@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-440926.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 440926;
 var summary = 'Correctly match regexps with special "i" characters';

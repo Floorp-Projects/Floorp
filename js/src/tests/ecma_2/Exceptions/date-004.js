@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'date-004.js';
 
 /**
    File Name:          date-004.js

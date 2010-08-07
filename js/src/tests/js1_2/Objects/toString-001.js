@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'toString-001.js';
 
 /**
    File Name:          toString_1.js

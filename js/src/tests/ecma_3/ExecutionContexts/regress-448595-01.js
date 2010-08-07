@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-448595-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 448595;
 var summary = 'scope chain var declaration with initialiser in |with| clauses';

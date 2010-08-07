@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-350692.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350692;
 var summary = 'import x["y"]["z"]';

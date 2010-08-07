@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-230216-1.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 230216;
 var summary = 'check for numerical overflow in regexps in back reference and bounds for {} quantifier';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-455775.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 455775;
 var summary = 'Do not assert: cx->fp->flags & JSFRAME_EVAL';

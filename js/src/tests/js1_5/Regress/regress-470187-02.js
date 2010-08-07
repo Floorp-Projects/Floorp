@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-470187-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470187;
 var summary = 'Do not assert: ATOM_IS_STRING(atom)';

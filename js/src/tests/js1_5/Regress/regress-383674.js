@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-383674.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 383674;
 var summary = 'Statement that implicitly calls toString should not be optimized away as a "useless expression"';

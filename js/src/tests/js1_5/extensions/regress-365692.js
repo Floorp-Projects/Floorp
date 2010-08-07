@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-365692.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 365692;
 var summary = 'getter/setter bytecodes should support atoms over 64k';

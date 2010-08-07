@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-419018.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 419018;
 var summary = 'UMR in JSENUMERATE_INIT';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-344711-n.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 344711;
 var summary = 'Do not crash compiling when peeking over a newline';

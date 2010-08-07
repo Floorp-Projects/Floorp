@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-3649-n.js';
 //-----------------------------------------------------------------------------
 // testcase from bug 2235 mff@research.att.com
 var BUGNUMBER = 3649;

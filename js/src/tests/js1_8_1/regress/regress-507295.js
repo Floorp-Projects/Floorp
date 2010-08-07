@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-507295.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 507295;
 var summary = 'TM: assert with using result of assignment to closure var'

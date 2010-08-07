@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-470619.js';
 
 var summary = 'Do not assert: regs.sp - 2 >= StackBase(fp)';
 var BUGNUMBER = 470619;

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-381963-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 381963;
 var summary = 'Decompilation of genexp in |while|';

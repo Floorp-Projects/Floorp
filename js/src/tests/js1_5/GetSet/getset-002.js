@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'getset-002.js';
 
 var t = {   
   _y: "<initial y>",

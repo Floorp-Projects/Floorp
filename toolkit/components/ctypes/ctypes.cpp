@@ -113,7 +113,10 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              jsval* vp,
              PRBool* _retval)
 {
-  JSObject* global = JS_GetGlobalObject(cx);
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
+  if (!global)
+    return NS_ERROR_NOT_AVAILABLE;
+
   *_retval = InitAndSealCTypesClass(cx, global);
   return NS_OK;
 }

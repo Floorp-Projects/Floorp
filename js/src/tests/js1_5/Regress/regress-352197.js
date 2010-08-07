@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352197.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352197;
 var summary = 'Strict warning for return e; vs. return;';

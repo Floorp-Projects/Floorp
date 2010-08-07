@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-336100.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 336100;
 var summary = 'bug 336100 - arguments regressed';

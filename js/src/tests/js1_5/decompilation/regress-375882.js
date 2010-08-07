@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-375882.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 375882;
 var summary = 'Decompilation of switch with case 0/0';

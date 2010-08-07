@@ -122,7 +122,7 @@ JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
  * GC memory is allocated in chunks. The size of each chunk is GC_CHUNK_SIZE.
  * The chunk contains an array of GC arenas holding GC things, an array of
  * the mark bitmaps for each arena, an array of JSGCArenaInfo arena
- * descriptors, an array of JSGCMarkingDelay descriptors, the JSGCChunkInfo
+ * descriptors, an array of JSGCMarkingDelay descriptors, the GCChunkInfo
  * chunk descriptor and a bitmap indicating free arenas in the chunk. The
  * following picture demonstrates the layout:
  *
@@ -135,7 +135,7 @@ JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
  * operation gives an arena index into the mark and JSGCArenaInfo arrays.
  *
  * All chunks that have at least one free arena are put on the doubly-linked
- * list with the head stored in JSRuntime.gcChunkList. JSGCChunkInfo contains
+ * list with the head stored in JSRuntime.gcChunkList. GCChunkInfo contains
  * the head of the chunk's free arena list together with the link fields for
  * gcChunkList.
  *
@@ -151,7 +151,7 @@ JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
  *
  * The number of arenas in the chunk is given by GC_ARENAS_PER_CHUNK. We find
  * that number as follows. Suppose chunk contains n arenas. Together with the
- * word-aligned free arena bitmap and JSGCChunkInfo they should fit into the
+ * word-aligned free arena bitmap and GCChunkInfo they should fit into the
  * chunk. Hence GC_ARENAS_PER_CHUNK or n_max is the maximum value of n for
  * which the following holds:
   *
@@ -162,7 +162,7 @@ JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
  *       s is the number of words in the GC arena, arena's mark bitmap,
  *         JSGCArenaInfo and JSGCMarkingDelay or GC_ARENA_ALL_WORDS.
  *       B is number of bits per word or B == JS_BITS_PER_WORD
- *       M is the number of words in the chunk without JSGCChunkInfo or
+ *       M is the number of words in the chunk without GCChunkInfo or
  *       M == (GC_CHUNK_SIZE - sizeof(JSGCArenaInfo)) / sizeof(jsuword).
  *
  * We rewrite the inequality as
@@ -208,11 +208,11 @@ JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
  *
  * For the final result we observe that in (4)
  *
- *    M*B == (GC_CHUNK_SIZE - sizeof(JSGCChunkInfo)) / sizeof(jsuword) *
+ *    M*B == (GC_CHUNK_SIZE - sizeof(GCChunkInfo)) / sizeof(jsuword) *
  *           JS_BITS_PER_WORD
- *        == (GC_CHUNK_SIZE - sizeof(JSGCChunkInfo)) * JS_BITS_PER_BYTE
+ *        == (GC_CHUNK_SIZE - sizeof(GCChunkInfo)) * JS_BITS_PER_BYTE
  *
- * since GC_CHUNK_SIZE and sizeof(JSGCChunkInfo) are at least word-aligned.
+ * since GC_CHUNK_SIZE and sizeof(GCChunkInfo) are at least word-aligned.
  */
 
 const jsuword GC_ARENA_SHIFT = 12;
@@ -250,7 +250,7 @@ struct JSGCArenaInfo {
      * Pointer to the previous arena in a linked list. The arena can either
      * belong to one of JSContext.gcArenaList lists or, when it does not have
      * any allocated GC things, to the list of free arenas in the chunk with
-     * head stored in JSGCChunkInfo.lastFreeArena.
+     * head stored in GCChunkInfo.lastFreeArena.
      */
     JSGCArena       *prev;
 
@@ -296,7 +296,9 @@ struct JSGCArena {
     inline jsbitmap *getMarkBitmap();
 };
 
-struct JSGCChunkInfo {
+namespace js {
+
+struct GCChunkInfo {
     JSRuntime       *runtime;
     size_t          numFreeArenas;
     size_t          gcChunkAge;
@@ -309,8 +311,10 @@ struct JSGCChunkInfo {
 
     inline void clearMarkBitmap();
 
-    static inline JSGCChunkInfo *fromChunk(jsuword chunk);
+    static inline GCChunkInfo *fromChunk(jsuword chunk);
 };
+
+} /* namespace js */
 
 /* Check that all chunk arrays at least word-aligned. */
 JS_STATIC_ASSERT(sizeof(JSGCArena) == GC_ARENA_SIZE);
@@ -324,7 +328,7 @@ const size_t GC_ARENA_ALL_WORDS = (GC_ARENA_SIZE + GC_MARK_BITMAP_SIZE +
 
 /* The value according (4) above. */
 const size_t GC_ARENAS_PER_CHUNK =
-    (GC_CHUNK_SIZE - sizeof(JSGCChunkInfo)) * JS_BITS_PER_BYTE /
+    (GC_CHUNK_SIZE - sizeof(GCChunkInfo)) * JS_BITS_PER_BYTE /
     (JS_BITS_PER_WORD * GC_ARENA_ALL_WORDS + 1);
 
 const size_t GC_FREE_ARENA_BITMAP_WORDS = (GC_ARENAS_PER_CHUNK +
@@ -337,12 +341,12 @@ const size_t GC_FREE_ARENA_BITMAP_SIZE = GC_FREE_ARENA_BITMAP_WORDS *
 /* Check that GC_ARENAS_PER_CHUNK indeed maximises (1). */
 JS_STATIC_ASSERT(GC_ARENAS_PER_CHUNK * GC_ARENA_ALL_WORDS +
                  GC_FREE_ARENA_BITMAP_WORDS <=
-                 (GC_CHUNK_SIZE - sizeof(JSGCChunkInfo)) / sizeof(jsuword));
+                 (GC_CHUNK_SIZE - sizeof(GCChunkInfo)) / sizeof(jsuword));
 
 JS_STATIC_ASSERT((GC_ARENAS_PER_CHUNK + 1) * GC_ARENA_ALL_WORDS +
                  (GC_ARENAS_PER_CHUNK + 1 + JS_BITS_PER_WORD - 1) /
                  JS_BITS_PER_WORD >
-                 (GC_CHUNK_SIZE - sizeof(JSGCChunkInfo)) / sizeof(jsuword));
+                 (GC_CHUNK_SIZE - sizeof(GCChunkInfo)) / sizeof(jsuword));
 
 
 const size_t GC_MARK_BITMAP_ARRAY_OFFSET = GC_ARENAS_PER_CHUNK
@@ -355,10 +359,10 @@ const size_t GC_MARKING_DELAY_ARRAY_OFFSET =
     GC_ARENA_INFO_ARRAY_OFFSET + sizeof(JSGCArenaInfo) * GC_ARENAS_PER_CHUNK;
 
 const size_t GC_CHUNK_INFO_OFFSET = GC_CHUNK_SIZE - GC_FREE_ARENA_BITMAP_SIZE -
-                                    sizeof(JSGCChunkInfo);
+                                    sizeof(GCChunkInfo);
 
 inline jsuword
-JSGCChunkInfo::getChunk() {
+GCChunkInfo::getChunk() {
     jsuword addr = reinterpret_cast<jsuword>(this);
     JS_ASSERT((addr & GC_CHUNK_MASK) == GC_CHUNK_INFO_OFFSET);
     jsuword chunk = addr & ~GC_CHUNK_MASK;
@@ -366,29 +370,29 @@ JSGCChunkInfo::getChunk() {
 }
 
 inline void
-JSGCChunkInfo::clearMarkBitmap()
+GCChunkInfo::clearMarkBitmap()
 {
     PodZero(reinterpret_cast<jsbitmap *>(getChunk() + GC_MARK_BITMAP_ARRAY_OFFSET),
             GC_MARK_BITMAP_WORDS * GC_ARENAS_PER_CHUNK);
 }
 
 /* static */
-inline JSGCChunkInfo *
-JSGCChunkInfo::fromChunk(jsuword chunk) {
+inline GCChunkInfo *
+GCChunkInfo::fromChunk(jsuword chunk) {
     JS_ASSERT(!(chunk & GC_CHUNK_MASK));
     jsuword addr = chunk | GC_CHUNK_INFO_OFFSET;
-    return reinterpret_cast<JSGCChunkInfo *>(addr);
+    return reinterpret_cast<GCChunkInfo *>(addr);
 }
 
 inline jsbitmap *
-JSGCChunkInfo::getFreeArenaBitmap()
+GCChunkInfo::getFreeArenaBitmap()
 {
     jsuword addr = reinterpret_cast<jsuword>(this);
-    return reinterpret_cast<jsbitmap *>(addr + sizeof(JSGCChunkInfo));
+    return reinterpret_cast<jsbitmap *>(addr + sizeof(GCChunkInfo));
 }
 
 inline void
-JSGCChunkInfo::init(JSRuntime *rt)
+GCChunkInfo::init(JSRuntime *rt)
 {
     runtime = rt;
     numFreeArenas = GC_ARENAS_PER_CHUNK;
@@ -607,7 +611,7 @@ static jsrefcount newChunkCount = 0;
 static jsrefcount destroyChunkCount = 0;
 #endif
 
-inline void *
+inline jsuword
 GetGCChunk(JSRuntime *rt)
 {
     void *p = rt->gcChunkAllocator->alloc();
@@ -617,7 +621,7 @@ GetGCChunk(JSRuntime *rt)
 #endif
     METER_IF(p, rt->gcStats.nchunks++);
     METER_UPDATE_MAX(rt->gcStats.maxnchunks, rt->gcStats.nchunks);
-    return p;
+    return reinterpret_cast<jsuword>(p);
 }
 
 inline void
@@ -648,28 +652,40 @@ NewGCArena(JSContext *cx)
         js_TriggerGC(cx, true);
     }
 
-    size_t nchunks = rt->gcChunks.length();
-
-    JSGCChunkInfo *ci;
-    for (;; ++rt->gcChunkCursor) {
-        if (rt->gcChunkCursor == nchunks) {
-            ci = NULL;
-            break;
-        }
-        ci = rt->gcChunks[rt->gcChunkCursor];
-        if (ci->numFreeArenas != 0)
-            break;
-    }
-    if (!ci) {
-        if (!rt->gcChunks.reserve(nchunks + 1))
+    if (rt->gcFreeArenaChunks.empty()) {
+#ifdef DEBUG
+        for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
+            JS_ASSERT(GCChunkInfo::fromChunk(r.front())->numFreeArenas == 0);
+#endif
+        /*
+         * Make sure that after the GC we can append all allocated chunks to
+         * gcFreeArenaChunks.
+         *
+         * FIXME bug 583729 - use the same for the rt->gcChunkSet.
+         */
+        if (!rt->gcFreeArenaChunks.reserve(rt->gcChunkSet.count() + 1))
             return NULL;
-        void *chunkptr = GetGCChunk(rt);
-        if (!chunkptr)
+        jsuword chunk = GetGCChunk(rt);
+        if (!chunk)
             return NULL;
-        ci = JSGCChunkInfo::fromChunk(reinterpret_cast<jsuword>(chunkptr));
+        GCChunkInfo *ci = GCChunkInfo::fromChunk(chunk);
         ci->init(rt);
-        JS_ALWAYS_TRUE(rt->gcChunks.append(ci));
+
+        /*
+         * FIXME bug 583732 - chunk is newly allocated and cannot present in
+         * the table so using ordinary lookupForAdd is suboptimal here.
+         */
+        GCChunkSet::AddPtr p = rt->gcChunkSet.lookupForAdd(chunk);
+        JS_ASSERT(!p);
+        if (!rt->gcChunkSet.add(p, chunk)) {
+            ReleaseGCChunk(rt, chunk);
+            return NULL;
+        }
+        JS_ALWAYS_TRUE(rt->gcFreeArenaChunks.append(ci));
     }
+
+    GCChunkInfo *ci = rt->gcFreeArenaChunks.back();
+    JS_ASSERT(ci->numFreeArenas);
 
     /* Scan the bitmap for the first non-zero bit. */
     jsbitmap *freeArenas = ci->getFreeArenaBitmap();
@@ -684,6 +700,10 @@ NewGCArena(JSContext *cx)
     JS_ASSERT(*freeArenas & (jsuword(1) << bit));
     *freeArenas &= ~(jsuword(1) << bit);
     --ci->numFreeArenas;
+    if (ci->numFreeArenas == 0) {
+        JS_ASSERT(ci == rt->gcFreeArenaChunks.back());
+        rt->gcFreeArenaChunks.popBack();
+    }
 
     rt->gcBytes += GC_ARENA_SIZE;
     METER(rt->gcStats.nallarenas++);
@@ -706,7 +726,7 @@ ReleaseGCArena(JSRuntime *rt, JSGCArena *a)
     METER(rt->gcStats.nallarenas--);
 
     jsuword chunk = a->getChunk();
-    JSGCChunkInfo *ci = JSGCChunkInfo::fromChunk(chunk);
+    GCChunkInfo *ci = GCChunkInfo::fromChunk(chunk);
     JS_ASSERT(ci->numFreeArenas <= GC_ARENAS_PER_CHUNK - 1);
     jsbitmap *freeArenas = ci->getFreeArenaBitmap();
     JS_ASSERT(!JS_TEST_BIT(freeArenas, a->getIndex()));
@@ -732,22 +752,24 @@ FreeGCChunks(JSRuntime *rt)
     }
 #endif
 
-    /* Remove unused chunks. */
-    size_t available = 0;
-    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i) {
-        JSGCChunkInfo *ci = *i;
+    /* Remove unused chunks and rebuild gcFreeArenaChunks. */
+    rt->gcFreeArenaChunks.clear();
+    JS_ASSERT(rt->gcFreeArenaChunks.capacity() >= rt->gcChunkSet.count());
+    for (GCChunkSet::Enum e(rt->gcChunkSet); !e.empty(); e.popFront()) {
+        GCChunkInfo *ci = GCChunkInfo::fromChunk(e.front());
         JS_ASSERT(ci->runtime == rt);
         if (ci->numFreeArenas == GC_ARENAS_PER_CHUNK) {
             if (ci->gcChunkAge > GC_MAX_CHUNK_AGE) {
+                e.removeFront();
                 ReleaseGCChunk(rt, ci->getChunk());
                 continue;
             }
             ci->gcChunkAge++;
         }
-        rt->gcChunks[available++] = ci;
+
+        if (ci->numFreeArenas)
+            JS_ALWAYS_TRUE(rt->gcFreeArenaChunks.append(ci));
     }
-    rt->gcChunks.resize(available);
-    rt->gcChunkCursor = 0;
 }
 
 static inline size_t
@@ -846,10 +868,10 @@ FinishGCArenaLists(JSRuntime *rt)
 
     rt->gcBytes = 0;
 
-    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i)
-        ReleaseGCChunk(rt, (*i)->getChunk());
-    rt->gcChunks.clear();
-    rt->gcChunkCursor = 0;
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
+        ReleaseGCChunk(rt, r.front());
+    rt->gcChunkSet.clear();
+    rt->gcFreeArenaChunks.clear();
 }
 
 intN
@@ -877,7 +899,7 @@ JSRuntime *
 js_GetGCThingRuntime(void *thing)
 {
     jsuword chunk = JSGCArena::fromGCThing(thing)->getChunk();
-    return JSGCChunkInfo::fromChunk(chunk)->runtime;
+    return GCChunkInfo::fromChunk(chunk)->runtime;
 }
 
 JS_FRIEND_API(bool)
@@ -899,6 +921,13 @@ JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
     InitGCArenaLists(rt);
+
+    /*
+     * Make room for at least 16 chunks so the table would not grow before
+     * the browser starts up.
+     */
+    if (!rt->gcChunkSet.init(16))
+        return false;
 
     if (!rt->gcRootsHash.init(256))
         return false;
@@ -938,186 +967,12 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
 namespace js {
 
-struct GCChunkHasher
-{
-    typedef jsuword Lookup;
-    static HashNumber hash(jsuword chunk) {
-        /*
-         * Strip zeros for better distribution after multiplying by the golden
-         * ratio.
-         */
-        JS_ASSERT(!(chunk & GC_CHUNK_MASK));
-        return HashNumber(chunk >> GC_CHUNK_SHIFT);
-    }
-    static bool match(jsuword k, jsuword l) {
-        JS_ASSERT(!(k & GC_CHUNK_MASK));
-        JS_ASSERT(!(l & GC_CHUNK_MASK));
-        return k == l;
-    }
-};
-
-class ConservativeGCStackMarker {
-  public:
-    ConservativeGCStackMarker(JSTracer *trc);
-
-    ~ConservativeGCStackMarker() {
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-        dumpConservativeRoots();
-#endif
-#ifdef JS_GCMETER
-        JSConservativeGCStats *total = &trc->context->runtime->gcStats.conservative;
-        total->words        += stats.words;
-        total->lowbitset    += stats.lowbitset;
-        total->notarena     += stats.notarena;
-        total->notchunk     += stats.notchunk;
-        total->freearena    += stats.freearena;
-        total->wrongtag     += stats.wrongtag;
-        total->notlive      += stats.notlive;
-        total->gcthings     += stats.gcthings;
-        total->unmarked     += stats.unmarked;
-#endif
-    }
-
-    void markRoots();
-
-  private:
-    void markRange(jsuword *begin, jsuword *end);
-    void markWord(jsuword w);
-
-    JSTracer *trc;
-    HashSet<jsuword, GCChunkHasher, SystemAllocPolicy> chunkSet;
-
-#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
-    JSConservativeGCStats stats;
-
-  public:
-    static void dumpStats(FILE *fp, JSConservativeGCStats *stats);
-
-# define CONSERVATIVE_METER(x)  ((void) (x))
-# define CONSERVATIVE_METER_IF(condition, x) ((void) ((condition) && (x)))
-
-#else
-
-# define CONSERVATIVE_METER(x)                  ((void) 0)
-# define CONSERVATIVE_METER_IF(condition, x)    ((void) 0)
-
-#endif
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-  private:
-    struct ConservativeRoot { void *thing; uint32 traceKind; };
-    Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
-    const char *dumpFileName;
-
-    void dumpConservativeRoots();
-#endif
-};
-
-ConservativeGCStackMarker::ConservativeGCStackMarker(JSTracer *trc)
-  : trc(trc)
-{
-    /*
-     * If initializing fails because we are out of memory, stack scanning
-     * slows down but is otherwise unaffected.
-     */
-    JSRuntime *rt = trc->context->runtime;
-    if (chunkSet.init(rt->gcChunks.length())) {
-        for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i) {
-            jsuword chunk = (*i)->getChunk();
-            JS_ASSERT(!chunkSet.has(chunk));
-            JS_ALWAYS_TRUE(chunkSet.put(chunk));
-        }
-    }
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    dumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
-    memset(&stats, 0, sizeof(stats));
-#endif
-}
-
-#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
-/* static */
-void
-ConservativeGCStackMarker::dumpStats(FILE *fp, JSConservativeGCStats *stats)
-{
-#define ULSTAT(x)       ((unsigned long)(stats->x))
-    fprintf(fp, "CONSERVATIVE STACK SCANNING:\n");
-    fprintf(fp, "      number of stack words: %lu\n", ULSTAT(words));
-    fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(lowbitset));
-    fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(notchunk));
-    fprintf(fp, "     not within arena range: %lu\n", ULSTAT(notarena));
-    fprintf(fp, "       points to free arena: %lu\n", ULSTAT(freearena));
-    fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(wrongtag));
-    fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(notlive));
-    fprintf(fp, "              things marked: %lu\n", ULSTAT(gcthings));
-    fprintf(fp, "         conservative roots: %lu\n", ULSTAT(unmarked));
-#undef ULSTAT
-}
-#endif
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-void
-ConservativeGCStackMarker::dumpConservativeRoots()
-{
-    if (!dumpFileName)
-        return;
-
-    JS_ASSERT(stats.unmarked == conservativeRoots.length());
-
-    FILE *fp;
-    if (!strcmp(dumpFileName, "stdout")) {
-        fp = stdout;
-    } else if (!strcmp(dumpFileName, "stderr")) {
-        fp = stderr;
-    } else if (!(fp = fopen(dumpFileName, "aw"))) {
-        fprintf(stderr,
-                "Warning: cannot open %s to dump the conservative roots\n",
-                dumpFileName);
-        return;
-    }
-
-    dumpStats(fp, &stats);
-    for (ConservativeRoot *i = conservativeRoots.begin();
-         i != conservativeRoots.end();
-         ++i) {
-        fprintf(fp, "  %p: ", i->thing);
-        switch (i->traceKind) {
-          default:
-            JS_NOT_REACHED("Unknown trace kind");
-
-          case JSTRACE_OBJECT: {
-            JSObject *obj = (JSObject *) i->thing;
-            fprintf(fp, "object %s", obj->getClass()->name);
-            break;
-          }
-          case JSTRACE_STRING: {
-            JSString *str = (JSString *) i->thing;
-            char buf[50];
-            js_PutEscapedString(buf, sizeof buf, str, '"');
-            fprintf(fp, "string %s", buf);
-            break;
-          }
-# if JS_HAS_XML_SUPPORT
-          case JSTRACE_XML: {
-            JSXML *xml = (JSXML *) i->thing;
-            fprintf(fp, "xml %u", (unsigned)xml->xml_class);
-            break;
-          }
-# endif
-        }
-        fputc('\n', fp);
-    }
-    fputc('\n', fp);
-
-    if (fp != stdout && fp != stderr)
-        fclose(fp);
-}
-#endif /* JS_DUMP_CONSERVATIVE_GC_ROOTS */
-
-static const jsuword JSID_PAYLOAD_MASK = (jsuword)~(jsuword)JSID_TYPE_MASK;
-
-void
-ConservativeGCStackMarker::markWord(jsuword w)
+/*
+ * Returns CGCT_VALID if the w can be a live GC thing and sets thing and traceKind
+ * accordingly. Otherwise returns the reason for rejection.
+ */
+inline ConservativeGCTest
+IsGCThingWord(JSRuntime *rt, jsuword w, void *&thing, uint32 &traceKind)
 {
     /*
      * The conservative scanner may access words that valgrind considers as
@@ -1129,8 +984,6 @@ ConservativeGCStackMarker::markWord(jsuword w)
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-#define RETURN(x) do { CONSERVATIVE_METER(stats.x++); return; } while (0)
-
     /*
      * We assume that the compiler never uses sub-word alignment to store
      * pointers and does not tag pointers on its own. Additionally, the value
@@ -1140,12 +993,13 @@ ConservativeGCStackMarker::markWord(jsuword w)
      */
     JS_STATIC_ASSERT(JSID_TYPE_STRING == 0 && JSID_TYPE_OBJECT == 4);
     if (w & 0x3)
-        RETURN(lowbitset);
+        return CGCT_LOWBITSET;
 
     /*
      * An object jsid has its low bits tagged. In the value representation on
      * 64-bit, the high bits are tagged.
      */
+    const jsuword JSID_PAYLOAD_MASK = ~jsuword(JSID_TYPE_MASK);
 #if JS_BITS_PER_WORD == 32
     jsuword payload = w & JSID_PAYLOAD_MASK;
 #elif JS_BITS_PER_WORD == 64
@@ -1153,33 +1007,21 @@ ConservativeGCStackMarker::markWord(jsuword w)
 #endif
 
     jsuword chunk = payload & ~GC_CHUNK_MASK;
-    JSGCChunkInfo *ci;
-    if (JS_LIKELY(chunkSet.initialized())) {
-        if (!chunkSet.has(chunk))
-            RETURN(notchunk);
-        ci = JSGCChunkInfo::fromChunk(chunk);
-    } else {
-        ci = JSGCChunkInfo::fromChunk(chunk);
-        for (JSGCChunkInfo **i = trc->context->runtime->gcChunks.begin(); ; ++i) {
-            if (i == trc->context->runtime->gcChunks.end())
-                RETURN(notchunk);
-            if (*i == ci)
-                break;
-        }
-    }
+    if (!rt->gcChunkSet.has(chunk))
+        return CGCT_NOTCHUNK;
+
+    GCChunkInfo *ci = GCChunkInfo::fromChunk(chunk);
 
     if ((payload & GC_CHUNK_MASK) >= GC_MARK_BITMAP_ARRAY_OFFSET)
-        RETURN(notarena);
+        return CGCT_NOTARENA;
 
     size_t arenaIndex = (payload & GC_CHUNK_MASK) >> GC_ARENA_SHIFT;
     if (JS_TEST_BIT(ci->getFreeArenaBitmap(), arenaIndex))
-        RETURN(freearena);
+        return CGCT_FREEARENA;
 
     JSGCArena *a = JSGCArena::fromChunkAndIndex(chunk, arenaIndex);
     JSGCArenaInfo *ainfo = a->getInfo();
 
-    JSGCThing *thing;
-    uint32 traceKind;
     traceKind = GetFinalizableArenaTraceKind(ainfo);
 
     /*
@@ -1189,7 +1031,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
      *
      *   if ((traceKind == JSTRACE_STRING && tag > 0 && tag != JSVAL_TAG_SHIFT) ||
      *       (traceKind == JSTRACE_OBJECT && tag > 0 && tag != JSVAL_TAG_OBJECT))
-     *     RETURN(wrongtag);
+     *     return CGCT_WRONGTAG;
      *
      * However, it seems like we should measure how often this actually avoids
      * false roots.
@@ -1207,7 +1049,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
      */
     if (offset + thingSize > GC_ARENA_SIZE) {
         JS_ASSERT(thingSize & (thingSize - 1));
-        RETURN(notarena);
+        return CGCT_NOTARENA;
     }
     thing = (JSGCThing *) (start + offset);
 
@@ -1223,48 +1065,88 @@ ConservativeGCStackMarker::markWord(jsuword w)
 
         /* If we find it on the freelist, it's dead. */
         if (thing == cursor)
-            RETURN(notlive);
+            return CGCT_NOTLIVE;
         JS_ASSERT_IF(cursor->link, cursor < cursor->link);
         cursor = cursor->link;
     }
 
-    CONSERVATIVE_METER(stats.gcthings++);
-
-    /*
-     * We have now a valid pointer, that is either raw or tagged properly.
-     * Since we do not rely on the conservative scanning yet and assume that
-     * all the roots are precisely reported, any unmarked GC things here mean
-     * those things leaked.
-     */
-    if (IS_GC_MARKING_TRACER(trc)) {
-        if (!js_IsAboutToBeFinalized(thing))
-            return;
-        CONSERVATIVE_METER(stats.unmarked++);
-    }
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    if (IS_GC_MARKING_TRACER(trc) && dumpFileName) {
-        ConservativeRoot root = {thing, traceKind};
-        conservativeRoots.append(root);
-    }
-#endif
-    Mark(trc, thing, traceKind, "machine stack");
-
-#undef RETURN
+    return CGCT_VALID;
 }
 
+inline ConservativeGCTest
+IsGCThingWord(JSRuntime *rt, jsuword w)
+{
+    void *thing;
+    uint32 traceKind;
+    return IsGCThingWord(rt, w, thing, traceKind);
+}
+
+
+#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
+
 void
-ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
+ConservativeGCStats::dump(FILE *fp)
+{
+    size_t words = 0;
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(counter); ++i)
+        words += counter[i];
+   
+#define ULSTAT(x)       ((unsigned long)(x))
+    fprintf(fp, "CONSERVATIVE STACK SCANNING:\n");
+    fprintf(fp, "      number of stack words: %lu\n", ULSTAT(words));
+    fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(counter[CGCT_LOWBITSET]));
+    fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(counter[CGCT_NOTCHUNK]));
+    fprintf(fp, "     not within arena range: %lu\n", ULSTAT(counter[CGCT_NOTARENA]));
+    fprintf(fp, "       points to free arena: %lu\n", ULSTAT(counter[CGCT_FREEARENA]));
+    fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(counter[CGCT_WRONGTAG]));
+    fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(counter[CGCT_NOTLIVE]));
+    fprintf(fp, "            valid GC things: %lu\n", ULSTAT(counter[CGCT_VALID]));
+#undef ULSTAT
+}
+#endif
+
+static void
+MarkWordConservatively(JSTracer *trc, jsuword w)
+{
+    /*
+     * The conservative scanner may access words that valgrind considers as
+     * undefined. To avoid false positives and not to alter valgrind view of
+     * the memory we make as memcheck-defined the argument, a copy of the
+     * original word. See bug 572678.
+     */
+#ifdef JS_VALGRIND
+    VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
+#endif
+
+    void *thing;
+    uint32 traceKind;
+    ConservativeGCTest test = IsGCThingWord(trc->context->runtime, w, thing, traceKind);
+    if (test == CGCT_VALID) {
+        Mark(trc, thing, traceKind, "machine stack");
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+        if (IS_GC_MARKING_TRACER(trc) && static_cast<GCMarker *>(trc)->conservativeDumpFileName) {
+            GCMarker::ConservativeRoot root = {thing, traceKind};
+            static_cast<GCMarker *>(trc)->conservativeRoots.append(root);
+        }
+#endif
+    }
+        
+#if defined JS_DUMP_CONSERVATIVE_GC_ROOTS || defined JS_GCMETER
+    if (IS_GC_MARKING_TRACER(trc))
+        static_cast<GCMarker *>(trc)->conservativeStats.counter[test]++;
+#endif
+}
+
+static void
+MarkRangeConservatively(JSTracer *trc, jsuword *begin, jsuword *end)
 {
     JS_ASSERT(begin <= end);
-    for (jsuword *i = begin; i != end; ++i) {
-        CONSERVATIVE_METER(stats.words++);
-        markWord(*i);
-    }
+    for (jsuword *i = begin; i != end; ++i)
+        MarkWordConservatively(trc, *i);
 }
 
 void
-ConservativeGCStackMarker::markRoots()
+MarkConservativeStackRoots(JSTracer *trc)
 {
     /* Do conservative scanning of the stack and registers. */
     for (ThreadDataIter i(trc->context->runtime); !i.empty(); i.popFront()) {
@@ -1280,14 +1162,13 @@ ConservativeGCStackMarker::markRoots()
             stackEnd = td->nativeStackBase;
 #endif
             JS_ASSERT(stackMin <= stackEnd);
-            markRange(stackMin, stackEnd);
-            markRange(ctd->registerSnapshot.words,
-                      JS_ARRAY_END(ctd->registerSnapshot.words));
+            MarkRangeConservatively(trc, stackMin, stackEnd);
+            MarkRangeConservatively(trc, ctd->registerSnapshot.words,
+                                    JS_ARRAY_END(ctd->registerSnapshot.words));
         }
     }
 }
 
-/* static */
 JS_NEVER_INLINE JS_FRIEND_API(void)
 ConservativeGCThreadData::enable(bool knownStackBoundary)
 {
@@ -1483,8 +1364,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "    max reachable closeable: %lu\n", ULSTAT(maxnclose));
     fprintf(fp, "      scheduled close hooks: %lu\n", ULSTAT(closelater));
     fprintf(fp, "  max scheduled close hooks: %lu\n", ULSTAT(maxcloselater));
-
-    ConservativeGCStackMarker::dumpStats(fp, &rt->gcStats.conservative);
+    rt->gcStats.conservative.dump(fp);
 
 #undef UL
 #undef ULSTAT
@@ -1989,6 +1869,88 @@ ThingsPerUnmarkedBit(unsigned thingSize)
     return JS_HOWMANY(ThingsPerArena(thingSize), JS_BITS_PER_WORD);
 }
 
+GCMarker::GCMarker(JSContext *cx)
+  : color(0), unmarkedArenaStackTop(NULL)
+{
+    JS_TRACER_INIT(this, cx, NULL);
+#ifdef DEBUG
+    markLaterCount = 0;
+#endif
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    conservativeDumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
+    memset(&conservativeStats, 0, sizeof(conservativeStats));
+#endif
+}
+
+GCMarker::~GCMarker()
+{
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    dumpConservativeRoots();
+#endif
+#ifdef JS_GCMETER
+    /* Update total stats. */
+    context->runtime->gcStats.conservative.add(conservativeStats);
+#endif
+}
+
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+void
+GCMarker::dumpConservativeRoots()
+{
+    if (!conservativeDumpFileName)
+        return;
+
+    FILE *fp;
+    if (!strcmp(conservativeDumpFileName, "stdout")) {
+        fp = stdout;
+    } else if (!strcmp(conservativeDumpFileName, "stderr")) {
+        fp = stderr;
+    } else if (!(fp = fopen(conservativeDumpFileName, "aw"))) {
+        fprintf(stderr,
+                "Warning: cannot open %s to dump the conservative roots\n",
+                conservativeDumpFileName);
+        return;
+    }
+
+    conservativeStats.dump(fp);
+
+    for (ConservativeRoot *i = conservativeRoots.begin();
+         i != conservativeRoots.end();
+         ++i) {
+        fprintf(fp, "  %p: ", i->thing);
+        switch (i->traceKind) {
+          default:
+            JS_NOT_REACHED("Unknown trace kind");
+
+          case JSTRACE_OBJECT: {
+            JSObject *obj = (JSObject *) i->thing;
+            fprintf(fp, "object %s", obj->getClass()->name);
+            break;
+          }
+          case JSTRACE_STRING: {
+            JSString *str = (JSString *) i->thing;
+            char buf[50];
+            js_PutEscapedString(buf, sizeof buf, str, '"');
+            fprintf(fp, "string %s", buf);
+            break;
+          }
+# if JS_HAS_XML_SUPPORT
+          case JSTRACE_XML: {
+            JSXML *xml = (JSXML *) i->thing;
+            fprintf(fp, "xml %u", (unsigned)xml->xml_class);
+            break;
+          }
+# endif
+        }
+        fputc('\n', fp);
+    }
+    fputc('\n', fp);
+
+    if (fp != stdout && fp != stderr)
+        fclose(fp);
+}
+#endif /* JS_DUMP_CONSERVATIVE_GC_ROOTS */
+
 void
 GCMarker::delayMarkingChildren(void *thing)
 {
@@ -2485,7 +2447,7 @@ js_TraceRuntime(JSTracer *trc)
     JSRuntime *rt = trc->context->runtime;
 
     if (rt->state != JSRTS_LANDING)
-        ConservativeGCStackMarker(trc).markRoots();
+        MarkConservativeStackRoots(trc);
 
     /*
      * Verify that we do not have at this point unmarked GC things stored in
@@ -2532,9 +2494,10 @@ js_TraceRuntime(JSTracer *trc)
                 continue;
 
             if (!IsMarkedGCThing(thing)) {
+                ConservativeGCTest test = IsGCThingWord(rt, reinterpret_cast<jsuword>(thing));
                 fprintf(stderr,
-                        "Conservative GC scanner has missed the root %p with tag %lu"
-                        " on the stack. Aborting.\n", thing, (unsigned long) gcr->tag);
+                        "Conservative GC scanner has missed the root %p with tag %ld"
+                        " on the stack due to %d. Aborting.\n", thing, (long) gcr->tag, int(test));
                 JS_ASSERT(false);
                 abort();
             }
@@ -3002,6 +2965,10 @@ SweepCompartments(JSContext *cx)
     JSCompartment **read = rt->compartments.begin();
     JSCompartment **end = rt->compartments.end();
     JSCompartment **write = read;
+    
+    /* Delete defaultCompartment only during runtime shutdown */
+    rt->defaultCompartment->marked = true;
+    
     while (read < end) {
         JSCompartment *compartment = (*read++);
         if (compartment->marked) {
@@ -3088,9 +3055,10 @@ GC(JSContext *cx  GCTIMER_PARAM)
     JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
     rt->gcMarkingTracer = &gcmarker;
-             
-    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i)
-        (*i)->clearMarkBitmap();
+   
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
+        GCChunkInfo::fromChunk(r.front())->clearMarkBitmap();
+   
     js_TraceRuntime(&gcmarker);
     js_MarkScriptFilenames(rt);
 

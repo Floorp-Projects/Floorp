@@ -54,7 +54,6 @@
  * alphabetically is necessary for the test to work in Rhino.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-90596-003.js';
 var UBound = 0;
 var BUGNUMBER = 90596;
 var summary = '[DontEnum] props (if overridden) should appear in for-in loops';

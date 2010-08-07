@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.5.1.js';
 
 START("13.5.1 - XMLList Constructor as Function");
 

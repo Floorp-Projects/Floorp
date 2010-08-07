@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452333.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452333;
 var summary = 'Do not crash with JIT: @ js_SkipWhiteSpace';

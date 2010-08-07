@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465236.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465236;
 var summary = 'TM: Do not assert: we should have converted to numbers already';

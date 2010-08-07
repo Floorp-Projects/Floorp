@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.1.4-06.js';
 
 var summary = "11.1.4 - ]] should be allowed in CDATA Section";
 var BUGNUMBER = 313929;

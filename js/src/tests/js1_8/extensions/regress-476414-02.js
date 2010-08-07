@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-476414-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 476414;
 var summary = 'Do not crash @ js_NativeSet';

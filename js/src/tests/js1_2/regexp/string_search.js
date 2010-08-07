@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'string_search.js';
 
 /**
    Filename:     string_search.js

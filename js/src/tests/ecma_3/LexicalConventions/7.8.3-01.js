@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = '7.8.3-01.js';
 var BUGNUMBER = 523401;
 var summary = 'identifier starts immediately after numeric literal';
 var expect = "SyntaxError: identifier starts immediately after numeric literal";

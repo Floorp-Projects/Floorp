@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'function-001.js';
 
 /**
  *  File Name:          RegExp/function-001.js

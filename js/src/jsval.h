@@ -74,7 +74,7 @@ JS_BEGIN_EXTERN_C
  * nice symbolic type tags, however we can only do this when we can force the
  * underlying type of the enum to be the desired size.
  */
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(__SUNPRO_CC)
 
 #if defined(_MSC_VER)
 # define JS_ENUM_HEADER(id, type)              enum id : type
@@ -179,8 +179,6 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0x67)
 #define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
 #define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
-#define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
-#define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_BOXED             ((uint8)0x99)
 #define JSVAL_TYPE_UNINITIALIZED     ((uint8)0xcd)
 
@@ -219,7 +217,7 @@ typedef uint64 JSValueShiftedTag;
 #define JSVAL_SHIFTED_TAG_OBJECT     (((uint64)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
 
 #endif  /* JS_BITS_PER_WORD */
-#endif  /* defined(__cplusplus) */
+#endif  /* defined(__cplusplus) && !defined(__SUNPRO_CC) */
 
 #define JSVAL_LOWER_INCL_TYPE_OF_OBJ_OR_NULL_SET        JSVAL_TYPE_NULL
 #define JSVAL_UPPER_EXCL_TYPE_OF_PRIMITIVE_SET          JSVAL_TYPE_OBJECT
@@ -698,6 +696,17 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 }
 
 #endif
+
+static JS_ALWAYS_INLINE double
+JS_CANONICALIZE_NAN(double d)
+{
+    if (JS_UNLIKELY(d != d)) {
+        jsval_layout l;
+        l.asBits = 0x7FF8000000000000LL;
+        return l.asDouble;
+    }
+    return d;
+}
 
 /* See JS_USE_JSVAL_JSID_STRUCT_TYPES comment in jsapi.h. */
 #if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)

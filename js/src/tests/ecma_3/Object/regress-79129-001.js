@@ -44,7 +44,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=79129
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-79129-001.js';
 var BUGNUMBER = 79129;
 var summary = "Regression test: we shouldn't crash on this code";
 

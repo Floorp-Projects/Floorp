@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349624.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349624;
 var summary = 'let in initial-value expression for another let';

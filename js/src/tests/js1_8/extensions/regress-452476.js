@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452476.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452476;
 var summary = 'Do not assert with JIT: !cx->runningJittedCode';

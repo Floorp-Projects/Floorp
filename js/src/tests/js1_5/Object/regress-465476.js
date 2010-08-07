@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465476.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465476;
 var summary = '"-0" and "0" are distinct properties.';

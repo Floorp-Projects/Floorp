@@ -1143,8 +1143,6 @@ typedef struct JSPropertyTreeEntry {
 
 namespace js {
 
-typedef Vector<JSGCChunkInfo *, 32, SystemAllocPolicy> GCChunks;
-
 struct GCPtrHasher
 {
     typedef void *Lookup;
@@ -1193,50 +1191,6 @@ typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
 
 class AutoValueVector;
 class AutoIdVector;
-
-struct GCMarker : public JSTracer {
-  private:
-    /* The color is only applied to objects, functions and xml. */
-    uint32 color;
-
-    /* See comments before delayMarkingChildren is jsgc.cpp. */
-    JSGCArena           *unmarkedArenaStackTop;
-#ifdef DEBUG
-    size_t              markLaterCount;
-#endif
-
-  public:
-    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
-
-  public:
-    explicit GCMarker(JSContext *cx)
-      : color(0), unmarkedArenaStackTop(NULL)
-    {
-        JS_TRACER_INIT(this, cx, NULL);
-#ifdef DEBUG
-        markLaterCount = 0;
-#endif
-    }
-
-    uint32 getMarkColor() const {
-        return color;
-    }
-
-    void setMarkColor(uint32 newColor) {
-        /*
-         * We must process any delayed marking here, otherwise we confuse
-         * colors.
-         */
-        markDelayedChildren();
-        color = newColor;
-    }
-
-    void delayMarkingChildren(void *thing);
-
-    JS_FRIEND_API(void) markDelayedChildren();
-
-    void slowifyArrays();
-};
 
 } /* namespace js */
 
@@ -1295,8 +1249,10 @@ struct JSRuntime {
     uint32              protoHazardShape;
 
     /* Garbage collector state, used by jsgc.c. */
-    js::GCChunks        gcChunks;
-    size_t              gcChunkCursor;
+    js::GCChunkSet      gcChunkSet;
+
+    /* GC chunks with at least one free arena. */
+    js::GCChunkInfoVector gcFreeArenaChunks;
 #ifdef DEBUG
     JSGCArena           *gcEmptyArenaList;
 #endif

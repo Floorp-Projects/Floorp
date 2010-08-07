@@ -1,3 +1,122 @@
+2010-08-05  Dan Witte  <dwitte@mozilla.com>
+
+        * Makefile.am: Pass FFI_DEBUG define to msvcc.sh for linking to the
+        debug CRT when --enable-debug is given.
+        * configure.ac: Define it.
+        * msvcc.sh: Translate -g and -DFFI_DEBUG appropriately.
+
+2010-08-04  Dan Witte  <dwitte@mozilla.com>
+
+	* src/x86/ffitarget.h: Add X86_ANY define for all x86/x86_64
+	platforms.
+	* src/x86/ffi.c: Remove redundant ifdef checks.
+	* src/prep_cif.c: Push stack space computation into src/x86/ffi.c
+	for X86_ANY so return value space doesn't get added twice.
+
+2010-08-03  Neil Rashbrooke <neil@parkwaycc.co.uk>
+
+	* msvcc.sh: Don't pass -safeseh to ml64 because behavior is buggy.
+
+2010-07-22  Dan Witte  <dwitte@mozilla.com>
+
+	* src/*/ffitarget.h: Make FFI_LAST_ABI one past the last valid ABI.
+	* src/prep_cif.c: Fix ABI assertion.
+        * src/cris/ffi.c: Ditto.
+
+2010-07-10  Evan Phoenix  <evan@fallingsnow.net>
+
+	* src/closures.c (selinux_enabled_check): Fix strncmp usage bug.
+
+2010-07-07  Dan Horák <dan@danny.cz>
+
+	* include/ffi.h.in: Protect #define with #ifndef.
+	* src/powerpc/ffitarget.h: Ditto.
+	* src/s390/ffitarget.h: Ditto.
+	* src/sparc/ffitarget.h: Ditto.
+
+2010-05-11  Dan Witte  <dwitte@mozilla.com>
+
+	* doc/libffi.tex: Document previous change.
+
+2010-05-11  Makoto Kato <m_kato@ga2.so-net.ne.jp>
+
+	* src/x86/ffi.c (ffi_call): Don't copy structs passed by value.
+
+2010-05-05  Michael Kohler <michaelkohler@live.com>
+
+	* src/dlmalloc.c (dlfree): Fix spelling.
+	* src/ia64/ffi.c (ffi_prep_cif_machdep): Ditto.
+	* configure.ac: Ditto.
+	* configure: Rebuilt.
+
+2010-04-13  Dan Witte  <dwitte@mozilla.com>
+
+	* msvcc.sh: Build with -W3 instead of -Wall.
+	* src/powerpc/ffi_darwin.c: Remove build warnings.
+	* src/x86/ffi.c: Ditto.
+	* src/x86/ffitarget.h: Ditto.
+
+2010-03-30  Dan Witte  <dwitte@mozilla.com>
+
+	* msvcc.sh: Disable build warnings.
+	* README (tested): Clarify windows build procedure.
+
+2010-03-14  Matthias Klose  <doko@ubuntu.com>
+
+	* src/x86/ffi64.c: Fix typo in comment.
+	* src/x86/ffi.c: Use /* ... */ comment style.
+
+2010-07-07   Neil Roberts <neil@linux.intel.com>
+
+	* src/x86/sysv.S (ffi_call_SYSV): Align the stack pointer to
+	16-bytes.
+
+2010-07-02  Jakub Jelinek  <jakub@redhat.com>
+
+	* Makefile.am (AM_MAKEFLAGS): Pass also mandir to submakes.
+	* Makefile.in: Regenerated.
+
+2010-05-19  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
+
+	* configure.ac (libffi_cv_as_x86_pcrel): Check for illegal in as
+	output, too.
+	(libffi_cv_as_ascii_pseudo_op): Check for .ascii.
+	(libffi_cv_as_string_pseudo_op): Check for .string.
+	* configure: Regenerate.
+	* fficonfig.h.in: Regenerate.
+	* src/x86/sysv.S (.eh_frame): Use .ascii, .string or error.
+
+2010-04-07  Jakub Jelinek  <jakub@redhat.com>
+
+	* regex.c (byte_re_match_2_internal): Avoid set but not used
+	warning.
+
+2010-04-02  Ralf Wildenhues  <Ralf.Wildenhues@gmx.de>
+
+	* Makefile.in: Regenerate.
+	* aclocal.m4: Regenerate.
+	* include/Makefile.in: Regenerate.
+	* man/Makefile.in: Regenerate.
+	* testsuite/Makefile.in: Regenerate.
+
+2010-03-15  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
+
+	* configure.ac (libffi_cv_as_x86_64_unwind_section_type): New test.
+	* configure: Regenerate.
+	* fficonfig.h.in: Regenerate.
+	* libffi/src/x86/unix64.S (.eh_frame)
+	[HAVE_AS_X86_64_UNWIND_SECTION_TYPE]: Use @unwind section type.
+
+2010-02-24  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
+
+	* doc/libffi.texi (The Closure API): Fix typo.
+	* doc/libffi.info: Remove.
+
+2010-02-15  Matthias Klose  <doko@ubuntu.com>
+
+	* src/arm/sysv.S (__ARM_ARCH__): Define for processor
+	__ARM_ARCH_7EM__.
+
 2010-01-07  Rainer Orth  <ro@CeBiTec.Uni-Bielefeld.DE>
 
 	PR libffi/40701

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-460116-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 460116;
 var summary = 'Condition propagation folding constants';

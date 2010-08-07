@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-365869.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 365869;
 var summary = 'strict warning for object literal with duplicate propery names';
