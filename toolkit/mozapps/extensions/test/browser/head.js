@@ -15,14 +15,22 @@ const CHROMEROOT = "chrome://mochikit/content/" + RELATIVE_DIR;
 const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
+const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
 
 var gPendingTests = [];
 var gTestsRun = 0;
 
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
+// Turn off remote results in searches
+Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 0);
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+  try {
+    Services.prefs.clearUserPref(PREF_SEARCH_MAXRESULTS);
+  }
+  catch (e) {
+  }
 });
 
 function add_test(test) {
