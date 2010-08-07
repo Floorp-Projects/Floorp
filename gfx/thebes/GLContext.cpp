@@ -309,7 +309,61 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
+
+    if (mInitialized) {
+        InitExtensions();
+    }
+
     return mInitialized;
+}
+
+// should match the order of GLExtensions
+static const char *sExtensionNames[] = {
+    "GL_EXT_framebuffer_object",
+    "GL_ARB_framebuffer_object",
+    "GL_EXT_bgra",
+    "GL_EXT_texture_format_BGRA8888",
+    "GL_OES_depth24",
+    "GL_OES_depth32",
+    "GL_OES_stencil8",
+    "GL_OES_texture_npot",
+    "GL_OES_depth_texture",
+    "GL_OES_packed_depth_stencil",
+    "GL_IMG_read_format",
+    "GL_EXT_read_format_bgra",
+    NULL
+};
+
+void
+GLContext::InitExtensions()
+{
+    MakeCurrent();
+    const GLubyte *extensions = fGetString(LOCAL_GL_EXTENSIONS);
+    char *exts = strdup((char *)extensions);
+
+    printf_stderr("GL extensions: %s\n", exts);
+
+    char *s = exts;
+    bool done = false;
+    while (!done) {
+        char *space = strchr(s, ' ');
+        if (space) {
+            *space = '\0';
+        } else {
+            done = true;
+        }
+
+        for (int i = 0; sExtensionNames[i]; ++i) {
+            if (strcmp(s, sExtensionNames[i]) == 0) {
+                printf_stderr("Found extension %s\n", s);
+                mAvailableExtensions[i] = 1;
+            }
+        }
+
+        s = space+1;
+    }
+
+    free(exts);
 }
 
 PRBool
@@ -479,6 +533,9 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 
     GLint viewport[4];
 
+    bool useDepthStencil =
+        !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
+
     // save a few things for later restoring
     fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
     fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*) &curBoundFramebuffer);
@@ -496,7 +553,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
         fGenFramebuffers(1, &mOffscreenFBO);
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
 
-        if (depth && stencil && !mIsGLES2) {
+        if (depth && stencil && useDepthStencil) {
             fGenRenderbuffers(1, &mOffscreenDepthRB);
         } else {
             if (depth) {
@@ -529,18 +586,35 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                     aSize.width, aSize.height,
                     0,
                     LOCAL_GL_RGB,
+#ifdef XP_WIN
+                    LOCAL_GL_UNSIGNED_BYTE,
+#else
                     mIsGLES2 ? LOCAL_GL_UNSIGNED_SHORT_5_6_5
                              : LOCAL_GL_UNSIGNED_BYTE,
+#endif
                     NULL);
     }
 
-    if (depth && stencil && !mIsGLES2) {
+    if (depth && stencil && useDepthStencil) {
         fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
         fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
                              LOCAL_GL_DEPTH24_STENCIL8,
                              aSize.width, aSize.height);
     } else {
         if (depth) {
+            GLenum depthType;
+            if (mIsGLES2) {
+                if (IsExtensionSupported(OES_depth32)) {
+                    depthType = LOCAL_GL_DEPTH_COMPONENT32;
+                } else if (IsExtensionSupported(OES_depth24)) {
+                    depthType = LOCAL_GL_DEPTH_COMPONENT24;
+                } else {
+                    depthType = LOCAL_GL_DEPTH_COMPONENT16;
+                }
+            } else {
+                depthType = LOCAL_GL_DEPTH_COMPONENT24;
+            }
+
             fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
             fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
                                  mIsGLES2 ? LOCAL_GL_DEPTH_COMPONENT16
@@ -565,7 +639,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                               mOffscreenTexture,
                               0);
 
-        if (depth && stencil && !mIsGLES2) {
+        if (depth && stencil && useDepthStencil) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_DEPTH_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
@@ -603,6 +677,10 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 
     if (firstTime) {
         UpdateActualFormat();
+
+        printf_stderr("Created offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d\n",
+                      mActualFormat.red, mActualFormat.green, mActualFormat.blue, mActualFormat.alpha,
+                      mActualFormat.depth, mActualFormat.stencil);
     }
 
     // We're good, and the framebuffer is already attached, so let's
@@ -665,7 +743,16 @@ GLContext::ClearSafely()
 void
 GLContext::UpdateActualFormat()
 {
-    // TODO
+    ContextFormat nf;
+
+    fGetIntegerv(LOCAL_GL_RED_BITS, (GLint*) &nf.alpha);
+    fGetIntegerv(LOCAL_GL_GREEN_BITS, (GLint*) &nf.alpha);
+    fGetIntegerv(LOCAL_GL_BLUE_BITS, (GLint*) &nf.alpha);
+    fGetIntegerv(LOCAL_GL_ALPHA_BITS, (GLint*) &nf.alpha);
+    fGetIntegerv(LOCAL_GL_DEPTH_BITS, (GLint*) &nf.depth);
+    fGetIntegerv(LOCAL_GL_STENCIL_BITS, (GLint*) &nf.depth);
+
+    mActualFormat = nf;
 }
 
 void
@@ -803,6 +890,69 @@ GLContext::ReadTextureImage(GLuint aTexture,
     fViewport(oldvp[0], oldvp[1], oldvp[2], oldvp[3]);
 
     return isurf.forget();
+}
+
+void
+GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
+                                      GLsizei aWidth, GLsizei aHeight,
+                                      gfxImageSurface *aDest)
+{
+    MakeCurrent();
+
+    if (aDest->Format() != gfxASurface::ImageFormatARGB32 &&
+        aDest->Format() != gfxASurface::ImageFormatRGB24)
+    {
+        NS_WARNING("ReadPixelsIntoImageSurface called with invalid image format");
+        return;
+    }
+
+    if (aDest->Width() != aWidth ||
+        aDest->Height() != aHeight ||
+        aDest->Stride() != aWidth * 4)
+    {
+        NS_WARNING("ReadPixelsIntoImageSurface called with wrong size or stride surface");
+        return;
+    }
+
+    GLint currentPackAlignment = 0;
+    fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &currentPackAlignment);
+    fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+
+    // defaults for desktop
+    GLenum format = LOCAL_GL_BGRA;
+    GLenum datatype = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+    bool swap = false;
+
+    if (IsGLES2()) {
+        datatype = LOCAL_GL_UNSIGNED_BYTE;
+
+        if (IsExtensionSupported(gl::GLContext::EXT_read_format_bgra) ||
+            IsExtensionSupported(gl::GLContext::IMG_read_format) ||
+            IsExtensionSupported(gl::GLContext::EXT_bgra))
+        {
+            format = LOCAL_GL_BGRA;
+        } else {
+            format = LOCAL_GL_RGBA;
+            swap = true;
+        }
+    }
+
+    fReadPixels(0, 0, aWidth, aHeight,
+                format, datatype,
+                aDest->Data());
+
+    if (swap) {
+        // swap B and R bytes
+        for (int j = 0; j < aHeight; ++j) {
+            PRUint32 *row = (PRUint32*) (aDest->Data() + aDest->Stride() * j);
+            for (int i = 0; i < aWidth; ++i) {
+                *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
+                row++;
+            }
+        }
+    }
+
+    fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
 }
 
 #ifdef DEBUG
