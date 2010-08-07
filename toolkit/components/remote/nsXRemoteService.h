@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
+/* vim:expandtab:shiftwidth=2:tabstop=8:
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -40,33 +40,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsQtRemoteService_h__
-#define __nsQtRemoteService_h__
+#ifndef NSXREMOTESERVICE_H
+#define NSXREMOTESERVICE_H
 
-#include "nsXRemoteService.h"
+#include "nsString.h"
+
+#include "nsIRemoteService.h"
+#include "nsIObserver.h"
 #include <X11/Xlib.h>
+#include <X11/X.h>
 
-class RemoteEventHandlerWidget;
+class nsIDOMWindow;
+class nsIWeakReference;
 
-class nsQtRemoteService : public nsXRemoteService
+/**
+  Base class for GTK/Qt remote service
+*/
+class nsXRemoteService : public nsIRemoteService,
+                         public nsIObserver
 {
 public:
-  // We will be a static singleton, so don't use the ordinary methods.
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREMOTESERVICE  
+    NS_DECL_NSIOBSERVER
 
-  nsQtRemoteService();
 
+protected:
+    nsXRemoteService();
+
+    static PRBool HandleNewProperty(Window aWindowId,Display* aDisplay,
+                                    Time aEventTime, Atom aChangedAtom,
+                                    nsIWeakReference* aDomWindow);
+    
+    void XRemoteBaseStartup(const char *aAppName, const char *aProfileName);
+
+    void HandleCommandsFor(Window aWindowId);
+    static nsXRemoteService *sRemoteImplementation;
 private:
-  ~nsQtRemoteService() { };
+    void EnsureAtoms();
+    static const char* HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
+                                     PRUint32 aTimestamp);
 
-  virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                              PRUint32 aTimestamp);
+    static const char* HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
+                                         PRUint32 aTimestamp);
 
-  void PropertyNotifyEvent(XEvent *evt);
-  friend class MozQRemoteEventHandlerWidget;
+    virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
+                                                PRUint32 aTimestamp) = 0;
 
-  QWidget *mServerWindow;
+    nsCString mAppName;
+    nsCString mProfileName;
+
+    static Atom sMozVersionAtom;
+    static Atom sMozLockAtom;
+    static Atom sMozCommandAtom;
+    static Atom sMozResponseAtom;
+    static Atom sMozUserAtom;
+    static Atom sMozProfileAtom;
+    static Atom sMozProgramAtom;
+    static Atom sMozCommandLineAtom;
 };
 
-#endif // __nsQtRemoteService_h__
+#endif // NSXREMOTESERVICE_H
