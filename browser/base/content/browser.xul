@@ -1089,7 +1089,6 @@
 #endif
 
 </vbox>
-<iframe id="tab-view" transparent="true" flex="1" src="chrome://browser/content/tabview.html" />
 </deck>
 
 </window>
