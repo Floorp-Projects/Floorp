@@ -36,6 +36,15 @@
 
 // New API methods can be added to here.
 let TabView = {
+  init: function TabView_init() {
+    var iframe = document.createElement("iframe");
+    iframe.id = "tab-view";
+    iframe.setAttribute("transparent", "true");
+    iframe.flex = 1;
+    iframe.setAttribute("src", "chrome://browser/content/tabview.html");
+    document.getElementById("tab-view-deck").appendChild(iframe);
+  },
+
   isVisible: function() {
     return (window.document.getElementById("tab-view-deck").selectedIndex == 1);
   },

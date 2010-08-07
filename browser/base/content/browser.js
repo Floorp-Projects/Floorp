@@ -1521,6 +1521,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gSyncUI.init();
 #endif
 
+  TabView.init();
+
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
 
