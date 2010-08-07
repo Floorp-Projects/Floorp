@@ -794,6 +794,48 @@ stubs::IncVp(VMFrame &f, Value *vp)
 }
 
 void JS_FASTCALL
+stubs::LocalInc(VMFrame &f, uint32 slot)
+{
+    double d;
+    if (!ValueToNumber(f.cx, f.regs.sp[-2], &d))
+        THROW();
+    f.regs.sp[-2].setNumber(d);
+    f.regs.sp[-1].setNumber(d + 1);
+    f.fp->slots()[slot] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
+stubs::LocalDec(VMFrame &f, uint32 slot)
+{
+    double d;
+    if (!ValueToNumber(f.cx, f.regs.sp[-2], &d))
+        THROW();
+    f.regs.sp[-2].setNumber(d);
+    f.regs.sp[-1].setNumber(d - 1);
+    f.fp->slots()[slot] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
+stubs::IncLocal(VMFrame &f, uint32 slot)
+{
+    double d;
+    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
+        THROW();
+    f.regs.sp[-1].setNumber(d + 1);
+    f.fp->slots()[slot] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
+stubs::DecLocal(VMFrame &f, uint32 slot)
+{
+    double d;
+    if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
+        THROW();
+    f.regs.sp[-1].setNumber(d - 1);
+    f.fp->slots()[slot] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
 stubs::DefFun(VMFrame &f, uint32 index)
 {
     bool doSet;
