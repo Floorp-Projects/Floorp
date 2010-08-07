@@ -668,6 +668,143 @@ GLContext::UpdateActualFormat()
     // TODO
 }
 
+void
+GLContext::MarkDestroyed()
+{
+    MakeCurrent();
+    DeleteOffscreenFBO();
+    memset(&mFunctionListStartSentinel, 0, &mFunctionListEndSentinel - &mFunctionListStartSentinel);
+}
+
+already_AddRefed<gfxImageSurface>
+GLContext::ReadTextureImage(GLuint aTexture,
+                            const gfxIntSize& aSize,
+                            GLenum aTextureFormat)
+{
+    MakeCurrent();
+
+    nsRefPtr<gfxImageSurface> isurf;
+
+    GLint oldrb, oldfb, oldprog, oldvp[4], oldPackAlignment;
+    GLint success;
+
+    GLuint rb = 0, fb = 0;
+    GLuint vs = 0, fs = 0, prog = 0;
+
+    const char *vShader =
+        "attribute vec4 aVertex;\n"
+        "attribute vec2 aTexCoord;\n"
+        "varying vec2 vTexCoord;\n"
+        "void main() { gl_Position = aVertex; vTexCoord = aTexCoord; }";
+    const char *fShader =
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "varying vec2 vTexCoord;\n"
+        "uniform sampler2D uTexture;\n"
+        "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }";
+
+    float verts[4*4] = {
+        -1.0f, -1.0f, 0.0f, 1.0f,
+         1.0f, -1.0f, 0.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f,
+         1.0f,  1.0f, 0.0f, 1.0f
+    };
+
+    float texcoords[2*4] = {
+        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f
+    };
+
+    fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &oldrb);
+    fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &oldfb);
+    fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &oldprog);
+    fGetIntegerv(LOCAL_GL_VIEWPORT, oldvp);
+    fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &oldPackAlignment);
+
+    fGenRenderbuffers(1, &rb);
+    fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
+    fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, LOCAL_GL_RGBA,
+                         aSize.width, aSize.height);
+
+    fGenFramebuffers(1, &fb);
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
+    fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                             LOCAL_GL_RENDERBUFFER, rb);
+
+    if (fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) !=
+        LOCAL_GL_FRAMEBUFFER_COMPLETE)
+    {
+        goto cleanup;
+    }
+
+    vs = fCreateShader(LOCAL_GL_VERTEX_SHADER);
+    fs = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
+    fShaderSource(vs, 1, (const GLchar**) &vShader, NULL);
+    fShaderSource(fs, 1, (const GLchar**) &fShader, NULL);
+    prog = fCreateProgram();
+    fAttachShader(prog, vs);
+    fAttachShader(prog, fs);
+    fBindAttribLocation(prog, 0, "aVertex");
+    fBindAttribLocation(prog, 1, "aTexCoord");
+    fLinkProgram(prog);
+
+    fGetProgramiv(prog, LOCAL_GL_LINK_STATUS, &success);
+    if (!success) {
+        goto cleanup;
+    }
+
+    fUseProgram(prog);
+
+    fEnableVertexAttribArray(0);
+    fEnableVertexAttribArray(1);
+
+    fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, verts);
+    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, texcoords);
+
+    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
+
+    fUniform1i(fGetUniformLocation(prog, "uTexture"), 0);
+
+    fViewport(0, 0, aSize.width, aSize.height);
+
+    fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+
+    fDisableVertexAttribArray(1);
+    fDisableVertexAttribArray(0);
+
+    isurf = new gfxImageSurface(aSize, gfxASurface::ImageFormatARGB32);
+    if (!isurf || isurf->CairoStatus()) {
+        isurf = nsnull;
+        goto cleanup;
+    }
+
+    if (oldPackAlignment != 4)
+        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+
+    fReadPixels(0, 0, aSize.width, aSize.height,
+                LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
+                isurf->Data());
+
+    if (oldPackAlignment != 4)
+        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, oldPackAlignment);
+
+ cleanup:
+    // note that deleting 0 has no effect in any of these calls
+    fDeleteRenderbuffers(1, &rb);
+    fDeleteFramebuffers(1, &fb);
+    fDeleteShader(vs);
+    fDeleteShader(fs);
+    fDeleteProgram(prog);
+
+    fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, oldrb);
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, oldfb);
+    fUseProgram(oldprog);
+    fViewport(oldvp[0], oldvp[1], oldvp[2], oldvp[3]);
+
+    return isurf.forget();
+}
+
 #ifdef DEBUG
 
 void
