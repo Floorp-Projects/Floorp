@@ -835,59 +835,74 @@ Narcissus.jsexec = (function() {
         jsdefs.defineProperty(proto, "constructor", this, false, false, true);
     }
 
+    function getPropertyDescriptor(obj, name) {
+        while (obj) {
+            if (({}).hasOwnProperty.call(obj, name))
+                return Object.getOwnPropertyDescriptor(obj, name);
+            obj = Object.getPrototypeOf(obj);
+        }
+    }
+
+    function getOwnProperties(obj) {
+        var map = {};
+        for (var name in Object.getOwnPropertyNames(obj))
+            map[name] = Object.getOwnPropertyDescriptor(obj, name);
+        return map;
+    }
+
     // Returns a new function wrapped with a Proxy.
-    function newFunction(n,x) {
-        var f = new FunctionObject(n, x.scope);
-        var p = Proxy.createFunction(
+    function newFunction(n, x) {
+        var fobj = new FunctionObject(n, x.scope);
 
-                // Handler function copied from
-                //  http://wiki.ecmascript.org/doku.php?id=harmony:proxies&s=proxy%20object#examplea_no-op_forwarding_proxy
-                function(obj) { return {
-                    getOwnPropertyDescriptor: function(name) {
-                        var desc = Object.getOwnPropertyDescriptor(obj);
+        // Handler copied from
+        // http://wiki.ecmascript.org/doku.php?id=harmony:proxies&s=proxy%20object#examplea_no-op_forwarding_proxy
+        var handler = {
+            getOwnPropertyDescriptor: function(name) {
+                var desc = Object.getOwnPropertyDescriptor(fobj, name);
 
-                        // a trapping proxy's properties must always be configurable
-                        desc.configurable = true;
-                        return desc;
-                     },
-                    getPropertyDescriptor: function(name) {
-                        var desc = Object.getPropertyDescriptor(obj); //assumed
+                // a trapping proxy's properties must always be configurable
+                desc.configurable = true;
+                return desc;
+            },
+            getPropertyDescriptor: function(name) {
+                var desc = getPropertyDescriptor(fobj, name);
 
-                        // a trapping proxy's properties must always be configurable
-                        desc.configurable = true;
-                        return desc;
-                    },
-                    getOwnPropertyNames: function() {
-                        return Object.getOwnPropertyNames(obj);
-                    },
-                    defineProperty: function(name, desc) {
-                        Object.defineProperty(obj, name, desc);
-                    },
-                    delete: function(name) { return delete obj[name]; },
-                    fix: function() {
-                        if (Object.isFrozen(obj)) {
-                            return Object.getOwnProperties(obj); // assumed
-                        }
+                // a trapping proxy's properties must always be configurable
+                desc.configurable = true;
+                return desc;
+            },
+            getOwnPropertyNames: function() {
+                return Object.getOwnPropertyNames(fobj);
+            },
+            defineProperty: function(name, desc) {
+                Object.defineProperty(fobj, name, desc);
+            },
+            delete: function(name) { return delete fobj[name]; },
+            fix: function() {
+                if (Object.isFrozen(fobj)) {
+                    return getOwnProperties(fobj);
+                }
 
-                        // As long as obj is not frozen, the proxy won't allow itself to be fixed.
-                        return undefined; // will cause a TypeError to be thrown
-                    },
+                // As long as fobj is not frozen, the proxy won't allow itself to be fixed.
+                return undefined; // will cause a TypeError to be thrown
+            },
 
-                    has: function(name) { return name in obj; },
-                    hasOwn: function(name) { return ({}).hasOwnProperty.call(obj, name); },
-                    get: function(receiver, name) { return obj[name]; },
+            has: function(name) { return name in fobj; },
+            hasOwn: function(name) { return ({}).hasOwnProperty.call(fobj, name); },
+            get: function(receiver, name) { return fobj[name]; },
 
-                    // bad behavior when set fails in non-strict mode
-                    set: function(receiver, name, val) { obj[name] = val; return true; },
-                    enumerate: function() {
-                        var result = [];
-                        for (name in obj) { result.push(name); };
-                        return result;
-                    },
-                    enumerateOwn: function() { return Object.keys(obj); } };
-                }(f),
-                function() { return f.__call__(this, arguments, x); },
-                function() { return f.__construct__(arguments, x); });
+            // bad behavior when set fails in non-strict mode
+            set: function(receiver, name, val) { fobj[name] = val; return true; },
+            enumerate: function() {
+                var result = [];
+                for (name in fobj) { result.push(name); };
+                return result;
+            },
+            keys: function() { return Object.keys(fobj); }
+        };
+        var p = Proxy.createFunction(handler,
+                                     function() { return fobj.__call__(this, arguments, x); },
+                                     function() { return fobj.__construct__(arguments, x); });
         return p;
     }
 
