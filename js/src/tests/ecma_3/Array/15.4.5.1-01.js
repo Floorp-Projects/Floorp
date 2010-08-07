@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.4.5.1-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = "(none)";
 var summary = '15.4.5.1 - array.length coverage';

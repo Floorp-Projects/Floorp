@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.1.4-04.js';
 
 var summary = "11.1.4 - XML Initializer - Comment hiding parsing/scanning";
 var BUGNUMBER = 311157;

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-449657.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 449657;
 var summary = 'JS_SealObject on Arrays';

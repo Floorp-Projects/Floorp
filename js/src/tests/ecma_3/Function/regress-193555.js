@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-193555.js';
 var UBound = 0;
 var BUGNUMBER = 193555;
 var summary = 'Testing access to function name from inside function';

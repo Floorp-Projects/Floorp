@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-462734-04.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 462734;
 var summary = 'Do not assert: pobj_ == obj2';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-306591.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 306591;
 var summary = 'String static methods';

@@ -1014,7 +1014,7 @@ nsContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& resul
 
   PRInt32 start = 0, end = 0;
   for (int count = 0; count < 4; count++) {
-    if (end >= marginStr.Length())
+    if ((PRUint32)end >= marginStr.Length())
       return PR_FALSE;
 
     // top, right, bottom, left
@@ -6318,7 +6318,7 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
 #ifdef MOZ_MEDIA
 #ifdef MOZ_OGG
   if (nsHTMLMediaElement::IsOggEnabled()) {
-    for (int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gOggTypes); ++i) {
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gOggTypes); ++i) {
       const char* type = nsHTMLMediaElement::gOggTypes[i];
       if (!strcmp(aType, type)) {
         docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
@@ -6333,7 +6333,7 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
 
 #ifdef MOZ_WEBM
   if (nsHTMLMediaElement::IsWebMEnabled()) {
-    for (int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gWebMTypes); ++i) {
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gWebMTypes); ++i) {
       const char* type = nsHTMLMediaElement::gWebMTypes[i];
       if (!strcmp(aType, type)) {
         docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");

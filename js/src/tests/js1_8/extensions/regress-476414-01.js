@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-476414-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 476414;
 var summary = 'Do not crash @ GetGCThingFlags';

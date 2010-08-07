@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-313967-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 313967;
 var summary = 'Compile time of N functions should be O(N)';

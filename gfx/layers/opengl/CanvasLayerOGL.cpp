@@ -54,12 +54,17 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 
-CanvasLayerOGL::~CanvasLayerOGL()
+void
+CanvasLayerOGL::Destroy()
 {
-  mOGLManager->MakeCurrent();
+  if (!mDestroyed) {
+    if (mTexture) {
+      GLContext *cx = mOGLManager->glForResources();
+      cx->MakeCurrent();
+      cx->fDeleteTextures(1, &mTexture);
+    }
 
-  if (mTexture) {
-    gl()->fDeleteTextures(1, &mTexture);
+    mDestroyed = PR_TRUE;
   }
 }
 
@@ -116,6 +121,10 @@ CanvasLayerOGL::MakeTexture()
 void
 CanvasLayerOGL::Updated(const nsIntRect& aRect)
 {
+  if (mDestroyed) {
+    return;
+  }
+
   NS_ASSERTION(mUpdatedRect.IsEmpty(),
                "CanvasLayer::Updated called more than once during a transaction!");
 
@@ -123,13 +132,15 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
 
   mUpdatedRect.UnionRect(mUpdatedRect, aRect);
 
-  if (mCanvasGLContext) {
+  if (mCanvasGLContext &&
+      mCanvasGLContext->GetContextType() == gl()->GetContextType())
+  {
     if (gl()->BindOffscreenNeedsTexture(mCanvasGLContext) &&
         mTexture == 0)
     {
       MakeTexture();
     }
-  } else if (mCanvasSurface) {
+  } else {
     PRBool newTexture = mTexture == 0;
     if (newTexture) {
       MakeTexture();
@@ -140,40 +151,50 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
     }
 
     nsRefPtr<gfxImageSurface> updatedAreaImageSurface;
-    nsRefPtr<gfxASurface> sourceSurface = mCanvasSurface;
+    if (mCanvasSurface) {
+      nsRefPtr<gfxASurface> sourceSurface = mCanvasSurface;
 
 #ifdef XP_WIN
-    if (sourceSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-      sourceSurface = static_cast<gfxWindowsSurface*>(sourceSurface.get())->GetImageSurface();
-      if (!sourceSurface)
-        sourceSurface = mCanvasSurface;
-    }
+      if (sourceSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
+        sourceSurface = static_cast<gfxWindowsSurface*>(sourceSurface.get())->GetImageSurface();
+        if (!sourceSurface)
+          sourceSurface = mCanvasSurface;
+      }
 #endif
 
 #if 0
-    // XXX don't copy, blah.
-    // but need to deal with stride on the gl side; do this later.
-    if (mCanvasSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-      gfxImageSurface *s = static_cast<gfxImageSurface*>(mCanvasSurface.get());
-      if (s->Format() == gfxASurface::ImageFormatARGB32 ||
-          s->Format() == gfxASurface::ImageFormatRGB24)
-      {
-        updatedAreaImageSurface = ...;
-      } else {
-        NS_WARNING("surface with format that we can't handle");
-        return;
-      }
-    } else
+      // XXX don't copy, blah.
+      // but need to deal with stride on the gl side; do this later.
+      if (mCanvasSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        gfxImageSurface *s = static_cast<gfxImageSurface*>(mCanvasSurface.get());
+        if (s->Format() == gfxASurface::ImageFormatARGB32 ||
+            s->Format() == gfxASurface::ImageFormatRGB24)
+        {
+          updatedAreaImageSurface = ...;
+        } else {
+          NS_WARNING("surface with format that we can't handle");
+          return;
+        }
+      } else
 #endif
-    {
+      {
+        updatedAreaImageSurface =
+          new gfxImageSurface(gfxIntSize(mUpdatedRect.width, mUpdatedRect.height),
+                              gfxASurface::ImageFormatARGB32);
+        nsRefPtr<gfxContext> ctx = new gfxContext(updatedAreaImageSurface);
+        ctx->Translate(gfxPoint(-mUpdatedRect.x, -mUpdatedRect.y));
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->SetSource(sourceSurface);
+        ctx->Paint();
+      }
+    } else if (mCanvasGLContext) {
       updatedAreaImageSurface =
         new gfxImageSurface(gfxIntSize(mUpdatedRect.width, mUpdatedRect.height),
                             gfxASurface::ImageFormatARGB32);
-      nsRefPtr<gfxContext> ctx = new gfxContext(updatedAreaImageSurface);
-      ctx->Translate(gfxPoint(-mUpdatedRect.x, -mUpdatedRect.y));
-      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx->SetSource(sourceSurface);
-      ctx->Paint();
+      mCanvasGLContext->ReadPixelsIntoImageSurface(mUpdatedRect.x, mUpdatedRect.y,
+                                                   mUpdatedRect.width,
+                                                   mUpdatedRect.height,
+                                                   updatedAreaImageSurface);
     }
 
     if (newTexture) {
@@ -222,12 +243,12 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   }
 
-  if (mCanvasGLContext) {
+  bool useGLContext = mCanvasGLContext &&
+    mCanvasGLContext->GetContextType() == gl()->GetContextType();
+
+  if (useGLContext) {
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     DEBUG_GL_ERROR_CHECK(gl());
-  }
-
-  if (mCanvasGLContext) {
     program = mOGLManager->GetRGBALayerProgram();
   } else {
     program = mOGLManager->GetBGRALayerProgram();
@@ -244,7 +265,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   DEBUG_GL_ERROR_CHECK(gl());
 
-  if (mCanvasGLContext) {
+  if (useGLContext) {
     gl()->UnbindTex2DOffscreen(mCanvasGLContext);
   }
 

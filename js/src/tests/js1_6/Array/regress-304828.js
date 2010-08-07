@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-304828.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 304828;
 var summary = 'Array Generic Methods';

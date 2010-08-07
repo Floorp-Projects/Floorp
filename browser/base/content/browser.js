@@ -2051,7 +2051,7 @@ function BrowserCloseTabOrWindow() {
 #endif
 
   // If the current tab is the last one, this will close the window.
-  gBrowser.removeCurrentTab();
+  gBrowser.removeCurrentTab({animate: true});
 }
 
 function BrowserTryToCloseWindow()

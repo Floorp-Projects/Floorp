@@ -80,6 +80,13 @@ var focusableElements = [
     "<iframe src=\"about:blank\" tabindex=\"1\"></iframe>",
     "<iframe src=\"about:blank\" contenteditable=\"true\"></iframe>",
 
+    "<iframe></iframe>",
+    "<iframe tabindex=\"-1\"></iframe>",
+    "<iframe tabindex=\"0\"></iframe>",
+    "<iframe tabindex=\"0\" disabled></iframe>",
+    "<iframe tabindex=\"1\"></iframe>",
+    "<iframe disabled></iframe>",
+
     "<img tabindex=\"-1\">",
     "<img tabindex=\"0\">",
     "<img tabindex=\"0\" disabled>",
@@ -179,13 +186,6 @@ var nonFocusableElements = [
     "<div tabindex=\"0\" disabled></div>",
     "<div disabled></div>",
 
-    "<iframe></iframe>",
-    "<iframe tabindex=\"-1\"></iframe>",
-    "<iframe tabindex=\"0\"></iframe>",
-    "<iframe tabindex=\"0\" disabled></iframe>",
-    "<iframe tabindex=\"1\"></iframe>",
-    "<iframe disabled></iframe>",
-
     "<img>",
     "<img disabled>",
     "<img contenteditable=\"true\">",
@@ -280,12 +280,19 @@ var focusableInContentEditable = [
     "<embed contenteditable=\"true\">",
 
     "<iframe src=\"about:blank\"></iframe>",
+    "<iframe></iframe>",
     "<iframe src=\"about:blank\" disabled></iframe>",
+    "<iframe disabled></iframe>",
     "<iframe src=\"about:blank\" tabindex=\"-1\"></iframe>",
+    "<iframe tabindex=\"-1\"></iframe>",
     "<iframe src=\"about:blank\" tabindex=\"0\"></iframe>",
+    "<iframe tabindex=\"0\"></iframe>",
     "<iframe src=\"about:blank\" tabindex=\"0\" disabled></iframe>",
+    "<iframe tabindex=\"0\" disabled></iframe>",
     "<iframe src=\"about:blank\" tabindex=\"1\"></iframe>",
+    "<iframe tabindex=\"1\"></iframe>",
     "<iframe src=\"about:blank\" contenteditable=\"true\"></iframe>",
+    "<iframe contenteditable=\"true\"></iframe>",
 
     "<img tabindex=\"-1\">",
     "<img tabindex=\"0\">",

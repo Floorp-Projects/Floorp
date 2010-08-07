@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355736.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355736;
 var summary = 'Decompilation of "[reserved]" has extra quotes';

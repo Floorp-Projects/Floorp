@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-234389.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 234389;
 var summary = 'Do not Crash when overloaded toString causes infinite recursion';

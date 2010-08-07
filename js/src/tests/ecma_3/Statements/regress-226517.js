@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-226517.js';
 var UBound = 0;
 var BUGNUMBER = 226517;
 var summary = '|finally| statement should execute even after a |return|';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-311157-02.js';
 
 var BUGNUMBER = 311157;
 var summary = 'Comment-hiding compromise left E4X parsing/scanning inconsistent';

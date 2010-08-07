@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '12.8-1-n.js';
 
 /**
    File Name:          12.8-1-n.js

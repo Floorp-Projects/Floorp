@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-188211.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 188211;
 var summary = 'Date.prototype.toLocaleString() error on future dates';

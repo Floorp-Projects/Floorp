@@ -88,7 +88,7 @@ float
 nsSVGGeometryFrame::GetStrokeWidth()
 {
   nsSVGElement *ctx = static_cast<nsSVGElement*>
-                                 (GetType() == nsGkAtoms::svgGlyphFrame ?
+                                 (mContent->IsNodeOfType(nsINode::eTEXT) ?
                                      mContent->GetParent() : mContent);
 
   return
@@ -101,7 +101,7 @@ nsresult
 nsSVGGeometryFrame::GetStrokeDashArray(gfxFloat **aDashes, PRUint32 *aCount)
 {
   nsSVGElement *ctx = static_cast<nsSVGElement*>
-                                 (GetType() == nsGkAtoms::svgGlyphFrame ?
+                                 (mContent->IsNodeOfType(nsINode::eTEXT) ?
                                      mContent->GetParent() : mContent);
   *aDashes = nsnull;
   *aCount = 0;
@@ -147,7 +147,7 @@ float
 nsSVGGeometryFrame::GetStrokeDashoffset()
 {
   nsSVGElement *ctx = static_cast<nsSVGElement*>
-                                 (GetType() == nsGkAtoms::svgGlyphFrame ?
+                                 (mContent->IsNodeOfType(nsINode::eTEXT) ?
                                      mContent->GetParent() : mContent);
 
   return

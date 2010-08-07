@@ -68,7 +68,6 @@
  * of not being provided.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.10.4.1-1.js';
 var BUGNUMBER = '61266';
 var summary = 'Passing a RegExp object to a RegExp() constructor';
 var statprefix = 'Applying RegExp() twice to pattern ';

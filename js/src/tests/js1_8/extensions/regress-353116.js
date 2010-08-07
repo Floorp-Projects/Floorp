@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-353116.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 353116;
 var summary = 'Improve errors messages for null, undefined properties';

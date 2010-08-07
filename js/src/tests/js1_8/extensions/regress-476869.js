@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-476869.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 476869;
 var summary = 'Do not assert: v != JSVAL_ERROR_COOKIE';

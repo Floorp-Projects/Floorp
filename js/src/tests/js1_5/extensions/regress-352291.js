@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352291.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352291;
 var summary = 'disassembly of regular expression';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352202.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352202;
 var summary = 'decompilation of for ((~x)["y"] in z)';

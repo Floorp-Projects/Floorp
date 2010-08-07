@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452346.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452346;
 var summary = 'Do not crash: @ Balloc';

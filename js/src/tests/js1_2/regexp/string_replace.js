@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'string_replace.js';
 
 /**
    Filename:     string_replace.js

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.1.4-02.js';
 
 var summary = "11.1.4 - XML Initializer should accept single CDATA Section";
 var BUGNUMBER = 257679;

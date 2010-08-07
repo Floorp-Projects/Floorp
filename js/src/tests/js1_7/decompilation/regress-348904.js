@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-348904.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 348904;
 var summary = 'decompilation for "let" in lvalue part of for..in';

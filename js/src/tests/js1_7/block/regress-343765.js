@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-343765.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 343765;
 var summary = 'Function defined in a let statement/expression does not work correctly outside the let scope';

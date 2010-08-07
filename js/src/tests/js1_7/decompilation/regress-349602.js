@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349602.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349602;
 var summary = 'decompilation of let with e4x literal';

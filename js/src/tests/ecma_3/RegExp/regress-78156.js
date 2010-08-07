@@ -48,7 +48,6 @@
  * across multiple lines, i.e. across '\n', '\r'.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-78156.js';
 var i = 0;
 var BUGNUMBER = 78156;
 var summary = 'Testing regular expressions with  ^, $, and the m flag -';

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-245308.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 245308;
 var summary = 'Don\'t Crash with nest try catch';

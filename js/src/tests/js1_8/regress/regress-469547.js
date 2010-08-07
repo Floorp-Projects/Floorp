@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-469547.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469547;
 var summary = 'Do not crash with: for each (let [,] in [[], [], null]) {}';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-460886-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 460886;
 var summary = 'Do not crash @ js_NewStringCopy';

@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.1.1.13.js';
 
 START("9.1.1.13 - XML Type [[AddInScopeNamespace]]");
 

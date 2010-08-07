@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'endLine.js';
 
 /**
    Filename:     endLine.js

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.4.4.11-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 312138;
 var summary = 'Array.sort should not eat exceptions';

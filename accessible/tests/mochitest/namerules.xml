@@ -69,8 +69,8 @@
 
     <!-- bricks -->
     <ruleset id="aria">
-      <rule attr="aria-label" type="string"/>
       <rule attr="aria-labelledby" type="ref"/>
+      <rule attr="aria-label" type="string"/>
     </ruleset>
 
     <ruleset id="htmlctrl_start">

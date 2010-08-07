@@ -46,7 +46,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=74474
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-74474-001.js';
 var UBound = 0;
 var BUGNUMBER = 74474;
 var summary = 'Testing switch statements with duplicate labels';

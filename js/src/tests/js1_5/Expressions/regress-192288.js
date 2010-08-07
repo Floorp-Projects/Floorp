@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-192288.js';
 var UBound = 0;
 var BUGNUMBER = 192288;
 var summary = 'Testing 0/0 inside functions ';

@@ -67,6 +67,7 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGContainerFrame.h"
+#include "nsSVGTextContainerFrame.h"
 #include "nsSVGLength2.h"
 #include "nsGenericElement.h"
 #include "nsSVGGraphicElement.h"
@@ -1357,9 +1358,23 @@ nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
 gfxRect
 nsSVGUtils::GetBBox(nsIFrame *aFrame)
 {
+  if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+    aFrame = aFrame->GetParent();
+  }
   gfxRect bbox;
   nsISVGChildFrame *svg = do_QueryFrame(aFrame);
   if (svg) {
+    // It is possible to apply a gradient, pattern, clipping path, mask or
+    // filter to text. When one of these facilities is applied to text
+    // the bounding box is the entire ‘text’ element in all
+    // cases.
+    nsSVGTextContainerFrame* metrics = do_QueryFrame(aFrame);
+    if (metrics) {
+      while (aFrame->GetType() != nsGkAtoms::svgTextFrame) {
+        aFrame = aFrame->GetParent();
+      }
+      svg = do_QueryFrame(aFrame);
+    }
     bbox = svg->GetBBoxContribution(gfxMatrix());
   } else {
     bbox = nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);

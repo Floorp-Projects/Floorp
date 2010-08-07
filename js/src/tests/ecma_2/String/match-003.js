@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'match-003.js';
 
 /**
  *  File Name:          String/match-003.js

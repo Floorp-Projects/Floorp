@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-309925-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 309925;
 var summary = 'Correctly parse Date strings with HH:MM';

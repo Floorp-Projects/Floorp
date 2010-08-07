@@ -1059,6 +1059,14 @@ PutStr(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+Now(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsdouble now = PRMJ_Now() / double(PRMJ_USEC_PER_MSEC);
+    JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL(now));
+    return true;
+}
+
+static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
@@ -2185,6 +2193,18 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     JS_ReportError(cx, "argument '%s' is not null or a heap-allocated thing",
                    badTraceArg);
     return JS_FALSE;
+}
+
+JSBool
+DumpObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *arg0 = NULL;
+    if (!JS_ConvertArguments(cx, argc, argv, "o", &arg0))
+        return JS_FALSE;
+
+    js_DumpObject(arg0);
+
+    return JS_TRUE;
 }
 
 #endif /* DEBUG */
@@ -3897,6 +3917,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("readline",       ReadLine,       0,0),
     JS_FN("print",          Print,          0,0),
     JS_FN("putstr",         PutStr,         0,0),
+    JS_FN("now",            Now,            0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
@@ -3922,6 +3943,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("disfile",        DisassFile,     1,0,0),
     JS_FS("dissrc",         DisassWithSrc,  1,0,0),
     JS_FN("dumpHeap",       DumpHeap,       0,0),
+    JS_FS("dumpObject",     DumpObject,     1,0,0),
     JS_FS("notes",          Notes,          1,0,0),
     JS_FS("tracing",        Tracing,        0,0,0),
     JS_FS("stats",          DumpStats,      1,0,0),
@@ -3989,6 +4011,7 @@ static const char *const shell_help_messages[] = {
 "readline()               Read a single line from stdin",
 "print([exp ...])         Evaluate and print expressions",
 "putstr([exp])            Evaluate and print expression without newline",
+"now()                    Return the current time with sub-ms precision",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
 "assertEq(actual, expected[, msg])\n"
@@ -4024,6 +4047,7 @@ static const char *const shell_help_messages[] = {
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",
+"dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
 "tracing([true|false|filename]) Turn bytecode execution tracing on/off.\n"
 "                         With filename, send to file.\n",
@@ -5061,7 +5085,7 @@ main(int argc, char **argv, char **envp)
     CALIBRATION_DELAY_COUNT = 0;
 #endif
 
-    rt = JS_NewRuntime(64L * 1024L * 1024L);
+    rt = JS_NewRuntime(128L * 1024L * 1024L);
     if (!rt)
         return 1;
 

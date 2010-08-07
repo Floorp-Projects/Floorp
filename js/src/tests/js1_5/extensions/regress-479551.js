@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-479551.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 479551;
 var summary = 'Do not assert: (cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread';

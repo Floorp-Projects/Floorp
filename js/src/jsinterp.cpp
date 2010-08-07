@@ -837,7 +837,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (down) {
         /* Propagate arg state for eval and the debugger API. */
         fp->callobj = down->callobj;
-        fp->argsobj = down->argsobj;
+        fp->argsobj = NULL;
         fp->fun = (script->staticLevel > 0) ? down->fun : NULL;
         fp->thisv = down->thisv;
         fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
@@ -4412,11 +4412,7 @@ BEGIN_CASE(JSOP_GETELEM)
                 /* Reload retval from the stack in the rare hole case. */
                 copyFrom = &regs.sp[-1];
             }
-        } else if (obj->isArguments()
-#ifdef JS_TRACER
-                   && !GetArgsPrivateNative(obj)
-#endif
-                  ) {
+        } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
 
             if (arg < obj->getArgsLength()) {
