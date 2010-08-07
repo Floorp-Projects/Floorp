@@ -1688,9 +1688,8 @@ class BindNameCompiler : public PICStubCompiler
 
     static void reset(ic::PICInfo &pic)
     {
-        RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(inlineJumpOffset(pic)),
-                         pic.slowPathStart);
+        PICRepatchBuffer repatcher(pic, pic.fastPathStart); 
+        repatcher.relink(pic.shapeGuard + inlineJumpOffset(pic), pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
