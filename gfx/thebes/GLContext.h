@@ -562,6 +562,40 @@ public:
                                                        const gfxIntSize& aSize,
                                                        GLenum aTextureFormat);
 
+    /**
+     * Call ReadPixels into an existing gfxImageSurface for the given bounds.
+     * The image surface must be using image format RGBA32 or RGB24.
+     */
+    void ReadPixelsIntoImageSurface(GLint aX, GLint aY, GLsizei aWidth, GLsizei aHeight,
+                                    gfxImageSurface *aDest);
+
+    /**
+     * Known GL extensions that can be queried by
+     * IsExtensionSupported.  The results of this are cached, and as
+     * such it's safe to use this even in performance critical code.
+     * If you add to this array, remember to add to the string names
+     * in GLContext.cpp.
+     */
+    enum GLExtensions {
+        EXT_framebuffer_object,
+        ARB_framebuffer_object,
+        EXT_bgra,
+        EXT_texture_format_BGRA8888,
+        OES_depth24,
+        OES_depth32,
+        OES_stencil8,
+        OES_texture_npot,
+        OES_depth_texture,
+        OES_packed_depth_stencil,
+        IMG_read_format,
+        EXT_read_format_bgra,
+        Extensions_Max
+    };
+
+    PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
+        return mAvailableExtensions[aKnownExtension];
+    }
+
 protected:
     PRPackedBool mInitialized;
     PRPackedBool mIsOffscreen;
@@ -585,6 +619,25 @@ protected:
     GLuint mOffscreenDepthRB;
     GLuint mOffscreenStencilRB;
 
+    // this should just be a std::bitset, but that ended up breaking
+    // MacOS X builds; see bug 584919.  We can replace this with one
+    // later on.
+    template<size_t setlen>
+    struct ExtensionBitset {
+        ExtensionBitset() {
+            for (int i = 0; i < setlen; ++i)
+                values[i] = false;
+        }
+
+        bool& operator[](const int index) {
+            NS_ASSERTION(index >= 0 && index < setlen, "out of range");
+            return values[index];
+        }
+
+        bool values[setlen];
+    };
+    ExtensionBitset<Extensions_Max> mAvailableExtensions;
+
     // Clear to transparent black, with 0 depth and stencil,
     // while preserving current ClearColor etc. values.
     // Useful for resizing offscreen buffers.
@@ -599,6 +652,7 @@ protected:
 
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
 
+    void InitExtensions();
     PRBool IsExtensionSupported(const char *extension);
 
     virtual already_AddRefed<TextureImage>
