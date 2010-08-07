@@ -700,7 +700,7 @@ window.TabItems = {
   // Function: init
   // Set up the necessary tracking to maintain the <TabItems>s.
   init: function() {
-    Utils.assert("TabManager must be initialized first", window.Tabs);
+    Utils.assert("TabManager must be initialized first", window.AllTabs);
     var self = this;
 
     // When a tab is opened, create the TabItem
