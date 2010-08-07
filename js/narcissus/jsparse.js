@@ -792,7 +792,7 @@ Narcissus.jsparse = (function() {
         }
     };
 
-    function CompilerContext(inFunction, builder) {
+    function StaticContext(inFunction, builder) {
         this.inFunction = inFunction;
         this.hasEmptyReturn = false;
         this.hasReturnWithValue = false;
@@ -804,7 +804,7 @@ Narcissus.jsparse = (function() {
         this.varDecls = [];
     }
 
-    CompilerContext.prototype = {
+    StaticContext.prototype = {
         bracketLevel: 0,
         curlyLevel: 0,
         parenLevel: 0,
@@ -1373,7 +1373,7 @@ Narcissus.jsparse = (function() {
         if (tt != LEFT_CURLY)
             t.unget();
 
-        var x2 = new CompilerContext(true, b);
+        var x2 = new StaticContext(true, b);
         var rp = t.save();
         if (x.inFunction) {
             /*
@@ -1428,7 +1428,7 @@ Narcissus.jsparse = (function() {
             } else {
                 // Only re-parse toplevel functions.
                 var x3 = x2;
-                x2 = new CompilerContext(true, b);
+                x2 = new StaticContext(true, b);
                 t.rewind(rp);
                 // Set a flag in case the builder wants to have different behavior
                 // on the second pass.
@@ -2241,7 +2241,7 @@ Narcissus.jsparse = (function() {
      */
     function parse(b, s, f, l) {
         var t = new jslex.Tokenizer(s, f, l);
-        var x = new CompilerContext(false, b);
+        var x = new StaticContext(false, b);
         var n = Script(t, x);
         if (!t.done)
             throw t.newSyntaxError("Syntax error");
