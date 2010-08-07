@@ -11336,7 +11336,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
     switch (argc) {
       case 1:
-        if (vp[2].isNumber()) {
+        if (vp[2].isNumber() && mode == JSOP_CALL) {
             if (native == js_math_ceil || native == js_math_floor || native == js_math_round) {
                 LIns* a = get(&vp[2]);
                 if (isPromote(a)) {
@@ -11368,7 +11368,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         break;
 
       case 2:
-        if (vp[2].isNumber() && vp[3].isNumber() &&
+        if (vp[2].isNumber() && vp[3].isNumber() && mode == JSOP_CALL &&
             (native == js_math_min || native == js_math_max)) {
             LIns* a = get(&vp[2]);
             LIns* b = get(&vp[3]);
