@@ -331,8 +331,18 @@ ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
 
 ThebesLayerOGL::~ThebesLayerOGL()
 {
-  mBuffer = nsnull;
-  DEBUG_GL_ERROR_CHECK(gl());
+  Destroy();
+}
+
+void
+ThebesLayerOGL::Destroy()
+{
+  if (!mDestroyed) {
+    mBuffer = nsnull;
+    DEBUG_GL_ERROR_CHECK(gl());
+
+    mDestroyed = PR_TRUE;
+  }
 }
 
 PRBool
