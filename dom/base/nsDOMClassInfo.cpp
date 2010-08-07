@@ -503,15 +503,15 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_DELPROPERTY |                                        \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
-  nsIXPCScriptable::WANT_OUTER_OBJECT |                                       \
-  nsIXPCScriptable::WANT_INNER_OBJECT |                                       \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
 
 #define INNER_WINDOW_SCRIPTABLE_FLAGS                                         \
- (COMMON_WINDOW_SCRIPTABLE_FLAGS)                                             \
+ (COMMON_WINDOW_SCRIPTABLE_FLAGS |                                            \
+  nsIXPCScriptable::WANT_OUTER_OBJECT)                                        \
 
 #define OUTER_WINDOW_SCRIPTABLE_FLAGS                                         \
  (COMMON_WINDOW_SCRIPTABLE_FLAGS |                                            \
+  nsIXPCScriptable::WANT_INNER_OBJECT |                                       \
   nsIXPCScriptable::WANT_NEWENUMERATE)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
@@ -7276,8 +7276,8 @@ nsCommonWindowSH::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 }
 
 NS_IMETHODIMP
-nsCommonWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                              JSObject * obj, JSObject * *_retval)
+nsInnerWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                             JSObject * obj, JSObject * *_retval)
 {
   nsGlobalWindow *origWin = nsGlobalWindow::FromWrapper(wrapper);
   nsGlobalWindow *win = origWin->GetOuterWindowInternal();
@@ -7304,12 +7304,12 @@ nsCommonWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx
 }
 
 NS_IMETHODIMP
-nsCommonWindowSH::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                              JSObject * obj, JSObject * *_retval)
+nsOuterWindowSH::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                             JSObject * obj, JSObject * *_retval)
 {
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
-  if (win->IsInnerWindow() || win->IsFrozen()) {
+  if (win->IsFrozen()) {
     // Return the inner window, or the outer if we're dealing with a
     // frozen outer.
 
@@ -7321,7 +7321,7 @@ nsCommonWindowSH::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx
     if (!inner) {
       // Yikes! No inner window! Instead of leaking the outer window into the
       // scope chain, let's return an error.
-
+      NS_ERROR("using an outer that doesn't have an inner?");
       *_retval = nsnull;
 
       return NS_ERROR_UNEXPECTED;
