@@ -20,6 +20,9 @@ var gServer;
 var gAddonInstalled = false;
 
 function test() {
+  // Turn on searching for this test
+  Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
+
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
