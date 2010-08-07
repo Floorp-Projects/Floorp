@@ -723,17 +723,12 @@ let Utils = {
 
   // ----------
   // Function: timeout
-  // wraps a delayed function call with try/catch
+  // delay a function call giving the timer as this
   timeout: function(func, delay) {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback({
       notify: function notify() {
-        try {
-          func();
-        }
-        catch(ex) {
-          Utils.log(timer, ex);
-        }
+        func.call(timer);
       }
     }, delay, timer.TYPE_ONE_SHOT);
   }
