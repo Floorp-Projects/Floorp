@@ -410,6 +410,11 @@ public:
 
     ~GLContextEGL()
     {
+        if (mOffscreenFBO) {
+            MakeCurrent();
+            DeleteOffscreenFBO();
+        }
+
         // If mGLWidget is non-null, then we've been given it by the GL context provider,
         // and it's managed by the widget implementation. In this case, We can't destroy
         // our contexts.
@@ -1291,6 +1296,8 @@ GLContextProviderEGL::GetGlobalContext()
     if (!triedToCreateContext && !gGlobalContext) {
         triedToCreateContext = true;
         gGlobalContext = CreateOffscreen(gfxIntSize(16, 16));
+        if (gGlobalContext)
+            gGlobalContext->SetIsGlobalSharedContext(PR_TRUE);
     }
 
     return gGlobalContext;
