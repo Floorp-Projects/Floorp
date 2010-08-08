@@ -436,11 +436,10 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Returns a <Rect> for the groupItem's bounds, including the title
   getBoundsWithTitle: function() {
     var b = this.getBounds();
-    var $container = iQ(this.container);
-    var $title = iQ('.tab-title', $container);
+    var $title = iQ(this.container).find('.tab-title');
     var height = b.height;
-    if ( typeof $title == 'number' )
-    	height = b.height + parseInt($title.height());
+    if ( $title.length )
+    	height += parseInt($title.height());
     return new Rect(b.left, b.top, b.width, height);
   },
 
