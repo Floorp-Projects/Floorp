@@ -1212,6 +1212,14 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           PRUint32 aFlags)
 {
+#ifdef DEBUG
+  if (aFlags & PAINT_WIDGET_LAYERS) {
+    nsIView* view = aFrame->GetView();
+    NS_ASSERTION(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame,
+      "PAINT_WIDGET_LAYERS should only be used on a display root that has a widget");
+  }
+#endif
+
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
 
@@ -1270,7 +1278,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   rv = aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
 
-  if (NS_SUCCEEDED(rv) && aFrame->GetType() == nsGkAtoms::pageContentFrame) {
+  nsIAtom* frameType = aFrame->GetType();
+  if (NS_SUCCEEDED(rv) && frameType == nsGkAtoms::pageContentFrame) {
+    NS_ASSERTION(!(aFlags & PAINT_WIDGET_LAYERS),
+      "shouldn't be painting with widget layers for page content frames");
     // We may need to paint out-of-flow frames whose placeholders are
     // on other pages. Add those pages to our display list. Note that
     // out-of-flow frames can't be placed after their placeholders so
@@ -1295,7 +1306,6 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                                      PAINT_IGNORE_VIEWPORT_SCROLLING |
                                      PAINT_HIDE_CARET);
 
-  nsIAtom* frameType = aFrame->GetType();
   // For the viewport frame in print preview/page layout we want to paint
   // the grey background behind the page, not the canvas color.
   if (frameType == nsGkAtoms::viewportFrame && 
@@ -1315,6 +1325,22 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     // can monkey with the contents if necessary.
     rv = presShell->AddCanvasBackgroundColorItem(
            builder, list, aFrame, canvasArea, aBackstop);
+
+    // If the passed in backstop color makes us draw something different from
+    // normal, we need to flush layers.
+    if ((aFlags & PAINT_WIDGET_LAYERS) && !willFlushLayers) {
+      nsIView* view = aFrame->GetView();
+      if (view) {
+        nscolor backstop = presShell->ComputeBackstopColor(view);
+        // The PresShell's canvas background color doesn't get updated until
+        // EnterPresShell, so this check has to be done after that.
+        nscolor canvasColor = presShell->GetCanvasBackground();
+        if (NS_ComposeColors(aBackstop, canvasColor) !=
+            NS_ComposeColors(backstop, canvasColor)) {
+          willFlushLayers = PR_TRUE;
+        }
+      }
+    }
   }
 
   builder.LeavePresShell(aFrame, dirtyRect);

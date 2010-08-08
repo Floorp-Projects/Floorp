@@ -75,6 +75,7 @@ class nsIFrame;
 class nsPresContext;
 class nsStyleSet;
 class nsIViewManager;
+class nsIView;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
 class nsAString;
@@ -137,8 +138,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe31f651a, 0x8c88, 0x4f19, \
-    { 0x8a, 0xb0, 0x00, 0x1f, 0x94, 0xed, 0x5f, 0xbd } }
+  { 0xe82aae32, 0x2d68, 0x452a, \
+    { 0x88, 0x95, 0x86, 0xc6, 0x07, 0xe1, 0xec, 0x91 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -961,6 +962,13 @@ public:
                                                  nsDisplayList& aList,
                                                  nsIFrame* aFrame,
                                                  const nsRect& aBounds) = 0;
+
+  /**
+   * Computes the backstop color for the view: transparent if in a transparent
+   * widget, otherwise the PresContext default background color. This color is
+   * only visible if the contents of the view as a whole are translucent.
+   */
+  virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot) = 0;
 
   void ObserveNativeAnonMutationsForPrint(PRBool aObserve)
   {
