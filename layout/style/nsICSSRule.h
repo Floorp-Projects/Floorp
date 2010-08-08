@@ -83,7 +83,7 @@ public:
 
   virtual PRInt32 GetType() const = 0;
 
-  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const = 0;
+  virtual nsIStyleSheet* GetStyleSheet() const = 0;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet) = 0;
   virtual void SetParentRule(mozilla::css::GroupRule* aRule) = 0;
 
