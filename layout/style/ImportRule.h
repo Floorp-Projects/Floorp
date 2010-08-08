@@ -64,6 +64,10 @@ public:
 
   DECL_STYLE_RULE_INHERIT
 
+#ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
+  using nsCSSRule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
+#endif
+
   // nsIStyleRule methods
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;

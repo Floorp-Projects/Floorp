@@ -348,10 +348,6 @@ public:
 
   virtual PRInt32 GetType() const;
 
-  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
-  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
-  virtual void SetParentRule(GroupRule* aRule);
-
   virtual already_AddRefed<nsICSSRule> Clone() const;
 
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
