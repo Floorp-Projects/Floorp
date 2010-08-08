@@ -1350,18 +1350,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
       nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
 
-  // Our list may contain content with different prescontexts at
-  // different zoom levels. 'rc' contains the nsIRenderingContext
-  // used for the previous display item, and lastPresContext is the
-  // prescontext for that item. We also cache the clip state for that
-  // item.
-  // XXX maybe we should stop that from being true by forcing content with
-  // different zoom levels into different layers?
-  nsRefPtr<nsIRenderingContext> rc;
-  nsPresContext* lastPresContext = nsnull;
-  nsRect currentClip;
-  PRBool setClipRect = PR_FALSE;
-
   PRUint32 i;
   // Update visible regions. We need perform visibility analysis again
   // because we may be asked to draw into part of a ThebesLayer that
@@ -1375,13 +1363,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   for (i = items.Length(); i > 0; --i) {
     ClippedDisplayItem* cdi = &items[i - 1];
 
-    presContext = cdi->mItem->GetUnderlyingFrame()->PresContext();
-    if (presContext->AppUnitsPerDevPixel() != appUnitsPerDevPixel) {
-      // Some kind of zooming detected, just redraw the entire item
-      nsRegion tmp(cdi->mItem->GetBounds(builder));
-      cdi->mItem->RecomputeVisibility(builder, &tmp);
-      continue;
-    }
+    NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == appUnitsPerDevPixel,
+                 "a thebes layer should contain items only at the same zoom");
 
     if (!cdi->mHasClipRect || cdi->mClipRect.Contains(visible.GetBounds())) {
       cdi->mItem->RecomputeVisibility(builder, &visible);
@@ -1404,13 +1387,22 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
   }
 
+  nsRefPtr<nsIRenderingContext> rc;
+  nsresult rv =
+    presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  if (NS_FAILED(rv))
+    return;
+  rc->Init(presContext->DeviceContext(), aContext);
+
+  nsRect currentClip;
+  PRBool setClipRect = PR_FALSE;
+
   for (i = 0; i < items.Length(); ++i) {
     ClippedDisplayItem* cdi = &items[i];
 
     if (cdi->mItem->GetVisibleRect().IsEmpty())
       continue;
 
-    presContext = cdi->mItem->GetUnderlyingFrame()->PresContext();
     // If the new desired clip state is different from the current state,
     // update the clip.
     if (setClipRect != cdi->mHasClipRect ||
@@ -1436,16 +1428,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       cdi->mTempLayerManager->BeginTransactionWithTarget(aContext);
       cdi->mTempLayerManager->EndTransaction(DrawThebesLayer, builder);
     } else {
-      if (presContext != lastPresContext) {
-        // Create a new rendering context with the right
-        // appunits-per-dev-pixel.
-        nsresult rv =
-          presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-        if (NS_FAILED(rv))
-          break;
-        rc->Init(presContext->DeviceContext(), aContext);
-        lastPresContext = presContext;
-      }
       cdi->mItem->Paint(builder, rc);
     }
   }
