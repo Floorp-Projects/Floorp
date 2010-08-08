@@ -1053,6 +1053,9 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
       }
     }
 
+    NS_ASSERTION(appUnitsPerDevPixel ==
+                   mContainerFrame->PresContext()->AppUnitsPerDevPixel(),
+                 "app units per dev pixel should be constant in a container");
     mContainerFrame->InvalidateWithFlags(
         bounds - mBuilder->ToReferenceFrame(mContainerFrame),
         nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
