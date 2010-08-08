@@ -343,7 +343,7 @@ public:
   void GetCssText(nsAString& aCssText);
   void SetCssText(const nsAString& aCssText);
   nsCSSStyleSheet* GetParentStyleSheet() { return mSheet; }
-  nsICSSGroupRule* GetParentRule() { return mParentRule; }
+  GroupRule* GetParentRule() { return mParentRule; }
   void GetSelectorText(nsAString& aSelectorText);
   void SetSelectorText(const nsAString& aSelectorText);
 
@@ -351,7 +351,7 @@ public:
 
   virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
-  virtual void SetParentRule(nsICSSGroupRule* aRule);
+  virtual void SetParentRule(GroupRule* aRule);
 
   virtual already_AddRefed<nsICSSRule> Clone() const;
 

@@ -44,7 +44,7 @@
 #define nsCSSRules_h_
 
 #include "nsCSSRule.h"
-#include "nsICSSGroupRule.h"
+#include "mozilla/css/GroupRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
@@ -54,79 +54,8 @@
 #include "nsCSSValue.h"
 
 class nsMediaList;
-template<class T> struct already_AddRefed;
 
-namespace mozilla {
-namespace css {
-class GroupRuleRuleList;
-}
-}
-
-#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
-virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const; \
-virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); \
-virtual void SetParentRule(nsICSSGroupRule* aRule); \
-virtual void MapRuleInfoInto(nsRuleData* aRuleData);
-
-#define DECL_STYLE_RULE_INHERIT  \
-DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
-nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
-
-// inherits from nsCSSRule and also implements methods on nsICSSGroupRule
-// so they can be shared between nsCSSMediaRule and nsCSSDocumentRule
-class nsCSSGroupRule : public nsCSSRule, public nsICSSGroupRule
-{
-protected:
-  nsCSSGroupRule();
-  nsCSSGroupRule(const nsCSSGroupRule& aCopy);
-  virtual ~nsCSSGroupRule();
-
-  // Implement part of nsISupports.
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-protected:
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
-public:
-
-  // implement part of nsIStyleRule and nsICSSRule
-  DECL_STYLE_RULE_INHERIT_NO_DOMRULE
-
-  // to help implement nsIStyleRule
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-public:
-  // implement nsICSSGroupRule
-  NS_IMETHOD AppendStyleRule(nsICSSRule* aRule);
-  NS_IMETHOD StyleRuleCount(PRInt32& aCount) const;
-  NS_IMETHOD GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
-  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
-  NS_IMETHOD DeleteStyleRuleAt(PRUint32 aIndex);
-  NS_IMETHOD InsertStyleRulesAt(PRUint32 aIndex,
-                                nsCOMArray<nsICSSRule>& aRules);
-  NS_IMETHOD ReplaceStyleRule(nsICSSRule *aOld, nsICSSRule *aNew);
-
-protected:
-  // to help implement nsIDOMCSSRule
-  nsresult AppendRulesToCssText(nsAString& aCssText);
-  // to implement methods on nsIDOMCSSRule
-  nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
-  nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
-
-  // to implement common methods on nsIDOMCSSMediaRule and
-  // nsIDOMCSSMozDocumentRule
-  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
-  nsresult InsertRule(const nsAString & aRule, PRUint32 aIndex,
-                      PRUint32* _retval);
-  nsresult DeleteRule(PRUint32 aIndex);
-
-  nsCOMArray<nsICSSRule> mRules;
-  nsRefPtr<mozilla::css::GroupRuleRuleList> mRuleCollection; // lazily constructed
-};
-
-class NS_FINAL_CLASS nsCSSMediaRule : public nsCSSGroupRule,
+class NS_FINAL_CLASS nsCSSMediaRule : public mozilla::css::GroupRule,
                                       public nsIDOMCSSMediaRule
 {
 public:
@@ -142,7 +71,7 @@ public:
 #endif
 
   // nsICSSRule methods
-  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override nsCSSGroupRule
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override GroupRule
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<nsICSSRule> Clone() const;
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
@@ -157,7 +86,7 @@ public:
   // nsIDOMCSSMediaRule interface
   NS_DECL_NSIDOMCSSMEDIARULE
 
-  // rest of nsICSSGroupRule interface
+  // rest of GroupRule
   NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
                                          nsMediaQueryResultCacheKey& aKey);
 
@@ -168,7 +97,7 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
 };
 
-class NS_FINAL_CLASS nsCSSDocumentRule : public nsCSSGroupRule,
+class NS_FINAL_CLASS nsCSSDocumentRule : public mozilla::css::GroupRule,
                                          public nsIDOMCSSMozDocumentRule
 {
 public:
@@ -198,7 +127,7 @@ public:
   // nsIDOMCSSMozDocumentRule interface
   NS_DECL_NSIDOMCSSMOZDOCUMENTRULE
 
-  // rest of nsICSSGroupRule interface
+  // rest of GroupRule
   NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
                                          nsMediaQueryResultCacheKey& aKey);
 

@@ -44,7 +44,26 @@
 #include "nsCOMPtr.h"
 #include "nsCSSStyleSheet.h"
 
-class nsICSSGroupRule;
+class nsIStyleSheet;
+class nsCSSStyleSheet;
+struct nsRuleData;
+template<class T> struct already_AddRefed;
+
+namespace mozilla {
+namespace css {
+class GroupRule;
+}
+}
+
+#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
+virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const; \
+virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); \
+virtual void SetParentRule(mozilla::css::GroupRule* aRule); \
+virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+
+#define DECL_STYLE_RULE_INHERIT  \
+DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
+virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
 class nsCSSRule {
 public:
@@ -77,7 +96,7 @@ public:
   }
 
   void
-  SetParentRule(nsICSSGroupRule* aRule)
+  SetParentRule(mozilla::css::GroupRule* aRule)
   {
     // We don't reference count this up reference. The group rule
     // will tell us when it's going away or when we're detached from
@@ -86,8 +105,8 @@ public:
   }
 
 protected:
-  nsCSSStyleSheet*    mSheet;
-  nsICSSGroupRule*    mParentRule;
+  nsCSSStyleSheet*         mSheet;
+  mozilla::css::GroupRule* mParentRule;
 };
 
 #endif /* nsCSSRule_h___ */

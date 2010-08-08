@@ -45,7 +45,7 @@
  */
 
 #include "mozilla/css/StyleRule.h"
-#include "nsICSSGroupRule.h"
+#include "mozilla/css/GroupRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
@@ -1225,7 +1225,7 @@ DOMCSSStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
     *aParentRule = nsnull;
     return NS_OK;
   }
-  nsICSSGroupRule* rule = Rule()->GetParentRule();
+  GroupRule* rule = Rule()->GetParentRule();
   if (!rule) {
     *aParentRule = nsnull;
     return NS_OK;
@@ -1390,7 +1390,7 @@ StyleRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 }
 
 /* virtual */ void
-StyleRule::SetParentRule(nsICSSGroupRule* aRule)
+StyleRule::SetParentRule(GroupRule* aRule)
 {
   nsCSSRule::SetParentRule(aRule);
 }
