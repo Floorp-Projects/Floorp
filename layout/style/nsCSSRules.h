@@ -53,9 +53,14 @@
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 
-class CSSGroupRuleRuleListImpl;
 class nsMediaList;
 template<class T> struct already_AddRefed;
+
+namespace mozilla {
+namespace css {
+class GroupRuleRuleList;
+}
+}
 
 #define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
 virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const; \
@@ -118,7 +123,7 @@ protected:
   nsresult DeleteRule(PRUint32 aIndex);
 
   nsCOMArray<nsICSSRule> mRules;
-  CSSGroupRuleRuleListImpl* mRuleCollection;
+  nsRefPtr<mozilla::css::GroupRuleRuleList> mRuleCollection; // lazily constructed
 };
 
 class NS_FINAL_CLASS nsCSSMediaRule : public nsCSSGroupRule,
