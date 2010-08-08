@@ -15,10 +15,10 @@ function test() {
   box.width = 300;
   box.height = 300;
 
-  let groupOne = new contentWindow.Group([], { bounds: box });
+  let groupOne = new contentWindow.GroupItem([], { bounds: box });
   ok(groupOne.isEmpty(), "This group is empty");
 
-  let groupTwo = new contentWindow.Group([], { bounds: box });
+  let groupTwo = new contentWindow.GroupItem([], { bounds: box });
 
   groupOne.addSubscriber(groupOne, "tabAdded", function() {
     groupOne.removeSubscriber(groupOne, "tabAdded");
@@ -46,12 +46,12 @@ function test() {
 
 
 function addTest(contentWindow, groupOneId, groupTwoId) {
-  let groupOne = contentWindow.Groups.group(groupOneId);
-  let groupTwo = contentWindow.Groups.group(groupTwoId);
+  let groupOne = contentWindow.GroupItems.group(groupOneId);
+  let groupTwo = contentWindow.GroupItems.group(groupTwoId);
   let groupOneTabItemCount = groupOne.getChildren().length;
   let groupTwoTabItemCount = groupTwo.getChildren().length;
-  is(groupOneTabItemCount, 1, "Group one has a tab"); 
-  is(groupTwoTabItemCount, 1, "Group two has two tabs"); 
+  is(groupOneTabItemCount, 1, "GroupItem one has a tab"); 
+  is(groupTwoTabItemCount, 1, "GroupItem two has two tabs"); 
   
   let srcElement = groupOne.getChild(0).container;
   ok(srcElement, "The source element exists");
