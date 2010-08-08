@@ -52,9 +52,8 @@ function nextAsyncText() {
     gotCloseEvent = true;
 
     const DEFAULT_ANIMATION_LENGTH = 250;
-    const MAX_WAIT_TIME = DEFAULT_ANIMATION_LENGTH * 4;
-    const INTERVAL_LENGTH = 100;
-    var polls = Math.ceil(MAX_WAIT_TIME / INTERVAL_LENGTH);
+    const MAX_WAIT_TIME = DEFAULT_ANIMATION_LENGTH * 5;
+    var polls = Math.ceil(MAX_WAIT_TIME / DEFAULT_ANIMATION_LENGTH);
     var pollTabRemoved = setInterval(function () {
       --polls;
       if (tab.parentNode && polls > 0)
@@ -67,7 +66,7 @@ function nextAsyncText() {
         nextAsyncText();
       else
         cleanup();
-    }, INTERVAL_LENGTH);
+    }, DEFAULT_ANIMATION_LENGTH);
   }, false);
 
   asyncTests.shift()(tab);
