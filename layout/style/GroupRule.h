@@ -40,47 +40,89 @@
  * rules, such as @media rules
  */
 
-#ifndef nsICSSGroupRule_h
-#define nsICSSGroupRule_h
+#ifndef mozilla_css_GroupRule_h__
+#define mozilla_css_GroupRule_h__
 
 #include "nsICSSRule.h"
+#include "nsCSSRule.h"
 #include "nsCOMArray.h"
+#include "nsAutoPtr.h"
 
 class nsPresContext;
 class nsMediaQueryResultCacheKey;
 
-#define NS_ICSS_GROUP_RULE_IID \
-{ 0xf1e3d96b, 0xe381, 0x4533, \
-  { 0xa6, 0x5e, 0xa5, 0x31, 0xba, 0xca, 0x93, 0x62 } }
+namespace mozilla {
+namespace css {
 
+class GroupRuleRuleList;
 
-class nsICSSGroupRule : public nsICSSRule {
+// inherits from nsCSSRule so it can be shared between
+// nsCSSMediaRule and nsCSSDocumentRule
+class GroupRule : public nsCSSRule, public nsICSSRule
+{
+protected:
+  GroupRule();
+  GroupRule(const GroupRule& aCopy);
+  virtual ~GroupRule();
+
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_GROUP_RULE_IID)
 
-  NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
+  // Implement part of nsISupports.
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
 
-  NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const = 0;
-  NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const = 0;
+  // implement part of nsIStyleRule and nsICSSRule
+  DECL_STYLE_RULE_INHERIT_NO_DOMRULE
+
+  // to help implement nsIStyleRule
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+public:
+  NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule);
+
+  NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const;
+  NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
 
   typedef nsCOMArray<nsICSSRule>::nsCOMArrayEnumFunc RuleEnumFunc;
-  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const = 0;
+  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
    * The next three methods should never be called unless you have first
    * called WillDirty() on the parent stylesheet.  After they are
    * called, DidDirty() needs to be called on the sheet.
    */
-  NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex) = 0;
+  NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex);
   NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex,
-                                 nsCOMArray<nsICSSRule>& aRules) = 0;
-  NS_IMETHOD  ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
+                                 nsCOMArray<nsICSSRule>& aRules);
+  NS_IMETHOD  ReplaceStyleRule(nsICSSRule *aOld, nsICSSRule *aNew);
 
   NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
                                          nsMediaQueryResultCacheKey& aKey) = 0;
-   
+
+protected:
+  // to help implement nsIDOMCSSRule
+  nsresult AppendRulesToCssText(nsAString& aCssText);
+  // to implement methods on nsIDOMCSSRule
+  nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
+  nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
+
+  // to implement common methods on nsIDOMCSSMediaRule and
+  // nsIDOMCSSMozDocumentRule
+  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
+  nsresult InsertRule(const nsAString & aRule, PRUint32 aIndex,
+                      PRUint32* _retval);
+  nsresult DeleteRule(PRUint32 aIndex);
+
+  nsCOMArray<nsICSSRule> mRules;
+  nsRefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSGroupRule, NS_ICSS_GROUP_RULE_IID)
+} // namespace css
+} // namespace mozilla
 
-#endif /* nsICSSGroupRule_h */
+#endif /* mozilla_css_GroupRule_h__ */

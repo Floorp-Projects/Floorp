@@ -73,13 +73,13 @@ namespace css = mozilla::css;
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 /* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
 /* virtual */ void _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { super::SetStyleSheet(aSheet); }  \
-/* virtual */ void _class::SetParentRule(nsICSSGroupRule* aRule) { super::SetParentRule(aRule); }  \
+/* virtual */ void _class::SetParentRule(css::GroupRule* aRule) { super::SetParentRule(aRule); }  \
 nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; return this; }  \
 /* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
 
 #define IMPL_STYLE_RULE_INHERIT2(_class, super) \
 /* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
-/* virtual */ void  _class::SetParentRule(nsICSSGroupRule* aRule) { super::SetParentRule(aRule); }  \
+/* virtual */ void  _class::SetParentRule(css::GroupRule* aRule) { super::SetParentRule(aRule); }  \
 /* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
 
 // -------------------------------
@@ -92,7 +92,7 @@ namespace css {
 class NS_FINAL_CLASS GroupRuleRuleList : public nsICSSRuleList
 {
 public:
-  GroupRuleRuleList(nsICSSGroupRule *aGroupRule);
+  GroupRuleRuleList(GroupRule *aGroupRule);
 
   NS_DECL_ISUPPORTS
 
@@ -106,10 +106,10 @@ private:
   ~GroupRuleRuleList();
 
 private:
-  nsICSSGroupRule* mGroupRule;
+  GroupRule* mGroupRule;
 };
 
-GroupRuleRuleList::GroupRuleRuleList(nsICSSGroupRule *aGroupRule)
+GroupRuleRuleList::GroupRuleRuleList(GroupRule *aGroupRule)
 {
   // Not reference counted to avoid circular references.
   // The rule will tell us when its going away.
@@ -576,11 +576,6 @@ NS_NewCSSImportRule(css::ImportRule** aInstancePtrResult,
   return NS_OK;
 }
 
-nsCSSGroupRule::nsCSSGroupRule()
-  : nsCSSRule()
-{
-}
-
 static PRBool
 CloneRuleInto(nsICSSRule* aRule, void* aArray)
 {
@@ -589,22 +584,30 @@ CloneRuleInto(nsICSSRule* aRule, void* aArray)
   return PR_TRUE;
 }
 
+namespace mozilla {
+namespace css {
+
+GroupRule::GroupRule()
+  : nsCSSRule()
+{
+}
+
 static PRBool
 SetParentRuleReference(nsICSSRule* aRule, void* aParentRule)
 {
-  nsCSSGroupRule* parentRule = static_cast<nsCSSGroupRule*>(aParentRule);
+  GroupRule* parentRule = static_cast<GroupRule*>(aParentRule);
   aRule->SetParentRule(parentRule);
   return PR_TRUE;
 }
 
-nsCSSGroupRule::nsCSSGroupRule(const nsCSSGroupRule& aCopy)
+GroupRule::GroupRule(const GroupRule& aCopy)
   : nsCSSRule(aCopy)
 {
-  const_cast<nsCSSGroupRule&>(aCopy).mRules.EnumerateForwards(CloneRuleInto, &mRules);
+  const_cast<GroupRule&>(aCopy).mRules.EnumerateForwards(CloneRuleInto, &mRules);
   mRules.EnumerateForwards(SetParentRuleReference, this);
 }
 
-nsCSSGroupRule::~nsCSSGroupRule()
+GroupRule::~GroupRule()
 {
   mRules.EnumerateForwards(SetParentRuleReference, nsnull);
   if (mRuleCollection) {
@@ -612,10 +615,10 @@ nsCSSGroupRule::~nsCSSGroupRule()
   }
 }
 
-NS_IMPL_ADDREF(nsCSSGroupRule)
-NS_IMPL_RELEASE(nsCSSGroupRule)
+NS_IMPL_ADDREF(GroupRule)
+NS_IMPL_RELEASE(GroupRule)
 
-IMPL_STYLE_RULE_INHERIT2(nsCSSGroupRule, nsCSSRule)
+IMPL_STYLE_RULE_INHERIT2(GroupRule, nsCSSRule)
 
 static PRBool
 SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
@@ -626,7 +629,7 @@ SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
 }
 
 /* virtual */ void
-nsCSSGroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
+GroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
   nsCSSRule::SetStyleSheet(aSheet);
@@ -634,7 +637,7 @@ nsCSSGroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 
 #ifdef DEBUG
 /* virtual */ void
-nsCSSGroupRule::List(FILE* out, PRInt32 aIndent) const
+GroupRule::List(FILE* out, PRInt32 aIndent) const
 {
   fputs(" {\n", out);
 
@@ -646,7 +649,7 @@ nsCSSGroupRule::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 NS_IMETHODIMP
-nsCSSGroupRule::AppendStyleRule(nsICSSRule* aRule)
+GroupRule::AppendStyleRule(nsICSSRule* aRule)
 {
   mRules.AppendObject(aRule);
   aRule->SetStyleSheet(mSheet);
@@ -660,14 +663,14 @@ nsCSSGroupRule::AppendStyleRule(nsICSSRule* aRule)
 }
 
 NS_IMETHODIMP
-nsCSSGroupRule::StyleRuleCount(PRInt32& aCount) const
+GroupRule::StyleRuleCount(PRInt32& aCount) const
 {
   aCount = mRules.Count();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCSSGroupRule::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
+GroupRule::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 {
   if (aIndex < 0 || aIndex >= mRules.Count()) {
     aRule = nsnull;
@@ -679,10 +682,10 @@ nsCSSGroupRule::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 }
 
 NS_IMETHODIMP_(PRBool)
-nsCSSGroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
+GroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 {
   return
-    const_cast<nsCSSGroupRule*>(this)->mRules.EnumerateForwards(aFunc, aData);
+    const_cast<GroupRule*>(this)->mRules.EnumerateForwards(aFunc, aData);
 }
 
 /*
@@ -692,7 +695,7 @@ nsCSSGroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
  * be called on the sheet
  */
 NS_IMETHODIMP
-nsCSSGroupRule::DeleteStyleRuleAt(PRUint32 aIndex)
+GroupRule::DeleteStyleRuleAt(PRUint32 aIndex)
 {
   nsICSSRule* rule = mRules.SafeObjectAt(aIndex);
   if (rule) {
@@ -703,8 +706,8 @@ nsCSSGroupRule::DeleteStyleRuleAt(PRUint32 aIndex)
 }
 
 NS_IMETHODIMP
-nsCSSGroupRule::InsertStyleRulesAt(PRUint32 aIndex,
-                                   nsCOMArray<nsICSSRule>& aRules)
+GroupRule::InsertStyleRulesAt(PRUint32 aIndex,
+                              nsCOMArray<nsICSSRule>& aRules)
 {
   aRules.EnumerateForwards(SetStyleSheetReference, mSheet);
   aRules.EnumerateForwards(SetParentRuleReference, this);
@@ -715,7 +718,7 @@ nsCSSGroupRule::InsertStyleRulesAt(PRUint32 aIndex,
 }
 
 NS_IMETHODIMP
-nsCSSGroupRule::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
+GroupRule::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
 {
   PRInt32 index = mRules.IndexOf(aOld);
   NS_ENSURE_TRUE(index != -1, NS_ERROR_UNEXPECTED);
@@ -728,7 +731,7 @@ nsCSSGroupRule::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
 }
 
 nsresult
-nsCSSGroupRule::AppendRulesToCssText(nsAString& aCssText)
+GroupRule::AppendRulesToCssText(nsAString& aCssText)
 {
   aCssText.AppendLiteral(" {\n");
 
@@ -752,14 +755,14 @@ nsCSSGroupRule::AppendRulesToCssText(nsAString& aCssText)
 }
 
 nsresult
-nsCSSGroupRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+GroupRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
 nsresult
-nsCSSGroupRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+GroupRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
     return mParentRule->GetDOMRule(aParentRule);
@@ -770,7 +773,7 @@ nsCSSGroupRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 
 // nsIDOMCSSMediaRule or nsIDOMCSSMozDocumentRule methods
 nsresult
-nsCSSGroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+GroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
   if (!mRuleCollection) {
     mRuleCollection = new css::GroupRuleRuleList(this);
@@ -781,7 +784,7 @@ nsCSSGroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 }
 
 nsresult
-nsCSSGroupRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
+GroupRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
   NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
   
@@ -795,7 +798,7 @@ nsCSSGroupRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _
 }
 
 nsresult
-nsCSSGroupRule::DeleteRule(PRUint32 aIndex)
+GroupRule::DeleteRule(PRUint32 aIndex)
 {
   NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
 
@@ -808,6 +811,9 @@ nsCSSGroupRule::DeleteRule(PRUint32 aIndex)
   return mSheet->DeleteRuleFromGroup(this, aIndex);
 }
 
+} // namespace css
+} // namespace mozilla
+
 // -------------------------------------------
 // nsICSSMediaRule
 //
@@ -816,7 +822,7 @@ nsCSSMediaRule::nsCSSMediaRule()
 }
 
 nsCSSMediaRule::nsCSSMediaRule(const nsCSSMediaRule& aCopy)
-  : nsCSSGroupRule(aCopy)
+  : GroupRule(aCopy)
 {
   if (aCopy.mMedia) {
     aCopy.mMedia->Clone(getter_AddRefs(mMedia));
@@ -834,19 +840,18 @@ nsCSSMediaRule::~nsCSSMediaRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSMediaRule, nsCSSGroupRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSMediaRule, nsCSSGroupRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSMediaRule, GroupRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSMediaRule, GroupRule)
 
 DOMCI_DATA(CSSMediaRule, nsCSSMediaRule)
 
 // QueryInterface implementation for nsCSSMediaRule
 NS_INTERFACE_MAP_BEGIN(nsCSSMediaRule)
-  NS_INTERFACE_MAP_ENTRY(nsICSSGroupRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsCSSGroupRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMediaRule)
 NS_INTERFACE_MAP_END
 
@@ -859,7 +864,7 @@ nsCSSMediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
     mMedia->SetStyleSheet(aSheet);
   }
 
-  nsCSSGroupRule::SetStyleSheet(aSheet);
+  GroupRule::SetStyleSheet(aSheet);
 }
 
 #ifdef DEBUG
@@ -878,7 +883,7 @@ nsCSSMediaRule::List(FILE* out, PRInt32 aIndent) const
     fputs(NS_LossyConvertUTF16toASCII(mediaText).get(), out);
   }
 
-  nsCSSGroupRule::List(out, aIndent);
+  GroupRule::List(out, aIndent);
 }
 #endif
 
@@ -923,7 +928,7 @@ nsCSSMediaRule::GetCssText(nsAString& aCssText)
     aCssText.Append(mediaText);
   }
 
-  return nsCSSGroupRule::AppendRulesToCssText(aCssText);
+  return GroupRule::AppendRulesToCssText(aCssText);
 }
 
 NS_IMETHODIMP
@@ -935,13 +940,13 @@ nsCSSMediaRule::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsCSSMediaRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  return nsCSSGroupRule::GetParentStyleSheet(aSheet);
+  return GroupRule::GetParentStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP
 nsCSSMediaRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return nsCSSGroupRule::GetParentRule(aParentRule);
+  return GroupRule::GetParentRule(aParentRule);
 }
 
 // nsIDOMCSSMediaRule methods
@@ -956,22 +961,22 @@ nsCSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
 NS_IMETHODIMP
 nsCSSMediaRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
-  return nsCSSGroupRule::GetCssRules(aRuleList);
+  return GroupRule::GetCssRules(aRuleList);
 }
 
 NS_IMETHODIMP
 nsCSSMediaRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
-  return nsCSSGroupRule::InsertRule(aRule, aIndex, _retval);
+  return GroupRule::InsertRule(aRule, aIndex, _retval);
 }
 
 NS_IMETHODIMP
 nsCSSMediaRule::DeleteRule(PRUint32 aIndex)
 {
-  return nsCSSGroupRule::DeleteRule(aIndex);
+  return GroupRule::DeleteRule(aIndex);
 }
 
-// nsICSSGroupRule interface
+// GroupRule interface
 NS_IMETHODIMP_(PRBool)
 nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext,
                                    nsMediaQueryResultCacheKey& aKey)
@@ -988,7 +993,7 @@ nsCSSDocumentRule::nsCSSDocumentRule(void)
 }
 
 nsCSSDocumentRule::nsCSSDocumentRule(const nsCSSDocumentRule& aCopy)
-  : nsCSSGroupRule(aCopy)
+  : GroupRule(aCopy)
   , mURLs(new URL(*aCopy.mURLs))
 {
 }
@@ -997,19 +1002,18 @@ nsCSSDocumentRule::~nsCSSDocumentRule(void)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSDocumentRule, nsCSSGroupRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSDocumentRule, nsCSSGroupRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSDocumentRule, GroupRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSDocumentRule, GroupRule)
 
 DOMCI_DATA(CSSMozDocumentRule, nsCSSDocumentRule)
 
 // QueryInterface implementation for nsCSSDocumentRule
 NS_INTERFACE_MAP_BEGIN(nsCSSDocumentRule)
-  NS_INTERFACE_MAP_ENTRY(nsICSSGroupRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsCSSGroupRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMozDocumentRule)
 NS_INTERFACE_MAP_END
 
@@ -1041,7 +1045,7 @@ nsCSSDocumentRule::List(FILE* out, PRInt32 aIndent) const
   str.Cut(str.Length() - 2, 1); // remove last ,
   fputs(str.get(), out);
 
-  nsCSSGroupRule::List(out, aIndent);
+  GroupRule::List(out, aIndent);
 }
 #endif
 
@@ -1089,7 +1093,7 @@ nsCSSDocumentRule::GetCssText(nsAString& aCssText)
   }
   aCssText.Cut(aCssText.Length() - 2, 1); // remove last ,
 
-  return nsCSSGroupRule::AppendRulesToCssText(aCssText);
+  return GroupRule::AppendRulesToCssText(aCssText);
 }
 
 NS_IMETHODIMP
@@ -1101,34 +1105,34 @@ nsCSSDocumentRule::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsCSSDocumentRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  return nsCSSGroupRule::GetParentStyleSheet(aSheet);
+  return GroupRule::GetParentStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP
 nsCSSDocumentRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return nsCSSGroupRule::GetParentRule(aParentRule);
+  return GroupRule::GetParentRule(aParentRule);
 }
 
 NS_IMETHODIMP
 nsCSSDocumentRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
-  return nsCSSGroupRule::GetCssRules(aRuleList);
+  return GroupRule::GetCssRules(aRuleList);
 }
 
 NS_IMETHODIMP
 nsCSSDocumentRule::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
-  return nsCSSGroupRule::InsertRule(aRule, aIndex, _retval);
+  return GroupRule::InsertRule(aRule, aIndex, _retval);
 }
 
 NS_IMETHODIMP
 nsCSSDocumentRule::DeleteRule(PRUint32 aIndex)
 {
-  return nsCSSGroupRule::DeleteRule(aIndex);
+  return GroupRule::DeleteRule(aIndex);
 }
 
-// nsICSSGroupRule interface
+// GroupRule interface
 NS_IMETHODIMP_(PRBool)
 nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
                                       nsMediaQueryResultCacheKey& aKey)

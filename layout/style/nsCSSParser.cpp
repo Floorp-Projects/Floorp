@@ -323,8 +323,8 @@ protected:
   PRBool SkipAtRule(PRBool aInsideBlock);
   PRBool SkipDeclaration(PRBool aCheckForBraces);
 
-  PRBool PushGroup(nsICSSGroupRule* aRule);
-  void PopGroup(void);
+  PRBool PushGroup(css::GroupRule* aRule);
+  void PopGroup();
 
   PRBool ParseRuleSet(RuleAppendFunc aAppendFunc, void* aProcessData,
                       PRBool aInsideBraces = PR_FALSE);
@@ -341,7 +341,7 @@ protected:
                      nsMediaList* aMedia,
                      RuleAppendFunc aAppendFunc,
                      void* aProcessData);
-  PRBool ParseGroupRule(nsICSSGroupRule* aRule, RuleAppendFunc aAppendFunc,
+  PRBool ParseGroupRule(css::GroupRule* aRule, RuleAppendFunc aAppendFunc,
                         void* aProcessData);
   PRBool ParseMediaRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aProcessData);
@@ -656,7 +656,7 @@ protected:
 #endif
 
   // Stack of rule groups; used for @media and such.
-  nsCOMArray<nsICSSGroupRule> mGroupStack;
+  nsTArray<nsRefPtr<css::GroupRule> > mGroupStack;
 
   // During the parsing of a property (which may be a shorthand), the data
   // are stored in |mTempData|.  (It is needed to ensure that parser
@@ -1958,7 +1958,7 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
 
 // Parse the {} part of an @media or @-moz-document rule.
 PRBool
-CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
+CSSParserImpl::ParseGroupRule(css::GroupRule* aRule,
                               RuleAppendFunc aAppendFunc,
                               void* aData)
 {
@@ -2386,27 +2386,27 @@ CSSParserImpl::SkipRuleSet(PRBool aInsideBraces)
 }
 
 PRBool
-CSSParserImpl::PushGroup(nsICSSGroupRule* aRule)
+CSSParserImpl::PushGroup(css::GroupRule* aRule)
 {
-  if (mGroupStack.AppendObject(aRule))
+  if (mGroupStack.AppendElement(aRule))
     return PR_TRUE;
 
   return PR_FALSE;
 }
 
 void
-CSSParserImpl::PopGroup(void)
+CSSParserImpl::PopGroup()
 {
-  PRInt32 count = mGroupStack.Count();
+  PRUint32 count = mGroupStack.Length();
   if (0 < count) {
-    mGroupStack.RemoveObjectAt(count - 1);
+    mGroupStack.RemoveElementAt(count - 1);
   }
 }
 
 void
 CSSParserImpl::AppendRule(nsICSSRule* aRule)
 {
-  PRInt32 count = mGroupStack.Count();
+  PRUint32 count = mGroupStack.Length();
   if (0 < count) {
     mGroupStack[count - 1]->AppendStyleRule(aRule);
   }
