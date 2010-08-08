@@ -1794,5 +1794,17 @@ window.GroupItems = {
       tab.tabItem.setZoomPrep(false);
       UI.showTabView();
     }
+  },
+  
+  // ----------
+  // Function: killNewTabGroup
+  // Removes the New Tab Group, which is now defunct. See bug 575851 and comments therein.
+  killNewTabGroup: function() {
+    this.groupItems.forEach(function(groupItem) {
+      if (groupItem.getTitle() == 'New Tabs') {
+        groupItem.removeAll();
+        groupItem.close();
+      }
+    });
   }
 };
