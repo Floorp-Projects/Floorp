@@ -47,7 +47,7 @@
 #include "nsIAtom.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/css/NameSpaceRule.h"
-#include "nsICSSGroupRule.h"
+#include "mozilla/css/GroupRule.h"
 #include "mozilla/css/ImportRule.h"
 #include "nsIMediaList.h"
 #include "nsIDocument.h"
@@ -1934,7 +1934,7 @@ nsCSSStyleSheet::DeleteRule(PRUint32 aIndex)
 }
 
 nsresult
-nsCSSStyleSheet::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
+nsCSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, PRUint32 aIndex)
 {
   NS_ENSURE_ARG_POINTER(aGroup);
   NS_ASSERTION(mInner->mComplete, "No deleting from an incomplete sheet!");
@@ -1970,7 +1970,7 @@ nsCSSStyleSheet::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
 
 nsresult
 nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
-                                     nsICSSGroupRule* aGroup,
+                                     css::GroupRule* aGroup,
                                      PRUint32 aIndex,
                                      PRUint32* _retval)
 {
@@ -2043,7 +2043,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
 }
 
 nsresult
-nsCSSStyleSheet::ReplaceRuleInGroup(nsICSSGroupRule* aGroup,
+nsCSSStyleSheet::ReplaceRuleInGroup(css::GroupRule* aGroup,
                                     nsICSSRule* aOld, nsICSSRule* aNew)
 {
   nsresult result;

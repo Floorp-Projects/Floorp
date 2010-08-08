@@ -59,7 +59,7 @@
 #include "nsICSSPseudoComparator.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsICSSGroupRule.h"
+#include "mozilla/css/GroupRule.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
@@ -2782,7 +2782,7 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
   }
   else if (nsICSSRule::MEDIA_RULE == type ||
            nsICSSRule::DOCUMENT_RULE == type) {
-    nsICSSGroupRule* groupRule = (nsICSSGroupRule*)aRule;
+    css::GroupRule* groupRule = static_cast<css::GroupRule*>(aRule);
     if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
       if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
         return PR_FALSE;
