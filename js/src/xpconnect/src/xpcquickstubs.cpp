@@ -1071,13 +1071,12 @@ xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval)
         return JS_TRUE;
     }
 
-    PRBool isShared = PR_FALSE;
-    jsval jsstr =
-        XPCStringConvert::ReadableToJSVal(cx, str, PR_TRUE, &isShared);
+    nsStringBuffer* sharedBuffer;
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer);
     if (JSVAL_IS_NULL(jsstr))
         return JS_FALSE;
     *rval = jsstr;
-    if (isShared)
+    if (sharedBuffer)
     {
         // The string was shared but ReadableToJSVal didn't addref it.
         // Move the ownership from str to jsstr.
@@ -1096,13 +1095,12 @@ xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)
         return JS_TRUE;
     }
 
-    PRBool isShared = PR_FALSE;
-    jsval jsstr =
-        XPCStringConvert::ReadableToJSVal(cx, str, PR_TRUE, &isShared);
+    nsStringBuffer* sharedBuffer;
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer);
     if(JSVAL_IS_NULL(jsstr))
         return JS_FALSE;
     *rval = JSVAL_TO_STRING(jsstr);
-    if (isShared)
+    if (sharedBuffer)
     {
         // The string was shared but ReadableToJSVal didn't addref it.
         // Move the ownership from str to jsstr.

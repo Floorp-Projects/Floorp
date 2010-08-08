@@ -704,15 +704,21 @@ nsWindow::Destroy(void)
     mIsDestroyed = PR_TRUE;
     mCreated = PR_FALSE;
 
-    nsRefPtr<GLContext> gl;
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
-    {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
-        gl = manager->gl();
-    }
-
     /** Need to clean our LayerManager up while still alive */
-    mLayerManager = NULL;
+    if (mLayerManager) {
+        nsRefPtr<GLContext> gl = nsnull;
+        if (mLayerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+            LayerManagerOGL *ogllm = static_cast<LayerManagerOGL*>(mLayerManager.get());
+            gl = ogllm->gl();
+        }
+
+        mLayerManager->Destroy();
+
+        if (gl) {
+            gl->MarkDestroyed();
+        }
+    }
+    mLayerManager = nsnull;
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          FuncToGpointer(theme_changed_cb),
@@ -789,9 +795,6 @@ nsWindow::Destroy(void)
 
         gdk_window_set_user_data(mGdkWindow, NULL);
         g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", NULL);
-        if (gl) {
-            gl->WindowDestroyed();
-        }
         gdk_window_destroy(mGdkWindow);
         mGdkWindow = nsnull;
     }
