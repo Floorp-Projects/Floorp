@@ -1607,9 +1607,9 @@ private:
 
 /**
  * nsDisplayZoom is used for subdocuments that have a different full zoom than
- * their parent documents.
+ * their parent documents. This item creates a container layer.
  */
-class nsDisplayZoom : public nsDisplayWrapList {
+class nsDisplayZoom : public nsDisplayOwnLayer {
 public:
   /**
    * @param aFrame is the root frame of the subdocument.
