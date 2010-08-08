@@ -136,9 +136,7 @@ NS_IMETHODIMP
 GroupRuleRuleList::GetLength(PRUint32* aLength)
 {
   if (mGroupRule) {
-    PRInt32 count;
-    mGroupRule->StyleRuleCount(count);
-    *aLength = (PRUint32)count;
+    *aLength = (PRUint32)mGroupRule->StyleRuleCount();
   } else {
     *aLength = 0;
   }
@@ -149,21 +147,14 @@ GroupRuleRuleList::GetLength(PRUint32* aLength)
 nsIDOMCSSRule*
 GroupRuleRuleList::GetItemAt(PRUint32 aIndex, nsresult* aResult)
 {
-  nsresult result = NS_OK;
+  *aResult = NS_OK;
 
   if (mGroupRule) {
-    nsCOMPtr<nsICSSRule> rule;
-
-    result = mGroupRule->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
+    nsCOMPtr<nsICSSRule> rule = mGroupRule->GetStyleRuleAt(aIndex);
     if (rule) {
       return rule->GetDOMRuleWeak(aResult);
     }
-    if (result == NS_ERROR_ILLEGAL_VALUE) {
-      result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
-    }
   }
-
-  *aResult = result;
 
   return nsnull;
 }
@@ -648,7 +639,7 @@ GroupRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
+void
 GroupRule::AppendStyleRule(nsICSSRule* aRule)
 {
   mRules.AppendObject(aRule);
@@ -659,29 +650,15 @@ GroupRule::AppendStyleRule(nsICSSRule* aRule)
     // shouldn't |SetModified| be removed?
     mSheet->SetModified(PR_TRUE);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-GroupRule::StyleRuleCount(PRInt32& aCount) const
+nsICSSRule*
+GroupRule::GetStyleRuleAt(PRInt32 aIndex) const
 {
-  aCount = mRules.Count();
-  return NS_OK;
+  return mRules.SafeObjectAt(aIndex);
 }
 
-NS_IMETHODIMP
-GroupRule::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
-{
-  if (aIndex < 0 || aIndex >= mRules.Count()) {
-    aRule = nsnull;
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  NS_ADDREF(aRule = mRules.ObjectAt(aIndex));
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(PRBool)
+PRBool
 GroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 {
   return
@@ -694,7 +671,7 @@ GroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
  * the parents tylesheet.  After they are called, DidDirty() needs to
  * be called on the sheet
  */
-NS_IMETHODIMP
+nsresult
 GroupRule::DeleteStyleRuleAt(PRUint32 aIndex)
 {
   nsICSSRule* rule = mRules.SafeObjectAt(aIndex);
@@ -705,7 +682,7 @@ GroupRule::DeleteStyleRuleAt(PRUint32 aIndex)
   return mRules.RemoveObjectAt(aIndex) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
 }
 
-NS_IMETHODIMP
+nsresult
 GroupRule::InsertStyleRulesAt(PRUint32 aIndex,
                               nsCOMArray<nsICSSRule>& aRules)
 {
@@ -717,7 +694,7 @@ GroupRule::InsertStyleRulesAt(PRUint32 aIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 GroupRule::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
 {
   PRInt32 index = mRules.IndexOf(aOld);
@@ -755,13 +732,6 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText)
 }
 
 nsresult
-GroupRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  NS_IF_ADDREF(*aSheet = mSheet);
-  return NS_OK;
-}
-
-nsresult
 GroupRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
@@ -772,15 +742,14 @@ GroupRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 // nsIDOMCSSMediaRule or nsIDOMCSSMozDocumentRule methods
-nsresult
-GroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+nsIDOMCSSRuleList*
+GroupRule::GetCssRules()
 {
   if (!mRuleCollection) {
     mRuleCollection = new css::GroupRuleRuleList(this);
   }
 
-  NS_ADDREF(*aRuleList = mRuleCollection);
-  return NS_OK;
+  return mRuleCollection;
 }
 
 nsresult
@@ -936,7 +905,8 @@ MediaRule::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 MediaRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  return GroupRule::GetParentStyleSheet(aSheet);
+  NS_IF_ADDREF(*aSheet = mSheet);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -957,7 +927,8 @@ MediaRule::GetMedia(nsIDOMMediaList* *aMedia)
 NS_IMETHODIMP
 MediaRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
-  return GroupRule::GetCssRules(aRuleList);
+  NS_ADDREF(*aRuleList = GroupRule::GetCssRules());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -973,7 +944,7 @@ MediaRule::DeleteRule(PRUint32 aIndex)
 }
 
 // GroupRule interface
-NS_IMETHODIMP_(PRBool)
+/* virtual */ PRBool
 MediaRule::UseForPresentation(nsPresContext* aPresContext,
                                    nsMediaQueryResultCacheKey& aKey)
 {
@@ -1107,7 +1078,8 @@ DocumentRule::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 DocumentRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  return GroupRule::GetParentStyleSheet(aSheet);
+  NS_IF_ADDREF(*aSheet = mSheet);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1119,7 +1091,8 @@ DocumentRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP
 DocumentRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
-  return GroupRule::GetCssRules(aRuleList);
+  NS_ADDREF(*aRuleList = GroupRule::GetCssRules());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1135,7 +1108,7 @@ DocumentRule::DeleteRule(PRUint32 aIndex)
 }
 
 // GroupRule interface
-NS_IMETHODIMP_(PRBool)
+/* virtual */ PRBool
 DocumentRule::UseForPresentation(nsPresContext* aPresContext,
                                       nsMediaQueryResultCacheKey& aKey)
 {
