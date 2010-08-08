@@ -87,6 +87,10 @@ CreateDummyWindow(HDC *aWindowDC = nsnull)
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
         pfd.iPixelType = PFD_TYPE_RGBA;
         pfd.cColorBits = 24;
+        pfd.cRedBits = 8;
+        pfd.cGreenBits = 8;
+        pfd.cBlueBits = 8;
+        pfd.cAlphaBits = 8;
         pfd.cDepthBits = 0;
         pfd.iLayerType = PFD_MAIN_PLANE;
 
@@ -688,6 +692,8 @@ GLContextProviderWGL::GetGlobalContext()
             gGlobalContext = nsnull;
             return PR_FALSE;
         }
+
+        gGlobalContext->SetIsGlobalSharedContext(PR_TRUE);
     }
 
     return static_cast<GLContext*>(gGlobalContext);

@@ -40,10 +40,6 @@
 #include <windows.h>
 #include "nsToolkit.h"
 
-#ifdef MOZ_ENABLE_LIBXUL
-#include "../xre/nsWindowsDllBlocklist.cpp"
-#endif
-
 #if defined(__GNUC__)
 // If DllMain gets name mangled, it won't be seen.
 extern "C" {
@@ -60,9 +56,6 @@ BOOL APIENTRY DllMain(
 {
     switch( reason ) {
         case DLL_PROCESS_ATTACH:
-#ifdef MOZ_ENABLE_LIBXUL
-            SetupDllBlocklist();
-#endif
             nsToolkit::Startup((HINSTANCE)hModule);
             break;
 
