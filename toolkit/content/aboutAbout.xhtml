@@ -2,6 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
 <!ENTITY % aboutAboutDTD SYSTEM "chrome://global/locale/aboutAbout.dtd" >
 %aboutAboutDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
 ]>
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -92,7 +94,7 @@
   ]]></script>
 </head>
 
-<body>
+<body dir="&locale.dir;">
   <h1>&aboutAbout.title;</h1>
   <p><em>&aboutAbout.note;</em></p>
   <ul id="abouts" class="columns"></ul>
