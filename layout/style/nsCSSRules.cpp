@@ -85,10 +85,14 @@ nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; ret
 // -------------------------------
 // Style Rule List for group rules
 //
-class CSSGroupRuleRuleListImpl : public nsICSSRuleList
+
+namespace mozilla {
+namespace css {
+
+class NS_FINAL_CLASS GroupRuleRuleList : public nsICSSRuleList
 {
 public:
-  CSSGroupRuleRuleListImpl(nsICSSGroupRule *aGroupRule);
+  GroupRuleRuleList(nsICSSGroupRule *aGroupRule);
 
   NS_DECL_ISUPPORTS
 
@@ -98,28 +102,26 @@ public:
 
   void DropReference() { mGroupRule = nsnull; }
 
-protected:
-  virtual ~CSSGroupRuleRuleListImpl(void);
+private:
+  ~GroupRuleRuleList();
 
 private:
   nsICSSGroupRule* mGroupRule;
 };
 
-CSSGroupRuleRuleListImpl::CSSGroupRuleRuleListImpl(nsICSSGroupRule *aGroupRule)
+GroupRuleRuleList::GroupRuleRuleList(nsICSSGroupRule *aGroupRule)
 {
   // Not reference counted to avoid circular references.
   // The rule will tell us when its going away.
   mGroupRule = aGroupRule;
 }
 
-CSSGroupRuleRuleListImpl::~CSSGroupRuleRuleListImpl()
+GroupRuleRuleList::~GroupRuleRuleList()
 {
 }
 
-DOMCI_DATA(CSSGroupRuleRuleList, CSSGroupRuleRuleListImpl)
-
 // QueryInterface implementation for CSSGroupRuleRuleList
-NS_INTERFACE_MAP_BEGIN(CSSGroupRuleRuleListImpl)
+NS_INTERFACE_MAP_BEGIN(GroupRuleRuleList)
   NS_INTERFACE_MAP_ENTRY(nsICSSRuleList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -127,11 +129,11 @@ NS_INTERFACE_MAP_BEGIN(CSSGroupRuleRuleListImpl)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(CSSGroupRuleRuleListImpl)
-NS_IMPL_RELEASE(CSSGroupRuleRuleListImpl)
+NS_IMPL_ADDREF(GroupRuleRuleList)
+NS_IMPL_RELEASE(GroupRuleRuleList)
 
-NS_IMETHODIMP    
-CSSGroupRuleRuleListImpl::GetLength(PRUint32* aLength)
+NS_IMETHODIMP
+GroupRuleRuleList::GetLength(PRUint32* aLength)
 {
   if (mGroupRule) {
     PRInt32 count;
@@ -144,8 +146,8 @@ CSSGroupRuleRuleListImpl::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
-nsIDOMCSSRule*    
-CSSGroupRuleRuleListImpl::GetItemAt(PRUint32 aIndex, nsresult* aResult)
+nsIDOMCSSRule*
+GroupRuleRuleList::GetItemAt(PRUint32 aIndex, nsresult* aResult)
 {
   nsresult result = NS_OK;
 
@@ -166,8 +168,8 @@ CSSGroupRuleRuleListImpl::GetItemAt(PRUint32 aIndex, nsresult* aResult)
   return nsnull;
 }
 
-NS_IMETHODIMP    
-CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
+NS_IMETHODIMP
+GroupRuleRuleList::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 {
   nsresult rv;
   nsIDOMCSSRule* rule = GetItemAt(aIndex, &rv);
@@ -179,6 +181,12 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
   NS_ADDREF(*aReturn = rule);
   return NS_OK;
 }
+
+} // namespace css
+} // namespace mozilla
+
+// Must be outside the namespace
+DOMCI_DATA(CSSGroupRuleRuleList, css::GroupRuleRuleList)
 
 // -------------------------------------------
 // CharsetRule
@@ -570,7 +578,6 @@ NS_NewCSSImportRule(css::ImportRule** aInstancePtrResult,
 
 nsCSSGroupRule::nsCSSGroupRule()
   : nsCSSRule()
-  , mRuleCollection(nsnull)
 {
 }
 
@@ -592,7 +599,6 @@ SetParentRuleReference(nsICSSRule* aRule, void* aParentRule)
 
 nsCSSGroupRule::nsCSSGroupRule(const nsCSSGroupRule& aCopy)
   : nsCSSRule(aCopy)
-  , mRuleCollection(nsnull) // lazily constructed
 {
   const_cast<nsCSSGroupRule&>(aCopy).mRules.EnumerateForwards(CloneRuleInto, &mRules);
   mRules.EnumerateForwards(SetParentRuleReference, this);
@@ -603,7 +609,6 @@ nsCSSGroupRule::~nsCSSGroupRule()
   mRules.EnumerateForwards(SetParentRuleReference, nsnull);
   if (mRuleCollection) {
     mRuleCollection->DropReference();
-    NS_RELEASE(mRuleCollection);
   }
 }
 
@@ -768,11 +773,7 @@ nsresult
 nsCSSGroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
   if (!mRuleCollection) {
-    mRuleCollection = new CSSGroupRuleRuleListImpl(this);
-    if (!mRuleCollection) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mRuleCollection);
+    mRuleCollection = new css::GroupRuleRuleList(this);
   }
 
   NS_ADDREF(*aRuleList = mRuleCollection);
