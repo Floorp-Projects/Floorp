@@ -52,10 +52,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSMediaRule.h"
-#include "nsIDOMCSSMozDocumentRule.h"
-#include "nsIDOMCSSCharsetRule.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIMediaList.h"
 #include "nsICSSRuleList.h"
 #include "nsIDocument.h"
@@ -214,58 +210,30 @@ DOMCI_DATA(CSSGroupRuleRuleList, css::GroupRuleRuleList)
 // -------------------------------------------
 // CharsetRule
 //
-class NS_FINAL_CLASS CSSCharsetRuleImpl : public css::Rule,
-                                          public nsIDOMCSSCharsetRule
-{
-public:
-  CSSCharsetRuleImpl(const nsAString& aEncoding);
-  CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy);
-private:
-  ~CSSCharsetRuleImpl() {}
-public:
-  NS_DECL_ISUPPORTS_INHERITED
 
-  DECL_STYLE_RULE_INHERIT
+// Must be outside namespace
+DOMCI_DATA(CSSCharsetRule, css::CharsetRule)
 
-  // nsIStyleRule methods
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
+namespace mozilla {
+namespace css {
 
-  // nsICSSRule methods
-  virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
-  
-  // nsIDOMCSSCharsetRule methods
-  NS_IMETHOD GetEncoding(nsAString& aEncoding);
-  NS_IMETHOD SetEncoding(const nsAString& aEncoding);
-
-protected:
-  nsString  mEncoding;
-};
-
-CSSCharsetRuleImpl::CSSCharsetRuleImpl(const nsAString& aEncoding)
+CharsetRule::CharsetRule(const nsAString& aEncoding)
   : css::Rule(),
     mEncoding(aEncoding)
 {
 }
 
-CSSCharsetRuleImpl::CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy)
+CharsetRule::CharsetRule(const CharsetRule& aCopy)
   : css::Rule(aCopy),
     mEncoding(aCopy.mEncoding)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, css::Rule)
-NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, css::Rule)
+NS_IMPL_ADDREF_INHERITED(CharsetRule, css::Rule)
+NS_IMPL_RELEASE_INHERITED(CharsetRule, css::Rule)
 
-DOMCI_DATA(CSSCharsetRule, CSSCharsetRuleImpl)
-
-// QueryInterface implementation for CSSCharsetRuleImpl
-NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
+// QueryInterface implementation for CharsetRule
+NS_INTERFACE_MAP_BEGIN(CharsetRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
@@ -274,11 +242,11 @@ NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSCharsetRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, css::Rule)
+IMPL_STYLE_RULE_INHERIT(CharsetRule, css::Rule)
 
 #ifdef DEBUG
 /* virtual */ void
-CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
+CharsetRule::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
@@ -290,59 +258,41 @@ CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 /* virtual */ PRInt32
-CSSCharsetRuleImpl::GetType() const
+CharsetRule::GetType() const
 {
   return nsICSSRule::CHARSET_RULE;
 }
 
 /* virtual */ already_AddRefed<nsICSSRule>
-CSSCharsetRuleImpl::Clone() const
+CharsetRule::Clone() const
 {
-  nsCOMPtr<nsICSSRule> clone = new CSSCharsetRuleImpl(*this);
+  nsCOMPtr<nsICSSRule> clone = new CharsetRule(*this);
   return clone.forget();
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetEncoding(nsAString& aEncoding)
+CharsetRule::GetEncoding(nsAString& aEncoding)
 {
   aEncoding = mEncoding;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::SetEncoding(const nsAString& aEncoding)
+CharsetRule::SetEncoding(const nsAString& aEncoding)
 {
   mEncoding = aEncoding;
   return NS_OK;
 }
 
-
-nsresult
-NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding)
-{
-  if (! aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  CSSCharsetRuleImpl* it = new CSSCharsetRuleImpl(aEncoding);
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetType(PRUint16* aType)
+CharsetRule::GetType(PRUint16* aType)
 {
   *aType = nsIDOMCSSRule::CHARSET_RULE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetCssText(nsAString& aCssText)
+CharsetRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@charset \"");
   aCssText.Append(mEncoding);
@@ -351,13 +301,13 @@ CSSCharsetRuleImpl::GetCssText(nsAString& aCssText)
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::SetCssText(const nsAString& aCssText)
+CharsetRule::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+CharsetRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   NS_ENSURE_ARG_POINTER(aSheet);
 
@@ -366,12 +316,32 @@ CSSCharsetRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+CharsetRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
     return mParentRule->GetDOMRule(aParentRule);
   }
   *aParentRule = nsnull;
+  return NS_OK;
+}
+
+} // namespace css
+} // namespace mozilla
+
+nsresult
+NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding)
+{
+  if (! aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  css::CharsetRule* it = new css::CharsetRule(aEncoding);
+
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aInstancePtrResult = it);
   return NS_OK;
 }
 
