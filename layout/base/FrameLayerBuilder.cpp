@@ -906,6 +906,9 @@ void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     const nsRect* aClipRect)
 {
+  PRInt32 appUnitsPerDevPixel =
+    mContainerFrame->PresContext()->AppUnitsPerDevPixel();
+
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
       nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
@@ -917,7 +920,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       continue;
     }
 
-    PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(item);
+    NS_ASSERTION(appUnitsPerDevPixel == AppUnitsPerDevPixel(item),
+      "items in a container layer should all have the same app units per dev pixel");
+
     nsIntRect itemVisibleRect =
       item->GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
     nsRect itemContent = item->GetBounds(mBuilder);
