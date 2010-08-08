@@ -67,26 +67,27 @@ let TabView = {
   },
 
   updateContextMenu: function(tab, popup) {
-    while(popup.lastChild && popup.lastChild.id != "context_namedGroups")
-      popup.removeChild(popup.lastChild);
-
     let tabViewWindow = document.getElementById("tab-view").contentWindow;
     let isEmpty = true;
 
-    if (tabViewWindow) {
-      let activeGroup = tab.tabItem.parent;
-      let groupItems = tabViewWindow.GroupItems.groupItems;
-      let self = this;
+    while(popup.lastChild && popup.lastChild.id != "context_namedGroups")
+      popup.removeChild(popup.lastChild);
 
-      groupItems.forEach(function(groupItem) { 
-        if (groupItem.getTitle().length > 0 && 
-            (!activeGroup || activeGroup.id != groupItem.id)) {
-          let menuItem = self._createGroupMenuItem(groupItem);
-          popup.appendChild(menuItem);
-          isEmpty = false;
-        }
-      });
-    }
+	  if (!tabViewWindow.UI.frameInitalized)
+	    tabViewWindow.UI.initFrame();
+
+    let activeGroup = tab.tabItem.parent;
+    let groupItems = tabViewWindow.GroupItems.groupItems;
+    let self = this;
+
+    groupItems.forEach(function(groupItem) { 
+      if (groupItem.getTitle().length > 0 && 
+          (!activeGroup || activeGroup.id != groupItem.id)) {
+        let menuItem = self._createGroupMenuItem(groupItem);
+        popup.appendChild(menuItem);
+        isEmpty = false;
+      }
+    });
     document.getElementById("context_namedGroups").hidden = isEmpty;
   },
 
@@ -103,8 +104,6 @@ let TabView = {
 
   moveTabTo: function(tab, groupItemId) {
     let tabViewWindow = document.getElementById("tab-view").contentWindow;
-
-    if (tabViewWindow)
-      tabViewWindow.GroupItems.moveTabToGroupItem(tab, groupItemId);
+    tabViewWindow.GroupItems.moveTabToGroupItem(tab, groupItemId);
   }
 };
