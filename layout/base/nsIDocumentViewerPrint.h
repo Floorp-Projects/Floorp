@@ -90,8 +90,7 @@ public:
   /**
    * Replaces the current presentation with print preview presentation.
    */
-  virtual void SetPrintPreviewPresentation(nsIWidget* aWidget,
-                                           nsIViewManager* aViewManager,
+  virtual void SetPrintPreviewPresentation(nsIViewManager* aViewManager,
                                            nsPresContext* aPresContext,
                                            nsIPresShell* aPresShell) = 0;
 };
@@ -111,8 +110,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   virtual void     OnDonePrinting(); \
   virtual PRBool   IsInitializedForPrintPreview(); \
   virtual void     InitializeForPrintPreview(); \
-  virtual void     SetPrintPreviewPresentation(nsIWidget* aWidget, \
-                                               nsIViewManager* aViewManager, \
+  virtual void     SetPrintPreviewPresentation(nsIViewManager* aViewManager, \
                                                nsPresContext* aPresContext, \
                                                nsIPresShell* aPresShell);
 
