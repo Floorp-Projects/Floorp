@@ -137,8 +137,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xb2d3df3b, 0x54ba, 0x44cf, \
-    { 0x8c, 0xfd, 0x24, 0x84, 0x3e, 0xac, 0x27, 0x96 } }
+  { 0xe31f651a, 0x8c88, 0x4f19, \
+    { 0x8a, 0xb0, 0x00, 0x1f, 0x94, 0xed, 0x5f, 0xbd } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -951,6 +951,16 @@ public:
                                                 const nsRect& aBounds,
                                                 nscolor aBackstopColor = NS_RGBA(0,0,0,0),
                                                 PRBool aForceDraw = PR_FALSE) = 0;
+
+  /**
+   * Add a solid color item to the bottom of aList with frame aFrame and
+   * bounds aBounds representing the dark grey background behind the page of a
+   * print preview presentation.
+   */
+  virtual nsresult AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
+                                                 nsDisplayList& aList,
+                                                 nsIFrame* aFrame,
+                                                 const nsRect& aBounds) = 0;
 
   void ObserveNativeAnonMutationsForPrint(PRBool aObserve)
   {
