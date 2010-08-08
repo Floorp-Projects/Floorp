@@ -1124,7 +1124,7 @@ PRBool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
     nsIFrame* f = i->GetUnderlyingFrame();
     if (f) {
       nsIFrame* activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull, nsnull);
+        nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull);
       if (activeScrolledRoot != aActiveScrolledRoot)
         return PR_FALSE;
     }
@@ -1248,7 +1248,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (mFrame->AreLayersMarkedActive())
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
-    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull, nsnull);
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
   return !ChildrenCanBeInactive(aBuilder, aManager, mList, activeScrolledRoot)
       ? LAYER_ACTIVE : LAYER_INACTIVE;
 }
@@ -1618,7 +1618,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (mFrame->AreLayersMarkedActive())
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
-    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull, nsnull);
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
   return !mStoredList.ChildrenCanBeInactive(aBuilder, 
                                              aManager, 
                                              *mStoredList.GetList(), 
