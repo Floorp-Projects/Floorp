@@ -84,6 +84,10 @@ var UIManager = {
   // Used to facilitate zooming down from a previous tab.
   _currentTab : null,
 
+  // Variable: frameInitalized
+  // The getter of _frameInitalized.
+  get frameInitalized() this._frameInitalized,
+
   // ----------
   // Function: init
   // Must be called after the object is created.
@@ -135,9 +139,9 @@ var UIManager = {
   },
 
   // ----------
-  // Function: _initFrame
+  // Function: initFrame
   // Initializes the TabView UI
-  _initFrame: function() {
+  initFrame: function() {
     try {
       Utils.assert("must not be already initialized", !this._frameInitalized);
 
@@ -179,7 +183,7 @@ var UIManager = {
       this._addTabActionHandlers();
 
       // ___ Storage
-      
+
       GroupItems.init();
 
       var groupItemsData = Storage.readGroupItemsData(gWindow);
@@ -316,11 +320,10 @@ var UIManager = {
     if (this._isTabViewVisible())
       return;
 
-    var self = this;
-
     if (!this._frameInitalized)
-      this._initFrame();
+      this.initFrame();
 
+    var self = this;
     var currentTab = this._currentTab;
     var item = null;
 
