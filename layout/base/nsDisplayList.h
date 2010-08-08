@@ -1607,9 +1607,9 @@ private:
 
 /**
  * nsDisplayZoom is used for subdocuments that have a different full zoom than
- * their parent documents.
+ * their parent documents. This item creates a container layer.
  */
-class nsDisplayZoom : public nsDisplayWrapList {
+class nsDisplayZoom : public nsDisplayOwnLayer {
 public:
   /**
    * @param aFrame is the root frame of the subdocument.
@@ -1632,6 +1632,11 @@ public:
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);
   NS_DISPLAY_DECL_NAME("Zoom", TYPE_ZOOM)
+
+  // Get the app units per dev pixel ratio of the child document.
+  PRInt32 GetChildAppUnitsPerDevPixel() { return mAPD; }
+  // Get the app units per dev pixel ratio of the parent document.
+  PRInt32 GetParentAppUnitsPerDevPixel() { return mParentAPD; }
 
 private:
   PRInt32 mAPD, mParentAPD;

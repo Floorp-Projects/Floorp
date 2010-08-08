@@ -296,12 +296,9 @@ public:
    * such ancestor before we reach aStopAtAncestor in the ancestor chain.
    * We expect frames with the same "active scrolled root" to be
    * scrolled together, so we'll place them in the same ThebesLayer.
-   * @param aOffset the offset from aFrame to the returned frame is stored
-   * here, if non-null
    */
   static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                            nsIFrame* aStopAtAncestor,
-                                            nsPoint* aOffset);
+                                            nsIFrame* aStopAtAncestor);
 
   /**
     * GetFrameFor returns the root frame for a view
@@ -1141,6 +1138,16 @@ public:
    */
   static nsIContent*
     GetEditableRootContentByContentEditable(nsIDocument* aDocument);
+
+  /**
+   * Returns true if the passed in prescontext needs the dark grey background
+   * that goes behind the page of a print preview presentation.
+   */
+  static PRBool NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
+    return aPresContext->IsRootPaginatedDocument() &&
+      (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
+       aPresContext->Type() == nsPresContext::eContext_PageLayout);
+  }
 };
 
 class nsSetAttrRunnable : public nsRunnable

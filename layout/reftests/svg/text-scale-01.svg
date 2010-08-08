@@ -7,14 +7,16 @@
   <title>Testcase for text scaling</title>
 
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=392233 -->
+  <!-- we use powers of two for the scales so they can be represented
+       exactly in a floating point representation -->
 
-  <g transform="scale(10)">
-    <text x="0" y="10" font-size="10">Hello</text>
+  <g transform="scale(8)">
+    <text x="0" y="16" font-size="16">Hello</text>
   </g>
-  <g transform="scale(100)">
-    <text x="0" y="2" font-size="1">Hello</text>
+  <g transform="scale(64)">
+    <text x="0" y="4" font-size="2">Hello</text>
   </g>
-  <g transform="scale(1000)">
-    <text x="0" y="0.3" font-size="0.1">Hello</text>
+  <g transform="scale(512)">
+    <text x="0" y="0.75" font-size="0.25">Hello</text>
   </g>
 </svg>
