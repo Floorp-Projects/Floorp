@@ -52,6 +52,7 @@
 #include "nsAutoPtr.h"
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
+#include "nsIDOMCSSCharsetRule.h"
 
 class nsMediaList;
 
@@ -258,5 +259,46 @@ nsCSSFontFaceStyleDecl::ContainingRule() const
   return reinterpret_cast<const nsCSSFontFaceRule*>
     (reinterpret_cast<const char*>(this) - offsetof(nsCSSFontFaceRule, mDecl));
 }
+
+namespace mozilla {
+namespace css {
+
+class NS_FINAL_CLASS CharsetRule : public Rule,
+                                   public nsIDOMCSSCharsetRule
+{
+public:
+  CharsetRule(const nsAString& aEncoding);
+private:
+  // For |Clone|
+  CharsetRule(const CharsetRule& aCopy);
+  ~CharsetRule() {}
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  DECL_STYLE_RULE_INHERIT
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMCSSCharsetRule methods
+  NS_IMETHOD GetEncoding(nsAString& aEncoding);
+  NS_IMETHOD SetEncoding(const nsAString& aEncoding);
+
+private:
+  nsString  mEncoding;
+};
+
+} // namespace css
+} // namespace mozilla
 
 #endif /* !defined(nsCSSRules_h_) */
