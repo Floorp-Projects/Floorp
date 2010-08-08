@@ -86,10 +86,9 @@ namespace css {
 NS_IMPL_ADDREF(Rule)
 NS_IMPL_RELEASE(Rule)
 
-/* virtual */ already_AddRefed<nsIStyleSheet>
+/* virtual */ nsIStyleSheet*
 Rule::GetStyleSheet() const
 {
-  NS_IF_ADDREF(mSheet);
   return mSheet;
 }
 
