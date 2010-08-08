@@ -1074,9 +1074,8 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   *aSheetPrincipal = nsnull;
   *aCSSLoader = nsnull;
 
-  nsCOMPtr<nsIStyleSheet> sheet;
   if (mRule) {
-    sheet = mRule->GetStyleSheet();
+    nsIStyleSheet* sheet = mRule->GetStyleSheet();
     if (sheet) {
       NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
       NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());

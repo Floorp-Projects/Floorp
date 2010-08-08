@@ -83,7 +83,7 @@ protected:
   NS_DECL_OWNINGTHREAD
 public:
 
-  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
+  virtual nsIStyleSheet* GetStyleSheet() const;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   virtual void SetParentRule(GroupRule* aRule);

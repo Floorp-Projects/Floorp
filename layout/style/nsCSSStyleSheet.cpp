@@ -1943,8 +1943,7 @@ nsCSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, PRUint32 aIndex)
   NS_ENSURE_TRUE(rule, NS_ERROR_ILLEGAL_VALUE);
 
   // check that the rule actually belongs to this sheet!
-  nsCOMPtr<nsIStyleSheet> ruleSheet = rule->GetStyleSheet();
-  if (this != ruleSheet) {
+  if (this != rule->GetStyleSheet()) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1976,8 +1975,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   nsresult result;
   NS_ASSERTION(mInner->mComplete, "No inserting into an incomplete sheet!");
   // check that the group actually belongs to this sheet!
-  nsCOMPtr<nsIStyleSheet> groupSheet = aGroup->GetStyleSheet();
-  if (this != groupSheet) {
+  if (this != aGroup->GetStyleSheet()) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2047,12 +2045,7 @@ nsCSSStyleSheet::ReplaceRuleInGroup(css::GroupRule* aGroup,
 {
   nsresult result;
   NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIStyleSheet> groupSheet = aGroup->GetStyleSheet();
-    NS_ASSERTION(this == groupSheet, "group doesn't belong to this sheet");
-  }
-#endif
+  NS_ASSERTION(this == aGroup->GetStyleSheet(), "group doesn't belong to this sheet");
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
 
