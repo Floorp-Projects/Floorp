@@ -3543,13 +3543,6 @@ nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
   NS_ASSERTION(PresContext() == aOther->PresContext(),
                "GetOffsetTo called on frames in different documents");
 
-  //XXX sometime in the near future once we are confident that all GetOffsetTo
-  // callers pass frames that are really in the same doc we can get rid of this
-  // check.
-  if (PresContext() != aOther->PresContext()) {
-    return GetOffsetToCrossDoc(aOther);
-  }
-
   nsPoint offset(0, 0);
   const nsIFrame* f;
   for (f = this; f != aOther && f; f = f->GetParent()) {

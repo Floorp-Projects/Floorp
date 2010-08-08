@@ -119,7 +119,14 @@ public:
   static PRBool ProcessMessage(nsWindow* aWindow, UINT msg,
                                WPARAM &wParam, LPARAM &lParam,
                                LRESULT *aRetValue, PRBool &aEatMessage);
-  static PRBool IsComposing(nsWindow* aWindow);
+  static PRBool IsComposing()
+  {
+    return IsComposingOnOurEditor() || IsComposingOnPlugin();
+  }
+  static PRBool IsComposingOn(nsWindow* aWindow)
+  {
+    return IsComposing() && IsComposingWindow(aWindow);
+  }
   static PRBool IsStatusChanged() { return sIsStatusChanged; }
 
   static PRBool IsDoingKakuteiUndo(HWND aWnd);
@@ -128,13 +135,35 @@ public:
 
   static PRBool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
 
+  // If aForce is TRUE, these methods doesn't check whether we have composition
+  // or not.  If you don't set it to TRUE, these method doesn't commit/cancel
+  // the composition on uexpected window.
+  static void CommitComposition(nsWindow* aWindow, PRBool aForce = PR_FALSE);
+  static void CancelComposition(nsWindow* aWindow, PRBool aForce = PR_FALSE);
+
 protected:
   static void EnsureHandlerInstance();
+
+  static PRBool IsComposingOnOurEditor();
+  static PRBool IsComposingOnPlugin();
+  static PRBool IsComposingWindow(nsWindow* aWindow);
 
   static PRBool ShouldDrawCompositionStringOurselves();
   static void InitKeyboardLayout(HKL aKeyboardLayout);
   static UINT GetKeyboardCodePage();
 
+  /**
+   * Checks whether the window is top level window of the composing window.
+   * In this method, the top level window means in all windows, not only in all
+   * OUR windows.  I.e., if the aWindow is embedded, this always returns FALSE.
+   */
+  static PRBool IsTopLevelWindowOfComposition(nsWindow* aWindow);
+
+  static PRBool ProcessInputLangChangeMessage(nsWindow* aWindow,
+                                              WPARAM wParam,
+                                              LPARAM lParam,
+                                              LRESULT *aRetValue,
+                                              PRBool &aEatMessage);
   static PRBool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
                                         LRESULT *aRetValue,
@@ -153,17 +182,30 @@ protected:
 
   // The result of On* methods mean "eat this message" when it's TRUE.
   PRBool OnIMEStartComposition(nsWindow* aWindow);
+  PRBool OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
+                                       WPARAM wParam, LPARAM lParam);
   PRBool OnIMEComposition(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  PRBool OnIMECompositionOnPlugin(nsWindow* aWindow,
+                                  WPARAM wParam, LPARAM lParam);
   PRBool OnIMEEndComposition(nsWindow* aWindow);
+  PRBool OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
+                                     WPARAM wParam, LPARAM lParam);
   PRBool OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                       LRESULT *aResult);
+  PRBool OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  PRBool OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  PRBool OnCharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
   PRBool OnInputLangChange(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
 
   // These message handlers don't use instance members, we should not create
   // the instance by the messages.  So, they should be static.
   static PRBool OnIMEChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
   static PRBool OnIMESetContext(nsWindow* aWindow,
-                                WPARAM wParam, LPARAM &lParam);
+                                WPARAM wParam, LPARAM lParam,
+                                LRESULT *aResult);
+  static PRBool OnIMESetContextOnPlugin(nsWindow* aWindow,
+                                        WPARAM wParam, LPARAM lParam,
+                                        LRESULT *aResult);
   static PRBool OnIMECompositionFull(nsWindow* aWindow);
   static PRBool OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
   static PRBool OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
@@ -178,6 +220,17 @@ protected:
   PRBool HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
                                  LRESULT *oResult);
   PRBool HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
+
+  /**
+   *  When a window's IME context is activating but we have composition on
+   *  another window, we should commit our composition because IME context is
+   *  shared by all our windows (including plug-ins).
+   *  @param aWindow is a new activated window.
+   *  If aWindow is our composing window, this method does nothing.
+   *  Otherwise, this commits the composition on the previous window.
+   *  If this method did commit a composition, this returns TRUE.
+   */
+  PRBool CommitCompositionOnPreviousWindow(nsWindow* aWindow);
 
   /**
    *  ResolveIMECaretPos
@@ -230,6 +283,42 @@ protected:
   nsresult EnsureClauseArray(PRInt32 aCount);
   nsresult EnsureAttributeArray(PRInt32 aCount);
 
+  /**
+   * When WM_IME_CHAR is received and passed to DefWindowProc, we need to
+   * record the messages.  In other words, we should record the messages
+   * when we receive WM_IME_CHAR on windowless plug-in (if we have focus,
+   * we always eat them).  When focus is moved from a windowless plug-in to
+   * our window during composition, WM_IME_CHAR messages were received when
+   * the plug-in has focus.  However, WM_CHAR messages are received after the
+   * plug-in lost focus.  So, we need to ignore the WM_CHAR messages because
+   * they make unexpected text input events on us.
+   */
+  nsTArray<MSG> mPassedIMEChar;
+
+  PRBool IsIMECharRecordsEmpty()
+  {
+    return mPassedIMEChar.IsEmpty();
+  }
+  void ResetIMECharRecords()
+  {
+    mPassedIMEChar.Clear();
+  }
+  void DequeueIMECharRecords(WPARAM &wParam, LPARAM &lParam)
+  {
+    MSG msg = mPassedIMEChar.ElementAt(0);
+    wParam = msg.wParam;
+    lParam = msg.lParam;
+    mPassedIMEChar.RemoveElementAt(0);
+  }
+  void EnqueueIMECharRecords(WPARAM wParam, LPARAM lParam)
+  {
+    MSG msg;
+    msg.wParam = wParam;
+    msg.lParam = lParam;
+    mPassedIMEChar.AppendElement(msg);
+  }
+
+  nsWindow* mComposingWindow;
   nsString  mCompositionString;
   nsTArray<PRUint32> mClauseArray;
   nsTArray<PRUint8> mAttributeArray;
@@ -238,9 +327,9 @@ protected:
   PRUint32 mCompositionStart;
 
   PRPackedBool mIsComposing;
+  PRPackedBool mIsComposingOnPlugin;
   PRPackedBool mNativeCaretIsCreated;
 
-  static PRPackedBool sIsComposingOnPlugin;
   static PRPackedBool sIsStatusChanged;
   static PRPackedBool sIsIME;
   static PRPackedBool sIsIMEOpening;

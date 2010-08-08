@@ -225,6 +225,12 @@ public:
                                            UINT aVirtualCharCode, const MSG *aMsg,
                                            const nsModifierKeyState &aModKeyState,
                                            PRUint32 aFlags = 0);
+  void                    DispatchPendingEvents();
+  PRBool                  DispatchPluginEvent(UINT aMessage,
+                                              WPARAM aWParam,
+                                              LPARAM aLParam,
+                                              PRBool aDispatchPendingEvents);
+
   void                    SuppressBlurEvents(PRBool aSuppress); // Called from nsFilePicker
   PRBool                  BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
@@ -303,7 +309,6 @@ protected:
   /**
    * Event processing helpers
    */
-  void                    DispatchPendingEvents();
   PRBool                  DispatchPluginEvent(const MSG &aMsg);
   PRBool                  DispatchFocusToTopLevelWindow(PRUint32 aEventType);
   PRBool                  DispatchFocus(PRUint32 aEventType);
