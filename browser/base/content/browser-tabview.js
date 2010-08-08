@@ -75,13 +75,13 @@ let TabView = {
 
     if (tabViewWindow) {
       let activeGroup = tab.tabItem.parent;
-      let groups = tabViewWindow.Groups.groups;
+      let groupItems = tabViewWindow.GroupItems.groupItems;
       let self = this;
 
-      groups.forEach(function(group) { 
-        if (group.getTitle().length > 0 && 
-            (!activeGroup || activeGroup.id != group.id)) {
-          let menuItem = self._createGroupMenuItem(group);
+      groupItems.forEach(function(groupItem) { 
+        if (groupItem.getTitle().length > 0 && 
+            (!activeGroup || activeGroup.id != groupItem.id)) {
+          let menuItem = self._createGroupMenuItem(groupItem);
           popup.appendChild(menuItem);
           isEmpty = false;
         }
@@ -90,21 +90,21 @@ let TabView = {
     document.getElementById("context_namedGroups").hidden = isEmpty;
   },
 
-  _createGroupMenuItem : function(group) {
+  _createGroupMenuItem : function(groupItem) {
     let menuItem = document.createElement("menuitem")
     menuItem.setAttribute("class", "group");
-    menuItem.setAttribute("label", group.getTitle());
+    menuItem.setAttribute("label", groupItem.getTitle());
     menuItem.setAttribute(
       "oncommand", 
-      "TabView.moveTabTo(TabContextMenu.contextTab,'" + group.id + "')");
+      "TabView.moveTabTo(TabContextMenu.contextTab,'" + groupItem.id + "')");
 
     return menuItem;
   },
 
-  moveTabTo: function(tab, groupId) {
+  moveTabTo: function(tab, groupItemId) {
     let tabViewWindow = document.getElementById("tab-view").contentWindow;
 
     if (tabViewWindow)
-      tabViewWindow.Groups.moveTabToGroup(tab, groupId);
+      tabViewWindow.GroupItems.moveTabToGroupItem(tab, groupItemId);
   }
 };
