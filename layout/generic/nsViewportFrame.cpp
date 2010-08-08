@@ -46,6 +46,9 @@
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 #include "nsDisplayList.h"
+#include "FrameLayerBuilder.h"
+
+using namespace mozilla;
 
 nsIFrame*
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -359,6 +362,13 @@ ViewportFrame::InvalidateInternal(const nsRect& aDamageRect,
 {
   nsRect r = aDamageRect + nsPoint(aX, aY);
   PresContext()->NotifyInvalidation(r, aFlags);
+
+  if ((mState & NS_FRAME_HAS_CONTAINER_LAYER) &&
+      !(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
+    FrameLayerBuilder::InvalidateThebesLayerContents(this, r);
+    // Don't need to invalidate any more Thebes layers
+    aFlags |= INVALIDATE_NO_THEBES_LAYERS;
+  }
 
   nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
   if (parent) {
