@@ -83,37 +83,36 @@ public:
 #endif
 
 public:
-  NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule);
+  void AppendStyleRule(nsICSSRule* aRule);
 
-  NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const;
-  NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
+  PRInt32 StyleRuleCount() const { return mRules.Count(); }
+  nsICSSRule* GetStyleRuleAt(PRInt32 aIndex) const;
 
   typedef nsCOMArray<nsICSSRule>::nsCOMArrayEnumFunc RuleEnumFunc;
-  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
+  PRBool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
    * The next three methods should never be called unless you have first
    * called WillDirty() on the parent stylesheet.  After they are
    * called, DidDirty() needs to be called on the sheet.
    */
-  NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex);
-  NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex,
-                                 nsCOMArray<nsICSSRule>& aRules);
-  NS_IMETHOD  ReplaceStyleRule(nsICSSRule *aOld, nsICSSRule *aNew);
+  nsresult DeleteStyleRuleAt(PRUint32 aIndex);
+  nsresult InsertStyleRulesAt(PRUint32 aIndex,
+                              nsCOMArray<nsICSSRule>& aRules);
+  nsresult ReplaceStyleRule(nsICSSRule *aOld, nsICSSRule *aNew);
 
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
-                                         nsMediaQueryResultCacheKey& aKey) = 0;
+  virtual PRBool UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey) = 0;
 
 protected:
   // to help implement nsIDOMCSSRule
   nsresult AppendRulesToCssText(nsAString& aCssText);
   // to implement methods on nsIDOMCSSRule
-  nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
   nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
 
   // to implement common methods on nsIDOMCSSMediaRule and
   // nsIDOMCSSMozDocumentRule
-  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
+  nsIDOMCSSRuleList* GetCssRules();
   nsresult InsertRule(const nsAString & aRule, PRUint32 aIndex,
                       PRUint32* _retval);
   nsresult DeleteRule(PRUint32 aIndex);
