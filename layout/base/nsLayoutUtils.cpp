@@ -680,25 +680,18 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
 
 nsIFrame*
 nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                        nsIFrame* aStopAtAncestor,
-                                        nsPoint* aOffset)
+                                        nsIFrame* aStopAtAncestor)
 {
-  nsPoint offset(0,0);
   nsIFrame* f = aFrame;
   while (f != aStopAtAncestor) {
     NS_ASSERTION(!IsPopup(f), "Should have stopped before popup");
-    nsPoint extraOffset(0,0);
-    nsIFrame* parent = GetCrossDocParentFrame(f, &extraOffset);
+    nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
     nsIScrollableFrame* sf = do_QueryFrame(parent);
     if (sf && sf->IsScrollingActive() && sf->GetScrolledFrame() == f)
       break;
-    offset += f->GetPosition() + extraOffset;
     f = parent;
-  }
-  if (aOffset) {
-    *aOffset = offset;
   }
   return f;
 }
