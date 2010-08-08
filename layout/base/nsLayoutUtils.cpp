@@ -1216,7 +1216,8 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   nsIPresShell* presShell = presContext->PresShell();
 
   nsRegion visibleRegion;
-  if (aFlags & PAINT_WIDGET_LAYERS) {
+  if ((aFlags & PAINT_WIDGET_LAYERS) &&
+      !(aFlags & PAINT_IGNORE_VIEWPORT_SCROLLING)) {
     // This layer tree will be reused, so we'll need to calculate it
     // for the whole visible area of the window
     visibleRegion = aFrame->GetOverflowRectRelativeToSelf();
@@ -1287,6 +1288,13 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     }
   }
 
+  // If we're going to display something different from what we'd normally
+  // paint in a window then we will flush out any retained layer trees before
+  // *and after* we draw.
+  PRBool willFlushLayers = aFlags & (PAINT_IGNORE_SUPPRESSION |
+                                     PAINT_IGNORE_VIEWPORT_SCROLLING |
+                                     PAINT_HIDE_CARET);
+
   nsIAtom* frameType = aFrame->GetType();
   // For the viewport frame in print preview/page layout we want to paint
   // the grey background behind the page, not the canvas color.
@@ -1337,9 +1345,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
     nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
-    if (aFlags & (PAINT_IGNORE_SUPPRESSION |
-                  PAINT_IGNORE_VIEWPORT_SCROLLING |
-                  PAINT_HIDE_CARET)) {
+    if (willFlushLayers) {
       // We're going to display something different from what we'd normally
       // paint in a window, so make sure we flush out any retained layer
       // trees before *and after* we draw
