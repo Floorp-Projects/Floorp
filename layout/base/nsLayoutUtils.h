@@ -1138,6 +1138,16 @@ public:
    */
   static nsIContent*
     GetEditableRootContentByContentEditable(nsIDocument* aDocument);
+
+  /**
+   * Returns true if the passed in prescontext needs the dark grey background
+   * that goes behind the page of a print preview presentation.
+   */
+  static PRBool NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
+    return aPresContext->IsRootPaginatedDocument() &&
+      (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
+       aPresContext->Type() == nsPresContext::eContext_PageLayout);
+  }
 };
 
 class nsSetAttrRunnable : public nsRunnable
