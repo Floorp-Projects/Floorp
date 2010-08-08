@@ -12470,7 +12470,7 @@ TraceRecorder::getStringLength(LIns* str_ins)
     return addName(lir->ins2ImmI(LIR_rshup,
                                  addName(lir->insLoad(LIR_ldp, str_ins,
                                                       offsetof(JSString, mLengthAndFlags),
-                                                      ACCSET_OTHER, LOAD_CONST), "mLengthAndFlags"),
+                                                      ACCSET_OTHER), "mLengthAndFlags"),
                                  JSString::FLAGS_LENGTH_SHIFT), "length");
 }
 
@@ -12479,7 +12479,7 @@ TraceRecorder::getStringChars(LIns* str_ins)
 {
     return addName(lir->insLoad(LIR_ldp, str_ins,
                                 offsetof(JSString, mChars),
-                                ACCSET_OTHER, LOAD_CONST), "chars");
+                                ACCSET_OTHER), "chars");
 }
 
 JS_REQUIRES_STACK LIns*
@@ -12487,7 +12487,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
 {
     idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
-                                    ACCSET_OTHER, LOAD_CONST);
+                                    ACCSET_OTHER);
     LIns *br = lir->insBranch(LIR_jt,
                               lir->insEqP_0(lir->ins2(LIR_andp,
                                                       length_ins,
@@ -12512,7 +12512,7 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
 {
     idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
-                                    ACCSET_OTHER, LOAD_CONST);
+                                    ACCSET_OTHER);
     LIns *br = lir->insBranch(LIR_jt,
                               lir->insEqP_0(lir->ins2(LIR_andp,
                                                       length_ins,
