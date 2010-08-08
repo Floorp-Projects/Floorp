@@ -1376,25 +1376,6 @@ StyleRule::RuleMatched()
   }
 }
 
-/* virtual */ already_AddRefed<nsIStyleSheet>
-StyleRule::GetStyleSheet() const
-{
-// XXX What about inner, etc.
-  return nsCSSRule::GetStyleSheet();
-}
-
-/* virtual */ void
-StyleRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
-{
-  nsCSSRule::SetStyleSheet(aSheet);
-}
-
-/* virtual */ void
-StyleRule::SetParentRule(GroupRule* aRule)
-{
-  nsCSSRule::SetParentRule(aRule);
-}
-
 /* virtual */ PRInt32
 StyleRule::GetType() const
 {
