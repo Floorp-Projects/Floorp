@@ -190,6 +190,7 @@ var UIManager = {
       var firstTime = !groupItemsData || Utils.isEmptyObject(groupItemsData);
       var groupItemData = Storage.readGroupItemData(gWindow);
       GroupItems.reconstitute(groupItemsData, groupItemData);
+      GroupItems.killNewTabGroup(); // temporary?
 
       if (firstTime) {
         var padding = 10;
