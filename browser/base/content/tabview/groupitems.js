@@ -84,11 +84,11 @@ window.GroupItem = function GroupItem(listOfEls, options) {
   // The <TabItem> for the groupItem's active tab.
   this._activeTab = null;
 
-   // Variables: xDensity, yDensity
-   // "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
-   // = "not squishable". For example, if there is extra space in the vertical direction,
-   // yDensity will be < 1. These are set by <GroupItem.arrange>, as it is dependent on the tab items
-   // inside the groupItem.
+  // Variables: xDensity, yDensity
+  // "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
+  // = "not squishable". For example, if there is extra space in the vertical direction,
+  // yDensity will be < 1. These are set by <GroupItem.arrange>, as it is dependent on the tab items
+  // inside the groupItem.
   this.xDensity = 0;
   this.yDensity = 0;
 
@@ -394,7 +394,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     box.height -= titleHeight;
     box.inset(6, 6);
 
-		box.height -= 33; // For new tab button
+    box.height -= 33; // For new tab button
 
     return box;
   },
@@ -484,7 +484,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.adjustTitleSize();
 
     this._updateDebugBounds();
-		this.setTrenches(rect);
+    this.setTrenches(rect);
 
     this.save();
   },
@@ -820,7 +820,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           count: count
         });
 
-				if (!count) {
+        if (!count) {
           this.xDensity = 0;
           this.yDensity = 0;
           return;
@@ -1118,7 +1118,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
 
     this.dropOptions.over = function() {
-			iQ(this.container).addClass("acceptsDrop");
+      iQ(this.container).addClass("acceptsDrop");
     };
     this.dropOptions.drop = function(event) {
       iQ(this.container).removeClass("acceptsDrop");
@@ -1364,6 +1364,8 @@ window.GroupItems = {
   groupItems: [],
   nextID: 1,
   _inited: false,
+  _activeGroup: null,
+  _activeOrphanTab: null,
 
   // ----------
   // Function: init
@@ -1580,38 +1582,38 @@ window.GroupItems = {
     let orphanTab = this.getActiveOrphanTab();
 //    Utils.log('newTab', groupItem, orphanTab);
     if (groupItem) {
-    	groupItem.add(tabItem);
+      groupItem.add(tabItem);
     } else if ( orphanTab ) {
-			let newGroupItemBounds = orphanTab.getBoundsWithTitle();
-			newGroupItemBounds.inset(-40,-40);
+      let newGroupItemBounds = orphanTab.getBoundsWithTitle();
+      newGroupItemBounds.inset(-40,-40);
 
-			let newGroupItem = new GroupItem([orphanTab, tabItem], {bounds: newGroupItemBounds});
-			newGroupItem.snap();
+      let newGroupItem = new GroupItem([orphanTab, tabItem], {bounds: newGroupItemBounds});
+      newGroupItem.snap();
 
-			this.setActiveGroupItem(newGroupItem);
+      this.setActiveGroupItem(newGroupItem);
 
     } else {
       this.positionNewTabAtBottom(tabItem);
-		}
+    }
   },
 
-	// ----------
-	// Function: positionNewTabAtBottom
-	// Does what it says on the tin. 
-	// TODO: Make more robust and improve documentation, 
-	// Also, this probably belongs in tabitems.js
-	positionNewTabAtBottom: function(tabItem) {
-		let windowBounds = Items.getSafeWindowBounds();
-		
-		let itemBounds = new Rect(
-		  windowBounds.right - TabItems.tabWidth,
-		  windowBounds.bottom - TabItems.tabHeight,
-		  TabItems.tabWidth, 
-		  TabItems.tabHeight
-		);
-		
+  // ----------
+  // Function: positionNewTabAtBottom
+  // Does what it says on the tin. 
+  // TODO: Make more robust and improve documentation, 
+  // Also, this probably belongs in tabitems.js
+  positionNewTabAtBottom: function(tabItem) {
+    let windowBounds = Items.getSafeWindowBounds();
+    
+    let itemBounds = new Rect(
+      windowBounds.right - TabItems.tabWidth,
+      windowBounds.bottom - TabItems.tabHeight,
+      TabItems.tabWidth, 
+      TabItems.tabHeight
+    );
+    
     tabItem.setBounds(itemBounds);
-	},
+  },
 
   // ----------
   // Function: getActiveGroupItem
@@ -1634,7 +1636,7 @@ window.GroupItems = {
   setActiveGroupItem: function(groupItem) {
     this._activeGroupItem = groupItem;
     this.updateTabBarForActiveGroupItem();
-		// if a groupItem is active, we surely are not in an orphaned tab.
+    // if a groupItem is active, we surely are not in an orphaned tab.
     this.setActiveOrphanTab(null);
   },
 
