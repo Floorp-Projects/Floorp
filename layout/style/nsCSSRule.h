@@ -54,9 +54,6 @@ class GroupRule;
 }
 
 #define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
-virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const; \
-virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); \
-virtual void SetParentRule(mozilla::css::GroupRule* aRule); \
 virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 #define DECL_STYLE_RULE_INHERIT  \
