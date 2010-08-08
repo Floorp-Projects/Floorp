@@ -1379,7 +1379,7 @@ nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
 
 nsDisplayZoom::nsDisplayZoom(nsIFrame* aFrame, nsDisplayList* aList,
                              PRInt32 aAPD, PRInt32 aParentAPD)
-    : nsDisplayWrapList(aFrame, aList), mAPD(aAPD), mParentAPD(aParentAPD) {
+    : nsDisplayOwnLayer(aFrame, aList), mAPD(aAPD), mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
 }
 
