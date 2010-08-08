@@ -1633,6 +1633,11 @@ public:
                                    nsRegion* aVisibleRegionBeforeMove);
   NS_DISPLAY_DECL_NAME("Zoom", TYPE_ZOOM)
 
+  // Get the app units per dev pixel ratio of the child document.
+  PRInt32 GetChildAppUnitsPerDevPixel() { return mAPD; }
+  // Get the app units per dev pixel ratio of the parent document.
+  PRInt32 GetParentAppUnitsPerDevPixel() { return mParentAPD; }
+
 private:
   PRInt32 mAPD, mParentAPD;
 };
