@@ -39,6 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
+#ifdef MOZ_LOGGING
+// this next define has to appear before the include of prlog.h
+#define FORCE_PR_LOG // Allow logging in the release build
+#endif
+
 #ifdef MOZ_IPC
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -204,8 +210,6 @@ struct nsEnumerationData
 //    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
 //    set NSPR_LOG_FILE=cookie.log
 //
-// this next define has to appear before the include of prlog.h
-#define FORCE_PR_LOG // Allow logging in the release build
 #include "prlog.h"
 #endif
 

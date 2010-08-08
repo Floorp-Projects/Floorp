@@ -414,6 +414,11 @@ else
 CPPSRCS += GLContextProvider$(GL_PROVIDER).cpp
 endif
 
+# Win32 is a special snowflake, for ANGLE
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += GLContextProviderEGL.cpp
+endif
+
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
 
 include $(topsrcdir)/config/rules.mk

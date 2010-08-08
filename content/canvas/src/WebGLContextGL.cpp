@@ -2410,58 +2410,6 @@ WebGLContext::ReadPixels_buf(WebGLint x, WebGLint y, WebGLsizei width, WebGLsize
 }
 
 NS_IMETHODIMP
-WebGLContext::ReadPixels_byteLength_old_API_deprecated(WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, WebGLsizei *retval)
-{
-    *retval = 0;
-    if (width < 0 || height < 0)
-        return ErrorInvalidValue("ReadPixels: negative size passed");
-
-    PRUint32 size = 0;
-    switch (format) {
-      case LOCAL_GL_ALPHA:
-        size = 1;
-        break;
-      case LOCAL_GL_RGB:
-        size = 3;
-        break;
-      case LOCAL_GL_RGBA:
-        size = 4;
-        break;
-      default:
-        return ErrorInvalidEnumInfo("ReadPixels: format", format);
-    }
-
-    switch (type) {
-//         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-//         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-//         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-      case LOCAL_GL_UNSIGNED_BYTE:
-        break;
-      default:
-        return ErrorInvalidEnumInfo("ReadPixels: type", type);
-    }
-    PRUint32 packAlignment;
-    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*) &packAlignment);
-
-    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
-
-    // alignedRowSize = row size rounded up to next multiple of
-    // packAlignment which is a power of 2
-    CheckedUint32 checked_alignedRowSize
-        = ((checked_plainRowSize + packAlignment-1) / packAlignment) * packAlignment;
-
-    CheckedUint32 checked_neededByteLength = (height-1)*checked_alignedRowSize + checked_plainRowSize;
-
-    if (!checked_neededByteLength.valid())
-        return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
-
-    *retval = checked_neededByteLength.value();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
 {
     if (target != LOCAL_GL_RENDERBUFFER)
@@ -3226,27 +3174,6 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum interna
     return TexImage2D_base(target, level, internalformat,
                            isurf->Width(), isurf->Height(), 0,
                            format, type,
-                           isurf->Data(), byteLength);
-}
-
-NS_IMETHODIMP
-WebGLContext::TexImage2D_dom_old_API_deprecated(WebGLenum target, WebGLint level, nsIDOMElement *elt,
-                                                PRBool flipY, PRBool premultiplyAlpha)
-{
-    nsRefPtr<gfxImageSurface> isurf;
-
-    nsresult rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf),
-                                           flipY, premultiplyAlpha);
-    if (NS_FAILED(rv))
-        return rv;
-
-    NS_ASSERTION(isurf->Stride() == isurf->Width() * 4, "Bad stride!");
-
-    PRUint32 byteLength = isurf->Stride() * isurf->Height();
-
-    return TexImage2D_base(target, level, LOCAL_GL_RGBA,
-                           isurf->Width(), isurf->Height(), 0,
-                           LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
                            isurf->Data(), byteLength);
 }
 
