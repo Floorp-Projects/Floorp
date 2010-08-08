@@ -951,6 +951,13 @@ public:
                                                 nscolor aBackstopColor,
                                                 PRBool aForceDraw);
 
+  virtual nsresult AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
+                                                 nsDisplayList& aList,
+                                                 nsIFrame* aFrame,
+                                                 const nsRect& aBounds);
+
+  virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot);
+
 protected:
   virtual ~PresShell();
 
@@ -1307,13 +1314,6 @@ private:
   PRPackedBool mInResize;
 
 private:
-  /*
-   * Computes the backstop color for the view: transparent if in a transparent
-   * widget, otherwise the PresContext default background color. This color is
-   * only visible if the contents of the view as a whole are translucent.
-   */
-  nscolor ComputeBackstopColor(nsIView* aDisplayRoot);
-
 #ifdef DEBUG
   // Ensure that every allocation from the PresArena is eventually freed.
   PRUint32 mPresArenaAllocCount;
@@ -5309,7 +5309,12 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
     flags |= nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES;
   }
   if (aFlags & RENDER_USE_WIDGET_LAYERS) {
-    flags |= nsLayoutUtils::PAINT_WIDGET_LAYERS;
+    // We only support using widget layers on display root's with widgets.
+    nsIView* view = rootFrame->GetView();
+    if (view && view->GetWidget() &&
+        nsLayoutUtils::GetDisplayRootFrame(rootFrame) == rootFrame) {
+      flags |= nsLayoutUtils::PAINT_WIDGET_LAYERS;
+    }
   }
   if (!(aFlags & RENDER_CARET)) {
     flags |= nsLayoutUtils::PAINT_HIDE_CARET;
@@ -5730,6 +5735,16 @@ PresShell::RenderSelection(nsISelection* aSelection,
 
   return PaintRangePaintInfo(&rangeItems, aSelection, nsnull, area, aPoint,
                              aScreenRect);
+}
+
+nsresult
+PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
+                                         nsDisplayList&        aList,
+                                         nsIFrame*             aFrame,
+                                         const nsRect&         aBounds)
+{
+  return aList.AppendNewToBottom(
+      new (&aBuilder) nsDisplaySolidColor(aFrame, aBounds, NS_RGB(115, 115, 115)));
 }
 
 static PRBool
