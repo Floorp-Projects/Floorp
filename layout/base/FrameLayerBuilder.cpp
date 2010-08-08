@@ -648,6 +648,13 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
 static PRUint32
 AppUnitsPerDevPixel(nsDisplayItem* aItem)
 {
+  // The underlying frame for zoom items is the root frame of the subdocument.
+  // But zoom display items report their bounds etc using the parent document's
+  // APD because zoom items act as a conversion layer between the two different
+  // APDs.
+  if (aItem->GetType() == nsDisplayItem::TYPE_ZOOM) {
+    return static_cast<nsDisplayZoom*>(aItem)->GetParentAppUnitsPerDevPixel();
+  }
   return aItem->GetUnderlyingFrame()->PresContext()->AppUnitsPerDevPixel();
 }
 
