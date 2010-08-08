@@ -1939,10 +1939,9 @@ nsCSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, PRUint32 aIndex)
   NS_ENSURE_ARG_POINTER(aGroup);
   NS_ASSERTION(mInner->mComplete, "No deleting from an incomplete sheet!");
   nsresult result;
-  nsCOMPtr<nsICSSRule> rule;
-  result = aGroup->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
-  NS_ENSURE_SUCCESS(result, result);
-  
+  nsCOMPtr<nsICSSRule> rule = aGroup->GetStyleRuleAt(aIndex);
+  NS_ENSURE_TRUE(rule, NS_ERROR_ILLEGAL_VALUE);
+
   // check that the rule actually belongs to this sheet!
   nsCOMPtr<nsIStyleSheet> ruleSheet = rule->GetStyleSheet();
   if (this != ruleSheet) {
