@@ -191,10 +191,9 @@ function ensure_opentabs_match_db() {
 
   try {
     var stmt = db.createStatement(
-                          "SELECT IFNULL(p_t.url, p.url) AS url, open_count, place_id " +
+                          "SELECT p.url AS url, open_count, place_id " +
                           "FROM moz_openpages_temp " +
-                          "LEFT JOIN moz_places p ON p.id=place_id " +
-                          "LEFT JOIN moz_places_temp p_t ON p_t.id=place_id");
+                          "LEFT JOIN moz_places p ON p.id = place_id");
   } catch (e) {
     ok(false, "error creating db statement: " + e);
     return;
