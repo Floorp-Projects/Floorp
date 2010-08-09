@@ -207,6 +207,7 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
 # those are just for language packs
 	cp -r $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
 	$(RM) l10n-stage/localized/install.rdf l10n-stage/localized/chrome.manifest
+	mv l10n-stage/localized/chrome/$(AB_CD).manifest l10n-stage/localized/chrome/localized.manifest
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	cp ../installer/windows/l10ngen/setup.exe l10n-stage
 	$(NSINSTALL) -D l10n-stage/localized/uninstall
