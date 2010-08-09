@@ -62,6 +62,7 @@
         _self: this,
 
         QueryInterface: function(aIID) {
+          const Ci = Components.interfaces;
           if (aIID.equals(Ci.nsIObserver) ||
               aIID.equals(Ci.nsISupportsWeakReference) ||
               aIID.equals(Ci.nsISupports))
@@ -310,9 +311,8 @@
       <method name="valueFromPreference">
         <body>
         <![CDATA[
-          this.value = Services.prefs
-                           .getComplexValue(this.pref, Ci.nsISupportsString)
-                           .data;
+          const nsISupportsString = Components.interfaces.nsISupportsString;
+          this.value = Services.prefs.getComplexValue(this.pref, nsISupportsString).data;
          ]]>
         </body>
       </method>
@@ -320,10 +320,10 @@
       <method name="valueToPreference">
         <body>
         <![CDATA[
-          let iss = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+          const nsISupportsString = Components.interfaces.nsISupportsString;
+          let iss = Components.classes["@mozilla.org/supports-string;1"].createInstance(nsISupportsString);
           iss.data = this.value;
-          Services.prefs
-              .setComplexValue(this.pref, Ci.nsISupportsString, iss);
+          Services.prefs.setComplexValue(this.pref, nsISupportsString, iss);
         ]]>
         </body>
       </method>
