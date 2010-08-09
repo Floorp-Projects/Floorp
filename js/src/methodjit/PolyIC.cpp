@@ -1890,7 +1890,7 @@ ic::GetElem(VMFrame &f, uint32 picIndex)
     Value idval = f.regs.sp[-1];
     JS_ASSERT(idval.isString());
     JSString *id = idval.toString();
-    if (pic.shouldGenerate()) {
+    if (0 && pic.shouldGenerate()) {
         GetElemCompiler cc(f, script, obj, pic, id, stubs::GetElem);
         if (!cc.update()) {
             cc.disable("error");
