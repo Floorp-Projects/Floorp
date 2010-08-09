@@ -1944,6 +1944,19 @@ struct JSContext
 #endif
     }
 
+#ifdef MOZ_TRACE_JSCALLS
+    /* Function entry/exit debugging callback. */
+    JSFunctionCallback    functionCallback;
+
+    void doFunctionCallback(const JSFunction *fun,
+                            const JSScript *scr,
+                            JSBool entering) const
+    {
+        if (functionCallback)
+            functionCallback(fun, scr, this, entering);
+    }
+#endif
+
     DSTOffsetCache dstOffsetCache;
 
     /* List of currently active non-escaping enumerators (for-in). */
