@@ -21,6 +21,7 @@
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
  *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -718,13 +719,40 @@ function testErrorOnPageReload() {
       testLogEntry(outputNode, "fooBazBaz",
         { success: successMsg, err: errMsg });
 
-      testEnd();
+      testWebConsoleClose();
     }, false);
 
     button.dispatchEvent(clickEvent);
   }, false);
 
   content.location.href = TEST_ERROR_URI;
+}
+
+/**
+ * Unit test for bug 580001:
+ * 'Close console after completion causes error "inputValue is undefined"'
+ */
+function testWebConsoleClose() {
+  let display = HUDService.getDisplayByURISpec(content.location.href);
+  let input = display.querySelector(".jsterm-input-node");
+
+  let errorWhileClosing = false;
+  function errorListener(evt) {
+    errorWhileClosing = true;
+  }
+  window.addEventListener("error", errorListener, false);
+
+  // Focus the inputNode and perform the keycombo to close the WebConsole.
+  input.focus();
+  EventUtils.synthesizeKey("k", { accelKey: true, shiftKey: true });
+
+  // We can't test for errors right away, because the error occures after a
+  // setTimeout(..., 0) in the WebConsole code.
+  executeSoon(function() {
+    window.removeEventListener("error", errorListener, false);
+    is (errorWhileClosing, false, "no error while closing the WebConsole");
+    testEnd();
+  });
 }
 
 function testEnd() {
