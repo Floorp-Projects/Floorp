@@ -360,7 +360,6 @@ var UIManager = {
         if (activeGroupItem)
           activeGroupItem.setTopChild(item);
 
-        window.GroupItems.setActiveGroupItem(null);
         self._resize(true);
         dispatchEvent(event);
       });
@@ -532,6 +531,7 @@ var UIManager = {
       if (focusTab && focusTab.tabItem) {
         newItem = focusTab.tabItem;
         GroupItems.setActiveGroupItem(newItem.parent);
+        GroupItems.updateTabBarForActiveGroupItem();
       }
 
       // ___ prepare for when we return to TabView
@@ -745,9 +745,12 @@ var UIManager = {
     const minSize = 60;
     const minMinSize = 15;
 
+		let lastActiveGroupItem = GroupItems.getActiveGroupItem();
+		GroupItems.setActiveGroupItem(null);
+
     var startPos = { x: e.clientX, y: e.clientY };
     var phantom = iQ("<div>")
-      .addClass("groupItem phantom")
+      .addClass("groupItem phantom activeGroupItem")
       .css({
         position: "absolute",
         opacity: .7,
@@ -825,6 +828,7 @@ var UIManager = {
           phantom.remove();
         }
       });
+      GroupItems.setActiveGroupItem(lastActiveGroupItem);
     }
 
     function finalize(e) {
@@ -845,6 +849,7 @@ var UIManager = {
         }
 
         var groupItem = new GroupItem(insideTabs,{bounds:bounds});
+        GroupItems.setActiveGroupItem(groupItem);
         phantom.remove();
         dragOutInfo = null;
       }

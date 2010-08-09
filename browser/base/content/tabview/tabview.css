@@ -191,7 +191,12 @@ body {
   -moz-border-radius: 0.4em;
   -moz-box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
-    rgba(0,0,0, .2) 1px 1px 4px;
+    rgba(0,0,0,0.2) 1px 1px 4px;
+}
+
+.groupItem.activeGroupItem {
+  -moz-box-shadow:
+    rgba(0,0,0,0.6) 1px 1px 8px;
 }
 
 .phantom {
