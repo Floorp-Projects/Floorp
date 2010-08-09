@@ -1227,12 +1227,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
               duration: 270,
               complete: function() {
                 iQ(tab.container).css({opacity: 1});
-                gBrowser.selectedTab = newTab;
-                /*
-                ToDo: do we need this?  onTabFocus already handles right?
-                UI.hideTabView()
-                */
-                gWindow.gURLBar.focus();
+                newTab.tabItem.zoomIn(!url);
                 $anim.remove();
                 // We need a timeout here so that there is a chance for the
                 // new tab to get made! Otherwise it won't appear in the list
