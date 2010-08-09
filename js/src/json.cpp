@@ -240,16 +240,14 @@ public:
         if (gapValue.value().isString()) {
             if (!js_ValueToCharBuffer(cx, gapValue.value(), gap))
                 return false;
-            if (cb.length() > 10)
-                cb.resize(10);
-        }
-
-        if (gapValue.value().isNumber()) {
+            if (gap.length() > 10)
+                gap.resize(10);
+        } else if (gapValue.value().isNumber()) {
             jsdouble d = gapValue.value().isInt32()
                          ? gapValue.value().toInt32()
                          : js_DoubleToInteger(gapValue.value().toDouble());
             d = JS_MIN(10, d);
-            if (d >= 1 && !cb.appendN(' ', uint32(d)))
+            if (d >= 1 && !gap.appendN(' ', uint32(d)))
                 return false;
         }
 
@@ -409,6 +407,7 @@ JO(JSContext *cx, Value *vp, StringifyContext *scx)
         s->getCharsAndLength(chars, length);
         if (!write_string(cx, scx->cb, chars, length) ||
             !scx->cb.append(':') ||
+            !(scx->gap.empty() || scx->cb.append(' ')) ||
             !Str(cx, id, obj, scx, &outputValue, true)) {
             return JS_FALSE;
         }
