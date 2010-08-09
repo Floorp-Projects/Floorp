@@ -136,17 +136,23 @@ nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT n.name "
     "FROM moz_anno_attributes n "
     "JOIN moz_annos a ON a.anno_attribute_id = n.id "
-    "JOIN moz_places h ON h.id = a.place_id "
-    "WHERE h.url = :page_url"));
+    "JOIN ( "
+      "SELECT id FROM moz_places_temp WHERE url = :page_url "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = :page_url "
+    ") AS h ON h.id = a.place_id"));
 
   RETURN_IF_STMT(mDBGetPageAnnotationValue, NS_LITERAL_CSTRING(
     "SELECT a.id, a.place_id, :anno_name, a.mime_type, a.content, a.flags, "
            "a.expiration, a.type "
     "FROM moz_anno_attributes n "
     "JOIN moz_annos a ON n.id = a.anno_attribute_id "
-    "JOIN moz_places h ON h.id = a.place_id "
-    "WHERE h.url = :page_url "
-      "AND n.name = :anno_name"));
+    "JOIN ( "
+      "SELECT id FROM moz_places_temp WHERE url = :page_url "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = :page_url "
+    ") AS h ON h.id = a.place_id "
+    "WHERE n.name = :anno_name"));
 
   RETURN_IF_STMT(mDBGetItemAnnotationValue, NS_LITERAL_CSTRING(
     "SELECT a.id, a.item_id, :anno_name, a.mime_type, a.content, a.flags, "
@@ -175,22 +181,26 @@ nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 
   RETURN_IF_STMT(mDBRemovePageAnnotation, NS_LITERAL_CSTRING(
     "DELETE FROM moz_annos "
-    "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
-      "AND anno_attribute_id = "
-        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"));
+    "WHERE place_id = ( "
+      "SELECT id FROM moz_places_temp WHERE url = :page_url "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = :page_url) "
+    "AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"));
 
   RETURN_IF_STMT(mDBRemoveItemAnnotation, NS_LITERAL_CSTRING(
     "DELETE FROM moz_items_annos "
     "WHERE item_id = :item_id "
-      "AND anno_attribute_id = "
-        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"));
+    "AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"));
 
   RETURN_IF_STMT(mDBGetPagesWithAnnotation, NS_LITERAL_CSTRING(
-    "SELECT h.url "
+    "SELECT IFNULL(h_t.url, h.url) AS coalesced_url "
     "FROM moz_anno_attributes n "
     "JOIN moz_annos a ON n.id = a.anno_attribute_id "
-    "JOIN moz_places h ON h.id = a.place_id "
-    "WHERE n.name = :anno_name"));
+    "LEFT JOIN moz_places h ON h.id = a.place_id "
+    "LEFT JOIN moz_places_temp h_t ON h_t.id = a.place_id "
+    "WHERE n.name = :anno_name AND coalesced_url NOT NULL"));
 
   RETURN_IF_STMT(mDBGetItemsWithAnnotation, NS_LITERAL_CSTRING(
     "SELECT a.item_id "
@@ -202,10 +212,12 @@ nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT h.id, "
            "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
            "a.id, a.dateAdded "
-    "FROM moz_places h "
+    "FROM (SELECT id FROM moz_places_temp WHERE url = :page_url "
+          "UNION "
+          "SELECT id FROM moz_places WHERE url = :page_url "
+          ") AS h "
     "LEFT JOIN moz_annos a ON a.place_id = h.id "
-                         "AND a.anno_attribute_id = nameid "
-    "WHERE h.url = :page_url"));
+                         "AND a.anno_attribute_id = nameid"));
 
   RETURN_IF_STMT(mDBCheckItemAnnotation, NS_LITERAL_CSTRING(
     "SELECT b.id, "
@@ -1570,7 +1582,9 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_annos WHERE place_id = "
-        "(SELECT id FROM moz_places WHERE url = :page_url)"),
+        "(SELECT id FROM moz_places_temp WHERE url = :page_url "
+         "UNION "
+         "SELECT id FROM moz_places WHERE url = :page_url)"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = URIBinder::Bind(statement, NS_LITERAL_CSTRING("page_url"), aURI);
@@ -1630,13 +1644,18 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
   nsCOMPtr<mozIStorageStatement> sourceStmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT h.id, n.id, n.name, a2.id "
-    "FROM moz_places h "
+    "FROM ( "
+      "SELECT id from moz_places_temp WHERE url = :source_url "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = :source_url "
+    ") AS h "
     "JOIN moz_annos a ON a.place_id = h.id "
     "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
-    "LEFT JOIN moz_annos a2 ON a2.place_id = "
-      "(SELECT id FROM moz_places WHERE url = :dest_url) "
-                          "AND a2.anno_attribute_id = n.id "
-    "WHERE url = :source_url"),
+    "LEFT JOIN moz_annos a2 ON a2.place_id = ( "
+      "SELECT id FROM moz_places_temp WHERE url = :dest_url "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = :dest_url "
+    ") AND a2.anno_attribute_id = n.id"),
     getter_AddRefs(sourceStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1650,9 +1669,12 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
       "INSERT INTO moz_annos "
       "(place_id, anno_attribute_id, mime_type, content, flags, expiration, "
        "type, dateAdded, lastModified) "
-      "SELECT (SELECT id FROM moz_places WHERE url = :page_url), "
-             "anno_attribute_id, mime_type, content, flags, expiration, type, "
-             ":date, :date "
+      "SELECT ( "
+        "SELECT id FROM moz_places_temp WHERE url = :page_url "
+        "UNION "
+        "SELECT id FROM moz_places WHERE url = :page_url "
+      "), anno_attribute_id, mime_type, content, flags, expiration, type, "
+        ":date, :date "
       "FROM moz_annos "
       "WHERE place_id = :page_id "
       "AND anno_attribute_id = :name_id"),
