@@ -146,10 +146,12 @@
 .jsterm-input-node {
     width: 98%;
     font-family: monospace;
-    font-size: 1.2em; 
-    line-height: 1.6em;
-    background-color: black;
-    color: white;
+    font-size: 9pt;
+    background: url("chrome://global/skin/icons/commandline.png") 4px 2px
+        no-repeat !important;
+    border: none !important;
+    padding: 0px 0px 0px 16px !important;
+    -moz-appearance: none !important;
 }
 
 .jsterm-output-line {
