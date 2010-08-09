@@ -71,6 +71,24 @@ public:
  * Macros to use for lazy statements initialization in Places services that use
  * GetStatement() method.
  */
+#ifdef DEBUG
+#define RETURN_IF_STMT(_stmt, _sql)                                            \
+  PR_BEGIN_MACRO                                                               \
+  if (address_of(_stmt) == address_of(aStmt)) {                                \
+    if (!_stmt) {                                                              \
+      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt));     \
+      if (NS_FAILED(rv)) {                                                     \
+        nsCAutoString err;                                                     \
+        (void)mDBConn->GetLastErrorString(err);                                \
+        (void)fprintf(stderr, "$$$ compiling statement failed with '%s'\n",    \
+                      err.get());                                              \
+      }                                                                        \
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                       \
+    }                                                                          \
+    return _stmt.get();                                                        \
+  }                                                                            \
+  PR_END_MACRO
+#else
 #define RETURN_IF_STMT(_stmt, _sql)                                            \
   PR_BEGIN_MACRO                                                               \
   if (address_of(_stmt) == address_of(aStmt)) {                                \
@@ -81,6 +99,7 @@ public:
     return _stmt.get();                                                        \
   }                                                                            \
   PR_END_MACRO
+#endif
 
 // Async statements don't need to be scoped, they are reset when done.
 // So use this version for statements used async, scoped version for statements
