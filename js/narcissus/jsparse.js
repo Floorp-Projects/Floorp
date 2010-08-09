@@ -383,8 +383,8 @@ Narcissus.parser = (function() {
 
         FUNCTION$build: function(t) {
             var n = new Node(t);
-            if (n.type != FUNCTION)
-                n.type = (n.value == "get") ? GETTER : SETTER;
+            if (n.type !== FUNCTION)
+                n.type = (n.value === "get") ? GETTER : SETTER;
             n.params = [];
             return n;
         },
@@ -660,9 +660,9 @@ Narcissus.parser = (function() {
         UNARY$build: function(t) {
             // NB t.token.type must be DELETE, VOID, TYPEOF, NOT, BITWISE_NOT,
             // UNARY_PLUS, UNARY_MINUS, INCREMENT, or DECREMENT.
-            if (t.token.type == PLUS)
+            if (t.token.type === PLUS)
                 t.token.type = UNARY_PLUS;
-            else if (t.token.type == MINUS)
+            else if (t.token.type === MINUS)
                 t.token.type = UNARY_MINUS;
             return new Node(t);
         },
@@ -881,7 +881,7 @@ Narcissus.parser = (function() {
     Np.toString = function () {
         var a = [];
         for (var i in this) {
-            if (this.hasOwnProperty(i) && i != 'type' && i != 'target')
+            if (this.hasOwnProperty(i) && i !== 'type' && i !== 'target')
                 a.push({id: i, value: this[i]});
         }
         a.sort(function (a,b) { return (a.id < b.id) ? -1 : 1; });
@@ -941,7 +941,7 @@ Narcissus.parser = (function() {
         var n = b.BLOCK$build(t, x.blockId++);
         b.BLOCK$hoistLets(n);
         x.stmtStack.push(n);
-        while (!t.done && t.peek(true) != RIGHT_CURLY)
+        while (!t.done && t.peek(true) !== RIGHT_CURLY)
             b.BLOCK$addStatement(n, Statement(t, x));
         x.stmtStack.pop();
         b.BLOCK$finish(n);
@@ -1006,7 +1006,7 @@ Narcissus.parser = (function() {
             b.SWITCH$setDiscriminant(n, ParenExpression(t, x));
             x.stmtStack.push(n);
             t.mustMatch(LEFT_CURLY);
-            while ((tt = t.get()) != RIGHT_CURLY) {
+            while ((tt = t.get()) !== RIGHT_CURLY) {
                 switch (tt) {
                   case DEFAULT:
                     if (n.defaultIndex >= 0)
@@ -1015,8 +1015,8 @@ Narcissus.parser = (function() {
                     b.SWITCH$setDefaultIndex(n, n.cases.length);
                     t.mustMatch(COLON);
                     b.DEFAULT$initializeStatements(n2, t);
-                    while ((tt=t.peek(true)) != CASE && tt != DEFAULT &&
-                           tt != RIGHT_CURLY)
+                    while ((tt=t.peek(true)) !== CASE && tt !== DEFAULT &&
+                           tt !== RIGHT_CURLY)
                         b.DEFAULT$addStatement(n2, Statement(t, x));
                     b.DEFAULT$finish(n2);
                     break;
@@ -1026,8 +1026,8 @@ Narcissus.parser = (function() {
                     b.CASE$setLabel(n2, Expression(t, x, COLON));
                     t.mustMatch(COLON);
                     b.CASE$initializeStatements(n2, t);
-                    while ((tt=t.peek(true)) != CASE && tt != DEFAULT &&
-                           tt != RIGHT_CURLY)
+                    while ((tt=t.peek(true)) !== CASE && tt !== DEFAULT &&
+                           tt !== RIGHT_CURLY)
                         b.CASE$addStatement(n2, Statement(t, x));
                     b.CASE$finish(n2);
                     break;
@@ -1043,17 +1043,17 @@ Narcissus.parser = (function() {
 
           case FOR:
             n = b.FOR$build(t);
-            if (t.match(IDENTIFIER) && t.token.value == "each")
+            if (t.match(IDENTIFIER) && t.token.value === "each")
                 b.FOR$rebuildForEach(n);
             t.mustMatch(LEFT_PAREN);
-            if ((tt = t.peek()) != SEMICOLON) {
+            if ((tt = t.peek()) !== SEMICOLON) {
                 x.inForLoopInit = true;
-                if (tt == VAR || tt == CONST) {
+                if (tt === VAR || tt === CONST) {
                     t.get();
                     n2 = Variables(t, x);
-                } else if (tt == LET) {
+                } else if (tt === LET) {
                     t.get();
-                    if (t.peek() == LEFT_PAREN) {
+                    if (t.peek() === LEFT_PAREN) {
                         n2 = LetBlock(t, x, false);
                     } else {
                         /*
@@ -1072,8 +1072,8 @@ Narcissus.parser = (function() {
             if (n2 && t.match(IN)) {
                 b.FOR$rebuildForIn(n);
                 b.FOR$setObject(n, Expression(t, x), forBlock);
-                if (n2.type == VAR || n2.type == LET) {
-                    if (n2.length != 1) {
+                if (n2.type === VAR || n2.type === LET) {
+                    if (n2.length !== 1) {
                         throw new SyntaxError("Invalid for..in left-hand side",
                                               t.filename, n2.lineno);
                     }
@@ -1086,11 +1086,11 @@ Narcissus.parser = (function() {
                 t.mustMatch(SEMICOLON);
                 if (n.isEach)
                     throw t.newSyntaxError("Invalid for each..in loop");
-                b.FOR$setCondition(n, (t.peek() == SEMICOLON)
+                b.FOR$setCondition(n, (t.peek() === SEMICOLON)
                                   ? null
                                   : Expression(t, x));
                 t.mustMatch(SEMICOLON);
-                b.FOR$setUpdate(n, (t.peek() == RIGHT_PAREN)
+                b.FOR$setUpdate(n, (t.peek() === RIGHT_PAREN)
                                    ? null
                                    : Expression(t, x));
             }
@@ -1126,11 +1126,11 @@ Narcissus.parser = (function() {
 
           case BREAK:
           case CONTINUE:
-            n = tt == BREAK ? b.BREAK$build(t) : b.CONTINUE$build(t);
+            n = tt === BREAK ? b.BREAK$build(t) : b.CONTINUE$build(t);
 
-            if (t.peekOnSameLine() == IDENTIFIER) {
+            if (t.peekOnSameLine() === IDENTIFIER) {
                 t.get();
-                if (tt == BREAK)
+                if (tt === BREAK)
                     b.BREAK$setLabel(n, t.token.value);
                 else
                     b.CONTINUE$setLabel(n, t.token.value);
@@ -1144,7 +1144,7 @@ Narcissus.parser = (function() {
                 do {
                     if (--i < 0)
                         throw t.newSyntaxError("Label not found");
-                } while (ss[i].label != label);
+                } while (ss[i].label !== label);
 
                 /*
                  * Both break and continue to label need to be handled specially
@@ -1153,22 +1153,22 @@ Narcissus.parser = (function() {
                  * nested so we skip all labels immediately enclosing the nearest
                  * non-label statement.
                  */
-                while (i < ss.length - 1 && ss[i+1].type == LABEL)
+                while (i < ss.length - 1 && ss[i+1].type === LABEL)
                     i++;
                 if (i < ss.length - 1 && ss[i+1].isLoop)
                     i++;
-                else if (tt == CONTINUE)
+                else if (tt === CONTINUE)
                     throw t.newSyntaxError("Invalid continue");
             } else {
                 do {
                     if (--i < 0) {
-                        throw t.newSyntaxError("Invalid " + ((tt == BREAK)
+                        throw t.newSyntaxError("Invalid " + ((tt === BREAK)
                                                              ? "break"
                                                              : "continue"));
                     }
-                } while (!ss[i].isLoop && !(tt == BREAK && ss[i].type == SWITCH));
+                } while (!ss[i].isLoop && !(tt === BREAK && ss[i].type === SWITCH));
             }
-            if (tt == BREAK) {
+            if (tt === BREAK) {
                 b.BREAK$setTarget(n, ss[i]);
                 b.BREAK$finish(n);
             } else {
@@ -1245,7 +1245,7 @@ Narcissus.parser = (function() {
             break;
 
           case LET:
-            if (t.peek() == LEFT_PAREN)
+            if (t.peek() === LEFT_PAREN)
                 n = LetBlock(t, x, true);
             else
                 n = Variables(t, x);
@@ -1263,14 +1263,14 @@ Narcissus.parser = (function() {
             return n;
 
           default:
-            if (tt == IDENTIFIER) {
+            if (tt === IDENTIFIER) {
                 tt = t.peek();
                 // Labeled statement.
-                if (tt == COLON) {
+                if (tt === COLON) {
                     label = t.token.value;
                     ss = x.stmtStack;
                     for (i = ss.length-1; i >= 0; --i) {
-                        if (ss[i].label == label)
+                        if (ss[i].label === label)
                             throw t.newSyntaxError("Duplicate label");
                     }
                     t.get();
@@ -1298,9 +1298,9 @@ Narcissus.parser = (function() {
 
     function MagicalSemicolon(t) {
         var tt;
-        if (t.lineno == t.token.lineno) {
+        if (t.lineno === t.token.lineno) {
             tt = t.peekOnSameLine();
-            if (tt != END && tt != NEWLINE && tt != SEMICOLON && tt != RIGHT_CURLY)
+            if (tt !== END && tt !== NEWLINE && tt !== SEMICOLON && tt !== RIGHT_CURLY)
                 throw t.newSyntaxError("missing ; before statement");
         }
         t.match(SEMICOLON);
@@ -1309,11 +1309,11 @@ Narcissus.parser = (function() {
     function returnOrYield(t, x) {
         var n, b = x.builder, tt = t.token.type, tt2;
 
-        if (tt == RETURN) {
+        if (tt === RETURN) {
             if (!x.inFunction)
                 throw t.newSyntaxError("Return not in function");
             n = b.RETURN$build(t);
-        } else /* (tt == YIELD) */ {
+        } else /* (tt === YIELD) */ {
             if (!x.inFunction)
                 throw t.newSyntaxError("Yield not in function");
             x.isGenerator = true;
@@ -1321,17 +1321,17 @@ Narcissus.parser = (function() {
         }
 
         tt2 = t.peek(true);
-        if (tt2 != END && tt2 != NEWLINE && tt2 != SEMICOLON && tt2 != RIGHT_CURLY
-            && (tt != YIELD ||
-                (tt2 != tt && tt2 != RIGHT_BRACKET && tt2 != RIGHT_PAREN &&
-                 tt2 != COLON && tt2 != COMMA))) {
-            if (tt == RETURN) {
+        if (tt2 !== END && tt2 !== NEWLINE && tt2 !== SEMICOLON && tt2 !== RIGHT_CURLY
+            && (tt !== YIELD ||
+                (tt2 !== tt && tt2 !== RIGHT_BRACKET && tt2 !== RIGHT_PAREN &&
+                 tt2 !== COLON && tt2 !== COMMA))) {
+            if (tt === RETURN) {
                 b.RETURN$setValue(n, Expression(t, x));
                 x.hasReturnWithValue = true;
             } else {
                 b.YIELD$setValue(n, AssignExpression(t, x));
             }
-        } else if (tt == RETURN) {
+        } else if (tt === RETURN) {
             x.hasEmptyReturn = true;
         }
 
@@ -1339,7 +1339,7 @@ Narcissus.parser = (function() {
         if (x.hasReturnWithValue && x.isGenerator)
             throw t.newSyntaxError("Generator returns a value");
 
-        if (tt == RETURN)
+        if (tt === RETURN)
             b.RETURN$finish(n);
         else
             b.YIELD$finish(n);
@@ -1383,7 +1383,7 @@ Narcissus.parser = (function() {
 
         // Do we have an expression closure or a normal body?
         var tt = t.get();
-        if (tt != LEFT_CURLY)
+        if (tt !== LEFT_CURLY)
             t.unget();
 
         var x2 = new StaticContext(true, b);
@@ -1396,7 +1396,7 @@ Narcissus.parser = (function() {
             x2.blockId = x.blockId;
         }
 
-        if (tt != LEFT_CURLY) {
+        if (tt !== LEFT_CURLY) {
             b.FUNCTION$setBody(f, AssignExpression(t, x));
             if (x.isGenerator)
                 throw t.newSyntaxError("Generator returns a value");
@@ -1483,12 +1483,12 @@ Narcissus.parser = (function() {
             }
         }
 
-        if (tt == LEFT_CURLY)
+        if (tt === LEFT_CURLY)
             t.mustMatch(RIGHT_CURLY);
 
         f.end = t.token.end;
         f.functionForm = functionForm;
-        if (functionForm == DECLARED_FORM)
+        if (functionForm === DECLARED_FORM)
             x.funDecls.push(f);
         b.FUNCTION$finish(f, x);
         return f;
@@ -1530,7 +1530,7 @@ Narcissus.parser = (function() {
                  * Lets at the function toplevel are just vars, at least in
                  * SpiderMonkey.
                  */
-                if (i == 0) {
+                if (i === 0) {
                     build = b.VAR$build;
                     addDecl = b.VAR$addDecl;
                     finish = b.VAR$finish;
@@ -1553,14 +1553,14 @@ Narcissus.parser = (function() {
              * declarations.
              */
             var n2 = b.DECL$build(t);
-            if (tt == LEFT_BRACKET || tt == LEFT_CURLY) {
+            if (tt === LEFT_BRACKET || tt === LEFT_CURLY) {
                 // Pass in s if we need to add each pattern matched into
                 // its varDecls, else pass in x.
                 var data = null;
                 // Need to unget to parse the full destructured expression.
                 t.unget();
                 b.DECL$setName(n2, DestructuringExpression(t, x, true, s));
-                if (x.inForLoopInit && t.peek() == IN) {
+                if (x.inForLoopInit && t.peek() === IN) {
                     addDecl.call(b, n, n2, s);
                     continue;
                 }
@@ -1582,11 +1582,11 @@ Narcissus.parser = (function() {
                 continue;
             }
 
-            if (tt != IDENTIFIER)
+            if (tt !== IDENTIFIER)
                 throw t.newSyntaxError("missing variable name");
 
             b.DECL$setName(n2, t.token.value);
-            b.DECL$setReadOnly(n2, n.type == CONST);
+            b.DECL$setReadOnly(n2, n.type === CONST);
             addDecl.call(b, n, n2, s);
 
             if (t.match(ASSIGN)) {
@@ -1628,7 +1628,7 @@ Narcissus.parser = (function() {
         b.LET_BLOCK$setVariables(n, Variables(t, x, n));
         t.mustMatch(RIGHT_PAREN);
 
-        if (isStatement && t.peek() != LEFT_CURLY) {
+        if (isStatement && t.peek() !== LEFT_CURLY) {
             /*
              * If this is really an expression in let statement guise, then we
              * need to wrap the LET_BLOCK node in a SEMICOLON node so that we pop
@@ -1654,9 +1654,9 @@ Narcissus.parser = (function() {
     }
 
     function checkDestructuring(t, x, n, simpleNamesOnly, data) {
-        if (n.type == ARRAY_COMP)
+        if (n.type === ARRAY_COMP)
             throw t.newSyntaxError("Invalid array comprehension left-hand side");
-        if (n.type != ARRAY_INIT && n.type != OBJECT_INIT)
+        if (n.type !== ARRAY_INIT && n.type !== OBJECT_INIT)
             return;
 
         var b = x.builder;
@@ -1665,15 +1665,15 @@ Narcissus.parser = (function() {
             var nn = n[i], lhs, rhs;
             if (!nn)
                 continue;
-            if (nn.type == PROPERTY_INIT)
+            if (nn.type === PROPERTY_INIT)
                 lhs = nn[0], rhs = nn[1];
             else
                 lhs = null, rhs = null;
-            if (rhs && (rhs.type == ARRAY_INIT || rhs.type == OBJECT_INIT))
+            if (rhs && (rhs.type === ARRAY_INIT || rhs.type === OBJECT_INIT))
                 checkDestructuring(t, x, rhs, simpleNamesOnly, data);
             if (lhs && simpleNamesOnly) {
                 // In declarations, lhs must be simple names
-                if (lhs.type != IDENTIFIER) {
+                if (lhs.type !== IDENTIFIER) {
                     throw t.newSyntaxError("missing name in pattern");
                 } else if (data) {
                     var n2 = b.DECL$build(t);
@@ -1717,7 +1717,7 @@ Narcissus.parser = (function() {
             b.FOR$rebuildForIn(n);
             if (t.match(IDENTIFIER)) {
                 // But sometimes they're for each..in.
-                if (t.token.value == "each")
+                if (t.token.value === "each")
                     b.FOR$rebuildForEach(n);
                 else
                     t.unget();
@@ -1778,9 +1778,9 @@ Narcissus.parser = (function() {
 
         var err = "expression must be parenthesized";
         if (t.match(FOR)) {
-            if (n.type == YIELD && !n.parenthesized)
+            if (n.type === YIELD && !n.parenthesized)
                 throw t.newSyntaxError("Yield " + err);
-            if (n.type == COMMA && !n.parenthesized)
+            if (n.type === COMMA && !n.parenthesized)
                 throw t.newSyntaxError("Generator " + err);
             n = GeneratorExpression(t, x, n);
         }
@@ -1806,7 +1806,7 @@ Narcissus.parser = (function() {
             n = n2;
             do {
                 n2 = n[n.length-1];
-                if (n2.type == YIELD && !n2.parenthesized)
+                if (n2.type === YIELD && !n2.parenthesized)
                     throw t.newSyntaxError("Yield expression must be parenthesized");
                 b.COMMA$addOperand(n, AssignExpression(t, x));
             } while (t.match(COMMA));
@@ -1989,7 +1989,7 @@ Narcissus.parser = (function() {
         x.inForLoopInit = false;
         n = ShiftExpression(t, x);
         while ((t.match(LT) || t.match(LE) || t.match(GE) || t.match(GT) ||
-               (oldLoopInit == false && t.match(IN)) ||
+               (oldLoopInit === false && t.match(IN)) ||
                t.match(INSTANCEOF))) {
             n2 = b.RELATIONAL$build(t);
             b.RELATIONAL$addOperand(n2, n);
@@ -2073,7 +2073,7 @@ Narcissus.parser = (function() {
             n = MemberExpression(t, x, true);
 
             // Don't look across a newline boundary for a postfix {in,de}crement.
-            if (t.tokens[(t.tokenIndex + t.lookahead - 1) & 3].lineno ==
+            if (t.tokens[(t.tokenIndex + t.lookahead - 1) & 3].lineno ===
                 t.lineno) {
                 if (t.match(INCREMENT) || t.match(DECREMENT)) {
                     n2 = b.UNARY$build(t);
@@ -2106,7 +2106,7 @@ Narcissus.parser = (function() {
             n = PrimaryExpression(t, x);
         }
 
-        while ((tt = t.get()) != END) {
+        while ((tt = t.get()) !== END) {
             switch (tt) {
               case DOT:
                 n2 = b.MEMBER$build(t);
@@ -2153,11 +2153,11 @@ Narcissus.parser = (function() {
             return n;
         do {
             n2 = AssignExpression(t, x);
-            if (n2.type == YIELD && !n2.parenthesized && t.peek() == COMMA)
+            if (n2.type === YIELD && !n2.parenthesized && t.peek() === COMMA)
                 throw t.newSyntaxError("Yield " + err);
             if (t.match(FOR)) {
                 n2 = GeneratorExpression(t, x, n2);
-                if (n.length > 1 || t.peek(true) == COMMA)
+                if (n.length > 1 || t.peek(true) === COMMA)
                     throw t.newSyntaxError("Generator " + err);
             }
             b.LIST$addOperand(n, n2);
@@ -2179,20 +2179,20 @@ Narcissus.parser = (function() {
 
           case LEFT_BRACKET:
             n = b.ARRAY_INIT$build(t);
-            while ((tt = t.peek()) != RIGHT_BRACKET) {
-                if (tt == COMMA) {
+            while ((tt = t.peek()) !== RIGHT_BRACKET) {
+                if (tt === COMMA) {
                     t.get();
                     b.ARRAY_INIT$addElement(n, null);
                     continue;
                 }
                 b.ARRAY_INIT$addElement(n, AssignExpression(t, x));
-                if (tt != COMMA && !t.match(COMMA))
+                if (tt !== COMMA && !t.match(COMMA))
                     break;
             }
 
             // If we matched exactly one element and got a FOR, we have an
             // array comprehension.
-            if (n.length == 1 && t.match(FOR)) {
+            if (n.length === 1 && t.match(FOR)) {
                 n2 = b.ARRAY_COMP$build(t);
                 b.ARRAY_COMP$setExpression(n2, n[0]);
                 b.ARRAY_COMP$setTail(n2, comprehensionTail(t, x));
@@ -2210,8 +2210,8 @@ Narcissus.parser = (function() {
             if (!t.match(RIGHT_CURLY)) {
                 do {
                     tt = t.get();
-                    if ((t.token.value == "get" || t.token.value == "set") &&
-                        t.peek() == IDENTIFIER) {
+                    if ((t.token.value === "get" || t.token.value === "set") &&
+                        t.peek() === IDENTIFIER) {
                         if (x.ecma3OnlyMode)
                             throw t.newSyntaxError("Illegal property accessor");
                         var fd = FunctionDefinition(t, x, true, EXPRESSED_FORM);
@@ -2243,7 +2243,7 @@ Narcissus.parser = (function() {
                         } else {
                             // Support, e.g., |var {x, y} = o| as destructuring shorthand
                             // for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
-                            if (t.peek() != COMMA && t.peek() != RIGHT_CURLY)
+                            if (t.peek() !== COMMA && t.peek() !== RIGHT_CURLY)
                                 throw t.newSyntaxError("missing : after property");
                             b.OBJECT_INIT$addProperty(n, id);
                         }
