@@ -566,13 +566,12 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           var gID = self.parent.id;
           var groupItem = GroupItems.groupItem(gID);
           GroupItems.setActiveGroupItem(groupItem);
-          GroupItems.updateTabBarForActiveGroupItem();
           groupItem.setActiveTab(self);
         } else {
           GroupItems.setActiveGroupItem(null);
           GroupItems.setActiveOrphanTab(self);
-          GroupItems.updateTabBarForActiveGroupItem();
         }
+        GroupItems.updateTabBar();
 
         if (childHitResult.callback)
           childHitResult.callback();
@@ -1031,7 +1030,7 @@ window.TabItems = {
           }, 15000);
         }
 
-        GroupItems.updateTabBarForActiveGroupItem();
+        GroupItems.updateTabBar();
 
         item.reconnected = true;
         found = true;
