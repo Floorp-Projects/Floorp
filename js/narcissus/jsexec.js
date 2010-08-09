@@ -1118,9 +1118,14 @@ Narcissus.interpreter = (function() {
 
         x.run(function() {
             for (;;) {
+                x.result = undefined;
                 putstr("njs> ");
                 var line = readline();
-                x.result = undefined;
+                // If readline receives EOF it returns null.
+                if (line === null) {
+                    print("");
+                    break;
+                }
                 try {
                     execute(parser.parse(b, line, "stdin", 1), x);
                     display(x.result);

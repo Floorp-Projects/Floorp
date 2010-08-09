@@ -4,7 +4,7 @@
 # Expects to be in the same directory as ./js
 # Expects the Narcissus src files to be in ./narcissus/
 
-import os, re, sys
+import os, re, sys, signal
 from subprocess import *
 from optparse import OptionParser
 
@@ -18,6 +18,12 @@ narc_jslex = os.path.join(NARC_JS_DIR, "jslex.js")
 narc_jsparse = os.path.join(NARC_JS_DIR, "jsparse.js")
 narc_jsexec = os.path.join(NARC_JS_DIR, "jsexec.js")
 
+def handler(signum, frame):
+    print ''
+    # the exit code produced by ./js on SIGINT
+    sys.exit(130)
+
+signal.signal(signal.SIGINT, handler)
 
 if __name__ == '__main__':
     op = OptionParser(usage='%prog [TEST-SPECS]')
