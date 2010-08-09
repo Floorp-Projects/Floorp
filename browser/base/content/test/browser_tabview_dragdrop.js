@@ -46,8 +46,8 @@ function test() {
 
 
 function addTest(contentWindow, groupOneId, groupTwoId) {
-  let groupOne = contentWindow.GroupItems.group(groupOneId);
-  let groupTwo = contentWindow.GroupItems.group(groupTwoId);
+  let groupOne = contentWindow.GroupItems.groupItem(groupOneId);
+  let groupTwo = contentWindow.GroupItems.groupItem(groupTwoId);
   let groupOneTabItemCount = groupOne.getChildren().length;
   let groupTwoTabItemCount = groupTwo.getChildren().length;
   is(groupOneTabItemCount, 1, "GroupItem one has a tab"); 
