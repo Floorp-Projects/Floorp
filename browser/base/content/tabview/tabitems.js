@@ -438,8 +438,8 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var b = this.getBounds();
     var $title = iQ(this.container).find('.tab-title');
     var height = b.height;
-    if ( $title.length )
-    	height += parseInt($title.height());
+    if ( Utils.isNumber($title.height()) )
+      height += $title.height();
     return new Rect(b.left, b.top, b.width, height);
   },
 
@@ -566,12 +566,12 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           var gID = self.parent.id;
           var groupItem = GroupItems.groupItem(gID);
           GroupItems.setActiveGroupItem(groupItem);
-					GroupItems.updateTabBarForActiveGroupItem();
+          GroupItems.updateTabBarForActiveGroupItem();
           groupItem.setActiveTab(self);
         } else {
           GroupItems.setActiveGroupItem(null);
           GroupItems.setActiveOrphanTab(self);
-					GroupItems.updateTabBarForActiveGroupItem();
+          GroupItems.updateTabBarForActiveGroupItem();
         }
 
         if (childHitResult.callback)
@@ -630,7 +630,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       complete: function() { // note that this will happen on the DOM thread
         $tab.removeClass('front');
 
-				GroupItems.setActiveOrphanTab(null);
+        GroupItems.setActiveOrphanTab(null);
 
         TabItems.resumePainting();
 
@@ -1015,10 +1015,8 @@ window.TabItems = {
           if (groupItem) {
             groupItem.add(item);
 
-            if (item.tab == gBrowser.selectedTab) {
+            if (item.tab == gBrowser.selectedTab)
               GroupItems.setActiveGroupItem(item.parent);
-							GroupItems.updateTabBarForActiveGroupItem();
-            }
           }
         }
 
