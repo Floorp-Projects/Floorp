@@ -40,8 +40,10 @@
 #include "nsIBoxObject.idl"
 
 interface nsIDOMElement;
+interface nsIDOMNode;
+interface nsIDOMEvent;
 
-[scriptable, uuid(88DC87BF-83EC-4F45-847A-E04C15DDA2FA)]
+[scriptable, uuid(e4c3845b-97d2-4fdf-860e-949746d15fb9)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -136,12 +138,14 @@ interface nsIPopupBoxObject : nsISupports
    * @param y vertical offset
    * @param isContextMenu true for context menus, false for other popups
    * @param attributesOverride true if popup node attributes override position
+   * @param triggerEvent the event that triggered this popup (mouse click for example)
    */
   void openPopup(in nsIDOMElement anchorElement,
                  in AString position,
                  in long x, in long y,
                  in boolean isContextMenu,
-                 in boolean attributesOverride);
+                 in boolean attributesOverride,
+                 in nsIDOMEvent triggerEvent);
 
   /**
    * Open the popup at a specific screen position specified by x and y. This
@@ -153,8 +157,11 @@ interface nsIPopupBoxObject : nsISupports
    * @param isContextMenu true for context menus, false for other popups
    * @param x horizontal screen position
    * @param y vertical screen position
+   * @param triggerEvent the event that triggered this popup (mouse click for example)
    */
-  void openPopupAtScreen(in long x, in long y, in boolean isContextMenu);
+  void openPopupAtScreen(in long x, in long y,
+                         in boolean isContextMenu,
+                         in nsIDOMEvent triggerEvent);
 
   /**
    * Returns the state of the popup:
@@ -164,6 +171,12 @@ interface nsIPopupBoxObject : nsISupports
    *   hiding - the popup is in the process of being hidden
    */
   readonly attribute AString popupState;
+
+  /**
+   * The node that triggered the popup. If the popup is not open, will return
+   * null.
+   */
+  readonly attribute nsIDOMNode triggerNode;
 };
 
 %{C++

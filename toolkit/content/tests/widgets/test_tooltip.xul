@@ -24,6 +24,8 @@
        specific sizing differences -->
   <button id="withtooltip" label="Tooltip Element" tooltip="thetooltip"
           class="plain" style="-moz-appearance: none; padding: 0;"/>
+  <iframe id="childframe" type="content" width="10" height="10"
+          src="http://sectest2.example.org:80/tests/toolkit/content/tests/widgets/popup_childframe_node.xul"/>
 </box>
 
 <script class="testbody" type="application/javascript">
@@ -76,7 +78,7 @@ var popupTests = [
     disableNonTestMouse(true);
     synthesizeMouse(document.documentElement, 2, 2, { type: "mousemove" });
     disableNonTestMouse(false);
-  },
+  }
 },
 {
   testname: "hover inherited tooltip",
@@ -97,6 +99,7 @@ var popupTests = [
             "popupshowing thetooltip", "popupshown thetooltip" ],
   test: function() {
     gButton = document.getElementById("withtooltip");
+    gExpectedTriggerNode = gButton;
     disableNonTestMouse(true);
     synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
     synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
@@ -104,8 +107,22 @@ var popupTests = [
     disableNonTestMouse(false);
   },
   result: function(testname) {
+    var tooltip = document.getElementById("thetooltip");
+    gExpectedTriggerNode = null;
+    is(tooltip.triggerNode, gButton, testname + " triggerNode");
+    is(document.popupNode, null, testname + " document.popupNode");
+    is(document.tooltipNode, gButton, testname + " document.tooltipNode");
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var child = $("childframe").contentDocument; 
+    var evt = child.createEvent("Event");
+    evt.initEvent("click", true, true);
+    child.documentElement.dispatchEvent(evt);
+    is(child.documentElement.getAttribute("data"), "xnull",
+       "cannot get tooltipNode from other document");
+
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
-    var rect = document.getElementById("thetooltip").getBoundingClientRect();
+    var rect = tooltip.getBoundingClientRect();
     var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
 
     is(Math.round(rect.left),
@@ -131,6 +148,12 @@ var popupTests = [
     gButton = document.getElementById("withtooltip");
     synthesizeMouse(gButton, 2, 2, { });
   },
+  result: function(testname) {
+    var tooltip = document.getElementById("thetooltip");
+    is(tooltip.triggerNode, null, testname + " triggerNode");
+    is(document.popupNode, null, testname + " document.popupNode");
+    is(document.tooltipNode, null, testname + " document.tooltipNode");
+  }
 },
 {
   testname: "hover tooltip after size increased",
@@ -211,7 +234,7 @@ var popupTests = [
     is(gOriginalWidth, rect.right - rect.left, testname + " tooltip is original width");
     is(gOriginalHeight, rect.bottom - rect.top, testname + " tooltip is original height");
   }
-},
+}
 
 ];
 

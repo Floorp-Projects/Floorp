@@ -355,10 +355,10 @@ nsWindowRoot::GetControllerForCommand(const char * aCommand,
   return NS_OK;
 }
 
-void
-nsWindowRoot::GetPopupNode(nsIDOMNode** aNode)
+nsIDOMNode*
+nsWindowRoot::GetPopupNode()
 {
-  NS_IF_ADDREF(*aNode = mPopupNode);
+  return mPopupNode;
 }
 
 void
