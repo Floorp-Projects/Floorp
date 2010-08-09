@@ -697,7 +697,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.removeClass("stacked");
       item.removeClass("stack-trayed");
       item.setRotation(0);
-      item.setSize(item.defaultSize.x, item.defaultSize.y);
 
       item.droppable(true);
       item.removeSubscriber(this, "close");
