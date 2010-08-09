@@ -81,6 +81,10 @@ XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
   return Services.strings.createBundle(HUD_STRINGS_URI);
 });
 
+// The amount of time in milliseconds that must pass between messages to
+// trigger the display of a new group.
+const NEW_GROUP_DELAY = 5000;
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -313,6 +317,8 @@ HUD_SERVICE.prototype =
     while (outputNode.firstChild) {
       outputNode.removeChild(outputNode.firstChild);
     }
+
+    outputNode.lastTimestamp = 0;
   },
 
   /**
@@ -689,23 +695,25 @@ HUD_SERVICE.prototype =
       throw new Error(ERRORS.MISSING_ARGS);
     }
 
+    let lastGroupNode = this.appendGroupIfNecessary(aConsoleNode,
+                                                    aMessage.timestamp);
     if (aFilterString) {
       var filtered = this.filterLogMessage(aFilterString, aMessageNode);
       if (filtered) {
         // we have successfully filtered a message, we need to log it
-        aConsoleNode.appendChild(aMessageNode);
+        lastGroupNode.appendChild(aMessageNode);
         aMessageNode.scrollIntoView(false);
       }
       else {
         // we need to ignore this message by changing its css class - we are
         // still logging this, it is just hidden
         var hiddenMessage = ConsoleUtils.hideLogMessage(aMessageNode);
-        aConsoleNode.appendChild(hiddenMessage);
+        lastGroupNode.appendChild(hiddenMessage);
       }
     }
     else {
       // log everything
-      aConsoleNode.appendChild(aMessageNode);
+      lastGroupNode.appendChild(aMessageNode);
       aMessageNode.scrollIntoView(false);
     }
     // store this message in the storage module:
@@ -1197,6 +1205,51 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Builds and appends a group to the console if enough time has passed since
+   * the last message.
+   *
+   * @param nsIDOMNode aConsoleNode
+   *        The DOM node that holds the output of the console (NB: not the HUD
+   *        node itself).
+   * @param number aTimestamp
+   *        The timestamp of the newest message in milliseconds.
+   * @returns nsIDOMNode
+   *          The group into which the next message should be written.
+   */
+  appendGroupIfNecessary:
+  function HS_appendGroupIfNecessary(aConsoleNode, aTimestamp)
+  {
+    let hudBox = aConsoleNode;
+    while (hudBox != null && hudBox.getAttribute("class") !== "hud-box") {
+      hudBox = hudBox.parentNode;
+    }
+
+    let lastTimestamp = hudBox.lastTimestamp;
+    let delta = aTimestamp - lastTimestamp;
+    hudBox.lastTimestamp = aTimestamp;
+    if (delta < NEW_GROUP_DELAY) {
+      // No new group needed. Return the most recently-added group, if there is
+      // one.
+      let lastGroupNode = aConsoleNode.querySelector(".hud-group:last-child");
+      if (lastGroupNode != null) {
+        return lastGroupNode;
+      }
+    }
+
+    let chromeDocument = aConsoleNode.ownerDocument;
+    let groupNode = chromeDocument.createElement("vbox");
+    groupNode.setAttribute("class", "hud-group");
+
+    let separatorNode = chromeDocument.createElement("separator");
+    separatorNode.setAttribute("class", "groove hud-divider");
+    separatorNode.setAttribute("orient", "horizontal");
+    groupNode.appendChild(separatorNode);
+
+    aConsoleNode.appendChild(groupNode);
+    return groupNode;
+  },
+
+  /**
    * update loadgroup when the window object is re-created
    *
    * @param string aId
@@ -1627,6 +1680,8 @@ function HeadsUpDisplay(aConfig)
 
   let console = this.createConsole();
 
+  this.HUDBox.lastTimestamp = 0;
+
   this.contentWindow.wrappedJSObject.console = console;
 
   // create the JSTerm input element
@@ -1835,6 +1890,8 @@ HeadsUpDisplay.prototype = {
 
     consoleWrap.appendChild(this.outputNode);
     outerWrap.appendChild(consoleWrap);
+
+    this.HUDBox.lastTimestamp = 0;
 
     this.jsTermParentNode = outerWrap;
     this.HUDBox.appendChild(outerWrap);
@@ -2465,6 +2522,9 @@ JSTerm.prototype = {
    */
   writeOutput: function JST_writeOutput(aOutputMessage, aIsInput)
   {
+    let lastGroupNode = HUDService.appendGroupIfNecessary(this.outputNode,
+                                                          Date.now());
+
     var node = this.elementFactory("div");
     if (aIsInput) {
       node.setAttribute("class", "jsterm-input-line");
@@ -2483,7 +2543,8 @@ JSTerm.prototype = {
 
     var textNode = this.textFactory(aOutputMessage);
     node.appendChild(textNode);
-    this.outputNode.appendChild(node);
+
+    lastGroupNode.appendChild(node);
     node.scrollIntoView(false);
   },
 
@@ -2494,6 +2555,8 @@ JSTerm.prototype = {
     while (outputNode.firstChild) {
       outputNode.removeChild(outputNode.firstChild);
     }
+
+    outputNode.lastTimestamp = 0;
   },
 
   keyDown: function JSTF_keyDown(aEvent)
