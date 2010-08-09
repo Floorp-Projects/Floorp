@@ -215,12 +215,13 @@ var ctrlTab = {
     if (this._tabList)
       return this._tabList;
 
-    var list = Array.slice(gBrowser.tabs);
+    let list = gBrowser.visibleTabs;
 
     if (this._closing)
       this.detachTab(this._closing, list);
 
-    for (let i = 0; i < gBrowser.tabContainer.selectedIndex; i++)
+    // Rotate the list until the selected tab is first
+    while (!list[0].selected)
       list.push(list.shift());
 
     if (this.recentlyUsedLimit != 0) {
@@ -462,11 +463,12 @@ var ctrlTab = {
           } else if (!event.shiftKey) {
             event.preventDefault();
             event.stopPropagation();
-            if (gBrowser.tabs.length > 2) {
+            let tabs = gBrowser.visibleTabs;
+            if (tabs.length > 2) {
               this.open();
-            } else if (gBrowser.tabs.length == 2) {
-              gBrowser.selectedTab = gBrowser.selectedTab.nextSibling ||
-                                     gBrowser.selectedTab.previousSibling;
+            } else if (tabs.length == 2) {
+              let index = gBrowser.selectedTab == tabs[0] ? 1 : 0;
+              gBrowser.selectedTab = tabs[index];
             }
           }
         }
@@ -664,7 +666,7 @@ var allTabs = {
     Array.forEach(this.previews, function (preview) {
       var tab = preview._tab;
       var matches = 0;
-      if (filter.length) {
+      if (filter.length && !tab.hidden) {
         let tabstring = tab.linkedBrowser.currentURI.spec;
         try {
           tabstring = decodeURI(tabstring);
@@ -673,7 +675,7 @@ var allTabs = {
         for (let i = 0; i < filter.length; i++)
           matches += tabstring.indexOf(filter[i]) > -1;
       }
-      if (matches < filter.length) {
+      if (matches < filter.length || tab.hidden) {
         preview.hidden = true;
       }
       else {

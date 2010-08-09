@@ -1212,6 +1212,7 @@ SessionStoreService.prototype = {
 
     if (aTab.pinned)
       tabData.pinned = true;
+    tabData.hidden = aTab.hidden;
 
     var disallow = [];
     for (var i = 0; i < CAPABILITIES.length; i++)
@@ -1938,6 +1939,11 @@ SessionStoreService.prototype = {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
                 tabbrowser.addTab("about:blank", {skipAnimation: true}));
+      // collapse all unselected tabs to prevent flickering when showing the
+      // tabs in the active group by TabView
+      if (!tabs[t].selected) {
+        tabs[t].hidden = true;
+      }
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {
         tabbrowser.moveTabTo(tabs[t], t);
@@ -1947,6 +1953,7 @@ SessionStoreService.prototype = {
         tabbrowser.pinTab(tabs[t]);
       else
         tabbrowser.unpinTab(tabs[t]);
+      tabs[t].hidden = winData.tabs[t].hidden;
     }
 
     // when overwriting tabs, remove all superflous ones
@@ -2031,6 +2038,7 @@ SessionStoreService.prototype = {
         tabbrowser.pinTab(tab);
       else
         tabbrowser.unpinTab(tab);
+      tab.hidden = tabData.hidden;
 
       tabData._tabStillLoading = true;
       if (!tabData.entries || tabData.entries.length == 0) {
