@@ -566,7 +566,11 @@ class GetPropCompiler : public PICStubCompiler
                           int32(JSScope::INVALID_SHAPE));
         repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineShapeJump(pic)),
                          pic.slowPathStart);
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), pic.slowPathStart);
+
+        if (pic.hasTypeCheck()) {
+            repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD),
+                             pic.slowPathStart);
+        }
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
@@ -578,9 +582,6 @@ class GetPropCompiler : public PICStubCompiler
             break;
           case ic::PICInfo::CALL:
             stub = ic::CallProp;
-            break;
-          case ic::PICInfo::GETELEM:
-            stub = ic::GetElem;
             break;
           default:
             JS_NOT_REACHED("invalid pic kind for GetPropCompiler::reset");
@@ -759,8 +760,10 @@ class GetPropCompiler : public PICStubCompiler
                    cs.executableAddress());
 
         /* Patch the type check to jump here. */
-        RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), cs);
+        if (pic.hasTypeCheck()) {
+            RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
+            repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), cs);
+        }
 
         /* Disable the PIC so we don't keep generating stubs on the above shape mismatch. */
         disable("generated string call stub");
@@ -797,9 +800,10 @@ class GetPropCompiler : public PICStubCompiler
         JaegerSpew(JSpew_PICs, "generate string length stub at %p\n",
                    start.executableAddress());
 
-        RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD),
-                         start);
+        if (pic.hasTypeCheck()) {
+            RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
+            repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), start);
+        }
 
         disable("generated string length stub");
 
@@ -1122,6 +1126,27 @@ class GetElemCompiler : public PICStubCompiler
         stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
         lastStubSecondShapeGuard(pic.u.get.secondShapeGuard)
     {}
+
+    static void reset(ic::PICInfo &pic)
+    {
+        JS_ASSERT(pic.kind == ic::PICInfo::GETELEM);
+
+        RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
+        repatcher.repatchLEAToLoadPtr(pic.storeBack.instructionAtOffset(dslotsLoad(pic)));
+
+        /* Only the shape needs to be patched to fail -- atom jump will never be taken. */
+        repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
+                           pic.shapeGuard + inlineShapeOffset(pic)),
+                          int32(JSScope::INVALID_SHAPE));
+        repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineShapeJump(pic)),
+                         pic.slowPathStart);
+
+        RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
+        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
+
+        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::GetElem));
+        repatcher.relinkCallerToTrampoline(retPtr, target);
+    }
 
     bool patchInline(JSObject *holder, JSScopeProperty *sprop)
     {
@@ -2186,9 +2211,15 @@ ic::PurgePICs(JSContext *cx, JSScript *script)
           case ic::PICInfo::BIND:
             BindNameCompiler::reset(pic);
             break;
-          case ic::PICInfo::CALL:
+          case ic::PICInfo::CALL: /* fall-through */
           case ic::PICInfo::GET:
             GetPropCompiler::reset(pic);
+            break;
+          case ic::PICInfo::GETELEM:
+            GetElemCompiler::reset(pic);
+            break;
+          default:
+            JS_NOT_REACHED("Unhandled PIC kind");
             break;
         }
         pic.reset();
