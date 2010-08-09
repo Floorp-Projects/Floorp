@@ -89,7 +89,7 @@ function HistoryStore(name) {
 
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
-    for each([query, stmt] in Iterator(this._stmts))
+    for each ([query, stmt] in Iterator(this._stmts))
       stmt.finalize();
     this.__hsvc = null;
     this._stmts = [];
@@ -113,7 +113,7 @@ HistoryStore.prototype = {
     return this._hsvc.DBConnection;
   },
 
-  _stmts: [],
+  _stmts: {},
   _getStmt: function(query) {
     if (query in this._stmts)
       return this._stmts[query];
@@ -122,34 +122,78 @@ HistoryStore.prototype = {
     return this._stmts[query] = this._db.createStatement(query);
   },
 
+  get _haveTempTablesStm() {
+    return this._getStmt(
+      "SELECT name FROM sqlite_temp_master " +
+      "WHERE name IN ('moz_places_temp', 'moz_historyvisits_temp')");
+  },
+
+  get _haveTempTables() {
+    if (this.__haveTempTables == null)
+      this.__haveTempTables = !!Utils.queryAsync(this._haveTempTablesStm,
+                                                 ["name"]).length;
+    return this.__haveTempTables;
+  },
+
   get _visitStm() {
+    // Gecko <2.0
+    if (this._haveTempTables) {
+      let where = 
+        "WHERE place_id = IFNULL( " +
+          "(SELECT id FROM moz_places_temp WHERE url = :url), " +
+          "(SELECT id FROM moz_places WHERE url = :url) " +
+        ") ";
+      return this._getStmt(
+        "SELECT visit_type type, visit_date date " +
+        "FROM moz_historyvisits_temp " + where + "UNION " +
+        "SELECT visit_type type, visit_date date " +
+        "FROM moz_historyvisits " + where +
+        "ORDER BY date DESC LIMIT 10 ");
+    }
+    // Gecko 2.0
     return this._getStmt(
       "SELECT visit_type type, visit_date date " +
-      "FROM moz_historyvisits_view " +
-      "WHERE place_id = (" +
-        "SELECT id " +
-        "FROM moz_places_view " +
-        "WHERE url = :url) " +
+      "FROM moz_historyvisits " +
+      "WHERE place_id = (SELECT id FROM moz_places WHERE url = :url) " +
       "ORDER BY date DESC LIMIT 10");
   },
 
   get _urlStm() {
-    return this._getStmt(
-      "SELECT url, title, frecency " +
-      "FROM moz_places_view " +
+    let where =
       "WHERE id = (" +
         "SELECT place_id " +
         "FROM moz_annos " +
         "WHERE content = :guid AND anno_attribute_id = (" +
           "SELECT id " +
           "FROM moz_anno_attributes " +
-          "WHERE name = '" + GUID_ANNO + "'))");
+          "WHERE name = '" + GUID_ANNO + "')) ";
+    // Gecko <2.0
+    if (this._haveTempTables)
+      return this._getStmt(
+        "SELECT url, title, frecency FROM moz_places_temp " + where +
+        "UNION ALL " +
+        "SELECT url, title, frecency FROM moz_places " + where + "LIMIT 1");
+    // Gecko 2.0
+    return this._getStmt(
+      "SELECT url, title, frecency FROM moz_places " + where + "LIMIT 1");
   },
 
   get _allUrlStm() {
+    // Gecko <2.0
+    if (this._haveTempTables)
+      return this._getStmt(
+        "SELECT url, frecency FROM moz_places_temp " +
+        "WHERE last_visit_date > :cutoff_date " +
+        "UNION " +
+        "SELECT url, frecency FROM moz_places " +
+        "WHERE last_visit_date > :cutoff_date " +
+        "ORDER BY 2 DESC " +
+        "LIMIT :max_results");
+
+    // Gecko 2.0
     return this._getStmt(
       "SELECT url " +
-      "FROM moz_places_view " +
+      "FROM moz_places " +
       "WHERE last_visit_date > :cutoff_date " +
       "ORDER BY frecency DESC " +
       "LIMIT :max_results");
@@ -191,7 +235,7 @@ HistoryStore.prototype = {
   },
 
   remove: function HistStore_remove(record) {
-    let page = this._findURLByGUID(record.id)
+    let page = this._findURLByGUID(record.id);
     if (page == null) {
       this._log.debug("Page already removed: " + record.id);
       return;
