@@ -85,6 +85,7 @@ endif
 EXTRA_JS_MODULES = \
   InlineSpellChecker.jsm \
   PopupNotifications.jsm \
+  Geometry.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
