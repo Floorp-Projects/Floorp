@@ -44,7 +44,6 @@
  */
 #include "jsprvtd.h"
 #include "jsstdint.h"
-#include "jstl.h"
 
 /*
  * js::Value is a C++-ified version of jsval that provides more information and
