@@ -25,6 +25,7 @@
  *   Rob Campbell <rcampbell@mozilla.com>
  *   Johnathan Nightingale <jnightingale@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Julian Viereck <jviereck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2810,6 +2811,10 @@ JSTerm.prototype = {
   {
     let inputNode = this.inputNode;
     let inputValue = inputNode.value;
+    // If the inputNode has no value, then don't try to complete on it.
+    if (!inputValue) {
+      return;
+    }
     let selStart = inputNode.selectionStart, selEnd = inputNode.selectionEnd;
 
     // 'Normalize' the selection so that end is always after start.
