@@ -54,6 +54,7 @@ DIRS += content/test
 endif
 
 EXTRA_JS_MODULES = \
+	content/AllTabs.js \
 	content/openLocationLastURL.jsm \
 	content/NetworkPrioritizer.jsm \
 	content/stylePanel.jsm \
@@ -83,3 +84,6 @@ endif
 ifneq (,$(filter windows, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DMENUBAR_CAN_AUTOHIDE=1
 endif
+
+libs::
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/content/tabview/modules/* $(FINAL_TARGET)/modules/tabview
