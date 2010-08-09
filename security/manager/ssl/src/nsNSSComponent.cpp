@@ -120,6 +120,8 @@
 #include "secerr.h"
 #include "sslerr.h"
 
+#include "nsXULAppAPI.h"
+
 #ifdef XP_WIN
 #include "nsILocalFileWin.h"
 #endif
@@ -283,6 +285,11 @@ nsTokenEventRunnable::Run()
 // creating any other components.
 PRBool EnsureNSSInitialized(EnsureNSSOperator op)
 {
+  if (GeckoProcessType_Default != XRE_GetProcessType()) {
+    NS_ERROR("Trying to initialize PSM/NSS in a non-chrome process!");
+    return PR_FALSE;
+  }
+
   static PRBool loading = PR_FALSE;
   static PRInt32 haveLoaded = 0;
 
