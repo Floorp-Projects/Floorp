@@ -52,6 +52,7 @@ const Cr = Components.results;
 
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
+const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
@@ -2051,6 +2052,7 @@ Checker.prototype = {
 
   /**
    * Returns an array of nsIUpdate objects discovered by the update check.
+   * @throws if the XML document element node name is not updates.
    */
   get _updates() {
     var updatesElement = this._request.responseXML.documentElement;
@@ -2061,7 +2063,8 @@ Checker.prototype = {
 
     if (updatesElement.nodeName != "updates") {
       LOG("Checker:updates get - unexpected node name!");
-      throw "";
+      throw new Error("Unexpected node name, expected: updates, got: " +
+                      updatesElement.nodeName);
     }
 
     const ELEMENT_NODE = Ci.nsIDOMNode.ELEMENT_NODE;
@@ -2111,14 +2114,49 @@ Checker.prototype = {
   onLoad: function UC_onLoad(event) {
     LOG("Checker:onLoad - request completed downloading document");
 
+    var certs = null;
+    if (!gPref.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE) &&
+        gPref.getBranch(PREF_APP_UPDATE_CERTS_BRANCH).getChildList("").length) {
+      certs = [];
+      let counter = 1;
+      while (true) {
+        let prefBranchCert = gPref.getBranch(PREF_APP_UPDATE_CERTS_BRANCH +
+                                             counter + ".");
+        let prefCertAttrs = prefBranchCert.getChildList("");
+        if (prefCertAttrs.length == 0)
+          break;
+
+        let certAttrs = {};
+        for each (let prefCertAttr in prefCertAttrs)
+          certAttrs[prefCertAttr] = prefBranchCert.getCharPref(prefCertAttr);
+
+        certs.push(certAttrs);
+        counter++;
+      }
+    }
+
+    var certAttrCheckFailed = false;
+    var status;
     try {
-      gCertUtils.checkCert(this._request.channel);
-      // Analyze the resulting DOM and determine the set of updates to install
-      var updates = this._updates;
+      try {
+        gCertUtils.checkCert(this._request.channel, certs);
+      }
+      catch (e) {
+        Components.utils.reportError(e);
+        if (e.result != Cr.NS_ERROR_ILLEGAL_VALUE)
+          throw e;
+
+        certAttrCheckFailed = true;
+      }
+
+      // Analyze the resulting DOM and determine the set of updates. If the
+      // certificate attribute check failed treat it as no updates found until
+      // Bug 583408 is fixed.
+      var updates = certAttrCheckFailed ? [] : this._updates;
 
       LOG("Checker:onLoad - number of updates available: " + updates.length);
 
-      // ... and tell the Update Service about what we discovered.
+      // Tell the Update Service about the updates
       this._callback.onCheckComplete(event.target, updates, updates.length);
     }
     catch (e) {

@@ -39,6 +39,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsXULTemplateResultXML;
 class nsXMLBindingValues;
@@ -88,6 +89,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
   NS_DECL_OWNINGTHREAD
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXMLBindingSet)
 
   /**
    * Add a binding to the set

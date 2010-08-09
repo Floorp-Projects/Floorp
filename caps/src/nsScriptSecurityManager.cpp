@@ -95,6 +95,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsPrintfCString.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -3257,9 +3258,10 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
 // Method implementing nsIChannelEventSink //
 /////////////////////////////////////////////
 NS_IMETHODIMP
-nsScriptSecurityManager::OnChannelRedirect(nsIChannel* oldChannel, 
-                                           nsIChannel* newChannel,
-                                           PRUint32 redirFlags)
+nsScriptSecurityManager::AsyncOnChannelRedirect(nsIChannel* oldChannel, 
+                                                nsIChannel* newChannel,
+                                                PRUint32 redirFlags,
+                                                nsIAsyncVerifyRedirectCallback *cb)
 {
     nsCOMPtr<nsIPrincipal> oldPrincipal;
     GetChannelPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
@@ -3278,7 +3280,12 @@ nsScriptSecurityManager::OnChannelRedirect(nsIChannel* oldChannel,
     if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
         rv = CheckLoadURIWithPrincipal(oldPrincipal, newOriginalURI, flags);
     }
-    return rv;
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    cb->OnRedirectVerifyCallback(NS_OK);
+    return NS_OK;
 }
 
 

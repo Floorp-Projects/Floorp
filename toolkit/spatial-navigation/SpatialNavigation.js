@@ -133,7 +133,7 @@ function _onInputKeyPress (event, callback) {
       return;
   }
 
-  if ((target instanceof Ci.nsIDOMNSHTMLInputElement &&
+  if ((target instanceof Ci.nsIDOMHTMLInputElement &&
        target.mozIsTextField(false)) ||
       target instanceof Ci.nsIDOMHTMLTextAreaElement) {
     
@@ -230,7 +230,7 @@ function _onInputKeyPress (event, callback) {
     doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).focus(bestElementToFocus);
 
     // if it is a text element, select all.
-    if ((bestElementToFocus instanceof Ci.nsIDOMNSHTMLInputElement &&
+    if ((bestElementToFocus instanceof Ci.nsIDOMHTMLInputElement &&
          bestElementToFocus.mozIsTextField(false)) ||
         bestElementToFocus instanceof Ci.nsIDOMHTMLTextAreaElement) {
       bestElementToFocus.selectionStart = 0;

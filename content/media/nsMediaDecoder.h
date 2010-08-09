@@ -51,6 +51,7 @@
 class nsHTMLMediaElement;
 class nsMediaStream;
 class nsIStreamListener;
+class nsHTMLTimeRanges;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of GetImageContainer, SetVideoData and GetStatistics,
@@ -236,6 +237,10 @@ public:
                     float aPixelAspectRatio,
                     Image* aImage);
 
+  // Constructs the time ranges representing what segments of the media
+  // are buffered and playable.
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered) = 0;
+
   // Returns PR_TRUE if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   PRBool CanPlayThrough();
@@ -247,6 +252,12 @@ protected:
 
   // Stop progress information timer.
   nsresult StopProgress();
+
+  // Ensures our media stream has been pinned.
+  void PinForSeek();
+
+  // Ensures our media stream has been unpinned.
+  void UnpinForSeek();
 
 protected:
   // Timer used for updating progress events
@@ -286,6 +297,10 @@ protected:
 
   // Pixel aspect ratio (ratio of the pixel width to pixel height)
   float mPixelAspectRatio;
+
+  // PR_TRUE when our media stream has been pinned. We pin the stream
+  // while seeking.
+  PRPackedBool mPinnedForSeek;
 
   // Has our size changed since the last repaint?
   PRPackedBool mSizeChanged;

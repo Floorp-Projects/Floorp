@@ -415,10 +415,12 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
+  nsPresContext* presContext = presShell->GetPresContext();
+
   nsDisplayList childItems;
 
   PRInt32 parentAPD = PresContext()->AppUnitsPerDevPixel();
-  PRInt32 subdocAPD = presShell->GetPresContext()->AppUnitsPerDevPixel();
+  PRInt32 subdocAPD = presContext->AppUnitsPerDevPixel();
 
   nsRect dirty;
   if (subdocRootFrame) {
@@ -459,12 +461,22 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     } else {
       bounds = subdocBoundsInParentUnits;
     }
-    // Add the canvas background color to the bottom of the list. This
-    // happens after we've built the list so that AddCanvasBackgroundColorItem
-    // can monkey with the contents if necessary.
-    rv = presShell->AddCanvasBackgroundColorItem(
-           *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
-           bounds, NS_RGBA(0,0,0,0), PR_TRUE);
+
+    // If we are in print preview/page layout we want to paint the grey
+    // background behind the page, not the canvas color. The canvas color gets
+    // painted on the page itself.
+    if (nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
+      rv = presShell->AddPrintPreviewBackgroundItem(
+             *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
+             bounds);
+    } else {
+      // Add the canvas background color to the bottom of the list. This
+      // happens after we've built the list so that AddCanvasBackgroundColorItem
+      // can monkey with the contents if necessary.
+      rv = presShell->AddCanvasBackgroundColorItem(
+             *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
+             bounds, NS_RGBA(0,0,0,0), PR_TRUE);
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {

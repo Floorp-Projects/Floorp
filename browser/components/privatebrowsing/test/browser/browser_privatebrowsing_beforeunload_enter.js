@@ -104,6 +104,7 @@ function test() {
         pb.privateBrowsingEnabled = false;
         Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
         Services.obs.removeObserver(promptObserver, "common-dialog-loaded", false);
+        gBrowser.getBrowserAtIndex(gBrowser.tabContainer.selectedIndex).contentWindow.focus();
         finish();
       }, true);
     }, true);

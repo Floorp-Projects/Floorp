@@ -41,7 +41,6 @@
 #include "nsTextControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIServiceManager.h"
 #include "nsFrameSelection.h"
@@ -1416,7 +1415,9 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   // Mark the scroll frame as being a reflow root. This will allow
   // incremental reflows to be initiated at the scroll frame, rather
   // than descending from the root frame of the frame hierarchy.
-  first->AddStateBits(NS_FRAME_REFLOW_ROOT);
+  if (first) {
+    first->AddStateBits(NS_FRAME_REFLOW_ROOT);
+  }
 
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");

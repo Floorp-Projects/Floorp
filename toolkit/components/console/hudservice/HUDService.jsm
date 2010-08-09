@@ -1811,14 +1811,10 @@ HeadsUpDisplay.prototype = {
     this.filterSpacer.setAttribute("flex", "1");
 
     this.filterBox = this.makeXULNode("textbox");
-    this.filterBox.setAttribute("class", "hud-filter-box");
+    this.filterBox.setAttribute("class", "compact hud-filter-box");
     this.filterBox.setAttribute("hudId", this.hudId);
     this.filterBox.setAttribute("placeholder", this.getStr("stringFilter"));
-
-    this.filterClearButton = this.makeXULNode("button");
-    this.filterClearButton.setAttribute("class", "hud-filter-clear");
-    this.filterClearButton.setAttribute("label", this.getStr("stringFilterClear"));
-    this.filterClearButton.setAttribute("hudId", this.hudId);
+    this.filterBox.setAttribute("type", "search");
 
     this.setFilterTextBoxEvents();
 
@@ -1859,11 +1855,6 @@ HeadsUpDisplay.prototype = {
       HUDService.updateFilterText(aEvent.target);
     }
     this.filterBox.addEventListener("keydown", keyPress, false);
-
-    function filterClick(aEvent) {
-      self.filterBox.value = "";
-    }
-    this.filterClearButton.addEventListener("click", filterClick, false);
   },
 
   /**
@@ -1893,7 +1884,6 @@ HeadsUpDisplay.prototype = {
     }
     toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
-    toolbar.appendChild(this.filterClearButton);
     return toolbar;
   },
 

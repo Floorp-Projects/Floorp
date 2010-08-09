@@ -116,6 +116,15 @@ public:
                                                            GLXContext,
                                                            Bool);
     PFNGLXCREATECONTEXT xCreateContext;
+    typedef int (GLAPIENTRY * PFNGLXGETCONFIG) (Display *,
+                                                XVisualInfo *,
+                                                int,
+                                                int *);
+    PFNGLXGETCONFIG xGetConfig;
+    typedef GLXPixmap (GLAPIENTRY * PFNGLXCREATEGLXPIXMAP) (Display *,
+                                                            XVisualInfo *,
+                                                            Pixmap);
+    PFNGLXCREATEGLXPIXMAP xCreateGLXPixmap;
 
     PRBool EnsureInitialized();
 

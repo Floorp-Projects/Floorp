@@ -212,7 +212,7 @@ nsICanvasRenderingContextWebGL_BufferSubData(JSContext *cx, uintN argc, jsval *v
 
 /*
  * ReadPixels takes:
- *    TexImage2D(int, int, int, int, uint, uint, ArrayBufferView)
+ *    ReadPixels(int, int, int, int, uint, uint, ArrayBufferView)
  */
 static JSBool
 nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
@@ -230,8 +230,7 @@ nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
-    // XXX we currently allow passing only 6 args to support the API. Eventually drop that.
-    if (argc < 6)
+    if (argc < 7)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
@@ -244,40 +243,8 @@ nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
     GET_UINT32_ARG(argv4, 4);
     GET_UINT32_ARG(argv5, 5);
 
-    if (argc == 6) {
-        /*** BEGIN old API deprecated code. Eventually drop that. ***/
-        // the code here is ugly, but temporary. It comes from the old ReadPixels implementation.
-        // Remove it as soon as it's OK to drop the old API.
-
-        PRInt32 byteLength;
-        rv = self->ReadPixels_byteLength_old_API_deprecated(argv2, argv3, argv4, argv5, &byteLength);
-        if (NS_FAILED(rv)) {
-            xpc_qsThrow(cx, NS_ERROR_FAILURE);
-            return JS_FALSE;
-        }
-        JSObject *abufObject = js_CreateArrayBuffer(cx, byteLength);
-        if (!abufObject) {
-            xpc_qsThrow(cx, NS_ERROR_FAILURE);
-            return JS_FALSE;
-        }
-
-        js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(abufObject);
-
-        rv = self->ReadPixels_buf(
-            argv0, argv1, argv2, argv3, argv4, argv5, abuf);
-        if (NS_FAILED(rv)) {
-            xpc_qsThrow(cx, NS_ERROR_FAILURE);
-            return JS_FALSE;
-        }
-        JSObject *retval = js_CreateTypedArrayWithBuffer(cx, js::TypedArray::TYPE_UINT8,
-                                                         abufObject, 0, byteLength);
-
-        *vp = OBJECT_TO_JSVAL(retval);
-        return JS_TRUE; // return here to be unaffected by the *vp = JSVAL_VOID; below
-
-        /*** END old API deprecated code ***/
-    } else if (argc == 7 &&
-               !JSVAL_IS_PRIMITIVE(argv[6]))
+    if (argc == 7 &&
+        !JSVAL_IS_PRIMITIVE(argv[6]))
     {
         JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
         if (js_IsArrayBuffer(argv6)) {
@@ -306,7 +273,7 @@ nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
 
 /*
  * TexImage2D takes:
- *    TexImage2D(uint, int, uint, int, int, int, uint, uint, ArrayBufferView)\
+ *    TexImage2D(uint, int, uint, int, int, int, uint, uint, ArrayBufferView)
  *    TexImage2D(uint, int, uint, uint, uint, nsIDOMElement)
  *    TexImage2D(uint, int, uint, uint, uint, ImageData)
  */
@@ -326,9 +293,7 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
-    // XXX we currently allow passing only 3 args to support the API. Eventually drop that.
-    // if (argc < 6 || argc == 7 || argc == 8)
-    if (argc < 3)
+    if (argc < 6 || argc == 7 || argc == 8)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
@@ -337,22 +302,9 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
     GET_UINT32_ARG(argv0, 0);
     GET_INT32_ARG(argv1, 1);
 
-    if (argc > 2 && JSVAL_IS_OBJECT(argv[2])) {
-        // the old API. Eventually drop that.
-
-        nsIDOMElement *elt;
-        xpc_qsSelfRef eltRef;
-        rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[2], &elt, &eltRef.ptr, &argv[2]);
-        if (NS_FAILED(rv)) return JS_FALSE;
-
-        GET_OPTIONAL_UINT32_ARG(argv3, 3);
-        GET_OPTIONAL_UINT32_ARG(argv4, 4);
-
-        rv = self->TexImage2D_dom_old_API_deprecated(argv0, argv1, elt, argv3, argv4);
-    } else if (argc > 5 &&
-               !JSVAL_IS_PRIMITIVE(argv[5]))
+    if (argc > 5 &&
+        !JSVAL_IS_PRIMITIVE(argv[5]))
     {
-
         // implement the variants taking a DOMElement as argv[5]
         GET_UINT32_ARG(argv2, 2);
         GET_UINT32_ARG(argv3, 3);

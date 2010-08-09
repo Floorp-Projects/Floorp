@@ -250,7 +250,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMNSHTMLAnchorElement2.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLBRElement.h"
@@ -275,9 +274,7 @@
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMNSHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMHTMLIsIndexElement.h"
 #include "nsIDOMHTMLLIElement.h"
 #include "nsIDOMHTMLLabelElement.h"
@@ -308,12 +305,13 @@
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"
 #include "nsIDOMHTMLMediaError.h"
+#include "nsIDOMHTMLTimeRanges.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLAudioElement.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIDOMNSCSS2Properties.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -468,6 +466,8 @@
 #include "nsIDOMSimpleGestureEvent.h"
 
 #include "nsIDOMNSMouseEvent.h"
+
+#include "nsIDOMMozTouchEvent.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIFrameMessageManager.h"
@@ -684,8 +684,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMSettableTokenList, nsDOMTokenListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(DocumentFragment, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(DocumentFragment, nsNodeSH, NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Attr, nsAttributeSH,
@@ -1354,6 +1353,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLTimeRanges, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(ProgressEvent, nsDOMGenericSH,
@@ -1376,6 +1377,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SimpleGestureEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(MozTouchEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #ifdef MOZ_MATHML
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
                                      ELEMENT_SCRIPTABLE_FLAGS)
@@ -1582,6 +1585,26 @@ jsid nsDOMClassInfo::sOncut_id           = JSID_VOID;
 jsid nsDOMClassInfo::sOnpaste_id         = JSID_VOID;
 jsid nsDOMClassInfo::sJava_id            = JSID_VOID;
 jsid nsDOMClassInfo::sPackages_id        = JSID_VOID;
+jsid nsDOMClassInfo::sOnloadstart_id     = JSID_VOID;
+jsid nsDOMClassInfo::sOnprogress_id      = JSID_VOID;
+jsid nsDOMClassInfo::sOnsuspend_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOnemptied_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOnstalled_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOnplay_id          = JSID_VOID;
+jsid nsDOMClassInfo::sOnpause_id         = JSID_VOID;
+jsid nsDOMClassInfo::sOnloadedmetadata_id= JSID_VOID;
+jsid nsDOMClassInfo::sOnloadeddata_id    = JSID_VOID;
+jsid nsDOMClassInfo::sOnwaiting_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOnplaying_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOncanplay_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOncanplaythrough_id= JSID_VOID;
+jsid nsDOMClassInfo::sOnseeking_id       = JSID_VOID;
+jsid nsDOMClassInfo::sOnseeked_id        = JSID_VOID;
+jsid nsDOMClassInfo::sOntimeupdate_id    = JSID_VOID;
+jsid nsDOMClassInfo::sOnended_id         = JSID_VOID;
+jsid nsDOMClassInfo::sOnratechange_id    = JSID_VOID;
+jsid nsDOMClassInfo::sOndurationchange_id= JSID_VOID;
+jsid nsDOMClassInfo::sOnvolumechange_id  = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
@@ -1784,6 +1807,28 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnpaste_id,         cx, "onpaste");
   SET_JSID_TO_STRING(sJava_id,            cx, "java");
   SET_JSID_TO_STRING(sPackages_id,        cx, "Packages");
+#ifdef MOZ_MEDIA
+  SET_JSID_TO_STRING(sOnloadstart_id,     cx, "onloadstart");
+  SET_JSID_TO_STRING(sOnprogress_id,      cx, "onprogress");
+  SET_JSID_TO_STRING(sOnsuspend_id,       cx, "onsuspend");
+  SET_JSID_TO_STRING(sOnemptied_id,       cx, "onemptied");
+  SET_JSID_TO_STRING(sOnstalled_id,       cx, "onstalled");
+  SET_JSID_TO_STRING(sOnplay_id,          cx, "onplay");
+  SET_JSID_TO_STRING(sOnpause_id,         cx, "onpause");
+  SET_JSID_TO_STRING(sOnloadedmetadata_id,cx, "onloadedmetadata");
+  SET_JSID_TO_STRING(sOnloadeddata_id,    cx, "onloadeddata");
+  SET_JSID_TO_STRING(sOnwaiting_id,       cx, "onwaiting");
+  SET_JSID_TO_STRING(sOnplaying_id,       cx, "onplaying");
+  SET_JSID_TO_STRING(sOncanplay_id,       cx, "oncanplay");
+  SET_JSID_TO_STRING(sOncanplaythrough_id,cx, "oncanplaythrough");
+  SET_JSID_TO_STRING(sOnseeking_id,       cx, "onseeking");
+  SET_JSID_TO_STRING(sOnseeked_id,        cx, "onseeked");
+  SET_JSID_TO_STRING(sOntimeupdate_id,    cx, "ontimeupdate");
+  SET_JSID_TO_STRING(sOnended_id,         cx, "onended");
+  SET_JSID_TO_STRING(sOnratechange_id,    cx, "onratechange");
+  SET_JSID_TO_STRING(sOndurationchange_id,cx, "ondurationchange");
+  SET_JSID_TO_STRING(sOnvolumechange_id,  cx, "onvolumechange");
+#endif // MOZ_MEDIA
 
   return NS_OK;
 }
@@ -2424,8 +2469,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLAnchorElement, nsIDOMHTMLAnchorElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAnchorElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAnchorElement2)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2546,13 +2589,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLImageElement, nsIDOMHTMLImageElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLImageElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLImageElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLInputElement, nsIDOMHTMLInputElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLInputElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2772,16 +2813,12 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleDeclaration, nsIDOMCSSStyleDeclaration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSS2Properties)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGCSS2Properties)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSCSS2Properties)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ComputedCSSStyleDeclaration,
                                       nsIDOMCSSStyleDeclaration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSS2Properties)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGCSS2Properties)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSCSS2Properties)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
@@ -3846,6 +3883,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAudioElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTimeRanges, nsIDOMHTMLTimeRanges)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTimeRanges)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END  
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN(ProgressEvent, nsIDOMProgressEvent)
@@ -3872,6 +3914,13 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SimpleGestureEvent, nsIDOMSimpleGestureEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSimpleGestureEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSMouseEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozTouchEvent, nsIDOMMozTouchEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozTouchEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSMouseEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
@@ -4808,6 +4857,26 @@ nsDOMClassInfo::ShutDown()
   sOnpaste_id         = JSID_VOID;
   sJava_id            = JSID_VOID;
   sPackages_id        = JSID_VOID;
+  sOnloadstart_id     = JSID_VOID;
+  sOnprogress_id      = JSID_VOID;
+  sOnsuspend_id       = JSID_VOID;
+  sOnemptied_id       = JSID_VOID;
+  sOnstalled_id       = JSID_VOID;
+  sOnplay_id          = JSID_VOID;
+  sOnpause_id         = JSID_VOID;
+  sOnloadedmetadata_id= JSID_VOID;
+  sOnloadeddata_id    = JSID_VOID;
+  sOnwaiting_id       = JSID_VOID;
+  sOnplaying_id       = JSID_VOID;
+  sOncanplay_id       = JSID_VOID;
+  sOncanplaythrough_id= JSID_VOID;
+  sOnseeking_id       = JSID_VOID;
+  sOnseeked_id        = JSID_VOID;
+  sOntimeupdate_id    = JSID_VOID;
+  sOnended_id         = JSID_VOID;
+  sOnratechange_id    = JSID_VOID;
+  sOndurationchange_id= JSID_VOID;
+  sOnvolumechange_id  = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -6283,8 +6352,8 @@ nsCommonWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
       name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
     // Don't expose chrome only constructors to content windows.
-    if (name_struct->mChromeOnly && aWin->IsChromeWindow()) {
-      NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Uh, bad?!");
+    if (name_struct->mChromeOnly &&
+        !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal())) {
       return NS_OK;
     }
 
@@ -7635,16 +7704,14 @@ nsEventReceiverSH::ReallyIsEventName(jsid id, jschar aFirstChar)
   case 'b' :
     return (id == sOnbeforeunload_id ||
             id == sOnblur_id);
-  case 'e' :
-    return id == sOnerror_id;
-  case 'f' :
-    return id == sOnfocus_id;
   case 'c' :
     return (id == sOnchange_id       ||
             id == sOnclick_id        ||
             id == sOncontextmenu_id  ||
             id == sOncopy_id         ||
-            id == sOncut_id);
+            id == sOncut_id          ||
+            id == sOncanplay_id      ||
+            id == sOncanplaythrough_id);
   case 'd' :
     return (id == sOndblclick_id     || 
             id == sOndrag_id         ||
@@ -7653,37 +7720,62 @@ nsEventReceiverSH::ReallyIsEventName(jsid id, jschar aFirstChar)
             id == sOndragleave_id    ||
             id == sOndragover_id     ||
             id == sOndragstart_id    ||
-            id == sOndrop_id);
+            id == sOndrop_id         ||
+            id == sOndurationchange_id);
+  case 'e' :
+    return (id == sOnerror_id ||
+            id == sOnemptied_id ||
+            id == sOnended_id);
+  case 'f' :
+    return id == sOnfocus_id;
   case 'h' :
     return id == sOnhashchange_id;
-  case 'l' :
-    return id == sOnload_id;
-  case 'p' :
-    return (id == sOnpaint_id        ||
-            id == sOnpageshow_id     ||
-            id == sOnpagehide_id     ||
-            id == sOnpaste_id        ||
-            id == sOnpopstate_id);
   case 'k' :
     return (id == sOnkeydown_id      ||
             id == sOnkeypress_id     ||
             id == sOnkeyup_id);
-  case 'u' :
-    return id == sOnunload_id;
+  case 'l' :
+    return (id == sOnload_id           ||
+            id == sOnloadeddata_id     ||
+            id == sOnloadedmetadata_id ||
+            id == sOnloadstart_id);
   case 'm' :
     return (id == sOnmousemove_id    ||
             id == sOnmouseout_id     ||
             id == sOnmouseover_id    ||
             id == sOnmouseup_id      ||
             id == sOnmousedown_id);
+  case 'p' :
+    return (id == sOnpaint_id        ||
+            id == sOnpageshow_id     ||
+            id == sOnpagehide_id     ||
+            id == sOnpaste_id        ||
+            id == sOnpopstate_id     ||
+            id == sOnpause_id        ||
+            id == sOnplay_id         ||
+            id == sOnplaying_id      ||
+            id == sOnprogress_id);
   case 'r' :
     return (id == sOnreadystatechange_id ||
             id == sOnreset_id            ||
-            id == sOnresize_id);
+            id == sOnresize_id           ||
+            id == sOnratechange_id);
   case 's' :
     return (id == sOnscroll_id       ||
             id == sOnselect_id       ||
-            id == sOnsubmit_id);
+            id == sOnsubmit_id       ||
+            id == sOnseeked_id       ||
+            id == sOnseeking_id      ||
+            id == sOnstalled_id      ||
+            id == sOnsuspend_id);
+  case 't':
+    return id == sOntimeupdate_id;
+  case 'u' :
+    return id == sOnunload_id;
+  case 'v':
+    return id == sOnvolumechange_id;
+  case 'w':
+    return id == sOnwaiting_id;
   }
 
   return PR_FALSE;

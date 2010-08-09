@@ -117,7 +117,7 @@ public:
     void SetDeviceOffset(const gfxPoint& offset);
     gfxPoint GetDeviceOffset() const;
 
-    void Flush();
+    void Flush() const;
     void MarkDirty();
     void MarkDirty(const gfxRect& r);
 

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var t;
+
+function boom()
+{
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  t = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
+  b.appendChild(t);
+  document.removeChild(document.documentElement)
+  document.appendChild(b)
+  document.removeChild(document.documentElement)
+  var ns = document.createElementNS("http://www.w3.org/1999/xhtml", "script");
+  var nt = document.createTextNode("t.appendChild(document.createTextNode(' '));");
+  ns.appendChild(nt);
+  b.appendChild(ns);
+  document.appendChild(b);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

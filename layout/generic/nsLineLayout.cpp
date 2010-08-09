@@ -888,7 +888,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // We might as well allow zero-width floats to be placed, though.
           availableWidth = 0;
         }
-        placedFloat = AddFloat(outOfFlowFrame, availableWidth, aReflowStatus);
+        placedFloat = AddFloat(outOfFlowFrame, availableWidth);
         NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
                        GetFirstLetterStyleOK()),
                     "FirstLetterStyle set on line with floating first letter");

@@ -1595,6 +1595,7 @@ stubTopTemplate = '''\
 #ifdef JS_TRACER
 #  include "nanojit/nanojit.h"
 #endif
+#include "qsWinUndefs.h"
 #include "prtypes.h"
 #include "nsID.h"
 #include "%s"

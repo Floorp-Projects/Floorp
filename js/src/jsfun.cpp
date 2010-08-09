@@ -87,14 +87,6 @@
 
 using namespace js;
 
-static inline void
-SetArgsPrivateNative(JSObject *argsobj, ArgsPrivateNative *apn)
-{
-    JS_ASSERT(argsobj->isArguments());
-    uintptr_t p = (uintptr_t) apn;
-    argsobj->setPrivate((void*) (p | 2));
-}
-
 JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, Value *vp)
 {
@@ -251,26 +243,24 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 
 #ifdef JS_TRACER
 JSObject * JS_FASTCALL
-js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
-             double *argv, ArgsPrivateNative *apn)
+js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
 {
     JSObject *argsobj = NewArguments(cx, parent, argc, callee);
     if (!argsobj)
         return NULL;
-    apn->argv = argv;
-    SetArgsPrivateNative(argsobj, apn);
+    argsobj->setPrivate(JS_ARGUMENT_OBJECT_ON_TRACE);
     return argsobj;
 }
 #endif
 
-JS_DEFINE_CALLINFO_6(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT,
-                     DOUBLEPTR, APNPTR, 0, nanojit::ACCSET_STORE_ANY)
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT,
+                     0, nanojit::ACCSET_STORE_ANY)
 
 /* FIXME change the return type to void. */
 JSBool JS_FASTCALL
 js_PutArguments(JSContext *cx, JSObject *argsobj, Value *args)
 {
-    JS_ASSERT(GetArgsPrivateNative(argsobj));
+    JS_ASSERT(argsobj->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE);
     PutArguments(cx, argsobj, args);
     argsobj->setPrivate(NULL);
     return true;
@@ -315,12 +305,10 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
         return NULL;
 
     /*
-     * We must wrap funobj with a JSFunction, so use NewObjectWithGivenProto.
-     * This helper has a special case for js_FunctionClass, triggered here and
-     * also possibly via the JS_NewObjectForGivenProto and JS_NewObject APIs.
+     * We must wrap funobj with a JSFunction.
      */
-    JSObject *wfunobj = NewObjectWithGivenProto(cx, &js_FunctionClass,
-                                                funobj, scopeChain);
+    JS_ASSERT (funobj);
+    JSObject *wfunobj = NewFunction(cx, funobj, scopeChain);
     if (!wfunobj)
         return NULL;
     AutoObjectRooter tvr(cx, wfunobj);
@@ -485,6 +473,8 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
 static JSBool
 ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
+    LeaveTrace(cx);
+
     if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
         return true;
 
@@ -495,14 +485,6 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          */
         uintN arg = uintN(JSID_TO_INT(id));
         if (arg < obj->getArgsLength()) {
-#ifdef JS_TRACER
-            ArgsPrivateNative *argp = GetArgsPrivateNative(obj);
-            if (argp) {
-                ExternNativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]);
-                return true;
-            }
-#endif
-
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 *vp = fp->argv[arg];
@@ -655,7 +637,7 @@ static void
 args_or_call_trace(JSTracer *trc, JSObject *obj)
 {
     if (obj->isArguments()) {
-        if (GetArgsPrivateNative(obj))
+        if (obj->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE)
             return;
     } else {
         JS_ASSERT(obj->getClass() == &js_CallClass);
@@ -2206,7 +2188,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     TokenKind tt;
 
     if (!JS_IsConstructing(cx)) {
-        obj = NewObject(cx, &js_FunctionClass, NULL, NULL);
+        obj = NewFunction(cx, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         rval->setObject(*obj);
@@ -2451,7 +2433,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         funobj->setParent(parent);
     } else {
-        funobj = NewObject(cx, &js_FunctionClass, NULL, parent);
+        funobj = NewFunction(cx, NULL, parent);
         if (!funobj)
             return NULL;
     }

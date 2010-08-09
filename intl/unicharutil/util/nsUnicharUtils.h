@@ -92,6 +92,16 @@ public:
   }
 };
 
+class nsASCIICaseInsensitiveStringComparator : public nsStringComparator
+{
+public:
+  virtual int operator() (const PRUnichar*,
+                          const PRUnichar*,
+                          PRUint32 aLength) const;
+  virtual int operator() (PRUnichar,
+                          PRUnichar) const;
+};
+
 inline PRBool
 CaseInsensitiveFindInReadable(const nsAString& aPattern,
                               nsAString::const_iterator& aSearchStart,
