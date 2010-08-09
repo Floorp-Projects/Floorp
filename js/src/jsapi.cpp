@@ -5660,6 +5660,20 @@ JS_ClearContextThread(JSContext *cx)
 #endif
 }
 
+#ifdef MOZ_TRACE_JSCALLS
+JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
+{
+    cx->functionCallback = fcb;
+}
+
+JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx)
+{
+    return cx->functionCallback;
+}
+#endif
+
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8 zeal)
