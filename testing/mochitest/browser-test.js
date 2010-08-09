@@ -53,6 +53,7 @@ Tester.prototype = {
 
   checker: null,
   currentTestIndex: -1,
+  lastStartTime: null,
   get currentTest() {
     return this.tests[this.currentTestIndex];
   },
@@ -164,6 +165,12 @@ Tester.prototype = {
   },
 
   realNextTest: function Test_realNextTest() {
+    if (this.lastStartTime) {
+      let time = Date.now() - this.lastStartTime;
+      this.dumper.dump("TEST-END | " + this.currentTest.path + " | Test took " +
+                       time + "ms to complete\n");
+    }
+
     if (this.done) {
       this.finish();
       return;
@@ -201,6 +208,7 @@ Tester.prototype = {
                                        this.currentTest.scope);
 
       // Run the test
+      this.lastStartTime = Date.now();
       this.currentTest.scope.test();
     } catch (ex) {
       this.currentTest.addResult(new testResult(false, "Exception thrown", ex, false));
