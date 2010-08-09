@@ -110,7 +110,7 @@ let FormWrapper = {
   createStatement: function createStatement(query) {
     try {
       // Just return the statement right away if it's okay
-      return Svc.Form.DBConnection.createStatement(query);
+      return Utils.createStatement(Svc.Form.DBConnection, query);
     }
     catch(ex) {
       // Assume guid column must not exist yet, so add it with an index
@@ -121,7 +121,7 @@ let FormWrapper = {
         "ON moz_formhistory (guid)");
 
       // Try creating the query now that the column exists
-      return Svc.Form.DBConnection.createStatement(query);
+      return Utils.createStatement(Svc.Form.DBConnection, query);
     }
   }
 };

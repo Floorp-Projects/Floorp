@@ -851,10 +851,12 @@ BookmarksStore.prototype = {
   get _frecencyStm() {
     if (!this.__frecencyStm) {
       this._log.trace("Creating SQL statement: _frecencyStm");
-      this.__frecencyStm = Svc.History.DBConnection.createStatement(
+      this.__frecencyStm = Utils.createStatement(
+        Svc.History.DBConnection,
         "SELECT frecency " +
         "FROM moz_places " +
-        "WHERE url = :url");
+        "WHERE url = :url " +
+        "LIMIT 1");
     }
     return this.__frecencyStm;
   },
@@ -868,14 +870,10 @@ BookmarksStore.prototype = {
 
     // Add in the bookmark's frecency if we have something
     if (record.bmkUri != null) {
-      try {
-        this._frecencyStm.params.url = record.bmkUri;
-        if (this._frecencyStm.step())
-          index += this._frecencyStm.row.frecency;
-      }
-      finally {
-        this._frecencyStm.reset();
-      }
+      this._frecencyStm.params.url = record.bmkUri;
+      let result = Utils.queryAsync(this._frecencyStm, ["frecency"]);
+      if (result.length)
+        index += result.frecency;
     }
 
     return index;
