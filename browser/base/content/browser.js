@@ -174,6 +174,7 @@ let gInitialPages = [
 #include inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
+#include browser-tabview.js
 
 #ifdef MOZ_SERVICES_SYNC
 #include browser-syncui.js
@@ -1519,6 +1520,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // initialize the sync UI
   gSyncUI.init();
 #endif
+
+  TabView.init();
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
@@ -6765,11 +6768,13 @@ var gBookmarkAllTabsHandler = {
     this._command = document.getElementById("Browser:BookmarkAllTabs");
     gBrowser.tabContainer.addEventListener("TabOpen", this, true);
     gBrowser.tabContainer.addEventListener("TabClose", this, true);
+    gBrowser.tabContainer.addEventListener("TabSelect", this, true);
+    gBrowser.tabContainer.addEventListener("TabMove", this, true);
     this._updateCommandState();
   },
 
   _updateCommandState: function BATH__updateCommandState(aTabClose) {
-    var numTabs = gBrowser.tabs.length;
+    let numTabs = gBrowser.visibleTabs.length;
 
     // The TabClose event is fired before the tab is removed from the DOM
     if (aTabClose)
@@ -7795,7 +7800,7 @@ var TabContextMenu = {
   updateContextMenu: function updateContextMenu(aPopupMenu) {
     this.contextTab = document.popupNode.localName == "tab" ?
                       document.popupNode : gBrowser.selectedTab;
-    var disabled = gBrowser.tabs.length == 1;
+    let disabled = gBrowser.visibleTabs.length == 1;
 
     // Enable the "Close Tab" menuitem when the window doesn't close with the last tab.
     document.getElementById("context_closeTab").disabled =
@@ -7817,7 +7822,7 @@ var TabContextMenu = {
 
     // Disable "Close other Tabs" if there is only one unpinned tab and
     // hide it when the user rightclicked on a pinned tab.
-    var unpinnedTabs = gBrowser.tabs.length - gBrowser._numPinnedTabs;
+    let unpinnedTabs = gBrowser.visibleTabs.length - gBrowser._numPinnedTabs;
     document.getElementById("context_closeOtherTabs").disabled = unpinnedTabs <= 1;
     document.getElementById("context_closeOtherTabs").hidden = this.contextTab.pinned;
   }
