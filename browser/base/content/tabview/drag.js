@@ -76,7 +76,7 @@ var Drag = function(item, event, isResizing, isFauxDrag) {
     this.item.isDragging = true;
     this.item.setZ(999999);
 
-		this.safeWindowBounds = Items.getSafeWindowBounds();
+    this.safeWindowBounds = Items.getSafeWindowBounds();
 
     Trenches.activateOthersTrenches(this.el);
 

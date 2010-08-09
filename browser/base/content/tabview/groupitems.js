@@ -1676,8 +1676,16 @@ window.GroupItems = {
     if (!window.UI)
       return; // called too soon
 
-    let tabItems = this._activeGroupItem == null ? this.getOrphanedTabs() :
-      this._activeGroupItem._children;
+//    Utils.log('updateTabBar', this._activeGroupItem, this._activeOrphanTab);
+
+    if (!this._activeGroupItem && !this._activeOrphanTab) {
+      Utils.assert("There must be something to show in the tab bar!",
+        false);
+      return;
+    }
+
+    let tabItems = this._activeGroupItem == null ?
+      [this._activeOrphanTab] : this._activeGroupItem._children;
     gBrowser.showOnlyTheseTabs(tabItems.map(function(item) item.tab));
   },
 
