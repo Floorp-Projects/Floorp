@@ -53,9 +53,7 @@ let EXPECTED_NOTIFICATIONS = [
   "places-shutdown"
 , "places-will-close-connection"
 , "places-connection-closing"
-, "places-sync-finished"
 , "places-expiration-finished"
-, "places-sync-finished"
 , "places-connection-closed"
 ];
 

@@ -45,8 +45,6 @@ var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
 var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
             getService(Ci.nsINavBookmarksService);
-var ios = Cc["@mozilla.org/network/io-service;1"].
-          getService(Components.interfaces.nsIIOService);
 
 /**
  * Function prohibits an attempt to pop up a confirmation
@@ -249,22 +247,13 @@ function run_test() {
   var pb = get_PBSvc();
 
   if (pb) { // Private Browsing might not be available
-    // need to catch places sync notifications
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    const kSyncFinished = "places-sync-finished";
     do_test_pending();
 
-    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefBranch);
-    prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+    Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
-    var bookmark_A_URI = ios.newURI("http://google.com/", null, null);
-    var bookmark_B_URI = ios.newURI("http://bugzilla.mozilla.org/", null, null);
-    var onBookmarkAAdded = {
-      observe: function (aSubject, aTopic, aData) {
-        os.removeObserver(this, kSyncFinished);
-
+    var bookmark_A_URI = NetUtil.newURI("http://google.com/");
+    var bookmark_B_URI = NetUtil.newURI("http://bugzilla.mozilla.org/");
+    var onBookmarkAAdded = function() {
         check_placesItem_Count();
 
         // Bookmark-A should be bookmarked, data should be retrievable
@@ -298,16 +287,11 @@ function run_test() {
         do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
         do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
 
-        os.addObserver(onBookmarkBAdded, kSyncFinished, false);
-
         // Create Bookmark-B
         myBookmarks[1] = create_bookmark(bookmark_B_URI,"title 2", "bugzilla");
-      }
+        onBookmarkBAdded();
     };
-    var onBookmarkBAdded = {
-      observe: function (aSubject, aTopic, aData) {
-        os.removeObserver(this, kSyncFinished);
-
+    var onBookmarkBAdded = function() {
         // A check on the history count should be same as before, 7 history entries with
         // now 2 bookmark items (A) and bookmark (B), so we set num_places_entries to 9
         num_places_entries = 10; // Bookmark-B successfully added but not the history entries.
@@ -330,9 +314,8 @@ function run_test() {
           do_check_true(bhist.isVisited(uri(visited_uri)));
         }
 
-        prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+        Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
         do_test_finished();
-      }
     };
 
     // History database should be empty
@@ -344,8 +327,6 @@ function run_test() {
     // History database should have entries
     do_check_true(histsvc.hasHistoryEntries);
 
-    os.addObserver(onBookmarkAAdded, kSyncFinished, false);
-
     // Create Bookmark-A
     myBookmarks[0] = create_bookmark(bookmark_A_URI,"title 1", "google");
 
@@ -354,5 +335,7 @@ function run_test() {
       do_check_true(bhist.isVisited(uri(visited_uri)));
       do_check_true(uri_in_db(uri(visited_uri)));
     }
+
+    onBookmarkAAdded();
   }
 }
