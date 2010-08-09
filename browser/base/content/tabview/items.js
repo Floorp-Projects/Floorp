@@ -176,8 +176,8 @@ window.Item.prototype = {
     this.dragOptions = {
       cancelClass: 'close stackExpander',
       start: function(e, ui) {
-      	if (this.isAGroupItem)
-      		GroupItems.setActiveGroupItem(this);
+        if (this.isAGroupItem)
+          GroupItems.setActiveGroupItem(this);
         drag.info = new Drag(this, e);
       },
       drag: function(e, ui) {
@@ -218,8 +218,8 @@ window.Item.prototype = {
       minWidth: 90,
       minHeight: 90,
       start: function(e,ui) {
-				if (this.isAGroupItem)
-					GroupItems.setActiveGroupItem(this);
+        if (this.isAGroupItem)
+          GroupItems.setActiveGroupItem(this);
         resizeInfo = new Drag(this, e, true); // true = isResizing
       },
       resize: function(e,ui) {
@@ -872,7 +872,7 @@ window.Items = {
     // extra chrome which makes a large top gutter unnecessary.
     // TODO: set top gutter separately, elsewhere.
     var topGutter = 5;
-		return new Rect(gutter, topGutter,
+    return new Rect(gutter, topGutter,
         window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter);
 
   },

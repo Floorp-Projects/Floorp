@@ -356,9 +356,11 @@ var UIManager = {
 
         self.setActiveTab(item);
 
-        var activeGroupItem = GroupItems.getActiveGroupItem();
-        if (activeGroupItem)
-          activeGroupItem.setTopChild(item);
+        if (item.parent) {
+          var activeGroupItem = GroupItems.getActiveGroupItem();
+          if (activeGroupItem)
+            activeGroupItem.setTopChild(item);
+        }
 
         self._resize(true);
         dispatchEvent(event);
@@ -530,7 +532,12 @@ var UIManager = {
       var newItem = null;
       if (focusTab && focusTab.tabItem) {
         newItem = focusTab.tabItem;
-        GroupItems.setActiveGroupItem(newItem.parent);
+				if (newItem.parent) {
+					GroupItems.setActiveGroupItem(newItem.parent);
+        } else {
+					GroupItems.setActiveGroupItem(null);
+					GroupItems.setActiveOrphanTab(newItem);
+        }
         GroupItems.updateTabBarForActiveGroupItem();
       }
 
@@ -712,7 +719,7 @@ var UIManager = {
         var activeTab = self.getActiveTab();
         if (activeTab) {
           var tabItems = (activeTab.parent ? activeTab.parent.getChildren() :
-                          GroupItems.getOrphanedTabs());
+                          [activeTab]);
           var length = tabItems.length;
           var currentIndex = tabItems.indexOf(activeTab);
 
@@ -745,8 +752,8 @@ var UIManager = {
     const minSize = 60;
     const minMinSize = 15;
 
-		let lastActiveGroupItem = GroupItems.getActiveGroupItem();
-		GroupItems.setActiveGroupItem(null);
+    let lastActiveGroupItem = GroupItems.getActiveGroupItem();
+    GroupItems.setActiveGroupItem(null);
 
     var startPos = { x: e.clientX, y: e.clientY };
     var phantom = iQ("<div>")
