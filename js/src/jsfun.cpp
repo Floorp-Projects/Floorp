@@ -305,12 +305,10 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
         return NULL;
 
     /*
-     * We must wrap funobj with a JSFunction, so use NewObjectWithGivenProto.
-     * This helper has a special case for js_FunctionClass, triggered here and
-     * also possibly via the JS_NewObjectForGivenProto and JS_NewObject APIs.
+     * We must wrap funobj with a JSFunction.
      */
-    JSObject *wfunobj = NewObjectWithGivenProto(cx, &js_FunctionClass,
-                                                funobj, scopeChain);
+    JS_ASSERT (funobj);
+    JSObject *wfunobj = NewFunction(cx, funobj, scopeChain);
     if (!wfunobj)
         return NULL;
     AutoObjectRooter tvr(cx, wfunobj);
@@ -2183,7 +2181,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     TokenKind tt;
 
     if (!JS_IsConstructing(cx)) {
-        obj = NewObject(cx, &js_FunctionClass, NULL, NULL);
+        obj = NewFunction(cx, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         rval->setObject(*obj);
@@ -2428,7 +2426,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         funobj->setParent(parent);
     } else {
-        funobj = NewObject(cx, &js_FunctionClass, NULL, parent);
+        funobj = NewFunction(cx, NULL, parent);
         if (!funobj)
             return NULL;
     }

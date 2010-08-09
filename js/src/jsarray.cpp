@@ -2954,7 +2954,7 @@ static JSFunctionSpec array_static_methods[] = {
 static inline JSObject *
 NewDenseArrayObject(JSContext *cx)
 {
-    return NewObject(cx, &js_ArrayClass, NULL, NULL);
+    return NewNonFunction<WithProto::Class>(cx, &js_ArrayClass, NULL, NULL);
 }
 
 JSBool
@@ -3065,7 +3065,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, const Value *vector)
 JSObject *
 js_NewSlowArrayObject(JSContext *cx)
 {
-    JSObject *obj = NewObject(cx, &js_SlowArrayClass, NULL, NULL);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_SlowArrayClass, NULL, NULL);
     if (obj)
         obj->setArrayLength(0);
     return obj;
