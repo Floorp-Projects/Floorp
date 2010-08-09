@@ -646,10 +646,8 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (typeof(item.setResizable) == 'function')
           item.setResizable(false);
 
-        if (item.tab == gBrowser.selectedTab) {
+        if (item.tab == gBrowser.selectedTab)
           GroupItems.setActiveGroupItem(this);
-          GroupItems.updateTabBar();
-        }
       }
 
       if (!options.dontArrange) {
@@ -988,7 +986,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     }*/
 
     GroupItems.setActiveGroupItem(self);
-    GroupItems.updateTabBar();
     return { shouldZoom: true };
 
     /*this.expand();
@@ -999,7 +996,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     // ___ we're stacked, and command is held down so expand
     GroupItems.setActiveGroupItem(self);
-    GroupItems.updateTabBar();
     var startBounds = this.getChild(0).getBounds();
     var $tray = iQ("<div>").css({
       top: startBounds.top,
@@ -1200,19 +1196,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Creates a new tab within this groupItem.
   newTab: function(url) {
     GroupItems.setActiveGroupItem(this);
-    GroupItems.updateTabBar();
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
-
-    /* ToDo: why we need this here?
-    // Because opening a new tab happens in a different thread(?)
-    // calling UI.showTabView() inline won't do anything. Instead
-    // we have to marshal it. A value of 0 wait time doesn't seem
-    // to work. Instead, we use a value of 1 which seems to be the
-    // minimum amount of time required.
-    Utils.timeout(function() {
-      UI.showTabView()
-    }, 1);
-    */
 
     var self = this;
     var doNextTab = function(tab) {
@@ -1258,7 +1242,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
                 // condition. We need a better solution.
                 Utils.timeout(function() {
                   self._sendToSubscribers("tabAdded", { groupItemId: self.id });
-                  GroupItems.updateTabBar();
                 }, 1);
               }
             });
@@ -1542,7 +1525,7 @@ window.GroupItems = {
   arrange: function() {
     var bounds = Items.getPageBounds();
     bounds.bottom -= 20; // for the dev menu
-    
+
     var count = this.groupItems.length - 1;
     var columns = Math.ceil(Math.sqrt(count));
     var rows = ((columns * columns) - count >= columns ? columns - 1 : columns);
@@ -1554,7 +1537,7 @@ window.GroupItems = {
     var box = new Rect(startX, startY,
         (totalWidth / columns) - padding,
         (totalHeight / rows) - padding);
-        
+
     var i = 0;
     this.groupItems.forEach(function(groupItem) {
       if (groupItem.locked.bounds)
@@ -1596,7 +1579,6 @@ window.GroupItems = {
       let newGroupItem = new GroupItem([orphanTab, tabItem], {bounds: newGroupItemBounds});
       newGroupItem.snap();
       this.setActiveGroupItem(newGroupItem);
-      this.updateTabBar();
     } else {
       this.positionNewTabAtBottom(tabItem);
     }
@@ -1604,19 +1586,19 @@ window.GroupItems = {
 
   // ----------
   // Function: positionNewTabAtBottom
-  // Does what it says on the tin. 
-  // TODO: Make more robust and improve documentation, 
+  // Does what it says on the tin.
+  // TODO: Make more robust and improve documentation,
   // Also, this probably belongs in tabitems.js
   positionNewTabAtBottom: function(tabItem) {
     let windowBounds = Items.getSafeWindowBounds();
-    
+
     let itemBounds = new Rect(
       windowBounds.right - TabItems.tabWidth,
       windowBounds.bottom - TabItems.tabHeight,
-      TabItems.tabWidth, 
+      TabItems.tabWidth,
       TabItems.tabHeight
     );
-    
+
     tabItem.setBounds(itemBounds);
   },
 
@@ -1650,7 +1632,7 @@ window.GroupItems = {
 
     this._activeGroupItem = groupItem;
   },
-  
+
   // ----------
   // Function: getActiveOrphanTab
   // Returns the active orphan tab, in cases when there is no active groupItem.
@@ -1680,8 +1662,7 @@ window.GroupItems = {
 //    Utils.log('updateTabBar', this._activeGroupItem, this._activeOrphanTab);
 
     if (!this._activeGroupItem && !this._activeOrphanTab) {
-      Utils.assert("There must be something to show in the tab bar!",
-        false);
+      Utils.assert("There must be something to show in the tab bar!", false);
       return;
     }
 
@@ -1769,8 +1750,8 @@ window.GroupItems = {
   //  tab - the <xul:tab>.
   //  groupItemId - the <groupItem>'s id.  If nothing, create a new <groupItem>.
   moveTabToGroupItem : function(tab, groupItemId) {
-    Utils.log("move to tab")
     let shouldUpdateTabBar = false;
+    let shouldShowTabView = false;
     let groupItem;
 
     // switch to the appropriate tab first.
@@ -1784,7 +1765,8 @@ window.GroupItems = {
           gBrowser.selectTabAtIndex(index + 1);
         else
           gBrowser.selectTabAtIndex(index - 1);
-        shouldUpdateTabBar = true;
+      } else {
+        shouldShowTabView = true;
       }
     } else
       shouldUpdateTabBar = true
@@ -1811,12 +1793,12 @@ window.GroupItems = {
 
     if (shouldUpdateTabBar)
       this.updateTabBar();
-    else {
+    else if (shouldShowTabView) {
       tab.tabItem.setZoomPrep(false);
       UI.showTabView();
     }
   },
-  
+
   // ----------
   // Function: killNewTabGroup
   // Removes the New Tab Group, which is now defunct. See bug 575851 and comments therein.

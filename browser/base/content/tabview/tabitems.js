@@ -537,19 +537,16 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         height:  $tabEl.height(),
         pos: $tabEl.position()
       };
-
       var scale = window.innerWidth/orig.width;
-
       var tab = this.tab;
 
       function onZoomDone() {
         TabItems.resumePainting();
         // If it's not focused, the onFocus lsitener would handle it.
-        if (gBrowser.selectedTab == tab) {
+        if (gBrowser.selectedTab == tab)
           UI.tabOnFocus(tab);
-        } else {
+        else
           gBrowser.selectedTab = tab;
-        }
 
         $tabEl
           .css({
@@ -753,22 +750,22 @@ window.TabItems = {
   update: function(tab) {
     try {
       Utils.assertThrow("tab", tab);
-      
+
       let shouldDefer = (
-        this.isPaintingPaused() || 
+        this.isPaintingPaused() ||
         this._tabsWaitingForUpdate.length ||
         Date.now() - this._lastUpdateTime < this._heartbeatTiming
       );
 
       let isCurrentTab = (
-        !UI._isTabViewVisible() && 
+        !UI._isTabViewVisible() &&
         tab == gBrowser.selectedTab
       );
-      
+
       if (shouldDefer && !isCurrentTab) {
         if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
           this._tabsWaitingForUpdate.push(tab);
-      } else 
+      } else
         this._update(tab);
     } catch(e) {
       Utils.log(e);
@@ -785,8 +782,8 @@ window.TabItems = {
       // ___ remove from waiting list if needed
       let index = this._tabsWaitingForUpdate.indexOf(tab);
       if (index != -1)
-        this._tabsWaitingForUpdate.splice(index, 1); 
-        
+        this._tabsWaitingForUpdate.splice(index, 1);
+
       // ___ get the TabItem
       Utils.assertThrow("must already be linked", tab.tabItem);
       let tabItem = tab.tabItem;
@@ -834,7 +831,7 @@ window.TabItems = {
     } catch(e) {
       Utils.log(e);
     }
-    
+
     this._lastUpdateTime = Date.now();
   },
 
@@ -866,7 +863,7 @@ window.TabItems = {
 
       let index = this._tabsWaitingForUpdate.indexOf(tab);
       if (index != -1)
-        this._tabsWaitingForUpdate.splice(index, 1); 
+        this._tabsWaitingForUpdate.splice(index, 1);
     } catch(e) {
       Utils.log(e);
     }
@@ -875,15 +872,15 @@ window.TabItems = {
   // ----------
   // Function: heartbeat
   // Allows us to spreadout update calls over a period of time.
-  heartbeat: function() {    
+  heartbeat: function() {
     if (!this._heartbeatOn)
       return;
-    
+
     if (this._tabsWaitingForUpdate.length) {
       this._update(this._tabsWaitingForUpdate[0]);
       // _update will remove the tab from the waiting list
     }
-      
+
     let self = this;
     if (this._tabsWaitingForUpdate.length) {
       Utils.timeout(function() {
@@ -892,7 +889,7 @@ window.TabItems = {
     } else
       this._hearbeatOn = false;
   },
-  
+
   // ----------
   // Function: pausePainting
   // Tells TabItems to stop updating thumbnails (so you can do
@@ -901,7 +898,7 @@ window.TabItems = {
   // pausePainting needs to be mirrored with a call to <resumePainting>.
   pausePainting: function() {
     this.paintingPaused++;
-    
+
     if (this.isPaintingPaused() && this._heartbeatOn)
       this._heartbeatOn = false;
   },
@@ -913,9 +910,9 @@ window.TabItems = {
   // three times before TabItems will start updating thumbnails again.
   resumePainting: function() {
     this.paintingPaused--;
-    
-    if (!this.isPaintingPaused() 
-        && this._tabsWaitingForUpdate.length 
+
+    if (!this.isPaintingPaused()
+        && this._tabsWaitingForUpdate.length
         && !this._heartbeatOn) {
       this._heartbeatOn = true;
       this.heartbeat();
@@ -1029,8 +1026,6 @@ window.TabItems = {
             }
           }, 15000);
         }
-
-        GroupItems.updateTabBar();
 
         item.reconnected = true;
         found = true;

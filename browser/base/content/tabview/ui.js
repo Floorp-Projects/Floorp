@@ -532,9 +532,9 @@ var UIManager = {
       var newItem = null;
       if (focusTab && focusTab.tabItem) {
         newItem = focusTab.tabItem;
-        if (newItem.parent) {
+        if (newItem.parent)
           GroupItems.setActiveGroupItem(newItem.parent);
-        } else {
+        else {
           GroupItems.setActiveGroupItem(null);
           GroupItems.setActiveOrphanTab(newItem);
         }
