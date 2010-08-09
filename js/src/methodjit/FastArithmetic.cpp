@@ -321,7 +321,31 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
     }
 
     EmitDoubleOp(op, fpRight, fpLeft, masm);
+    
+    MaybeJump done;
+    
+    /*
+     * Try to convert result to integer. Skip this for 1/x or -1/x, as the
+     * result is unlikely to fit in an int.
+     */
+    if (op == JSOP_DIV && !(lhs->isConstant() && lhs->isType(JSVAL_TYPE_INT32) &&
+        abs(lhs->getValue().toInt32()) == 1)) {
+        RegisterID reg = frame.allocReg();
+        JumpList isDouble;
+        masm.branchConvertDoubleToInt32(fpLeft, reg, isDouble, fpRight);
+        
+        masm.storePayload(reg, frame.addressOf(lhs));
+        masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
+        
+        frame.freeReg(reg);
+        done.setJump(masm.jump());
+        isDouble.linkTo(masm.label(), &masm);
+    }
+
     masm.storeDouble(fpLeft, frame.addressOf(lhs));
+
+    if (done.isSet())
+        done.getJump().linkTo(masm.label(), &masm);
 
     if (lhsNotNumber.isSet() || rhsNotNumber.isSet()) {
         stubcc.leave();
