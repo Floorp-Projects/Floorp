@@ -1218,6 +1218,9 @@ struct JSCompartment {
     void sweep(JSContext *cx);
 };
 
+typedef void
+(* JSActivityCallback)(void *arg, JSBool active);
+
 struct JSRuntime {
     /* Default compartment. */
     JSCompartment       *defaultCompartment;
@@ -1233,6 +1236,20 @@ struct JSRuntime {
 
     /* Compartment create/destroy callback. */
     JSCompartmentCallback compartmentCallback;
+
+    /*
+     * Sets a callback that is run whenever the runtime goes idle - the
+     * last active request ceases - and begins activity - when it was
+     * idle and a request begins. Note: The callback is called under the
+     * GC lock.
+     */
+    void setActivityCallback(JSActivityCallback cb, void *arg) {
+        activityCallback = cb;
+        activityCallbackArg = arg;
+    }
+
+    JSActivityCallback    activityCallback;
+    void                 *activityCallbackArg;
 
     /*
      * Shape regenerated whenever a prototype implicated by an "add property"
