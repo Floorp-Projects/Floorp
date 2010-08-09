@@ -46,6 +46,7 @@
 #include "nsOggCodecState.h"
 
 class nsMediaDecoder;
+class nsHTMLTimeRanges;
 
 class nsOggReader : public nsBuiltinDecoderReader
 {
@@ -62,8 +63,12 @@ public:
   // read have valid time info.  
   virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
+
   virtual VideoData* FindStartTime(PRInt64 aOffset,
                                    PRInt64& aOutStartTime);
+
+  // Get the end time of aEndOffset. This is the playback position we'd reach
+  // after playback finished at aEndOffset.
   virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
   virtual PRBool HasAudio()
@@ -80,8 +85,21 @@ public:
 
   virtual nsresult ReadMetadata();
   virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime);
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime);
 
 private:
+
+  // Get the end time of aEndOffset. This is the playback position we'd reach
+  // after playback finished at aEndOffset. If PRBool aCachedDataOnly is
+  // PR_TRUE, then we'll only read from data which is cached in the media cached,
+  // otherwise we'll do regular blocking reads from the media stream.
+  // If PRBool aCachedDataOnly is PR_TRUE, and aState is not mOggState, this can
+  // safely be called on the main thread, otherwise it must be called on the
+  // state machine thread.
+  PRInt64 FindEndTime(PRInt64 aEndOffset,
+                      PRBool aCachedDataOnly,
+                      ogg_sync_state* aState);
+
   // Decodes one packet of Vorbis data, storing the resulting chunks of
   // PCM samples in aChunks.
   nsresult DecodeVorbis(nsTArray<SoundData*>& aChunks,

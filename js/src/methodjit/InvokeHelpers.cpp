@@ -348,7 +348,7 @@ InlineConstruct(VMFrame &f, uint32 argc)
         return NULL;
 
     JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
-    return NewObject(cx, &js_ObjectClass, proto, funobj->getParent());
+    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent());
 }
 
 void * JS_FASTCALL

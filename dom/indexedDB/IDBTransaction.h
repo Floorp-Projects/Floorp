@@ -178,26 +178,6 @@ private:
   bool mAborted;
 };
 
-NS_STACK_CLASS
-class AutoTransactionRequestNotifier
-{
-public:
-  AutoTransactionRequestNotifier(IDBTransaction* aTransaction)
-  : mTransaction(aTransaction)
-  {
-    NS_ASSERTION(mTransaction, "Null pointer!");
-    mTransaction->OnNewRequest();
-  }
-
-  ~AutoTransactionRequestNotifier()
-  {
-    mTransaction->OnRequestFinished();
-  }
-
-private:
-  nsRefPtr<IDBTransaction> mTransaction;
-};
-
 class CommitHelper : public nsIRunnable
 {
 public:

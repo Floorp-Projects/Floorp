@@ -1124,7 +1124,7 @@ PRBool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
     nsIFrame* f = i->GetUnderlyingFrame();
     if (f) {
       nsIFrame* activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull, nsnull);
+        nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull);
       if (activeScrolledRoot != aActiveScrolledRoot)
         return PR_FALSE;
     }
@@ -1248,7 +1248,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (mFrame->AreLayersMarkedActive())
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
-    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull, nsnull);
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
   return !ChildrenCanBeInactive(aBuilder, aManager, mList, activeScrolledRoot)
       ? LAYER_ACTIVE : LAYER_INACTIVE;
 }
@@ -1379,7 +1379,7 @@ nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
 
 nsDisplayZoom::nsDisplayZoom(nsIFrame* aFrame, nsDisplayList* aList,
                              PRInt32 aAPD, PRInt32 aParentAPD)
-    : nsDisplayWrapList(aFrame, aList), mAPD(aAPD), mParentAPD(aParentAPD) {
+    : nsDisplayOwnLayer(aFrame, aList), mAPD(aAPD), mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
 }
 
@@ -1593,43 +1593,37 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
     (newOrigin + toMozOrigin, disp->mTransform.GetThebesMatrix(bounds, aFactor));
 }
 
-/* Painting applies the transform, paints the sublist, then unapplies
- * the transform.
- */
-void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
-                               nsIRenderingContext *aCtx)
+already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
+                                                       LayerManager *aManager)
 {
-  /* Get the local transform matrix with which we'll transform all wrapped
-   * elements.  If this matrix is singular, we shouldn't display anything
-   * and can abort.
-   */
   gfxMatrix newTransformMatrix =
     GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
                                  mFrame->PresContext()->AppUnitsPerDevPixel(),
                                 nsnull);
   if (newTransformMatrix.IsSingular())
-    return;
+    return nsnull;
 
-  /* Get the context and automatically save and restore it. */
-  gfxContext* gfx = aCtx->ThebesContext();
-  gfxContextAutoSaveRestore autoRestorer(gfx);
+  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList());
+  if (!layer)
+    return nsnull;
+ 
+  layer->SetTransform(gfx3DMatrix::From2D(newTransformMatrix));
+  return layer.forget();
+}
 
-  /* Get the new CTM by applying this transform after all of the
-   * transforms preceding it.
-   */
-  newTransformMatrix.Multiply(gfx->CurrentMatrix());
-
-  /* Set the matrix for the transform based on the old matrix and the new
-   * transform data.
-   */
-  gfx->SetMatrix(newTransformMatrix);
-
-  /* Now, send the paint call down.
-   */    
-  mStoredList.GetList()->
-      PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
-
-  /* The AutoSaveRestore object will clean things up. */
+nsDisplayItem::LayerState
+nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                  LayerManager* aManager) {
+  if (mFrame->AreLayersMarkedActive())
+    return LAYER_ACTIVE;
+  nsIFrame* activeScrolledRoot =
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
+  return !mStoredList.ChildrenCanBeInactive(aBuilder, 
+                                             aManager, 
+                                             *mStoredList.GetList(), 
+                                             activeScrolledRoot)
+      ? LAYER_ACTIVE : LAYER_INACTIVE;
 }
 
 PRBool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,

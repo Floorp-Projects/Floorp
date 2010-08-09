@@ -170,7 +170,7 @@ vpx_codec_err_t vpx_codec_register_put_frame_cb(vpx_codec_ctx_t             *ctx
         res = VPX_CODEC_ERROR;
     else
     {
-        ctx->priv->dec.put_frame_cb.put_frame = cb;
+        ctx->priv->dec.put_frame_cb.fn.put_frame = cb;
         ctx->priv->dec.put_frame_cb.user_priv = user_priv;
         res = VPX_CODEC_OK;
     }
@@ -192,7 +192,7 @@ vpx_codec_err_t vpx_codec_register_put_slice_cb(vpx_codec_ctx_t             *ctx
         res = VPX_CODEC_ERROR;
     else
     {
-        ctx->priv->dec.put_slice_cb.put_slice = cb;
+        ctx->priv->dec.put_slice_cb.fn.put_slice = cb;
         ctx->priv->dec.put_slice_cb.user_priv = user_priv;
         res = VPX_CODEC_OK;
     }

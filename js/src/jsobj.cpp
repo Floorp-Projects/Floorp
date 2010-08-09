@@ -2434,8 +2434,8 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    JSObject *obj = NewObjectWithGivenProto(cx, &js_ObjectClass, v.toObjectOrNull(),
-                                            vp->toObject().getGlobal());
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, v.toObjectOrNull(),
+                                                        vp->toObject().getGlobal());
     if (!obj)
         return JS_FALSE;
     vp->setObject(*obj); /* Root and prepare for eventual return. */
@@ -2683,7 +2683,7 @@ js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
      * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
      * from easily or unconditionally calling NewNativeClassInstance here.
      */
-    return NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0,
@@ -3376,7 +3376,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * (3) is not enough without addressing the bootstrapping dependency on (1)
      * and (2).
      */
-    JSObject *proto = NewObject(cx, clasp, parent_proto, obj);
+    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, parent_proto, obj);
     if (!proto)
         return NULL;
 
@@ -3843,7 +3843,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
             proto = rval.toObjectOrNull();
     }
 
-    JSObject *obj = NewObject(cx, clasp, proto, parent);
+    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
     if (!obj)
         return NULL;
 
@@ -5598,6 +5598,39 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
     return FindClassPrototype(cx, scope, protoKey, protop, clasp);
 }
 
+/*
+ * For shared precompilation of function objects, we support cloning on entry
+ * to an execution context in which the function declaration or expression
+ * should be processed as if it were not precompiled, where the precompiled
+ * function's scope chain does not match the execution context's.  The cloned
+ * function object carries its execution-context scope in its parent slot; it
+ * links to the precompiled function (the "clone-parent") via its proto slot.
+ *
+ * Note that this prototype-based delegation leaves an unchecked access path
+ * from the clone to the clone-parent's 'constructor' property.  If the clone
+ * lives in a less privileged or shared scope than the clone-parent, this is
+ * a security hole, a sharing hazard, or both.  Therefore we check all such
+ * accesses with the following getter/setter pair, which we use when defining
+ * 'constructor' in f.prototype for all function objects f.
+ */
+static JSBool
+CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    JSAtom *atom = cx->runtime->atomState.constructorAtom;
+    JS_ASSERT(id == ATOM_TO_JSID(atom));
+    uintN attrs;
+    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_READ, vp, &attrs);
+}
+
+static JSBool
+CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    JSAtom *atom = cx->runtime->atomState.constructorAtom;
+    JS_ASSERT(id == ATOM_TO_JSID(atom));
+    uintN attrs;
+    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE, vp, &attrs);
+}
+
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
@@ -5617,7 +5650,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
      * for a user-defined function f, is DontEnum.
      */
     return proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 ObjectOrNullValue(ctor), PropertyStub, PropertyStub, 0);
+                                 ObjectOrNullValue(ctor), CheckCtorGetAccess, CheckCtorSetAccess, 0);
 }
 
 JSBool

@@ -75,6 +75,7 @@ class nsIFrame;
 class nsPresContext;
 class nsStyleSet;
 class nsIViewManager;
+class nsIView;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
 class nsAString;
@@ -109,6 +110,10 @@ namespace mozilla {
 namespace dom {
 class Element;
 } // namespace dom
+
+namespace layers{
+class LayerManager;
+} // namespace layers
 } // namespace mozilla
 
 // Flags to pass to SetCapturingContent
@@ -133,8 +138,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0x318f7b6c, 0x56be, 0x4256, \
-    { 0xa3, 0x09, 0xff, 0xdc, 0xde, 0x04, 0x63, 0xf6 } }
+  { 0xe82aae32, 0x2d68, 0x452a, \
+    { 0x88, 0x95, 0x86, 0xc6, 0x07, 0xe1, 0xec, 0x91 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -187,6 +192,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_base, NS_IPRESSHELL_IID)
 
 class nsIPresShell : public nsIPresShell_base
 {
+protected:
+  typedef mozilla::layers::LayerManager LayerManager;
+
 public:
   virtual NS_HIDDEN_(nsresult) Init(nsIDocument* aDocument,
                                    nsPresContext* aPresContext,
@@ -945,6 +953,23 @@ public:
                                                 nscolor aBackstopColor = NS_RGBA(0,0,0,0),
                                                 PRBool aForceDraw = PR_FALSE) = 0;
 
+  /**
+   * Add a solid color item to the bottom of aList with frame aFrame and
+   * bounds aBounds representing the dark grey background behind the page of a
+   * print preview presentation.
+   */
+  virtual nsresult AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
+                                                 nsDisplayList& aList,
+                                                 nsIFrame* aFrame,
+                                                 const nsRect& aBounds) = 0;
+
+  /**
+   * Computes the backstop color for the view: transparent if in a transparent
+   * widget, otherwise the PresContext default background color. This color is
+   * only visible if the contents of the view as a whole are translucent.
+   */
+  virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot) = 0;
+
   void ObserveNativeAnonMutationsForPrint(PRBool aObserve)
   {
     mObservesMutationsForPrint = aObserve;
@@ -952,6 +977,16 @@ public:
   PRBool ObservesNativeAnonMutationsForPrint()
   {
     return mObservesMutationsForPrint;
+  }
+
+  void SetIsActive(PRBool aIsActive)
+  {
+    mIsActive = aIsActive;
+  }
+
+  PRBool IsActive()
+  {
+    return mIsActive;
   }
 
   // mouse capturing
@@ -1013,6 +1048,12 @@ public:
    * Get the root DOM window of this presShell.
    */
   virtual already_AddRefed<nsPIDOMWindow> GetRootWindow() = 0;
+
+  /**
+   * Get the layer manager for the widget of the root view, if it has
+   * one.
+   */
+  virtual LayerManager* GetLayerManager() = 0;
 
   /**
    * Refresh observer management.
@@ -1083,6 +1124,7 @@ protected:
   PRPackedBool              mIsReflowing;
   PRPackedBool              mPaintingSuppressed;  // For all documents we initially lock down painting.
   PRPackedBool              mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
+  PRPackedBool              mIsActive;
 
 #ifdef ACCESSIBILITY
   /**

@@ -42,6 +42,7 @@
 #include "nsOggReader.h"
 #include "VideoUtils.h"
 #include "theora/theoradec.h"
+#include "nsHTMLTimeRanges.h"
 
 using namespace mozilla;
 
@@ -132,7 +133,6 @@ static PRBool DoneReadingHeaders(nsTArray<nsOggCodecState*>& aBitstreams) {
   }
   return PR_TRUE;
 }
-
 
 nsresult nsOggReader::ReadMetadata()
 {
@@ -797,22 +797,37 @@ GetChecksum(ogg_page* page)
 VideoData* nsOggReader::FindStartTime(PRInt64 aOffset,
                                       PRInt64& aOutStartTime)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
-
+  NS_ASSERTION(mDecoder->OnStateMachineThread(),
+               "Should be on state machine thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
-  stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  NS_ENSURE_TRUE(stream != nsnull, nsnull);
+  nsresult res = stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  NS_ENSURE_SUCCESS(res, nsnull);
   return nsBuiltinDecoderReader::FindStartTime(aOffset, aOutStartTime);
 }
 
 PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
 {
   MonitorAutoEnter mon(mMonitor);
-  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
-
+  NS_ASSERTION(mDecoder->OnStateMachineThread(),
+               "Should be on state machine thread.");
+  PRInt64 endTime = FindEndTime(aEndOffset, PR_FALSE, &mOggState);
+  // Reset read head to start of media data.
+  NS_ASSERTION(mDataOffset > 0,
+               "Should have offset of first non-header page");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
-  ogg_sync_reset(&mOggState);
+  NS_ENSURE_TRUE(stream != nsnull, -1);
+  nsresult res = stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
+  NS_ENSURE_SUCCESS(res, -1);
+  return endTime;
+}
 
-  stream->Seek(nsISeekableStream::NS_SEEK_SET, aEndOffset);
+PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset,
+                                 PRBool aCachedDataOnly,
+                                 ogg_sync_state* aState)
+{
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  ogg_sync_reset(aState);
 
   // We need to find the last page which ends before aEndOffset that
   // has a granulepos that we can convert to a timestamp. We do this by
@@ -821,25 +836,19 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
   // we've previously encountered before, we'll either backoff again if we
   // haven't found an end time yet, or return the last end time found.
   const int step = 5000;
-  PRInt64 offset = aEndOffset;
+  PRInt64 readStartOffset = aEndOffset;
+  PRInt64 readHead = aEndOffset;
   PRInt64 endTime = -1;
   PRUint32 checksumAfterSeek = 0;
   PRUint32 prevChecksumAfterSeek = 0;
   PRBool mustBackOff = PR_FALSE;
   while (PR_TRUE) {
-    {
-      MonitorAutoExit exitReaderMon(mMonitor);
-      MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
-      if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-        return -1;
-      }
-    }
     ogg_page page;    
-    int ret = ogg_sync_pageseek(&mOggState, &page);
+    int ret = ogg_sync_pageseek(aState, &page);
     if (ret == 0) {
       // We need more data if we've not encountered a page we've seen before,
       // or we've read to the end of file.
-      if (mustBackOff || stream->Tell() == aEndOffset) {
+      if (mustBackOff || readHead == aEndOffset) {
         if (endTime != -1) {
           // We have encountered a page before, or we're at the end of file.
           break;
@@ -847,27 +856,37 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
         mustBackOff = PR_FALSE;
         prevChecksumAfterSeek = checksumAfterSeek;
         checksumAfterSeek = 0;
-        ogg_sync_reset(&mOggState);
-        offset = NS_MAX(static_cast<PRInt64>(0), offset - step);
-        stream->Seek(nsISeekableStream::NS_SEEK_SET, offset);
+        ogg_sync_reset(aState);
+        readStartOffset = NS_MAX(static_cast<PRInt64>(0), readStartOffset - step);
+        readHead = readStartOffset;
       }
-      NS_ASSERTION(stream->Tell() < aEndOffset,
-                   "Stream pos must be before range end");
 
       PRInt64 limit = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX),
-                             aEndOffset - stream->Tell());
+                             aEndOffset - readHead);
       limit = NS_MAX(static_cast<PRInt64>(0), limit);
       limit = NS_MIN(limit, static_cast<PRInt64>(step));
       PRUint32 bytesToRead = static_cast<PRUint32>(limit);
       PRUint32 bytesRead = 0;
-      char* buffer = ogg_sync_buffer(&mOggState,
-                                     bytesToRead);
+      char* buffer = ogg_sync_buffer(aState, bytesToRead);
       NS_ASSERTION(buffer, "Must have buffer");
-      stream->Read(buffer, bytesToRead, &bytesRead);
+      nsresult res;
+      if (aCachedDataOnly) {
+        res = stream->ReadFromCache(buffer, readHead, bytesToRead);
+        NS_ENSURE_SUCCESS(res,res);
+        bytesRead = bytesToRead;
+      } else {
+        NS_ASSERTION(readHead < aEndOffset,
+                     "Stream pos must be before range end");
+        res = stream->Seek(nsISeekableStream::NS_SEEK_SET, readHead);
+        NS_ENSURE_SUCCESS(res,res);
+        res = stream->Read(buffer, bytesToRead, &bytesRead);
+        NS_ENSURE_SUCCESS(res,res);
+      }
+      readHead += bytesRead;
 
       // Update the synchronisation layer with the number
       // of bytes written to the buffer
-      ret = ogg_sync_wrote(&mOggState, bytesRead);
+      ret = ogg_sync_wrote(aState, bytesRead);
       if (ret != 0) {
         endTime = -1;
         break;
@@ -917,11 +936,7 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
     }
   }
 
-  ogg_sync_reset(&mOggState);
-
-  NS_ASSERTION(mDataOffset > 0,
-               "Should have offset of first non-header page");
-  stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
+  ogg_sync_reset(aState);
 
   return endTime;
 }
@@ -929,6 +944,7 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
 nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime)
 {
   MonitorAutoEnter mon(mMonitor);
+  nsresult res;
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
@@ -938,7 +954,8 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
     return NS_ERROR_FAILURE;
   }
   if (aTarget == aStartTime) {
-    stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
+    res = stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
+    NS_ENSURE_SUCCESS(res, res);
     mPageOffset = mDataOffset;
     NS_ASSERTION(aStartTime != -1, "mStartTime should be known");
     {
@@ -960,7 +977,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
     // seeking over the network. This makes seeking in buffered ranges almost
     // instantaneous.
     ByteRange r = GetSeekRange(ranges, aTarget, aStartTime, aEndTime, PR_TRUE);
-    nsresult res = NS_ERROR_FAILURE;
+    res = NS_ERROR_FAILURE;
     if (!r.IsNull()) {
       // The frame should be in this buffered range. Seek exactly there.
       res = SeekBisection(aTarget, r, 0);
@@ -1120,8 +1137,10 @@ enum PageSyncResult {
 
 // Reads a page from the media stream.
 static PageSyncResult
-PageSync(ogg_sync_state* aState,
-         nsMediaStream* aStream,
+PageSync(nsMediaStream* aStream,
+         ogg_sync_state* aState,
+         PRBool aCachedDataOnly,
+         PRInt64 aOffset,
          PRInt64 aEndOffset,
          ogg_page* aPage,
          int& aSkippedBytes)
@@ -1130,6 +1149,7 @@ PageSync(ogg_sync_state* aState,
   // Sync to the next page.
   int ret = 0;
   PRUint32 bytesRead = 0;
+  PRInt64 readHead = aOffset;
   while (ret <= 0) {
     ret = ogg_sync_pageseek(aState, aPage);
     if (ret == 0) {
@@ -1138,21 +1158,28 @@ PageSync(ogg_sync_state* aState,
 
       // Read from the file into the buffer
       PRInt64 bytesToRead = NS_MIN(static_cast<PRInt64>(PAGE_STEP),
-                                   aEndOffset - aStream->Tell());
+                                   aEndOffset - readHead);
       if (bytesToRead <= 0) {
         return PAGE_SYNC_END_OF_RANGE;
       }
-      nsresult rv = aStream->Read(buffer,
-                                  static_cast<PRUint32>(bytesToRead),
-                                  &bytesRead);
-      if (NS_FAILED(rv)) {
-        return PAGE_SYNC_ERROR;
+      nsresult rv = NS_OK;
+      if (aCachedDataOnly) {
+        rv = aStream->ReadFromCache(buffer, readHead, bytesToRead);
+        NS_ENSURE_SUCCESS(rv,PAGE_SYNC_ERROR);
+        bytesRead = bytesToRead;
+      } else {
+        rv = aStream->Seek(nsISeekableStream::NS_SEEK_SET, readHead);
+        NS_ENSURE_SUCCESS(rv,PAGE_SYNC_ERROR);
+        rv = aStream->Read(buffer,
+                           static_cast<PRUint32>(bytesToRead),
+                           &bytesRead);
+        NS_ENSURE_SUCCESS(rv,PAGE_SYNC_ERROR);
       }
-
       if (bytesRead == 0 && NS_SUCCEEDED(rv)) {
         // End of file.
         return PAGE_SYNC_END_OF_RANGE;
       }
+      readHead += bytesRead;
 
       // Update the synchronisation layer with the number
       // of bytes written to the buffer
@@ -1178,13 +1205,15 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
+  nsresult res;
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
   if (aTarget == aRange.mTimeStart) {
     if (NS_FAILED(ResetDecode())) {
       return NS_ERROR_FAILURE;
     }
-    stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
+    res = stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
+    NS_ENSURE_SUCCESS(res, res);
     mPageOffset = mDataOffset;
     return NS_OK;
   }
@@ -1255,14 +1284,14 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
                               startOffset, (startOffset+startLength), guess,
                               endOffset, interval, target, startTime, endTime));
       hops++;
-      stream->Seek(nsISeekableStream::NS_SEEK_SET, guess);
     
-      // We've seeked into the media somewhere. Locate the next page, and then
-      // figure out the granule time of the audio and video bitstreams there.
-      // We can then make a bisection decision based on our location in the media.
-      
-      PageSyncResult res = PageSync(&mOggState,
-                                    stream,
+      // Locate the next page after our seek guess, and then figure out the
+      // granule time of the audio and video bitstreams there. We can then
+      // make a bisection decision based on our location in the media.
+      PageSyncResult res = PageSync(stream,
+                                    &mOggState,
+                                    PR_FALSE,
+                                    guess,
                                     endOffset,
                                     &page,
                                     skippedBytes);
@@ -1347,7 +1376,8 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
       // last page before the target, and the first page after the target.
       SEEK_LOG(PR_LOG_DEBUG, ("Seek loop (interval == 0) break"));
       NS_ASSERTION(startTime < aTarget, "Start time must always be less than target");
-      stream->Seek(nsISeekableStream::NS_SEEK_SET, startOffset);
+      res = stream->Seek(nsISeekableStream::NS_SEEK_SET, startOffset);
+      NS_ENSURE_SUCCESS(res, res);
       mPageOffset = startOffset;
       if (NS_FAILED(ResetDecode())) {
         return NS_ERROR_FAILURE;
@@ -1358,7 +1388,8 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
     SEEK_LOG(PR_LOG_DEBUG, ("Time at offset %lld is %lldms", guess, granuleTime));
     if (granuleTime < seekTarget && granuleTime > seekLowerBound) {
       // We're within the fuzzy region in which we want to terminate the search.
-      stream->Seek(nsISeekableStream::NS_SEEK_SET, oldPageOffset);
+      res = stream->Seek(nsISeekableStream::NS_SEEK_SET, oldPageOffset);
+      NS_ENSURE_SUCCESS(res,res);
       mPageOffset = oldPageOffset;
       if (NS_FAILED(ResetDecode())) {
         return NS_ERROR_FAILURE;
@@ -1387,4 +1418,90 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
   return NS_OK;
 }
 
+nsresult nsOggReader::GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
 
+  // Traverse across the buffered byte ranges, determining the time ranges
+  // they contain. nsMediaStream::GetNextCachedData(offset) returns -1 when
+  // offset is after the end of the media stream, or there's no more cached
+  // data after the offset. This loop will run until we've checked every
+  // buffered range in the media, in increasing order of offset.
+  ogg_sync_state state;
+  ogg_sync_init(&state);
+  PRInt64 startOffset = stream->GetNextCachedData(mDataOffset);
+  while (startOffset >= 0) {
+    PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
+    NS_ASSERTION(startOffset < endOffset, "Buffered range must end after its start");
+    // Bytes [startOffset..endOffset] are cached.
+
+    // Find the start time of the range.
+    PRInt64 startTime = -1;
+    if (startOffset == mDataOffset) {
+      // Because the granulepos time is actually the end time of the page,
+      // we special-case (startOffset == mDataOffset) so that the first
+      // buffered range always appears to be buffered from [t=0...] rather
+      // than from the end-time of the first page.
+      startTime = aStartTime;
+    }
+    // Read pages until we find one with a granulepos which we can convert
+    // into a timestamp to use as the time of the start of the buffered range.
+    ogg_sync_reset(&state);
+    while (startTime == -1) {
+      ogg_page page;
+      PRInt32 discard;
+      PageSyncResult res = PageSync(stream,
+                                    &state,
+                                    PR_TRUE,
+                                    startOffset,
+                                    endOffset,
+                                    &page,
+                                    discard);
+      if (res == PAGE_SYNC_ERROR) {
+        // If we don't clear the sync state before exit we'll leak.
+        ogg_sync_clear(&state);
+        return NS_ERROR_FAILURE;
+      } else if (res == PAGE_SYNC_END_OF_RANGE) {
+        // Hit the end of range without reading a page, give up trying to
+        // find a start time for this buffered range, skip onto the next one.
+        break;
+      }
+
+      PRInt64 granulepos = ogg_page_granulepos(&page);
+      if (granulepos == -1) {
+        // Page doesn't have an end time, advance to the next page
+        // until we find one.
+        startOffset += page.header_len + page.body_len;
+        continue;
+      }
+
+      PRUint32 serial = ogg_page_serialno(&page);
+      nsOggCodecState* codecState = nsnull;
+      mCodecStates.Get(serial, &codecState);
+      if (codecState && codecState->mActive) {
+        startTime = codecState->Time(granulepos) - aStartTime;
+        NS_ASSERTION(startTime > 0, "Must have positive start time");
+      }
+    }
+
+    if (startTime != -1) {
+      // We were able to find a start time for that range, see if we can
+      // find an end time.
+      PRInt64 endTime = FindEndTime(endOffset, PR_TRUE, &state);
+      if (endTime != -1) {
+        endTime -= aStartTime;
+        aBuffered->Add(static_cast<float>(startTime) / 1000.0f,
+                       static_cast<float>(endTime) / 1000.0f);
+      }
+    }
+    startOffset = stream->GetNextCachedData(endOffset);
+    NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
+      "Must have advanced to start of next range, or hit end of stream");
+  }
+
+  // If we don't clear the sync state before exit we'll leak.
+  ogg_sync_clear(&state);
+
+  return NS_OK;
+}

@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -41,49 +40,6 @@
 #include "gfxImageSurface.h"
 
 
-struct gfxAlphaRecoveryResult {
-    gfxAlphaRecoveryResult()
-        : uniformColor(PR_FALSE),
-          uniformAlpha(PR_FALSE)
-    { }
-    PRBool uniformColor;
-    PRBool uniformAlpha;
-    gfxFloat alpha;
-    gfxFloat r, g, b;
-};
-
-static void _compute_alpha_values (unsigned int *black_data,
-                                   unsigned int *white_data,
-                                   gfxIntSize dimensions,
-                                   gfxAlphaRecoveryResult *result);
-
-already_AddRefed<gfxImageSurface>
-gfxAlphaRecovery::RecoverAlpha (gfxImageSurface *blackSurf,
-                                gfxImageSurface *whiteSurf,
-                                gfxIntSize dimensions)
-{
-
-    nsRefPtr<gfxImageSurface> resultSurf;
-    resultSurf = new gfxImageSurface(dimensions, gfxASurface::ImageFormatARGB32);
-
-    // copy blackSurf into resultSurf
-    gfxContext ctx(resultSurf);
-    ctx.SetSource(blackSurf);
-    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx.Paint();
-
-    gfxAlphaRecoveryResult result;
-    _compute_alpha_values ((unsigned int*) resultSurf->Data(),
-                           (unsigned int*) whiteSurf->Data(),
-                           dimensions,
-                           &result);
-
-    // XX use result, maybe return pattern, etc.
-
-    NS_ADDREF(resultSurf.get());
-    return resultSurf.get();
-}
-
 /** from cairo-xlib-utils.c, modified */
 /**
  * Given the RGB data for two image surfaces, one a source image composited
@@ -103,69 +59,100 @@ gfxAlphaRecovery::RecoverAlpha (gfxImageSurface *blackSurf,
  * bits are likely to be the most accurate.
  */
 
-#define SET_ALPHA(v, a) (((v) & ~(0xFF << 24)) | ((a) << 24))
-#define GREEN_OF(v) (((v) >> 8) & 0xFF)
-
-static void
-_compute_alpha_values (unsigned int *black_data,
-                       unsigned int *white_data,
-                       gfxIntSize dimensions,
-                       gfxAlphaRecoveryResult *result)
+static inline PRUint32
+RecoverPixel(PRUint32 black, PRUint32 white)
 {
-    int num_pixels = dimensions.width * dimensions.height;
-    int i;
-    unsigned int first;
-    unsigned int deltas = 0;
-    unsigned char first_alpha;
-  
-    if (num_pixels == 0) {
-        if (result) {
-            result->uniformAlpha = PR_TRUE;
-            result->uniformColor = PR_TRUE;
-            /* whatever we put here will be true */
-            result->alpha = 1.0;
-            result->r = result->g = result->b = 0.0;
+    const PRUint32 GREEN_MASK = 0x0000FF00;
+    const PRUint32 ALPHA_MASK = 0xFF000000;
+
+    /* |diff| here is larger when the source image pixel is more transparent.
+       If both renderings are from the same source image composited with OVER,
+       then the color values on white will always be greater than those on
+       black, so |diff| would not overflow.  However, overflow may happen, for
+       example, when a plugin plays a video and the image is rapidly changing.
+       If there is overflow, then behave as if we limit to the difference to
+       >= 0, which will make the rendering opaque.  (Without this overflow
+       will make the rendering transparent.) */
+    PRUint32 diff = (white & GREEN_MASK) - (black & GREEN_MASK);
+    /* |diff| is 0xFFFFxx00 on overflow and 0x0000xx00 otherwise, so use this
+        to limit the transparency. */
+    PRUint32 limit = diff & ALPHA_MASK;
+    /* The alpha bits of the result */
+    PRUint32 alpha = (ALPHA_MASK - (diff << 16)) | limit;
+
+    return alpha | (black & ~ALPHA_MASK);
+}
+
+/* static */ PRBool
+gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
+                               const gfxImageSurface* whiteSurf,
+                               Analysis* analysis)
+{
+    gfxIntSize size = blackSurf->GetSize();
+
+    if (size != whiteSurf->GetSize() ||
+        (blackSurf->Format() != gfxASurface::ImageFormatARGB32 &&
+         blackSurf->Format() != gfxASurface::ImageFormatRGB24) ||
+        (whiteSurf->Format() != gfxASurface::ImageFormatARGB32 &&
+         whiteSurf->Format() != gfxASurface::ImageFormatRGB24))
+        return PR_FALSE;
+
+    blackSurf->Flush();
+    whiteSurf->Flush();
+
+    unsigned char* blackData = blackSurf->Data();
+    unsigned char* whiteData = whiteSurf->Data();
+
+    /* Get the alpha value of 'first' */
+    PRUint32 first;
+    if (size.width == 0 || size.height == 0) {
+        first = 0;
+    } else {
+        if (!blackData || !whiteData)
+            return PR_FALSE;
+
+        first = RecoverPixel(*reinterpret_cast<PRUint32*>(blackData),
+                             *reinterpret_cast<PRUint32*>(whiteData));
+    }
+
+    PRUint32 deltas = 0;
+    for (PRInt32 i = 0; i < size.height; ++i) {
+        PRUint32* blackPixel = reinterpret_cast<PRUint32*>(blackData);
+        const PRUint32* whitePixel = reinterpret_cast<PRUint32*>(whiteData);
+        for (PRInt32 j = 0; j < size.width; ++j) {
+            PRUint32 recovered = RecoverPixel(blackPixel[j], whitePixel[j]);
+            blackPixel[j] = recovered;
+            deltas |= (first ^ recovered);
         }
-        return;
+        blackData += blackSurf->Stride();
+        whiteData += whiteSurf->Stride();
     }
-  
-    first_alpha = 255 - (GREEN_OF(*white_data) - GREEN_OF(*black_data));
-    /* set the alpha value of 'first' */
-    first = SET_ALPHA(*black_data, first_alpha);
-  
-    for (i = 0; i < num_pixels; ++i) {
-        unsigned int black = *black_data;
-        unsigned int white = *white_data;
-        unsigned char pixel_alpha = 255 - (GREEN_OF(white) - GREEN_OF(black));
-        
-        black = SET_ALPHA(black, pixel_alpha);
-        *black_data = black;
-        deltas |= (first ^ black);
-        
-        black_data++;
-        white_data++;
-    }
+
+    blackSurf->MarkDirty();
     
-    if (result) {
-        result->uniformAlpha = (deltas >> 24) == 0;
-        if (result->uniformAlpha) {
-            result->alpha = first_alpha/255.0;
+    if (analysis) {
+        analysis->uniformAlpha = (deltas >> 24) == 0;
+        analysis->uniformColor = PR_FALSE;
+        if (analysis->uniformAlpha) {
+            double d_first_alpha = first >> 24;
+            analysis->alpha = d_first_alpha/255.0;
             /* we only set uniformColor when the alpha is already uniform.
                it's only useful in that case ... and if the alpha was nonuniform
                then computing whether the color is uniform would require unpremultiplying
                every pixel */
-            result->uniformColor = (deltas & ~(0xFF << 24)) == 0;
-            if (result->uniformColor) {
-                if (first_alpha == 0) {
+            analysis->uniformColor = deltas == 0;
+            if (analysis->uniformColor) {
+                if (d_first_alpha == 0.0) {
                     /* can't unpremultiply, this is OK */
-                    result->r = result->g = result->b = 0.0;
+                    analysis->r = analysis->g = analysis->b = 0.0;
                 } else {
-                    double d_first_alpha = first_alpha;
-                    result->r = (first & 0xFF)/d_first_alpha;
-                    result->g = ((first >> 8) & 0xFF)/d_first_alpha;
-                    result->b = ((first >> 16) & 0xFF)/d_first_alpha;
+                    analysis->r = (first & 0xFF)/d_first_alpha;
+                    analysis->g = ((first >> 8) & 0xFF)/d_first_alpha;
+                    analysis->b = ((first >> 16) & 0xFF)/d_first_alpha;
                 }
             }
         }
     }
+
+    return PR_TRUE;
 }

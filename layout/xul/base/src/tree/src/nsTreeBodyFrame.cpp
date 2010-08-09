@@ -143,6 +143,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
 :nsLeafBoxFrame(aPresShell, aContext),
  mSlots(nsnull),
  mTopRowIndex(0),
+ mPageLength(0),
  mHorzPosition(0),
  mHorzWidth(0),
  mAdjustWidth(0),

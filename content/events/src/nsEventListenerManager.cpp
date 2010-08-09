@@ -491,6 +491,10 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasOrientationEventListener();
+  } else if (aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) {
+    nsPIDOMWindow* window = GetInnerWindowForTarget();
+    if (window)
+      window->SetHasTouchEventListeners();
   }
 
   return NS_OK;

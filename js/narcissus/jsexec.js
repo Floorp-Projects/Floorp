@@ -169,7 +169,8 @@ Narcissus.jsexec = (function() {
             evaluate(snarf(s), s, 1)
         },
         print: print,
-        version: function() { return 185; }
+        version: function() { return Narcissus.options.version; },
+        quit: function() { throw END; }
     };
 
     // Helper to avoid Object.prototype.hasOwnProperty polluting scope objects.
@@ -204,7 +205,24 @@ Narcissus.jsexec = (function() {
         thisObject: global,
         result: undefined,
         target: null,
-        ecma3OnlyMode: false
+        ecma3OnlyMode: false,
+        // Run a thunk in this execution context and return its result.
+        run: function(thunk) {
+            var prev = ExecutionContext.current;
+            ExecutionContext.current = this;
+            try {
+                thunk();
+                return this.result;
+            } catch (e if e == THROW) {
+                if (prev) {
+                    prev.result = this.result;
+                    throw THROW;
+                }
+                throw this.result;
+            } finally {
+                ExecutionContext.current = prev;
+            }
+        }
     };
 
     function Reference(base, propertyName, node) {
@@ -817,59 +835,74 @@ Narcissus.jsexec = (function() {
         jsdefs.defineProperty(proto, "constructor", this, false, false, true);
     }
 
+    function getPropertyDescriptor(obj, name) {
+        while (obj) {
+            if (({}).hasOwnProperty.call(obj, name))
+                return Object.getOwnPropertyDescriptor(obj, name);
+            obj = Object.getPrototypeOf(obj);
+        }
+    }
+
+    function getOwnProperties(obj) {
+        var map = {};
+        for (var name in Object.getOwnPropertyNames(obj))
+            map[name] = Object.getOwnPropertyDescriptor(obj, name);
+        return map;
+    }
+
     // Returns a new function wrapped with a Proxy.
-    function newFunction(n,x) {
-        var f = new FunctionObject(n, x.scope);
-        var p = Proxy.createFunction(
+    function newFunction(n, x) {
+        var fobj = new FunctionObject(n, x.scope);
 
-                // Handler function copied from
-                //  http://wiki.ecmascript.org/doku.php?id=harmony:proxies&s=proxy%20object#examplea_no-op_forwarding_proxy
-                function(obj) { return {
-                    getOwnPropertyDescriptor: function(name) {
-                        var desc = Object.getOwnPropertyDescriptor(obj);
+        // Handler copied from
+        // http://wiki.ecmascript.org/doku.php?id=harmony:proxies&s=proxy%20object#examplea_no-op_forwarding_proxy
+        var handler = {
+            getOwnPropertyDescriptor: function(name) {
+                var desc = Object.getOwnPropertyDescriptor(fobj, name);
 
-                        // a trapping proxy's properties must always be configurable
-                        desc.configurable = true;
-                        return desc;
-                     },
-                    getPropertyDescriptor: function(name) {
-                        var desc = Object.getPropertyDescriptor(obj); //assumed
+                // a trapping proxy's properties must always be configurable
+                desc.configurable = true;
+                return desc;
+            },
+            getPropertyDescriptor: function(name) {
+                var desc = getPropertyDescriptor(fobj, name);
 
-                        // a trapping proxy's properties must always be configurable
-                        desc.configurable = true;
-                        return desc;
-                    },
-                    getOwnPropertyNames: function() {
-                        return Object.getOwnPropertyNames(obj);
-                    },
-                    defineProperty: function(name, desc) {
-                        Object.defineProperty(obj, name, desc);
-                    },
-                    delete: function(name) { return delete obj[name]; },
-                    fix: function() {
-                        if (Object.isFrozen(obj)) {
-                            return Object.getOwnProperties(obj); // assumed
-                        }
+                // a trapping proxy's properties must always be configurable
+                desc.configurable = true;
+                return desc;
+            },
+            getOwnPropertyNames: function() {
+                return Object.getOwnPropertyNames(fobj);
+            },
+            defineProperty: function(name, desc) {
+                Object.defineProperty(fobj, name, desc);
+            },
+            delete: function(name) { return delete fobj[name]; },
+            fix: function() {
+                if (Object.isFrozen(fobj)) {
+                    return getOwnProperties(fobj);
+                }
 
-                        // As long as obj is not frozen, the proxy won't allow itself to be fixed.
-                        return undefined; // will cause a TypeError to be thrown
-                    },
+                // As long as fobj is not frozen, the proxy won't allow itself to be fixed.
+                return undefined; // will cause a TypeError to be thrown
+            },
 
-                    has: function(name) { return name in obj; },
-                    hasOwn: function(name) { return ({}).hasOwnProperty.call(obj, name); },
-                    get: function(receiver, name) { return obj[name]; },
+            has: function(name) { return name in fobj; },
+            hasOwn: function(name) { return ({}).hasOwnProperty.call(fobj, name); },
+            get: function(receiver, name) { return fobj[name]; },
 
-                    // bad behavior when set fails in non-strict mode
-                    set: function(receiver, name, val) { obj[name] = val; return true; },
-                    enumerate: function() {
-                        var result = [];
-                        for (name in obj) { result.push(name); };
-                        return result;
-                    },
-                    enumerateOwn: function() { return Object.keys(obj); } };
-                }(f),
-                function() { return f.__call__(this, arguments, x); },
-                function() { return f.__construct__(arguments, x); });
+            // bad behavior when set fails in non-strict mode
+            set: function(receiver, name, val) { fobj[name] = val; return true; },
+            enumerate: function() {
+                var result = [];
+                for (name in fobj) { result.push(name); };
+                return result;
+            },
+            keys: function() { return Object.keys(fobj); }
+        };
+        var p = Proxy.createFunction(handler,
+                                     function() { return fobj.__call__(this, arguments, x); },
+                                     function() { return fobj.__construct__(arguments, x); });
         return p;
     }
 
@@ -1046,8 +1079,66 @@ Narcissus.jsexec = (function() {
         return x2.result;
     }
 
+    // A read-eval-print-loop that roughly tracks the behavior of the js shell.
+    function repl() {
+
+        // Display a value similarly to the js shell.
+        function display(x) {
+            if (typeof x == "object") {
+                // At the js shell, objects with no |toSource| don't print.
+                if (x != null && "toSource" in x) {
+                    try {
+                        print(x.toSource());
+                    } catch (e) {
+                    }
+                } else {
+                    print("null");
+                }
+            } else if (typeof x == "string") {
+                print(uneval(x));
+            } else if (typeof x != "undefined") {
+                // Since x must be primitive, String can't throw.
+                print(String(x));
+            }
+        }
+
+        // String conversion that never throws.
+        function string(x) {
+            try {
+                return String(x);
+            } catch (e) {
+                return "unknown (can't convert to string)";
+            }
+        }
+
+        var b = new jsparse.VanillaBuilder;
+        var x = new ExecutionContext(GLOBAL_CODE);
+
+        x.run(function() {
+            for (;;) {
+                putstr("njs> ");
+                var line = readline();
+                x.result = undefined;
+                try {
+                    execute(jsparse.parse(b, line, "stdin", 1), x);
+                    display(x.result);
+                } catch (e if e == THROW) {
+                    print("uncaught exception: " + string(x.result));
+                } catch (e if e == END) {
+                    break;
+                } catch (e if e instanceof SyntaxError) {
+                    print(e.toString());
+                } catch (e) {
+                    print("internal Narcissus error");
+                    throw e;
+                }
+            }
+        });
+    }
+
     return {
-        "evaluate": evaluate
+        "evaluate": evaluate,
+        "repl": repl
     };
 
 }());

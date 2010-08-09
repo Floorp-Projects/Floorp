@@ -19,6 +19,11 @@
   background-position: left center;
 }
 
+.searchbar-popup {
+  margin-top: 4px;
+  -moz-margin-start: 3px;
+}
+
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
   margin: 0;
   padding: 3px 0 2px;

@@ -2480,6 +2480,7 @@ js_TraceRuntime(JSTracer *trc)
 #ifdef JS_THREADSAFE
             JS_ASSERT(acx->outstandingRequests != 0);
 #endif
+            JS_ASSERT(JS_THREAD_DATA(acx)->conservativeGC.isEnabled());
             void *thing;
             switch (gcr->tag) {
               default:
@@ -2514,8 +2515,16 @@ js_TraceRuntime(JSTracer *trc)
             if (!IsMarkedGCThing(thing)) {
                 ConservativeGCTest test = IsGCThingWord(rt, reinterpret_cast<jsuword>(thing));
                 fprintf(stderr,
-                        "Conservative GC scanner has missed the root %p with tag %ld"
-                        " on the stack due to %d. Aborting.\n", thing, (long) gcr->tag, int(test));
+                        "Conservative GC scanner has missed the root 0x%p with tag %ld"
+                        " on the stack due to %d. The root location 0x%p, distance from"
+                        " the stack base %ld, conservative gc span %ld."
+                        " Consevtaive GC status for the thread %d."
+                        " Aborting.\n",
+                        thing, (long) gcr->tag, int(test), (void *) gcr,
+                        (long) ((jsword) JS_THREAD_DATA(acx)->nativeStackBase - (jsword) gcr),
+                        (long) ((jsword) JS_THREAD_DATA(acx)->nativeStackBase -
+                                (jsword) JS_THREAD_DATA(acx)->conservativeGC.nativeStackTop),
+                        JS_THREAD_DATA(acx)->conservativeGC.enableCount);
                 JS_ASSERT(false);
                 abort();
             }

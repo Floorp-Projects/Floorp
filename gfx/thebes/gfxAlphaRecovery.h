@@ -43,13 +43,22 @@
 
 class THEBES_API gfxAlphaRecovery {
 public:
-    /* Given two RGB24 surfaces with the same rendering, one on a black
-     * background and the other on white, return a new surface
-     * that contains the contents with recovered alpha.
+    struct Analysis {
+        PRBool uniformColor;
+        PRBool uniformAlpha;
+        gfxFloat alpha;
+        gfxFloat r, g, b;
+    };
+
+    /* Given two surfaces of equal size with the same rendering, one onto a
+     * black background and the other onto white, recovers alpha values from
+     * the difference and sets the alpha values on the black surface.
+     * The surfaces must have format RGB24 or ARGB32.
+     * Returns PR_TRUE on success.
      */
-    static already_AddRefed<gfxImageSurface> RecoverAlpha (gfxImageSurface *blackSurface,
-                                                           gfxImageSurface *whiteSurface,
-                                                           gfxIntSize dimensions);
+    static PRBool RecoverAlpha (gfxImageSurface *blackSurface,
+                                const gfxImageSurface *whiteSurface,
+                                Analysis *analysis = nsnull);
 };
 
 #endif /* _GFXALPHARECOVERY_H_ */

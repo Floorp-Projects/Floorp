@@ -59,7 +59,7 @@
 #include "IDBKeyRange.h"
 #include "LazyIdleThread.h"
 
-#define DB_SCHEMA_VERSION 1
+#define DB_SCHEMA_VERSION 2
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -155,7 +155,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX key_index "
+    "CREATE UNIQUE INDEX key_index "
     "ON object_data (key_value, object_store_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -174,7 +174,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX ai_key_index "
+    "CREATE UNIQUE INDEX ai_key_index "
     "ON ai_object_data (id, object_store_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);

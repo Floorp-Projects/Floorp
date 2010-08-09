@@ -155,6 +155,8 @@ public:
   NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
+  NS_IMETHOD              RegisterTouchWindow();
+  NS_IMETHOD              UnregisterTouchWindow();
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
 

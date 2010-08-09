@@ -65,7 +65,6 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIFormControl.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -270,7 +269,7 @@ EmbedContextMenuInfo::GetSelectedText()
   if (mCtxFormType != 0 && mEventNode) {
     PRInt32 TextLength = 0, selStart = 0, selEnd = 0;
     if (mCtxFormType == NS_FORM_INPUT_TEXT || mCtxFormType == NS_FORM_INPUT_FILE) {
-      nsCOMPtr<nsIDOMNSHTMLInputElement> nsinput = do_QueryInterface(mEventNode, &rv);
+      nsCOMPtr<nsIDOMHTMLInputElement> nsinput = do_QueryInterface(mEventNode, &rv);
       if (NS_SUCCEEDED(rv) && nsinput)
         nsinput->GetTextLength(&TextLength);
       if (TextLength > 0) {

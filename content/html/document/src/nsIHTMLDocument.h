@@ -54,8 +54,8 @@ class nsIScriptElement;
 class nsIEditor;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x1e1dc0fa, 0xf13e, 0x4abd, \
- { 0xa0, 0x95, 0x92, 0xa6, 0x7a, 0x31, 0x3c, 0x50 } }
+{ 0x840cacc9, 0x1956, 0x4987, \
+  { 0x80, 0x6e, 0xc6, 0xab, 0x19, 0x1b, 0x92, 0xd2 } }
 
 
 /**
@@ -66,11 +66,7 @@ class nsIHTMLDocument : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
 
-  virtual nsresult AddImageMap(nsIDOMHTMLMapElement* aMap) = 0;
-
   virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName) = 0;
-
-  virtual void RemoveImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
   /**
    * Set compatibility mode for this document

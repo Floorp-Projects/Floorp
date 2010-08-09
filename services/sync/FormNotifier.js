@@ -10,43 +10,47 @@ function FormNotifier() {
   let obs = Cc["@mozilla.org/observer-service;1"].
     getService(Ci.nsIObserverService);
 
-  for (let keyval in Iterator(baseForm)) {
-    // Make a local copy of these values
-    let [key, val] = keyval;
-
-    // Don't overwrite something we already have
-    if (key in this)
-      continue;
-
-    // Make a getter to grab non-functions
-    if (typeof val != "function") {
-      this.__defineGetter__(key, function() baseForm[key]);
-      continue;
-    }
-
-    // XXX Bug 568707 Make use of "key" to prevent it from disappearing
-    (function(){})(key);
-
-    // Wrap the function with notifications
-    this[key] = function() {
+  function wrap(method) {
+    return function() {
       let args = Array.slice(arguments);
       let notify = function(type) {
         obs.notifyObservers(null, "form-notifier", JSON.stringify({
           args: args,
-          func: key,
+          func: method,
           type: type
         }));
       };
 
       notify("before");
       try {
-        return val.apply(this, arguments);
+        return baseForm[method].apply(this, arguments);
       }
       finally {
         notify("after");
       }
     };
   }
+
+  this.__defineGetter__("DBConnection", function() baseForm.DBConnection);
+  this.__defineGetter__("hasEntries", function() baseForm.hasEntries);
+
+  this.addEntry = wrap("addEntry");
+  this.entryExists = wrap("entryExists");
+  this.nameExists = wrap("nameExists");
+  this.removeAllEntries = wrap("removeAllEntries");
+  this.removeEntriesByTimeframe = wrap("removeEntriesByTimeframe");
+  this.removeEntriesForName = wrap("removeEntriesForName");
+  this.removeEntry = wrap("removeEntry");
+
+  // Avoid leaking the base form service.
+  obs.addObserver({
+    observe: function() {
+      obs.removeObserver(this, "profile-before-change");
+      baseForm = null;
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+                                           Ci.nsIObserver])
+  }, "profile-before-change", true);
 }
 FormNotifier.prototype = {
   classDescription: "Form Notifier Wrapper",

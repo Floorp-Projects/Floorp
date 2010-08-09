@@ -1004,7 +1004,7 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
 {
     bool fun = call || construct;
     Class *clasp = fun ? &FunctionProxyClass : &ObjectProxyClass;
-    JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!obj || (construct && !js_EnsureReservedSlots(cx, obj, 0)))
         return NULL;
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
@@ -1243,7 +1243,7 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
     Class *clasp = proxy->isFunctionProxy() ? &CallableObjectClass : &js_ObjectClass;
 
     /* Make a blank object from the recipe fix provided to us. */
-    JSObject *newborn = NewObjectWithGivenProto(cx, clasp, proto, parent);
+    JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!newborn)
         return NULL;
     AutoObjectRooter tvr2(cx, newborn);
@@ -1285,7 +1285,7 @@ Class js_ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *module = NewObject(cx, &js_ProxyClass, NULL, obj);
+    JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj);
     if (!module)
         return NULL;
     if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),

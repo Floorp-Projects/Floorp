@@ -46,9 +46,11 @@
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsMathUtils.h"
+#include "nsStyleUtil.h"
+#include "CSSCalc.h"
+#include "prenv.h"  // for paint forcing
 
-// Paint forcing
-#include "prenv.h"
+namespace css = mozilla::css;
 
 nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
@@ -491,6 +493,405 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   }
 
   return buffer;
+}
+
+namespace {
+
+struct CSSValueSerializeCalcOps {
+  CSSValueSerializeCalcOps(nsCSSProperty aProperty, nsAString& aResult)
+    : mProperty(aProperty),
+      mResult(aResult)
+  {
+  }
+
+  typedef nsCSSValue input_type;
+  typedef nsCSSValue::Array input_array_type;
+
+  static nsCSSUnit GetUnit(const input_type& aValue) {
+    return aValue.GetUnit();
+  }
+
+  void Append(const char* aString)
+  {
+    mResult.AppendASCII(aString);
+  }
+
+  void AppendLeafValue(const input_type& aValue)
+  {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Percent ||
+                      aValue.IsLengthUnit(), "unexpected unit");
+    aValue.AppendToString(mProperty, mResult);
+  }
+
+  void AppendNumber(const input_type& aValue)
+  {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
+    aValue.AppendToString(mProperty, mResult);
+  }
+
+private:
+  nsCSSProperty mProperty;
+  nsAString &mResult;
+};
+
+} // anonymous namespace
+
+void
+nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  // eCSSProperty_UNKNOWN gets used for some recursive calls below.
+  NS_ABORT_IF_FALSE((0 <= aProperty &&
+                     aProperty <= eCSSProperty_COUNT_no_shorthands) ||
+                    aProperty == eCSSProperty_UNKNOWN,
+                    "property ID out of range");
+
+  nsCSSUnit unit = GetUnit();
+  if (unit == eCSSUnit_Null) {
+    return;
+  }
+
+  if (eCSSUnit_String <= unit && unit <= eCSSUnit_Attr) {
+    if (unit == eCSSUnit_Attr) {
+      aResult.AppendLiteral("attr(");
+    }
+    nsAutoString  buffer;
+    GetStringValue(buffer);
+    if (unit == eCSSUnit_String) {
+      nsStyleUtil::AppendEscapedCSSString(buffer, aResult);
+    } else if (unit == eCSSUnit_Families) {
+      // XXX We really need to do *some* escaping.
+      aResult.Append(buffer);
+    } else {
+      nsStyleUtil::AppendEscapedCSSIdent(buffer, aResult);
+    }
+  }
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Cubic_Bezier) {
+    switch (unit) {
+      case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
+      case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
+      case eCSSUnit_Cubic_Bezier: aResult.AppendLiteral("cubic-bezier("); break;
+      default: break;
+    }
+
+    nsCSSValue::Array *array = GetArrayValue();
+    PRBool mark = PR_FALSE;
+    for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
+      if (aProperty == eCSSProperty_border_image && i >= 5) {
+        if (array->Item(i).GetUnit() == eCSSUnit_Null) {
+          continue;
+        }
+        if (i == 5) {
+          aResult.AppendLiteral(" /");
+        }
+      }
+      if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
+        if (unit == eCSSUnit_Array &&
+            eCSSProperty_transition_timing_function != aProperty)
+          aResult.AppendLiteral(" ");
+        else
+          aResult.AppendLiteral(", ");
+      }
+      nsCSSProperty prop =
+        ((eCSSUnit_Counter <= unit && unit <= eCSSUnit_Counters) &&
+         i == array->Count() - 1)
+        ? eCSSProperty_list_style_type : aProperty;
+      if (array->Item(i).GetUnit() != eCSSUnit_Null) {
+        array->Item(i).AppendToString(prop, aResult);
+        mark = PR_TRUE;
+      }
+    }
+    if (eCSSUnit_Array == unit &&
+        aProperty == eCSSProperty_transition_timing_function) {
+      aResult.AppendLiteral(")");
+    }
+  }
+  /* Although Function is backed by an Array, we'll handle it separately
+   * because it's a bit quirky.
+   */
+  else if (eCSSUnit_Function == unit) {
+    const nsCSSValue::Array* array = GetArrayValue();
+    NS_ASSERTION(array->Count() >= 1, "Functions must have at least one element for the name.");
+
+    /* Append the function name. */
+    const nsCSSValue& functionName = array->Item(0);
+    if (functionName.GetUnit() == eCSSUnit_Enumerated) {
+      // We assume that the first argument is always of nsCSSKeyword type.
+      const nsCSSKeyword functionId =
+        static_cast<nsCSSKeyword>(functionName.GetIntValue());
+      nsStyleUtil::AppendEscapedCSSIdent(
+        NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(functionId)),
+        aResult);
+    } else {
+      functionName.AppendToString(aProperty, aResult);
+    }
+    aResult.AppendLiteral("(");
+
+    /* Now, step through the function contents, writing each of them as we go. */
+    for (size_t index = 1; index < array->Count(); ++index) {
+      array->Item(index).AppendToString(aProperty, aResult);
+
+      /* If we're not at the final element, append a comma. */
+      if (index + 1 != array->Count())
+        aResult.AppendLiteral(", ");
+    }
+
+    /* Finally, append the closing parenthesis. */
+    aResult.AppendLiteral(")");
+  }
+  else if (IsCalcUnit()) {
+    NS_ABORT_IF_FALSE(GetUnit() == eCSSUnit_Calc ||
+                      GetUnit() == eCSSUnit_Calc_Maximum ||
+                      GetUnit() == eCSSUnit_Calc_Minimum,
+                      "unexpected unit");
+    CSSValueSerializeCalcOps ops(aProperty, aResult);
+    css::SerializeCalc(*this, ops);
+  }
+  else if (eCSSUnit_Integer == unit) {
+    nsAutoString tmpStr;
+    tmpStr.AppendInt(GetIntValue(), 10);
+    aResult.Append(tmpStr);
+  }
+  else if (eCSSUnit_Enumerated == unit) {
+    if (eCSSProperty_text_decoration == aProperty) {
+      PRInt32 intValue = GetIntValue();
+      if (NS_STYLE_TEXT_DECORATION_NONE == intValue) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        // Ignore the "override all" internal value.
+        // (It doesn't have a string representation.)
+        intValue &= ~NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
+        nsStyleUtil::AppendBitmaskCSSValue(
+          aProperty, intValue,
+          NS_STYLE_TEXT_DECORATION_UNDERLINE,
+          NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
+          aResult);
+      }
+    }
+    else if (eCSSProperty_azimuth == aProperty) {
+      PRInt32 intValue = GetIntValue();
+      AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, (intValue & ~NS_STYLE_AZIMUTH_BEHIND)), aResult);
+      if ((NS_STYLE_AZIMUTH_BEHIND & intValue) != 0) {
+        aResult.Append(PRUnichar(' '));
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_AZIMUTH_BEHIND), aResult);
+      }
+    }
+    else if (eCSSProperty_marks == aProperty) {
+      PRInt32 intValue = GetIntValue();
+      if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                           NS_STYLE_PAGE_MARKS_CROP,
+                                           NS_STYLE_PAGE_MARKS_REGISTER,
+                                           aResult);
+      }
+    }
+    else {
+      const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, GetIntValue());
+      AppendASCIItoUTF16(name, aResult);
+    }
+  }
+  else if (eCSSUnit_EnumColor == unit) {
+    // we can lookup the property in the ColorTable and then
+    // get a string mapping the name
+    nsCAutoString str;
+    if (nsCSSProps::GetColorName(GetIntValue(), str)){
+      AppendASCIItoUTF16(str, aResult);
+    } else {
+      NS_NOTREACHED("bad color value");
+    }
+  }
+  else if (eCSSUnit_Color == unit) {
+    nscolor color = GetColorValue();
+    if (color == NS_RGBA(0, 0, 0, 0)) {
+      // Use the strictest match for 'transparent' so we do correct
+      // round-tripping of all other rgba() values.
+      aResult.AppendLiteral("transparent");
+    } else {
+      nsAutoString tmpStr;
+      PRUint8 a = NS_GET_A(color);
+      if (a < 255) {
+        tmpStr.AppendLiteral("rgba(");
+      } else {
+        tmpStr.AppendLiteral("rgb(");
+      }
+
+      NS_NAMED_LITERAL_STRING(comma, ", ");
+
+      tmpStr.AppendInt(NS_GET_R(color), 10);
+      tmpStr.Append(comma);
+      tmpStr.AppendInt(NS_GET_G(color), 10);
+      tmpStr.Append(comma);
+      tmpStr.AppendInt(NS_GET_B(color), 10);
+      if (a < 255) {
+        tmpStr.Append(comma);
+        tmpStr.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
+      }
+      tmpStr.Append(PRUnichar(')'));
+
+      aResult.Append(tmpStr);
+    }
+  }
+  else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
+    aResult.Append(NS_LITERAL_STRING("url("));
+    nsStyleUtil::AppendEscapedCSSString(
+      nsDependentString(GetOriginalURLValue()), aResult);
+    aResult.Append(NS_LITERAL_STRING(")"));
+  }
+  else if (eCSSUnit_Percent == unit) {
+    nsAutoString tmpStr;
+    tmpStr.AppendFloat(GetPercentValue() * 100.0f);
+    aResult.Append(tmpStr);
+  }
+  else if (eCSSUnit_Percent < unit) {  // length unit
+    nsAutoString tmpStr;
+    tmpStr.AppendFloat(GetFloatValue());
+    aResult.Append(tmpStr);
+  }
+  else if (eCSSUnit_Gradient == unit) {
+    nsCSSValueGradient* gradient = GetGradientValue();
+
+    if (gradient->mIsRepeating) {
+      if (gradient->mIsRadial)
+        aResult.AppendLiteral("-moz-repeating-radial-gradient(");
+      else
+        aResult.AppendLiteral("-moz-repeating-linear-gradient(");
+    } else {
+      if (gradient->mIsRadial)
+        aResult.AppendLiteral("-moz-radial-gradient(");
+      else
+        aResult.AppendLiteral("-moz-linear-gradient(");
+    }
+
+    if (gradient->mBgPosX.GetUnit() != eCSSUnit_None ||
+        gradient->mBgPosY.GetUnit() != eCSSUnit_None ||
+        gradient->mAngle.GetUnit() != eCSSUnit_None) {
+      if (gradient->mBgPosX.GetUnit() != eCSSUnit_None) {
+        gradient->mBgPosX.AppendToString(eCSSProperty_background_position,
+                                         aResult);
+        aResult.AppendLiteral(" ");
+      }
+      if (gradient->mBgPosY.GetUnit() != eCSSUnit_None) {
+        gradient->mBgPosY.AppendToString(eCSSProperty_background_position,
+                                         aResult);
+        aResult.AppendLiteral(" ");
+      }
+      if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
+        gradient->mAngle.AppendToString(aProperty, aResult);
+      }
+      aResult.AppendLiteral(", ");
+    }
+
+    if (gradient->mIsRadial &&
+        (gradient->mRadialShape.GetUnit() != eCSSUnit_None ||
+         gradient->mRadialSize.GetUnit() != eCSSUnit_None)) {
+      if (gradient->mRadialShape.GetUnit() != eCSSUnit_None) {
+        NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_Enumerated,
+                     "bad unit for radial gradient shape");
+        PRInt32 intValue = gradient->mRadialShape.GetIntValue();
+        NS_ASSERTION(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                     "radial gradient with linear shape?!");
+        AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                               nsCSSProps::kRadialGradientShapeKTable),
+                           aResult);
+        aResult.AppendLiteral(" ");
+      }
+
+      if (gradient->mRadialSize.GetUnit() != eCSSUnit_None) {
+        NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_Enumerated,
+                     "bad unit for radial gradient size");
+        PRInt32 intValue = gradient->mRadialSize.GetIntValue();
+        AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                               nsCSSProps::kRadialGradientSizeKTable),
+                           aResult);
+      }
+      aResult.AppendLiteral(", ");
+    }
+
+    for (PRUint32 i = 0 ;;) {
+      gradient->mStops[i].mColor.AppendToString(aProperty, aResult);
+      if (gradient->mStops[i].mLocation.GetUnit() != eCSSUnit_None) {
+        aResult.AppendLiteral(" ");
+        gradient->mStops[i].mLocation.AppendToString(aProperty, aResult);
+      }
+      if (++i == gradient->mStops.Length()) {
+        break;
+      }
+      aResult.AppendLiteral(", ");
+    }
+
+    aResult.AppendLiteral(")");
+  }
+
+  switch (unit) {
+    case eCSSUnit_Null:         break;
+    case eCSSUnit_Auto:         aResult.AppendLiteral("auto");     break;
+    case eCSSUnit_Inherit:      aResult.AppendLiteral("inherit");  break;
+    case eCSSUnit_Initial:      aResult.AppendLiteral("-moz-initial"); break;
+    case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
+    case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
+    case eCSSUnit_System_Font:  aResult.AppendLiteral("-moz-use-system-font"); break;
+    case eCSSUnit_All:          aResult.AppendLiteral("all"); break;
+    case eCSSUnit_Dummy:
+    case eCSSUnit_DummyInherit:
+    case eCSSUnit_RectIsAuto:
+      NS_NOTREACHED("should never serialize");
+      break;
+
+    case eCSSUnit_String:       break;
+    case eCSSUnit_Ident:        break;
+    case eCSSUnit_Families:     break;
+    case eCSSUnit_URL:          break;
+    case eCSSUnit_Image:        break;
+    case eCSSUnit_Array:        break;
+    case eCSSUnit_Attr:
+    case eCSSUnit_Cubic_Bezier:
+    case eCSSUnit_Counter:
+    case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
+    case eCSSUnit_Local_Font:   break;
+    case eCSSUnit_Font_Format:  break;
+    case eCSSUnit_Function:     break;
+    case eCSSUnit_Calc:         break;
+    case eCSSUnit_Calc_Plus:    break;
+    case eCSSUnit_Calc_Minus:   break;
+    case eCSSUnit_Calc_Times_L: break;
+    case eCSSUnit_Calc_Times_R: break;
+    case eCSSUnit_Calc_Divided: break;
+    case eCSSUnit_Calc_Minimum: break;
+    case eCSSUnit_Calc_Maximum: break;
+    case eCSSUnit_Integer:      break;
+    case eCSSUnit_Enumerated:   break;
+    case eCSSUnit_EnumColor:    break;
+    case eCSSUnit_Color:        break;
+    case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
+    case eCSSUnit_Number:       break;
+    case eCSSUnit_Gradient:     break;
+
+    case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
+    case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
+    case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
+    case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
+    case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
+
+    case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
+    case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;
+    case eCSSUnit_Char:         aResult.AppendLiteral("ch");   break;
+    case eCSSUnit_RootEM:       aResult.AppendLiteral("rem");  break;
+
+    case eCSSUnit_Pixel:        aResult.AppendLiteral("px");   break;
+
+    case eCSSUnit_Degree:       aResult.AppendLiteral("deg");  break;
+    case eCSSUnit_Grad:         aResult.AppendLiteral("grad"); break;
+    case eCSSUnit_Radian:       aResult.AppendLiteral("rad");  break;
+
+    case eCSSUnit_Hertz:        aResult.AppendLiteral("Hz");   break;
+    case eCSSUnit_Kilohertz:    aResult.AppendLiteral("kHz");  break;
+
+    case eCSSUnit_Seconds:      aResult.Append(PRUnichar('s'));    break;
+    case eCSSUnit_Milliseconds: aResult.AppendLiteral("ms");   break;
+  }
 }
 
 nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
