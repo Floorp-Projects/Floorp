@@ -1404,7 +1404,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
                 rhsNotNumber2.get().linkTo(stubcc.masm.label(), &stubcc.masm);
 
             /* Emit the slow path - note full frame syncage. */
-            stubcc.syncExit(Uses(2));
+            frame.sync(stubcc.masm, Uses(2));
             stubcc.leave();
             stubcc.call(stub);
         }
