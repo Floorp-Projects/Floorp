@@ -24,6 +24,9 @@
       <property name="state" readonly="true"
                 onget="return this.popupBoxObject.popupState"/>
 
+      <property name="triggerNode" readonly="true"
+                onget="return this.popupBoxObject.triggerNode"/>
+
       <method name="openPopup">
         <parameter name="aAnchorElement"/>
         <parameter name="aPosition"/>
@@ -31,13 +34,14 @@
         <parameter name="aY"/>
         <parameter name="aIsContextMenu"/>
         <parameter name="aAttributesOverride"/>
+        <parameter name="aTriggerEvent"/>
         <body>
         <![CDATA[
           try {
             var popupBox = this.popupBoxObject;
             if (popupBox)
               popupBox.openPopup(aAnchorElement, aPosition, aX, aY,
-                                 aIsContextMenu, aAttributesOverride);
+                                 aIsContextMenu, aAttributesOverride, aTriggerEvent);
           } catch(e) {}
         ]]>
         </body>
@@ -47,12 +51,13 @@
         <parameter name="aX"/>
         <parameter name="aY"/>
         <parameter name="aIsContextMenu"/>
+        <parameter name="aTriggerEvent"/>
         <body>
         <![CDATA[
           try {
             var popupBox = this.popupBoxObject;
             if (popupBox)
-              popupBox.openPopupAtScreen(aX, aY, aIsContextMenu);
+              popupBox.openPopupAtScreen(aX, aY, aIsContextMenu, aTriggerEvent);
           } catch(e) {}
         ]]>
         </body>

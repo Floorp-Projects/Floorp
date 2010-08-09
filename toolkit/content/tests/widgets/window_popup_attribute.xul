@@ -16,6 +16,10 @@ window.opener.SimpleTest.waitForFocus(runTests, window);
 <hbox style="margin-left: 325px; margin-top: 325px;">
   <label id="trigger" popup="thepopup" value="Popup"/>
 </hbox>
+<!-- this frame is used to check that document.popupNode
+     is inaccessible from different sources -->
+<iframe id="childframe" type="content" width="10" height="10"
+        src="http://sectest2.example.org:80/tests/toolkit/content/tests/widgets/popup_childframe_node.xul"/>
 
 <menupopup id="thepopup">
   <menuitem id="item1" label="First"/>

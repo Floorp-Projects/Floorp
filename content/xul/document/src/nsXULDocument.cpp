@@ -378,7 +378,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
         cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(tmp->mPrototypes[i]));
     }
 
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTooltipNode)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLocalStore)
 
     if (tmp->mOverlayLoadObservers.IsInitialized())
@@ -388,7 +387,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTooltipNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
@@ -1528,25 +1526,22 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP
 nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 {
-    // Get popup node.
-    nsresult rv = TrustedGetPopupNode(aNode); // addref happens here
-
-    if (NS_SUCCEEDED(rv) && *aNode && !nsContentUtils::CanCallerAccess(*aNode)) {
-        NS_RELEASE(*aNode);
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsXULDocument::TrustedGetPopupNode(nsIDOMNode** aNode)
-{
     *aNode = nsnull;
 
+    nsCOMPtr<nsIDOMNode> node;
     nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
     if (rootWin)
-        rootWin->GetPopupNode(aNode); // addref happens here
+        node = rootWin->GetPopupNode(); // addref happens here
+
+    if (!node) {
+        nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+        if (pm) {
+            node = pm->GetLastTriggerPopupNode(this);
+        }
+    }
+
+    if (node && nsContentUtils::CanCallerAccess(node))
+      node.swap(*aNode);
 
     return NS_OK;
 }
@@ -1615,25 +1610,22 @@ nsXULDocument::GetPopupRangeOffset(PRInt32* aRangeOffset)
 NS_IMETHODIMP
 nsXULDocument::GetTooltipNode(nsIDOMNode** aNode)
 {
-    if (mTooltipNode && !nsContentUtils::CanCallerAccess(mTooltipNode)) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-    *aNode = mTooltipNode;
-    NS_IF_ADDREF(*aNode);
-    return NS_OK;
-}
+    *aNode = nsnull;
 
-NS_IMETHODIMP
-nsXULDocument::TrustedGetTooltipNode(nsIDOMNode** aNode)
-{
-    NS_IF_ADDREF(*aNode = mTooltipNode);
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+        nsCOMPtr<nsIDOMNode> node = pm->GetLastTriggerTooltipNode(this);
+        if (node && nsContentUtils::CanCallerAccess(node))
+            node.swap(*aNode);
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULDocument::SetTooltipNode(nsIDOMNode* aNode)
 {
-    mTooltipNode = aNode;
+    // do nothing
     return NS_OK;
 }
 
