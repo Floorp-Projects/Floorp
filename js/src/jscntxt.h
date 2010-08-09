@@ -3134,11 +3134,23 @@ class AutoValueVector : private AutoGCRooter
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {
-        return vector.growBy(inc);
+        /* N.B. Value's default ctor leaves the Value udnefined */
+        size_t oldLength = vector.length();
+        if (!vector.growByUninitialized(inc))
+            return false;
+        MakeValueRangeGCSafe(vector.begin() + oldLength, vector.end());
+        return true;
     }
 
     bool resize(size_t newLength) {
-        return vector.resize(newLength);
+        size_t oldLength = vector.length();
+        if (newLength <= oldLength)
+            vector.shrinkBy(oldLength - newLength);
+        /* N.B. Value's default ctor leaves the Value udnefined */
+        if (!vector.growByUninitialized(newLength - oldLength))
+            return false;
+        MakeValueRangeGCSafe(vector.begin() + oldLength, vector.end());
+        return true;
     }
 
     bool reserve(size_t newLength) {
@@ -3180,11 +3192,23 @@ class AutoIdVector : private AutoGCRooter
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {
-        return vector.growBy(inc);
+        /* N.B. jsid's default ctor leaves the jsid udnefined */
+        size_t oldLength = vector.length();
+        if (!vector.growByUninitialized(inc))
+            return false;
+        MakeIdRangeGCSafe(vector.begin() + oldLength, vector.end());
+        return true;
     }
 
     bool resize(size_t newLength) {
-        return vector.resize(newLength);
+        size_t oldLength = vector.length();
+        if (newLength <= oldLength)
+            vector.shrinkBy(oldLength - newLength);
+        /* N.B. jsid's default ctor leaves the jsid udnefined */
+        if (!vector.growByUninitialized(newLength - oldLength))
+            return false;
+        MakeIdRangeGCSafe(vector.begin() + oldLength, vector.end());
+        return true;
     }
 
     bool reserve(size_t newLength) {
@@ -3211,44 +3235,6 @@ class AutoIdVector : private AutoGCRooter
 
 JSIdArray *
 NewIdArray(JSContext *cx, jsint length);
-
-static JS_ALWAYS_INLINE void
-MakeValueRangeGCSafe(Value *vec, uintN len)
-{
-    PodZero(vec, len);
-}
-
-static JS_ALWAYS_INLINE void
-MakeValueRangeGCSafe(Value *beg, Value *end)
-{
-    PodZero(beg, end - beg);
-}
-
-static JS_ALWAYS_INLINE void
-SetValueRangeToUndefined(Value *beg, Value *end)
-{
-    for (Value *v = beg; v != end; ++v)
-        v->setUndefined();
-}
-
-static JS_ALWAYS_INLINE void
-SetValueRangeToUndefined(Value *vec, uintN len)
-{
-    return SetValueRangeToUndefined(vec, vec + len);
-}
-
-static JS_ALWAYS_INLINE void
-SetValueRangeToNull(Value *beg, Value *end)
-{
-    for (Value *v = beg; v != end; ++v)
-        v->setNull();
-}
-
-static JS_ALWAYS_INLINE void
-SetValueRangeToNull(Value *vec, uintN len)
-{
-    return SetValueRangeToNull(vec, vec + len);
-}
 
 } /* namespace js */
 
