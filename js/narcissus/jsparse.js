@@ -927,6 +927,16 @@ Narcissus.parser = (function() {
      * Parses a list of Statements.
      */
     function Statements(t, x) {
+        /*
+         * Blocks are uniquely numbered by a blockId within a function that is
+         * at the top level of the program. blockId starts from 0.
+         *
+         * This is done to aid hoisting for parse-time analyses done in custom
+         * builders.
+         *
+         * For more details in its interaction with hoisting, see comments in
+         * FunctionDefinition.
+         */
         var b = x.builder;
         var n = b.BLOCK$build(t, x.blockId++);
         b.BLOCK$hoistLets(n);
@@ -937,7 +947,10 @@ Narcissus.parser = (function() {
         b.BLOCK$finish(n);
         if (n.needsHoisting) {
             b.setHoists(n.id, n.varDecls);
-            // Propagate up to the function.
+            /*
+             * If a block needs hoisting, we need to propagate this flag up to
+             * the CompilerContext.
+             */
             x.needsHoisting = true;
         }
         return n;
@@ -1377,9 +1390,8 @@ Narcissus.parser = (function() {
         var rp = t.save();
         if (x.inFunction) {
             /*
-             * Inner functions don't reset block numbering. They also need to
-             * remember which block they were parsed in for hoisting (see comment
-             * below).
+             * Inner functions don't reset block numbering, only functions at
+             * the top level of the program do.
              */
             x2.blockId = x.blockId;
         }
@@ -1394,44 +1406,76 @@ Narcissus.parser = (function() {
         }
 
         /*
-         * To linearize hoisting with nested blocks needing hoists, if a toplevel
-         * function has any hoists we reparse the entire thing. Each toplevel
-         * function is parsed at most twice.
+         * Hoisting makes parse-time binding analysis tricky. A taxonomy of hoists:
          *
-         * Pass 1: If there needs to be hoisting at any child block or inner
-         * function, the entire function gets reparsed.
+         * 1. vars hoist to the top of their function:
          *
-         * Pass 2: It's possible that hoisting has changed the upvars of
-         * functions. That is, consider:
+         *    var x = 'global';
+         *    function f() {
+         *      x = 'f';
+         *      if (false)
+         *        var x;
+         *    }
+         *    f();
+         *    print(x); // "global"
          *
-         * function f() {
-         *   x = 0;
-         *   g();
-         *   x; // x's forward pointer should be invalidated!
-         *   function g() {
-         *     x = 'g';
-         *   }
-         *   var x;
-         * }
+         * 2. lets hoist to the top of their block:
          *
-         * So, a function needs to remember in which block it is parsed under
-         * (since the function body is _not_ hoisted, only the declaration) and
-         * upon hoisting, needs to recalculate all its upvars up front.
+         *    function f() { // id: 0
+         *      var x = 'f';
+         *      {
+         *        {
+         *          print(x); // "undefined"
+         *        }
+         *        let x;
+         *      }
+         *    }
+         *    f();
+         *
+         * 3. inner functions at function top-level hoist to the beginning
+         *    of the function.
+         *
+         * If the builder used is doing parse-time analyses, hoisting may
+         * invalidate earlier conclusions it makes about variable scope.
+         *
+         * The builder can opt to set the needsHoisting flag in a
+         * CompilerContext (in the case of var and function hoisting) or in a
+         * node of type BLOCK (in the case of let hoisting). This signals for
+         * the parser to reparse sections of code.
+         *
+         * To avoid exponential blowup, if a function at the program top-level
+         * has any hoists in its child blocks or inner functions, we reparse
+         * the entire toplevel function. Each toplevel function is parsed at
+         * most twice.
+         *
+         * The list of declarations can be tied to block ids to aid talking
+         * about declarations of blocks that have not yet been fully parsed.
+         *
+         * Blocks are already uniquely numbered; see the comment in
+         * Statements.
          */
         if (x2.needsHoisting) {
-            // Order is important here! funDecls must come _after_ varDecls!
+
+            /*
+             * Order is important here! Builders expect funDecls to come after
+             * varDecls!
+             */
             b.setHoists(f.body.id, x2.varDecls.concat(x2.funDecls));
 
             if (x.inFunction) {
-                // Propagate up to the parent function if we're an inner function.
+                /*
+                 * If an inner function needs hoisting, we need to propagate
+                 * this flag up to the parent function.
+                 */
                 x.needsHoisting = true;
             } else {
-                // Only re-parse toplevel functions.
-                var x3 = x2;
+                // Only re-parse functions at the top level of the program.
                 x2 = new StaticContext(true, b);
                 t.rewind(rp);
-                // Set a flag in case the builder wants to have different behavior
-                // on the second pass.
+                /*
+                 * Set a flag in case the builder wants to have different behavior
+                 * on the second pass.
+                 */
                 b.secondPass = true;
                 b.FUNCTION$hoistVars(f.body.id, true);
                 b.FUNCTION$setBody(f, Script(t, x2));
