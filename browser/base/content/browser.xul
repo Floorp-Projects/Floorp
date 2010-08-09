@@ -222,7 +222,8 @@
            noautofocus="true"
            noautohide="true"
            onclick="InspectorUI.stopInspecting();"
-           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"/>
+           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"
+           onMozMousePixelScroll="InspectorUI.highlighter.handlePixelScroll(event);"/>
 
     <panel id="inspector-panel"
            orient="vertical"
