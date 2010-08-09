@@ -873,7 +873,7 @@ BookmarksStore.prototype = {
       this._frecencyStm.params.url = record.bmkUri;
       let result = Utils.queryAsync(this._frecencyStm, ["frecency"]);
       if (result.length)
-        index += result.frecency;
+        index += result[0].frecency;
     }
 
     return index;
