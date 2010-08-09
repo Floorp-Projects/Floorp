@@ -212,6 +212,8 @@ nsPlacesDBUtils.prototype = {
       "DELETE FROM moz_annos WHERE id IN ( " +
         "SELECT id FROM moz_annos a " +
         "WHERE NOT EXISTS " +
+          "(SELECT id FROM moz_places_temp WHERE id = a.place_id LIMIT 1) " +
+        "AND NOT EXISTS " +
           "(SELECT id FROM moz_places WHERE id = a.place_id LIMIT 1) " +
       ")");
     cleanupStatements.push(deleteOrphanAnnos);
@@ -286,6 +288,7 @@ nsPlacesDBUtils.prototype = {
       ") AND id IN (" +
         "SELECT b.id FROM moz_bookmarks b " +
         "WHERE fk NOT NULL AND b.type = :bookmark_type " +
+          "AND NOT EXISTS (SELECT url FROM moz_places_temp WHERE id = b.fk LIMIT 1) " +
           "AND NOT EXISTS (SELECT url FROM moz_places WHERE id = b.fk LIMIT 1) " +
       ")");
     deleteNoPlaceItems.params["bookmark_type"] = this._bms.TYPE_BOOKMARK;
@@ -444,6 +447,7 @@ nsPlacesDBUtils.prototype = {
     // D.11 remove old livemarks status items
     //      Livemark status items are now static but some livemark has still old
     //      status items bookmarks inside it. We should remove them.
+    //      Note: This does not need to query the temp table.
     let removeLivemarkStaticItems = this._dbConn.createStatement(
       "DELETE FROM moz_bookmarks WHERE type = :bookmark_type AND fk IN ( " +
         "SELECT id FROM moz_places WHERE url = :lmloading OR url = :lmfailed " +
@@ -459,6 +463,8 @@ nsPlacesDBUtils.prototype = {
       "DELETE FROM moz_favicons WHERE id IN (" +
         "SELECT id FROM moz_favicons f " +
         "WHERE NOT EXISTS " +
+          "(SELECT id FROM moz_places_temp WHERE favicon_id = f.id LIMIT 1) " +
+          "AND NOT EXISTS" +
           "(SELECT id FROM moz_places WHERE favicon_id = f.id LIMIT 1) " +
       ")");
     cleanupStatements.push(deleteOrphanIcons);
@@ -469,6 +475,8 @@ nsPlacesDBUtils.prototype = {
       "DELETE FROM moz_historyvisits WHERE id IN (" +
         "SELECT id FROM moz_historyvisits v " +
         "WHERE NOT EXISTS " +
+          "(SELECT id FROM moz_places_temp WHERE id = v.place_id LIMIT 1) " +
+          "AND NOT EXISTS " +
           "(SELECT id FROM moz_places WHERE id = v.place_id LIMIT 1) " +
       ")");
     cleanupStatements.push(deleteOrphanVisits);
@@ -479,6 +487,8 @@ nsPlacesDBUtils.prototype = {
       "DELETE FROM moz_inputhistory WHERE place_id IN (" +
         "SELECT place_id FROM moz_inputhistory i " +
         "WHERE NOT EXISTS " +
+          "(SELECT id FROM moz_places_temp WHERE id = i.place_id LIMIT 1) " +
+          "AND NOT EXISTS " +
           "(SELECT id FROM moz_places WHERE id = i.place_id LIMIT 1) " +
       ")");
     cleanupStatements.push(deleteOrphanInputHistory);
@@ -526,17 +536,22 @@ nsPlacesDBUtils.prototype = {
 
 /* XXX needs test
     // L.2 recalculate visit_count
+    // We're detecting errors only in disk table since temp tables could have
+    // different values based on the number of visits not yet synced to disk.
     let detectWrongCountPlaces = this._dbConn.createStatement(
       "SELECT id FROM moz_places h " +
-      "WHERE h.visit_count <> " +
+      "WHERE id NOT IN (SELECT id FROM moz_places_temp) " +
+        "AND h.visit_count <> " +
           "(SELECT count(*) FROM moz_historyvisits " +
             "WHERE place_id = h.id AND visit_type NOT IN (0,4,7,8))");
     while (detectWrongCountPlaces.executeStep()) {
       let placeId = detectWrongCountPlaces.getInt64(0);
       let fixCountForPlace = this._dbConn.createStatement(
-        "UPDATE moz_places SET visit_count = ( " +
+        "UPDATE moz_places_view SET visit_count = ( " +
           "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + "
+            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + " +
+          "(SELECT count(*) FROM moz_historyvisits_temp " +
+            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + " +
         ") WHERE id = :place_id");
       fixCountForPlace.params["place_id"] = placeId;
       cleanupStatements.push(fixCountForPlace);

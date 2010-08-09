@@ -345,7 +345,7 @@ function createLivemark(aLmChildItemURI) {
  * @return the frecency of aURL
  */
 function getFrecency(aURL) {
-  let sql = "SELECT frecency FROM moz_places WHERE url = :url";
+  let sql = "SELECT frecency FROM moz_places_view WHERE url = :url";
   let stmt = dbConn.createStatement(sql);
   stmt.params.url = aURL;
   do_check_true(stmt.executeStep());
