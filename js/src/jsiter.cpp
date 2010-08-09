@@ -808,6 +808,16 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
         if (ni->shapes_length) {
             uint32 hash = ni->shapes_key % NATIVE_ITER_CACHE_SIZE;
             JSObject **hp = &JS_THREAD_DATA(cx)->cachedNativeIterators[hash];
+            
+            JSObject *pobj = obj;
+            int i = 0;
+            do {
+                ni->shapes_array[i] = pobj->shape();
+                ++i;
+                pobj = pobj->getProto();
+            } while (pobj);
+            ni->shapes_length = i;
+
             ni->props_cursor = ni->props_array;
             ni->next = *hp;
             *hp = obj;
