@@ -568,6 +568,7 @@ var Browser = {
 
     messageManager.addMessageListener("Browser:ViewportMetadata", this);
     messageManager.addMessageListener("Browser:FormSubmit", this);
+    messageManager.addMessageListener("Browser:KeyPress", this);
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
@@ -1287,6 +1288,14 @@ var Browser = {
         browser.lastLocation = null;
         break;
 
+      case "Browser:KeyPress":
+        let event = document.createEvent("KeyEvents");
+        event.initKeyEvent("keypress", true, true, null,
+                        json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
+                        json.keyCode, json.charCode)
+        document.getElementById("mainKeyset").dispatchEvent(event);
+        break;
+
       case "Browser:ZoomToPoint:Return":
         // JSON-ified rect needs to be recreated so the methods exist
         let rect = Rect.fromRect(json.rect);
@@ -1613,18 +1622,34 @@ function ContentCustomKeySender(browserView) {
 
 ContentCustomKeySender.prototype = {
   /** Dispatch a mouse event with chrome client coordinates. */
-  dispatchKeyEvent: function _dispatchKeyEvent(event) {
+  dispatchKeyEvent: function _dispatchKeyEvent(aEvent) {
     let browser = this._browserView.getBrowser();
     if (browser) {
-      let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-      try {
-        fl.sendCrossProcessKeyEvent(event.type, event.keyCode, event.charCode, event.modifiers);
-      } catch (e) {}
+      browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
+        type: aEvent.type,
+        keyCode: aEvent.keyCode,
+        charCode: aEvent.charCode,
+        modifiers: this._parseModifiers(aEvent)
+      });
     }
   },
 
+  _parseModifiers: function _parseModifiers(aEvent) {
+    const masks = Components.interfaces.nsIDOMNSEvent;
+    var mval = 0;
+    if (aEvent.shiftKey)
+      mval |= masks.SHIFT_MASK;
+    if (aEvent.ctrlKey)
+      mval |= masks.CONTROL_MASK;
+    if (aEvent.altKey)
+      mval |= masks.ALT_MASK;
+    if (aEvent.metaKey)
+      mval |= masks.META_MASK;
+    return mval;
+  },
+
   toString: function toString() {
-    return "[ContentCustomClicker] { }";
+    return "[ContentCustomKeySender] { }";
   }
 };
 
