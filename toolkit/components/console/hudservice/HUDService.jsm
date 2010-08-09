@@ -1924,30 +1924,43 @@ HeadsUpDisplay.prototype = {
     let buttons = ["Network", "CSSParser", "Exception", "Error",
                    "Info", "Warn", "Log",];
 
+    const pageButtons = [
+      { prefKey: "network", name: "PageNet" },
+      { prefKey: "cssparser", name: "PageCSS" },
+      { prefKey: "exception", name: "PageJS" }
+    ];
+    const consoleButtons = [
+      { prefKey: "error", name: "ConsoleErrors" },
+      { prefKey: "warn", name: "ConsoleWarnings" },
+      { prefKey: "info", name: "ConsoleInfo" },
+      { prefKey: "log", name: "ConsoleLog" }
+    ];
+
     let toolbar = this.makeXULNode("toolbar");
     toolbar.setAttribute("class", "hud-console-filter-toolbar");
     toolbar.setAttribute("mode", "text");
 
     toolbar.appendChild(this.consoleClearButton);
-    let btn;
-    for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i] == "Clear") {
-        btn = this.makeButton(buttons[i], "plain");
-      }
-      else {
-        btn = this.makeButton(buttons[i], "checkbox");
-      }
-      toolbar.appendChild(btn);
-    }
+
+    let pageCategoryTitle = this.getStr("categoryPage");
+    this.addButtonCategory(toolbar, pageCategoryTitle, pageButtons);
+
+    let separator = this.makeXULNode("separator");
+    separator.setAttribute("orient", "vertical");
+    toolbar.appendChild(separator);
+
+    let consoleCategoryTitle = this.getStr("categoryConsole");
+    this.addButtonCategory(toolbar, consoleCategoryTitle, consoleButtons);
+
     toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
     return toolbar;
   },
 
-  makeButton: function HUD_makeButton(aName, aType)
+  makeButton: function HUD_makeButton(aName, aPrefKey, aType)
   {
     var self = this;
-    let prefKey = aName.toLowerCase();
+    let prefKey = aPrefKey;
 
     let btn;
     if (aType == "checkbox") {
@@ -1978,6 +1991,30 @@ HeadsUpDisplay.prototype = {
       btn.setAttribute("oncommand", command);
     }
     return btn;
+  },
+
+  /**
+   * Appends a category title and a series of buttons to the filter bar.
+   *
+   * @param nsIDOMNode aToolbar
+   *        The DOM node to which to add the category.
+   * @param string aTitle
+   *        The title for the category.
+   * @param Array aButtons
+   *        The buttons, specified as objects with "name" and "prefKey"
+   *        properties.
+   * @returns nsIDOMNode
+   */
+  addButtonCategory: function(aToolbar, aTitle, aButtons) {
+    let lbl = this.makeXULNode("label");
+    lbl.setAttribute("class", "hud-filter-cat");
+    lbl.setAttribute("value", aTitle);
+    aToolbar.appendChild(lbl);
+
+    for (let i = 0; i < aButtons.length; i++) {
+      let btn = aButtons[i];
+      aToolbar.appendChild(this.makeButton(btn.name, btn.prefKey, "checkbox"));
+    }
   },
 
   createHUD: function HUD_createHUD()
