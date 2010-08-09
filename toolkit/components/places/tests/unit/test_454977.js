@@ -57,7 +57,7 @@ function add_visit(aURI, aVisitDate, aVisitType) {
       aVisitType != hs.TRANSITION_DOWNLOAD)
     visit_count ++;
   // Get the place id
-  var sql = "SELECT place_id FROM moz_historyvisits WHERE id = ?1";
+  var sql = "SELECT place_id FROM moz_historyvisits_view WHERE id = ?1";
   var stmt = mDBConn.createStatement(sql);
   stmt.bindInt64Parameter(0, visitId);
   do_check_true(stmt.executeStep());

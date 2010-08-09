@@ -251,12 +251,17 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 
   // Double ordering covers possible lastModified ties, that could happen when
   // importing, syncing or due to extensions.
-  // Note: not using a JOIN is cheaper in this case.
   RETURN_IF_STMT(mDBFindURIBookmarks, NS_LITERAL_CSTRING(
     "SELECT b.id "
     "FROM moz_bookmarks b "
-    "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
-      "AND b.fk NOTNULL "
+    "WHERE b.type = :item_type AND b.fk = ( "
+      "SELECT id FROM moz_places_temp "
+      "WHERE url = :page_url "
+      "UNION "
+      "SELECT id FROM moz_places "
+      "WHERE url = :page_url "
+      "LIMIT 1 "
+    ") "
     "ORDER BY b.lastModified DESC, b.id DESC "));
 
   // Select all children of a given folder, sorted by position.
@@ -266,10 +271,15 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // by mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.
   RETURN_IF_STMT(mDBGetChildren, NS_LITERAL_CSTRING(
-    "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-           "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
-           "b.parent, null, b.position, b.type, b.fk, b.folder_type "
+    "SELECT IFNULL(h_t.id, h.id), IFNULL(h_t.url, h.url), "
+           "COALESCE(b.title, h_t.title, h.title), "
+           "IFNULL(h_t.rev_host, h.rev_host), "
+           "IFNULL(h_t.visit_count, h.visit_count), "
+           "IFNULL(h_t.last_visit_date, h.last_visit_date), "
+           "f.url, null, b.id, b.dateAdded, b.lastModified, b.parent, null, "
+           "b.position, b.type, b.fk, b.folder_type "
     "FROM moz_bookmarks b "
+    "LEFT JOIN moz_places_temp h_t ON b.fk = h_t.id "
     "LEFT JOIN moz_places h ON b.fk = h.id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE b.parent = :parent "
@@ -288,7 +298,8 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // Get bookmark/folder/separator properties.
   RETURN_IF_STMT(mDBGetItemProperties, NS_LITERAL_CSTRING(
     "SELECT b.id, "
-           "(SELECT url FROM moz_places WHERE id = b.fk), "
+           "IFNULL((SELECT url FROM moz_places_temp WHERE id = b.fk), "
+                  "(SELECT url FROM moz_places WHERE id = b.fk)), "
            "b.title, b.position, b.fk, b.parent, b.type, b.folder_type, "
            "b.dateAdded, b.lastModified "
     "FROM moz_bookmarks b "
@@ -312,9 +323,12 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT 1 FROM moz_bookmarks WHERE fk = :page_id"));
 
   RETURN_IF_STMT(mDBIsURIBookmarkedInDatabase, NS_LITERAL_CSTRING(
-    "SELECT 1 FROM moz_bookmarks b "
-    "JOIN moz_places h ON b.fk = h.id "
-    "WHERE h.url = :page_url"));
+    "SELECT 1 FROM moz_bookmarks WHERE fk = ("
+      "SELECT id FROM moz_places_temp WHERE url = :page_url "
+      "UNION ALL "
+      "SELECT id FROM moz_places WHERE url = :page_url "
+      "LIMIT 1"
+    ")"));
 
   // Checks to make sure a place id is a bookmark, and isn't a livemark.
   RETURN_IF_STMT(mDBIsRealBookmark, NS_LITERAL_CSTRING(
@@ -349,12 +363,19 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBSetItemIndex, NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks SET position = :item_index WHERE id = :item_id"));
 
+  // Get keyword text for bookmarked URI.
   RETURN_IF_STMT(mDBGetKeywordForURI, NS_LITERAL_CSTRING(
     "SELECT k.keyword "
-    "FROM FROM moz_places h "
+    "FROM ( "
+      "SELECT id FROM moz_places_temp "
+      "WHERE url = :page_url "
+      "UNION ALL "
+      "SELECT id FROM moz_places "
+      "WHERE url = :page_url "
+      "LIMIT 1 "
+    ") AS h "
     "JOIN moz_bookmarks b ON b.fk = h.id "
-    "JOIN moz_keywords k ON k.id = b.keyword_id "
-    "WHERE h.url = :page_url "));
+    "JOIN moz_keywords k ON k.id = b.keyword_id"));
 
   RETURN_IF_STMT(mDBAdjustPosition, NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks SET position = position + :delta "
@@ -401,6 +422,14 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // For most cases these levels of redirects should be fine though, it's hard
   // to hit a page that is 4 or 5 levels of redirects below a bookmarked page.
   //
+  // Moreover this query does not mix-up all possible cases of disk and temp
+  // tables.  This is because we expect a redirects chain to be completely on
+  // disk or completely in memory.  We never bring back visits from disk to
+  // memory, we sync visits on a timer (the chained visits have narrow times),
+  // or on bookmarks changes.  The likely possiblity that we break a chain in
+  // the middle is so much smaller than the perf and readability hit we would
+  // get making complete crossing joins.
+  //
   // As a bonus the query also checks first if place_id is already a bookmark,
   // so you don't have to check that apart.
 
@@ -413,13 +442,31 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
                     nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
 
   RETURN_IF_STMT(mDBFindRedirectedBookmark, NS_LITERAL_CSTRING(
-    "SELECT "
+    "SELECT IFNULL( "
+      "(SELECT url FROM moz_places_temp WHERE id = :page_id), "
       "(SELECT url FROM moz_places WHERE id = :page_id) "
+    ") "
     "FROM moz_bookmarks b "
     "WHERE b.fk = :page_id "
     "UNION ALL " // Not directly bookmarked.
-    "SELECT "
+    "SELECT IFNULL( "
+      "(SELECT url FROM moz_places_temp WHERE id = " COALESCE_PLACEID "), "
       "(SELECT url FROM moz_places WHERE id = " COALESCE_PLACEID ") "
+    ") "
+    "FROM moz_historyvisits_temp self "
+    "JOIN moz_bookmarks b ON b.fk = " COALESCE_PLACEID
+    "LEFT JOIN moz_historyvisits_temp parent ON parent.id = self.from_visit "
+    "LEFT JOIN moz_historyvisits_temp grandparent ON parent.from_visit = grandparent.id "
+      "AND parent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+    "LEFT JOIN moz_historyvisits_temp greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
+      "AND grandparent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+    "WHERE self.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
+      "AND self.place_id = :page_id "
+    "UNION ALL " // Not in the temp table.
+    "SELECT IFNULL( "
+      "(SELECT url FROM moz_places_temp WHERE id = " COALESCE_PLACEID "), "
+      "(SELECT url FROM moz_places WHERE id = " COALESCE_PLACEID ") "
+    ") "
     "FROM moz_historyvisits self "
     "JOIN moz_bookmarks b ON b.fk = " COALESCE_PLACEID
     "LEFT JOIN moz_historyvisits parent ON parent.id = self.from_visit "
@@ -2583,6 +2630,8 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
 
   DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBFindURIBookmarks);
   nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"), TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool more;
