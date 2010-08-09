@@ -68,7 +68,7 @@ Narcissus.interpreter = (function() {
 
         // Function properties.
         eval: function eval(s) {
-            if (typeof s != "string")
+            if (typeof s !== "string")
                 return s;
 
             var x = ExecutionContext.current;
@@ -80,7 +80,7 @@ Narcissus.interpreter = (function() {
             ExecutionContext.current = x2;
             try {
                 execute(parser.parse(new parser.VanillaBuilder, s), x2);
-            } catch (e if e == THROW) {
+            } catch (e if e === THROW) {
                 x.result = x2.result;
                 throw e;
             } catch (e if e instanceof SyntaxError) {
@@ -111,7 +111,7 @@ Narcissus.interpreter = (function() {
         decodeURIComponent: decodeURIComponent,
         encodeURIComponent: encodeURIComponent,
 
-        // Class constructors.  Where ECMA-262 requires C.length == 1, we declare
+        // Class constructors.  Where ECMA-262 requires C.length === 1, we declare
         // a dummy formal parameter.
         Object: Object,
         Function: function Function(dummy) {
@@ -163,7 +163,7 @@ Narcissus.interpreter = (function() {
         // Extensions to ECMA.
         snarf: snarf, evaluate: evaluate,
         load: function load(s) {
-            if (typeof s != "string")
+            if (typeof s !== "string")
                 return s;
 
             evaluate(snarf(s), s, 1)
@@ -213,7 +213,7 @@ Narcissus.interpreter = (function() {
             try {
                 thunk();
                 return this.result;
-            } catch (e if e == THROW) {
+            } catch (e if e === THROW) {
                 if (prev) {
                     prev.result = this.result;
                     throw THROW;
@@ -253,15 +253,15 @@ Narcissus.interpreter = (function() {
 
     function isPrimitive(v) {
         var t = typeof v;
-        return (t == "object") ? v === null : t != "function";
+        return (t === "object") ? v === null : t !== "function";
     }
 
     function isObject(v) {
         var t = typeof v;
-        return (t == "object") ? v !== null : t == "function";
+        return (t === "object") ? v !== null : t === "function";
     }
 
-    // If r instanceof Reference, v == getValue(r); else v === r.  If passed, rn
+    // If r instanceof Reference, v === getValue(r); else v === r.  If passed, rn
     // is the node whose execute result was r.
     function toObject(v, r, rn) {
         switch (typeof v) {
@@ -287,10 +287,10 @@ Narcissus.interpreter = (function() {
 
         switch (n.type) {
           case FUNCTION:
-            if (n.functionForm != parser.DECLARED_FORM) {
-                if (!n.name || n.functionForm == parser.STATEMENT_FORM) {
+            if (n.functionForm !== parser.DECLARED_FORM) {
+                if (!n.name || n.functionForm === parser.STATEMENT_FORM) {
                     v = newFunction(n, x);
-                    if (n.functionForm == parser.STATEMENT_FORM)
+                    if (n.functionForm === parser.STATEMENT_FORM)
                         definitions.defineProperty(x.scope.object, n.name, v, true);
                 } else {
                     t = new Object;
@@ -311,7 +311,7 @@ Narcissus.interpreter = (function() {
             for (i = 0, j = a.length; i < j; i++) {
                 s = a[i].name;
                 f = newFunction(a[i], x);
-                definitions.defineProperty(t, s, f, x.type != EVAL_CODE);
+                definitions.defineProperty(t, s, f, x.type !== EVAL_CODE);
             }
             a = n.varDecls;
             for (i = 0, j = a.length; i < j; i++) {
@@ -322,7 +322,7 @@ Narcissus.interpreter = (function() {
                                         u.filename, u.lineno);
                 }
                 if (u.readOnly || !hasDirectProperty(t, s)) {
-                    definitions.defineProperty(t, s, undefined, x.type != EVAL_CODE, u.readOnly);
+                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, u.readOnly);
                 }
             }
             // FALL THROUGH
@@ -345,7 +345,7 @@ Narcissus.interpreter = (function() {
             var matchDefault = false;
           switch_loop:
             for (i = 0, j = a.length; ; i++) {
-                if (i == j) {
+                if (i === j) {
                     if (n.defaultIndex >= 0) {
                         i = n.defaultIndex - 1; // no case matched, do default
                         matchDefault = true;
@@ -354,7 +354,7 @@ Narcissus.interpreter = (function() {
                     break;                      // no default, exit switch_loop
                 }
                 t = a[i];                       // next case (might be default!)
-                if (t.type == CASE) {
+                if (t.type === CASE) {
                     u = getValue(execute(t.caseLabel, x));
                 } else {
                     if (!matchDefault)          // not defaulting, skip for now
@@ -366,11 +366,11 @@ Narcissus.interpreter = (function() {
                         if (t.statements.length) {
                             try {
                                 execute(t.statements, x);
-                            } catch (e if e == BREAK && x.target == n) {
+                            } catch (e if e === BREAK && x.target == n) {
                                 break switch_loop;
                             }
                         }
-                        if (++i == j)
+                        if (++i === j)
                             break switch_loop;
                         t = a[i];
                     }
@@ -386,9 +386,9 @@ Narcissus.interpreter = (function() {
             while (!n.condition || getValue(execute(n.condition, x))) {
                 try {
                     execute(n.body, x);
-                } catch (e if e == BREAK && x.target == n) {
+                } catch (e if e === BREAK && x.target === n) {
                     break;
-                } catch (e if e == CONTINUE && x.target == n) {
+                } catch (e if e === CONTINUE && x.target === n) {
                     // Must run the update expression.
                 }
                 n.update && getValue(execute(n.update, x));
@@ -404,7 +404,9 @@ Narcissus.interpreter = (function() {
             v = getValue(s);
 
             // ECMA deviation to track extant browser JS implementation behavior.
-            t = (v == null && !x.ecma3OnlyMode) ? v : toObject(v, s, n.object);
+            t = ((v === null || v === undefined) && !x.ecma3OnlyMode)
+              ? v
+              : toObject(v, s, n.object);
             a = [];
             for (i in t)
                 a.push(i);
@@ -412,9 +414,9 @@ Narcissus.interpreter = (function() {
                 putValue(execute(r, x), a[i], r);
                 try {
                     execute(n.body, x);
-                } catch (e if e == BREAK && x.target == n) {
+                } catch (e if e === BREAK && x.target === n) {
                     break;
-                } catch (e if e == CONTINUE && x.target == n) {
+                } catch (e if e === CONTINUE && x.target === n) {
                     continue;
                 }
             }
@@ -424,9 +426,9 @@ Narcissus.interpreter = (function() {
             do {
                 try {
                     execute(n.body, x);
-                } catch (e if e == BREAK && x.target == n) {
+                } catch (e if e === BREAK && x.target === n) {
                     break;
-                } catch (e if e == CONTINUE && x.target == n) {
+                } catch (e if e === CONTINUE && x.target === n) {
                     continue;
                 }
             } while (getValue(execute(n.condition, x)));
@@ -440,11 +442,11 @@ Narcissus.interpreter = (function() {
           case TRY:
             try {
                 execute(n.tryBlock, x);
-            } catch (e if e == THROW && (j = n.catchClauses.length)) {
+            } catch (e if e === THROW && (j = n.catchClauses.length)) {
                 e = x.result;
                 x.result = undefined;
                 for (i = 0; ; i++) {
-                    if (i == j) {
+                    if (i === j) {
                         x.result = e;
                         throw THROW;
                     }
@@ -497,8 +499,8 @@ Narcissus.interpreter = (function() {
                         break;
                 }
                 u = getValue(execute(u, x));
-                if (n.type == CONST)
-                    definitions.defineProperty(s.object, t, u, x.type != EVAL_CODE, true);
+                if (n.type === CONST)
+                    definitions.defineProperty(s.object, t, u, x.type !== EVAL_CODE, true);
                 else
                     s.object[t] = u;
             }
@@ -515,7 +517,7 @@ Narcissus.interpreter = (function() {
           case LABEL:
             try {
                 execute(n.statement, x);
-            } catch (e if e == BREAK && x.target == n) {
+            } catch (e if e === BREAK && x.target === n) {
             }
             break;
 
@@ -612,7 +614,7 @@ Narcissus.interpreter = (function() {
           case INSTANCEOF:
             t = getValue(execute(n[0], x));
             u = getValue(execute(n[1], x));
-            if (isObject(u) && typeof u.__hasInstance__ == "function")
+            if (isObject(u) && typeof u.__hasInstance__ === "function")
                 v = u.__hasInstance__(t);
             else
                 v = t instanceof u;
@@ -688,7 +690,7 @@ Narcissus.interpreter = (function() {
             u = Number(getValue(t));
             if (n.postfix)
                 v = u;
-            putValue(t, (n.type == INCREMENT) ? ++u : --u, n[0]);
+            putValue(t, (n.type === INCREMENT) ? ++u : --u, n[0]);
             if (!n.postfix)
                 v = u;
             break;
@@ -721,7 +723,7 @@ Narcissus.interpreter = (function() {
             r = execute(n[0], x);
             a = execute(n[1], x);
             f = getValue(r);
-            if (isPrimitive(f) || typeof f.__call__ != "function") {
+            if (isPrimitive(f) || typeof f.__call__ !== "function") {
                 throw new TypeError(r + " is not callable",
                                     n[0].filename, n[0].lineno);
             }
@@ -735,13 +737,13 @@ Narcissus.interpreter = (function() {
           case NEW_WITH_ARGS:
             r = execute(n[0], x);
             f = getValue(r);
-            if (n.type == NEW) {
+            if (n.type === NEW) {
                 a = {};
                 definitions.defineProperty(a, "length", 0, false, false, true);
             } else {
                 a = execute(n[1], x);
             }
-            if (isPrimitive(f) || typeof f.__construct__ != "function") {
+            if (isPrimitive(f) || typeof f.__construct__ !== "function") {
                 throw new TypeError(r + " is not a constructor",
                                     n[0].filename, n[0].lineno);
             }
@@ -761,12 +763,12 @@ Narcissus.interpreter = (function() {
             v = {};
             for (i = 0, j = n.length; i < j; i++) {
                 t = n[i];
-                if (t.type == PROPERTY_INIT) {
+                if (t.type === PROPERTY_INIT) {
                     v[t[0].value] = getValue(execute(t[1], x));
                 } else {
                     f = newFunction(t, x);
-                    u = (t.type == GETTER) ? '__defineGetter__'
-                                           : '__defineSetter__';
+                    u = (t.type === GETTER) ? '__defineGetter__'
+                                            : '__defineSetter__';
                     v[u](t.name, thunk(f, x));
                 }
             }
@@ -921,9 +923,9 @@ Narcissus.interpreter = (function() {
             ExecutionContext.current = x2;
             try {
                 execute(f.body, x2);
-            } catch (e if e == RETURN) {
+            } catch (e if e === RETURN) {
                 return x2.result;
-            } catch (e if e == THROW) {
+            } catch (e if e === THROW) {
                 x.result = x2.result;
                 throw THROW;
             } finally {
@@ -955,7 +957,7 @@ Narcissus.interpreter = (function() {
             }
             var o;
             while ((o = v.__proto__)) {
-                if (o == p)
+                if (o === p)
                     return true;
                 v = o;
             }
@@ -969,14 +971,14 @@ Narcissus.interpreter = (function() {
 
         apply: function (t, a) {
             // Curse ECMA again!
-            if (typeof this.__call__ != "function") {
+            if (typeof this.__call__ !== "function") {
                 throw new TypeError("Function.prototype.apply called on" +
                                     " uncallable object");
             }
 
             if (t === undefined || t === null)
                 t = global;
-            else if (typeof t != "object")
+            else if (typeof t !== "object")
                 t = toObject(t, t);
 
             if (a === undefined || a === null) {
@@ -1059,7 +1061,7 @@ Narcissus.interpreter = (function() {
     }
 
     function evaluate(s, f, l) {
-        if (typeof s != "string")
+        if (typeof s !== "string")
             return s;
 
         var x = ExecutionContext.current;
@@ -1067,7 +1069,7 @@ Narcissus.interpreter = (function() {
         ExecutionContext.current = x2;
         try {
             execute(parser.parse(new parser.VanillaBuilder, s, f, l), x2);
-        } catch (e if e == THROW) {
+        } catch (e if e === THROW) {
             if (x) {
                 x.result = x2.result;
                 throw THROW;
@@ -1084,9 +1086,9 @@ Narcissus.interpreter = (function() {
 
         // Display a value similarly to the js shell.
         function display(x) {
-            if (typeof x == "object") {
+            if (typeof x === "object") {
                 // At the js shell, objects with no |toSource| don't print.
-                if (x != null && "toSource" in x) {
+                if (x !== null && "toSource" in x) {
                     try {
                         print(x.toSource());
                     } catch (e) {
@@ -1094,9 +1096,9 @@ Narcissus.interpreter = (function() {
                 } else {
                     print("null");
                 }
-            } else if (typeof x == "string") {
+            } else if (typeof x === "string") {
                 print(uneval(x));
-            } else if (typeof x != "undefined") {
+            } else if (typeof x !== "undefined") {
                 // Since x must be primitive, String can't throw.
                 print(String(x));
             }
@@ -1122,9 +1124,9 @@ Narcissus.interpreter = (function() {
                 try {
                     execute(parser.parse(b, line, "stdin", 1), x);
                     display(x.result);
-                } catch (e if e == THROW) {
+                } catch (e if e === THROW) {
                     print("uncaught exception: " + string(x.result));
-                } catch (e if e == END) {
+                } catch (e if e === END) {
                     break;
                 } catch (e if e instanceof SyntaxError) {
                     print(e.toString());

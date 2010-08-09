@@ -82,7 +82,7 @@ Narcissus.lexer = (function() {
         get done() {
             // We need to set scanOperand to true here because the first thing
             // might be a regexp.
-            return this.peek(true) == END;
+            return this.peek(true) === END;
         },
 
         get token() {
@@ -90,7 +90,7 @@ Narcissus.lexer = (function() {
         },
 
         match: function (tt, scanOperand) {
-            return this.get(scanOperand) == tt || this.unget();
+            return this.get(scanOperand) === tt || this.unget();
         },
 
         mustMatch: function (tt) {
@@ -103,7 +103,7 @@ Narcissus.lexer = (function() {
             var tt, next;
             if (this.lookahead) {
                 next = this.tokens[(this.tokenIndex + this.lookahead) & 3];
-                tt = (this.scanNewlines && next.lineno != this.lineno)
+                tt = (this.scanNewlines && next.lineno !== this.lineno)
                      ? NEWLINE
                      : next.type;
             } else {
@@ -379,7 +379,7 @@ Narcissus.lexer = (function() {
                 --this.lookahead;
                 this.tokenIndex = (this.tokenIndex + 1) & 3;
                 token = this.tokens[this.tokenIndex];
-                if (token.type != NEWLINE || this.scanNewlines)
+                if (token.type !== NEWLINE || this.scanNewlines)
                     return token.type;
             }
 
@@ -431,7 +431,7 @@ Narcissus.lexer = (function() {
          * Match depends on unget returning undefined.
          */
         unget: function () {
-            if (++this.lookahead == 4) throw "PANIC: too much lookahead!";
+            if (++this.lookahead === 4) throw "PANIC: too much lookahead!";
             this.tokenIndex = (this.tokenIndex - 1) & 3;
         },
 
