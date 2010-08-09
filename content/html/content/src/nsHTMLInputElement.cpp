@@ -2880,7 +2880,7 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRI
   }
 
 #ifdef XP_MACOSX
-  const PRBool defaultFocusable = !aWithMouse;
+  const PRBool defaultFocusable = !aWithMouse || nsFocusManager::sMouseFocusesFormControl;
 #else
   const PRBool defaultFocusable = PR_TRUE;
 #endif
