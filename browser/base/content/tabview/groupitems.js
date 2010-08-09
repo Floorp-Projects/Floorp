@@ -1707,14 +1707,15 @@ window.GroupItems = {
   //  reverse - the boolean indicates the direction to look for the next groupItem.
   // Returns the <tabItem>. If nothing is found, return null.
   getNextGroupItemTab: function(reverse) {
-    var groupItems = GroupItems.groupItems.map(function(groupItem) groupItem);
+    var groupItems = Utils.copy(GroupItems.groupItems);
+    if (reverse)
+      groupItems = groupItems.reverse();
     var activeGroupItem = GroupItems.getActiveGroupItem();
+    var activeOrphanTab = GroupItems.getActiveOrphanTab();
     var tabItem = null;
 
     if (!activeGroupItem) {
       if (groupItems.length > 0) {
-        if (reverse)
-          groupItems = groupItems.reverse();
 
         groupItems.some(function(groupItem) {
           var child = groupItem.getChild(0);
