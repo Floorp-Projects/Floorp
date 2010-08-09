@@ -86,7 +86,6 @@ EXTRA_COMPONENTS = \
   toolkitplaces.manifest \
   nsLivemarkService.js \
   nsTaggingService.js \
-  nsPlacesDBFlush.js \
   nsPlacesExpiration.js \
   nsMicrosummaryService.js \
   $(NULL)
