@@ -138,8 +138,8 @@ let historyObserver = {
       return;
 
     // dump tables, useful if the test fails.
-    //dump_table("moz_places");
-    //dump_table("moz_favicons");
+    dump_table("moz_places_temp");
+    dump_table("moz_favicons");
 
     // Ensure we have been called by the last test.
     do_check_true(pageURI.equals(uri("http://test4.bar/")));

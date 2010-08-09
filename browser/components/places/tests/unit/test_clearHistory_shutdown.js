@@ -58,7 +58,9 @@ let expirationObserver = {
                         .DBConnection;
 
     let stmt = db.createStatement(
-      "SELECT id FROM moz_places WHERE url = :page_url "
+      "SELECT id FROM moz_places_temp WHERE url = :page_url "
+    + "UNION ALL "
+    + "SELECT id FROM moz_places WHERE url = :page_url "
     );
 
     try {

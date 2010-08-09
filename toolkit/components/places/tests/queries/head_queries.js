@@ -85,7 +85,7 @@ function populateDB(aArray) {
         if (qdata.title && !qdata.isDetails) {
           // Set the page title synchronously, otherwise setPageTitle is LAZY.
           let stmt = DBConn().createStatement(
-            "UPDATE moz_places SET title = :title WHERE url = :url"
+            "UPDATE moz_places_view SET title = :title WHERE url = :url"
           );
           stmt.params.title = qdata.title;
           stmt.params.url = qdata.uri;
@@ -102,7 +102,7 @@ function populateDB(aArray) {
           // Set a fake visit_count, this is not a real count but can be used
           // to test sorting by visit_count.
           let stmt = DBConn().createStatement(
-            "UPDATE moz_places SET visit_count = :vc WHERE url = :url");
+            "UPDATE moz_places_view SET visit_count = :vc WHERE url = :url");
           stmt.params.vc = qdata.visitCount;
           stmt.params.url = qdata.uri;
           try {
