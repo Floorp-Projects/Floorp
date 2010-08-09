@@ -119,7 +119,7 @@ HistoryStore.prototype = {
       return this._stmts[query];
 
     this._log.trace("Creating SQL statement: " + query);
-    return this._stmts[query] = this._db.createStatement(query);
+    return this._stmts[query] = Utils.createStatement(this._db, query);
   },
 
   get _haveTempTablesStm() {
