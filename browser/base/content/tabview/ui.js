@@ -123,7 +123,6 @@ var UIManager = {
       // ___ show TabView at startup based on last session.
       if (data.tabViewVisible) {
         this._stopZoomPreparation = true;
-
         this.showTabView();
 
         // ensure the tabs in the tab strip are in the same order as the tab

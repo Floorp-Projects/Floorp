@@ -523,7 +523,9 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: zoomIn
   // Allows you to select the tab and zoom in on it, thereby bringing you
   // to the tab in Firefox to interact with.
-  zoomIn: function() {
+  // Parameters:
+  //   isNewBlankTab - boolean indicates whether it is a newly opened blank tab.
+  zoomIn: function(isNewBlankTab) {
     var self = this;
     var $tabEl = iQ(this.container);
     var childHitResult = { shouldZoom: true };
@@ -569,6 +571,9 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           GroupItems.setActiveOrphanTab(self);
         }
         GroupItems.updateTabBar();
+
+        if (isNewBlankTab)
+          gWindow.gURLBar.focus();
 
         if (childHitResult.callback)
           childHitResult.callback();
