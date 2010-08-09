@@ -78,6 +78,21 @@ function run_test() {
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
     do_check_true(Weave.Service.isLoggedIn);
     do_check_true(Svc.Prefs.get("autoconnect"));
+    
+    _("Calling login() with parameters when the client is unconfigured sends notification.");
+    let notified = false;
+    Weave.Svc.Obs.add("weave:service:setup-complete", function() {
+      notified = true;
+    });
+    Weave.Service.username = "";
+    Weave.Service.password = "";
+    Weave.Service.passphrase = "";    
+    Weave.Service.login("janedoe", "ilovejohn", "bar");
+    do_check_true(notified);
+    do_check_eq(Status.service, STATUS_OK);
+    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Svc.Prefs.get("autoconnect"));
 
     _("Logout.");
     Weave.Service.logout();

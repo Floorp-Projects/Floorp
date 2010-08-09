@@ -766,6 +766,7 @@ WeaveSvc.prototype = {
       if (Svc.IO.offline)
         throw "Application is offline, login should not be called";
 
+      let initialStatus = this._checkSetup();
       if (username)
         this.username = username;
       if (password)
@@ -775,6 +776,12 @@ WeaveSvc.prototype = {
 
       if (this._checkSetup() == CLIENT_NOT_CONFIGURED)
         throw "aborting login, client not configured";
+
+      // Calling login() with parameters when the client was
+      // previously not configured means setup was completed.
+      if (initialStatus == CLIENT_NOT_CONFIGURED
+          && (username || password || passphrase))
+        Svc.Obs.notify("weave:service:setup-complete");
 
       this._log.info("Logging in user " + this.username);
 
