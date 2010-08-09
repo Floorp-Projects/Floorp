@@ -646,8 +646,10 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (typeof(item.setResizable) == 'function')
           item.setResizable(false);
 
-        if (item.tab == gBrowser.selectedTab)
+        if (item.tab == gBrowser.selectedTab) {
           GroupItems.setActiveGroupItem(this);
+          GroupItems.updateTabBarForActiveGroupItem();
+        }
       }
 
       if (!options.dontArrange) {
@@ -986,6 +988,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     }*/
 
     GroupItems.setActiveGroupItem(self);
+    GroupItems.updateTabBarForActiveGroupItem();
     return { shouldZoom: true };
 
     /*this.expand();
@@ -996,6 +999,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     // ___ we're stacked, and command is held down so expand
     GroupItems.setActiveGroupItem(self);
+    GroupItems.updateTabBarForActiveGroupItem();
     var startBounds = this.getChild(0).getBounds();
     var $tray = iQ("<div>").css({
       top: startBounds.top,
@@ -1123,6 +1127,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.dropOptions.drop = function(event) {
       iQ(this.container).removeClass("acceptsDrop");
       this.add(drag.info.$el, {left:event.pageX, top:event.pageY});
+      GroupItems.setActiveGroupItem(this);
     };
 
     if (!this.locked.bounds)
@@ -1195,6 +1200,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Creates a new tab within this groupItem.
   newTab: function(url) {
     GroupItems.setActiveGroupItem(this);
+    GroupItems.updateTabBarForActiveGroupItem();
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
     /* ToDo: why we need this here?
@@ -1364,7 +1370,7 @@ window.GroupItems = {
   groupItems: [],
   nextID: 1,
   _inited: false,
-  _activeGroup: null,
+  _activeGroupItem: null,
   _activeOrphanTab: null,
 
   // ----------
@@ -1511,6 +1517,7 @@ window.GroupItems = {
 
     if (groupItem == this._activeGroupItem)
       this._activeGroupItem = null;
+
   },
 
   // ----------
@@ -1578,20 +1585,18 @@ window.GroupItems = {
   // Function: newTab
   // Given a <TabItem>, files it in the appropriate groupItem.
   newTab: function(tabItem) {
-    let groupItem = this.getActiveGroupItem();
+    let activeGroupItem = this.getActiveGroupItem();
     let orphanTab = this.getActiveOrphanTab();
-//    Utils.log('newTab', groupItem, orphanTab);
-    if (groupItem) {
-      groupItem.add(tabItem);
-    } else if ( orphanTab ) {
+//    Utils.log('newTab', activeGroupItem, orphanTab);
+    if (activeGroupItem) {
+      activeGroupItem.add(tabItem);
+    } else if (orphanTab) {
       let newGroupItemBounds = orphanTab.getBoundsWithTitle();
       newGroupItemBounds.inset(-40,-40);
-
       let newGroupItem = new GroupItem([orphanTab, tabItem], {bounds: newGroupItemBounds});
       newGroupItem.snap();
-
       this.setActiveGroupItem(newGroupItem);
-
+      this.updateTabBarForActiveGroupItem();
     } else {
       this.positionNewTabAtBottom(tabItem);
     }
@@ -1617,8 +1622,7 @@ window.GroupItems = {
 
   // ----------
   // Function: getActiveGroupItem
-  // Returns the active groupItem. Active means the groupItem where a new
-  // tab will live when it is created as well as what tabs are
+  // Returns the active groupItem. Active means its tabs are
   // shown in the tab bar when not in the TabView interface.
   getActiveGroupItem: function() {
     return this._activeGroupItem;
@@ -1626,20 +1630,27 @@ window.GroupItems = {
 
   // ----------
   // Function: setActiveGroupItem
-  // Sets the active groupItem, thereby showing only the relavent tabs
-  // to that groupItem. The change is visible only if the tab bar is
-  // visible.
+  // Sets the active groupItem, thereby showing only the relevent tabs, and
+  // setting the groupItem which will receive new tabs.
   //
   // Paramaters:
   //  groupItem - the active <GroupItem> or <null> if no groupItem is active
   //          (which means we have an orphaned tab selected)
   setActiveGroupItem: function(groupItem) {
-    this._activeGroupItem = groupItem;
-    this.updateTabBarForActiveGroupItem();
-    // if a groupItem is active, we surely are not in an orphaned tab.
-    this.setActiveOrphanTab(null);
-  },
 
+    if (this._activeGroupItem)
+      iQ(this._activeGroupItem.container).removeClass('activeGroupItem');
+
+    if (groupItem !== null) {
+      if (groupItem)
+        iQ(groupItem.container).addClass('activeGroupItem');
+      // if a groupItem is active, we surely are not in an orphaned tab.
+      this.setActiveOrphanTab(null);
+    }
+
+    this._activeGroupItem = groupItem;
+  },
+  
   // ----------
   // Function: getActiveOrphanTab
   // Returns the active orphan tab, in cases when there is no active groupItem.
