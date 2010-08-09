@@ -623,6 +623,10 @@ var UIManager = {
           (charCode == 96 || charCode == 126)) {
         event.stopPropagation();
         event.preventDefault();
+
+        if (!self._frameInitalized)
+          self.initFrame();
+
         var tabItem = GroupItems.getNextGroupItemTab(event.shiftKey);
         if (tabItem)
           gBrowser.selectedTab = tabItem.tab;
