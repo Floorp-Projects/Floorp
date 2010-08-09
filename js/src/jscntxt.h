@@ -3144,8 +3144,10 @@ class AutoValueVector : private AutoGCRooter
 
     bool resize(size_t newLength) {
         size_t oldLength = vector.length();
-        if (newLength <= oldLength)
+        if (newLength <= oldLength) {
             vector.shrinkBy(oldLength - newLength);
+            return true;
+        }
         /* N.B. Value's default ctor leaves the Value udnefined */
         if (!vector.growByUninitialized(newLength - oldLength))
             return false;
@@ -3192,7 +3194,7 @@ class AutoIdVector : private AutoGCRooter
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {
-        /* N.B. jsid's default ctor leaves the jsid udnefined */
+        /* N.B. jsid's default constructor leaves the jsid udnefined */
         size_t oldLength = vector.length();
         if (!vector.growByUninitialized(inc))
             return false;
@@ -3202,9 +3204,11 @@ class AutoIdVector : private AutoGCRooter
 
     bool resize(size_t newLength) {
         size_t oldLength = vector.length();
-        if (newLength <= oldLength)
+        if (newLength <= oldLength) {
             vector.shrinkBy(oldLength - newLength);
-        /* N.B. jsid's default ctor leaves the jsid udnefined */
+            return true;
+        }
+        /* N.B. jsid's default constructor leaves the jsid udnefined */
         if (!vector.growByUninitialized(newLength - oldLength))
             return false;
         MakeIdRangeGCSafe(vector.begin() + oldLength, vector.end());
