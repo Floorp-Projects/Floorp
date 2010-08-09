@@ -1759,9 +1759,17 @@ $(XPIDL_GEN_DIR)/.done:
 # don't depend on $(XPIDL_GEN_DIR), because the modification date changes
 # with any addition to the directory, regenerating all .h files -> everything.
 
-$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
+XPIDL_DEPS = \
+  $(topsrcdir)/xpcom/idl-parser/header.py \
+  $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+  $(NULL)
+
+$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m header -w $(XPIDL_FLAGS) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=$(DEPTH)/xpcom/idl-parser -I $(DIST)/idl $(_VPATH_SRCS) > $@
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
