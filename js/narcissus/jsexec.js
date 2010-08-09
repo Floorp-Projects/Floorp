@@ -48,13 +48,13 @@
  * an extra level of prototype-based delegation.
  */
 
-Narcissus.jsexec = (function() {
+Narcissus.interpreter = (function() {
 
-    var jsparse = Narcissus.jsparse;
-    var jsdefs = Narcissus.jsdefs;
+    var parser = Narcissus.parser;
+    var definitions = Narcissus.definitions;
 
     // Set constants in the local scope.
-    eval(jsdefs.consts);
+    eval(definitions.consts);
 
     const GLOBAL_CODE = 0, EVAL_CODE = 1, FUNCTION_CODE = 2;
 
@@ -79,7 +79,7 @@ Narcissus.jsexec = (function() {
             x2.scope = x.scope;
             ExecutionContext.current = x2;
             try {
-                execute(jsparse.parse(new jsparse.VanillaBuilder, s), x2);
+                execute(parser.parse(new parser.VanillaBuilder, s), x2);
             } catch (e if e == THROW) {
                 x.result = x2.result;
                 throw e;
@@ -128,12 +128,12 @@ Narcissus.jsexec = (function() {
 
             // XXX We want to pass a good file and line to the tokenizer.
             // Note the anonymous name to maintain parity with Spidermonkey.
-            var t = new jsparse.Tokenizer("anonymous(" + p + ") {" + b + "}");
+            var t = new parser.Tokenizer("anonymous(" + p + ") {" + b + "}");
 
             // NB: Use the STATEMENT_FORM constant since we don't want to push this
             // function onto the fake compilation context.
-            var x = { builder: new jsparse.VanillaBuilder };
-            var f = jsparse.FunctionDefinition(t, x, false, jsparse.STATEMENT_FORM);
+            var x = { builder: new parser.VanillaBuilder };
+            var f = parser.FunctionDefinition(t, x, false, parser.STATEMENT_FORM);
             var s = {object: global, parent: null};
             return newFunction(f,{scope:s});
         },
@@ -181,8 +181,8 @@ Narcissus.jsexec = (function() {
     // Reflect a host class into the target global environment by delegation.
     function reflectClass(name, proto) {
         var gctor = global[name];
-        jsdefs.defineProperty(gctor, "prototype", proto, true, true, true);
-        jsdefs.defineProperty(proto, "constructor", gctor, false, false, true);
+        definitions.defineProperty(gctor, "prototype", proto, true, true, true);
+        definitions.defineProperty(proto, "constructor", gctor, false, false, true);
         return proto;
     }
 
@@ -287,17 +287,17 @@ Narcissus.jsexec = (function() {
 
         switch (n.type) {
           case FUNCTION:
-            if (n.functionForm != jsparse.DECLARED_FORM) {
-                if (!n.name || n.functionForm == jsparse.STATEMENT_FORM) {
+            if (n.functionForm != parser.DECLARED_FORM) {
+                if (!n.name || n.functionForm == parser.STATEMENT_FORM) {
                     v = newFunction(n, x);
-                    if (n.functionForm == jsparse.STATEMENT_FORM)
-                        jsdefs.defineProperty(x.scope.object, n.name, v, true);
+                    if (n.functionForm == parser.STATEMENT_FORM)
+                        definitions.defineProperty(x.scope.object, n.name, v, true);
                 } else {
                     t = new Object;
                     x.scope = {object: t, parent: x.scope};
                     try {
                         v = newFunction(n, x);
-                        jsdefs.defineProperty(t, n.name, v, true, true);
+                        definitions.defineProperty(t, n.name, v, true, true);
                     } finally {
                         x.scope = x.scope.parent;
                     }
@@ -311,7 +311,7 @@ Narcissus.jsexec = (function() {
             for (i = 0, j = a.length; i < j; i++) {
                 s = a[i].name;
                 f = newFunction(a[i], x);
-                jsdefs.defineProperty(t, s, f, x.type != EVAL_CODE);
+                definitions.defineProperty(t, s, f, x.type != EVAL_CODE);
             }
             a = n.varDecls;
             for (i = 0, j = a.length; i < j; i++) {
@@ -322,7 +322,7 @@ Narcissus.jsexec = (function() {
                                         u.filename, u.lineno);
                 }
                 if (u.readOnly || !hasDirectProperty(t, s)) {
-                    jsdefs.defineProperty(t, s, undefined, x.type != EVAL_CODE, u.readOnly);
+                    definitions.defineProperty(t, s, undefined, x.type != EVAL_CODE, u.readOnly);
                 }
             }
             // FALL THROUGH
@@ -450,7 +450,7 @@ Narcissus.jsexec = (function() {
                     }
                     t = n.catchClauses[i];
                     x.scope = {object: {}, parent: x.scope};
-                    jsdefs.defineProperty(x.scope.object, t.varName, e, true);
+                    definitions.defineProperty(x.scope.object, t.varName, e, true);
                     try {
                         if (t.guard && !getValue(execute(t.guard, x)))
                             continue;
@@ -498,14 +498,14 @@ Narcissus.jsexec = (function() {
                 }
                 u = getValue(execute(u, x));
                 if (n.type == CONST)
-                    jsdefs.defineProperty(s.object, t, u, x.type != EVAL_CODE, true);
+                    definitions.defineProperty(s.object, t, u, x.type != EVAL_CODE, true);
                 else
                     s.object[t] = u;
             }
             break;
 
           case DEBUGGER:
-            throw "NYI: " + jsdefs.tokens[n.type];
+            throw "NYI: " + definitions.tokens[n.type];
 
           case SEMICOLON:
             if (n.expression)
@@ -712,9 +712,9 @@ Narcissus.jsexec = (function() {
             v = {};
             for (i = 0, j = n.length; i < j; i++) {
                 u = getValue(execute(n[i], x));
-                jsdefs.defineProperty(v, i, u, false, false, true);
+                definitions.defineProperty(v, i, u, false, false, true);
             }
-            jsdefs.defineProperty(v, "length", i, false, false, true);
+            definitions.defineProperty(v, "length", i, false, false, true);
             break;
 
           case CALL:
@@ -737,7 +737,7 @@ Narcissus.jsexec = (function() {
             f = getValue(r);
             if (n.type == NEW) {
                 a = {};
-                jsdefs.defineProperty(a, "length", 0, false, false, true);
+                definitions.defineProperty(a, "length", 0, false, false, true);
             } else {
                 a = execute(n[1], x);
             }
@@ -815,8 +815,8 @@ Narcissus.jsexec = (function() {
 
     function Activation(f, a) {
         for (var i = 0, j = f.params.length; i < j; i++)
-            jsdefs.defineProperty(this, f.params[i], a[i], true);
-        jsdefs.defineProperty(this, "arguments", a, true);
+            definitions.defineProperty(this, f.params[i], a[i], true);
+        definitions.defineProperty(this, "arguments", a, true);
     }
 
     // Null Activation.prototype's proto slot so that Object.prototype.* does not
@@ -829,10 +829,10 @@ Narcissus.jsexec = (function() {
     function FunctionObject(node, scope) {
         this.node = node;
         this.scope = scope;
-        jsdefs.defineProperty(this, "length", node.params.length, true, true, true);
+        definitions.defineProperty(this, "length", node.params.length, true, true, true);
         var proto = {};
-        jsdefs.defineProperty(this, "prototype", proto, true);
-        jsdefs.defineProperty(proto, "constructor", this, false, false, true);
+        definitions.defineProperty(this, "prototype", proto, true);
+        definitions.defineProperty(proto, "constructor", this, false, false, true);
     }
 
     function getPropertyDescriptor(obj, name) {
@@ -914,7 +914,7 @@ Narcissus.jsexec = (function() {
             x2.thisObject = t || global;
             x2.caller = x;
             x2.callee = this;
-            jsdefs.defineProperty(a, "callee", this, false, false, true);
+            definitions.defineProperty(a, "callee", this, false, false, true);
             var f = this.node;
             x2.scope = {object: new Activation(f, a), parent: this.scope};
 
@@ -981,12 +981,12 @@ Narcissus.jsexec = (function() {
 
             if (a === undefined || a === null) {
                 a = {};
-                jsdefs.defineProperty(a, "length", 0, false, false, true);
+                definitions.defineProperty(a, "length", 0, false, false, true);
             } else if (a instanceof Array) {
                 var v = {};
                 for (var i = 0, j = a.length; i < j; i++)
-                    jsdefs.defineProperty(v, i, a[i], false, false, true);
-                jsdefs.defineProperty(v, "length", i, false, false, true);
+                    definitions.defineProperty(v, i, a[i], false, false, true);
+                definitions.defineProperty(v, "length", i, false, false, true);
                 a = v;
             } else if (!(a instanceof Object)) {
                 // XXX check for a non-arguments object
@@ -1013,18 +1013,18 @@ Narcissus.jsexec = (function() {
     var REp = RegExp.prototype;
 
     if (!('__call__' in Fp)) {
-        jsdefs.defineProperty(Fp, "__call__",
+        definitions.defineProperty(Fp, "__call__",
                        function (t, a, x) {
                            // Curse ECMA yet again!
                            a = Array.prototype.splice.call(a, 0, a.length);
                            return this.apply(t, a);
                        }, true, true, true);
-        jsdefs.defineProperty(REp, "__call__",
+        definitions.defineProperty(REp, "__call__",
                        function (t, a, x) {
                            a = Array.prototype.splice.call(a, 0, a.length);
                            return this.exec.apply(this, a);
                        }, true, true, true);
-        jsdefs.defineProperty(Fp, "__construct__",
+        definitions.defineProperty(Fp, "__construct__",
                        function (a, x) {
                            a = Array.prototype.splice.call(a, 0, a.length);
                            switch (a.length) {
@@ -1048,7 +1048,7 @@ Narcissus.jsexec = (function() {
         // Since we use native functions such as Date along with host ones such
         // as global.eval, we want both to be considered instances of the native
         // Function constructor.
-        jsdefs.defineProperty(Fp, "__hasInstance__",
+        definitions.defineProperty(Fp, "__hasInstance__",
                        function (v) {
                            return v instanceof Function || v instanceof global.Function;
                        }, true, true, true);
@@ -1066,7 +1066,7 @@ Narcissus.jsexec = (function() {
         var x2 = new ExecutionContext(GLOBAL_CODE);
         ExecutionContext.current = x2;
         try {
-            execute(jsparse.parse(new jsparse.VanillaBuilder, s, f, l), x2);
+            execute(parser.parse(new parser.VanillaBuilder, s, f, l), x2);
         } catch (e if e == THROW) {
             if (x) {
                 x.result = x2.result;
@@ -1111,7 +1111,7 @@ Narcissus.jsexec = (function() {
             }
         }
 
-        var b = new jsparse.VanillaBuilder;
+        var b = new parser.VanillaBuilder;
         var x = new ExecutionContext(GLOBAL_CODE);
 
         x.run(function() {
@@ -1120,7 +1120,7 @@ Narcissus.jsexec = (function() {
                 var line = readline();
                 x.result = undefined;
                 try {
-                    execute(jsparse.parse(b, line, "stdin", 1), x);
+                    execute(parser.parse(b, line, "stdin", 1), x);
                     display(x.result);
                 } catch (e if e == THROW) {
                     print("uncaught exception: " + string(x.result));
@@ -1137,8 +1137,8 @@ Narcissus.jsexec = (function() {
     }
 
     return {
-        "evaluate": evaluate,
-        "repl": repl
+        evaluate: evaluate,
+        repl: repl
     };
 
 }());
