@@ -89,20 +89,18 @@ gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
 }
 
 gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
-    mSize(size), mOwnsData(PR_FALSE), mFormat(format)
+    mSize(size), mOwnsData(PR_FALSE), mData(nsnull), mFormat(format)
 {
     mStride = ComputeStride();
 
     if (!CheckSurfaceSize(size))
         return;
 
-    // if we have a zero-sized surface, just set mData to nsnull
+    // if we have a zero-sized surface, just leave mData nsnull
     if (mSize.height * mStride > 0) {
         mData = (unsigned char *) calloc(mSize.height, mStride);
         if (!mData)
             return;
-    } else {
-        mData = nsnull;
     }
 
     mOwnsData = PR_TRUE;
