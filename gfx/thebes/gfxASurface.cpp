@@ -267,7 +267,7 @@ gfxASurface::GetDeviceOffset() const
 }
 
 void
-gfxASurface::Flush()
+gfxASurface::Flush() const
 {
     cairo_surface_flush(mSurface);
 }

@@ -360,6 +360,26 @@ protected:
   static jsid sOnpaste_id;
   static jsid sJava_id;
   static jsid sPackages_id;
+  static jsid sOnloadstart_id;
+  static jsid sOnprogress_id;
+  static jsid sOnsuspend_id;
+  static jsid sOnemptied_id;
+  static jsid sOnstalled_id;
+  static jsid sOnplay_id;
+  static jsid sOnpause_id;
+  static jsid sOnloadedmetadata_id;
+  static jsid sOnloadeddata_id;
+  static jsid sOnwaiting_id;
+  static jsid sOnplaying_id;
+  static jsid sOncanplay_id;
+  static jsid sOncanplaythrough_id;
+  static jsid sOnseeking_id;
+  static jsid sOnseeked_id;
+  static jsid sOntimeupdate_id;
+  static jsid sOnended_id;
+  static jsid sOnratechange_id;
+  static jsid sOndurationchange_id;
+  static jsid sOnvolumechange_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;

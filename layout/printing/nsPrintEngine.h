@@ -105,6 +105,7 @@ public:
                       nsISupports*            aContainer,
                       nsIDocument*            aDocument,
                       float                   aScreenDPI,
+                      nsIWidget*              aParentWidget,
                       FILE*                   aDebugFile);
 
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, PRInt32& aCount);
@@ -193,6 +194,8 @@ public:
 
   PRBool   CheckBeforeDestroy();
   nsresult Cancelled();
+
+  nsIWidget* GetPrintPreviewWindow() {return mPrtPreview->mPrintObject->mWindow;}
 
   nsIPresShell* GetPrintPreviewPresShell() {return mPrtPreview->mPrintObject->mPresShell;}
 
@@ -288,6 +291,7 @@ protected:
   nsIPageSequenceFrame*   mPageSeqFrame;
 
   // Print Preview
+  nsCOMPtr<nsIWidget>     mParentWidget;        
   nsPrintData*            mPrtPreview;
   nsPrintData*            mOldPrtPreview;
 
