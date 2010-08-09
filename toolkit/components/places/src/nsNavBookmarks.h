@@ -381,7 +381,8 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBSetItemLastModified;
   nsCOMPtr<mozIStorageStatement> mDBSetItemIndex;
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
-  nsCOMPtr<mozIStorageStatement> mDBGetBookmarksToKeywords;
+  nsCOMPtr<mozIStorageStatement> mDBGetKeywordForBookmark;
+  nsCOMPtr<mozIStorageStatement> mDBGetURIForKeyword;
   nsCOMPtr<mozIStorageStatement> mDBAdjustPosition;
   nsCOMPtr<mozIStorageStatement> mDBRemoveItem;
   nsCOMPtr<mozIStorageStatement> mDBGetLastChildId;
@@ -448,21 +449,6 @@ private:
   nsCategoryCache<nsINavBookmarkObserver> mCacheObservers;
 
   bool mShuttingDown;
-
-  /**
-   * Always call EnsureKeywordsHash() and check it for errors before actually
-   * using the hash.  Internal keyword methods are already doing that.
-   */
-  nsresult EnsureKeywordsHash();
-  nsDataHashtable<nsTrimInt64HashKey, nsString> mBookmarkToKeywordHash;
-
-  /**
-   * This function must be called every time a bookmark is removed.
-   *
-   * @param aURI
-   *        Uri to test.
-   */
-  nsresult UpdateKeywordsHashForRemovedBookmark(PRInt64 aItemId);
 };
 
 struct nsBookmarksUpdateBatcher
