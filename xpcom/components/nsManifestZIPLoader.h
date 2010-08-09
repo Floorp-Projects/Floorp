@@ -37,21 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.h"
-#include "nsIManifestLoader.h"
+#include "nsCOMPtr.h"
 
 #include "nsIZipReader.h"
+#include "nsIInputStream.h"
 
-class nsManifestZIPLoader : public nsIManifestLoader
+class nsManifestZIPLoader
 {
  public:
     nsManifestZIPLoader();
-    virtual ~nsManifestZIPLoader() {}
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMANIFESTLOADER
+    ~nsManifestZIPLoader();
+
+    already_AddRefed<nsIInputStream> LoadEntry(const char* name);
 
  private:
-    already_AddRefed<nsIZipReader> GetZipReader(nsILocalFile* aFile);
+    nsCOMPtr<nsIZipReader> mZipReader;
 };
 
