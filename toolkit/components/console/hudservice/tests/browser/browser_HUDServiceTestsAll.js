@@ -116,7 +116,8 @@ function introspectLogNodes() {
   let count = outputNode.childNodes.length;
   ok(count > 0, "LogCount: " + count);
 
-  let klasses = ["hud-msg-node hud-log",
+  let klasses = ["hud-group",
+                 "hud-msg-node hud-log",
                  "hud-msg-node hud-warn",
                  "hud-msg-node hud-info",
                  "hud-msg-node hud-error",
@@ -247,15 +248,15 @@ function testConsoleLoggingAPI(aMethod)
 
   let HUD = HUDService.hudWeakReferences[hudId].get();
   let jsterm = HUD.jsterm;
-  let outputLogNode = jsterm.outputNode;
-  ok(/foo bar/.test(outputLogNode.childNodes[0].childNodes[0].nodeValue),
+  let group = jsterm.outputNode.querySelector(".hud-group");
+  ok(/foo bar/.test(group.childNodes[1].childNodes[0].nodeValue),
     "Emitted both console arguments");
 }
 
 function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
-  var msgs = aOutputNode.childNodes;
-  for (var i = 0; i < msgs.length; i++) {
+  var msgs = aOutputNode.querySelector(".hud-group").childNodes;
+  for (var i = 1; i < msgs.length; i++) {
     var message = msgs[i].innerHTML.indexOf(aMatchString);
     if (message > -1) {
       ok(true, aSuccessErrObj.success);
@@ -299,16 +300,43 @@ function testOutputOrder()
   jsterm.clearOutput();
   jsterm.execute("console.log('foo', 'bar');");
 
-  is(outputNode.childNodes.length, 3, "Three children in output");
-  let outputChildren = outputNode.childNodes;
+  let group = outputNode.querySelector(".hud-group");
+  is(group.childNodes.length, 4, "Four children in output");
+  let outputChildren = group.childNodes;
 
   let executedStringFirst =
-    /console\.log\('foo', 'bar'\);/.test(outputChildren[0].childNodes[0].nodeValue);
+    /console\.log\('foo', 'bar'\);/.test(outputChildren[1].childNodes[0].nodeValue);
 
   let outputSecond =
-    /foo bar/.test(outputChildren[1].childNodes[0].nodeValue);
+    /foo bar/.test(outputChildren[2].childNodes[0].nodeValue);
 
   ok(executedStringFirst && outputSecond, "executed string comes first");
+}
+
+function testGroups()
+{
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
+
+  jsterm.clearOutput();
+
+  let timestamp0 = Date.now();
+  jsterm.execute("0");
+  is(outputNode.querySelectorAll(".hud-group").length, 1,
+    "one group exists after the first console message");
+
+  jsterm.execute("1");
+  let timestamp1 = Date.now();
+  if (timestamp1 - timestamp0 < 5000) {
+    is(outputNode.querySelectorAll(".hud-group").length, 1,
+      "only one group still exists after the second console message");
+  }
+
+  HUD.HUDBox.lastTimestamp = 0;   // a "far past" value
+  jsterm.execute("2");
+  is(outputNode.querySelectorAll(".hud-group").length, 2,
+    "two groups exist after the third console message");
 }
 
 function testNullUndefinedOutput()
@@ -320,19 +348,21 @@ function testNullUndefinedOutput()
   jsterm.clearOutput();
   jsterm.execute("null;");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
-  let outputChildren = outputNode.childNodes;
+  let group = outputNode.querySelector(".hud-group");
+  is(group.childNodes.length, 3, "Three children in output");
+  let outputChildren = group.childNodes;
 
-  is (outputChildren[1].childNodes[0].nodeValue, "null",
+  is (outputChildren[2].childNodes[0].nodeValue, "null",
       "'null' printed to output");
 
   jsterm.clearOutput();
   jsterm.execute("undefined;");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
-  outputChildren = outputNode.childNodes;
+  group = outputNode.querySelector(".hud-group");
+  is(group.childNodes.length, 3, "Three children in output");
+  outputChildren = group.childNodes;
 
-  is (outputChildren[1].childNodes[0].nodeValue, "undefined",
+  is (outputChildren[2].childNodes[0].nodeValue, "undefined",
       "'undefined' printed to output");
 }
 
@@ -342,14 +372,15 @@ function testJSInputAndOutputStyling() {
   jsterm.clearOutput();
   jsterm.execute("2 + 2");
 
-  let outputChildren = jsterm.outputNode.childNodes;
-  let jsInputNode = outputChildren[0];
+  let group = jsterm.outputNode.querySelector(".hud-group");
+  let outputChildren = group.childNodes;
+  let jsInputNode = outputChildren[1];
   isnot(jsInputNode.childNodes[0].nodeValue.indexOf("2 + 2"), -1,
     "JS input node contains '2 + 2'");
   isnot(jsInputNode.getAttribute("class").indexOf("jsterm-input-line"), -1,
     "JS input node is of the CSS class 'jsterm-input-line'");
 
-  let jsOutputNode = outputChildren[1];
+  let jsOutputNode = outputChildren[2];
   isnot(jsOutputNode.childNodes[0].nodeValue.indexOf("4"), -1,
     "JS output node contains '4'");
   isnot(jsOutputNode.getAttribute("class").indexOf("jsterm-output-line"), -1,
@@ -544,18 +575,19 @@ function testExecutionScope()
 
   let HUD = HUDService.hudWeakReferences[hudId].get();
   let jsterm = HUD.jsterm;
-  let outputNode = jsterm.outputNode;
 
   jsterm.clearOutput();
   jsterm.execute("location;");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
-  let outputChildren = outputNode.childNodes;
+  let group = jsterm.outputNode.querySelector(".hud-group");
 
-  is(/location;/.test(outputChildren[0].childNodes[0].nodeValue), true,
+  is(group.childNodes.length, 3, "Three children in output");
+  let outputChildren = group.childNodes;
+
+  is(/location;/.test(outputChildren[1].childNodes[0].nodeValue), true,
     "'location;' written to output");
 
-  isnot(outputChildren[1].childNodes[0].nodeValue.indexOf(TEST_URI), -1,
+  isnot(outputChildren[2].childNodes[0].nodeValue.indexOf(TEST_URI), -1,
     "command was executed in the window scope");
 }
 
@@ -717,6 +749,7 @@ function test() {
       testIteration();
       testConsoleHistory();
       testOutputOrder();
+      testGroups();
       testNullUndefinedOutput();
       testJSInputAndOutputStyling();
       testExecutionScope();
