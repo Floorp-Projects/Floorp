@@ -1173,9 +1173,11 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
             clasp = f->u.n.clasp;
     }
 
-    JSObject *obj = NewObject(cx, clasp, proto, parent);
-    if (!obj)
+    JSObject* obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
+    if (!obj) {
         return JS_FALSE;
+    }
+
 
     /* Keep |obj| rooted in case vp[1] is overwritten with a primitive. */
     AutoObjectRooter tvr(cx, obj);
@@ -4548,7 +4550,7 @@ BEGIN_CASE(JSOP_NEW)
                 goto error;
             }
             JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
-            JSObject *obj2 = NewObject(cx, &js_ObjectClass, proto, obj->getParent());
+            JSObject *obj2 = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, obj->getParent());
             if (!obj2)
                 goto error;
 

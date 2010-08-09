@@ -1252,7 +1252,7 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
     JSObject *JSON;
 
-    JSON = NewObject(cx, &js_JSONClass, NULL, obj);
+    JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
     if (!JSON)
         return NULL;
     if (!JS_DefineProperty(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),

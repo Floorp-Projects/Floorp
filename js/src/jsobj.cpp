@@ -2433,8 +2433,8 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    JSObject *obj = NewObjectWithGivenProto(cx, &js_ObjectClass, v.toObjectOrNull(),
-                                            vp->toObject().getGlobal());
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, v.toObjectOrNull(),
+                                                        vp->toObject().getGlobal());
     if (!obj)
         return JS_FALSE;
     vp->setObject(*obj); /* Root and prepare for eventual return. */
@@ -2682,7 +2682,7 @@ js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
      * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
      * from easily or unconditionally calling NewNativeClassInstance here.
      */
-    return NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0,
@@ -3374,7 +3374,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * (3) is not enough without addressing the bootstrapping dependency on (1)
      * and (2).
      */
-    JSObject *proto = NewObject(cx, clasp, parent_proto, obj);
+    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, parent_proto, obj);
     if (!proto)
         return NULL;
 
@@ -3837,7 +3837,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
             proto = rval.toObjectOrNull();
     }
 
-    JSObject *obj = NewObject(cx, clasp, proto, parent);
+    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
     if (!obj)
         return NULL;
 
