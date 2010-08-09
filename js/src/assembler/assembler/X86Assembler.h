@@ -1668,9 +1668,7 @@ public:
 
     JmpSrc jne()
     {
-        FIXME_INSN_PRINTING;
-        m_formatter.twoByteOp(jccRel32(ConditionNE));
-        return m_formatter.immediateRel32();
+        return jCC(ConditionNE);
     }
     
     JmpSrc jnz()
@@ -1757,9 +1755,7 @@ public:
 
     JmpSrc jp()
     {
-        FIXME_INSN_PRINTING;
-        m_formatter.twoByteOp(jccRel32(ConditionP));
-        return m_formatter.immediateRel32();
+        return jCC(ConditionP);
     }
     
     JmpSrc js()

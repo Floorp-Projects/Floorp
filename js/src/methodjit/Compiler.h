@@ -62,6 +62,7 @@ class Compiler
     typedef JSC::MacroAssembler::Address Address;
     typedef JSC::MacroAssembler::BaseIndex BaseIndex;
     typedef JSC::MacroAssembler::Jump Jump;
+    typedef JSC::MacroAssembler::JumpList JumpList;
     typedef JSC::MacroAssembler::Call Call;
     typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
