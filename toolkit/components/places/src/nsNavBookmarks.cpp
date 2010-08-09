@@ -351,7 +351,7 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 
   RETURN_IF_STMT(mDBGetKeywordForURI, NS_LITERAL_CSTRING(
     "SELECT k.keyword "
-    "FROM FROM moz_places h "
+    "FROM moz_places h "
     "JOIN moz_bookmarks b ON b.fk = h.id "
     "JOIN moz_keywords k ON k.id = b.keyword_id "
     "WHERE h.url = :page_url "));
