@@ -43,13 +43,13 @@
  * Parser.
  */
 
-Narcissus.jsparse = (function() {
+Narcissus.parser = (function() {
 
-    var jslex = Narcissus.jslex;
-    var jsdefs = Narcissus.jsdefs;
+    var lexer = Narcissus.lexer;
+    var definitions = Narcissus.definitions;
 
     // Set constants in the local scope.
-    eval(jsdefs.consts);
+    eval(definitions.consts);
 
    /*
     * The vanilla AST builder.
@@ -827,7 +827,7 @@ Narcissus.jsparse = (function() {
     }
 
     // Node extends Array, which we extend slightly with a top-of-stack method.
-    jsdefs.defineProperty(Array.prototype, "top",
+    definitions.defineProperty(Array.prototype, "top",
                    function() {
                        return this.length && this[this.length-1];
                    }, false, false, true);
@@ -874,8 +874,8 @@ Narcissus.jsparse = (function() {
     Node.indentLevel = 0;
 
     function tokenstr(tt) {
-        var t = jsdefs.tokens[tt];
-        return /^\W/.test(t) ? jsdefs.opTypeNames[t] : t.toUpperCase();
+        var t = definitions.tokens[tt];
+        return /^\W/.test(t) ? definitions.opTypeNames[t] : t.toUpperCase();
     }
 
     Np.toString = function () {
@@ -899,12 +899,12 @@ Narcissus.jsparse = (function() {
         return this.tokenizer.source.slice(this.start, this.end);
     };
 
-    jsdefs.defineGetter(Np, "filename",
+    definitions.defineGetter(Np, "filename",
                  function() {
                      return this.tokenizer.filename;
                  });
 
-    jsdefs.defineProperty(String.prototype, "repeat",
+    definitions.defineProperty(String.prototype, "repeat",
                    function(n) {
                        var s = "", t = this + s;
                        while (--n >= 0)
@@ -1207,7 +1207,7 @@ Narcissus.jsparse = (function() {
 
           case CATCH:
           case FINALLY:
-            throw t.newSyntaxError(jsdefs.tokens[tt] + " without preceding try");
+            throw t.newSyntaxError(definitions.tokens[tt] + " without preceding try");
 
           case THROW:
             n = b.THROW$build(t);
@@ -2183,7 +2183,7 @@ Narcissus.jsparse = (function() {
                                 throw t.newSyntaxError("Illegal trailing ,");
                             break object_init;
                           default:
-                            if (t.token.value in jsdefs.keywords) {
+                            if (t.token.value in definitions.keywords) {
                                 id = b.PRIMARY$build(t, IDENTIFIER);
                                 b.PRIMARY$finish(id);
                                 break;
@@ -2240,7 +2240,7 @@ Narcissus.jsparse = (function() {
      * parse :: (builder, file ptr, path, line number) -> node
      */
     function parse(b, s, f, l) {
-        var t = new jslex.Tokenizer(s, f, l);
+        var t = new lexer.Tokenizer(s, f, l);
         var x = new StaticContext(false, b);
         var n = Script(t, x);
         if (!t.done)
@@ -2250,13 +2250,13 @@ Narcissus.jsparse = (function() {
     }
 
     return {
-        "parse": parse,
-        "VanillaBuilder": VanillaBuilder,
-        "DECLARED_FORM": DECLARED_FORM,
-        "EXPRESSED_FORM": EXPRESSED_FORM,
-        "STATEMENT_FORM": STATEMENT_FORM,
-        "Tokenizer": jslex.Tokenizer,
-        "FunctionDefinition": FunctionDefinition
+        parse: parse,
+        VanillaBuilder: VanillaBuilder,
+        DECLARED_FORM: DECLARED_FORM,
+        EXPRESSED_FORM: EXPRESSED_FORM,
+        STATEMENT_FORM: STATEMENT_FORM,
+        Tokenizer: lexer.Tokenizer,
+        FunctionDefinition: FunctionDefinition
     };
 
 }());

@@ -41,16 +41,16 @@
  * Lexical scanner.
  */
 
-Narcissus.jslex = (function() {
+Narcissus.lexer = (function() {
 
-    var jsdefs = Narcissus.jsdefs;
+    var definitions = Narcissus.definitions;
 
     // Set constants in the local scope.
-    eval(jsdefs.consts);
+    eval(definitions.consts);
 
     // Build up a trie of operator tokens.
     var opTokens = {};
-    for (var op in jsdefs.opTypeNames) {
+    for (var op in definitions.opTypeNames) {
         if (op === '\n' || op === '.')
             continue;
 
@@ -337,13 +337,13 @@ Narcissus.jslex = (function() {
             }
 
             var op = node.op;
-            if (jsdefs.assignOps[op] && input[this.cursor] === '=') {
+            if (definitions.assignOps[op] && input[this.cursor] === '=') {
                 this.cursor++;
                 token.type = ASSIGN;
-                token.assignOp = jsdefs.tokenIds[jsdefs.opTypeNames[op]];
+                token.assignOp = definitions.tokenIds[definitions.opTypeNames[op]];
                 op += '=';
             } else {
-                token.type = jsdefs.tokenIds[jsdefs.opTypeNames[op]];
+                token.type = definitions.tokenIds[definitions.opTypeNames[op]];
                 token.assignOp = null;
             }
 
@@ -363,7 +363,7 @@ Narcissus.jslex = (function() {
             this.cursor--;  // Put the non-word character back.
 
             var id = input.substring(token.start, this.cursor);
-            token.type = jsdefs.keywords[id] || IDENTIFIER;
+            token.type = definitions.keywords[id] || IDENTIFIER;
             token.value = id;
         },
 
@@ -463,7 +463,7 @@ Narcissus.jslex = (function() {
         }
     };
 
-    return { "Tokenizer": Tokenizer };
+    return { Tokenizer: Tokenizer };
 
 }());
 

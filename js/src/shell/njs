@@ -39,17 +39,17 @@ if __name__ == '__main__':
 
     if options.js_exps:
         for exp in options.js_exps:
-            cmd += 'Narcissus.jsexec.evaluate("%s"); ' % exp.replace('"', '\\"')
+            cmd += 'Narcissus.interpreter.evaluate("%s"); ' % exp.replace('"', '\\"')
 
     if options.js_files:
         for file in options.js_files:
-            cmd += 'Narcissus.jsexec.evaluate(snarf("%(file)s"), "%(file)s", 1); ' % { 'file':file }
+            cmd += 'Narcissus.interpreter.evaluate(snarf("%(file)s"), "%(file)s", 1); ' % { 'file':file }
 
     if (not options.js_exps) and (not options.js_files):
         options.js_interactive = True
 
     if options.js_interactive:
-        cmd += 'Narcissus.jsexec.repl();'
+        cmd += 'Narcissus.interpreter.repl();'
 
     Popen([js_cmd, '-f', narc_jsdefs, '-f', narc_jslex, '-f', narc_jsparse, '-f', narc_jsexec, '-e', cmd]).wait()
 
