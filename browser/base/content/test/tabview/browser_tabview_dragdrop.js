@@ -72,12 +72,12 @@ function addTest(contentWindow, groupOneId, groupTwoId) {
      "The number of children in group two is increased by 1");
   
   let onTabViewHidden = function() {
+    window.removeEventListener("tabviewhidden", onTabViewHidden, false);
     groupTwo.closeAll(); 
     finish();
   };
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
   TabView.toggle();
-
 }
 
 function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
