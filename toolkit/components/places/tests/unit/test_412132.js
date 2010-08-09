@@ -292,7 +292,7 @@ function getFrecency(url)
   var stmt;
   var frecency;
 
-  sql = "SELECT frecency FROM moz_places_view WHERE url = ?1";
+  sql = "SELECT frecency FROM moz_places WHERE url = ?1";
   stmt = dbConn.createStatement(sql);
   stmt.bindUTF8StringParameter(0, url);
   do_check_true(stmt.executeStep());
@@ -307,7 +307,7 @@ function prepTest(testName, callback)
 {
   print("Test: " + testName);
   waitForClearHistory(function() {
-    dbConn.executeSimpleSQL("DELETE FROM moz_places_view");
+    dbConn.executeSimpleSQL("DELETE FROM moz_places");
     dbConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE id > " +
                             defaultBookmarksMaxId);
     callback();
