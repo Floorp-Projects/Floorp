@@ -794,7 +794,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     LeaveTrace(cx);
 
-    DTrace::ExecutionScope executionScope(script);
+    DTrace::ExecutionScope executionScope(cx, script);
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
      * code before pushExecuteFrame must not reenter the interpreter.
