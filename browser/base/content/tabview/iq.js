@@ -465,7 +465,7 @@ iQClass.prototype = {
   // ----------
   // Function: css
   // Sets or gets CSS properties on the receiver. When setting certain numerical properties,
-  // will automatically add "px".
+  // will automatically add "px". A property can be removed by setting it to null.
   //
   // Possible call patterns:
   //   a: object, b: undefined - sets with properties from a
@@ -508,7 +508,9 @@ iQClass.prototype = {
         if (pixels[key] && typeof(value) != 'string')
           value += 'px';
 
-        if (key.indexOf('-') != -1)
+        if (value == null) {
+          elem.style.removeProperty(key);
+        } else if (key.indexOf('-') != -1)
           elem.style.setProperty(key, value, '');
         else
           elem.style[key] = value;
