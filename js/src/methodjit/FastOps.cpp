@@ -941,7 +941,6 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 {
     bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);
     int32 amt = (op == JSOP_INCLOCAL || op == JSOP_LOCALINC) ? 1 : -1;
-    uint32 ndefs = 1;
 
     frame.pushLocal(slot);
 
@@ -965,21 +964,43 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         return;
     }
 
-    if (post && !popped) {
-        frame.dup();
-        fe = frame.peek(-1);
-        ndefs++;
+    /*
+     * If the local variable is not known to be an int32, or the pre-value
+     * is observed, then do the simple thing and decompose x++ into simpler
+     * opcodes.
+     */
+    if (fe->isNotType(JSVAL_TYPE_INT32) || (post && !popped)) {
+        /* V */
+        jsop_pos();
+        /* N */
+
+        if (post && !popped) {
+            frame.dup();
+            /* N N */
+        }
+
+        frame.push(Int32Value(1));
+        /* N? N 1 */
+
+        if (amt == 1)
+            jsop_binary(JSOP_ADD, stubs::Add);
+        else
+            jsop_binary(JSOP_SUB, stubs::Sub);
+        /* N? N+1 */
+
+        frame.storeLocal(slot, post || popped);
+        /* N? N+1 */
+
+        if (post || popped)
+            frame.pop();
+
+        return;
     }
 
-    if (!fe->isTypeKnown() || fe->getKnownType() != JSVAL_TYPE_INT32) {
-        /* :TODO: do something smarter for the known-type-is-bad case. */
-        if (fe->isTypeKnown()) {
-            Jump j = masm.jump();
-            stubcc.linkExit(j, Uses(ndefs));
-        } else {
-            Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
-            stubcc.linkExit(intFail, Uses(ndefs));
-        }
+    /* If the pre value is not observed, we can emit better code. */
+    if (!fe->isTypeKnown()) {
+        Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
+        stubcc.linkExit(intFail, Uses(1));
     }
 
     RegisterID reg = frame.copyDataIntoReg(fe);
@@ -989,38 +1010,27 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
     else
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf, Uses(ndefs));
+    stubcc.linkExit(ovf, Uses(1));
 
-    /* Note, stub call will push original value again no matter what. */
+    /* Note, stub call will push the original value again no matter what. */
     stubcc.leave();
 
     stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
-    if (post && !popped) {
-        if (op == JSOP_LOCALINC)
-            stubcc.call(stubs::LocalInc);
-        else
-            stubcc.call(stubs::LocalDec);
-    } else {
-        if (op == JSOP_LOCALINC || op == JSOP_INCLOCAL)
-            stubcc.call(stubs::IncLocal);
-        else
-            stubcc.call(stubs::DecLocal);
-    }
+    if (op == JSOP_LOCALINC || op == JSOP_INCLOCAL)
+        stubcc.call(stubs::IncLocal);
+    else
+        stubcc.call(stubs::DecLocal);
 
     frame.pop();
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-    frame.storeLocal(slot, post || popped, false);
+    frame.storeLocal(slot, popped, false);
 
-    if (popped) {
-        /* No value will be observed. */
-        frame.popn(ndefs);
-    } else {
-        if (post)
-            frame.pop();
+    if (popped)
+        frame.pop();
+    else
         frame.forgetType(frame.peek(-1));
-    }
 
-    stubcc.rejoin(Changes((post || popped) ? 1 : 0));
+    stubcc.rejoin(Changes(0));
 }
 
 void
