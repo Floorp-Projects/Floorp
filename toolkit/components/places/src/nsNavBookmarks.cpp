@@ -61,8 +61,6 @@
 
 #include "mozilla/FunctionTimer.h"
 
-#define BOOKMARKS_TO_KEYWORDS_INITIAL_CACHE_SIZE 64
-
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_PlaceID = 2;
@@ -95,31 +93,6 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 #define BOOKMARKS_TOOLBAR_FOLDER_ANNO NS_LITERAL_CSTRING(BOOKMARKS_ANNO_PREFIX "toolbarFolder")
 #define GUID_ANNO NS_LITERAL_CSTRING("placesInternal/GUID")
 #define READ_ONLY_ANNO NS_LITERAL_CSTRING("placesInternal/READ_ONLY")
-
-
-namespace {
-
-struct keywordSearchData
-{
-  PRInt64 itemId;
-  nsString keyword;
-};
-
-PLDHashOperator
-SearchBookmarkForKeyword(nsTrimInt64HashKey::KeyType aKey,
-                         const nsString aValue,
-                         void* aUserArg)
-{
-  keywordSearchData* data = reinterpret_cast<keywordSearchData*>(aUserArg);
-  if (data->keyword.Equals(aValue)) {
-    data->itemId = aKey;
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
-}
-
-} // Anonymous namespace.
-
 
 nsNavBookmarks::nsNavBookmarks() : mItemCount(0)
                                  , mRoot(0)
@@ -363,6 +336,12 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBSetItemIndex, NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks SET position = :item_index WHERE id = :item_id"));
 
+  // Get keyword text for bookmark id.
+  RETURN_IF_STMT(mDBGetKeywordForBookmark, NS_LITERAL_CSTRING(
+    "SELECT k.keyword FROM moz_bookmarks b "
+    "JOIN moz_keywords k ON k.id = b.keyword_id "
+    "WHERE b.id = :item_id"));
+
   // Get keyword text for bookmarked URI.
   RETURN_IF_STMT(mDBGetKeywordForURI, NS_LITERAL_CSTRING(
     "SELECT k.keyword "
@@ -376,6 +355,19 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     ") AS h "
     "JOIN moz_bookmarks b ON b.fk = h.id "
     "JOIN moz_keywords k ON k.id = b.keyword_id"));
+
+  // Get URI for keyword.
+  RETURN_IF_STMT(mDBGetURIForKeyword, NS_LITERAL_CSTRING(
+    "SELECT url FROM moz_keywords k "
+    "JOIN moz_bookmarks b ON b.keyword_id = k.id "
+    "JOIN moz_places_temp h ON b.fk = h.id "
+    "WHERE k.keyword = :keyword "
+    "UNION ALL "
+    "SELECT url FROM moz_keywords k "
+    "JOIN moz_bookmarks b ON b.keyword_id = k.id "
+    "JOIN moz_places h ON b.fk = h.id "
+    "WHERE k.keyword = :keyword "
+    "LIMIT 1"));
 
   RETURN_IF_STMT(mDBAdjustPosition, NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks SET position = position + :delta "
@@ -503,6 +495,8 @@ nsNavBookmarks::FinalizeStatements() {
     mDBSetItemLastModified,
     mDBSetItemIndex,
     mDBGetKeywordForURI,
+    mDBGetKeywordForBookmark,
+    mDBGetURIForKeyword,
     mDBAdjustPosition,
     mDBRemoveItem,
     mDBGetLastChildId,
@@ -1126,9 +1120,6 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->UpdateFrecency(placeId, IsRealBookmark(placeId));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = UpdateKeywordsHashForRemovedBookmark(aItemId);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -1696,9 +1687,6 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
       rv = history->UpdateFrecency(placeId, IsRealBookmark(placeId));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = UpdateKeywordsHashForRemovedBookmark(child.itemId);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -2758,95 +2746,96 @@ nsNavBookmarks::SetItemIndex(PRInt64 aItemId, PRInt32 aNewIndex)
 }
 
 
-nsresult
-nsNavBookmarks::UpdateKeywordsHashForRemovedBookmark(PRInt64 aItemId)
-{
-  nsAutoString kw;
-  if (NS_SUCCEEDED(GetKeywordForBookmark(aItemId, kw)) && !kw.IsEmpty()) {
-    nsresult rv = EnsureKeywordsHash();
-    NS_ENSURE_SUCCESS(rv, rv);
-    mBookmarkToKeywordHash.Remove(aItemId);
-  }
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId,
                                       const nsAString& aKeyword)
 {
   NS_ENSURE_ARG_MIN(aBookmarkId, 1);
 
-  nsresult rv = EnsureKeywordsHash();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Shortcuts are always lowercased internally.
-  nsAutoString keyword(aKeyword);
-  ToLowerCase(keyword);
-
-  // Check if bookmark was already associated to a keyword.
-  nsAutoString oldKeyword;
-  rv = GetKeywordForBookmark(aBookmarkId, oldKeyword);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Trying to set the same value or to remove a nonexistent keyword is a no-op.
-  if (keyword.Equals(oldKeyword) || (keyword.IsEmpty() && oldKeyword.IsEmpty()))
-    return NS_OK;
-
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  nsresult rv;
+  PRInt64 keywordId = 0;
+  if (!aKeyword.IsEmpty()) {
+    // Shortcuts are always lowercased internally.
+    nsAutoString kwd(aKeyword);
+    ToLowerCase(kwd);
 
-  nsCOMPtr<mozIStorageStatement> updateBookmarkStmt;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_bookmarks "
-    "SET keyword_id = (SELECT id FROM moz_keywords WHERE keyword = :keyword), "
-        "lastModified = :date "
-    "WHERE id = :item_id "
-  ), getter_AddRefs(updateBookmarkStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (keyword.IsEmpty()) {
-    // Remove keyword association from the hash.
-    mBookmarkToKeywordHash.Remove(aBookmarkId);
-    rv = updateBookmarkStmt->BindNullByName(NS_LITERAL_CSTRING("keyword"));
-  }
-   else {
-    // We are associating bookmark to a new keyword. Create a new keyword
-    // record if needed.
-    nsCOMPtr<mozIStorageStatement> newKeywordStmt;
+    //  Attempt to find a pre-existing keyword record.
+    nsCOMPtr<mozIStorageStatement> getKeywordStmnt;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT OR IGNORE INTO moz_keywords (keyword) VALUES (:keyword)"
-    ), getter_AddRefs(newKeywordStmt));
+        "SELECT id from moz_keywords WHERE keyword = :keyword"),
+      getter_AddRefs(getKeywordStmnt));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = newKeywordStmt->BindStringByName(NS_LITERAL_CSTRING("keyword"),
-                                          keyword);
+    rv = getKeywordStmnt->BindStringByName(NS_LITERAL_CSTRING("keyword"), kwd);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = newKeywordStmt->Execute();
+    PRBool hasResult;
+    rv = getKeywordStmnt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Add new keyword association to the hash, removing the old one if needed.
-    if (!oldKeyword.IsEmpty())
-      mBookmarkToKeywordHash.Remove(aBookmarkId);
-    mBookmarkToKeywordHash.Put(aBookmarkId, keyword);
-    rv = updateBookmarkStmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
+    if (hasResult) {
+      rv = getKeywordStmnt->GetInt64(0, &keywordId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      // Create a new keyword record.
+      nsCOMPtr<mozIStorageStatement> addKeywordStmnt;
+      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "INSERT INTO moz_keywords (keyword) VALUES (:keyword)"),
+        getter_AddRefs(addKeywordStmnt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = addKeywordStmnt->BindStringByName(NS_LITERAL_CSTRING("keyword"), kwd);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = addKeywordStmnt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<mozIStorageStatement> idStmt;
+      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT id "
+          "FROM moz_keywords "
+          "ORDER BY ROWID DESC "
+          "LIMIT 1"),
+        getter_AddRefs(idStmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = idStmt->ExecuteStep(&hasResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
+      rv = idStmt->GetInt64(0, &keywordId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // Update bookmark record w/ the keyword's id or null.
+  nsCOMPtr<mozIStorageStatement> updateKeywordStmnt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_bookmarks SET keyword_id = :keyword_id, lastModified = :date "
+      "WHERE id = :item_id"),
+    getter_AddRefs(updateKeywordStmnt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (keywordId > 0) {
+    rv = updateKeywordStmnt->BindInt64ByName(NS_LITERAL_CSTRING("keyword_id"),
+                                             keywordId);
+  }
+  else {
+    rv = updateKeywordStmnt->BindNullByName(NS_LITERAL_CSTRING("keyword_id"));
   }
   NS_ENSURE_SUCCESS(rv, rv);
   PRTime lastModified = PR_Now();
-  rv = updateBookmarkStmt->BindInt64ByName(NS_LITERAL_CSTRING("date"),
-                                           lastModified);
+  rv = updateKeywordStmnt->BindInt64ByName(NS_LITERAL_CSTRING("date"), lastModified);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = updateBookmarkStmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"),
-                                           aBookmarkId);
+  rv = updateKeywordStmnt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aBookmarkId);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = updateBookmarkStmt->Execute();
+  rv = updateKeywordStmnt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Pass the new keyword to OnItemChanged.
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemChanged(aBookmarkId, NS_LITERAL_CSTRING("keyword"),
-                                 PR_FALSE, NS_ConvertUTF16toUTF8(keyword),
+                                 PR_FALSE, NS_ConvertUTF16toUTF8(aKeyword),
                                  lastModified, TYPE_BOOKMARK));
 
   return NS_OK;
@@ -2883,17 +2872,21 @@ nsNavBookmarks::GetKeywordForBookmark(PRInt64 aBookmarkId, nsAString& aKeyword)
   NS_ENSURE_ARG_MIN(aBookmarkId, 1);
   aKeyword.Truncate(0);
 
-  nsresult rv = EnsureKeywordsHash();
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetKeywordForBookmark);
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"),
+                                      aBookmarkId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString keyword;
-  if (!mBookmarkToKeywordHash.Get(aBookmarkId, &keyword)) {
+  PRBool hasMore = PR_FALSE;
+  rv = stmt->ExecuteStep(&hasMore);
+  if (NS_FAILED(rv) || ! hasMore) {
     aKeyword.SetIsVoid(PR_TRUE);
-  }
-  else {
-    aKeyword.Assign(keyword);
+    return NS_OK; // not found: return void keyword string
   }
 
+  // found, get the keyword
+  rv = stmt->GetString(0, aKeyword);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -2906,57 +2899,24 @@ nsNavBookmarks::GetURIForKeyword(const nsAString& aKeyword, nsIURI** aURI)
   *aURI = nsnull;
 
   // Shortcuts are always lowercased internally.
-  nsAutoString keyword(aKeyword);
-  ToLowerCase(keyword);
+  nsAutoString kwd(aKeyword);
+  ToLowerCase(kwd);
 
-  nsresult rv = EnsureKeywordsHash();
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetURIForKeyword);
+  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), kwd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  keywordSearchData searchData;
-  searchData.keyword.Assign(aKeyword);
-  searchData.itemId = -1;
-  mBookmarkToKeywordHash.EnumerateRead(SearchBookmarkForKeyword, &searchData);
+  PRBool hasMore = PR_FALSE;
+  rv = stmt->ExecuteStep(&hasMore);
+  if (NS_FAILED(rv) || ! hasMore)
+    return NS_OK; // not found: leave URI null
 
-  if (searchData.itemId == -1) {
-    // Not found.
-    return NS_OK;
-  }
-
-  rv = GetBookmarkURI(searchData.itemId, aURI);
+  // found, get the URI
+  nsCAutoString spec;
+  rv = stmt->GetUTF8String(0, spec);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-nsresult
-nsNavBookmarks::EnsureKeywordsHash() {
-  if (mBookmarkToKeywordHash.IsInitialized())
-    return NS_OK;
-
-  mBookmarkToKeywordHash.Init(BOOKMARKS_TO_KEYWORDS_INITIAL_CACHE_SIZE);
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT b.id, k.keyword "
-    "FROM moz_bookmarks b "
-    "JOIN moz_keywords k ON k.id = b.keyword_id "
-  ), getter_AddRefs(stmt));
+  rv = NS_NewURI(aURI, spec);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMore;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-    PRInt64 itemId;
-    rv = stmt->GetInt64(0, &itemId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsAutoString keyword;
-    rv = stmt->GetString(1, keyword);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mBookmarkToKeywordHash.Put(itemId, keyword);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
