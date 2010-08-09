@@ -70,11 +70,14 @@ function addTest(contentWindow, groupOneId, groupTwoId) {
      "The number of children in group one is decreased by 1");
   is(groupTwo.getChildren().length, ++groupTwoTabItemCount, 
      "The number of children in group two is increased by 1");
-
+  
+  let onTabViewHidden = function() {
+    groupTwo.closeAll(); 
+    finish();
+  };
+  window.addEventListener("tabviewhidden", onTabViewHidden, false);
   TabView.toggle();
-  groupTwo.closeAll(); 
 
-  finish();
 }
 
 function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
