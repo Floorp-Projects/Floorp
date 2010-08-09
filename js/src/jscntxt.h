@@ -3147,7 +3147,7 @@ class AutoValueVector : private AutoGCRooter
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {
-        /* N.B. Value's default ctor leaves the Value udnefined */
+        /* N.B. Value's default ctor leaves the Value undefined */
         size_t oldLength = vector.length();
         if (!vector.growByUninitialized(inc))
             return false;
@@ -3161,7 +3161,7 @@ class AutoValueVector : private AutoGCRooter
             vector.shrinkBy(oldLength - newLength);
             return true;
         }
-        /* N.B. Value's default ctor leaves the Value udnefined */
+        /* N.B. Value's default ctor leaves the Value undefined */
         if (!vector.growByUninitialized(newLength - oldLength))
             return false;
         MakeValueRangeGCSafe(vector.begin() + oldLength, vector.end());
@@ -3207,7 +3207,7 @@ class AutoIdVector : private AutoGCRooter
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {
-        /* N.B. jsid's default constructor leaves the jsid udnefined */
+        /* N.B. jsid's default ctor leaves the jsid undefined */
         size_t oldLength = vector.length();
         if (!vector.growByUninitialized(inc))
             return false;
@@ -3221,7 +3221,7 @@ class AutoIdVector : private AutoGCRooter
             vector.shrinkBy(oldLength - newLength);
             return true;
         }
-        /* N.B. jsid's default constructor leaves the jsid udnefined */
+        /* N.B. jsid's default ctor leaves the jsid undefined */
         if (!vector.growByUninitialized(newLength - oldLength))
             return false;
         MakeIdRangeGCSafe(vector.begin() + oldLength, vector.end());
