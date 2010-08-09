@@ -896,12 +896,11 @@ JS_SuspendRequest(JSContext *cx)
     if (saveDepth == 0)
         return 0;
 
+    JS_THREAD_DATA(cx)->conservativeGC.enable();
     do {
         cx->outstandingRequests++;  /* compensate for StopRequest */
         StopRequest(cx);
     } while (cx->requestDepth);
-
-    JS_THREAD_DATA(cx)->conservativeGC.enable();
 
     return saveDepth;
 #else
@@ -916,13 +915,12 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
     if (saveDepth == 0)
         return;
 
-    JS_THREAD_DATA(cx)->conservativeGC.disable();
-
     JS_ASSERT(cx->outstandingRequests != 0);
     do {
         JS_BeginRequest(cx);
         cx->outstandingRequests--;  /* compensate for JS_BeginRequest */
     } while (--saveDepth != 0);
+    JS_THREAD_DATA(cx)->conservativeGC.disable();
 #endif
 }
 
@@ -2892,10 +2890,12 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
-    JSObject *obj = NewObjectWithGivenProto(cx, Valueify(clasp), NULL, NULL);
-    if (obj && !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
-                                   PrivateValue(cx->compartment)))
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, Valueify(clasp), NULL, NULL);
+    if (obj &&
+        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
+                            PrivateValue(cx->compartment))) {
         return false;
+    }
     return obj;
 }
 
@@ -2920,11 +2920,16 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
+
+    JS_ASSERT(clasp != &js_FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
-    JSObject *obj = NewObject(cx, clasp, proto, parent);
+
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
+
     JS_ASSERT_IF(obj, obj->getParent());
     return obj;
 }
@@ -2934,11 +2939,15 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
+
+    JS_ASSERT(clasp != &js_FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
-    return NewObjectWithGivenProto(cx, clasp, proto, parent);
+
+    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3335,18 +3344,20 @@ JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp,
                 JSObject *proto, uintN attrs)
 {
-    JSObject *nobj;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    nobj = NewObject(cx, clasp, proto, obj);
+
+    JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
+
     if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), NULL, NULL, attrs, 0, 0))
         return NULL;
+
     return nobj;
 }
 
@@ -3866,7 +3877,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    iterobj = NewObject(cx, &prop_iter_class, NULL, obj);
+    iterobj = NewNonFunction<WithProto::Class>(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4541,14 +4552,14 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, script);
     if (!script)
-        return NewObject(cx, &js_ScriptClass, NULL, NULL);
+        return NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
 
     JS_ASSERT(!script->u.object);
 
     {
         AutoScriptRooter root(cx, script);
 
-        obj = NewObject(cx, &js_ScriptClass, NULL, NULL);
+        obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
         if (obj) {
             obj->setPrivate(script);
             script->u.object = obj;

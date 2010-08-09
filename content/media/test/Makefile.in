@@ -93,6 +93,7 @@ _TEST_FILES = \
 		test_audio2.html \
 		test_autobuffer.html \
 		test_autoplay.html \
+		test_buffered.html \
 		test_bug448534.html \
 		test_bug463162.xhtml \
 		test_bug465498.html \
@@ -120,6 +121,7 @@ _TEST_FILES = \
 		test_paused.html \
 		test_paused_after_ended.html \
 		test_play_events.html \
+		test_play_events_2.html \
 		test_play_twice.html \
 		test_playback.html \
 		test_playback_errors.html \
@@ -191,6 +193,7 @@ _TEST_FILES += \
 		bug523816.ogv \
 		bug533822.ogg \
 		bug557094.ogv \
+		bug580982.webm \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \

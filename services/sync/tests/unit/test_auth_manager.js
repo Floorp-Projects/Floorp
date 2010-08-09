@@ -34,6 +34,7 @@ function server_handler(metadata, response) {
 }
 
 function run_test() {
+do_test_pending();
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
@@ -57,6 +58,6 @@ function run_test() {
     do_check_eq(content, "This path exists and is protected by a UTF8 password");
     do_check_eq(content.status, 200);
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
   }
 }

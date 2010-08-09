@@ -50,7 +50,7 @@
 #include "nsDOMError.h"
 #include "nsDOMString.h"
 #include "nsPrintfCString.h"
-#include "nsIDOMNSCSS2Properties.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsStyleContext.h"
@@ -165,12 +165,10 @@ DOMCI_DATA(ComputedCSSStyleDeclaration, nsComputedDOMStyle)
 
 // QueryInterface implementation for nsComputedDOMStyle
 NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
-  NS_INTERFACE_TABLE5(nsComputedDOMStyle,
+  NS_INTERFACE_TABLE3(nsComputedDOMStyle,
                       nsICSSDeclaration,
                       nsIDOMCSSStyleDeclaration,
-                      nsIDOMCSS2Properties,
-                      nsIDOMSVGCSS2Properties,
-                      nsIDOMNSCSS2Properties)
+                      nsIDOMCSS2Properties)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsComputedDOMStyle)
@@ -410,17 +408,17 @@ nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
 // nsDOMCSSDeclaration abstract methods which should never be called
 // on a nsComputedDOMStyle object, but must be defined to avoid
 // compile errors.
-nsresult
-nsComputedDOMStyle::GetCSSDeclaration(css::Declaration**, PRBool)
+css::Declaration*
+nsComputedDOMStyle::GetCSSDeclaration(PRBool)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSDeclaration");
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 nsresult
-nsComputedDOMStyle::DeclarationChanged()
+nsComputedDOMStyle::SetCSSDeclaration(css::Declaration*)
 {
-  NS_RUNTIMEABORT("called nsComputedDOMStyle::DeclarationChanged");
+  NS_RUNTIMEABORT("called nsComputedDOMStyle::SetCSSDeclaration");
   return NS_ERROR_FAILURE;
 }
 
@@ -433,7 +431,7 @@ nsComputedDOMStyle::DocToUpdate()
 
 nsresult
 nsComputedDOMStyle::GetCSSParsingEnvironment(nsIURI**, nsIURI**, nsIPrincipal**,
-                                             mozilla::css::Loader**)
+                                             css::Loader**)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSParsingEnvironment");
   return NS_ERROR_FAILURE;

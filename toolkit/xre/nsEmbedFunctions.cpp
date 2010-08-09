@@ -384,51 +384,58 @@ XRE_InitChildProcess(int aArgc,
       break;
   }
 
-  // Associate this thread with a UI MessageLoop
-  MessageLoop uiMessageLoop(uiLoopType);
   {
-    nsAutoPtr<ProcessChild> process;
+    // This is a lexical scope for the MessageLoop below.  We want it
+    // to go out of scope before NS_LogTerm() so that we don't get
+    // spurious warnings about XPCOM objects being destroyed from a
+    // static context.
 
-    switch (aProcess) {
-    case GeckoProcessType_Default:
-      NS_RUNTIMEABORT("This makes no sense");
-      break;
+    // Associate this thread with a UI MessageLoop
+    MessageLoop uiMessageLoop(uiLoopType);
+    {
+      nsAutoPtr<ProcessChild> process;
 
-    case GeckoProcessType_Plugin:
-      process = new PluginProcessChild(parentHandle);
-      break;
+      switch (aProcess) {
+      case GeckoProcessType_Default:
+        NS_RUNTIMEABORT("This makes no sense");
+        break;
 
-    case GeckoProcessType_Content:
-      process = new ContentProcess(parentHandle);
-      break;
+      case GeckoProcessType_Plugin:
+        process = new PluginProcessChild(parentHandle);
+        break;
 
-    case GeckoProcessType_Jetpack:
-      process = new JetpackProcessChild(parentHandle);
-      break;
+      case GeckoProcessType_Content:
+        process = new ContentProcess(parentHandle);
+        break;
 
-    case GeckoProcessType_IPDLUnitTest:
+      case GeckoProcessType_Jetpack:
+        process = new JetpackProcessChild(parentHandle);
+        break;
+
+      case GeckoProcessType_IPDLUnitTest:
 #ifdef MOZ_IPDL_TESTS
-      process = new IPDLUnitTestProcessChild(parentHandle);
+        process = new IPDLUnitTestProcessChild(parentHandle);
 #else 
-      NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
+        NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
 #endif
-      break;
+        break;
 
-    default:
-      NS_RUNTIMEABORT("Unknown main thread class");
+      default:
+        NS_RUNTIMEABORT("Unknown main thread class");
+      }
+
+      if (!process->Init()) {
+        NS_LogTerm();
+        return NS_ERROR_FAILURE;
+      }
+
+      // Run the UI event loop on the main thread.
+      uiMessageLoop.MessageLoop::Run();
+
+      // Allow ProcessChild to clean up after itself before going out of
+      // scope and being deleted
+      process->CleanUp();
     }
-
-    if (!process->Init()) {
-      NS_LogTerm();
-      return NS_ERROR_FAILURE;
-    }
-
-    // Run the UI event loop on the main thread.
-    uiMessageLoop.MessageLoop::Run();
-
-    // Allow ProcessChild to clean up after itself before going out of
-    // scope and being deleted
-    process->CleanUp();
   }
 
   NS_LogTerm();

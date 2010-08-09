@@ -188,6 +188,8 @@ public:
   NS_IMETHOD              GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD              CancelIMEComposition();
   NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
+  NS_IMETHOD              RegisterTouchWindow();
+  NS_IMETHOD              UnregisterTouchWindow();
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
@@ -223,6 +225,12 @@ public:
                                            UINT aVirtualCharCode, const MSG *aMsg,
                                            const nsModifierKeyState &aModKeyState,
                                            PRUint32 aFlags = 0);
+  void                    DispatchPendingEvents();
+  PRBool                  DispatchPluginEvent(UINT aMessage,
+                                              WPARAM aWParam,
+                                              LPARAM aLParam,
+                                              PRBool aDispatchPendingEvents);
+
   void                    SuppressBlurEvents(PRBool aSuppress); // Called from nsFilePicker
   PRBool                  BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
@@ -274,6 +282,10 @@ protected:
   static BOOL CALLBACK    BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg);
   static BOOL CALLBACK    BroadcastMsg(HWND aTopWindow, LPARAM aMsg);
   static BOOL CALLBACK    DispatchStarvedPaints(HWND aTopWindow, LPARAM aMsg);
+#if !defined(WINCE)
+  static BOOL CALLBACK    RegisterTouchForDescendants(HWND aTopWindow, LPARAM aMsg);
+  static BOOL CALLBACK    UnregisterTouchForDescendants(HWND aTopWindow, LPARAM aMsg);
+#endif
   static LRESULT CALLBACK MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
@@ -297,7 +309,6 @@ protected:
   /**
    * Event processing helpers
    */
-  void                    DispatchPendingEvents();
   PRBool                  DispatchPluginEvent(const MSG &aMsg);
   PRBool                  DispatchFocusToTopLevelWindow(PRUint32 aEventType);
   PRBool                  DispatchFocus(PRUint32 aEventType);
@@ -351,6 +362,9 @@ protected:
                                     PRBool *aEventDispatched = nsnull);
   virtual PRBool          OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
   PRBool                  OnGesture(WPARAM wParam, LPARAM lParam);
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  PRBool                  OnTouch(WPARAM wParam, LPARAM lParam);
+#endif
   PRBool                  OnHotKey(WPARAM wParam, LPARAM lParam);
   BOOL                    OnInputLangChange(HKL aHKL);
   void                    OnSettingsChange(WPARAM wParam, LPARAM lParam);
@@ -447,6 +461,7 @@ protected:
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mPainting;
   PRPackedBool          mExitToNonClientArea;
+  PRPackedBool          mTouchWindow;
   PRUint32              mBlurSuppressLevel;
   nsContentType         mContentType;
   DWORD_PTR             mOldStyle;

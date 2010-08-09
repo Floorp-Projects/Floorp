@@ -172,6 +172,13 @@ public:
    */
   virtual gfxIntSize GetCurrentSize() = 0;
 
+  /**
+   * Set a new layer manager for this image container.  It must be
+   * either of the same type as the container's current layer manager,
+   * or null.  TRUE is returned on success.
+   */
+  virtual PRBool SetLayerManager(LayerManager *aManager) = 0;
+
 protected:
   LayerManager* mManager;
 

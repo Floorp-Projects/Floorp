@@ -62,6 +62,8 @@ public:
 
   virtual gfxIntSize GetCurrentSize();
 
+  virtual PRBool SetLayerManager(LayerManager *aManager);
+
 private:
   typedef mozilla::Mutex Mutex;
 

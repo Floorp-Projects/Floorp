@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Miika Jarvinen <mjarvin@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,30 +43,30 @@
 #ifndef __nsQtRemoteService_h__
 #define __nsQtRemoteService_h__
 
-#include "nsIRemoteService.h"
+#include "nsXRemoteService.h"
+#include <X11/Xlib.h>
 
-#include "nsIObserver.h"
+class RemoteEventHandlerWidget;
 
-#include "nsString.h"
-#include "nsInterfaceHashtable.h"
-
-class nsIDOMWindow;
-class nsIWeakReference;
-class nsIWidget;
-
-class nsQtRemoteService : public nsIRemoteService,
-                          public nsIObserver
+class nsQtRemoteService : public nsXRemoteService
 {
 public:
   // We will be a static singleton, so don't use the ordinary methods.
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIREMOTESERVICE
-  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIREMOTESERVICE  
 
-  nsQtRemoteService() { };
+  nsQtRemoteService();
 
 private:
   ~nsQtRemoteService() { };
+
+  virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
+                                              PRUint32 aTimestamp);
+
+  void PropertyNotifyEvent(XEvent *evt);
+  friend class MozQRemoteEventHandlerWidget;
+
+  QWidget *mServerWindow;
 };
 
 #endif // __nsQtRemoteService_h__

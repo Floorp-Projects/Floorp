@@ -92,6 +92,14 @@
   visibility: collapse;
 }
 
+.addon:not([upgrade="true"]) .update-postfix {
+  display: none;
+}
+
 #detail-view[loading] > .detail-view-container {
+  display: none;
+}
+
+.view-pane:not(#updates-view) .addon .relnotes-toggle {
   display: none;
 }

@@ -121,6 +121,9 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define UA_PREF_PREFIX          "general.useragent."
 #define UA_APPNAME              "Mozilla"
 #define UA_APPVERSION           "5.0"
+#ifdef XP_WIN
+#define UA_SPARE_PLATFORM
+#endif
 
 #define HTTP_PREF_PREFIX        "network.http."
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
@@ -602,7 +605,9 @@ nsHttpHandler::BuildUserAgent()
     // than if we didn't preallocate at all.
     mUserAgent.SetCapacity(mAppName.Length() + 
                            mAppVersion.Length() + 
+#ifndef UA_SPARE_PLATFORM
                            mPlatform.Length() + 
+#endif
                            mOscpu.Length() +
                            mMisc.Length() +
                            mProduct.Length() +
@@ -622,8 +627,10 @@ nsHttpHandler::BuildUserAgent()
 
     // Application comment
     mUserAgent += '(';
+#ifndef UA_SPARE_PLATFORM
     mUserAgent += mPlatform;
     mUserAgent.AppendLiteral("; ");
+#endif
     mUserAgent += mOscpu;
     if (!mMisc.IsEmpty()) {
         mUserAgent.AppendLiteral("; ");

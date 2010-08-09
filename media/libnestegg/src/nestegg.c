@@ -1406,7 +1406,7 @@ int
 nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback)
 {
   int r;
-  uint64_t id, version;
+  uint64_t id, version, docversion;
   struct ebml_list_node * track;
   char * doctype;
   nestegg * ctx = NULL;
@@ -1446,13 +1446,31 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback)
     return -1;
   }
 
-  /* XXX youtube hack: accept webm and matroska for now */
-  if (get_string(ctx->ebml.doctype, &doctype) == 0 &&
-      (strcmp(doctype, "webm") == 0 ||
-       strcmp(doctype, "matroska") == 0) &&
-      get_uint(ctx->ebml.doctype_read_version, &version) == 0 && version <= 2 &&
-      get_uint(ctx->ebml.ebml_read_version, &version) == 0 && version <= 1 &&
-      !ctx->segment.tracks.track_entry.head) {
+  if (get_uint(ctx->ebml.ebml_read_version, &version) != 0) {
+    version = 1;
+  }
+  if (version != 1) {
+    nestegg_destroy(ctx);
+    return -1;
+  }
+
+  if (get_string(ctx->ebml.doctype, &doctype) != 0) {
+      doctype = "matroska";
+  }
+  if (strcmp(doctype, "webm") != 0) {
+    nestegg_destroy(ctx);
+    return -1;
+  }
+
+  if (get_uint(ctx->ebml.doctype_read_version, &docversion) != 0) {
+    docversion = 1;
+  }
+  if (docversion < 1 || docversion > 2) {
+    nestegg_destroy(ctx);
+    return -1;
+  }
+
+  if (!ctx->segment.tracks.track_entry.head) {
     nestegg_destroy(ctx);
     return -1;
   }
@@ -1626,25 +1644,10 @@ nestegg_track_type(nestegg * ctx, unsigned int track)
   return -1;
 }
 
-struct bitmapinfoheader {
-  int size;
-  int width;
-  int height;
-  short planes;
-  short bit_count;
-  unsigned int compression;
-  int size_image;
-  int x_pels_per_meter;
-  int y_pels_per_meter;
-  int clr_used;
-  int clr_important;
-};
-
 int
 nestegg_track_codec_id(nestegg * ctx, unsigned int track)
 {
   char * codec_id;
-  struct ebml_binary codec_private;
   struct track_entry * entry;
 
   entry = find_track_entry(ctx, track);
@@ -1659,15 +1662,6 @@ nestegg_track_codec_id(nestegg * ctx, unsigned int track)
 
   if (strcmp(codec_id, "A_VORBIS") == 0)
     return NESTEGG_CODEC_VORBIS;
-
-  /* XXX youtube hack: accept VFW codec id for now */
-  if (strcmp(codec_id, "V_MS/VFW/FOURCC") == 0 &&
-      get_binary(entry->codec_private, &codec_private) == 0 &&
-      codec_private.length >= 40) {
-    struct bitmapinfoheader * bih = (struct bitmapinfoheader *) codec_private.data;
-    if (bih->compression == 0x30385056)
-      return NESTEGG_CODEC_VP8;
-  }
 
   return -1;
 }

@@ -72,7 +72,11 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell)
   : mX(0), mY(0),
-    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
+    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
+    mPushedLeftFloatPastBreak(PR_FALSE),
+    mPushedRightFloatPastBreak(PR_FALSE),
+    mSplitLeftFloatAcrossBreak(PR_FALSE),
+    mSplitRightFloatAcrossBreak(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsFloatManager);
 }
@@ -415,6 +419,10 @@ nsFloatManager::PushState(SavedState* aState)
   // reflows ensures that nothing gets missed.
   aState->mX = mX;
   aState->mY = mY;
+  aState->mPushedLeftFloatPastBreak = mPushedLeftFloatPastBreak;
+  aState->mPushedRightFloatPastBreak = mPushedRightFloatPastBreak;
+  aState->mSplitLeftFloatAcrossBreak = mSplitLeftFloatAcrossBreak;
+  aState->mSplitRightFloatAcrossBreak = mSplitRightFloatAcrossBreak;
   aState->mFloatInfoCount = mFloats.Length();
 }
 
@@ -425,6 +433,10 @@ nsFloatManager::PopState(SavedState* aState)
 
   mX = aState->mX;
   mY = aState->mY;
+  mPushedLeftFloatPastBreak = aState->mPushedLeftFloatPastBreak;
+  mPushedRightFloatPastBreak = aState->mPushedRightFloatPastBreak;
+  mSplitLeftFloatAcrossBreak = aState->mSplitLeftFloatAcrossBreak;
+  mSplitRightFloatAcrossBreak = aState->mSplitRightFloatAcrossBreak;
 
   NS_ASSERTION(aState->mFloatInfoCount <= mFloats.Length(),
                "somebody misused PushState/PopState");
@@ -434,6 +446,9 @@ nsFloatManager::PopState(SavedState* aState)
 nscoord
 nsFloatManager::GetLowestFloatTop() const
 {
+  if (mPushedLeftFloatPastBreak || mPushedRightFloatPastBreak) {
+    return nscoord_MAX;
+  }
   if (!HasAnyFloats()) {
     return nscoord_MIN;
   }
@@ -465,8 +480,12 @@ nsFloatManager::List(FILE* out) const
 #endif
 
 nscoord
-nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
+nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType,
+                            PRUint32 aFlags) const
 {
+  if (!(aFlags & DONT_CLEAR_PUSHED_FLOATS) && ClearContinues(aBreakType)) {
+    return nscoord_MAX;
+  }
   if (!HasAnyFloats()) {
     return aY;
   }
@@ -498,22 +517,12 @@ nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
 PRBool
 nsFloatManager::ClearContinues(PRUint8 aBreakType) const
 {
-  if (!HasAnyFloats() || aBreakType == NS_STYLE_CLEAR_NONE)
-    return PR_FALSE;
-  for (PRUint32 i = mFloats.Length(); i > 0; i--) {
-    nsIFrame* f = mFloats[i-1].mFrame;
-    if (f->GetNextInFlow()) {
-      if (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT)
-        return PR_TRUE;
-      PRUint8 floatSide = f->GetStyleDisplay()->mFloats;
-      if ((aBreakType == NS_STYLE_CLEAR_LEFT &&
-           floatSide == NS_STYLE_FLOAT_LEFT) ||
-          (aBreakType == NS_STYLE_CLEAR_RIGHT &&
-           floatSide == NS_STYLE_FLOAT_RIGHT))
-        return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
+  return ((mPushedLeftFloatPastBreak || mSplitLeftFloatAcrossBreak) &&
+          (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+           aBreakType == NS_STYLE_CLEAR_LEFT)) ||
+         ((mPushedRightFloatPastBreak || mSplitRightFloatAcrossBreak) &&
+          (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+           aBreakType == NS_STYLE_CLEAR_RIGHT));
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -51,6 +51,16 @@ LoginManagerCrypto_SDR.prototype = {
     classID : Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerCrypto]),
 
+    __sdrSlot : null, // PKCS#11 slot being used by the SDR.
+    get _sdrSlot() {
+        if (!this.__sdrSlot) {
+            let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                          getService(Ci.nsIPKCS11ModuleDB);
+            this.__sdrSlot = modules.findSlotByName("");
+        }
+        return this.__sdrSlot;
+    },
+
     __decoderRing : null,  // nsSecretDecoderRing service
     get _decoderRing() {
         if (!this.__decoderRing)
@@ -73,7 +83,8 @@ LoginManagerCrypto_SDR.prototype = {
         this.__utfConverter = null;
     },
 
-    _debug : false, // mirrors signon.debug
+    _debug  : false, // mirrors signon.debug
+    _uiBusy : false,
 
 
     /*
@@ -120,6 +131,10 @@ LoginManagerCrypto_SDR.prototype = {
     encrypt : function (plainText) {
         let cipherText = null;
 
+        let wasLoggedIn = this.isLoggedIn;
+        let canceledMP = false;
+
+        this._uiBusy = true;
         try {
             let plainOctet = this._utfConverter.ConvertFromUnicode(plainText);
             plainOctet += this._utfConverter.Finish();
@@ -128,10 +143,19 @@ LoginManagerCrypto_SDR.prototype = {
             this.log("Failed to encrypt string. (" + e.name + ")");
             // If the user clicks Cancel, we get NS_ERROR_FAILURE.
             // (unlike decrypting, which gets NS_ERROR_NOT_AVAILABLE).
-            if (e.result == Cr.NS_ERROR_FAILURE)
+            if (e.result == Cr.NS_ERROR_FAILURE) {
+                canceledMP = true;
                 throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
-            else
+            } else {
                 throw Components.Exception("Couldn't encrypt string", Cr.NS_ERROR_FAILURE);
+            }
+        } finally {
+            this._uiBusy = false;
+            // If we triggered a master password prompt, notify observers.
+            if (!wasLoggedIn && this.isLoggedIn)
+                this._notifyObservers("passwordmgr-crypto-login");
+            else if (canceledMP)
+                this._notifyObservers("passwordmgr-crypto-loginCanceled");
         }
         return cipherText;
     },
@@ -148,6 +172,10 @@ LoginManagerCrypto_SDR.prototype = {
     decrypt : function (cipherText) {
         let plainText = null;
 
+        let wasLoggedIn = this.isLoggedIn;
+        let canceledMP = false;
+
+        this._uiBusy = true;
         try {
             let plainOctet;
             if (cipherText.charAt(0) == '~') {
@@ -170,14 +198,55 @@ LoginManagerCrypto_SDR.prototype = {
             // If the cipherText is bad / wrong key, we get NS_ERROR_FAILURE
             // Wrong passwords are handled by the decoderRing reprompting;
             // we get no notification.
-            if (e.result == Cr.NS_ERROR_NOT_AVAILABLE)
+            if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+                canceledMP = true;
                 throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
-            else
+            } else {
                 throw Components.Exception("Couldn't decrypt string", Cr.NS_ERROR_FAILURE);
+            }
+        } finally {
+            this._uiBusy = false;
+            // If we triggered a master password prompt, notify observers.
+            if (!wasLoggedIn && this.isLoggedIn)
+                this._notifyObservers("passwordmgr-crypto-login");
+            else if (canceledMP)
+                this._notifyObservers("passwordmgr-crypto-loginCanceled");
         }
 
         return plainText;
-    }
+    },
+
+
+    /*
+     * uiBusy
+     */
+    get uiBusy() {
+        return this._uiBusy;
+    },
+
+
+    /*
+     * isLoggedIn
+     */
+    get isLoggedIn() {
+        let status = this._sdrSlot.status;
+        this.log("SDR slot status is " + status);
+        if (status == Ci.nsIPKCS11Slot.SLOT_READY ||
+            status == Ci.nsIPKCS11Slot.SLOT_LOGGED_IN)
+            return true;
+        if (status == Ci.nsIPKCS11Slot.SLOT_NOT_LOGGED_IN)
+            return false;
+        throw Components.Exception("unexpected slot status: " + status, Cr.NS_ERROR_FAILURE);
+    },
+
+
+    /*
+     * _notifyObservers
+     */
+    _notifyObservers : function(topic) {
+        this.log("Prompted for a master password, notifying for " + topic);
+        Services.obs.notifyObservers(null, topic, null);
+     },
 }; // end of nsLoginManagerCrypto_SDR implementation
 
 let component = [LoginManagerCrypto_SDR];

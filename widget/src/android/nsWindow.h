@@ -154,8 +154,14 @@ public:
     NS_IMETHOD GetAttention(PRInt32 aCycleCount) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
 
+    NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEEnabled(PRUint32 aState);
     NS_IMETHOD GetIMEEnabled(PRUint32* aState);
+    NS_IMETHOD CancelIMEComposition();
+
+    NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
+    NS_IMETHOD OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
+    NS_IMETHOD OnIMESelectionChange(void);
 
     gfxASurface* GetThebesSurface();
 
@@ -164,8 +170,7 @@ protected:
     nsWindow *FindTopLevel();
     PRBool DrawTo(gfxASurface *targetSurface);
     PRBool IsTopLevel();
-    nsresult GetCurrentOffset(PRUint32 &aOffset, PRUint32 &aLength);
-    nsresult DeleteRange(int aOffset, int aLen);
+    void OnIMEAddRange(mozilla::AndroidGeckoEvent *ae);
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
@@ -176,6 +181,10 @@ protected:
     nsWindow* mParent;
     double mStartDist;
     nsCOMPtr<nsIdleService> mIdleService;
+    
+    PRUint32 mIMEEnabled;
+    PRBool mIMEComposing;
+    nsAutoTArray<nsTextRange, 4> mIMERanges;
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);
