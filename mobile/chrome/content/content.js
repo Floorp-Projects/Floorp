@@ -421,6 +421,7 @@ ProgressController.prototype = {
 function Content() {
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:Focus", this);
+  addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseDown", this);
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:MouseCancel", this);
@@ -457,6 +458,21 @@ Content.prototype = {
       case "Browser:Focus":
         docShell.isOffScreenBrowser = true;
         this._selected = true;
+        break;
+
+      case "Browser:KeyEvent":
+        let utils = Util.getWindowUtils(content);
+        let defaultAction = utils.sendKeyEvent(json.type, json.keyCode, json.charCode, modifiers);
+        if (defaultAction && json.type == "keypress") {
+          const masks = Ci.nsIDOMNSEvent;
+          sendAsyncMessage("Browser:KeyPress", {
+            ctrlKey: json.modifiers & masks.CONTROL_MASK,
+            shiftKey: json.modifiers & masks.SHIFT_MASK,
+            metaKey: json.modifiers & masks.META_MASK,
+            keyCode: json.keyCode,
+            charCode: json.charCode
+          });
+        }
         break;
 
       case "Browser:MouseDown":
