@@ -58,20 +58,32 @@ def firstCap(str):
 def attributeParamName(a):
     return "a" + firstCap(a.name)
 
+def attributeParamNames(a):
+    l = [attributeParamName(a)]
+    if a.implicit_jscontext:
+        l.insert(0, "cx")
+    return ", ".join(l)
+
 def attributeNativeName(a, getter):
     binaryname = a.binaryname is not None and a.binaryname or firstCap(a.name)
     return "%s%s" % (getter and 'Get' or 'Set', binaryname)
 
 def attributeParamlist(a, getter):
-    return "%s%s" % (a.realtype.nativeType(getter and 'out' or 'in'),
-                     attributeParamName(a))
+    l = ["%s%s" % (a.realtype.nativeType(getter and 'out' or 'in'),
+                   attributeParamName(a))]
+    if a.implicit_jscontext:
+        l.insert(0, "JSContext* cx")
+
+    return ", ".join(l)
 
 def attributeAsNative(a, getter):
         scriptable = a.isScriptable() and "NS_SCRIPTABLE " or ""
+        deprecated = a.deprecated and "NS_DEPRECATED " or ""
         params = {'scriptable': scriptable,
+                  'deprecated': deprecated,
                   'binaryname': attributeNativeName(a, getter),
                   'paramlist': attributeParamlist(a, getter)}
-        return "%(scriptable)sNS_IMETHOD %(binaryname)s(%(paramlist)s)" % params
+        return "%(deprecated)s%(scriptable)sNS_IMETHOD %(binaryname)s(%(paramlist)s)" % params
 
 def methodNativeName(m):
     return m.binaryname is not None and m.binaryname or firstCap(m.name)
@@ -89,24 +101,29 @@ def methodAsNative(m):
     return "%s%s %s(%s)" % (scriptable,
                             methodReturnType(m, 'NS_IMETHOD'),
                             methodNativeName(m),
-                            paramlistAsNative(m.params,
-                                              m.realtype,
-                                              notxpcom=m.notxpcom))
+                            paramlistAsNative(m))
 
-def paramlistAsNative(l, rettype, notxpcom, empty='void'):
-    l = list(l)
-    if not notxpcom and rettype.name != 'void':
-        l.append(xpidl.Param(paramtype='out',
-                             type=None,
-                             name='_retval',
-                             attlist=[],
-                             location=None,
-                             realtype=rettype))
+def paramlistAsNative(m, empty='void'):
+    l = [paramAsNative(p) for p in m.params]
+
+    if m.implicit_jscontext:
+        l.append("JSContext* cx")
+
+    if m.optional_argc:
+        l.append('PRUint8 _argc')
+
+    if not m.notxpcom and m.realtype.name != 'void':
+        l.append(paramAsNative(xpidl.Param(paramtype='out',
+                                           type=None,
+                                           name='_retval',
+                                           attlist=[],
+                                           location=None,
+                                           realtype=m.realtype)))
 
     if len(l) == 0:
         return empty
 
-    return ", ".join([paramAsNative(p) for p in l])
+    return ", ".join(l)
 
 def paramAsNative(p):
     if p.paramtype == 'in':
@@ -118,10 +135,18 @@ def paramAsNative(p):
                        p.name,
                        typeannotate)
 
-def paramlistNames(l, rettype, notxpcom):
-    names = [p.name for p in l]
-    if not notxpcom and rettype.name != 'void':
+def paramlistNames(m):
+    names = [p.name for p in m.params]
+
+    if m.implicit_jscontext:
+        names.append('cx')
+
+    if m.optional_argc:
+        names.append('_argc')
+
+    if not m.notxpcom and m.realtype.name != 'void':
         names.append('_retval')
+
     if len(names) == 0:
         return ''
     return ', '.join(names)
@@ -383,15 +408,15 @@ def write_interface(iface, fd):
             if isinstance(member, xpidl.Attribute):
                 fd.write(tmpl % {'asNative': attributeAsNative(member, True),
                                  'nativeName': attributeNativeName(member, True),
-                                 'paramList': attributeParamName(member)})
+                                 'paramList': attributeParamNames(member)})
                 if not member.readonly:
                     fd.write(tmpl % {'asNative': attributeAsNative(member, False),
                                      'nativeName': attributeNativeName(member, False),
-                                     'paramList': attributeParamName(member)})
+                                     'paramList': attributeParamNames(member)})
             elif isinstance(member, xpidl.Method):
                 fd.write(tmpl % {'asNative': methodAsNative(member),
                                  'nativeName': methodNativeName(member),
-                                 'paramList': paramlistNames(member.params, member.realtype, member.notxpcom)})
+                                 'paramList': paramlistNames(member)})
         if len(iface.members) == 0:
             fd.write('\\\n  /* no methods! */')
         elif not member.kind in ('attribute', 'method'):
@@ -422,7 +447,7 @@ def write_interface(iface, fd):
             fd.write(example_tmpl % {'implclass': implclass,
                                      'returntype': methodReturnType(member, 'NS_IMETHODIMP'),
                                      'nativeName': methodNativeName(member),
-                                     'paramList': paramlistAsNative(member.params, member.realtype, notxpcom=member.notxpcom, empty='')})
+                                     'paramList': paramlistAsNative(member, empty='')})
         fd.write('\n')
 
     fd.write(iface_template_epilog)
