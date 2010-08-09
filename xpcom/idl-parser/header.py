@@ -455,15 +455,43 @@ def write_interface(iface, fd):
 if __name__ == '__main__':
     from optparse import OptionParser
     o = OptionParser()
-    o.add_option('-I', action='append', dest='incdirs', help="Directory to search for imported files", default=[])
-    o.add_option('--cachedir', dest='cachedir', help="Directory in which to cache lex/parse tables.", default='')
+    o.add_option('-I', action='append', dest='incdirs', default=['.'],
+                 help="Directory to search for imported files")
+    o.add_option('--cachedir', dest='cachedir', default=None,
+                 help="Directory in which to cache lex/parse tables.")
+    o.add_option('-o', dest='outfile', default=None,
+                 help="Output file (default is stdout)")
+    o.add_option('-d', dest='depfile', default=None,
+                 help="Generate a make dependency file")
     options, args = o.parse_args()
     file, = args
 
-    if options.cachedir != '':
+    if options.cachedir is not None:
+        if not os.path.isdir(options.cachedir):
+            os.mkdir(options.cachedir)
         sys.path.append(options.cachedir)
+
+    if options.depfile is not None and options.outfile is None:
+        print >>sys.stderr, "-d requires -o"
+        sys.exit(1)
+
+    if options.outfile is not None:
+        outfd = open(options.outfile, 'w')
+        closeoutfd = True
+    else:
+        outfd = sys.stdout
+        closeoutfd = False
 
     p = xpidl.IDLParser(outputdir=options.cachedir)
     idl = p.parse(open(file).read(), filename=file)
     idl.resolve(options.incdirs, p)
-    print_header(idl, sys.stdout, file)
+    print_header(idl, outfd, file)
+
+    if closeoutfd:
+        outfd.close()
+
+    if options.depfile is not None:
+        depfd = open(options.depfile, 'w')
+        deps = [dep.replace('\\', '/') for dep in idl.deps]
+
+        print >>depfd, "%s: %s" % (options.outfile, " ".join(deps))

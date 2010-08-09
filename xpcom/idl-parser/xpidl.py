@@ -282,6 +282,7 @@ class Include(object):
             self.IDL.resolve(parent.incdirs, parent.parser)
             for type in self.IDL.getNames():
                 parent.setName(type)
+            parent.deps.extend(self.IDL.deps)
             return
 
         raise IDLError("File '%s' not found" % self.filename, self.location)
@@ -289,6 +290,7 @@ class Include(object):
 class IDL(object):
     def __init__(self, productions):
         self.productions = productions
+        self.deps = []
 
     def setName(self, object):
         self.namemap.set(object)
@@ -1320,7 +1322,10 @@ class IDLParser(object):
             self.lexer.filename = filename
         self.lexer.lineno = 1
         self.lexer.input(data)
-        return self.parser.parse(lexer=self)
+        idl = self.parser.parse(lexer=self)
+        if filename is not None:
+            idl.deps.append(filename)
+        return idl
 
     def getLocation(self, p, i):
         return Location(self.lexer, p.lineno(i), p.lexpos(i))
