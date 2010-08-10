@@ -171,6 +171,7 @@ _BROWSER_FILES = \
                  tabview/browser_tabview_group.js \
                  tabview/browser_tabview_launch.js \
                  tabview/browser_visibleTabs.js \
+                 tabview/browser_visibleTabs_contextMenu.js \
                  discovery.html \
                  moz.png \
                  test_bug435035.html \
