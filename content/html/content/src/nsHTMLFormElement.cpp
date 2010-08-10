@@ -80,6 +80,23 @@
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
+static const nsAttrValue::EnumTable kFormMethodTable[] = {
+  { "get", NS_FORM_METHOD_GET },
+  { "post", NS_FORM_METHOD_POST },
+  { 0 }
+};
+// Default method is 'get'.
+static const nsAttrValue::EnumTable* kFormDefaultMethod = &kFormMethodTable[0];
+
+static const nsAttrValue::EnumTable kFormEnctypeTable[] = {
+  { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
+  { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
+  { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
+  { 0 }
+};
+// Default method is 'application/x-www-form-urlencoded'.
+static const nsAttrValue::EnumTable* kFormDefaultEnctype = &kFormEnctypeTable[1];
+
 // nsHTMLFormElement
 
 PRBool nsHTMLFormElement::gFirstFormSubmitted = PR_FALSE;
@@ -356,8 +373,10 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
+                                kFormDefaultEnctype->tag)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
+                                kFormDefaultMethod->tag)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 
@@ -404,19 +423,6 @@ nsHTMLFormElement::Reset()
                               &event);
   return NS_OK;
 }
-
-static const nsAttrValue::EnumTable kFormMethodTable[] = {
-  { "get", NS_FORM_METHOD_GET },
-  { "post", NS_FORM_METHOD_POST },
-  { 0 }
-};
-
-static const nsAttrValue::EnumTable kFormEnctypeTable[] = {
-  { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
-  { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
-  { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
-  { 0 }
-};
 
 PRBool
 nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
