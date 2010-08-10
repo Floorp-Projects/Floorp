@@ -59,7 +59,7 @@
 //   dontPush - true if this infoItem shouldn't push away on creation; default is false
 window.InfoItem = function(bounds, options) {
   try {
-    Utils.assertThrow('bounds', Utils.isRect(bounds));
+    Utils.assertThrow(Utils.isRect(bounds), 'bounds');
 
     if (typeof(options) == 'undefined')
       options = {};
@@ -163,7 +163,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Sets the bounds with the given <Rect>, animating unless "immediately" is false.
   setBounds: function(rect, immediately) {
     try {
-      Utils.assertThrow('InfoItem.setBounds: rect must be a real rectangle!', Utils.isRect(rect));
+      Utils.assertThrow(Utils.isRect(rect), 'InfoItem.setBounds: rect must be a real rectangle!');
 
       // ___ Determine what has changed
       var css = {};
@@ -184,8 +184,8 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         return;
 
       this.bounds = new Rect(rect);
-      Utils.assertThrow('InfoItem.setBounds: this.bounds must be a real rectangle!',
-                        Utils.isRect(this.bounds));
+      Utils.assertThrow(Utils.isRect(this.bounds), 
+          'InfoItem.setBounds: this.bounds must be a real rectangle!');
 
       // ___ Update our representation
       if (immediately) {
@@ -214,7 +214,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Set the Z order for the item's container.
   setZ: function(value) {
     try {
-      Utils.assertThrow('value must be a number', typeof(value) == 'number');
+      Utils.assertThrow(typeof(value) == 'number', 'value must be a number');
 
       this.zIndex = value;
 
@@ -250,7 +250,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Sets the item's container's html to the specified value.
   html: function(value) {
     try {
-      Utils.assertThrow('value must be a string', typeof(value) == 'string');
+      Utils.assertThrow(typeof(value) == 'string', 'value must be a string');
       this.$contents.html(value);
     } catch(e) {
       Utils.log(e);

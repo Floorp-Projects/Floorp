@@ -87,7 +87,7 @@ Storage = {
   // Function: saveTab
   // Saves the data for a single tab.
   saveTab: function(tab, data) {
-    Utils.assert('tab', tab);
+    Utils.assert(tab, "tab");
 
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
       JSON.stringify(data));
@@ -97,7 +97,7 @@ Storage = {
   // Function: getTabData
   // Returns the data object associated with a single tab.
   getTabData: function(tab) {
-    Utils.assert('tab', tab);
+    Utils.assert(tab, "tab");
 
     var existingData = null;
     try {

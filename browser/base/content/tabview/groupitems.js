@@ -99,7 +99,7 @@ window.GroupItem = function GroupItem(listOfEls, options) {
 
   var rectToBe;
   if (options.bounds) {
-    Utils.assert("options.bounds must be a Rect",Utils.isRect(options.bounds));
+    Utils.assert(Utils.isRect(options.bounds), "options.bounds must be a Rect");
     rectToBe = new Rect(options.bounds);
   }
 
@@ -309,7 +309,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setActiveTab
   // Sets the active <TabItem> for this groupItem
   setActiveTab: function(tab) {
-    Utils.assert('tab must be a TabItem', tab && tab.isATabItem);
+    Utils.assert(tab && tab.isATabItem, 'tab must be a TabItem');
     this._activeTab = tab;
   },
 
@@ -377,7 +377,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: adjustTitleSize
   // Used to adjust the width of the title box depending on groupItem width and title size.
   adjustTitleSize: function() {
-    Utils.assert('bounds needs to have been set', this.bounds);
+    Utils.assert(this.bounds, 'bounds needs to have been set');
     var w = Math.min(this.bounds.width - 35, Math.max(150, this.getTitle().length * 6));
     var css = {width: w};
     this.$title.css(css);
@@ -569,7 +569,8 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         $el = iQ(a);
         item = Items.item($el);
       }
-      Utils.assertThrow("shouldn't already be in another groupItem", !item.parent || item.parent == this);
+      Utils.assertThrow(!item.parent || item.parent == this, 
+          "shouldn't already be in another groupItem");
 
       item.removeTrenches();
 
@@ -1479,8 +1480,8 @@ window.GroupItems = {
   // Function: register
   // Adds the given <GroupItem> to the list of groupItems we're tracking.
   register: function(groupItem) {
-    Utils.assert('groupItem', groupItem);
-    Utils.assert('only register once per groupItem', this.groupItems.indexOf(groupItem) == -1);
+    Utils.assert(groupItem, 'groupItem');
+    Utils.assert(this.groupItems.indexOf(groupItem) == -1, 'only register once per groupItem');
     this.groupItems.push(groupItem);
   },
 
@@ -1656,7 +1657,7 @@ window.GroupItems = {
 //    Utils.log('updateTabBar', this._activeGroupItem, this._activeOrphanTab);
 
     if (!this._activeGroupItem && !this._activeOrphanTab) {
-      Utils.assert("There must be something to show in the tab bar!", false);
+      Utils.assert(false, "There must be something to show in the tab bar!");
       return;
     }
 

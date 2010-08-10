@@ -62,8 +62,8 @@ var drag = {
 //   isFauxDrag - (boolean) true if a faux drag, which is used when simply snapping.
 var Drag = function(item, event, isResizing, isFauxDrag) {
   try {
-    Utils.assert('must be an item, or at least a faux item',
-                 item && (item.isAnItem || item.isAFauxItem));
+    Utils.assert(item && (item.isAnItem || item.isAFauxItem), 
+        'must be an item, or at least a faux item');
 
     this.isResizing = isResizing || false;
     this.item = item;
