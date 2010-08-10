@@ -64,7 +64,7 @@
 //   dontPush - true if this groupItem shouldn't push away on creation; default is false
 window.GroupItem = function GroupItem(listOfEls, options) {
   try {
-  if (typeof(options) == 'undefined')
+  if (typeof options == 'undefined')
     options = {};
 
   this._inited = false;
@@ -577,7 +577,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!dropPos)
         dropPos = {top:window.innerWidth, left:window.innerHeight};
 
-      if (typeof(options) == 'undefined')
+      if (typeof options == 'undefined')
         options = {};
 
       var self = this;
@@ -644,7 +644,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         item.setParent(this);
 
-        if (typeof(item.setResizable) == 'function')
+        if (typeof item.setResizable == 'function')
           item.setResizable(false);
 
         if (item.tab == gBrowser.selectedTab)
@@ -686,7 +686,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item = Items.item($el);
       }
 
-      if (typeof(options) == 'undefined')
+      if (typeof options == 'undefined')
         options = {};
 
       var index = this._children.indexOf(item);
@@ -702,7 +702,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.droppable(true);
       item.removeSubscriber(this, "close");
 
-      if (typeof(item.setResizable) == 'function')
+      if (typeof item.setResizable == 'function')
         item.setResizable(true);
 
       if (!this._children.length && !this.locked.close && !this.getTitle() && !options.dontClose) {
@@ -800,12 +800,12 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var count = this._children.length;
       if (!this.shouldStack(count)) {
         var animate;
-        if (!options || typeof(options.animate) == 'undefined')
+        if (!options || typeof options.animate == 'undefined')
           animate = true;
         else
           animate = options.animate;
 
-        if (typeof(options) == 'undefined')
+        if (typeof options == 'undefined')
           options = {};
 
         this._children.forEach(function(child) {
@@ -876,12 +876,12 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   animate - whether to animate; default: true.
   _stackArrange: function(bb, options) {
     var animate;
-    if (!options || typeof(options.animate) == 'undefined')
+    if (!options || typeof options.animate == 'undefined')
       animate = true;
     else
       animate = options.animate;
 
-    if (typeof(options) == 'undefined')
+    if (typeof options == 'undefined')
       options = {};
 
     var count = this._children.length;
@@ -1142,11 +1142,11 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         // Don't zoom in on clicks inside of the controls.
         var className = self._mouseDown.className;
-        if (className.indexOf('title-shield') != -1
-            || className.indexOf('name') != -1
-            || className.indexOf('close') != -1
-            || className.indexOf('newTabButton') != -1
-            || className.indexOf('stackExpander') != -1) {
+        if (className.indexOf('title-shield') != -1 ||
+           className.indexOf('name') != -1 ||
+           className.indexOf('close') != -1 ||
+           className.indexOf('newTabButton') != -1 ||
+           className.indexOf('stackExpander') != -1) {
           return;
         }
 
@@ -1406,7 +1406,6 @@ window.GroupItems = {
   // Function: getBoundingBox
   // Given an array of DOM elements, returns a <Rect> with (roughly) the union of their locations.
   getBoundingBox: function GroupItems_getBoundingBox(els) {
-    var el, b;
     var bounds = [iQ(el).bounds() for each (el in els)];
     var left   = Math.min.apply({},[ b.left   for each (b in bounds) ]);
     var top    = Math.min.apply({},[ b.top    for each (b in bounds) ]);

@@ -120,11 +120,11 @@ Drag.prototype = {
 
     // OH SNAP!
     if ( // if we aren't holding down the meta key...
-         !Keys.meta
-         && (!checkItemStatus // don't check the item status...
-              // OR we aren't a tab on top of something else, and there's no drop site...
-              || (!(this.item.isATabItem && this.item.overlapsWithOtherItems())
-                 && !iQ(".acceptsDrop").length))
+         !Keys.meta &&
+         (!checkItemStatus || // don't check the item status...
+         // OR we aren't a tab on top of something else, and there's no drop site...
+         (!(this.item.isATabItem && this.item.overlapsWithOtherItems()) &&
+             !iQ(".acceptsDrop").length))
         ) {
       newRect = Trenches.snap(bounds,stationaryCorner,assumeConstantSize,keepProportional);
       if (newRect) { // might be false if no changes were made
@@ -276,8 +276,8 @@ Drag.prototype = {
     Trenches.hideGuides();
     this.item.isDragging = false;
 
-    if (this.parent && !this.parent.locked.close && this.parent != this.item.parent
-        && this.parent.isEmpty()) {
+    if (this.parent && !this.parent.locked.close && this.parent != this.item.parent &&
+       this.parent.isEmpty()) {
       this.parent.close();
     }
 

@@ -145,15 +145,15 @@ window.Item.prototype = {
   // Parameters:
   //   container - the outermost DOM element that describes this item onscreen.
   _init: function(container) {
-    Utils.assert(typeof(this.addSubscriber) == 'function' && 
-        typeof(this.removeSubscriber) == 'function' && 
-        typeof(this._sendToSubscribers) == 'function',
+    Utils.assert(typeof this.addSubscriber == 'function' && 
+        typeof this.removeSubscriber == 'function' && 
+        typeof this._sendToSubscribers == 'function',
         'Subclass must implement the Subscribable interface');
     Utils.assert(Utils.isDOMElement(container), 'container must be a DOM element');
-    Utils.assert(typeof(this.setBounds) == 'function', 'Subclass must provide setBounds');
-    Utils.assert(typeof(this.setZ) == 'function', 'Subclass must provide setZ');
-    Utils.assert(typeof(this.close) == 'function', 'Subclass must provide close');
-    Utils.assert(typeof(this.save) == 'function', 'Subclass must provide save');
+    Utils.assert(typeof this.setBounds == 'function', 'Subclass must provide setBounds');
+    Utils.assert(typeof this.setZ == 'function', 'Subclass must provide setZ');
+    Utils.assert(typeof this.close == 'function', 'Subclass must provide close');
+    Utils.assert(typeof this.save == 'function', 'Subclass must provide save');
     Utils.assert(Utils.isPoint(this.defaultSize), 'Subclass must provide defaultSize');
     Utils.assert(this.locked, 'Subclass must provide locked');
     Utils.assert(Utils.isRect(this.bounds), 'Subclass must provide bounds');
@@ -576,7 +576,7 @@ window.Item.prototype = {
       Utils.assert(this.dragOptions, 'dragOptions');
 
       var cancelClasses = [];
-      if (typeof(this.dragOptions.cancelClass) == 'string')
+      if (typeof this.dragOptions.cancelClass == 'string')
         cancelClasses = this.dragOptions.cancelClass.split(' ');
 
       var self = this;
@@ -898,12 +898,12 @@ window.Items = {
   //   the list of rectangles if the pretend option is set; otherwise null
   arrange: function(items, bounds, options) {
     var animate;
-    if (!options || typeof(options.animate) == 'undefined')
+    if (!options || typeof options.animate == 'undefined')
       animate = true;
     else
       animate = options.animate;
 
-    if (typeof(options) == 'undefined')
+    if (typeof options == 'undefined')
       options = {};
 
     var rects = null;
@@ -952,7 +952,7 @@ window.Items = {
     for (a = 0; a < count; a++) {
 /*
       if (animate == 'sometimes')
-        immediately = (typeof(item.groupItemData.row) == 'undefined' || item.groupItemData.row == row);
+        immediately = (typeof item.groupItemData.row == 'undefined' || item.groupItemData.row == row);
       else
 */
         immediately = !animate;
