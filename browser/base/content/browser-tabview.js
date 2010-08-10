@@ -35,6 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 let TabView = {
+  _deck: null,
   _window: null,
   _sessionstore: null,
   _visibilityID: "tabview-visibility",
@@ -53,28 +54,37 @@ let TabView = {
     if (data) {
       data = JSON.parse(data);
       if (data && data.visible)
-        this.toggle();
+        this.show();
     }
   },
 
   // ----------
-  _initFrame: function TabView__initFrame() {
-    if (this._window)
-      return;
+  // Creates the frame and calls the callback once it's loaded. 
+  // If the frame already exists, calls the callback immediately. 
+  _initFrame: function TabView__initFrame(callback) {
+    if (this._window) {
+      if (typeof callback == "function")
+        callback();
+    } else {
+      // ___ find the deck
+      this._deck = document.getElementById("tab-view-deck");
       
-    // ___ create the frame
-    var iframe = document.createElement("iframe");
-    iframe.id = "tab-view";
-    iframe.setAttribute("transparent", "true");
-    iframe.flex = 1;
-    iframe.setAttribute("src", "chrome://browser/content/tabview.html");
-    document.getElementById("tab-view-deck").appendChild(iframe);
-    this._window = iframe.contentWindow;
-    
-    // ___ visibility storage handler
-    let self = this;
-    var observer = {
-      observe : function(subject, topic, data) {
+      // ___ create the frame
+      var iframe = document.createElement("iframe");
+      iframe.id = "tab-view";
+      iframe.setAttribute("transparent", "true");
+      iframe.flex = 1;
+              
+      if (typeof callback == "function")
+        iframe.addEventListener("DOMContentLoaded", callback, false);
+      
+      iframe.setAttribute("src", "chrome://browser/content/tabview.html");
+      this._deck.appendChild(iframe);
+      this._window = iframe.contentWindow;
+
+      // ___ visibility storage handler
+      let self = this;
+      function observer(subject, topic, data) {
         if (topic == "quit-application-requested") {
           let data = {
             visible: self.isVisible()
@@ -83,41 +93,44 @@ let TabView = {
           self._sessionstore.setWindowValue(window, self._visibilityID, JSON.stringify(data));
         }
       }
-    };
-    
-    Services.obs.addObserver(observer, "quit-application-requested", false);
+      
+      Services.obs.addObserver(observer, "quit-application-requested", false);
+    }
   },
 
   // ----------
   isVisible: function() {
-    return (document.getElementById("tab-view-deck").selectedIndex == 1);
+    return (this._deck ? this._deck.selectedIndex == 1 : false);
+  },
+
+  // ----------
+  show: function() {
+    if (this.isVisible())
+      return;
+    
+    this._initFrame(function() {
+      let event = document.createEvent("Events");
+      event.initEvent("tabviewshow", false, false);
+      dispatchEvent(event);
+    });
+  },
+
+  // ----------
+  hide: function() {
+    if (!this.isVisible())
+      return;
+
+    let event = document.createEvent("Events");
+    event.initEvent("tabviewhide", false, false);
+    dispatchEvent(event);
   },
 
   // ----------
   toggle: function() {
-    let firstTime = false;
-    let event = document.createEvent("Events");
-
-    if (this.isVisible()) {
-      event.initEvent("tabviewhide", false, false);
-    } else {
-      if (!this._window) {
-        firstTime = true;
-        this._initFrame(); 
-      }        
-        
-      event.initEvent("tabviewshow", false, false);
-    }
-    
-    if (firstTime) {
-      // TODO: need a better way to know when the frame is loaded
-      // I suppose we can just attach to its onload?
-      setTimeout(function() {
-        dispatchEvent(event);
-      }, 100);
-    } else {
-      dispatchEvent(event);
-    }
+    if (this.isVisible())
+      this.hide();
+    else 
+      this.show();
   },
 
   // ----------
@@ -134,22 +147,21 @@ let TabView = {
     while(popup.lastChild && popup.lastChild.id != "context_namedGroups")
       popup.removeChild(popup.lastChild);
 
-	  if (!this._window)
-	    this._initFrame(); // TODO: wait for load	    
-
-    let activeGroup = tab.tabItem.parent;
-    let groupItems = this._window.GroupItems.groupItems;
     let self = this;
-
-    groupItems.forEach(function(groupItem) { 
-      if (groupItem.getTitle().length > 0 && 
-          (!activeGroup || activeGroup.id != groupItem.id)) {
-        let menuItem = self._createGroupMenuItem(groupItem);
-        popup.appendChild(menuItem);
-        isEmpty = false;
-      }
+    this._initFrame(function() {
+      let activeGroup = tab.tabItem.parent;
+      let groupItems = self._window.GroupItems.groupItems;
+  
+      groupItems.forEach(function(groupItem) { 
+        if (groupItem.getTitle().length > 0 && 
+            (!activeGroup || activeGroup.id != groupItem.id)) {
+          let menuItem = self._createGroupMenuItem(groupItem);
+          popup.appendChild(menuItem);
+          isEmpty = false;
+        }
+      });
+      document.getElementById("context_namedGroups").hidden = isEmpty;
     });
-    document.getElementById("context_namedGroups").hidden = isEmpty;
   },
 
   // ----------
@@ -192,7 +204,7 @@ let TabView = {
 #endif
         event.stopPropagation();
         event.preventDefault();
-        self.toggle();
+        self.show();
         return;
       }
 
@@ -202,12 +214,11 @@ let TabView = {
         event.stopPropagation();
         event.preventDefault();
 
-        if (!self._window)
-          self._initFrame(); // TODO: wait for load
-
-        var tabItem = self._window.GroupItems.getNextGroupItemTab(event.shiftKey);
-        if (tabItem)
-          window.gBrowser.selectedTab = tabItem.tab;
+        self._initFrame(function() {
+          var tabItem = self._window.GroupItems.getNextGroupItemTab(event.shiftKey);
+          if (tabItem)
+            window.gBrowser.selectedTab = tabItem.tab;
+        });
       }
     }, true);
   }

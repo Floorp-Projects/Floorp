@@ -180,8 +180,8 @@ window.Item.prototype = {
           GroupItems.setActiveGroupItem(this);
         drag.info = new Drag(this, e);
       },
-      drag: function(e, ui) {
-        drag.info.drag(e, ui);
+      drag: function(e) {
+        drag.info.drag(e);
       },
       stop: function() {
         drag.info.stop();
@@ -608,7 +608,7 @@ window.Item.prototype = {
         }
 
         if (typeof self.dragOptions.drag == "function")
-          self.dragOptions.drag.apply(self, [e, {}]);
+          self.dragOptions.drag.apply(self, [e]);
 
         // drop events
         var best = {
