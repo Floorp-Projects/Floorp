@@ -1833,18 +1833,6 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
-   * Clears the HeadsUpDisplay output node of any log messages
-   *
-   * @returns void
-   */
-  clearConsoleOutput: function HUD_clearConsoleOutput()
-  {
-    for each (var node in this.outputNode.childNodes) {
-      this.outputNode.removeChild(node);
-    }
-  },
-
-  /**
    * Build the UI of each HeadsUpDisplay
    *
    * @returns nsIDOMNode
