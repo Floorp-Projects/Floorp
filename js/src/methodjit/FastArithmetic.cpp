@@ -1173,8 +1173,8 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
         stubcc.leave();
         stubcc.call(stub);
 
-        frame.forgetEverything();
         frame.popn(2);
+        frame.forgetEverything();
 
         Jump j = masm.branchDouble(dblCond, fpLeft, fpRight);
 
@@ -1339,9 +1339,10 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
         frame.pinReg(cmpReg);
         if (reg.isSet())
             frame.pinReg(reg.reg());
-        frame.forgetEverything();
+        
         frame.popn(2);
-
+        frame.forgetEverything();
+        
         /* Operands could have been reordered, so use cmpOp. */
         Assembler::Condition i32Cond;
         bool ifeq = fused == JSOP_IFEQ;
