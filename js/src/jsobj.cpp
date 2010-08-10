@@ -106,7 +106,8 @@ JS_FRIEND_DATA(const JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAP
 
 Class js_ObjectClass = {
     js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_FAST_CONSTRUCTOR,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -2554,25 +2555,25 @@ static JSFunctionSpec object_static_methods[] = {
 };
 
 JSBool
-js_Object(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+js_Object(JSContext *cx, uintN argc, Value *vp)
 {
+    JSObject *obj;
     if (argc == 0) {
         /* Trigger logic below to construct a blank object. */
         obj = NULL;
     } else {
         /* If argv[0] is null or undefined, obj comes back null. */
-        if (!js_ValueToObjectOrNull(cx, argv[0], &obj))
+        if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
             return JS_FALSE;
     }
     if (!obj) {
-        JS_ASSERT(!argc || argv[0].isNull() || argv[0].isUndefined());
-        if (JS_IsConstructing(cx))
-            return JS_TRUE;
+        /* Make an object whether this was called with 'new' or not. */
+        JS_ASSERT(!argc || vp[2].isNull() || vp[2].isUndefined());
         obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
         if (!obj)
             return JS_FALSE;
     }
-    rval->setObject(*obj);
+    vp->setObject(*obj);
     return JS_TRUE;
 }
 
@@ -3253,7 +3254,7 @@ Class js_BlockClass = {
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ObjectClass, (Native) js_Object, 1,
                                    object_props, object_methods, NULL, object_static_methods);
     if (!proto)
         return NULL;
@@ -3402,7 +3403,11 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         ctor = proto;
     } else {
-        fun = js_NewFunction(cx, NULL, constructor, nargs, 0, obj, atom);
+        uint16 flags = 0;
+        if (clasp->flags & JSCLASS_FAST_CONSTRUCTOR)
+            flags |= JSFUN_FAST_NATIVE | JSFUN_FAST_NATIVE_CTOR;
+
+        fun = js_NewFunction(cx, NULL, constructor, nargs, flags, obj, atom);
         if (!fun)
             goto bad;
 
