@@ -49,8 +49,6 @@
 #include "nsINodeInfo.h"
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla::dom;
-
 PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
                                                   nsXMLEventsManager * aManager,
                                                   nsIContent * aContent)
@@ -336,7 +334,7 @@ nsXMLEventsManager::EndLoad(nsIDocument* aDocument)
 
 void
 nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
-                                     Element* aElement,
+                                     nsIContent* aContent,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
@@ -350,23 +348,23 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
        aAttribute == nsGkAtoms::observer ||
        aAttribute == nsGkAtoms::phase ||
        aAttribute == nsGkAtoms::propagate)) {
-    RemoveListener(aElement);
-    AddXMLEventsContent(aElement);
-    nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aElement);
+    RemoveListener(aContent);
+    AddXMLEventsContent(aContent);
+    nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aContent);
   }
   else {
-    if (aElement->NodeInfo()->Equals(nsGkAtoms::listener,
+    if (aContent->NodeInfo()->Equals(nsGkAtoms::listener,
                                      kNameSpaceID_XMLEvents)) {
-      RemoveListener(aElement);
-      AddXMLEventsContent(aElement);
-      nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aElement);
+      RemoveListener(aContent);
+      AddXMLEventsContent(aContent);
+      nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aContent);
     }
-    else if (aElement->GetIDAttributeName() == aAttribute) {
+    else if (aContent->GetIDAttributeName() == aAttribute) {
       if (aModType == nsIDOMMutationEvent::REMOVAL)
-        mListeners.Enumerate(EnumAndSetIncomplete, aElement);
+        mListeners.Enumerate(EnumAndSetIncomplete, aContent);
       else if (aModType == nsIDOMMutationEvent::MODIFICATION) {
         //Remove possible listener
-        mListeners.Enumerate(EnumAndSetIncomplete, aElement);
+        mListeners.Enumerate(EnumAndSetIncomplete, aContent);
         //Add new listeners
         AddListeners(aDocument);
       }
