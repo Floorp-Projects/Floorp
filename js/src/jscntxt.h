@@ -1065,9 +1065,6 @@ struct JSThreadData {
     /* Cached native iterators. */
     JSObject            *cachedNativeIterators[NATIVE_ITER_CACHE_SIZE];
 
-    /* Native iterator most recently started. */
-    JSObject            *lastNativeIterator;
-
     /* Base address of the native stack for the current thread. */
     jsuword             *nativeStackBase;
 
