@@ -177,6 +177,16 @@ CompileStatus
 mjit::Compiler::generatePrologue()
 {
     invokeLabel = masm.label();
+#ifdef JS_CPU_ARM
+    /* 
+     * Unlike x86/x64, the return address is not automatically pushed onto the stack during a call
+     * (blx). To compensate, we explicitly push it here.
+     *
+     * NOTE: The ABI requires that we maintain 8-byte stack alignment at function boundaries. The
+     * trampoline always enters this function with an unaligned stack so we can re-align it.
+     */
+    masm.push(JSC::ARMRegisters::lr);
+#endif
     restoreFrameRegs(masm);
 
     /*
@@ -186,6 +196,9 @@ mjit::Compiler::generatePrologue()
     if (fun) {
         Jump j = masm.jump();
         invokeLabel = masm.label();
+#ifdef JS_CPU_ARM
+        masm.push(JSC::ARMRegisters::lr);
+#endif
         restoreFrameRegs(masm);
 
         /* Set locals to undefined. */
@@ -202,20 +215,6 @@ mjit::Compiler::generatePrologue()
 
         j.linkTo(masm.label(), &masm);
     }
-
-#ifdef JS_CPU_ARM
-    /*
-     * Unlike x86/x64, the return address is not pushed on the stack. To
-     * compensate, we store the LR back into the stack on entry. This means
-     * it's really done twice when called via the trampoline, but it's only
-     * one instruction so probably not a big deal.
-     *
-     * The trampoline version goes through a veneer to make sure we can enter
-     * scripts at any arbitrary point - i.e. we can't rely on this being here,
-     * except for inline calls.
-     */
-    masm.storePtr(JSC::ARMRegisters::lr, FrameAddress(offsetof(VMFrame, scriptedReturn)));
-#endif
 
     return Compile_Okay;
 }
@@ -1565,9 +1564,6 @@ mjit::Compiler::emitReturn()
                                         FrameAddress(offsetof(VMFrame, inlineCallCount)),
                                         ImmPtr(0));
     stubcc.linkExit(noInlineCalls, Uses(frame.frameDepth()));
-#if defined(JS_CPU_ARM)
-    stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
-#endif
     stubcc.masm.ret();
 
     JS_ASSERT_IF(!fun, JSOp(*PC) == JSOP_STOP);
@@ -1634,10 +1630,6 @@ mjit::Compiler::emitReturn()
 #ifdef DEBUG
     masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
                   Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
-#endif
-
-#if defined(JS_CPU_ARM)
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
 #endif
 
     masm.ret();
@@ -1827,14 +1819,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 
     /* Fast-path: return address contains scripted call. */
 
-#ifndef JS_CPU_ARM
-    /*
-     * Since ARM does not push return addresses on the stack, we rely on the
-     * scripted entry to store back the LR safely. Upon return we then write
-     * back the LR to the VMFrame instead of pushing.
-     */
     masm.addPtr(Imm32(sizeof(void*)), Registers::StackPointer);
-#endif
     masm.call(Registers::ReturnReg);
 #if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
     masm.callLabel = masm.label();
@@ -1845,11 +1830,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * The scripted call returns a register triplet, containing the jsval and
      * the current f.scriptedReturn.
      */
-#ifdef JS_CPU_ARM
-    masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, scriptedReturn)));
-#else
     masm.push(Registers::ReturnReg);
-#endif
 
     /*
      * Functions invoked with |new| can return, for some reason, primitive

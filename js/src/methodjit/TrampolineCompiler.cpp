@@ -145,10 +145,6 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
                   Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
 #endif
 
-#if defined(JS_CPU_ARM)
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
-#endif
-
     masm.ret();
     return true;
 }

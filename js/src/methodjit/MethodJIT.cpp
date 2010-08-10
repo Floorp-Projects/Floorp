@@ -308,8 +308,8 @@ SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
 
 # elif defined(JS_CPU_ARM)
 
-JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) == 76);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 32);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) == (sizeof(VMFrame)-4));
+JS_STATIC_ASSERT(sizeof(VMFrame) == 80);
 
 asm volatile (
 ".text\n"
@@ -324,7 +324,14 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampoline)   "\n"
 SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
-    /* The trampoline for ARM looks like this:
+    /*
+     * On entry to JaegerTrampoline:
+     *      r0 = cx
+     *      r1 = fp
+     *      r2 = code
+     *      r3 = inlineCallCount
+     *
+     * The VMFrame for ARM looks like this:
      *  [ lr        ]   \
      *  [ r11       ]   |
      *  [ r10       ]   |
@@ -334,60 +341,52 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ r6        ]   | considering that we might not use them anyway.
      *  [ r5        ]   |
      *  [ r4        ]   /
-     *  [ regs      ]   \
-     *  [ ICallCnt  ]   | Parameters for the compiled code (and subsequently-called routines).
-     *  [ cx        ]   |
-     *  [ fp        ]   |
-     *  [ sp        ]   /
-     *  [ args      ]
-     *  [ ...       ]
-     *  [ padding   ]
-     *  [ exc. ret  ]  <- sp
+     *  [ ICallCnt  ]
+     *  [ cx        ]
+     *  [ fp        ]
+     *  [ regs.sp   ]
+     *  [ regs.pc   ]
+     *  [ oldRegs   ]
+     *  [ previous  ]
+     *  [ args.ptr  ]
+     *  [ args.ptr2 ]
+     *  [ srpt. ret ]   } Scripted return.
      */
     
-    /* We push these in short groups (rather than using one big push operation) because it
-     * supposedly benefits Cortex-A9. TODO: Check that this is actually a benefit. */
-"   push    {r10,r11,lr}"                   "\n"
-"   push    {r7-r9}"                        "\n"
-"   push    {r4-r6}"                        "\n"
-"   mov     r11, #0"                        "\n"   /* r11 = inlineCallCount */
-"   push    {r11}"                          "\n"   /* inlineCallCount   */
-"   push    {r0}"                           "\n"   /* cx                */
-"   push    {r1}"                           "\n"   /* fp                */
-"   mov     r11, r1"                        "\n"   /* JSFrameReg        */
+    /* Push callee-saved registers. TODO: Do we actually need to push all of them? If the
+     * compiled JavaScript function is EABI-compliant, we only need to push what we use in
+     * JaegerTrampoline. */
+"   push    {r4-r11,lr}"                        "\n"
+    /* Push interesting VMFrame content. */
+"   push    {r0,r3}"                            "\n"    /* inlineCallCount, cx */
+"   push    {r1}"                               "\n"    /* fp */
+    /* Remaining fields are set elsewhere, but we need to leave space for them. */
+"   sub     sp, sp, #(4*8)"                     "\n"
 
-    /* Leave space for the VMFrame arguments. The largest slot appears to be 8 bytes for 32-bit
-     * architectures, though hard-coding this doesn't seem sensible. TODO: Use sizeof here and for
-     * the other targets. */
+"   mov     r0, sp"                             "\n"
+"   mov     r4, r2"                             "\n"    /* Preserve r2 ('code') in a callee-saved register. */
+"   bl  " SYMBOL_STRING_RELOC(SetVMFrameRegs)   "\n"
+"   mov     r0, sp"                             "\n"
+"   bl  " SYMBOL_STRING_RELOC(PushActiveVMFrame)"\n"
 
-"   sub     sp, sp, #(8*4)"                 "\n"
+    /* Call the compiled JavaScript function. We do this with an unaligned sp because the compiled
+     * script explicitly pushes the return value into f->scriptedReturn. */
+"   add     sp, sp, #(4*1)"                     "\n"
+"   blx     r4"                                 "\n"
+"   sub     sp, sp, #(4*1)"                     "\n"
 
-"   mov     r0, sp"                         "\n"
-"   push    {r2}"                           "\n"
-"   blx " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
-"   pop     {r2}"                           "\n"
-
-    /* Call the compiled JavaScript function using r2 ('code'). */
-"   bl  " SYMBOL_STRING_RELOC(JaegerTrampVeneer) "\n"
-
-    /* --------
-     * Tidy up: Unwind the stack pointer, restore the callee-saved registers and then return.
-     */
-
-"   mov     r0, sp"                         "\n"
-"   blx " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
+    /* Tidy up. */
+"   mov     r0, sp"                             "\n"
+"   bl  " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+"   mov     r0, sp"                             "\n"
+"   bl  " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
-"   add     sp, sp, #(11*4)"           "\n"
+"   add     sp, sp, #(4*8 + 4*3)"               "\n"
 
     /* Set a 'true' return value to indicate successful completion. */
 "   mov     r0, #1"                         "\n"
-
-    /* We pop these in short groups (rather than using one big push operation) because it
-     * supposedly benefits Cortex-A9. TODO: Check that this is actually a benefit. */
-"   pop     {r4-r6}"                        "\n"
-"   pop     {r7-r9}"                        "\n"
-"   pop     {r10,r11,pc}"                   "\n"    /* Pop lr directly into the pc to return quickly. */
+"   pop     {r4-r11,pc}"                    "\n"
 );
 
 asm volatile (
@@ -398,7 +397,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 "   mov     r0, sp"                         "\n"
 
     /* Call the utility function that sets up the internal throw routine. */
-"   blx " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
+"   bl  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
     
     /* If 0 was returned, just bail out as normal. Otherwise, we have a 'catch' or 'finally' clause
      * to execute. */
@@ -406,13 +405,9 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 "   bxne    r0"                             "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
-"   add     sp, sp, #(11*4)"           "\n"
+"   add     sp, sp, #(4*8 + 4*3)"               "\n"
 
-    /* We pop these in short groups (rather than using one big push operation) because it
-     * supposedly benefits Cortex-A9. TODO: Check that this is actually a benefit. */
-"   pop     {r4-r6}"                        "\n"
-"   pop     {r7-r9}"                        "\n"
-"   pop     {r10,r11,pc}"                   "\n"    /* Pop lr directly into the pc to return quickly. */
+"   pop     {r4-r11,pc}"                    "\n"
 );
 
 asm volatile (
@@ -423,22 +418,10 @@ SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
      * need to store the LR somewhere (so it can be modified in case on an exception) and then
      * branch to the js_ stub as if nothing had happened.
      * The arguments are identical to those for js_* except that the target function should be in
-     * 'ip'. TODO: This is not ABI-compliant, though it is convenient for now. I should work out
-     * which register to use to do this properly; r1 is likely because r0 gets VMFrame &f. */
-"   str     lr, [sp]"                       "\n"    /* VMFrame->veneerReturn */
+     * 'ip'. */
+"   push    {ip,lr}"                        "\n"
 "   blx     ip"                             "\n"
-"   ldr     pc, [sp]"                       "\n"    /* This should stack-predict, but only if 'sp' is used. */
-);
-
-asm volatile (
-".text\n"
-".globl " SYMBOL_STRING(JaegerTrampVeneer)   "\n"
-SYMBOL_STRING(JaegerTrampVeneer) ":"         "\n"
-    /* This is needed to store the initial scriptedReturn value, which won't
-     * get stored when invoking JaegerShot() into the middle of methods.
-     */
-"   str     lr, [sp, #4]"                   "\n"    /* VMFrame->scriptedReturn */
-"   bx      r2"                             "\n"
+"   pop     {ip,pc}"                        "\n"
 );
 
 # else
