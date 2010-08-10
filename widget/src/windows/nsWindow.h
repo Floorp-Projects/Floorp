@@ -248,6 +248,7 @@ public:
   WNDPROC                 GetPrevWindowProc() { return mPrevWndProc; }
   static nsWindow*        GetNSWindowPtr(HWND aWnd);
   WindowHook&             GetWindowHook() { return mWindowHook; }
+  nsWindow*               GetParentWindow(PRBool aIncludeOwner);
 
   /**
    * Misc.
@@ -297,7 +298,6 @@ protected:
   static BOOL             SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
   LPARAM                  lParamToScreen(LPARAM lParam);
   LPARAM                  lParamToClient(LPARAM lParam);
-  nsWindow*               GetParentWindow(PRBool aIncludeOwner);
   virtual void            SubclassWindow(BOOL bState);
   PRBool                  CanTakeFocus();
   PRBool                  UpdateNonClientMargins(PRInt32 aSizeMode = -1, PRBool aReflowWindow = PR_TRUE);

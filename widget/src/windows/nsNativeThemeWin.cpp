@@ -23,6 +23,7 @@
  *   Tim Hill (tim@prismelite.com)
  *   James Ross (silver@warwickcompsoc.co.uk)
  *   Simon Bünzli (zeniko@gmail.com)
+ *   Jim Mathies (jmathies@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -105,8 +106,7 @@ static int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
    return 1;
 }
 
-static BOOL
-GetViewportOrgEx(HDC hdc, LPPOINT lpPoint)
+static BOOL GetViewportOrgEx(HDC hdc, LPPOINT lpPoint)
 {
   SetViewportOrgEx(hdc, 0, 0, lpPoint);
   if (lpPoint->x != 0 || lpPoint->y != 0)
@@ -115,10 +115,49 @@ GetViewportOrgEx(HDC hdc, LPPOINT lpPoint)
 }
 #endif
 
-static inline bool IsHTMLContent(nsIFrame *frame)
+static inline PRBool IsHTMLContent(nsIFrame *frame)
 {
   nsIContent* content = frame->GetContent();
   return content && content->IsHTML();
+}
+
+static PRInt32 GetTopLevelWindowActiveState(nsIFrame *aFrame)
+{
+  // Get the widget. nsIFrame's GetNearestWidget walks up the view chain
+  // until it finds a real window.
+  nsIWidget* widget = aFrame->GetNearestWidget();
+  nsWindow * window = static_cast<nsWindow*>(widget);
+  if (widget && !window->IsTopLevelWidget() &&
+      !(window = window->GetParentWindow(PR_FALSE)))
+    return PR_FALSE;
+
+  if (window->GetWindowHandle() == ::GetActiveWindow())
+    return mozilla::widget::themeconst::FS_ACTIVE;
+  return mozilla::widget::themeconst::FS_INACTIVE;
+}
+
+static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, PRInt32 eventState)
+{
+  if (GetTopLevelWindowActiveState(aFrame) ==
+      mozilla::widget::themeconst::FS_INACTIVE)
+    return mozilla::widget::themeconst::BS_INACTIVE;
+
+  if (eventState & NS_EVENT_STATE_ACTIVE)
+    return mozilla::widget::themeconst::BS_PUSHED;
+  else if (eventState & NS_EVENT_STATE_HOVER)
+    return mozilla::widget::themeconst::BS_HOT;
+  else
+    return mozilla::widget::themeconst::BS_NORMAL;
+}
+
+static PRInt32 GetClassicWindowFrameButtonState(PRInt32 eventState)
+{
+  if (eventState & NS_EVENT_STATE_ACTIVE)
+    return DFCS_BUTTONPUSH|DFCS_PUSHED;
+  else if (eventState & NS_EVENT_STATE_HOVER)
+    return DFCS_BUTTONPUSH|DFCS_HOT;
+  else
+    return DFCS_BUTTONPUSH;
 }
 
 nsNativeThemeWin::nsNativeThemeWin() {
@@ -367,6 +406,16 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
     case NS_THEME_MENUIMAGE:
     case NS_THEME_MENUITEMTEXT:
       return nsUXThemeData::GetTheme(eUXMenu);
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    case NS_THEME_WINDOW_FRAME_LEFT:
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+      return nsUXThemeData::GetTheme(eUXWindowFrame);
   }
   return NULL;
 }
@@ -976,6 +1025,43 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aPart = -1;
       aState = 0;
       return NS_OK;
+
+    case NS_THEME_WINDOW_TITLEBAR:
+      aPart = mozilla::widget::themeconst::WP_CAPTION;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+      aPart = mozilla::widget::themeconst::WP_MAXCAPTION;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_FRAME_LEFT:
+      aPart = mozilla::widget::themeconst::WP_FRAMELEFT;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+      aPart = mozilla::widget::themeconst::WP_FRAMERIGHT;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+      aPart = mozilla::widget::themeconst::WP_FRAMEBOTTOM;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+      aPart = mozilla::widget::themeconst::WP_CLOSEBUTTON;
+      aState = GetWindowFrameButtonState(aFrame, GetContentState(aFrame, aWidgetType));
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+      aPart = mozilla::widget::themeconst::WP_MINBUTTON;
+      aState = GetWindowFrameButtonState(aFrame, GetContentState(aFrame, aWidgetType));
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+      aPart = mozilla::widget::themeconst::WP_MAXBUTTON;
+      aState = GetWindowFrameButtonState(aFrame, GetContentState(aFrame, aWidgetType));
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+      aPart = mozilla::widget::themeconst::WP_RESTOREBUTTON;
+      aState = GetWindowFrameButtonState(aFrame, GetContentState(aFrame, aWidgetType));
+      return NS_OK;
   }
 
   aPart = 0;
@@ -1026,6 +1112,32 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     dr.size.height += 2.0;
   }
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  // ^^ without the right sdk, assume xp theming and fall through.
+  if (nsUXThemeData::CheckForCompositor()) {
+    switch (aWidgetType) {
+      case NS_THEME_WINDOW_TITLEBAR:
+      case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+      case NS_THEME_WINDOW_FRAME_LEFT:
+      case NS_THEME_WINDOW_FRAME_RIGHT:
+      case NS_THEME_WINDOW_FRAME_BOTTOM:
+        // Nothing to draw, these areas are glass. Minimum dimensions
+        // should be set, so xul content should be layed out correctly.
+        return NS_OK;
+      break;
+      case NS_THEME_WINDOW_BUTTON_CLOSE:
+      case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+      case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+      case NS_THEME_WINDOW_BUTTON_RESTORE:
+        // Not conventional bitmaps, can't be retrieved. If we fall
+        // through here and call the theme library we'll get aero
+        // basic bitmaps. 
+        return NS_OK;
+      break;
+    }
+  }
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+    
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
 
   gfxWindowsNativeDrawing nativeDrawing(ctx, dr, GetWidgetNativeDrawingFlags(aWidgetType));
@@ -1645,6 +1757,50 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         sizeReq = TS_MIN;
       }
       break;
+
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+      // For XP, use the theme library dimensions, which seem to be accurate.
+      if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
+        break;
+      // The only way to get accurate titlebar button info is to query a
+      // window w/buttons when it's visible. nsWindow takes care of this and
+      // stores that info in nsUXThemeData.
+      aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_RESTORE].cx;
+      aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_RESTORE].cy;
+      *aIsOverridable = PR_FALSE;
+      return NS_OK;
+
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+      if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
+        break;
+      aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_MINIMIZE].cx;
+      aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_MINIMIZE].cy;
+      *aIsOverridable = PR_FALSE;
+      return NS_OK;
+
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+      if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
+        break;
+      aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_CLOSE].cx;
+      aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_CLOSE].cy;
+      *aIsOverridable = PR_FALSE;
+      return NS_OK;
+
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+      aResult->height = GetSystemMetrics(SM_CYCAPTION);
+      aResult->height += GetSystemMetrics(SM_CYFRAME);
+      *aIsOverridable = PR_FALSE;
+      return NS_OK;
+
+    case NS_THEME_WINDOW_FRAME_LEFT:
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+      aResult->width = GetSystemMetrics(SM_CXFRAME);
+      aResult->height = GetSystemMetrics(SM_CYFRAME);
+      *aIsOverridable = PR_FALSE;
+      return NS_OK;
   }
 
   PRInt32 part, state;
@@ -1700,6 +1856,19 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_TAB_PANEL ||
       aWidgetType == NS_THEME_TOOLBAR_SEPARATOR) {
     *aShouldRepaint = PR_FALSE;
+    return NS_OK;
+  }
+
+  if (aWidgetType == NS_THEME_WINDOW_TITLEBAR ||
+      aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED ||
+      aWidgetType == NS_THEME_WINDOW_FRAME_LEFT ||
+      aWidgetType == NS_THEME_WINDOW_FRAME_RIGHT ||
+      aWidgetType == NS_THEME_WINDOW_FRAME_BOTTOM ||
+      aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE ||
+      aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE ||
+      aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE ||
+      aWidgetType == NS_THEME_WINDOW_BUTTON_RESTORE) {
+    *aShouldRepaint = PR_TRUE;
     return NS_OK;
   }
 
@@ -1890,6 +2059,15 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_MENUARROW:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_MENUITEMTEXT:
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    case NS_THEME_WINDOW_FRAME_LEFT:
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -2103,6 +2281,36 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       aResult->height = 10;
       break;
     }
+
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    case NS_THEME_WINDOW_TITLEBAR:
+      aResult->height = GetSystemMetrics(SM_CYCAPTION);
+      aResult->height += GetSystemMetrics(SM_CYFRAME);
+      aResult->width = 0;
+    break;
+    case NS_THEME_WINDOW_FRAME_LEFT:
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+      aResult->width = GetSystemMetrics(SM_CXFRAME);
+      aResult->height = 0;
+    break;
+
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+      aResult->height = GetSystemMetrics(SM_CYFRAME);
+      aResult->width = 0;
+    break;
+
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+      aResult->width = GetSystemMetrics(SM_CXSIZE);
+      aResult->height = GetSystemMetrics(SM_CYSIZE);
+      // XXX I have no idea why these caption metrics are always off,
+      // but they are.
+      aResult->width -= 2;
+      aResult->height -= 4;
+    break;
+
     default:
       return NS_ERROR_FAILURE;
   }  
@@ -2386,6 +2594,50 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_MENUSEPARATOR:
       aPart = 0;
       aState = 0;
+      return NS_OK;
+    case NS_THEME_WINDOW_TITLEBAR:
+      aPart = mozilla::widget::themeconst::WP_CAPTION;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+      aPart = mozilla::widget::themeconst::WP_MAXCAPTION;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_FRAME_LEFT:
+      aPart = mozilla::widget::themeconst::WP_FRAMELEFT;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+      aPart = mozilla::widget::themeconst::WP_FRAMERIGHT;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+      aPart = mozilla::widget::themeconst::WP_FRAMEBOTTOM;
+      aState = GetTopLevelWindowActiveState(aFrame);
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+      aPart = DFC_CAPTION;
+      aState = DFCS_CAPTIONCLOSE |
+               GetClassicWindowFrameButtonState(GetContentState(aFrame,
+                                                                aWidgetType));
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+      aPart = DFC_CAPTION;
+      aState = DFCS_CAPTIONMIN |
+               GetClassicWindowFrameButtonState(GetContentState(aFrame,
+                                                                aWidgetType));
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+      aPart = DFC_CAPTION;
+      aState = DFCS_CAPTIONMAX |
+               GetClassicWindowFrameButtonState(GetContentState(aFrame,
+                                                                aWidgetType));
+      return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+      aPart = DFC_CAPTION;
+      aState = DFCS_CAPTIONRESTORE |
+               GetClassicWindowFrameButtonState(GetContentState(aFrame,
+                                                                aWidgetType));
       return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -2858,6 +3110,87 @@ RENDER_AGAIN:
       break;
     }
 #endif
+
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    {
+      // inset the caption area so it doesn't overflow.
+      RECT rect = widgetRect;
+      PRInt32 offset = GetSystemMetrics(SM_CXFRAME);
+      rect.top += offset;
+      rect.left += offset;
+      rect.right -= offset;
+      rect.bottom -= 1;
+
+      // if enabled, draw a gradient titlebar background, otherwise
+      // fill with a solid color.
+      BOOL bFlag = TRUE;
+      SystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &bFlag, NULL);
+      if (!bFlag) {
+        if (state == mozilla::widget::themeconst::FS_ACTIVE)
+          FillRect(hdc, &rect, (HBRUSH)(COLOR_ACTIVECAPTION+1));
+        else
+          FillRect(hdc, &rect, (HBRUSH)(COLOR_INACTIVECAPTION+1));
+      } else {
+        DWORD startColor, endColor;
+        if (state == mozilla::widget::themeconst::FS_ACTIVE) {
+          startColor = GetSysColor(COLOR_ACTIVECAPTION);
+          endColor = GetSysColor(COLOR_GRADIENTACTIVECAPTION);
+        } else {
+          startColor = GetSysColor(COLOR_INACTIVECAPTION);
+          endColor = GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
+        }
+
+        TRIVERTEX vertex[2];
+        vertex[0].x     = rect.left;
+        vertex[0].y     = rect.top;
+        vertex[0].Red   = GetRValue(startColor) << 8;
+        vertex[0].Green = GetGValue(startColor) << 8;
+        vertex[0].Blue  = GetBValue(startColor) << 8;
+        vertex[0].Alpha = 0;
+
+        vertex[1].x     = rect.right;
+        vertex[1].y     = rect.bottom; 
+        vertex[1].Red   = GetRValue(endColor) << 8;
+        vertex[1].Green = GetGValue(endColor) << 8;
+        vertex[1].Blue  = GetBValue(endColor) << 8;
+        vertex[1].Alpha = 0;
+
+        GRADIENT_RECT gRect;
+        gRect.UpperLeft  = 0;
+        gRect.LowerRight = 1;
+        // available on win2k & up
+        GradientFill(hdc, vertex, 2, &gRect, 1, GRADIENT_FILL_RECT_H);
+      }
+
+      // frame things up with the left, top, and right raised borders.
+      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_TOP|BF_LEFT|BF_RIGHT);
+      break;
+    }
+
+    case NS_THEME_WINDOW_FRAME_LEFT:
+      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_LEFT);
+      break;
+
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RIGHT);
+      break;
+
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_BOTTOM);
+      break;
+
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+    {
+      PRInt32 oldTA = SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
+      DrawFrameControl(hdc, &widgetRect, part, state);
+      SetTextAlign(hdc, oldTA);
+      break;
+    }
+
     default:
       rv = NS_ERROR_FAILURE;
       break;
