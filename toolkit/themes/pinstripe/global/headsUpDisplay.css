@@ -112,6 +112,12 @@
     display: none;
 }
 
+.hud-filter-cat {
+    color: #6b6b6b;
+    font-weight: bold;
+    margin: 0px 12px 0px 0px;
+}
+
 /* JSTerm Styles */
 
 .jsterm-wrapper-node {
