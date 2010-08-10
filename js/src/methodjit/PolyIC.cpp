@@ -2163,7 +2163,10 @@ ic::Name(VMFrame &f, uint32 index)
             THROW();
         }
         JSScopeProperty *sprop = (JSScopeProperty *)cc.prop;
-        NATIVE_GET(f.cx, cc.obj, cc.holder, sprop, JSGET_METHOD_BARRIER, &rval,
+        JSObject *normalized = cc.obj;
+        if (cc.obj->getClass() == &js_WithClass && !sprop->hasDefaultGetter())
+            normalized = js_UnwrapWithObject(f.cx, cc.obj);
+        NATIVE_GET(f.cx, normalized, cc.holder, sprop, JSGET_METHOD_BARRIER, &rval,
                    THROW());
         JS_UNLOCK_OBJ(f.cx, cc.holder);
     }
