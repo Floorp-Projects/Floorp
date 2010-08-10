@@ -1555,6 +1555,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   // Call GetSystemMetrics to determine size for WinXP scrollbars
   // (GetThemeSysSize API returns the optimal size for the theme, but 
   //  Windows appears to always use metrics when drawing standard scrollbars)
+  PRInt32 sizeReq = TS_TRUE; // Best-fit size
   switch (aWidgetType) {
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
@@ -1566,6 +1567,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_DROPDOWN_BUTTON:
       return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
+
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_RADIOMENUITEM:
@@ -1577,6 +1579,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         return NS_OK;
       }
       break;
+
     case NS_THEME_MENUIMAGE:
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
@@ -1586,39 +1589,62 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         aResult->height = boxSize.cy;
         *aIsOverridable = PR_FALSE;
       }
+
     case NS_THEME_MENUITEMTEXT:
       return NS_OK;
+
     case NS_THEME_MENUARROW:
       aResult->width = 26;
       aResult->height = 16;
       return NS_OK;
-  }
 
-  if (aWidgetType == NS_THEME_RESIZER) {
-    *aIsOverridable = PR_FALSE;
-  }
-  else if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL ||
-           aWidgetType == NS_THEME_SCALE_THUMB_VERTICAL) {
-    *aIsOverridable = PR_FALSE;
-    // on Vista, GetThemePartAndState returns odd values for
-    // scale thumbs, so use a hardcoded size instead.
-    if (nsUXThemeData::sIsVistaOrLater) {
-      if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL) {
-        aResult->width = 12;
-        aResult->height = 20;
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+      // Best-fit size for progress meters is too large for most 
+      // themes. We want these widgets to be able to really shrink
+      // down, so use the min-size request value (of 0).
+      sizeReq = TS_MIN; 
+      break;
+
+    case NS_THEME_RESIZER:
+      *aIsOverridable = PR_FALSE;
+      break;
+
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+    {
+      *aIsOverridable = PR_FALSE;
+      // on Vista, GetThemePartAndState returns odd values for
+      // scale thumbs, so use a hardcoded size instead.
+      if (nsUXThemeData::sIsVistaOrLater) {
+        if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL) {
+          aResult->width = 12;
+          aResult->height = 20;
+        }
+        else {
+          aResult->width = 20;
+          aResult->height = 12;
+        }
+        return NS_OK;
       }
-      else {
-        aResult->width = 20;
-        aResult->height = 12;
-      }
-      return NS_OK;
+      break;
     }
-  }
-  else if (aWidgetType == NS_THEME_TOOLBAR_SEPARATOR) {
-    // that's 2px left margin, 2px right margin and 2px separator
-    // (the margin is drawn as part of the separator, though)
-    aResult->width = 6;
-    return NS_OK;
+
+    case NS_THEME_TOOLBAR_SEPARATOR:
+      // that's 2px left margin, 2px right margin and 2px separator
+      // (the margin is drawn as part of the separator, though)
+      aResult->width = 6;
+      return NS_OK;
+
+    case NS_THEME_BUTTON:
+      // We should let HTML buttons shrink to their min size.
+      // FIXME bug 403934: We should probably really separate
+      // GetPreferredWidgetSize from GetMinimumWidgetSize, so callers can
+      // use the one they want.
+      if (aFrame->GetContent()->IsHTML()) {
+        sizeReq = TS_MIN;
+      }
+      break;
   }
 
   PRInt32 part, state;
@@ -1630,37 +1656,26 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!hdc)
     return NS_ERROR_FAILURE;
 
-  PRInt32 sizeReq = 1; // Best-fit size. (TS_TRUE)
-  if (aWidgetType == NS_THEME_PROGRESSBAR ||
-      aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL)
-    sizeReq = 0; // Best-fit size for progress meters is too large for most 
-                 // themes.
-                 // In our app, we want these widgets to be able to really shrink down,
-                 // so use the min-size request value (of 0).
-
-  // We should let HTML buttons shrink to their min size.
-  // FIXME bug 403934: We should probably really separate
-  // GetPreferredWidgetSize from GetMinimumWidgetSize, so callers can
-  // use the one they want.
-  if (aWidgetType == NS_THEME_BUTTON &&
-      aFrame->GetContent()->IsHTML())
-    sizeReq = 0; /* TS_MIN */
-
   SIZE sz;
   nsUXThemeData::getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
   aResult->width = sz.cx;
   aResult->height = sz.cy;
 
-  if (aWidgetType == NS_THEME_SPINNER_UP_BUTTON ||
-      aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON) {
-    aResult->width++;
-    aResult->height = aResult->height / 2 + 1;
+  switch(aWidgetType) {
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON:
+      aResult->width++;
+      aResult->height = aResult->height / 2 + 1;
+      break;
+
+    case NS_THEME_MENUSEPARATOR:
+    {
+      SIZE gutterSize(GetGutterSize(theme,hdc));
+      aResult->width += gutterSize.cx;
+      break;
+    }
   }
-  else if (aWidgetType == NS_THEME_MENUSEPARATOR)
-  {
-    SIZE gutterSize(GetGutterSize(theme,hdc));
-    aResult->width += gutterSize.cx;
-  }
+
   return NS_OK;
 }
 
