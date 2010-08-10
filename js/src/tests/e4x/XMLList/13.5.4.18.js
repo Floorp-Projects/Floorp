@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.5.4.18.js';
 
 START("13.5.4.18 - XMLList propertyIsEnumerable()");
 

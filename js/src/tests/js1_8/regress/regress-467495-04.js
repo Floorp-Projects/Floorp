@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-467495-04.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 467495;
 var summary = 'TCF_FUN_CLOSURE_VS_VAR is necessary';

@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-170193.js';
 var UBound = 0;
 var BUGNUMBER = 170193;
 var summary = 'adding property after middle-delete of function w duplicate formal args';

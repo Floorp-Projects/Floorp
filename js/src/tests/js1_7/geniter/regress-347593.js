@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-347593.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 347593;
 var summary = 'For-each loop with destructuring assignment';

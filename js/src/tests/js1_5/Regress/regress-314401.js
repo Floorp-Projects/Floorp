@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-314401.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 314401;
 var summary = 'setTimeout(eval,0,"",null)|setTimeout(Script,0,"",null) should not crash';

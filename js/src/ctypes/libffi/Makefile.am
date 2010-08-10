@@ -69,6 +69,7 @@ AM_MAKEFLAGS = \
 	"exec_prefix=$(exec_prefix)" \
 	"infodir=$(infodir)" \
 	"libdir=$(libdir)" \
+	"mandir=$(mandir)" \
 	"prefix=$(prefix)" \
 	"AR=$(AR)" \
 	"AS=$(AS)" \
@@ -151,6 +152,9 @@ endif
 if FRV
 nodist_libffi_la_SOURCES += src/frv/eabi.S src/frv/ffi.c
 endif
+if MOXIE
+nodist_libffi_la_SOURCES += src/moxie/eabi.S src/moxie/ffi.c
+endif
 if S390
 nodist_libffi_la_SOURCES += src/s390/sysv.S src/s390/ffi.c
 endif
@@ -174,6 +178,14 @@ libffi_convenience_la_SOURCES = $(libffi_la_SOURCES)
 nodist_libffi_convenience_la_SOURCES = $(nodist_libffi_la_SOURCES)
 
 AM_CFLAGS = -Wall -g -fexceptions
+if FFI_DEBUG
+# Build debug. Define FFI_DEBUG on the commandline so that, when building with
+# MSVC, it can link against the debug CRT.
+AM_CFLAGS += -DFFI_DEBUG
+else
+# Build opt.
+AM_CFLAGS += -O2
+endif
 
 libffi_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` $(LTLDFLAGS) $(AM_LTLDFLAGS)
 

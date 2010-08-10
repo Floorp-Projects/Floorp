@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'slice.js';
 
 /**
    Filename:     slice.js

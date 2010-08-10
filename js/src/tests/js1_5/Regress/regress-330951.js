@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-330951.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 330951;
 var summary = 'Crash in Array.sort on array with undefined value';

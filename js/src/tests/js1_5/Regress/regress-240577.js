@@ -5,7 +5,6 @@
  * Contributor: Bob Clary
  */
 
-var gTestfile = 'regress-240577.js';
 //-----------------------------------------------------------------------------
 // originally reported by Jens Thiele <karme@unforgettable.com> in
 var BUGNUMBER = 240577;

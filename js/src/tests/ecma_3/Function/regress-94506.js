@@ -45,7 +45,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=94506
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-94506.js';
 var UBound = 0;
 var BUGNUMBER = 94506;
 var summary = 'Testing functions employing identifiers named "arguments"';

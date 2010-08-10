@@ -26,7 +26,13 @@ function successCallback(position) {
   opener.done();
 }
 
+function accept() {
+  clickNotificationButton(kAcceptButton);
+}
+
 navigator.geolocation.watchPosition(successCallback, null, null);
+setTimeout(accept, 50);
+
 </script>
 </pre>
 </body>

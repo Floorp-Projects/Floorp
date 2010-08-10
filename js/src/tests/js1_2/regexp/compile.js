@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'compile.js';
 
 /**
    Filename:     compile.js

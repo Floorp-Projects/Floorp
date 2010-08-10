@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  * Contributors: Gary Kwong and Nicholas Nethercote
  */
-gTestfile = 'regress-563210';
 
 if (typeof gczeal != 'undefined' && typeof gc != 'undefined') {
     try

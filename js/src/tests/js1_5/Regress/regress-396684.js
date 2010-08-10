@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-396684.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 396684;
 var summary = 'Function call with stack arena exhausted';

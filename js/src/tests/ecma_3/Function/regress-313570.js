@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-313570.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 313570;
 var summary = 'length of objects whose prototype chain includes a function';

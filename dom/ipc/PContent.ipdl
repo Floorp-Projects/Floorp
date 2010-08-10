@@ -93,6 +93,9 @@ parent:
 
     // PermissionsManager messages
     sync TestPermission(URI uri, nsCString type, PRBool exact) returns (PRUint32 retValue);
+    NotifyIME(int aType, int aState);
+    NotifyIMEChange(nsString aText, PRUint32 aTextLen,
+                    int aStart, int aEnd, int aNewEnd);
 };
 
 }

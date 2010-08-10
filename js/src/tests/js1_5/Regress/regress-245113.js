@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-245113.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 245113;
 var summary = 'instanceof operator should return false for class prototype';

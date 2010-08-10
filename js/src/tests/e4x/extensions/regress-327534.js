@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-327534.js';
 
 var summary = "uneval on E4X gives Error: xml is not a function";
 var BUGNUMBER = 327534;

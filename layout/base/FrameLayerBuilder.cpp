@@ -468,9 +468,6 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
   if (!newDisplayItems->HasContainerLayer()) {
     props.Delete(ThebesLayerInvalidRegionProperty());
     f->RemoveStateBits(NS_FRAME_HAS_CONTAINER_LAYER);
-  } else {
-    NS_ASSERTION(f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER,
-                 "This bit should have been set by BuildContainerLayerFor");
   }
 
   // Reset the invalid region now so we can start collecting new dirty
@@ -651,6 +648,13 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
 static PRUint32
 AppUnitsPerDevPixel(nsDisplayItem* aItem)
 {
+  // The underlying frame for zoom items is the root frame of the subdocument.
+  // But zoom display items report their bounds etc using the parent document's
+  // APD because zoom items act as a conversion layer between the two different
+  // APDs.
+  if (aItem->GetType() == nsDisplayItem::TYPE_ZOOM) {
+    return static_cast<nsDisplayZoom*>(aItem)->GetParentAppUnitsPerDevPixel();
+  }
   return aItem->GetUnderlyingFrame()->PresContext()->AppUnitsPerDevPixel();
 }
 
@@ -902,6 +906,9 @@ void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     const nsRect* aClipRect)
 {
+  PRInt32 appUnitsPerDevPixel =
+    mContainerFrame->PresContext()->AppUnitsPerDevPixel();
+
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
       nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
@@ -913,7 +920,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       continue;
     }
 
-    PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(item);
+    NS_ASSERTION(appUnitsPerDevPixel == AppUnitsPerDevPixel(item),
+      "items in a container layer should all have the same app units per dev pixel");
+
     nsIntRect itemVisibleRect =
       item->GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
     nsRect itemContent = item->GetBounds(mBuilder);
@@ -981,12 +990,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       }
 
       nsIFrame* f = item->GetUnderlyingFrame();
-      nsPoint offsetToActiveScrolledRoot;
       nsIFrame* activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(f, mBuilder->ReferenceFrame(),
-                                                &offsetToActiveScrolledRoot);
-      NS_ASSERTION(offsetToActiveScrolledRoot == f->GetOffsetToCrossDoc(activeScrolledRoot),
-                   "Wrong offset");
+        nsLayoutUtils::GetActiveScrolledRootFor(f, mBuilder->ReferenceFrame());
       if (item->IsFixedAndCoveringViewport(mBuilder)) {
         // Make its active scrolled root be the active scrolled root of
         // the enclosing viewport, since it shouldn't be scrolled by scrolled
@@ -996,8 +1001,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
           nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
         NS_ASSERTION(viewportFrame, "no viewport???");
         activeScrolledRoot =
-          nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, mBuilder->ReferenceFrame(),
-                                                  &offsetToActiveScrolledRoot);
+          nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, mBuilder->ReferenceFrame());
       }
 
       nscolor uniformColor;
@@ -1054,6 +1058,9 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
       }
     }
 
+    NS_ASSERTION(appUnitsPerDevPixel ==
+                   mContainerFrame->PresContext()->AppUnitsPerDevPixel(),
+                 "app units per dev pixel should be constant in a container");
     mContainerFrame->InvalidateWithFlags(
         bounds - mBuilder->ToReferenceFrame(mContainerFrame),
         nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
@@ -1225,8 +1232,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   state.Finish();
 
   containerLayer->SetIsOpaqueContent(aChildren.IsOpaque());
-  nsRefPtr<Layer> layer = containerLayer.forget();
-  return layer.forget();
+  return containerLayer.forget();
 }
 
 Layer*
@@ -1349,18 +1355,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
       nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
 
-  // Our list may contain content with different prescontexts at
-  // different zoom levels. 'rc' contains the nsIRenderingContext
-  // used for the previous display item, and lastPresContext is the
-  // prescontext for that item. We also cache the clip state for that
-  // item.
-  // XXX maybe we should stop that from being true by forcing content with
-  // different zoom levels into different layers?
-  nsRefPtr<nsIRenderingContext> rc;
-  nsPresContext* lastPresContext = nsnull;
-  nsRect currentClip;
-  PRBool setClipRect = PR_FALSE;
-
   PRUint32 i;
   // Update visible regions. We need perform visibility analysis again
   // because we may be asked to draw into part of a ThebesLayer that
@@ -1374,13 +1368,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   for (i = items.Length(); i > 0; --i) {
     ClippedDisplayItem* cdi = &items[i - 1];
 
-    presContext = cdi->mItem->GetUnderlyingFrame()->PresContext();
-    if (presContext->AppUnitsPerDevPixel() != appUnitsPerDevPixel) {
-      // Some kind of zooming detected, just redraw the entire item
-      nsRegion tmp(cdi->mItem->GetBounds(builder));
-      cdi->mItem->RecomputeVisibility(builder, &tmp);
-      continue;
-    }
+    NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == appUnitsPerDevPixel,
+                 "a thebes layer should contain items only at the same zoom");
 
     if (!cdi->mHasClipRect || cdi->mClipRect.Contains(visible.GetBounds())) {
       cdi->mItem->RecomputeVisibility(builder, &visible);
@@ -1403,13 +1392,22 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
   }
 
+  nsRefPtr<nsIRenderingContext> rc;
+  nsresult rv =
+    presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  if (NS_FAILED(rv))
+    return;
+  rc->Init(presContext->DeviceContext(), aContext);
+
+  nsRect currentClip;
+  PRBool setClipRect = PR_FALSE;
+
   for (i = 0; i < items.Length(); ++i) {
     ClippedDisplayItem* cdi = &items[i];
 
     if (cdi->mItem->GetVisibleRect().IsEmpty())
       continue;
 
-    presContext = cdi->mItem->GetUnderlyingFrame()->PresContext();
     // If the new desired clip state is different from the current state,
     // update the clip.
     if (setClipRect != cdi->mHasClipRect ||
@@ -1435,16 +1433,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       cdi->mTempLayerManager->BeginTransactionWithTarget(aContext);
       cdi->mTempLayerManager->EndTransaction(DrawThebesLayer, builder);
     } else {
-      if (presContext != lastPresContext) {
-        // Create a new rendering context with the right
-        // appunits-per-dev-pixel.
-        nsresult rv =
-          presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-        if (NS_FAILED(rv))
-          break;
-        rc->Init(presContext->DeviceContext(), aContext);
-        lastPresContext = presContext;
-      }
       cdi->mItem->Paint(builder, rc);
     }
   }

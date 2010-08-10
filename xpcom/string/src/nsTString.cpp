@@ -69,17 +69,3 @@ nsTAdoptingString_CharT::operator=( const self_type& str )
     return *this;
   }
 
-nsTFixedString_CharT::nsTFixedString_CharT( char_type* data, size_type storageSize )
-  : string_type(data, PRUint32(char_traits::length(data)), F_TERMINATED | F_FIXED | F_CLASS_FIXED)
-    , mFixedCapacity(storageSize - 1)
-    , mFixedBuf(data)
-{}
-
-nsTFixedString_CharT::nsTFixedString_CharT( char_type* data, size_type storageSize, size_type length )
-  : string_type(data, length, F_TERMINATED | F_FIXED | F_CLASS_FIXED)
-    , mFixedCapacity(storageSize - 1)
-    , mFixedBuf(data)
-{
-  // null-terminate
-  mFixedBuf[length] = char_type(0);
-}

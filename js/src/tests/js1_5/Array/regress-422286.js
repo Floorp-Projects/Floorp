@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-422286.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 422286;
 var summary = 'Array slice when array\'s length is assigned';

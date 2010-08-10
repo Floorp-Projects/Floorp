@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452884-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452884;
 var summary = 'Do not crash in switch';

@@ -360,6 +360,26 @@ protected:
   static jsid sOnpaste_id;
   static jsid sJava_id;
   static jsid sPackages_id;
+  static jsid sOnloadstart_id;
+  static jsid sOnprogress_id;
+  static jsid sOnsuspend_id;
+  static jsid sOnemptied_id;
+  static jsid sOnstalled_id;
+  static jsid sOnplay_id;
+  static jsid sOnpause_id;
+  static jsid sOnloadedmetadata_id;
+  static jsid sOnloadeddata_id;
+  static jsid sOnwaiting_id;
+  static jsid sOnplaying_id;
+  static jsid sOncanplay_id;
+  static jsid sOncanplaythrough_id;
+  static jsid sOnseeking_id;
+  static jsid sOnseeked_id;
+  static jsid sOntimeupdate_id;
+  static jsid sOnended_id;
+  static jsid sOnratechange_id;
+  static jsid sOndurationchange_id;
+  static jsid sOnvolumechange_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
@@ -478,14 +498,14 @@ public:
 
 // Window scriptable helper
 
-class nsWindowSH : public nsEventReceiverSH
+class nsCommonWindowSH : public nsEventReceiverSH
 {
 protected:
-  nsWindowSH(nsDOMClassInfoData* aData) : nsEventReceiverSH(aData)
+  nsCommonWindowSH(nsDOMClassInfoData *aData) : nsEventReceiverSH(aData)
   {
   }
 
-  virtual ~nsWindowSH()
+  virtual ~nsCommonWindowSH()
   {
   }
 
@@ -553,10 +573,41 @@ public:
   static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
                                              nsIHTMLDocument *doc);
+};
 
+class nsOuterWindowSH : public nsCommonWindowSH
+{
+protected:
+  nsOuterWindowSH(nsDOMClassInfoData* aData) : nsCommonWindowSH(aData)
+  {
+  }
+
+  virtual ~nsOuterWindowSH()
+  {
+  }
+
+public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsWindowSH(aData);
+    return new nsOuterWindowSH(aData);
+  }
+};
+
+class nsInnerWindowSH : public nsCommonWindowSH
+{
+protected:
+  nsInnerWindowSH(nsDOMClassInfoData* aData) : nsCommonWindowSH(aData)
+  {
+  }
+
+  virtual ~nsInnerWindowSH()
+  {
+  }
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsInnerWindowSH(aData);
   }
 };
 

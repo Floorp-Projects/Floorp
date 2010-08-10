@@ -46,7 +46,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.7.4.6-1.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing Number.prototype.toExponential(fractionDigits)';

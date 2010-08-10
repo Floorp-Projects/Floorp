@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-468711.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 468711;
 var summary = 'TM: Do not assert: !JS_ON_TRACE(cx)';

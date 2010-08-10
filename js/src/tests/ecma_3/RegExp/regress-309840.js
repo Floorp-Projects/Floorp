@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-309840.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 309840;
 var summary = 'Treat / in a literal regexp class as valid';

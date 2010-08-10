@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-327897.js';
 
 var summary = "Crash in js_GetStringBytes";
 var BUGNUMBER = 327897;

@@ -230,6 +230,18 @@ public:
   PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
   PRBool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
 
+  // returns the parent menupopup, if any
+  nsMenuFrame* GetParentMenu() {
+    nsIFrame* parent = GetParent();
+    if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+      return static_cast<nsMenuFrame *>(parent);
+    }
+    return nsnull;
+  }
+
+  nsIContent* GetTriggerContent() { return mTriggerContent; }
+  void SetTriggerContent(nsIContent* aTriggerContent) { mTriggerContent = aTriggerContent; }
+
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell
   PRBool IsInContentShell() { return mInContentShell; }
@@ -237,6 +249,7 @@ public:
   // the Initialize methods are used to set the anchor position for
   // each way of opening a popup.
   void InitializePopup(nsIContent* aAnchorContent,
+                       nsIContent* aTriggerContent,
                        const nsAString& aPosition,
                        PRInt32 aXPos, PRInt32 aYPos,
                        PRBool aAttributesOverride);
@@ -246,7 +259,8 @@ public:
    * positioned at a slight offset from aXPos/aYPos to ensure the
    * (presumed) mouse position is not over the menu.
    */
-  void InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
+  void InitializePopupAtScreen(nsIContent* aTriggerContent,
+                               PRInt32 aXPos, PRInt32 aYPos,
                                PRBool aIsContextMenu);
 
   void InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
@@ -365,6 +379,10 @@ protected:
   // the content that the popup is anchored to, if any, which may be in a
   // different document than the popup.
   nsCOMPtr<nsIContent> mAnchorContent;
+
+  // the content that triggered the popup, typically the node where the mouse
+  // was clicked. It will be cleared when the popup is hidden.
+  nsCOMPtr<nsIContent> mTriggerContent;
 
   nsMenuFrame* mCurrentMenu; // The current menu that is active.
 

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.1.4-07.js';
 
 var summary = "11.1.4 - XML Initializer - <p:{b}b>x</p:bb>";
 var BUGNUMBER = 321549;

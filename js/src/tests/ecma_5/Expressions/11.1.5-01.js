@@ -1,7 +1,6 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
-var gTestfile = '11.1.5-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 520696;
 var summary =

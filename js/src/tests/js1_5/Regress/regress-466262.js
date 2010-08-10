@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-466262.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 466262;
 var summary = 'Do not assert: f == f->root';

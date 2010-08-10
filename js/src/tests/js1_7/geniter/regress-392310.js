@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-392310.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 392310;
 var summary = 'send on newborn generator';

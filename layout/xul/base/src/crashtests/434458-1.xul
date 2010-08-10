@@ -6,8 +6,8 @@ function boom() {
   var x = a.popupBoxObject;
   a.parentNode.removeChild(a);
   x.enableKeyboardNavigator(true);
-  x.openPopup(null, "after_start", 0, 0, false, false);
-  x.openPopupAtScreen(2, 2, false);
+  x.openPopup(null, "after_start", 0, 0, false, false, null);
+  x.openPopupAtScreen(2, 2, false, null);
   x.showPopup(document.documentElement, a, -1, -1, "popup", "topleft", "topleft");
   x.hidePopup();
   document.documentElement.removeAttribute("class");

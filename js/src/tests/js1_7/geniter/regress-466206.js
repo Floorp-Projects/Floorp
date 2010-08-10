@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-466206.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 466206;
 var summary = 'Do not crash due to unrooted function variables';

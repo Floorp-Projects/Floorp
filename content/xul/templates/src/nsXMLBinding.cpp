@@ -41,6 +41,28 @@
 NS_IMPL_ADDREF(nsXMLBindingSet)
 NS_IMPL_RELEASE(nsXMLBindingSet)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLBindingSet)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXMLBindingSet)
+  nsXMLBinding* binding = tmp->mFirst;
+  while (binding) {
+    binding->mExpr = nsnull;
+    binding = binding->mNext;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXMLBindingSet)
+  nsXMLBinding* binding = tmp->mFirst;
+  while (binding) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "nsXMLBinding::mExpr"); 
+    cb.NoteXPCOMChild(binding->mExpr);
+    binding = binding->mNext;
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXMLBindingSet, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXMLBindingSet, Release)
+
 nsresult
 nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
 {

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-315147.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 315147;
 var summary = 'Error JSMSG_UNDEFINED_PROP should be JSEXN_REFERENCEERR';

@@ -45,7 +45,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=96128
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-96128-n.js';
 var BUGNUMBER = 96128;
 var summary = 'Testing that JS infinite recursion protection works';
 

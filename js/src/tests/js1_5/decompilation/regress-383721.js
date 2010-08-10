@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-383721.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 383721;
 var summary = 'decompiling Tabs';

@@ -5,7 +5,6 @@
  * Contributor: Blake Kaplan
  */
 
-var gTestfile = 'regress-428366.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 428366;
 var summary = 'Do not assert deleting eval 16 times';

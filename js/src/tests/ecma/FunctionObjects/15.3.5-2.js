@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '15.3.5-2.js';
 
 /**
    File Name:          15.3.5-1.js

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452338.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452338;
 var summary = 'Do not assert with JIT: obj2 == obj';

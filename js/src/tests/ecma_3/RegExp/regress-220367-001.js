@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-220367-001.js';
 var i = 0;
 var BUGNUMBER = 220367;
 var summary = 'Regexp conformance test';

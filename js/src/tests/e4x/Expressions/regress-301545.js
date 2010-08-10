@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-301545.js';
 
 var summary = "11.1.1 - Attribute Identifiers Do not crash when " +
     "attribute-op name collides with local var";

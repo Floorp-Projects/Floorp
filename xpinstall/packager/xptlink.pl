@@ -67,12 +67,11 @@ $return = GetOptions(	"source|s=s",           \$srcdir,
 			"<>",                   \&do_badargument
 			);
 
-if ($finaldir ne "") {
-  $bindir = "";
+if ($finaldir eq "") {
+  die "Error: -f is required";
 }
-else {
-  $bindir = "bin/";
-}
+
+my $bindir = "";
 
 # remove extra slashes from $destdir
 $destdir =~ s:/+:/:g;
@@ -133,16 +132,9 @@ foreach my $component (@xptdirs) {
 
 		# merge .xpt files into one if we found any in the dir
 		if ( scalar(@xptfiles) ) {
-      my ($merged, $fmerged, $manifest);
-      if ($finaldir ne "") {
-        $merged = "$finaldir/$component.xpt";
-        $manifest = "$finaldir/$component.manifest";
-      }
-      else {
-        $fmerged = "$destdir/$component/$bindir"."components/$component.xpt";
-        $merged = $fmerged.".new";
-        $manifest = "$destdir/$component/$bindir"."components/$component.manifest";
-      }
+      my ($merged, $manifest);
+      $merged = "$finaldir/$component.xpt";
+      $manifest = "$finaldir/interfaces.manifest";
 
       my @realxptfiles;
       my $realmerged;
@@ -166,23 +158,8 @@ foreach my $component (@xptdirs) {
       open MANIFEST, '>>', $manifest;
       print MANIFEST "interfaces $component.xpt\n";
       close MANIFEST;
-
-      if ($finaldir eq "") {
-        # remove old .xpt files in the component directory.
-        ($debug >= 2) && print "Deleting individual xpt files.\n";
-        for my $file (@xptfiles) {
-          ($debug >= 4) && print "\t$file";
-          unlink ($file) ||
-              die "Couldn't unlink file $file.\n";
-          ($debug >= 4) && print "\t\tdeleted\n\n";
-        }
-
-        ($debug >= 2) && print "Renaming $merged as $fmerged\n";
-        rename ($merged, $fmerged) ||
-            die "Rename of '$merged' to '$fmerged' failed.\n";
-			}
 		}
-	}
+  }
 }
 ($debug >= 1) && print "Linking .xpt files completed.\n";
 

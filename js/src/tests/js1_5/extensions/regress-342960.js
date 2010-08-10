@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-342960.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 342960;
 var summary = 'Do not crash on large string toSource';

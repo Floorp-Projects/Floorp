@@ -70,9 +70,6 @@ rpc protocol PBrowser
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
 
-child:
-    __delete__();
-
 parent:
     /**
      * When child sends this message, parent should move focus to
@@ -109,6 +106,8 @@ parent:
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
                    PRInt32[] aIntParams, nsString[] aStringParams);
+
+    __delete__();
 
 child:
     CreateWidget(MagicWindowHandle parentWidget);
@@ -161,6 +160,28 @@ child:
     // @param matrix the transformation matrix the context we're going to draw into should have.
     PDocumentRendererNativeID(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush,
                               gfxMatrix matrix, PRUint32 nativeID);
+
+    /**
+     * Sent by the chrome process when it no longer wants this remote
+     * <browser>.  The child side cleans up in response, then
+     * finalizing its death by sending back __delete__() to the
+     * parent.
+     */
+    Destroy();
+
+/*
+ * FIXME: write protocol!
+
+state LIVE:
+    send LoadURL goto LIVE;
+//etc.
+    send Destroy goto DYING;
+
+state DYING:
+    discard send blah;
+// etc.
+    recv __delete__;
+ */
 };
 
 }

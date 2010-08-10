@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-362872-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 362872;
 var summary = 'script should not drop watchpoint that is in use';

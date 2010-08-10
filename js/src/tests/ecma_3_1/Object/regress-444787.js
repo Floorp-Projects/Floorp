@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-444787.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 444787;
 var summary = 'Object.getPrototypeOf';

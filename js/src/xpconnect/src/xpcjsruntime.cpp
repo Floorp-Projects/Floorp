@@ -498,6 +498,15 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 {
                     return JS_FALSE;
                 }
+
+                // We seem to sometime lose the unrooted global flag. Restore it
+                // here. FIXME: bug 584495.
+                JSContext *iter = nsnull, *acx;
+
+                while((acx = JS_ContextIterator(cx->runtime, &iter))) {
+                    if (!JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
+                        JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+                }
                 break;
             }
             case JSGC_MARK_END:

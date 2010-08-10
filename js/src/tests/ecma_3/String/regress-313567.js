@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-313567.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 313567;
 var summary = 'String.prototype.length should not be generic';

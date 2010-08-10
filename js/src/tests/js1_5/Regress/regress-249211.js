@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-249211.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 249211;
 var summary = 'support export and import for 4xp';

@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-208496-001.js';
 var UBound = 0;
 var BUGNUMBER = 208496;
 var summary = 'Testing |with (f)| inside the definition of |function f()|';
