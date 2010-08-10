@@ -13,12 +13,12 @@
  *
  * The Original Code is utils.js.
  *
- * The Initial Developer of the Original Code is
- * Aza Raskin <aza@mozilla.com>
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Aza Raskin <aza@mozilla.com>
  * Ian Gilman <ian@iangilman.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
@@ -136,10 +136,10 @@ Rect.prototype = {
   // Function: intersects
   // Returns true if this rectangle intersects the given <Rect>.
   intersects: function(rect) {
-    return (rect.right > this.left
-        && rect.left < this.right
-        && rect.bottom > this.top
-        && rect.top < this.bottom);
+    return (rect.right > this.left &&
+           rect.left < this.right &&
+           rect.bottom > this.top &&
+           rect.top < this.bottom);
   },
 
   // ----------
@@ -164,10 +164,10 @@ Rect.prototype = {
   // Paramaters
   //  - A <Rect>
   contains: function(rect) {
-    return(rect.left > this.left
-         && rect.right < this.right
-         && rect.top > this.top
-         && rect.bottom < this.bottom)
+    return (rect.left > this.left &&
+           rect.right < this.right &&
+           rect.top > this.top &&
+           rect.bottom < this.bottom);
   },
 
   // ----------
@@ -237,10 +237,10 @@ Rect.prototype = {
   // Function: equals
   // Returns true if this rectangle is identical to the given <Rect>.
   equals: function(rect) {
-    return (rect.left == this.left
-        && rect.top == this.top
-        && rect.width == this.width
-        && rect.height == this.height);
+    return (rect.left == this.left &&
+           rect.top == this.top &&
+           rect.width == this.width &&
+           rect.height == this.height);
   },
 
   // ----------
@@ -386,7 +386,7 @@ Subscribable.prototype = {
     try {
       Utils.assertThrow(refObject, "refObject");
       Utils.assertThrow(typeof callback == "function", "callback must be a function");
-      Utils.assertThrow(eventName && typeof(eventName) == "string",
+      Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
 
       if (!this.subscribers)
@@ -420,7 +420,7 @@ Subscribable.prototype = {
   removeSubscriber: function(refObject, eventName) {
     try {
       Utils.assertThrow(refObject, "refObject");
-      Utils.assertThrow(eventName && typeof(eventName) == "string",
+      Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
 
       if (!this.subscribers || !this.subscribers[eventName])
@@ -439,7 +439,7 @@ Subscribable.prototype = {
   // Internal routine. Used by the Subscribable to fire events.
   _sendToSubscribers: function(eventName, eventInfo) {
     try {
-      Utils.assertThrow(eventName && typeof(eventName) == "string",
+      Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
 
       if (!this.subscribers || !this.subscribers[eventName])
@@ -501,7 +501,7 @@ let Utils = {
   assert: function Utils_assert(condition, label) {
     if (!condition) {
       let text;
-      if (typeof(label) != 'string')
+      if (typeof label != 'string')
         text = 'badly formed assert';
       else
         text = "tabview assert: " + label;
@@ -516,7 +516,7 @@ let Utils = {
   assertThrow: function(condition, label) {
     if (!condition) {
       let text;
-      if (typeof(label) != 'string')
+      if (typeof label != 'string')
         text = 'badly formed assert';
       else
         text = "tabview assert: " + label;
@@ -542,9 +542,9 @@ let Utils = {
       }
 
       s += prop + ': ';
-      if (typeof(value) == 'string')
+      if (typeof value == 'string')
         s += '\'' + value + '\'';
-      else if (typeof(value) == 'function')
+      else if (typeof value == 'function')
         s += 'function';
       else
         s += value;
@@ -560,7 +560,7 @@ let Utils = {
   expandArgumentsForLog: function(args) {
     var that = this;
     return Array.map(args, function(arg) {
-      return typeof(arg) == 'object' ? that.expandObject(arg) : arg;
+      return typeof arg == 'object' ? that.expandObject(arg) : arg;
     }).join('; ');
   },
 
@@ -584,27 +584,27 @@ let Utils = {
   // Function: isNumber
   // Returns true if the argument is a valid number.
   isNumber: function(n) {
-    return (typeof(n) == 'number' && !isNaN(n));
+    return typeof n == 'number' && !isNaN(n);
   },
 
   // ----------
   // Function: isRect
   // Returns true if the given object (r) looks like a <Rect>.
   isRect: function(r) {
-    return (r
-        && this.isNumber(r.left)
-        && this.isNumber(r.top)
-        && this.isNumber(r.width)
-        && this.isNumber(r.height));
+    return (r &&
+           this.isNumber(r.left) &&
+           this.isNumber(r.top) &&
+           this.isNumber(r.width) &&
+           this.isNumber(r.height));
   },
 
   // ----------
   // Function: isRange
   // Returns true if the given object (r) looks like a <Range>.
   isRange: function(r) {
-    return (r
-        && this.isNumber(r.min)
-        && this.isNumber(r.max));
+    return (r &&
+           this.isNumber(r.min) &&
+           this.isNumber(r.max));
   },
 
   // ----------
@@ -620,17 +620,17 @@ let Utils = {
   isPlainObject: function(obj) {
     // Must be an Object.
     // Make sure that DOM nodes and window objects don't pass through, as well
-    if (!obj || Object.prototype.toString.call(obj) !== "[object Object]"
-        || obj.nodeType || obj.setInterval) {
+    if (!obj || Object.prototype.toString.call(obj) !== "[object Object]" ||
+       obj.nodeType || obj.setInterval) {
       return false;
     }
 
     // Not own constructor property must be Object
     const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-    if (obj.constructor
-      && !hasOwnProperty.call(obj, "constructor")
-      && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
+    if (obj.constructor &&
+       !hasOwnProperty.call(obj, "constructor") &&
+       !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
       return false;
     }
 
@@ -657,7 +657,7 @@ let Utils = {
   // Returns a copy of the argument. Note that this is a shallow copy; if the argument
   // has properties that are themselves objects, those properties will be copied by reference.
   copy: function(value) {
-    if (value && typeof(value) == 'object') {
+    if (value && typeof value == 'object') {
       if (Array.isArray(value))
         return this.extend([], value);
       return this.extend({}, value);
@@ -677,9 +677,9 @@ let Utils = {
   // Function: extend
   // Pass several objects in and it will combine them all into the first object and return it.
   extend: function() {
-    // copy reference to target object
-    var target = arguments[0] || {}, i = 1, length = arguments.length, options, name, src, copy;
 
+    // copy reference to target object
+    let target = arguments[0] || {};
     // Deep copy is not supported
     if (typeof target === "boolean") {
       this.assert(false, "The first argument of extend cannot be a boolean." +
@@ -689,6 +689,7 @@ let Utils = {
 
     // Back when this was in iQ + iQ.fn, so you could extend iQ objects with it.
     // This is no longer supported.
+    let length = arguments.length;
     if (length === 1) {
       this.assert(false, "Extending the iQ prototype using extend is not supported.");
       return target;
@@ -699,13 +700,13 @@ let Utils = {
       target = {};
     }
 
-    for (; i < length; i++) {
+    for (let i = 1; i < length; i++) {
       // Only deal with non-null/undefined values
-      if ((options = arguments[i]) != null) {
+      let options = arguments[i];
+      if (options != null) {
         // Extend the base object
-        for (name in options) {
-          src = target[name];
-          copy = options[name];
+        for (let name in options) {
+          let copy = options[name];
 
           // Prevent never-ending loop
           if (target === copy)
