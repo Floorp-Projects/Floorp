@@ -26,6 +26,7 @@
  *   Johnathan Nightingale <jnightingale@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
  *   Julian Viereck <jviereck@mozilla.com>
+ *   Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -204,14 +205,18 @@ HUD_SERVICE.prototype =
     var origOnerrorFunc = window.onerror;
     window.onerror = function windowOnError(aErrorMsg, aURL, aLineNumber)
     {
-      var lineNum = "";
-      if (aLineNumber) {
-        lineNum = self.getFormatStr("errLine", [aLineNumber]);
+      if (aURL && !(aURL in self.uriRegistry)) {
+        var lineNum = "";
+        if (aLineNumber) {
+          lineNum = self.getFormatStr("errLine", [aLineNumber]);
+        }
+        console.error(aErrorMsg + " @ " + aURL + " " + lineNum);
       }
-      console.error(aErrorMsg + " @ " + aURL + " " + lineNum);
+
       if (origOnerrorFunc) {
         origOnerrorFunc(aErrorMsg, aURL, aLineNumber);
       }
+
       return false;
     };
   },
