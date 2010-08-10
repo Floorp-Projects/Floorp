@@ -38,8 +38,8 @@
 function test() {
   waitForExplicitFinish();
 
-  TabView.toggle();
   window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
+  setTimeout(function() { TabView.toggle(); }, 0);
 }
 
 function onTabViewWindowLoaded() {
@@ -115,11 +115,15 @@ function addTest(contentWindow, groupOneId, groupTwoId) {
   
   let onTabViewHidden = function() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    groupTwo.closeAll(); 
-    finish();
+    // ToDo: somehow the close all would break tab view being hideen 
+    // so need to find a way to fix it
+    setTimeout(function() { 
+      groupTwo.closeAll();
+      finish();
+    }, 100);
   };
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  TabView.toggle();
+  contentWindow.UI.hideTabView();
 }
 
 function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
@@ -153,3 +157,5 @@ function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
     false, false, false, false, 0, null, dataTransfer);
   srcElement.dispatchEvent(event);
 }
+
+
