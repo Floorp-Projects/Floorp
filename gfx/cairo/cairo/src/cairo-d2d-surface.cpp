@@ -47,10 +47,294 @@ extern "C" {
 // Required for using placement new.
 #include <new>
 
-ID2D1Factory *D2DSurfFactory::mFactoryInstance = NULL;
-ID3D10Device1 *D3D10Factory::mDeviceInstance = NULL;
-
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)CAIRO_STATUS_SUCCESS
+
+struct Vertex
+{
+    float position[2];
+};
+
+// This factory is not device dependent, we can store it. But will clear it
+// if there are no devices left needing it.
+static ID2D1Factory *sD2DFactory = NULL;
+static HMODULE sD2DModule;
+
+static void
+_cairo_d2d_release_factory()
+{
+    int refcnt = sD2DFactory->Release();
+    if (!refcnt) {
+	// Once the last reference goes, free the library.
+	sD2DFactory = NULL;
+	FreeLibrary(sD2DModule);
+    }
+}
+
+/**
+ * Set a blending mode for an operator. This will also return a boolean that
+ * reports if for this blend mode the entire surface needs to be blended. This
+ * is true whenever the DEST blend is not ONE when src alpha is 0.
+ */
+static cairo_int_status_t
+_cairo_d2d_set_operator(cairo_d2d_device_t *device,
+			cairo_operator_t op)
+{
+    assert(op < MAX_OPERATORS);
+    if (op >= MAX_OPERATORS) {
+	// Eep! Someone forgot to update MAX_OPERATORS probably.
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (device->mBlendStates[op]) {
+	device->mD3D10Device->OMSetBlendState(device->mBlendStates[op], NULL, 0xffffffff);
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
+    D3D10_BLEND_DESC desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.BlendEnable[0] = TRUE;
+    desc.AlphaToCoverageEnable = FALSE;
+    desc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL;
+
+    switch (op) {
+	case CAIRO_OPERATOR_OVER:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_INV_SRC_ALPHA;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_ONE;
+	    break;
+	case CAIRO_OPERATOR_ADD:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_ONE;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_ONE;
+	    break;
+	case CAIRO_OPERATOR_IN:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_ZERO;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_DEST_ALPHA;
+	    break;
+	case CAIRO_OPERATOR_OUT:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_ZERO;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_INV_DEST_ALPHA;
+	    break;
+	case CAIRO_OPERATOR_ATOP:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_INV_SRC_ALPHA;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_DEST_ALPHA;
+	    break;
+	case CAIRO_OPERATOR_DEST:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_ONE;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_ZERO;
+	    break;
+	case CAIRO_OPERATOR_DEST_OVER:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_ONE;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_INV_DEST_ALPHA;
+	    break;
+	case CAIRO_OPERATOR_DEST_IN:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_SRC_ALPHA;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_ZERO;
+	    break;
+	case CAIRO_OPERATOR_DEST_OUT:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_INV_SRC_ALPHA;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_ZERO;
+	    break;
+	case CAIRO_OPERATOR_DEST_ATOP:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_SRC_ALPHA;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_INV_DEST_ALPHA;
+	    break;
+	case CAIRO_OPERATOR_XOR:
+	    desc.BlendOp = desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
+	    desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_INV_SRC_ALPHA;
+	    desc.SrcBlend = desc.SrcBlendAlpha = D3D10_BLEND_INV_DEST_ALPHA;
+	    break;
+	default:
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    };
+    device->mD3D10Device->CreateBlendState(&desc, &device->mBlendStates[op]);
+
+    device->mD3D10Device->OMSetBlendState(device->mBlendStates[op], NULL, 0xffffffff);
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
+cairo_device_t *
+cairo_d2d_create_device()
+{
+    D3D10_RASTERIZER_DESC rastDesc;
+    D3D10_INPUT_ELEMENT_DESC layout[] =
+    {
+	{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+    };
+    D3D10_PASS_DESC passDesc;
+    ID3D10EffectTechnique *technique;
+    Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
+    CD3D10_BUFFER_DESC bufferDesc(sizeof(vertices), D3D10_BIND_VERTEX_BUFFER);
+    D3D10_SUBRESOURCE_DATA data;
+
+    cairo_d2d_device_t *device = new cairo_d2d_device_t;
+    device->mD3D10_1 = LoadLibraryA("d3d10_1.dll");
+    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
+	GetProcAddress(device->mD3D10_1, "D3D10CreateDevice1");
+    D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
+	GetProcAddress(device->mD3D10_1, "D3D10CreateEffectFromMemory");
+    D2D1CreateFactoryFunc createD2DFactory;
+
+    if (!createD3DDevice || !createEffect) {
+	goto FAILED;
+    }
+
+    /**
+     * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
+     * documentation on D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+     * can be misleading. In fact, that flag gives no such indication. I pointed this
+     * out to Bas in my email. However, Microsoft is in fact using this flag to
+     * indicate "light weight" DX applications. By light weight they are essentially
+     * referring to applications that are not games. The idea is that when you create
+     * a DX game, the driver assumes that you will pretty much have a single instance
+     * and therefore it doesn't try to hold back when it comes to GPU resource
+     * allocation as long as it can crank out performance. In other words, the
+     * priority in regular DX applications is to make that one application run as fast
+     * as you can. For "light weight" applications, including D2D applications, the
+     * priorities are a bit different. Now you are no longer going to have a single
+     * (or very few) instances. You can have a lot of them (say, for example, a
+     * separate DX context/device per browser tab). In such cases, the GPU resource
+     * allocation scheme changes.
+     */
+    HRESULT hr = createD3DDevice(
+	NULL, 
+	D3D10_DRIVER_TYPE_HARDWARE,
+	NULL,
+	D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+	D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+	D3D10_FEATURE_LEVEL_10_1,
+	D3D10_1_SDK_VERSION,
+	&device->mD3D10Device);
+    if (FAILED(hr)) {
+	HRESULT hr = createD3DDevice(
+	    NULL, 
+	    D3D10_DRIVER_TYPE_HARDWARE,
+	    NULL,
+	    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+	    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+	    D3D10_FEATURE_LEVEL_10_0,
+	    D3D10_1_SDK_VERSION,
+	    &device->mD3D10Device);
+	if (FAILED(hr)) {
+	    /* This is not guaranteed to be too fast! */
+	    HRESULT hr = createD3DDevice(
+		NULL, 
+		D3D10_DRIVER_TYPE_HARDWARE,
+		NULL,
+		D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+		D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+		D3D10_FEATURE_LEVEL_9_3,
+		D3D10_1_SDK_VERSION,
+		&device->mD3D10Device);
+
+	}
+    }
+    if (FAILED(hr)) {
+	goto FAILED;
+    }
+
+    if (!sD2DFactory) {
+	sD2DModule = LoadLibraryW(L"d2d1.dll");
+	createD2DFactory = (D2D1CreateFactoryFunc)
+	    GetProcAddress(sD2DModule, "D2D1CreateFactory");
+	if (!createD2DFactory) {
+	    goto FAILED;
+	}
+	D2D1_FACTORY_OPTIONS options;
+#ifdef DEBUG
+	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
+#else
+	options.debugLevel = D2D1_DEBUG_LEVEL_NONE;
+#endif
+	hr = createD2DFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,
+			      __uuidof(ID2D1Factory),
+			      &options,
+			      (void**)&sD2DFactory);
+	if (FAILED(hr)) {
+	    goto FAILED;
+	}
+    } else {
+	sD2DFactory->AddRef();
+    }
+
+    device->mD3D10Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP);
+    createEffect((void*)g_main, sizeof(g_main), 0, device->mD3D10Device, NULL, &device->mSampleEffect);
+
+    technique = device->mSampleEffect->GetTechniqueByName("SampleTexture");
+    technique->GetPassByIndex(0)->GetDesc(&passDesc);
+
+
+    hr = device->mD3D10Device->CreateInputLayout(layout,
+						 sizeof(layout) / sizeof(D3D10_INPUT_ELEMENT_DESC),
+						 passDesc.pIAInputSignature,
+						 passDesc.IAInputSignatureSize,
+						 &device->mInputLayout);
+    if (FAILED(hr)) {
+	goto FAILED;
+    }
+
+    data.pSysMem = (void*)vertices;
+    hr = device->mD3D10Device->CreateBuffer(&bufferDesc, &data, &device->mQuadBuffer);
+    if (FAILED(hr)) {
+	goto FAILED;
+    }
+
+    memset(&rastDesc, 0, sizeof(rastDesc));
+    rastDesc.CullMode = D3D10_CULL_NONE;
+    rastDesc.FillMode = D3D10_FILL_SOLID;
+    hr = device->mD3D10Device->CreateRasterizerState(&rastDesc, &device->mRasterizerState);
+    if (FAILED(hr)) {
+	goto FAILED;
+    }
+    device->base.refcount = 1;
+
+    return &device->base;
+FAILED:
+    delete &device->base;
+    return NULL;
+}
+
+int
+cairo_release_device(cairo_device_t *device)
+{
+    int newrefcnt = --device->refcount;
+    if (!newrefcnt) {
+	// Call the correct destructor
+	cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
+	FreeLibrary(d2d_device->mD3D10_1);
+	delete d2d_device;
+	_cairo_d2d_release_factory();
+    }
+    return newrefcnt;
+}
+
+int
+cairo_addref_device(cairo_device_t *device)
+{
+    return ++device->refcount;
+}
+
+static void
+_cairo_d2d_setup_for_blend(cairo_d2d_device_t *device)
+{
+    device->mD3D10Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    device->mD3D10Device->IASetInputLayout(device->mInputLayout);
+
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    ID3D10Buffer *buff = device->mQuadBuffer;
+    device->mD3D10Device->IASetVertexBuffers(0, 1, &buff, &stride, &offset);
+
+    device->mD3D10Device->RSSetState(device->mRasterizerState);
+}
 
 // Contains our cache usage - perhaps this should be made threadsafe.
 static int cache_usage = 0;
@@ -347,6 +631,15 @@ _cairo_d2d_color_from_cairo_color(const cairo_color_t &color)
 			(FLOAT)color.alpha);
 }
 
+static void
+_cairo_d2d_round_out_to_int_rect(cairo_rectangle_int_t *rect, double x1, double y1, double x2, double y2)
+{
+    rect->x = (int)floor(x1);
+    rect->y = (int)floor(y1);
+    rect->width = (int)ceil(x2) - rect->x;
+    rect->height = (int)ceil(y2) - rect->y;    
+}
+
 /**
  * Gets the surface buffer texture for window surfaces whose backbuffer
  * is not directly usable as a bitmap.
@@ -366,7 +659,7 @@ _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface)
         softDesc.MipLevels = 1;
 	softDesc.Usage = D3D10_USAGE_DEFAULT;
 	softDesc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-	D3D10Factory::Device()->CreateTexture2D(&softDesc, NULL, &surface->bufferTexture);
+	surface->device->mD3D10Device->CreateTexture2D(&softDesc, NULL, &surface->bufferTexture);
     }
     return surface->bufferTexture;
 }
@@ -414,7 +707,7 @@ void cairo_d2d_present_backbuffer(cairo_surface_t *surface)
     _cairo_d2d_flush(d2dsurf);
     if (d2dsurf->dxgiChain) {
 	d2dsurf->dxgiChain->Present(0, 0);
-	D3D10Factory::Device()->Flush();
+	d2dsurf->device->mD3D10Device->Flush();
     }
 }
 
@@ -743,16 +1036,16 @@ _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style
     }
 
     RefPtr<ID2D1StrokeStyle> strokeStyle;
-    D2DSurfFactory::Instance()->CreateStrokeStyle(D2D1::StrokeStyleProperties(line_cap, 
-									      line_cap,
-									      line_cap, 
-									      line_join, 
-									      (FLOAT)style->miter_limit,
-									      dashStyle,
-									      (FLOAT)style->dash_offset),
-						  dashes,
-						  style->num_dashes,
-						  &strokeStyle);
+    sD2DFactory->CreateStrokeStyle(D2D1::StrokeStyleProperties(line_cap, 
+							       line_cap,
+							       line_cap, 
+							       line_join, 
+							       (FLOAT)style->miter_limit,
+							       dashStyle,
+							       (FLOAT)style->dash_offset),
+							        dashes,
+							        style->num_dashes,
+							        &strokeStyle);
     delete [] dashes;
     return strokeStyle;
 }
@@ -769,6 +1062,18 @@ cairo_user_data_key_t bitmap_key_extend;
 cairo_user_data_key_t bitmap_key_snapshot;
 
 struct cached_bitmap {
+    cached_bitmap()
+    {
+	sD2DFactory->AddRef();
+    }
+
+    ~cached_bitmap()
+    {
+	// Clear bitmap out first because it depends on the factory.
+	bitmap = NULL;
+	_cairo_d2d_release_factory();
+    }
+
     /** The cached bitmap */
     RefPtr<ID2D1Bitmap> bitmap;
     /** The cached bitmap is dirty and needs its data refreshed */
@@ -1724,7 +2029,7 @@ _cairo_d2d_create_path_geometry_for_path(cairo_path_fixed_t *path,
 					 D2D1_FIGURE_BEGIN type)
 {
     RefPtr<ID2D1PathGeometry> d2dpath;
-    D2DSurfFactory::Instance()->CreatePathGeometry(&d2dpath);
+    sD2DFactory->CreatePathGeometry(&d2dpath);
     RefPtr<ID2D1GeometrySink> sink;
     d2dpath->Open(&sink);
     D2D1_FILL_MODE fillMode = D2D1_FILL_MODE_WINDING;
@@ -1844,8 +2149,8 @@ _cairo_d2d_clear (cairo_d2d_surface_t *d2dsurf,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
-						     const cairo_pattern_t *source)
+cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
+					      const cairo_pattern_t *source)
 {
     if (op == CAIRO_OPERATOR_SOURCE) {
 	/** Operator over is easier for D2D! If the source if opaque, change */
@@ -1935,7 +2240,7 @@ _cairo_d2d_create_similar(void			*surface,
     RefPtr<ID3D10Texture2D> texture;
     RefPtr<IDXGISurface> dxgiSurface;
 
-    hr = D3D10Factory::Device()->CreateTexture2D(&desc, NULL, &texture);
+    hr = d2dsurf->device->mD3D10Device->CreateTexture2D(&desc, NULL, &texture);
     if (FAILED(hr)) {
 	goto FAIL_CREATESIMILAR;
     }
@@ -1952,14 +2257,14 @@ _cairo_d2d_create_similar(void			*surface,
 					  D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE
 					: D2D1_RENDER_TARGET_USAGE_NONE;
 
-    hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
-								   D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
-								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
-											 alpha),
-								       dpiX,
-								       dpiY,
-								       usage),
-								   &newSurf->rt);
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+						    D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+										 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
+												   alpha),
+										 dpiX,
+										 dpiY,
+										 usage),
+						    &newSurf->rt);
 
     if (FAILED(hr)) {
 	goto FAIL_CREATESIMILAR;
@@ -1982,6 +2287,9 @@ _cairo_d2d_create_similar(void			*surface,
 
     _d2d_clear_surface(newSurf);
 
+    newSurf->device = d2dsurf->device;
+    cairo_addref_device(&newSurf->device->base);
+
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
 FAIL_CREATESIMILAR:
@@ -1998,6 +2306,7 @@ _cairo_d2d_finish(void	    *surface)
 
     reset_clip(d2dsurf);
 
+    cairo_release_device(&d2dsurf->device->base);
     d2dsurf->~cairo_d2d_surface_t();
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2032,12 +2341,12 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     softDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE | D3D10_CPU_ACCESS_READ;
     softDesc.Usage = D3D10_USAGE_STAGING;
     softDesc.BindFlags = 0;
-    hr = D3D10Factory::Device()->CreateTexture2D(&softDesc, NULL, &softTexture);
+    hr = d2dsurf->device->mD3D10Device->CreateTexture2D(&softDesc, NULL, &softTexture);
     if (FAILED(hr)) {
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    D3D10Factory::Device()->CopyResource(softTexture, d2dsurf->surface);
+    d2dsurf->device->mD3D10Device->CopyResource(softTexture, d2dsurf->surface);
 
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
@@ -2105,11 +2414,11 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     softDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE | D3D10_CPU_ACCESS_READ;
     softDesc.Usage = D3D10_USAGE_STAGING;
     softDesc.BindFlags = 0;
-    hr = D3D10Factory::Device()->CreateTexture2D(&softDesc, NULL, &softTexture);
+    hr = d2dsurf->device->mD3D10Device->CreateTexture2D(&softDesc, NULL, &softTexture);
     if (FAILED(hr)) {
 	return CAIRO_STATUS_NO_MEMORY;
     }
-    D3D10Factory::Device()->CopyResource(softTexture, d2dsurf->surface);
+    d2dsurf->device->mD3D10Device->CopyResource(softTexture, d2dsurf->surface);
 
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
@@ -2149,7 +2458,7 @@ _cairo_d2d_release_dest_image(void                    *abstract_surface,
     cairo_surface_destroy(&image->base);
 
     softTexture->Unmap(0);
-    D3D10Factory::Device()->CopyResource(d2dsurf->surface, softTexture);
+    d2dsurf->device->mD3D10Device->CopyResource(d2dsurf->surface, softTexture);
     softTexture->Release();
 }
 
@@ -2196,7 +2505,7 @@ _cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
     if (src->surface.get() == dst->surface.get()) {
 	// Self-copy
 	srcResource = _cairo_d2d_get_buffer_texture(dst);
-	D3D10Factory::Device()->CopyResource(srcResource, src->surface);
+	src->device->mD3D10Device->CopyResource(srcResource, src->surface);
     } else {
 	// Need to flush the source too if it's a different surface.
         _cairo_d2d_flush(src);
@@ -2230,14 +2539,14 @@ _cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
 	rect.right = transformed_rect.x + transformed_rect.width;
 	rect.bottom = transformed_rect.y + transformed_rect.height;
 
-	D3D10Factory::Device()->CopySubresourceRegion(dst->surface,
-						      0,
-						      area_to_copy.x,
-						      area_to_copy.y,
-						      0,
-						      srcResource,
-						      0,
-						      &rect);
+	src->device->mD3D10Device->CopySubresourceRegion(dst->surface,
+							 0,
+							 area_to_copy.x,
+							 area_to_copy.y,
+							 0,
+							 srcResource,
+							 0,
+							 &rect);
     }
 
     return rv;
@@ -2282,6 +2591,11 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
     
     cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
 
+    if (d2dsrc->device != dst->device) {
+	// This doesn't work between different devices.
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     /* Region we need to clip this operation to */
     cairo_region_t *clipping_region = NULL;
     cairo_region_t *region;
@@ -2315,6 +2629,191 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
     return rv;
 }
 
+RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
+{
+    RefPtr<ID3D10Texture2D> texture = _cairo_d2d_get_buffer_texture(surf);
+    RefPtr<ID2D1RenderTarget> new_rt;
+    RefPtr<IDXGISurface> dxgiSurface;
+    texture->QueryInterface(&dxgiSurface);
+    HRESULT hr;
+
+    _cairo_d2d_flush(surf);
+
+    if (!surf) {
+	return NULL;
+    }
+
+    D2D1_RENDER_TARGET_PROPERTIES props = 
+	D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+				     D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED));
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+						    props,
+						    &new_rt);
+
+    if (FAILED(hr)) {
+	return NULL;
+    }
+
+    new_rt->BeginDraw();
+    new_rt->Clear(D2D1::ColorF(0, 0));
+
+    // Since this is a fresh surface there's no point in doing clever things to
+    // keep the clip path around until a certain depth. So we just do a straight-
+    // forward push of all clip paths in the tree, similar to what the normal
+    // clip code does, but a little less clever.
+    if (clip) {
+	cairo_clip_path_t *path = clip->path;
+	while (path) {
+	    cairo_box_t clip_box;
+	    if (_cairo_path_fixed_is_box(&path->path, &clip_box)) {
+		// If this does not have a region it could be none-pixel aligned.
+		D2D1_ANTIALIAS_MODE aaMode = D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
+		if (box_is_integer(&clip_box)) {
+		    aaMode = D2D1_ANTIALIAS_MODE_ALIASED;
+		}
+		new_rt->PushAxisAlignedClip(D2D1::RectF(_cairo_fixed_to_float(clip_box.p1.x),
+							_cairo_fixed_to_float(clip_box.p1.y),
+							_cairo_fixed_to_float(clip_box.p2.x),
+							_cairo_fixed_to_float(clip_box.p2.y)),
+					    aaMode);
+	    } else {
+		HRESULT hr;
+		RefPtr<ID2D1PathGeometry> geom = _cairo_d2d_create_path_geometry_for_path (&path->path,
+											   path->fill_rule,
+											   D2D1_FIGURE_BEGIN_FILLED);
+		RefPtr<ID2D1Layer> layer;
+
+		hr = new_rt->CreateLayer (&layer);
+
+		D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
+
+		new_rt->PushLayer(D2D1::LayerParameters(
+					D2D1::InfiniteRect(),
+					geom,
+					D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+					D2D1::IdentityMatrix(),
+					1.0,
+					0,
+					options),
+				  layer);
+	    }
+	    path = path->prev;
+	}
+    }
+    return new_rt;
+}
+
+cairo_int_status_t _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds)
+{
+    int numPaths = 0;
+    if (clip) {
+	cairo_clip_path_t *path = clip->path;
+	while (path) {
+	    numPaths++;
+	    path = path->prev;
+	}
+	
+	cairo_clip_path_t **paths = new cairo_clip_path_t*[numPaths];
+
+	numPaths = 0;
+	path = clip->path;
+	while (path) {
+	    paths[numPaths++] = path;
+	    path = path->prev;
+	}	
+
+	for (int i = numPaths - 1; i >= 0; i--) {
+	    if (paths[i]->flags & CAIRO_CLIP_PATH_IS_BOX) {
+		rt->PopAxisAlignedClip();
+	    } else {
+		rt->PopLayer();
+	    }
+	}
+	delete [] paths;
+    }
+    rt->EndDraw();
+    HRESULT hr;
+
+    RefPtr<ID3D10Texture2D> srcTexture = _cairo_d2d_get_buffer_texture(surf);
+    RefPtr<ID3D10Texture2D> dstTexture;
+
+    surf->surface->QueryInterface(&dstTexture);
+    ID3D10Device *device = surf->device->mD3D10Device;
+
+    if (!surf->buffer_rt_view) {
+	hr = device->CreateRenderTargetView(dstTexture, NULL, &surf->buffer_rt_view);
+	if (FAILED(hr)) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    if (!surf->buffer_sr_view) {
+	hr = device->CreateShaderResourceView(srcTexture, NULL, &surf->buffer_sr_view);
+	if (FAILED(hr)) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    cairo_int_status_t status;
+
+    status = _cairo_d2d_set_operator(surf->device, op);
+
+    if (unlikely(status)) {
+	return status;
+    }
+
+    D3D10_TEXTURE2D_DESC tDesc;
+    dstTexture->GetDesc(&tDesc);
+    D3D10_VIEWPORT vp;
+    vp.Height = tDesc.Height;
+    vp.MinDepth = 0;
+    vp.MaxDepth = 1.0;
+    vp.TopLeftX = 0;
+    vp.TopLeftY = 0;
+    vp.Width = tDesc.Width;
+    device->RSSetViewports(1, &vp);
+
+    ID3D10Effect *effect = surf->device->mSampleEffect;
+
+    ID3D10RenderTargetView *rtViewPtr = surf->buffer_rt_view;
+    device->OMSetRenderTargets(1, &rtViewPtr, 0);
+    ID3D10EffectVectorVariable *quadDesc = effect->GetVariableByName("QuadDesc")->AsVector();
+    ID3D10EffectVectorVariable *texCoords = effect->GetVariableByName("TexCoords")->AsVector();
+
+    float quadDescVal[] = { -1.0f, 1.0f, 2.0f, -2.0f };
+    float texCoordsVal[] = { 0.0, 0.0, 1.0f, 1.0f };
+    if (bounds && _cairo_operator_bounded_by_mask(op)) {
+	quadDescVal[0] = -1.0f + ((float)bounds->x / (float)tDesc.Width) * 2.0f;
+	quadDescVal[1] = 1.0f - ((float)bounds->y / (float)tDesc.Height) * 2.0f;
+	quadDescVal[2] = ((float)bounds->width / (float)tDesc.Width) * 2.0f;
+	quadDescVal[3] = -((float)bounds->height / (float)tDesc.Height) * 2.0f;
+	texCoordsVal[0] = (float)bounds->x / (float)tDesc.Width;
+	texCoordsVal[1] = (float)bounds->y / (float)tDesc.Height;
+	texCoordsVal[2] = (float)bounds->width / (float)tDesc.Width;
+	texCoordsVal[3] = (float)bounds->height / (float)tDesc.Height;
+    }
+    quadDesc->SetFloatVector(quadDescVal);
+    texCoords->SetFloatVector(texCoordsVal);
+
+    _cairo_d2d_setup_for_blend(surf->device);
+    ID3D10EffectTechnique *technique = effect->GetTechniqueByName("SampleTexture");
+    technique->GetPassByIndex(0)->Apply(0);
+
+    ID3D10ShaderResourceView *srViewPtr = surf->buffer_sr_view;
+    device->PSSetShaderResources(0, 1, &srViewPtr);
+
+    device->Draw(4, 0);
+
+#ifdef DEBUG
+    // Quiet down some info messages from D3D10 debug layer
+    srViewPtr = NULL;
+    device->PSSetShaderResources(0, 1, &srViewPtr);
+    rtViewPtr = NULL;
+    device->OMSetRenderTargets(1, &rtViewPtr, 0); 
+#endif
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_d2d_paint(void			*surface,
 		 cairo_operator_t	 op,
@@ -2325,6 +2824,10 @@ _cairo_d2d_paint(void			*surface,
     cairo_int_status_t status;
 
     op = _cairo_d2d_simplify_operator(op, source);
+
+    if (op == CAIRO_OPERATOR_SOURCE) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (op == CAIRO_OPERATOR_CLEAR) {
 	return _cairo_d2d_clear(d2dsurf, clip);
@@ -2341,14 +2844,25 @@ _cairo_d2d_paint(void			*surface,
 	    return status;
 	}
     }
+    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(d2dsurf, clip);
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(d2dsurf);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
 
-    _begin_draw_state(d2dsurf);
-    status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
+	if (unlikely(status))
+	    return status;
+    }
+#endif
 
-    if (unlikely(status))
-	return status;
-
-    d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 
     RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
 								   source);
@@ -2356,23 +2870,16 @@ _cairo_d2d_paint(void			*surface,
     if (!brush) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (op == CAIRO_OPERATOR_OVER) {
-	D2D1_SIZE_F size = d2dsurf->rt->GetSize();
-	d2dsurf->rt->FillRectangle(D2D1::RectF((FLOAT)0,
-					       (FLOAT)0,
-					       (FLOAT)size.width,
-					       (FLOAT)size.height),
-				   brush);
-    } else if (op == CAIRO_OPERATOR_SOURCE) {
-	D2D1_SIZE_F size = d2dsurf->rt->GetSize();
-	d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
-	d2dsurf->rt->FillRectangle(D2D1::RectF((FLOAT)0,
-					       (FLOAT)0,
-					       (FLOAT)size.width,
-					       (FLOAT)size.height),
-				   brush);
-    } else {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    D2D1_SIZE_F size = target_rt->GetSize();
+    target_rt->FillRectangle(D2D1::RectF((FLOAT)0,
+					 (FLOAT)0,
+					 (FLOAT)size.width,
+					 (FLOAT)size.height),
+			     brush);
+
+    if (target_rt.get() != d2dsurf->rt.get()) {
+	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
     }
 
     return CAIRO_INT_STATUS_SUCCESS;
@@ -2473,27 +2980,32 @@ _cairo_d2d_stroke(void			*surface,
 
     op = _cairo_d2d_simplify_operator(op, source);
 
-    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD) {
-	/** 
-	 * We don't really support ADD yet. True ADD support requires getting
-	 * the tesselated mesh from D2D, and blending that using D3D which has
-	 * an add operator available.
-	 */
+    if (op == CAIRO_OPERATOR_SOURCE) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    _begin_draw_state(d2dsurf);
+    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(d2dsurf, clip);
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(d2dsurf);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
 
-    status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
-
-    if (unlikely (status))
-	return status;
-
+	if (unlikely(status))
+	    return status;
+    }
+#endif
 
     if (antialias == CAIRO_ANTIALIAS_NONE) {
-	d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+	target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
     } else {
-	d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
     RefPtr<ID2D1StrokeStyle> strokeStyle = _cairo_d2d_create_strokestyle_for_stroke_style(style);
 
@@ -2507,9 +3019,9 @@ _cairo_d2d_stroke(void			*surface,
     D2D1::Matrix3x2F inverse_mat = _cairo_d2d_invert_matrix(mat);
     
     RefPtr<ID2D1TransformedGeometry> trans_geom;
-    D2DSurfFactory::Instance()->CreateTransformedGeometry(d2dpath, &inverse_mat, &trans_geom);
+    sD2DFactory->CreateTransformedGeometry(d2dpath, &inverse_mat, &trans_geom);
 
-    d2dsurf->rt->SetTransform(mat);
+    target_rt->SetTransform(mat);
 
     RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
 								   source);
@@ -2517,9 +3029,18 @@ _cairo_d2d_stroke(void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    d2dsurf->rt->DrawGeometry(trans_geom, brush, (FLOAT)style->line_width, strokeStyle);
+    target_rt->DrawGeometry(trans_geom, brush, (FLOAT)style->line_width, strokeStyle);
 
-    d2dsurf->rt->SetTransform(D2D1::Matrix3x2F::Identity());
+    target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
+
+    if (target_rt.get() != d2dsurf->rt.get()) {
+	D2D1_RECT_F bounds;
+	trans_geom->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, D2D1::IdentityMatrix(), &bounds);
+	cairo_rectangle_int_t bound_rect;
+	_cairo_d2d_round_out_to_int_rect(&bound_rect, bounds.left, bounds.top, bounds.right, bounds.bottom);
+	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip, &bound_rect);
+    }
+
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
@@ -2552,35 +3073,47 @@ _cairo_d2d_fill(void			*surface,
 
     op = _cairo_d2d_simplify_operator(op, source);
 
-    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
-	op != CAIRO_OPERATOR_CLEAR) {
-	/** 
-	 * We don't really support ADD yet. True ADD support requires getting
-	 * the tesselated mesh from D2D, and blending that using D3D which has
-	 * an add operator available.
-	 */
+    if (op == CAIRO_OPERATOR_SOURCE) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    _begin_draw_state(d2dsurf);
-    status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
-
-    if (unlikely(status))
-	return status;
-
-
-    if (antialias == CAIRO_ANTIALIAS_NONE) {
-	d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
-    } else {
-	d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
 
     if (op == CAIRO_OPERATOR_CLEAR) {
 	if (_cairo_path_fixed_is_box(path, &box)) {
+	    _begin_draw_state(d2dsurf);
+	    status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
+
+	    if (unlikely(status))
+		return status;
+
 	    return _cairo_d2d_clear_box (d2dsurf, clip, &box);
 	} else {
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
+    }
+
+    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+    
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(d2dsurf, clip);
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(d2dsurf);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
+
+	if (unlikely(status))
+	    return status;
+    }
+#endif
+
+    if (antialias == CAIRO_ANTIALIAS_NONE) {
+	target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    } else {
+	target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
 
     if (is_box) {
@@ -2594,11 +3127,11 @@ _cairo_d2d_fill(void			*surface,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-	d2dsurf->rt->FillRectangle(D2D1::RectF(x1,
-					       y1,
-					       x2,
-					       y2),
-				   brush);
+	target_rt->FillRectangle(D2D1::RectF(x1,
+					     y1,
+					     x2,
+					     y2),
+				 brush);
     } else {
 	RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, fill_rule, D2D1_FIGURE_BEGIN_FILLED);
 
@@ -2607,8 +3140,17 @@ _cairo_d2d_fill(void			*surface,
 	if (!brush) {
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
-	d2dsurf->rt->FillGeometry(d2dpath, brush);
+	target_rt->FillGeometry(d2dpath, brush);
     }
+
+    if (target_rt.get() != d2dsurf->rt.get()) {
+	double x1, y1, x2, y2;
+	_cairo_path_fixed_bounds(path, &x1, &y1, &x2, &y2);
+	cairo_rectangle_int_t bounds;
+	_cairo_d2d_round_out_to_int_rect(&bounds, x1, y1, x2, y2);
+	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip, &bounds);
+    }
+
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
@@ -2660,17 +3202,11 @@ _cairo_d2d_getextents(void		       *surface,
 /** Helper functions. */
 
 cairo_surface_t*
-cairo_d2d_surface_create_for_hwnd(HWND wnd,
+cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
+				  HWND wnd,
 				  cairo_content_t content)
 {
-    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
-	/**
-	 * FIXME: In the near future we can use cairo_device_t to pass in a
-	 * device.
-	 */
-	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
-    }
-
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(cairo_device);
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     new (newSurf) cairo_d2d_surface_t();
 
@@ -2700,7 +3236,7 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd,
     if (!sizePixels.height) {
 	sizePixels.height = 1;
     }
-    ID3D10Device1 *device = D3D10Factory::Device();
+    ID3D10Device1 *device = d2d_device->mD3D10Device;
     RefPtr<IDXGIDevice> dxgiDevice;
     RefPtr<IDXGIAdapter> dxgiAdapter;
     RefPtr<IDXGIFactory> dxgiFactory;
@@ -2762,7 +3298,7 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd,
 					 dpiX,
 					 dpiY,
 					 D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE);
-    hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(newSurf->backBuf,
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(newSurf->backBuf,
 								   props,
 								   &newSurf->rt);
     if (FAILED(hr)) {
@@ -2776,6 +3312,9 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd,
 
     _d2d_clear_surface(newSurf);
 
+    newSurf->device = d2d_device;
+    cairo_addref_device(cairo_device);
+
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
 FAIL_HWND:
@@ -2785,17 +3324,12 @@ FAIL_HWND:
 }
 
 cairo_surface_t *
-cairo_d2d_surface_create(cairo_format_t format,
+cairo_d2d_surface_create(cairo_device_t *device,
+			 cairo_format_t format,
                          int width,
                          int height)
 {
-    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
-	/**
-	 * FIXME: In the near future we can use cairo_device_t to pass in a
-	 * device.
-	 */
-	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
-    }
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     new (newSurf) cairo_d2d_surface_t();
 
@@ -2838,7 +3372,7 @@ cairo_d2d_surface_create(cairo_format_t format,
     D2D1_BITMAP_PROPERTIES bitProps;
     D2D1_RENDER_TARGET_PROPERTIES props;
 
-    hr = D3D10Factory::Device()->CreateTexture2D(&desc, NULL, &texture);
+    hr = d2d_device->mD3D10Device->CreateTexture2D(&desc, NULL, &texture);
 
     if (FAILED(hr)) {
 	goto FAIL_CREATE;
@@ -2858,7 +3392,7 @@ cairo_d2d_surface_create(cairo_format_t format,
     if (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE)
 	props.usage = D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
 
-    hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
 								   props,
 								   &newSurf->rt);
 
@@ -2886,6 +3420,9 @@ cairo_d2d_surface_create(cairo_format_t format,
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
     _d2d_clear_surface(newSurf);
+
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
 
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
@@ -2945,8 +3482,8 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
     }
     ID3D10Texture2D *texture = _cairo_d2d_get_buffer_texture(d2dsurf);
 
-    D3D10Factory::Device()->CopyResource(texture, d2dsurf->surface);
-    D3D10Factory::Device()->CopySubresourceRegion(d2dsurf->surface,
+    d2dsurf->device->mD3D10Device->CopyResource(texture, d2dsurf->surface);
+    d2dsurf->device->mD3D10Device->CopySubresourceRegion(d2dsurf->surface,
 						  0,
 						  point.x,
 						  point.y,
@@ -2955,19 +3492,6 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
 						  0,
 						  &rect);
 
-}
-
-cairo_bool_t
-cairo_d2d_has_support()
-{
-    /**
-     * FIXME: We should be able to fix this in the near future when we pass in
-     * a cairo_device_t to our surface creation functions.
-     */
-    if (!D3D10Factory::Device() || !D2DSurfFactory::Instance()) {
-	return false;
-    }
-    return true;
 }
 
 HDC
