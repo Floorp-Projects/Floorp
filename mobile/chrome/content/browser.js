@@ -710,6 +710,36 @@ var Browser = {
   },
 
   /**
+   * Load a URI in the current tab, or a new tab if necessary.
+   * @param aURI String
+   * @param aParams Object with optional properties that will be passed to loadURIWithFlags:
+   *    flags, referrerURI, charset, postData.
+   */
+  loadURI: function loadURI(aURI, aParams) {
+    let browser = this.selectedBrowser;
+
+    // We need to keep about: pages opening in new "local" tabs. We also want to spawn
+    // new "remote" tabs if opening web pages from a "local" about: page.
+    let currentURI = browser.currentURI.spec;
+    let useLocal = Util.isLocalScheme(aURI);
+    let hasLocal = Util.isLocalScheme(currentURI);
+
+    if (hasLocal != useLocal) {
+      let oldTab = this.selectedTab;
+      if (currentURI == "about:blank" && !browser.canGoBack && !browser.canGoForward) {
+        this.closeTab(oldTab);
+        oldTab = null;
+      }
+      let tab = Browser.addTab(aURI, true, oldTab);
+      tab.browser.stop();
+    }
+
+    let params = aParams || {};
+    let flags = params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    getBrowser().loadURIWithFlags(aURI, flags, params.referrerURI, params.charset, params.postData);
+  },
+
+  /**
    * Return the currently active <browser> object
    */
   get selectedBrowser() {
@@ -1432,7 +1462,7 @@ nsBrowserAccess.prototype = {
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = Browser.selectedBrowser;
     }
-    
+
     try {
       let referrer;
       if (aURI) {

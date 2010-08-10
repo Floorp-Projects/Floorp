@@ -502,18 +502,7 @@ var BrowserUI = {
 
     this._edit.value = aURI;
 
-    // We need to keep about: pages opening in new "local" tabs. We also want to spawn
-    // new "remote" tabs if opening web pages from a "local" about: page.
-    let currentURI = getBrowser().currentURI;
-    let useLocal = Util.isLocalScheme(aURI);
-    let hasLocal = Util.isLocalScheme(currentURI.spec);
-    if (hasLocal != useLocal) {
-      let tab = Browser.addTab("about:blank", true);
-      tab.browser.stop();
-    }
-
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    getBrowser().loadURIWithFlags(aURI, loadFlags, null, null);
+    Browser.loadURI(aURI, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
 
     // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
     // and the proper third-party fixup can be done
@@ -561,17 +550,7 @@ var BrowserUI = {
     Util.forceOnline();
 
     let submission = button.engine.getSubmission(this._edit.value, null);
-    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-
-    let currentURI = getBrowser().currentURI;
-    let hasLocal = Util.isLocalScheme(currentURI.spec);
-    if (hasLocal) {
-      // We are in a local browser, so make a new tab and stop the initial load
-      let tab = Browser.addTab("about:blank", true);
-      tab.browser.stop();
-    }
-
-    getBrowser().loadURIWithFlags(submission.uri.spec, flags, null, null, submission.postData);
+    Browser.loadURI(submission.uri.spec, { postData: submission.postData });
   },
 
   updateStar: function() {
