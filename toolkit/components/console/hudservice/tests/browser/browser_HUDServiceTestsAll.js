@@ -747,13 +747,75 @@ function testDuplicateError() {
           "found test-duplicate-error.html");
 
         text = null;
-        testWebConsoleClose();
+        testCopyOutputMenuItem();
       });
     }
   };
 
   Services.console.registerListener(consoleObserver);
   content.location = TEST_DUPLICATE_ERROR_URI;
+}
+
+function testCopyOutputMenuItem()
+{
+  // See bug 574036 - HUD Console should allow copying text.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=574036
+
+  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var selection = getSelection();
+  var console = content.wrappedJSObject.console;
+
+  if (selection.rangeCount > 0) {
+    selection.removeAllRanges();
+  }
+
+  // Test 1: check that the copyOutputMenuItem is disabled
+  HUD.contextMenu.addEventListener("popupshown", function () {
+    HUD.contextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    // Skip the test on Linux, because the menu is always enabled.
+    // See bug 584972 - https://bugzilla.mozilla.org/show_bug.cgi?id=584972
+    if (navigator.platform.indexOf("Linux") == -1) {
+      ok(HUD.copyOutputMenuItem.disabled, "HUD.copyOutputMenuItem is disabled");
+    }
+
+    console.log("Hello world!");
+
+    var range = HUD.chromeDocument.createRange();
+    range.selectNode(HUD.outputNode.firstChild);
+    selection.addRange(range);
+
+    // Test 2: check that the copyOutputMenuItem is enabled, because a node is
+    // selected.
+    HUD.contextMenu.addEventListener("popupshown", function () {
+      HUD.contextMenu.removeEventListener("popupshown", arguments.callee,
+        false);
+
+      ok(!HUD.copyOutputMenuItem.disabled, "HUD.copyOutputMenuItem is enabled");
+
+      selection.removeAllRanges();
+
+      // We are done, close the contextmenu now.
+      EventUtils.synthesizeKey("VK_ESCAPE", {});
+
+      testWebConsoleClose();
+    }, false);
+
+    HUD.contextMenu.addEventListener("popuphidden", function () {
+      HUD.contextMenu.removeEventListener("popuphidden", arguments.callee,
+        false);
+
+      // Show the context menu again.
+      EventUtils.synthesizeMouse(HUD.outputNode, 2, 2, {type: "contextmenu",
+        button: 2});
+    }, false);
+
+    // We need to hide the context menu, before we can show it again.
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+  }, false);
+
+  EventUtils.synthesizeMouse(HUD.outputNode, 1, 1, {type: "contextmenu",
+    button: 2});
 }
 
 /**

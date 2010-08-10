@@ -1675,6 +1675,8 @@ function HeadsUpDisplay(aConfig)
   this.XULFactory = NodeFactory("xul", "xul", this.chromeDocument);
   this.textFactory = NodeFactory("text", "xul", this.chromeDocument);
 
+  this.chromeWindow = HUDService.getChromeWindowFromContentWindow(this.contentWindow);
+
   // create a panel dynamically and attach to the parentNode
   let hudBox = this.createHUD();
 
@@ -1760,9 +1762,15 @@ HeadsUpDisplay.prototype = {
   {
     this.hudId = this.HUDBox.getAttribute("id");
 
-    // set outputNode
     this.outputNode = this.HUDBox.querySelectorAll(".hud-output-node")[0];
 
+    this.contextMenu = this.HUDBox.querySelector("#" + this.hudId +
+        "-output-contextmenu");
+    this.copyOutputMenuItem = this.HUDBox.
+      querySelector("menuitem[command=cmd_copy]");
+
+    this.chromeWindow = HUDService.
+      getChromeWindowFromContentWindow(this.contentWindow);
     this.chromeDocument = this.HUDBox.ownerDocument;
 
     if (this.outputNode) {
@@ -1867,6 +1875,7 @@ HeadsUpDisplay.prototype = {
     this.outputNode = this.makeXULNode("vbox");
     this.outputNode.setAttribute("class", "hud-output-node");
     this.outputNode.setAttribute("flex", "1");
+    this.outputNode.setAttribute("context", this.hudId + "-output-contextmenu");
 
     this.filterSpacer = this.makeXULNode("spacer");
     this.filterSpacer.setAttribute("flex", "1");
@@ -1887,6 +1896,16 @@ HeadsUpDisplay.prototype = {
     var command = "HUDConsoleUI.command(this)";
     this.consoleClearButton.setAttribute("oncommand", command);
 
+    this.copyOutputMenuItem = this.makeXULNode("menuitem");
+    this.copyOutputMenuItem.setAttribute("label", this.getStr("copyCmd.label"));
+    this.copyOutputMenuItem.setAttribute("accesskey", this.getStr("copyCmd.accesskey"));
+    this.copyOutputMenuItem.setAttribute("key", "key_copy");
+    this.copyOutputMenuItem.setAttribute("command", "cmd_copy");
+
+    this.contextMenu = this.makeXULNode("menupopup");
+    this.contextMenu.setAttribute("id", this.hudId + "-output-contextmenu");
+    this.contextMenu.appendChild(this.copyOutputMenuItem);
+
     this.filterPrefs = HUDService.getDefaultFilterPrefs(this.hudId);
 
     let consoleFilterToolbar = this.makeFilterToolbar();
@@ -1895,6 +1914,11 @@ HeadsUpDisplay.prototype = {
     consoleWrap.appendChild(consoleFilterToolbar);
 
     consoleWrap.appendChild(this.outputNode);
+
+    // We want the context menu inside the console wrapper, but outside the
+    // outputNode.
+    outerWrap.appendChild(this.contextMenu);
+
     outerWrap.appendChild(consoleWrap);
 
     this.HUDBox.lastTimestamp = 0;
