@@ -437,9 +437,7 @@
   </popupset>
 
 #ifdef MENUBAR_CAN_AUTOHIDE
-  <vbox id="titlebar">
-    <hbox id="titlebar-content">
-    <hbox id="appmenu-button-container" align="start">
+  <hbox id="appmenu-button-container">
     <button id="appmenu-button"
             type="menu"
             label="&brandShortName;"
@@ -579,15 +577,7 @@
                   command="cmd_quitApplication"/>
       </menupopup>
     </button>
-    </hbox>
-    <spacer id="titlebar-spacer" flex="1"/>
-    <hbox id="titlebar-buttonbox" collapsed="true">
-      <toolbarbutton id="titlebar-min" onclick="window.minimize();"/>
-      <toolbarbutton id="titlebar-max" onclick="onTitlebarMaxClick();"/>
-      <toolbarbutton id="titlebar-close" onclick="window.close();"/>
-    </hbox>
-    </hbox>
-  </vbox>
+  </hbox>
 #endif
 
   <toolbox id="navigator-toolbox"
