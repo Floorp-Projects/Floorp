@@ -327,7 +327,7 @@ LayerManagerD3D9::Render()
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  mDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0xffffffff, 0, 0);
+  mDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0x00000000, 0, 0);
 
   mDevice->BeginScene();
 
