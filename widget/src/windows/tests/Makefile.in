@@ -42,6 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef BUILD_STATIC_LIBS
 ifndef MOZ_ENABLE_LIBXUL
 LOCAL_INCLUDES =  -I$(srcdir)/../   \
                   -I$(srcdir)/../../xpwidgets \
@@ -62,6 +63,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,ole32 oleaut32 shell32 comctl32 comdlg32 imm32 
 
 CPP_UNIT_TESTS = TestWinDND.cpp \
                  $(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
