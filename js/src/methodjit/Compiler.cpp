@@ -212,11 +212,14 @@ mjit::Compiler::generatePrologue()
         invokeLabel = masm.label();
         RegisterID retAddr = takeHWReturnAddress(masm);
         masm.saveReturnAddress(retAddr);
+#ifdef DEBUG
+        masm.storePtr(ImmPtr(JSStackFrame::sInvalidpc), Address(JSFrameReg, JSStackFrame::offsetOfSavedpc()));
+#endif
 
         Label fastPath = masm.label();
 
         /* Store these early on so slow paths can access them. */
-        masm.storePtr(ImmPtr(script), Address(JSFrameReg, JSStackFrame::offsetScript()));
+        masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetOfExec()));
         masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
 
         {
@@ -229,14 +232,20 @@ mjit::Compiler::generatePrologue()
             arityLabel = stubcc.masm.label();
             RegisterID retAddr = takeHWReturnAddress(stubcc.masm);
             stubcc.masm.saveReturnAddress(retAddr);
-            Jump argMatch = stubcc.masm.branch32(Assembler::AboveOrEqual, JSParamReg_Argc,
+#ifdef DEBUG
+            stubcc.masm.storePtr(ImmPtr(JSStackFrame::sInvalidpc), Address(JSFrameReg, JSStackFrame::offsetOfSavedpc()));
+#endif
+            Jump argMatch = stubcc.masm.branch32(Assembler::Equal, JSParamReg_Argc,
                                                  Imm32(fun->nargs));
             stubcc.crossJump(argMatch, fastPath);
 
+            if (JSParamReg_Argc != Registers::ArgReg1)
+                stubcc.masm.move(JSParamReg_Argc, Registers::ArgReg1);
+
             /* Slow path - call the arity check function. Returns new fp. */
-            stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetFunction()));
+            stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetOfExec()));
             stubcc.masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
-            stubcc.call(stubs::CheckArity);
+            stubcc.call(stubs::FixupArity);
             stubcc.masm.move(Registers::ReturnReg, JSFrameReg);
             stubcc.crossJump(stubcc.masm.jump(), fastPath);
         }
@@ -254,28 +263,16 @@ mjit::Compiler::generatePrologue()
         /* If the stack check fails... */
         {
             stubcc.linkExitDirect(stackCheck, stubcc.masm.label());
-            stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetFunction()));
-            stubcc.call(stubs::CheckStackQuota);
+            stubcc.call(stubs::HitStackQuota);
             stubcc.crossJump(stubcc.masm.jump(), masm.label());
         }
 
-        /* Easy frame members. Hard ones are in caller. */
-        masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetFunction()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetCallObj()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetArgsObj()));
-        masm.storeValue(UndefinedValue(), Address(JSFrameReg, JSStackFrame::offsetReturnValue()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetAnnotation()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetBlockChain()));
-        if (script->debugMode)
-            masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetHookData()));
-#ifdef DEBUG
-        masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
-                      Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
-#endif
+        /* Fill in the members that initCallFrameLatePrologue does. */
+        masm.storeValue(UndefinedValue(), Address(JSFrameReg, JSStackFrame::offsetOfReturnValue()));
+        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetOfBlockChain()));
 
         /* :TODO: This is entirely wrong. */
-        masm.store32(Imm32(cx->version),
-                     Address(JSFrameReg, JSStackFrame::offsetCallerVersion()));
+        masm.store32(Imm32(cx->version), Address(JSFrameReg, JSStackFrame::offsetOfCallerVersion()));
 
         /* Set cx->fp */
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ReturnReg);
@@ -481,8 +478,6 @@ mjit::Compiler::finishThisUp()
         script->callICs[i].funObjReg = callICs[i].funObjReg;
         script->callICs[i].funPtrReg = callICs[i].funPtrReg;
         script->callICs[i].frameDepth = callICs[i].frameDepth;
-        script->callICs[i].isConstantThis = callICs[i].isConstantThis;
-        script->callICs[i].constantThis  = callICs[i].constantThis;
     }
 #endif /* JS_MONOIC */
 
@@ -670,7 +665,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETRVAL)
           {
             FrameEntry *fe = frame.peek(-1);
-            frame.storeTo(fe, Address(JSFrameReg, JSStackFrame::offsetReturnValue()), true);
+            frame.storeTo(fe, Address(JSFrameReg, JSStackFrame::offsetOfReturnValue()), true);
             frame.pop();
           }
           END_CASE(JSOP_POPV)
@@ -678,7 +673,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_RETURN)
           {
             FrameEntry *fe = frame.peek(-1);
-            frame.storeTo(fe, Address(JSFrameReg, JSStackFrame::offsetReturnValue()), true);
+            frame.storeTo(fe, Address(JSFrameReg, JSStackFrame::offsetOfReturnValue()), true);
             frame.pop();
             emitReturn();
           }
@@ -1171,8 +1166,7 @@ mjit::Compiler::generateMethod()
             bool popped = PC[JSOP_SETARG_LENGTH] == JSOP_POP;
 
             RegisterID reg = frame.allocReg();
-            masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
-            Address address = Address(reg, slot * sizeof(Value));
+            Address address = Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
             frame.storeTo(top, address, popped);
             frame.freeReg(reg);
           }
@@ -1386,8 +1380,7 @@ mjit::Compiler::generateMethod()
             uintN index = GET_UINT16(PC);
             // JSObject *obj = &fp->argv[-2].toObject();
             RegisterID reg = frame.allocReg();
-            masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
-            masm.loadPayload(Address(reg, int32(sizeof(Value)) * -2), reg);
+            masm.loadPayload(Address(JSFrameReg, JSStackFrame::offsetOfCallee(fun)), reg);
             // obj->getFlatClosureUpvars()
             Address upvarAddress(reg, offsetof(JSObject, fslots) + 
                                       JSObject::JSSLOT_FLAT_CLOSURE_UPVARS * sizeof(Value));
@@ -1770,47 +1763,37 @@ mjit::Compiler::emitReturn()
             stubCall(stubs::PutCallObject);
             frame.throwaway();
         } else {
-            /* if (callobj) ... */
-            Jump callObj = masm.branchPtr(Assembler::NotEqual,
-                                          Address(JSFrameReg, JSStackFrame::offsetCallObj()),
-                                          ImmPtr(0));
-            stubcc.linkExit(callObj, Uses(frame.frameDepth()));
-
+            /* if (hasCallObj() || hasArgsObj()) stubs::PutActivationObjects() */
+            Jump putObjs = masm.branchTest32(Assembler::NonZero,
+                                             Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
+                                             Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
+            stubcc.linkExit(putObjs, Uses(frame.frameDepth()));
             frame.throwaway();
 
             stubcc.leave();
-            stubcc.call(stubs::PutCallObject);
-            Jump j = stubcc.masm.jump();
-
-            /* if (arguments) ... */
-            Jump argsObj = masm.branchPtr(Assembler::NotEqual,
-                                          Address(JSFrameReg, JSStackFrame::offsetArgsObj()),
-                                          ImmIntPtr(0));
-            stubcc.linkExit(argsObj, Uses(0));
-            stubcc.call(stubs::PutArgsObject);
+            stubcc.call(stubs::PutActivationObjects);
             stubcc.rejoin(Changes(0));
-            stubcc.crossJump(j, masm.label());
         }
     }
 
     /*
-     * r = fp->down
+     * r = fp->prev
      * f.fp = r
      */
-    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, down)), Registers::ReturnReg);
+    masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), Registers::ReturnReg);
     masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, regs.fp)));
 
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
 
-    Address rval(JSFrameReg, JSStackFrame::offsetReturnValue());
+    Address rval(JSFrameReg, JSStackFrame::offsetOfReturnValue());
     masm.loadPayload(rval, JSReturnReg_Data);
     masm.loadTypeTag(rval, JSReturnReg_Type);
     masm.restoreReturnAddress();
     masm.move(Registers::ReturnReg, JSFrameReg);
 #ifdef DEBUG
-    masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
-                  Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
+    masm.storePtr(ImmPtr(JSStackFrame::sInvalidpc),
+                  Address(JSFrameReg, JSStackFrame::offsetOfSavedpc()));
 #endif
     masm.ret();
 }
@@ -1925,11 +1908,6 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * Save constant |this| to optimize thisv stores for common call cases
      * like CALL[LOCAL, GLOBAL, ARG] which push NULL.
      */
-    callIC.isConstantThis = false;
-    if (thisvFe->isConstant()) {
-        callIC.isConstantThis = true;
-        callIC.constantThis = thisvFe->getValue();
-    }
     callIC.frameDepth = frame.frameDepth();
 
     /* Grab type and data registers up-front. */
@@ -3066,7 +3044,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.fastPathStart = masm.label();
 
     Address parent(pic.objReg, offsetof(JSObject, parent));
-    masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetScopeChain()), pic.objReg);
+    masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
 
     pic.shapeGuard = masm.label();
 #if defined JS_NUNBOX32
@@ -3132,7 +3110,7 @@ void
 mjit::Compiler::jsop_bindname(uint32 index)
 {
     RegisterID reg = frame.allocReg();
-    Address scopeChain(JSFrameReg, JSStackFrame::offsetScopeChain());
+    Address scopeChain(JSFrameReg, JSStackFrame::offsetOfScopeChain());
     masm.loadPtr(scopeChain, reg);
 
     Address address(reg, offsetof(JSObject, parent));
@@ -3152,16 +3130,13 @@ mjit::Compiler::jsop_bindname(uint32 index)
 void
 mjit::Compiler::jsop_getarg(uint32 index)
 {
-    RegisterID reg = frame.allocReg();
-    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
-    frame.freeReg(reg);
-    frame.push(Address(reg, index * sizeof(Value)));
+    frame.push(Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, index)));
 }
 
 void
 mjit::Compiler::jsop_this()
 {
-    Address thisvAddr(JSFrameReg, JSStackFrame::offsetThisValue());
+    Address thisvAddr(JSFrameReg, JSStackFrame::offsetOfThis(fun));
     if (0 && !script->strictModeCode) {
         Jump null = masm.testNull(Assembler::Equal, thisvAddr);
         stubcc.linkExit(null, Uses(1));

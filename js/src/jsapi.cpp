@@ -90,6 +90,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
@@ -1795,7 +1796,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->hasfp())
-        return cx->fp()->getScopeChain()->getGlobal();
+        return cx->fp()->scopeChain().getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
@@ -4760,7 +4761,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, args))
+    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return NULL;
 
     args.callee().setObject(*ctor);
@@ -4836,7 +4837,7 @@ JS_IsRunning(JSContext *cx)
 #endif
     JSStackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
-        fp = fp->down;
+        fp = fp->prev();
     return fp != NULL;
 }
 

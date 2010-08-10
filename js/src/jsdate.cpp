@@ -2056,7 +2056,7 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
     /* Step 6. */
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, args))
+    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.callee() = toISO;

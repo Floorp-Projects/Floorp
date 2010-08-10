@@ -1132,21 +1132,16 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
     stubcc.linkExit(ovf, Uses(0));
 
-    Address argv(JSFrameReg, offsetof(JSStackFrame, argv));
-
     stubcc.leave();
-    stubcc.masm.loadPtr(argv, Registers::ArgReg1);
-    stubcc.masm.addPtr(Imm32(sizeof(Value) * slot), Registers::ArgReg1, Registers::ArgReg1);
+    stubcc.masm.addPtr(Imm32(JSStackFrame::offsetOfFormalArg(fun, slot)),
+                       JSFrameReg, Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
     fe = frame.peek(-1);
 
-    reg = frame.allocReg();
-    masm.loadPtr(argv, reg);
-    Address address = Address(reg, slot * sizeof(Value));
+    Address address = Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
     frame.storeTo(fe, address, popped);
-    frame.freeReg(reg);
 
     if (post || popped)
         frame.pop();
