@@ -1100,6 +1100,10 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
 {
   nsresult rv = NS_OK;
 
+  if (mIgnoreNextCloseHead && aTag == eHTMLTag_head) {
+    mIgnoreNextCloseHead = PR_FALSE;
+    return NS_OK;
+  }
   if (mSkip) {
     mSkip = PR_FALSE;
     return rv;
@@ -1229,7 +1233,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
   
   nsresult rv = NS_OK;
 
-  if (mSkip) {
+  if (mSkip || mIgnoreNextCloseHead) {
     return rv;
   }
   
