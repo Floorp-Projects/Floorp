@@ -201,21 +201,6 @@ window.TabItem = function(tab) {
   this._updateDebugBounds();
 
   TabItems.register(this);
-  this.addSubscriber(this, "beforeclose", function(who, info) {
-    TabItems.unregister(self);
-    self.removeTrenches();
-  });
-
-  this.addSubscriber(this, 'urlChanged', function(who, info) {
-    if (!self.reconnected && (info.oldURL == 'about:blank' || !info.oldURL))
-      TabItems.reconnect(self);
-
-    self.save();
-  });
-
-  this.addSubscriber(TabItems, "close", function() {
-    Items.unsquish(null, self);
-  });
 
   if (!TabItems.reconnect(this))
     GroupItems.newTab(this);
@@ -792,8 +777,11 @@ window.TabItems = {
       if (tabUrl != tabItem.url) {
         let oldURL = tabItem.url;
         tabItem.url = tabUrl;
-        tabItem._sendToSubscribers(
-          'urlChanged', {oldURL: oldURL, newURL: tabUrl});
+
+        if (!tabItem.reconnected && (oldURL == 'about:blank' || !oldURL))
+          this.reconnect(tabItem);
+    
+        tabItem.save();
       }
 
       // ___ label
@@ -847,9 +835,11 @@ window.TabItems = {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(tab.tabItem, "should already be linked");
 
-      tab.tabItem._sendToSubscribers("beforeclose");
-      iQ(tab.tabItem.container).remove();
+      this.unregister(tab.tabItem);
       tab.tabItem._sendToSubscribers("close");
+      iQ(tab.tabItem.container).remove();
+      tab.tabItem.removeTrenches();
+      Items.unsquish(null, tab.tabItem);
 
       tab.tabItem = null;
 
