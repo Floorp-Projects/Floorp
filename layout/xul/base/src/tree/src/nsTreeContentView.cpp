@@ -49,9 +49,6 @@
 #include "nsIXULSortService.h"
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
-#include "mozilla/dom/Element.h"
-
-namespace dom = mozilla::dom;
 
 #define NS_ENSURE_NATIVE_COLUMN(_col)                                \
   nsRefPtr<nsTreeColumn> col = nsTreeBodyFrame::GetColumnImpl(_col); \
@@ -839,25 +836,25 @@ nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
 }
 
 void
-nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
-                                    dom::Element* aElement,
-                                    PRInt32       aNameSpaceID,
-                                    nsIAtom*      aAttribute,
-                                    PRInt32       aModType)
+nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
+                                    nsIContent*  aContent,
+                                    PRInt32      aNameSpaceID,
+                                    nsIAtom*     aAttribute,
+                                    PRInt32      aModType)
 {
   // Lots of codepaths under here that do all sorts of stuff, so be safe.
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
-  nsIAtom* tag = aElement->Tag();
+  nsIAtom *tag = aContent->Tag();
 
-  if (mBoxObject && (aElement == mRoot || aElement == mBody)) {
+  if (mBoxObject && (aContent == mRoot || aContent == mBody)) {
     mBoxObject->ClearStyleAndImageCaches();
     mBoxObject->Invalidate();
   }
 
-  if (aElement->IsXUL()) {
+  if (aContent->IsXUL()) {
     if (tag != nsGkAtoms::treecol &&
         tag != nsGkAtoms::treeitem &&
         tag != nsGkAtoms::treeseparator &&
@@ -865,7 +862,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
         tag != nsGkAtoms::treecell)
       return;
     // We don't consider XUL nodes under non-XUL nodes.
-    if (!aElement->GetParent()->IsXUL())
+    if (!aContent->GetParent()->IsXUL())
       return;
   }
   else {
@@ -875,7 +872,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
 
-  for (nsIContent* element = aElement; element != mBody; element = element->GetParent()) {
+  for (nsIContent* element = aContent; element != mBody; element = element->GetParent()) {
     if (!element)
       return; // this is not for us
     nsIAtom *parentTag = element->Tag();
@@ -887,11 +884,11 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
   // Handle changes of the hidden attribute.
   if (aAttribute == nsGkAtoms::hidden &&
      (tag == nsGkAtoms::treeitem || tag == nsGkAtoms::treeseparator)) {
-    PRBool hidden = aElement->AttrValueIs(kNameSpaceID_None,
+    PRBool hidden = aContent->AttrValueIs(kNameSpaceID_None,
                                           nsGkAtoms::hidden,
                                           nsGkAtoms::_true, eCaseMatters);
  
-    PRInt32 index = FindContent(aElement);
+    PRInt32 index = FindContent(aContent);
     if (hidden && index >= 0) {
       // Hide this row along with its children.
       PRInt32 count = RemoveRow(index);
@@ -900,9 +897,9 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
     }
     else if (!hidden && index < 0) {
       // Show this row along with its children.
-      nsCOMPtr<nsIContent> parent = aElement->GetParent();
+      nsCOMPtr<nsIContent> parent = aContent->GetParent();
       if (parent) {
-        InsertRowFor(parent, aElement);
+        InsertRowFor(parent, aContent);
       }
     }
 
@@ -915,7 +912,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
         nsCOMPtr<nsITreeColumns> cols;
         mBoxObject->GetColumns(getter_AddRefs(cols));
         if (cols) {
-          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aElement);
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
           nsCOMPtr<nsITreeColumn> col;
           cols->GetColumnFor(element, getter_AddRefs(col));
           mBoxObject->InvalidateColumn(col);
@@ -924,12 +921,12 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
     }
   }
   else if (tag == nsGkAtoms::treeitem) {
-    PRInt32 index = FindContent(aElement);
+    PRInt32 index = FindContent(aContent);
     if (index >= 0) {
       Row* row = mRows[index];
       if (aAttribute == nsGkAtoms::container) {
         PRBool isContainer =
-          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::container,
+          aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::container,
                                 nsGkAtoms::_true, eCaseMatters);
         row->SetContainer(isContainer);
         if (mBoxObject)
@@ -937,7 +934,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
       }
       else if (aAttribute == nsGkAtoms::open) {
         PRBool isOpen =
-          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+          aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
                                 nsGkAtoms::_true, eCaseMatters);
         PRBool wasOpen = row->IsOpen();
         if (! isOpen && wasOpen)
@@ -947,7 +944,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
       }
       else if (aAttribute == nsGkAtoms::empty) {
         PRBool isEmpty =
-          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::empty,
+          aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::empty,
                                 nsGkAtoms::_true, eCaseMatters);
         row->SetEmpty(isEmpty);
         if (mBoxObject)
@@ -956,7 +953,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
     }
   }
   else if (tag == nsGkAtoms::treeseparator) {
-    PRInt32 index = FindContent(aElement);
+    PRInt32 index = FindContent(aContent);
     if (index >= 0) {
       if (aAttribute == nsGkAtoms::properties && mBoxObject) {
         mBoxObject->InvalidateRow(index);
@@ -965,7 +962,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
   }
   else if (tag == nsGkAtoms::treerow) {
     if (aAttribute == nsGkAtoms::properties) {
-      nsCOMPtr<nsIContent> parent = aElement->GetParent();
+      nsCOMPtr<nsIContent> parent = aContent->GetParent();
       if (parent) {
         PRInt32 index = FindContent(parent);
         if (index >= 0 && mBoxObject) {
@@ -981,7 +978,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
         aAttribute == nsGkAtoms::src ||
         aAttribute == nsGkAtoms::value ||
         aAttribute == nsGkAtoms::label) {
-      nsIContent* parent = aElement->GetParent();
+      nsIContent* parent = aContent->GetParent();
       if (parent) {
         nsCOMPtr<nsIContent> grandParent = parent->GetParent();
         if (grandParent && grandParent->IsXUL()) {
