@@ -35,11 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 let EXPORTED_SYMBOLS = ["AllTabs"];
@@ -70,12 +66,12 @@ let AllTabs = {
    * @usage AllTabs.register("change", function handleChange(tab, event) {});
    */
   register: function register(eventName, callback) {
-    // Either create the first entry or add additional callbacks
+    // Either add additional callbacks or create the first entry
     let listeners = eventListeners[eventName];
-    if (listeners == null)
-      eventListeners[eventName] = [callback];
-    else
+    if (listeners)
       listeners.push(callback);
+    else
+      eventListeners[eventName] = [callback];
   },
 
   /**
@@ -91,7 +87,7 @@ let AllTabs = {
   unregister: function unregister(eventName, callback) {
     // Nothing to remove for this event
     let listeners = eventListeners[eventName];
-    if (listeners == null)
+    if (!listeners)
       return;
 
     // Can only remove a callback if we have it
@@ -120,39 +116,39 @@ function registerBrowserWindow(browserWindow) {
     browserWindow.addEventListener(tabEvent, function(event) {
       // Make sure we've gotten listeners before trying to call
       let listeners = eventListeners[eventName];
-      if (listeners == null)
+      if (!listeners)
         return;
 
-      let tab = event.originalTarget;
+      let tab = event.target;
 
       // Make a copy of the listeners, so it can't change as we call back
       listeners.slice().forEach(function(callback) {
         try {
           callback(tab, event);
         }
-        // Ignore failures from the callback
-        catch(ex) {}
+        // Don't let failing callbacks stop us but report the failure
+        catch(ex) {
+          Cu.reportError(ex);
+        }
       });
     }, true);
   });
 }
 
-let observer = {
-  observe: function observe(subject, topic, data) {
-    switch (topic) {
-      case "domwindowopened":
-        subject.addEventListener("load", function() {
-          subject.removeEventListener("load", arguments.callee, false);
+function observer(subject, topic, data) {
+  switch (topic) {
+    case "domwindowopened":
+      subject.addEventListener("load", function() {
+        subject.removeEventListener("load", arguments.callee, false);
 
-          // Now that the window has loaded, only register on browser windows
-          let doc = subject.document.documentElement;
-          if (doc.getAttribute("windowtype") == "navigator:browser")
-            registerBrowserWindow(subject);
-        }, false);
-        break;
-    }
+        // Now that the window has loaded, only register on browser windows
+        let doc = subject.document.documentElement;
+        if (doc.getAttribute("windowtype") == "navigator:browser")
+          registerBrowserWindow(subject);
+      }, false);
+      break;
   }
-};
+}
 
 // Register listeners on all browser windows and future ones
 browserWindows.forEach(registerBrowserWindow);
