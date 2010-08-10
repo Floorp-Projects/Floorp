@@ -26,7 +26,6 @@
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
- *   Jim Mathies (jmathies@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -102,7 +101,21 @@ statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
 }
 
-/* ::::: app menu button ::::: */
+/* App menu button */
+
+%ifndef WINSTRIPE_AERO
+#appmenu-button-container {
+  background: ActiveCaption;
+}
+
+#appmenu-button-container:-moz-window-inactive {
+  background: InactiveCaption;
+}
+%endif
+
+#appmenu-button-container {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+}
 
 #appmenu-button {
   -moz-appearance: none;
@@ -157,84 +170,24 @@ statusbarpanel#statusbar-display {
   color: -moz-menuhovertext;
 }
 
-/* ::::: titlebar ::::: */
-
-#titlebar {
-  -moz-appearance: -moz-window-titlebar;
-  /* we only need to the middle section, hide the edges of the
-  theme background beyond the window frame. */
-  margin-left: -15px;
-  margin-right: -15px;
-}
-
-#main-window[sizemode="maximized"] > #titlebar {
-  -moz-appearance: -moz-window-titlebar-maximized;
-}
-
-#titlebar-content {
-  margin-left: 15px;
-  margin-right: 15px;
-}
-
-/* aesthetic - push the fx button off the top window border */
-@media not all and (-moz-windows-classic) {
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
-%ifndef WINSTRIPE_AERO
-    margin-top: 1px;
-%else
-    margin-top: 2px;
+/* XXX: stop-gap until the button can be drawn in the title bar */
+%ifdef WINSTRIPE_AERO
+@media not all and (-moz-windows-compositor) {
 %endif
+  #main-window[tabsontop="true"] > #appmenu-button-container > #appmenu-button {
+    position: relative !important;
+    margin-bottom: -1.6em !important;
   }
-}
-
-#titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box;
-  -moz-box-align: start;
-}
-
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box-maximized;
-}
-
-/* titlebar command buttons */
-
-#titlebar-min {
-  -moz-appearance: -moz-window-button-minimize;
-}
-
-#titlebar-max {
-  -moz-appearance: -moz-window-button-maximize;
-}
-
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox > #titlebar-max {
-  -moz-appearance: -moz-window-button-restore;
-}
-
-#titlebar-close {
-  -moz-appearance: -moz-window-button-close;
-}
-
-@media not all and (-moz-windows-classic) {
-  #titlebar-min {
-    -moz-margin-end: 1px;
+  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] {
+    position: relative !important;
+    background-color: -moz-dialog !important;
   }
-
-  #titlebar-max {
-    -moz-margin-start: 1px;
-    -moz-margin-end: 1px;
+  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar:not([inFullscreen]) {
+    -moz-padding-start: 10em !important;
   }
-
-  #titlebar-close {
-    -moz-margin-start: 1px;
-    -moz-margin-end: 0;
-  }
+%ifdef WINSTRIPE_AERO
 }
-
-@media all and (-moz-windows-classic) {
-  #titlebar-close {
-    -moz-margin-start: 2px !important;
-  }
-}
+%endif
 
 /* ::::: bookmark buttons ::::: */
 
