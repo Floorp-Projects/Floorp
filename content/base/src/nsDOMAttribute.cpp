@@ -41,7 +41,7 @@
 
 #include "nsDOMAttribute.h"
 #include "nsGenericElement.h"
-#include "mozilla/dom/Element.h"
+#include "nsIContent.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
@@ -59,8 +59,6 @@
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMutationEvent.h"
-
-using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 PRBool nsDOMAttribute::sInitialized;
@@ -748,13 +746,13 @@ nsDOMAttribute::EnsureChildState()
 
 void
 nsDOMAttribute::AttributeChanged(nsIDocument* aDocument,
-                                 Element* aElement,
+                                 nsIContent* aContent,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  PRInt32 aModType)
 {
   nsIContent* content = GetContentInternal();
-  if (aElement != content) {
+  if (aContent != content) {
     return;
   }
 

@@ -53,8 +53,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGMatrix.h"
 
-namespace dom = mozilla::dom;
-
 class nsSVGMutationObserver : public nsStubMutationObserver
 {
 public:
@@ -83,17 +81,17 @@ static nsSVGMutationObserver sSVGMutationObserver;
 // nsIMutationObserver methods
 
 void
-nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
-                                        dom::Element* aElement,
+nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
+                                        nsIContent *aContent,
                                         PRInt32 aNameSpaceID,
-                                        nsIAtom* aAttribute,
+                                        nsIAtom *aAttribute,
                                         PRInt32 aModType)
 {
   if (aNameSpaceID != kNameSpaceID_XML || aAttribute != nsGkAtoms::space) {
     return;
   }
 
-  nsIFrame* frame = aElement->GetPrimaryFrame();
+  nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     return;
   }
