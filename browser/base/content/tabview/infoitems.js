@@ -61,7 +61,7 @@ window.InfoItem = function(bounds, options) {
   try {
     Utils.assertThrow(Utils.isRect(bounds), 'bounds');
 
-    if (typeof(options) == 'undefined')
+    if (typeof options == 'undefined')
       options = {};
 
     this._inited = false;
@@ -214,7 +214,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Set the Z order for the item's container.
   setZ: function(value) {
     try {
-      Utils.assertThrow(typeof(value) == 'number', 'value must be a number');
+      Utils.assertThrow(typeof value == 'number', 'value must be a number');
 
       this.zIndex = value;
 
@@ -250,7 +250,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Sets the item's container's html to the specified value.
   html: function(value) {
     try {
-      Utils.assertThrow(typeof(value) == 'string', 'value must be a string');
+      Utils.assertThrow(typeof value == 'string', 'value must be a string');
       this.$contents.html(value);
     } catch(e) {
       Utils.log(e);
