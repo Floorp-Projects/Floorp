@@ -742,8 +742,8 @@ var UIManager = {
       phantom.animate({
         width: 0,
         height: 0,
-        top: phantom.position().top + phantom.height()/2,
-        left: phantom.position().left + phantom.width()/2
+        top: phantom.position().x + phantom.height()/2,
+        left: phantom.position().y + phantom.width()/2
       }, {
         duration: 300,
         complete: function() {
