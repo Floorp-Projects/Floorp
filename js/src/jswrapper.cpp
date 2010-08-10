@@ -388,7 +388,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * This loses us some transparency, and is generally very cheesy.
      */
     JSObject *global =
-        cx->hasfp() ? cx->fp()->getScopeChain()->getGlobal() : cx->globalObject;
+        cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
     wrapper->setParent(global);
     return true;
 }
@@ -535,7 +535,7 @@ AutoCompartment::enter()
         context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         frame.construct();
-        if (!context->stack().pushDummyFrame(context, frame.ref(), regs, scopeChain)) {
+        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
             frame.destroy();
             context->compartment = origin;
             return false;

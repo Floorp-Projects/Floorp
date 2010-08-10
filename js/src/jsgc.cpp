@@ -87,6 +87,7 @@
 
 #include "jsprobes.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jshashtable.h"
 
@@ -2032,18 +2033,19 @@ gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
-    if (fp->hasCallObj())
-        JS_CALL_OBJECT_TRACER(trc, fp->getCallObj(), "call");
-    if (fp->hasArgsObj())
-        JS_CALL_OBJECT_TRACER(trc, fp->getArgsObj(), "arguments");
-    if (fp->hasScript())
-        js_TraceScript(trc, fp->getScript());
+    MarkObject(trc, fp->scopeChain(), "scope chain");
+    if (fp->isDummyFrame())
+        return;
 
-    /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
-    MarkValue(trc, fp->getThisValue(), "this");
-    MarkValue(trc, fp->getReturnValue(), "rval");
-    if (fp->hasScopeChain())
-        JS_CALL_OBJECT_TRACER(trc, fp->getScopeChain(), "scope chain");
+    if (fp->hasCallObj())
+        MarkObject(trc, fp->callObj(), "call");
+    if (fp->hasArgsObj())
+        MarkObject(trc, fp->argsObj(), "arguments");
+    if (fp->isScriptFrame())
+        js_TraceScript(trc, fp->script());
+
+    MarkValue(trc, fp->thisValue(), "this");
+    MarkValue(trc, fp->returnValue(), "rval");
 }
 
 inline void
@@ -2094,12 +2096,12 @@ AutoGCRooter::trace(JSTracer *trc)
       case DESCRIPTOR : {
         PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
         if (desc.obj)
-            MarkObject(trc, desc.obj, "Descriptor::obj");
+            MarkObject(trc, *desc.obj, "Descriptor::obj");
         MarkValue(trc, desc.value, "Descriptor::value");
         if ((desc.attrs & JSPROP_GETTER) && desc.getter)
-            MarkObject(trc, CastAsObject(desc.getter), "Descriptor::get");
+            MarkObject(trc, *CastAsObject(desc.getter), "Descriptor::get");
         if (desc.attrs & JSPROP_SETTER && desc.setter)
-            MarkObject(trc, CastAsObject(desc.setter), "Descriptor::set");
+            MarkObject(trc, *CastAsObject(desc.setter), "Descriptor::set");
         return;
       }
 
@@ -2117,7 +2119,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case OBJECT:
         if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            MarkObject(trc, obj, "js::AutoObjectRooter.obj");
+            MarkObject(trc, *obj, "js::AutoObjectRooter.obj");
         return;
 
       case ID:

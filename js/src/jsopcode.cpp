@@ -75,6 +75,8 @@
 #include "jstracer.h"
 #include "jsvector.h"
 
+#include "jsinterpinlines.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
 
@@ -279,7 +281,7 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    return js_DisassembleAtPC(cx, cx->fp()->getScript(), true, stdout, cx->regs->pc);
+    return js_DisassembleAtPC(cx, cx->fp()->script(), true, stdout, cx->regs->pc);
 }
 
 JSBool
@@ -2880,10 +2882,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      */
                     JSStackFrame *fp = js_GetTopStackFrame(cx);
                     if (fp) {
-                        while (!(fp->flags & JSFRAME_EVAL))
-                            fp = fp->down;
-                        JS_ASSERT(fp->getScript() == jp->script);
-                        JS_ASSERT(fp->down->getFunction() == jp->fun);
+                        while (!fp->isEvalFrame())
+                            fp = fp->prev();
+                        JS_ASSERT(fp->script() == jp->script);
+                        JS_ASSERT(fp->prev()->fun() == jp->fun);
                         JS_ASSERT(FUN_INTERPRETED(jp->fun));
                         JS_ASSERT(jp->script != jp->fun->u.i.script);
                         JS_ASSERT(jp->script->upvarsOffset != 0);
@@ -5089,8 +5091,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
                            JSString *fallback)
 {
     JSStackFrame *fp;
-    jsbytecode *pc;
     JSScript *script;
+    jsbytecode *pc;
 
     Value v = Valueify(v_in);
 
@@ -5100,17 +5102,12 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
     LeaveTrace(cx);
     
-    /* Get scripted caller */
-    FrameRegsIter i(cx);
-    while (!i.done() && !i.fp()->hasScript())
-        ++i;
-
-    if (i.done() || !i.pc() || i.fp()->getSlotCount() == 0)
+    if (!cx->regs || !cx->regs->fp || !cx->regs->fp->isScriptFrame())
         goto do_fallback;
 
-    fp = i.fp();
-    script = fp->getScript();
-    pc = fp->hasIMacroPC() ? fp->getIMacroPC() : i.pc();
+    fp = cx->regs->fp;
+    script = fp->script();
+    pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
     JS_ASSERT(pc >= script->main && pc < script->code + script->length);
 
     if (spindex != JSDVG_IGNORE_STACK) {
@@ -5141,7 +5138,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
              * it that caused exception, see bug 328664.
              */
             Value *stackBase = fp->base();
-            Value *sp = i.sp();
+            Value *sp = cx->regs->sp;
             do {
                 if (sp == stackBase) {
                     pcdepth = -1;
@@ -5172,15 +5169,11 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     }
 
     {
-        jsbytecode* savepc = i.pc();
-        jsbytecode* savedIMacroPC = fp->maybeIMacroPC();
-        if (savedIMacroPC) {
+        jsbytecode* savedImacropc = fp->maybeImacropc();
+        if (savedImacropc) {
             JS_ASSERT(cx->hasfp());
-            if (fp == cx->fp())
-                cx->regs->pc = savedIMacroPC;
-            else
-                fp->savedPC = savedIMacroPC;
-            fp->clearIMacroPC();
+            cx->regs->pc = savedImacropc;
+            fp->clearImacropc();
         }
 
         /*
@@ -5188,18 +5181,15 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
          * value *inside* an imacro; this would confuse the decompiler.
          */
         char *name;
-        if (savedIMacroPC && size_t(pc - script->code) >= script->length)
+        if (savedImacropc && size_t(pc - script->code) >= script->length)
             name = FAILED_EXPRESSION_DECOMPILER;
         else
-            name = DecompileExpression(cx, script, fp->maybeFunction(), pc);
+            name = DecompileExpression(cx, script, fp->maybeFun(), pc);
 
-        if (savedIMacroPC) {
+        if (savedImacropc) {
             JS_ASSERT(cx->hasfp());
-            if (fp == cx->fp())
-                cx->regs->pc = savedIMacroPC;
-            else
-                fp->savedPC = savepc;
-            fp->setIMacroPC(savedIMacroPC);
+            cx->regs->pc = savedImacropc;
+            fp->setImacropc(savedImacropc);
         }
 
         if (name != FAILED_EXPRESSION_DECOMPILER)
@@ -5492,8 +5482,8 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
      * the state-of-the-world at the *start* of the imacro.
      */
     JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp->hasIMacroPC());
-    intN pcdepth = ReconstructPCStack(cx, script, fp->getIMacroPC(), pcstack);
+    JS_ASSERT(fp->hasImacropc());
+    intN pcdepth = ReconstructPCStack(cx, script, fp->imacropc(), pcstack);
     if (pcdepth < 0)
         return pcdepth;
     return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);

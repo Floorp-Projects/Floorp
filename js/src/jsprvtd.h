@@ -131,6 +131,7 @@ class TraceRecorder;
 struct TraceMonitor;
 class StackSpace;
 class StackSegment;
+class FrameRegsIter;
 
 struct Compiler;
 struct Parser;
