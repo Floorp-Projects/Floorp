@@ -39,7 +39,13 @@ function test() {
   waitForExplicitFinish();
 
   TabView.toggle();
-  ok(TabView.isVisible(), "Tab View is visible");  
+  window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
+}
+
+function onTabViewWindowLoaded() {
+  window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
+
+  ok(TabView.isVisible(), "Tab View is visible");
   
   let contentWindow = document.getElementById("tab-view").contentWindow;
 
@@ -47,7 +53,7 @@ function test() {
   let padding = 10;
   let pageBounds = contentWindow.Items.getPageBounds();
   pageBounds.inset(padding, padding);
-  
+
   let box = new contentWindow.Rect(pageBounds);
   box.width = 300;
   box.height = 300;
@@ -80,7 +86,6 @@ function test() {
   // open tab in group
   groupOne.newTab("");
 }
-
 
 function addTest(contentWindow, groupOneId, groupTwoId) {
   let groupOne = contentWindow.GroupItems.groupItem(groupOneId);
