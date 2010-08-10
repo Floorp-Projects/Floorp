@@ -105,14 +105,14 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 }
 
 void
-nsNodeUtils::AttributeWillChange(Element* aElement,
+nsNodeUtils::AttributeWillChange(nsIContent* aContent,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  PRInt32 aModType)
 {
-  nsIDocument* doc = aElement->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
-                             (doc, aElement, aNameSpaceID, aAttribute,
+  nsIDocument* doc = aContent->GetOwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aContent,
+                             (doc, aContent, aNameSpaceID, aAttribute,
                               aModType));
 }
 
