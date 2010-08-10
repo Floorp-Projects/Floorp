@@ -11458,11 +11458,19 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (!clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
-        args[0] = INS_CONSTOBJ(funobj);
-        args[1] = INS_CONSTPTR(clasp);
-        args[2] = cx_ins;
-        newobj_ins = lir->insCall(&js_NewInstance_ci, args);
-        guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+        if (fun->isFastConstructor()) {
+            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+            newobj_ins = INS_CONST(JS_FAST_CONSTRUCTOR);
+
+            /* Treat this as a regular call, the constructor will behave correctly. */
+            mode = JSOP_CALL;
+        } else {
+            args[0] = INS_CONSTOBJ(funobj);
+            args[1] = INS_CONSTPTR(clasp);
+            args[2] = cx_ins;
+            newobj_ins = lir->insCall(&js_NewInstance_ci, args);
+            guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+        }
         this_ins = newobj_ins;
     } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
         this_ins = INS_CONSTOBJ(funobj->getParent());
@@ -11624,22 +11632,20 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
     }
 
-    if (FUN_SLOW_NATIVE(fun)) {
-        Native native = fun->u.n.native;
-        Value* argv = &tval + 1;
-        if (native == js_Array)
-            return newArray(&fval.toObject(), argc, argv, &fval);
-        if (native == js_String && argc == 1) {
-            if (mode == JSOP_NEW)
-                return newString(&fval.toObject(), 1, argv, &fval);
-            if (!argv[0].isPrimitive()) {
-                CHECK_STATUS(guardNativeConversion(argv[0]));
-                return callImacro(call_imacros.String);
-            }
-            set(&fval, stringify(argv[0]));
-            pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-            return RECORD_CONTINUE;
+    FastNative native = FUN_FAST_NATIVE(fun);
+    Value* argv = &tval + 1;
+    if (native == js_Array)
+        return newArray(&fval.toObject(), argc, argv, &fval);
+    if (native == js_String && argc == 1) {
+        if (mode == JSOP_NEW)
+            return newString(&fval.toObject(), 1, argv, &fval);
+        if (!argv[0].isPrimitive()) {
+            CHECK_STATUS(guardNativeConversion(argv[0]));
+            return callImacro(call_imacros.String);
         }
+        set(&fval, stringify(argv[0]));
+        pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+        return RECORD_CONTINUE;
     }
 
     RecordingStatus rs = callNative(argc, mode);
@@ -13513,10 +13519,11 @@ TraceRecorder::record_NativeCallComplete()
     if (pendingSpecializedNative == IGNORE_NATIVE_CALL_COMPLETE_CALLBACK)
         return ARECORD_CONTINUE;
 
-    jsbytecode* pc = cx->regs->pc;
-
+#ifdef DEBUG
     JS_ASSERT(pendingSpecializedNative);
+    jsbytecode* pc = cx->regs->pc;
     JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW || *pc == JSOP_SETPROP);
+#endif
 
     Value& v = stackval(-1);
     LIns* v_ins = get(&v);
@@ -13550,7 +13557,7 @@ TraceRecorder::record_NativeCallComplete()
              * indicating the error status.
              */
 
-            if (*pc == JSOP_NEW) {
+            if (pendingSpecializedNative->flags & JSTN_CONSTRUCTOR) {
                 LIns *cond_ins;
                 LIns *x;
 

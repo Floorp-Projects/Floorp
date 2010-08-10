@@ -101,6 +101,17 @@ typedef union JSLocalNames {
                                        appear to call itself via its own name
                                        or arguments.callee */
 
+#define JSFUN_FAST_NATIVE_CTOR 0x0002 /* JSFastNative directly invokable
+                                       * during construction. */
+
+/*
+ * Extra JSCLASS flag indicating the native passed to JS_InitClass is
+ * a fast native constructor.  This is internal for now as the 'this' value passed
+ * to such a constructor is a magic value, and there is no way to query this
+ * in the API.  See bug 581263.
+ */
+#define JSCLASS_FAST_CONSTRUCTOR (1<<4)
+
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
                                        JSFunctionSpec::call points to a
@@ -165,12 +176,13 @@ struct JSFunction : public JSObject
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
-    bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
-    bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
-    bool isInterpreted()    const { return FUN_INTERPRETED(this); }
-    bool isFastNative()     const { return !!(flags & JSFUN_FAST_NATIVE); }
-    bool isHeavyweight()    const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
-    unsigned minArgs()      const { return FUN_MINARGS(this); }
+    bool optimizedClosure()  const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
+    bool needsWrapper()      const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
+    bool isInterpreted()     const { return FUN_INTERPRETED(this); }
+    bool isFastNative()      const { return !!(flags & JSFUN_FAST_NATIVE); }
+    bool isFastConstructor() const { return !!(flags & JSFUN_FAST_NATIVE_CTOR); }
+    bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+    unsigned minArgs()       const { return FUN_MINARGS(this); }
 
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));

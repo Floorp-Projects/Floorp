@@ -1151,7 +1151,7 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote);
 
 extern JSBool
-js_String(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
+js_String(JSContext *cx, uintN argc, js::Value *vp);
 
 namespace js {
 
