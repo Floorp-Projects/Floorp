@@ -69,12 +69,12 @@ ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   , LayerD3D9(aManager)
 {
   mImplData = static_cast<LayerD3D9*>(this);
-  aManager->mThebesLayers.AppendElement(this);
+  aManager->deviceManager()->mThebesLayers.AppendElement(this);
 }
 
 ThebesLayerD3D9::~ThebesLayerD3D9()
 {
-  mD3DManager->mThebesLayers.RemoveElement(this);
+  mD3DManager->deviceManager()->mThebesLayers.RemoveElement(this);
 }
 
 /**
@@ -338,7 +338,7 @@ ThebesLayerD3D9::RenderLayer()
   opacity[0] = GetOpacity();
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
-  mD3DManager->SetShaderMode(LayerManagerD3D9::RGBLAYER);
+  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
 
   device()->SetTexture(0, mTexture);
   device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);

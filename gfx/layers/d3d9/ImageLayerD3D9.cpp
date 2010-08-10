@@ -185,7 +185,7 @@ ImageLayerD3D9::RenderLayer()
     opacity[0] = GetOpacity();
     device()->SetPixelShaderConstantF(0, opacity, 1);
 
-    mD3DManager->SetShaderMode(LayerManagerD3D9::YCBCRLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
 
     device()->SetTexture(0, yuvImage->mYTexture);
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
@@ -227,7 +227,7 @@ ImageLayerD3D9::RenderLayer()
     opacity[0] = GetOpacity();
     device()->SetPixelShaderConstantF(0, opacity, 1);
 
-    mD3DManager->SetShaderMode(LayerManagerD3D9::RGBLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
 
     device()->SetTexture(0, cairoImage->mTexture);
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
