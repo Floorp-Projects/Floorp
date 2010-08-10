@@ -84,27 +84,11 @@ var UIManager = {
   // Used to facilitate zooming down from a previous tab.
   _currentTab : null,
 
-  // Variable: frameInitalized
-  // The getter of _frameInitalized.
-  get frameInitalized() this._frameInitalized,
-
   // ----------
   // Function: init
   // Must be called after the object is created.
   init: function() {
-    var self = this;
-    Profile.checkpoint();
-    Storage.onReady(function() {
-      self._delayInit();
-    });
-  },
-
-  // ----------
-  // Function: _delayInit
-  // Called automatically by init once sessionstore is online.
-  _delayInit : function() {
     try {
-      Profile.checkpoint("delay until _delayInit");
       let self = this;
 
       // ___ storage
@@ -114,37 +98,11 @@ var UIManager = {
       this._pageBounds = data.pageBounds;
 
       // ___ hook into the browser
-      this._setBrowserKeyHandlers();
-
       gWindow.addEventListener("tabviewshow", function() {
         self.showTabView(true);
       }, false);
-
-      // ___ show TabView at startup based on last session.
-      if (data.tabViewVisible) {
-        this._stopZoomPreparation = true;
-        this.showTabView();
-
-        // ensure the tabs in the tab strip are in the same order as the tab
-        // items in groupItems when switching back to main browser UI for the first
-        // time.
-        GroupItems.groupItems.forEach(function(groupItem) {
-          self._reorderTabsOnHide.push(groupItem);
-        });
-      }
-    } catch(e) {
-      Utils.log(e);
-    }
-  },
-
-  // ----------
-  // Function: initFrame
-  // Initializes the TabView UI
-  initFrame: function() {
-    try {
-      Utils.assert("must not be already initialized", !this._frameInitalized);
-
-      let self = this;
+      
+      // ___ currentTab
       this._currentTab = gBrowser.selectedTab;
 
       // ___ Dev Menu
@@ -319,9 +277,6 @@ var UIManager = {
   showTabView: function(zoomOut) {
     if (this._isTabViewVisible())
       return;
-
-    if (!this._frameInitalized)
-      this.initFrame();
 
     var self = this;
     var currentTab = this._currentTab;
@@ -588,49 +543,6 @@ var UIManager = {
       if (index == -1)
         this._reorderTabItemsOnShow.push(groupItem);
     }
-  },
-
-  // ----------
-  // Function: _setBrowserKeyHandlers
-  // Overrides the browser's keys for navigating between tab (outside of the
-  // TabView UI) so they do the right thing in respect to groupItems.
-  _setBrowserKeyHandlers : function() {
-    var self = this;
-
-    gWindow.addEventListener("keypress", function(event) {
-      if (self._isTabViewVisible())
-        return;
-
-      var charCode = event.charCode;
-#ifdef XP_MACOSX
-      // if a text box in a webpage has the focus, the event.altKey would
-      // return false so we are depending on the charCode here.
-      if (!event.ctrlKey && !event.metaKey && !event.shiftKey &&
-          charCode == 160) { // alt + space
-#else
-      if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-          !event.altKey && charCode == 32) { // ctrl + space
-#endif
-        event.stopPropagation();
-        event.preventDefault();
-        self.showTabView(true);
-        return;
-      }
-
-      // Control (+ Shift) + `
-      if (event.ctrlKey && !event.metaKey && !event.altKey &&
-          (charCode == 96 || charCode == 126)) {
-        event.stopPropagation();
-        event.preventDefault();
-
-        if (!self._frameInitalized)
-          self.initFrame();
-
-        var tabItem = GroupItems.getNextGroupItemTab(event.shiftKey);
-        if (tabItem)
-          gBrowser.selectedTab = tabItem.tab;
-      }
-    }, true);
   },
 
   // ----------
@@ -1063,7 +975,6 @@ var UIManager = {
       return;
 
     var data = {
-      tabViewVisible: this._isTabViewVisible(),
       pageBounds: this._pageBounds
     };
 
