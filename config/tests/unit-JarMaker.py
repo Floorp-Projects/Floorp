@@ -43,7 +43,7 @@ class TestJarMaker(unittest.TestCase):
     """
     Unit tests for JarMaker.py
     """
-    debug = False # set to True to debug failing tests on disk
+    debug = True # set to True to debug failing tests on disk
     def setUp(self):
         self.tmpdir = mkdtemp()
         self.srcdir = os.path.join(self.tmpdir, 'src')
@@ -142,6 +142,10 @@ class TestJarMaker(unittest.TestCase):
             os.mkdir(ldir)
             open(os.path.join(ldir, relpath), 'w').write(relpath+" content\n")
         # create reference
+        mf = open(os.path.join(self.refdir, 'chrome.manifest'), 'w')
+        mf.write('manifest chrome/ab-CD.manifest\n')
+        mf.close()
+
         chrome_ref = os.path.join(self.refdir, 'chrome')
         os.mkdir(chrome_ref)
         mf = open(os.path.join(chrome_ref, 'ab-CD.manifest'), 'wb')

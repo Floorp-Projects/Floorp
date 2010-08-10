@@ -68,6 +68,10 @@ CPPSRCS		= \
 		nsNativeComponentLoader.cpp \
 		$(NULL)
 
+ifdef MOZ_OMNIJAR
+CPPSRCS += nsManifestZIPLoader.cpp
+endif
+
 SDK_XPIDLSRCS	= \
 		nsIClassInfo.idl	      \
 		nsIComponentRegistrar.idl     \
@@ -76,7 +80,6 @@ SDK_XPIDLSRCS	= \
 		nsIServiceManager.idl	      \
 		nsIComponentManager.idl       \
 		nsICategoryManager.idl        \
-		nsIManifestLoader.idl         \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -87,6 +90,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../build \
 	-I.. \
 	-I$(topsrcdir)/chrome/src \
+	-I$(topsrcdir)/modules/libjar \
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

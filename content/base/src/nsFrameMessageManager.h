@@ -45,6 +45,9 @@
 #include "nsIAtom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
+#include "nsIPrincipal.h"
+#include "nsIXPConnect.h"
+#include "nsDataHashtable.h"
 
 class nsAXPCNativeCallContext;
 struct JSContext;
@@ -148,6 +151,28 @@ protected:
   void* mCallbackData;
   JSContext* mContext;
   nsTArray<nsString> mPendingScripts;
+};
+
+struct nsFrameScriptExecutorJSObjectHolder
+{
+  nsFrameScriptExecutorJSObjectHolder(JSObject* aObject) : mObject(aObject) {}
+  JSObject* mObject;
+};
+
+class nsFrameScriptExecutor
+{
+public:
+  static void Shutdown();
+protected:
+  nsFrameScriptExecutor() : mCx(nsnull) {}
+  void DidCreateCx();
+  // Call this when you want to destroy mCx.
+  void DestroyCx();
+  void LoadFrameScriptInternal(const nsAString& aURL);
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
+  JSContext* mCx;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  static nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>* sCachedScripts;
 };
 
 #endif
