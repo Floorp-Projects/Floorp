@@ -85,13 +85,13 @@ public:
 
   /**
    * Send AttributeChanged notifications to nsIMutationObservers.
-   * @param aElement      Element whose data changed
+   * @param aContent      Node whose data changed
    * @param aNameSpaceID  Namespace of changed attribute
    * @param aAttribute    Local-name of changed attribute
    * @param aModType      Type of change (add/change/removal)
    * @see nsIMutationObserver::AttributeChanged
    */
-  static void AttributeChanged(mozilla::dom::Element* aElement,
+  static void AttributeChanged(nsIContent* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType);
