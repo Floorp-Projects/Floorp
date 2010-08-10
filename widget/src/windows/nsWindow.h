@@ -302,6 +302,8 @@ protected:
   PRBool                  CanTakeFocus();
   PRBool                  UpdateNonClientMargins(PRInt32 aSizeMode = -1, PRBool aReflowWindow = PR_TRUE);
   void                    ResetLayout();
+  void                    InvalidateNonClientRegion();
+  HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
 #if !defined(WINCE)
   static void             InitTrackPointHack();
 #endif
