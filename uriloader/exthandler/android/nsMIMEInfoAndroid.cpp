@@ -230,9 +230,7 @@ nsMIMEInfoAndroid::SetPreferredAction(nsHandlerInfoAction aPrefAction)
 NS_IMETHODIMP
 nsMIMEInfoAndroid::GetAlwaysAskBeforeHandling(PRBool* aAlwaysAsk)
 {
-  // the chooser dialog currently causes a crash on Android, avoid this by returning false here
-  // but be sure to return mAlwaysAsk when that gets fixed (bug 584896)
-  *aAlwaysAsk = PR_FALSE;
+  *aAlwaysAsk = mAlwaysAsk;
   return NS_OK;
 }
 
