@@ -124,6 +124,10 @@ public:
 
   IDirect3DDevice9 *device() { return mDevice; }
 
+  bool IsD3D9Ex() { return mDeviceEx; }
+
+  bool HasDynamicTextures() { return mHasDynamicTextures; }
+
   enum ShaderMode {
     RGBLAYER,
     YCBCRLAYER,
@@ -153,8 +157,14 @@ private:
   /* The D3D device we use */
   nsRefPtr<IDirect3DDevice9> mDevice;
 
+  /* The D3D9Ex device - only valid on Vista+ with WDDM */
+  nsRefPtr<IDirect3DDevice9Ex> mDeviceEx;
+
   /* An instance of the D3D9 object */
   nsRefPtr<IDirect3D9> mD3D9;
+
+  /* An instance of the D3D9Ex object - only valid on Vista+ with WDDM */
+  nsRefPtr<IDirect3D9Ex> mD3D9Ex;
 
   /* Vertex shader used for layer quads */
   nsRefPtr<IDirect3DVertexShader9> mLayerVS;
@@ -178,6 +188,9 @@ private:
    * device with.
    */
   HWND mFocusWnd;
+
+  /* If this device supports dynamic textures */
+  bool mHasDynamicTextures;
 
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

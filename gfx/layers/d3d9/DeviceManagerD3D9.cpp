@@ -47,8 +47,15 @@ namespace layers {
 
 const LPCWSTR kClassName       = L"D3D9WindowClass";
 
+#define USE_D3D9EX
+
 typedef IDirect3D9* (WINAPI*Direct3DCreate9Func)(
   UINT SDKVersion
+);
+
+typedef HRESULT (WINAPI*Direct3DCreate9ExFunc)(
+  UINT SDKVersion,
+  IDirect3D9Ex **ppD3D
 );
 
 struct vertex {
@@ -171,6 +178,7 @@ SwapChainD3D9::Reset()
 #define LACKS_CAP(a, b) !(((a) & (b)) == (b))
 
 DeviceManagerD3D9::DeviceManagerD3D9()
+  : mHasDynamicTextures(false)
 {
 }
 
@@ -178,6 +186,8 @@ bool
 DeviceManagerD3D9::Init()
 {
   WNDCLASSW wc;
+  HRESULT hr;
+
   if (!GetClassInfoW(GetModuleHandle(NULL), kClassName, &wc)) {
       ZeroMemory(&wc, sizeof(WNDCLASSW));
       wc.hInstance = GetModuleHandle(NULL);
@@ -198,14 +208,32 @@ DeviceManagerD3D9::Init()
     return false;
   }
 
-  Direct3DCreate9Func d3d9create = (Direct3DCreate9Func)
-    GetProcAddress(LoadLibraryW(L"d3d9.dll"), "Direct3DCreate9");
+  HMODULE d3d9 = LoadLibraryW(L"d3d9.dll");
+  Direct3DCreate9Func d3d9Create = (Direct3DCreate9Func)
+    GetProcAddress(d3d9, "Direct3DCreate9");
+  Direct3DCreate9ExFunc d3d9CreateEx = (Direct3DCreate9ExFunc)
+    GetProcAddress(d3d9, "Direct3DCreate9Ex");
   
-  if (!d3d9create) {
-    return false;
+#ifdef USE_D3D9EX
+  if (d3d9CreateEx) {
+    hr = d3d9CreateEx(D3D_SDK_VERSION, getter_AddRefs(mD3D9Ex));
+    if (SUCCEEDED(hr)) {
+      mD3D9 = mD3D9Ex;
+    }
   }
+#endif
 
-  mD3D9 = dont_AddRef(d3d9create(D3D_SDK_VERSION));
+  if (!mD3D9) {
+    if (!d3d9Create) {
+      return false;
+    }
+
+    mD3D9 = dont_AddRef(d3d9Create(D3D_SDK_VERSION));
+
+    if (!mD3D9) {
+      return false;
+    }
+  }
 
   D3DPRESENT_PARAMETERS pp;
   memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -218,18 +246,47 @@ DeviceManagerD3D9::Init()
   pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
   pp.hDeviceWindow = mFocusWnd;
 
-  HRESULT hr = mD3D9->CreateDevice(D3DADAPTER_DEFAULT,
-                                   D3DDEVTYPE_HAL,
-                                   mFocusWnd,
-                                   D3DCREATE_FPU_PRESERVE |
-                                   D3DCREATE_MULTITHREADED |
-                                   D3DCREATE_MIXED_VERTEXPROCESSING,
-                                   &pp,
-                                   getter_AddRefs(mDevice));
+  if (mD3D9Ex) {
+    hr = mD3D9Ex->CreateDeviceEx(D3DADAPTER_DEFAULT,
+                                 D3DDEVTYPE_HAL,
+                                 mFocusWnd,
+                                 D3DCREATE_FPU_PRESERVE |
+                                 D3DCREATE_MULTITHREADED |
+                                 D3DCREATE_MIXED_VERTEXPROCESSING,
+                                 &pp,
+                                 NULL,
+                                 getter_AddRefs(mDeviceEx));
+    if (SUCCEEDED(hr)) {
+      mDevice = mDeviceEx;
+    }
 
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to create Device for DeviceManagerD3D9.");
-    return false;
+    D3DCAPS9 caps;
+    if (mDeviceEx->GetDeviceCaps(&caps)) {
+      if (LACKS_CAP(caps.Caps2, D3DCAPS2_DYNAMICTEXTURES)) {
+        // XXX - Should we actually hit this we'll need a CanvasLayer that
+        // supports static D3DPOOL_DEFAULT textures.
+        NS_WARNING("D3D9Ex device not used because of lack of support for \
+                   dynamic textures. This is unexpected.");
+        mDevice = nsnull;
+        mDeviceEx = nsnull;
+      }
+    }
+  }
+
+  if (!mDevice) {
+    hr = mD3D9->CreateDevice(D3DADAPTER_DEFAULT,
+                             D3DDEVTYPE_HAL,
+                             mFocusWnd,
+                             D3DCREATE_FPU_PRESERVE |
+                             D3DCREATE_MULTITHREADED |
+                             D3DCREATE_MIXED_VERTEXPROCESSING,
+                             &pp,
+                             getter_AddRefs(mDevice));
+
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to create Device for DeviceManagerD3D9.");
+      return false;
+    }
   }
 
   if (!VerifyCaps()) {
@@ -265,9 +322,9 @@ DeviceManagerD3D9::Init()
   }
 
   hr = mDevice->CreateVertexBuffer(sizeof(vertex) * 4,
+                                   D3DUSAGE_WRITEONLY,
                                    0,
-                                   0,
-                                   D3DPOOL_MANAGED,
+                                   D3DPOOL_DEFAULT,
                                    getter_AddRefs(mVB),
                                    NULL);
 
@@ -385,6 +442,27 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   HRESULT hr = mDevice->TestCooperativeLevel();
 
   if (SUCCEEDED(hr)) {
+    if (IsD3D9Ex()) {
+      hr = mDeviceEx->CheckDeviceState(mFocusWnd);
+      if (FAILED(hr)) {
+        D3DPRESENT_PARAMETERS pp;
+        memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
+
+        pp.BackBufferWidth = 1;
+        pp.BackBufferHeight = 1;
+        pp.BackBufferFormat = D3DFMT_A8R8G8B8;
+        pp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        pp.Windowed = TRUE;
+        pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+        pp.hDeviceWindow = mFocusWnd;
+        
+        hr = mDeviceEx->ResetEx(&pp, NULL);
+        // Handle D3DERR_DEVICEREMOVED!
+        if (FAILED(hr)) {
+          return false;
+        }
+      }
+    }
     return true;
   }
 
@@ -471,6 +549,10 @@ DeviceManagerD3D9::VerifyCaps()
   if ((caps.PixelShaderVersion & 0xffff) < 0x200 ||
       (caps.VertexShaderVersion & 0xffff) < 0x200) {
     return false;
+  }
+
+  if (HAS_CAP(caps.Caps2, D3DCAPS2_DYNAMICTEXTURES)) {
+    mHasDynamicTextures = true;
   }
 
   return true;
