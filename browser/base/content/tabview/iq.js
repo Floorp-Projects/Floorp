@@ -327,14 +327,16 @@ iQClass.prototype = {
   // Function: width
   // Returns the width of the receiver.
   width: function() {
-    return parseInt(this.css('width'));
+    let bounds = this.bounds();
+    return bounds.width
   },
 
   // ----------
   // Function: height
   // Returns the height of the receiver.
   height: function() {
-    return parseInt(this.css('height'));
+    let bounds = this.bounds();
+    return bounds.height;
   },
 
   // ----------
@@ -342,18 +344,18 @@ iQClass.prototype = {
   // Returns an object with the receiver's position in left and top
   // properties.
   position: function() {
-    return {
-      left: parseInt(this.css('left')),
-      top: parseInt(this.css('top'))
-    };
+    let bounds = this.bounds();
+    return new Point(bounds.left, bounds.top);
   },
 
   // ----------
   // Function: bounds
   // Returns a <Rect> with the receiver's bounds.
   bounds: function() {
-    let p = this.position();
-    return new Rect(p.left, p.top, this.width(), this.height());
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    let rect = this[0].getBoundingClientRect();
+    return new Rect(Math.floor(rect.left), Math.floor(rect.top),
+                    Math.floor(rect.width), Math.floor(rect.height));
   },
 
   // ----------
@@ -479,12 +481,7 @@ iQClass.prototype = {
       if (typeof b === "undefined") {
         Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);
 
-        let substitutions = {
-          'MozTransform': '-moz-transform',
-          'zIndex': 'z-index'
-        };
-
-        return window.getComputedStyle(this[0], null).getPropertyValue(substitutions[key] || key);
+        return window.getComputedStyle(this[0], null).getPropertyValue(key);
       }
       properties = {};
       properties[key] = b;

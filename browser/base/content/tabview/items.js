@@ -608,7 +608,7 @@ window.Item.prototype = {
         }
 
         if (typeof self.dragOptions.drag == "function")
-          self.dragOptions.drag.apply(self, [e, {position: box.position()}]);
+          self.dragOptions.drag.apply(self, [e, {}]);
 
         // drop events
         var best = {
