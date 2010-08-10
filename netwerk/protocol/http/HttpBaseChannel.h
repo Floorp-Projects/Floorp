@@ -60,24 +60,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIResumableChannel.h"
 
-#define DIE_WITH_ASYNC_OPEN_MSG()                                              \
-  do {                                                                         \
-    fprintf(stderr,                                                            \
-            "*&*&*&*&*&*&*&**&*&&*& FATAL ERROR: '%s' "                        \
-            "called after AsyncOpen: %s +%d",                                  \
-            __FUNCTION__, __FILE__, __LINE__);                                 \
-    NS_ABORT();                                                                \
-    return NS_ERROR_NOT_IMPLEMENTED;                                           \
-  } while (0)
-
-#define ENSURE_CALLED_BEFORE_ASYNC_OPEN()                                      \
-  if (mIsPending)                                                              \
-    DIE_WITH_ASYNC_OPEN_MSG();                                                 \
-  if (mWasOpened)                                                              \
-    DIE_WITH_ASYNC_OPEN_MSG();                                                 \
-  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);                           \
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
-
 namespace mozilla {
 namespace net {
 
