@@ -78,11 +78,11 @@ StackSpace::firstUnused() const
         JS_ASSERT(invokeArgEnd == NULL);
         return base;
     }
-    if (JSContext *cx = seg->maybeContext()) {
+    if (seg->inContext()) {
         Value *sp = seg->getCurrentRegs()->sp;
         if (invokeArgEnd > sp) {
             JS_ASSERT(invokeSegment == currentSegment);
-            JS_ASSERT_IF(cx->fp, invokeFrame == cx->fp);
+            JS_ASSERT_IF(seg->maybeContext()->fp, invokeFrame == seg->maybeContext()->fp);
             return invokeArgEnd;
         }
         return sp;
