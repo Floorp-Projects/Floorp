@@ -4977,7 +4977,7 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
 
 void
 PresShell::AttributeChanged(nsIDocument* aDocument,
-                            nsIContent*  aContent,
+                            Element*     aElement,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType)
@@ -4990,7 +4990,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeChanged(aContent, aNameSpaceID,
+    mFrameConstructor->AttributeChanged(aElement, aNameSpaceID,
                                         aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
