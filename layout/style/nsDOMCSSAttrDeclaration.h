@@ -37,8 +37,8 @@
 
 /* DOM object for element.style */
 
-#ifndef nsDOMCSSAttributeDeclaration_h___
-#define nsDOMCSSAttributeDeclaration_h___
+#ifndef nsDOMCSSAttributeDeclaration_h
+#define nsDOMCSSAttributeDeclaration_h
 
 #include "nsDOMCSSDeclaration.h"
 
@@ -85,6 +85,7 @@ protected:
   virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl);
   virtual nsIDocument* DocToUpdate();
 
+  // XXX bug 585014 use nsRefPtr<Element> and fix mContent->AsElement()
   nsCOMPtr<nsIContent> mContent;
 
 #ifdef MOZ_SMIL
@@ -96,4 +97,4 @@ protected:
 #endif // MOZ_SMIL
 };
 
-#endif /* nsDOMCSSAttributeDeclaration_h___ */
+#endif /* nsDOMCSSAttributeDeclaration_h */
