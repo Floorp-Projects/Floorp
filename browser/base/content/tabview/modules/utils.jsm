@@ -384,10 +384,10 @@ Subscribable.prototype = {
   // The refObject is used to facilitate removal if necessary.
   addSubscriber: function(refObject, eventName, callback) {
     try {
-      Utils.assertThrow("refObject", refObject);
-      Utils.assertThrow("callback must be a function", typeof callback == "function");
-      Utils.assertThrow("eventName must be a non-empty string",
-          eventName && typeof(eventName) == "string");
+      Utils.assertThrow(refObject, "refObject");
+      Utils.assertThrow(typeof callback == "function", "callback must be a function");
+      Utils.assertThrow(eventName && typeof(eventName) == "string",
+          "eventName must be a non-empty string");
 
       if (!this.subscribers)
         this.subscribers = {};
@@ -401,7 +401,7 @@ Subscribable.prototype = {
       });
 
       if (existing.length) {
-        Utils.assert('should only ever be one', existing.length == 1);
+        Utils.assert(existing.length == 1, 'should only ever be one');
         existing[0].callback = callback;
       } else {
         subs.push({
@@ -419,9 +419,9 @@ Subscribable.prototype = {
   // Removes the callback associated with refObject for the given event.
   removeSubscriber: function(refObject, eventName) {
     try {
-      Utils.assertThrow("refObject", refObject);
-      Utils.assertThrow("eventName must be a non-empty string",
-          eventName && typeof(eventName) == "string");
+      Utils.assertThrow(refObject, "refObject");
+      Utils.assertThrow(eventName && typeof(eventName) == "string",
+          "eventName must be a non-empty string");
 
       if (!this.subscribers || !this.subscribers[eventName])
         return;
@@ -439,8 +439,8 @@ Subscribable.prototype = {
   // Internal routine. Used by the Subscribable to fire events.
   _sendToSubscribers: function(eventName, eventInfo) {
     try {
-      Utils.assertThrow("eventName must be a non-empty string",
-          eventName && typeof(eventName) == "string");
+      Utils.assertThrow(eventName && typeof(eventName) == "string",
+          "eventName must be a non-empty string");
 
       if (!this.subscribers || !this.subscribers[eventName])
         return;
@@ -498,10 +498,10 @@ let Utils = {
   // ----------
   // Function: assert
   // Prints a stack trace along with label (as a console message) if condition is false.
-  assert: function Utils_assert(label, condition) {
+  assert: function Utils_assert(condition, label) {
     if (!condition) {
       let text;
-      if (typeof(label) == 'undefined')
+      if (typeof(label) != 'string')
         text = 'badly formed assert';
       else
         text = "tabview assert: " + label;
@@ -513,10 +513,10 @@ let Utils = {
   // ----------
   // Function: assertThrow
   // Throws label as an exception if condition is false.
-  assertThrow: function(label, condition) {
+  assertThrow: function(condition, label) {
     if (!condition) {
       let text;
-      if (typeof(label) == 'undefined')
+      if (typeof(label) != 'string')
         text = 'badly formed assert';
       else
         text = "tabview assert: " + label;
@@ -682,15 +682,15 @@ let Utils = {
 
     // Deep copy is not supported
     if (typeof target === "boolean") {
-      this.assert("The first argument of extend cannot be a boolean."
-                   +"Deep copy is not supported.", false);
+      this.assert(false, "The first argument of extend cannot be a boolean." +
+          "Deep copy is not supported.");
       return target;
     }
 
     // Back when this was in iQ + iQ.fn, so you could extend iQ objects with it.
     // This is no longer supported.
     if (length === 1) {
-      this.assert("Extending the iQ prototype using extend is not supported.", false);
+      this.assert(false, "Extending the iQ prototype using extend is not supported.");
       return target;
     }
 
