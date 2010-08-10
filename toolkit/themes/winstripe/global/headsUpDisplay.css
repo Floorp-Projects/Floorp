@@ -155,10 +155,6 @@
     -moz-appearance: none !important;
 }
 
-.jsterm-input-node textarea {
-    overflow-x: hidden;
-}
-
 .jsterm-output-line {
     font-size: 1.2em;
 }
