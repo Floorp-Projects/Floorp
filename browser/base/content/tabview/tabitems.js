@@ -92,7 +92,7 @@ window.TabItem = function(tab) {
       + parseInt($div.css('padding-bottom'));
 
   this.bounds = $div.bounds();
-  
+
   // ___ superclass setup
   this._init($div[0]);
 
@@ -178,7 +178,7 @@ window.TabItem = function(tab) {
       return;
 
     if (iQ(e.target).hasClass("close"))
-      gBrowser.removeTab(tab);
+      self.close();
     else {
       if (!Items.item(this).isDragging)
         self.zoomIn();
@@ -201,7 +201,7 @@ window.TabItem = function(tab) {
   this._updateDebugBounds();
 
   TabItems.register(this);
-  this.addSubscriber(this, "close", function(who, info) {
+  this.addSubscriber(this, "beforeclose", function(who, info) {
     TabItems.unregister(self);
     self.removeTrenches();
   });
@@ -462,6 +462,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // closes the item.
   close: function() {
     gBrowser.removeTab(this.tab);
+    this._sendToSubscribers("tabRemoved");
 
     // No need to explicitly delete the tab data, becasue sessionstore data
     // associated with the tab will automatically go away
@@ -846,8 +847,9 @@ window.TabItems = {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(tab.tabItem, "should already be linked");
 
-      tab.tabItem._sendToSubscribers("close");
+      tab.tabItem._sendToSubscribers("beforeclose");
       iQ(tab.tabItem.container).remove();
+      tab.tabItem._sendToSubscribers("close");
 
       tab.tabItem = null;
 
