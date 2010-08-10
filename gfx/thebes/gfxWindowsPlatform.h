@@ -214,6 +214,9 @@ public:
 #ifdef CAIRO_HAS_DWRITE_FONT
     IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
 #endif
+#ifdef CAIRO_HAS_D2D_SURFACE
+    cairo_device_t *GetD2DDevice() { return mD2DDevice; }
+#endif
 
 #ifdef MOZ_FT2_FONTS
     FT_Library GetFTLibrary();
@@ -232,6 +235,9 @@ private:
 
 #ifdef CAIRO_HAS_DWRITE_FONT
     nsRefPtr<IDWriteFactory> mDWriteFactory;
+#endif
+#ifdef CAIRO_HAS_D2D_SURFACE
+    cairo_device_t *mD2DDevice;
 #endif
 
     virtual qcms_profile* GetPlatformCMSOutputProfile();
