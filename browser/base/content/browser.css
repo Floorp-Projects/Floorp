@@ -83,12 +83,8 @@ toolbar[printpreview="true"] {
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#main-window[inFullscreen] > #titlebar {
+#main-window[inFullscreen] > #appmenu-button-container {
   display: none;
-}
-
-#titlebar {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
 }
 %endif
 
