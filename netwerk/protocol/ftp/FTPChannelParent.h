@@ -18,11 +18,12 @@
  *
  * The Initial Developer of the Original Code is
  *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Alon Zakai <azakai@mozilla.com>
+ *   Josh Matthews <josh@joshmatthews.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,37 +39,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/net/PNeckoParent.h"
-#include "mozilla/net/NeckoCommon.h"
+#ifndef mozilla_net_FTPChannelParent_h
+#define mozilla_net_FTPChannelParent_h
 
-#ifndef mozilla_net_NeckoParent_h
-#define mozilla_net_NeckoParent_h
+#include "mozilla/net/PFTPChannelParent.h"
+#include "mozilla/net/NeckoCommon.h"
+#include "nsIStreamListener.h"
+#include "nsIInterfaceRequestor.h"
+
+class nsFtpChannel;
 
 namespace mozilla {
 namespace net {
 
-// Header file contents
-class NeckoParent :
-  public PNeckoParent
+class FTPChannelParent : public PFTPChannelParent
+                       , public nsIStreamListener
+                       , public nsIInterfaceRequestor
 {
 public:
-  NeckoParent();
-  virtual ~NeckoParent();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  FTPChannelParent();
+  virtual ~FTPChannelParent();
 
 protected:
-  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* browser);
-  virtual bool DeallocPHttpChannel(PHttpChannelParent*);
-  virtual PCookieServiceParent* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceParent*);
-  virtual PWyciwygChannelParent* AllocPWyciwygChannel();
-  virtual bool DeallocPWyciwygChannel(PWyciwygChannelParent*);
-  virtual PFTPChannelParent* AllocPFTPChannel();
-  virtual bool DeallocPFTPChannel(PFTPChannelParent*);
-  virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
-                                   const PRUint16& flags);
+  NS_OVERRIDE virtual bool RecvAsyncOpen(const IPC::URI& uri,
+                                         const PRUint64& startPos,
+                                         const nsCString& entityID,
+                                         const IPC::InputStream& uploadStream);
+  NS_OVERRIDE virtual bool RecvCancel(const nsresult& status);
+  NS_OVERRIDE virtual bool RecvSuspend();
+  NS_OVERRIDE virtual bool RecvResume();
+
+  NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+
+  nsRefPtr<nsFtpChannel> mChannel;
+
+  bool mIPCClosed;
 };
 
 } // namespace net
 } // namespace mozilla
 
-#endif // mozilla_net_NeckoParent_h
+#endif // mozilla_net_FTPChannelParent_h

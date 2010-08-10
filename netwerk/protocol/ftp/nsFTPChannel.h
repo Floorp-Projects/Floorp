@@ -62,6 +62,7 @@
 #include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsHashPropertyBag.h"
+#include "nsFtpProtocolHandler.h"
 
 class nsFtpChannel : public nsBaseChannel,
                      public nsIFTPChannel,

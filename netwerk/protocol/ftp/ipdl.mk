@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla Firefox.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Mozilla Foundation <http://www.mozilla.org/>.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s):
+# Contributor(s):  Alon Zakai
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,72 +34,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
-MODULE         = necko
-LIBRARY_NAME   = nkftp_s
-LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_ftp
-GRE_MODULE     = 1
-
-FORCE_STATIC_LIB = 1
-
-EXPORTS = ftpCore.h
-
-XPIDLSRCS = \
-  nsIFTPChannel.idl \
+IPDLSRCS =         \
+  PFTPChannel.ipdl \
   $(NULL)
 
-ifdef MOZ_IPC
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net += \
-  FTPChannelParent.h \
-  FTPChannelChild.h  \
-  $(NULL)
-endif
-
-CPPSRCS = \
-  nsFtpProtocolHandler.cpp \
-  nsFTPChannel.cpp \
-  nsFtpConnectionThread.cpp \
-  nsFtpControlConnection.cpp \
-  $(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS += \
-  FTPChannelParent.cpp \
-  FTPChannelChild.cpp \
-  $(NULL)
-endif
-
-# Use -g for Irix mipspro builds as workaround for bug 92099
-ifneq (,$(filter IRIX IRIX64,$(OS_ARCH)))
-ifndef GNU_CC
-MODULE_OPTIMIZE_FLAGS=-O -g
-endif
-endif
-
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../../base/src \
-  -I$(topsrcdir)/xpcom/ds \
-  $(NULL)
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-include $(topsrcdir)/config/rules.mk
-
-ifeq ($(OS_ARCH),WINNT)
-ifndef MOZ_DEBUG
-ifndef NO_LOGGING
-DEFINES += -DFORCE_PR_LOG
-endif
-endif
-endif # WINNT
-
-DEFINES += -DIMPL_NS_NET

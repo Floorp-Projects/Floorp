@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
 
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -18,11 +18,12 @@
  *
  * The Initial Developer of the Original Code is
  *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Alon Zakai <azakai@mozilla.com>
+ *   Josh Matthews <josh@joshmatthews.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,37 +39,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/net/PNeckoParent.h"
-#include "mozilla/net/NeckoCommon.h"
+include protocol PNecko;
 
-#ifndef mozilla_net_NeckoParent_h
-#define mozilla_net_NeckoParent_h
+include "mozilla/net/NeckoMessageUtils.h";
+
+using IPC::URI;
+using IPC::InputStream;
+using PRTime;
 
 namespace mozilla {
 namespace net {
 
-// Header file contents
-class NeckoParent :
-  public PNeckoParent
+async protocol PFTPChannel
 {
-public:
-  NeckoParent();
-  virtual ~NeckoParent();
+  manager PNecko;
 
-protected:
-  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* browser);
-  virtual bool DeallocPHttpChannel(PHttpChannelParent*);
-  virtual PCookieServiceParent* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceParent*);
-  virtual PWyciwygChannelParent* AllocPWyciwygChannel();
-  virtual bool DeallocPWyciwygChannel(PWyciwygChannelParent*);
-  virtual PFTPChannelParent* AllocPFTPChannel();
-  virtual bool DeallocPFTPChannel(PFTPChannelParent*);
-  virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
-                                   const PRUint16& flags);
+parent:
+  __delete__();
+
+  AsyncOpen(URI uri, PRUint64 startPos, nsCString entityID,
+            InputStream uploadStream);
+  Cancel(nsresult status);
+  Suspend();
+  Resume();
+
+child:
+  OnStartRequest(PRInt32 aContentLength, nsCString aContentType,
+                 PRTime aLastModified, nsCString aEntityID, URI aURI);
+  OnDataAvailable(nsCString data, PRUint32 offset, PRUint32 count);
+  OnStopRequest(nsresult statusCode);
+  CancelEarly(nsresult statusCode);
 };
 
 } // namespace net
 } // namespace mozilla
 
-#endif // mozilla_net_NeckoParent_h

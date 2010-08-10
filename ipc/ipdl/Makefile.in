@@ -64,6 +64,7 @@ IPDLDIRS =  \
   js/jetpack \
   layout/ipc \
   netwerk/ipc  \
+  netwerk/protocol/ftp \
   netwerk/protocol/http  \
   netwerk/protocol/wyciwyg \
   netwerk/cookie  \
