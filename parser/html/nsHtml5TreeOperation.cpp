@@ -61,13 +61,10 @@
 #include "nsIFormProcessor.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
-#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_SVG
 #include "nsHtml5SVGLoadDispatcher.h"
 #endif
-
-namespace dom = mozilla::dom;
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
@@ -316,7 +313,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return AppendToDocument(node, aBuilder);
     }
     case eTreeOpAddAttributes: {
-      dom::Element* node = (*(mOne.node))->AsElement();
+      nsIContent* node = *(mOne.node);
       nsHtml5HtmlAttributes* attributes = mTwo.attributes;
 
       nsHtml5OtherDocUpdate update(node->GetOwnerDoc(),
