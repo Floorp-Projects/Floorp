@@ -4956,12 +4956,12 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
 
 void
 PresShell::AttributeWillChange(nsIDocument* aDocument,
-                               Element*     aElement,
+                               nsIContent*  aContent,
                                PRInt32      aNameSpaceID,
                                nsIAtom*     aAttribute,
                                PRInt32      aModType)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeWillChange");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   // XXXwaterson it might be more elegant to wait until after the
@@ -4969,7 +4969,7 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeWillChange(aElement, aNameSpaceID,
+    mFrameConstructor->AttributeWillChange(aContent, aNameSpaceID,
                                            aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }

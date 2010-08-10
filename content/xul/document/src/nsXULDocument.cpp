@@ -976,19 +976,19 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
 void
 nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
-                                   Element* aElement, PRInt32 aNameSpaceID,
+                                   nsIContent* aContent, PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute, PRInt32 aModType)
 {
-    NS_ABORT_IF_FALSE(aElement, "Null content!");
+    NS_ABORT_IF_FALSE(aContent, "Null content!");
     NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
     // XXXbz check aNameSpaceID, dammit!
     // See if we need to update our ref map.
     if (aAttribute == nsGkAtoms::ref ||
-        (aAttribute == nsGkAtoms::id && !aElement->GetIDAttributeName())) {
+        (aAttribute == nsGkAtoms::id && !aContent->GetIDAttributeName())) {
         // Might not need this, but be safe for now.
         nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-        RemoveElementFromRefMap(aElement);
+        RemoveElementFromRefMap(aContent->AsElement());
     }
 }
 
