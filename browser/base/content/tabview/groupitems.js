@@ -1234,7 +1234,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
                 // of the groupItem's tab.
                 // TODO: This is probably a terrible hack that sets up a race
                 // condition. We need a better solution.
-                Utils.timeout(function() {
+                setTimeout(function() {
                   self._sendToSubscribers("tabAdded", { groupItemId: self.id });
                 }, 1);
               }
