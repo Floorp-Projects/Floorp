@@ -122,9 +122,10 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
 {
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION(AttributeChanged, aContent,
-                             (doc, aContent, aNameSpaceID, aAttribute,
+  Element* aElement = aContent->AsElement();
+  nsIDocument* doc = aElement->GetOwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(AttributeChanged, aElement,
+                             (doc, aElement, aNameSpaceID, aAttribute,
                               aModType));
 }
 

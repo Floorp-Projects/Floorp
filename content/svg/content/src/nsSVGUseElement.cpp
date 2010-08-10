@@ -42,6 +42,9 @@
 #include "nsIDOMSVGSymbolElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////
 // implementation
@@ -194,13 +197,13 @@ nsSVGUseElement::CharacterDataChanged(nsIDocument *aDocument,
 }
 
 void
-nsSVGUseElement::AttributeChanged(nsIDocument *aDocument,
-                                  nsIContent *aContent,
+nsSVGUseElement::AttributeChanged(nsIDocument* aDocument,
+                                  Element* aElement,
                                   PRInt32 aNameSpaceID,
-                                  nsIAtom *aAttribute,
+                                  nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
-  if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+  if (nsContentUtils::IsInSameAnonymousTree(this, aElement)) {
     TriggerReclone();
   }
 }

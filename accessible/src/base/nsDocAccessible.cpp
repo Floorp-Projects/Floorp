@@ -73,9 +73,12 @@
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
+#include "mozilla/dom/Element.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
+
+namespace dom = mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Static member initialization
@@ -905,15 +908,16 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
 }
 
 void
-nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
+                                  dom::Element* aElement,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
-  AttributeChangedImpl(aContent, aNameSpaceID, aAttribute);
+  AttributeChangedImpl(aElement, aNameSpaceID, aAttribute);
 
   // If it was the focused node, cache the new state
-  if (aContent == gLastFocusedNode) {
-    nsAccessible *focusedAccessible = GetAccService()->GetAccessible(aContent);
+  if (aElement == gLastFocusedNode) {
+    nsAccessible *focusedAccessible = GetAccService()->GetAccessible(aElement);
     if (focusedAccessible)
       gLastFocusedAccessiblesState = nsAccUtils::State(focusedAccessible);
   }
