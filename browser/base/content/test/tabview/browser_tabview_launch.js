@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is tabview drag and drop test.
+ * The Original Code is tabview launch test.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.

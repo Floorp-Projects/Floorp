@@ -521,8 +521,8 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Closes the groupItem, removing (but not closing) all of its children.
   close: function() {
     this.removeAll();
-    this._sendToSubscribers("close");
     GroupItems.unregister(this);
+    this._sendToSubscribers("close");
     this.removeTrenches();
     iQ(this.container).fadeOut(function() {
       iQ(this).remove();
@@ -638,7 +638,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.droppable(false);
         item.groupItemData = {};
 
-        item.addSubscriber(this, "close", function() {
+        item.addSubscriber(this, "beforeclose", function() {
           self.remove($el);
         });
 
@@ -700,7 +700,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.setRotation(0);
 
       item.droppable(true);
-      item.removeSubscriber(this, "close");
+      item.removeSubscriber(this, "beforeclose");
 
       if (typeof(item.setResizable) == 'function')
         item.setResizable(true);
