@@ -1728,12 +1728,8 @@ return_wrapper:
             {
                 XPCWrappedNativeProto* wrapper_proto =
                     isWN ? wrapper->GetProto() : GetSlimWrapperProto(cur);
-                XPCWrappedNativeScope* wrapper_scope =
-                    wrapper_proto ? wrapper_proto->GetScope() :
-                                    wrapper->GetScope();
                 if(proto != wrapper_proto &&
-                   (proto->GetScope() != wrapper_scope ||
-                    !protoClassInfo || !wrapper_proto ||
+                   (!protoClassInfo || !wrapper_proto ||
                     protoClassInfo != wrapper_proto->GetClassInfo()))
                     continue;
             }

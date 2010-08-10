@@ -4892,8 +4892,8 @@ nsDOMClassInfo::ShutDown()
 // Window helper
 
 NS_IMETHODIMP
-nsCommonWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                            JSObject *globalObj, JSObject **parentObj)
+nsInnerWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                           JSObject *globalObj, JSObject **parentObj)
 {
   // Normally ::PreCreate() is used to give XPConnect the parent
   // object for the object that's being wrapped, this parent object is
@@ -4911,25 +4911,30 @@ nsCommonWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   NS_ASSERTION(sgo, "nativeObj not a global object!");
 
   nsGlobalWindow *win = nsGlobalWindow::FromSupports(nativeObj);
-
-  if (win->IsOuterWindow()) {
-    win->EnsureInnerWindow();
+  JSObject *winObj = win->FastGetGlobalJSObject();
+  if (!winObj) {
+    NS_ASSERTION(win->GetOuterWindowInternal()->IsCreatingInnerWindow(),
+                 "should have a JS object by this point");
+    return NS_OK;
   }
 
-  if (sgo) {
-    *parentObj = sgo->GetGlobalJSObject();
+  *parentObj = winObj;
+  return NS_OK;
+}
 
-    if (*parentObj) {
-      return win->IsChromeWindow() ? NS_OK : NS_SUCCESS_NEEDS_XOW;
-    }
+NS_IMETHODIMP
+nsOuterWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                           JSObject *globalObj, JSObject **parentObj)
+{
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeObj));
+  NS_ASSERTION(sgo, "nativeObj not a global object!");
+
+  nsGlobalWindow *win = nsGlobalWindow::FromSupports(nativeObj);
+  if (!win->EnsureInnerWindow()) {
+    return NS_ERROR_FAILURE;
   }
 
-  // We're most likely being called when the global object is
-  // created, at that point we won't get a nsIScriptContext but we
-  // know we're called on the correct context so we return globalObj
-
-  *parentObj = globalObj;
-
+  *parentObj = win->GetCurrentInnerWindowInternal()->FastGetGlobalJSObject();
   return win->IsChromeWindow() ? NS_OK : NS_SUCCESS_NEEDS_XOW;
 }
 
@@ -6662,33 +6667,33 @@ nsCommonWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     my_cx = (JSContext *)my_context->GetNativeContext();
   }
 
-  JSBool ok;
-  jsval exn;
-  {
+  JSBool ok = JS_TRUE;
+  jsval exn = JSVAL_VOID;
+  if (win->IsInnerWindow()) {
     JSAutoRequest transfer(my_cx);
 
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
-    
+
     // Don't resolve standard classes on XPCNativeWrapper etc, only
     // resolve them if we're resolving on the real global object.
     ok = obj == realObj ?
          ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
          JS_TRUE;
-    
+
     if (!ok) {
       // Trust the JS engine (or the script security manager) to set
       // the exception in the JS engine.
-      
+
       if (!JS_GetPendingException(my_cx, &exn)) {
         return NS_ERROR_UNEXPECTED;
       }
-      
+
       // Return NS_OK to avoid stomping over the exception that was passed
       // down from the ResolveStandardClass call.
       // Note that the order of the JS_ClearPendingException and
       // JS_SetPendingException is important in the case that my_cx == cx.
-      
+
       JS_ClearPendingException(my_cx);
     }
   }
