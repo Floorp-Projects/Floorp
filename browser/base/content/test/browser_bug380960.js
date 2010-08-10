@@ -52,7 +52,7 @@ function nextAsyncText() {
     gotCloseEvent = true;
 
     const DEFAULT_ANIMATION_LENGTH = 250;
-    const MAX_WAIT_TIME = DEFAULT_ANIMATION_LENGTH * 5;
+    const MAX_WAIT_TIME = DEFAULT_ANIMATION_LENGTH * 7;
     var polls = Math.ceil(MAX_WAIT_TIME / DEFAULT_ANIMATION_LENGTH);
     var pollTabRemoved = setInterval(function () {
       --polls;

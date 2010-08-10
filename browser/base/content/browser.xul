@@ -143,7 +143,7 @@
                 accesskey="&undoCloseTab.accesskey;"
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
-                oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
+                oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>
     </menupopup>
 
     <menupopup id="backForwardMenu"
@@ -222,7 +222,8 @@
            noautofocus="true"
            noautohide="true"
            onclick="InspectorUI.stopInspecting();"
-           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"/>
+           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"
+           onMozMousePixelScroll="InspectorUI.highlighter.handlePixelScroll(event);"/>
 
     <panel id="inspector-panel"
            orient="vertical"
@@ -694,8 +695,8 @@
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <box id="notification-popup-box" hidden="true" align="center">
-            <image id="geo-notification-icon" class="notification-anchor-icon"/>
-            <image id="addons-notification-icon" class="notification-anchor-icon"/>
+            <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.

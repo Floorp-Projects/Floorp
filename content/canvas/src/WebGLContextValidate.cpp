@@ -39,9 +39,12 @@
 
 #include "WebGLContext.h"
 
+#include "nsIPrefService.h"
+#include "nsServiceManagerUtils.h"
+
 #include "CheckedInt.h"
 
-#if !defined(USE_GLES2) && defined(USE_ANGLE)
+#if defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
 #endif
 
@@ -444,17 +447,26 @@ WebGLContext::InitAndValidateGL()
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
     }
 
-#if !defined(USE_GLES2) && defined(USE_ANGLE)
-    // initialize shader translator
-    static bool didTranslatorInit = false;
-    if (!didTranslatorInit && mShaderValidation) {
-        if (!ShInitialize()) {
-            LogMessage("GLSL translator initialization failed!");
-            return PR_FALSE;
+    static bool didTranslatorCheck = false;
+    if (!didTranslatorCheck) {
+        // Check the shader validator pref
+        nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
+
+        prefService->GetBoolPref("webgl.shader_validator", &mShaderValidation);
+
+#if defined(USE_ANGLE)
+        // initialize shader translator
+        if (mShaderValidation) {
+            if (!ShInitialize()) {
+                LogMessage("GLSL translator initialization failed!");
+                return PR_FALSE;
+            }
         }
-        didTranslatorInit = true;
-    }
 #endif
+
+        didTranslatorCheck = true;
+    }
 
     return PR_TRUE;
 }

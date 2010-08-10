@@ -120,6 +120,10 @@
 #include "secerr.h"
 #include "sslerr.h"
 
+#ifdef MOZ_IPC
+#include "nsXULAppAPI.h"
+#endif
+
 #ifdef XP_WIN
 #include "nsILocalFileWin.h"
 #endif
@@ -283,6 +287,13 @@ nsTokenEventRunnable::Run()
 // creating any other components.
 PRBool EnsureNSSInitialized(EnsureNSSOperator op)
 {
+#ifdef MOZ_IPC
+  if (GeckoProcessType_Default != XRE_GetProcessType()) {
+    NS_ERROR("Trying to initialize PSM/NSS in a non-chrome process!");
+    return PR_FALSE;
+  }
+#endif
+
   static PRBool loading = PR_FALSE;
   static PRInt32 haveLoaded = 0;
 
