@@ -90,7 +90,7 @@ let TabView = {
 
   // ----------
   isVisible: function() {
-    return (window.document.getElementById("tab-view-deck").selectedIndex == 1);
+    return (document.getElementById("tab-view-deck").selectedIndex == 1);
   },
 
   // ----------
