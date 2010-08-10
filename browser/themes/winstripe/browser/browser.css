@@ -1154,9 +1154,16 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 #TabsToolbar:not(:-moz-lwtheme),
 #TabsToolbar[tabsontop="false"] {
+  background-image: -moz-linear-gradient(transparent, transparent 50%,
+                                         rgba(0,0,0,.05) 90%, rgba(0,0,0,.1));
+}
+
+#TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
   -moz-box-shadow: 0 -1px ThreeDShadow inset;
-  background-image: -moz-linear-gradient(transparent, transparent 10%,
-                                         rgba(0,0,0,.03) 50%, rgba(0,0,0,.1) 90%, rgba(0,0,0,.2));
+}
+
+#TabsToolbar[tabsontop="false"] {
+  border-bottom: 1px solid ThreeDShadow !important;
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
