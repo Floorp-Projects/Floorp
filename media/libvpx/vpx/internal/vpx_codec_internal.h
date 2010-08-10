@@ -321,7 +321,7 @@ typedef struct vpx_codec_priv_cb_pair
     {
         vpx_codec_put_frame_cb_fn_t    put_frame;
         vpx_codec_put_slice_cb_fn_t    put_slice;
-    };
+    } fn;
     void                            *user_priv;
 } vpx_codec_priv_cb_pair_t;
 

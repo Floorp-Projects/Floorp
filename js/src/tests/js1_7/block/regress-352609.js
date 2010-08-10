@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352609.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352609;
 var summary = 'decompilation of |let| expression for |is not a function| error';

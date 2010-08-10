@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351219.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351219;
 var summary = 'Decompilation of immutable infinity, NaN';

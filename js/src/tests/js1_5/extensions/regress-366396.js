@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-366396.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 366396;
 var summary = 'Do not assert !SPROP_HAS_STUB_GETTER on Setter with %=';

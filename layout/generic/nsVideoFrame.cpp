@@ -187,6 +187,14 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
 
   nsRefPtr<ImageContainer> container = element->GetImageContainer();
+  // If we have a container with a different layer manager, try to hand
+  // off the container to the new one.
+  if (container && container->Manager() != aManager) {
+    // we don't care about the return type here -- if the set didn't take, it'll
+    // be handled when we next check the manager
+    container->SetLayerManager(aManager);
+  }
+
   // If we have a container with the right layer manager already, we don't
   // need to do anything here. Otherwise we need to set up a temporary
   // ImageContainer, capture the video data and store it in the temp
@@ -203,6 +211,10 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
       // Get video from the existing container. It was created for a
       // different layer manager, so we do fallback through cairo.
       imageSurface = container->GetCurrentAsSurface(&cairoData.mSize);
+      if (!imageSurface) {
+        // we couldn't do fallback, so we've got nothing to do here
+        return nsnull;
+      }
       cairoData.mSurface = imageSurface;
     } else {
       // We're probably printing.

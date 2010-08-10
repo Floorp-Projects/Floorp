@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-321874.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 321874;
 var summary = 'lhs must be a reference in (for lhs in rhs) ...';

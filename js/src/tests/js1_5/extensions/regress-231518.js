@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-231518.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 231518;
 var summary = 'decompiler must quote keywords and non-identifier property names';

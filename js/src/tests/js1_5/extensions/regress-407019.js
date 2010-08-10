@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-407019.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 407019;
 var summary = 'Do not assert: !JS_IsExceptionPending(cx) - Browser only';

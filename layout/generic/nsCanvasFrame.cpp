@@ -446,6 +446,11 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
+  // Set our size up front, since some parts of reflow depend on it
+  // being already set.  Note that the computed height may be
+  // unconstrained; that's ok.  Consumers should watch out for that.
+  SetSize(nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight())); 
+
   // Reflow our one and only normal child frame. It's either the root
   // element's frame or a placeholder for that frame, if the root element
   // is abs-pos or fixed-pos. We may have additional children which

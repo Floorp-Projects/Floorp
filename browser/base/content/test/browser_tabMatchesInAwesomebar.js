@@ -102,6 +102,23 @@ var gTestSteps = [
       ensure_opentabs_match_db();
       nextStep()
     });
+  },
+  function() {
+    info("Running step 6 - ensure we don't register subframes as open pages");
+    let tab = gBrowser.addTab();
+    tab.linkedBrowser.addEventListener("load", function () {
+      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      // Start the sub-document load.
+      executeSoon(function () {
+        tab.linkedBrowser.addEventListener("load", function (e) {
+          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+            ensure_opentabs_match_db();
+            nextStep()
+        }, true);
+        tab.linkedBrowser.contentDocument.querySelector("iframe").src = "http://test2.example.org/";
+      });
+    }, true);
+    tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
   }
 ];
 

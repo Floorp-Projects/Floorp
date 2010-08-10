@@ -5,7 +5,6 @@
  * Contributor: Blake Kaplan
  */
 
-var gTestfile = 'regress-346749.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346749;
 var summary = 'let declarations at function level should turn into var declarations';

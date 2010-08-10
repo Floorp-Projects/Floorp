@@ -54,7 +54,6 @@
  * relevant to the effect of parsing the FunctionDeclaration."
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-68498-004.js';
 var BUGNUMBER = 68498;
 var summary = 'Testing self.eval(str) inside a function';
 var statprefix = '; currently at expect[';

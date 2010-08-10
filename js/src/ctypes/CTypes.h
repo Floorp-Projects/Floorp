@@ -111,6 +111,8 @@ class Array : public Vector<T, N, SystemAllocPolicy>
 // String and AutoString classes, based on Vector.
 typedef Vector<jschar,  0, SystemAllocPolicy> String;
 typedef Vector<jschar, 64, SystemAllocPolicy> AutoString;
+typedef Vector<char,    0, SystemAllocPolicy> CString;
+typedef Vector<char,   64, SystemAllocPolicy> AutoCString;
 
 // Convenience functions to append, insert, and compare Strings.
 template <class T, size_t N, class AP, size_t ArrayLength>
@@ -140,6 +142,20 @@ AppendString(Vector<jschar, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
   v.append(str->chars(), str->length());
+}
+
+template <size_t N, class AP>
+void
+AppendString(Vector<char, N, AP> &v, JSString* str)
+{
+  JS_ASSERT(str);
+  size_t vlen = v.length();
+  size_t alen = str->length();
+  if (!v.resize(vlen + alen))
+    return;
+
+  for (size_t i = 0; i < alen; ++i)
+    v[i + vlen] = char(str->chars()[i]);
 }
 
 template <class T, size_t N, class AP, size_t ArrayLength>
@@ -462,6 +478,8 @@ namespace FunctionType {
 
   FunctionInfo* GetFunctionInfo(JSContext* cx, JSObject* obj);
   JSObject* GetLibrary(JSContext* cx, JSObject* obj);
+  void BuildSymbolName(JSContext* cx, JSString* name, JSObject* typeObj,
+    AutoCString& result);
 }
 
 namespace CClosure {

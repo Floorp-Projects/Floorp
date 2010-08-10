@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'StrictEquality-001.js';
 
 /**
  *  File Name:          StrictEquality-001.js

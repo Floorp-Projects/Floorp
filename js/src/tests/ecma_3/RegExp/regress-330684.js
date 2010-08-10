@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-330684.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 330684;
 var summary = 'Do not hang on RegExp';

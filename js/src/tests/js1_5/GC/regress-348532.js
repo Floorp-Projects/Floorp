@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-348532.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 348532;
 var summary = 'Do not overflow int when constructing Error.stack';

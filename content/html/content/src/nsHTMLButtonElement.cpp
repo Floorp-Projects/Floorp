@@ -260,7 +260,7 @@ nsHTMLButtonElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PR
 
   *aIsFocusable = 
 #ifdef XP_MACOSX
-    !aWithMouse &&
+    (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
 #endif
     !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 

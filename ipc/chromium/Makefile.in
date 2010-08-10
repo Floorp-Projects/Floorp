@@ -64,7 +64,6 @@ endif # }
 
 vpath %.cc \
   $(srcdir)/src/base \
-  $(srcdir)/src/base/third_party/dmg_fp \
   $(srcdir)/src/base/third_party/nspr \
   $(srcdir)/src/base/third_party/nss \
   $(srcdir)/src/chrome/common \
@@ -79,8 +78,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CPPSRCS += \
-  dtoa.cc \
-  g_fmt.cc \
   prtime.cc \
   at_exit.cc \
   base_paths.cc \

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.3.4.4.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 290488;
 var summary = '15.3.4.4 - Function.prototype.call() Scope';

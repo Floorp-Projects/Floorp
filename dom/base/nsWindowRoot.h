@@ -95,7 +95,7 @@ public:
   virtual nsresult GetControllerForCommand(const char * aCommand,
                                            nsIController** _retval);
 
-  virtual void GetPopupNode(nsIDOMNode** aNode);
+  virtual nsIDOMNode* GetPopupNode();
   virtual void SetPopupNode(nsIDOMNode* aNode);
 
   virtual void SetParentTarget(nsPIDOMEventTarget* aTarget)

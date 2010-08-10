@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '8.6.2.6-001.js';
 var UBound = 0;
 var BUGNUMBER = 167325;
 var summary = "Test for TypeError on invalid default string value of object";

@@ -300,19 +300,17 @@ protected:
       }
       fprintf (stderr, "=== Log:\n%s\n", nsPromiseFlatCString(log).get());
       fprintf (stderr, "============\n");
+    }
 
-      // We can mark the shaders for deletion; they're attached to the program
-      // and will remain attached.
-      mGL->fDeleteShader(vertexShader);
-      mGL->fDeleteShader(fragmentShader);
+    // We can mark the shaders for deletion; they're attached to the program
+    // and will remain attached.
+    mGL->fDeleteShader(vertexShader);
+    mGL->fDeleteShader(fragmentShader);
 
-      if (!success) {
-        mGL->fDeleteProgram(mProgram);
-
-        mProgram = 0;
-
-        return false;
-      }
+    if (!success) {
+      mGL->fDeleteProgram(mProgram);
+      mProgram = 0;
+      return false;
     }
 
     // Now query uniforms, so that we can initialize mUniformValues

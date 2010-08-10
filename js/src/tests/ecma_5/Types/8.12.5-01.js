@@ -7,7 +7,6 @@
  *   Jeff Walden <jwalden+code@mit.edu>
  */
 
-var gTestfile = "template.js";
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 523846;
 var summary =

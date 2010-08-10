@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = '15.2.3.14-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 307791;
 var summary = 'ES5 Object.keys(O)';

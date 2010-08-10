@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-350256-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350256;
 var summary = 'Array.apply maximum arguments: 2^19 - 1024';

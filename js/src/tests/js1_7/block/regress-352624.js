@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352624.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352624;
 var summary = 'Do not crash with |let (map)| in WAY_TOO_MUCH_GC builds';

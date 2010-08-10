@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-001.js';
 
 /**
  *  File Name:          RegExp/regress-001.js

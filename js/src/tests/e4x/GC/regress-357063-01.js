@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-357063-01.js';
 
 var BUGNUMBER = 357063;
 var summary = 'GC hazard in XMLEquality';

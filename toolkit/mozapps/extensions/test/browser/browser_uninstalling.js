@@ -41,9 +41,6 @@ function test() {
     operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
   }]);
 
-  // Turn off searching
-  Services.prefs.setIntPref("extensions.getAddons.maxResults", 0);
-
   open_manager(null, function(aWindow) {
     gManagerWindow = aWindow;
     gDocument = gManagerWindow.document;

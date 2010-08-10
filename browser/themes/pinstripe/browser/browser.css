@@ -419,6 +419,11 @@ toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen
   -moz-box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 5px, @loweredShadow@;
 }
 
+toolbar[mode="icons"] .toolbarbutton-1 > menupopup,
+toolbar[mode="icons"] toolbarbutton[type="menu-button"] > menupopup {
+  margin-top: 1px;
+}
+
 /* unified back/forward button */
 
 #unified-back-forward-button {
@@ -1861,6 +1866,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   width: 16px;
   height: 16px;
   margin: 0 2px;
+}
+
+.notification-anchor-icon:-moz-focusring {
+  -moz-box-shadow: 0 0 3px 1px -moz-mac-focusring inset,
+                   0 0 3px 2px -moz-mac-focusring;
 }
 
 #geo-notification-icon {

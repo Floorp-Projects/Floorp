@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-350730.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350730;
 var summary = 'Do not assert: pn2->pn_slot >= 0 || varOrConst [@ EmitVariables]';

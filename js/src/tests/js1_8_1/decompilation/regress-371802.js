@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-371802.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 371802;
 var summary = 'Do not assert with group assignment';

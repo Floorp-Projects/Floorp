@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-341496.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 341496;
 var summary = 'Iterators: check that adding properties does not crash';

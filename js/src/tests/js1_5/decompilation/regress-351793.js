@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351793.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351793;
 var summary = 'decompilation of double parenthesized object literal';

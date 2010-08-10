@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351973.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351973;
 var summary = 'GC hazard with unrooted ids in Object.toSource';

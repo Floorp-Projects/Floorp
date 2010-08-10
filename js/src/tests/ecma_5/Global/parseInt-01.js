@@ -1,7 +1,6 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
-var gTestfile = 'parseInt-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 577536;
 var summary = "ES5 15.1.2.2 parseInt(string, radix)";

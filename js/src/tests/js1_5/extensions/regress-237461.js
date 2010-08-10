@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-237461.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 237461;
 var summary = 'don\'t crash with nested function collides with var';

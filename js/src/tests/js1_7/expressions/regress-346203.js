@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-346203.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346203;
 var summary = 'Do not crash during destructuring assignment ';

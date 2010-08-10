@@ -49,6 +49,7 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -471,16 +472,23 @@ FetchDatabaseIconStep::HandleResult(mozIStorageResultSet* aResultSet)
   // is in the query to mimic mDBGetIconInfo.
   // Indeed in future we could want to retain only one statement.
 
-  rv = row->GetInt64(2, &mStepper->mExpiration);
-  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  PRBool isNull;
+  rv = row->GetIsNull(2, &isNull);
+  if (!isNull) {
+    rv = row->GetInt64(2, &mStepper->mExpiration);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  }
 
-  PRUint8* data;
-  PRUint32 dataLen = 0;
-  rv = row->GetBlob(3, &dataLen, &data);
-  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
-  mStepper->mData.Adopt(TO_CHARBUFFER(data), dataLen);
-  rv = row->GetUTF8String(4, mStepper->mMimeType);
-  FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  rv = row->GetIsNull(3, &isNull);
+  if (!isNull) {
+    PRUint8* data;
+    PRUint32 dataLen = 0;
+    rv = row->GetBlob(3, &dataLen, &data);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+    mStepper->mData.Adopt(TO_CHARBUFFER(data), dataLen);
+    rv = row->GetUTF8String(4, mStepper->mMimeType);
+    FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
+  }
 
   PRInt32 isRevisit;
   rv = row->GetInt32(5, &isRevisit);
@@ -758,11 +766,13 @@ FetchNetworkIconStep::GetInterface(const nsIID& uuid,
 
 
 NS_IMETHODIMP
-FetchNetworkIconStep::OnChannelRedirect(nsIChannel* oldChannel,
-                                        nsIChannel* newChannel,
-                                        PRUint32 flags)
+FetchNetworkIconStep::AsyncOnChannelRedirect(nsIChannel* oldChannel,
+                                             nsIChannel* newChannel,
+                                             PRUint32 flags,
+                                             nsIAsyncVerifyRedirectCallback *cb)
 {
   mChannel = newChannel;
+  cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 

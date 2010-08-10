@@ -1649,9 +1649,12 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
   mOuter->InvalidateWithFlags(mScrollPort, flags);
 
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
-    // XXX fix this to transform rectangle properly
-    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame,
-      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot));
+    nsRect update =
+      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot);
+    update = update.ConvertAppUnitsRoundOut(
+      mOuter->PresContext()->AppUnitsPerDevPixel(),
+      displayRoot->PresContext()->AppUnitsPerDevPixel());
+    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, update);
   }
 }
 

@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-110286.js';
 var UBound = 0;
 var BUGNUMBER = 110286;
 var summary = 'Multiline comments containing "/*" should not be syntax errors';

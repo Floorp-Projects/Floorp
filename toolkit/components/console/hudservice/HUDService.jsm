@@ -25,6 +25,8 @@
  *   Rob Campbell <rcampbell@mozilla.com>
  *   Johnathan Nightingale <jnightingale@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Julian Viereck <jviereck@mozilla.com>
+ *   Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,6 +82,10 @@ const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
 XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
   return Services.strings.createBundle(HUD_STRINGS_URI);
 });
+
+// The amount of time in milliseconds that must pass between messages to
+// trigger the display of a new group.
+const NEW_GROUP_DELAY = 5000;
 
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
@@ -199,14 +205,18 @@ HUD_SERVICE.prototype =
     var origOnerrorFunc = window.onerror;
     window.onerror = function windowOnError(aErrorMsg, aURL, aLineNumber)
     {
-      var lineNum = "";
-      if (aLineNumber) {
-        lineNum = self.getFormatStr("errLine", [aLineNumber]);
+      if (aURL && !(aURL in self.uriRegistry)) {
+        var lineNum = "";
+        if (aLineNumber) {
+          lineNum = self.getFormatStr("errLine", [aLineNumber]);
+        }
+        console.error(aErrorMsg + " @ " + aURL + " " + lineNum);
       }
-      console.error(aErrorMsg + " @ " + aURL + " " + lineNum);
+
       if (origOnerrorFunc) {
         origOnerrorFunc(aErrorMsg, aURL, aLineNumber);
       }
+
       return false;
     };
   },
@@ -313,6 +323,8 @@ HUD_SERVICE.prototype =
     while (outputNode.firstChild) {
       outputNode.removeChild(outputNode.firstChild);
     }
+
+    outputNode.lastTimestamp = 0;
   },
 
   /**
@@ -689,23 +701,25 @@ HUD_SERVICE.prototype =
       throw new Error(ERRORS.MISSING_ARGS);
     }
 
+    let lastGroupNode = this.appendGroupIfNecessary(aConsoleNode,
+                                                    aMessage.timestamp);
     if (aFilterString) {
       var filtered = this.filterLogMessage(aFilterString, aMessageNode);
       if (filtered) {
         // we have successfully filtered a message, we need to log it
-        aConsoleNode.appendChild(aMessageNode);
+        lastGroupNode.appendChild(aMessageNode);
         aMessageNode.scrollIntoView(false);
       }
       else {
         // we need to ignore this message by changing its css class - we are
         // still logging this, it is just hidden
         var hiddenMessage = ConsoleUtils.hideLogMessage(aMessageNode);
-        aConsoleNode.appendChild(hiddenMessage);
+        lastGroupNode.appendChild(hiddenMessage);
       }
     }
     else {
       // log everything
-      aConsoleNode.appendChild(aMessageNode);
+      lastGroupNode.appendChild(aMessageNode);
       aMessageNode.scrollIntoView(false);
     }
     // store this message in the storage module:
@@ -1197,6 +1211,51 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Builds and appends a group to the console if enough time has passed since
+   * the last message.
+   *
+   * @param nsIDOMNode aConsoleNode
+   *        The DOM node that holds the output of the console (NB: not the HUD
+   *        node itself).
+   * @param number aTimestamp
+   *        The timestamp of the newest message in milliseconds.
+   * @returns nsIDOMNode
+   *          The group into which the next message should be written.
+   */
+  appendGroupIfNecessary:
+  function HS_appendGroupIfNecessary(aConsoleNode, aTimestamp)
+  {
+    let hudBox = aConsoleNode;
+    while (hudBox != null && hudBox.getAttribute("class") !== "hud-box") {
+      hudBox = hudBox.parentNode;
+    }
+
+    let lastTimestamp = hudBox.lastTimestamp;
+    let delta = aTimestamp - lastTimestamp;
+    hudBox.lastTimestamp = aTimestamp;
+    if (delta < NEW_GROUP_DELAY) {
+      // No new group needed. Return the most recently-added group, if there is
+      // one.
+      let lastGroupNode = aConsoleNode.querySelector(".hud-group:last-child");
+      if (lastGroupNode != null) {
+        return lastGroupNode;
+      }
+    }
+
+    let chromeDocument = aConsoleNode.ownerDocument;
+    let groupNode = chromeDocument.createElement("vbox");
+    groupNode.setAttribute("class", "hud-group");
+
+    let separatorNode = chromeDocument.createElement("separator");
+    separatorNode.setAttribute("class", "groove hud-divider");
+    separatorNode.setAttribute("orient", "horizontal");
+    groupNode.appendChild(separatorNode);
+
+    aConsoleNode.appendChild(groupNode);
+    return groupNode;
+  },
+
+  /**
    * update loadgroup when the window object is re-created
    *
    * @param string aId
@@ -1616,6 +1675,8 @@ function HeadsUpDisplay(aConfig)
   this.XULFactory = NodeFactory("xul", "xul", this.chromeDocument);
   this.textFactory = NodeFactory("text", "xul", this.chromeDocument);
 
+  this.chromeWindow = HUDService.getChromeWindowFromContentWindow(this.contentWindow);
+
   // create a panel dynamically and attach to the parentNode
   let hudBox = this.createHUD();
 
@@ -1626,6 +1687,8 @@ function HeadsUpDisplay(aConfig)
                                     this.notificationBox.childNodes[1]);
 
   let console = this.createConsole();
+
+  this.HUDBox.lastTimestamp = 0;
 
   this.contentWindow.wrappedJSObject.console = console;
 
@@ -1699,9 +1762,15 @@ HeadsUpDisplay.prototype = {
   {
     this.hudId = this.HUDBox.getAttribute("id");
 
-    // set outputNode
     this.outputNode = this.HUDBox.querySelectorAll(".hud-output-node")[0];
 
+    this.contextMenu = this.HUDBox.querySelector("#" + this.hudId +
+        "-output-contextmenu");
+    this.copyOutputMenuItem = this.HUDBox.
+      querySelector("menuitem[command=cmd_copy]");
+
+    this.chromeWindow = HUDService.
+      getChromeWindowFromContentWindow(this.contentWindow);
     this.chromeDocument = this.HUDBox.ownerDocument;
 
     if (this.outputNode) {
@@ -1764,18 +1833,6 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
-   * Clears the HeadsUpDisplay output node of any log messages
-   *
-   * @returns void
-   */
-  clearConsoleOutput: function HUD_clearConsoleOutput()
-  {
-    for each (var node in this.outputNode.childNodes) {
-      this.outputNode.removeChild(node);
-    }
-  },
-
-  /**
    * Build the UI of each HeadsUpDisplay
    *
    * @returns nsIDOMNode
@@ -1806,6 +1863,7 @@ HeadsUpDisplay.prototype = {
     this.outputNode = this.makeXULNode("vbox");
     this.outputNode.setAttribute("class", "hud-output-node");
     this.outputNode.setAttribute("flex", "1");
+    this.outputNode.setAttribute("context", this.hudId + "-output-contextmenu");
 
     this.filterSpacer = this.makeXULNode("spacer");
     this.filterSpacer.setAttribute("flex", "1");
@@ -1826,6 +1884,16 @@ HeadsUpDisplay.prototype = {
     var command = "HUDConsoleUI.command(this)";
     this.consoleClearButton.setAttribute("oncommand", command);
 
+    this.copyOutputMenuItem = this.makeXULNode("menuitem");
+    this.copyOutputMenuItem.setAttribute("label", this.getStr("copyCmd.label"));
+    this.copyOutputMenuItem.setAttribute("accesskey", this.getStr("copyCmd.accesskey"));
+    this.copyOutputMenuItem.setAttribute("key", "key_copy");
+    this.copyOutputMenuItem.setAttribute("command", "cmd_copy");
+
+    this.contextMenu = this.makeXULNode("menupopup");
+    this.contextMenu.setAttribute("id", this.hudId + "-output-contextmenu");
+    this.contextMenu.appendChild(this.copyOutputMenuItem);
+
     this.filterPrefs = HUDService.getDefaultFilterPrefs(this.hudId);
 
     let consoleFilterToolbar = this.makeFilterToolbar();
@@ -1834,7 +1902,14 @@ HeadsUpDisplay.prototype = {
     consoleWrap.appendChild(consoleFilterToolbar);
 
     consoleWrap.appendChild(this.outputNode);
+
+    // We want the context menu inside the console wrapper, but outside the
+    // outputNode.
+    outerWrap.appendChild(this.contextMenu);
+
     outerWrap.appendChild(consoleWrap);
+
+    this.HUDBox.lastTimestamp = 0;
 
     this.jsTermParentNode = outerWrap;
     this.HUDBox.appendChild(outerWrap);
@@ -1867,30 +1942,43 @@ HeadsUpDisplay.prototype = {
     let buttons = ["Network", "CSSParser", "Exception", "Error",
                    "Info", "Warn", "Log",];
 
+    const pageButtons = [
+      { prefKey: "network", name: "PageNet" },
+      { prefKey: "cssparser", name: "PageCSS" },
+      { prefKey: "exception", name: "PageJS" }
+    ];
+    const consoleButtons = [
+      { prefKey: "error", name: "ConsoleErrors" },
+      { prefKey: "warn", name: "ConsoleWarnings" },
+      { prefKey: "info", name: "ConsoleInfo" },
+      { prefKey: "log", name: "ConsoleLog" }
+    ];
+
     let toolbar = this.makeXULNode("toolbar");
     toolbar.setAttribute("class", "hud-console-filter-toolbar");
     toolbar.setAttribute("mode", "text");
 
     toolbar.appendChild(this.consoleClearButton);
-    let btn;
-    for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i] == "Clear") {
-        btn = this.makeButton(buttons[i], "plain");
-      }
-      else {
-        btn = this.makeButton(buttons[i], "checkbox");
-      }
-      toolbar.appendChild(btn);
-    }
+
+    let pageCategoryTitle = this.getStr("categoryPage");
+    this.addButtonCategory(toolbar, pageCategoryTitle, pageButtons);
+
+    let separator = this.makeXULNode("separator");
+    separator.setAttribute("orient", "vertical");
+    toolbar.appendChild(separator);
+
+    let consoleCategoryTitle = this.getStr("categoryConsole");
+    this.addButtonCategory(toolbar, consoleCategoryTitle, consoleButtons);
+
     toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
     return toolbar;
   },
 
-  makeButton: function HUD_makeButton(aName, aType)
+  makeButton: function HUD_makeButton(aName, aPrefKey, aType)
   {
     var self = this;
-    let prefKey = aName.toLowerCase();
+    let prefKey = aPrefKey;
 
     let btn;
     if (aType == "checkbox") {
@@ -1921,6 +2009,30 @@ HeadsUpDisplay.prototype = {
       btn.setAttribute("oncommand", command);
     }
     return btn;
+  },
+
+  /**
+   * Appends a category title and a series of buttons to the filter bar.
+   *
+   * @param nsIDOMNode aToolbar
+   *        The DOM node to which to add the category.
+   * @param string aTitle
+   *        The title for the category.
+   * @param Array aButtons
+   *        The buttons, specified as objects with "name" and "prefKey"
+   *        properties.
+   * @returns nsIDOMNode
+   */
+  addButtonCategory: function(aToolbar, aTitle, aButtons) {
+    let lbl = this.makeXULNode("label");
+    lbl.setAttribute("class", "hud-filter-cat");
+    lbl.setAttribute("value", aTitle);
+    aToolbar.appendChild(lbl);
+
+    for (let i = 0; i < aButtons.length; i++) {
+      let btn = aButtons[i];
+      aToolbar.appendChild(this.makeButton(btn.name, btn.prefKey, "checkbox"));
+    }
   },
 
   createHUD: function HUD_createHUD()
@@ -2465,6 +2577,9 @@ JSTerm.prototype = {
    */
   writeOutput: function JST_writeOutput(aOutputMessage, aIsInput)
   {
+    let lastGroupNode = HUDService.appendGroupIfNecessary(this.outputNode,
+                                                          Date.now());
+
     var node = this.elementFactory("div");
     if (aIsInput) {
       node.setAttribute("class", "jsterm-input-line");
@@ -2483,7 +2598,8 @@ JSTerm.prototype = {
 
     var textNode = this.textFactory(aOutputMessage);
     node.appendChild(textNode);
-    this.outputNode.appendChild(node);
+
+    lastGroupNode.appendChild(node);
     node.scrollIntoView(false);
   },
 
@@ -2494,6 +2610,8 @@ JSTerm.prototype = {
     while (outputNode.firstChild) {
       outputNode.removeChild(outputNode.firstChild);
     }
+
+    outputNode.lastTimestamp = 0;
   },
 
   keyDown: function JSTF_keyDown(aEvent)
@@ -2697,6 +2815,10 @@ JSTerm.prototype = {
   {
     let inputNode = this.inputNode;
     let inputValue = inputNode.value;
+    // If the inputNode has no value, then don't try to complete on it.
+    if (!inputValue) {
+      return;
+    }
     let selStart = inputNode.selectionStart, selEnd = inputNode.selectionEnd;
 
     // 'Normalize' the selection so that end is always after start.

@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'toLocaleFormat-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 291494;
 var summary = 'Date.prototype.toLocaleFormat extension';

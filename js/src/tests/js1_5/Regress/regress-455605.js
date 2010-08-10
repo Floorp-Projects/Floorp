@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-455605.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 455605;
 var summary = 'Do not assert with JIT: "need a way to EOT now, since this is trace end": 0';

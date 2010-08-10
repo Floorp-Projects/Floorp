@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'while-004.js';
 
 /**
  *  File Name:          while-004

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-276103.js';
 //-----------------------------------------------------------------------------
 // testcase by Gianugo Rabellino <gianugo@apache.org>
 var BUGNUMBER = 276103;

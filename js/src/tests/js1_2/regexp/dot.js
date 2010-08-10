@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'dot.js';
 
 /**
    Filename:     dot.js

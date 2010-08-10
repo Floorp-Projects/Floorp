@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'string-002.js';
 
 /**
    File Name:          string-002.js

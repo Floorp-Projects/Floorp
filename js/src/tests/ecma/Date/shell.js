@@ -1,12 +1,9 @@
-gTestsubsuite = 'Date';
 
-var gTestfile;
 var BUGNUMBER;
 var summary;
 
 function runDSTOffsetCachingTestsFraction(part, parts)
 {
-  gTestfile = 'dst-offset-caching-' + part + '-of-' + parts + '.js';
   BUGNUMBER = 563938;
   summary = 'Cache DST offsets to improve SunSpider score';
 

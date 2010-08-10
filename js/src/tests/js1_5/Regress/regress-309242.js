@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-309242.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 309242;
 var summary = 'E4X should be on by default while preserving comment hack';

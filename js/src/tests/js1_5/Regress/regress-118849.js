@@ -55,7 +55,6 @@
  *   A string containing JS statements comprising the function definition.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-118849.js';
 var UBound = 0;
 var BUGNUMBER = 118849;
 var summary = 'Should not crash if we provide Function() with bad arguments'

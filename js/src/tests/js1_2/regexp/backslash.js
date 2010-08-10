@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'backslash.js';
 
 /**
    Filename:     backslash.js

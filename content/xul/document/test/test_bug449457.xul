@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=449457
   <script type="application/javascript"><![CDATA[
 
     /** Test for Bug 449457 **/
-    document.tooltipNode = document;
+    document.popupNode = document;
     ok(true, "This is just a leak test");
 
   ]]></script>

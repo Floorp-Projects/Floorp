@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-310295.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 310295;
 var summary = 'Do not crash on JS_ValueToString';

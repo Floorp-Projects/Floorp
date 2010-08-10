@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-376410.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 376410;
 var summary = 'let declaration must be direct child of block, ' + 

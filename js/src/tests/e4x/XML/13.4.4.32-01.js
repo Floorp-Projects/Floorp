@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.4.4.32-01.js';
 
 START("13.4.4.32-1 - XML replace() by index, text to string");
 

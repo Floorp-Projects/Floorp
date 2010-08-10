@@ -222,6 +222,7 @@ pref("accessibility.tabfocus_applies_to_xul", true);
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
+pref("accessibility.mouse_focuses_formcontrol", false);
 
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
@@ -3128,7 +3129,7 @@ pref("image.mem.min_discard_timeout_ms", 10000);
 
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
-pref("webgl.shader_validator", false);
+pref("webgl.shader_validator", true);
 pref("webgl.software_render", false);
 pref("webgl.osmesalib", "");
 

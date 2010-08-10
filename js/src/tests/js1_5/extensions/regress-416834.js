@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-416834.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 416834;
 var summary = 'Do not assert: !entry || entry->kpc == ((PCVCAP_TAG(entry->vcap) > 1) ? (jsbytecode *) JSID_TO_ATOM(id) : cx->fp->pc)';

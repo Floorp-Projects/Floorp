@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-459990.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 459990;
 var summary = 'Do not crash with if (true && a && b) { }';

@@ -66,7 +66,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'uc-005.js';
 var UBound = 0;
 var BUGNUMBER = 58274;
 var summary = 'Testing identifiers with double-byte names';

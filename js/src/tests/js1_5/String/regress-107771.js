@@ -45,7 +45,6 @@
  * The bug: Section 1 passed, but Sections 2-5 all failed with |actual| == 12
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-107771.js';
 var UBound = 0;
 var BUGNUMBER = 107771;
 var summary = "Regression test for bug 107771";

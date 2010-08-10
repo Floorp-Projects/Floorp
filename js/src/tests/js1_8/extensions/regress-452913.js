@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452913.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452913;
 var summary = 'Do not crash with defined getter and for (let)';

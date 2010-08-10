@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-209067.js';
 var UBound = 0;
 var BUGNUMBER = 209067;
 var summary = 'Testing complicated str.replace()';

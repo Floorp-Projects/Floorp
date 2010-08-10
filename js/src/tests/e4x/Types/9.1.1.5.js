@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.1.1.5.js';
 
 // XML Type [[Default Value]]
 START("9.1.1.5 - XML [[Default Value]]");

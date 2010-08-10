@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'exec.js';
 
 /**
    Filename:     exec.js

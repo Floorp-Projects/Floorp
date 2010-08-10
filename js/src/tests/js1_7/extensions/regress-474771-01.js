@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-474771-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 474771;
 var summary = 'TM: do not assert: jumpTable == interruptJumpTable';
