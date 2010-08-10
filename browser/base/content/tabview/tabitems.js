@@ -698,7 +698,7 @@ window.TabItems = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
         self.link(tab);
       }, 1);
     });
@@ -709,7 +709,7 @@ window.TabItems = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
     });
@@ -719,7 +719,7 @@ window.TabItems = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
         self.unlink(tab);
       }, 1);
     });
@@ -873,7 +873,7 @@ window.TabItems = {
 
     let self = this;
     if (this._tabsWaitingForUpdate.length) {
-      Utils.timeout(function() {
+      setTimeout(function() {
         self.heartbeat();
       }, this._heartbeatTiming);
     } else
@@ -1010,7 +1010,7 @@ window.TabItems = {
           item.showCachedData(tabData);
           // the code in the progress listener doesn't fire sometimes because
           // tab is being restored so need to catch that.
-          Utils.timeout(function() {
+          setTimeout(function() {
             if (item && item.isShowingCachedData) {
               item.hideCachedData();
             }

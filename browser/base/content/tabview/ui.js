@@ -343,7 +343,7 @@ var UIManager = {
     gBrowser.contentWindow.focus();
 
     // set the close button on tab
-/*     Utils.timeout(function() { // Marshal event from chrome thread to DOM thread    */
+/*     setTimeout(function() { // Marshal event from chrome thread to DOM thread    */
       gBrowser.tabContainer.adjustTabstrip();
 /*     }, 1); */
 
@@ -412,7 +412,7 @@ var UIManager = {
           // ToDo: When running unit tests, everything happens so quick so
           // new tabs might be added after a tab is closing. Therefore, this
           // hack is used. We should look for a better solution.
-          Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+          setTimeout(function() { // Marshal event from chrome thread to DOM thread
             if ((groupItem && groupItem._children.length > 0) ||
               (groupItem == null && gBrowser.visibleTabs.length > 0))
               self.hideTabView();
@@ -426,7 +426,7 @@ var UIManager = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
         var activeGroupItem = GroupItems.getActiveGroupItem();
         if (activeGroupItem)
           self.setReorderTabItemsOnShow(activeGroupItem);
@@ -467,7 +467,7 @@ var UIManager = {
     this._closedLastVisibleTab = false;
     this._closedSelectedTabInTabView = false;
 
-    Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+    setTimeout(function() { // Marshal event from chrome thread to DOM thread
       // this value is true when TabView is open at browser startup.
       if (self._stopZoomPreparation) {
         self._stopZoomPreparation = false;
