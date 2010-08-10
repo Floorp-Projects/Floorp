@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Rob Campbell <rcampbell@mozilla.com> (original author)
  *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Julian Viereck <jviereck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -320,6 +321,29 @@ PanelHighlighter.prototype = {
       InspectorUI.inspectNode(element);
     }
   },
+
+  /**
+   * Handle MozMousePixelScroll in panel when InspectorUI.inspecting is true.
+   *
+   * @param aEvent
+   *        The onMozMousePixelScrollEvent triggering the method.
+   * @returns void
+   */
+  handlePixelScroll: function PanelHighlighter_handlePixelScroll(aEvent) {
+    if (!InspectorUI.inspecting) {
+      return;
+    }
+    let browserRect = this.browser.getBoundingClientRect();
+    let element = InspectorUI.elementFromPoint(this.win.document,
+      aEvent.clientX - browserRect.left, aEvent.clientY - browserRect.top);
+    let win = element.ownerDocument.defaultView;
+
+    if (aEvent.axis == aEvent.HORIZONTAL_AXIS) {
+      win.scrollBy(aEvent.detail, 0);
+    } else {
+      win.scrollBy(0, aEvent.detail);
+    }
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////

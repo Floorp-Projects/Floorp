@@ -457,3 +457,34 @@ function is_time_ordered(before, after) {
   let skew = isWindows ? 20000000 : 0;
   return after - before > -skew;
 }
+
+
+// These tests are known to randomly fail due to bug 507790 when database
+// flushes are active, so we turn off syncing for them.
+let (randomFailingSyncTests = [
+  "test_multi_word_tags.js",
+  "test_removeVisitsByTimeframe.js",
+  "test_utils_getURLsForContainerNode.js",
+  "test_exclude_livemarks.js",
+  "test_402799.js",
+  "test_results-as-visit.js",
+  "test_sorting.js",
+  "test_redirectsMode.js",
+  "test_384228.js",
+  "test_395593.js",
+  "test_containersQueries_sorting.js",
+  "test_browserGlue_smartBookmarks.js",
+  "test_browserGlue_distribution.js",
+  "test_331487.js",
+  "test_tags.js",
+  "test_385829.js",
+  "test_405938_restore_queries.js",
+]) {
+  let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
+  if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
+    print("Test " + currentTestFilename +
+          " is known random due to bug 507790, disabling PlacesDBFlush.");
+    let sync = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsIObserver);
+    sync.observe(null, "places-debug-stop-sync", null);
+  }
+}

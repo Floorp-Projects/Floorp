@@ -100,8 +100,10 @@ function run_test() {
     testData[i].title = null;
   }
 
-  //dump_table("moz_places");
-  //dump_table("moz_historyvisits");
+  dump_table("moz_places");
+  dump_table("moz_places_temp");
+  dump_table("moz_historyvisits");
+  dump_table("moz_historyvisits_temp");
 
   var numSortFunc = function (a,b) { return (a - b); };
   var arrs = testDataTyped.concat(testDataDownload).concat(testDataBookmark)

@@ -237,3 +237,16 @@
 
 // Vista glass
 #define NS_THEME_WIN_GLASS                                 230
+
+// Windows themed window frame elements
+#define NS_THEME_WINDOW_TITLEBAR                           231
+#define NS_THEME_WINDOW_TITLEBAR_MAXIMIZED                 232
+#define NS_THEME_WINDOW_FRAME_LEFT                         233
+#define NS_THEME_WINDOW_FRAME_RIGHT                        234
+#define NS_THEME_WINDOW_FRAME_BOTTOM                       235
+#define NS_THEME_WINDOW_BUTTON_CLOSE                       236
+#define NS_THEME_WINDOW_BUTTON_MINIMIZE                    237
+#define NS_THEME_WINDOW_BUTTON_MAXIMIZE                    238
+#define NS_THEME_WINDOW_BUTTON_RESTORE                     239
+#define NS_THEME_WINDOW_BUTTON_BOX                         240
+#define NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED               241

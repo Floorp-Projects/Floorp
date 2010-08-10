@@ -190,6 +190,7 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBSetPageFavicon;
   nsCOMPtr<mozIStorageStatement> mDBAssociateFaviconURIToPageURI;
   nsCOMPtr<mozIStorageStatement> mDBRemoveOnDiskReferences;
+  nsCOMPtr<mozIStorageStatement> mDBRemoveTempReferences;
   nsCOMPtr<mozIStorageStatement> mDBRemoveAllFavicons;
 
   static nsFaviconService* gFaviconService;
