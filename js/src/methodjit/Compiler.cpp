@@ -945,7 +945,17 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRICTNE)
 
           BEGIN_CASE(JSOP_ITER)
+#if defined JS_CPU_X64
+          {
+            prepareStubCall(Uses(1));
+            masm.move(Imm32(PC[1]), Registers::ArgReg1);
+            stubCall(stubs::Iter);
+            frame.pop();
+            frame.pushSynced();
+          }
+#else
             iter(PC[1]);
+#endif
           END_CASE(JSOP_ITER)
 
           BEGIN_CASE(JSOP_MOREITER)
@@ -955,7 +965,13 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_MOREITER)
 
           BEGIN_CASE(JSOP_ENDITER)
+#if defined JS_CPU_X64
+            prepareStubCall(Uses(1));
+            stubCall(stubs::EndIter);
+            frame.pop();
+#else
             iterEnd();
+#endif
           END_CASE(JSOP_ENDITER)
 
           BEGIN_CASE(JSOP_POP)
