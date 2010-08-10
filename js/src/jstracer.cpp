@@ -13870,7 +13870,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
                          lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
-    v_ins = unbox_value(*vp, addr_ins, 0, exit, true);
+    v_ins = unbox_value(*vp, addr_ins, 0, exit);
 
     /* Don't let the hole value escape. Turn it into an undefined. */
     if (vp->isMagic()) {
