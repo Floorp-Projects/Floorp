@@ -918,3 +918,8 @@ Svc.Obs = Observers;
 let Str = {};
 ["errors", "sync"]
   .forEach(function(lazy) Utils.lazy2(Str, lazy, Utils.lazyStrings(lazy)));
+
+Svc.Obs.add("xpcom-shutdown", function () {
+  for (let name in Svc)
+    delete Svc[name];
+});
