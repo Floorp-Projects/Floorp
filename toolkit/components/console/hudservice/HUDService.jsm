@@ -2467,10 +2467,8 @@ JSTerm.prototype = {
     this.createSandbox();
     this.inputNode = this.mixins.inputNode;
     this.scrollToNode = this.mixins.scrollToNode;
-    let eventHandlerKeyDown = this.keyDown();
-    this.inputNode.addEventListener('keypress', eventHandlerKeyDown, false);
-    let eventHandlerInput = this.inputEventHandler();
-    this.inputNode.addEventListener('input', eventHandlerInput, false);
+    let eventHandler = this.keyDown();
+    this.inputNode.addEventListener('keypress', eventHandler, false);
     this.outputNode = this.mixins.outputNode;
     if (this.mixins.cssClassOverride) {
       this.cssClassOverride = this.mixins.cssClassOverride;
@@ -2598,16 +2596,6 @@ JSTerm.prototype = {
     outputNode.lastTimestamp = 0;
   },
 
-  inputEventHandler: function JSTF_inputEventHandler()
-  {
-    var self = this;
-    function handleInputEvent(aEvent) {
-      self.inputNode.setAttribute("rows",
-        Math.min(8, self.inputNode.value.split("\n").length));
-    }
-    return handleInputEvent;
-  },
-
   keyDown: function JSTF_keyDown(aEvent)
   {
     var self = this;
@@ -2651,7 +2639,6 @@ JSTerm.prototype = {
           case 13:
             // return
             self.execute();
-            aEvent.preventDefault();
             break;
           case 38:
             // up arrow: history previous
@@ -2766,7 +2753,7 @@ JSTerm.prototype = {
   {
     var firstLineBreak = this.codeInputString.indexOf("\n");
     return ((firstLineBreak == -1) ||
-            (this.inputNode.selectionStart <= firstLineBreak));
+            (this.codeInputString.selectionStart <= firstLineBreak));
   },
 
   caretInLastLine: function JSTF_caretInLastLine()
@@ -2942,8 +2929,6 @@ JSTermFirefoxMixin.prototype = {
   {
     let inputNode = this.xulElementFactory("textbox");
     inputNode.setAttribute("class", "jsterm-input-node");
-    inputNode.setAttribute("multiline", "true");
-    inputNode.setAttribute("rows", "1");
 
     if (this.existingConsoleNode == undefined) {
       // create elements
