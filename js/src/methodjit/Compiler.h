@@ -226,10 +226,8 @@ class Compiler
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
-    void iter(uintN flags);
     void iterNext();
     void iterMore();
-    void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID fpReg);
 
     /* Opcode handlers. */
