@@ -202,13 +202,28 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "ret"                                   "\n"
 );
 
+JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 0x40);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x40);
+
+JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
+JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
+
 asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
 SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
-    /* Restore fp reg. */
-    "movq 0x40(%rsp), %rbx"                 "\n"
-    "jmp *%rax"                             "\n"
+    "movq 0x40(%rbx), %rcx"                 "\n" /* fp->rval type (as value) */
+    "movq $0xFFFF800000000000, %r11"         "\n" /* load type mask (JSVAL_TAG_MASK) */
+    "andq %r11, %rcx"                       "\n" /* extract type */
+
+    "movq 0x40(%rbx), %rdx"                 "\n" /* fp->rval type */
+    "movq $0x00007FFFFFFFFFFF, %r11"        "\n" /* load payload mask (JSVAL_PAYLOAD_MASK) */
+    "andq %r11, %rdx"                       "\n" /* extract payload */
+
+    "movq 0x60(%rbx), %rax"                 "\n" /* fp->ncode */
+    "movq 0x40(%rsp), %rbx"                 "\n" /* f.fp */
+    "ret"                                   "\n"
 );
 
 # elif defined(JS_CPU_X86)
