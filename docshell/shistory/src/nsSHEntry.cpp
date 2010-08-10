@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -55,8 +56,6 @@
 #include "nsISHistoryInternal.h"
 #include "nsDocShellEditorData.h"
 #include "nsIDocShell.h"
-
-namespace dom = mozilla::dom;
 
 // Hardcode this to time out unused content viewers after 30 minutes
 #define CONTENT_VIEWER_TIMEOUT_SECONDS 30*60
@@ -790,7 +789,7 @@ nsSHEntry::AttributeWillChange(nsIDocument* aDocument,
 
 void
 nsSHEntry::AttributeChanged(nsIDocument* aDocument,
-                            dom::Element* aElement,
+                            nsIContent* aContent,
                             PRInt32 aNameSpaceID,
                             nsIAtom* aAttribute,
                             PRInt32 aModType)
