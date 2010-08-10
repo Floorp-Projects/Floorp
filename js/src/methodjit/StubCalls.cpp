@@ -1176,14 +1176,15 @@ stubs::Add(VMFrame &f)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
 
-    if (lval.isInt32() && rval.isInt32()) {
-        int32_t l = lval.toInt32(), r = rval.toInt32();
-        int32_t sum = l + r;
-        regs.sp--;
-        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000)))
-            regs.sp[-1].setDouble(double(l) + double(r));
-        else
-            regs.sp[-1].setInt32(sum);
+    /* The string + string case is easily the hottest;  try it first. */
+    bool lIsString = lval.isString();
+    bool rIsString = rval.isString();
+    JSString *lstr, *rstr;
+    if (lIsString && rIsString) {
+        lstr = lval.toString();
+        rstr = rval.toString();
+        goto string_concat;
+
     } else
 #if JS_HAS_XML_SUPPORT
     if (lval.isObject() && lval.toObject().isXML() &&
@@ -1195,13 +1196,12 @@ stubs::Add(VMFrame &f)
     } else
 #endif
     {
+        /* These can convert lval/rval to strings. */
         if (lval.isObject() && !DefaultValue(f, JSTYPE_VOID, lval, -2))
             THROW();
         if (rval.isObject() && !DefaultValue(f, JSTYPE_VOID, rval, -1))
             THROW();
-        bool lIsString, rIsString;
-        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
-            JSString *lstr, *rstr;
+        if ((lIsString = lval.isString()) || (rIsString = rval.isString())) {
             if (lIsString) {
                 lstr = lval.toString();
             } else {
@@ -1218,11 +1218,8 @@ stubs::Add(VMFrame &f)
                     THROW();
                 regs.sp[-1].setString(rstr);
             }
-            JSString *str = js_ConcatStrings(cx, lstr, rstr);
-            if (!str)
-                THROW();
-            regs.sp--;
-            regs.sp[-1].setString(str);
+            goto string_concat;
+
         } else {
             double l, r;
             if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
@@ -1232,6 +1229,14 @@ stubs::Add(VMFrame &f)
             regs.sp[-1].setNumber(l);
         }
     }
+    return;
+
+  string_concat:
+    JSString *str = js_ConcatStrings(cx, lstr, rstr);
+    if (!str)
+        THROW();
+    regs.sp--;
+    regs.sp[-1].setString(str);
 }
 
 
