@@ -41,8 +41,6 @@
 #include "nsSVGPathElement.h"
 #include "nsSVGAnimateMotionElement.h"
 
-using namespace mozilla::dom;
-
 nsSVGElement::StringInfo nsSVGMpathElement::sStringInfo[1] =
 {
   { &nsGkAtoms::href, kNameSpaceID_XLink },
@@ -198,10 +196,10 @@ nsSVGMpathElement::GetStringInfo()
 // nsIMutationObserver methods
 
 void
-nsSVGMpathElement::AttributeChanged(nsIDocument* aDocument,
-                                    Element* aElement,
+nsSVGMpathElement::AttributeChanged(nsIDocument *aDocument,
+                                    nsIContent *aContent,
                                     PRInt32 aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsIAtom *aAttribute,
                                     PRInt32 aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
