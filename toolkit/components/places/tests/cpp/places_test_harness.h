@@ -182,12 +182,16 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
   do_check_success(rv);
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, hidden, typed, visit_count FROM moz_places_temp "
+    "WHERE url=?1 "
+    "UNION ALL "
     "SELECT id, hidden, typed, visit_count FROM moz_places "
     "WHERE url=?1 "
+    "LIMIT 1"
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  rv = stmt->BindUTF8StringByIndex(0, spec);
+  rv = stmt->BindUTF8StringParameter(0, spec);
   do_check_success(rv);
 
   PRBool hasResults;
@@ -218,13 +222,16 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
   nsCOMPtr<mozIStorageStatement> stmt;
 
   nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, from_visit, visit_type FROM moz_historyvisits_temp "
+    "WHERE place_id=?1 "
+    "UNION ALL "
     "SELECT id, from_visit, visit_type FROM moz_historyvisits "
     "WHERE place_id=?1 "
     "LIMIT 1"
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  rv = stmt->BindInt64ByIndex(0, placeId);
+  rv = stmt->BindInt64Parameter(0, placeId);
   do_check_success(rv);
 
   PRBool hasResults;
