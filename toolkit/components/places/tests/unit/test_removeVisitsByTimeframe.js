@@ -390,7 +390,7 @@ function deleteAllHistoryAndBookmarks() {
  * @return the frecency of aURI
  */
 function getFrecencyForURI(aURI) {
-  let sql = "SELECT frecency FROM moz_places WHERE url = :url";
+  let sql = "SELECT frecency FROM moz_places_view WHERE url = :url";
   let stmt = dbConn.createStatement(sql);
   stmt.params.url = aURI.spec;
   do_check_true(stmt.executeStep());
@@ -407,7 +407,7 @@ function getFrecencyForURI(aURI) {
  *         the URI of a place
  */
 function uriExistsInMozPlaces(aURI) {
-  let sql = "SELECT id FROM moz_places WHERE url = :url";
+  let sql = "SELECT id FROM moz_places_view WHERE url = :url";
   let stmt = dbConn.createStatement(sql);
   stmt.params.url = aURI.spec;
   var exists = stmt.executeStep();

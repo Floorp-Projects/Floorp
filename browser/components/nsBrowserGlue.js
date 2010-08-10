@@ -356,7 +356,10 @@ BrowserGlue.prototype = {
     }
 
     // Load the "more info" page for a locked places.sqlite
-    // This property is set earlier by places-database-locked topic.
+    // This property is set earlier in the startup process:
+    // nsPlacesDBFlush loads after profile-after-change and initializes
+    // the history service, which sends out places-database-locked
+    // which sets this property.
     if (this._isPlacesDatabaseLocked) {
       this._showPlacesLockedNotificationBox();
     }

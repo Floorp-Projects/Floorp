@@ -109,6 +109,33 @@ const kTitleTagsSeparator = " \u2013 ";
 const kBrowserUrlbarBranch = "browser.urlbar.";
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Global Functions
+
+/**
+ * Generates the SQL subquery to get the best favicon for a given revhost.  This
+ * is the favicon for the most recent visit.
+ *
+ * @param aTableName
+ *        The table to join to the moz_favicons table with.  This must have a
+ *        column called favicon_id.
+ * @return the SQL subquery (in string form) to get the best favicon.
+ */
+function best_favicon_for_revhost(aTableName)
+{
+  return "(" +
+    "SELECT f.url " +
+    "FROM " + aTableName + " " +
+    "JOIN moz_favicons f ON f.id = favicon_id " +
+    "WHERE rev_host = IFNULL( " +
+      "(SELECT rev_host FROM moz_places_temp WHERE id = b.fk), " +
+      "(SELECT rev_host FROM moz_places WHERE id = b.fk) " +
+    ") " +
+    "ORDER BY frecency DESC " +
+    "LIMIT 1 " +
+  ")";
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //// AutoCompleteStatementCallbackWrapper class
 
 /**
@@ -184,24 +211,32 @@ function nsPlacesAutoComplete()
   //////////////////////////////////////////////////////////////////////////////
   //// Shared Constants for Smart Getters
 
+  // Define common pieces of various queries.
   // TODO bug 412736 in case of a frecency tie, break it with h.typed and
   // h.visit_count which is better than nothing.  This is slow, so not doing it
   // yet...
-  const SQL_BASE = "SELECT h.url, h.title, f.url, " + kBookTagSQLFragment + ", "
-                 +        "h.visit_count, h.typed, h.id, :query_type, "
-                 +        "t.open_count "
-                 + "FROM moz_places h "
-                 + "LEFT JOIN moz_favicons f ON f.id = h.favicon_id "
-                 + "LEFT JOIN moz_openpages_temp t ON t.place_id = h.id "
-                 + "WHERE h.frecency <> 0 "
-                 +   "AND AUTOCOMPLETE_MATCH(:searchString, h.url, "
-                 +                          "IFNULL(bookmark, h.title), tags, "
-                 +                          "h.visit_count, h.typed, parent, "
-                 +                          "t.open_count, "
-                 +                          ":matchBehavior, :searchBehavior) "
-                 +  "{ADDITIONAL_CONDITIONS} "
-                 + "ORDER BY h.frecency DESC, h.id DESC "
-                 + "LIMIT :maxResults";
+  // Note: h.frecency is only selected because we need it for ordering.
+  function sql_base_fragment(aTableName) {
+    return "SELECT h.url, h.title, f.url, " + kBookTagSQLFragment + ", " +
+                  "h.visit_count, h.typed, h.id, :query_type, t.open_count, " +
+                  "h.frecency " +
+           "FROM " + aTableName + " h " +
+           "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id " +
+           "LEFT OUTER JOIN moz_openpages_temp t ON t.place_id = h.id " +
+           "WHERE h.frecency <> 0 " +
+           "AND AUTOCOMPLETE_MATCH(:searchString, h.url, " +
+                                  "IFNULL(bookmark, h.title), tags, " +
+                                  "h.visit_count, h.typed, parent, " +
+                                  "t.open_count, " +
+                                  ":matchBehavior, :searchBehavior) " +
+          "{ADDITIONAL_CONDITIONS} ";
+  }
+  const SQL_BASE = sql_base_fragment("moz_places_temp") +
+                   "UNION ALL " +
+                   sql_base_fragment("moz_places") +
+                   "AND +h.id NOT IN (SELECT id FROM moz_places_temp) " +
+                   "ORDER BY h.frecency DESC, h.id DESC " +
+                   "LIMIT :maxResults";
 
   //////////////////////////////////////////////////////////////////////////////
   //// Smart Getters
@@ -234,42 +269,42 @@ function nsPlacesAutoComplete()
 
   XPCOMUtils.defineLazyGetter(this, "_defaultQuery", function() {
     let replacementText = "";
-    return this._db.createAsyncStatement(
+    return this._db.createStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
   });
 
   XPCOMUtils.defineLazyGetter(this, "_historyQuery", function() {
     let replacementText = "AND h.visit_count > 0";
-    return this._db.createAsyncStatement(
+    return this._db.createStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
   });
 
   XPCOMUtils.defineLazyGetter(this, "_bookmarkQuery", function() {
     let replacementText = "AND bookmark IS NOT NULL";
-    return this._db.createAsyncStatement(
+    return this._db.createStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
   });
 
   XPCOMUtils.defineLazyGetter(this, "_tagsQuery", function() {
     let replacementText = "AND tags IS NOT NULL";
-    return this._db.createAsyncStatement(
+    return this._db.createStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
   });
 
   XPCOMUtils.defineLazyGetter(this, "_openPagesQuery", function() {
     let replacementText = "AND t.open_count > 0";
-    return this._db.createAsyncStatement(
+    return this._db.createStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
   });
 
   XPCOMUtils.defineLazyGetter(this, "_typedQuery", function() {
     let replacementText = "AND h.typed = 1";
-    return this._db.createAsyncStatement(
+    return this._db.createStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
   });
@@ -278,55 +313,58 @@ function nsPlacesAutoComplete()
     // In this query, we are taking kBookTagSQLFragment only for h.id because it
     // uses data from the moz_bookmarks table and we sync tables on bookmark
     // insert.  So, most likely, h.id will always be populated when we have any
-    // bookmark.
-    return this._db.createAsyncStatement(
-      "/* do not warn (bug 487789) */ "
-    + "SELECT h.url, h.title, f.url, " + kBookTagSQLFragment + ", "
-    +         "h.visit_count, h.typed, h.id, :query_type, t.open_count, rank "
-    + "FROM ( "
-    +   "SELECT ROUND( "
-    +     "MAX(((i.input = :search_string) + "
-    +          "(SUBSTR(i.input, 1, LENGTH(:search_string)) = :search_string) "
-    +         ") * i.use_count "
-    +     ") , 1 " // Round at first decimal.
-    +   ") AS rank, place_id "
-    +   "FROM moz_inputhistory i "
-    +   "GROUP BY i.place_id "
-    +   "HAVING rank > 0 "
-    + ") AS i "
-    + "JOIN moz_places h ON h.id = i.place_id "
-    + "LEFT JOIN moz_favicons f ON f.id = h.favicon_id "
-    + "LEFT JOIN moz_openpages_temp t ON t.place_id = i.place_id "
-    + "WHERE AUTOCOMPLETE_MATCH(:searchString, h.url, "
-    +                          "IFNULL(bookmark, h.title), tags, "
-    +                          "h.visit_count, h.typed, parent, "
-    +                          "t.open_count, "
-    +                          ":matchBehavior, :searchBehavior) "
-    + "ORDER BY rank DESC, h.frecency DESC "
+    // bookmark.  We still need to join on moz_places_temp for other data (eg.
+    // title).
+    return this._db.createStatement(
+      "/* do not warn (bug 487789) */ " +
+      "SELECT IFNULL(h_t.url, h.url) AS c_url, " +
+             "IFNULL(h_t.title, h.title) AS c_title, f.url, " +
+              kBookTagSQLFragment + ", " +
+              "IFNULL(h_t.visit_count, h.visit_count) AS c_visit_count, " +
+              "IFNULL(h_t.typed, h.typed) AS c_typed, " +
+              "IFNULL(h_t.id, h.id), :query_type, t.open_count, rank " +
+      "FROM ( " +
+        "SELECT ROUND(MAX(((i.input = :search_string) + " +
+                          "(SUBSTR(i.input, 1, LENGTH(:search_string)) = :search_string)) * " +
+                          "i.use_count), 1) AS rank, place_id " +
+        "FROM moz_inputhistory i " +
+        "GROUP BY i.place_id " +
+        "HAVING rank > 0 " +
+      ") AS i " +
+      "LEFT JOIN moz_places h ON h.id = i.place_id " +
+      "LEFT JOIN moz_places_temp h_t ON h_t.id = i.place_id " +
+      "LEFT JOIN moz_favicons f ON f.id = IFNULL(h_t.favicon_id, h.favicon_id) " + 
+      "LEFT JOIN moz_openpages_temp t ON t.place_id = i.place_id " +
+      "WHERE c_url NOTNULL " +
+      "AND AUTOCOMPLETE_MATCH(:searchString, c_url, " +
+                             "IFNULL(bookmark, c_title), tags, " +
+                             "c_visit_count, c_typed, parent, " +
+                             "t.open_count, " +
+                             ":matchBehavior, :searchBehavior) " +
+      "ORDER BY rank DESC, IFNULL(h_t.frecency, h.frecency) DESC"
     );
   });
 
   XPCOMUtils.defineLazyGetter(this, "_keywordQuery", function() {
-    return this._db.createAsyncStatement(
-      "/* do not warn (bug 487787) */ "
-    + "SELECT "
-    +  "(SELECT REPLACE(url, '%s', :query_string) FROM moz_places WHERE id = b.fk) "
-    +  "AS search_url, h.title, "
-    +  "IFNULL(f.url, (SELECT f.url "
-    +                 "FROM moz_places "
-    +                 "JOIN moz_favicons f ON f.id = favicon_id "
-    +                 "WHERE rev_host = (SELECT rev_host FROM moz_places WHERE id = b.fk) "
-    +                 "ORDER BY frecency DESC "
-    +                 "LIMIT 1) "
-    + "), b.parent, b.title, NULL, h.visit_count, h.typed, IFNULL(h.id, b.fk), "
-    +  ":query_type, t.open_count "
-    +  "FROM moz_keywords k "
-    +  "JOIN moz_bookmarks b ON b.keyword_id = k.id "
-    +  "LEFT JOIN moz_places h ON h.url = search_url "
-    +  "LEFT JOIN moz_favicons f ON f.id = h.favicon_id "
-    +  "LEFT JOIN moz_openpages_temp t ON t.place_id = h.id "
-    +  "WHERE LOWER(k.keyword) = LOWER(:keyword) "
-    +  "ORDER BY h.frecency DESC "
+    return this._db.createStatement(
+      "/* do not warn (bug 487787) */ " +
+      "SELECT IFNULL( " +
+          "(SELECT REPLACE(url, '%s', :query_string) FROM moz_places_temp WHERE id = b.fk), " +
+          "(SELECT REPLACE(url, '%s', :query_string) FROM moz_places WHERE id = b.fk) " +
+        ") AS search_url, IFNULL(h_t.title, h.title), " +
+        "COALESCE(f.url, " + best_favicon_for_revhost("moz_places_temp") + "," +
+                  best_favicon_for_revhost("moz_places") + "), b.parent, " +
+        "b.title, NULL, IFNULL(h_t.visit_count, h.visit_count), " +
+        "IFNULL(h_t.typed, h.typed), COALESCE(h_t.id, h.id, b.fk), " +
+        ":query_type, t.open_count " +
+      "FROM moz_keywords k " +
+      "JOIN moz_bookmarks b ON b.keyword_id = k.id " +
+      "LEFT JOIN moz_places AS h ON h.url = search_url " +
+      "LEFT JOIN moz_places_temp AS h_t ON h_t.url = search_url " +
+      "LEFT JOIN moz_favicons f ON f.id = IFNULL(h_t.favicon_id, h.favicon_id) " +
+      "LEFT JOIN moz_openpages_temp t ON t.place_id = IFNULL(h_t.id, h.id) " +
+      "WHERE LOWER(k.keyword) = LOWER(:keyword) " +
+      "ORDER BY IFNULL(h_t.frecency, h.frecency) DESC"
     );
   });
 

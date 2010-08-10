@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -104,6 +105,14 @@
     width: 100%;
 }
 
+.hud-filter-cat:-moz-system-metric(windows-default-theme) {
+    color: GrayText;
+}
+
+.hud-group:first-child .hud-divider {
+    display: none;
+}
+
 /* JSTerm Styles */
 
 .jsterm-wrapper-node {
@@ -138,10 +147,16 @@
 .jsterm-input-node {
     width: 98%;
     font-family: monospace;
-    font-size: 1.2em; 
-    line-height: 1.6em;
-    background-color: black;
-    color: white;
+    font-size: 9pt;
+    background: url("chrome://global/skin/icons/commandline.png") 4px 3px
+        no-repeat !important;
+    border: none !important;
+    padding: 0px 0px 0px 16px !important;
+    -moz-appearance: none !important;
+}
+
+.jsterm-input-node textarea {
+    overflow-x: hidden;
 }
 
 .jsterm-output-line {
