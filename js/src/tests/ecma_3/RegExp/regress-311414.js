@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-311414.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 311414;
 var summary = 'RegExp captured tail match should be O(N)';

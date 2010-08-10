@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-475971.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 475971;
 var summary = 'js_CheckRedeclaration should unlock object on failures';

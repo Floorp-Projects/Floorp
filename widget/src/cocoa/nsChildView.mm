@@ -1786,7 +1786,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   debug_DumpEvent(stdout, event->widget, event, nsCAutoString("something"), 0);
 #endif
 
-  NS_ASSERTION(!(IME_IsComposing() && NS_IS_KEY_EVENT(event)),
+  NS_ASSERTION(!(mTextInputHandler.IsIMEComposing() && NS_IS_KEY_EVENT(event)),
     "Any key events should not be fired during IME composing");
 
   aStatus = nsEventStatus_eIgnore;
@@ -1959,7 +1959,7 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   NSLog(@"**** ResetInputState");
 #endif
 
-  IME_CommitComposition();
+  mTextInputHandler.CommitIMEComposition();
   return NS_OK;
 }
 
@@ -1970,7 +1970,7 @@ NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
   NSLog(@"**** SetIMEOpenState aState = %d", aState);
 #endif
 
-  IME_SetOpenState(aState);
+  mTextInputHandler.SetIMEOpenState(aState);
   return NS_OK;
 }
 
@@ -1981,7 +1981,7 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
   NSLog(@"**** GetIMEOpenState");
 #endif
 
-  *aState = IME_IsOpened();
+  *aState = mTextInputHandler.IsIMEOpened();
   return NS_OK;
 }
 
@@ -1994,16 +1994,16 @@ NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
   switch (aState) {
     case nsIWidget::IME_STATUS_ENABLED:
     case nsIWidget::IME_STATUS_PLUGIN:
-      IME_SetASCIICapableOnly(PR_FALSE);
-      IME_Enable(PR_TRUE);
+      mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
+      mTextInputHandler.EnableIME(PR_TRUE);
       break;
     case nsIWidget::IME_STATUS_DISABLED:
-      IME_SetASCIICapableOnly(PR_FALSE);
-      IME_Enable(PR_FALSE);
+      mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
+      mTextInputHandler.EnableIME(PR_FALSE);
       break;
     case nsIWidget::IME_STATUS_PASSWORD:
-      IME_SetASCIICapableOnly(PR_TRUE);
-      IME_Enable(PR_FALSE);
+      mTextInputHandler.SetASCIICapableOnly(PR_TRUE);
+      mTextInputHandler.EnableIME(PR_FALSE);
       break;
     default:
       NS_ERROR("not implemented!");
@@ -2017,12 +2017,13 @@ NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
   NSLog(@"**** GetIMEEnabled");
 #endif
 
-  if (IME_IsEnabled())
+  if (mTextInputHandler.IsIMEEnabled()) {
     *aState = nsIWidget::IME_STATUS_ENABLED;
-  else if (IME_IsASCIICapableOnly())
+  } else if (mTextInputHandler.IsASCIICapableOnly()) {
     *aState = nsIWidget::IME_STATUS_PASSWORD;
-  else
+  } else {
     *aState = nsIWidget::IME_STATUS_DISABLED;
+  }
   return NS_OK;
 }
 
@@ -2033,7 +2034,7 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   NSLog(@"**** CancelIMEComposition");
 #endif
 
-  IME_CancelComposition();
+  mTextInputHandler.CancelIMEComposition();
   return NS_OK;
 }
 
@@ -2341,7 +2342,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)widgetDestroyed
 {
-  mGeckoChild->IME_OnDestroyView(self);
+  mGeckoChild->TextInputHandler()->OnDestroyView(self);
   mGeckoChild = nsnull;
 
   // Just in case we're destroyed abruptly and missed the draggingExited
@@ -4680,14 +4681,14 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
-  if (!mGeckoChild->IME_IsComposing() && len == 0)
+  if (!mGeckoChild->TextInputHandler()->IsIMEComposing() && len == 0)
     return; // nothing to do
   PRUnichar buffer[MAX_BUFFER_SIZE];
   PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters:bufPtr];
   bufPtr[len] = PRUnichar('\0');
 
-  if (len == 1 && !mGeckoChild->IME_IsComposing()) {
+  if (len == 1 && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     // don't let the same event be fired twice when hitting
     // enter/return! (Bug 420502)
     if (mKeyPressSent)
@@ -4746,16 +4747,16 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     }
   }
   else {
-    if (!mGeckoChild->IME_IsComposing()) {
+    if (!mGeckoChild->TextInputHandler()->IsIMEComposing()) {
       [self sendCompositionEvent:NS_COMPOSITION_START];
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
       if (mGeckoChild) {
-        mGeckoChild->IME_OnStartComposition(self);
+        mGeckoChild->TextInputHandler()->OnStartIMEComposition(self);
         // Note: mGeckoChild might have become null here. Don't count on it from here on.
       }
     }
 
-    if (mGeckoChild && mGeckoChild->IME_IgnoreCommit()) {
+    if (mGeckoChild && mGeckoChild->TextInputHandler()->IgnoreIMECommit()) {
       tmpStr = [tmpStr init];
       len = 0;
       bufPtr[0] = PRUnichar('\0');
@@ -4771,7 +4772,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     [self sendCompositionEvent:NS_COMPOSITION_END];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     if (mGeckoChild) {
-      mGeckoChild->IME_OnEndComposition();
+      mGeckoChild->TextInputHandler()->OnEndIMEComposition();
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
     }
     mMarkedRange = NSMakeRange(NSNotFound, 0);
@@ -4842,20 +4843,20 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   mMarkedRange.length = len;
 
-  if (!mGeckoChild->IME_IsComposing() && len > 0) {
+  if (!mGeckoChild->TextInputHandler()->IsIMEComposing() && len > 0) {
     nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(selection);
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
     [self sendCompositionEvent:NS_COMPOSITION_START];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     if (mGeckoChild) {
-      mGeckoChild->IME_OnStartComposition(self);
+      mGeckoChild->TextInputHandler()->OnStartIMEComposition(self);
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
     }
   }
 
-  if (mGeckoChild->IME_IsComposing()) {
-    mGeckoChild->IME_OnUpdateComposition(tmpStr);
+  if (mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+    mGeckoChild->TextInputHandler()->OnUpdateIMEComposition(tmpStr);
 
     BOOL commit = len == 0;
     [self sendTextEvent:bufPtr attributedString:aString
@@ -4868,7 +4869,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       [self sendCompositionEvent:NS_COMPOSITION_END];
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
       if (mGeckoChild) {
-        mGeckoChild->IME_OnEndComposition();
+        mGeckoChild->TextInputHandler()->OnEndIMEComposition();
         // Note: mGeckoChild might have become null here. Don't count on it from here on.
       }
     }
@@ -4887,7 +4888,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   if (mGeckoChild)
-    mGeckoChild->IME_CommitComposition();
+    mGeckoChild->TextInputHandler()->CommitIMEComposition();
 }
 
 - (BOOL) hasMarkedText
@@ -5135,7 +5136,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   mCurKeyEvent = theEvent;
 
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
-  if (nonDeadKeyPress && !mGeckoChild->IME_IsComposing()) {
+  if (nonDeadKeyPress && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     if (![theEvent isARepeat]) {
       NSResponder* firstResponder = [[self window] firstResponder];
 
@@ -5186,7 +5187,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
     if ((!geckoEvent.isChar || geckoEvent.isControl) &&
-        !mGeckoChild->IME_IsComposing()) {
+        !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
       if (mKeyDownHandled)
         geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5196,13 +5197,14 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     }
   }
 
-  // Let Cocoa interpret the key events, caching IsComposing first.
+  // Let Cocoa interpret the key events, caching IsIMEComposing first.
   // We don't do it if this came from performKeyEquivalent because
   // interpretKeyEvents isn't set up to handle those key combinations.
-  PRBool wasComposing = mGeckoChild->IME_IsComposing();
+  PRBool wasComposing = mGeckoChild->TextInputHandler()->IsIMEComposing();
   PRBool interpretKeyEventsCalled = PR_FALSE;
   if (!isKeyEquiv &&
-      (mGeckoChild->IME_IsEnabled() || mGeckoChild->IME_IsASCIICapableOnly())) {
+      (mGeckoChild->TextInputHandler()->IsIMEEnabled() ||
+       mGeckoChild->TextInputHandler()->IsASCIICapableOnly())) {
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     interpretKeyEventsCalled = PR_TRUE;
   }
@@ -5211,7 +5213,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     return (mKeyDownHandled || mKeyPressHandled);;
 
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing &&
-      !mGeckoChild->IME_IsComposing()) {
+      !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
@@ -5416,8 +5418,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   }
 
   // if we don't have any characters we can't generate a keyUp event
-  if ([[theEvent characters] length] == 0 || mGeckoChild->IME_IsComposing())
+  if ([[theEvent characters] length] == 0 ||
+      mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     return;
+  }
 
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -5451,8 +5455,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   }
 
   // don't process if we're composing, but don't consume the event
-  if (mGeckoChild->IME_IsComposing())
+  if (mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     return NO;
+  }
 
   UInt32 modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
 
@@ -5649,8 +5654,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mGeckoChild || [theEvent type] != NSFlagsChanged ||
-      mGeckoChild->IME_IsComposing())
+      mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     return;
+  }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -5681,6 +5687,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent
 {
+  // If we're being destroyed assume the default -- return YES.
+  if (!mGeckoChild)
+    return YES;
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_ACTIVATE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -6398,6 +6408,9 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
     return nil;
 
   ChildView* childView = (ChildView*)view;
+  // If childView is being destroyed return nil.
+  if (![childView widget])
+    return nil;
   return WindowAcceptsEvent(window, aEvent, childView) ? childView : nil;
 }
 

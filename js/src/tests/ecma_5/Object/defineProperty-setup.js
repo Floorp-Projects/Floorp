@@ -1064,8 +1064,6 @@ function runDictionaryPropertyPresentTestsFraction(PART, PARTS)
 
 function runNonTerminalPropertyPresentTestsFraction(PART, PARTS)
 {
-  var gTestfile =
-    '15.2.3.6-middle-redefinition-' + PART + '-of-' + PARTS + '.js';
   var BUGNUMBER = 560566;
   var summary =
     'ES5 Object.defineProperty(O, P, Attributes): middle redefinition ' +

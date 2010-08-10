@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'multiline-001.js';
 
 /**
  *  File Name:          RegExp/multiline-001.js

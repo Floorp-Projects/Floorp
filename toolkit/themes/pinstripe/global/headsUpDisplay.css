@@ -58,6 +58,7 @@
 .hud-output-node div {
     -moz-user-select: text;
     white-space: pre-wrap;
+    -moz-user-focus: normal;
 }
 
 .hud-output-node .hud-network {
@@ -104,6 +105,16 @@
     width: 100%;
 }
 
+.hud-group:first-child .hud-divider {
+    display: none;
+}
+
+.hud-filter-cat {
+    color: #6b6b6b;
+    font-weight: bold;
+    margin: 0px 12px 0px 0px;
+}
+
 /* JSTerm Styles */
 
 .jsterm-wrapper-node {
@@ -138,10 +149,12 @@
 .jsterm-input-node {
     width: 98%;
     font-family: monospace;
-    font-size: 1.2em; 
-    line-height: 1.6em;
-    background-color: black;
-    color: white;
+    font-size: 9pt;
+    background: url("chrome://global/skin/icons/commandline.png") 4px 2px
+        no-repeat !important;
+    border: none !important;
+    padding: 0px 0px 0px 16px !important;
+    -moz-appearance: none !important;
 }
 
 .jsterm-output-line {

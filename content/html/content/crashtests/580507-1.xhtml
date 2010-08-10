@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var input = document.getElementById("i");
+  input.setAttribute('type', "image");
+  input.removeAttribute('type');
+  input.placeholder = "Y";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><input id="i" /></body>
+</html>

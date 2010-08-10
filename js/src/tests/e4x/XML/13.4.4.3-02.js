@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.4.4.3-02.js';
 
 var summary = "13.4.4.3 - XML.appendChild should copy child";
 var BUGNUMBER = 312692;

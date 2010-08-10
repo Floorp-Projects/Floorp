@@ -3,7 +3,6 @@
 
 var PART = 3, PARTS = 4;
 
-var gTestfile = '15.2.3.6-redefinition-3-of-4.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 430133;
 var summary =

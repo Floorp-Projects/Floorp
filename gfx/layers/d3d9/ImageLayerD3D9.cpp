@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -128,6 +128,13 @@ ImageContainerD3D9::GetCurrentSize()
   }
 
   return gfxIntSize(0,0);
+}
+
+PRBool
+ImageContainerD3D9::SetLayerManager(LayerManager *aManager)
+{
+  // we can't do anything here for now
+  return PR_FALSE;
 }
 
 Layer*

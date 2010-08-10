@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.4.4.3.js';
 
 START("13.4.4.3 - XML appendChild()");
 

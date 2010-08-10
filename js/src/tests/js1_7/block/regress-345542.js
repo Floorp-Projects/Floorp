@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-345542.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 345542;
 var summary = 'Use let in let-scoped loops';

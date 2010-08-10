@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'destructuring-scope.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 'none';
 var summary = 'Test destructuring assignments for differing scopes';

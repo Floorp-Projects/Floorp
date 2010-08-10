@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-342359.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 342359;
 var summary = 'Overriding ReferenceError should stick';

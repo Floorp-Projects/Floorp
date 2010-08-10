@@ -117,6 +117,11 @@ void test()
 
     test_twice_bigger_type<T>::run();
 
+    typedef typename integer_traits<T>::unsigned_type unsigned_T;
+
+    VERIFY(sizeof(unsigned_T) == sizeof(T));
+    VERIFY(integer_traits<unsigned_T>::is_signed == false);
+
     CheckedInt<T> max_value(integer_traits<T>::max_value());
     CheckedInt<T> min_value(integer_traits<T>::min_value());
 
@@ -453,9 +458,11 @@ void test()
     VERIFY(y == zero);
     x = max_value;
     VERIFY_IS_VALID(x++);
+    x = max_value;
     VERIFY_IS_INVALID(++x);
     x = min_value;
     VERIFY_IS_VALID(x--);
+    x = min_value;
     VERIFY_IS_INVALID(--x);
 }
 

@@ -56,6 +56,8 @@
 
 #include "GLContextProvider.h"
 
+#include "prenv.h"
+
 using namespace mozilla;
 using namespace mozilla::gl;
 
@@ -275,30 +277,67 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     format.depth = 16;
     format.minDepth = 1;
 
-    gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+    
+#ifdef XP_WIN
+    // On Windows, we may have a choice of backends, including straight
+    // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
+    // We don't differentiate the latter two yet, but we allow for
+    // a env var to try EGL first, instead of last.
+    bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
 
-    printf_stderr ("--- WebGL context created: %p\n", gl.get());
+    // if we want EGL, try it first
+    if (!gl && preferEGL) {
+        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
+        }
+    }
 
-#ifdef USE_GLES2
-    // On native GLES2, no need to validate, the compiler will do it
-    mShaderValidation = PR_FALSE;
+    // if it failed, then try the default provider, whatever that is
+    if (!gl) {
+        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
+        }
+    }
+
+    // if that failed, and we weren't already preferring EGL, try it now.
+    if (!gl && !preferEGL) {
+        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
+        }
+    }
 #else
-    // Check the shader validator pref
-    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
-
-    prefService->GetBoolPref("webgl.shader_validator", &mShaderValidation);
+    // other platforms just use whatever the default is
+    if (!gl) {
+        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
+        }
+    }
 #endif
 
-    if (!InitAndValidateGL()) {
+    // last chance, try OSMesa
+    if (!gl) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
-        if (!InitAndValidateGL()) {
-            LogMessage("WebGL: Can't get a usable OpenGL context.");
-            return NS_ERROR_FAILURE;
+        if (gl) {
+            if (!InitAndValidateGL()) {
+                gl = nsnull;
+            } else {
+                // make sure we notify always in this case, because it's likely going to be
+                // painfully slow
+                LogMessage("WebGL: Using software rendering via OSMesa");
+            }
         }
-
-        LogMessage("WebGL: Using software rendering via OSMesa");
     }
+
+    if (!gl) {
+        LogMessage("WebGL: Can't get a usable OpenGL context.");
+        return NS_ERROR_FAILURE;
+    }
+
+    printf_stderr ("--- WebGL context created: %p\n", gl.get());
 
     mWidth = width;
     mHeight = height;

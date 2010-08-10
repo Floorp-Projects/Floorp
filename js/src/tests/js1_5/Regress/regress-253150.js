@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-253150.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 253150;
 var summary = 'Do not warn on detecting properties';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352267.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352267;
 var summary = 'Do not assert with |if|, block, |let|';

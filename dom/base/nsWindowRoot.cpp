@@ -56,7 +56,7 @@
 #include "nsGUIEvent.h"
 #include "nsGlobalWindow.h"
 #include "nsFocusManager.h"
-#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIControllers.h"
 
@@ -292,7 +292,7 @@ nsWindowRoot::GetControllers(nsIControllers** aResult)
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 
-    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement =
+    nsCOMPtr<nsIDOMHTMLInputElement> htmlInputElement =
       do_QueryInterface(focusedContent);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
@@ -355,10 +355,10 @@ nsWindowRoot::GetControllerForCommand(const char * aCommand,
   return NS_OK;
 }
 
-void
-nsWindowRoot::GetPopupNode(nsIDOMNode** aNode)
+nsIDOMNode*
+nsWindowRoot::GetPopupNode()
 {
-  NS_IF_ADDREF(*aNode = mPopupNode);
+  return mPopupNode;
 }
 
 void

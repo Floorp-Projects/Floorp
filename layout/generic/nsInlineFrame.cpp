@@ -754,17 +754,6 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
 
   // Create a next-in-flow if needed.
   if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
-    if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
-      nsBlockReflowState* blockRS = lineLayout->mBlockRS;
-      nsPlaceholderFrame* placeholder =
-        static_cast<nsPlaceholderFrame*>(aFrame);
-      rv = blockRS->mBlock->SplitFloat(*blockRS,
-                                       placeholder->GetOutOfFlowFrame(),
-                                       aStatus);
-      // Allow the parent to continue reflowing.
-      aStatus = NS_FRAME_COMPLETE;
-      return rv;
-    }
     nsIFrame* newFrame;
     rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
     if (NS_FAILED(rv)) {

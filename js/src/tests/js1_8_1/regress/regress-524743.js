@@ -1,6 +1,5 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
-gTestfile = 'regress-524743';
 
 if (typeof gczeal != 'undefined' && typeof gc != 'undefined') {
     try

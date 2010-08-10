@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-489682.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 489682;
 var summary = 'TM: wrong number with nested type-unstable loops';

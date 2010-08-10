@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-291930.js';
 
 START("If document starts with comment, document is discarded");
 printBugNumber(291930);

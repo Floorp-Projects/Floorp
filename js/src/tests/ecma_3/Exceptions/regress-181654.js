@@ -44,7 +44,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=181654
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-181654.js';
 var UBound = 0;
 var BUGNUMBER = '181654';
 var summary = 'Calling toString for an object derived from the Error class should be possible.';

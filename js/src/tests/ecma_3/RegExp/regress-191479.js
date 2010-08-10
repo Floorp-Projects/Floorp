@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-191479.js';
 var i = 0;
 var BUGNUMBER = 191479;
 var summary = 'Testing regular expressions of form /(x|y){n,}/';

@@ -5,7 +5,6 @@
  * Contributor: Blake Kaplan
  */
 
-var gTestfile = 'regress-386030.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 386030;
 var summary = 'Array.reduce should ignore holes';

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-127243.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 127243;
 var summary = 'Do not crash on watch';

@@ -56,7 +56,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
@@ -74,7 +73,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -441,7 +440,7 @@ nsFileControlFrame::CaptureMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Get parent nsIDOMWindowInternal object.
   nsIContent* content = mFrame->GetContent();
-  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElem = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElem = do_QueryInterface(content);
   nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(content);
   if (!content || !inputElem || !fileControl)
     return NS_ERROR_FAILURE;
@@ -538,7 +537,7 @@ nsFileControlFrame::BrowseMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Get parent nsIDOMWindowInternal object.
   nsIContent* content = mFrame->GetContent();
-  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElem = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElem = do_QueryInterface(content);
   nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(content);
   if (!content || !inputElem || !fileControl)
     return NS_ERROR_FAILURE;

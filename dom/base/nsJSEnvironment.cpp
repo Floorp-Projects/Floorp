@@ -3464,7 +3464,7 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
     // chain when we're clearing an outer window whose current inner we
     // still want.
     if (aClearFromProtoChain) {
-      nsWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
+      nsCommonWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
 
       // Clear up obj's prototype chain, but not Object.prototype.
       for (JSObject *o = ::JS_GetPrototype(mContext, obj), *next;
@@ -3980,11 +3980,13 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
   PRInt32 highwatermark = nsContentUtils::GetIntPref(aPrefName, 32);
 
   if (highwatermark >= 32) {
-    // There are two options of memory usage in tracemonkey. One is
-    // to use malloc() and the other is to use memory for GC. (E.g.
-    // js_NewGCThing()/RefillDoubleFreeList()).
-    // Let's limit the high water mark for the first one to 32MB,
-    // and second one to 0xffffffff.
+    /*
+     * There are two ways to allocate memory in SpiderMonkey. One is
+     * to use jsmalloc() and the other is to use GC-owned memory
+     * (e.g. js_NewGCThing()).
+     *
+     * In the browser, we don't cap the amount of GC-owned memory.
+     */
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
                       64L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,

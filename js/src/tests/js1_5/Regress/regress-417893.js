@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-417893.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 417893;
 var summary = 'Fast natives must use JS_THIS/JS_THIS_OBJECT';

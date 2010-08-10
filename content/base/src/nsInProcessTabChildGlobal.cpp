@@ -110,7 +110,7 @@ bool SendAsyncMessageToParent(void* aCallbackData,
 nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
                                                      nsIContent* aOwner,
                                                      nsFrameMessageManager* aChrome)
-: mCx(nsnull), mDocShell(aShell), mInitialized(PR_FALSE), mLoadingScript(PR_FALSE),
+: mDocShell(aShell), mInitialized(PR_FALSE), mLoadingScript(PR_FALSE),
   mDelayedDisconnect(PR_FALSE), mOwner(aOwner), mChromeMessageManager(aChrome)
 {
 }
@@ -196,8 +196,7 @@ nsInProcessTabChildGlobal::Disconnect()
   }
   if (!mLoadingScript) {
     if (mCx) {
-      JS_DestroyContext(mCx);
-      mCx = nsnull;
+      DestroyCx();
     }
   } else {
     mDelayedDisconnect = PR_TRUE;
@@ -296,7 +295,7 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
   NS_ENSURE_SUCCESS(rv, false);
 
   JS_SetGlobalObject(cx, global);
-
+  DidCreateCx();
   return NS_OK;
 }
 
@@ -307,67 +306,10 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL)
     mInitialized = PR_TRUE;
     Init();
   }
-  if (!mGlobal || !mCx) {
-    return;
-  }
-
-  nsCString url = NS_ConvertUTF16toUTF8(aURL);
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  nsCOMPtr<nsIChannel> channel;
-  NS_NewChannel(getter_AddRefs(channel), uri);
-  if (!channel) {
-    return;
-  }
-
-  nsCOMPtr<nsIInputStream> input;
-  channel->Open(getter_AddRefs(input));
-  nsString dataString;
-  if (input) {
-    const PRUint32 bufferSize = 256;
-    char buffer[bufferSize];
-    nsCString data;
-    PRUint32 avail = 0;
-    input->Available(&avail);
-    PRUint32 read = 0;
-    if (avail) {
-      while (NS_SUCCEEDED(input->Read(buffer, bufferSize, &read)) && read) {
-        data.Append(buffer, read);
-        read = 0;
-      }
-    }
-    nsScriptLoader::ConvertToUTF16(channel, (PRUint8*)data.get(), data.Length(),
-                                   EmptyString(), nsnull, dataString);
-  }
-
-  if (!dataString.IsEmpty()) {
-    JSAutoRequest ar(mCx);
-    jsval retval;
-    JSObject* global = nsnull;
-    mGlobal->GetJSObject(&global);
-    if (!global) {
-      return;
-    }
-
-    JSPrincipals* jsprin = nsnull;
-    mPrincipal->GetJSPrincipals(mCx, &jsprin);
-    nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
-    nsContentUtils::ThreadJSContextStack()->Push(mCx);
-    PRBool tmp = mLoadingScript;
-    mLoadingScript = PR_TRUE;
-    JS_EvaluateUCScriptForPrincipals(mCx, global, jsprin,
-                                     (jschar*)dataString.get(),
-                                     dataString.Length(),
-                                     url.get(), 1, &retval);
-    //XXX Argh, JSPrincipals are manually refcounted!
-    JSPRINCIPALS_DROP(mCx, jsprin);
-    mLoadingScript = tmp;
-    JSContext* unused;
-    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
-  }
+  PRBool tmp = mLoadingScript;
+  mLoadingScript = PR_TRUE;
+  LoadFrameScriptInternal(aURL);
+  mLoadingScript = tmp;
   if (!mLoadingScript && mDelayedDisconnect) {
     mDelayedDisconnect = PR_FALSE;
     Disconnect();

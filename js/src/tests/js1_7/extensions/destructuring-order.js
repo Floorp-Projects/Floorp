@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'destructuring-order.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = "(none)";
 var summary = "Order of destructuring, destructuring in the presence of " +

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-472703.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 472703;
 var summary = 'Do not assert: regs.sp[-1] == OBJECT_TO_JSVAL(fp->scopeChain)';

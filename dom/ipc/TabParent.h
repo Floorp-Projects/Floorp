@@ -53,6 +53,7 @@
 #include "nsIDialogParamBlock.h"
 #include "nsIAuthPromptProvider.h"
 
+class nsFrameLoader;
 class nsIURI;
 class nsIDOMElement;
 struct gfxMatrix;
@@ -222,6 +223,9 @@ protected:
     nsTArray<DelayedDialogData*> mDelayedDialogs;
 
     PRBool ShouldDelayDialogs();
+
+private:
+    already_AddRefed<nsFrameLoader> GetFrameLoader() const;
 };
 
 } // namespace dom

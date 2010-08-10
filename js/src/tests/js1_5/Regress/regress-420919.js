@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-420919.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 420919;
 var summary = 'this.u.v = 1 should report this.u is undefined';

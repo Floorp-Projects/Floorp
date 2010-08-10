@@ -448,8 +448,8 @@ to the style struct:<br>
   <h3><a name="DOM">DOM</a></h3>
 Users in scripts, or anywhere outside of layout/ or content/ may need to access
 the new property.  This is done using the CSS OM, specifically
-<code>nsIDOMCSSStyleDeclaration</code>, <code>nsIDOMCSS2Properties</code>, and
-<code>nsIDOMNSCSS2Properties</code>.  By the magic of C++ pre-processing, the
+<code>nsIDOMCSSStyleDeclaration</code> and <code>nsIDOMCSS2Properties</code>.
+By the magic of C++ pre-processing, the
 CSS2Properties interfaces will be implemented automatically when you
 <a href="#CSSPropList">add your property</a> to <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsCSSPropList.h">
 nsCSSPropList.h</a>. Because of this, if you fail to add your property to the

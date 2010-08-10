@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'properties-001.js';
 
 /**
  *  File Name:          RegExp/properties-001.js

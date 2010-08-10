@@ -62,12 +62,10 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 DOMCI_DATA(CSSStyleDeclaration, nsDOMCSSDeclaration)
 
 NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
-  NS_INTERFACE_TABLE5(nsDOMCSSDeclaration,
+  NS_INTERFACE_TABLE3(nsDOMCSSDeclaration,
                       nsICSSDeclaration,
                       nsIDOMCSSStyleDeclaration,
-                      nsIDOMCSS2Properties,
-                      nsIDOMSVGCSS2Properties,
-                      nsIDOMNSCSS2Properties)
+                      nsIDOMCSS2Properties)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleDeclaration)
 NS_INTERFACE_MAP_END
@@ -338,8 +336,6 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 }
 
 // nsIDOMCSS2Properties
-// nsIDOMSVGCSS2Properties
-// nsIDOMNSCSS2Properties
 
 #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,   \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)      \

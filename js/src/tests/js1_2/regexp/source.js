@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'source.js';
 
 /**
    Filename:     source.js

@@ -124,24 +124,27 @@ nsPopupBoxObject::OpenPopup(nsIDOMElement* aAnchorElement,
                             const nsAString& aPosition,
                             PRInt32 aXPos, PRInt32 aYPos,
                             PRBool aIsContextMenu,
-                            PRBool aAttributesOverride)
+                            PRBool aAttributesOverride,
+                            nsIDOMEvent* aTriggerEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mContent) {
     nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
     pm->ShowPopup(mContent, anchorContent, aPosition, aXPos, aYPos,
-                  aIsContextMenu, aAttributesOverride, PR_FALSE, nsnull);
+                  aIsContextMenu, aAttributesOverride, PR_FALSE, aTriggerEvent);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPopupBoxObject::OpenPopupAtScreen(PRInt32 aXPos, PRInt32 aYPos, PRBool aIsContextMenu)
+nsPopupBoxObject::OpenPopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
+                                    PRBool aIsContextMenu,
+                                    nsIDOMEvent* aTriggerEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mContent)
-    pm->ShowPopupAtScreen(mContent, aXPos, aYPos, aIsContextMenu, nsnull);
+    pm->ShowPopupAtScreen(mContent, aXPos, aYPos, aIsContextMenu, aTriggerEvent);
   return NS_OK;
 }
 
@@ -260,6 +263,33 @@ nsPopupBoxObject::GetPopupState(nsAString& aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPopupBoxObject::GetTriggerNode(nsIDOMNode** aTriggerNode)
+{
+  *aTriggerNode = nsnull;
+
+  nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
+  while (menuPopupFrame) {
+    nsIContent* triggerContent = menuPopupFrame->GetTriggerContent();
+    if (triggerContent) {
+      CallQueryInterface(triggerContent, aTriggerNode);
+      break;
+    }
+
+    // check up the menu hierarchy until a popup with a trigger node is found
+    nsMenuFrame* menuFrame = menuPopupFrame->GetParentMenu();
+    if (!menuFrame)
+      break;
+
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
+    if (!parentPopup || !parentPopup->IsMenu())
+      break;
+
+    menuPopupFrame = static_cast<nsMenuPopupFrame *>(parentPopup);
+  }
+
+  return NS_OK;
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

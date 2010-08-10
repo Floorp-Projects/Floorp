@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-308566.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 308566;
 var summary = 'Do not treat octal sequence as regexp backrefs in strict mode';

@@ -680,25 +680,18 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
 
 nsIFrame*
 nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                        nsIFrame* aStopAtAncestor,
-                                        nsPoint* aOffset)
+                                        nsIFrame* aStopAtAncestor)
 {
-  nsPoint offset(0,0);
   nsIFrame* f = aFrame;
   while (f != aStopAtAncestor) {
     NS_ASSERTION(!IsPopup(f), "Should have stopped before popup");
-    nsPoint extraOffset(0,0);
-    nsIFrame* parent = GetCrossDocParentFrame(f, &extraOffset);
+    nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
     nsIScrollableFrame* sf = do_QueryFrame(parent);
     if (sf && sf->IsScrollingActive() && sf->GetScrolledFrame() == f)
       break;
-    offset += f->GetPosition() + extraOffset;
     f = parent;
-  }
-  if (aOffset) {
-    *aOffset = offset;
   }
   return f;
 }
@@ -745,6 +738,24 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame)
     }
   }
   return nsnull;
+}
+
+//static
+PRBool
+nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
+                              nsStyleContext* aStyleContext,
+                              nsCSSPseudoElements::Type aPseudoElement,
+                              nsPresContext* aPresContext)
+{
+  NS_PRECONDITION(aPresContext, "Must have a prescontext");
+
+  nsRefPtr<nsStyleContext> pseudoContext;
+  if (aContent) {
+    pseudoContext = aPresContext->StyleSet()->
+      ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
+                              aStyleContext);
+  }
+  return pseudoContext != nsnull;
 }
 
 nsPoint
@@ -1201,11 +1212,20 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           PRUint32 aFlags)
 {
+#ifdef DEBUG
+  if (aFlags & PAINT_WIDGET_LAYERS) {
+    nsIView* view = aFrame->GetView();
+    NS_ASSERTION(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame,
+      "PAINT_WIDGET_LAYERS should only be used on a display root that has a widget");
+  }
+#endif
+
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
 
   nsRegion visibleRegion;
-  if (aFlags & PAINT_WIDGET_LAYERS) {
+  if ((aFlags & PAINT_WIDGET_LAYERS) &&
+      !(aFlags & PAINT_IGNORE_VIEWPORT_SCROLLING)) {
     // This layer tree will be reused, so we'll need to calculate it
     // for the whole visible area of the window
     visibleRegion = aFrame->GetOverflowRectRelativeToSelf();
@@ -1258,7 +1278,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   rv = aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
 
-  if (NS_SUCCEEDED(rv) && aFrame->GetType() == nsGkAtoms::pageContentFrame) {
+  nsIAtom* frameType = aFrame->GetType();
+  if (NS_SUCCEEDED(rv) && frameType == nsGkAtoms::pageContentFrame) {
+    NS_ASSERTION(!(aFlags & PAINT_WIDGET_LAYERS),
+      "shouldn't be painting with widget layers for page content frames");
     // We may need to paint out-of-flow frames whose placeholders are
     // on other pages. Add those pages to our display list. Note that
     // out-of-flow frames can't be placed after their placeholders so
@@ -1276,17 +1299,20 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     }
   }
 
-  nsIAtom* frameType = aFrame->GetType();
+  // If we're going to display something different from what we'd normally
+  // paint in a window then we will flush out any retained layer trees before
+  // *and after* we draw.
+  PRBool willFlushLayers = aFlags & (PAINT_IGNORE_SUPPRESSION |
+                                     PAINT_IGNORE_VIEWPORT_SCROLLING |
+                                     PAINT_HIDE_CARET);
+
   // For the viewport frame in print preview/page layout we want to paint
   // the grey background behind the page, not the canvas color.
-  if (frameType == nsGkAtoms::viewportFrame &&
-      presContext->IsRootPaginatedDocument() &&
-      (presContext->Type() == nsPresContext::eContext_PrintPreview ||
-       presContext->Type() == nsPresContext::eContext_PageLayout)) {
+  if (frameType == nsGkAtoms::viewportFrame && 
+      nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
     nsRect bounds = nsRect(builder.ToReferenceFrame(aFrame),
                            aFrame->GetSize());
-    rv = list.AppendNewToBottom(new (&builder) nsDisplaySolidColor(
-           aFrame, bounds, NS_RGB(115, 115, 115)));
+    rv = presShell->AddPrintPreviewBackgroundItem(builder, list, aFrame, bounds);
   } else if (frameType != nsGkAtoms::pageFrame) {
     // For printing, this function is first called on an nsPageFrame, which
     // creates a display list with a PageContent item. The PageContent item's
@@ -1299,6 +1325,22 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     // can monkey with the contents if necessary.
     rv = presShell->AddCanvasBackgroundColorItem(
            builder, list, aFrame, canvasArea, aBackstop);
+
+    // If the passed in backstop color makes us draw something different from
+    // normal, we need to flush layers.
+    if ((aFlags & PAINT_WIDGET_LAYERS) && !willFlushLayers) {
+      nsIView* view = aFrame->GetView();
+      if (view) {
+        nscolor backstop = presShell->ComputeBackstopColor(view);
+        // The PresShell's canvas background color doesn't get updated until
+        // EnterPresShell, so this check has to be done after that.
+        nscolor canvasColor = presShell->GetCanvasBackground();
+        if (NS_ComposeColors(aBackstop, canvasColor) !=
+            NS_ComposeColors(backstop, canvasColor)) {
+          willFlushLayers = PR_TRUE;
+        }
+      }
+    }
   }
 
   builder.LeavePresShell(aFrame, dirtyRect);
@@ -1329,9 +1371,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
     nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
-    if (aFlags & (PAINT_IGNORE_SUPPRESSION |
-                  PAINT_IGNORE_VIEWPORT_SCROLLING |
-                  PAINT_HIDE_CARET)) {
+    if (willFlushLayers) {
       // We're going to display something different from what we'd normally
       // paint in a window, so make sure we flush out any retained layer
       // trees before *and after* we draw
@@ -1743,12 +1783,26 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto ||
                  pos->mHeight.GetUnit() == eStyleUnit_Percent,
                  "unknown height unit");
-    // There's no basis for the percentage height, so it acts like auto.
-    // Should we consider a max-height < min-height pair a basis for
-    // percentage heights?  The spec is somewhat unclear, and not doing
-    // so is simpler and avoids troubling discontinuities in behavior,
-    // so I'll choose not to. -LDB
-    return PR_FALSE;
+    nsIAtom* fType = f->GetType();
+    if (fType != nsGkAtoms::viewportFrame && fType != nsGkAtoms::canvasFrame &&
+        fType != nsGkAtoms::pageContentFrame) {
+      // There's no basis for the percentage height, so it acts like auto.
+      // Should we consider a max-height < min-height pair a basis for
+      // percentage heights?  The spec is somewhat unclear, and not doing
+      // so is simpler and avoids troubling discontinuities in behavior,
+      // so I'll choose not to. -LDB
+      return PR_FALSE;
+    }
+
+    NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto,
+                 "Unexpected height unit for viewport or canvas or page-content");
+    // For the viewport, canvas, and page-content kids, the percentage
+    // basis is just the parent height.
+    h = f->GetSize().height;
+    if (h == NS_UNCONSTRAINEDSIZE) {
+      // We don't have a percentage basis after all
+      return PR_FALSE;
+    }
   }
 
   nscoord maxh;
@@ -2575,6 +2629,17 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
         // kid's position, not the scrolling, so we get the initial
         // position.
         *aResult = kidPosition + aFrame->GetUsedBorderAndPadding().top;
+        return PR_TRUE;
+      }
+      return PR_FALSE;
+    }
+
+    if (fType == nsGkAtoms::fieldSetFrame) {
+      LinePosition kidPosition;
+      nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+      // kid might be a legend frame here, but that's ok.
+      if (GetFirstLinePosition(kid, &kidPosition)) {
+        *aResult = kidPosition + kid->GetPosition().y;
         return PR_TRUE;
       }
       return PR_FALSE;

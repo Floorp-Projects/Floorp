@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-366668-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 366668;
 var summary = 'decompilation of "let with with" ';

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-226078.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 226078;
 var summary = 'Do not Crash @ js_Interpret 3127f864';

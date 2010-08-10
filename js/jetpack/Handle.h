@@ -48,6 +48,8 @@
 #include "jsobj.h"
 #include "jscntxt.h"
 
+#include "mozilla/unused.h"
+
 namespace mozilla {
 namespace jetpack {
 
@@ -62,7 +64,8 @@ class Handle
   Handle(Handle* parent)
     : mParent(parent)
     , mObj(NULL)
-    , mRuntime(NULL)
+    , mCx(NULL)
+    , mRooted(false)
   {}
 
   BaseType* AllocPHandle() {
@@ -79,7 +82,8 @@ public:
   Handle()
     : mParent(NULL)
     , mObj(NULL)
-    , mRuntime(NULL)
+    , mCx(NULL)
+    , mRooted(false)
   {}
 
   ~Handle() { TearDown(); }
@@ -95,8 +99,28 @@ public:
     return Unwrap(cx, JSVAL_TO_OBJECT(val));
   }
 
-  JSObject* ToJSObject(JSContext* cx) const {
-    if (!mObj && !mRuntime) {
+  void Root() {
+    NS_ASSERTION(mObj && mCx, "Rooting with no object unexpected.");
+    if (mRooted)
+      return;
+
+    if (!JS_AddNamedObjectRoot(mCx, &mObj, "Jetpack Handle")) {
+      NS_RUNTIMEABORT("Failed to add root.");
+    }
+    mRooted = true;
+  }
+
+  void Unroot() {
+    NS_ASSERTION(mCx, "Unrooting with no JSContext unexpected.");
+    if (!mRooted)
+      return;
+
+    JS_RemoveObjectRoot(mCx, &mObj);
+    mRooted = false;
+  }
+
+  JSObject* ToJSObject(JSContext* cx) {
+    if (!mObj && !mCx) {
       JSAutoRequest request(cx);
 
       JSClass* clasp = const_cast<JSClass*>(&sHandle_JSClass);
@@ -107,16 +131,13 @@ public:
 
       JSPropertySpec* ps = const_cast<JSPropertySpec*>(sHandle_Properties);
       JSFunctionSpec* fs = const_cast<JSFunctionSpec*>(sHandle_Functions);
-      JSRuntime* rt;
 
       if (JS_SetPrivate(cx, obj, (void*)this) &&
           JS_DefineProperties(cx, obj, ps) &&
-          JS_DefineFunctions(cx, obj, fs) &&
-          (rt = JS_GetRuntime(cx)) &&
-          JS_AddObjectRoot(cx, &mObj))
-      {
+          JS_DefineFunctions(cx, obj, fs)) {
         mObj = obj;
-        mRuntime = rt;
+        mCx = cx;
+        Root();
       }
     }
     return mObj;
@@ -134,16 +155,33 @@ private:
   static bool IsParent(const PHandleChild* handle) { return false; }
 
   void TearDown() {
-    if (mObj) {
-      mObj->setPrivate(NULL);
-      mObj = NULL;
+    if (mCx) {
+      JSAutoRequest ar(mCx);
+
+      if (mObj) {
+        mObj->setPrivate(NULL);
+
+        js::AutoObjectRooter obj(mCx, mObj);
+        mObj = NULL;
+
+        JSBool hasOnInvalidate;
+        if (JS_HasProperty(mCx, obj.object(), "onInvalidate",
+                           &hasOnInvalidate) && hasOnInvalidate) {
+          js::AutoValueRooter r(mCx);
+          JSBool ok = JS_CallFunctionName(mCx, obj.object(), "onInvalidate", 0,
+                                          NULL, r.jsval_addr());
+          if (!ok)
+            JS_ReportPendingException(mCx);
+        }
+
+        // By not nulling out mContext, we prevent ToJSObject from
+        // reviving an invalidated/destroyed handle.
+      }
+
       // Nulling out mObj effectively unroots the object, but we still
       // need to remove the root, else the JS engine will complain at
       // shutdown.
-      NS_ASSERTION(mRuntime, "Should have a JSRuntime if we had an object");
-      js_RemoveRoot(mRuntime, (void*)&mObj);
-      // By not nulling out mRuntime, we prevent ToJSObject from
-      // reviving an invalidated/destroyed handle.
+      Unroot();
     }
   }
 
@@ -155,8 +193,9 @@ private:
 
   // Used to cache the JSObject returned by ToJSObject, which is
   // otherwise a const method.
-  mutable JSObject*  mObj;
-  mutable JSRuntime* mRuntime;
+  JSObject*  mObj;
+  JSContext* mCx;
+  bool mRooted;
 
   static Handle*
   Unwrap(JSContext* cx, JSObject* obj) {
@@ -200,6 +239,38 @@ private:
   }
 
   static JSBool
+  GetIsRooted(JSContext* cx, JSObject* obj, jsid, jsval* vp) {
+    Handle* self = Unwrap(cx, obj);
+    bool rooted = self ? self->mRooted : false;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(rooted));
+    return JS_TRUE;
+  }
+
+  static JSBool
+  SetIsRooted(JSContext* cx, JSObject* obj, jsid, jsval* vp) {
+    Handle* self = Unwrap(cx, obj);
+    JSBool v;
+    if (!JS_ValueToBoolean(cx, *vp, &v))
+      return JS_FALSE;
+
+    if (!self) {
+      if (v) {
+        JS_ReportError(cx, "Cannot root invalidated handle.");
+        return JS_FALSE;
+      }
+      return JS_TRUE;
+    }
+
+    if (v)
+      self->Root();
+    else
+      self->Unroot();
+
+    *vp = BOOLEAN_TO_JSVAL(v);
+    return JS_TRUE;
+  }
+
+  static JSBool
   Invalidate(JSContext* cx, uintN argc, jsval* vp) {
     if (argc > 0) {
       JS_ReportError(cx, "invalidate takes zero arguments");
@@ -207,15 +278,10 @@ private:
     }
 
     Handle* self = Unwrap(cx, JS_THIS_OBJECT(cx, vp));
-    if (self) {
-      JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_TRUE));
-      if (!Send__delete__(self)) {
-        JS_ReportError(cx, "Failed to send __delete__ while invalidating");
-        return JS_FALSE;
-      }
-    } else {
-      JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_FALSE));
-    }
+    if (self)
+      unused << Send__delete__(self);
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
     return JS_TRUE;
   }
@@ -248,10 +314,13 @@ private:
   static void
   Finalize(JSContext* cx, JSObject* obj) {
     Handle* self = Unwrap(cx, obj);
-    // Avoid warnings about unused return values:
-    self && Send__delete__(self);
+    if (self) {
+      NS_ASSERTION(!self->mRooted, "Finalizing a rooted object?");
+      self->mCx = NULL;
+      self->mObj = NULL;
+      unused << Send__delete__(self);
+    }
   }
-
 };
 
 template <class BaseType>
@@ -265,13 +334,14 @@ Handle<BaseType>::sHandle_JSClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-#define HANDLE_PROP_FLAGS (JSPROP_READONLY | JSPROP_PERMANENT)
+#define HANDLE_PROP_FLAGS (JSPROP_PERMANENT | JSPROP_SHARED)
 
 template <class BaseType>
 const JSPropertySpec
 Handle<BaseType>::sHandle_Properties[] = {
-  { "parent",  0, HANDLE_PROP_FLAGS, GetParent,  NULL },
-  { "isValid", 0, HANDLE_PROP_FLAGS, GetIsValid, NULL },
+  { "parent",  0, HANDLE_PROP_FLAGS | JSPROP_READONLY, GetParent,  NULL },
+  { "isValid", 0, HANDLE_PROP_FLAGS | JSPROP_READONLY, GetIsValid, NULL },
+  { "isRooted", 0, HANDLE_PROP_FLAGS, GetIsRooted, SetIsRooted },
   { 0, 0, 0, NULL, NULL }
 };
 

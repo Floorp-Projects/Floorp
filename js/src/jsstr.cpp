@@ -176,6 +176,18 @@ JSString::flatten()
     topNode->initFlatMutable(chars, pos, capacity);
 }
 
+#ifdef JS_TRACER
+
+int32 JS_FASTCALL
+js_Flatten(JSString* str)
+{
+    str->flatten();
+    return 0;
+}
+JS_DEFINE_CALLINFO_1(extern, INT32, js_Flatten, STRING, 0, nanojit::ACCSET_STORE_ANY)
+
+#endif /* !JS_TRACER */
+
 static JS_ALWAYS_INLINE size_t
 RopeAllocSize(const size_t length, size_t *capacity)
 {
@@ -976,17 +988,6 @@ str_substring(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-static JSString* FASTCALL
-String_p_toString(JSContext* cx, JSObject* obj)
-{
-    if (!InstanceOf(cx, obj, &js_StringClass, NULL))
-        return NULL;
-    Value v = obj->getPrimitiveThis();
-    return v.toString();
-}
-#endif
-
 JSString* JS_FASTCALL
 js_toLowerCase(JSContext *cx, JSString *str)
 {
@@ -1110,8 +1111,8 @@ str_localeCompare(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-str_charAt(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_str_charAt(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     jsint i;
@@ -1149,8 +1150,8 @@ out_of_range:
     return JS_TRUE;
 }
 
-static JSBool
-str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     jsint i;
@@ -1184,60 +1185,6 @@ out_of_range:
     vp->setDouble(js_NaN);
     return JS_TRUE;
 }
-
-#ifdef JS_TRACER
-
-jsdouble FASTCALL
-js_String_p_charCodeAt(JSString* str, jsdouble d)
-{
-    d = js_DoubleToInteger(d);
-    if (d < 0 || (int32)str->length() <= d)
-        return js_NaN;
-    return jsdouble(str->chars()[jsuint(d)]);
-}
-
-int32 FASTCALL
-js_String_p_charCodeAt_int_int(JSString* str, jsint i)
-{
-    if (i < 0 || (int32)str->length() <= i)
-        return 0;
-    return str->chars()[i];
-}
-JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int_int,  STRING, INT32,
-                     1, nanojit::ACCSET_NONE)
-
-int32 FASTCALL
-js_String_p_charCodeAt_double_int(JSString* str, double d)
-{
-    d = js_DoubleToInteger(d);
-    if (d < 0 || (int32)str->length() <= d)
-        return 0;
-    return str->chars()[jsuint(d)];
-}
-JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_double_int,  STRING, DOUBLE,
-                     1, nanojit::ACCSET_NONE)
-
-jsdouble FASTCALL
-js_String_p_charCodeAt0(JSString* str)
-{
-    if ((int32)str->length() == 0)
-        return js_NaN;
-    return jsdouble(str->chars()[0]);
-}
-
-/*
- * The FuncFilter replaces the generic double version of charCodeAt with the
- * integer fast path if appropriate.
- */
-int32 FASTCALL
-js_String_p_charCodeAt0_int(JSString* str)
-{
-    if ((int32)str->length() == 0)
-        return 0;
-    return str->chars()[0];
-}
-JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING, 1, nanojit::ACCSET_NONE)
-#endif
 
 jsint
 js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
@@ -2851,19 +2798,8 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 }
 #endif
 
-JS_DEFINE_TRCINFO_1(js_str_toString,
-    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,
-         1, nanojit::ACCSET_NONE)))
-JS_DEFINE_TRCINFO_1(str_charAt,
-    (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,
-         1, nanojit::ACCSET_NONE)))
-JS_DEFINE_TRCINFO_2(str_charCodeAt,
-    (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,
-         1, nanojit::ACCSET_NONE)),
-    (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,
-         1, nanojit::ACCSET_NONE)))
 JS_DEFINE_TRCINFO_1(str_concat,
-    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
+    (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
 #define GENERIC           JSFUN_GENERIC_NATIVE
@@ -2877,14 +2813,14 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Java-like methods. */
-    JS_TN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING, &js_str_toString_trcinfo),
+    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
-    JS_TN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE, &str_charAt_trcinfo),
-    JS_TN("charCodeAt",        str_charCodeAt,        1,GENERIC_PRIMITIVE, &str_charCodeAt_trcinfo),
+    JS_FN("charAt",            js_str_charAt,         1,GENERIC_PRIMITIVE),
+    JS_FN("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE),
     JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
     JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
     JS_FN("trim",              str_trim,              0,GENERIC_PRIMITIVE),

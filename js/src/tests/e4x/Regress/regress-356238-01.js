@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-356238-01.js';
 
 var BUGNUMBER = 356238;
 var summary = 'bug 356238';

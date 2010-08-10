@@ -427,9 +427,9 @@ public:
   // or NS_ERROR_FAILURE on failure.
   virtual nsresult ReadMetadata() = 0;
 
-
-  // Stores the presentation time of the first sample in the stream in
-  // aOutStartTime, and returns the first video sample, if we have video.
+  // Stores the presentation time of the first frame/sample we'd be
+  // able to play if we started playback at aOffset, and returns the
+  // first video sample, if we have video.
   virtual VideoData* FindStartTime(PRInt64 aOffset,
                                    PRInt64& aOutStartTime);
 
@@ -451,6 +451,13 @@ public:
 
   // Queue of video samples. This queue is threadsafe.
   MediaQueue<VideoData> mVideoQueue;
+
+  // Populates aBuffered with the time ranges which are buffered. aStartTime
+  // must be the presentation time of the first sample/frame in the media, e.g.
+  // the media time corresponding to playback time/position 0. This function
+  // should only be called on the main thread.
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered,
+                               PRInt64 aStartTime) = 0;
 
 protected:
 

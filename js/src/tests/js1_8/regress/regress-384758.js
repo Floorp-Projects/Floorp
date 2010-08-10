@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-384758.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 384758;
 var summary = 'Statement can not follow expression closure with out intervening ;';

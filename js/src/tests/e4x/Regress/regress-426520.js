@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-426520.js';
 
 var summary = 'Do not crash @ ParseXMLSource';
 var BUGNUMBER = 426520;

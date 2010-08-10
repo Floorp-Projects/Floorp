@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-417131.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 417131;
 var summary = 'stress test for cache';

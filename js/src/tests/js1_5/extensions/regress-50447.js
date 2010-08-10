@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-50447.js';
 
 /*
  * SUMMARY: New properties fileName, lineNumber have been added to Error objects

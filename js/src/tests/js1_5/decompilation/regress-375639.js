@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-375639.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 375639;
 var summary = 'Uneval|Decompilation of string containing null character';

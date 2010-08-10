@@ -253,8 +253,14 @@ typedef PRUint64 nsFrameState;
 // frame instead of the root frame.
 #define NS_FRAME_REFLOW_ROOT                        NS_FRAME_STATE_BIT(19)
 
-// Bits 20-31 of the frame state are reserved for implementations.
-#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xFFF00000)
+// Bits 20-31 and 60-63 of the frame state are reserved for implementations.
+#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xF0000000FFF00000)
+
+// This bit is set on floats whose parent does not contain their
+// placeholder.  This can happen for two reasons:  (1) the float was
+// split, and this piece is the continuation, or (2) the entire float
+// didn't fit on the page.
+#define NS_FRAME_IS_PUSHED_FLOAT                    NS_FRAME_STATE_BIT(32)
 
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
@@ -415,9 +421,11 @@ typedef PRUint32 nsReflowStatus;
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
    NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
 
-// The frame (not counting a continuation) did not fit in the available height and 
-// wasn't at the top of a page. If it was at the top of a page, then it is not 
-// possible to reflow it again with more height, so we don't set it in that case.
+// A frame is "truncated" if the part of the frame before the first
+// possible break point was unable to fit in the available vertical
+// space.  Therefore, the entire frame should be moved to the next page.
+// A frame that begins at the top of the page must never be "truncated".
+// Doing so would likely cause an infinite loop.
 #define NS_FRAME_TRUNCATED  0x0010
 #define NS_FRAME_IS_TRUNCATED(status) \
   (0 != ((status) & NS_FRAME_TRUNCATED))

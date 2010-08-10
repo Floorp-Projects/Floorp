@@ -1304,13 +1304,6 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
 
       aScriptContext->SetGCOnDestruction(PR_FALSE);
     }
-
-    nsCOMPtr<nsIPrincipal> principal =
-      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-
-    aScriptContext->CreateOuterObject(this, principal);
-    aScriptContext->DidInitializeContext();
-    mJSObject = (JSObject *)aScriptContext->GetNativeGlobal();
   }
 
   mContext = aScriptContext;
@@ -1620,6 +1613,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   if (IsFrozen()) {
     // This outer is now getting its first inner, thaw the outer now
     // that it's ready and is getting an inner window.
+    mContext->CreateOuterObject(this, aDocument->NodePrincipal());
+    mContext->DidInitializeContext();
+    mJSObject = (JSObject *)mContext->GetNativeGlobal();
+
     Thaw();
   }
 
@@ -1745,7 +1742,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow = currentInner;
 
     if (aDocument != oldDoc) {
-      nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      nsCommonWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
     }
   } else {
     if (aState) {
@@ -1930,8 +1927,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   if ((!reUseInnerWindow || aDocument != oldDoc) && !aState) {
     nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
-    nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
-                                           html_doc);
+    nsCommonWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
+                                                 html_doc);
   }
 
   // This code should not be called during shutdown any more (now that
@@ -2471,7 +2468,7 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   if (mIsModalContentWindow) {
     // Modal content windows don't have an "arguments" property, they
     // have a "dialogArguments" property which is handled
-    // separately. See nsWindowSH::NewResolve().
+    // separately. See nsCommonWindowSH::NewResolve().
 
     return NS_OK;
   }

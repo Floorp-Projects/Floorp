@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465862.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465862;
 var summary = 'Do case-insensitive matching correctly in JIT for non-ASCII-letters';

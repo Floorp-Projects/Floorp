@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-355474-01.js';
 
 var BUGNUMBER = 355474;
 var summary = 'Iterating over XML with WAY_TOO_MUCH_GC';

@@ -43,7 +43,6 @@
  */
 //-----------------------------------------------------------------------------
 
-gTestsubsuite = 'RegExp';
 
 var MSG_PATTERN = '\nregexp = ';
 var MSG_STRING = '\nstring = ';

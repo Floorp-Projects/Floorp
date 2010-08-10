@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-366292.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 366292;
 var summary = '__defineSetter__ and JSPROP_SHARED regression';

@@ -99,6 +99,7 @@ _BROWSER_FILES = \
                  title_test.svg \
                  browser_bug329212.js \
                  browser_bug356571.js \
+                 browser_bug380960.js \
                  browser_bug386835.js \
                  browser_bug405137.js \
                  browser_bug406216.js \
@@ -138,6 +139,7 @@ _BROWSER_FILES = \
                  browser_bug563588.js \
                  browser_bug577121.js \
                  browser_bug580956.js \
+                 browser_bug581242.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
@@ -149,6 +151,7 @@ _BROWSER_FILES = \
                  browser_inspector_highlighter.js \
                  browser_inspector_stylePanel.js \
                  browser_inspector_iframeTest.js \
+                 browser_inspector_scrolling.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \

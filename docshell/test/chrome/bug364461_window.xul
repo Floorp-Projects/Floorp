@@ -120,6 +120,7 @@
                      "<body>test1</body></html>";
 
       gExpected = [{type: "pagehide", persisted: true},
+
                    {type: "load", title: "test1"},
                    {type: "pageshow", title: "test1", persisted: false}];
       gBrowser.loadURI(test1Doc);
