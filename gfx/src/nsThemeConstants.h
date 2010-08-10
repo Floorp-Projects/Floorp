@@ -248,3 +248,5 @@
 #define NS_THEME_WINDOW_BUTTON_MINIMIZE                    237
 #define NS_THEME_WINDOW_BUTTON_MAXIMIZE                    238
 #define NS_THEME_WINDOW_BUTTON_RESTORE                     239
+#define NS_THEME_WINDOW_BUTTON_BOX                         240
+#define NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED               241
