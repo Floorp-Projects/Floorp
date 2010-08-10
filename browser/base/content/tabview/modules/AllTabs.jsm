@@ -45,10 +45,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 let EXPORTED_SYMBOLS = ["AllTabs"];
 
 let AllTabs = {
-  //////////////////////////////////////////////////////////////////////////////
-  //// Public
-  //////////////////////////////////////////////////////////////////////////////
-
   /**
    * Get an array of all tabs from all tabbrowser windows.
    *
@@ -57,148 +53,91 @@ let AllTabs = {
    */
   get tabs() {
     // Get tabs from each browser window and flatten them into one array
-    let browserWindows = AllTabs.allBrowserWindows;
-    return Array.concat.apply({}, browserWindows.map(function(browserWindow) {
+    return Array.concat.apply(null, browserWindows.map(function(browserWindow) {
       return Array.slice(browserWindow.gBrowser.tabs);
     }));
   },
 
   /**
-   * Attach a callback for when a tab's attributes change such as title, busy
-   * state, icon, etc.
+   * Attach a callback for a given tab event.
    *
-   * There is also an unbind method off of this method to remove the callback.
-   *
+   * @param eventName
+   *        Name of the corresponding Tab* Event; one of "attrModified",
+   *        "close", "move", "open", "select".
    * @param callback
-   *        Callback that gets called with the tab being changed as "this" and
-   *        the event as the first argument.
-   * @usage AllTabs.onChange(handleChange);
-   *        AllTabs.onChange.unbind(handleChange);
+   *        Callback that gets called with the tab as the first argument and
+   *        the event as the second argument.
+   * @usage AllTabs.register("change", function handleChange(tab, event) {});
    */
-  get onChange() AllTabs.makeBind("onChange"),
-
-  /**
-   * Attach a callback for when a tab is closed.
-   *
-   * There is also an unbind method off of this method to remove the callback.
-   *
-   * @param callback
-   *        Callback that gets called with the tab being closed as "this" and
-   *        the event as the first argument.
-   * @usage AllTabs.onClose(handleClose);
-   *        AllTabs.onClose.unbind(handleClose);
-   */
-  get onClose() AllTabs.makeBind("onClose"),
-
-  /**
-   * Attach a callback for when a tab is moved.
-   *
-   * There is also an unbind method off of this method to remove the callback.
-   *
-   * @param callback
-   *        Callback that gets called with the tab being moved as "this" and
-   *        the event as the first argument.
-   * @usage AllTabs.onMove(handleMove);
-   *        AllTabs.onMove.unbind(handleMove);
-   */
-  get onMove() AllTabs.makeBind("onMove"),
-
-  /**
-   * Attach a callback for when a tab is opened.
-   *
-   * There is also an unbind method off of this method to remove the callback.
-   *
-   * @param callback
-   *        Callback that gets called with the tab being opened as "this" and
-   *        the event as the first argument.
-   * @usage AllTabs.onOpen(handleOpen);
-   *        AllTabs.onOpen.unbind(handleOpen);
-   */
-  get onOpen() AllTabs.makeBind("onOpen"),
-
-  /**
-   * Attach a callback for when a tab is selected.
-   *
-   * There is also an unbind method off of this method to remove the callback.
-   *
-   * @param callback
-   *        Callback that gets called with the tab being selected as "this" and
-   *        the event as the first argument.
-   * @usage AllTabs.onSelect(handleSelect);
-   *        AllTabs.onSelect.unbind(handleSelect);
-   */
-  get onSelect() AllTabs.makeBind("onSelect"),
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// Private
-  //////////////////////////////////////////////////////////////////////////////
-
-  get allBrowserWindows() {
-    let browserWindows = [];
-    let windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements())
-      browserWindows.push(windows.getNext());
-    return browserWindows;
+  register: function register(eventName, callback) {
+    // Either create the first entry or add additional callbacks
+    let listeners = eventListeners[eventName];
+    if (listeners == null)
+      eventListeners[eventName] = [callback];
+    else
+      listeners.push(callback);
   },
 
-  eventMap: {
-    TabAttrModified: "onChange",
-    TabClose: "onClose",
-    TabMove: "onMove",
-    TabOpen: "onOpen",
-    TabSelect: "onSelect",
-  },
-
-  registerBrowserWindow: function registerBrowserWindow(browserWindow) {
-    // Add a listener for each tab even to trigger the matching topic
-    [i for (i in Iterator(AllTabs.eventMap))].forEach(function([tabEvent, topic]) {
-      browserWindow.addEventListener(tabEvent, function(event) {
-        AllTabs.trigger(topic, event.originalTarget, event);
-      }, true);
-    });
-  },
-
-  listeners: {},
-
-  makeBind: function makeBind(topic) {
-    delete AllTabs[topic];
-    AllTabs.listeners[topic] = [];
-
-    // Allow adding listeners to this topic
-    AllTabs[topic] = function bind(callback) {
-      AllTabs.listeners[topic].push(callback);
-    };
-
-    // Allow removing listeners from this topic
-    AllTabs[topic].unbind = function unbind(callback) {
-      let index = AllTabs.listeners[topic].indexOf(callback);
-      if (index != -1)
-        AllTabs.listeners[topic].splice(index, 1);
-    };
-
-    return AllTabs[topic];
-  },
-
-  trigger: function trigger(topic, tab, event) {
-    // Make sure we've gotten listeners before trying to call
-    let listeners = AllTabs.listeners[topic];
+  /**
+   * Remove a callback for a given tab event.
+   *
+   * @param eventName
+   *        Name of the corresponding Tab* Event; one of "attrModified",
+   *        "close", "move", "open", "select".
+   * @param callback
+   *        The callback given for the original AllTabs.register call.
+   * @usage AllTabs.unregister("close", handleClose);
+   */
+  unregister: function unregister(eventName, callback) {
+    // Nothing to remove for this event
+    let listeners = eventListeners[eventName];
     if (listeners == null)
       return;
 
-    // Make a copy of the listeners, so it can't change as we call back
-    listeners.slice().forEach(function(callback) {
-      try {
-        callback.call(tab, event);
-      }
-      // Ignore failures from the callback
-      catch(ex) {}
-    });
-  },
+    // Can only remove a callback if we have it
+    let index = listeners.indexOf(callback);
+    if (index == -1)
+      return;
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIObserver
-  //////////////////////////////////////////////////////////////////////////////
+    listeners.splice(index, 1);
+  }
+};
 
+__defineGetter__("browserWindows", function browserWindows() {
+  let browserWindows = [];
+  let windows = Services.wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements())
+    browserWindows.push(windows.getNext());
+  return browserWindows;
+});
+
+let events = ["attrModified", "close", "move", "open", "select"];
+let eventListeners = {};
+
+function registerBrowserWindow(browserWindow) {
+  events.forEach(function(eventName) {
+    let tabEvent = "Tab" + eventName[0].toUpperCase() + eventName.slice(1);
+    browserWindow.addEventListener(tabEvent, function(event) {
+      // Make sure we've gotten listeners before trying to call
+      let listeners = eventListeners[eventName];
+      if (listeners == null)
+        return;
+
+      let tab = event.originalTarget;
+
+      // Make a copy of the listeners, so it can't change as we call back
+      listeners.slice().forEach(function(callback) {
+        try {
+          callback(tab, event);
+        }
+        // Ignore failures from the callback
+        catch(ex) {}
+      });
+    }, true);
+  });
+}
+
+let observer = {
   observe: function observe(subject, topic, data) {
     switch (topic) {
       case "domwindowopened":
@@ -208,13 +147,13 @@ let AllTabs = {
           // Now that the window has loaded, only register on browser windows
           let doc = subject.document.documentElement;
           if (doc.getAttribute("windowtype") == "navigator:browser")
-            AllTabs.registerBrowserWindow(subject);
+            registerBrowserWindow(subject);
         }, false);
         break;
     }
-  },
+  }
 };
 
 // Register listeners on all browser windows and future ones
-AllTabs.allBrowserWindows.forEach(AllTabs.registerBrowserWindow);
-Services.obs.addObserver(AllTabs, "domwindowopened", false);
+browserWindows.forEach(registerBrowserWindow);
+Services.obs.addObserver(observer, "domwindowopened", false);
