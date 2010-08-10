@@ -453,6 +453,8 @@ protected:
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
                    PRBool aForInsertionPoint);
+
+  void ClearFrameOffsetCache();
 };
 
 #endif
