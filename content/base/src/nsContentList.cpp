@@ -605,38 +605,39 @@ nsContentList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache,
 }
 
 void
-nsContentList::AttributeChanged(nsIDocument *aDocument, Element* aElement,
+nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRInt32 aModType)
 {
-  NS_PRECONDITION(aElement, "Must have a content node to work with");
+  NS_PRECONDITION(aContent, "Must have a content node to work with");
+  NS_PRECONDITION(aContent->IsElement(), "Should be an element");
   
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
-      !MayContainRelevantNodes(aElement->GetNodeParent()) ||
-      !nsContentUtils::IsInSameAnonymousTree(mRootNode, aElement)) {
+      !MayContainRelevantNodes(aContent->GetNodeParent()) ||
+      !nsContentUtils::IsInSameAnonymousTree(mRootNode, aContent)) {
     // Either we're already dirty or this notification doesn't affect
-    // whether we might match aElement.
+    // whether we might match aContent.
     return;
   }
   
-  if (Match(aElement)) {
-    if (mElements.IndexOf(aElement) == -1) {
-      // We match aElement now, and it's not in our list already.  Just dirty
+  if (Match(aContent->AsElement())) {
+    if (mElements.IndexOf(aContent) == -1) {
+      // We match aContent now, and it's not in our list already.  Just dirty
       // ourselves; this is simpler than trying to figure out where to insert
-      // aElement.
+      // aContent.
       SetDirty();
     }
   } else {
-    // We no longer match aElement.  Remove it from our list.  If it's
+    // We no longer match aContent.  Remove it from our list.  If it's
     // already not there, this is a no-op (though a potentially
     // expensive one).  Either way, no change of mState is required
     // here.
-    mElements.RemoveObject(aElement);
+    mElements.RemoveObject(aContent);
   }
 }
 
 void
-nsContentList::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
+nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                                nsIContent* aFirstNewContent,
                                PRInt32 aNewIndexInContainer)
 {
