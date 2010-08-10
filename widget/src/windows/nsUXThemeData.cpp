@@ -70,6 +70,9 @@ nsUXThemeData::sIsVistaOrLater = PR_FALSE;
 PRPackedBool
 nsUXThemeData::sHaveCompositor = PR_FALSE;
 
+PRBool nsUXThemeData::sTitlebarInfoPopulated = PR_FALSE;
+SIZE nsUXThemeData::sCommandButtons[3];
+
 nsUXThemeData::OpenThemeDataPtr nsUXThemeData::openTheme = NULL;
 nsUXThemeData::CloseThemeDataPtr nsUXThemeData::closeTheme = NULL;
 nsUXThemeData::DrawThemeBackgroundPtr nsUXThemeData::drawThemeBG = NULL;
@@ -223,8 +226,48 @@ const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
       return L"Listview";
     case eUXMenu:
       return L"Menu";
+    case eUXWindowFrame:
+      return L"Window";
     default:
       NS_NOTREACHED("unknown uxtheme class");
       return L"";
   }
+}
+
+// static
+void
+nsUXThemeData::InitTitlebarInfo()
+{
+  // Pre-populate with generic metrics. These likley will not match
+  // the current theme, but they insure the buttons at least show up.
+  sCommandButtons[0].cx = GetSystemMetrics(SM_CXSIZE);
+  sCommandButtons[0].cy = GetSystemMetrics(SM_CYSIZE);
+  sCommandButtons[1].cx = sCommandButtons[2].cx = sCommandButtons[0].cx;
+  sCommandButtons[1].cy = sCommandButtons[2].cy = sCommandButtons[0].cy;
+}
+
+// static
+void
+nsUXThemeData::UpdateTitlebarInfo(TITLEBARINFOEX& info)
+{
+  if (sTitlebarInfoPopulated)
+    return;
+
+  // Only set if we have valid data for all three buttons we use.
+  if ((info.rgrect[2].right - info.rgrect[2].left) == 0 ||
+      (info.rgrect[3].right - info.rgrect[3].left) == 0 ||
+      (info.rgrect[5].right - info.rgrect[5].left) == 0)
+    return;
+
+  // minimize
+  sCommandButtons[0].cx = info.rgrect[2].right - info.rgrect[2].left;
+  sCommandButtons[0].cy = info.rgrect[2].bottom - info.rgrect[2].top;
+  // maximize/restore
+  sCommandButtons[1].cx = info.rgrect[3].right - info.rgrect[3].left;
+  sCommandButtons[1].cy = info.rgrect[3].bottom - info.rgrect[3].top;
+  // close
+  sCommandButtons[2].cx = info.rgrect[5].right - info.rgrect[5].left;
+  sCommandButtons[2].cy = info.rgrect[5].bottom - info.rgrect[5].top;
+
+  sTitlebarInfoPopulated = PR_TRUE;
 }
