@@ -21,6 +21,8 @@
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
  *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,6 +69,8 @@ const TEST_FILTER_URI = "http://example.com/browser/toolkit/components/console/h
 const TEST_PROPERTY_PROVIDER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-property-provider.html";
 
 const TEST_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-error.html";
+
+const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-duplicate-error.html";
 
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
@@ -116,7 +120,8 @@ function introspectLogNodes() {
   let count = outputNode.childNodes.length;
   ok(count > 0, "LogCount: " + count);
 
-  let klasses = ["hud-msg-node hud-log",
+  let klasses = ["hud-group",
+                 "hud-msg-node hud-log",
                  "hud-msg-node hud-warn",
                  "hud-msg-node hud-info",
                  "hud-msg-node hud-error",
@@ -247,15 +252,15 @@ function testConsoleLoggingAPI(aMethod)
 
   let HUD = HUDService.hudWeakReferences[hudId].get();
   let jsterm = HUD.jsterm;
-  let outputLogNode = jsterm.outputNode;
-  ok(/foo bar/.test(outputLogNode.childNodes[0].childNodes[0].nodeValue),
+  let group = jsterm.outputNode.querySelector(".hud-group");
+  ok(/foo bar/.test(group.childNodes[1].childNodes[0].nodeValue),
     "Emitted both console arguments");
 }
 
 function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
-  var msgs = aOutputNode.childNodes;
-  for (var i = 0; i < msgs.length; i++) {
+  var msgs = aOutputNode.querySelector(".hud-group").childNodes;
+  for (var i = 1; i < msgs.length; i++) {
     var message = msgs[i].innerHTML.indexOf(aMatchString);
     if (message > -1) {
       ok(true, aSuccessErrObj.success);
@@ -299,16 +304,43 @@ function testOutputOrder()
   jsterm.clearOutput();
   jsterm.execute("console.log('foo', 'bar');");
 
-  is(outputNode.childNodes.length, 3, "Three children in output");
-  let outputChildren = outputNode.childNodes;
+  let group = outputNode.querySelector(".hud-group");
+  is(group.childNodes.length, 4, "Four children in output");
+  let outputChildren = group.childNodes;
 
   let executedStringFirst =
-    /console\.log\('foo', 'bar'\);/.test(outputChildren[0].childNodes[0].nodeValue);
+    /console\.log\('foo', 'bar'\);/.test(outputChildren[1].childNodes[0].nodeValue);
 
   let outputSecond =
-    /foo bar/.test(outputChildren[1].childNodes[0].nodeValue);
+    /foo bar/.test(outputChildren[2].childNodes[0].nodeValue);
 
   ok(executedStringFirst && outputSecond, "executed string comes first");
+}
+
+function testGroups()
+{
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
+
+  jsterm.clearOutput();
+
+  let timestamp0 = Date.now();
+  jsterm.execute("0");
+  is(outputNode.querySelectorAll(".hud-group").length, 1,
+    "one group exists after the first console message");
+
+  jsterm.execute("1");
+  let timestamp1 = Date.now();
+  if (timestamp1 - timestamp0 < 5000) {
+    is(outputNode.querySelectorAll(".hud-group").length, 1,
+      "only one group still exists after the second console message");
+  }
+
+  HUD.HUDBox.lastTimestamp = 0;   // a "far past" value
+  jsterm.execute("2");
+  is(outputNode.querySelectorAll(".hud-group").length, 2,
+    "two groups exist after the third console message");
 }
 
 function testNullUndefinedOutput()
@@ -320,19 +352,21 @@ function testNullUndefinedOutput()
   jsterm.clearOutput();
   jsterm.execute("null;");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
-  let outputChildren = outputNode.childNodes;
+  let group = outputNode.querySelector(".hud-group");
+  is(group.childNodes.length, 3, "Three children in output");
+  let outputChildren = group.childNodes;
 
-  is (outputChildren[1].childNodes[0].nodeValue, "null",
+  is (outputChildren[2].childNodes[0].nodeValue, "null",
       "'null' printed to output");
 
   jsterm.clearOutput();
   jsterm.execute("undefined;");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
-  outputChildren = outputNode.childNodes;
+  group = outputNode.querySelector(".hud-group");
+  is(group.childNodes.length, 3, "Three children in output");
+  outputChildren = group.childNodes;
 
-  is (outputChildren[1].childNodes[0].nodeValue, "undefined",
+  is (outputChildren[2].childNodes[0].nodeValue, "undefined",
       "'undefined' printed to output");
 }
 
@@ -342,14 +376,15 @@ function testJSInputAndOutputStyling() {
   jsterm.clearOutput();
   jsterm.execute("2 + 2");
 
-  let outputChildren = jsterm.outputNode.childNodes;
-  let jsInputNode = outputChildren[0];
+  let group = jsterm.outputNode.querySelector(".hud-group");
+  let outputChildren = group.childNodes;
+  let jsInputNode = outputChildren[1];
   isnot(jsInputNode.childNodes[0].nodeValue.indexOf("2 + 2"), -1,
     "JS input node contains '2 + 2'");
   isnot(jsInputNode.getAttribute("class").indexOf("jsterm-input-line"), -1,
     "JS input node is of the CSS class 'jsterm-input-line'");
 
-  let jsOutputNode = outputChildren[1];
+  let jsOutputNode = outputChildren[2];
   isnot(jsOutputNode.childNodes[0].nodeValue.indexOf("4"), -1,
     "JS output node contains '4'");
   isnot(jsOutputNode.getAttribute("class").indexOf("jsterm-output-line"), -1,
@@ -544,18 +579,19 @@ function testExecutionScope()
 
   let HUD = HUDService.hudWeakReferences[hudId].get();
   let jsterm = HUD.jsterm;
-  let outputNode = jsterm.outputNode;
 
   jsterm.clearOutput();
   jsterm.execute("location;");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
-  let outputChildren = outputNode.childNodes;
+  let group = jsterm.outputNode.querySelector(".hud-group");
 
-  is(/location;/.test(outputChildren[0].childNodes[0].nodeValue), true,
+  is(group.childNodes.length, 3, "Three children in output");
+  let outputChildren = group.childNodes;
+
+  is(/location;/.test(outputChildren[1].childNodes[0].nodeValue), true,
     "'location;' written to output");
 
-  isnot(outputChildren[1].childNodes[0].nodeValue.indexOf(TEST_URI), -1,
+  isnot(outputChildren[2].childNodes[0].nodeValue.indexOf(TEST_URI), -1,
     "command was executed in the window scope");
 }
 
@@ -623,17 +659,47 @@ function testErrorOnPageReload() {
   // see bug 580030: the error handler fails silently after page reload.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=580030
 
+  var consoleObserver = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+    observe: function (aMessage)
+    {
+      // we ignore errors we don't care about
+      if (!(aMessage instanceof Ci.nsIScriptError) ||
+        aMessage.category != "content javascript") {
+        return;
+      }
+
+      Services.console.unregisterListener(this);
+
+      const successMsg = "Found the error message after page reload";
+      const errMsg = "Could not get the error message after page reload";
+
+      var display = HUDService.getDisplayByURISpec(content.location.href);
+      var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+      executeSoon(function () {
+        testLogEntry(outputNode, "fooBazBaz",
+          { success: successMsg, err: errMsg });
+
+        testDuplicateError();
+      });
+    }
+  };
+
   var pageReloaded = false;
-  browser.addEventListener("DOMContentLoaded", function onDOMLoad() {
+  browser.addEventListener("load", function() {
     if (!pageReloaded) {
       pageReloaded = true;
       content.location.reload();
       return;
     }
 
-    browser.removeEventListener("DOMContentLoaded", onDOMLoad, false);
+    browser.removeEventListener("load", arguments.callee, true);
 
-    // dispatch a click event to the button in the test page.
+    // dispatch a click event to the button in the test page and listen for
+    // errors.
+
     var contentDocument = browser.contentDocument.wrappedJSObject;
     var button = contentDocument.getElementsByTagName("button")[0];
     var clickEvent = contentDocument.createEvent("MouseEvents");
@@ -641,25 +707,80 @@ function testErrorOnPageReload() {
       browser.contentWindow.wrappedJSObject, 0, 0, 0, 0, 0, false, false,
       false, false, 0, null);
 
-    var successMsg = "Found the error message after page reload";
-    var errMsg = "Could not get the error message after page reload";
-
-    var display = HUDService.getDisplayByURISpec(content.location.href);
-    var outputNode = display.querySelectorAll(".hud-output-node")[0];
-
-    button.addEventListener("click", function onClickHandler() {
-      button.removeEventListener("click", onClickHandler, false);
-
-      testLogEntry(outputNode, "fooBazBaz",
-        { success: successMsg, err: errMsg });
-
-      testEnd();
-    }, false);
-
+    Services.console.registerListener(consoleObserver);
     button.dispatchEvent(clickEvent);
-  }, false);
+  }, true);
 
-  content.location.href = TEST_ERROR_URI;
+  content.location = TEST_ERROR_URI;
+}
+
+function testDuplicateError() {
+  // see bug 582201 - exceptions show twice in WebConsole
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=582201
+
+  var consoleObserver = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+    observe: function (aMessage)
+    {
+      // we ignore errors we don't care about
+      if (!(aMessage instanceof Ci.nsIScriptError) ||
+        aMessage.category != "content javascript") {
+        return;
+      }
+
+      Services.console.unregisterListener(this);
+
+      var display = HUDService.getDisplayByURISpec(content.location.href);
+      var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+      executeSoon(function () {
+        var text = outputNode.textContent;
+        var error1pos = text.indexOf("fooDuplicateError1");
+        ok(error1pos > -1, "found fooDuplicateError1");
+        if (error1pos > -1) {
+          ok(text.indexOf("fooDuplicateError1", error1pos + 1) == -1,
+            "no duplicate for fooDuplicateError1");
+        }
+
+        ok(text.indexOf("test-duplicate-error.html") > -1,
+          "found test-duplicate-error.html");
+
+        text = null;
+        testWebConsoleClose();
+      });
+    }
+  };
+
+  Services.console.registerListener(consoleObserver);
+  content.location = TEST_DUPLICATE_ERROR_URI;
+}
+
+/**
+ * Unit test for bug 580001:
+ * 'Close console after completion causes error "inputValue is undefined"'
+ */
+function testWebConsoleClose() {
+  let display = HUDService.getDisplayByURISpec(content.location.href);
+  let input = display.querySelector(".jsterm-input-node");
+
+  let errorWhileClosing = false;
+  function errorListener(evt) {
+    errorWhileClosing = true;
+  }
+  window.addEventListener("error", errorListener, false);
+
+  // Focus the inputNode and perform the keycombo to close the WebConsole.
+  input.focus();
+  EventUtils.synthesizeKey("k", { accelKey: true, shiftKey: true });
+
+  // We can't test for errors right away, because the error occures after a
+  // setTimeout(..., 0) in the WebConsole code.
+  executeSoon(function() {
+    window.removeEventListener("error", errorListener, false);
+    is (errorWhileClosing, false, "no error while closing the WebConsole");
+    testEnd();
+  });
 }
 
 function testEnd() {
@@ -717,6 +838,7 @@ function test() {
       testIteration();
       testConsoleHistory();
       testOutputOrder();
+      testGroups();
       testNullUndefinedOutput();
       testJSInputAndOutputStyling();
       testExecutionScope();

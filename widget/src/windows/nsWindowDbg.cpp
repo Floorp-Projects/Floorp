@@ -394,6 +394,7 @@ EventMsgInfo gAllEvents[] = {
   {"WM_TABLET_QUERYSYSTEMGESTURESTATUS",  0x02CC},
   {"WM_GESTURE",                          0x0119},
   {"WM_GESTURENOTIFY",                    0x011A},
+  {"WM_GETTITLEBARINFOEX",                0x033F},
   {NULL, 0x0}
 };
 
