@@ -570,7 +570,7 @@ iQClass.prototype = {
       this.css(css);
 
       let self = this;
-      Utils.timeout(function() {
+      setTimeout(function() {
         self.css({
           '-moz-transition-property': 'none',
           '-moz-transition-duration': '',
