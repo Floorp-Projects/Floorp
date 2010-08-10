@@ -49,40 +49,6 @@ Storage = {
   VISIBILITY_DATA_IDENTIFIER:    "tabview-visibility",
 
   // ----------
-  // Function: onReady
-  // Calls callback when Storage is ready for business. Could be immediately if it's already ready
-  // or later if needed.
-  onReady: function(callback) {
-    try {
-      // ToDo: the session store doesn't expose any public methods/variables for
-      // us to check whether it's loaded or not so using a private one for
-      // now.
-      var alreadyReady = gWindow.__SSi;
-      if (alreadyReady) {
-        callback();
-      } else {
-        var observer = {
-          observe: function(subject, topic, data) {
-            try {
-              if (topic == "browser-delayed-startup-finished") {
-                if (subject == gWindow) {
-                  callback();
-                }
-              }
-            } catch(e) {
-              Utils.log(e);
-            }
-          }
-        };
-        Services.obs.addObserver(
-          observer, "browser-delayed-startup-finished", false);
-      }
-    } catch(e) {
-      Utils.log(e);
-    }
-  },
-
-  // ----------
   // Function: init
   // Sets up the object.
   init: function() {
