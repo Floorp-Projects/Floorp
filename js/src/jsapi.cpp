@@ -806,7 +806,7 @@ JS_BeginRequest(JSContext *cx)
         cx->thread->requestContext = cx;
         rt->requestCount++;
 
-        if (rt->requestCount == 1)
+        if (rt->requestCount == 1 && rt->activityCallback)
             rt->activityCallback(rt->activityCallbackArg, true);
     }
 #endif
@@ -858,7 +858,8 @@ StopRequest(JSContext *cx)
         rt->requestCount--;
         if (rt->requestCount == 0) {
             JS_NOTIFY_REQUEST_DONE(rt);
-            rt->activityCallback(rt->activityCallbackArg, false);
+            if (rt->activityCallback)
+                rt->activityCallback(rt->activityCallbackArg, false);
         }
     }
 }
