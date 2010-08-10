@@ -41,7 +41,7 @@ const Cu = Components.utils;
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Service.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
