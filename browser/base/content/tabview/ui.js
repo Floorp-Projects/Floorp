@@ -380,13 +380,13 @@ var UIManager = {
   _addTabActionHandlers: function() {
     var self = this;
 
-    AllTabs.onClose(function() {
-      if (this.ownerDocument.defaultView != gWindow)
+    AllTabs.register("close", function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
         return;
 
       if (self._isTabViewVisible()) {
         // just closed the selected tab in the TabView interface.
-        if (self._currentTab == this)
+        if (self._currentTab == tab)
           self._closedSelectedTabInTabView = true;
       } else {
         // if not closing the last tab
@@ -405,8 +405,8 @@ var UIManager = {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
             // remove the zoom prep.
-            if (this && this.tabItem)
-              this.tabItem.setZoomPrep(false);
+            if (tab && tab.tabItem)
+              tab.tabItem.setZoomPrep(false);
             self.showTabView();
           }
           // ToDo: When running unit tests, everything happens so quick so
@@ -422,8 +422,8 @@ var UIManager = {
       return false;
     });
 
-    AllTabs.onMove(function() {
-      if (this.ownerDocument.defaultView != gWindow)
+    AllTabs.register("move", function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
         return;
 
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
@@ -433,11 +433,11 @@ var UIManager = {
       }, 1);
     });
 
-    AllTabs.onSelect(function() {
-      if (this.ownerDocument.defaultView != gWindow)
+    AllTabs.register("select", function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      self.tabOnFocus(this);
+      self.tabOnFocus(tab);
     });
   },
 

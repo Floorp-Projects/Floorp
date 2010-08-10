@@ -606,7 +606,6 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: zoomOut
   // Handles the zoom down animation after returning to TabView.
   // It is expected that this routine will be called from the chrome thread
-  // (in response to AllTabs.onFocus()).
   //
   // Parameters:
   //   complete - a function to call after the zoom down animation
@@ -706,11 +705,10 @@ window.TabItems = {
     var self = this;
 
     // When a tab is opened, create the TabItem
-    AllTabs.onOpen(function() {
-      if (this.ownerDocument.defaultView != gWindow)
+    AllTabs.register("open", function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      var tab = this;
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.link(tab);
       }, 1);
@@ -718,22 +716,20 @@ window.TabItems = {
 
     // When a tab's content is loaded, show the canvas and hide the cached data
     // if necessary.
-    AllTabs.onChange(function() {
-      if (this.ownerDocument.defaultView != gWindow)
+    AllTabs.register("attrModified", function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      let tab = this;
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
     });
 
     // When a tab is closed, unlink.
-    AllTabs.onClose(function() {
-      if (this.ownerDocument.defaultView != gWindow)
+    AllTabs.register("close", function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      var tab = this;
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.unlink(tab);
       }, 1);
