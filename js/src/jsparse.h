@@ -998,18 +998,7 @@ struct Parser : private js::AutoGCRooter
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : js::AutoGCRooter(cx, PARSER), context(cx),
-        aleFreeList(NULL), tokenStream(cx), principals(NULL), callerFrame(cfp),
-        callerVarObj(cfp ? cfp->varobj(cx->containingSegment(cfp)) : NULL),
-        nodeList(NULL), functionCount(0), traceListHead(NULL), tc(NULL),
-        keepAtoms(cx->runtime)
-    {
-        js::PodArrayZero(tempFreeList);
-        setPrincipals(prin);
-        JS_ASSERT_IF(cfp, cfp->hasScript());
-    }
-
+    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL);
     ~Parser();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
@@ -1155,10 +1144,7 @@ struct Compiler
     Parser parser;
     GlobalScope *globalScope;
 
-    Compiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : parser(cx, prin, cfp)
-    {
-    }
+    Compiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL);
 
     /*
      * Initialize a compiler. Parameters are passed on to init parser.

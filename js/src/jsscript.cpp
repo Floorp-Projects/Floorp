@@ -66,6 +66,7 @@
 #endif
 #include "methodjit/MethodJIT.h"
 
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -1249,7 +1250,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     if (!cx->runtime->gcRunning) {
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
-        if (!(fp && (fp->flags & JSFRAME_EVAL))) {
+        if (!(fp && fp->isEvalFrame())) {
             JS_PROPERTY_CACHE(cx).purgeForScript(script);
 
 #ifdef CHECK_SCRIPT_OWNER
@@ -1434,8 +1435,8 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 uintN
 js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp)
 {
-    return js_PCToLineNumber(cx, fp->getScript(),
-                             fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx));
+    return js_PCToLineNumber(cx, fp->script(),
+                             fp->hasImacropc() ? fp->imacropc() : fp->pc(cx));
 }
 
 uintN

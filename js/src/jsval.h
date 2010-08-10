@@ -261,6 +261,7 @@ typedef enum JSWhyMagic
     JS_GENERATOR_CLOSING,        /* exception value thrown when closing a generator */
     JS_NO_CONSTANT,              /* compiler sentinel value */
     JS_THIS_POISON,              /* used in debug builds to catch tracing errors */
+    JS_ARG_POISON,               /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;

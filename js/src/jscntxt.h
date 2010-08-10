@@ -280,19 +280,18 @@ struct GlobalState {
 };
 
 /*
- * A StackSegment (referred to as just a 'segment') contains a down-linked set
+ * A StackSegment (referred to as just a 'segment') contains a prev-linked set
  * of stack frames and the slots associated with each frame. A segment and its
  * contained frames/slots also have a precise memory layout that is described
  * in the js::StackSpace comment. A key layout invariant for segments is that
- * down-linked frames are adjacent in memory, separated only by the values that
- * constitute the locals and expression stack of the down-frame and arguments
- * of the up-frame.
+ * prev-linked frames are adjacent in memory, separated only by the values that
+ * constitute the locals and expression stack of the prev-frame.
  *
  * The set of stack frames in a non-empty segment start at the segment's
  * "current frame", which is the most recently pushed frame, and ends at the
  * segment's "initial frame". Note that, while all stack frames in a segment
- * are down-linked, not all down-linked frames are in the same segment. Hence,
- * for a segment |ss|, |ss->getInitialFrame()->down| may be non-null and in a
+ * are prev-linked, not all prev-linked frames are in the same segment. Hence,
+ * for a segment |ss|, |ss->getInitialFrame()->prev| may be non-null and in a
  * different segment. This occurs when the VM reenters itself (via Invoke or
  * Execute). In full generality, a single context may contain a forest of trees
  * of stack frames. With respect to this forest, a segment contains a linear
@@ -372,11 +371,7 @@ class StackSegment
 
     /* Safe casts guaranteed by the contiguous-stack layout. */
 
-    Value *previousSegmentEnd() const {
-        return (Value *)this;
-    }
-
-    Value *getInitialArgBegin() const {
+    Value *valueRangeBegin() const {
         return (Value *)(this + 1);
     }
 
@@ -515,9 +510,14 @@ class StackSegment
         initialVarObj = obj;
     }
 
-    JSObject *getInitialVarObj() const {
+    bool hasInitialVarObj() {
         JS_ASSERT(inContext());
-        return initialVarObj;
+        return initialVarObj != NULL;
+    }
+
+    JSObject &getInitialVarObj() const {
+        JS_ASSERT(inContext() && initialVarObj);
+        return *initialVarObj;
     }
 
 #ifdef DEBUG
@@ -559,32 +559,50 @@ struct InvokeArgsAlreadyOnTheStack : CallArgs
 class InvokeFrameGuard
 {
     friend class StackSpace;
-    JSContext        *cx;  /* null implies nothing pushed */
-    JSFrameRegs      regs;
-    JSFrameRegs      *prevRegs;
+    JSContext        *cx_;  /* null implies nothing pushed */
+    JSFrameRegs      regs_;
+    JSFrameRegs      *prevRegs_;
   public:
-    InvokeFrameGuard() : cx(NULL) {}
+    InvokeFrameGuard() : cx_(NULL) {}
     JS_REQUIRES_STACK ~InvokeFrameGuard();
-    bool pushed() const { return cx != NULL; }
-    JSFrameRegs &getRegs() { return regs; }
+    bool pushed() const { return cx_ != NULL; }
+    JSStackFrame *fp() const { return regs_.fp; }
 };
 
-/* See StackSpace::pushExecuteFrame. */
+/* Reusable base; not for direct use. */
 class FrameGuard
 {
     friend class StackSpace;
-    JSContext        *cx;  /* null implies nothing pushed */
-    StackSegment     *seg;
-    Value            *vp;
-    JSStackFrame     *fp;
-    JSStackFrame     *down;
+    JSContext        *cx_;  /* null implies nothing pushed */
+    StackSegment     *seg_;
+    Value            *vp_;
+    JSStackFrame     *fp_;
   public:
-    FrameGuard() : cx(NULL), vp(NULL), fp(NULL) {}
+    FrameGuard() : cx_(NULL), vp_(NULL), fp_(NULL) {}
     JS_REQUIRES_STACK ~FrameGuard();
-    bool pushed() const { return cx != NULL; }
-    Value *getvp() const { return vp; }
-    JSStackFrame *getFrame() const { return fp; }
+    bool pushed() const { return cx_ != NULL; }
+    StackSegment *segment() const { return seg_; }
+    Value *vp() const { return vp_; }
+    JSStackFrame *fp() const { return fp_; }
 };
+
+/* See StackSpace::pushExecuteFrame. */
+class ExecuteFrameGuard : public FrameGuard
+{
+    friend class StackSpace;
+    JSFrameRegs      regs_;
+};
+
+/* See StackSpace::pushDummyFrame. */
+class DummyFrameGuard : public FrameGuard
+{
+    friend class StackSpace;
+    JSFrameRegs      regs_;
+};
+
+/* See StackSpace::pushGeneratorFrame. */
+class GeneratorFrameGuard : public FrameGuard
+{};
 
 /*
  * Stack layout
@@ -610,7 +628,7 @@ class FrameGuard
  *   |segment| slots |frame| slots |frame| slots |frame| slots |
  *                       |  ^          |  ^          |
  *          ? <----------'  `----------'  `----------'
- *                down          down          down
+ *                prev          prev          prev
  *
  * Moreover, the bytes in the following ranges form a contiguous array of
  * Values that are marked during GC:
@@ -653,7 +671,7 @@ class FrameGuard
  *      preserves order (in terms of previousInContext and previousInMemory,
  *      respectively).
  *   2. the mapping from stack frames to their containing segment preserves
- *      order (in terms of down and previousInContext, respectively).
+ *      order (in terms of prev and previousInContext, respectively).
  */
 class StackSpace
 {
@@ -674,23 +692,42 @@ class StackSpace
 #endif
     Value        *invokeArgEnd;
 
-    JS_REQUIRES_STACK bool pushSegmentForInvoke(JSContext *cx, uintN argc,
-                                                InvokeArgsGuard &ag);
-    JS_REQUIRES_STACK bool pushInvokeFrameSlow(JSContext *cx, const InvokeArgsGuard &ag,
-                                               InvokeFrameGuard &fg);
-    JS_REQUIRES_STACK void popInvokeFrameSlow(const CallArgs &args);
-    JS_REQUIRES_STACK void popSegmentForInvoke(const InvokeArgsGuard &ag);
-
-    /* Although guards are friends, XGuard should only call popX(). */
     friend class InvokeArgsGuard;
-    JS_REQUIRES_STACK inline void popInvokeArgs(const InvokeArgsGuard &args);
     friend class InvokeFrameGuard;
-    JS_REQUIRES_STACK void popInvokeFrame(const InvokeFrameGuard &ag);
     friend class FrameGuard;
-    JS_REQUIRES_STACK void popFrame(JSContext *cx);
 
-    /* Return a pointer to the first unused slot. */
-    JS_REQUIRES_STACK
+    bool pushSegmentForInvoke(JSContext *cx, uintN argc, InvokeArgsGuard *ag);
+    void popSegmentForInvoke(const InvokeArgsGuard &ag);
+
+    bool pushInvokeFrameSlow(JSContext *cx, const InvokeArgsGuard &ag,
+                             InvokeFrameGuard *fg);
+    void popInvokeFrameSlow(const CallArgs &args);
+
+    bool getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nfixed,
+                            FrameGuard *fg) const;
+    void pushSegmentAndFrame(JSContext *cx, JSObject *initialVarObj,
+                             JSFrameRegs *regs, FrameGuard *fg);
+    void popSegmentAndFrame(JSContext *cx);
+
+    struct EnsureSpaceCheck {
+        inline bool operator()(const StackSpace &, JSContext *, Value *, uintN);
+    };
+
+    struct LimitCheck {
+        JSStackFrame *base;
+        Value **limit;
+        LimitCheck(JSStackFrame *base, Value **limit) : base(base), limit(limit) {}
+        inline bool operator()(const StackSpace &, JSContext *, Value *, uintN);
+    };
+
+    template <class Check>
+    inline JSStackFrame *getCallFrame(JSContext *cx, Value *sp, uintN nactual,
+                                      JSFunction *fun, JSScript *script,
+                                      uint32 *pflags, Check check) const;
+
+    inline void popInvokeArgs(const InvokeArgsGuard &args);
+    inline void popInvokeFrame(const InvokeFrameGuard &ag);
+
     inline Value *firstUnused() const;
 
     inline bool isCurrentAndActive(JSContext *cx) const;
@@ -714,6 +751,19 @@ class StackSpace
     static const size_t COMMIT_VALS     = 16 * 1024;
     static const size_t COMMIT_BYTES    = COMMIT_VALS * sizeof(Value);
 
+    /*
+     * SunSpider and v8bench have roughly an average of 9 slots per script.
+     * Our heuristic for a quick over-recursion check uses a generous slot
+     * count based on this estimate. We take this frame size and multiply it
+     * by the old recursion limit from the interpreter.
+     *
+     * Worst case, if an average size script (<=9 slots) over recurses, it'll
+     * effectively be the same as having increased the old inline call count
+     * to <= 5,000.
+     */
+    static const size_t STACK_QUOTA    = (VALUES_PER_STACK_FRAME + 18) *
+                                         JS_MAX_INLINE_CALL_COUNT;
+
     /* Kept as a member of JSThreadData; cannot use constructor/destructor. */
     bool init();
     void finish();
@@ -735,6 +785,9 @@ class StackSpace
      */
     inline bool ensureEnoughSpaceToEnterTrace();
 
+    /* See stubs::HitStackQuota. */
+    inline bool bumpCommitEnd(Value *from, uintN nslots);
+
     /* +1 for slow native's stack frame. */
     static const ptrdiff_t MAX_TRACE_SPACE_VALS =
       MAX_NATIVE_STACK_SLOTS + MAX_CALL_STACK_ENTRIES * VALUES_PER_STACK_FRAME +
@@ -744,14 +797,14 @@ class StackSpace
     JS_REQUIRES_STACK void mark(JSTracer *trc);
 
     /*
-     * For all four use cases below:
+     * For all five use cases below:
      *  - The boolean-valued functions call js_ReportOutOfScriptQuota on OOM.
      *  - The "get*Frame" functions do not change any global state, they just
      *    check OOM and return pointers to an uninitialized frame with the
      *    requested missing arguments/slots. Only once the "push*Frame"
      *    function has been called is global state updated. Thus, between
      *    "get*Frame" and "push*Frame", the frame and slots are unrooted.
-     *  - The "push*Frame" functions will set fp->down; the caller needn't.
+     *  - The "push*Frame" functions will set fp->prev; the caller needn't.
      *  - Functions taking "*Guard" arguments will use the guard's destructor
      *    to pop the allocation. The caller must ensure the guard has the
      *    appropriate lifetime.
@@ -765,66 +818,54 @@ class StackSpace
      * Invoke calls. The InvokeArgumentsGuard passed to Invoke must come from
      * an immediately-enclosing (stack-wise) call to pushInvokeArgs.
      */
-    JS_REQUIRES_STACK
-    bool pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag);
+    bool pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag);
 
     /* These functions are called inside Invoke, not Invoke clients. */
-    bool getInvokeFrame(JSContext *cx, const CallArgs &args,
-                        uintN nmissing, uintN nfixed,
-                        InvokeFrameGuard &fg) const;
+    bool getInvokeFrame(JSContext *cx, const CallArgs &args, JSFunction *fun,
+                        JSScript *script, uint32 *flags, InvokeFrameGuard *fg) const;
 
-    JS_REQUIRES_STACK
-    void pushInvokeFrame(JSContext *cx, const CallArgs &args, InvokeFrameGuard &fg);
+    void pushInvokeFrame(JSContext *cx, const CallArgs &args, InvokeFrameGuard *fg);
 
-    /*
-     * For the simpler case when arguments are allocated at the same time as
-     * the frame and it is not necessary to have rooted argument values before
-     * pushing the frame.
-     */
-    JS_REQUIRES_STACK
-    bool getExecuteFrame(JSContext *cx, JSStackFrame *down,
-                         uintN vplen, uintN nfixed,
-                         FrameGuard &fg) const;
-    JS_REQUIRES_STACK
-    void pushExecuteFrame(JSContext *cx, FrameGuard &fg,
-                          JSFrameRegs &regs, JSObject *initialVarObj);
+    /* These functions are called inside Execute, not Execute clients. */
+    bool getExecuteFrame(JSContext *cx, JSScript *script, ExecuteFrameGuard *fg) const;
+    void pushExecuteFrame(JSContext *cx, JSObject *initialVarObj, ExecuteFrameGuard *fg);
 
     /*
      * Since RAII cannot be used for inline frames, callers must manually
      * call pushInlineFrame/popInlineFrame.
      */
-    JS_REQUIRES_STACK
-    inline JSStackFrame *getInlineFrame(JSContext *cx, Value *sp,
-                                        uintN nmissing, uintN nfixed) const;
+    inline JSStackFrame *getInlineFrame(JSContext *cx, Value *sp, uintN nactual,
+                                        JSFunction *fun, JSScript *script,
+                                        uint32 *flags) const;
+    inline void pushInlineFrame(JSContext *cx, JSScript *script, JSStackFrame *fp,
+                                JSFrameRegs *regs);
+    inline void popInlineFrame(JSContext *cx, JSStackFrame *prev, js::Value *newsp);
 
-    JS_REQUIRES_STACK
-    inline JSStackFrame *getInlineFrameUnchecked(JSContext *cx, Value *sp,
-                                                 uintN nmissing) const;
+    /* These functions are called inside SendToGenerator. */
+    bool getGeneratorFrame(JSContext *cx, uintN vplen, uintN nfixed,
+                           GeneratorFrameGuard *fg);
+    void pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameGuard *fg);
 
-    JS_REQUIRES_STACK
-    inline void pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
-                                JSStackFrame *newfp);
+    /* Pushes a JSStackFrame::isDummyFrame. */
+    bool pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *fg);
 
-    JS_REQUIRES_STACK
-    inline void popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down);
-
-    /*
-     * For pushing a bookkeeping frame.
-     */
-    JS_REQUIRES_STACK
-    bool pushDummyFrame(JSContext *cx, FrameGuard &fg, JSFrameRegs &regs, JSObject *scopeChain);
-
-    /*
-     * Ensure space based on an over-recursion limit.
-     */
-    inline bool ensureSpace(JSContext *maybecx, Value *start, Value *from,
-                            Value *& limit, uint32 nslots) const;
+    /* Check and bump the given stack limit. */
+    inline JSStackFrame *getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
+                                                   JSFunction *fun, JSScript *script, uint32 *flags,
+                                                   JSStackFrame *base, Value **limit) const;
 
     /*
-     * Create a stack limit for quickly detecting over-recursion and whether
-     * a commit bump is needed.
+     * Compute a stack limit for entering method jit code which allows the
+     * method jit to check for end-of-stack and over-recursion with a single
+     * comparison. See STACK_QUOTA above.
      */
-    inline Value *makeStackLimit(Value *start) const;
+    inline Value *getStackLimit(JSContext *cx);
+
+    /*
+     * Try to bump the given 'limit' by bumping the commit limit. Return false
+     * if fully committed or if 'limit' exceeds 'base' + STACK_QUOTA.
+     */
+    bool bumpCommitAndLimit(JSStackFrame *base, Value *from, uintN nvals, Value **limit) const;
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
@@ -832,7 +873,7 @@ JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
 /*
  * While |cx->fp|'s pc/sp are available in |cx->regs|, to compute the saved
  * value of pc/sp for any other frame, it is necessary to know about that
- * frame's up-frame. This iterator maintains this information when walking down
+ * frame's next-frame. This iterator maintains this information when walking
  * a chain of stack frames starting at |cx->fp|.
  *
  * Usage:
@@ -847,8 +888,7 @@ class FrameRegsIter
     jsbytecode        *curpc;
 
     void initSlow();
-    void incSlow(JSStackFrame *up, JSStackFrame *down);
-    static inline Value *contiguousDownFrameSP(JSStackFrame *up);
+    void incSlow(JSStackFrame *fp, JSStackFrame *prev);
 
   public:
     JS_REQUIRES_STACK inline FrameRegsIter(JSContext *cx);
@@ -2155,10 +2195,10 @@ struct JSContext
     JSStackFrame *findFrameAtLevel(uintN targetLevel) {
         JSStackFrame *fp = this->regs->fp;
         while (true) {
-            JS_ASSERT(fp && fp->hasScript());
-            if (fp->getScript()->staticLevel == targetLevel)
+            JS_ASSERT(fp && fp->isScriptFrame());
+            if (fp->script()->staticLevel == targetLevel)
                 break;
-            fp = fp->down;
+            fp = fp->prev();
         }
         return fp;
     }
@@ -2373,27 +2413,6 @@ js_TraceRegExpStatics(JSTracer *trc, JSContext *acx)
     acx->regExpStatics.mark(trc);
 }
 
-JS_ALWAYS_INLINE JSObject *
-JSStackFrame::varobj(js::StackSegment *seg) const
-{
-    JS_ASSERT(seg->contains(this));
-    return hasFunction() ? maybeCallObj() : seg->getInitialVarObj();
-}
-
-JS_ALWAYS_INLINE JSObject *
-JSStackFrame::varobj(JSContext *cx) const
-{
-    JS_ASSERT(cx->activeSegment()->contains(this));
-    return hasFunction() ? maybeCallObj() : cx->activeSegment()->getInitialVarObj();
-}
-
-JS_ALWAYS_INLINE jsbytecode *
-JSStackFrame::pc(JSContext *cx) const
-{
-    JS_ASSERT(cx->regs && cx->containingSegment(this) != NULL);
-    return (cx->regs->fp == this) ? cx->regs->pc : savedPC;
-}
-
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
 #endif
@@ -2428,16 +2447,16 @@ class AutoCheckRequestDepth {
 static inline uintN
 FramePCOffset(JSContext *cx, JSStackFrame* fp)
 {
-    jsbytecode *pc = fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx);
-    return uintN(pc - fp->getScript()->code);
+    jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
+    return uintN(pc - fp->script()->code);
 }
 
 static inline JSAtom **
 FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->hasIMacroPC()
+    return fp->hasImacropc()
            ? COMMON_ATOMS_START(&cx->runtime->atomState)
-           : fp->getScript()->atomMap.vector;
+           : fp->script()->atomMap.vector;
 }
 
 namespace js {

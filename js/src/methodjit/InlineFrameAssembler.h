@@ -61,16 +61,8 @@ struct AdjustedFrame {
 };
 
 /*
- * This is used for emitting code to inline callee-side frame creation.
- * Specifically, it initializes the following members:
- *
- *  savedPC
- *  argc
- *  flags
- *  scopeChain
- *  argv
- *  thisv
- *  down
+ * This is used for emitting code to inline callee-side frame creation and
+ * should jit code equivalent to JSStackFrame::initCallFrameCallerHalf.
  *
  * Once finished, JSFrameReg is advanced to be the new fp.
  */
@@ -81,8 +73,6 @@ class InlineFrameAssembler {
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 
     Assembler &masm;
-    bool       isConstantThis;  // Is |thisv| constant?
-    Value      constantThis;    // If so, this is the value.
     uint32     frameDepth;      // script->nfixed + stack depth at caller call site
     uint32     argc;            // number of args being passed to the function
     RegisterID funObjReg;       // register containing the function object (callee)
@@ -99,8 +89,6 @@ class InlineFrameAssembler {
     InlineFrameAssembler(Assembler &masm, JSContext *cx, ic::CallICInfo &ic, uint32 flags)
       : masm(masm), flags(flags)
     {
-        isConstantThis = ic.isConstantThis;
-        constantThis = ic.constantThis;
         frameDepth = ic.frameDepth;
         argc = ic.argc;
         funObjReg = ic.funObjReg;
@@ -112,8 +100,6 @@ class InlineFrameAssembler {
     InlineFrameAssembler(Assembler &masm, Compiler::CallGenInfo &gen, jsbytecode *pc, uint32 flags)
       : masm(masm), pc(pc), flags(flags)
     {
-        isConstantThis = gen.isConstantThis;
-        constantThis = gen.constantThis;
         frameDepth = gen.frameDepth;
         argc = gen.argc;
         funObjReg = gen.funObjReg;
@@ -122,38 +108,17 @@ class InlineFrameAssembler {
 
     inline void assemble()
     {
+        JS_ASSERT((flags & ~JSFRAME_CONSTRUCTING) == 0);
+
         RegisterID t0 = tempRegs.takeAnyReg();
 
-        /* Note: savedPC goes into the down frame. */
-        masm.storePtr(ImmPtr(pc), Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
+        masm.storePtr(ImmPtr(pc), Address(JSFrameReg, JSStackFrame::offsetOfSavedpc()));
 
         AdjustedFrame adj(sizeof(JSStackFrame) + frameDepth * sizeof(Value));
-        masm.store32(Imm32(argc), adj.addrOf(offsetof(JSStackFrame, argc)));
-        masm.store32(Imm32(flags), adj.addrOf(offsetof(JSStackFrame, flags)));
+        masm.store32(Imm32(JSFRAME_FUNCTION | flags), adj.addrOf(JSStackFrame::offsetOfFlags()));
         masm.loadPtr(Address(funObjReg, offsetof(JSObject, parent)), t0);
-        masm.storePtr(t0, adj.addrOf(JSStackFrame::offsetScopeChain()));
-        masm.addPtr(Imm32(adj.baseOffset - (argc * sizeof(Value))), JSFrameReg, t0);
-        masm.storePtr(t0, adj.addrOf(offsetof(JSStackFrame, argv)));
-
-        Address targetThis = adj.addrOf(JSStackFrame::offsetThisValue());
-        if (isConstantThis) {
-            masm.storeValue(constantThis, targetThis);
-        } else {
-            Address thisvAddr = Address(t0, -int32(sizeof(Value) * 1));
-#ifdef JS_NUNBOX32
-            RegisterID t1 = tempRegs.takeAnyReg();
-            masm.loadPayload(thisvAddr, t1);
-            masm.storePayload(t1, targetThis);
-            masm.loadTypeTag(thisvAddr, t1);
-            masm.storeTypeTag(t1, targetThis);
-            tempRegs.putReg(t1);
-#elif JS_PUNBOX64
-            masm.loadPtr(thisvAddr, t0);
-            masm.storePtr(t0, targetThis);
-#endif
-        }
-
-        masm.storePtr(JSFrameReg, adj.addrOf(offsetof(JSStackFrame, down)));
+        masm.storePtr(t0, adj.addrOf(JSStackFrame::offsetOfScopeChain()));
+        masm.storePtr(JSFrameReg, adj.addrOf(JSStackFrame::offsetOfPrev()));
 
         /* Adjust JSFrameReg. Callee fills in the rest. */
         masm.addPtr(Imm32(sizeof(JSStackFrame) + sizeof(Value) * frameDepth), JSFrameReg);

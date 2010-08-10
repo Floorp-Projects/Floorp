@@ -89,6 +89,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
@@ -166,6 +167,25 @@ JSParseNode::clear()
     pn_used = pn_defn = false;
     pn_arity = PN_NULLARY;
     pn_parens = false;
+}
+
+Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
+  : js::AutoGCRooter(cx, PARSER),
+    context(cx),
+    aleFreeList(NULL),
+    tokenStream(cx),
+    principals(NULL),
+    callerFrame(cfp),
+    callerVarObj(cfp ? &cfp->varobj(cx->containingSegment(cfp)) : NULL),
+    nodeList(NULL),
+    functionCount(0),
+    traceListHead(NULL),
+    tc(NULL),
+    keepAtoms(cx->runtime)
+{
+    js::PodArrayZero(tempFreeList);
+    setPrincipals(prin);
+    JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
 
 bool
@@ -717,6 +737,11 @@ SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
 /*
  * Compile a top-level script.
  */
+Compiler::Compiler(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
+  : parser(cx, prin, cfp)
+{
+}
+
 JSScript *
 Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                         JSPrincipals *principals, uint32 tcflags,
@@ -792,8 +817,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame &&
-        callerFrame->hasScript() &&
-        callerFrame->getScript()->strictModeCode) {
+        callerFrame->isScriptFrame() &&
+        callerFrame->script()->strictModeCode) {
         cg.flags |= TCF_STRICT_MODE_CODE;
         tokenStream.setStrictMode();
     }
@@ -816,13 +841,13 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
                 goto out;
         }
 
-        if (callerFrame && callerFrame->hasFunction()) {
+        if (callerFrame && callerFrame->isFunctionFrame()) {
             /*
              * An eval script in a caller frame needs to have its enclosing
              * function captured in case it refers to an upvar, and someone
              * wishes to decompile it while it's running.
              */
-            funbox = parser.newObjectBox(FUN_OBJECT(callerFrame->getFunction()));
+            funbox = parser.newObjectBox(FUN_OBJECT(callerFrame->fun()));
             if (!funbox)
                 goto out;
             funbox->emitLink = cg.objectList.lastbox;
