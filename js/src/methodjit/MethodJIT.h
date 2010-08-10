@@ -57,14 +57,10 @@ namespace js {
 
 struct VMFrame
 {
-#if defined(JS_CPU_ARM)
-    JSC::ReturnAddressPtr   veneerReturn;
-#endif
-
     /* This must be the first entry on CPUs which push return addresses. */
     void *scriptedReturn;
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64) || defined(JS_CPU_ARM)
     uintptr_t               padding;
 #endif
 
@@ -133,7 +129,7 @@ struct VMFrame
     void *savedLR;
 
     inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(&this->veneerReturn);
+        return reinterpret_cast<void**>(this) - 1;
     }
 #else
 # error "The VMFrame layout isn't defined for your processor architecture!"
@@ -143,6 +139,7 @@ struct VMFrame
 };
 
 #ifdef JS_CPU_ARM
+// WARNING: Do not call this function directly from C(++) code because it is not ABI-compliant.
 extern "C" void JaegerStubVeneer(void);
 #endif
 

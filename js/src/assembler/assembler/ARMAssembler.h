@@ -130,14 +130,16 @@ namespace JSC {
         
 #ifdef DEBUG
         bool isOOLPath;
+        // Assign a default value to keep Valgrind quiet.
+        ARMAssembler() : isOOLPath(false) { }
+#else
+        ARMAssembler() { }
 #endif
 
         typedef ARMRegisters::RegisterID RegisterID;
         typedef ARMRegisters::FPRegisterID FPRegisterID;
         typedef AssemblerBufferWithConstantPool<2048, 4, 4, ARMAssembler> ARMBuffer;
         typedef SegmentedVector<int, 64> Jumps;
-
-        ARMAssembler() { }
 
         unsigned char *buffer() const { return m_buffer.buffer(); }
 

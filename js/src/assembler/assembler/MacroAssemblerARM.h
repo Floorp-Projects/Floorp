@@ -622,6 +622,13 @@ public:
         return Jump(m_assembler.jmp(ARMCondition(cond)));
     }
 
+    // Encode a NOP using "MOV rX, rX", where 'X' is defined by 'tag', and is
+    // in the range r0-r14.
+    void nop(int tag)
+    {
+        m_assembler.mov_r(tag, tag);
+    }
+
     void breakpoint()
     {
         m_assembler.bkpt(0);
