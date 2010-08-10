@@ -46,7 +46,7 @@ function onTabViewWindowLoaded() {
   window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
 
   ok(TabView.isVisible(), "Tab View is visible");
-  
+
   let contentWindow = document.getElementById("tab-view").contentWindow;
 
   // create group one and two
@@ -92,32 +92,32 @@ function addTest(contentWindow, groupOneId, groupTwoId) {
   let groupTwo = contentWindow.GroupItems.groupItem(groupTwoId);
   let groupOneTabItemCount = groupOne.getChildren().length;
   let groupTwoTabItemCount = groupTwo.getChildren().length;
-  is(groupOneTabItemCount, 1, "GroupItem one has a tab"); 
-  is(groupTwoTabItemCount, 1, "GroupItem two has two tabs"); 
-  
+  is(groupOneTabItemCount, 1, "GroupItem one has a tab");
+  is(groupTwoTabItemCount, 1, "GroupItem two has two tabs");
+
   let srcElement = groupOne.getChild(0).container;
   ok(srcElement, "The source element exists");
-  
+
   // calculate the offsets
   let groupTwoRect = groupTwo.container.getBoundingClientRect();
   let srcElementRect = srcElement.getBoundingClientRect();
-  let offsetX = 
+  let offsetX =
     Math.round(groupTwoRect.left + groupTwoRect.width/5) - srcElementRect.left;
-  let offsetY = 
+  let offsetY =
     Math.round(groupTwoRect.top + groupTwoRect.height/5) -  srcElementRect.top;
 
   simulateDragDrop(srcElement, offsetX, offsetY, contentWindow);
-  
-  is(groupOne.getChildren().length, --groupOneTabItemCount, 
+
+  is(groupOne.getChildren().length, --groupOneTabItemCount,
      "The number of children in group one is decreased by 1");
-  is(groupTwo.getChildren().length, ++groupTwoTabItemCount, 
+  is(groupTwo.getChildren().length, ++groupTwoTabItemCount,
      "The number of children in group two is increased by 1");
-  
+
   let onTabViewHidden = function() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    // ToDo: somehow the close all would break tab view being hideen 
+    // ToDo: somehow the close all would break tab view being hideen
     // so need to find a way to fix it
-    setTimeout(function() { 
+    setTimeout(function() {
       groupTwo.closeAll();
       finish();
     }, 100);
@@ -134,21 +134,21 @@ function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
     srcElement, 1, 1, { type: "mousedown" }, contentWindow);
   event = contentWindow.document.createEvent("DragEvents");
   event.initDragEvent(
-    "dragenter", true, true, contentWindow, 0, 0, 0, 0, 0, 
+    "dragenter", true, true, contentWindow, 0, 0, 0, 0, 0,
     false, false, false, false, 1, null, dataTransfer);
   srcElement.dispatchEvent(event);
-  
+
   // drag over
   for (let i = 4; i >= 0; i--)
     EventUtils.synthesizeMouse(
-      srcElement,  Math.round(offsetX/5),  Math.round(offsetY/4), 
+      srcElement,  Math.round(offsetX/5),  Math.round(offsetY/4),
       { type: "mousemove" }, contentWindow);
   event = contentWindow.document.createEvent("DragEvents");
   event.initDragEvent(
-    "dragover", true, true, contentWindow, 0, 0, 0, 0, 0, 
+    "dragover", true, true, contentWindow, 0, 0, 0, 0, 0,
     false, false, false, false, 0, null, dataTransfer);
   srcElement.dispatchEvent(event);
-  
+
   // drop
   EventUtils.synthesizeMouse(srcElement, 0, 0, { type: "mouseup" }, contentWindow);
   event = contentWindow.document.createEvent("DragEvents");
@@ -157,5 +157,3 @@ function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
     false, false, false, false, 0, null, dataTransfer);
   srcElement.dispatchEvent(event);
 }
-
-
