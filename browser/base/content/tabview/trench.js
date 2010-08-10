@@ -116,7 +116,7 @@ Trench.prototype = {
 
   setParentItem: function Trench_setParentItem(item) {
     if (!item.isAnItem) {
-      Utils.assert("parentItem must be an Item",false);
+      Utils.assert(false, "parentItem must be an Item");
       return false;
     }
     this.parentItem = item;

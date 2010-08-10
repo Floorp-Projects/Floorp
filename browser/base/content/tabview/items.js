@@ -145,18 +145,18 @@ window.Item.prototype = {
   // Parameters:
   //   container - the outermost DOM element that describes this item onscreen.
   _init: function(container) {
-    Utils.assert('Subclass must implement the Subscribable interface',
-      typeof(this.addSubscriber) == 'function' &&
-      typeof(this.removeSubscriber) == 'function' &&
-      typeof(this._sendToSubscribers) == 'function');
-    Utils.assert('container must be a DOM element', Utils.isDOMElement(container));
-    Utils.assert('Subclass must provide setBounds', typeof(this.setBounds) == 'function');
-    Utils.assert('Subclass must provide setZ', typeof(this.setZ) == 'function');
-    Utils.assert('Subclass must provide close', typeof(this.close) == 'function');
-    Utils.assert('Subclass must provide save', typeof(this.save) == 'function');
-    Utils.assert('Subclass must provide defaultSize', Utils.isPoint(this.defaultSize));
-    Utils.assert('Subclass must provide locked', this.locked);
-    Utils.assert('Subclass must provide bounds', Utils.isRect(this.bounds));
+    Utils.assert(typeof(this.addSubscriber) == 'function' && 
+        typeof(this.removeSubscriber) == 'function' && 
+        typeof(this._sendToSubscribers) == 'function',
+        'Subclass must implement the Subscribable interface');
+    Utils.assert(Utils.isDOMElement(container), 'container must be a DOM element');
+    Utils.assert(typeof(this.setBounds) == 'function', 'Subclass must provide setBounds');
+    Utils.assert(typeof(this.setZ) == 'function', 'Subclass must provide setZ');
+    Utils.assert(typeof(this.close) == 'function', 'Subclass must provide close');
+    Utils.assert(typeof(this.save) == 'function', 'Subclass must provide save');
+    Utils.assert(Utils.isPoint(this.defaultSize), 'Subclass must provide defaultSize');
+    Utils.assert(this.locked, 'Subclass must provide locked');
+    Utils.assert(Utils.isRect(this.bounds), 'Subclass must provide bounds');
 
     this.container = container;
 
@@ -239,7 +239,7 @@ window.Item.prototype = {
   // Function: getBounds
   // Returns a copy of the Item's bounds as a <Rect>.
   getBounds: function() {
-    Utils.assert('this.bounds', Utils.isRect(this.bounds));
+    Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     return new Rect(this.bounds);
   },
 
@@ -268,7 +268,7 @@ window.Item.prototype = {
   //   immediately - if false or omitted, animates to the new position;
   //   otherwise goes there immediately
   setPosition: function(left, top, immediately) {
-    Utils.assert('this.bounds', Utils.isRect(this.bounds));
+    Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     this.setBounds(new Rect(left, top, this.bounds.width, this.bounds.height), immediately);
   },
 
@@ -282,7 +282,7 @@ window.Item.prototype = {
   //   immediately - if false or omitted, animates to the new size;
   //   otherwise resizes immediately
   setSize: function(width, height, immediately) {
-    Utils.assert('this.bounds', Utils.isRect(this.bounds));
+    Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
 
@@ -290,7 +290,7 @@ window.Item.prototype = {
   // Function: setUserSize
   // Remembers the current size as one the user has chosen.
   setUserSize: function() {
-    Utils.assert('this.bounds', Utils.isRect(this.bounds));
+    Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     this.userSize = new Point(this.bounds.width, this.bounds.height);
     this.save();
   },
@@ -573,7 +573,7 @@ window.Item.prototype = {
   // Enables dragging on this item. Note: not to be called multiple times on the same item!
   draggable: function() {
     try {
-      Utils.assert('dragOptions', this.dragOptions);
+      Utils.assert(this.dragOptions, 'dragOptions');
 
       var cancelClasses = [];
       if (typeof(this.dragOptions.cancelClass) == 'string')
@@ -728,7 +728,7 @@ window.Item.prototype = {
       if (value)
         $container.addClass('iq-droppable');
       else {
-        Utils.assert('dropOptions', this.dropOptions);
+        Utils.assert(this.dropOptions, 'dropOptions');
 
         $container.removeClass('iq-droppable');
       }
@@ -748,7 +748,7 @@ window.Item.prototype = {
       if (!value) {
         $container.removeClass('iq-resizable');
       } else {
-        Utils.assert('resizeOptions', this.resizeOptions);
+        Utils.assert(this.resizeOptions, 'resizeOptions');
 
         $container.addClass('iq-resizable');
 

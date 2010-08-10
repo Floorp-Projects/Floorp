@@ -49,7 +49,7 @@
 //   tab - a xul:tab
 window.TabItem = function(tab) {
 
-  Utils.assert('tab', tab);
+  Utils.assert(tab, "tab");
 
   this.tab = tab;
   // register this as the tab's tabItem
@@ -690,7 +690,7 @@ window.TabItems = {
   // Function: init
   // Set up the necessary tracking to maintain the <TabItems>s.
   init: function() {
-    Utils.assert("TabManager must be initialized first", window.AllTabs);
+    Utils.assert(window.AllTabs, "AllTabs must be initialized first");
     var self = this;
 
     // When a tab is opened, create the TabItem
@@ -739,7 +739,7 @@ window.TabItems = {
   // Takes in a xul:tab.
   update: function(tab) {
     try {
-      Utils.assertThrow("tab", tab);
+      Utils.assertThrow(tab, "tab");
 
       let shouldDefer = (
         this.isPaintingPaused() ||
@@ -767,7 +767,7 @@ window.TabItems = {
   // Takes in a xul:tab.
   _update: function(tab) {
     try {
-      Utils.assertThrow("tab", tab);
+      Utils.assertThrow(tab, "tab");
 
       // ___ remove from waiting list if needed
       let index = this._tabsWaitingForUpdate.indexOf(tab);
@@ -775,7 +775,7 @@ window.TabItems = {
         this._tabsWaitingForUpdate.splice(index, 1);
 
       // ___ get the TabItem
-      Utils.assertThrow("must already be linked", tab.tabItem);
+      Utils.assertThrow(tab.tabItem, "must already be linked");
       let tabItem = tab.tabItem;
 
       // ___ icon
@@ -830,8 +830,8 @@ window.TabItems = {
   // Takes in a xul:tab.
   link: function(tab){
     try {
-      Utils.assertThrow("tab", tab);
-      Utils.assertThrow("shouldn't already be linked", !tab.tabItem);
+      Utils.assertThrow(tab, "tab");
+      Utils.assertThrow(!tab.tabItem, "shouldn't already be linked");
       new TabItem(tab); // sets tab.tabItem to itself
     } catch(e) {
       Utils.log(e);
@@ -843,8 +843,8 @@ window.TabItems = {
   // Takes in a xul:tab.
   unlink: function(tab) {
     try {
-      Utils.assertThrow("tab", tab);
-      Utils.assertThrow("should already be linked", tab.tabItem);
+      Utils.assertThrow(tab, "tab");
+      Utils.assertThrow(tab.tabItem, "should already be linked");
 
       tab.tabItem._sendToSubscribers("close");
       iQ(tab.tabItem.container).remove();
@@ -921,8 +921,8 @@ window.TabItems = {
   // Function: register
   // Adds the given <TabItem> to the master list.
   register: function(item) {
-    Utils.assert('item must be a TabItem', item && item.isAnItem);
-    Utils.assert('only register once per item', this.items.indexOf(item) == -1);
+    Utils.assert(item && item.isAnItem, 'item must be a TabItem');
+    Utils.assert(this.items.indexOf(item) == -1, 'only register once per item');
     this.items.push(item);
   },
 
@@ -977,8 +977,8 @@ window.TabItems = {
     var found = false;
 
     try{
-      Utils.assert('item', item);
-      Utils.assert('item.tab', item.tab);
+      Utils.assert(item, 'item');
+      Utils.assert(item.tab, 'item.tab');
 
       if (item.reconnected)
         return true;
