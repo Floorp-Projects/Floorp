@@ -378,8 +378,9 @@ Trench.prototype = {
   //   position - (integer) a position in px
   //   range - (<Range>) the rule's range
   ruleOverlaps: function Trench_ruleOverlaps(position, range) {
-    return (this.position - this.radius < position && position < this.position + this.radius
-            && this.activeRange.contains(range));
+    return (this.position - this.radius < position &&
+           position < this.position + this.radius &&
+           this.activeRange.contains(range));
   },
 
   //----------
@@ -553,8 +554,9 @@ var Trenches = {
     this.trenches.forEach(function(t) {
       if (t.el === element)
         return;
-      if (t.parentItem && (t.parentItem.isAFauxItem || t.parentItem.isDragging
-                                                    || t.parentItem.isDropTarget))
+      if (t.parentItem && (t.parentItem.isAFauxItem ||
+         t.parentItem.isDragging ||
+         t.parentItem.isDropTarget))
         return;
       t.active = true;
       t.calculateActiveRange();

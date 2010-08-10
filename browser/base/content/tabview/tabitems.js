@@ -893,9 +893,9 @@ window.TabItems = {
   resumePainting: function() {
     this.paintingPaused--;
 
-    if (!this.isPaintingPaused()
-        && this._tabsWaitingForUpdate.length
-        && !this._heartbeatOn) {
+    if (!this.isPaintingPaused() &&
+        this._tabsWaitingForUpdate.length &&
+        !this._heartbeatOn) {
       this._heartbeatOn = true;
       this.heartbeat();
     }
