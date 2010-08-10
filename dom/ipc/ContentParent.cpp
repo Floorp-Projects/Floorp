@@ -53,6 +53,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsChromeRegistryChrome.h"
+#include "nsExternalHelperAppService.h"
+#include "nsCExternalHandlerService.h"
 
 #ifdef ANDROID
 #include "AndroidBridge.h"
@@ -467,6 +469,17 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
     nsCOMPtr<nsIURI> ourURI(uri);
     IHistory *history = nsContentUtils::GetHistory(); 
     history->SetURITitle(ourURI, title);
+    return true;
+}
+
+bool
+ContentParent::RecvLoadURIExternal(const IPC::URI& uri)
+{
+    nsCOMPtr<nsIExternalProtocolService> extProtService(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
+    if (!extProtService)
+        return true;
+    nsCOMPtr<nsIURI> ourURI(uri);
+    extProtService->LoadURI(ourURI, nsnull);
     return true;
 }
 
