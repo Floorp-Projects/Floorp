@@ -92,9 +92,7 @@ window.TabItem = function(tab) {
       + parseInt($div.css('padding-bottom'));
 
   this.bounds = $div.bounds();
-  this.bounds.width += this.sizeExtra.x;
-  this.bounds.height += this.sizeExtra.y;
-
+  
   // ___ superclass setup
   this._init($div[0]);
 
@@ -534,11 +532,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     if (childHitResult.shouldZoom) {
       // Zoom in!
-      var orig = {
-        width: $tabEl.width(),
-        height:  $tabEl.height(),
-        pos: $tabEl.position()
-      };
+      var orig = $tabEl.bounds();
       var scale = window.innerWidth/orig.width;
       var tab = this.tab;
 
@@ -551,12 +545,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           gBrowser.selectedTab = tab;
 
         $tabEl
-          .css({
-            top:   orig.pos.top,
-            left:  orig.pos.left,
-            width: orig.width,
-            height:orig.height,
-          })
+          .css(orig.css())
           .removeClass("front");
 
         // If the tab is in a groupItem set then set the active
@@ -590,10 +579,10 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       $tabEl
         .addClass("front")
         .animate({
-          top:    orig.pos.top * (1-1/scaleCheat),
-          left:   orig.pos.left * (1-1/scaleCheat),
-          width:  orig.width*scale/scaleCheat,
-          height: orig.height*scale/scaleCheat
+          top:    orig.top    * (1 - 1/scaleCheat),
+          left:   orig.left   * (1 - 1/scaleCheat),
+          width:  orig.width  * scale/scaleCheat,
+          height: orig.height * scale/scaleCheat
         }, {
           duration: 230,
           easing: 'fast',
