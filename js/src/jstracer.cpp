@@ -3495,7 +3495,7 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
          * to see doubles on entry. The first op to use this slot will emit a
          * d2i cast which will cancel out the i2d we insert here.
          */
-        ins = lir->insLoad(LIR_ldi, base, offset + sPayloadOffset, accSet);
+        ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         ins = lir->ins1(LIR_i2d, ins);
     } else {
         JS_ASSERT_IF(t != JSVAL_TYPE_BOXED && !IsFrameObjPtrTraceType(t),
@@ -3503,13 +3503,13 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
         if (t == JSVAL_TYPE_DOUBLE) {
             ins = lir->insLoad(LIR_ldd, base, offset, accSet);
         } else if (t == JSVAL_TYPE_BOOLEAN) {
-            ins = lir->insLoad(LIR_ldi, base, offset + sPayloadOffset, accSet);
+            ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else if (t == JSVAL_TYPE_UNDEFINED) {
             ins = INS_UNDEFINED();
         } else if (t == JSVAL_TYPE_MAGIC) {
-            ins = lir->insLoad(LIR_ldi, base, offset + sPayloadOffset, accSet);
+            ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else {
-            ins = lir->insLoad(LIR_ldp, base, offset + sPayloadOffset, accSet);
+            ins = lir->insLoad(LIR_ldp, base, offset, accSet);
         }
     }
     checkForGlobalObjectReallocation();
@@ -9665,7 +9665,8 @@ LIns*
 TraceRecorder::stobj_get_fslot_ptr(LIns *obj_ins, unsigned slot)
 {
     JS_ASSERT(slot < JS_INITIAL_NSLOTS);
-    return lir->insLoad(LIR_ldi, obj_ins, offsetof(JSObject, fslots) + slot * sizeof(Value),
+    return lir->insLoad(LIR_ldi, obj_ins,
+                        offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
                         ACCSET_OTHER);
 }
 
@@ -9744,7 +9745,7 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
 
     if (v.isDouble()) {
         guard(true, lir->ins2(LIR_ltui, tag_ins, INS_CONSTU(JSVAL_TAG_CLEAR)), exit);
-        return lir->insLoad(LIR_ldd, vaddr_ins, offset + sPayloadOffset, accSet);
+        return lir->insLoad(LIR_ldd, vaddr_ins, offset, accSet);
     }
 
     if (v.isObject()) {
