@@ -14,11 +14,12 @@
  * The Original Code is iq.js.
  *
  * The Initial Developer of the Original Code is
- * Ian Gilman <ian@iangilman.com>.
+ * the Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Ian Gilman <ian@iangilman.com>
  * Aza Raskin <aza@mozilla.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
@@ -181,14 +182,12 @@ let iQClass = function(selector, context) {
     }
   }
   return ret;
-}
+};
+  
 iQClass.prototype = {
 
   // Start with an empty selector
   selector: "",
-
-  // The current version of iQ being used
-  iq: "1.4.2",
 
   // The default length of a iQ object is 0
   length: 0,
@@ -328,7 +327,7 @@ iQClass.prototype = {
   // Returns the width of the receiver.
   width: function() {
     let bounds = this.bounds();
-    return bounds.width
+    return bounds.width;
   },
 
   // ----------
@@ -449,18 +448,14 @@ iQClass.prototype = {
   // Function: attr
   // Sets or gets an attribute on the element(s).
   attr: function(key, value) {
-    try {
-      Utils.assert(typeof key === 'string', 'string key');
-      if (typeof value === "undefined") {
-        Utils.assert(this.length == 1, 'retrieval does not support multi-objects (or null objects)');
-        return this[0].getAttribute(key);
-      }
-      for (let i = 0; this[i] != null; i++) {
-        this[i].setAttribute(key, value);
-      }
-    } catch(e) {
-      Utils.log(e);
+    Utils.assert(typeof key === 'string', 'string key');
+    if (typeof value === "undefined") {
+      Utils.assert(this.length == 1, 'retrieval does not support multi-objects (or null objects)');
+      return this[0].getAttribute(key);
     }
+
+    for (let i = 0; this[i] != null; i++)
+      this[i].setAttribute(key, value);
 
     return this;
   },
@@ -503,7 +498,7 @@ iQClass.prototype = {
       let elem = this[i];
       for (let key in properties) {
         let value = properties[key];
-        if (pixels[key] && typeof(value) != 'string')
+        if (pixels[key] && typeof value != 'string')
           value += 'px';
 
         if (value == null) {
@@ -613,16 +608,12 @@ iQClass.prototype = {
   // Function: fadeIn
   // Animates the receiver to full opacity.
   fadeIn: function() {
-    try {
-      this.css({display: ''});
-      this.animate({
-        opacity: 1
-      }, {
-        duration: 400
-      });
-    } catch(e) {
-      Utils.log(e);
-    }
+    this.css({display: ''});
+    this.animate({
+      opacity: 1
+    }, {
+      duration: 400
+    });
 
     return this;
   },
@@ -631,12 +622,7 @@ iQClass.prototype = {
   // Function: hide
   // Hides the receiver.
   hide: function() {
-    try {
-      this.css({display: 'none', opacity: 0});
-    } catch(e) {
-      Utils.log(e);
-    }
-
+    this.css({display: 'none', opacity: 0});
     return this;
   },
 
@@ -644,12 +630,7 @@ iQClass.prototype = {
   // Function: show
   // Shows the receiver.
   show: function() {
-    try {
-      this.css({display: '', opacity: 1});
-    } catch(e) {
-      Utils.log(e);
-    }
-
+    this.css({display: '', opacity: 1});
     return this;
   },
 
