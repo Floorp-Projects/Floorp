@@ -115,15 +115,15 @@ function addTest(contentWindow, groupOneId, groupTwoId) {
 
   let onTabViewHidden = function() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    // ToDo: somehow the close all would break tab view being hideen
-    // so need to find a way to fix it
-    setTimeout(function() {
-      groupTwo.closeAll();
-      finish();
-    }, 100);
+    finish();
   };
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  contentWindow.UI.hideTabView();
+
+  groupTwo.addSubscriber(groupTwo, "close", function() {
+    groupTwo.removeSubscriber(groupTwo, "close");
+    contentWindow.UI.hideTabView();
+  });
+  groupTwo.closeAll();
 }
 
 function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
@@ -153,7 +153,7 @@ function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
   EventUtils.synthesizeMouse(srcElement, 0, 0, { type: "mouseup" }, contentWindow);
   event = contentWindow.document.createEvent("DragEvents");
   event.initDragEvent(
-    "drop", true, true, contentWindow, 0, 0, 0, 0, 0, 
+    "drop", true, true, contentWindow, 0, 0, 0, 0, 0,
     false, false, false, false, 0, null, dataTransfer);
   srcElement.dispatchEvent(event);
 }
