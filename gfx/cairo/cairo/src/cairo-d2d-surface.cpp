@@ -2168,7 +2168,152 @@ _cairo_d2d_flush(void                  *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
+			cairo_d2d_surface_t *src,
+			cairo_point_int_t *translation,
+			cairo_region_t *region)
+{
+    RefPtr<IDXGISurface> dstSurface;
+    dst->surface->QueryInterface(&dstSurface);
+    RefPtr<IDXGISurface> srcSurface;
+    src->surface->QueryInterface(&srcSurface);
+    DXGI_SURFACE_DESC srcDesc, dstDesc;
 
+    srcSurface->GetDesc(&srcDesc);
+    dstSurface->GetDesc(&dstDesc);
+
+    cairo_rectangle_int_t clip_rect;
+    clip_rect.x = 0;
+    clip_rect.y = 0;
+    clip_rect.width = dstDesc.Width;
+    clip_rect.height = dstDesc.Height;
+    
+    cairo_int_status_t rv = CAIRO_INT_STATUS_SUCCESS;
+
+    _cairo_d2d_flush(dst);
+    ID3D10Resource *srcResource = src->surface;
+    if (src->surface.get() == dst->surface.get()) {
+	// Self-copy
+	srcResource = _cairo_d2d_get_buffer_texture(dst);
+	D3D10Factory::Device()->CopyResource(srcResource, src->surface);
+    } else {
+	// Need to flush the source too if it's a different surface.
+        _cairo_d2d_flush(src);
+    }
+
+    // One copy for each rectangle in the final clipping region.
+    for (int i = 0; i < cairo_region_num_rectangles(region); i++) {
+	D3D10_BOX rect;
+	cairo_rectangle_int_t area_to_copy;
+
+	cairo_region_get_rectangle(region, i, &area_to_copy);
+
+	cairo_rectangle_int_t transformed_rect = { area_to_copy.x + translation->x,
+						   area_to_copy.y + translation->y,
+						   area_to_copy.width, area_to_copy.height };
+	cairo_rectangle_int_t surface_rect = { 0, 0, srcDesc.Width, srcDesc.Height };
+
+
+	if (!_cairo_rectangle_contains(&surface_rect, &transformed_rect)) {
+	    /* We cannot do any sort of extend, in the future a little bit of extra code could
+	     * allow us to support EXTEND_NONE.
+	     */
+	    rv = CAIRO_INT_STATUS_UNSUPPORTED;
+	    break;
+	}
+
+	rect.front = 0;
+	rect.back = 1;
+	rect.left = transformed_rect.x;
+	rect.top = transformed_rect.y;
+	rect.right = transformed_rect.x + transformed_rect.width;
+	rect.bottom = transformed_rect.y + transformed_rect.height;
+
+	D3D10Factory::Device()->CopySubresourceRegion(dst->surface,
+						      0,
+						      area_to_copy.x,
+						      area_to_copy.y,
+						      0,
+						      srcResource,
+						      0,
+						      &rect);
+    }
+
+    return rv;
+}
+
+/**
+ * This function will text if we can use GPU mem cpy to execute an operation with
+ * a surface pattern. If box is NULL it will operate on the entire dst surface.
+ */
+static cairo_int_status_t
+_cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
+		    cairo_surface_t *src,
+		    cairo_box_t *box,
+		    const cairo_matrix_t *matrix,
+		    cairo_clip_t *clip,
+		    cairo_operator_t op)
+{
+    if (op != CAIRO_OPERATOR_SOURCE &&
+	!(op == CAIRO_OPERATOR_OVER && src->content == CAIRO_CONTENT_COLOR)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    cairo_point_int_t translation;
+    if ((box && !box_is_integer(box)) ||
+	!_cairo_matrix_is_integer_translation(matrix, &translation.x, &translation.y)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    /* For now we do only D2D sources */
+    if (src->type != CAIRO_SURFACE_TYPE_D2D) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    
+    cairo_rectangle_int_t rect;
+    if (box) {
+	_cairo_box_round_to_rectangle(box, &rect);
+    } else {
+	rect.x = rect.y = 0;
+	rect.width = dst->rt->GetPixelSize().width;
+	rect.height = dst->rt->GetPixelSize().height;
+    }
+    
+    cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
+
+    /* Region we need to clip this operation to */
+    cairo_region_t *clipping_region = NULL;
+    cairo_region_t *region;
+    if (clip) {
+	_cairo_clip_get_region(clip, &clipping_region);
+
+	if (!clipping_region) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+	region = cairo_region_copy(clipping_region);
+
+	cairo_region_intersect_rectangle(region, &rect);
+
+	if (cairo_region_is_empty(region)) {
+	    // Nothing to do.
+	    return CAIRO_INT_STATUS_SUCCESS;
+	}
+    } else {
+	region = cairo_region_create_rectangle(&rect);
+	// Areas outside of the surface do not matter.
+	cairo_rectangle_int_t surface_rect = { 0, 0,
+					       dst->rt->GetPixelSize().width,
+					       dst->rt->GetPixelSize().height };
+	cairo_region_intersect_rectangle(region, &surface_rect);
+    }
+
+    cairo_int_status_t rv = _cairo_d2d_copy_surface(dst, d2dsrc, &translation, region);
+    
+    cairo_region_destroy(region);
+    
+    return rv;
+}
 
 static cairo_int_status_t
 _cairo_d2d_paint(void			*surface,
@@ -2185,6 +2330,17 @@ _cairo_d2d_paint(void			*surface,
 	return _cairo_d2d_clear(d2dsurf, clip);
     }
 
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	const cairo_surface_pattern_t *surf_pattern = 
+	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
+
+	status = _cairo_d2d_try_copy(d2dsurf, surf_pattern->surface,
+				     NULL, &source->matrix, clip, op);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	    return status;
+	}
+    }
 
     _begin_draw_state(d2dsurf);
     status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
@@ -2380,6 +2536,19 @@ _cairo_d2d_fill(void			*surface,
     cairo_int_status_t status;
 
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
+    cairo_box_t box;
+    bool is_box = _cairo_path_fixed_is_box(path, &box);
+
+    if (is_box && source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	const cairo_surface_pattern_t *surf_pattern = 
+	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
+	cairo_int_status_t rv = _cairo_d2d_try_copy(d2dsurf, surf_pattern->surface,
+						    &box, &source->matrix, clip, op);
+
+	if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
+	    return rv;
+	}
+    }
 
     op = _cairo_d2d_simplify_operator(op, source);
 
@@ -2406,8 +2575,6 @@ _cairo_d2d_fill(void			*surface,
 	d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
 
-    cairo_box_t box;
-
     if (op == CAIRO_OPERATOR_CLEAR) {
 	if (_cairo_path_fixed_is_box(path, &box)) {
 	    return _cairo_d2d_clear_box (d2dsurf, clip, &box);
@@ -2416,7 +2583,7 @@ _cairo_d2d_fill(void			*surface,
 	}
     }
 
-    if (_cairo_path_fixed_is_box(path, &box)) {
+    if (is_box) {
 	float x1 = _cairo_fixed_to_float(box.p1.x);
 	float y1 = _cairo_fixed_to_float(box.p1.y);    
 	float x2 = _cairo_fixed_to_float(box.p2.x);    
