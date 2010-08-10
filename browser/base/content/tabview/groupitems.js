@@ -638,8 +638,8 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.droppable(false);
         item.groupItemData = {};
 
-        item.addSubscriber(this, "beforeclose", function() {
-          self.remove($el);
+        item.addSubscriber(this, "close", function() {
+          self.remove(item);
         });
 
         item.setParent(this);
@@ -700,7 +700,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.setRotation(0);
 
       item.droppable(true);
-      item.removeSubscriber(this, "beforeclose");
+      item.removeSubscriber(this, "close");
 
       if (typeof(item.setResizable) == 'function')
         item.setResizable(true);
