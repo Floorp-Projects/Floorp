@@ -256,7 +256,7 @@ Drag.prototype = {
   // ----------
   // Function: drag
   // Called in response to an <Item> draggable "drag" event.
-  drag: function(event, ui) {
+  drag: function(event) {
     this.snap('topleft',true);
 
     if (this.parent && this.parent.expanded) {
