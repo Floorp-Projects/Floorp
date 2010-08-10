@@ -440,9 +440,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
 
     // Init titlebar button info for custom frames.
-    if (GetWindowsVersion() >= VISTA_VERSION) {
-      nsUXThemeData::InitTitlebarInfo();
-    }
+    nsUXThemeData::InitTitlebarInfo();
   } // !sInstanceCount
 
   mIdleService = nsnull;
@@ -1234,16 +1232,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
     Invalidate(PR_FALSE);
 #endif
 
-  // Update titlebar metric info when the window is shown.
-  if (!nsUXThemeData::sTitlebarInfoPopulated && bState &&
-      GetWindowsVersion() >= VISTA_VERSION &&
-      (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
-      (mBorderStyle == eBorderStyle_default || mBorderStyle == eBorderStyle_all)) {
-    TITLEBARINFOEX info = {0};
-    info.cbSize = sizeof(TITLEBARINFOEX);
-    SendMessage(mWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
-    nsUXThemeData::UpdateTitlebarInfo(info);
-  }
   return NS_OK;
 }
 
