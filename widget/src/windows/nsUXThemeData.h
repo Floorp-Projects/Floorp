@@ -123,7 +123,7 @@ public:
 
   // nsWindow calls this to update desktop settings info
   static void InitTitlebarInfo();
-  static void UpdateTitlebarInfo(TITLEBARINFOEX& info);
+  static void UpdateTitlebarInfo(HWND aWnd);
 
   static inline BOOL IsAppThemed() {
     return isAppThemed && isAppThemed();

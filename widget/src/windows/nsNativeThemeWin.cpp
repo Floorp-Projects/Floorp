@@ -139,8 +139,11 @@ static PRInt32 GetTopLevelWindowActiveState(nsIFrame *aFrame)
 static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, PRInt32 eventState)
 {
   if (GetTopLevelWindowActiveState(aFrame) ==
-      mozilla::widget::themeconst::FS_INACTIVE)
+      mozilla::widget::themeconst::FS_INACTIVE) {
+    if (eventState & NS_EVENT_STATE_HOVER)
+      return mozilla::widget::themeconst::BS_HOT;
     return mozilla::widget::themeconst::BS_INACTIVE;
+  }
 
   if (eventState & NS_EVENT_STATE_ACTIVE)
     return mozilla::widget::themeconst::BS_PUSHED;
@@ -158,6 +161,22 @@ static PRInt32 GetClassicWindowFrameButtonState(PRInt32 eventState)
     return DFCS_BUTTONPUSH|DFCS_HOT;
   else
     return DFCS_BUTTONPUSH;
+}
+
+static void QueryForButtonData(nsIFrame *aFrame)
+{
+  if (nsUXThemeData::sTitlebarInfoPopulated)
+    return;
+
+  nsIWidget* widget = aFrame->GetNearestWidget();
+  nsWindow * window = static_cast<nsWindow*>(widget);
+  if (!window)
+    return;
+  if (!window->IsTopLevelWidget() &&
+      !(window = window->GetParentWindow(PR_FALSE)))
+    return;
+
+  nsUXThemeData::UpdateTitlebarInfo(window->GetWindowHandle());
 }
 
 nsNativeThemeWin::nsNativeThemeWin() {
@@ -415,6 +434,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
     case NS_THEME_WINDOW_BUTTON_MINIMIZE:
     case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
     case NS_THEME_WINDOW_BUTTON_RESTORE:
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
       return nsUXThemeData::GetTheme(eUXWindowFrame);
   }
   return NULL;
@@ -1062,6 +1083,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aPart = mozilla::widget::themeconst::WP_RESTOREBUTTON;
       aState = GetWindowFrameButtonState(aFrame, GetContentState(aFrame, aWidgetType));
       return NS_OK;
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
+      aPart = -1;
+      aState = 0;
+      return NS_OK;
   }
 
   aPart = 0;
@@ -1499,6 +1525,53 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   }
 
   HANDLE theme = GetTheme(aWidgetType);
+
+  if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
+      aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) {
+    aResult->SizeTo(0, 0, 0, 0);
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+    // aero glass doesn't display custom buttons
+    if (nsUXThemeData::CheckForCompositor())
+      return PR_TRUE;
+#endif
+
+    // button padding for standard windows
+    if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX) {
+      aResult->top = GetSystemMetrics(SM_CXFRAME);
+      if (nsUXThemeData::sIsVistaOrLater) {
+        aResult->right += 2;
+      } else {
+        aResult->right += 1;
+      }
+    }
+
+    // Adjust horizontal button padding for maximized windows on XP
+    if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED &&
+        !nsUXThemeData::sIsVistaOrLater) {
+      aResult->right += 1;
+    }
+
+    // Push buttons down
+    if (theme) {
+      aResult->top += 1;
+    } else {
+      aResult->top += 2;
+    }
+    return PR_TRUE;
+  }
+
+  // Content padding
+  if (aWidgetType == NS_THEME_WINDOW_TITLEBAR ||
+      aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED) {
+    aResult->SizeTo(0, 0, 0, 0);
+    // Maximized windows have an offscreen offset equal to
+    // the border padding. (windows quirk)
+    if (aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED)
+      aResult->top = GetSystemMetrics(SM_CXFRAME);
+    return PR_TRUE;
+  }
+
   if (!theme)
     return PR_FALSE;
 
@@ -1760,30 +1833,39 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
 
     case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
     case NS_THEME_WINDOW_BUTTON_RESTORE:
-      // For XP, use the theme library dimensions, which seem to be accurate.
-      if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
-        break;
       // The only way to get accurate titlebar button info is to query a
       // window w/buttons when it's visible. nsWindow takes care of this and
       // stores that info in nsUXThemeData.
+      QueryForButtonData(aFrame);
       aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_RESTORE].cx;
       aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_RESTORE].cy;
+      // For XP, subtract 4 from system metrics dimensions.
+      if (nsWindow::GetWindowsVersion() == WINXP_VERSION) {
+        aResult->width -= 4;
+        aResult->height -= 4;
+      }
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
     case NS_THEME_WINDOW_BUTTON_MINIMIZE:
-      if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
-        break;
+      QueryForButtonData(aFrame);
       aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_MINIMIZE].cx;
       aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_MINIMIZE].cy;
+      if (nsWindow::GetWindowsVersion() == WINXP_VERSION) {
+        aResult->width -= 4;
+        aResult->height -= 4;
+      }
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
     case NS_THEME_WINDOW_BUTTON_CLOSE:
-      if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
-        break;
+      QueryForButtonData(aFrame);
       aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_CLOSE].cx;
       aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_CLOSE].cy;
+      if (nsWindow::GetWindowsVersion() == WINXP_VERSION) {
+        aResult->width -= 4;
+        aResult->height -= 4;
+      }
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
@@ -2068,6 +2150,8 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_WINDOW_BUTTON_MINIMIZE:
     case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
     case NS_THEME_WINDOW_BUTTON_RESTORE:
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
       return PR_TRUE;
   }
   return PR_FALSE;
