@@ -8128,11 +8128,12 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
 }
 
 void
-nsCSSFrameConstructor::AttributeWillChange(Element* aElement,
+nsCSSFrameConstructor::AttributeWillChange(nsIContent* aContent,
                                            PRInt32 aNameSpaceID,
                                            nsIAtom* aAttribute,
                                            PRInt32 aModType)
 {
+  Element* aElement = aContent->AsElement();
   nsRestyleHint rshint =
     mPresShell->StyleSet()->HasAttributeDependentStyle(mPresShell->GetPresContext(),
                                                        aElement,
