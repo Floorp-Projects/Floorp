@@ -50,6 +50,8 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
 
     nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, PRBool aAllowRootChanges,
                                        PRInt64 aFolder, PRBool aIsImportDefaults);
+    nsresult ImportHTMLFromURIInternal(nsIURI* aURI, PRBool aAllowRootChanges,
+                                       PRInt64 aFolder, PRBool aIsImportDefaults);
     nsresult WriteContainer(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteContainerHeader(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteTitle(nsINavHistoryResultNode* aItem, nsIOutputStream* aOutput);
