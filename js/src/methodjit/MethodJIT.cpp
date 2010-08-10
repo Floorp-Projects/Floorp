@@ -295,14 +295,18 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "ret"                                "\n"
 );
 
+JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 0x28);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x3C);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x20);
+
 asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
 SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
-    "movl 0x28(%ebx), %edx"                 "\n"
-    "movl 0x2C(%ebx), %ecx"                 "\n"
-    "movl 0x3C(%ebx), %eax"                 "\n"
-    "movl 0x20(%esp), %ebx"                 "\n"
+    "movl 0x28(%ebx), %edx"                 "\n" /* fp->rval data */
+    "movl 0x2C(%ebx), %ecx"                 "\n" /* fp->rval type */
+    "movl 0x3C(%ebx), %eax"                 "\n" /* fp->ncode */
+    "movl 0x20(%esp), %ebx"                 "\n" /* f.fp */
     "ret"                                   "\n"
 );
 
