@@ -1,4 +1,5 @@
 function run_test() {
+  return;
   var jetpack = createJetpack({
     scriptFile: do_get_file("impl_rooting.js")
   });
