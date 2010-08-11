@@ -60,11 +60,8 @@
 
 #navigator-toolbox {
   -moz-appearance: none;
-  border-top: none;
   background-color: transparent;
-}
-
-#navigator-toolbox[tabsontop="true"] {
+  border-top: none;
   border-bottom: 1px solid ThreeDShadow;
 }
 
@@ -1117,10 +1114,6 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
   -moz-box-shadow: 0 -1px ThreeDShadow inset;
-}
-
-#TabsToolbar[tabsontop="false"] {
-  border-bottom: 1px solid ThreeDShadow !important;
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
