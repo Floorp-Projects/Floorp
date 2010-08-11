@@ -4871,13 +4871,12 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return NULL;
 
-    Value *vp = args.getvp();
-    vp[0].setObject(*ctor);
-    vp[1].setNull();
-    memcpy(vp + 2, argv, argc * sizeof(jsval));
+    args.callee().setObject(*ctor);
+    args.thisv().setNull();
+    memcpy(args.argv(), argv, argc * sizeof(jsval));
 
     bool ok = InvokeConstructor(cx, args);
-    JSObject *obj = ok ? vp[0].toObjectOrNull() : NULL;
+    JSObject *obj = ok ? args.rval().toObjectOrNull() : NULL;
 
     LAST_FRAME_CHECKS(cx, ok);
     return obj;
