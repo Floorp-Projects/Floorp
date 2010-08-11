@@ -1192,21 +1192,27 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
         return false;
     }
 
+    Class *clasp = &js_ObjectClass;
+
     /*
      * Call fast constructors without making the object first.
      * The native will be able to make the right new object faster.
      */
     if (obj2->isFunction()) {
-        JSFunction *fun = (JSFunction *) obj2->getPrivate();
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj2);
         if (fun->isFastConstructor()) {
             args.thisv().setMagic(JS_FAST_CONSTRUCTOR);
 
             FastNative fn = (FastNative)fun->u.n.native;
             if (!fn(cx, args.argc(), args.base()))
                 return JS_FALSE;
-            JS_ASSERT(!args.callee().isPrimitive());
+            JS_ASSERT(!args.rval().isPrimitive());
             return JS_TRUE;
         }
+
+        /* Get the class, for natives that aren't fast constructors. */
+        if (!fun->isInterpreted() && fun->u.n.clasp)
+            clasp = fun->u.n.clasp;
     }
 
     Value protov;
@@ -1215,13 +1221,6 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = obj2->getParent();
-    Class *clasp = &js_ObjectClass;
-
-    if (obj2->getClass() == &js_FunctionClass) {
-        JSFunction *f = GET_FUNCTION_PRIVATE(cx, obj2);
-        if (!f->isInterpreted() && f->u.n.clasp)
-            clasp = f->u.n.clasp;
-    }
 
     JSObject* obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
     if (!obj)
