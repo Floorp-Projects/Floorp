@@ -43,9 +43,13 @@
 #include "jsregexp.h"
 #include "jscntxt.h"
 #include "jsobjinlines.h"
+#include "assembler/wtf/Platform.h"
+
+#if ENABLE_YARR_JIT
 #include "yarr/yarr/RegexJIT.h"
-#include "nanojit/avmplus.h"
+#else
 #include "yarr/pcre/pcre.h"
+#endif
 
 namespace js {
 
