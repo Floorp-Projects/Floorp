@@ -38,15 +38,17 @@ function test_local_invalidation() {
   var parent = createHandle(),
       child = parent.createHandle();
 
-  do_check_true(child.invalidate());
+  dump("test_local_invalidation\n");
+  
+  child.invalidate();
   do_check_false(child.isValid);
   do_check_true(parent.isValid);
 
   child = parent.createHandle();
   do_check_true(child.isValid);
 
-  do_check_true(parent.invalidate());
-  do_check_false(parent.invalidate());
+  parent.invalidate();
+  parent.invalidate();
   do_check_false(child.isValid);
   do_check_false(parent.isValid);
 
@@ -60,7 +62,7 @@ function test_local_invalidation() {
   do_check_eq(child.parent.parent, parent);
   do_check_true(child.parent.isValid);
 
-  do_check_true(child.parent.invalidate());
+  child.parent.invalidate();
   do_check_false(child.isValid);
   do_check_true(parent.isValid);
 
@@ -80,7 +82,7 @@ function test_long_parent_chain(len) {
     handle = handle.parent;
 
   do_check_true(child.isValid);
-  do_check_true(ancestor.invalidate());
+  ancestor.invalidate();
   do_check_false(child.isValid);
 }
 

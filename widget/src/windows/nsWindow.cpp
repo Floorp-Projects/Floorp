@@ -157,6 +157,7 @@
 #include "nsHashKeys.h"
 #include "nsString.h"
 #include "mozilla/Services.h"
+#include "nsNativeThemeWin.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
@@ -377,7 +378,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mDisplayPanFeedback   = PR_FALSE;
   mTouchWindow          = PR_FALSE;
   mCustomNonClient      = PR_FALSE;
-  mCompositorFlag       = PR_FALSE;
   mHideChrome           = PR_FALSE;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -414,29 +414,32 @@ nsWindow::nsWindow() : nsBaseWidget()
   // Global initialization
   if (!sInstanceCount) {
 #if !defined(WINCE)
-  gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
+    gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
 #endif
 
-  // Init IME handler
-  nsIMM32Handler::Initialize();
+    // Init IME handler
+    nsIMM32Handler::Initialize();
 
 #ifdef NS_ENABLE_TSF
-  nsTextStore::Initialize();
+    nsTextStore::Initialize();
 #endif
 
 #if !defined(WINCE)
-  if (SUCCEEDED(::OleInitialize(NULL)))
-    sIsOleInitialized = TRUE;
-  NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
+    if (SUCCEEDED(::OleInitialize(NULL)))
+      sIsOleInitialized = TRUE;
+    NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
 #endif
 
 #if defined(HEAP_DUMP_EVENT)
-  InitHeapDump();
+    InitHeapDump();
 #endif
 
 #if !defined(WINCE)
-  InitTrackPointHack();
+    InitTrackPointHack();
 #endif
+
+    // Init titlebar button info for custom frames.
+    nsUXThemeData::InitTitlebarInfo();
   } // !sInstanceCount
 
   mIdleService = nsnull;
@@ -1985,13 +1988,6 @@ nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, PRBool aReflowWindow)
   if (!mCustomNonClient)
     return PR_FALSE;
 
-  // XXX Temp disable margins until frame rendering is supported
-  mCompositorFlag = PR_TRUE;
-  if(!nsUXThemeData::CheckForCompositor()) {
-    mCompositorFlag = PR_FALSE;
-    return PR_FALSE;
-  }
-
   mNonClientOffset.top = mNonClientOffset.bottom =
     mNonClientOffset.left = mNonClientOffset.right = 0;
 
@@ -2102,6 +2098,63 @@ nsWindow::SetNonClientMargins(nsIntMargin &margins)
   }
 
   return NS_OK;
+}
+
+void
+nsWindow::InvalidateNonClientRegion()
+{
+  // +-+-----------------------+-+
+  // | | app non-client chrome | |
+  // | +-----------------------+ |
+  // | |   app client chrome   | | }
+  // | +-----------------------+ | }
+  // | |      app content      | | } area we don't want to invalidate
+  // | +-----------------------+ | }
+  // | |   app client chrome   | | }
+  // | +-----------------------+ | 
+  // +---------------------------+ <
+  //  ^                         ^    windows non-client chrome
+  // client area = app *
+  RECT rect;
+  GetWindowRect(mWnd, &rect);
+  MapWindowPoints(NULL, mWnd, (LPPOINT)&rect, 2);
+  HRGN winRgn = CreateRectRgnIndirect(&rect);
+
+  // Subtract app client chrome and app content leaving
+  // windows non-client chrome and app non-client chrome
+  // in winRgn.
+  GetWindowRect(mWnd, &rect);
+  rect.top += mCaptionHeight;
+  rect.right -= mHorResizeMargin;
+  rect.bottom -= mHorResizeMargin;
+  rect.left += mVertResizeMargin;
+  MapWindowPoints(NULL, mWnd, (LPPOINT)&rect, 2);
+  HRGN clientRgn = CreateRectRgnIndirect(&rect);
+  CombineRgn(winRgn, winRgn, clientRgn, RGN_DIFF);
+  DeleteObject(clientRgn);
+
+  // triggers ncpaint and paint events for the two areas
+  RedrawWindow(mWnd, NULL, winRgn, RDW_FRAME|RDW_INVALIDATE);
+  DeleteObject(winRgn);
+}
+
+HRGN
+nsWindow::ExcludeNonClientFromPaintRegion(HRGN aRegion)
+{
+  RECT rect;
+  HRGN rgn = NULL;
+  if (aRegion == (HRGN)1) { // undocumented value indicating a full refresh
+    GetWindowRect(mWnd, &rect);
+    rgn = CreateRectRgnIndirect(&rect);
+  } else {
+    rgn = aRegion;
+  }
+  GetClientRect(mWnd, &rect);
+  MapWindowPoints(mWnd, NULL, (LPPOINT)&rect, 2);
+  HRGN nonClientRgn = CreateRectRgnIndirect(&rect);
+  CombineRgn(rgn, rgn, nonClientRgn, RGN_DIFF);
+  DeleteObject(nonClientRgn);
+  return rgn;
 }
 
 /**************************************************************
@@ -4511,7 +4564,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   // Glass hit testing w/custom transparent margins
   LRESULT dwmHitResult;
   if (mCustomNonClient &&
-      mCompositorFlag &&
       nsUXThemeData::CheckForCompositor() &&
       nsUXThemeData::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
     *aRetValue = dwmHitResult;
@@ -4652,7 +4704,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // copies the valid information to the specified area within the new
       // client area. If the wParam parameter is FALSE, the application should
       // return zero.
-      if (mCustomNonClient && mCompositorFlag) {
+      if (mCustomNonClient) {
         if (!wParam) {
           result = PR_TRUE;
           *aRetValue = 0;
@@ -4692,7 +4744,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
        * composited desktop.
        */
 
-      if (!mCustomNonClient || !mCompositorFlag)
+      if (!mCustomNonClient)
         break;
 
       *aRetValue =
@@ -4700,6 +4752,87 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = PR_TRUE;
       break;
     }
+
+    case WM_SETTEXT:
+      /*
+       * WM_SETTEXT paints the titlebar area. Avoid this if we have a
+       * custom titlebar we paint ourselves.
+       */
+
+      if (mNonClientMargins.top == -1)
+        break;
+
+      {
+        // From msdn, the way around this is to disable the visible state
+        // temporarily. We need the text to be set but we don't want the
+        // redraw to occur.
+        DWORD style = GetWindowLong(mWnd, GWL_STYLE);
+        SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
+        *aRetValue = CallWindowProcW(GetPrevWindowProc(), mWnd,
+                                     msg, wParam, lParam);
+        SetWindowLong(mWnd, GWL_STYLE, style);
+        return PR_TRUE;
+      }
+
+    case WM_NCACTIVATE:
+    {
+      /*
+       * WM_NCACTIVATE paints nc areas. Avoid this and re-route painting
+       * through WM_NCPAINT via InvalidateNonClientRegion.
+       */
+
+      if (!mCustomNonClient)
+        break;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+      // let the dwm handle nc painting on glass
+      if(nsUXThemeData::CheckForCompositor())
+        break;
+#endif
+
+      if (wParam == TRUE) {
+        // going active
+        *aRetValue = FALSE; // ignored
+        result = PR_TRUE;
+        // invalidate to trigger a paint
+        InvalidateNonClientRegion();
+        break;
+      } else {
+        // going inactive
+        *aRetValue = TRUE; // go ahead and deactive
+        result = PR_TRUE;
+        // invalidate to trigger a paint
+        InvalidateNonClientRegion();
+        break;
+      }
+    }
+
+    case WM_NCPAINT:
+    {
+      /*
+       * Reset the non-client paint region so that it excludes the
+       * non-client areas we paint manually. Then call defwndproc
+       * to do the actual painting.
+       */
+
+      if (!mCustomNonClient)
+        break;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+      // let the dwm handle nc painting on glass
+      if(nsUXThemeData::CheckForCompositor())
+        break;
+#endif
+
+      HRGN paintRgn = ExcludeNonClientFromPaintRegion((HRGN)wParam);
+      LRESULT res = CallWindowProcW(GetPrevWindowProc(), mWnd,
+                                    msg, (WPARAM)paintRgn, lParam);
+      if (paintRgn != (HRGN)wParam)
+        DeleteObject(paintRgn);
+      *aRetValue = res;
+      result = PR_TRUE;
+    }
+    break;
 
 #ifndef WINCE
     case WM_POWERBROADCAST:

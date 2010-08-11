@@ -58,6 +58,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
+#include "nsFocusManager.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -480,7 +481,7 @@ nsHTMLImageElement::IsHTMLFocusable(PRBool aWithMouse,
 
   *aIsFocusable = 
 #ifdef XP_MACOSX
-    !aWithMouse &&
+    (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
 #endif
     (tabIndex >= 0 || HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 

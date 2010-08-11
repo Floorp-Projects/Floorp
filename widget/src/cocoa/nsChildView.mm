@@ -5687,6 +5687,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent
 {
+  // If we're being destroyed assume the default -- return YES.
+  if (!mGeckoChild)
+    return YES;
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_ACTIVATE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -6404,6 +6408,9 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
     return nil;
 
   ChildView* childView = (ChildView*)view;
+  // If childView is being destroyed return nil.
+  if (![childView widget])
+    return nil;
   return WindowAcceptsEvent(window, aEvent, childView) ? childView : nil;
 }
 
