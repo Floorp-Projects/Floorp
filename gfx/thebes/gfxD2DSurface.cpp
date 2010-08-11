@@ -46,6 +46,14 @@ gfxD2DSurface::gfxD2DSurface(HWND aWnd, gfxContentType aContent)
         (cairo_content_t)aContent));
 }
 
+gfxD2DSurface::gfxD2DSurface(HANDLE handle, gfxContentType aContent)
+{
+    Init(cairo_d2d_surface_create_for_handle(
+        gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
+        handle,
+	(cairo_content_t)aContent));
+}
+
 gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
 {
     Init(csurf, PR_TRUE);
