@@ -125,7 +125,7 @@ MSG_DEF(JSMSG_BYTECODE_TOO_BIG,        42, 2, JSEXN_INTERNALERR, "bytecode {0} t
 MSG_DEF(JSMSG_UNKNOWN_FORMAT,          43, 1, JSEXN_INTERNALERR, "unknown bytecode format {0}")
 MSG_DEF(JSMSG_TOO_MANY_CON_ARGS,       44, 0, JSEXN_SYNTAXERR, "too many constructor arguments")
 MSG_DEF(JSMSG_TOO_MANY_FUN_ARGS,       45, 0, JSEXN_SYNTAXERR, "too many function arguments")
-MSG_DEF(JSMSG_BAD_QUANTIFIER,          46, 1, JSEXN_SYNTAXERR, "invalid quantifier {0}")
+MSG_DEF(JSMSG_BAD_QUANTIFIER,          46, 0, JSEXN_SYNTAXERR, "invalid quantifier")
 MSG_DEF(JSMSG_MIN_TOO_BIG,             47, 1, JSEXN_SYNTAXERR, "overlarge minimum {0}")
 MSG_DEF(JSMSG_MAX_TOO_BIG,             48, 1, JSEXN_SYNTAXERR, "overlarge maximum {0}")
 MSG_DEF(JSMSG_OUT_OF_ORDER,            49, 1, JSEXN_SYNTAXERR, "maximum {0} less than minimum")

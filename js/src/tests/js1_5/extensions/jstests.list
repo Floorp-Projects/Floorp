@@ -43,7 +43,7 @@ script regress-325269.js
 script regress-327608.js
 script regress-328443.js
 script regress-328556.js
-script regress-330569.js
+skip script regress-330569.js # Yarr doesn't bail on complex regexps.
 script regress-333541.js
 skip script regress-335700.js # bug xxx - reftest hang, BigO
 skip-if(!xulRuntime.shell) script regress-336409-1.js # no results reported.
@@ -71,7 +71,7 @@ skip script regress-350531.js # slow
 script regress-351102-01.js
 script regress-351102-02.js
 script regress-351102-06.js
-script regress-351448.js
+skip script regress-351448.js # Yarr doesn't have the same complexity errors at execution time.
 script regress-351463-01.js
 script regress-351973.js
 script regress-352261.js

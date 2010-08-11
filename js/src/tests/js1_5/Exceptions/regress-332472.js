@@ -39,7 +39,7 @@
 var BUGNUMBER = 332472;
 var summary = 'new RegExp() ignores string boundaries when throwing exceptions';
 var actual = '';
-var expect = 'SyntaxError: invalid quantifier ?asdf';
+var expect = 'SyntaxError: invalid quantifier';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
