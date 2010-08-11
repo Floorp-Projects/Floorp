@@ -396,7 +396,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
         }
     }
 
-    if (!Invoke(f.cx, InvokeArgsGuard(vp, argc), 0))
+    if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
         THROWV(NULL);
 
     return NULL;
@@ -455,7 +455,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))
+    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
         THROWV(NULL);
 
     return NULL;

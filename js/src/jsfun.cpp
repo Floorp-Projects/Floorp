@@ -2037,12 +2037,12 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     /* Push fval, obj, and the args. */
-    args.getvp()[0] = fval;
-    args.getvp()[1] = ObjectOrNullValue(obj);
-    memcpy(args.getvp() + 2, argv, argc * sizeof *argv);
+    args.callee() = fval;
+    args.thisv().setObjectOrNull(obj);
+    memcpy(args.argv(), argv, argc * sizeof *argv);
 
     bool ok = Invoke(cx, args, 0);
-    *vp = *args.getvp();
+    *vp = args.rval();
     return ok;
 }
 
@@ -2118,9 +2118,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Push fval, obj, and aobj's elements as args. */
-    Value *sp = args.getvp();
-    *sp++ = fval;
-    *sp++ = ObjectOrNullValue(obj);
+    args.callee() = fval;
+    args.thisv().setObjectOrNull(obj);
 
     /* Steps 7-8. */
     if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
@@ -2131,31 +2130,32 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
          * corresponding arguments element. See args_delProperty.
          */
         JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate();
+        Value *argv = args.argv();
         if (fp) {
-            memcpy(sp, fp->argv, n * sizeof(Value));
+            memcpy(argv, fp->argv, n * sizeof(Value));
             for (uintN i = 0; i < n; i++) {
                 if (aobj->getArgsElement(i).isMagic(JS_ARGS_HOLE)) // suppress deleted element
-                    sp[i].setUndefined();
+                    argv[i].setUndefined();
             }
         } else {
             for (uintN i = 0; i < n; i++) {
-                sp[i] = aobj->getArgsElement(i);
-                if (sp[i].isMagic(JS_ARGS_HOLE))
-                    sp[i].setUndefined();
+                argv[i] = aobj->getArgsElement(i);
+                if (argv[i].isMagic(JS_ARGS_HOLE))
+                    argv[i].setUndefined();
             }
         }
     } else {
+        Value *argv = args.argv();
         for (uintN i = 0; i < n; i++) {
-            if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), sp))
+            if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), &argv[i]))
                 return JS_FALSE;
-            sp++;
         }
     }
 
     /* Step 9. */
     if (!Invoke(cx, args, 0))
         return false;
-    *vp = *args.getvp();
+    *vp = args.rval();
     return true;
 }
 
@@ -2664,14 +2664,33 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
     AutoValueRooter tvr(cx);
     uintN error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
     LeaveTrace(cx);
+
+    /*
+     * We try to the print the code that produced vp if vp is a value in the
+     * most recent interpreted stack frame. Note that additional values, not
+     * directly produced by the script, may have been pushed onto the frame's
+     * expression stack (e.g. by InvokeFromEngine) thereby incrementing sp past
+     * the depth simulated by ReconstructPCStack. Since we must pass an offset
+     * from the top of the simulated stack to js_ReportValueError3, it is
+     * important to do bounds checking using the simulated, rather than actual,
+     * stack depth.
+     */
+    ptrdiff_t spindex = 0;
+
     FrameRegsIter i(cx);
     while (!i.done() && !i.pc())
         ++i;
 
-    ptrdiff_t spindex =
-        (!i.done() && i.fp()->base() <= vp && vp < i.sp())
-        ? vp - i.sp()
-        : ((flags & JSV2F_SEARCH_STACK) ? JSDVG_SEARCH_STACK : JSDVG_IGNORE_STACK);
+    if (!i.done()) {
+        uintN depth = js_ReconstructStackDepth(cx, i.fp()->script, i.pc());
+        Value *simsp = i.fp()->base() + depth;
+        JS_ASSERT(simsp <= i.sp());
+        if (i.fp()->base() <= vp && vp < simsp)
+            spindex = vp - simsp;
+    }
+
+    if (!spindex)
+        spindex = ((flags & JSV2F_SEARCH_STACK) ? JSDVG_SEARCH_STACK : JSDVG_IGNORE_STACK);
 
     js_ReportValueError3(cx, error, spindex, *vp, NULL, name, source);
 }
