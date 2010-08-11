@@ -226,28 +226,8 @@ static inline PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
 static inline PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Coord;
 }
-static inline PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_None || aUnit == eStyleUnit_Coord;
-}
 static inline PRBool IsFixedOffset(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Coord;
-}
-static inline PRBool IsFixedHeight(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord;
-}
-
-static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
-{
-  return aCoord.GetUnit() == eStyleUnit_Coord ||
-         (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          (aCoord.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
-           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT));
-}
-
-static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
-{
-  return aCoord.GetUnit() == eStyleUnit_None ||
-         IsFixedWidth(aCoord);
 }
 
 PRBool
@@ -286,9 +266,9 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // then our frame width does not depend on the parent width.
     // Note that borders never depend on the parent width
     // XXX All of the enumerated values except -moz-available are ok too.
-    if (!IsFixedWidth(pos->mWidth) ||
-        !IsFixedWidth(pos->mMinWidth) ||
-        !IsFixedMaxWidth(pos->mMaxWidth) ||
+    if (pos->WidthDependsOnContainer() ||
+        pos->MinWidthDependsOnContainer() ||
+        pos->MaxWidthDependsOnContainer() ||
         !IsFixedPaddingSize(padding->mPadding.GetLeftUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetRightUnit())) {
       return PR_TRUE;
@@ -325,12 +305,12 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // and height is a length or height and bottom are auto and top is not auto,
     // then our frame height does not depend on the parent height.
     // Note that borders never depend on the parent height
-    if (!(IsFixedHeight(pos->mHeight.GetUnit()) ||
-          (pos->mHeight.GetUnit() == eStyleUnit_Auto &&
+    if ((pos->HeightDependsOnContainer() &&
+         !(pos->mHeight.GetUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetBottomUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetTopUnit() != eStyleUnit_Auto)) ||
-        !IsFixedHeight(pos->mMinHeight.GetUnit()) ||
-        !IsFixedMaxSize(pos->mMaxHeight.GetUnit()) ||
+        pos->MinHeightDependsOnContainer() ||
+        pos->MaxHeightDependsOnContainer() ||
         !IsFixedPaddingSize(padding->mPadding.GetTopUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetBottomUnit())) { 
       return PR_TRUE;
