@@ -1390,24 +1390,23 @@
 
             var closeWindow = false;
             var newTab = false;
-            if (this.tabs.length - this._removingTabs.length == 1) {
-              if (!TabView || !TabView.isVisible()) {
-                closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
-                              !window.toolbar.visible ||
-                                this.tabContainer._closeWindowWithLastTab;
+            if (this.tabs.length - this._removingTabs.length == 1 && 
+                (!TabView || !TabView.isVisible())) {
+              closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
+                            !window.toolbar.visible ||
+                              this.tabContainer._closeWindowWithLastTab;
 
-                // Closing the tab and replacing it with a blank one is notably slower
-                // than closing the window right away. If the caller opts in, take
-                // the fast path.
-                if (closeWindow &&
-                   aCloseWindowFastpath &&
-                   this._removingTabs.length == 0 &&
-                   (this._windowIsClosing = window.closeWindow(true)))
-                  return null;
+              // Closing the tab and replacing it with a blank one is notably slower
+              // than closing the window right away. If the caller opts in, take
+              // the fast path.
+              if (closeWindow &&
+                 aCloseWindowFastpath &&
+                 this._removingTabs.length == 0 &&
+                 (this._windowIsClosing = window.closeWindow(true)))
+                return null;
 
-                newTab = true;
-              }
-           }
+              newTab = true;
+            }
 
             this._removingTabs.push(aTab);
 
