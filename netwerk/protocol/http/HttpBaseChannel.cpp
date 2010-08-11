@@ -905,10 +905,7 @@ HttpBaseChannel::SetCookie(const char *aCookieHeader)
   nsICookieService *cs = gHttpHandler->GetCookieService();
   NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
 
-  return cs->SetCookieStringFromHttp(mURI,
-                                     nsnull,
-                                     nsnull,
-                                     aCookieHeader,
+  return cs->SetCookieStringFromHttp(mURI, nsnull, nsnull, aCookieHeader,
                                      mResponseHead->PeekHeader(nsHttp::Date),
                                      this);
 }
@@ -972,8 +969,7 @@ HttpBaseChannel::AddCookiesToRequest()
   if (cs) {
     cs->GetCookieStringFromHttp(mURI,
                                 mDocumentURI ? mDocumentURI : mOriginalURI,
-                                this,
-                                getter_Copies(cookie));
+                                this, getter_Copies(cookie));
   }
 
   if (cookie.IsEmpty()) {
@@ -1046,11 +1042,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
         const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
         PRInt64 len = clen ? nsCRT::atoll(clen) : -1;
         uploadChannel2->ExplicitSetUploadStream(
-            mUploadStream,
-            nsDependentCString(ctype),
-            len,
-            nsDependentCString(mRequestHead.Method()),
-            mUploadStreamHasHeaders);
+                                  mUploadStream, nsDependentCString(ctype), len,
+                                  nsDependentCString(mRequestHead.Method()),
+                                  mUploadStreamHasHeaders);
       } else {
         if (mUploadStreamHasHeaders) {
           uploadChannel->SetUploadStream(mUploadStream, EmptyCString(),
@@ -1065,8 +1059,8 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
           }
           if (clen) {
             uploadChannel->SetUploadStream(mUploadStream,
-                             nsDependentCString(ctype),
-                             atoi(clen));
+                                           nsDependentCString(ctype),
+                                           atoi(clen));
           }
         }
       }
