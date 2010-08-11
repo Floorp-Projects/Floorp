@@ -152,9 +152,9 @@ namespace nanojit {
         #define asm_output(...) do { \
             if (_logc->lcbits & LC_Native) { \
                 outline[0]='\0'; \
-               VMPI_sprintf(outline, "%p   ", _nIns); \
-                sprintf(&outline[13], ##__VA_ARGS__); \
-                output(); \
+                VMPI_sprintf(outline, "%p   ", _nIns);  \
+                VMPI_sprintf(outline+VMPI_strlen(outline), ##__VA_ARGS__);   \
+                output();                               \
             } \
         } while (0) /* no semi */
         #define gpn(r)                  regNames[(r)]
