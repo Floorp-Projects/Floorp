@@ -79,7 +79,6 @@ class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public nsICacheInfoChannel
                        , public nsIEncodedChannel
-                       , public nsIResumableChannel
                        , public nsIProxiedChannel
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
@@ -89,7 +88,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICACHEINFOCHANNEL
   NS_DECL_NSIENCODEDCHANNEL
-  NS_DECL_NSIRESUMABLECHANNEL
   NS_DECL_NSIPROXIEDCHANNEL
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
@@ -116,6 +114,8 @@ public:
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
   // nsISupportsPriority
   NS_IMETHOD SetPriority(PRInt32 value);
+  // nsIResumableChannel
+  NS_IMETHOD ResumeAt(PRUint64 startPos, const nsACString& entityID);
 
   // Final setup when redirect has proceeded successfully in chrome
   nsresult CompleteRedirectSetup(nsIStreamListener *listener, 
@@ -156,6 +156,11 @@ private:
   PRUint32     mCacheExpirationTime;
   nsCString    mCachedCharset;
 
+  // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
+  bool mSendResumeAt;
+  // Current suspension depth for this channel object
+  PRUint32 mSuspendCount;
+
   // FIXME: replace with IPDL states (bug 536319) 
   enum HttpChannelChildState mState;
   bool mIPCOpen;
@@ -166,6 +171,7 @@ private:
   // event loop (ex: IPDL rpc) could cause listener->OnDataAvailable (for
   // instance) to be called before mListener->OnStartRequest has completed.
   void BeginEventQueueing();
+  void EndEventQueueing();
   void FlushEventQueue();
   void EnqueueEvent(ChildChannelEvent* callback);
   bool ShouldEnqueue();
@@ -174,6 +180,7 @@ private:
   enum {
     PHASE_UNQUEUED,
     PHASE_QUEUEING,
+    PHASE_FINISHED_QUEUEING,
     PHASE_FLUSHING
   } mQueuePhase;
 
@@ -211,16 +218,26 @@ private:
 inline void
 HttpChannelChild::BeginEventQueueing()
 {
-  if (mQueuePhase == PHASE_FLUSHING)
+  if (mQueuePhase != PHASE_UNQUEUED)
     return;
   // Store incoming IPDL messages for later.
   mQueuePhase = PHASE_QUEUEING;
 }
 
+inline void
+HttpChannelChild::EndEventQueueing()
+{
+  if (mQueuePhase != PHASE_QUEUEING)
+    return;
+
+  mQueuePhase = PHASE_FINISHED_QUEUEING;
+}
+
+
 inline bool
 HttpChannelChild::ShouldEnqueue()
 {
-  return mQueuePhase != PHASE_UNQUEUED;
+  return mQueuePhase != PHASE_UNQUEUED || mSuspendCount;
 }
 
 inline void

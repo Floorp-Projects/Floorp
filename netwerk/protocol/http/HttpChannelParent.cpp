@@ -104,7 +104,10 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const PRUint16&            priority,
                                  const PRUint8&             redirectionLimit,
                                  const PRBool&              allowPipelining,
-                                 const PRBool&              forceAllowThirdPartyCookie)
+                                 const PRBool&              forceAllowThirdPartyCookie,
+                                 const bool&                doResumeAt,
+                                 const PRUint64&            startPos,
+                                 const nsCString&           entityID)
 {
   nsCOMPtr<nsIURI> uri(aURI);
   nsCOMPtr<nsIURI> originalUri(aOriginalURI);
@@ -128,6 +131,9 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   httpChan->SetRemoteChannel(true);
+
+  if (doResumeAt)
+    httpChan->ResumeAt(startPos, entityID);
 
   if (originalUri)
     httpChan->SetOriginalURI(originalUri);
@@ -180,6 +186,20 @@ HttpChannelParent::RecvSetPriority(const PRUint16& priority)
 {
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   httpChan->SetPriority(priority);
+  return true;
+}
+
+bool
+HttpChannelParent::RecvSuspend()
+{
+  mChannel->Suspend();
+  return true;
+}
+
+bool
+HttpChannelParent::RecvResume()
+{
+  mChannel->Resume();
   return true;
 }
 
