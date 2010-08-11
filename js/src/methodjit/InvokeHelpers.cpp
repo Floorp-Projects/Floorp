@@ -684,7 +684,7 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
             break;
 
         /* Unwind and return. */
-        ok &= js_UnwindScope(cx, 0, cx->throwing);
+        ok &= bool(js_UnwindScope(cx, 0, cx->throwing));
         InlineReturn(cx, ok);
     }
 
