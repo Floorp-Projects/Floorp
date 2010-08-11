@@ -2141,8 +2141,8 @@ var gCSSProperties = {
 		domProp: "textShadow",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
 		prerequisites: { "color": "blue" },
+		initial_values: [ "none" ],
 		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px",
 			/* calc() values */
 			"2px 2px -moz-calc(-5px)", /* clamped */
@@ -2281,6 +2281,8 @@ var gCSSProperties = {
 		domProp: "width",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		/* computed value tests for width test more with display:block */
+		prerequisites: { "display": "block" },
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
