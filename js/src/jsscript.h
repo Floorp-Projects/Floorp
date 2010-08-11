@@ -46,7 +46,6 @@
 #include "jsatom.h"
 #include "jsprvtd.h"
 #include "jsdbgapi.h"
-#include "jsclist.h"
 
 /*
  * Type of try note associated with each catch or finally block, and also with
@@ -185,8 +184,6 @@ union CallSite;
 #endif
 
 struct JSScript {
-    /* FIXME: bug 586181 */
-    JSCList         links;      /* Links for compartment script list */
     jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint32          length;     /* length of code vector */
     uint16          version;    /* JS version under which script was compiled */
@@ -215,9 +212,6 @@ struct JSScript {
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
-#ifdef JS_METHODJIT
-    bool            debugMode:1;      /* script was compiled in debug mode */
-#endif
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */

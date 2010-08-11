@@ -1,4 +1,3 @@
-setDebug(true);
 function main() {
   return 1;
 }
