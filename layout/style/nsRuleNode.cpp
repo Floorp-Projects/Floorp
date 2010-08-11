@@ -512,19 +512,9 @@ SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   aCoord = ComputeCalc(aValue, ops);
 }
 
-struct ComputeComputedCalcCalcOps : public css::BasicCoordCalcOps
+struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,
+                                    public css::BasicCoordCalcOps
 {
-  typedef nsStyleCoord input_type;
-  typedef nsStyleCoord::Array input_array_type;
-
-  static nsCSSUnit GetUnit(const nsStyleCoord& aValue)
-  {
-    if (aValue.IsCalcUnit()) {
-      return css::ConvertCalcUnit(aValue.GetUnit());
-    }
-    return eCSSUnit_Null;
-  }
-
   const nscoord mPercentageBasis;
 
   ComputeComputedCalcCalcOps(nscoord aPercentageBasis)
@@ -542,13 +532,6 @@ struct ComputeComputedCalcCalcOps : public css::BasicCoordCalcOps
       result = aValue.GetCoordValue();
     }
     return result;
-  }
-
-  float ComputeNumber(const nsStyleCoord& aValue)
-  {
-    NS_ABORT_IF_FALSE(PR_FALSE, "SpecifiedToComputedCalcOps should not "
-                                "leave numbers in structure");
-    return 0.0f;
   }
 };
 
