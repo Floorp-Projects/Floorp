@@ -47,10 +47,6 @@
 #include "prlog.h"
 #include "nsAutoPtr.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIDocument.h"
-#include "nsGUIEvent.h"
-#include "nsEventDispatcher.h"
-#include "jsapi.h"
 
 /*
  * TODO:
@@ -82,14 +78,6 @@ nsRefreshDriver::MostRecentRefresh() const
   const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
 
   return mMostRecentRefresh;
-}
-
-PRInt64
-nsRefreshDriver::MostRecentRefreshEpochTime() const
-{
-  const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
-
-  return mMostRecentRefreshEpochTime;
 }
 
 PRBool
@@ -155,15 +143,12 @@ nsRefreshDriver::ObserverCount() const
   }
   sum += mStyleFlushObservers.Length();
   sum += mLayoutFlushObservers.Length();
-  sum += mBeforePaintTargets.Length();
   return sum;
 }
 
 void
 nsRefreshDriver::UpdateMostRecentRefresh()
 {
-  // Call JS_Now first, since that can have nonzero latency in some rare cases.
-  mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
 }
 
@@ -232,21 +217,6 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
       }
     }
     if (i == 0) {
-      // Don't just loop while we have things in mBeforePaintTargets,
-      // the whole point is that event handlers should readd the
-      // target as needed.
-      nsTArray<nsIDocument*> targets;
-      targets.SwapElements(mBeforePaintTargets);
-      PRInt64 eventTime = mMostRecentRefreshEpochTime / PR_USEC_PER_MSEC;
-      for (PRUint32 i = 0; i < targets.Length(); ++i) {
-        targets[i]->BeforePaintEventFiring();
-      }
-      for (PRUint32 i = 0; i < targets.Length(); ++i) {
-        nsEvent ev(PR_TRUE, NS_BEFOREPAINT);
-        ev.time = eventTime;
-        nsEventDispatcher::Dispatch(targets[i], nsnull, &ev);
-      }
-
       // This is the Flush_Style case.
       while (!mStyleFlushObservers.IsEmpty() &&
              mPresContext && mPresContext->GetPresShell()) {
@@ -310,20 +280,3 @@ nsRefreshDriver::IsRefreshObserver(nsARefreshObserver *aObserver,
   return array.Contains(aObserver);
 }
 #endif
-
-PRBool
-nsRefreshDriver::ScheduleBeforePaintEvent(nsIDocument* aDocument)
-{
-  NS_ASSERTION(mBeforePaintTargets.IndexOf(aDocument) ==
-               mBeforePaintTargets.NoIndex,
-               "Shouldn't have a paint event posted for this document");
-  PRBool appended = mBeforePaintTargets.AppendElement(aDocument) != nsnull;
-  EnsureTimerStarted();
-  return appended;
-}
-
-void
-nsRefreshDriver::RevokeBeforePaintEvent(nsIDocument* aDocument)
-{
-  mBeforePaintTargets.RemoveElement(aDocument);
-}
