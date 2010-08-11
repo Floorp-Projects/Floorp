@@ -1259,7 +1259,10 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->getThisObject(cx);
+    if (fp->isDummyFrame())
+        return NULL;
+    else
+        return fp->getThisObject(cx);
 }
 
 JS_PUBLIC_API(JSFunction *)

@@ -69,7 +69,8 @@ enum JSFrameFlags {
     JSFRAME_BAILING            = 0x100, /* walking out of a method JIT'd frame */
     JSFRAME_RECORDING          = 0x200, /* recording a trace */
     JSFRAME_BAILED_AT_RETURN   = 0x400, /* bailed at JSOP_RETURN */
-
+    JSFRAME_DUMMY              = 0x800, /* frame is a dummy frame */
+	
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
 
@@ -244,7 +245,7 @@ struct JSStackFrame
         return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
 
-    bool isDummyFrame() const { return !script && !fun; }
+    bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
 
   private:
     JSObject *computeThisObject(JSContext *cx);
@@ -545,6 +546,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
+    JS_ASSERT(!isDummyFrame());
     return thisv.isPrimitive() ? computeThisObject(cx) : &thisv.toObject();
 }
 
