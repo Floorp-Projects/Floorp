@@ -205,6 +205,7 @@ namespace JSC {
             FMRS = 0x0e100a10,
             FSITOD = 0x0eb80bc0,
             FTOSID = 0x0ebd0b40,
+            FTOSIZD = 0x0ebd0bc0,
             FMSTAT = 0x0ef1fa10
 #if WTF_ARM_ARCH_VERSION >= 5
            ,CLZ = 0x016f0f10,
@@ -424,6 +425,12 @@ namespace JSC {
         {
             spewInsWithOp2("cmp", cc, rn, op2);
             emitInst(static_cast<ARMWord>(cc) | CMP | SET_CC, 0, rn, op2);
+        }
+
+        void cmn_r(int rn, ARMWord op2, Condition cc = AL)
+        {
+            spewInsWithOp2("cmn", cc, rn, op2);
+            emitInst(static_cast<ARMWord>(cc) | CMN | SET_CC, 0, rn, op2);
         }
 
         void orr_r(int rd, int rn, ARMWord op2, Condition cc = AL)
@@ -673,16 +680,18 @@ namespace JSC {
 
         void fdtr_u(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
         {
+            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, "vldr.f64", nameFpRegD(dd), nameGpReg(rn), offset);
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
             ASSERT(offset <= 0xff);
             emitInst(static_cast<ARMWord>(cc) | FDTR | DT_UP | (isLoad ? DT_LOAD : 0), dd, rn, offset);
         }
 
         void fdtr_d(bool isLoad, int dd, int rn, ARMWord offset, Condition cc = AL)
         {
+            char const * ins = isLoad ? "vldr.f64" : "vstr.f64";
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, "vldr.f64", nameFpRegD(dd), nameGpReg(rn), offset);
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, ins, nameFpRegD(dd), nameGpReg(rn), offset);
             ASSERT(offset <= 0xff);
             emitInst(static_cast<ARMWord>(cc) | FDTR | (isLoad ? DT_LOAD : 0), dd, rn, offset);
         }
@@ -739,6 +748,13 @@ namespace JSC {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
             emitInst(static_cast<ARMWord>(cc) | FTOSID, fd, 0, dm);
+        }
+
+        void ftosizd_r(int fd, int dm, Condition cc = AL)
+        {
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FTOSIZD, fd, 0, dm);
         }
 
         void fmstat(Condition cc = AL)

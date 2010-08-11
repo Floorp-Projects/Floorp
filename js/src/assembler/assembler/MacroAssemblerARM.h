@@ -853,7 +853,7 @@ public:
 
     bool supportsFloatingPointTruncate() const
     {
-        return false;
+        return true;
     }
 
     bool supportsFloatingPointSqrt() const
@@ -972,13 +972,17 @@ public:
     // Truncates 'src' to an integer, and places the resulting 'dest'.
     // If the result is not representable as a 32 bit value, branch.
     // May also branch for some values that are representable in 32 bits
-    // (specifically, in this case, INT_MIN).
+    // (specifically, in this case, INT_MIN and INT_MAX).
     Jump branchTruncateDoubleToInt32(FPRegisterID src, RegisterID dest)
     {
-        (void)(src);
-        (void)(dest);
-        ASSERT_NOT_REACHED();
-        return jump();
+        m_assembler.ftosizd_r(ARMRegisters::SD0, src);
+        // If FTOSIZD (VCVT.S32.F64) can't fit the result into a 32-bit
+        // integer, it saturates at INT_MAX or INT_MIN. Testing this is
+        // probably quicker than testing FPSCR for exception.
+        m_assembler.fmrs_r(dest, ARMRegisters::SD0);
+        m_assembler.cmn_r(dest, ARMAssembler::getOp2(1));
+        m_assembler.cmp_r(dest, ARMAssembler::getOp2(0x80000000), ARMCondition(NonZero));
+        return Jump(m_assembler.jmp(ARMCondition(Zero)));
     }
 
     // Convert 'src' to an integer, and places the resulting 'dest'.
