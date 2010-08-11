@@ -1563,6 +1563,14 @@ if test -z "$OS_TARGET"; then
 fi
 OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
+dnl Set INTEL_ARCHITECTURE if we're compiling for x86-32 or x86-64.
+dnl ===============================================================
+INTEL_ARCHITECTURE=
+case "$OS_TEST" in
+    x86_64|i?86)
+      INTEL_ARCHITECTURE=1
+esac
+
 dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
@@ -9122,6 +9130,8 @@ AC_SUBST(OS_TARGET)
 AC_SUBST(OS_ARCH)
 AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
+AC_SUBST(CPU_ARCH)
+AC_SUBST(INTEL_ARCHITECTURE)
 
 AC_SUBST(MOZ_DISABLE_JAR_PACKAGING)
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
