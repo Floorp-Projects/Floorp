@@ -723,7 +723,7 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            if (TabView.isVisible()) {
+            if (TabView && TabView.isVisible()) {
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.getWindowTitle();
@@ -1391,7 +1391,7 @@
             var closeWindow = false;
             var newTab = false;
             if (this.tabs.length - this._removingTabs.length == 1) {
-              if (!TabView.isVisible()) {
+              if (!TabView || !TabView.isVisible()) {
                 closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                               !window.toolbar.visible ||
                                 this.tabContainer._closeWindowWithLastTab;
