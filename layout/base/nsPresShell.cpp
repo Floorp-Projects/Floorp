@@ -7267,8 +7267,7 @@ PresShell::Freeze()
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
 
   nsPresContext* presContext = GetPresContext();
-  if (presContext &&
-      presContext->RefreshDriver()->PresContext() == presContext) {
+  if (presContext) {
     presContext->RefreshDriver()->Freeze();
   }
 }
@@ -7321,8 +7320,7 @@ void
 PresShell::Thaw()
 {
   nsPresContext* presContext = GetPresContext();
-  if (presContext &&
-      presContext->RefreshDriver()->PresContext() == presContext) {
+  if (presContext) {
     presContext->RefreshDriver()->Thaw();
   }
 
