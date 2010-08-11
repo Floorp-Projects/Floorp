@@ -56,6 +56,7 @@
 #include "nsIURI.h"
 #include "nsISupportsPriority.h"
 #include "nsIApplicationCache.h"
+#include "nsIResumableChannel.h"
 
 #define DIE_WITH_ASYNC_OPEN_MSG()                                              \
   do {                                                                         \
@@ -95,6 +96,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIUploadChannel
                       , public nsIUploadChannel2
                       , public nsISupportsPriority
+                      , public nsIResumableChannel
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -168,6 +170,9 @@ public:
   NS_IMETHOD GetPriority(PRInt32 *value);
   NS_IMETHOD AdjustPriority(PRInt32 delta);
 
+  // nsIResumableChannel
+  NS_IMETHOD GetEntityID(nsACString& aEntityID);
+
 protected:
   void AddCookiesToRequest();
   virtual nsresult SetupReplacementChannel(nsIURI *,
@@ -204,6 +209,10 @@ protected:
   nsCString                         mContentTypeHint;
   nsCString                         mContentCharsetHint;
   nsCString                         mUserSetCookieHeader;
+
+  // Resumable channel specific data
+  nsCString                         mEntityID;
+  PRUint64                          mStartPos;
 
   nsresult                          mStatus;
   PRUint32                          mLoadFlags;

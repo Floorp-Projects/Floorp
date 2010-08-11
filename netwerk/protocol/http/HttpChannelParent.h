@@ -93,10 +93,15 @@ protected:
                              const PRUint16&            priority,
                              const PRUint8&             redirectionLimit,
                              const PRBool&              allowPipelining,
-                             const PRBool&              forceAllowThirdPartyCookie);
+                             const PRBool&              forceAllowThirdPartyCookie,
+                             const bool&                doResumeAt,
+                             const PRUint64&            startPos,
+                             const nsCString&           entityID);
 
   virtual bool RecvSetPriority(const PRUint16& priority);
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
+  virtual bool RecvSuspend();
+  virtual bool RecvResume();
   virtual bool RecvRedirect2Result(const nsresult& result,
                                    const RequestHeaderTuples& changedHeaders);
 
