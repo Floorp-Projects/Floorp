@@ -83,10 +83,6 @@ Tester.prototype = {
         let msg = baseMsg.replace("{elt}", "tab") +
                   ": " + lastTab.linkedBrowser.currentURI.spec;
         this.currentTest.addResult(new testResult(false, msg, "", false));
-        if (gBrowser._removingTabs && gBrowser._removingTabs.indexOf(lastTab) > -1) {
-          gBrowser._endRemoveTab(lastTab);
-          continue;
-        }
         gBrowser.removeTab(lastTab);
       }
     }
