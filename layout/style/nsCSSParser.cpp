@@ -1309,6 +1309,7 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
   NS_ASSERTION(!mHavePushBack, "mustn't have pushback at this point");
   do {
     if (! mScanner.NextURL(mToken)) {
+      // EOF
       return PR_FALSE;
     }
   } while (eCSSToken_WhiteSpace == mToken.mType);
@@ -3615,7 +3616,8 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           aValue.SetColorValue(NS_RGB(r,g,b));
           return PR_TRUE;
         }
-        return PR_FALSE;  // already pushed back
+        SkipUntil(')');
+        return PR_FALSE;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-rgba") ||
                mToken.mIdent.LowerCaseEqualsLiteral("rgba")) {
@@ -3629,7 +3631,8 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           aValue.SetColorValue(NS_RGBA(r, g, b, a));
           return PR_TRUE;
         }
-        return PR_FALSE;  // already pushed back
+        SkipUntil(')');
+        return PR_FALSE;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl")) {
         // hsl ( hue , saturation , lightness )
@@ -3638,6 +3641,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           aValue.SetColorValue(rgba);
           return PR_TRUE;
         }
+        SkipUntil(')');
         return PR_FALSE;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-hsla") ||
@@ -3652,6 +3656,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
                                        NS_GET_B(rgba), a));
           return PR_TRUE;
         }
+        SkipUntil(')');
         return PR_FALSE;
       }
       break;
@@ -4474,12 +4479,20 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   if (((aVariantMask & VARIANT_ATTR) != 0) &&
       (eCSSToken_Function == tk->mType) &&
       tk->mIdent.LowerCaseEqualsLiteral("attr")) {
-    return ParseAttr(aValue);
+    if (!ParseAttr(aValue)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+    return PR_TRUE;
   }
   if (((aVariantMask & VARIANT_CUBIC_BEZIER) != 0) &&
       (eCSSToken_Function == tk->mType)) {
      if (tk->mIdent.LowerCaseEqualsLiteral("cubic-bezier")) {
-      return ParseTransitionTimingFunctionValues(aValue);
+      if (!ParseTransitionTimingFunctionValues(aValue)) {
+        SkipUntil(')');
+        return PR_FALSE;
+      }
+      return PR_TRUE;
     }
   }
   if ((aVariantMask & VARIANT_CALC) &&
