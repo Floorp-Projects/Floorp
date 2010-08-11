@@ -633,10 +633,9 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
         }
 
         if (FAILED(rv)) {
-            aTextRun->ResetGlyphRuns();
             // Uniscribe doesn't like this font for some reason.
-            // Returning FALSE will make the gfxGDIFont discard this
-            // shaper and replace it with a "dumb" GDI one.
+            // Returning FALSE will make the gfxGDIFont retry with the
+            // "dumb" GDI one, unless useUniscribeOnly was set.
             result = PR_FALSE;
             break;
         }
