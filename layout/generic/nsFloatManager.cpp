@@ -144,11 +144,11 @@ void nsFloatManager::Shutdown()
 
 nsFlowAreaRect
 nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
-                            nscoord aHeight, nscoord aContentAreaWidth,
+                            nscoord aHeight, nsRect aContentArea,
                             SavedState* aState) const
 {
   NS_ASSERTION(aHeight >= 0, "unexpected max height");
-  NS_ASSERTION(aContentAreaWidth >= 0, "unexpected content area width");
+  NS_ASSERTION(aContentArea.width >= 0, "unexpected content area width");
 
   nscoord top = aYOffset + mY;
   if (top < nscoord_MIN) {
@@ -172,7 +172,8 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
   if (floatCount == 0 ||
       (mFloats[floatCount-1].mLeftYMost <= top &&
        mFloats[floatCount-1].mRightYMost <= top)) {
-    return nsFlowAreaRect(0, aYOffset, aContentAreaWidth, aHeight, PR_FALSE);
+    return nsFlowAreaRect(aContentArea.x, aYOffset, aContentArea.width,
+                          aHeight, PR_FALSE);
   }
 
   nscoord bottom;
@@ -189,8 +190,8 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
       bottom = nscoord_MAX;
     }
   }
-  nscoord left = mX;
-  nscoord right = aContentAreaWidth + mX;
+  nscoord left = mX + aContentArea.x;
+  nscoord right = mX + aContentArea.XMost();
   if (right < left) {
     NS_WARNING("bad value");
     right = left;
