@@ -404,9 +404,8 @@ public:
    * similar to those for nsIPopupBoxObject::OpenPopup.
    *
    * aTriggerEvent should be the event that triggered the event. This is used
-   * to determine the coordinates for the popupshowing event. This may be null
-   * if the popup was not triggered by an event, or the coordinates are not
-   * important. Note that this may be reworked in bug 383930.
+   * to determine the coordinates and trigger node for the popup. This may be
+   * null if the popup was not triggered by an event.
    *
    * This fires the popupshowing event synchronously.
    */
@@ -519,6 +518,21 @@ public:
   nsTArray<nsIFrame *> GetVisiblePopups();
 
   /**
+   * Get the node that last triggered a popup or tooltip in the document
+   * aDocument. aDocument must be non-null and be a document contained within
+   * the same window hierarchy as the popup to retrieve.
+   */
+  already_AddRefed<nsIDOMNode> GetLastTriggerPopupNode(nsIDocument* aDocument)
+  {
+    return GetLastTriggerNode(aDocument, PR_FALSE);
+  }
+
+  already_AddRefed<nsIDOMNode> GetLastTriggerTooltipNode(nsIDocument* aDocument)
+  {
+    return GetLastTriggerNode(aDocument, PR_TRUE);
+  }
+
+  /**
    * Return false if a popup may not be opened. This will return false if the
    * popup is already open, if the popup is in a content shell that is not
    * focused, or if it is a submenu of another menu that isn't open.
@@ -616,7 +630,7 @@ protected:
   nsMenuFrame* GetMenuFrameForContent(nsIContent* aContent);
 
   // get the nsMenuPopupFrame, if any, for the given content node
-  nsMenuPopupFrame* GetPopupFrameForContent(nsIContent* aContent);
+  nsMenuPopupFrame* GetPopupFrameForContent(nsIContent* aContent, PRBool aShouldFlush);
 
   // return the topmost menu, skipping over invisible popups
   nsMenuChainItem* GetTopVisibleMenu();
@@ -628,9 +642,9 @@ protected:
   void HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames,
                         PRBool aDeselectMenu);
 
-  // set the event that was used to trigger the popup, or null to
-  // clear the event details.
-  void SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup);
+  // set the event that was used to trigger the popup, or null to clear the
+  // event details. aTriggerContent will be set to the target of the event.
+  void InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup, nsIContent** aTriggerContent);
 
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously
   void ShowPopupCallback(nsIContent* aPopup,
@@ -712,6 +726,8 @@ private:
 
 protected:
 
+  already_AddRefed<nsIDOMNode> GetLastTriggerNode(nsIDocument* aDocument, PRBool aIsTooltip);
+
   /**
    * Set mouse capturing for the current popup. This traps mouse clicks that
    * occur outside the popup so that it can be closed up. aOldPopup should be
@@ -764,6 +780,10 @@ protected:
 
   // a popup that is waiting on the timer
   nsMenuPopupFrame* mTimerMenu;
+
+  // the popup that is currently being opened, stored only during the
+  // popupshowing event
+  nsCOMPtr<nsIContent> mOpeningPopup;
 };
 
 nsresult

@@ -486,7 +486,6 @@ def _cxxRefType(ipdltype, side):
 def _cxxConstRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if ipdltype.isIPDL() and ipdltype.isActor():
-        t.const = 1                 # const Actor*
         return t
     if ipdltype.isIPDL() and ipdltype.isShmem():
         t.ref = 1
@@ -508,8 +507,7 @@ def _cxxConstPtrToType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if ipdltype.isIPDL() and ipdltype.isActor():
         t.ptr = 0
-        t.const = 1
-        t.ptrconstptr = 1           # const Actor* const*
+        t.ptrconstptr = 1
         return t
     t.const = 1
     t.ptrconst = 1

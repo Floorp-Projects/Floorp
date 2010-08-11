@@ -513,8 +513,6 @@ protected:
                                 JSObject *obj, JSString *str,
                                 PRBool *did_resolve);
 
-  static PRBool sResolving;
-
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
@@ -544,24 +542,15 @@ public:
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
-  NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, PRUint32 enum_op, jsval *statep,
-                          jsid *idp, PRBool *_retval);
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
   NS_IMETHOD Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                       JSObject * obj, const jsval &val, PRBool *bp);
-  NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, JSObject * *_retval);
-  NS_IMETHOD InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, JSObject * *_retval);
 
   static JSBool GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
                                               jsid id, uintN flags,
@@ -586,7 +575,20 @@ protected:
   {
   }
 
+  static PRBool sResolving;
+
 public:
+  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsid id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+  NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, PRUint32 enum_op, jsval *statep,
+                          jsid *idp, PRBool *_retval);
+  NS_IMETHOD InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                         JSObject * obj, JSObject * *_retval);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsOuterWindowSH(aData);
@@ -605,6 +607,10 @@ protected:
   }
 
 public:
+  // We WANT_ADDPROPERTY, but are content to inherit it from nsEventReceiverSH.
+  NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                         JSObject * obj, JSObject * *_retval);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsInnerWindowSH(aData);

@@ -133,6 +133,7 @@ PRBool NS_SVGEnabled();
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
 #include "nsContentSink.h"
+#include "nsFrameMessageManager.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -297,6 +298,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
 #ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();

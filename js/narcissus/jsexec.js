@@ -62,6 +62,11 @@ Narcissus.interpreter = (function() {
         this.type = type;
     }
 
+    function isStackOverflow(e) {
+        var re = /InternalError: (script stack space quota is exhausted|too much recursion)/;
+        return re.test(e.toString());
+    }
+
     var global = {
         // Value properties.
         NaN: NaN, Infinity: Infinity, undefined: undefined,
@@ -77,33 +82,19 @@ Narcissus.interpreter = (function() {
             x2.caller = x.caller;
             x2.callee = x.callee;
             x2.scope = x.scope;
-            ExecutionContext.current = x2;
             try {
-                execute(parser.parse(new parser.VanillaBuilder, s), x2);
-            } catch (e if e === THROW) {
-                x.result = x2.result;
-                throw e;
-            } catch (e if e instanceof SyntaxError) {
-                x.result = e;
-                throw THROW;
-            } catch (e if e instanceof InternalError) {
+                x2.execute(parser.parse(new parser.VanillaBuilder, s));
+                return x2.result;
+            } catch (e if e instanceof SyntaxError || isStackOverflow(e)) {
                 /*
-                 * If we get too much recursion during parsing we need to re-throw
-                 * it as a narcissus THROW.
+                 * If we get an internal error during parsing we need to reify
+                 * the exception as a Narcissus THROW.
                  *
                  * See bug 152646.
                  */
-                var re = /InternalError: (script stack space quota is exhausted|too much recursion)/;
-                if (re.test(e.toString())) {
-                    x.result = e;
-                    throw THROW;
-                } else {
-                    throw e;
-                }
-            } finally {
-                ExecutionContext.current = x;
+                x.result = e;
+                throw THROW;
             }
-            return x2.result;
         },
         parseInt: parseInt, parseFloat: parseFloat,
         isNaN: isNaN, isFinite: isFinite,
@@ -206,18 +197,19 @@ Narcissus.interpreter = (function() {
         result: undefined,
         target: null,
         ecma3OnlyMode: false,
-        // Run a thunk in this execution context and return its result.
-        run: function(thunk) {
+        // Execute a node in this execution context.
+        execute: function(n) {
             var prev = ExecutionContext.current;
             ExecutionContext.current = this;
             try {
-                thunk();
-                return this.result;
+                execute(n, this);
             } catch (e if e === THROW) {
+                // Propagate the throw to the previous context if it exists.
                 if (prev) {
                     prev.result = this.result;
                     throw THROW;
                 }
+                // Otherwise reflect the throw into host JS.
                 throw this.result;
             } finally {
                 ExecutionContext.current = prev;
@@ -920,16 +912,10 @@ Narcissus.interpreter = (function() {
             var f = this.node;
             x2.scope = {object: new Activation(f, a), parent: this.scope};
 
-            ExecutionContext.current = x2;
             try {
-                execute(f.body, x2);
+                x2.execute(f.body);
             } catch (e if e === RETURN) {
                 return x2.result;
-            } catch (e if e === THROW) {
-                x.result = x2.result;
-                throw THROW;
-            } finally {
-                ExecutionContext.current = x;
             }
             return undefined;
         },
@@ -1064,21 +1050,9 @@ Narcissus.interpreter = (function() {
         if (typeof s !== "string")
             return s;
 
-        var x = ExecutionContext.current;
-        var x2 = new ExecutionContext(GLOBAL_CODE);
-        ExecutionContext.current = x2;
-        try {
-            execute(parser.parse(new parser.VanillaBuilder, s, f, l), x2);
-        } catch (e if e === THROW) {
-            if (x) {
-                x.result = x2.result;
-                throw THROW;
-            }
-            throw x2.result;
-        } finally {
-            ExecutionContext.current = x;
-        }
-        return x2.result;
+        var x = new ExecutionContext(GLOBAL_CODE);
+        x.execute(parser.parse(new parser.VanillaBuilder, s, f, l));
+        return x.result;
     }
 
     // A read-eval-print-loop that roughly tracks the behavior of the js shell.
@@ -1116,31 +1090,31 @@ Narcissus.interpreter = (function() {
         var b = new parser.VanillaBuilder;
         var x = new ExecutionContext(GLOBAL_CODE);
 
-        x.run(function() {
-            for (;;) {
-                x.result = undefined;
-                putstr("njs> ");
-                var line = readline();
-                // If readline receives EOF it returns null.
-                if (line === null) {
-                    print("");
-                    break;
-                }
-                try {
-                    execute(parser.parse(b, line, "stdin", 1), x);
-                    display(x.result);
-                } catch (e if e === THROW) {
-                    print("uncaught exception: " + string(x.result));
-                } catch (e if e === END) {
-                    break;
-                } catch (e if e instanceof SyntaxError) {
-                    print(e.toString());
-                } catch (e) {
-                    print("internal Narcissus error");
-                    throw e;
-                }
+        ExecutionContext.current = x;
+        for (;;) {
+            x.result = undefined;
+            putstr("njs> ");
+            var line = readline();
+            // If readline receives EOF it returns null.
+            if (line === null) {
+                print("");
+                break;
             }
-        });
+            try {
+                execute(parser.parse(b, line, "stdin", 1), x);
+                display(x.result);
+            } catch (e if e === THROW) {
+                print("uncaught exception: " + string(x.result));
+            } catch (e if e === END) {
+                break;
+            } catch (e if e instanceof SyntaxError) {
+                print(e.toString());
+            } catch (e) {
+                print("internal Narcissus error");
+                throw e;
+            }
+        }
+        ExecutionContext.current = null;
     }
 
     return {

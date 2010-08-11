@@ -51,6 +51,8 @@ _TEST_FILES	= \
 		child_ip_address.html \
 		test_setting_document.domain_idn.html \
 		idn_child.html \
+		file_location.html \
+		test_location.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)
