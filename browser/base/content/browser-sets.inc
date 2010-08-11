@@ -150,8 +150,6 @@
     <command id="Inspector:Next"
              oncommand="InspectorUI.inspectNext();"
              disabled="true"/>
-    <command id="Inspector:Style"
-             oncommand="InspectorUI.toggleStylePanel();"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
