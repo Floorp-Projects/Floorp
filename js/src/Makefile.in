@@ -290,6 +290,21 @@ endif
 
 endif # ENABLE_TRACEJIT
 
+ifeq ($(TARGET_CPU), powerpc)
+
+VPATH +=	$(srcdir)/assembler \
+		$(srcdir)/assembler/wtf \
+		$(srcdir)/yarr/pcre \
+		$(NULL)
+
+CPPSRCS += 	pcre_compile.cpp \
+                pcre_exec.cpp \
+                pcre_tables.cpp \
+                pcre_xclass.cpp \
+                pcre_ucp_searchfuncs.cpp \
+		$(NULL)
+else
+
 ###############################################
 # BEGIN include sources for the Nitro assembler
 #
@@ -302,6 +317,7 @@ VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/yarr/yarr \
 		$(srcdir)/yarr/pcre \
 		$(srcdir)/yarr/wtf \
+		$(NONE)
 
 CPPSRCS += 	Assertions.cpp \
 		ExecutableAllocatorPosix.cpp \
@@ -313,11 +329,7 @@ CPPSRCS += 	Assertions.cpp \
 		MacroAssemblerX86Common.cpp \
 		RegexCompiler.cpp \
 		RegexJIT.cpp \
-                pcre_compile.cpp \
-                pcre_exec.cpp \
-                pcre_tables.cpp \
-                pcre_xclass.cpp \
-                pcre_ucp_searchfuncs.cpp
+		$(NONE)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
@@ -336,6 +348,7 @@ endif
 # END enclude sources for the Nitro assembler
 #############################################
 
+endif
 
 ifdef JS_HAS_CTYPES
 VPATH += $(srcdir)/ctypes
