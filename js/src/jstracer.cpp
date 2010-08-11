@@ -10566,6 +10566,22 @@ TraceRecorder::record_JSOP_LEAVEWITH()
     return ARECORD_STOP;
 }
 
+#ifdef MOZ_TRACE_JSCALLS
+// Usually, cx->doFunctionCallback() is invoked via DTrace::enterJSFun
+// and friends, but the DTrace:: probes use fp and therefore would
+// need to break out of tracing. So we define a functionProbe()
+// callback to be called by generated code when a Javascript function
+// is entered or exited.
+static JSBool JS_FASTCALL
+functionProbe(JSContext *cx, JSFunction *fun, JSBool enter)
+{
+    cx->doFunctionCallback(fun, FUN_SCRIPT(fun), enter);
+    return true;
+}
+
+JS_DEFINE_CALLINFO_3(static, BOOL, functionProbe, CONTEXT, FUNCTION, BOOL, 0, 0)
+#endif
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_RETURN()
 {
@@ -10584,6 +10600,14 @@ TraceRecorder::record_JSOP_RETURN()
     }
 
     putActivationObjects();
+
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        LIns* args[] = { INS_CONST(0), INS_CONSTPTR(cx->fp->fun), cx_ins };
+        LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+        guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+    }
+#endif
 
     /* If we inlined this function call, make the return value available to the caller code. */
     Value& rval = stackval(-1);
@@ -11607,6 +11631,17 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
      */
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &fval.toObject());
 
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        JSScript *script = FUN_SCRIPT(fun);
+        if (! script || ! script->isEmpty()) {
+            LIns* args[] = { INS_CONST(1), INS_CONSTPTR(fun), cx_ins };
+            LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+            guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+        }
+    }
+#endif
+
     if (FUN_INTERPRETED(fun)) {
         if (mode == JSOP_NEW) {
             LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
@@ -11633,7 +11668,15 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         return RECORD_CONTINUE;
     }
 
-    return callNative(argc, mode);
+    RecordingStatus rs = callNative(argc, mode);
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        LIns* args[] = { INS_CONST(0), INS_CONSTPTR(fun), cx_ins };
+        LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+        guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+    }
+#endif
+    return rs;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -15672,6 +15715,14 @@ TraceRecorder::record_JSOP_STOP()
     }
 
     putActivationObjects();
+
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        LIns* args[] = { INS_CONST(0), INS_CONSTPTR(cx->fp->fun), cx_ins };
+        LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+        guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+    }
+#endif
 
     /*
      * We know falling off the end of a constructor returns the new object that

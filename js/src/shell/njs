@@ -4,7 +4,7 @@
 # Expects to be in the same directory as ./js
 # Expects the Narcissus src files to be in ./narcissus/
 
-import os, re, sys
+import os, re, sys, signal
 from subprocess import *
 from optparse import OptionParser
 
@@ -18,6 +18,12 @@ narc_jslex = os.path.join(NARC_JS_DIR, "jslex.js")
 narc_jsparse = os.path.join(NARC_JS_DIR, "jsparse.js")
 narc_jsexec = os.path.join(NARC_JS_DIR, "jsexec.js")
 
+def handler(signum, frame):
+    print ''
+    # the exit code produced by ./js on SIGINT
+    sys.exit(130)
+
+signal.signal(signal.SIGINT, handler)
 
 if __name__ == '__main__':
     op = OptionParser(usage='%prog [TEST-SPECS]')
@@ -39,17 +45,17 @@ if __name__ == '__main__':
 
     if options.js_exps:
         for exp in options.js_exps:
-            cmd += 'Narcissus.jsexec.evaluate("%s"); ' % exp.replace('"', '\\"')
+            cmd += 'Narcissus.interpreter.evaluate("%s"); ' % exp.replace('"', '\\"')
 
     if options.js_files:
         for file in options.js_files:
-            cmd += 'Narcissus.jsexec.evaluate(snarf("%(file)s"), "%(file)s", 1); ' % { 'file':file }
+            cmd += 'Narcissus.interpreter.evaluate(snarf("%(file)s"), "%(file)s", 1); ' % { 'file':file }
 
     if (not options.js_exps) and (not options.js_files):
         options.js_interactive = True
 
     if options.js_interactive:
-        cmd += 'Narcissus.jsexec.repl();'
+        cmd += 'Narcissus.interpreter.repl();'
 
     Popen([js_cmd, '-f', narc_jsdefs, '-f', narc_jslex, '-f', narc_jsparse, '-f', narc_jsexec, '-e', cmd]).wait()
 

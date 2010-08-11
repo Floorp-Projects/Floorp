@@ -48,7 +48,7 @@ Narcissus = {
     options: { version: 185 }
 };
 
-Narcissus.jsdefs = (function() {
+Narcissus.definitions = (function() {
 
     var tokens = [
         // End of source.
@@ -190,14 +190,14 @@ Narcissus.jsdefs = (function() {
     }
 
     return {
-      "tokens": tokens,
-      "opTypeNames": opTypeNames,
-      "keywords": keywords,
-      "tokenIds": tokenIds,
-      "consts": consts,
-      "assignOps": assignOps,
-      "defineGetter": defineGetter,
-      "defineProperty": defineProperty
+        tokens: tokens,
+        opTypeNames: opTypeNames,
+        keywords: keywords,
+        tokenIds: tokenIds,
+        consts: consts,
+        assignOps: assignOps,
+        defineGetter: defineGetter,
+        defineProperty: defineProperty
     };
 }());
 
