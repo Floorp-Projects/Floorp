@@ -40,11 +40,12 @@ function test() {
 
   let tabOne = gBrowser.addTab("about:blank");
   let tabTwo = gBrowser.addTab("http://mochi.test:8888/");
-
   gBrowser.selectedTab = tabTwo;
 
-  var browser = gBrowser.getBrowserForTab(tabTwo);
-  browser.addEventListener("load", function() {
+  let browser = gBrowser.getBrowserForTab(tabTwo);
+  let onLoad = function() {
+    browser.removeEventListener("load", onLoad, true);
+
     gBrowser.showOnlyTheseTabs([tabTwo]);
 
     is(gBrowser.visibleTabs.length, 1, "Only one tab is visible");
@@ -61,5 +62,6 @@ function test() {
     });
 
     finish();
-  }, true);
+  }
+  browser.addEventListener("load", onLoad, true);
 }
