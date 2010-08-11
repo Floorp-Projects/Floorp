@@ -143,7 +143,7 @@
                 accesskey="&undoCloseTab.accesskey;"
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
-                oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
+                oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>
     </menupopup>
 
     <menupopup id="backForwardMenu"
