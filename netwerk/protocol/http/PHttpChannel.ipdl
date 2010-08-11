@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,8 +58,6 @@ protocol PHttpChannel
   manager PNecko;
 
 parent:
-  __delete__();
-
   AsyncOpen(URI                 uri,
             // - TODO: bug 571161: unclear if any HTTP channel clients ever
             // set originalURI != uri (about:credits?); also not clear if
@@ -74,11 +73,20 @@ parent:
             PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,
-            PRBool              forceAllowThirdPartyCookie);
+            PRBool              forceAllowThirdPartyCookie,
+            bool                resumeAt,
+            PRUint64            startPos,
+            nsCString           entityID);
 
   SetPriority(PRUint16 priority);
 
   SetCacheTokenCachedCharset(nsCString charset);
+
+  Suspend();
+  Resume();
+
+  // Reports approval/veto of redirect by child process redirect observers
+  Redirect2Result(nsresult result, RequestHeaderTuples changedHeaders);
 
 child:
   OnStartRequest(nsHttpResponseHead responseHead,
@@ -97,6 +105,18 @@ child:
   OnProgress(PRUint64 progress, PRUint64 progressMax);
 
   OnStatus(nsresult status, nsString statusArg);
+
+  // Called to initiate content channel redirect, starts talking to sinks
+  // on the content process and reports result via OnRedirect2Result above
+  Redirect1Begin(PHttpChannel       newChannel,
+                 URI                newUri,
+                 PRUint32           redirectFlags,
+                 nsHttpResponseHead responseHead);
+  // Called if redirect successful so that child can complete setup.
+  Redirect3Complete();
+
+both:
+  __delete__();
 };
 
 

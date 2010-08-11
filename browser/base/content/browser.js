@@ -159,9 +159,13 @@ XPCOMUtils.defineLazyGetter(this, "Weave", function() {
 XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
   let tmp = {};
   Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
-  return new tmp.PopupNotifications(gBrowser,
-                                    document.getElementById("notification-popup"),
-                                    document.getElementById("notification-popup-box"));
+  try {
+    return new tmp.PopupNotifications(gBrowser,
+                                      document.getElementById("notification-popup"),
+                                      document.getElementById("notification-popup-box"));
+  } catch (ex) {
+    Cu.reportError(ex);
+  }
 });
 
 let gInitialPages = [
@@ -1317,15 +1321,6 @@ function prepareForStartup() {
 
   // setup simple gestures support
   gGestureSupport.init(true);
-
-#ifdef MENUBAR_CAN_AUTOHIDE
-  // update the visibility of the titlebar buttons after the window is
-  // displayed. (required by theme code.)
-  window.addEventListener("MozAfterPaint", function () {
-    window.removeEventListener("MozAfterPaint", arguments.callee, false);
-    document.getElementById("titlebar-buttonbox").collapsed = false;
-  }, false);
-#endif
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
@@ -4770,19 +4765,12 @@ function updateAppButtonDisplay() {
     window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
-  document.getElementById("titlebar").hidden = !displayAppButton;
+  document.getElementById("appmenu-button-container").hidden = !displayAppButton;
 
   if (displayAppButton)
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
-}
-
-function onTitlebarMaxClick() {
-  if (window.windowState == window.STATE_MAXIMIZED)
-    window.restore();
-  else
-    window.maximize();
 }
 #endif
 

@@ -72,7 +72,7 @@ var PlacesUIUtils = {
    * @returns A URI object for the spec.
    */
   createFixedURI: function PUIU_createFixedURI(aSpec) {
-    return URIFixup.createFixupURI(aSpec, 0);
+    return URIFixup.createFixupURI(aSpec, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
   },
 
   /**
@@ -128,7 +128,7 @@ var PlacesUIUtils = {
    */
   _getBookmarkItemCopyTransaction:
   function PUIU__getBookmarkItemCopyTransaction(aData, aContainer, aIndex,
-                                              aExcludeAnnotations) {
+                                                aExcludeAnnotations) {
     var itemURL = PlacesUtils._uri(aData.uri);
     var itemTitle = aData.title;
     var keyword = aData.keyword || null;
@@ -278,7 +278,7 @@ var PlacesUIUtils = {
    *          the move/insert.
    */
   makeTransaction: function PUIU_makeTransaction(data, type, container,
-                                               index, copy) {
+                                                 index, copy) {
     switch (data.type) {
       case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
         if (copy)
@@ -289,7 +289,7 @@ var PlacesUIUtils = {
       case PlacesUtils.TYPE_X_MOZ_PLACE:
         if (data.id == -1) // Not bookmarked.
           return this._getURIItemCopyTransaction(data, container, index);
-  
+
         if (copy)
           return this._getBookmarkItemCopyTransaction(data, container, index);
         // Otherwise move the item.
@@ -361,14 +361,14 @@ var PlacesUIUtils = {
    *    bookmarks root folder.
    */
   showAddBookmarkUI: function PUIU_showAddBookmarkUI(aURI,
-                                                   aTitle,
-                                                   aDescription,
-                                                   aDefaultInsertionPoint,
-                                                   aShowPicker,
-                                                   aLoadInSidebar,
-                                                   aKeyword,
-                                                   aPostData,
-                                                   aCharSet) {
+                                                     aTitle,
+                                                     aDescription,
+                                                     aDefaultInsertionPoint,
+                                                     aShowPicker,
+                                                     aLoadInSidebar,
+                                                     aKeyword,
+                                                     aPostData,
+                                                     aCharSet) {
     var info = {
       action: "add",
       type: "bookmark"
@@ -417,9 +417,9 @@ var PlacesUIUtils = {
    */
   showMinimalAddBookmarkUI:
   function PUIU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
-                                       aDefaultInsertionPoint, aShowPicker,
-                                       aLoadInSidebar, aKeyword, aPostData,
-                                       aCharSet) {
+                                         aDefaultInsertionPoint, aShowPicker,
+                                         aLoadInSidebar, aKeyword, aPostData,
+                                         aCharSet) {
     var info = {
       action: "add",
       type: "bookmark",
@@ -485,11 +485,11 @@ var PlacesUIUtils = {
    *    bookmarks root folder.
    */
   showAddLivemarkUI: function PUIU_showAddLivemarkURI(aFeedURI,
-                                                    aSiteURI,
-                                                    aTitle,
-                                                    aDescription,
-                                                    aDefaultInsertionPoint,
-                                                    aShowPicker) {
+                                                      aSiteURI,
+                                                      aTitle,
+                                                      aDescription,
+                                                      aDefaultInsertionPoint,
+                                                      aShowPicker) {
     var info = {
       action: "add",
       type: "livemark"
@@ -525,8 +525,8 @@ var PlacesUIUtils = {
    */
   showMinimalAddLivemarkUI:
   function PUIU_showMinimalAddLivemarkURI(aFeedURI, aSiteURI, aTitle,
-                                        aDescription, aDefaultInsertionPoint,
-                                        aShowPicker) {
+                                          aDescription, aDefaultInsertionPoint,
+                                          aShowPicker) {
     var info = {
       action: "add",
       type: "livemark",
@@ -706,7 +706,7 @@ var PlacesUIUtils = {
   /**
    * By calling this before visiting an URL, the visit will be associated to a
    * TRANSITION_BOOKMARK transition.
-   * This is used when visiting pages from the bookmarks menu, 
+   * This is used when visiting pages from the bookmarks menu,
    * personal toolbar, and bookmarks from within the places organizer.
    * If this is not called visits will be marked as TRANSITION_LINK.
    */
@@ -730,6 +730,8 @@ var PlacesUIUtils = {
    * bookmarked (see bug 224521).
    * @param aURINode
    *        a URI node
+   * @param aWindow
+   *        a window on which a potential error alert is shown on.
    * @return true if it's safe to open the node in the browser, false otherwise.
    *
    */
@@ -890,7 +892,7 @@ var PlacesUIUtils = {
   openNodeWithEvent: function PUIU_openNodeWithEvent(aNode, aEvent) {
     this.openNodeIn(aNode, this._getCurrentActiveWin().whereToOpenLink(aEvent));
   },
-  
+
   /**
    * Loads the node's URL in the appropriate tab or window or as a
    * web panel.
@@ -927,12 +929,12 @@ var PlacesUIUtils = {
    * Used to avoid nsIURI overhead in frequently called UI functions.
    *
    * @param aUrlString the url to guess the scheme from.
-   * 
+   *
    * @return guessed scheme for this url string.
    *
    * @note this is not supposed be perfect, so use it only for UI purposes.
    */
-  guessUrlSchemeForUI: function PUU_guessUrlSchemeForUI(aUrlString) {
+  guessUrlSchemeForUI: function PUIU_guessUrlSchemeForUI(aUrlString) {
     return aUrlString.substr(0, aUrlString.indexOf(":"));
   },
 
@@ -961,7 +963,7 @@ var PlacesUIUtils = {
     return title || this.getString("noTitle");
   },
 
-  get leftPaneQueries() {    
+  get leftPaneQueries() {
     // build the map
     this.leftPaneFolderId;
     return this.leftPaneQueries;
@@ -1239,7 +1241,7 @@ var PlacesUIUtils = {
           queryName = name;
       }
     }
-    return queryName; 
+    return queryName;
   }
 };
 
@@ -1380,7 +1382,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
 
    /**
     * Transaction for editing a the description of a bookmark or a folder.
-    * 
+    *
     * @param aItemId
     *        id of the item to edit.
     * @param aDescription

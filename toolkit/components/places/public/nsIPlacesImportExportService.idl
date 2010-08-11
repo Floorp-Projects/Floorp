@@ -39,13 +39,14 @@
 #include "nsISupports.idl"
 
 interface nsILocalFile;
+interface nsIURI;
 
 /**
  * The PlacesImportExport interface provides methods for importing
  * and exporting Places data.
  */
 
-[scriptable, uuid(21c00314-fa63-11db-8314-0800200c9a66)]
+[scriptable, uuid(47a4a09e-c708-4e68-b2f2-664d982ce026)]
 interface nsIPlacesImportExportService: nsISupports
 {
   /**
@@ -63,6 +64,11 @@ interface nsIPlacesImportExportService: nsISupports
    * true.  The observer subject will be null.
    */
   void importHTMLFromFile(in nsILocalFile aFile, in boolean aIsInitialImport);
+
+  /**
+   * Same thing as importHTMLFromFile, but takes a URI instead
+   */
+  void importHTMLFromURI(in nsIURI aURI, in boolean aIsInitialImport);
 
   /**
    * Loads the given bookmarks.html file and puts it in the given folder

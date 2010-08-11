@@ -106,6 +106,11 @@ nsHTMLDNSPrefetch::Initialize()
   rv = CallGetService(kDNSServiceCID, &sDNSService);
   if (NS_FAILED(rv)) return rv;
   
+#ifdef MOZ_IPC
+  if (mozilla::net::IsNeckoChild())
+    mozilla::net::NeckoChild::InitNeckoChild();
+#endif
+
   sInitialized = PR_TRUE;
   return NS_OK;
 }

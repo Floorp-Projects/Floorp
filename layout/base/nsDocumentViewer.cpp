@@ -3328,6 +3328,8 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
 {
   NS_ENSURE_ARG_POINTER(aNode);
 
+  *aNode = nsnull;
+
   // get the document
   nsIDocument* document = GetDocument();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
@@ -3340,7 +3342,22 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
     NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
     // get the popup node
-    NS_IF_ADDREF(*aNode = root->GetPopupNode());
+    nsCOMPtr<nsIDOMNode> node = root->GetPopupNode();
+#ifdef MOZ_XUL
+    if (!node) {
+      nsPIDOMWindow* rootWindow = root->GetWindow();
+      if (rootWindow) {
+        nsCOMPtr<nsIDocument> rootDoc = do_QueryInterface(rootWindow->GetExtantDocument());
+        if (rootDoc) {
+          nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+          if (pm) {
+            node = pm->GetLastTriggerPopupNode(rootDoc);
+          }
+        }
+      }
+    }
+#endif
+    node.swap(*aNode);
   }
 
   return NS_OK;

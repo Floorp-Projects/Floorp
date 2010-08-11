@@ -1,0 +1,15 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+protocol PTestSyncHang {
+
+child:
+    __delete__();
+
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest
