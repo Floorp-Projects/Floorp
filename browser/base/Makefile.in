@@ -85,4 +85,4 @@ DEFINES += -DMENUBAR_CAN_AUTOHIDE=1
 endif
 
 libs::
-	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/content/tabview/modules/* $(FINAL_TARGET)/modules/tabview
+	$(NSINSTALL) $(srcdir)/content/tabview/modules/* $(FINAL_TARGET)/modules/tabview
