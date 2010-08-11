@@ -46,7 +46,9 @@
 #include "jsregexp.h"
 #include "jswrapper.h"
 #include "methodjit/PolyIC.h"
-#include "assembler/jit/ExecutableAllocator.h"
+#ifdef JS_METHODJIT
+# include "assembler/jit/ExecutableAllocator.h"
+#endif
 
 #include "jsobjinlines.h"
 
@@ -298,7 +300,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+#ifdef JS_METHODJIT
     delete execPool;
+#endif
 }
 
 bool
