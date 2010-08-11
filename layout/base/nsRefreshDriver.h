@@ -48,10 +48,8 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
-#include "nsTArray.h"
 
 class nsPresContext;
-class nsIPresShell;
 
 /**
  * An abstract base class to be implemented by callers wanting to be
@@ -114,33 +112,6 @@ public:
                                mozFlushType aFlushType);
 
   /**
-   * Add / remove presshells that we should flush style and layout on
-   */
-  PRBool AddStyleFlushObserver(nsIPresShell* aShell) {
-    NS_ASSERTION(!mStyleFlushObservers.Contains(aShell),
-		 "Double-adding style flush observer");
-    PRBool appended = mStyleFlushObservers.AppendElement(aShell) != nsnull;
-    EnsureTimerStarted();
-    return appended;
-  }
-  void RemoveStyleFlushObserver(nsIPresShell* aShell) {
-    mStyleFlushObservers.RemoveElement(aShell);
-  }
-  PRBool AddLayoutFlushObserver(nsIPresShell* aShell) {
-    NS_ASSERTION(!IsLayoutFlushObserver(aShell),
-		 "Double-adding layout flush observer");
-    PRBool appended = mLayoutFlushObservers.AppendElement(aShell) != nsnull;
-    EnsureTimerStarted();
-    return appended;
-  }
-  void RemoveLayoutFlushObserver(nsIPresShell* aShell) {
-    mLayoutFlushObservers.RemoveElement(aShell);
-  }
-  PRBool IsLayoutFlushObserver(nsIPresShell* aShell) {
-    return mLayoutFlushObservers.Contains(aShell);
-  }
-
-  /**
    * Tell the refresh driver that it is done driving refreshes and
    * should stop its timer and forget about its pres context.  This may
    * be called from within a refresh.
@@ -191,8 +162,6 @@ private:
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
-  nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
-  nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
 };
 
 #endif /* !defined(nsRefreshDriver_h_) */

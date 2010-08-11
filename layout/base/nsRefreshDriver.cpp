@@ -46,7 +46,6 @@
 #include "nsComponentManagerUtils.h"
 #include "prlog.h"
 #include "nsAutoPtr.h"
-#include "nsCSSFrameConstructor.h"
 
 /*
  * TODO:
@@ -141,8 +140,6 @@ nsRefreshDriver::ObserverCount() const
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
     sum += mObservers[i].Length();
   }
-  sum += mStyleFlushObservers.Length();
-  sum += mLayoutFlushObservers.Length();
   return sum;
 }
 
@@ -218,25 +215,13 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
     }
     if (i == 0) {
       // This is the Flush_Style case.
-      while (!mStyleFlushObservers.IsEmpty() &&
-             mPresContext && mPresContext->GetPresShell()) {
-        PRUint32 idx = mStyleFlushObservers.Length() - 1;
-        nsCOMPtr<nsIPresShell> shell = mStyleFlushObservers[idx];
-        mStyleFlushObservers.RemoveElementAt(idx);
-        shell->FrameConstructor()->mObservingRefreshDriver = PR_FALSE;
-        shell->FlushPendingNotifications(Flush_Style);
-      }
+      // FIXME: Maybe we should only flush if the WillRefresh calls did
+      // something?  It's probably ok as-is, though, especially as we
+      // hook up more things here (or to the replacement of this class).
+      presShell->FlushPendingNotifications(Flush_Style);
     } else if  (i == 1) {
       // This is the Flush_Layout case.
-      while (!mLayoutFlushObservers.IsEmpty() &&
-             mPresContext && mPresContext->GetPresShell()) {
-        PRUint32 idx = mLayoutFlushObservers.Length() - 1;
-        nsCOMPtr<nsIPresShell> shell = mLayoutFlushObservers[idx];
-        mLayoutFlushObservers.RemoveElementAt(idx);
-        shell->mReflowScheduled = PR_FALSE;
-        shell->mSuppressInterruptibleReflows = PR_FALSE;
-        shell->FlushPendingNotifications(Flush_InterruptibleLayout);
-      }
+      presShell->FlushPendingNotifications(Flush_InterruptibleLayout);
     }
   }
 
