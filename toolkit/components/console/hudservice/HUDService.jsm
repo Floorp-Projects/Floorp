@@ -63,6 +63,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "sss",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
+XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
+  var obj = {};
+  try {
+    Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  } catch (err) {
+    Cu.reportError(err);
+  }
+  return obj.PropertyPanel;
+});
+
+
 function LogFactory(aMessagePrefix)
 {
   function log(aMessage) {
@@ -2527,25 +2538,38 @@ JSTerm.prototype = {
   {
     return this.context.get().QueryInterface(Ci.nsIDOMWindowInternal);
   },
+  /**
+   * Evaluates a string in the sandbox. The string is currently wrapped by a
+   * with(window) { aString } construct, see bug 574033.
+   *
+   * @param string aString
+   *        String to evaluate in the sandbox.
+   * @returns something
+   *          The result of the evaluation.
+   */
+  evalInSandbox: function JST_evalInSandbox(aString)
+  {
+    let execStr = "with(window) {" + aString + "}";
+    return Cu.evalInSandbox(execStr,  this.sandbox, "default", "HUD Console", 1);
+  },
+
 
   execute: function JST_execute(aExecuteString)
   {
     // attempt to execute the content of the inputNode
-    var str = aExecuteString || this.inputNode.value;
-    if (!str) {
+    aExecuteString = aExecuteString || this.inputNode.value;
+    if (!aExecuteString) {
       this.console.log("no value to execute");
       return;
     }
 
-    this.writeOutput(str, true);
+    this.writeOutput(aExecuteString, true);
 
     try {
-      var execStr = "with(window) {" + str + "}";
-      var result =
-        Cu.evalInSandbox(execStr,  this.sandbox, "default", "HUD Console", 1);
+      var result = this.evalInSandbox(aExecuteString);
 
-      if (result || result === false || result === " ") {
-        this.writeOutput(result, false);
+      if (result || result === false) {
+        this.writeOutputJS(aExecuteString, result);
       }
       else if (result === undefined) {
         this.writeOutput("undefined", false);
@@ -2555,15 +2579,120 @@ JSTerm.prototype = {
       }
     }
     catch (ex) {
-      if (ex) {
-        this.console.error(ex);
-      }
+      this.console.error(ex);
     }
 
-    this.history.push(str);
+    this.history.push(aExecuteString);
     this.historyIndex++;
     this.historyPlaceHolder = this.history.length;
     this.inputNode.value = "";
+  },
+
+  /**
+   * Opens a new PropertyPanel. The panel has two buttons: "Update" reexecutes
+   * the passed aEvalString and places the result inside of the tree. The other
+   * button closes the panel.
+   *
+   * @param string aEvalString
+   *        String that was used to eval the aOutputObject. Used as title
+   *        and to update the tree content.
+   * @param object aOutputObject
+   *        Object to display/inspect inside of the tree.
+   * @param nsIDOMNode aAnchor
+   *        A node to popup the panel next to (using "after_pointer").
+   * @returns object the created and opened propertyPanel.
+   */
+  openPropertyPanel: function JST_openPropertyPanel(aEvalString, aOutputObject,
+                                                    aAnchor)
+  {
+    let self = this;
+    let propPanel;
+    // The property panel has two buttons:
+    // 1. `Update`: reexecutes the string executed on the command line. The
+    //    result will be inspected by this panel.
+    // 2. `Close`: destroys the panel.
+    let buttons = [];
+
+    // If there is a evalString passed to this function, then add a `Update`
+    // button to the panel so that the evalString can be reexecuted to update
+    // the content of the panel.
+    if (aEvalString !== null) {
+      buttons.push({
+        label: HUDService.getStr("update.button"),
+        accesskey: HUDService.getStr("update.accesskey"),
+        oncommand: function () {
+          try {
+            var result = self.evalInSandbox(aEvalString);
+
+            if (result !== undefined) {
+              // TODO: This updates the value of the tree.
+              // However, the states of opened nodes is not saved.
+              // See bug 586246.
+              propPanel.treeView.data = result;
+            }
+          }
+          catch (ex) {
+            self.console.error(ex);
+          }
+        }
+      });
+    }
+
+    buttons.push({
+      label: HUDService.getStr("close.button"),
+      accesskey: HUDService.getStr("close.accesskey"),
+      oncommand: function () {
+        propPanel.destroy();
+      }
+    });
+
+    let doc = self.parentNode.ownerDocument;
+    let parent = doc.getElementById("mainPopupSet");
+    let title = (aEvalString
+        ? HUDService.getFormatStr("jsPropertyInspectTitle", [aEvalString])
+        : HUDService.getStr("jsPropertyTitle"));
+    propPanel = new PropertyPanel(parent, doc, title, aOutputObject, buttons);
+
+    let panel = propPanel.panel;
+    panel.openPopup(aAnchor, "after_pointer", 0, 0, false, false);
+    panel.sizeTo(200, 400);
+    return propPanel;
+  },
+
+  /**
+   * Writes a JS object to the JSTerm outputNode. If the user clicks on the
+   * written object, openPropertyPanel is called to open up a panel to inspect
+   * the object.
+   *
+   * @param string aEvalString
+   *        String that was evaluated to get the aOutputObject.
+   * @param object aOutputObject
+   *        Object to be written to the outputNode.
+   */
+  writeOutputJS: function JST_writeOutputJS(aEvalString, aOutputObject)
+  {
+    let lastGroupNode = HUDService.appendGroupIfNecessary(this.outputNode,
+                                                      Date.now());
+    var node = this.elementFactory("div");
+    node.setAttribute("class", "jsterm-output-line");
+
+    var self = this;
+    var link = this.elementFactory("a");
+    link.setAttribute("href", "javascript:");
+    link.setAttribute("aria-haspopup", "true");
+    link.onclick = function() {
+      self.openPropertyPanel(aEvalString, aOutputObject, link);
+    }
+
+    // TODO: format the aOutputObject and don't just use the
+    // aOuputObject.toString() function: [object object] -> Object {prop, ...}
+    // See bug 586249.
+    textNode = this.textFactory(aOutputObject);
+    link.appendChild(textNode);
+    node.appendChild(link);
+
+    lastGroupNode.appendChild(node);
+    node.scrollIntoView(false);
   },
 
   /**
