@@ -81,7 +81,11 @@
 }
 
 #nav-bar:not(:-moz-lwtheme),
-#navigator-toolbox[tabsontop="true"] > #nav-bar {
+#nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
+#nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
+#navigator-toolbox[tabsontop="true"] > #nav-bar,
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
   background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
