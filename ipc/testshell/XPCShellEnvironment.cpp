@@ -1215,6 +1215,9 @@ bool
 XPCShellEnvironment::EvaluateString(const nsString& aString,
                                     nsString* aResult)
 {
+  XPCShellEnvironment* env = Environment(mCx);
+  XPCShellEnvironment::AutoContextPusher pusher(env);
+
   JSAutoRequest ar(mCx);
 
   JS_ClearPendingException(mCx);
