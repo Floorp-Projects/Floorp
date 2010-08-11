@@ -91,6 +91,7 @@
 
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::layers;
 
@@ -790,6 +791,7 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
             NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
             mDocShell->SetAllowDNSPrefetch(!!aValue);
         }
+        break;
     case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
         {
            NS_ENSURE_STATE(mDocShell);
@@ -1230,10 +1232,15 @@ NS_IMETHODIMP nsWebBrowser::Create()
         NS_ENSURE_SUCCESS(rv, rv);
     }
    mDocShellAsNav->SetSessionHistory(mInitInfo->sessionHistory);
-   
-   // Hook up global history. Do not fail if we can't - just warn.
-    rv = EnableGlobalHistory(mShouldEnableHistory);
-   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
+
+#ifdef MOZ_IPC
+   if (XRE_GetProcessType() == GeckoProcessType_Default)
+#endif
+   {
+       // Hook up global history. Do not fail if we can't - just warn.
+       rv = EnableGlobalHistory(mShouldEnableHistory);
+       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
+   }
 
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
 

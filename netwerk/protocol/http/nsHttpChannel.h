@@ -54,7 +54,6 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
-#include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIStringEnumerator.h"
@@ -81,7 +80,6 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsICacheListener
                     , public nsIEncodedChannel
                     , public nsITransportEventSink
-                    , public nsIResumableChannel
                     , public nsIProtocolProxyCallback
                     , public nsIHttpAuthenticableChannel
                     , public nsITraceableChannel
@@ -97,7 +95,6 @@ public:
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIENCODEDCHANNEL
     NS_DECL_NSITRANSPORTEVENTSINK
-    NS_DECL_NSIRESUMABLECHANNEL
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
     NS_DECL_NSITRACEABLECHANNEL
@@ -144,6 +141,8 @@ public:
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
     // nsISupportsPriority
     NS_IMETHOD SetPriority(PRInt32 value);
+    // nsIResumableChannel
+    NS_IMETHOD ResumeAt(PRUint64 startPos, const nsACString& entityID);
 
 public: /* internal necko use only */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
@@ -206,7 +205,7 @@ private:
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
+    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
 
     // proxy specific methods
     nsresult ProxyFailover();
@@ -269,14 +268,8 @@ private:
     nsCacheAccessMode                 mOfflineCacheAccess;
     nsCString                         mOfflineCacheClientID;
 
-    nsCOMPtr<nsIApplicationCache>     mApplicationCache;
-
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
-
-    // Resumable channel specific data
-    nsCString                         mEntityID;
-    PRUint64                          mStartPos;
 
     // Function pointer that can be set to indicate that we got suspended while
     // waiting on an AsyncCall.  When we get resumed we should AsyncCall this
@@ -314,9 +307,6 @@ private:
     // True if we are loading a fallback cache entry from the
     // application cache.
     PRUint32                          mFallbackChannel          : 1;
-    PRUint32                          mInheritApplicationCache  : 1;
-    PRUint32                          mChooseApplicationCache   : 1;
-    PRUint32                          mLoadedFromApplicationCache : 1;
     PRUint32                          mTracingEnabled           : 1;
     // True if consumer added its own If-None-Match or If-Modified-Since
     // headers. In such a case we must not override them in the cache code

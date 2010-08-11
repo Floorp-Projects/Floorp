@@ -1011,6 +1011,10 @@ toolbar[iconsize="small"] #fullscreen-button {
   height: 16px;
 }
 
+.notification-anchor-icon:-moz-focusring {
+  outline: 1px dotted -moz-DialogText;
+}
+
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }

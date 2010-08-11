@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
- *   Patrick Walton <pcwalton@mozilla.com>
 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,9 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-%include shared.inc
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .hud-box {
     border-bottom: 1px solid #aaa;
@@ -62,6 +58,7 @@
 .hud-output-node div {
     -moz-user-select: text;
     white-space: pre-wrap;
+    -moz-user-focus: normal;
 }
 
 .hud-output-node .hud-network {
@@ -110,6 +107,12 @@
 
 .hud-group:first-child .hud-divider {
     display: none;
+}
+
+.hud-filter-cat {
+    color: #6b6b6b;
+    font-weight: bold;
+    margin: 0px 12px 0px 0px;
 }
 
 /* JSTerm Styles */
@@ -164,7 +167,6 @@
 
 /* these need to be revised ... */
 .hud-console-filter-toolbar {
-    background: @scopeBarBackground@ !important;
-    padding: 4px 1px;
+    padding: 1px 0px;
     -moz-box-align: center;
 }

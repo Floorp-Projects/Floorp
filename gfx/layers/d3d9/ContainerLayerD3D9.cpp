@@ -254,7 +254,7 @@ ContainerLayerD3D9::RenderLayer()
     opacityVector[0] = opacity;
     device()->SetPixelShaderConstantF(0, opacityVector, 1);
 
-    mD3DManager->SetShaderMode(LayerManagerD3D9::RGBLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
 
     device()->SetTexture(0, renderTexture);
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);

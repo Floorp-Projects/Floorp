@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
  *   Daniel Witte <dwitte@mozilla.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,23 +50,49 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 
-class Callback
-{
- public:
-  virtual bool Run() = 0;
-};
-
 namespace mozilla {
 namespace net {
 
-// C++ file contents
+class ChildChannelEvent
+{
+ public:
+  ChildChannelEvent() { MOZ_COUNT_CTOR(Callback); }
+  virtual ~ChildChannelEvent() { MOZ_COUNT_DTOR(Callback); }
+  virtual void Run() = 0;
+};
+
+// Ensures any incoming IPDL msgs are queued during its lifetime, and flushes
+// the queue when it goes out of scope.
+class AutoEventEnqueuer 
+{
+public:
+  AutoEventEnqueuer(HttpChannelChild* channel) : mChannel(channel) 
+  {
+    mChannel->BeginEventQueueing();
+  }
+  ~AutoEventEnqueuer() 
+  { 
+    mChannel->EndEventQueueing();
+    mChannel->FlushEventQueue(); 
+  }
+private:
+    HttpChannelChild *mChannel;
+};
+
+
+//-----------------------------------------------------------------------------
+// HttpChannelChild
+//-----------------------------------------------------------------------------
+
 HttpChannelChild::HttpChannelChild()
   : mIsFromCache(PR_FALSE)
   , mCacheEntryAvailable(PR_FALSE)
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
+  , mSendResumeAt(false)
+  , mSuspendCount(0)
   , mState(HCC_NEW)
   , mIPCOpen(false)
-  , mShouldBuffer(true)
+  , mQueuePhase(PHASE_UNQUEUED)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 }
@@ -96,6 +123,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -118,6 +146,78 @@ HttpChannelChild::ReleaseIPDLReference()
   Release();
 }
 
+void
+HttpChannelChild::FlushEventQueue()
+{
+  NS_ABORT_IF_FALSE(mQueuePhase != PHASE_UNQUEUED,
+                    "Queue flushing should not occur if PHASE_UNQUEUED");
+  
+  // Queue already being flushed, or the channel's suspended.
+  if (mQueuePhase != PHASE_FINISHED_QUEUEING || mSuspendCount)
+    return;
+  
+  if (mEventQueue.Length() > 0) {
+    // It is possible for new callbacks to be enqueued as we are
+    // flushing the queue, so the queue must not be cleared until
+    // all callbacks have run.
+    mQueuePhase = PHASE_FLUSHING;
+    
+    nsRefPtr<HttpChannelChild> kungFuDeathGrip(this);
+    PRUint32 i;
+    for (i = 0; i < mEventQueue.Length(); i++) {
+      mEventQueue[i]->Run();
+      // If the callback ended up suspending us, abort all further flushing.
+      if (mSuspendCount)
+        break;
+    }
+    // We will always want to remove at least one finished callback.
+    if (i < mEventQueue.Length())
+      i++;
+
+    mEventQueue.RemoveElementsAt(0, i);
+  }
+
+  if (mSuspendCount)
+    mQueuePhase = PHASE_QUEUEING;
+  else
+    mQueuePhase = PHASE_UNQUEUED;
+}
+
+class StartRequestEvent : public ChildChannelEvent
+{
+ public:
+  StartRequestEvent(HttpChannelChild* child,
+                    const nsHttpResponseHead& responseHead,
+                    const PRBool& useResponseHead,
+                    const PRBool& isFromCache,
+                    const PRBool& cacheEntryAvailable,
+                    const PRUint32& cacheExpirationTime,
+                    const nsCString& cachedCharset)
+  : mChild(child)
+  , mResponseHead(responseHead)
+  , mUseResponseHead(useResponseHead)
+  , mIsFromCache(isFromCache)
+  , mCacheEntryAvailable(cacheEntryAvailable)
+  , mCacheExpirationTime(cacheExpirationTime)
+  , mCachedCharset(cachedCharset)
+  {}
+
+  void Run() 
+  { 
+    mChild->OnStartRequest(mResponseHead, mUseResponseHead, mIsFromCache, 
+                           mCacheEntryAvailable, mCacheExpirationTime, 
+                           mCachedCharset);
+  }
+ private:
+  HttpChannelChild* mChild;
+  nsHttpResponseHead mResponseHead;
+  PRBool mUseResponseHead;
+  PRBool mIsFromCache;
+  PRBool mCacheEntryAvailable;
+  PRUint32 mCacheExpirationTime;
+  nsCString mCachedCharset;
+};
+
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const PRBool& useResponseHead,
@@ -125,6 +225,25 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const PRBool& cacheEntryAvailable,
                                      const PRUint32& cacheExpirationTime,
                                      const nsCString& cachedCharset)
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new StartRequestEvent(this, responseHead, useResponseHead,
+                                       isFromCache, cacheEntryAvailable,
+                                       cacheExpirationTime, cachedCharset));
+  } else {
+    OnStartRequest(responseHead, useResponseHead, isFromCache,
+                   cacheEntryAvailable, cacheExpirationTime, cachedCharset);
+  }
+  return true;
+}
+
+void 
+HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
+                                 const PRBool& useResponseHead,
+                                 const PRBool& isFromCache,
+                                 const PRBool& cacheEntryAvailable,
+                                 const PRUint32& cacheExpirationTime,
+                                 const nsCString& cachedCharset)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
@@ -140,31 +259,21 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
   mCacheExpirationTime = cacheExpirationTime;
   mCachedCharset = cachedCharset;
 
+  AutoEventEnqueuer ensureSerialDispatch(this);
+
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
-  if (NS_FAILED(rv)) {
+  if (NS_SUCCEEDED(rv)) {
+    if (mResponseHead)
+      SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+  } else {
     // TODO: Cancel request: (bug 536317)
     //  - Send Cancel msg to parent 
     //  - drop any in flight OnDataAvail msgs we receive
     //  - make sure we do call OnStopRequest eventually
-    return true;  
   }
-
-  if (mResponseHead)
-    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
-
-  bool ret = true;
-  nsCOMPtr<nsIHttpChannel> kungFuDeathGrip(this);
-  for (PRUint32 i = 0; i < mBufferedCallbacks.Length(); i++) {
-    ret = mBufferedCallbacks[i]->Run();
-    if (!ret)
-      break;
-  }
-  mBufferedCallbacks.Clear();
-  mShouldBuffer = false;
-  return ret;
 }
 
-class DataAvailableEvent : public Callback
+class DataAvailableEvent : public ChildChannelEvent
 {
  public:
   DataAvailableEvent(HttpChannelChild* child,
@@ -176,11 +285,7 @@ class DataAvailableEvent : public Callback
   , mOffset(offset)
   , mCount(count) {}
 
-  bool Run()
-  {
-    return mChild->OnDataAvailable(mData, mOffset, mCount);
-  }
-
+  void Run() { mChild->OnDataAvailable(mData, mOffset, mCount); }
  private:
   HttpChannelChild* mChild;
   nsCString mData;
@@ -193,11 +298,15 @@ HttpChannelChild::RecvOnDataAvailable(const nsCString& data,
                                       const PRUint32& offset,
                                       const PRUint32& count)
 {
-  DataAvailableEvent* event = new DataAvailableEvent(this, data, offset, count);
-  return BufferOrDispatch(event);
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new DataAvailableEvent(this, data, offset, count));
+  } else {
+    OnDataAvailable(data, offset, count);
+  }
+  return true;
 }
 
-bool 
+void 
 HttpChannelChild::OnDataAvailable(const nsCString& data,
                                   const PRUint32& offset,
                                   const PRUint32& count)
@@ -218,18 +327,20 @@ HttpChannelChild::OnDataAvailable(const nsCString& data,
                                       NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
     // TODO:  what to do here?  Cancel request?  Very unlikely to fail.
-    return false;  
+    return;
   }
+
+  AutoEventEnqueuer ensureSerialDispatch(this);
+
   rv = mListener->OnDataAvailable(this, mListenerContext,
                                   stringStream, offset, count);
   stringStream->Close();
   if (NS_FAILED(rv)) {
     // TODO: Cancel request: see OnStartRequest. Bug 536317
   }
-  return true;
 }
 
-class StopRequestEvent : public Callback
+class StopRequestEvent : public ChildChannelEvent
 {
  public:
   StopRequestEvent(HttpChannelChild* child,
@@ -237,11 +348,7 @@ class StopRequestEvent : public Callback
   : mChild(child)
   , mStatusCode(statusCode) {}
 
-  bool Run()
-  {
-    return mChild->OnStopRequest(mStatusCode);
-  }
-
+  void Run() { mChild->OnStopRequest(mStatusCode); }
  private:
   HttpChannelChild* mChild;
   nsresult mStatusCode;
@@ -250,11 +357,15 @@ class StopRequestEvent : public Callback
 bool 
 HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  StopRequestEvent* event = new StopRequestEvent(this, statusCode);
-  return BufferOrDispatch(event);
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new StopRequestEvent(this, statusCode));
+  } else {
+    OnStopRequest(statusCode);
+  }
+  return true;
 }
 
-bool 
+void 
 HttpChannelChild::OnStopRequest(const nsresult& statusCode)
 {
   LOG(("HttpChannelChild::RecvOnStopRequest [this=%x status=%u]\n", 
@@ -264,21 +375,26 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
 
   mIsPending = PR_FALSE;
   mStatus = statusCode;
-  mListener->OnStopRequest(this, mListenerContext, statusCode);
-  mListener = 0;
-  mListenerContext = 0;
-  mCacheEntryAvailable = PR_FALSE;
 
-  if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, statusCode);
+  { // We must flush the queue before we Send__delete__, 
+    // so make sure this goes out of scope before then.
+    AutoEventEnqueuer ensureSerialDispatch(this);
+    
+    mListener->OnStopRequest(this, mListenerContext, statusCode);
+    mListener = 0;
+    mListenerContext = 0;
+    mCacheEntryAvailable = PR_FALSE;
+
+    if (mLoadGroup)
+      mLoadGroup->RemoveRequest(this, nsnull, statusCode);
+  }
 
   // This calls NeckoChild::DeallocPHttpChannel(), which deletes |this| if IPDL
   // holds the last reference.  Don't rely on |this| existing after here.
   PHttpChannelChild::Send__delete__(this);
-  return true;
 }
 
-class ProgressEvent : public Callback
+class ProgressEvent : public ChildChannelEvent
 {
  public:
   ProgressEvent(HttpChannelChild* child,
@@ -288,11 +404,7 @@ class ProgressEvent : public Callback
   , mProgress(progress)
   , mProgressMax(progressMax) {}
 
-  bool Run()
-  {
-    return mChild->OnProgress(mProgress, mProgressMax);
-  }
-
+  void Run() { mChild->OnProgress(mProgress, mProgressMax); }
  private:
   HttpChannelChild* mChild;
   PRUint64 mProgress, mProgressMax;
@@ -302,11 +414,15 @@ bool
 HttpChannelChild::RecvOnProgress(const PRUint64& progress,
                                  const PRUint64& progressMax)
 {
-  ProgressEvent* event = new ProgressEvent(this, progress, progressMax);
-  return BufferOrDispatch(event);
+  if (ShouldEnqueue())  {
+    EnqueueEvent(new ProgressEvent(this, progress, progressMax));
+  } else {
+    OnProgress(progress, progressMax);
+  }
+  return true;
 }
 
-bool
+void
 HttpChannelChild::OnProgress(const PRUint64& progress,
                              const PRUint64& progressMax)
 {
@@ -317,6 +433,8 @@ HttpChannelChild::OnProgress(const PRUint64& progress,
   if (!mProgressSink)
     GetCallback(mProgressSink);
 
+  AutoEventEnqueuer ensureSerialDispatch(this);
+
   // block socket status event after Cancel or OnStopRequest has been called.
   if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && 
       !(mLoadFlags & LOAD_BACKGROUND)) 
@@ -326,11 +444,9 @@ HttpChannelChild::OnProgress(const PRUint64& progress,
       mProgressSink->OnProgress(this, nsnull, progress, progressMax);
     }
   }
-
-  return true;
 }
 
-class StatusEvent : public Callback
+class StatusEvent : public ChildChannelEvent
 {
  public:
   StatusEvent(HttpChannelChild* child,
@@ -340,11 +456,7 @@ class StatusEvent : public Callback
   , mStatus(status)
   , mStatusArg(statusArg) {}
 
-  bool Run()
-  {
-    return mChild->OnStatus(mStatus, mStatusArg);
-  }
-
+  void Run() { mChild->OnStatus(mStatus, mStatusArg); }
  private:
   HttpChannelChild* mChild;
   nsresult mStatus;
@@ -355,11 +467,15 @@ bool
 HttpChannelChild::RecvOnStatus(const nsresult& status,
                                const nsString& statusArg)
 {
-  StatusEvent* event = new StatusEvent(this, status, statusArg);
-  return BufferOrDispatch(event);
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new StatusEvent(this, status, statusArg));
+  } else {
+    OnStatus(status, statusArg);
+  }
+  return true;
 }
 
-bool
+void
 HttpChannelChild::OnStatus(const nsresult& status,
                            const nsString& statusArg)
 {
@@ -369,27 +485,168 @@ HttpChannelChild::OnStatus(const nsresult& status,
   if (!mProgressSink)
     GetCallback(mProgressSink);
 
+  AutoEventEnqueuer ensureSerialDispatch(this);
+  
   // block socket status event after Cancel or OnStopRequest has been called.
   if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && 
       !(mLoadFlags & LOAD_BACKGROUND)) 
   {
     mProgressSink->OnStatus(this, nsnull, status, statusArg.get());
   }
+}
 
+class Redirect1Event : public ChildChannelEvent
+{
+ public:
+  Redirect1Event(HttpChannelChild* child,
+                 PHttpChannelChild* newChannel,
+                 const IPC::URI& newURI,
+                 const PRUint32& redirectFlags,
+                 const nsHttpResponseHead& responseHead)
+  : mChild(child)
+  , mNewChannel(newChannel)
+  , mNewURI(newURI)
+  , mRedirectFlags(redirectFlags)
+  , mResponseHead(responseHead) {}
+
+  void Run() 
+  { 
+    mChild->Redirect1Begin(mNewChannel, mNewURI, mRedirectFlags, 
+                           mResponseHead); 
+  }
+ private:
+  HttpChannelChild*   mChild;
+  PHttpChannelChild*  mNewChannel;
+  IPC::URI            mNewURI;
+  PRUint32            mRedirectFlags;
+  nsHttpResponseHead  mResponseHead;
+};
+
+bool
+HttpChannelChild::RecvRedirect1Begin(PHttpChannelChild* newChannel,
+                                     const IPC::URI& newURI,
+                                     const PRUint32& redirectFlags,
+                                     const nsHttpResponseHead& responseHead)
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new Redirect1Event(this, newChannel, newURI, redirectFlags, 
+                                    responseHead)); 
+  } else {
+    Redirect1Begin(newChannel, newURI, redirectFlags, responseHead);
+  }
   return true;
 }
 
-bool
-HttpChannelChild::BufferOrDispatch(Callback* callback)
+void
+HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
+                                 const IPC::URI& newURI,
+                                 const PRUint32& redirectFlags,
+                                 const nsHttpResponseHead& responseHead)
 {
-  if (mShouldBuffer) {
-      mBufferedCallbacks.AppendElement(callback);
-      return true;
-  }
+  HttpChannelChild* 
+    newHttpChannelChild = static_cast<HttpChannelChild*>(newChannel);
+  nsCOMPtr<nsIURI> uri(newURI);
 
-  bool result = callback->Run();
-  delete callback;
-  return result;
+  nsresult rv = 
+    newHttpChannelChild->HttpBaseChannel::Init(uri, mCaps,
+                                               mConnectionInfo->ProxyInfo());
+  if (NS_FAILED(rv))
+    return; // TODO Bug 536317
+
+  // We won't get OnStartRequest, set cookies here.
+  mResponseHead = new nsHttpResponseHead(responseHead);
+  SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+
+  PRBool preserveMethod = (mResponseHead->Status() == 307);
+  rv = SetupReplacementChannel(uri, newHttpChannelChild, preserveMethod);
+  if (NS_FAILED(rv))
+    return; // TODO Bug 536317
+
+  mRedirectChannelChild = newHttpChannelChild;
+
+  nsresult result = gHttpHandler->AsyncOnChannelRedirect(this, 
+                                                         newHttpChannelChild, 
+                                                         redirectFlags);
+  if (NS_FAILED(result))
+    OnRedirectVerifyCallback(result);
+}
+
+class Redirect3Event : public ChildChannelEvent
+{
+ public:
+  Redirect3Event(HttpChannelChild* child) : mChild(child) {}
+  void Run() { mChild->Redirect3Complete(); }
+ private:
+  HttpChannelChild* mChild;
+};
+
+bool
+HttpChannelChild::RecvRedirect3Complete()
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new Redirect3Event(this));
+  } else {
+    Redirect3Complete();
+  }
+  return true;
+}
+
+void
+HttpChannelChild::Redirect3Complete()
+{
+  nsresult rv;
+
+  // Redirecting to new channel: shut this down and init new channel
+  if (mLoadGroup)
+    mLoadGroup->RemoveRequest(this, nsnull, NS_BINDING_ABORTED);
+
+  // Chrome channel has been AsyncOpen'd.  Reflect this in child.
+  rv = mRedirectChannelChild->CompleteRedirectSetup(mListener, 
+                                                    mListenerContext);
+  if (NS_FAILED(rv))
+    ; // TODO Cancel: Bug 536317 
+}
+
+nsresult
+HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener, 
+                                        nsISupports *aContext)
+{
+  LOG(("HttpChannelChild::FinishRedirectSetup [this=%x]\n", this));
+
+  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+  // notify "http-on-modify-request" observers
+  gHttpHandler->OnModifyRequest(this);
+
+  mIsPending = PR_TRUE;
+  mWasOpened = PR_TRUE;
+  mListener = listener;
+  mListenerContext = aContext;
+
+  // add ourselves to the load group. 
+  if (mLoadGroup)
+    mLoadGroup->AddRequest(this, nsnull);
+
+  // TODO: may have been canceled by on-modify-request observers: bug 536317
+
+  mState = HCC_OPENED;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelChild::nsIAsyncVerifyRedirectCallback
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
+{
+  // Cookies may have been changed by redirect observers
+  mRedirectChannelChild->AddCookiesToRequest();
+  // Must not be called until after redirect observers called.
+  mRedirectChannelChild->SetOriginalURI(mRedirectOriginalURI);
+
+  return SendRedirect2Result(result, mRedirectChannelChild->mRequestHeaders);
 }
 
 //-----------------------------------------------------------------------------
@@ -406,13 +663,22 @@ HttpChannelChild::Cancel(nsresult status)
 NS_IMETHODIMP
 HttpChannelChild::Suspend()
 {
-  DROP_DEAD();
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
+  SendSuspend();
+  mSuspendCount++;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::Resume()
 {
-  DROP_DEAD();
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
+  SendResume();
+  mSuspendCount--;
+  if (!mSuspendCount)
+    FlushEventQueue();
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -519,17 +785,18 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
 
-  // The socket transport layer in the chrome process now has a logical ref to
-  // us, until either OnStopRequest or OnRedirect is called.
+  // The socket transport in the chrome process now holds a logical ref to us
+  // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
   gNeckoChild->SendPHttpChannelConstructor(this, tabChild);
 
-  SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI), IPC::URI(mDocumentURI),
-                IPC::URI(mReferrer), mLoadFlags, mRequestHeaders, 
-                mRequestHead.Method(), uploadStreamData, 
-                uploadStreamInfo, mPriority, mRedirectionLimit, 
-                mAllowPipelining, mForceAllowThirdPartyCookie);
+  SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
+                IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
+                mRequestHeaders, mRequestHead.Method(), uploadStreamData,
+                uploadStreamInfo, mPriority, mRedirectionLimit,
+                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
+                mStartPos, mEntityID);
 
   mState = HCC_OPENED;
   return NS_OK;
@@ -645,14 +912,14 @@ HttpChannelChild::SetApplyConversion(PRBool aApplyConversion)
 NS_IMETHODIMP
 HttpChannelChild::ResumeAt(PRUint64 startPos, const nsACString& entityID)
 {
-  DROP_DEAD();
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+  mStartPos = startPos;
+  mEntityID = entityID;
+  mSendResumeAt = true;
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpChannelChild::GetEntityID(nsACString& aEntityID)
-{
-  DROP_DEAD();
-}
+// GetEntityID is shared in HttpBaseChannel
 
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsISupportsPriority
@@ -703,7 +970,8 @@ HttpChannelChild::GetApplicationCache(nsIApplicationCache **aApplicationCache)
 NS_IMETHODIMP
 HttpChannelChild::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 {
-  DROP_DEAD();
+  // FIXME: redirects call. so stub OK for now. Fix in bug 536295.  
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
@@ -744,5 +1012,6 @@ HttpChannelChild::SetChooseApplicationCache(PRBool aChooseApplicationCache)
 
 
 //------------------------------------------------------------------------------
+
 }} // mozilla::net
 
