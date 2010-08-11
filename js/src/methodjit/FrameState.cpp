@@ -218,6 +218,9 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     } else {
         JS_ASSERT(fe->data.inMemory());
         RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::DATA);
+
+        JS_ASSERT(addressOf(fe).base != address.base ||
+                  addressOf(fe).offset != address.offset);
         masm.loadPayload(addressOf(fe), reg);
         masm.storePayload(reg, address);
         if (popped)
@@ -232,6 +235,8 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         masm.storeTypeTag(fe->type.reg(), address);
     } else {
         JS_ASSERT(fe->type.inMemory());
+        JS_ASSERT(addressOf(fe).base != address.base ||
+                  addressOf(fe).offset != address.offset);
         RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE);
         masm.loadTypeTag(addressOf(fe), reg);
         masm.storeTypeTag(reg, address);
@@ -482,10 +487,17 @@ FrameState::merge(Assembler &masm, Changes changes) const
             continue;
         }
 
-        if (fe->data.inRegister())
-            masm.loadPayload(addressOf(fe), fe->data.reg());
-        if (fe->type.inRegister())
-            masm.loadTypeTag(addressOf(fe), fe->type.reg());
+#if defined JS_PUNBOX64
+        if (fe->data.inRegister() && fe->type.inRegister()) {
+            masm.loadValueAsComponents(addressOf(fe), fe->type.reg(), fe->data.reg());
+        } else
+#endif
+        {
+            if (fe->data.inRegister())
+                masm.loadPayload(addressOf(fe), fe->data.reg());
+            if (fe->type.inRegister())
+                masm.loadTypeTag(addressOf(fe), fe->type.reg());
+        }
     }
 }
 
