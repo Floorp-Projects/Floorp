@@ -48,13 +48,13 @@
  * an extra level of prototype-based delegation.
  */
 
-Narcissus.jsexec = (function() {
+Narcissus.interpreter = (function() {
 
-    var jsparse = Narcissus.jsparse;
-    var jsdefs = Narcissus.jsdefs;
+    var parser = Narcissus.parser;
+    var definitions = Narcissus.definitions;
 
     // Set constants in the local scope.
-    eval(jsdefs.consts);
+    eval(definitions.consts);
 
     const GLOBAL_CODE = 0, EVAL_CODE = 1, FUNCTION_CODE = 2;
 
@@ -68,7 +68,7 @@ Narcissus.jsexec = (function() {
 
         // Function properties.
         eval: function eval(s) {
-            if (typeof s != "string")
+            if (typeof s !== "string")
                 return s;
 
             var x = ExecutionContext.current;
@@ -79,8 +79,8 @@ Narcissus.jsexec = (function() {
             x2.scope = x.scope;
             ExecutionContext.current = x2;
             try {
-                execute(jsparse.parse(new jsparse.VanillaBuilder, s), x2);
-            } catch (e if e == THROW) {
+                execute(parser.parse(new parser.VanillaBuilder, s), x2);
+            } catch (e if e === THROW) {
                 x.result = x2.result;
                 throw e;
             } catch (e if e instanceof SyntaxError) {
@@ -111,7 +111,7 @@ Narcissus.jsexec = (function() {
         decodeURIComponent: decodeURIComponent,
         encodeURIComponent: encodeURIComponent,
 
-        // Class constructors.  Where ECMA-262 requires C.length == 1, we declare
+        // Class constructors.  Where ECMA-262 requires C.length === 1, we declare
         // a dummy formal parameter.
         Object: Object,
         Function: function Function(dummy) {
@@ -128,12 +128,12 @@ Narcissus.jsexec = (function() {
 
             // XXX We want to pass a good file and line to the tokenizer.
             // Note the anonymous name to maintain parity with Spidermonkey.
-            var t = new jsparse.Tokenizer("anonymous(" + p + ") {" + b + "}");
+            var t = new parser.Tokenizer("anonymous(" + p + ") {" + b + "}");
 
             // NB: Use the STATEMENT_FORM constant since we don't want to push this
             // function onto the fake compilation context.
-            var x = { builder: new jsparse.VanillaBuilder };
-            var f = jsparse.FunctionDefinition(t, x, false, jsparse.STATEMENT_FORM);
+            var x = { builder: new parser.VanillaBuilder };
+            var f = parser.FunctionDefinition(t, x, false, parser.STATEMENT_FORM);
             var s = {object: global, parent: null};
             return newFunction(f,{scope:s});
         },
@@ -163,7 +163,7 @@ Narcissus.jsexec = (function() {
         // Extensions to ECMA.
         snarf: snarf, evaluate: evaluate,
         load: function load(s) {
-            if (typeof s != "string")
+            if (typeof s !== "string")
                 return s;
 
             evaluate(snarf(s), s, 1)
@@ -181,8 +181,8 @@ Narcissus.jsexec = (function() {
     // Reflect a host class into the target global environment by delegation.
     function reflectClass(name, proto) {
         var gctor = global[name];
-        jsdefs.defineProperty(gctor, "prototype", proto, true, true, true);
-        jsdefs.defineProperty(proto, "constructor", gctor, false, false, true);
+        definitions.defineProperty(gctor, "prototype", proto, true, true, true);
+        definitions.defineProperty(proto, "constructor", gctor, false, false, true);
         return proto;
     }
 
@@ -213,7 +213,7 @@ Narcissus.jsexec = (function() {
             try {
                 thunk();
                 return this.result;
-            } catch (e if e == THROW) {
+            } catch (e if e === THROW) {
                 if (prev) {
                     prev.result = this.result;
                     throw THROW;
@@ -253,15 +253,15 @@ Narcissus.jsexec = (function() {
 
     function isPrimitive(v) {
         var t = typeof v;
-        return (t == "object") ? v === null : t != "function";
+        return (t === "object") ? v === null : t !== "function";
     }
 
     function isObject(v) {
         var t = typeof v;
-        return (t == "object") ? v !== null : t == "function";
+        return (t === "object") ? v !== null : t === "function";
     }
 
-    // If r instanceof Reference, v == getValue(r); else v === r.  If passed, rn
+    // If r instanceof Reference, v === getValue(r); else v === r.  If passed, rn
     // is the node whose execute result was r.
     function toObject(v, r, rn) {
         switch (typeof v) {
@@ -287,17 +287,17 @@ Narcissus.jsexec = (function() {
 
         switch (n.type) {
           case FUNCTION:
-            if (n.functionForm != jsparse.DECLARED_FORM) {
-                if (!n.name || n.functionForm == jsparse.STATEMENT_FORM) {
+            if (n.functionForm !== parser.DECLARED_FORM) {
+                if (!n.name || n.functionForm === parser.STATEMENT_FORM) {
                     v = newFunction(n, x);
-                    if (n.functionForm == jsparse.STATEMENT_FORM)
-                        jsdefs.defineProperty(x.scope.object, n.name, v, true);
+                    if (n.functionForm === parser.STATEMENT_FORM)
+                        definitions.defineProperty(x.scope.object, n.name, v, true);
                 } else {
                     t = new Object;
                     x.scope = {object: t, parent: x.scope};
                     try {
                         v = newFunction(n, x);
-                        jsdefs.defineProperty(t, n.name, v, true, true);
+                        definitions.defineProperty(t, n.name, v, true, true);
                     } finally {
                         x.scope = x.scope.parent;
                     }
@@ -311,7 +311,7 @@ Narcissus.jsexec = (function() {
             for (i = 0, j = a.length; i < j; i++) {
                 s = a[i].name;
                 f = newFunction(a[i], x);
-                jsdefs.defineProperty(t, s, f, x.type != EVAL_CODE);
+                definitions.defineProperty(t, s, f, x.type !== EVAL_CODE);
             }
             a = n.varDecls;
             for (i = 0, j = a.length; i < j; i++) {
@@ -322,7 +322,7 @@ Narcissus.jsexec = (function() {
                                         u.filename, u.lineno);
                 }
                 if (u.readOnly || !hasDirectProperty(t, s)) {
-                    jsdefs.defineProperty(t, s, undefined, x.type != EVAL_CODE, u.readOnly);
+                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, u.readOnly);
                 }
             }
             // FALL THROUGH
@@ -345,7 +345,7 @@ Narcissus.jsexec = (function() {
             var matchDefault = false;
           switch_loop:
             for (i = 0, j = a.length; ; i++) {
-                if (i == j) {
+                if (i === j) {
                     if (n.defaultIndex >= 0) {
                         i = n.defaultIndex - 1; // no case matched, do default
                         matchDefault = true;
@@ -354,7 +354,7 @@ Narcissus.jsexec = (function() {
                     break;                      // no default, exit switch_loop
                 }
                 t = a[i];                       // next case (might be default!)
-                if (t.type == CASE) {
+                if (t.type === CASE) {
                     u = getValue(execute(t.caseLabel, x));
                 } else {
                     if (!matchDefault)          // not defaulting, skip for now
@@ -366,11 +366,11 @@ Narcissus.jsexec = (function() {
                         if (t.statements.length) {
                             try {
                                 execute(t.statements, x);
-                            } catch (e if e == BREAK && x.target == n) {
+                            } catch (e if e === BREAK && x.target == n) {
                                 break switch_loop;
                             }
                         }
-                        if (++i == j)
+                        if (++i === j)
                             break switch_loop;
                         t = a[i];
                     }
@@ -386,9 +386,9 @@ Narcissus.jsexec = (function() {
             while (!n.condition || getValue(execute(n.condition, x))) {
                 try {
                     execute(n.body, x);
-                } catch (e if e == BREAK && x.target == n) {
+                } catch (e if e === BREAK && x.target === n) {
                     break;
-                } catch (e if e == CONTINUE && x.target == n) {
+                } catch (e if e === CONTINUE && x.target === n) {
                     // Must run the update expression.
                 }
                 n.update && getValue(execute(n.update, x));
@@ -404,7 +404,9 @@ Narcissus.jsexec = (function() {
             v = getValue(s);
 
             // ECMA deviation to track extant browser JS implementation behavior.
-            t = (v == null && !x.ecma3OnlyMode) ? v : toObject(v, s, n.object);
+            t = ((v === null || v === undefined) && !x.ecma3OnlyMode)
+              ? v
+              : toObject(v, s, n.object);
             a = [];
             for (i in t)
                 a.push(i);
@@ -412,9 +414,9 @@ Narcissus.jsexec = (function() {
                 putValue(execute(r, x), a[i], r);
                 try {
                     execute(n.body, x);
-                } catch (e if e == BREAK && x.target == n) {
+                } catch (e if e === BREAK && x.target === n) {
                     break;
-                } catch (e if e == CONTINUE && x.target == n) {
+                } catch (e if e === CONTINUE && x.target === n) {
                     continue;
                 }
             }
@@ -424,9 +426,9 @@ Narcissus.jsexec = (function() {
             do {
                 try {
                     execute(n.body, x);
-                } catch (e if e == BREAK && x.target == n) {
+                } catch (e if e === BREAK && x.target === n) {
                     break;
-                } catch (e if e == CONTINUE && x.target == n) {
+                } catch (e if e === CONTINUE && x.target === n) {
                     continue;
                 }
             } while (getValue(execute(n.condition, x)));
@@ -440,17 +442,17 @@ Narcissus.jsexec = (function() {
           case TRY:
             try {
                 execute(n.tryBlock, x);
-            } catch (e if e == THROW && (j = n.catchClauses.length)) {
+            } catch (e if e === THROW && (j = n.catchClauses.length)) {
                 e = x.result;
                 x.result = undefined;
                 for (i = 0; ; i++) {
-                    if (i == j) {
+                    if (i === j) {
                         x.result = e;
                         throw THROW;
                     }
                     t = n.catchClauses[i];
                     x.scope = {object: {}, parent: x.scope};
-                    jsdefs.defineProperty(x.scope.object, t.varName, e, true);
+                    definitions.defineProperty(x.scope.object, t.varName, e, true);
                     try {
                         if (t.guard && !getValue(execute(t.guard, x)))
                             continue;
@@ -497,15 +499,15 @@ Narcissus.jsexec = (function() {
                         break;
                 }
                 u = getValue(execute(u, x));
-                if (n.type == CONST)
-                    jsdefs.defineProperty(s.object, t, u, x.type != EVAL_CODE, true);
+                if (n.type === CONST)
+                    definitions.defineProperty(s.object, t, u, x.type !== EVAL_CODE, true);
                 else
                     s.object[t] = u;
             }
             break;
 
           case DEBUGGER:
-            throw "NYI: " + jsdefs.tokens[n.type];
+            throw "NYI: " + definitions.tokens[n.type];
 
           case SEMICOLON:
             if (n.expression)
@@ -515,7 +517,7 @@ Narcissus.jsexec = (function() {
           case LABEL:
             try {
                 execute(n.statement, x);
-            } catch (e if e == BREAK && x.target == n) {
+            } catch (e if e === BREAK && x.target === n) {
             }
             break;
 
@@ -612,7 +614,7 @@ Narcissus.jsexec = (function() {
           case INSTANCEOF:
             t = getValue(execute(n[0], x));
             u = getValue(execute(n[1], x));
-            if (isObject(u) && typeof u.__hasInstance__ == "function")
+            if (isObject(u) && typeof u.__hasInstance__ === "function")
                 v = u.__hasInstance__(t);
             else
                 v = t instanceof u;
@@ -688,7 +690,7 @@ Narcissus.jsexec = (function() {
             u = Number(getValue(t));
             if (n.postfix)
                 v = u;
-            putValue(t, (n.type == INCREMENT) ? ++u : --u, n[0]);
+            putValue(t, (n.type === INCREMENT) ? ++u : --u, n[0]);
             if (!n.postfix)
                 v = u;
             break;
@@ -712,16 +714,16 @@ Narcissus.jsexec = (function() {
             v = {};
             for (i = 0, j = n.length; i < j; i++) {
                 u = getValue(execute(n[i], x));
-                jsdefs.defineProperty(v, i, u, false, false, true);
+                definitions.defineProperty(v, i, u, false, false, true);
             }
-            jsdefs.defineProperty(v, "length", i, false, false, true);
+            definitions.defineProperty(v, "length", i, false, false, true);
             break;
 
           case CALL:
             r = execute(n[0], x);
             a = execute(n[1], x);
             f = getValue(r);
-            if (isPrimitive(f) || typeof f.__call__ != "function") {
+            if (isPrimitive(f) || typeof f.__call__ !== "function") {
                 throw new TypeError(r + " is not callable",
                                     n[0].filename, n[0].lineno);
             }
@@ -735,13 +737,13 @@ Narcissus.jsexec = (function() {
           case NEW_WITH_ARGS:
             r = execute(n[0], x);
             f = getValue(r);
-            if (n.type == NEW) {
+            if (n.type === NEW) {
                 a = {};
-                jsdefs.defineProperty(a, "length", 0, false, false, true);
+                definitions.defineProperty(a, "length", 0, false, false, true);
             } else {
                 a = execute(n[1], x);
             }
-            if (isPrimitive(f) || typeof f.__construct__ != "function") {
+            if (isPrimitive(f) || typeof f.__construct__ !== "function") {
                 throw new TypeError(r + " is not a constructor",
                                     n[0].filename, n[0].lineno);
             }
@@ -761,12 +763,12 @@ Narcissus.jsexec = (function() {
             v = {};
             for (i = 0, j = n.length; i < j; i++) {
                 t = n[i];
-                if (t.type == PROPERTY_INIT) {
+                if (t.type === PROPERTY_INIT) {
                     v[t[0].value] = getValue(execute(t[1], x));
                 } else {
                     f = newFunction(t, x);
-                    u = (t.type == GETTER) ? '__defineGetter__'
-                                           : '__defineSetter__';
+                    u = (t.type === GETTER) ? '__defineGetter__'
+                                            : '__defineSetter__';
                     v[u](t.name, thunk(f, x));
                 }
             }
@@ -815,8 +817,8 @@ Narcissus.jsexec = (function() {
 
     function Activation(f, a) {
         for (var i = 0, j = f.params.length; i < j; i++)
-            jsdefs.defineProperty(this, f.params[i], a[i], true);
-        jsdefs.defineProperty(this, "arguments", a, true);
+            definitions.defineProperty(this, f.params[i], a[i], true);
+        definitions.defineProperty(this, "arguments", a, true);
     }
 
     // Null Activation.prototype's proto slot so that Object.prototype.* does not
@@ -829,10 +831,10 @@ Narcissus.jsexec = (function() {
     function FunctionObject(node, scope) {
         this.node = node;
         this.scope = scope;
-        jsdefs.defineProperty(this, "length", node.params.length, true, true, true);
+        definitions.defineProperty(this, "length", node.params.length, true, true, true);
         var proto = {};
-        jsdefs.defineProperty(this, "prototype", proto, true);
-        jsdefs.defineProperty(proto, "constructor", this, false, false, true);
+        definitions.defineProperty(this, "prototype", proto, true);
+        definitions.defineProperty(proto, "constructor", this, false, false, true);
     }
 
     function getPropertyDescriptor(obj, name) {
@@ -914,16 +916,16 @@ Narcissus.jsexec = (function() {
             x2.thisObject = t || global;
             x2.caller = x;
             x2.callee = this;
-            jsdefs.defineProperty(a, "callee", this, false, false, true);
+            definitions.defineProperty(a, "callee", this, false, false, true);
             var f = this.node;
             x2.scope = {object: new Activation(f, a), parent: this.scope};
 
             ExecutionContext.current = x2;
             try {
                 execute(f.body, x2);
-            } catch (e if e == RETURN) {
+            } catch (e if e === RETURN) {
                 return x2.result;
-            } catch (e if e == THROW) {
+            } catch (e if e === THROW) {
                 x.result = x2.result;
                 throw THROW;
             } finally {
@@ -955,7 +957,7 @@ Narcissus.jsexec = (function() {
             }
             var o;
             while ((o = v.__proto__)) {
-                if (o == p)
+                if (o === p)
                     return true;
                 v = o;
             }
@@ -969,24 +971,24 @@ Narcissus.jsexec = (function() {
 
         apply: function (t, a) {
             // Curse ECMA again!
-            if (typeof this.__call__ != "function") {
+            if (typeof this.__call__ !== "function") {
                 throw new TypeError("Function.prototype.apply called on" +
                                     " uncallable object");
             }
 
             if (t === undefined || t === null)
                 t = global;
-            else if (typeof t != "object")
+            else if (typeof t !== "object")
                 t = toObject(t, t);
 
             if (a === undefined || a === null) {
                 a = {};
-                jsdefs.defineProperty(a, "length", 0, false, false, true);
+                definitions.defineProperty(a, "length", 0, false, false, true);
             } else if (a instanceof Array) {
                 var v = {};
                 for (var i = 0, j = a.length; i < j; i++)
-                    jsdefs.defineProperty(v, i, a[i], false, false, true);
-                jsdefs.defineProperty(v, "length", i, false, false, true);
+                    definitions.defineProperty(v, i, a[i], false, false, true);
+                definitions.defineProperty(v, "length", i, false, false, true);
                 a = v;
             } else if (!(a instanceof Object)) {
                 // XXX check for a non-arguments object
@@ -1013,18 +1015,18 @@ Narcissus.jsexec = (function() {
     var REp = RegExp.prototype;
 
     if (!('__call__' in Fp)) {
-        jsdefs.defineProperty(Fp, "__call__",
+        definitions.defineProperty(Fp, "__call__",
                        function (t, a, x) {
                            // Curse ECMA yet again!
                            a = Array.prototype.splice.call(a, 0, a.length);
                            return this.apply(t, a);
                        }, true, true, true);
-        jsdefs.defineProperty(REp, "__call__",
+        definitions.defineProperty(REp, "__call__",
                        function (t, a, x) {
                            a = Array.prototype.splice.call(a, 0, a.length);
                            return this.exec.apply(this, a);
                        }, true, true, true);
-        jsdefs.defineProperty(Fp, "__construct__",
+        definitions.defineProperty(Fp, "__construct__",
                        function (a, x) {
                            a = Array.prototype.splice.call(a, 0, a.length);
                            switch (a.length) {
@@ -1048,7 +1050,7 @@ Narcissus.jsexec = (function() {
         // Since we use native functions such as Date along with host ones such
         // as global.eval, we want both to be considered instances of the native
         // Function constructor.
-        jsdefs.defineProperty(Fp, "__hasInstance__",
+        definitions.defineProperty(Fp, "__hasInstance__",
                        function (v) {
                            return v instanceof Function || v instanceof global.Function;
                        }, true, true, true);
@@ -1059,15 +1061,15 @@ Narcissus.jsexec = (function() {
     }
 
     function evaluate(s, f, l) {
-        if (typeof s != "string")
+        if (typeof s !== "string")
             return s;
 
         var x = ExecutionContext.current;
         var x2 = new ExecutionContext(GLOBAL_CODE);
         ExecutionContext.current = x2;
         try {
-            execute(jsparse.parse(new jsparse.VanillaBuilder, s, f, l), x2);
-        } catch (e if e == THROW) {
+            execute(parser.parse(new parser.VanillaBuilder, s, f, l), x2);
+        } catch (e if e === THROW) {
             if (x) {
                 x.result = x2.result;
                 throw THROW;
@@ -1084,9 +1086,9 @@ Narcissus.jsexec = (function() {
 
         // Display a value similarly to the js shell.
         function display(x) {
-            if (typeof x == "object") {
+            if (typeof x === "object") {
                 // At the js shell, objects with no |toSource| don't print.
-                if (x != null && "toSource" in x) {
+                if (x !== null && "toSource" in x) {
                     try {
                         print(x.toSource());
                     } catch (e) {
@@ -1094,9 +1096,9 @@ Narcissus.jsexec = (function() {
                 } else {
                     print("null");
                 }
-            } else if (typeof x == "string") {
+            } else if (typeof x === "string") {
                 print(uneval(x));
-            } else if (typeof x != "undefined") {
+            } else if (typeof x !== "undefined") {
                 // Since x must be primitive, String can't throw.
                 print(String(x));
             }
@@ -1111,20 +1113,25 @@ Narcissus.jsexec = (function() {
             }
         }
 
-        var b = new jsparse.VanillaBuilder;
+        var b = new parser.VanillaBuilder;
         var x = new ExecutionContext(GLOBAL_CODE);
 
         x.run(function() {
             for (;;) {
+                x.result = undefined;
                 putstr("njs> ");
                 var line = readline();
-                x.result = undefined;
+                // If readline receives EOF it returns null.
+                if (line === null) {
+                    print("");
+                    break;
+                }
                 try {
-                    execute(jsparse.parse(b, line, "stdin", 1), x);
+                    execute(parser.parse(b, line, "stdin", 1), x);
                     display(x.result);
-                } catch (e if e == THROW) {
+                } catch (e if e === THROW) {
                     print("uncaught exception: " + string(x.result));
-                } catch (e if e == END) {
+                } catch (e if e === END) {
                     break;
                 } catch (e if e instanceof SyntaxError) {
                     print(e.toString());
@@ -1137,8 +1144,8 @@ Narcissus.jsexec = (function() {
     }
 
     return {
-        "evaluate": evaluate,
-        "repl": repl
+        evaluate: evaluate,
+        repl: repl
     };
 
 }());

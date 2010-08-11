@@ -69,11 +69,12 @@ class DTrace {
     static void finalizeObject(JSObject *obj);
 
     class ExecutionScope {
+        const JSContext *cx;
         const JSScript *script;
         void startExecution();
         void endExecution();
       public:
-        explicit ExecutionScope(JSScript *script);
+        explicit ExecutionScope(JSContext *cx, JSScript *script);
         ~ExecutionScope();
     };
 
@@ -106,6 +107,9 @@ DTrace::enterJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun, JSStackFram
             handleFunctionArgs(cx, fp, fun, argc, argv);
     }
 #endif
+#ifdef MOZ_TRACE_JSCALLS
+    cx->doFunctionCallback(fun, fun ? FUN_SCRIPT(fun) : NULL, true);
+#endif
 }
 
 inline void
@@ -119,6 +123,9 @@ DTrace::exitJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun,
         if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
             handleFunctionReturn(cx, fp, fun);
     }
+#endif
+#ifdef MOZ_TRACE_JSCALLS
+    cx->doFunctionCallback(fun, fun ? FUN_SCRIPT(fun) : NULL, false);
 #endif
 }
 
@@ -134,12 +141,15 @@ DTrace::finalizeObject(JSObject *obj)
 /* Execution scope. */
 
 inline
-DTrace::ExecutionScope::ExecutionScope(JSScript *script)
-  : script(script)
+DTrace::ExecutionScope::ExecutionScope(JSContext *cx, JSScript *script)
+  : cx(cx), script(script)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_START_ENABLED())
         startExecution();
+#endif
+#ifdef MOZ_TRACE_JSCALLS
+    cx->doFunctionCallback(NULL, script, true);
 #endif
 }
 
@@ -149,6 +159,9 @@ DTrace::ExecutionScope::~ExecutionScope()
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
         endExecution();
+#endif
+#ifdef MOZ_TRACE_JSCALLS
+    cx->doFunctionCallback(NULL, script, false);
 #endif
 }
 
