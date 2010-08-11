@@ -5531,8 +5531,8 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   }
 
   SetCoord(posData.mWidth, pos->mWidth, parentPos->mWidth,
-           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
            SETCOORD_LPEH | SETCOORD_INITIAL_ZERO, aContext,
            mPresContext, canStoreInRuleTree);

@@ -2285,8 +2285,63 @@ var gCSSProperties = {
 		prerequisites: { "display": "block" },
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
-		invalid_values: [ "none", "-2px" ]
+		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			/* valid calc() values */
+			"-moz-calc(-2px)",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(50% + 2px)",
+			"-moz-calc( 50% + 2px)",
+			"-moz-calc(50% + 2px )",
+			"-moz-calc( 50% + 2px )",
+			"-moz-calc(50% - -2px)",
+			"-moz-calc(2px - -50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3 *25px)",
+			"-moz-calc(3 * 25px)",
+			"-moz-calc(3* 25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(25px *3)",
+			"-moz-calc(25px* 3)",
+			"-moz-calc(25px * 3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-calc(50% - 3em + 2px)",
+			"-moz-calc(50% - (3em + 2px))",
+			"-moz-calc((50% - 3em) + 2px)",
+			"-moz-min(50%, 30em)",
+			"-moz-calc(min(50%, 30em))",
+			"-moz-max(30em, 2px + 50%)",
+			"-moz-calc(max(30em, 2px + 50%))",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+			"-moz-calc(min(30%, 30em,200px, min(500px ,40em)))",
+			"-moz-min(50%)",
+			"-moz-max(20px)",
+			"-moz-calc(min(2em))",
+			"-moz-calc(max(50%))",
+			"-moz-calc(50px/2)",
+			"-moz-calc(50px/(2 - 1))"
+		],
+		invalid_values: [ "none", "-2px",
+			/* invalid calc() values */
+			"-moz-calc(50%+ 2px)",
+			"-moz-calc(50% +2px)",
+			"-moz-calc(50%+2px)",
+			"-moz-min()",
+			"-moz-calc(min())",
+			"-moz-max()",
+			"-moz-calc(max())",
+			"-moz-calc(50px/(2 - 2))",
+			/* If we ever support division by values, which is
+			 * complicated for the reasons described in
+			 * http://lists.w3.org/Archives/Public/www-style/2010Jan/0007.html
+			 * , we should support all 4 of these as described in
+			 * http://lists.w3.org/Archives/Public/www-style/2009Dec/0296.html
+			 */
+			"-moz-calc((3em / 100%) * 3em)",
+			"-moz-calc(3em / 100% * 3em)",
+			"-moz-calc(3em * (3em / 100%))",
+			"-moz-calc(3em * 3em / 100%)"
+		]
 	},
 	"word-spacing": {
 		domProp: "wordSpacing",
