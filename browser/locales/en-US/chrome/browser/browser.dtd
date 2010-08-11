@@ -12,7 +12,7 @@
 <!ENTITY mainWindow.titlePrivateBrowsingSuffix "(Private Browsing)">
 
 <!-- Tab context menu -->
-<!ENTITY  moveTabTo.label                    "Move This Tab To">
+<!ENTITY  moveTabTo.label                    "Move This Tab To…">
 <!ENTITY  moveTabTo.accesskey                "M">
 <!ENTITY  createNewGroup.label               "Create New Group">
 <!ENTITY  createNewGroup.accesskey           "C">
@@ -240,7 +240,8 @@
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
-<!ENTITY showTabView.label "TabView">
+<!ENTITY showTabView.label     "TabView">
+<!ENTITY showTabView.accesskey     "V">
 <!ENTITY viewToolbarsMenu.label       "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey     "T"> 
 <!ENTITY viewSidebarMenu.label "Sidebar">

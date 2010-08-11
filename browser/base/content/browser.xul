@@ -113,7 +113,7 @@
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
-      <menu id="context_tabViewMenu" class="menu-iconic" label="&moveTabTo.label;..." 
+      <menu id="context_tabViewMenu" class="menu-iconic" label="&moveTabTo.label;"
             accesskey="&moveTabTo.accesskey;">
         <menupopup id="context_tabViewMenuPopup" 
                    onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
@@ -1114,6 +1114,9 @@
 #endif
 
 </vbox>
+<!-- <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
+     Introducing the iframe dynamically, as needed, was found to be better than
+     starting with an empty iframe here in browser.xul from a Ts standpoint. -->
 </deck>
 
 </window>
