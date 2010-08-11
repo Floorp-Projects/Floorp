@@ -426,6 +426,14 @@ Reverse(T *beg, T *end)
     }
 }
 
+template <typename InputIterT, typename CallableT>
+void
+ForEach(InputIterT begin, InputIterT end, CallableT f)
+{
+    for (; begin != end; ++begin)
+        f(*begin);
+}
+
 } /* namespace js */
 
 #endif /* jstl_h_ */
