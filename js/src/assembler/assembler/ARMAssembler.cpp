@@ -361,6 +361,10 @@ inline void ARMAssembler::fixUpOffsets(void * buffer)
         ARMWord* ldrAddr = reinterpret_cast<ARMWord*>(data + pos);
         ARMWord* addr = getLdrImmAddress(ldrAddr);
         if (*addr != InvalidBranchTarget) {
+// The following is disabled for JM because we patch some branches after
+// calling fixUpOffset, and the branch patcher doesn't know how to handle 'B'
+// instructions.
+#if 0
             if (!(*iter & 1)) {
                 int diff = reinterpret_cast<ARMWord*>(data + *addr) - (ldrAddr + DefaultPrefetching);
 
@@ -369,6 +373,7 @@ inline void ARMAssembler::fixUpOffsets(void * buffer)
                     continue;
                 }
             }
+#endif
             *addr = reinterpret_cast<ARMWord>(data + *addr);
         }
     }
