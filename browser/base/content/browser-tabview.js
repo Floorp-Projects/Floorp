@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #   Raymond Lee <raymond@appcoast.com>
+#   Ian Gilman <ian@iangilman.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,11 +61,8 @@ let TabView = {
         getService(Ci.nsISessionStore);
 
     let data = this._sessionstore.getWindowValue(window, this._visibilityID);
-    if (data) {
-      data = JSON.parse(data);
-      if (data && data.visible)
-        this.show();
-    }
+    if (data && data == "true")
+      this.show();
   },
 
   // ----------
@@ -95,11 +93,8 @@ let TabView = {
       let self = this;
       function observer(subject, topic, data) {
         if (topic == "quit-application-requested") {
-          let data = {
-            visible: self.isVisible()
-          };
-          
-          self._sessionstore.setWindowValue(window, self._visibilityID, JSON.stringify(data));
+          let data = (self.isVisible() ? "true" : "false");
+          self._sessionstore.setWindowValue(window, self._visibilityID, data);
         }
       }
       
