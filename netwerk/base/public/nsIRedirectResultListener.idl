@@ -1,7 +1,6 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is nsIApplicationCache.idl.
  *
  * The Initial Developer of the Original Code is
- *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,33 +37,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/net/PNeckoParent.h"
-#include "mozilla/net/NeckoCommon.h"
+#include "nsISupports.idl"
 
-#ifndef mozilla_net_NeckoParent_h
-#define mozilla_net_NeckoParent_h
-
-namespace mozilla {
-namespace net {
-
-// Header file contents
-class NeckoParent :
-  public PNeckoParent
+[scriptable, uuid(85cd2640-e91e-41ac-bdca-1dbf10dc131e)]
+interface nsIRedirectResultListener : nsISupports
 {
-public:
-  NeckoParent();
-  virtual ~NeckoParent();
-
-protected:
-  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* browser);
-  virtual bool DeallocPHttpChannel(PHttpChannelParent*);
-  virtual PCookieServiceParent* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceParent*);
-  virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
-                                   const PRUint16& flags);
+  /**
+   *  When an HTTP redirect has been processed (either successfully or not)
+   *  nsIHttpChannel will call this function if its callbacks implement this
+   *  interface.
+   *
+   *  @param proceeding
+   *         Indicated whether the redirect will be proceeding, or not (i.e.
+   *         has been canceled, or failed).
+   */
+  void onRedirectResult(in PRBool proceeding);
 };
-
-} // namespace net
-} // namespace mozilla
-
-#endif // mozilla_net_NeckoParent_h
