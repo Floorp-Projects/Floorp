@@ -91,7 +91,6 @@ static const char* const sEventNames[] = {
   "durationchange", "volumechange",
 #endif // MOZ_MEDIA
   "MozAfterPaint",
-  "MozBeforePaint",
   "MozSwipeGesture",
   "MozMagnifyGestureStart",
   "MozMagnifyGestureUpdate",
@@ -401,7 +400,7 @@ nsDOMEvent::GetCancelable(PRBool* aCancelable)
 NS_IMETHODIMP
 nsDOMEvent::GetTimeStamp(PRUint64* aTimeStamp)
 {
-  *aTimeStamp = mEvent->time;
+  LL_UI2L(*aTimeStamp, mEvent->time);
   return NS_OK;
 }
 
@@ -1303,8 +1302,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 #endif
   case NS_AFTERPAINT:
     return sEventNames[eDOMEvents_afterpaint];
-  case NS_BEFOREPAINT:
-    return sEventNames[eDOMEvents_beforepaint];
   case NS_SIMPLE_GESTURE_SWIPE:
     return sEventNames[eDOMEvents_MozSwipeGesture];
   case NS_SIMPLE_GESTURE_MAGNIFY_START:
