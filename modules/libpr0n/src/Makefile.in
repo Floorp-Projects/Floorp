@@ -52,6 +52,7 @@ LIBXUL_LIBRARY  = 1
 
 CPPSRCS		= \
 			Image.cpp \
+			Decoder.cpp \
 			DiscardTracker.cpp \
 			RasterImage.cpp \
 			imgFrame.cpp \
