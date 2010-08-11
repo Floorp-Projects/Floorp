@@ -1114,9 +1114,9 @@
 #endif
 
 </vbox>
-<!-- <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
-     Introducing the iframe dynamically, as needed, was found to be better than
-     starting with an empty iframe here in browser.xul from a Ts standpoint. -->
+# <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
+#     Introducing the iframe dynamically, as needed, was found to be better than
+#     starting with an empty iframe here in browser.xul from a Ts standpoint.
 </deck>
 
 </window>
