@@ -3627,6 +3627,7 @@ PRUint32
 gfxTextRun::FindFirstGlyphRunContaining(PRUint32 aOffset)
 {
     NS_ASSERTION(aOffset <= mCharacterCount, "Bad offset looking for glyphrun");
+    NS_ASSERTION(mGlyphRuns.Length() > 0, "no glyph runs present!");
     if (aOffset == mCharacterCount)
         return mGlyphRuns.Length();
     PRUint32 start = 0;
