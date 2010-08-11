@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,33 +39,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/net/PNeckoParent.h"
-#include "mozilla/net/NeckoCommon.h"
+#ifndef mozilla_net_HttpChannelCallbackWrapper_h
+#define mozilla_net_HttpChannelCallbackWrapper_h
 
-#ifndef mozilla_net_NeckoParent_h
-#define mozilla_net_NeckoParent_h
+#include "nsHttp.h"
+#include "mozilla/net/NeckoCommon.h"
+#include "PHttpChannelParams.h"
+#include "nsIStreamListener.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIChannelEventSink.h"
+#include "nsIRedirectResultListener.h"
+#include "nsIProgressEventSink.h"
+
+using namespace mozilla::dom;
+
+class nsICacheEntryDescriptor;
 
 namespace mozilla {
 namespace net {
 
-// Header file contents
-class NeckoParent :
-  public PNeckoParent
+class HttpChannelParent;
+
+class HttpChannelParentListener : public nsIInterfaceRequestor
+                                 , public nsIChannelEventSink
+                                 , public nsIRedirectResultListener
+                                 , public nsIStreamListener
 {
 public:
-  NeckoParent();
-  virtual ~NeckoParent();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIREDIRECTRESULTLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  HttpChannelParentListener(HttpChannelParent* aInitialChannel);
+  virtual ~HttpChannelParentListener();
 
 protected:
-  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* browser);
-  virtual bool DeallocPHttpChannel(PHttpChannelParent*);
-  virtual PCookieServiceParent* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceParent*);
-  virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
-                                   const PRUint16& flags);
+  friend class HttpChannelParent;
+  void OnContentRedirectResultReceived(
+                            const nsresult result, 
+                            const RequestHeaderTuples& changedHeaders);
+
+private:
+  nsRefPtr<HttpChannelParent> mActiveChannel;
+  nsRefPtr<HttpChannelParent> mRedirectChannel;
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
 };
 
 } // namespace net
 } // namespace mozilla
 
-#endif // mozilla_net_NeckoParent_h
+#endif // mozilla_net_HttpChannelParent_h

@@ -54,7 +54,6 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
-#include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIStringEnumerator.h"
@@ -206,7 +205,7 @@ private:
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
+    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
 
     // proxy specific methods
     nsresult ProxyFailover();
@@ -269,8 +268,6 @@ private:
     nsCacheAccessMode                 mOfflineCacheAccess;
     nsCString                         mOfflineCacheClientID;
 
-    nsCOMPtr<nsIApplicationCache>     mApplicationCache;
-
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
 
@@ -314,9 +311,6 @@ private:
     // True if we are loading a fallback cache entry from the
     // application cache.
     PRUint32                          mFallbackChannel          : 1;
-    PRUint32                          mInheritApplicationCache  : 1;
-    PRUint32                          mChooseApplicationCache   : 1;
-    PRUint32                          mLoadedFromApplicationCache : 1;
     PRUint32                          mTracingEnabled           : 1;
     // True if consumer added its own If-None-Match or If-Modified-Since
     // headers. In such a case we must not override them in the cache code
