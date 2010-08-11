@@ -4,6 +4,7 @@ html {
 }
 
 body {
+  background-color: transparent;  
   font-family: Tahoma, sans-serif !important;
   padding: 0px;
   color: rgba(0,0,0,0.4);
@@ -120,7 +121,9 @@ body {
   opacity: 1.0;
 }
 
-.favicon img:hover, .close img:hover, .expander img:hover {
+.favicon img:hover, 
+.close img:hover, 
+.expander img:hover {
   opacity: 1;
   border: none;
 }
@@ -165,7 +168,11 @@ body {
   -moz-box-shadow:  rgba(54,79,225,1) 0px 0px 5px -1px !important;
 }
 
-.front .tab-title, .front .close, .front .favicon, .front .expander, .front .thumb-shadow {
+.front .tab-title, 
+.front .close, 
+.front .favicon, 
+.front .expander, 
+.front .thumb-shadow {
   display: none;
 }
 
@@ -236,7 +243,9 @@ body {
 /* Trenches
 ----------------------------------*/
 
-.guideTrench, .visibleTrench, .activeVisibleTrench {
+.guideTrench, 
+.visibleTrench, 
+.activeVisibleTrench {
   position: absolute;
 }
 
@@ -263,11 +272,13 @@ body {
   opacity: 0.45;
 }
 
-.visibleTrench.border, .activeVisibleTrench.border {
+.visibleTrench.border, 
+.activeVisibleTrench.border {
   background-color: red;
 }
 
-.visibleTrench.guide, .activeVisibleTrench.guide {
+.visibleTrench.guide, 
+.activeVisibleTrench.guide {
   background-color: blue;
 }
 
@@ -407,7 +418,8 @@ input.defaultName:hover {
   display: block;
 }
 
-.iq-resizable-disabled .iq-resizable-handle, .iq-resizable-autohide .iq-resizable-handle {
+.iq-resizable-disabled .iq-resizable-handle, 
+.iq-resizable-autohide .iq-resizable-handle {
   display: none;
 }
 
