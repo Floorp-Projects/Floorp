@@ -368,7 +368,9 @@ nsEditor::GetDesiredSpellCheckState()
     return PR_FALSE;                    // Spellchecking forced off globally
   }
 
-  if (!CanEnableSpellCheck()) {
+  // Check for password/readonly/disabled, which are not spellchecked
+  // regardless of DOM
+  if (IsPasswordEditor() || IsReadonly() || IsDisabled()) {
     return PR_FALSE;
   }
 
@@ -441,12 +443,6 @@ nsEditor::GetFlags(PRUint32 *aFlags)
 NS_IMETHODIMP
 nsEditor::SetFlags(PRUint32 aFlags)
 {
-  // XXX Don't return even if aFlags == mFlags because when this editor is
-  // initializing, SetFlags() returns before all jobs are finished and
-  // PostCreate() will call this with same flags, then, this method needs to
-  // do the all jobs.
-
-  PRBool spellcheckerWasEnabled = CanEnableSpellCheck();
   mFlags = aFlags;
 
   if (!mDocWeak || !mPresShellWeak) {
@@ -456,11 +452,9 @@ nsEditor::SetFlags(PRUint32 aFlags)
     return NS_OK;
   }
 
-  // The flag change may cause the spellchecker state change
-  if (CanEnableSpellCheck() != spellcheckerWasEnabled) {
-    nsresult rv = SyncRealTimeSpell();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // Changing the flags can change whether spellchecking is on, so re-sync it
+  nsresult rv = SyncRealTimeSpell();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Might be changing editable state, so, we need to reset current IME state
   // if we're focused and the flag change causes IME state change.
@@ -468,7 +462,7 @@ nsEditor::SetFlags(PRUint32 aFlags)
     // Use "enable" for the default value because if IME is disabled
     // unexpectedly, it makes serious a11y problem.
     PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
-    nsresult rv = GetPreferredIMEState(&newState);
+    rv = GetPreferredIMEState(&newState);
     if (NS_SUCCEEDED(rv)) {
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
