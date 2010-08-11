@@ -1093,8 +1093,6 @@ public:
   static void ReleaseStatics();
 
 protected:
-  friend class nsRefreshDriver;
-
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1104,7 +1102,7 @@ protected:
   nsIDocument*              mDocument;      // [STRONG]
   nsPresContext*            mPresContext;   // [STRONG]
   nsStyleSet*               mStyleSet;      // [OWNS]
-  nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
+  nsCSSFrameConstructor*    mFrameConstructor; // [STRONG]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsFrameSelection*         mSelection;
   nsFrameManagerBase        mFrameManager;  // [OWNS]
@@ -1141,13 +1139,6 @@ protected:
   PRPackedBool              mIsAccessibilityActive;
 
   PRPackedBool              mObservesMutationsForPrint;
-
-  PRPackedBool              mReflowScheduled; // If true, we have a reflow
-                                              // scheduled. Guaranteed to be
-                                              // false if mReflowContinueTimer
-                                              // is non-null.
-
-  PRPackedBool              mSuppressInterruptibleReflows;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
