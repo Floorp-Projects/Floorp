@@ -14,7 +14,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> 
 
     <application android:label="@MOZ_APP_DISPLAYNAME@"
-		 android:icon="@drawable/icon">
+		 android:icon="@drawable/icon"
+		 android:debuggable="true">
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|orientation|mcc|mnc"
