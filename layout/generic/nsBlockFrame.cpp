@@ -3486,8 +3486,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
          this, aFloatAvailableSpace.mHasFloats);
 #endif
 
-  const nsMargin& borderPadding = aState.BorderPadding();
-  nscoord x = aFloatAvailableSpace.mRect.x + borderPadding.left;
+  nscoord x = aFloatAvailableSpace.mRect.x;
   nscoord availWidth = aFloatAvailableSpace.mRect.width;
   nscoord availHeight;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
@@ -5557,11 +5556,9 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
     availWidth = aFloatAvailableSpace.width;
   }
 
-  // aState.mY is relative to the border-top, make it relative to the content-top
-  nscoord contentYOffset = aState.mY - aState.BorderPadding().top;
   nscoord availHeight = NS_UNCONSTRAINEDSIZE == aState.mContentArea.height
                         ? NS_UNCONSTRAINEDSIZE
-                        : NS_MAX(0, aState.mContentArea.height - contentYOffset);
+                        : NS_MAX(0, aState.mContentArea.YMost() - aState.mY);
 
 #ifdef DISABLE_FLOAT_BREAKING_IN_COLUMNS
   if (availHeight != NS_UNCONSTRAINEDSIZE &&
@@ -5574,8 +5571,8 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
   }
 #endif
 
-  return nsRect(aState.BorderPadding().left,
-                aState.BorderPadding().top,
+  return nsRect(aState.mContentArea.x,
+                aState.mContentArea.y,
                 availWidth, availHeight);
 }
 
@@ -6610,7 +6607,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // Reflow the bullet now
   nsSize availSize;
   // Make up a width since it doesn't really matter (XXX).
-  availSize.width = rs.ComputedWidth();
+  availSize.width = aState.mContentArea.width;
   availSize.height = NS_UNCONSTRAINEDSIZE;
 
   // Get the reason right.
@@ -6644,26 +6641,22 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // the block's border, and the bullet frame's margin.
   nscoord x;
   if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
-    // Note: floatAvailSpace.x is relative to the content box and never
-    // less than zero.  Converting to frame coordinates and subtracting
-    // the padding and border cancel each other out, and the NS_MAX()
-    // with 0 (or with the left border+padding) is even implied in the
-    // right place.
-    x = floatAvailSpace.x - reflowState.mComputedMargin.right - aMetrics.width;
+    // The floatAvailSpace.x gives us the content/float edge. Then we
+    // subtract out the left border/padding and the bullet's width and
+    // margin to offset the position.
+    x = floatAvailSpace.x - rs.mComputedBorderPadding.left
+        - reflowState.mComputedMargin.right - aMetrics.width;
   } else {
-    // The XMost() of the available space and the computed width both
-    // give us offsets from the left content edge.  Then we add the left
-    // border/padding to get into frame coordinates, and the right
-    // border/padding and the bullet's margin to offset the position.
-    x = NS_MIN(rs.ComputedWidth(), floatAvailSpace.XMost())
-        + rs.mComputedBorderPadding.LeftRight()
+    // The XMost() of the available space give us offsets from the left
+    // border edge.  Then we add the right border/padding and the
+    // bullet's margin to offset the position.
+    x = floatAvailSpace.XMost() + rs.mComputedBorderPadding.right
         + reflowState.mComputedMargin.left;
   }
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
-  const nsMargin& bp = aState.BorderPadding();
-  nscoord y = bp.top;
+  nscoord y = aState.mContentArea.y;
   mBullet->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
   mBullet->DidReflow(aState.mPresContext, &aState.mReflowState, NS_FRAME_REFLOW_FINISHED);
 }
