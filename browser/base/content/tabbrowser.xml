@@ -1016,7 +1016,8 @@
           //    == 1              false                     YES
           //    == 1              true                      NO
           //    > 1               false/true                NO
-          var owner = (aURIs.length > 1) || aLoadInBackground ? null : this.selectedTab;
+          var multiple = aURIs.length > 1;
+          var owner = multiple || aLoadInBackground ? null : this.selectedTab;
           var firstTabAdded = null;
 
           if (aReplace) {
@@ -1028,7 +1029,7 @@
             }
           }
           else
-            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: true});
+            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: multiple});
 
           var tabNum = this.tabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
