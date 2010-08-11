@@ -9408,6 +9408,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     //      a. cloned data as the state object,
     //      b. if the third argument was present, the absolute URL found in
     //         step 2
+    //    Also clear the new history entry's POST data (see bug 580069).
     // 5. If aReplace is false (i.e. we're doing a pushState instead of a
     //    replaceState), notify bfcache that we've navigated to a new page.
     // 6. If the third argument is present, set the document's current address
@@ -9570,8 +9571,10 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         newSHEntry->SetURI(newURI);
     }
 
-    // Step 4: Modify new/original session history entry
+    // Step 4: Modify new/original session history entry and clear its POST
+    // data, if there is any.
     newSHEntry->SetStateData(dataStr);
+    newSHEntry->SetPostData(nsnull);
 
     // Step 5: If aReplace is false, indicating that we're doing a pushState
     // rather than a replaceState, notify bfcache that we've added a page to
