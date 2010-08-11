@@ -724,7 +724,8 @@
         <body>
           <![CDATA[
             if (TabView.isVisible()) {
-              // ToDo: this will be removed when we gain ability to draw o the menu bar. 
+              // ToDo: this will be removed when we gain ability to draw to the menu bar.
+              // Bug 586175
               this.ownerDocument.title = TabView.getWindowTitle();
             } else {
               this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);

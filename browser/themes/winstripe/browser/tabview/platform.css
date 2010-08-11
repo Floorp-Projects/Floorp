@@ -8,18 +8,18 @@
 
 #bg {
   background: -moz-linear-gradient(top,#F1F5FB,#EDF4FB);
-  position:absolute;
-  top:0;
-  left:0;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   z-index: -999999;
 }
 
-.newTabButtonAlt{
+.newTabButtonAlt {
   position: absolute;
   cursor: pointer;
-  z-index:99999;
+  z-index: 99999;
   border: none;
   -moz-border-radius: 4px;
   font-size: 50px;
@@ -32,13 +32,13 @@
   -moz-box-shadow: inset 0px 0px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.3);
 }
 
-.newTabButtonAlt>span{
+.newTabButtonAlt > span {
   color: #D9E7FC;
   text-shadow: 0px 0px 7px rgba(0,0,0,.4), 0 -1px 0 rgba(255,255,255,.6);
   font-weight: bold;
 }
 
-.newTabGroup{
+.newTabGroup {
   background-color: #D9E7FC;
   border: none;
   border-top: 1px solid rgba(127,127,127,.5);
@@ -46,7 +46,7 @@
   -moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
 }
 
-.inNewTabGroup .favicon{
+.inNewTabGroup .favicon {
   background-color: #D9E7FC;
   -moz-box-shadow: none;
 }
