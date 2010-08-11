@@ -37,6 +37,7 @@
 let TabView = {
   _deck: null,
   _window: null,
+  _iframe: null,
   _sessionstore: null,
   _visibilityID: "tabview-visibility",
   
@@ -80,6 +81,7 @@ let TabView = {
       
       iframe.setAttribute("src", "chrome://browser/content/tabview.html");
       this._deck.appendChild(iframe);
+      this._iframe = iframe;
       this._window = iframe.contentWindow;
 
       // ___ visibility storage handler
@@ -109,6 +111,7 @@ let TabView = {
       return;
     
     this._initFrame(function() {
+      iQ(this._iframe).show();
       let event = document.createEvent("Events");
       event.initEvent("tabviewshow", false, false);
       dispatchEvent(event);
@@ -120,6 +123,7 @@ let TabView = {
     if (!this.isVisible())
       return;
 
+    iQ(this._iframe).hide();
     let event = document.createEvent("Events");
     event.initEvent("tabviewhide", false, false);
     dispatchEvent(event);
