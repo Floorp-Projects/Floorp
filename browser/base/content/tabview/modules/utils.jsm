@@ -50,10 +50,8 @@
 let EXPORTED_SYMBOLS = ["Point", "Rect", "Range", "Subscribable", "Utils"];
 
 // #########
-const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-const Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -137,9 +135,9 @@ Rect.prototype = {
   // Returns true if this rectangle intersects the given <Rect>.
   intersects: function(rect) {
     return (rect.right > this.left &&
-           rect.left < this.right &&
-           rect.bottom > this.top &&
-           rect.top < this.bottom);
+            rect.left < this.right &&
+            rect.bottom > this.top &&
+            rect.top < this.bottom);
   },
 
   // ----------
@@ -165,9 +163,9 @@ Rect.prototype = {
   //  - A <Rect>
   contains: function(rect) {
     return (rect.left > this.left &&
-           rect.right < this.right &&
-           rect.top > this.top &&
-           rect.bottom < this.bottom);
+            rect.right < this.right &&
+            rect.top > this.top &&
+            rect.bottom < this.bottom);
   },
 
   // ----------
@@ -238,9 +236,9 @@ Rect.prototype = {
   // Returns true if this rectangle is identical to the given <Rect>.
   equals: function(rect) {
     return (rect.left == this.left &&
-           rect.top == this.top &&
-           rect.width == this.width &&
-           rect.height == this.height);
+            rect.top == this.top &&
+            rect.width == this.width &&
+            rect.height == this.height);
   },
 
   // ----------
@@ -317,11 +315,11 @@ Range.prototype = {
   // Paramaters
   //  - a number or <Range>
   contains: function(value) {
-    return Utils.isNumber(value) ?
-      value >= this.min && value <= this.max :
-      Utils.isRange(value) ?
-        (value.min <= this.max && this.min <= value.max) :
-        false;
+    if (Utils.isNumber(value))
+      return value >= this.min && value <= this.max;
+    if (Utils.isRange(value))
+      return value.min >= this.min && value.max <= this.max;
+    return false;
   },
 
   // ----------
@@ -388,29 +386,30 @@ Subscribable.prototype = {
       Utils.assertThrow(typeof callback == "function", "callback must be a function");
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
-
-      if (!this.subscribers)
-        this.subscribers = {};
-
-      if (!this.subscribers[eventName])
-        this.subscribers[eventName] = [];
-
-      var subs = this.subscribers[eventName];
-      var existing = subs.filter(function(element) {
-        return element.refObject == refObject;
-      });
-
-      if (existing.length) {
-        Utils.assert(existing.length == 1, 'should only ever be one');
-        existing[0].callback = callback;
-      } else {
-        subs.push({
-          refObject: refObject,
-          callback: callback
-        });
-      }
     } catch(e) {
       Utils.log(e);
+      return;
+    }
+
+    if (!this.subscribers)
+      this.subscribers = {};
+
+    if (!this.subscribers[eventName])
+      this.subscribers[eventName] = [];
+
+    var subs = this.subscribers[eventName];
+    var existing = subs.filter(function(element) {
+      return element.refObject == refObject;
+    });
+
+    if (existing.length) {
+      Utils.assert(existing.length == 1, 'should only ever be one');
+      existing[0].callback = callback;
+    } else {
+      subs.push({
+        refObject: refObject,
+        callback: callback
+      });
     }
   },
 
@@ -422,16 +421,17 @@ Subscribable.prototype = {
       Utils.assertThrow(refObject, "refObject");
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
-
-      if (!this.subscribers || !this.subscribers[eventName])
-        return;
-
-      this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
-        return element.refObject != refObject;
-      });
     } catch(e) {
       Utils.log(e);
+      return;
     }
+
+    if (!this.subscribers || !this.subscribers[eventName])
+      return;
+
+    this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
+      return element.refObject != refObject;
+    });
   },
 
   // ----------
@@ -441,18 +441,22 @@ Subscribable.prototype = {
     try {
       Utils.assertThrow(eventName && typeof eventName == "string",
           "eventName must be a non-empty string");
-
-      if (!this.subscribers || !this.subscribers[eventName])
-        return;
-
-      var self = this;
-      var subsCopy = this.subscribers[eventName].concat();
-      subsCopy.forEach(function(object) {
-        object.callback(self, eventInfo);
-      });
     } catch(e) {
       Utils.log(e);
+      return;
     }
+
+    if (!this.subscribers || !this.subscribers[eventName])
+      return;
+
+    var subsCopy = this.subscribers[eventName].concat();
+    subsCopy.forEach(function(object) {
+      try {
+        object.callback(this, eventInfo);
+      } catch(e) {
+        Utils.log(e);
+      }
+    }, this);
   }
 };
 
@@ -592,10 +596,10 @@ let Utils = {
   // Returns true if the given object (r) looks like a <Rect>.
   isRect: function(r) {
     return (r &&
-           this.isNumber(r.left) &&
-           this.isNumber(r.top) &&
-           this.isNumber(r.width) &&
-           this.isNumber(r.height));
+            this.isNumber(r.left) &&
+            this.isNumber(r.top) &&
+            this.isNumber(r.width) &&
+            this.isNumber(r.height));
   },
 
   // ----------
@@ -603,8 +607,8 @@ let Utils = {
   // Returns true if the given object (r) looks like a <Range>.
   isRange: function(r) {
     return (r &&
-           this.isNumber(r.min) &&
-           this.isNumber(r.max));
+            this.isNumber(r.min) &&
+            this.isNumber(r.max));
   },
 
   // ----------
