@@ -1,4 +1,3 @@
-setDebug(true);
 var x = "notset";
 function main() { x = "success"; }
 function failure() { x = "failure"; }
