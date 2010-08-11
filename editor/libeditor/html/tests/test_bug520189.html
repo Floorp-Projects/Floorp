@@ -202,26 +202,26 @@ var tests = [
   {
     id: "s",
     isIFrame: true,
-    payload: invalidStyle3Payload,
+    payload: invalidStyle1Payload,
     rootElement: function() document.getElementById("s").contentDocument.documentElement,
     checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
   },
   {
     id: "t",
-    payload: invalidStyle3Payload,
+    payload: invalidStyle1Payload,
     rootElement: function() document.getElementById("t"),
     checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
   },
   {
     id: "u",
     isIFrame: true,
-    payload: invalidStyle4Payload,
+    payload: invalidStyle2Payload,
     rootElement: function() document.getElementById("u").contentDocument.documentElement,
     checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
   },
   {
     id: "v",
-    payload: invalidStyle4Payload,
+    payload: invalidStyle2Payload,
     rootElement: function() document.getElementById("v"),
     checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
   },
@@ -301,39 +301,39 @@ var tests = [
   {
     id: "gg",
     isIFrame: true,
-    payload: validImgSrc1Payload,
+    payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("gg").contentDocument.documentElement,
     checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   },
   {
     id: "hh",
-    payload: validImgSrc1Payload,
+    payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("hh"),
     checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   },
   {
     id: "ii",
     isIFrame: true,
-    payload: validImgSrc2Payload,
+    payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("ii").contentDocument.documentElement,
     checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   },
   {
     id: "jj",
-    payload: validImgSrc2Payload,
+    payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("jj"),
     checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   },
   {
     id: "kk",
     isIFrame: true,
-    payload: validImgSrc3Payload,
+    payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("kk").contentDocument.documentElement,
     checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   },
   {
     id: "ll",
-    payload: validImgSrc3Payload,
+    payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("ll"),
     checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
   },
