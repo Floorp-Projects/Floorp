@@ -368,7 +368,7 @@ nsEditor::GetDesiredSpellCheckState()
     return PR_FALSE;                    // Spellchecking forced off globally
   }
 
-  if (CanEnableSpellCheck()) {
+  if (!CanEnableSpellCheck()) {
     return PR_FALSE;
   }
 
