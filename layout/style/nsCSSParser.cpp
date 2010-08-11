@@ -512,7 +512,9 @@ protected:
   PRBool ParseTransition();
   PRBool ParseTransitionTimingFunction();
   PRBool ParseTransitionTimingFunctionValues(nsCSSValue& aValue);
-  PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent, char aStop);
+  PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent,
+                                                     char aStop,
+                                                     PRBool aCheckRange);
   PRBool AppendValueToList(nsCSSValueList**& aListTail,
                            const nsCSSValue& aValue);
 
@@ -8859,10 +8861,10 @@ CSSParserImpl::ParseTransitionTimingFunctionValues(nsCSSValue& aValue)
   }
 
   float x1, x2, y1, y2;
-  if (!ParseTransitionTimingFunctionValueComponent(x1, ',') ||
-      !ParseTransitionTimingFunctionValueComponent(y1, ',') ||
-      !ParseTransitionTimingFunctionValueComponent(x2, ',') ||
-      !ParseTransitionTimingFunctionValueComponent(y2, ')')) {
+  if (!ParseTransitionTimingFunctionValueComponent(x1, ',', PR_TRUE) ||
+      !ParseTransitionTimingFunctionValueComponent(y1, ',', PR_FALSE) ||
+      !ParseTransitionTimingFunctionValueComponent(x2, ',', PR_TRUE) ||
+      !ParseTransitionTimingFunctionValueComponent(y2, ')', PR_FALSE)) {
     return PR_FALSE;
   }
 
@@ -8878,14 +8880,19 @@ CSSParserImpl::ParseTransitionTimingFunctionValues(nsCSSValue& aValue)
 
 PRBool
 CSSParserImpl::ParseTransitionTimingFunctionValueComponent(float& aComponent,
-                                                           char aStop)
+                                                           char aStop,
+                                                           PRBool aCheckRange)
 {
   if (!GetToken(PR_TRUE)) {
     return PR_FALSE;
   }
   nsCSSToken* tk = &mToken;
   if (tk->mType == eCSSToken_Number) {
-    aComponent = tk->mNumber;
+    float num = tk->mNumber;
+    if (aCheckRange && (num < 0.0 || num > 1.0)) {
+      return PR_FALSE;
+    }
+    aComponent = num;
     if (ExpectSymbol(aStop, PR_TRUE)) {
       return PR_TRUE;
     }
