@@ -1408,12 +1408,6 @@ public:
    */
   virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId) = 0;
 
-  void ScheduleBeforePaintEvent();
-  void BeforePaintEventFiring()
-  {
-    mHavePendingPaint = PR_FALSE;
-  }
-
 protected:
   ~nsIDocument()
   {
@@ -1552,9 +1546,6 @@ protected:
 
   // True if document has ever had script handling object.
   PRPackedBool mHasHadScriptHandlingObject;
-
-  // True if we're waiting for a before-paint event.
-  PRPackedBool mHavePendingPaint;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

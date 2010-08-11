@@ -66,6 +66,7 @@
 #include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
+#include "nsRefreshDriver.h"
 #include "nsChangeHint.h"
 
 class nsIContent;
@@ -101,8 +102,6 @@ struct nsPoint;
 struct nsIntPoint;
 struct nsRect;
 struct nsIntRect;
-class nsRefreshDriver;
-class nsARefreshObserver;
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;
