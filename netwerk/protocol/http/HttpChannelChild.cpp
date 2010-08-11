@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
  *   Daniel Witte <dwitte@mozilla.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,7 +76,11 @@ private:
     HttpChannelChild *mChannel;
 };
 
-// C++ file contents
+
+//-----------------------------------------------------------------------------
+// HttpChannelChild
+//-----------------------------------------------------------------------------
+
 HttpChannelChild::HttpChannelChild()
   : mIsFromCache(PR_FALSE)
   , mCacheEntryAvailable(PR_FALSE)
@@ -113,6 +118,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -473,6 +479,160 @@ HttpChannelChild::OnStatus(const nsresult& status,
   }
 }
 
+class Redirect1Event : public ChildChannelEvent
+{
+ public:
+  Redirect1Event(HttpChannelChild* child,
+                 PHttpChannelChild* newChannel,
+                 const IPC::URI& newURI,
+                 const PRUint32& redirectFlags,
+                 const nsHttpResponseHead& responseHead)
+  : mChild(child)
+  , mNewChannel(newChannel)
+  , mNewURI(newURI)
+  , mRedirectFlags(redirectFlags)
+  , mResponseHead(responseHead) {}
+
+  void Run() 
+  { 
+    mChild->Redirect1Begin(mNewChannel, mNewURI, mRedirectFlags, 
+                           mResponseHead); 
+  }
+ private:
+  HttpChannelChild*   mChild;
+  PHttpChannelChild*  mNewChannel;
+  IPC::URI            mNewURI;
+  PRUint32            mRedirectFlags;
+  nsHttpResponseHead  mResponseHead;
+};
+
+bool
+HttpChannelChild::RecvRedirect1Begin(PHttpChannelChild* newChannel,
+                                     const IPC::URI& newURI,
+                                     const PRUint32& redirectFlags,
+                                     const nsHttpResponseHead& responseHead)
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new Redirect1Event(this, newChannel, newURI, redirectFlags, 
+                                    responseHead)); 
+  } else {
+    Redirect1Begin(newChannel, newURI, redirectFlags, responseHead);
+  }
+  return true;
+}
+
+void
+HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
+                                 const IPC::URI& newURI,
+                                 const PRUint32& redirectFlags,
+                                 const nsHttpResponseHead& responseHead)
+{
+  HttpChannelChild* 
+    newHttpChannelChild = static_cast<HttpChannelChild*>(newChannel);
+  nsCOMPtr<nsIURI> uri(newURI);
+
+  nsresult rv = 
+    newHttpChannelChild->HttpBaseChannel::Init(uri, mCaps,
+                                               mConnectionInfo->ProxyInfo());
+  if (NS_FAILED(rv))
+    return; // TODO Bug 536317
+
+  // We won't get OnStartRequest, set cookies here.
+  mResponseHead = new nsHttpResponseHead(responseHead);
+  SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+
+  PRBool preserveMethod = (mResponseHead->Status() == 307);
+  rv = SetupReplacementChannel(uri, newHttpChannelChild, preserveMethod);
+  if (NS_FAILED(rv))
+    return; // TODO Bug 536317
+
+  mRedirectChannelChild = newHttpChannelChild;
+
+  nsresult result = gHttpHandler->AsyncOnChannelRedirect(this, 
+                                                         newHttpChannelChild, 
+                                                         redirectFlags);
+  if (NS_FAILED(result))
+    OnRedirectVerifyCallback(result);
+}
+
+class Redirect3Event : public ChildChannelEvent
+{
+ public:
+  Redirect3Event(HttpChannelChild* child) : mChild(child) {}
+  void Run() { mChild->Redirect3Complete(); }
+ private:
+  HttpChannelChild* mChild;
+};
+
+bool
+HttpChannelChild::RecvRedirect3Complete()
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new Redirect3Event(this));
+  } else {
+    Redirect3Complete();
+  }
+  return true;
+}
+
+void
+HttpChannelChild::Redirect3Complete()
+{
+  nsresult rv;
+
+  // Redirecting to new channel: shut this down and init new channel
+  if (mLoadGroup)
+    mLoadGroup->RemoveRequest(this, nsnull, NS_BINDING_ABORTED);
+
+  // Chrome channel has been AsyncOpen'd.  Reflect this in child.
+  rv = mRedirectChannelChild->CompleteRedirectSetup(mListener, 
+                                                    mListenerContext);
+  if (NS_FAILED(rv))
+    ; // TODO Cancel: Bug 536317 
+}
+
+nsresult
+HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener, 
+                                        nsISupports *aContext)
+{
+  LOG(("HttpChannelChild::FinishRedirectSetup [this=%x]\n", this));
+
+  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+  // notify "http-on-modify-request" observers
+  gHttpHandler->OnModifyRequest(this);
+
+  mIsPending = PR_TRUE;
+  mWasOpened = PR_TRUE;
+  mListener = listener;
+  mListenerContext = aContext;
+
+  // add ourselves to the load group. 
+  if (mLoadGroup)
+    mLoadGroup->AddRequest(this, nsnull);
+
+  // TODO: may have been canceled by on-modify-request observers: bug 536317
+
+  mState = HCC_OPENED;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelChild::nsIAsyncVerifyRedirectCallback
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
+{
+  // Cookies may have been changed by redirect observers
+  mRedirectChannelChild->AddCookiesToRequest();
+  // Must not be called until after redirect observers called.
+  mRedirectChannelChild->SetOriginalURI(mRedirectOriginalURI);
+
+  return SendRedirect2Result(result, mRedirectChannelChild->mRequestHeaders);
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsIRequest
 //-----------------------------------------------------------------------------
@@ -600,16 +760,16 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
 
-  // The socket transport layer in the chrome process now has a logical ref to
-  // us, until either OnStopRequest or OnRedirect is called.
+  // The socket transport in the chrome process now holds a logical ref to us
+  // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
   gNeckoChild->SendPHttpChannelConstructor(this, tabChild);
 
-  SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI), IPC::URI(mDocumentURI),
-                IPC::URI(mReferrer), mLoadFlags, mRequestHeaders, 
-                mRequestHead.Method(), uploadStreamData, 
-                uploadStreamInfo, mPriority, mRedirectionLimit, 
+  SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
+                IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
+                mRequestHeaders, mRequestHead.Method(), uploadStreamData,
+                uploadStreamInfo, mPriority, mRedirectionLimit,
                 mAllowPipelining, mForceAllowThirdPartyCookie);
 
   mState = HCC_OPENED;
@@ -784,7 +944,8 @@ HttpChannelChild::GetApplicationCache(nsIApplicationCache **aApplicationCache)
 NS_IMETHODIMP
 HttpChannelChild::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 {
-  DROP_DEAD();
+  // FIXME: redirects call. so stub OK for now. Fix in bug 536295.  
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
@@ -825,5 +986,6 @@ HttpChannelChild::SetChooseApplicationCache(PRBool aChooseApplicationCache)
 
 
 //------------------------------------------------------------------------------
+
 }} // mozilla::net
 

@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
  *   Daniel Witte <dwitte@mozilla.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,7 @@
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 namespace mozilla {
 namespace net {
@@ -73,7 +75,6 @@ enum HttpChannelChildState {
   HCC_ONSTOP
 };
 
-// Header file contents
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public nsICacheInfoChannel
@@ -82,6 +83,7 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIProxiedChannel
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
+                       , public nsIAsyncVerifyRedirectCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -92,6 +94,7 @@ public:
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
   NS_DECL_NSIAPPLICATIONCACHECHANNEL
+  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   HttpChannelChild();
   virtual ~HttpChannelChild();
@@ -114,6 +117,10 @@ public:
   // nsISupportsPriority
   NS_IMETHOD SetPriority(PRInt32 value);
 
+  // Final setup when redirect has proceeded successfully in chrome
+  nsresult CompleteRedirectSetup(nsIStreamListener *listener, 
+                                 nsISupports *aContext);
+
   // IPDL holds a reference while the PHttpChannel protocol is live (starting at
   // AsyncOpen, and ending at either OnStopRequest or any IPDL error, either of
   // which call NeckoChild::DeallocPHttpChannel()).
@@ -133,9 +140,16 @@ protected:
   bool RecvOnStopRequest(const nsresult& statusCode);
   bool RecvOnProgress(const PRUint64& progress, const PRUint64& progressMax);
   bool RecvOnStatus(const nsresult& status, const nsString& statusArg);
+  bool RecvRedirect1Begin(PHttpChannelChild* newChannel,
+                          const URI& newURI,
+                          const PRUint32& redirectFlags,
+                          const nsHttpResponseHead& responseHead);
+  bool RecvRedirect3Complete();
 
 private:
   RequestHeaderTuples mRequestHeaders;
+  nsRefPtr<HttpChannelChild> mRedirectChannelChild;
+  nsCOMPtr<nsIURI> mRedirectOriginalURI;
 
   PRPackedBool mIsFromCache;
   PRPackedBool mCacheEntryAvailable;
@@ -175,6 +189,10 @@ private:
   void OnStopRequest(const nsresult& statusCode);
   void OnProgress(const PRUint64& progress, const PRUint64& progressMax);
   void OnStatus(const nsresult& status, const nsString& statusArg);
+  void Redirect1Begin(PHttpChannelChild* newChannel, const URI& newURI,
+                      const PRUint32& redirectFlags,
+                      const nsHttpResponseHead& responseHead);
+  void Redirect3Complete();
 
   friend class AutoEventEnqueuer;
   friend class StartRequestEvent;
@@ -182,6 +200,8 @@ private:
   friend class DataAvailableEvent;
   friend class ProgressEvent;
   friend class StatusEvent;
+  friend class Redirect1Event;
+  friend class Redirect3Event;
 };
 
 //-----------------------------------------------------------------------------

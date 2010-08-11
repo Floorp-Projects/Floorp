@@ -46,6 +46,12 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 
+#include "nsICachingChannel.h"
+#include "nsISeekableStream.h"
+#include "nsIEncodedChannel.h"
+#include "nsIResumableChannel.h"
+#include "nsIApplicationCacheChannel.h"
+
 namespace mozilla {
 namespace net {
 
@@ -62,6 +68,9 @@ HttpBaseChannel::HttpBaseChannel()
   , mAllowPipelining(PR_TRUE)
   , mForceAllowThirdPartyCookie(PR_FALSE)
   , mUploadStreamHasHeaders(PR_FALSE)
+  , mInheritApplicationCache(PR_TRUE)
+  , mChooseApplicationCache(PR_FALSE)
+  , mLoadedFromApplicationCache(PR_FALSE)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -978,6 +987,135 @@ HttpBaseChannel::AddCookiesToRequest()
   // existing cookies if we have no cookies to set or if the cookie
   // service is unavailable.
   SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, PR_FALSE);
+}
+
+static PLDHashOperator
+CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
+{
+  nsIWritablePropertyBag* bag = static_cast<nsIWritablePropertyBag*>
+                                           (aClosure);
+  bag->SetProperty(aKey, aData);
+  return PL_DHASH_NEXT;
+}
+
+nsresult
+HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI, 
+                                         nsIChannel   *newChannel,
+                                         PRBool        preserveMethod)
+{
+  LOG(("HttpBaseChannel::SetupReplacementChannel "
+     "[this=%p newChannel=%p preserveMethod=%d]",
+     this, newChannel, preserveMethod));
+  PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
+  // if the original channel was using SSL and this channel is not using
+  // SSL, then no need to inhibit persistent caching.  however, if the
+  // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
+  // set, then allow the flag to apply to the redirected channel as well.
+  // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
+  // we only need to check if the original channel was using SSL.
+  if (mConnectionInfo->UsingSSL())
+    newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
+
+  // Do not pass along LOAD_CHECK_OFFLINE_CACHE
+  newLoadFlags &= ~nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE;
+
+  newChannel->SetLoadGroup(mLoadGroup); 
+  newChannel->SetNotificationCallbacks(mCallbacks);
+  newChannel->SetLoadFlags(newLoadFlags);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
+  if (!httpChannel)
+    return NS_OK; // no other options to set
+
+  if (preserveMethod) {
+    nsCOMPtr<nsIUploadChannel> uploadChannel =
+      do_QueryInterface(httpChannel);
+    nsCOMPtr<nsIUploadChannel2> uploadChannel2 =
+      do_QueryInterface(httpChannel);
+    if (mUploadStream && (uploadChannel2 || uploadChannel)) {
+      // rewind upload stream
+      nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
+      if (seekable)
+        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+
+      // replicate original call to SetUploadStream...
+      if (uploadChannel2) {
+        const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
+        if (!ctype)
+          ctype = "";
+        const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
+        PRInt64 len = clen ? nsCRT::atoll(clen) : -1;
+        uploadChannel2->ExplicitSetUploadStream(
+            mUploadStream,
+            nsDependentCString(ctype),
+            len,
+            nsDependentCString(mRequestHead.Method()),
+            mUploadStreamHasHeaders);
+      } else {
+        if (mUploadStreamHasHeaders) {
+          uploadChannel->SetUploadStream(mUploadStream, EmptyCString(),
+                           -1);
+        } else {
+          const char *ctype =
+            mRequestHead.PeekHeader(nsHttp::Content_Type);
+          const char *clen =
+            mRequestHead.PeekHeader(nsHttp::Content_Length);
+          if (!ctype) {
+            ctype = "application/octet-stream";
+          }
+          if (clen) {
+            uploadChannel->SetUploadStream(mUploadStream,
+                             nsDependentCString(ctype),
+                             atoi(clen));
+          }
+        }
+      }
+    }
+    // since preserveMethod is true, we need to ensure that the appropriate 
+    // request method gets set on the channel, regardless of whether or not 
+    // we set the upload stream above. This means SetRequestMethod() will
+    // be called twice if ExplicitSetUploadStream() gets called above.
+
+    httpChannel->SetRequestMethod(nsDependentCString(mRequestHead.Method()));
+  }
+  // convey the referrer if one was used for this channel to the next one
+  if (mReferrer)
+    httpChannel->SetReferrer(mReferrer);
+  // convey the mAllowPipelining flag
+  httpChannel->SetAllowPipelining(mAllowPipelining);
+  // convey the new redirection limit
+  httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
+
+  nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
+  if (httpInternal) {
+    // convey the mForceAllowThirdPartyCookie flag
+    httpInternal->SetForceAllowThirdPartyCookie(mForceAllowThirdPartyCookie);
+
+    // update the DocumentURI indicator since we are being redirected.
+    // if this was a top-level document channel, then the new channel
+    // should have its mDocumentURI point to newURI; otherwise, we
+    // just need to pass along our mDocumentURI to the new channel.
+    if (newURI && (mURI == mDocumentURI))
+      httpInternal->SetDocumentURI(newURI);
+    else
+      httpInternal->SetDocumentURI(mDocumentURI);
+  } 
+  
+  // transfer application cache information
+  nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+    do_QueryInterface(newChannel);
+  if (appCacheChannel) {
+    appCacheChannel->SetApplicationCache(mApplicationCache);
+    appCacheChannel->SetInheritApplicationCache(mInheritApplicationCache);
+    // We purposely avoid transfering mChooseApplicationCache.
+  }
+
+  // transfer any properties
+  nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
+  if (bag)
+    mPropertyHash.EnumerateRead(CopyProperties, bag.get());
+
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------------
