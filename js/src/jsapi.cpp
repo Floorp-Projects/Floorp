@@ -94,6 +94,10 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
+#include "jsregexpinlines.h"
+
+#include "assembler/jit/ExecutableAllocator.h"
+#include "methodjit/Logging.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -557,6 +561,10 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
+#ifdef JS_METHODJIT_SPEW
+    JMCheckLogging();
+#endif
+
 #ifdef DEBUG
     functionMeterFilename = getenv("JS_FUNCTION_STATFILE");
     if (functionMeterFilename) {
@@ -575,6 +583,12 @@ JSRuntime::init(uint32 maxbytes)
 
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
+
+#if ENABLE_YARR_JIT
+    regExpAllocator = new JSC::ExecutableAllocator();
+    if (!regExpAllocator)
+        return false;
+#endif
 
     deflatedStringCache = new js::DeflatedStringCache();
     if (!deflatedStringCache || !deflatedStringCache->init())
@@ -640,6 +654,9 @@ JSRuntime::~JSRuntime()
      * calling js_FinishAtomState, which finalizes strings.
      */
     delete deflatedStringCache;
+#if ENABLE_YARR_JIT
+    delete regExpAllocator;
+#endif
     js_FinishGC(this);
 #ifdef JS_THREADSAFE
     if (gcLock)
@@ -5412,14 +5429,11 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
 {
-    jschar *chars;
-    JSObject *obj;
-
     CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    obj = js_NewRegExpObject(cx, NULL, chars, length, flags);
+    JSObject *obj = RegExp::createObject(cx, chars, length, flags);
     cx->free(chars);
     return obj;
 }
@@ -5428,22 +5442,17 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return js_NewRegExpObject(cx, NULL, chars, length, flags);
+    return RegExp::createObject(cx, chars, length, flags);
 }
 
 JS_PUBLIC_API(void)
 JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
 {
-    JSRegExpStatics *res;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
     /* No locking required, cx is thread-private and input must be live. */
-    res = &cx->regExpStatics;
-    res->clearRoots();
-    res->input = input;
-    res->multiline = multiline;
+    cx->regExpStatics.reset(input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -5457,7 +5466,7 @@ JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx)
 {
     /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clearRoots();
+    cx->regExpStatics.clear();
 }
 
 /* TODO: compile, execute, get/set other statics... */
