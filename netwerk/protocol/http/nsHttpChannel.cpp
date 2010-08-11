@@ -3249,6 +3249,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     nsresult rv;
 
+    if (mCanceled)
+        return mStatus;
+
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
         return rv;
