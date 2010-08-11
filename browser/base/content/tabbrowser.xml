@@ -1323,9 +1323,18 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
             if (aParams)
               var animate = aParams.animate;
+
+            // Handle requests for synchronously removing an already
+            // asynchronously closing tab.
+            if (!animate &&
+                this._removingTabs.indexOf(aTab) > -1) {
+              this._endRemoveTab(aTab);
+              return;
+            }
+
+            var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
 
             if (!this._beginRemoveTab(aTab, false, null, true))
               return;
@@ -2404,7 +2413,7 @@
          var tabs = document.getBindingParent(this);
          tabs.removeAttribute("overflow");
 
-         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser._endRemoveTab,
+         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
                                                tabs.tabbrowser);
 
          tabs._positionPinnedTabs();
