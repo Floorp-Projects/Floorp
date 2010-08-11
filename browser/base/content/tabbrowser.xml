@@ -1016,8 +1016,7 @@
           //    == 1              false                     YES
           //    == 1              true                      NO
           //    > 1               false/true                NO
-          var multiple = aURIs.length > 1;
-          var owner = multiple || aLoadInBackground ? null : this.selectedTab;
+          var owner = (aURIs.length > 1) || aLoadInBackground ? null : this.selectedTab;
           var firstTabAdded = null;
 
           if (aReplace) {
@@ -1029,7 +1028,7 @@
             }
           }
           else
-            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: multiple});
+            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: true});
 
           var tabNum = this.tabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
@@ -1324,18 +1323,9 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
+            var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
             if (aParams)
               var animate = aParams.animate;
-
-            // Handle requests for synchronously removing an already
-            // asynchronously closing tab.
-            if (!animate &&
-                this._removingTabs.indexOf(aTab) > -1) {
-              this._endRemoveTab(aTab);
-              return;
-            }
-
-            var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
 
             if (!this._beginRemoveTab(aTab, false, null, true))
               return;
@@ -2414,7 +2404,7 @@
          var tabs = document.getBindingParent(this);
          tabs.removeAttribute("overflow");
 
-         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
+         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser._endRemoveTab,
                                                tabs.tabbrowser);
 
          tabs._positionPinnedTabs();
