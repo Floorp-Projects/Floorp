@@ -130,15 +130,11 @@ class Assembler : public BaseAssembler
         loadValue(address, Registers::ValueReg);
         Label l = label();
         
-        move(Registers::ValueReg, type);
-        move(Registers::ValueReg, payload);
-        move(Imm64(JSVAL_PAYLOAD_MASK), Registers::ValueReg);
+        move(Imm64(JSVAL_PAYLOAD_MASK), payload);
+        move(Imm64(JSVAL_TAG_MASK), type);
 
-        /* Use JSC::scratchRegister to mask type bits. */
-        convertValueToType(type);
-
-        /* Use ValueReg to mask payload bits. */
         andPtr(Registers::ValueReg, payload);
+        andPtr(Registers::ValueReg, type);
 
         return l;
     }
