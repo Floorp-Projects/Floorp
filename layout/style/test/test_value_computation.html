@@ -8,6 +8,10 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <style type="text/css" id="stylesheet"></style>
+  <style type="text/css">
+  /* For 'width', 'height', etc., need a constant size container. */
+  #display { width: 500px; height: 200px }
+  </style>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
@@ -79,6 +83,17 @@ function xfail_value(property, value, is_initial, has_frame) {
   return false;
 }
 
+var gSwapInitialWhenHaveFrame = {
+  // When there's a frame, '-moz-available' works out to the same as
+  // 'auto' given the prerequisites of only 'display: block'.
+  "width": [ "-moz-available" ],
+};
+
+function swap_when_frame(property, value) {
+  return (property in gSwapInitialWhenHaveFrame) &&
+         gSwapInitialWhenHaveFrame[property].indexOf(value) != -1;
+}
+
 var gElementN = document.getElementById("elementn");
 var gElementF = document.getElementById("elementf");
 var gStyleSheet = document.getElementById("stylesheet").sheet;
@@ -95,6 +110,9 @@ function setup_initial_values(id, ivalprop, prereqprop) {
   window[ivalprop] = iframe.contentWindow.getComputedStyle(
                        iframe.contentDocument.documentElement.firstChild, "");
   var sheet = iframe.contentDocument.styleSheets[0];
+  // For 'width', 'height', etc., need a constant size container.
+  sheet.insertRule(":root { height: 200px; width: 500px }", sheet.cssRules.length);
+
   window[prereqprop] = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
 }
 
@@ -157,9 +175,11 @@ function test_value(property, val, is_initial)
     (xfail_value(property, val, is_initial, false) ? todo_isnot : isnot)(
        val_computed_n, initial_computed_n,
        "should not get initial value for '" + property + ":" + val + "' on elementn.");
-    (xfail_value(property, val, is_initial, true) ? todo_isnot : isnot)(
+    var swap = swap_when_frame(property, val);
+    (xfail_value(property, val, is_initial, true) ? todo_isnot : (swap ? is : isnot))(
        val_computed_f, initial_computed_f,
-       "should not get initial value for '" + property + ":" + val + "' on elementf.");
+       "should " + (swap ? "" : "not ") +
+       "get initial value for '" + property + ":" + val + "' on elementf.");
   }
   if (is_initial)
     gRule1.style.removeProperty(property);
