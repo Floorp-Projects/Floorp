@@ -36,9 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
+  waitForExplicitFinish();
+
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
-  is(gBrowser.visibleTabs.length, 1, "1 tab should be open");  
+  is(gBrowser.visibleTabs.length, 1, "1 tab should be open");
   is(Disabled(), true, "Bookmark All Tabs should be hidden");
 
   // Add a tab
@@ -46,30 +48,39 @@ function test() {
   is(gBrowser.visibleTabs.length, 2, "2 tabs should be open");
   is(Disabled(), false, "Bookmark All Tabs should be available");
 
+  let observe = function(subject, topic, data) {
+    Services.obs.removeObserver(observe, "tab-visibility-change");
+    setTimeout(function() {
+      is(Disabled(), true, "Bookmark All Tabs should be hidden as there is only one visible tab");
+
+      // Add a tab that will get pinned
+      let pinned = gBrowser.addTab();
+      gBrowser.pinTab(pinned);
+      is(gBrowser.visibleTabs.length, 2, "2 tabs should be visible now");
+      is(Disabled(), false, "Bookmark All Tabs should be available as there are two visible tabs");
+
+      // Show all tabs
+      let allTabs = [tab for each (tab in gBrowser.tabs)];
+      gBrowser.showOnlyTheseTabs(allTabs);
+
+      // reset the environment
+      gBrowser.removeTab(testTab);
+      gBrowser.removeTab(pinned);
+      is(gBrowser.visibleTabs.length, 1, "only orig is left and visible");
+      is(gBrowser.tabs.length, 1, "sanity check that it matches");
+      is(Disabled(), true, "Bookmark All Tabs should be hidden");
+      is(gBrowser.selectedTab, origTab, "got the orig tab");
+      is(origTab.hidden, false, "and it's not hidden -- visible!");
+
+      finish();
+    }, 0);
+  }
+  Services.obs.addObserver(observe, "tab-visibility-change", false);
+
   // Hide the original tab
   gBrowser.selectedTab = testTab;
   gBrowser.showOnlyTheseTabs([testTab]);
-  is(gBrowser.visibleTabs.length, 1, "1 tab should be visible");  
-  is(Disabled(), true, "Bookmark All Tabs should be hidden as there is only one visible tab");
-  
-  // Add a tab that will get pinned
-  let pinned = gBrowser.addTab();
-  gBrowser.pinTab(pinned);
-  is(gBrowser.visibleTabs.length, 2, "2 tabs should be visible now");
-  is(Disabled(), false, "Bookmark All Tabs should be available as there are two visible tabs");
-
-  // Show all tabs
-  let allTabs = [tab for each (tab in gBrowser.tabs)];
-  gBrowser.showOnlyTheseTabs(allTabs);
-
-  // reset the environment  
-  gBrowser.removeTab(testTab);
-  gBrowser.removeTab(pinned);
-  is(gBrowser.visibleTabs.length, 1, "only orig is left and visible");
-  is(gBrowser.tabs.length, 1, "sanity check that it matches");
-  is(Disabled(), true, "Bookmark All Tabs should be hidden");
-  is(gBrowser.selectedTab, origTab, "got the orig tab");
-  is(origTab.hidden, false, "and it's not hidden -- visible!");
+  is(gBrowser.visibleTabs.length, 1, "1 tab should be visible");
 }
 
 function Disabled() {
