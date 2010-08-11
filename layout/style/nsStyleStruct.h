@@ -1075,14 +1075,7 @@ struct nsStylePosition {
     { return HeightCoordDependsOnContainer(mMaxHeight); }
 
 private:
-  static PRBool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
-  {
-    return aCoord.GetUnit() == eStyleUnit_Auto ||
-           aCoord.GetUnit() == eStyleUnit_Percent ||
-           (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-            (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
-             aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
-  }
+  static PRBool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord);
   static PRBool HeightCoordDependsOnContainer(const nsStyleCoord &aCoord)
   {
     return aCoord.GetUnit() == eStyleUnit_Auto || // CSS 2.1, 10.6.4, item (5)

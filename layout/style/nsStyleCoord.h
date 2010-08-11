@@ -124,6 +124,16 @@ public:
     return eStyleUnit_Calc <= mUnit && mUnit <= eStyleUnit_Calc_Maximum;
   }
 
+  PRBool IsCoordPercentCalcUnit() const {
+    return mUnit == eStyleUnit_Coord ||
+           mUnit == eStyleUnit_Percent ||
+           IsCalcUnit();
+  }
+
+  // Does this calc() expression have any percentages inside it?  Can be
+  // called only when IsCalcUnit() is true.
+  PRBool CalcHasPercent() const;
+
   PRBool IsArrayValue() const {
     return IsCalcUnit();
   }
