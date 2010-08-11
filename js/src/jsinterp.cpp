@@ -396,18 +396,17 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    Value *invokevp = args.getvp();
-    invokevp[0] = obj->fslots[JSSLOT_FOUND_FUNCTION];
-    invokevp[1] = vp[1];
-    invokevp[2] = obj->fslots[JSSLOT_SAVED_ID];
+    args.callee() = obj->fslots[JSSLOT_FOUND_FUNCTION];
+    args.thisv() = vp[1];
+    args[0] = obj->fslots[JSSLOT_SAVED_ID];
     JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
-    invokevp[3].setObject(*argsobj);
+    args[1].setObject(*argsobj);
     JSBool ok = (flags & JSINVOKE_CONSTRUCT)
                 ? InvokeConstructor(cx, args)
                 : Invoke(cx, args, flags);
-    vp[0] = invokevp[0];
+    vp[0] = args.rval();
     return ok;
 }
 
@@ -483,16 +482,15 @@ callJSNative(JSContext *cx, CallOp callOp, JSObject *thisp, uintN argc, Value *a
 template <typename T>
 static JS_REQUIRES_STACK bool
 InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
-       const InvokeArgsGuard &args, uintN flags)
+             const CallArgs &argsRef, uintN flags)
 {
-    uintN argc = args.getArgc();
-    Value *vp = args.getvp();
+    CallArgs args = argsRef;
 
     if (native && fun && fun->isFastNative()) {
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
 #endif
-        JSBool ok = callJSFastNative(cx, (FastNative) native, argc, vp);
+        JSBool ok = callJSFastNative(cx, (FastNative) native, args.argc(), args.base());
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
         if (ok && !alreadyThrowing)
@@ -507,13 +505,13 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     if (fun) {
         if (fun->isInterpreted()) {
             uintN minargs = fun->nargs;
-            nmissing = minargs > argc ? minargs - argc : 0;
+            nmissing = minargs > args.argc() ? minargs - args.argc() : 0;
             nvars = fun->u.i.nvars;
         } else if (fun->isFastNative()) {
             nvars = nmissing = 0;
         } else {
             uintN minargs = fun->nargs;
-            nmissing = (minargs > argc ? minargs - argc : 0) + fun->u.n.extra;
+            nmissing = (minargs > args.argc() ? minargs - args.argc() : 0) + fun->u.n.extra;
             nvars = 0;
         }
     } else {
@@ -526,25 +524,24 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
      * code before pushInvokeFrame must not reenter the interpreter.
      */
-    JSFrameRegs regs;
     InvokeFrameGuard frame;
     if (!cx->stack().getInvokeFrame(cx, args, nmissing, nfixed, frame))
         return false;
     JSStackFrame *fp = frame.getFrame();
 
     /* Initialize missing missing arguments and new local variables. */
-    Value *missing = vp + 2 + argc;
+    Value *missing = args.argv() + args.argc();
     SetValueRangeToUndefined(missing, nmissing);
     SetValueRangeToUndefined(fp->slots(), nvars);
 
     /* Initialize frame. */
-    fp->thisv = vp[1];
+    fp->thisv = args.thisv();
     fp->callobj = NULL;
     fp->argsobj = NULL;
     fp->script = script;
     fp->fun = fun;
-    fp->argc = argc;
-    fp->argv = vp + 2;
+    fp->argc = args.argc();
+    fp->argv = args.argv();
     fp->rval = (flags & JSINVOKE_CONSTRUCT) ? fp->thisv : UndefinedValue();
     fp->annotation = NULL;
     fp->scopeChain = NULL;
@@ -553,6 +550,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->flags = flags;
 
     /* Initialize regs. */
+    JSFrameRegs &regs = frame.getRegs();
     if (script) {
         regs.pc = script->code;
         regs.sp = fp->slots() + script->nfixed;
@@ -562,10 +560,10 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     }
 
     /* Officially push |fp|. |frame|'s destructor pops. */
-    cx->stack().pushInvokeFrame(cx, args, frame, regs);
+    cx->stack().pushInvokeFrame(cx, args, frame);
 
     /* Now that the frame has been pushed, fix up the scope chain. */
-    JSObject *parent = vp[0].toObject().getParent();
+    JSObject *parent = args.callee().toObject().getParent();
     if (native) {
         /* Slow natives and call ops expect the caller's scopeChain as their scopeChain. */
         if (JSStackFrame *down = fp->down)
@@ -586,25 +584,25 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
      * and fp->scopeChain is correct because the thisObject hook may call
      * JS_GetScopeChain.
      */
-    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !vp[1].isPrimitive());
-    if (vp[1].isObject() && !(flags & JSINVOKE_CONSTRUCT)) {
+    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !args.thisv().isPrimitive());
+    if (args.thisv().isObject() && !(flags & JSINVOKE_CONSTRUCT)) {
         /*
          * We must call the thisObject hook in case we are not called from the
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.
          */
-        JSObject *thisp = vp[1].toObjectOrNull();
+        JSObject *thisp = args.thisv().toObjectOrNull();
         if (!thisp) {
-            JSObject *funobj = &args.getvp()[0].toObject();
+            JSObject *funobj = &args.callee().toObject();
             thisp = funobj->getGlobal();
         }
         thisp = thisp->thisObject(cx);
         if (!thisp)
              return false;
-         vp[1].setObject(*thisp);
-         fp->thisv.setObject(*thisp);
+        args.thisv().setObject(*thisp);
+        fp->thisv.setObject(*thisp);
     }
-    JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
+    JS_ASSERT_IF(!args.thisv().isPrimitive(), IsSaneThisObject(args.thisv().toObject()));
 
     /* Call the hook if present after we fully initialized the frame. */
     JSInterpreterHook hook = cx->debugHooks->callHook;
@@ -645,7 +643,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     }
 
     fp->putActivationObjects(cx);
-    *vp = fp->rval;
+    args.rval() = fp->rval;
     return ok;
 }
 
@@ -691,19 +689,16 @@ DoSlowCall(JSContext *cx, uintN argc, Value *vp)
  * when done.  Then push the return value.
  */
 JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
+Invoke(JSContext *cx, const CallArgs &args, uintN flags)
 {
-    Value *vp = args.getvp();
-    uintN argc = args.getArgc();
-    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+    JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
 
-    const Value &v = vp[0];
-    if (v.isPrimitive()) {
-        js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
+    if (args.callee().isPrimitive()) {
+        js_ReportIsNotFunction(cx, &args.callee(), flags & JSINVOKE_FUNFLAGS);
         return false;
     }
 
-    JSObject *funobj = &v.toObject();
+    JSObject *funobj = &args.callee().toObject();
     Class *clasp = funobj->getClass();
 
     if (clasp == &js_FunctionClass) {
@@ -718,10 +713,10 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
             if (script->isEmpty()) {
                 if (flags & JSINVOKE_CONSTRUCT) {
-                    JS_ASSERT(vp[1].isObject());
-                    *vp = vp[1];
+                    JS_ASSERT(args.thisv().isObject());
+                    args.rval() = args.thisv();
                 } else {
-                    vp->setUndefined();
+                    args.rval().setUndefined();
                 }
                 return true;
             }
@@ -732,15 +727,15 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
         if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
             /* Handle bound method special case. */
-            vp[1].setObject(*funobj->getParent());
-        } else if (!vp[1].isObjectOrNull()) {
+            args.thisv().setObject(*funobj->getParent());
+        } else if (!args.thisv().isObjectOrNull()) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PrimitiveThisTest(fun, vp[1]))
+            if (PrimitiveThisTest(fun, args.thisv()))
                 return InvokeCommon(cx, fun, script, native, args, flags);
         }
 
         if (flags & JSINVOKE_CONSTRUCT) {
-            JS_ASSERT(args.getvp()[1].isObject());
+            JS_ASSERT(args.thisv().isObject());
         } else {
             /*
              * We must call js_ComputeThis in case we are not called from the
@@ -753,8 +748,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
              * the appropriate this-computing bytecode, e.g., JSOP_THIS.
              */
             if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-                Value *vp = args.getvp();
-                if (!ComputeThisFromVp(cx, vp))
+                if (!args.computeThis(cx))
                     return false;
             }
         }
@@ -763,13 +757,13 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
 #if JS_HAS_NO_SUCH_METHOD
     if (clasp == &js_NoSuchMethodClass)
-        return NoSuchMethod(cx, argc, vp, flags);
+        return NoSuchMethod(cx, args.argc(), args.base(), flags);
 #endif
 
     /* Try a call or construct native object op. */
     if (flags & JSINVOKE_CONSTRUCT) {
-        if (!vp[1].isObjectOrNull()) {
-            if (!js_PrimitiveToObject(cx, &vp[1]))
+        if (!args.thisv().isObjectOrNull()) {
+            if (!js_PrimitiveToObject(cx, &args.thisv()))
                 return false;
         }
         return InvokeCommon(cx, NULL, NULL, DoConstruct, args, flags);
@@ -794,9 +788,9 @@ InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags
     if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return JS_FALSE;
 
-    args.getvp()[0] = fval;
-    args.getvp()[1] = thisv;
-    memcpy(args.getvp() + 2, argv, argc * sizeof(Value));
+    args.callee() = fval;
+    args.thisv() = thisv;
+    memcpy(args.argv(), argv, argc * sizeof(Value));
 
     if (!Invoke(cx, args, flags))
         return JS_FALSE;
@@ -807,7 +801,7 @@ InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags
      * (js_ValueToString for example) callers do not need to manage roots
      * for local, temporary references to such results.
      */
-    *rval = *args.getvp();
+    *rval = args.rval();
     if (rval->isMarkable())
         cx->weakRoots.lastInternalResult = rval->asGCThing();
 
@@ -898,8 +892,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
          * CallStackSegment of |down|. If |down == cx->fp|, the callstack is
          * simply the context's active callstack, so we can use
          * |down->varobj(cx)|.  When |down != cx->fp|, we need to do a slow
-         * linear search. Luckily, this only happens with indirect eval and
-         * JS_EvaluateInStackFrame.
+         * linear search. Luckily, this only happens with EvaluateInFrame.
          */
         initialVarObj = (down == cx->fp)
                         ? down->varobj(cx)
@@ -1187,18 +1180,18 @@ InstanceOfSlow(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
 }
 
 JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
+InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
 {
     JS_ASSERT(!js_FunctionClass.construct);
-    Value *vp = args.getvp();
+    CallArgs args = argsRef;
 
-    if (vp->isPrimitive()) {
+    if (args.callee().isPrimitive()) {
         /* Use js_ValueToFunction to report an error. */
-        JS_ALWAYS_TRUE(!js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT));
+        JS_ALWAYS_TRUE(!js_ValueToFunction(cx, &args.callee(), JSV2F_CONSTRUCT));
         return false;
     }
 
-    JSObject *obj2 = &vp->toObject();
+    JSObject *obj2 = &args.callee().toObject();
 
     /*
      * Call fast constructors without making the object first.
@@ -1207,27 +1200,21 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
     if (obj2->isFunction()) {
         JSFunction *fun = (JSFunction *) obj2->getPrivate();
         if (fun->isFastConstructor()) {
-            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+            args.thisv().setMagic(JS_FAST_CONSTRUCTOR);
 
             FastNative fn = (FastNative)fun->u.n.native;
-            if (!fn(cx, args.getArgc(), vp))
+            if (!fn(cx, args.argc(), args.base()))
                 return JS_FALSE;
-            JS_ASSERT(!vp->isPrimitive());
+            JS_ASSERT(!args.callee().isPrimitive());
             return JS_TRUE;
         }
     }
 
-    /*
-     * Get the constructor prototype object for this function.
-     * Use the nominal 'this' parameter slot, vp[1], as a local
-     * root to protect this prototype, in case it has no other
-     * strong refs.
-     */
-    if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &vp[1]))
+    Value protov;
+    if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
         return false;
 
-    const Value &v = vp[1];
-    JSObject *proto = v.isObjectOrNull() ? v.toObjectOrNull() : NULL;
+    JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = obj2->getParent();
     Class *clasp = &js_ObjectClass;
 
@@ -1243,25 +1230,21 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
     }
 
 
-    /* Keep |obj| rooted in case vp[1] is overwritten with a primitive. */
-    AutoObjectRooter tvr(cx, obj);
-
     /* Now we have an object with a constructor method; call it. */
-    vp[1].setObject(*obj);
+    args.thisv().setObject(*obj);
     if (!Invoke(cx, args, JSINVOKE_CONSTRUCT))
         return JS_FALSE;
 
     /* Check the return value and if it's primitive, force it to be obj. */
-    const Value &rval = *vp;
-    if (rval.isPrimitive()) {
+    if (args.rval().isPrimitive()) {
         if (obj2->getClass() != &js_FunctionClass) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_NEW_RESULT,
-                                 js_ValueToPrintableString(cx, *vp));
+                                 js_ValueToPrintableString(cx, args.rval()));
             return JS_FALSE;
         }
-        vp->setObject(*obj);
+        args.rval().setObject(*obj);
     }
 
     JS_RUNTIME_METER(cx->runtime, constructs);
@@ -2801,6 +2784,7 @@ BEGIN_CASE(JSOP_STOP)
         }
 
         JSStackFrame *down = fp->down;
+        bool recursive = fp->script == down->script;
         Value *newsp = fp->argv - 1;
 
         /* Pop the frame. */
@@ -4680,7 +4664,7 @@ BEGIN_CASE(JSOP_NEW)
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))
+    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
         goto error;
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
@@ -4850,7 +4834,7 @@ BEGIN_CASE(JSOP_APPLY)
     }
 
     bool ok;
-    ok = Invoke(cx, InvokeArgsGuard(vp, argc), 0);
+    ok = Invoke(cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0);
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
     if (!ok)
@@ -4867,7 +4851,7 @@ BEGIN_CASE(JSOP_SETCALL)
 {
     uintN argc = GET_ARGC(regs.pc);
     Value *vp = regs.sp - argc - 2;
-    JSBool ok = Invoke(cx, InvokeArgsGuard(vp, argc), 0);
+    JSBool ok = Invoke(cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0);
     if (ok)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
     goto error;

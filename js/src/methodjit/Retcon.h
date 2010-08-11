@@ -123,17 +123,18 @@ private:
 class CallStackIterator
 {
 public:
-    CallStackIterator(JSContext *cx) : curcs(cx->stack().getCurrentSegment()) { };
+    CallStackIterator(JSContext *cx)
+      : curcs(cx->stack().getCurrentSegment()) { };
   
     bool done() const { return curcs == NULL; }
     CallStackIterator& operator++();
     FrameIterator top() const;
     FrameIterator bottom() const;
 
-    CallStackSegment *cs() const { return curcs; }
+    StackSegment *cs() const { return curcs; }
 
 private:
-    CallStackSegment *curcs;    
+    StackSegment *curcs;    
 };
 
 } /* namespace mjit */
