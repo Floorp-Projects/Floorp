@@ -68,6 +68,7 @@ enum JSFrameFlags {
     JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
     JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
+    JSFRAME_DUMMY              = 0x200, /* frame is a dummy frame */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -222,7 +223,7 @@ struct JSStackFrame
         return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
 
-    bool isDummyFrame() const { return !script && !fun; }
+    bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
 };
 
 namespace js {
@@ -510,6 +511,7 @@ js_MeterSlotOpcode(JSOp op, uint32 slot);
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
+    JS_ASSERT(!isDummyFrame());
     if (flags & JSFRAME_COMPUTED_THIS)
         return &thisv.toObject();
     if (!js::ComputeThisFromArgv(cx, argv))
