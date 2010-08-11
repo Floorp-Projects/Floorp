@@ -162,6 +162,11 @@ public:
    */
   void Thaw();
 
+  /**
+   * Return the prescontext we were initialized with
+   */
+  nsPresContext* PresContext() const { return mPresContext; }
+
 #ifdef DEBUG
   /**
    * Check whether the given observer is an observer for the given flush type
