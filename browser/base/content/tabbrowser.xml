@@ -795,6 +795,7 @@
             // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
             if (!this._previewMode) {
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
+
               this.updateTitlebar();
             }
 
@@ -1190,14 +1191,6 @@
 
             b._fastFind = this.fastFind;
             b.droppedLinkHandler = handleDroppedLink;
-
-            var uniqueId = "panel" + Date.now() + position;
-            this.mPanelContainer.lastChild.id = uniqueId;
-            t.linkedPanel = uniqueId;
-            t.linkedBrowser = b;
-            t._tPos = position;
-            if (t.previousSibling && t.previousSibling.selected)
-              t.setAttribute("afterselected", true);
 
             this.tabContainer.adjustTabstrip();
 
