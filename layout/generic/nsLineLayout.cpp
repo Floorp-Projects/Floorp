@@ -813,25 +813,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Let frame know that are reflowing it. Note that we don't bother
   // positioning the frame yet, because we're probably going to end up
   // moving it when we do the vertical alignment
-  nscoord x = pfd->mBounds.x;
-  nscoord y = pfd->mBounds.y;
-
   aFrame->WillReflow(mPresContext);
 
-  // Adjust spacemanager coordinate system for the frame. The
-  // spacemanager coordinates are <b>inside</b> the current spans
-  // border+padding, but the x/y coordinates are not (recall that
-  // frame coordinates are relative to the parents origin and that the
-  // parents border/padding is <b>inside</b> the parent
-  // frame. Therefore we have to subtract out the parents
-  // border+padding before translating.
+  // Adjust spacemanager coordinate system for the frame.
   nsHTMLReflowMetrics metrics;
 #ifdef DEBUG
   metrics.width = nscoord(0xdeadbeef);
   metrics.height = nscoord(0xdeadbeef);
 #endif
-  nscoord tx = x - psd->mReflowState->mComputedBorderPadding.left;
-  nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
+  nscoord tx = pfd->mBounds.x;
+  nscoord ty = pfd->mBounds.y;
   mFloatManager->Translate(tx, ty);
 
   nsIAtom* frameType = aFrame->GetType();
