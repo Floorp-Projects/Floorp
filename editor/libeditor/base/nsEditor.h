@@ -360,13 +360,6 @@ protected:
 
   nsKeyEvent* GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent);
 
-  PRBool CanEnableSpellCheck()
-  {
-    // Check for password/readonly/disabled, which are not spellchecked
-    // regardless of DOM
-    return !IsPasswordEditor() && !IsReadonly() && !IsDisabled();
-  }
-
 public:
 
   /** All editor operations which alter the doc should be prefaced
