@@ -291,6 +291,15 @@ nsEventListenerManager::nsEventListenerManager() :
 
 nsEventListenerManager::~nsEventListenerManager() 
 {
+  // If your code fails this assertion, a possible reason is that
+  // a class did not call our Disconnect() manually. Note that
+  // this class can have Disconnect called in one of two ways:
+  // if it is part of a cycle, then in Unlink() (such a cycle
+  // would be with one of the listeners, not mTarget which is weak).
+  // If not part of a cycle, then Disconnect must be called manually,
+  // typically from the destructor of the owner class (mTarget).
+  // XXX azakai: Is there any reason to not just call Disconnect
+  //             from right here, if not previously called?
   NS_ASSERTION(!mTarget, "didn't call Disconnect");
   RemoveAllListeners();
 
