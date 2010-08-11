@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+%include shared.inc
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .hud-box {
     border-bottom: 1px solid #aaa;
@@ -167,6 +171,10 @@
 
 /* these need to be revised ... */
 .hud-console-filter-toolbar {
-    padding: 1px 0px;
+    background: @scopeBarBackground@ !important;
+    border-bottom: @scopeBarSeparatorBorder@;
+    padding: 0px 1px;
+    -moz-appearance: none !important;
     -moz-box-align: center;
 }
+
