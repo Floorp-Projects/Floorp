@@ -298,7 +298,7 @@ JetpackActorCommon::jsval_from_PrimVariant(JSContext* cx,
 
   case PrimVariant::TPHandleParent: {
     JSObject* hobj =
-      static_cast<const HandleParent*>(from.get_PHandleParent())->ToJSObject(cx);
+      static_cast<HandleParent*>(from.get_PHandleParent())->ToJSObject(cx);
     if (!hobj)
       return false;
     *to = OBJECT_TO_JSVAL(hobj);
@@ -307,7 +307,7 @@ JetpackActorCommon::jsval_from_PrimVariant(JSContext* cx,
 
   case PrimVariant::TPHandleChild: {
     JSObject* hobj =
-      static_cast<const HandleChild*>(from.get_PHandleChild())->ToJSObject(cx);
+      static_cast<HandleChild*>(from.get_PHandleChild())->ToJSObject(cx);
     if (!hobj)
       return false;
     *to = OBJECT_TO_JSVAL(hobj);

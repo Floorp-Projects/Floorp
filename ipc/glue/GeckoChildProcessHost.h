@@ -64,7 +64,7 @@ public:
 
   ~GeckoChildProcessHost();
 
-  bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
+  bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>(), int32 timeoutMs=0);
   bool AsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
   bool PerformAsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
 

@@ -107,6 +107,11 @@ public:
 	return mPtr;
     }
 
+    T* operator->() const
+    {
+	return mPtr;
+    }
+
     operator bool()
     {
 	return (mPtr ? true : false);

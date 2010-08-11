@@ -271,6 +271,10 @@ cairo_private void
 _cairo_box_from_rectangle (cairo_box_t                 *box,
 			   const cairo_rectangle_int_t *rectangle);
 
+cairo_private cairo_bool_t
+_cairo_rectangle_contains (const cairo_rectangle_int_t *containing_rectangle,
+			   const cairo_rectangle_int_t *contained_rectangle);
+
 cairo_private void
 _cairo_box_round_to_rectangle (const cairo_box_t     *box,
 			       cairo_rectangle_int_t *rectangle);

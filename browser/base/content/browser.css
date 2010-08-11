@@ -83,12 +83,8 @@ toolbar[printpreview="true"] {
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#main-window[inFullscreen] > #titlebar {
+#main-window[inFullscreen] > #appmenu-button-container {
   display: none;
-}
-
-#titlebar {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
 }
 %endif
 
@@ -326,6 +322,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
    notifications are */
 .notification-anchor-icon {
   display: none;
+  -moz-user-focus: normal;
 }
 
 #notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,

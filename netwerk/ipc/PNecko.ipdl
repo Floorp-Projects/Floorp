@@ -57,10 +57,12 @@ sync protocol PNecko
 parent:
   __delete__();
 
-  PHttpChannel(nullable PBrowser iframeEmbedding);
   PCookieService();
 
   HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
+
+both:
+  PHttpChannel(nullable PBrowser browser);
 };
 
 

@@ -56,7 +56,7 @@ public:
   virtual ~NeckoParent();
 
 protected:
-  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* iframeEmbedding);
+  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* browser);
   virtual bool DeallocPHttpChannel(PHttpChannelParent*);
   virtual PCookieServiceParent* AllocPCookieService();
   virtual bool DeallocPCookieService(PCookieServiceParent*);

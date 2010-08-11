@@ -526,6 +526,9 @@ GetExtension(nsILocalFile* file)
 void
 nsComponentManagerImpl::RegisterOmnijar(const char* aPath, bool aChromeOnly)
 {
+    if (!mozilla::OmnijarPath())
+        return;
+
     nsCOMPtr<nsIInputStream> is = mManifestLoader->LoadEntry(aPath);
 
     PRUint32 flen;

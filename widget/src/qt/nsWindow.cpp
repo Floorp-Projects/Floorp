@@ -2082,7 +2082,9 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     if (mIsTopLevel) {
         QGraphicsView* newView = nsnull;
 #ifdef MOZ_ENABLE_MEEGOTOUCH
-        newView = new MozMGraphicsView(widget);
+        if (XRE_GetProcessType() == GeckoProcessType_Default) {
+            newView = new MozMGraphicsView(widget);
+        } else
 #else
         newView = new MozQGraphicsView(widget);
 #endif
