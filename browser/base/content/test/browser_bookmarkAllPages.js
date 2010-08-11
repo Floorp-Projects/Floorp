@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is profile.js.
+ * The Original Code is bookmark all pages test with tab view.
  *
  * The Initial Developer of the Original Code is
- * Ian Gilman <ian@iangilman.com>
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,60 +35,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// **********
-// Title: profile.js
+function test() {
+  waitForExplicitFinish();
 
-(function() {
-// ##########
-// Class: Profile
-// A simple profiling helper.
-// TODO: remove before shipping.
-window.Profile = {
-  // Variable: silent
-  // If true, disables logging of results.
-  silent: true,
+  let tabOne = gBrowser.addTab("about:blank");
+  let tabTwo = gBrowser.addTab("http://mochi.test:8888/");
 
-  // Variable: cutoff
-  // How many ms a wrapped function needs to take before it gets logged.
-  cutoff: 4,
+  gBrowser.selectedTab = tabTwo;
 
-  // Variable: _time
-  // Private. The time of the last checkpoint.
-  _time: Date.now(),
+  var browser = gBrowser.getBrowserForTab(tabTwo);
+  browser.addEventListener("load", function() {
+    gBrowser.showOnlyTheseTabs([tabTwo]);
 
-  // ----------
-  // Function: wrap
-  // Wraps the given object with profiling for each method.
-  wrap: function(obj, name) {
-    let self = this;
-    [i for (i in Iterator(obj))].forEach(function([key, val]) {
-      if (typeof val != "function")
-        return;
+    is(gBrowser.visibleTabs.length, 1, "Only one tab is visible");
 
-      obj[key] = function() {
-        let start = Date.now();
-        try {
-          return val.apply(obj, arguments);
-        } finally {
-          let diff = Date.now() - start;
-          if (diff >= self.cutoff && !self.silent)
-            Utils.log("profile: " + name + "." + key + " = " + diff + "ms");
-        }
-      };
+    let uris = PlacesCommandHook._getUniqueTabInfo();
+    is(uris.length, 1, "Only one uri is returned");
+
+    is(uris[0].spec, tabTwo.linkedBrowser.currentURI.spec, "It's the correct URI");
+
+    gBrowser.removeTab(tabOne);
+    gBrowser.removeTab(tabTwo);
+    Array.forEach(gBrowser.tabs, function(tab) {
+      tab.hidden = false;
     });
-  },
 
-  // ----------
-  // Function: checkpoint
-  // Reset the clock. If label is provided, print the time in milliseconds since the last reset.
-  checkpoint: function(label) {
-    var now = Date.now();
-
-    if (label && !this.silent)
-      Utils.log("profile checkpoint: " + label + " = " + (now - this._time) + "ms");
-
-    this._time = now;
-  }
-};
-
-})();
+    finish();
+  }, true);
+}

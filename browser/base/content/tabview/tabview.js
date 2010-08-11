@@ -1,7 +1,3 @@
-// profile.js starts a timer to see how long this file takes to load, so it needs to be first.
-// The file should be removed before we ship.
-#include profile.js
-
 Components.utils.import("resource://gre/modules/tabview/AllTabs.jsm");
 Components.utils.import("resource://gre/modules/tabview/groups.jsm");
 Components.utils.import("resource://gre/modules/tabview/utils.jsm");
