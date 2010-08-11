@@ -413,7 +413,6 @@ class nsHashKey;
 // paint notification events
 #define NS_NOTIFYPAINT_START    3400
 #define NS_AFTERPAINT           (NS_NOTIFYPAINT_START)
-#define NS_BEFOREPAINT          (NS_NOTIFYPAINT_START+1)
 
 // Simple gesture events
 #define NS_SIMPLE_GESTURE_EVENT_START    3500
@@ -535,7 +534,7 @@ public:
   nsIntPoint  refPoint;
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
-  PRUint64    time;
+  PRUint32    time;
   // Flags to hold event flow stage and capture/bubble cancellation
   // status. This is used also to indicate whether the event is trusted.
   PRUint32    flags;
