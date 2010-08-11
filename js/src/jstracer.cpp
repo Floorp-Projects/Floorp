@@ -11482,9 +11482,12 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (!clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
-        if (fun->flags & JSFUN_FAST_NATIVE_CTOR) {
+        if (fun->isFastConstructor()) {
             vp[1].setMagic(JS_FAST_CONSTRUCTOR);
-            newobj_ins = INS_CONSTWORD(JS_FAST_CONSTRUCTOR);
+            newobj_ins = INS_CONST(JS_FAST_CONSTRUCTOR);
+
+            /* Treat this as a regular call, the constructor will behave correctly. */
+            mode = JSOP_CALL;
         } else {
             args[0] = INS_CONSTOBJ(funobj);
             args[1] = INS_CONSTPTR(clasp);
@@ -13541,10 +13544,11 @@ TraceRecorder::record_NativeCallComplete()
     if (pendingSpecializedNative == IGNORE_NATIVE_CALL_COMPLETE_CALLBACK)
         return ARECORD_CONTINUE;
 
-    jsbytecode* pc = cx->regs->pc;
-
+#ifdef DEBUG
     JS_ASSERT(pendingSpecializedNative);
+    jsbytecode* pc = cx->regs->pc;
     JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW || *pc == JSOP_SETPROP);
+#endif
 
     Value& v = stackval(-1);
     LIns* v_ins = get(&v);
@@ -13578,7 +13582,7 @@ TraceRecorder::record_NativeCallComplete()
              * indicating the error status.
              */
 
-            if (*pc == JSOP_NEW) {
+            if (pendingSpecializedNative->flags & JSTN_CONSTRUCTOR) {
                 LIns *cond_ins;
                 LIns *x;
 
