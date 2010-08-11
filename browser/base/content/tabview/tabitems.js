@@ -14,11 +14,12 @@
  * The Original Code is tabitems.js.
  *
  * The Initial Developer of the Original Code is
- * Ian Gilman <ian@iangilman.com>.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Ian Gilman <ian@iangilman.com>
  * Aza Raskin <aza@mozilla.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  * Ehsan Akhgari <ehsan@mozilla.com>

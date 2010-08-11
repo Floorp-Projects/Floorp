@@ -14,11 +14,12 @@
  * The Original Code is trench.js.
  *
  * The Initial Developer of the Original Code is
- * Michael Yoshitaka Erlewine <mitcho@mitcho.com>.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  * Ian Gilman <ian@iangilman.com>
  * Aza Raskin <aza@mozilla.com>
  *
