@@ -510,6 +510,14 @@ SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   SpecifiedToComputedCalcOps ops(aStyleContext, aStyleContext->PresContext(),
                                  aCanStoreInRuleTree);
   aCoord = ComputeCalc(aValue, ops);
+  if (!aCoord.IsCalcUnit()) {
+    // Some callers distinguish between calc(50%) and 50%, or calc(50px)
+    // and 50px.
+    nsStyleCoord::Array *array =
+      nsStyleCoord::Array::Create(aStyleContext, aCanStoreInRuleTree, 1);
+    array->Item(0) = aCoord;
+    aCoord.SetArrayValue(array, eStyleUnit_Calc);
+  }
 }
 
 struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,

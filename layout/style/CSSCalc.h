@@ -154,24 +154,25 @@ ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
 }
 
 #define CHECK_UNIT(u_)                                                        \
-  PR_STATIC_ASSERT(int(eCSSUnit_Calc_##u_) + 14 == int(eStyleUnit_Calc_##u_));\
-  PR_STATIC_ASSERT(eCSSUnit_Calc_##u_ >= eCSSUnit_Calc_Plus);                 \
-  PR_STATIC_ASSERT(eCSSUnit_Calc_##u_ <= eCSSUnit_Calc_Maximum);
+  PR_STATIC_ASSERT(int(eCSSUnit_##u_) + 14 == int(eStyleUnit_##u_));          \
+  PR_STATIC_ASSERT(eCSSUnit_##u_ >= eCSSUnit_Calc);                           \
+  PR_STATIC_ASSERT(eCSSUnit_##u_ <= eCSSUnit_Calc_Maximum);
 
-CHECK_UNIT(Plus)
-CHECK_UNIT(Minus)
-CHECK_UNIT(Times_L)
-CHECK_UNIT(Times_R)
-CHECK_UNIT(Divided)
-CHECK_UNIT(Minimum)
-CHECK_UNIT(Maximum)
+CHECK_UNIT(Calc)
+CHECK_UNIT(Calc_Plus)
+CHECK_UNIT(Calc_Minus)
+CHECK_UNIT(Calc_Times_L)
+CHECK_UNIT(Calc_Times_R)
+CHECK_UNIT(Calc_Divided)
+CHECK_UNIT(Calc_Minimum)
+CHECK_UNIT(Calc_Maximum)
 
 #undef CHECK_UNIT
 
 inline nsStyleUnit
 ConvertCalcUnit(nsCSSUnit aUnit)
 {
-  NS_ABORT_IF_FALSE(eCSSUnit_Calc_Plus <= aUnit &&
+  NS_ABORT_IF_FALSE(eCSSUnit_Calc <= aUnit &&
                     aUnit <= eCSSUnit_Calc_Maximum, "out of range");
   return nsStyleUnit(aUnit + 14);
 }
@@ -179,7 +180,7 @@ ConvertCalcUnit(nsCSSUnit aUnit)
 inline nsCSSUnit
 ConvertCalcUnit(nsStyleUnit aUnit)
 {
-  NS_ABORT_IF_FALSE(eStyleUnit_Calc_Plus <= aUnit &&
+  NS_ABORT_IF_FALSE(eStyleUnit_Calc <= aUnit &&
                     aUnit <= eStyleUnit_Calc_Maximum, "out of range");
   return nsCSSUnit(aUnit - 14);
 }
