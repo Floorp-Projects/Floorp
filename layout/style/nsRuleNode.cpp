@@ -562,22 +562,6 @@ nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
   return css::ComputeCalc(aValue, ops);
 }
 
-/* static */ nscoord
-nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
-                                    nscoord aPercentageBasis)
-{
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Coord:
-      return aCoord.GetCoordValue();
-    case eStyleUnit_Percent:
-      return NSCoordSaturatingMultiply(aPercentageBasis,
-                                       aCoord.GetPercentValue());
-    default:
-      NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(), "unexpected unit");
-      return nsRuleNode::ComputeComputedCalc(aCoord, aPercentageBasis);
-  }
-}
-
 #define SETCOORD_NORMAL                 0x01   // N
 #define SETCOORD_AUTO                   0x02   // A
 #define SETCOORD_INHERIT                0x04   // H
