@@ -2135,12 +2135,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     masm.loadPayload(slot, objReg);
     DBGLABEL(dbgDataLoad);
 #elif defined JS_PUNBOX64
-    masm.loadValue(slot, shapeReg);
-    Label inlineValueLoadLabel = masm.label();
-
-    masm.move(shapeReg, objReg);
-    masm.convertValueToPayload(objReg);
-    masm.convertValueToType(shapeReg);
+    Label inlineValueLoadLabel =
+        masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
     pic.storeBack = masm.label();
 
@@ -2228,12 +2224,8 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     masm.loadPayload(slot, objReg);
     DBGLABEL(dbgDataLoad);
 #elif defined JS_PUNBOX64
-    masm.loadValue(slot, shapeReg);
-    Label inlineValueOffsetLabel = masm.label();
-
-    masm.move(shapeReg, objReg);
-    masm.convertValueToType(shapeReg);
-    masm.convertValueToPayload(objReg);
+    Label inlineValueOffsetLabel =
+        masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
     pic.storeBack = masm.label();
 
@@ -2365,12 +2357,8 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     masm.loadPayload(slot, objReg);
     DBGLABEL(dbgDataLoad);
 #elif defined JS_PUNBOX64
-    masm.loadValue(slot, shapeReg);
-    Label inlineValueLoadLabel = masm.label();
-
-    masm.move(shapeReg, objReg);
-    masm.convertValueToPayload(objReg);
-    masm.convertValueToType(shapeReg);
+    Label inlineValueLoadLabel =
+        masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
     pic.storeBack = masm.label();
 
@@ -2524,12 +2512,8 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     masm.loadPayload(slot, objReg);
     DBGLABEL(dbgDataLoad);
 #elif defined JS_PUNBOX64
-    masm.loadValue(slot, shapeReg);
-    Label inlineValueLoadLabel = masm.label();
-
-    masm.move(shapeReg, objReg);
-    masm.convertValueToPayload(objReg);
-    masm.convertValueToType(shapeReg);
+    Label inlineValueLoadLabel =
+        masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
 
     pic.storeBack = masm.label();
@@ -3313,12 +3297,9 @@ mjit::Compiler::jsop_getgname(uint32 index)
     masm.loadPayload(address, dreg);
     masm.loadTypeTag(address, treg);
 # elif defined JS_PUNBOX64
-    masm.loadValue(address, treg);
-    mic.patchValueOffset = masm.differenceBetween(mic.load, masm.label());
-
-    masm.move(treg, dreg);
-    masm.convertValueToPayload(dreg);
-    masm.convertValueToType(treg);
+    Label inlineValueLoadLabel =
+        masm.loadValueAsComponents(address, treg, dreg);
+    mic.patchValueOffset = masm.differenceBetween(mic.load, inlineValueLoadLabel);
 # endif
 
     frame.pushRegs(treg, dreg);
