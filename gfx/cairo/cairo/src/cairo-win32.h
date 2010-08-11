@@ -159,6 +159,16 @@ int
 cairo_addref_device(cairo_device_t *device);
 
 /**
+ * Flushes a D3D device. In most cases the surface backend will do this
+ * internally, but when using a surfaces created from a shared handle this
+ * should be executed manually when a different device is going to be accessing
+ * the same surface data. This will also block until the device is finished
+ * processing all work.
+ */
+void
+cairo_d2d_finish_device(cairo_device_t *device);
+
+/**
  * Create a D2D surface for an HWND
  *
  * \param device Device used to create the surface
@@ -183,6 +193,20 @@ cairo_d2d_surface_create(cairo_device_t *device,
 			 cairo_format_t format,
                          int width,
                          int height);
+
+/**
+ * Create a D3D surface from a Texture SharedHandle, this is obtained from a
+ * CreateTexture call on a D3D9 device. This has to be an A8R8G8B8 format
+ * or an A8 format, the treatment of the alpha channel can be indicated using
+ * the content parameter.
+ *
+ * \param device Device used to create the surface
+ * \param handle Shared handle to the texture we want to wrap
+ * \param content Content of the texture, COLOR_ALPHA for ARGB
+ * \return New cairo surface
+ */
+cairo_public cairo_surface_t *
+cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo_content_t content);
 
 /**
  * Present the backbuffer for a surface create for an HWND. This needs
