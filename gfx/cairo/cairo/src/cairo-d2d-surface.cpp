@@ -322,6 +322,39 @@ cairo_addref_device(cairo_device_t *device)
     return ++device->refcount;
 }
 
+void
+cairo_d2d_finish_device(cairo_device_t *device)
+{
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
+    // Here it becomes interesting, this flush method is generally called when
+    // interop is going on between our device and another device. The
+    // synchronisation between these devices is not always that great. The
+    // device flush method may flush the device's command queue, but it gives
+    // no guarantee that the device will actually be done with those commands,
+    // and so the surface may still not be complete when the external device
+    // chooses to use it. The EVENT query will actually tell us when the GPU
+    // is completely done with our commands.
+    D3D10_QUERY_DESC queryDesc;
+    queryDesc.MiscFlags = 0;
+    queryDesc.Query = D3D10_QUERY_EVENT;
+    RefPtr<ID3D10Query> query;
+
+    d2d_device->mD3D10Device->CreateQuery(&queryDesc, &query);
+
+    // QUERY_EVENT does not use Begin(). It's disabled.
+    query->End();
+
+    BOOL done = FALSE;
+    while (!done) {
+	// This will return S_OK and done = FALSE when the GPU is not done, and
+	// S_OK and done = TRUE when the GPU is done. Any other return value
+	// means we need to break out or risk an infinite loop.
+	if (FAILED(query->GetData(&done, sizeof(BOOL), 0))) {
+	    break;
+	}
+    }
+}
+
 static void
 _cairo_d2d_setup_for_blend(cairo_d2d_device_t *device)
 {
@@ -3430,6 +3463,108 @@ FAIL_CREATE:
     newSurf->~cairo_d2d_surface_t();
     free(newSurf);
     return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY));
+}
+
+cairo_surface_t *
+cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo_content_t content)
+{
+    if (!device) {
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_DEVICE));
+    }
+
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
+    cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
+    new (newSurf) cairo_d2d_surface_t();
+
+    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
+    HRESULT hr;
+    RefPtr<ID3D10Texture2D> texture;
+    RefPtr<IDXGISurface> dxgiSurface;
+    D2D1_BITMAP_PROPERTIES bitProps;
+    D2D1_RENDER_TARGET_PROPERTIES props;
+    DXGI_FORMAT format;
+    DXGI_SURFACE_DESC desc;
+
+    hr = d2d_device->mD3D10Device->OpenSharedResource(handle,
+						      __uuidof(ID3D10Resource),
+						      (void**)&newSurf->surface);
+
+    if (FAILED(hr)) {
+	goto FAIL_CREATEHANDLE;
+    }
+
+    hr = newSurf->surface->QueryInterface(&dxgiSurface);
+
+    if (FAILED(hr)) {
+	goto FAIL_CREATEHANDLE;
+    }
+
+    dxgiSurface->GetDesc(&desc);
+    format = desc.Format;
+    
+    D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
+    if (format == DXGI_FORMAT_B8G8R8A8_UNORM) {
+	if (content == CAIRO_CONTENT_ALPHA) {
+	    status = CAIRO_STATUS_INVALID_CONTENT;
+	    goto FAIL_CREATEHANDLE;
+	}
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
+	if (content == CAIRO_CONTENT_COLOR) {
+	    alpha = D2D1_ALPHA_MODE_IGNORE;
+	}
+    } else if (format == DXGI_FORMAT_A8_UNORM) {
+	if (content != CAIRO_CONTENT_ALPHA) {
+	    status = CAIRO_STATUS_INVALID_CONTENT;
+	    goto FAIL_CREATEHANDLE;
+	}
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_ALPHA);
+    } else {
+	status = CAIRO_STATUS_INVALID_FORMAT;
+	// We don't know how to support this format!
+	goto FAIL_CREATEHANDLE;
+    }
+
+    props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
+
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+						    props,
+						    &newSurf->rt);
+
+    if (FAILED(hr)) {
+	goto FAIL_CREATEHANDLE;
+    }
+
+    bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
+				      alpha));
+
+    if (format != DXGI_FORMAT_A8_UNORM) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+
+	if (FAILED(hr)) {
+	    goto FAIL_CREATEHANDLE;
+	}
+    }
+
+    newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
+
+    _d2d_clear_surface(newSurf);
+
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
+
+    return &newSurf->base;
+   
+FAIL_CREATEHANDLE:
+    newSurf->~cairo_d2d_surface_t();
+    free(newSurf);
+    return _cairo_surface_create_in_error(_cairo_error(status));
 }
 
 void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t *clip)
