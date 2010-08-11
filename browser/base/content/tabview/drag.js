@@ -14,11 +14,12 @@
  * The Original Code is drag.js.
  *
  * The Initial Developer of the Original Code is
- * Michael Yoshitaka Erlewine <mitcho@mitcho.com>.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
