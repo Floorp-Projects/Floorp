@@ -138,12 +138,11 @@ int main()
 
   printf("Feature Presume Compile Support  Use\n");
 #define SHOW_INFO(featurelc_, featureuc_)                                     \
-  printf(    "%7s    %1s       %1s       %1s      %1s\n",                     \
+  printf(    "%7s    %1s       %1s       %1s\n",                              \
          #featurelc_,                                                         \
          PRESUME_##featureuc_##_STRING,                                       \
          COMPILE_##featureuc_##_STRING,                                       \
-         (mozilla::supports_##featurelc_() ? "Y" : "-"),                      \
-         (mozilla::use_##featurelc_() ? "Y" : "-"));
+         (mozilla::supports_##featurelc_() ? "Y" : "-"));
   SHOW_INFO(mmx, MMX)
   SHOW_INFO(sse, SSE)
   SHOW_INFO(sse2, SSE2)
