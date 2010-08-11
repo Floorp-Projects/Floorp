@@ -1160,7 +1160,7 @@
       </handler>
       <handler event="dragover" group="system">
       <![CDATA[
-        if (event.getPreventDefault())
+        if (!this.droppedLinkHandler || event.getPreventDefault())
           return;
 
         // For drags that appear to be internal text (for example, tab drags),
@@ -1181,7 +1181,7 @@
       </handler>
       <handler event="drop" group="system">
       <![CDATA[
-        if (event.getPreventDefault())
+        if (!this.droppedLinkHandler || event.getPreventDefault())
           return;
 
         let name = { };
@@ -1198,10 +1198,7 @@
           return;
 
         if (uri) {
-          if (this.droppedLinkHandler)
-            this.droppedLinkHandler(event, uri, name.value);
-          else
-            this.loadURI(uri, null, "");
+          this.droppedLinkHandler(event, uri, name.value);
         }
       ]]>
       </handler>
