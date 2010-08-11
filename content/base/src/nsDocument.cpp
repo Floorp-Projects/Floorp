@@ -3074,6 +3074,11 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   mExternalResourceMap.ShowViewers();
 
+  if (mHavePendingPaint) {
+    mPresShell->GetPresContext()->RefreshDriver()->
+      ScheduleBeforePaintEvent(this);
+  }
+
   shell.swap(*aInstancePtrResult);
 
   return NS_OK;
@@ -3083,6 +3088,9 @@ void
 nsDocument::DeleteShell()
 {
   mExternalResourceMap.HideViewers();
+  if (mHavePendingPaint) {
+    mPresShell->GetPresContext()->RefreshDriver()->RevokeBeforePaintEvent(this);
+  }
   mPresShell = nsnull;
 }
 
@@ -7856,4 +7864,18 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
   }
   mCreatingStaticClone = PR_FALSE;
   return clonedDoc.forget();
+}
+
+void
+nsIDocument::ScheduleBeforePaintEvent()
+{
+  if (!mHavePendingPaint) {
+    // We don't want to use GetShell() here, because we want to schedule the
+    // paint even if we're frozen.  Either we'll get unfrozen and then the
+    // event will fire, or we'll quietly go away at some point.
+    mHavePendingPaint =
+      !mPresShell ||
+      mPresShell->GetPresContext()->RefreshDriver()->
+        ScheduleBeforePaintEvent(this);
+  }
 }
