@@ -95,9 +95,12 @@
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
 #include "jsregexpinlines.h"
+#include "assembler/wtf/Platform.h"
 
+#if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
 #include "methodjit/Logging.h"
+#endif
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
