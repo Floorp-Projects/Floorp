@@ -805,6 +805,9 @@ JS_BeginRequest(JSContext *cx)
         cx->outstandingRequests++;
         cx->thread->requestContext = cx;
         rt->requestCount++;
+
+        if (rt->requestCount == 1 && rt->activityCallback)
+            rt->activityCallback(rt->activityCallbackArg, true);
     }
 #endif
 }
@@ -853,8 +856,11 @@ StopRequest(JSContext *cx)
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);
         rt->requestCount--;
-        if (rt->requestCount == 0)
+        if (rt->requestCount == 0) {
             JS_NOTIFY_REQUEST_DONE(rt);
+            if (rt->activityCallback)
+                rt->activityCallback(rt->activityCallbackArg, false);
+        }
     }
 }
 #endif
@@ -5659,6 +5665,20 @@ JS_ClearContextThread(JSContext *cx)
     return 0;
 #endif
 }
+
+#ifdef MOZ_TRACE_JSCALLS
+JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
+{
+    cx->functionCallback = fcb;
+}
+
+JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx)
+{
+    return cx->functionCallback;
+}
+#endif
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)

@@ -1643,7 +1643,7 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (vp[2].isPrimitive()) {
-        char *bytes = DecompileValueGenerator(cx, 0 - argc, vp[2], NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, vp[2], NULL);
         if (!bytes)
             return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
