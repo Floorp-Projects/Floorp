@@ -555,7 +555,7 @@
 
             _startStalledTimer: function () {
               this._cancelStalledTimer();
-              this._stalledTimer = setTimeout(function (self) { 
+              this._stalledTimer = setTimeout(function (self) {
                 self.mTab.setAttribute("stalled", "true");
               }, 700, this);
             },
@@ -634,7 +634,7 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            var docURIObject = browser.contentDocument.documentURIObject; 
+            var docURIObject = browser.contentDocument.documentURIObject;
             if (browser.contentDocument instanceof ImageDocument) {
               if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
                 try {
@@ -1772,6 +1772,7 @@
           Array.forEach(this.tabs, function(tab) {
             tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned && !tab.selected;
           });
+          Services.obs.notifyObservers(window, "tab-visibility-change", null);
         ]]>
         </body>
       </method>
@@ -2725,7 +2726,7 @@
           var tab = this._getDragTargetTab(event);
           if (window.getComputedStyle(this, null).direction == "ltr") {
             for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
-              if (event.screenX < tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2) 
+              if (event.screenX < tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2)
                 return i;
           } else {
             for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
@@ -2960,7 +2961,7 @@
         var scrollRect = tabStrip.scrollClientRect;
         var rect = this.getBoundingClientRect();
         var minMargin = scrollRect.left - rect.left;
-        var maxMargin = Math.min(minMargin + scrollRect.width, 
+        var maxMargin = Math.min(minMargin + scrollRect.width,
                                  scrollRect.right);
         if (!ltr)
           [minMargin, maxMargin] = [this.clientWidth - maxMargin,
@@ -3341,7 +3342,7 @@
             var curTabBO = this.childNodes[i].tab.boxObject;
             if (curTabBO.screenX >= tabstripBO.screenX &&
                 curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
-              this.childNodes[i].setAttribute("tabIsVisible", "true"); 
+              this.childNodes[i].setAttribute("tabIsVisible", "true");
             else
               this.childNodes[i].removeAttribute("tabIsVisible");
           }
@@ -3352,7 +3353,7 @@
         <parameter name="aTab"/>
         <body><![CDATA[
           var menuItem = document.createElementNS(
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
             "menuitem");
 
           menuItem.setAttribute("class", "menuitem-iconic alltabs-item menuitem-with-favicon");
