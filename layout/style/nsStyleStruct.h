@@ -1052,14 +1052,42 @@ struct nsStylePosition {
   static PRBool ForceCompare() { return PR_TRUE; }
 
   nsStyleSides  mOffset;                // [reset] coord, percent, auto
-  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, enum
+  nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, auto
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum
-  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, enum
+  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, enum, none
   nsStyleCoord  mHeight;                // [reset] coord, percent, auto
   nsStyleCoord  mMinHeight;             // [reset] coord, percent
-  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null
+  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, none
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
   nsStyleCoord  mZIndex;                // [reset] integer, auto
+
+  PRBool WidthDependsOnContainer() const
+    { return WidthCoordDependsOnContainer(mWidth); }
+  PRBool MinWidthDependsOnContainer() const
+    { return WidthCoordDependsOnContainer(mMinWidth); }
+  PRBool MaxWidthDependsOnContainer() const
+    { return WidthCoordDependsOnContainer(mMaxWidth); }
+  PRBool HeightDependsOnContainer() const
+    { return HeightCoordDependsOnContainer(mHeight); }
+  PRBool MinHeightDependsOnContainer() const
+    { return HeightCoordDependsOnContainer(mMinHeight); }
+  PRBool MaxHeightDependsOnContainer() const
+    { return HeightCoordDependsOnContainer(mMaxHeight); }
+
+private:
+  static PRBool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
+  {
+    return aCoord.GetUnit() == eStyleUnit_Auto ||
+           aCoord.GetUnit() == eStyleUnit_Percent ||
+           (aCoord.GetUnit() == eStyleUnit_Enumerated &&
+            (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
+             aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
+  }
+  static PRBool HeightCoordDependsOnContainer(const nsStyleCoord &aCoord)
+  {
+    return aCoord.GetUnit() == eStyleUnit_Auto || // CSS 2.1, 10.6.4, item (5)
+           aCoord.GetUnit() == eStyleUnit_Percent;
+  }
 };
 
 struct nsStyleTextReset {
