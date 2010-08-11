@@ -211,7 +211,7 @@ browser.jar:
         skin/classic/aero/browser/tabview/platform.css               (tabview/platform.css)
         skin/classic/aero/browser/tabview/stack-expander.png         (tabview/stack-expander.png)
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
-	    skin/classic/aero/browser/tabview/tabview-16.png             (tabview/tabview-16.png)
+        skin/classic/aero/browser/tabview/tabview-16.png             (tabview/tabview-16.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-16-throbber.png
         skin/classic/aero/browser/sync-16.png

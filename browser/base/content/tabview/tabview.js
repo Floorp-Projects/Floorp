@@ -1,13 +1,17 @@
-Components.utils.import("resource://gre/modules/tabview/AllTabs.jsm");
-Components.utils.import("resource://gre/modules/tabview/groups.jsm");
-Components.utils.import("resource://gre/modules/tabview/utils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/tabview/AllTabs.jsm");
+Cu.import("resource://gre/modules/tabview/groups.jsm");
+Cu.import("resource://gre/modules/tabview/utils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
-  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIWebNavigation).
-    QueryInterface(Components.interfaces.nsIDocShell).
+  return window.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebNavigation).
+    QueryInterface(Ci.nsIDocShell).
     chromeEventHandler.ownerDocument.defaultView;
 });
 

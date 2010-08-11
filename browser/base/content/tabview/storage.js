@@ -14,11 +14,12 @@
  * The Original Code is storage.js.
  *
  * The Initial Developer of the Original Code is
- * Ehsan Akhgari <ehsan@mozilla.com>
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Ehsan Akhgari <ehsan@mozilla.com>
  * Ian Gilman <ian@iangilman.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,19 +43,18 @@
 // Class: Storage
 // Singleton for permanent storage of TabView data.
 Storage = {
-  GROUP_DATA_IDENTIFIER:  "tabview-group",
+  GROUP_DATA_IDENTIFIER: "tabview-group",
   GROUPS_DATA_IDENTIFIER: "tabview-groups",
-  TAB_DATA_IDENTIFIER:    "tabview-tab",
-  UI_DATA_IDENTIFIER:    "tabview-ui",
-  VISIBILITY_DATA_IDENTIFIER:    "tabview-visibility",
+  TAB_DATA_IDENTIFIER: "tabview-tab",
+  UI_DATA_IDENTIFIER: "tabview-ui",
 
   // ----------
   // Function: init
   // Sets up the object.
   init: function() {
     this._sessionStore =
-      Components.classes["@mozilla.org/browser/sessionstore;1"]
-        .getService(Components.interfaces.nsISessionStore);
+      Cc["@mozilla.org/browser/sessionstore;1"].
+        getService(Ci.nsISessionStore);
   },
 
   // ----------
@@ -101,7 +101,6 @@ Storage = {
 
     var existingData = null;
     try {
-/*         Utils.log("readTabData: " + this._sessionStore.getTabValue(tab, this.TAB_DATA_IDENTIFIER)); */
       var tabData = this._sessionStore.getTabValue(tab, this.TAB_DATA_IDENTIFIER);
       if (tabData != "") {
         existingData = JSON.parse(tabData);
@@ -111,7 +110,6 @@ Storage = {
       Utils.log(e);
     }
 
-/*     Utils.log('tab', existingData); */
     return existingData;
   },
 
@@ -142,7 +140,6 @@ Storage = {
   readGroupItemData: function(win) {
     var existingData = {};
     try {
-/*         Utils.log("readGroupItemData" + this._sessionStore.getWindowValue(win, this.GROUP_DATA_IDENTIFIER)); */
       existingData = JSON.parse(
         this._sessionStore.getWindowValue(win, this.GROUP_DATA_IDENTIFIER)
       );
@@ -190,8 +187,6 @@ Storage = {
     } catch (e) {
       Utils.log("Error in saveData: "+e);
     }
-
-/*     Utils.log('save data', id, data); */
   },
 
   // ----------
@@ -207,7 +202,6 @@ Storage = {
       Utils.log("Error in readData: "+e);
     }
 
-/*     Utils.log('read data', id, existingData); */
     return existingData;
   }
 };
