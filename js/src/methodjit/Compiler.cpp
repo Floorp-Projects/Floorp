@@ -337,8 +337,6 @@ mjit::Compiler::finishThisUp()
         *(uint32*)cursor = pics.length();
         cursor += sizeof(uint32);
         script->pics = (ic::PICInfo *)cursor;
-    } else {
-        script->pics = NULL;
     }
 
     for (size_t i = 0; i < pics.length(); i++) {
@@ -414,10 +412,6 @@ mjit::Compiler::finishThisUp()
         callSiteList[i].c.id = callSites[i].id;
     }
     script->callSites = callSiteList;
-
-#ifdef JS_METHODJIT
-    script->debugMode = cx->compartment->debugMode;
-#endif
 
     return Compile_Okay;
 }
