@@ -5744,7 +5744,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_height:
     return ParseNonNegativeVariant(aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHKLP,
+    return ParseNonNegativeVariant(aValue, VARIANT_AHKLP | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
   case eCSSProperty_force_broken_image_icon:
     return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
