@@ -169,6 +169,8 @@ _BROWSER_FILES = \
                  browser_selectTabAtIndex.js \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
+                 browser_visibleTabs.js \
+                 browser_visibleTabs_contextMenu.js \
                  discovery.html \
                  moz.png \
                  test_bug435035.html \
