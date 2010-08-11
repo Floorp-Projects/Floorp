@@ -36,10 +36,22 @@
 #include "gfxD2DSurface.h"
 #include "cairo.h"
 #include "cairo-win32.h"
+#include "gfxWindowsPlatform.h"
 
 gfxD2DSurface::gfxD2DSurface(HWND aWnd, gfxContentType aContent)
 {
-    Init(cairo_d2d_surface_create_for_hwnd(aWnd, (cairo_content_t)aContent));
+    Init(cairo_d2d_surface_create_for_hwnd(
+        gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
+        aWnd,
+        (cairo_content_t)aContent));
+}
+
+gfxD2DSurface::gfxD2DSurface(HANDLE handle, gfxContentType aContent)
+{
+    Init(cairo_d2d_surface_create_for_handle(
+        gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
+        handle,
+	(cairo_content_t)aContent));
 }
 
 gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
@@ -50,7 +62,10 @@ gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
 gfxD2DSurface::gfxD2DSurface(const gfxIntSize& size,
                              gfxImageFormat imageFormat)
 {
-    Init(cairo_d2d_surface_create((cairo_format_t)imageFormat, size.width, size.height));
+    Init(cairo_d2d_surface_create(
+        gfxWindowsPlatform::GetPlatform()->GetD2DDevice(),
+        (cairo_format_t)imageFormat,
+        size.width, size.height));
 }
 
 gfxD2DSurface::~gfxD2DSurface()
