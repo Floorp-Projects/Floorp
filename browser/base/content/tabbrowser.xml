@@ -2992,6 +2992,15 @@
             // move the dropped tab
             if (newIndex > draggedTab._tPos)
               newIndex--;
+
+            if (draggedTab.pinned) {
+              if (newIndex >= this.tabbrowser._numPinnedTabs)
+                this.tabbrowser.unpinTab(draggedTab);
+            } else {
+              if (newIndex <= this.tabbrowser._numPinnedTabs - 1)
+                this.tabbrowser.pinTab(draggedTab);
+            }
+
             this.tabbrowser.moveTabTo(draggedTab, newIndex);
           }
         } else if (draggedTab) {
