@@ -60,8 +60,11 @@
 
 #navigator-toolbox {
   -moz-appearance: none;
-  background-color: transparent;
   border-top: none;
+  background-color: transparent;
+}
+
+#navigator-toolbox[tabsontop="true"] {
   border-bottom: 1px solid ThreeDShadow;
 }
 
@@ -78,11 +81,7 @@
 }
 
 #nav-bar:not(:-moz-lwtheme),
-#nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
-#nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
-#navigator-toolbox[tabsontop="true"] > #nav-bar,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
-#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
+#navigator-toolbox[tabsontop="true"] > #nav-bar {
   background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
@@ -1114,6 +1113,10 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
   -moz-box-shadow: 0 -1px ThreeDShadow inset;
+}
+
+#TabsToolbar[tabsontop="false"] {
+  border-bottom: 1px solid ThreeDShadow !important;
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
