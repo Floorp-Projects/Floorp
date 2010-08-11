@@ -375,6 +375,12 @@ public:
     nsCOMPtr<nsILoadGroup> mLoadGroup;
   };
 
+  // Hide all our viewers
+  void HideViewers();
+
+  // Show all our viewers
+  void ShowViewers();
+
 protected:
   class PendingLoad : public ExternalResourceLoad,
                       public nsIStreamListener
@@ -588,6 +594,7 @@ public:
                                nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
+  virtual void DeleteShell();
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,
                                      nsIDocument* aSubDoc);
