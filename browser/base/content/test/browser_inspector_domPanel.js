@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Inspector Style Panel Tests.
+ * The Original Code is Inspector DOM Panel Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Rob Campbell <rcampbell@mozilla.com> (original author)
+ *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 let doc;
-let spans;
 let testGen;
 
 function createDocument()
@@ -50,52 +49,55 @@ function createDocument()
     '<p id="body" style="{font-size: 12pt}">I am a test-case. This text exists ' +
     'solely to provide some things to <span style="{color: yellow}">' +
     'highlight</span> and <span style="{font-weight: bold}">count</span> ' +
-    'style list-items in the box at right. If you are reading this, ' +
+    'DOM list-items in the box at right. If you are reading this, ' +
     'you should go do something else instead. Maybe read a book. Or better ' +
     'yet, write some test-cases for another bit of code. ' +
     '<span style="{font-style: italic}">Maybe more inspector test-cases!</span></p>\n' +
     '<p id="closing">end transmission</p>\n' +
     '</div>';
-  doc.title = "Inspector Style Test";
-  setupStyleTests();
-}
-
-function setupStyleTests()
-{
-  spans = doc.querySelectorAll("span");
-  ok(spans, "captain, we have the spans");
-  document.addEventListener("popupshown", runStyleTests, false);
+  doc.title = "Inspector DOM Test";
+  document.addEventListener("popupshown", runDOMTests, false);
   InspectorUI.openInspectorUI();
 }
 
-function spanGenerator()
+function nodeGenerator()
 {
-  for (var i = 0; i < spans.length; ++i) {
-    InspectorUI.inspectNode(spans[i]);
-    yield;
-  }
+  let body = doc.body;
+  InspectorUI.inspectNode(body);
+  yield;
+  let h1 = doc.querySelector("h1");
+  InspectorUI.inspectNode(h1);
+  yield;
+  let first = doc.getElementById("first");
+  InspectorUI.inspectNode(first);
+  yield;
+  let closing = doc.getElementById("#closing");
+  InspectorUI.inspectNode(closing);
+  yield;
 }
 
-function runStyleTests(evt)
+function runDOMTests(evt)
 {
-  if (evt.target.id != "inspector-style-panel")
+  if (evt.target.id != "inspector-dom-panel")
     return true;
-  document.removeEventListener("popupshown", runStyleTests, false);
-  document.addEventListener("popupshown", performTestComparisons, false);
+  InspectorUI._log("runDOMtests");
+  document.removeEventListener("popupshown", runDOMTests, false);
   InspectorUI.stopInspecting();
-  testGen = spanGenerator();
+  document.addEventListener("popupshown", performTestComparisons, false);
+  testGen = nodeGenerator();
   testGen.next();
 }
 
 function performTestComparisons(evt)
 {
+  InspectorUI._log("performTestComparisons");
   if (evt.target.id != "highlighter-panel")
     return true;
 
   ok(InspectorUI.treeView.selectedNode, "selection");
-  ok(InspectorUI.isStylePanelOpen, "style panel is open?");
+  ok(InspectorUI.isDOMPanelOpen, "DOM panel is open?");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
-  ok(InspectorUI.styleBox.itemCount > 0, "styleBox has items");
+  ok(InspectorUI.domTreeView.rowCount > 0, "domBox has items");
 
   try {
     testGen.next();

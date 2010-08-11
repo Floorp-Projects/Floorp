@@ -48,20 +48,20 @@ function startInspectorTests()
 
 function runInspectorTests(evt)
 {
-  if (evt.target.id != "inspector-panel")
+  if (evt.target.id != "inspector-dom-panel")
     return true;
   document.removeEventListener("popupshown", runInspectorTests, false);
   document.addEventListener("popuphidden", finishInspectorTests, false);
   ok(InspectorUI.inspecting, "Inspector is highlighting");
   ok(InspectorUI.isPanelOpen, "Inspector Tree Panel is open");
   ok(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
-  todo(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
+  ok(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
   InspectorUI.toggleInspectorUI();
 }
 
 function finishInspectorTests(evt)
 {
-  if (evt.target.id != "inspector-style-panel")
+  if (evt.target.id != "inspector-dom-panel")
     return true;
   document.removeEventListener("popuphidden", finishInspectorTests, false);
   ok(!InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is closed");

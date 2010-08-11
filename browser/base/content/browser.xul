@@ -255,7 +255,12 @@
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
                        class="toolbarbutton-text"
-                       command="Inspector:Style"/>
+                       oncommand="InspectorUI.toggleStylePanel();'"/>
+        <toolbarbutton id="inspector-dom-toolbutton"
+                       label="&inspectDOMButton.label;"
+                       accesskey="&inspectDOMButton.accesskey;"
+                       class="toolbarbutton-text"
+                       oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
       <tree id="inspector-tree" class="plain"
             seltype="single"
@@ -289,7 +294,7 @@
         <listbox id="inspector-style-listbox" flex="1"/>
         <hbox align="end">
           <spacer flex="1" />
-          <resizer dir="bottomend" />
+          <resizer dir="bottomend"/>
         </hbox>
     </panel>
 
