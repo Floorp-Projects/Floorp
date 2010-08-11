@@ -56,6 +56,8 @@ namespace net {
 class ChildChannelEvent
 {
  public:
+  ChildChannelEvent() { MOZ_COUNT_CTOR(Callback); }
+  virtual ~ChildChannelEvent() { MOZ_COUNT_DTOR(Callback); }
   virtual void Run() = 0;
 };
 
@@ -70,6 +72,7 @@ public:
   }
   ~AutoEventEnqueuer() 
   { 
+    mChannel->EndEventQueueing();
     mChannel->FlushEventQueue(); 
   }
 private:
@@ -85,6 +88,8 @@ HttpChannelChild::HttpChannelChild()
   : mIsFromCache(PR_FALSE)
   , mCacheEntryAvailable(PR_FALSE)
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
+  , mSendResumeAt(false)
+  , mSuspendCount(0)
   , mState(HCC_NEW)
   , mIPCOpen(false)
   , mQueuePhase(PHASE_UNQUEUED)
@@ -147,8 +152,8 @@ HttpChannelChild::FlushEventQueue()
   NS_ABORT_IF_FALSE(mQueuePhase != PHASE_UNQUEUED,
                     "Queue flushing should not occur if PHASE_UNQUEUED");
   
-  // Queue already being flushed.
-  if (mQueuePhase != PHASE_QUEUEING)
+  // Queue already being flushed, or the channel's suspended.
+  if (mQueuePhase != PHASE_FINISHED_QUEUEING || mSuspendCount)
     return;
   
   if (mEventQueue.Length() > 0) {
@@ -157,14 +162,25 @@ HttpChannelChild::FlushEventQueue()
     // all callbacks have run.
     mQueuePhase = PHASE_FLUSHING;
     
-    nsCOMPtr<nsIHttpChannel> kungFuDeathGrip(this);
-    for (PRUint32 i = 0; i < mEventQueue.Length(); i++) {
+    nsRefPtr<HttpChannelChild> kungFuDeathGrip(this);
+    PRUint32 i;
+    for (i = 0; i < mEventQueue.Length(); i++) {
       mEventQueue[i]->Run();
+      // If the callback ended up suspending us, abort all further flushing.
+      if (mSuspendCount)
+        break;
     }
-    mEventQueue.Clear();
+    // We will always want to remove at least one finished callback.
+    if (i < mEventQueue.Length())
+      i++;
+
+    mEventQueue.RemoveElementsAt(0, i);
   }
 
-  mQueuePhase = PHASE_UNQUEUED;
+  if (mSuspendCount)
+    mQueuePhase = PHASE_QUEUEING;
+  else
+    mQueuePhase = PHASE_UNQUEUED;
 }
 
 class StartRequestEvent : public ChildChannelEvent
@@ -647,13 +663,22 @@ HttpChannelChild::Cancel(nsresult status)
 NS_IMETHODIMP
 HttpChannelChild::Suspend()
 {
-  DROP_DEAD();
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
+  SendSuspend();
+  mSuspendCount++;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::Resume()
 {
-  DROP_DEAD();
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
+  SendResume();
+  mSuspendCount--;
+  if (!mSuspendCount)
+    FlushEventQueue();
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -770,7 +795,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
                 IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
                 mRequestHeaders, mRequestHead.Method(), uploadStreamData,
                 uploadStreamInfo, mPriority, mRedirectionLimit,
-                mAllowPipelining, mForceAllowThirdPartyCookie);
+                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
+                mStartPos, mEntityID);
 
   mState = HCC_OPENED;
   return NS_OK;
@@ -886,14 +912,14 @@ HttpChannelChild::SetApplyConversion(PRBool aApplyConversion)
 NS_IMETHODIMP
 HttpChannelChild::ResumeAt(PRUint64 startPos, const nsACString& entityID)
 {
-  DROP_DEAD();
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+  mStartPos = startPos;
+  mEntityID = entityID;
+  mSendResumeAt = true;
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpChannelChild::GetEntityID(nsACString& aEntityID)
-{
-  DROP_DEAD();
-}
+// GetEntityID is shared in HttpBaseChannel
 
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsISupportsPriority

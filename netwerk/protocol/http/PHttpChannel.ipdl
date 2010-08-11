@@ -73,11 +73,17 @@ parent:
             PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,
-            PRBool              forceAllowThirdPartyCookie);
+            PRBool              forceAllowThirdPartyCookie,
+            bool                resumeAt,
+            PRUint64            startPos,
+            nsCString           entityID);
 
   SetPriority(PRUint16 priority);
 
   SetCacheTokenCachedCharset(nsCString charset);
+
+  Suspend();
+  Resume();
 
   // Reports approval/veto of redirect by child process redirect observers
   Redirect2Result(nsresult result, RequestHeaderTuples changedHeaders);

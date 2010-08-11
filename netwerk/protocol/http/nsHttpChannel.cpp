@@ -115,7 +115,6 @@ nsHttpChannel::nsHttpChannel()
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
-    , mStartPos(LL_MAXUINT)
     , mPendingAsyncCallOnResume(nsnull)
     , mSuspendCount(0)
     , mApplyConversion(PR_TRUE)
@@ -4070,51 +4069,6 @@ nsHttpChannel::ResumeAt(PRUint64 aStartPos,
     mEntityID = aEntityID;
     mStartPos = aStartPos;
     mResuming = PR_TRUE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetEntityID(nsACString& aEntityID)
-{
-    // Don't return an entity ID for Non-GET requests which require
-    // additional data
-    if (mRequestHead.Method() != nsHttp::Get) {
-        return NS_ERROR_NOT_RESUMABLE;
-    }
-
-    // Don't return an entity if the server sent the following header:
-    // Accept-Ranges: none
-    // Not sending the Accept-Ranges header means we can still try
-    // sending range requests.
-    const char* acceptRanges =
-        mResponseHead->PeekHeader(nsHttp::Accept_Ranges);
-    if (acceptRanges &&
-        !nsHttp::FindToken(acceptRanges, "bytes", HTTP_HEADER_VALUE_SEPS)) {
-        return NS_ERROR_NOT_RESUMABLE;
-    }
-
-    PRUint64 size = LL_MAXUINT;
-    nsCAutoString etag, lastmod;
-    if (mResponseHead) {
-        size = mResponseHead->TotalEntitySize();
-        const char* cLastMod = mResponseHead->PeekHeader(nsHttp::Last_Modified);
-        if (cLastMod)
-            lastmod = cLastMod;
-        const char* cEtag = mResponseHead->PeekHeader(nsHttp::ETag);
-        if (cEtag)
-            etag = cEtag;
-    }
-    nsCString entityID;
-    NS_EscapeURL(etag.BeginReading(), etag.Length(), esc_AlwaysCopy |
-            esc_FileBaseName | esc_Forced, entityID);
-    entityID.Append('/');
-    entityID.AppendInt(PRInt64(size));
-    entityID.Append('/');
-    entityID.Append(lastmod);
-    // NOTE: Appending lastmod as the last part avoids having to escape it
-
-    aEntityID = entityID;
-
     return NS_OK;
 }
 

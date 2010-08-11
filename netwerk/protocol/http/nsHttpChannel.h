@@ -80,7 +80,6 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsICacheListener
                     , public nsIEncodedChannel
                     , public nsITransportEventSink
-                    , public nsIResumableChannel
                     , public nsIProtocolProxyCallback
                     , public nsIHttpAuthenticableChannel
                     , public nsITraceableChannel
@@ -96,7 +95,6 @@ public:
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIENCODEDCHANNEL
     NS_DECL_NSITRANSPORTEVENTSINK
-    NS_DECL_NSIRESUMABLECHANNEL
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
     NS_DECL_NSITRACEABLECHANNEL
@@ -143,6 +141,8 @@ public:
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
     // nsISupportsPriority
     NS_IMETHOD SetPriority(PRInt32 value);
+    // nsIResumableChannel
+    NS_IMETHOD ResumeAt(PRUint64 startPos, const nsACString& entityID);
 
 public: /* internal necko use only */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
@@ -270,10 +270,6 @@ private:
 
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
-
-    // Resumable channel specific data
-    nsCString                         mEntityID;
-    PRUint64                          mStartPos;
 
     // Function pointer that can be set to indicate that we got suspended while
     // waiting on an AsyncCall.  When we get resumed we should AsyncCall this
