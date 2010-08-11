@@ -2425,6 +2425,23 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     FrameEntry *funFe = frame.peek(-2);
     JS_ASSERT(!funFe->isTypeKnown());
 
+    /*
+     * See bug 584579 - need to forget string type, since wrapping could
+     * create an object. forgetType() alone is not valid because it cannot be
+     * used on copies or constants.
+     */
+    RegisterID strReg;
+    FrameEntry *strFe = frame.peek(-1);
+    if (strFe->isConstant()) {
+        strReg = frame.allocReg();
+        masm.move(ImmPtr(strFe->getValue().toString()), strReg);
+    } else {
+        strReg = frame.ownRegForData(strFe);
+    }
+    frame.pop();
+    frame.pushTypedPayload(JSVAL_TYPE_STRING, strReg);
+    frame.forgetType(frame.peek(-1));
+
     RegisterID temp = frame.allocReg();
     RegisterID funReg = frame.copyDataIntoReg(funFe);
     Jump notFun1 = frame.testObject(Assembler::NotEqual, funFe);
@@ -2435,7 +2452,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     masm.and32(Imm32(JSFUN_THISP_STRING), temp);
     Jump noPrim = masm.branchTest32(Assembler::Zero, temp, temp);
     {
-        stubcc.linkExit(noPrim, Uses(1));
+        stubcc.linkExit(noPrim, Uses(2));
         stubcc.leave();
         stubcc.call(stubs::WrapPrimitiveThis);
     }
@@ -2445,7 +2462,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     notFun2.linkTo(masm.label(), &masm);
     notFun1.linkTo(masm.label(), &masm);
     
-    stubcc.rejoin(Changes(2));
+    stubcc.rejoin(Changes(1));
 
     return true;
 }
