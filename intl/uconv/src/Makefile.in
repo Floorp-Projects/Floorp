@@ -75,7 +75,22 @@ CPPSRCS         += \
 		nsUnicodeToCP1252.cpp \
 		nsUnicodeToMacRoman.cpp \
 		$(NULL)
+endif
 
+# Are we targeting x86-32 or x86-64?  If so, we want to include the SSE2
+# version of nsUTF8ToUnicodeSSE2.cpp.
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS			+= nsUTF8ToUnicodeSSE2.cpp
+
+# nsUTF8ToUnicodeSSE2.cpp uses SSE2 intrinsics, so we need to pass -msse2 if
+# we're using gcc. (See bug 585538 comment 12.)
+ifdef GNU_CC
+nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+
+ifdef SOLARIS_SUNPRO_CXX
+nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -93,12 +108,6 @@ else
 CPPSRCS			+= nsUNIXCharset.cpp
 endif
 endif
-endif
-endif
-
-ifeq (86,$(findstring 86,$(OS_TEST)))
-ifdef SOLARIS_SUNPRO_CXX
-nsUTF8ToUnicode.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 
