@@ -5,3 +5,4 @@ script regress-420087.js
 script regress-420610.js
 script regress-441477-01.js
 script regress-469937.js
+script regress-580544.js

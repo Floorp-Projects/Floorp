@@ -450,7 +450,9 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
         }
         PRInt32 start, end;
         frame->GetOffsets(start, end);
-        fragmentLength = end - start;
+        NS_ASSERTION(!(contentTextLength < end - start),
+                     "Frame offsets don't fit in content");
+        fragmentLength = NS_MIN(contentTextLength, end - start);
         contentOffset = start;
         isTextFrame = PR_TRUE;
       }

@@ -107,7 +107,7 @@ static  JSContext *autoconfig_cx = nsnull;
 static  JSObject *autoconfig_glob;
 
 static JSClass global_class = {
-    "autoconfig_global", 0,
+    "autoconfig_global", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   nsnull
 };

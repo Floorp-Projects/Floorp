@@ -42,7 +42,6 @@
  */
 
 #include "nsTextFragment.h"
-#include "nsString.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
@@ -239,27 +238,6 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
   mState.mInHeap = PR_TRUE;
   mState.mIs2b = need2;
   mState.mLength = aLength;
-}
-
-void
-nsTextFragment::AppendTo(nsAString& aString) const
-{
-  if (mState.mIs2b) {
-    aString.Append(m2b, mState.mLength);
-  } else {
-    AppendASCIItoUTF16(Substring(m1b, m1b + mState.mLength),
-                       aString);
-  }
-}
-
-void
-nsTextFragment::AppendTo(nsAString& aString, PRInt32 aOffset, PRInt32 aLength) const
-{
-  if (mState.mIs2b) {
-    aString.Append(m2b + aOffset, aLength);
-  } else {
-    AppendASCIItoUTF16(Substring(m1b + aOffset, m1b + aOffset + aLength), aString);
-  }
 }
 
 void

@@ -253,8 +253,8 @@ typedef PRUint64 nsFrameState;
 // frame instead of the root frame.
 #define NS_FRAME_REFLOW_ROOT                        NS_FRAME_STATE_BIT(19)
 
-// Bits 20-31 of the frame state are reserved for implementations.
-#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xFFF00000)
+// Bits 20-31 and 60-63 of the frame state are reserved for implementations.
+#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xF0000000FFF00000)
 
 // This bit is set on floats whose parent does not contain their
 // placeholder.  This can happen for two reasons:  (1) the float was

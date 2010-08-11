@@ -86,10 +86,13 @@ private:
   static JSBool RegisterReceiver(JSContext* cx, uintN argc, jsval *vp);
   static JSBool UnregisterReceiver(JSContext* cx, uintN argc, jsval *vp);
   static JSBool UnregisterReceivers(JSContext* cx, uintN argc, jsval *vp);
-  static JSBool Wrap(JSContext* cx, uintN argc, jsval *vp);
   static JSBool CreateHandle(JSContext* cx, uintN argc, jsval *vp);
   static JSBool CreateSandbox(JSContext* cx, uintN argc, jsval *vp);
   static JSBool EvalInSandbox(JSContext* cx, uintN argc, jsval *vp);
+  static JSBool GC(JSContext* cx, uintN argc, jsval *vp);
+#ifdef JS_GC_ZEAL
+  static JSBool GCZeal(JSContext* cx, uintN argc, jsval *vp);
+#endif
 
   static void ReportError(JSContext* cx, const char* message,
                           JSErrorReport* report);
