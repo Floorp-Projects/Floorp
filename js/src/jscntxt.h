@@ -1258,10 +1258,10 @@ struct JSCompartment {
 #ifdef JS_METHODJIT
     /* Executable allocator for PIC buffers. */
     JSC::ExecutableAllocator *execPool;
-
-    /* Needed to re-JIT scripts for debug mode and so we can flush PICs. */
-    JSCList scripts;
 #endif
+
+    /* List all scripts in this compartment. */
+    JSCList scripts;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
