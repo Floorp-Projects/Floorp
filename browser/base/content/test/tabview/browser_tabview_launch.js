@@ -56,7 +56,7 @@ function test() {
           eventObject = { altKey: true };
         } else {
           charCode = 32;
-          eventObject = { ctrlKey: true };
+          eventObject = { altKey: true, ctrlKey: true };
         }
         var modifiers = EventUtils._parseModifiers(eventObject);
         var keyDownDefaultHappened =
