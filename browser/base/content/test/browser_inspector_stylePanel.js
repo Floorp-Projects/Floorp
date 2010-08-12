@@ -93,7 +93,8 @@ function performTestComparisons(evt)
     return true;
 
   ok(InspectorUI.treeView.selectedNode, "selection");
-  ok(InspectorUI.isStylePanelOpen, "style panel is open?");
+  ok(InspectorUI._showStylePanel, "_showStylePanel");
+  is(InspectorUI.isStylePanelOpen, InspectorUI._showStylePanel, "style panel matches _showStylePanel?");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
   ok(InspectorUI.styleBox.itemCount > 0, "styleBox has items");
 
