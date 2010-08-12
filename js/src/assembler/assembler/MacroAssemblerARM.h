@@ -28,7 +28,7 @@
 #ifndef MacroAssemblerARM_h
 #define MacroAssemblerARM_h
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
@@ -972,7 +972,6 @@ public:
     // Truncates 'src' to an integer, and places the resulting 'dest'.
     // If the result is not representable as a 32 bit value, branch.
     // May also branch for some values that are representable in 32 bits
-    // (specifically, in this case, INT_MIN and INT_MAX).
     Jump branchTruncateDoubleToInt32(FPRegisterID src, RegisterID dest)
     {
         m_assembler.ftosizd_r(ARMRegisters::SD0, src);

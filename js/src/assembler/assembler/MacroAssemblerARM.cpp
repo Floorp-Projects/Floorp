@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
@@ -36,7 +36,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <elf.h>
+
+// lame check for kernel version
+// see bug 586550
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
+#include <asm/procinfo.h>
+#else
 #include <asm/hwcap.h>
+#endif
+
 #endif
 
 namespace JSC {

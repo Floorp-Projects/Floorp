@@ -287,9 +287,8 @@ args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JS_REQUIRES_STACK JSObject *
-WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunction *fun)
+WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
-    JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
     JS_ASSERT(fun->optimizedClosure());
     JS_ASSERT(!fun->u.i.wrapper);
 
@@ -304,11 +303,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     if (!scopeChain)
         return NULL;
 
-    /*
-     * We must wrap funobj with a JSFunction.
-     */
-    JS_ASSERT (funobj);
-    JSObject *wfunobj = NewFunction(cx, funobj, scopeChain);
+    JSObject *wfunobj = NewFunction(cx, scopeChain);
     if (!wfunobj)
         return NULL;
     AutoObjectRooter tvr(cx, wfunobj);
@@ -730,7 +725,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, Value *vp)
 
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
-                JSObject *wrapper = WrapEscapingClosure(cx, fp, funobj, fun);
+                JSObject *wrapper = WrapEscapingClosure(cx, fp, fun);
                 if (!wrapper)
                     return false;
                 vp->setObject(*wrapper);
@@ -1294,7 +1289,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
      * alas, it seems foo.caller is still used on the Web.
      */
     if (fun->needsWrapper()) {
-        JSObject *wrapper = WrapEscapingClosure(cx, this, fun, fun);
+        JSObject *wrapper = WrapEscapingClosure(cx, this, fun);
         if (!wrapper)
             return false;
         vp->setObject(*wrapper);
@@ -2188,7 +2183,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     TokenKind tt;
 
     if (!JS_IsConstructing(cx)) {
-        obj = NewFunction(cx, NULL, NULL);
+        obj = NewFunction(cx, NULL);
         if (!obj)
             return JS_FALSE;
         rval->setObject(*obj);
@@ -2433,7 +2428,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         funobj->setParent(parent);
     } else {
-        funobj = NewFunction(cx, NULL, parent);
+        funobj = NewFunction(cx, parent);
         if (!funobj)
             return NULL;
     }
@@ -2565,7 +2560,7 @@ js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun)
     JS_ASSERT(!cx->fp->fun->optimizedClosure());
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
 
-    return WrapEscapingClosure(cx, cx->fp, FUN_OBJECT(fun), fun);
+    return WrapEscapingClosure(cx, cx->fp, fun);
 }
 
 JSFunction *

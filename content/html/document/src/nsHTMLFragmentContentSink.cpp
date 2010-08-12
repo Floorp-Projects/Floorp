@@ -1100,6 +1100,10 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
 {
   nsresult rv = NS_OK;
 
+  if (mIgnoreNextCloseHead && aTag == eHTMLTag_head) {
+    mIgnoreNextCloseHead = PR_FALSE;
+    return NS_OK;
+  }
   if (mSkip) {
     mSkip = PR_FALSE;
     return rv;
@@ -1229,7 +1233,10 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
   
   nsresult rv = NS_OK;
 
-  if (mSkip) {
+  // We need to explicitly skip adding leaf nodes in the paranoid sink,
+  // otherwise things like the textnode under <title> get appended to
+  // the fragment itself, and won't be popped off in CloseContainer.
+  if (mSkip || mIgnoreNextCloseHead) {
     return rv;
   }
   

@@ -894,30 +894,16 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 #if !defined(ENABLE_YARR_JIT)
 
 /* YARR supports x86 & x86-64, and has been tested on Mac and Windows. */
-#if (WTF_CPU_X86 && WTF_PLATFORM_MAC) \
- || (WTF_CPU_X86_64 && WTF_PLATFORM_MAC) \
- || (WTF_CPU_ARM_THUMB2 && WTF_PLATFORM_IPHONE) \
- || (WTF_CPU_X86 && WTF_PLATFORM_WIN)
-#define ENABLE_YARR 1
+#if WTF_CPU_X86 \
+ || WTF_CPU_X86_64 \
+ || WTF_CPU_ARM_THUMB2 \
+ || WTF_CPU_X86
 #define ENABLE_YARR_JIT 1
-#endif
-
-#if WTF_PLATFORM_QT
-#if (WTF_CPU_X86 && WTF_PLATFORM_WIN_OS && WTF_COMPILER_MINGW && GCC_VERSION >= 40100) \
- || (WTF_CPU_X86 && WTF_PLATFORM_WIN_OS && WTF_COMPILER_MSVC) \
- || (WTF_CPU_X86 && WTF_PLATFORM_LINUX && GCC_VERSION >= 40100) \
- || (WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX)
-#define ENABLE_YARR 1
-#define ENABLE_YARR_JIT 1
-#endif
+#else
+#define ENABLE_YARR_JIT 0
 #endif
 
 #endif /* !defined(ENABLE_YARR_JIT) */
-
-/* Sanity Check */
-#if ENABLE_YARR_JIT && !ENABLE_YARR
-#error "YARR_JIT requires YARR"
-#endif
 
 #if ENABLE_JIT || ENABLE_YARR_JIT
 #define ENABLE_ASSEMBLER 1

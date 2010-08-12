@@ -26,7 +26,7 @@
 #ifndef RepatchBuffer_h
 #define RepatchBuffer_h
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER
 

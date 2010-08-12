@@ -26,9 +26,9 @@
 #ifndef AbstractMacroAssembler_h
 #define AbstractMacroAssembler_h
 
-#include <wtf/Platform.h>
-#include <assembler/MacroAssemblerCodeRef.h>
-#include <assembler/CodeLocation.h>
+#include "assembler/wtf/Platform.h"
+#include "assembler/assembler/MacroAssemblerCodeRef.h"
+#include "assembler/assembler/CodeLocation.h"
 #include "jsstdint.h"
 
 #if ENABLE_ASSEMBLER
@@ -410,12 +410,12 @@ public:
         
         void append(JumpList& other)
         {
-            m_jumps.append(other.m_jumps.begin(), other.m_jumps.size());
+            m_jumps.append(other.m_jumps.begin(), other.m_jumps.length());
         }
 
         bool empty()
         {
-            return !m_jumps.size();
+            return !m_jumps.length();
         }
         
         const JumpVector& jumps() { return m_jumps; }
