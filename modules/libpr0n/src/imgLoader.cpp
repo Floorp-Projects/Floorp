@@ -1853,14 +1853,11 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool *_retval)
 {
   *_retval = PR_FALSE;
-  nsCOMPtr<nsIComponentRegistrar> reg;
-  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(reg));
-  if (NS_FAILED(rv))
-    return rv;
   nsCAutoString mimeType(aMimeType);
   ToLowerCase(mimeType);
-  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;3?type=") + mimeType);
-  return reg->IsContractIDRegistered(decoderId.get(),  _retval);
+  *_retval = (Image::GetDecoderType(mimeType.get()) == Image::eDecoderType_unknown)
+    ? PR_FALSE : PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP imgLoader::GetMIMETypeFromContent(nsIRequest* aRequest,
