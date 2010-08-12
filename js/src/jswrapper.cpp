@@ -46,6 +46,7 @@
 #include "jsregexp.h"
 #include "jswrapper.h"
 #include "methodjit/PolyIC.h"
+#include "methodjit/MonoIC.h"
 #ifdef JS_METHODJIT
 # include "assembler/jit/ExecutableAllocator.h"
 #endif
@@ -493,7 +494,7 @@ JSCompartment::purge(JSContext *cx)
         mjit::ic::PurgePICs(cx, script);
 # endif
 # if defined JS_MONOIC
-        //mjit::ic::PurgeMICs(cx, script);
+        mjit::ic::PurgeMICs(cx, script);
 # endif
     }
 #endif

@@ -259,6 +259,12 @@ struct JSScript {
         return pics ? *(uint32*)((uint8 *)pics - sizeof(uint32)) : 0;
     }
 # endif
+
+# if defined JS_MONOIC
+    inline uint32 numMICs() {
+        return mics ? *(uint32*)((uint8 *)mics - sizeof(uint32)) : 0;
+    }
+# endif
 #endif
 
     /* Script notes are allocated right after the code. */
