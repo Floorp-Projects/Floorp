@@ -2299,14 +2299,14 @@ JS_ALWAYS_INLINE JSObject *
 JSStackFrame::varobj(js::StackSegment *seg) const
 {
     JS_ASSERT(seg->contains(this));
-    return fun ? callobj : seg->getInitialVarObj();
+    return fun ? maybeCallObj() : seg->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE JSObject *
 JSStackFrame::varobj(JSContext *cx) const
 {
     JS_ASSERT(cx->activeSegment()->contains(this));
-    return fun ? callobj : cx->activeSegment()->getInitialVarObj();
+    return fun ? maybeCallObj() : cx->activeSegment()->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE jsbytecode *

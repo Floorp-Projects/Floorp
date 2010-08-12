@@ -1112,7 +1112,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
          *
          * NB: This means that the C API must not be used to call eval.
          */
-        JS_ASSERT_IF(caller->argv, caller->callobj);
+        JS_ASSERT_IF(caller->argv, caller->hasCallObj());
         scopeobj = callerScopeChain;
     }
 #endif
@@ -6412,8 +6412,8 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
             }
         }
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
-        MaybeDumpObject("callobj", fp->callobj);
-        MaybeDumpObject("argsobj", fp->argsobj);
+        MaybeDumpObject("callobj", fp->maybeCallObj());
+        MaybeDumpObject("argsobj", fp->maybeArgsObj());
         MaybeDumpValue("this", fp->thisv);
         fprintf(stderr, "  rval: ");
         dumpValue(fp->rval);
