@@ -358,7 +358,7 @@ Narcissus.interpreter = (function() {
                         if (t.statements.length) {
                             try {
                                 execute(t.statements, x);
-                            } catch (e if e === BREAK && x.target == n) {
+                            } catch (e if e === BREAK && x.target === n) {
                                 break switch_loop;
                             }
                         }
