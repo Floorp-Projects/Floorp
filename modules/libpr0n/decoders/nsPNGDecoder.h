@@ -41,9 +41,8 @@
 #ifndef nsPNGDecoder_h__
 #define nsPNGDecoder_h__
 
-#include "imgIDecoder.h"
+#include "Decoder.h"
 
-#include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxASurface.h"
 
@@ -56,17 +55,16 @@
 namespace mozilla {
 namespace imagelib {
 class RasterImage;
-} // namespace imagelib
-} // namespace mozilla
 
-class nsPNGDecoder : public imgIDecoder
+class nsPNGDecoder : public Decoder
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODER
-
   nsPNGDecoder();
   virtual ~nsPNGDecoder();
+
+  virtual nsresult InitInternal();
+  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual nsresult ShutdownInternal(PRUint32 aFlags);
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    PRInt32 width, PRInt32 height,
@@ -77,10 +75,6 @@ public:
   void NotifyDone(PRBool aSuccess);
 
 public:
-  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
-  nsCOMPtr<imgIDecoderObserver> mObserver;
-  PRUint32 mFlags;
-
   png_structp mPNG;
   png_infop mInfo;
   nsIntRect mFrameRect;
@@ -120,5 +114,8 @@ public:
   static void PNGAPI warning_callback(png_structp png_ptr,
                                       png_const_charp warning_msg);
 };
+
+} // namespace imagelib
+} // namespace mozilla
 
 #endif // nsPNGDecoder_h__

@@ -42,8 +42,7 @@
 #define _nsGIFDecoder2_h
 
 #include "nsCOMPtr.h"
-#include "imgIDecoder.h"
-#include "imgIContainer.h"
+#include "Decoder.h"
 #include "imgIDecoderObserver.h"
 
 #include "GIF2.h"
@@ -51,20 +50,20 @@
 namespace mozilla {
 namespace imagelib {
 class RasterImage;
-} // namespace imagelib
-} // namespace mozilla
 
 //////////////////////////////////////////////////////////////////////
 // nsGIFDecoder2 Definition
 
-class nsGIFDecoder2 : public imgIDecoder
+class nsGIFDecoder2 : public Decoder
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODER
 
   nsGIFDecoder2();
   ~nsGIFDecoder2();
+
+  virtual nsresult InitInternal();
+  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual nsresult ShutdownInternal(PRUint32 aFlags);
 
 private:
   /* These functions will be called when the decoder has a decoded row,
@@ -83,9 +82,6 @@ private:
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
-  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
-  nsCOMPtr<imgIDecoderObserver> mObserver;
-  PRUint32 mFlags;
   PRInt32 mCurrentRow;
   PRInt32 mLastFlushedRow;
 
@@ -108,5 +104,8 @@ private:
 
   gif_struct mGIFStruct;
 };
+
+} // namespace imagelib
+} // namespace mozilla
 
 #endif

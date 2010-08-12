@@ -48,12 +48,11 @@
 #include "nsIInputStream.h"
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 
 #include "prlog.h"
 
-using namespace mozilla::imagelib;
+namespace mozilla {
+namespace imagelib {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
@@ -62,8 +61,6 @@ PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 // Convert from row (1..height) to absolute line (0..height-1)
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
-
-NS_IMPL_ISUPPORTS1(nsBMPDecoder, imgIDecoder)
 
 nsBMPDecoder::nsBMPDecoder()
 {
@@ -84,18 +81,10 @@ nsBMPDecoder::~nsBMPDecoder()
       free(mRow);
 }
 
-NS_IMETHODIMP nsBMPDecoder::Init(imgIContainer *aImage,
-                                 imgIDecoderObserver *aObserver,
-                                 PRUint32 aFlags)
+nsresult
+nsBMPDecoder::InitInternal()
 {
-    NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
-                      "wrong type of imgIContainer for decoding into");
-
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", aImage));
-
-    mImage = static_cast<RasterImage*>(aImage);
-    mObserver = aObserver;
-    mFlags = aFlags;
+    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", mImage.get()));
 
     // Fire OnStartDecode at init time to support bug 512435
     if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
@@ -104,7 +93,8 @@ NS_IMETHODIMP nsBMPDecoder::Init(imgIContainer *aImage,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsBMPDecoder::Close(PRUint32 aFlags)
+nsresult
+nsBMPDecoder::ShutdownInternal(PRUint32 aFlags)
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Close()\n"));
 
@@ -119,11 +109,6 @@ NS_IMETHODIMP nsBMPDecoder::Close(PRUint32 aFlags)
             mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
         }
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsBMPDecoder::Flush()
-{
     return NS_OK;
 }
 
@@ -167,8 +152,8 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBMPDecoder::Write(const char* aBuffer, PRUint32 aCount)
+nsresult
+nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 {
     // No forgiveness
     if (mError)
@@ -672,3 +657,6 @@ void nsBMPDecoder::ProcessInfoHeader()
     mBIH.colors = LITTLE_TO_NATIVE32(mBIH.colors);
     mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
+
+} // namespace imagelib
+} // namespace mozilla
