@@ -70,23 +70,24 @@ let (ios = Components.classes["@mozilla.org/network/io-service;1"]
 // Enable crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER_NO_REPORT
 // and handle checking for minidumps.
-if ("@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
-  // Remember to update </toolkit/crashreporter/test/unit/test_crashreporter.js>
-  // too if you change this initial setting.
-  let (crashReporter =
-        Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-        .getService(Components.interfaces.nsICrashReporter)) {
-    crashReporter.enabled = true;
-
-    try { // nsIXULRuntime is not available in some configurations.
-	let processType = Components.classes["@mozilla.org/xre/runtime;1"].
-	    getService(Components.interfaces.nsIXULRuntime).processType;
-	if (Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT == processType)
-	    crashReporter.minidumpPath = do_get_cwd();
+// Note that if we're in a child process, we don't want to init the
+// crashreporter component.
+try { // nsIXULRuntime is not available in some configurations.
+  let processType = Components.classes["@mozilla.org/xre/runtime;1"].
+    getService(Components.interfaces.nsIXULRuntime).processType;
+  if (processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT &&
+      "@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
+    // Remember to update </toolkit/crashreporter/test/unit/test_crashreporter.js>
+    // too if you change this initial setting.
+    let (crashReporter =
+          Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
+          .getService(Components.interfaces.nsICrashReporter)) {
+      crashReporter.enabled = true;
+      crashReporter.minidumpPath = do_get_cwd();
     }
-    catch (e) { }
   }
 }
+catch (e) { }
 
 
 function _TimerCallback(func, timer) {
