@@ -211,6 +211,24 @@ nsStyleCoord::GetAngleValueInRadians() const
   }
 }
 
+PRBool
+nsStyleCoord::CalcHasPercent() const
+{
+  NS_ABORT_IF_FALSE(IsCalcUnit(), "caller should check IsCalcUnit()");
+  nsStyleCoord::Array *a = GetArrayValue();
+  for (size_t i = 0, i_end = a->Count(); i < i_end; ++i) {
+    const nsStyleCoord &v = a->Item(i);
+    if (v.GetUnit() == eStyleUnit_Percent) {
+      return PR_TRUE;
+    }
+    if (v.IsCalcUnit() && v.CalcHasPercent()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+
 inline void*
 nsStyleCoord::Array::operator new(size_t aSelfSize,
                                   nsStyleContext *aAllocationContext,
