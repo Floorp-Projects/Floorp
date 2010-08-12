@@ -27,7 +27,8 @@ NS_NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len,
 
 NS_EXPORT nsresult
 NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
-                                       nsIStorageStream** stream)
+                                       nsIStorageStream** stream,
+				       PRBool wantDebugStream)
 {
   nsCOMPtr<nsIStorageStream> storageStream;
 
@@ -42,13 +43,17 @@ NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
   objectOutput->SetOutputStream(outputStream);
   
 #ifdef DEBUG
-  // Wrap in debug stream to detect unsupported writes of 
-  // multiply-referenced non-singleton objects
-  StartupCache* sc = StartupCache::GetSingleton();
-  NS_ENSURE_TRUE(sc, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIObjectOutputStream> debugStream;
-  sc->GetDebugObjectOutputStream(objectOutput, getter_AddRefs(debugStream));
-  debugStream.forget(wrapperStream);
+  if (wantDebugStream) {
+    // Wrap in debug stream to detect unsupported writes of 
+    // multiply-referenced non-singleton objects
+    StartupCache* sc = StartupCache::GetSingleton();
+    NS_ENSURE_TRUE(sc, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIObjectOutputStream> debugStream;
+    sc->GetDebugObjectOutputStream(objectOutput, getter_AddRefs(debugStream));
+    debugStream.forget(wrapperStream);
+  } else {
+    objectOutput.forget(wrapperStream);
+  }
 #else
   objectOutput.forget(wrapperStream);
 #endif
