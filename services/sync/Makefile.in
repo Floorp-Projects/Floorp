@@ -46,7 +46,6 @@ DIRS = locales
 
 EXTRA_COMPONENTS = \
   SyncComponents.manifest \
-  FormNotifier.js \
   Weave.js \
   $(NULL)
 

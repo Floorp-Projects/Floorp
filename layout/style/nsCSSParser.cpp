@@ -512,7 +512,9 @@ protected:
   PRBool ParseTransition();
   PRBool ParseTransitionTimingFunction();
   PRBool ParseTransitionTimingFunctionValues(nsCSSValue& aValue);
-  PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent, char aStop);
+  PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent,
+                                                     char aStop,
+                                                     PRBool aCheckRange);
   PRBool AppendValueToList(nsCSSValueList**& aListTail,
                            const nsCSSValue& aValue);
 
@@ -1307,6 +1309,7 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
   NS_ASSERTION(!mHavePushBack, "mustn't have pushback at this point");
   do {
     if (! mScanner.NextURL(mToken)) {
+      // EOF
       return PR_FALSE;
     }
   } while (eCSSToken_WhiteSpace == mToken.mType);
@@ -3613,7 +3616,8 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           aValue.SetColorValue(NS_RGB(r,g,b));
           return PR_TRUE;
         }
-        return PR_FALSE;  // already pushed back
+        SkipUntil(')');
+        return PR_FALSE;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-rgba") ||
                mToken.mIdent.LowerCaseEqualsLiteral("rgba")) {
@@ -3627,7 +3631,8 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           aValue.SetColorValue(NS_RGBA(r, g, b, a));
           return PR_TRUE;
         }
-        return PR_FALSE;  // already pushed back
+        SkipUntil(')');
+        return PR_FALSE;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl")) {
         // hsl ( hue , saturation , lightness )
@@ -3636,6 +3641,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
           aValue.SetColorValue(rgba);
           return PR_TRUE;
         }
+        SkipUntil(')');
         return PR_FALSE;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-hsla") ||
@@ -3650,6 +3656,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
                                        NS_GET_B(rgba), a));
           return PR_TRUE;
         }
+        SkipUntil(')');
         return PR_FALSE;
       }
       break;
@@ -4472,12 +4479,20 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   if (((aVariantMask & VARIANT_ATTR) != 0) &&
       (eCSSToken_Function == tk->mType) &&
       tk->mIdent.LowerCaseEqualsLiteral("attr")) {
-    return ParseAttr(aValue);
+    if (!ParseAttr(aValue)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+    return PR_TRUE;
   }
   if (((aVariantMask & VARIANT_CUBIC_BEZIER) != 0) &&
       (eCSSToken_Function == tk->mType)) {
      if (tk->mIdent.LowerCaseEqualsLiteral("cubic-bezier")) {
-      return ParseTransitionTimingFunctionValues(aValue);
+      if (!ParseTransitionTimingFunctionValues(aValue)) {
+        SkipUntil(')');
+        return PR_FALSE;
+      }
+      return PR_TRUE;
     }
   }
   if ((aVariantMask & VARIANT_CALC) &&
@@ -5729,7 +5744,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_height:
     return ParseNonNegativeVariant(aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHKLP,
+    return ParseNonNegativeVariant(aValue, VARIANT_AHKLP | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
   case eCSSProperty_force_broken_image_icon:
     return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
@@ -8859,10 +8874,10 @@ CSSParserImpl::ParseTransitionTimingFunctionValues(nsCSSValue& aValue)
   }
 
   float x1, x2, y1, y2;
-  if (!ParseTransitionTimingFunctionValueComponent(x1, ',') ||
-      !ParseTransitionTimingFunctionValueComponent(y1, ',') ||
-      !ParseTransitionTimingFunctionValueComponent(x2, ',') ||
-      !ParseTransitionTimingFunctionValueComponent(y2, ')')) {
+  if (!ParseTransitionTimingFunctionValueComponent(x1, ',', PR_TRUE) ||
+      !ParseTransitionTimingFunctionValueComponent(y1, ',', PR_FALSE) ||
+      !ParseTransitionTimingFunctionValueComponent(x2, ',', PR_TRUE) ||
+      !ParseTransitionTimingFunctionValueComponent(y2, ')', PR_FALSE)) {
     return PR_FALSE;
   }
 
@@ -8878,14 +8893,19 @@ CSSParserImpl::ParseTransitionTimingFunctionValues(nsCSSValue& aValue)
 
 PRBool
 CSSParserImpl::ParseTransitionTimingFunctionValueComponent(float& aComponent,
-                                                           char aStop)
+                                                           char aStop,
+                                                           PRBool aCheckRange)
 {
   if (!GetToken(PR_TRUE)) {
     return PR_FALSE;
   }
   nsCSSToken* tk = &mToken;
   if (tk->mType == eCSSToken_Number) {
-    aComponent = tk->mNumber;
+    float num = tk->mNumber;
+    if (aCheckRange && (num < 0.0 || num > 1.0)) {
+      return PR_FALSE;
+    }
+    aComponent = num;
     if (ExpectSymbol(aStop, PR_TRUE)) {
       return PR_TRUE;
     }

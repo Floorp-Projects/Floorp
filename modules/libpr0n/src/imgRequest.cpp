@@ -565,17 +565,12 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *
   NS_ASSERTION(image, "imgRequest::OnStartContainer called with a null image!");
   if (!image) return NS_ERROR_UNEXPECTED;
 
-  // We only want to send onStartContainer once, but we might get multiple
-  // OnStartContainer calls (e.g. from multipart/x-mixed-replace). Therefore,
-  // we tell our status tracker about OnStartContainer *after* attempting to
-  // send the notifications. That way, if we have previously called
-  // OnStartContainer, the status tracker can notice.
+  mImage->GetStatusTracker().RecordStartContainer(image);
+
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
   while (iter.HasMore()) {
     mImage->GetStatusTracker().SendStartContainer(iter.GetNext(), image);
   }
-
-  mImage->GetStatusTracker().RecordStartContainer(image);
 
   return NS_OK;
 }

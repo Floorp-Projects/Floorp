@@ -26,13 +26,13 @@
 #ifndef AssemblerBuffer_h
 #define AssemblerBuffer_h
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER
 
 #include <string.h>
-#include <jit/ExecutableAllocator.h>
-#include <wtf/Assertions.h>
+#include "assembler/jit/ExecutableAllocator.h"
+#include "assembler/wtf/Assertions.h"
 #include "jsstdint.h"
 
 namespace JSC {
