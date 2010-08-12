@@ -46,12 +46,10 @@
 #include "nsMemory.h"
 #include "nsRect.h"
 
-#include "nsIComponentManager.h"
 #include "nsIInputStream.h"
 
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
-#include "nsIInterfaceRequestorUtils.h"
 
 #include "gfxColor.h"
 #include "nsColor.h"

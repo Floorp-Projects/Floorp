@@ -43,13 +43,11 @@
 
 #include "imgIContainerObserver.h"
 
-#include "nsIComponentManager.h"
 #include "nsIInputStream.h"
 
 #include "nspr.h"
 #include "nsCRT.h"
 #include "ImageLogging.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "gfxColor.h"
 
 #include "jerror.h"

@@ -45,14 +45,6 @@
 #include "imgIDecoderObserver.h"
 #include "gfxColor.h"
 
-#define NS_BMPDECODER_CID \
-{ /* {78c61626-4d1f-4843-9364-4652d98ff6e1} */ \
-  0x78c61626, \
-  0x4d1f, \
-  0x4843, \
-  { 0x93, 0x64, 0x46, 0x52, 0xd9, 0x8f, 0xf6, 0xe1 } \
-}
-
 struct BMPFILEHEADER {
     char signature[2]; // String "BM"
     PRUint32 filesize;
