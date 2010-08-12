@@ -882,7 +882,7 @@ toolbar[iconsize="small"] #fullscreen-button {
   -moz-border-start: 1px solid ThreeDShadow;
 }
 
-#identity-box:focus {
+#identity-box:-moz-focusring {
   outline: 1px dotted -moz-DialogText;
 }
 

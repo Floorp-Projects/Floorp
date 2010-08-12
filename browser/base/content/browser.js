@@ -6777,14 +6777,12 @@ var gBookmarkAllTabsHandler = {
     this._updateCommandState();
   },
 
-  _updateCommandState: function BATH__updateCommandState(aTabClose) {
-    let numTabs = gBrowser.visibleTabs.length;
+  _updateCommandState: function BATH__updateCommandState() {
+    let remainingTabs = gBrowser.visibleTabs.filter(function(tab) {
+      return gBrowser._removingTabs.indexOf(tab) == -1;
+    });
 
-    // The TabClose event is fired before the tab is removed from the DOM
-    if (aTabClose)
-      numTabs--;
-
-    if (numTabs > 1)
+    if (remainingTabs.length > 1)
       this._command.removeAttribute("disabled");
     else
       this._command.setAttribute("disabled", "true");
@@ -6796,7 +6794,7 @@ var gBookmarkAllTabsHandler = {
 
   // nsIDOMEventListener
   handleEvent: function(aEvent) {
-    this._updateCommandState(aEvent.type == "TabClose");
+    this._updateCommandState();
   }
 };
 

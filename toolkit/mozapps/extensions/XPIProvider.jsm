@@ -5692,8 +5692,11 @@ DirectoryInstallLocation.prototype = {
     delete this._DirToIDMap[dir.path];
     delete this._IDToDirMap[aId];
 
-    if (!dir.exists())
-      throw new Error("Attempt to uninstall unknown add-on " + aId);
+    if (!dir.exists()) {
+      WARN("Attempted to remove the directory for " + aId + " from " +
+           this._name + " but it was already gone");
+      return;
+    }
 
     dir.remove(true);
   },
