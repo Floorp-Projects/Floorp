@@ -686,9 +686,7 @@ mjit::Compiler::jsop_neg()
 
     JS_ASSERT(!fe->isConstant());
 
-    /* 
-     * Load type information into register.
-     */
+    /* Load type information into register. */
     MaybeRegisterID feTypeReg;
     if (!fe->isTypeKnown() && !frame.shouldAvoidTypeRemat(fe)) {
         /* Safe because only one type is loaded. */
@@ -698,15 +696,6 @@ mjit::Compiler::jsop_neg()
         frame.pinReg(feTypeReg.reg());
     }
 
-    /*
-     * If copyDataIntoReg() is called here, syncAllRegs() is not required.
-     * If called from the int path, the double and int states would
-     * need to be explicitly synced in a currently unsupported manner.
-     *
-     * This function call can call allocReg() and clobber any register.
-     * (It is also useful to think about the interplay between this
-     *  code being in the int path, versus stub call syncing..)
-     */
     RegisterID reg = frame.copyDataIntoReg(masm, fe);
     Label feSyncTarget = stubcc.syncExitAndJump(Uses(1));
 

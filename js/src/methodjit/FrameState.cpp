@@ -433,43 +433,6 @@ FrameState::resetRegState()
 }
 
 void
-FrameState::syncAllRegs(uint32 mask)
-{
-    Registers regs(mask);
-
-    /* Same as syncAndKill(), minus the killing. */
-    FrameEntry *tos = tosFe();
-    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
-        FrameEntry *fe = tracker[i];
-        if (fe >= tos)
-            continue;
-
-        Address address = addressOf(fe);
-        FrameEntry *backing = fe;
-        if (fe->isCopy())
-            backing = fe->copyOf();
-
-        JS_ASSERT_IF(i == 0, !fe->isCopy());
-
-        if (!fe->data.synced()) {
-            if (backing != fe && backing->data.inMemory())
-                tempRegForData(backing);
-            syncData(backing, address, masm);
-            fe->data.sync();
-            if (fe->isConstant() && !fe->type.synced())
-                fe->type.sync();
-        }
-        if (!fe->type.synced()) {
-            if (backing != fe && backing->type.inMemory())
-                tempRegForType(backing);
-            syncType(backing, address, masm);
-            fe->type.sync();
-        }
-    }
-
-}
-
-void
 FrameState::merge(Assembler &masm, Changes changes) const
 {
     FrameEntry *tos = tosFe();
