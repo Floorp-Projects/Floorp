@@ -174,6 +174,7 @@ Trench.prototype = {
       this.activeRect = new Rect(this.activeRange.min, this.position - this.radius, this.activeRange.extent, 2 * this.radius);
       this.guideRect = new Rect(this.activeRange.min, this.position, this.activeRange.extent, 0);
     }
+    return true;
   },
 
   //----------

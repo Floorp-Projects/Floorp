@@ -1293,6 +1293,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           }
           return true;
         }
+        return false;
       });
     });
   },
@@ -1468,10 +1469,8 @@ window.GroupItems = {
   getGroupItemWithTitle: function(title) {
     var result = null;
     this.groupItems.forEach(function(groupItem) {
-      if (groupItem.getTitle() == title) {
+      if (groupItem.getTitle() == title)
         result = groupItem;
-        return false;
-      }
     });
 
     return result;
@@ -1506,10 +1505,8 @@ window.GroupItems = {
   groupItem: function(a) {
     var result = null;
     this.groupItems.forEach(function(candidate) {
-      if (candidate.id == a) {
+      if (candidate.id == a)
         result = candidate;
-        return false;
-      }
     });
 
     return result;
@@ -1700,6 +1697,7 @@ window.GroupItems = {
             tabItem = child;
             return true;
           }
+          return false;
         });
       }
     } else {
@@ -1712,6 +1710,7 @@ window.GroupItems = {
           currentIndex = index;
           return true;
         }
+        return false;
       });
       var firstGroupItems = groupItems.slice(currentIndex + 1);
       firstGroupItems.some(function(groupItem) {
@@ -1720,6 +1719,7 @@ window.GroupItems = {
           tabItem = child;
           return true;
         }
+        return false;
       });
       if (!tabItem) {
         var orphanedTabs = GroupItems.getOrphanedTabs();
@@ -1734,6 +1734,7 @@ window.GroupItems = {
             tabItem = child;
             return true;
           }
+          return false;
         });
       }
     }
