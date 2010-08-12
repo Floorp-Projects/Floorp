@@ -59,7 +59,8 @@
 
 #include "gfxPlatform.h"
 
-using namespace mozilla::imagelib;
+namespace mozilla {
+namespace imagelib {
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
@@ -79,9 +80,6 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 // do manual validation without libpng.
 static const PRUint8 pngSignatureBytes[] =
                { 137, 80, 78, 71, 13, 10, 26, 10 };
-
-
-NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
 nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
@@ -220,16 +218,10 @@ void nsPNGDecoder::EndImageFrame()
     mObserver->OnStopFrame(nsnull, numFrames - 1);
 }
 
-
-/** imgIDecoder methods **/
-
-/* void init (in imgIContainer aImage,
-              imgIDecoderObserver aObserver,
-              unsigned long aFlags); */
-NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
-                                 imgIDecoderObserver *aObserver,
-                                 PRUint32 aFlags)
+nsresult
+nsPNGDecoder::InitInternal()
 {
+
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   static png_byte color_chunks[]=
        { 99,  72,  82,  77, '\0',   /* cHRM */
@@ -248,12 +240,6 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
         116,  73,  77,  69, '\0',   /* tIME */
         122,  84,  88, 116, '\0'};  /* zTXt */
 #endif
-  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
-                    "wrong type of imgIContainer for decoding into");
-
-  mImage = static_cast<RasterImage*>(aImage);
-  mObserver = aObserver;
-  mFlags = aFlags;
 
   // Fire OnStartDecode at init time to support bug 512435
   if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
@@ -308,8 +294,8 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
   return NS_OK;
 }
 
-/* void close (); */
-NS_IMETHODIMP nsPNGDecoder::Close(PRUint32 aFlags)
+nsresult
+nsPNGDecoder::ShutdownInternal(PRUint32 aFlags)
 {
   if (mPNG)
     png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
@@ -321,18 +307,11 @@ NS_IMETHODIMP nsPNGDecoder::Close(PRUint32 aFlags)
       !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
-  mImage = nsnull;
   return NS_OK;
 }
 
-/* void flush (); */
-NS_IMETHODIMP nsPNGDecoder::Flush()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPNGDecoder::Write(const char *aBuffer, PRUint32 aCount)
+nsresult
+nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   // We use gotos, so we need to declare variables here
   nsresult rv;
@@ -933,3 +912,5 @@ nsPNGDecoder::warning_callback(png_structp png_ptr, png_const_charp warning_msg)
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
 
+} // namespace imagelib
+} // namespace mozilla
