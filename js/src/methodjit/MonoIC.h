@@ -161,6 +161,8 @@ void CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *f
 
 #endif /* JS_CPU_X86 */
 
+void PurgeMICs(JSContext *cx, JSScript *script);
+
 } /* namespace ic */
 } /* namespace mjit */
 } /* namespace js */
