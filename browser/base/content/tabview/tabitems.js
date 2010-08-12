@@ -670,6 +670,7 @@ window.TabItems = {
   _heartbeatOn: false,
   _heartbeatTiming: 100, // milliseconds between beats
   _lastUpdateTime: Date.now(),
+  _eventListeners: [],
 
   // ----------
   // Function: init
@@ -679,35 +680,36 @@ window.TabItems = {
     var self = this;
 
     // When a tab is opened, create the TabItem
-    AllTabs.register("open", function(tab) {
+    this._eventListeners["open"] = function(tab) {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
       setTimeout(function() { // Marshal event from chrome thread to DOM thread
         self.link(tab);
       }, 1);
-    });
-
+    }
     // When a tab's content is loaded, show the canvas and hide the cached data
     // if necessary.
-    AllTabs.register("attrModified", function(tab) {
+    this._eventListeners["attrModified"] = function(tab) {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
       setTimeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
-    });
-
+    }
     // When a tab is closed, unlink.
-    AllTabs.register("close", function(tab) {
+    this._eventListeners["close"] = function(tab) {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
       setTimeout(function() { // Marshal event from chrome thread to DOM thread
         self.unlink(tab);
       }, 1);
-    });
+    }
+    for (let name in this._eventListeners) {
+      AllTabs.register(name, this._eventListeners[name]);
+    }
 
     // For each tab, create the link.
     AllTabs.tabs.forEach(function(tab) {
@@ -717,6 +719,18 @@ window.TabItems = {
       self.link(tab);
       self.update(tab);
     });
+  },
+
+  // ----------
+  // Function: uninit
+  uninit: function() {
+    for (let name in this._eventListeners) {
+      AllTabs.unregister(name, this._eventListeners[name]);
+    }
+    this.items = null;
+    this._eventListeners = null;
+    this._lastUpdateTime = null;
+    this._tabsWaitingForUpdate = null;
   },
 
   // ----------
@@ -779,7 +793,7 @@ window.TabItems = {
 
         if (!tabItem.reconnected && (oldURL == 'about:blank' || !oldURL))
           this.reconnect(tabItem);
-    
+
         tabItem.save();
       }
 
