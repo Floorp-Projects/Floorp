@@ -386,7 +386,10 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
             return NULL;
     } else {
         sprop = (JSScopeProperty *)prop;
-        NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval, return NULL);
+        JSObject *normalized = obj;
+        if (obj->getClass() == &js_WithClass && !sprop->hasDefaultGetter())
+            normalized = js_UnwrapWithObject(cx, obj);
+        NATIVE_GET(cx, normalized, obj2, sprop, JSGET_METHOD_BARRIER, &rval, return NULL);
         obj2->dropProperty(cx, (JSProperty *) sprop);
     }
 
