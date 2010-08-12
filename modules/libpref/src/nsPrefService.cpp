@@ -768,8 +768,21 @@ static nsresult pref_InitAppDefaultsFromOmnijar()
   rv = pref_ReadPrefFromJar(jarReader, "greprefs.js");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = pref_ReadPrefFromJar(jarReader, "defaults/prefs.js");
+  nsZipFind *findPtr;
+  rv = jarReader->FindInit("defaults/pref/*.js$", &findPtr);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoPtr<nsZipFind> find(findPtr);
+
+  nsCAutoString prefName;
+  const char *entryName;
+  PRUint16 entryNameLen;
+  while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
+    prefName = nsDependentCSubstring(entryName, entryName + entryNameLen);
+    rv = pref_ReadPrefFromJar(jarReader, prefName.get());
+    if (NS_FAILED(rv))
+      NS_WARNING("Error parsing preferences.");
+  }
 
   return NS_OK;
 }
