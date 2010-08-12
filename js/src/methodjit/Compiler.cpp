@@ -266,11 +266,16 @@ mjit::Compiler::finishThisUp()
 
 #if defined JS_MONOIC
     if (mics.length()) {
-        script->mics = (ic::MICInfo *)cx->calloc(sizeof(ic::MICInfo) * mics.length());
-        if (!script->mics) {
+        uint8 *cursor = (uint8 *)cx->calloc(sizeof(ic::MICInfo) * mics.length() + sizeof(uint32));
+        if (!cursor) {
             execPool->release();
             return Compile_Error;
         }
+        *(uint32*)cursor = mics.length();
+        cursor += sizeof(uint32);
+        script->mics = (ic::MICInfo *)cursor;
+    } else {
+        script->mics = NULL;
     }
 #endif
 
