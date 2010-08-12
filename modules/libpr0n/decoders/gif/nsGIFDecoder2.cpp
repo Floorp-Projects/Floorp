@@ -75,11 +75,8 @@ mailing address.
 #include <stddef.h>
 #include "prmem.h"
 
-#include "nsIInterfaceRequestorUtils.h"
-
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
-#include "nsIComponentManager.h"
 #include "imgIContainerObserver.h"
 #include "RasterImage.h"
 
