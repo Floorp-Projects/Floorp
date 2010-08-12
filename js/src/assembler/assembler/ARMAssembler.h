@@ -1191,9 +1191,16 @@ namespace JSC {
             ASSERT((op2 & ~0xfff) == 0);
 
             uint32_t    imm8 = op2 & 0xff;
-            uint32_t    rot = 32 - ((op2 >> 7) & 0x1e);
+            uint32_t    rot = ((op2 >> 7) & 0x1e);
 
-            return imm8 << (rot & 0x1f);
+            // 'rot' is a right-rotate count.
+
+            uint32_t    imm = (imm8 >> rot);
+            if (rot > 0) {
+                imm |= (imm8 << (32-rot));
+            }
+
+            return imm;
         }
 
         // Format the operand 2 argument for debug spew. The operand can be
