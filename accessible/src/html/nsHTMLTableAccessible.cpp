@@ -895,7 +895,12 @@ nsHTMLTableAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
   nsAccessible *cell =
     GetAccService()->GetAccessibleInWeakShell(cellContent, mWeakShell);
-  if (cell && cell != this) {
+
+  if (!cell) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (cell != this) {
     // XXX bug 576838: crazy tables (like table6 in tables/test_table2.html) may
     // return itself as a cell what makes Orca hang.
     NS_ADDREF(*aTableCellAccessible = cell);
