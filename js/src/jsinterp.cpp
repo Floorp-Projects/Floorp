@@ -2782,7 +2782,6 @@ BEGIN_CASE(JSOP_STOP)
         }
 
         JSStackFrame *down = fp->down;
-        bool recursive = fp->script == down->script;
         Value *newsp = fp->argv - 1;
 
         /* Pop the frame. */
