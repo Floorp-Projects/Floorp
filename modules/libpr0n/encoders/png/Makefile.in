@@ -53,9 +53,7 @@ ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
 DEFINES		+= -DMOZ_PNG_WRITE
 endif
 
-ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
 DEFINES		+= -DMOZ_PNG_READ
-endif
 
 CPPSRCS		= nsPNGEncoder.cpp
 
