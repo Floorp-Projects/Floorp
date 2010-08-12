@@ -102,7 +102,7 @@ var UIManager = {
       gWindow.addEventListener("tabviewshow", function() {
         self.showTabView(true);
       }, false);
-      
+
       // ___ currentTab
       this._currentTab = gBrowser.selectedTab;
 
@@ -126,6 +126,9 @@ var UIManager = {
         Array.forEach(gBrowser.tabs, function(tab) {
           tab.hidden = false;
         });
+      });
+      iQ(window).bind("unload", function() {
+        self.uninit();
       });
 
       gWindow.addEventListener("tabviewhide", function() {
@@ -224,6 +227,17 @@ var UIManager = {
     } catch(e) {
       Utils.log(e);
     }
+  },
+
+  uninit: function() {
+    TabItems.uninit();
+    GroupItems.uninit();
+    Storage.uninit();
+
+    this._currentTab = null;
+    this._pageBounds = null;
+    this._reorderTabItemsOnShow = null;
+    this._reorderTabsOnHide = null;
   },
 
   // ----------

@@ -58,6 +58,12 @@ let Storage = {
   },
 
   // ----------
+  // Function: uninit
+  uninit : function() {
+    this._sessionStore = null;
+  },
+
+  // ----------
   // Function: wipe
   // Cleans out all the stored data, leaving empty objects.
   wipe: function() {
