@@ -1934,9 +1934,9 @@ Assembler::BLX(Register addr, bool chk /* = true */)
         underrunProtect(4);
     }
 
-    // BLX IP
+    // BLX reg
     *(--_nIns) = (NIns)( (COND_AL) | (0x12<<20) | (0xFFF<<8) | (0x3<<4) | (addr) );
-    asm_output("blx ip");
+    asm_output("blx %s", gpn(addr));
 }
 
 // Emit the code required to load a memory address into a register as follows:
