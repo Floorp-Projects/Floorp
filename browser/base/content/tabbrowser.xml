@@ -723,7 +723,13 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            if (TabView && TabView.isVisible()) {
+              // ToDo: this will be removed when we gain ability to draw to the menu bar.
+              // Bug 586175
+              this.ownerDocument.title = TabView.windowTitle;
+            } else {
+              this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            }
           ]]>
         </body>
       </method>
@@ -1394,7 +1400,8 @@
 
             var closeWindow = false;
             var newTab = false;
-            if (this.tabs.length - this._removingTabs.length == 1) {
+            if (this.tabs.length - this._removingTabs.length == 1 && 
+                (!TabView || !TabView.isVisible())) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
                               this.tabContainer._closeWindowWithLastTab;

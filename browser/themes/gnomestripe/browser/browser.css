@@ -563,6 +563,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
 }
 
+#tabview-button {
+  list-style-image: url(chrome://browser/skin/tabview/tabview.png);
+}
+
 #downloads-button {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
@@ -1521,5 +1525,14 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
+}
+
+/* Tab Context Menu */
+#context_tabViewMenu {
+  list-style-image: url(chrome://browser/skin/tabview/tabview-16.png);
+}
+
+#context_tabViewMenuPopup > menuitem.group {
+  padding-left: 40px;
 }
 

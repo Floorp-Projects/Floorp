@@ -544,6 +544,12 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   -moz-margin-end: 3px;
 }
 
+/* tabview button */
+
+#tabview-button {
+  list-style-image: url(chrome://browser/skin/tabview/tabview.png);
+}
+
 /* download manager button */
 
 #downloads-button {
@@ -2106,5 +2112,14 @@ panel[dimmed="true"] {
 /* Sync */
 #sync-status-button.statusbarpanel-iconic {
   padding: 0 5px;
+}
+
+/* Tab Context Menu */
+#context_tabViewMenu {
+  list-style-image: url(chrome://browser/skin/tabview/tabview-16.png);
+}
+
+#context_tabViewMenuPopup > menuitem.group {
+  padding-left: 40px;
 }
 
