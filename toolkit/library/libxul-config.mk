@@ -139,6 +139,7 @@ COMPONENT_LIBS += \
 	i18n \
 	chardet \
 	jar$(VERSION_NUMBER) \
+        startupcache \
 	pref \
 	htmlpars \
 	imglib2 \
