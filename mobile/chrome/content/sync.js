@@ -52,6 +52,9 @@ let WeaveGlue = {
   },
 
   connect: function connect() {
+    if (this._settings.user.value != Weave.Service.username)
+      Weave.Service.startOver();
+
     Weave.Service.login(this._settings.user.value, this._settings.pass.value,
       this._settings.secret.value);
     Weave.Service.persistLogin();
