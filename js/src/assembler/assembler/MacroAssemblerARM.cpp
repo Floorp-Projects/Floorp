@@ -37,8 +37,11 @@
 #include <unistd.h>
 #include <elf.h>
 
+// lame check for kernel version
+// see bug 586550
 #ifdef MOZ_PLATFORM_MAEMO
-#if (MOZ_PLATFORM_MAEMO == 4)
+#include <linux/version.h>
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28) 
 #include <asm/procinfo.h>
 #else
 #include <asm/hwcap.h>
