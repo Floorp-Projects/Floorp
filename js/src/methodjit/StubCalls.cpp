@@ -1339,6 +1339,36 @@ stubs::NewArray(VMFrame &f, uint32 len)
 }
 
 void JS_FASTCALL
+stubs::Debugger(VMFrame &f, jsbytecode *pc)
+{
+    JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
+    if (handler) {
+        Value rval;
+        switch (handler(f.cx, f.cx->fp->script, pc, Jsvalify(&rval),
+                        f.cx->debugHooks->debuggerHandlerData)) {
+          case JSTRAP_THROW:
+            f.cx->throwing = JS_TRUE;
+            f.cx->exception = rval;
+            THROW();
+
+          case JSTRAP_RETURN:
+            f.cx->throwing = JS_FALSE;
+            f.cx->fp->rval = rval;
+            *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
+                                         JS_METHODJIT_DATA(f.cx).trampolines.forceReturn);
+            break;
+
+          case JSTRAP_ERROR:
+            f.cx->throwing = JS_FALSE;
+            THROW();
+
+          default:
+            break;
+        }
+    }
+}
+
+void JS_FASTCALL
 stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 {
     if (!js_HandleExecutionInterrupt(f.cx))

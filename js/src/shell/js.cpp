@@ -1564,6 +1564,32 @@ Untrap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSTrapStatus
+DebuggerHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                void *closure)
+{
+    return TrapHandler(cx, script, pc, rval, STRING_TO_JSVAL((JSString *)closure));
+}
+
+static JSBool
+SetDebuggerHandler(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    if (argc == 0) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             JSSMSG_NOT_ENOUGH_ARGS, "setDebuggerHandler");
+        return JS_FALSE;
+    }
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+
+    JS_SetDebuggerHandler(cx->runtime, DebuggerHandler, str);
+    *rval = JSVAL_VOID;
+    return JS_TRUE;
+}
+
 static JSBool
 LineToPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -3998,6 +4024,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("gczeal",         GCZeal,         1,0),
 #endif
     JS_FS("setDebug",       SetDebug,       1,0,0),
+    JS_FS("setDebuggerHandler", SetDebuggerHandler, 1, 0, 0),
     JS_FS("trap",           Trap,           3,0,0),
     JS_FS("untrap",         Untrap,         2,0,0),
     JS_FS("line2pc",        LineToPC,       0,0,0),
@@ -4104,6 +4131,7 @@ static const char *const shell_help_messages[] = {
 "gczeal(level)            How zealous the garbage collector should be",
 #endif
 "setDebug(debug)          Set debug mode",
+"setDebuggerHandler(f)    Set handler for debugger keyword to f",
 "trap([fun, [pc,]] exp)   Trap bytecode execution",
 "untrap(fun[, pc])        Remove a trap",
 "line2pc([fun,] line)     Map line number to PC",
