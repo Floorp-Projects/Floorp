@@ -40,6 +40,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = browser/base/content/test
 
+DIRS += tabview
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -168,6 +170,9 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
                  browser_visibleTabs.js \
+                 browser_visibleTabs_contextMenu.js \
+                 browser_visibleTabs_bookmarkAllPages.js \
+                 browser_visibleTabs_tabPreview.js \
                  discovery.html \
                  moz.png \
                  test_bug435035.html \

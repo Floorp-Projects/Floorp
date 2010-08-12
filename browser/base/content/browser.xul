@@ -102,6 +102,9 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
+<deck flex="1" id="tab-view-deck">
+<vbox flex="1">
+
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
@@ -110,6 +113,18 @@
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
+      <menu id="context_tabViewMenu" class="menu-iconic" label="&moveTabTo.label;"
+            accesskey="&moveTabTo.accesskey;">
+        <menupopup id="context_tabViewMenuPopup" 
+                   onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
+          <menuitem label="&createNewGroup.label;" 
+                    accesskey="&createNewGroup.accesskey;" 
+                    oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);" />
+          <menuitem id="context_namedGroups" label="&namedGroups.label;" 
+                    disabled="true" />
+        </menupopup>
+      </menu>
+      <menuseparator/>
       <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
@@ -893,7 +908,7 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,tabview-button,alltabs-button,tabs-closebutton"
              collapsed="true">
 
       <tabs id="tabbrowser-tabs"
@@ -926,6 +941,12 @@
         <menupopup id="alltabs-popup"
                    position="after_end"/>
       </toolbarbutton>
+
+      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabViewButton.label;"
+                     command="Browser:ToggleTabView"
+                     tooltiptext="&tabViewButton.tooltip;"
+                     removable="true"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
@@ -1081,4 +1102,11 @@
     </svg:mask>
   </svg:svg>
 #endif
+
+</vbox>
+# <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
+#     Introducing the iframe dynamically, as needed, was found to be better than
+#     starting with an empty iframe here in browser.xul from a Ts standpoint.
+</deck>
+
 </window>
