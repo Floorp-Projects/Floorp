@@ -686,7 +686,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 fp->fun = fun;
                 fp->argv = vp + 2;
                 fp->scopeChain = closure->getParent();
-                fp->argsobj = NULL;
+                fp->setArgsObj(NULL);
 
                 /* Initialize regs. */
                 regs.pc = script ? script->code : NULL;
