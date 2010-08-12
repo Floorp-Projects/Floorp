@@ -681,10 +681,8 @@ window.Item.prototype = {
         var cancel = false;
         var $target = iQ(e.target);
         cancelClasses.forEach(function(className) {
-          if ($target.hasClass(className)) {
+          if ($target.hasClass(className))
             cancel = true;
-            return false;
-          }
         });
 
         if (cancel) {
@@ -1058,16 +1056,16 @@ window.Items = {
             return;
 
           var bounds2 = pair2.bounds;
-          if (bounds2.intersects(newBounds)) {
+          if (bounds2.intersects(newBounds))
             blocked = true;
-            return false;
-          }
+					return;
         });
 
         if (!blocked) {
           pair.bounds.copy(newBounds);
         }
       }
+      return;
     });
 
     if (!pairsProvided) {

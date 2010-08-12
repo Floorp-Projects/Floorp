@@ -420,7 +420,6 @@ var UIManager = {
           }, 1);
         }
       }
-      return false;
     });
 
     AllTabs.register("move", function(tab) {
