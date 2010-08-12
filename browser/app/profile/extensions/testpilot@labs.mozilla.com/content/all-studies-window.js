@@ -286,11 +286,9 @@ var TestPilotXulWindow = {
       let openInTab = (task.taskType == TaskConstants.TYPE_LEGACY);
 
       this.addDescription(textVbox, task.title, task.summary);
-      if (task.showMoreInfoLink) {
-        this.addXulLink(
-          textVbox, this._stringBundle.getString("testpilot.moreInfo"),
-          task.defaultUrl, openInTab);
-      }
+      this.addXulLink(
+        textVbox, this._stringBundle.getString("testpilot.moreInfo"),
+        task.defaultUrl, openInTab);
 
       // Create the rightmost status area, depending on status:
       let statusVbox = document.createElement("vbox");

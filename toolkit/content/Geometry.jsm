@@ -14,8 +14,7 @@
  *
  * The Original Code is Mozilla Mobile Browser.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -23,6 +22,7 @@
  *   Roy Frostig <rfrostig@mozilla.com>
  *   Ben Combee <bcombee@mozilla.com>
  *   Matt Brubeck <mbrubeck@mozilla.com>
+ *   Benjamin Stover <bstover@mozilla.com>
  *   Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["Point","Rect"];
+let EXPORTED_SYMBOLS = ["Point", "Rect"];
 
 /**
  * Simple Point class.
@@ -60,7 +60,7 @@ Point.prototype = {
     this.y = y;
     return this;
   },
-  
+
   equals: function equals(x, y) {
     return this.x == x && this.y == y;
   },

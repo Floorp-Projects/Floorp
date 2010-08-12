@@ -437,7 +437,7 @@ public:
                                nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult) = 0;
-  void DeleteShell() { mPresShell = nsnull; }
+  virtual void DeleteShell() = 0;
 
   nsIPresShell* GetShell() const
   {
