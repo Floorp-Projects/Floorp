@@ -114,13 +114,14 @@ Assembler::CountLeadingZeroes(uint32_t data)
     // ARMCC can do this with an intrinsic.
     leading_zeroes = __clz(data);
 
-// current Android GCC compiler incorrectly refuses to compile 'clz' for armv5
-// (even though this is a legal instruction there). Since we currently only compile for ARMv5
-// for emulation, we don't care too much (but we DO care for ARMv6+ since those are "real"
-// devices).
-#elif defined(__GNUC__) && !(defined(ANDROID) && __ARM_ARCH__ <= 5)
+#elif defined(__GNUC__) && (NJ_COMPILER_ARM_ARCH >= 5)
     // GCC can use inline assembler to insert a CLZ instruction.
     __asm (
+#if defined(ANDROID) && (NJ_COMPILER_ARM_ARCH < 7)
+    // On Android gcc compiler, the clz instruction is not supported with a
+    // target smaller than armv7, despite it being legal for armv5+.
+        "   .arch armv7-a\n"
+#endif
         "   clz     %0, %1  \n"
         :   "=r"    (leading_zeroes)
         :   "r"     (data)
