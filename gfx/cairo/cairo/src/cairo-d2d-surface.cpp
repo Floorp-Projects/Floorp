@@ -214,7 +214,7 @@ cairo_d2d_create_device()
 	D3D10_1_SDK_VERSION,
 	&device->mD3D10Device);
     if (FAILED(hr)) {
-	HRESULT hr = createD3DDevice(
+	hr = createD3DDevice(
 	    NULL, 
 	    D3D10_DRIVER_TYPE_HARDWARE,
 	    NULL,
@@ -225,7 +225,7 @@ cairo_d2d_create_device()
 	    &device->mD3D10Device);
 	if (FAILED(hr)) {
 	    /* This is not guaranteed to be too fast! */
-	    HRESULT hr = createD3DDevice(
+	    hr = createD3DDevice(
 		NULL, 
 		D3D10_DRIVER_TYPE_HARDWARE,
 		NULL,
