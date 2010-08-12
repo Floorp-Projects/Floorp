@@ -980,7 +980,7 @@ public:
         // integer, it saturates at INT_MAX or INT_MIN. Testing this is
         // probably quicker than testing FPSCR for exception.
         m_assembler.fmrs_r(dest, ARMRegisters::SD0);
-        m_assembler.cmn_r(dest, ARMAssembler::getOp2(1));
+        m_assembler.cmn_r(dest, ARMAssembler::getOp2(-0x7fffffff));
         m_assembler.cmp_r(dest, ARMAssembler::getOp2(0x80000000), ARMCondition(NonZero));
         return Jump(m_assembler.jmp(ARMCondition(Zero)));
     }
