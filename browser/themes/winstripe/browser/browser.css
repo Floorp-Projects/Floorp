@@ -845,13 +845,13 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   background-color: hsl(92,45%,52%);
 }
 
-#identity-box:focus {
+#identity-box:-moz-focusring {
   outline: 1px dotted -moz-DialogText;
   outline-offset: -3px;
 }
 
-#identity-box.verifiedDomain:focus ,
-#identity-box.verifiedIdentity:focus {
+#identity-box.verifiedDomain:-moz-focusring,
+#identity-box.verifiedIdentity:-moz-focusring {
   outline-color: white;
 }
 
