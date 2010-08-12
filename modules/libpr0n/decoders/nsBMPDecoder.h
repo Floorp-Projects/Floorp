@@ -41,9 +41,12 @@
 #define _nsBMPDecoder_h
 
 #include "nsAutoPtr.h"
-#include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 #include "gfxColor.h"
+#include "Decoder.h"
+
+namespace mozilla {
+namespace imagelib {
 
 struct BMPFILEHEADER {
     char signature[2]; // String "BM"
@@ -131,34 +134,27 @@ enum ERLEState {
     eRLEStateAbsoluteModePadded ///< As above, but another byte of data has to be read as padding
 };
 
-namespace mozilla {
-namespace imagelib {
 class RasterImage;
-} // namespace imagelib
-} // namespace mozilla
 
 /**
  * Decoder for BMP-Files, as used by Windows and OS/2
  */
-class nsBMPDecoder : public imgIDecoder
+class nsBMPDecoder : public Decoder
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_IMGIDECODER
-    
+
     nsBMPDecoder();
     ~nsBMPDecoder();
+
+    virtual nsresult InitInternal();
+    virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
+    virtual nsresult ShutdownInternal(PRUint32 aFlags);
 
 private:
 
     /** Calculates the red-, green- and blueshift in mBitFields using
      * the bitmasks from mBitFields */
     NS_METHOD CalcBitShift();
-
-    nsCOMPtr<imgIDecoderObserver> mObserver;
-
-    nsRefPtr<mozilla::imagelib::RasterImage> mImage;
-    PRUint32 mFlags;
 
     PRUint32 mPos;
 
@@ -222,6 +218,10 @@ inline void Set4BitPixel(PRUint32*& aDecoded, PRUint8 aData,
         --aCount;
     }
 }
+
+} // namespace imagelib
+} // namespace mozilla
+
 
 #endif
 

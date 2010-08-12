@@ -53,9 +53,8 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 
-using namespace mozilla::imagelib;
-
-NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
+namespace mozilla {
+namespace imagelib {
 
 #define ICONCOUNTOFFSET 4
 #define DIRENTRYOFFSET 6
@@ -87,18 +86,9 @@ nsICODecoder::~nsICODecoder()
 {
 }
 
-NS_IMETHODIMP nsICODecoder::Init(imgIContainer *aImage,
-                                 imgIDecoderObserver *aObserver,
-                                 PRUint32 aFlags)
+nsresult
+nsICODecoder::InitInternal()
 {
-  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
-                    "wrong type of imgIContainer for decoding into");
-
-  // Grab parameters
-  mImage = static_cast<RasterImage*>(aImage);
-  mObserver = aObserver;
-  mFlags = aFlags;
-
   // Fire OnStartDecode at init time to support bug 512435
   if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
     mObserver->OnStartDecode(nsnull);
@@ -106,7 +96,8 @@ NS_IMETHODIMP nsICODecoder::Init(imgIContainer *aImage,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsICODecoder::Close(PRUint32 aFlags)
+nsresult
+nsICODecoder::ShutdownInternal(PRUint32 aFlags)
 {
   nsresult rv = NS_OK;
 
@@ -148,13 +139,8 @@ NS_IMETHODIMP nsICODecoder::Close(PRUint32 aFlags)
   return rv;
 }
 
-NS_IMETHODIMP nsICODecoder::Flush()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsICODecoder::Write(const char* aBuffer, PRUint32 aCount)
+nsresult
+nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 {
   // No forgiveness
   if (mError)
@@ -552,3 +538,6 @@ void nsICODecoder::ProcessInfoHeader() {
   mBIH.colors = LITTLE_TO_NATIVE32(mBIH.colors);
   mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
+
+} // namespace imagelib
+} // namespace mozilla

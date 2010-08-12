@@ -41,18 +41,15 @@
 #ifndef nsIconDecoder_h__
 #define nsIconDecoder_h__
 
-#include "imgIDecoder.h"
+#include "Decoder.h"
 
 #include "nsCOMPtr.h"
 
-#include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 
 namespace mozilla {
 namespace imagelib {
 class RasterImage;
-} // namespace imagelib
-} // namespace mozilla
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // The icon decoder is a decoder specifically tailored for loading icons 
@@ -73,18 +70,17 @@ class RasterImage;
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-class nsIconDecoder : public imgIDecoder
+class nsIconDecoder : public Decoder
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODER
 
   nsIconDecoder();
   virtual ~nsIconDecoder();
 
-  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
-  nsCOMPtr<imgIDecoderObserver> mObserver;
-  PRUint32 mFlags;
+  virtual nsresult InitInternal();
+  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual nsresult ShutdownInternal(PRUint32 aFlags);
+
   PRUint8 mWidth;
   PRUint8 mHeight;
   PRUint32 mPixBytesRead;
@@ -104,5 +100,7 @@ enum {
   iconStateError      = 4
 };
 
+} // namespace imagelib
+} // namespace mozilla
 
 #endif // nsIconDecoder_h__

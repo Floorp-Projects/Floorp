@@ -54,8 +54,6 @@
 
 #include "gfxPlatform.h"
 
-using namespace mozilla::imagelib;
-
 extern "C" {
 #include "iccjpeg.h"
 
@@ -73,7 +71,10 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
                  JSAMPARRAY output_buf, int num_rows);
 }
 
-NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
+static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
+
+namespace mozilla {
+namespace imagelib {
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
@@ -89,8 +90,6 @@ METHODDEF(boolean) fill_input_buffer (j_decompress_ptr jd);
 METHODDEF(void) skip_input_data (j_decompress_ptr jd, long num_bytes);
 METHODDEF(void) term_source (j_decompress_ptr jd);
 METHODDEF(void) my_error_exit (j_common_ptr cinfo);
-
-static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
 
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
@@ -136,23 +135,9 @@ nsJPEGDecoder::~nsJPEGDecoder()
 }
 
 
-/** imgIDecoder methods **/
-
-/* void init (in imgIContainer aImage, 
-              in imgIDecoderObserver aObserver,
-              in unsigned long aFlags); */
-NS_IMETHODIMP nsJPEGDecoder::Init(imgIContainer *aImage, 
-                                  imgIDecoderObserver *aObserver,
-                                  PRUint32 aFlags)
+nsresult
+nsJPEGDecoder::InitInternal()
 {
-  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
-                    "wrong type of imgIContainer for decoding into");
-
-  /* Grab the parameters. */
-  mImage = static_cast<RasterImage*>(aImage);
-  mObserver = aObserver;
-  mFlags = aFlags;
-
   /* Fire OnStartDecode at init time to support bug 512435 */
   if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
     mObserver->OnStartDecode(nsnull);
@@ -190,9 +175,8 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIContainer *aImage,
   return NS_OK;
 }
 
-
-/* void close (); */
-NS_IMETHODIMP nsJPEGDecoder::Close(PRUint32 aFlags)
+nsresult
+nsJPEGDecoder::ShutdownInternal(PRUint32 aFlags)
 {
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
          ("[this=%p] nsJPEGDecoder::Close\n", this));
@@ -230,14 +214,8 @@ NS_IMETHODIMP nsJPEGDecoder::Close(PRUint32 aFlags)
   return NS_OK;
 }
 
-/* void flush (); */
-NS_IMETHODIMP nsJPEGDecoder::Flush()
-{
-  return NS_OK;
-}
-
-//******************************************************************************
-nsresult nsJPEGDecoder::Write(const char *aBuffer, PRUint32 aCount)
+nsresult
+nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   mSegment = (const JOCTET *)aBuffer;
   mSegmentLen = aCount;
@@ -932,6 +910,9 @@ term_source (j_decompress_ptr jd)
   // Notify
   decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
 }
+
+} // namespace imagelib
+} // namespace mozilla
 
 
 /**************** YCbCr -> Cairo's RGB24/ARGB32 conversion: most common case **************/
