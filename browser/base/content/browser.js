@@ -1573,8 +1573,6 @@ function BrowserShutdown()
     Components.utils.reportError(ex);
   }
 
-  gBookmarkAllTabsHandler.uninit();
-
   BrowserOffline.uninit();
   OfflineApps.uninit();
   DownloadMonitorPanel.uninit();
@@ -4286,7 +4284,7 @@ var XULBrowserWindow = {
       // Of course, this is especially wrong with bfcache on...
 
       // fix bug 253793 - turn off highlight when page changes
-      gFindBar.getElement("highlight").checked = false;
+      gFindBar.getElement("highlight").checked = false;      
     }
 
     // See bug 358202, when tabs are switched during a drag operation,
@@ -6771,16 +6769,12 @@ function formatURL(aFormat, aIsPref) {
  */
 var gBookmarkAllTabsHandler = {
   init: function () {
-    Services.obs.addObserver(this, "tab-visibility-change", false);
-
     this._command = document.getElementById("Browser:BookmarkAllTabs");
     gBrowser.tabContainer.addEventListener("TabOpen", this, true);
     gBrowser.tabContainer.addEventListener("TabClose", this, true);
+    gBrowser.tabContainer.addEventListener("TabSelect", this, true);
+    gBrowser.tabContainer.addEventListener("TabMove", this, true);
     this._updateCommandState();
-  },
-
-  uninit: function () {
-    Services.obs.removeObserver(this, "tab-visibility-change");
   },
 
   _updateCommandState: function BATH__updateCommandState(aTabClose) {
@@ -6803,12 +6797,7 @@ var gBookmarkAllTabsHandler = {
   // nsIDOMEventListener
   handleEvent: function(aEvent) {
     this._updateCommandState(aEvent.type == "TabClose");
-  },
-
-  observe: function(subject, topic, data) {
-    if (topic == "tab-visibility-change" && subject == window)
-      this._updateCommandState();
-  },
+  }
 };
 
 /**
@@ -7852,3 +7841,4 @@ XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
     Components.utils.reportError(ex);
   }
 });
+
