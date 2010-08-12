@@ -8,11 +8,18 @@ let ds = Cc["@mozilla.org/file/directory_service;1"]
 let provider = {
   getFile: function(prop, persistent) {
     persistent.value = true;
-    if (prop == "ExtPrefDL")
-      return [ds.get("CurProcD", Ci.nsIFile)];
-    else if (prop == "ProfD")
-      return ds.get("CurProcD", Ci.nsIFile);
-    throw Cr.NS_ERROR_FAILURE;
+    switch (prop) {
+      case "ExtPrefDL":
+        return [ds.get("CurProcD", Ci.nsIFile)];
+      case "ProfD":
+        return ds.get("CurProcD", Ci.nsIFile);
+      case "UHist":
+        let histFile = ds.get("CurProcD", Ci.nsIFile);
+        histFile.append("history.dat");
+        return histFile;
+      default:
+        throw Cr.NS_ERROR_FAILURE;
+    }
   },
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
