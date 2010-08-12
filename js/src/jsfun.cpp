@@ -596,8 +596,10 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     *objp = NULL;
     bool valid = false;
+    uintN attrs = JSPROP_SHARED;
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
+        attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
         if (arg < obj->getArgsInitialLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
             valid = true;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
@@ -609,12 +611,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     }
 
     if (valid) {
-        /*
-         * XXX ECMA specs DontEnum even for indexed properties, contrary to
-         * other array-like objects.
-         */
         Value tmp = UndefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &tmp, ArgGetter, ArgSetter, JSPROP_SHARED))
+        if (!js_DefineProperty(cx, obj, id, &tmp, ArgGetter, ArgSetter, attrs))
             return JS_FALSE;
         *objp = obj;
     }
@@ -713,8 +711,10 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject 
 
     *objp = NULL;
     bool valid = false;
+    uintN attrs = JSPROP_SHARED;
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
+        attrs = JSPROP_SHARED | JSPROP_ENUMERATE;
         if (arg < obj->getArgsInitialLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
             valid = true;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
@@ -746,13 +746,9 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject 
     }
 
     if (valid) {
-        /*
-         * XXX ECMA specs DontEnum even for indexed properties, contrary to
-         * other array-like objects.
-         */
         Value tmp = UndefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &tmp, StrictArgGetter, StrictArgSetter, JSPROP_SHARED))
-            return JS_FALSE;
+        if (!js_DefineProperty(cx, obj, id, &tmp, StrictArgGetter, StrictArgSetter, attrs))
+            return false;
         *objp = obj;
     }
     return true;
