@@ -292,12 +292,12 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
 {
   LOG(("HttpChannelParent::OnDataAvailable [this=%x]\n", this));
  
-  nsresult rv;
-  rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
-  if (NS_FAILED(rv) ||
-      bytesRead != aCount ||
-      mIPCClosed ||
-      !SendOnDataAvailable(data, aOffset, bytesRead))
+  nsCString data;
+  nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (mIPCClosed || !SendOnDataAvailable(data, aOffset, aCount))
     return NS_ERROR_UNEXPECTED; 
 
   return NS_OK;
