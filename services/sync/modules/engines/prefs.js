@@ -76,25 +76,30 @@ PrefsEngine.prototype = {
 
 function PrefStore(name) {
   Store.call(this, name);
+  Svc.Obs.add("profile-before-change", function() {
+    this.__prefs = null;
+    this.__syncPrefs = null;
+  }, this);
 }
 PrefStore.prototype = {
   __proto__: Store.prototype,
 
+ __prefs: null,
   get _prefs() {
-    let prefs = Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefBranch);
-
-    this.__defineGetter__("_prefs", function() prefs);
-    return prefs;
+    if (!this.__prefs)
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch2);
+    return this.__prefs;
   },
 
+  __syncPrefs: null,
   get _syncPrefs() {
-    let service = Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefService);
-    let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {});
-
-    this.__defineGetter__("_syncPrefs", function() syncPrefs);
-    return syncPrefs;
+    if (!this.__syncPrefs)
+      this.__syncPrefs = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefService).
+                         getBranch(WEAVE_SYNC_PREFS).
+                         getChildList("", {});
+    return this.__syncPrefs;
   },
 
   _getAllPrefs: function PrefStore__getAllPrefs() {
@@ -211,7 +216,7 @@ PrefStore.prototype = {
   },
 
   remove: function PrefStore_remove(record) {
-    this._log.trace("Ignoring remove request")
+    this._log.trace("Ignoring remove request");
   },
 
   update: function PrefStore_update(record) {
@@ -226,37 +231,59 @@ PrefStore.prototype = {
 
 function PrefTracker(name) {
   Tracker.call(this, name);
-  this._prefs.addObserver("", this, false);
+  Svc.Obs.add("profile-before-change", this);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
 
+ __prefs: null,
   get _prefs() {
-    let prefs = Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefBranch2);
-
-    this.__defineGetter__("_prefs", function() prefs);
-    return prefs;
+    if (!this.__prefs)
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch2);
+    return this.__prefs;
   },
 
+  __syncPrefs: null,
   get _syncPrefs() {
-    let service = Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefService);
-    let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {});
-
-    this.__defineGetter__("_syncPrefs", function() syncPrefs);
-    return syncPrefs;
+    if (!this.__syncPrefs)
+      this.__syncPrefs = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefService).
+                         getBranch(WEAVE_SYNC_PREFS).
+                         getChildList("", {});
+    return this.__syncPrefs;
   },
 
-  /* 25 points per pref change */
+  _enabled: false,
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic != "nsPref:changed")
-      return;
-
-    if (this._syncPrefs.indexOf(aData) != -1) {
-      this.score += 1;
-      this.addChangedID(WEAVE_PREFS_GUID);
-      this._log.trace("Preference " + aData + " changed");
+    switch (aTopic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          this._prefs.addObserver("", this, false);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          this._prefs.removeObserver("", this);
+          this._enabled = false;
+        }
+        // Fall through to clean up.
+      case "profile-before-change":
+        this.__prefs = null;
+        this.__syncPrefs = null;
+        this._prefs.removeObserver("", this);
+        break;
+      case "nsPref:changed":
+        // 25 points per pref change
+        if (this._syncPrefs.indexOf(aData) != -1) {
+          this.score += 1;
+          this.addChangedID(WEAVE_PREFS_GUID);
+          this._log.trace("Preference " + aData + " changed");
+        }
+        break;
     }
   }
 };
