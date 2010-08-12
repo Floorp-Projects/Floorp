@@ -63,7 +63,7 @@ struct nsCycleCollectionLanguageRuntime
 
 nsresult nsCycleCollector_startup();
 // Returns the number of collected nodes.
-NS_COM PRUint32 nsCycleCollector_collect();
+NS_COM PRUint32 nsCycleCollector_collect(PRBool aDrawGraph);
 NS_COM PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();
 
