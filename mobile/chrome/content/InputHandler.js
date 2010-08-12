@@ -1267,7 +1267,8 @@ GestureModule.prototype = {
     }
     catch (e) {
       Util.dumpLn("Error while handling gesture event", aEvent.type,
-                  "\nPlease report error at:", e.getSource());
+                  "\nPlease report error at:", e);
+      Cu.reportError(e);
     }
   },
 

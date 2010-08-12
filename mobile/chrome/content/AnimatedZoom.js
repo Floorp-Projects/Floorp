@@ -61,11 +61,46 @@ function AnimatedZoom(aBrowserView) {
 
   // sanitize the snapshot rectangle to fit inside viewport
   this.snapshotRect.translateInside(viewportRect).restrictTo(viewportRect).expandToIntegers();
-  this.snapshot = this._createCanvas(this.snapshotRect.width, this.snapshotRect.height);
-  let snapshotCtx = this.snapshot.getContext("2d");
+
+  this.snapshot = AnimatedZoom.createCanvas();
+  let snapshotCtx = this.snapshot.MozGetIPCContext("2d")
   snapshotCtx.clearRect(0, 0, this.snapshotRect.width, this.snapshotRect.height);
   this.bv.renderToCanvas(this.snapshot, this.snapshotRect.width, this.snapshotRect.height, this.snapshotRect.clone());
 
+  let remote = !this.bv.getBrowser().contentWindow;
+  if (remote) {
+    this.canvasReady = false;
+    this.snapshot.addEventListener("MozAsyncCanvasRender", this, false);
+  } else {
+    this.canvasReady = true;
+    this.startAnimation();
+  }
+}
+
+AnimatedZoom.prototype.handleEvent = function(aEvent) {
+  if (aEvent.type == "MozAsyncCanvasRender") {
+    this.snapshot.removeEventListener("MozAsyncCanvasRender", this, false);
+    if (aEvent.originalTarget == this.snapshot) {
+      this.canvasReady = true;
+      this.startAnimation();
+    }
+  }
+};
+
+/** Creating a canvas element of width and height. */
+AnimatedZoom.createCanvas = function(aRemote) {
+  if (!this._canvas) {
+    let canvas = document.createElementNS(kXHTMLNamespaceURI, "canvas");
+    canvas.width = Math.max(window.innerWidth, window.innerHeight) * 2;
+    canvas.height = Math.max(window.innerWidth, window.innerHeight) * 2;
+    canvas.mozOpaque = true;
+    this._canvas = canvas;
+  }
+  return this._canvas;
+};
+
+AnimatedZoom.prototype.startAnimation = function()
+{
   // stop live rendering during zooming
   this.bv.pauseRendering();
 
@@ -93,17 +128,19 @@ function AnimatedZoom(aBrowserView) {
   backgroundImage.src = "chrome://browser/content/checkerboard.png";
   ctx.fillStyle = ctx.createPattern(backgroundImage, 'repeat');
 
-  // fill the canvas with current data
-  this.updateTo(this.zoomFrom);
-}
+  if (this.zoomTo) {
+    this.updateTo(this.zoomFrom);
 
-/** Creating a canvas element of width and height. */
-AnimatedZoom.prototype._createCanvas = function(width, height) {
-  let canvas = document.createElementNS(kXHTMLNamespaceURI, "canvas");
-  canvas.width = width;
-  canvas.height = height;
-  canvas.mozOpaque = true;
-  return canvas;
+    // start animation timer
+    this.counter = 0;
+    this.inc = 1.0 / Services.prefs.getIntPref("browser.ui.zoom.animationDuration");
+    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this.interval = 1000 / Services.prefs.getIntPref("browser.ui.zoom.animationFps");
+    this.timer.initWithCallback(Util.bind(this._callback, this), this.interval, this.timer.TYPE_REPEATING_PRECISE);
+
+    // force first update to be according to FPS even though first callback would take longer
+    this.lastTime = 0;
+  }
 };
 
 /** Updates the zoom to new rect. */
@@ -130,6 +167,7 @@ AnimatedZoom.prototype.updateTo = function(nextRect) {
 
   // fill background and draw the (possibly scaled) image
   destRect.restrictTo(canvasRect).expandToIntegers();
+
   ctx.drawImage(this.snapshot,
                 Math.floor(srcRect.left), Math.floor(srcRect.top),
                 Math.floor(srcRect.width), Math.floor(srcRect.height),
@@ -150,20 +188,13 @@ AnimatedZoom.prototype.updateTo = function(nextRect) {
 
 /** Starts an animated zoom to zoomRect. */
 AnimatedZoom.prototype.animateTo = function(aZoomRect) {
-  if (this.timer)
-    return false;
-
   this.zoomTo = aZoomRect;
 
-  // start animation timer
-  this.counter = 0;
-  this.inc = 1.0 / Services.prefs.getIntPref("browser.ui.zoom.animationDuration");
-  this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  this.interval = 1000 / Services.prefs.getIntPref("browser.ui.zoom.animationFps");
-  this.timer.initWithCallback(Util.bind(this._callback, this), this.interval, this.timer.TYPE_REPEATING_PRECISE);
+  if (this.timer || !this.canvasReady)
+    return false;
 
-  // force first update to be according to FPS even though first callback would take longer
-  this.lastTime = 0;
+  this.startAnimation();
+
   return true;
 };
 
@@ -188,7 +219,7 @@ AnimatedZoom.prototype._callback = function() {
     }
   }
   catch(e) {
-    Util.dumpLn("Error while zooming. Please report error at:", e.getSource());
+    Util.dumpLn("Error while zooming. Please report error at:", e);
     this.finish();
     throw e;
   }
