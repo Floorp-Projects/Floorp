@@ -496,13 +496,12 @@ struct JSObject {
      * Reserved slot structure for Arguments objects:
      *
      * JSSLOT_PRIVATE       - the corresponding frame until the frame exits.
-     * JSSLOT_ARGS_LENGTH   - the number of actual arguments, a flag
+     * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag
      *                        indicating whether arguments.length was
-     *                        overwritten, and a flag indicating whether the
-     *                        function for which arguments were created is in
-     *                        strict mode.  This slot is not used to represent
+     *                        overwritten.  This slot is not used to represent
      *                        arguments.length after that property has been
-     *                        assigned, even if the new value is integral.
+     *                        assigned, even if the new value is integral: it's
+     *                        always the original length.
      * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that
      *                        was overwritten.
      *
@@ -516,14 +515,12 @@ struct JSObject {
     /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
     static const uint32 ARGS_FIXED_RESERVED_SLOTS = 2;
 
-    /* Lower-order bit values stolen from the length slot. */
+    /* Lower-order bit stolen from the length slot. */
     static const uint32 ARGS_LENGTH_OVERRIDDEN_BIT = 0x1;
-    static const uint32 ARGS_CALLEE_IN_STRICT_MODE_BIT = 0x2;
-    static const uint32 ARGS_PACKED_BITS_COUNT = 2;
+    static const uint32 ARGS_PACKED_BITS_COUNT = 1;
 
     /*
-     * Set the initial length of the arguments, mark the length as not
-     * overridden, and mark arguments as not being from strict mode code.
+     * Set the initial length of the arguments, and mark it as not overridden.
      */
     inline void setArgsLength(uint32 argc);
 
@@ -538,9 +535,6 @@ struct JSObject {
 
     inline const js::Value &getArgsCallee() const;
     inline void setArgsCallee(const js::Value &callee);
-
-    inline void setArgsStrictMode();
-    inline bool isArgsStrictMode() const;
 
     inline const js::Value &getArgsElement(uint32 i) const;
     inline js::Value *addressOfArgsElement(uint32 i) const;
@@ -770,6 +764,8 @@ struct JSObject {
     inline bool canHaveMethodBarrier() const;
 
     inline bool isArguments() const;
+    inline bool isNormalArguments() const;
+    inline bool isStrictArguments() const;
     inline bool isArray() const;
     inline bool isDenseArray() const;
     inline bool isSlowArray() const;
