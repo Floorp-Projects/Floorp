@@ -1396,6 +1396,12 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_TRACE)
 
+          BEGIN_CASE(JSOP_DEBUGGER)
+            prepareStubCall(Uses(0));
+            masm.move(ImmPtr(PC), Registers::ArgReg0);
+            stubCall(stubs::Debugger);
+          END_CASE(JSOP_DEBUGGER)
+
           BEGIN_CASE(JSOP_INITMETHOD)
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
