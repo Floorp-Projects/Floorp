@@ -225,53 +225,75 @@ TabStore.prototype = {
 
 function TabTracker(name) {
   Tracker.call(this, name);
-
-  Svc.Obs.add("private-browsing", this);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 
   // Make sure "this" pointer is always set correctly for event listeners
   this.onTab = Utils.bind2(this, this.onTab);
-
-  // Register as an observer so we can catch windows opening and closing:
-  Svc.WinWatcher.registerNotification(this);
-
-  // Also register listeners on already open windows
-  let wins = Svc.WinMediator.getEnumerator("navigator:browser");
-  while (wins.hasMoreElements())
-    this._registerListenersForWindow(wins.getNext());
+  this._unregisterListeners = Utils.bind2(this, this._unregisterListeners);
 }
 TabTracker.prototype = {
   __proto__: Tracker.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  _registerListenersForWindow: function TabTracker__registerListen(window) {
-    this._log.trace("Registering tab listeners in new window");
-
-    // For each topic, add or remove onTab as the listener
-    let topics = ["pageshow", "TabOpen", "TabClose", "TabSelect"];
-    let onTab = this.onTab;
-    let addRem = function(add) topics.forEach(function(topic) {
-      window[(add ? "add" : "remove") + "EventListener"](topic, onTab, false);
-    });
-
-    // Add the listeners now and remove them on unload
-    addRem(true);
-    window.addEventListener("unload", function() addRem(false), false);
+  _topics: ["pageshow", "TabOpen", "TabClose", "TabSelect"],
+  _registerListenersForWindow: function registerListenersFW(window) {
+    this._log.trace("Registering tab listeners in window");
+    for each (let topic in this._topics) {
+      window.addEventListener(topic, this.onTab, false);
+    }
+    window.addEventListener("unload", this._unregisterListeners, false);
   },
 
-  observe: function TabTracker_observe(aSubject, aTopic, aData) {
-    // Add tab listeners now that a window has opened
-    if (aTopic == "domwindowopened") {
-      let self = this;
-      aSubject.addEventListener("load", function onLoad(event) {
-        aSubject.removeEventListener("load", onLoad, false);
-        // Only register after the window is done loading to avoid unloads
-        self._registerListenersForWindow(aSubject);
-      }, false);
+  _unregisterListeners: function unregisterListeners(event) {
+    this._unregisterListenersForWindow(event.target);
+  },
+
+  _unregisterListenersForWindow: function unregisterListenersFW(window) {
+    this._log.trace("Removing tab listeners in window");
+    window.removeEventListener("unload", this._unregisterListeners, false);
+    for each (let topic in this._topics) {
+      window.removeEventListener(topic, this.onTab, false);
     }
-    else if (aTopic == "private-browsing" && aData == "enter"
-             && !PBPrefs.get("autostart"))
-      this.clearChangedIDs();
+  },
+
+  _enabled: false,
+  observe: function TabTracker_observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.Obs.add("private-browsing", this);
+          Svc.Obs.add("domwindowopened", this);
+          let wins = Svc.WinMediator.getEnumerator("navigator:browser");
+          while (wins.hasMoreElements())
+            this._registerListenersForWindow(wins.getNext());
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.Obs.remove("private-browsing", this);
+          Svc.Obs.remove("domwindowopened", this);
+          let wins = Svc.WinMediator.getEnumerator("navigator:browser");
+          while (wins.hasMoreElements())
+            this._unregisterListenersForWindow(wins.getNext());
+          this._enabled = false;
+        }
+        return;
+      case "domwindowopened":
+        // Add tab listeners now that a window has opened
+        let self = this;
+        aSubject.addEventListener("load", function onLoad(event) {
+          aSubject.removeEventListener("load", onLoad, false);
+          // Only register after the window is done loading to avoid unloads
+          self._registerListenersForWindow(aSubject);
+        }, false);
+        break;
+      case "private-browsing":
+        if (aData == "enter" && !PBPrefs.get("autostart"))
+          this.clearChangedIDs();
+    }
   },
 
   onTab: function onTab(event) {

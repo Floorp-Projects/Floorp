@@ -470,13 +470,16 @@ static inline PRBool
 DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
 {
   const nsStylePosition *pos = aEmbeddingFrame->GetStylePosition();
-  nsStyleUnit widthUnit  = pos->mWidth.GetUnit();
-  nsStyleUnit heightUnit = pos->mHeight.GetUnit();
+  const nsStyleCoord &width = pos->mWidth;
+  const nsStyleCoord &height = pos->mHeight;
 
   // XXX it would be nice to know if the size of aEmbeddingFrame's containing
   // block depends on aEmbeddingFrame, then we'd know if we can return false
   // for eStyleUnit_Percent too.
-  return (widthUnit != eStyleUnit_Coord) || (heightUnit != eStyleUnit_Coord);
+  return (width.GetUnit() != eStyleUnit_Coord &&
+          (!width.IsCalcUnit() || width.CalcHasPercent())) ||
+         (height.GetUnit() != eStyleUnit_Coord &&
+          (!height.IsCalcUnit() || height.CalcHasPercent()));
 }
 
 NS_IMETHODIMP

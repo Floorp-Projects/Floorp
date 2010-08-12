@@ -1157,29 +1157,6 @@ nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState)
   return maxSize;
 }
 
-#if 0 // XXXldb I don't think this is even needed
-/* virtual */ nscoord
-nsXULScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
-{
-  nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
-  if (widthUnit == eStyleUnit_Percent || widthUnit == eStyleUnit_Auto) {
-    nsMargin border = aReflowState.mComputedBorderPadding;
-    aDesiredSize.mMaxElementWidth = border.right + border.left;
-    mMaxElementWidth = aDesiredSize.mMaxElementWidth;
-  } else {
-    NS_NOTYETIMPLEMENTED("Use the info from the scrolled frame");
-#if 0
-    // if not set then use the cached size. If set then set it.
-    if (aDesiredSize.mMaxElementWidth == -1)
-      aDesiredSize.mMaxElementWidth = mMaxElementWidth;
-    else
-      mMaxElementWidth = aDesiredSize.mMaxElementWidth;
-#endif
-  }
-  return 0;
-}
-#endif
-
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsXULScrollFrame::GetFrameName(nsAString& aResult) const
