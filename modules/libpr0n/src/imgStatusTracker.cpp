@@ -319,10 +319,7 @@ imgStatusTracker::RecordStartContainer(imgIContainer* aContainer)
 void
 imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy, imgIContainer* aContainer)
 {
-  // We only want to send onStartContainer once, but we might get multiple
-  // OnStartContainer calls (e.g. from multipart/x-mixed-replace).
-  PRBool alreadySent = (mState & stateHasSize) != 0;
-  if (!alreadySent && !aProxy->NotificationsDeferred())
+  if (!aProxy->NotificationsDeferred())
     aProxy->OnStartContainer(aContainer);
 }
 
