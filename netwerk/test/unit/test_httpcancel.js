@@ -4,7 +4,6 @@
 do_load_httpd_js();
 
 const NS_BINDING_ABORTED = 0x804b0002;
-const TEST_COUNT = 2;
 
 var observer = {
   QueryInterface: function eventsink_qi(iid) {
@@ -34,14 +33,8 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    this.currentTest++;
-    if (this.currentTest == TEST_COUNT)
-      httpserv.stop(do_test_finished);
-    else
-      execute_test(this.currentTest)
-  },
-
-  currentTest : 0
+    httpserv.stop(do_test_finished);
+  }
 };
 
 function makeChan(url) {
@@ -55,23 +48,14 @@ function makeChan(url) {
 
 var httpserv = null;
 
-function execute_test(id) {
-  if (id < 0 || id >= TEST_COUNT)
-    do_throw("Invalid test id.");
-
+function execute_test() {
   var chan = makeChan("http://localhost:4444/failtest");
  
-  if (id == 0) { 
-    listener.shouldNotStart = true;
-    var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
-    obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
-    obs.addObserver(observer, "http-on-modify-request", false); 
-  }
+  var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
+  obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+  obs.addObserver(observer, "http-on-modify-request", false); 
  
   chan.asyncOpen(listener, null);
-
-  if (id == 1) 
-    chan.cancel(NS_BINDING_ABORTED);
 }
 
 function run_test() {
@@ -79,7 +63,7 @@ function run_test() {
   httpserv.registerPathHandler("/failtest", failtest);
   httpserv.start(4444);
   
-  execute_test(0);
+  execute_test();
 
   do_test_pending();
 }
