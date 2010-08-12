@@ -488,6 +488,16 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, js::Value *vp);
 extern JSBool
 js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
 
+/*
+ * Get the arguments object for the given frame.  If the frame is strict mode
+ * code, its current arguments will be copied into the arguments object.
+ *
+ * NB: Callers *must* get the arguments object before any parameters are
+ *     mutated when the frame is strict mode code!  The emitter ensures this
+ *     occurs for strict mode functions containing syntax which might mutate a
+ *     named parameter by synthesizing an arguments access at the start of the
+ *     function.
+ */
 extern JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 

@@ -1131,8 +1131,7 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 bool
 CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
 {
-    if (tc->needStrictChecks() &&
-        lhs->pn_type == TOK_NAME) {
+    if (tc->needStrictChecks() && lhs->pn_type == TOK_NAME) {
         JSAtom *atom = lhs->pn_atom;
         JSAtomState *atomState = &cx->runtime->atomState;
         if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
@@ -2821,8 +2820,8 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     JSFunction *fun = (JSFunction *) funbox->object;
 
     /* Now parse formal argument list and compute fun->nargs. */
-    JSParseNode *list = NULL;
-    if (!functionArguments(funtc, funbox, fun, &list))
+    JSParseNode *prolog = NULL;
+    if (!functionArguments(funtc, funbox, fun, &prolog))
         return NULL;
 
     if (type == GETTER && fun->nargs > 0) {
@@ -2866,6 +2865,24 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 #endif
     pn->pn_pos.end = tokenStream.currentToken().pos.end;
 
+    /*
+     * Strict mode functions' arguments objects copy initial parameter values.
+     * We create arguments objects lazily -- but that doesn't work for strict
+     * mode functions where a parameter might be modified and arguments might
+     * be accessed.  For such functions we synthesize an access to arguments to
+     * initialize it with the original parameter values.
+     */
+    if (funtc.inStrictMode()) {
+        /*
+         * Fruit of the poisonous tree: eval forces eager arguments
+         * creation in (strict mode) parent functions.
+         */
+        if (outertc->inFunction() && outertc->inStrictMode()) {
+            if (funtc.callsEval())
+                outertc->noteCallsEval();
+        }
+    }
+
 #if JS_HAS_DESTRUCTURING
     /*
      * If there were destructuring formal parameters, prepend the initializing
@@ -2874,7 +2891,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
      * parameter destructuring code without bracing the decompilation of the
      * function body's lexical scope.
      */
-    if (list) {
+    if (prolog) {
         if (body->pn_arity != PN_LIST) {
             JSParseNode *block;
 
@@ -2894,7 +2911,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 
         item->pn_type = TOK_SEMI;
         item->pn_pos.begin = item->pn_pos.end = body->pn_pos.begin;
-        item->pn_kid = list;
+        item->pn_kid = prolog;
         item->pn_next = body->pn_head;
         body->pn_head = item;
         if (body->pn_tail == &body->pn_head)
@@ -5663,15 +5680,6 @@ Parser::statement()
     return MatchOrInsertSemicolon(context, &tokenStream) ? pn : NULL;
 }
 
-static void
-NoteArgumentsUse(JSTreeContext *tc)
-{
-    JS_ASSERT(tc->inFunction());
-    tc->flags |= TCF_FUN_USES_ARGUMENTS;
-    if (tc->funbox)
-        tc->funbox->node->pn_dflags |= PND_FUNARG;
-}
-
 JSParseNode *
 Parser::variables(bool inLetHead)
 {
@@ -5837,7 +5845,7 @@ Parser::variables(bool inLetHead)
 
             if (tc->inFunction() &&
                 atom == context->runtime->atomState.argumentsAtom) {
-                NoteArgumentsUse(tc);
+                tc->noteArgumentsUse();
                 if (!let)
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
             }
@@ -8188,7 +8196,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
              * a reference of the form foo.arguments, which ancient code may
              * still use instead of arguments (more hate).
              */
-            NoteArgumentsUse(tc);
+            tc->noteArgumentsUse();
 
             /*
              * Bind early to JSOP_ARGUMENTS to relieve later code from having

@@ -458,9 +458,9 @@ public:
 #define PNX_DESTRUCT   0x200            /* destructuring special cases:
                                            1. shorthand syntax used, at present
                                               object destructuring ({x,y}) only;
-                                           2. the first child of function body
-                                              is code evaluating destructuring
-                                              arguments */
+                                           2. code evaluating destructuring
+                                              arguments occurs before function
+                                              body */
 #define PNX_HOLEY      0x400            /* array initialiser has holes */
 
     uintN frameLevel() const {
