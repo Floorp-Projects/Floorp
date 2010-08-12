@@ -94,8 +94,8 @@ function debug() {
 
     dump(endl);
 
-    dump('location from Browser: ' + Browser.selectedBrowser.contentWindow.location + endl);
-    dump('location from BV     : ' + bv.getBrowser().contentWindow.location + endl);
+    dump('location from Browser: ' + Browser.selectedBrowser.currentURI.spec + endl);
+    dump('location from BV     : ' + bv.getBrowser().currentURI.spec + endl);
 
     dump(endl + endl);
 
@@ -456,6 +456,9 @@ var Browser = {
       let curEl = document.activeElement;
       if (curEl && curEl.scrollIntoView)
         curEl.scrollIntoView(false);
+
+      // Preload the zoom snapshot canvas, because it's slow on Android (bug 586353)
+      AnimatedZoom.createCanvas().MozGetIPCContext("2d");
     }
     window.addEventListener("resize", resizeHandler, false);
 
