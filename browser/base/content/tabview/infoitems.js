@@ -150,10 +150,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         return;
 
       var data = this.getStorageData();
-  /*
-      if (GroupItems.groupItemStorageSanity(data))
-        Storage.saveGroupItem(Utils.getCurrentWindow(), data);
-  */
+
     } catch(e) {
       Utils.log(e);
     }
@@ -240,7 +237,6 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         Items.unsquish();
       });
 
-  /*     Storage.deleteGroupItem(Utils.getCurrentWindow(), this.id); */
     } catch(e) {
       Utils.log(e);
     }

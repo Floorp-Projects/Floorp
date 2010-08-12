@@ -949,12 +949,7 @@ window.Items = {
 
     var a;
     for (a = 0; a < count; a++) {
-/*
-      if (animate == 'sometimes')
-        immediately = (typeof item.groupItemData.row == 'undefined' || item.groupItemData.row == row);
-      else
-*/
-        immediately = !animate;
+      immediately = !animate;
 
       if (rects)
         rects.push(new Rect(box));
@@ -967,11 +962,6 @@ window.Items = {
             item.setZ(options.z);
         }
       }
-
-/*
-      item.groupItemData.column = column;
-      item.groupItemData.row = row;
-*/
 
       box.left += box.width + padding;
       column++;

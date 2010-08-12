@@ -393,10 +393,21 @@ input.defaultName:hover {
   position: absolute;
   opacity: .4;
   cursor: pointer;
+  background-image: url(chrome://browser/skin/tabview/stack-expander.png);
+  width: 24px;
+  height: 24px;
 }
 
 .stackExpander:hover {
   opacity: .7 !important;
+}
+
+.shield {
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
 }
 
 /* Resizable
@@ -404,8 +415,10 @@ input.defaultName:hover {
 .resizer {
   background-image: url(chrome://global/skin/icons/resizer.png);
   position: absolute;
-  bottom: 6px;
-  right: 6px;
+	width: 16px;
+	height: 16px;
+	bottom: 0px;
+	right: 0px;
   opacity: .2;
 }
 

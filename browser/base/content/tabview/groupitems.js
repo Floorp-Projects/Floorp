@@ -63,7 +63,7 @@
 //   container - a DOM element to use as the container for this groupItem; otherwise will create
 //   title - the title for the groupItem; otherwise blank
 //   dontPush - true if this groupItem shouldn't push away on creation; default is false
-window.GroupItem = function GroupItem(listOfEls, options) {
+let GroupItem = function GroupItem(listOfEls, options) {
   try {
   if (typeof options == 'undefined')
     options = {};
@@ -123,7 +123,6 @@ window.GroupItem = function GroupItem(listOfEls, options) {
   $container
     .css({zIndex: -100})
     .appendTo("body");
-/*     .dequeue(); */
 
   // ___ New Tab Button
   this.$ntb = iQ("<div>")
@@ -140,11 +139,6 @@ window.GroupItem = function GroupItem(listOfEls, options) {
   // ___ Resizer
   this.$resizer = iQ("<div>")
     .addClass('resizer')
-    .css({
-      position: "absolute",
-      width: 16, height: 16,
-      bottom: 0, right: 0,
-    })
     .appendTo($container)
     .hide();
 
@@ -249,8 +243,7 @@ window.GroupItem = function GroupItem(listOfEls, options) {
   }
 
   // ___ Stack Expander
-  this.$expander = iQ("<img/>")
-    .attr("src", "chrome://browser/skin/tabview/stack-expander.png")
+  this.$expander = iQ("<div/>")
     .addClass("stackExpander")
     .appendTo($container)
     .hide();
@@ -380,7 +373,11 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Used to adjust the width of the title box depending on groupItem width and title size.
   adjustTitleSize: function() {
     Utils.assert(this.bounds, 'bounds needs to have been set');
-    var w = Math.min(this.bounds.width - 35, Math.max(150, this.getTitle().length * 6));
+    let closeButton = iQ('.close', this.container);
+    var w = Math.min(this.bounds.width - closeButton.width() - closeButton.css('right'),
+                     Math.max(150, this.getTitle().length * 6));
+    // The * 6 multiplier calculation is assuming that characters in the title
+    // are approximately 6 pixels wide. Bug 586545
     var css = {width: w};
     this.$title.css(css);
     this.$titleShield.css(css);
@@ -394,8 +391,10 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
-    box.inset(6, 6);
 
+    // Make the computed bounds' "padding" and new tab button margin actually be
+    // themeable --OR-- compute this from actual bounds. Bug 586546
+    box.inset(6, 6);
     box.height -= 33; // For new tab button
 
     return box;
@@ -556,7 +555,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Adds an item to the groupItem.
   // Parameters:
   //
-  //   a - The item to add. Can be an <Item>, a DOM element or a jQuery object.
+  //   a - The item to add. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
   //   dropPos - An object with left and top properties referring to the location dropped at.  Optional.
   //   options - An object with optional settings for this call. Currently the only one is dontArrange.
@@ -591,8 +590,10 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         wasAlreadyInThisGroupItem = true;
       }
 
-      // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
-      // (right now it can match the thumbnail above it and go there)
+      // TODO: You should be allowed to drop in the white space at the bottom
+      // and have it go to the end (right now it can match the thumbnail above
+      // it and go there)
+      // Bug 586548
       function findInsertionPoint(dropPos) {
         if (self.shouldStack(self._children.length + 1))
           return 0;
@@ -672,7 +673,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Removes an item from the groupItem.
   // Parameters:
   //
-  //   a - The item to remove. Can be an <Item>, a DOM element or a jQuery object.
+  //   a - The item to remove. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
   //   options - An object with optional settings for this call. Currently the only one is dontArrange.
   remove: function(a, options) {
@@ -763,7 +764,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           top: dT + childBB.height + Math.min(7, (this.getBounds().bottom-childBB.bottom)/2),
           // TODO: Why the magic -6? because the childBB.width seems to be over-sizing itself.
           // But who can blame an object for being a bit optimistic when self-reporting size.
-          // It has to impress the ladies somehow.
+          // It has to impress the ladies somehow. Bug 586549
           left: dL + childBB.width/2 - this.$expander.width()/2 - 6,
         });
   },
@@ -892,7 +893,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     var zIndex = this.getZ() + count + 1;
 
-    var Pi = Math.acos(-1);
     var maxRotation = 35; // degress
     var scale = 0.8;
     var newTabsPad = 10;
@@ -981,17 +981,8 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       };
     }
 
-    // ___ we're stacked, but command isn't held down
-    /*if (!Keys.meta) {
-      GroupItems.setActiveGroupItem(self);
-      return { shouldZoom: true };
-    }*/
-
     GroupItems.setActiveGroupItem(self);
     return { shouldZoom: true };
-
-    /*this.expand();
-    return {};*/
   },
 
   expand: function() {
@@ -1019,13 +1010,17 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var overlayHeight = Math.min(window.innerHeight - (padding * 2), h*row + padding*(row+1));
 
     var pos = {left: startBounds.left, top: startBounds.top};
-    pos.left -= overlayWidth/3;
-    pos.top  -= overlayHeight/3;
+    pos.left -= overlayWidth / 3;
+    pos.top  -= overlayHeight / 3;
 
-    if (pos.top < 0)  pos.top = 20;
-    if (pos.left < 0) pos.left = 20;
-    if (pos.top+overlayHeight > window.innerHeight) pos.top = window.innerHeight-overlayHeight-20;
-    if (pos.left+overlayWidth > window.innerWidth)  pos.left = window.innerWidth-overlayWidth-20;
+    if (pos.top < 0)
+      pos.top = 20;
+    if (pos.left < 0)
+      pos.left = 20;
+    if (pos.top + overlayHeight > window.innerHeight)
+      pos.top = window.innerHeight - overlayHeight - 20;
+    if (pos.left + overlayWidth > window.innerWidth)
+      pos.left = window.innerWidth - overlayWidth - 20;
 
     $tray
       .animate({
@@ -1044,12 +1039,8 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
 
     var $shield = iQ('<div>')
+      .addClass('shield')
       .css({
-        left: 0,
-        top: 0,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        position: 'absolute',
         zIndex: 99997
       })
       .appendTo('body')
@@ -1237,6 +1228,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
                 // of the groupItem's tab.
                 // TODO: This is probably a terrible hack that sets up a race
                 // condition. We need a better solution.
+                // Bug 586551
                 setTimeout(function() {
                   self._sendToSubscribers("tabAdded", { groupItemId: self.id });
                 }, 1);
@@ -1250,6 +1242,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // sometimes a long delay before the animation occurs.
     // We need to fix this--immediate response to a users
     // actions is necessary for a good user experience.
+    // Bug 586552
     self.onNextNewTab(doNextTab);
   },
 
@@ -1274,6 +1267,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var currentIndex;
 
     // ToDo: optimisation is needed to further reduce the tab move.
+    // Bug 586553
     this._children.forEach(function(tabItem) {
       tabBarTabs.some(function(tab, i) {
         if (tabItem.tab == tab) {
@@ -1357,10 +1351,6 @@ window.GroupItems = {
   // ----------
   // Function: init
   init: function() {
-/*
-    Utils.log("hello");
-    Utils.log("Groups", Groups);
-*/
   },
 
   // ----------
@@ -1452,6 +1442,7 @@ window.GroupItems = {
   // Given persistent storage data for a groupItem, returns true if it appears to not be damaged.
   groupItemStorageSanity: function(groupItemData) {
     // TODO: check everything
+    // Bug 586555
     var sane = true;
     if (!Utils.isRect(groupItemData.bounds)) {
       Utils.log('GroupItems.groupItemStorageSanity: bad bounds', groupItemData.bounds);
@@ -1465,7 +1456,7 @@ window.GroupItems = {
   // Function: getGroupItemWithTitle
   // Returns the <GroupItem> that has the given title, or null if none found.
   // TODO: what if there are multiple groupItems with the same title??
-  //       Right now, looks like it'll return the last one.
+  //       Right now, looks like it'll return the last one. Bug 586557
   getGroupItemWithTitle: function(title) {
     var result = null;
     this.groupItems.forEach(function(groupItem) {
@@ -1582,6 +1573,7 @@ window.GroupItems = {
   // Does what it says on the tin.
   // TODO: Make more robust and improve documentation,
   // Also, this probably belongs in tabitems.js
+  // Bug 586558
   positionNewTabAtBottom: function(tabItem) {
     let windowBounds = Items.getSafeWindowBounds();
 
