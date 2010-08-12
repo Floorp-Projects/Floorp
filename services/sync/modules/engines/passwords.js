@@ -44,7 +44,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://services-sync/base_records/collection.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/type_records/passwords.js");
@@ -224,16 +223,33 @@ PasswordStore.prototype = {
 
 function PasswordTracker(name) {
   Tracker.call(this, name);
-  Observers.add("passwordmgr-storage-changed", this);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  /* A single add, remove or change is 15 points, all items removed is 50 */
+  _enabled: false,
   observe: function PasswordTracker_observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.Obs.add("passwordmgr-storage-changed", this);
+          this._enabled = true;
+        }
+        return;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.Obs.remove("passwordmgr-storage-changed", this);
+          this._enabled = false;
+        }
+        return;
+    }
+
     if (this.ignoreAll)
       return;
 
+    // A single add, remove or change is 15 points, all items removed is 50
     switch (aData) {
     case 'modifyLogin':
       aSubject = aSubject.QueryInterface(Ci.nsIArray).
