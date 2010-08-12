@@ -2532,6 +2532,26 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
         funtc->lexdeps.clear();
     }
 
+    /*
+     * Check whether any parameters have been assigned within this function.
+     * In strict mode parameters do not alias arguments[i], and to make the
+     * arguments object reflect initial parameter values prior to any mutation
+     * we create it eagerly whenever parameters are (or might, in the case of
+     * calls to eval) be assigned.
+     */
+    if (funtc->inStrictMode() && funbox->object->getFunctionPrivate()->nargs > 0) {
+        JSAtomListIterator iter(&funtc->decls);
+        JSAtomListElement *ale;
+
+        while ((ale = iter()) != NULL) {
+            JSDefinition *dn = ALE_DEFN(ale);
+            if (dn->kind() == JSDefinition::ARG && dn->isAssigned()) {
+                funbox->tcflags |= TCF_FUN_MUTATES_PARAMETER;
+                break;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -2952,7 +2972,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         return NULL;
 
     /* If the surrounding function is not strict code, reset the lexer. */
-    if (!(outertc->flags & TCF_STRICT_MODE_CODE))
+    if (!outertc->inStrictMode())
         tokenStream.setStrictMode(false);
 
     return result;
@@ -3527,7 +3547,8 @@ NoteLValue(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN dflag = PND_
 
     pn->pn_dflags |= dflag;
 
-    if (pn->pn_atom == cx->runtime->atomState.argumentsAtom)
+    JSAtom *lname = pn->pn_atom;
+    if (lname == cx->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
 }
 
@@ -7018,6 +7039,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 if (pn->pn_atom == context->runtime->atomState.evalAtom) {
                     /* Select JSOP_EVAL and flag tc as heavyweight. */
                     pn2->pn_op = JSOP_EVAL;
+                    tc->noteCallsEval();
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
