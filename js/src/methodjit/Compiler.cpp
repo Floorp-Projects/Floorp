@@ -289,7 +289,6 @@ mjit::Compiler::finishThisUp()
             script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
             script->mics[i].u.name.typeConst = mics[i].u.name.typeConst;
             script->mics[i].u.name.dataConst = mics[i].u.name.dataConst;
-            script->mics[i].u.name.dataWrite = mics[i].u.name.dataWrite;
 #if defined JS_PUNBOX64
             script->mics[i].patchValueOffset = mics[i].patchValueOffset;
 #endif
@@ -3381,7 +3380,6 @@ mjit::Compiler::jsop_setgname(uint32 index)
 
     mic.u.name.typeConst = fe->isTypeKnown();
     mic.u.name.dataConst = fe->isConstant();
-    mic.u.name.dataWrite = !mic.u.name.dataConst || !fe->getValue().isUndefined();
 
     if (!mic.u.name.dataConst) {
         dataReg = frame.ownRegForData(fe);
