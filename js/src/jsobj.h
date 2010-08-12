@@ -306,6 +306,9 @@ struct JSObject {
     inline JSScope *scope() const;
     inline uint32 shape() const;
 
+    /* Tolerates shapeless objects. */
+    inline uint32 shapeUnchecked() const;
+
     bool isDelegate() const {
         return (flags & jsuword(1)) != jsuword(0);
     }

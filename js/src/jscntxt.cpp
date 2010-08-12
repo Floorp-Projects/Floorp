@@ -522,6 +522,7 @@ JSThreadData::purge(JSContext *cx)
 
     /* Purge cached native iterators. */
     memset(cachedNativeIterators, 0, sizeof(cachedNativeIterators));
+    lastNativeIterator = NULL;
 
     dtoaCache.s = NULL;
 }

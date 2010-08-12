@@ -576,6 +576,12 @@ JSObject::shape() const
     return map->shape;
 }
 
+inline uint32
+JSObject::shapeUnchecked() const
+{
+    return map->shape;
+}
+
 inline const js::Value &
 JSObject::lockedGetSlot(uintN slot) const
 {
