@@ -4759,7 +4759,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
        * custom titlebar we paint ourselves.
        */
 
-      if (mNonClientMargins.top == -1)
+      if (!mCustomNonClient || mNonClientMargins.top == -1)
         break;
 
       {
