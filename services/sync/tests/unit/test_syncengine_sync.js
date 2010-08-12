@@ -46,8 +46,8 @@ SteamStore.prototype = {
     return (id in this.items);
   },
 
-  createRecord: function(id) {
-    var record = new SteamRecord();
+  createRecord: function(id, uri) {
+    var record = new SteamRecord(uri);
     record.id = id;
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
@@ -257,7 +257,7 @@ function test_syncStartup_metaGet404() {
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     _("New bulk key was uploaded");
-    let key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
+    let key = crypto_steam.data.keyring["../keys/pubkey"];
     do_check_eq(key.wrapped, "fake-symmetric-key-0");
     do_check_eq(key.hmac, "fake-symmetric-key-0                                            ");
 
@@ -439,7 +439,7 @@ function test_syncStartup_badKeyWipesServerData() {
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     // New bulk key was uploaded
-    key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
+    key = crypto_steam.data.keyring["../keys/pubkey"];
     do_check_eq(key.wrapped, "fake-symmetric-key-1");
     do_check_eq(key.hmac, "fake-symmetric-key-1                                            ");
 

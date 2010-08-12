@@ -51,7 +51,7 @@ function run_test() {
     let res = new Resource("http://localhost:8080/record");
     let resp = res.get();
 
-    let rec = new WBORecord();
+    let rec = new WBORecord("http://localhost:8080/record");
     rec.deserialize(res.data);
     do_check_eq(rec.id, "asdf-1234-asdf-1234"); // NOT "record"!
 

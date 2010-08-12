@@ -52,8 +52,25 @@ function test_createKeypair() {
   let id = ID.set('foo', new Identity('foo', 'luser'));
   id.password = passphrase;
 
+  _("Key pair requires URIs for both keys.");
+  let error;
+  try {
+    let result = PubKeys.createKeypair(id);
+  } catch(ex) {
+    error = ex;
+  }
+  do_check_eq(error, "Missing or null parameter 'pubkeyUri'.");
+
+  error = undefined;
+  try {
+    let result = PubKeys.createKeypair(id, "http://host/pub/key");
+  } catch(ex) {
+    error = ex;
+  }
+  do_check_eq(error, "Missing or null parameter 'privkeyUri'.");
+
   _("Generate a key pair.");
-  let result = PubKeys.createKeypair(id, "http://pub/key", "http://priv/key");
+  let result = PubKeys.createKeypair(id, "http://host/pub/key", "http://host/priv/key");
 
   _("Check that salt and IV are of correct length.");
   // 16 bytes = 24 base64 encoded characters
@@ -61,10 +78,13 @@ function test_createKeypair() {
   do_check_eq(result.privkey.iv.length, 24);
 
   _("URIs are set.");
-  do_check_eq(result.pubkey.uri.spec, "http://pub/key");
-  do_check_eq(result.pubkey.privateKeyUri.spec, "http://priv/key");
-  do_check_eq(result.privkey.uri.spec, "http://priv/key");
-  do_check_eq(result.privkey.publicKeyUri.spec, "http://pub/key");
+  do_check_eq(result.pubkey.uri.spec, "http://host/pub/key");
+  do_check_eq(result.pubkey.privateKeyUri.spec, "http://host/priv/key");
+  do_check_eq(result.pubkey.payload.privateKeyUri, "../priv/key");
+
+  do_check_eq(result.privkey.uri.spec, "http://host/priv/key");
+  do_check_eq(result.privkey.publicKeyUri.spec, "http://host/pub/key");
+  do_check_eq(result.privkey.payload.publicKeyUri, "../pub/key");
 
   _("UTF8 encoded passphrase was used.");
   do_check_true(Svc.Crypto.verifyPassphrase(result.privkey.keyData,
