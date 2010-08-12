@@ -1025,7 +1025,8 @@
           //    == 1              false                     YES
           //    == 1              true                      NO
           //    > 1               false/true                NO
-          var owner = (aURIs.length > 1) || aLoadInBackground ? null : this.selectedTab;
+          var multiple = aURIs.length > 1;
+          var owner = multiple || aLoadInBackground ? null : this.selectedTab;
           var firstTabAdded = null;
 
           if (aReplace) {
@@ -1037,7 +1038,7 @@
             }
           }
           else
-            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: true});
+            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: multiple});
 
           var tabNum = this.tabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
@@ -1333,9 +1334,18 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
             if (aParams)
               var animate = aParams.animate;
+
+            // Handle requests for synchronously removing an already
+            // asynchronously closing tab.
+            if (!animate &&
+                this._removingTabs.indexOf(aTab) > -1) {
+              this._endRemoveTab(aTab);
+              return;
+            }
+
+            var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
 
             if (!this._beginRemoveTab(aTab, false, null, true))
               return;
@@ -1576,12 +1586,15 @@
             }
 
             let removing = this._removingTabs;
-            let ignoreRemoving = function(tab) removing.indexOf(tab) == -1;
+            function keepRemaining(tab) {
+              // A tab remains only if it's not being removed nor blurred
+              return removing.indexOf(tab) == -1 && tab != aTab;
+            }
 
             // Switch to a visible tab unless there aren't any remaining
-            let remainingTabs = this.visibleTabs.filter(ignoreRemoving);
+            let remainingTabs = this.visibleTabs.filter(keepRemaining);
             if (remainingTabs.length == 0)
-              remainingTabs = Array.filter(this.tabs, ignoreRemoving);
+              remainingTabs = Array.filter(this.tabs, keepRemaining);
 
             // Try to find a remaining tab that comes after the given tab
             var tab = aTab;
@@ -1589,8 +1602,15 @@
               tab = tab.nextSibling;
             } while (tab && remainingTabs.indexOf(tab) == -1);
 
-            // If no tab was found, give the end of the remaining tabs
-            this.selectedTab = tab ? tab : remainingTabs.pop();
+            if (!tab) {
+              tab = aTab;
+
+              do {
+                tab = tab.previousSibling;
+              } while (tab && remainingTabs.indexOf(tab) == -1);
+            }
+
+            this.selectedTab = tab;
           ]]>
         </body>
       </method>
@@ -1786,11 +1806,8 @@
           if (aIndex < 0)
             aIndex += tabs.length;
 
-          if (aIndex >= 0 && aIndex < tabs.length) {
-            let nextTab = tabs[aIndex];
-            if (nextTab != this.selectedTab)
-              this.selectedTab = nextTab;
-          }
+          if (aIndex >= 0 && aIndex < tabs.length)
+            this.selectedTab = tabs[aIndex];
 
           if (aEvent) {
             aEvent.preventDefault();
@@ -2417,9 +2434,9 @@
       </method>
       <method name="_canScrollToElement">
         <parameter name="tab"/>
-        <body>
-          return !tab.pinned;
-        </body>
+        <body><![CDATA[
+          return !tab.pinned && !tab.hidden;
+        ]]></body>
       </method>
     </implementation>
 
@@ -2431,7 +2448,7 @@
          var tabs = document.getBindingParent(this);
          tabs.removeAttribute("overflow");
 
-         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser._endRemoveTab,
+         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
                                                tabs.tabbrowser);
 
          tabs._positionPinnedTabs();
@@ -2596,9 +2613,8 @@
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "noclose");
             else {
-              let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
-              if (tab && tab.hidden)
-                tab = this.tabbrowser.visibleTabs[0];
+              // Grab the last tab for size comparison
+              let tab = this.tabbrowser.visibleTabs.pop();
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else

@@ -172,6 +172,7 @@ SpacerFrame::GetDesiredSize(nsHTMLReflowMetrics& aMetrics, nsSize aPercentBase)
       float factor = position->mWidth.GetPercentValue();
       aMetrics.width = NSToCoordRound(factor * aPercentBase.width);
     }
+    // else treat enumerated values and calc() like 'auto'
 
     // height
     unit = position->mHeight.GetUnit();

@@ -60,12 +60,12 @@ enum nsStyleUnit {
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
   eStyleUnit_Enumerated   = 32,     // (int) value has enumerated meaning
-  // The following are all of the eCSSUnit_Calc_* types (but not
-  // eCSSUnit_Calc itself, since we don't need to distinguish
-  // calc(min()) from min() in compute dstyle).  They are all weak
+  // The following are all of the eCSSUnit_Calc_* types.  They are weak
   // pointers to a calc tree allocated by nsStyleContext::Alloc.
   // NOTE:  They are in the same order as the eCSSUnit_Calc_* values so
   // that converting between the two sets is just addition/subtraction.
+  eStyleUnit_Calc         = 39,     // (Array*) calc() toplevel, to
+                                    // distinguish 50% from calc(50%), etc.
   eStyleUnit_Calc_Plus    = 40,     // (Array*) + node within calc()
   eStyleUnit_Calc_Minus   = 41,     // (Array*) - within calc
   eStyleUnit_Calc_Times_L = 42,     // (Array*) num * val within calc
@@ -121,8 +121,18 @@ public:
   }
 
   PRBool IsCalcUnit() const {
-    return eStyleUnit_Calc_Plus <= mUnit && mUnit <= eStyleUnit_Calc_Maximum;
+    return eStyleUnit_Calc <= mUnit && mUnit <= eStyleUnit_Calc_Maximum;
   }
+
+  PRBool IsCoordPercentCalcUnit() const {
+    return mUnit == eStyleUnit_Coord ||
+           mUnit == eStyleUnit_Percent ||
+           IsCalcUnit();
+  }
+
+  // Does this calc() expression have any percentages inside it?  Can be
+  // called only when IsCalcUnit() is true.
+  PRBool CalcHasPercent() const;
 
   PRBool IsArrayValue() const {
     return IsCalcUnit();
