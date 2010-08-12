@@ -91,6 +91,9 @@ nsresult nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *aRetval
 
 nsresult nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext)
 {
+  if (!mozilla::AndroidBridge::Bridge())
+    return NS_ERROR_FAILURE;
+
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
   return mozilla::AndroidBridge::Bridge()->
