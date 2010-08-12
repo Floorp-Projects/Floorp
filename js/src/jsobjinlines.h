@@ -729,9 +729,9 @@ out:
 }
 
 static JS_ALWAYS_INLINE JSObject *
-NewFunction(JSContext *cx, JSObject *proto, JSObject *parent)
+NewFunction(JSContext *cx, JSObject *parent)
 {
-    return detail::NewObject<WithProto::Class, true>(cx, &js_FunctionClass, proto, parent);
+    return detail::NewObject<WithProto::Class, true>(cx, &js_FunctionClass, NULL, parent);
 }
 
 template <WithProto::e withProto>
@@ -745,10 +745,9 @@ template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    if (clasp == &js_FunctionClass)
-        return NewFunction(cx, NULL, parent);
-
-    return NewNonFunction<withProto>(cx, clasp, proto, parent);
+    return (clasp == &js_FunctionClass)
+           ? detail::NewObject<withProto, true>(cx, clasp, proto, parent)
+           : detail::NewObject<withProto, false>(cx, clasp, proto, parent);
 }
 
 } /* namespace js */
