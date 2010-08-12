@@ -418,6 +418,13 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     rv |= aStream->WriteObject(mNodeInfoManager->DocumentPrincipal(),
                                PR_TRUE);
     
+#ifdef DEBUG
+    // XXX Worrisome if we're caching things without system principal.
+    if (nsContentUtils::IsSystemPrincipal(mNodeInfoManager->DocumentPrincipal())) {
+        NS_WARNING("Serializing document without system principal");
+    }
+#endif
+
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
     if (mRoot)
