@@ -575,7 +575,7 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GarbageCollect()
+nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
 {
   // Always permit this in debug builds.
 #ifndef DEBUG
@@ -584,7 +584,7 @@ nsDOMWindowUtils::GarbageCollect()
   }
 #endif
 
-  nsJSContext::CC();
+  nsJSContext::CC(aListener);
 
   return NS_OK;
 }
