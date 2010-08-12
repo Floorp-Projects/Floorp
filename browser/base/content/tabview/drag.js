@@ -62,39 +62,35 @@ var drag = {
 //   isResizing - (boolean) is this a resizing instance? or (if false) dragging?
 //   isFauxDrag - (boolean) true if a faux drag, which is used when simply snapping.
 var Drag = function(item, event, isResizing, isFauxDrag) {
-  try {
-    Utils.assert(item && (item.isAnItem || item.isAFauxItem), 
-        'must be an item, or at least a faux item');
+  Utils.assert(item && (item.isAnItem || item.isAFauxItem), 
+      'must be an item, or at least a faux item');
 
-    this.isResizing = isResizing || false;
-    this.item = item;
-    this.el = item.container;
-    this.$el = iQ(this.el);
-    this.parent = this.item.parent;
-    this.startPosition = new Point(event.clientX, event.clientY);
-    this.startTime = Date.now();
+  this.isResizing = isResizing || false;
+  this.item = item;
+  this.el = item.container;
+  this.$el = iQ(this.el);
+  this.parent = this.item.parent;
+  this.startPosition = new Point(event.clientX, event.clientY);
+  this.startTime = Date.now();
 
-    this.item.isDragging = true;
-    this.item.setZ(999999);
+  this.item.isDragging = true;
+  this.item.setZ(999999);
 
-    this.safeWindowBounds = Items.getSafeWindowBounds();
+  this.safeWindowBounds = Items.getSafeWindowBounds();
 
-    Trenches.activateOthersTrenches(this.el);
+  Trenches.activateOthersTrenches(this.el);
 
-    if (!isFauxDrag) {
-      // When a tab drag starts, make it the focused tab.
-      if (this.item.isAGroupItem) {
-        var tab = UI.getActiveTab();
-        if (!tab || tab.parent != this.item) {
-          if (this.item._children.length)
-            UI.setActiveTab(this.item._children[0]);
-        }
-      } else if (this.item.isATabItem) {
-        UI.setActiveTab(this.item);
+  if (!isFauxDrag) {
+    // When a tab drag starts, make it the focused tab.
+    if (this.item.isAGroupItem) {
+      var tab = UI.getActiveTab();
+      if (!tab || tab.parent != this.item) {
+        if (this.item._children.length)
+          UI.setActiveTab(this.item._children[0]);
       }
+    } else if (this.item.isATabItem) {
+      UI.setActiveTab(this.item);
     }
-  } catch(e) {
-    Utils.log(e);
   }
 };
 
@@ -121,27 +117,32 @@ Drag.prototype = {
     var snappedTrenches = {};
 
     // OH SNAP!
-    if ( // if we aren't holding down the meta key...
-         !Keys.meta &&
-         (!checkItemStatus || // don't check the item status...
-         // OR we aren't a tab on top of something else, and there's no drop site...
-         (!(this.item.isATabItem && this.item.overlapsWithOtherItems()) &&
-             !iQ(".acceptsDrop").length))
-        ) {
-      newRect = Trenches.snap(bounds,stationaryCorner,assumeConstantSize,keepProportional);
-      if (newRect) { // might be false if no changes were made
-        update = true;
-        snappedTrenches = newRect.snappedTrenches || {};
-        bounds = newRect;
+
+    // if we aren't holding down the meta key...
+    if (!Keys.meta) {
+      // snappable = true if we aren't a tab on top of something else, and
+      // there's no active drop site...
+      let snappable = !(this.item.isATabItem &&
+                       this.item.overlapsWithOtherItems()) &&
+                       !iQ(".acceptsDrop").length;
+      if (!checkItemStatus || snappable) {
+        newRect = Trenches.snap(bounds, stationaryCorner, assumeConstantSize,
+                                keepProportional);
+        if (newRect) { // might be false if no changes were made
+          update = true;
+          snappedTrenches = newRect.snappedTrenches || {};
+          bounds = newRect;
+        }
       }
     }
 
     // make sure the bounds are in the window.
-    newRect = this.snapToEdge(bounds,stationaryCorner,assumeConstantSize,keepProportional);
+    newRect = this.snapToEdge(bounds, stationaryCorner, assumeConstantSize,
+                              keepProportional);
     if (newRect) {
       update = true;
       bounds = newRect;
-      Utils.extend(snappedTrenches,newRect.snappedTrenches);
+      Utils.extend(snappedTrenches, newRect.snappedTrenches);
     }
 
     Trenches.hideGuides();
@@ -150,8 +151,6 @@ Drag.prototype = {
       if (typeof trench == 'object') {
         trench.showGuide = true;
         trench.show();
-      } else if (trench === 'edge') {
-        // show the edge...?
       }
     }
 
@@ -174,7 +173,7 @@ Drag.prototype = {
     var bounds = this.item.getBounds();
     bounds = this.snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional, true);
     if (bounds) {
-      this.item.setBounds(bounds,true);
+      this.item.setBounds(bounds, true);
       return true;
     }
     return false;
@@ -259,12 +258,11 @@ Drag.prototype = {
   // Function: drag
   // Called in response to an <Item> draggable "drag" event.
   drag: function(event) {
-    this.snap('topleft',true);
+    this.snap('topleft', true);
 
     if (this.parent && this.parent.expanded) {
-      var now = Date.now();
       var distance = this.startPosition.distance(new Point(event.clientX, event.clientY));
-      if (/* now - this.startTime > 500 ||  */distance > 100) {
+      if (distance > 100) {
         this.parent.remove(this.item);
         this.parent.collapse();
       }

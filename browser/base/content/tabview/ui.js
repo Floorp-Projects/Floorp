@@ -344,9 +344,7 @@ var UIManager = {
     gBrowser.contentWindow.focus();
 
     // set the close button on tab
-/*     setTimeout(function() { // Marshal event from chrome thread to DOM thread    */
-      gBrowser.tabContainer.adjustTabstrip();
-/*     }, 1); */
+    gBrowser.tabContainer.adjustTabstrip();
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX

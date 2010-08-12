@@ -350,7 +350,6 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // a random location (i.e., from [0,0]). Instead, just
       // have it appear where it should be.
       if (immediately || (!this._hasBeenDrawn)) {
-  /*       $container.stop(true, true); */
         $container.css(css);
       } else {
         TabItems.pausePainting();
@@ -361,14 +360,13 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             TabItems.resumePainting();
           }
         });
-    /*       }).dequeue(); */
       }
 
       if (css.fontSize && !this.inStack()) {
         if (css.fontSize < fontSizeRange.min)
-          $title.fadeOut();//.dequeue();
+          $title.fadeOut();
         else
-          $title.fadeIn();//.dequeue();
+          $title.fadeIn();
       }
 
       if (css.width) {
