@@ -727,6 +727,13 @@ window.TabItems = {
     for (let name in this._eventListeners) {
       AllTabs.unregister(name, this._eventListeners[name]);
     }
+    this.items.forEach(function(tabItem) {
+      for (var x in tabItem) {
+        if (typeof tabItem[x] == "object")
+          tabItem[x] = null;
+      }
+    });
+
     this.items = null;
     this._eventListeners = null;
     this._lastUpdateTime = null;
