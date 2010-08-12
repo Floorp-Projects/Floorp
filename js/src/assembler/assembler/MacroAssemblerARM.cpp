@@ -36,7 +36,17 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <elf.h>
+
+#ifdef MOZ_PLATFORM_MAEMO
+#if (MOZ_PLATFORM_MAEMO == 4)
+#include <asm/procinfo.h>
+#else
 #include <asm/hwcap.h>
+#endif
+#else
+#include <asm/hwcap.h>
+#endif
+
 #endif
 
 namespace JSC {
