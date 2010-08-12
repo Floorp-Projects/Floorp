@@ -1398,7 +1398,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DEBUGGER)
             prepareStubCall(Uses(0));
-            masm.move(ImmPtr(PC), Registers::ArgReg0);
+            masm.move(ImmPtr(PC), Registers::ArgReg1);
             stubCall(stubs::Debugger);
           END_CASE(JSOP_DEBUGGER)
 
