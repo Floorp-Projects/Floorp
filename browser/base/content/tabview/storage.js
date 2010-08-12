@@ -42,7 +42,7 @@
 // ##########
 // Class: Storage
 // Singleton for permanent storage of TabView data.
-Storage = {
+let Storage = {
   GROUP_DATA_IDENTIFIER: "tabview-group",
   GROUPS_DATA_IDENTIFIER: "tabview-groups",
   TAB_DATA_IDENTIFIER: "tabview-tab",
