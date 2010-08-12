@@ -223,7 +223,6 @@ JSObject::setArgsLength(uint32 argc)
     JS_ASSERT(UINT32_MAX > (uint64(argc) << ARGS_PACKED_BITS_COUNT));
     fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << ARGS_PACKED_BITS_COUNT);
     JS_ASSERT(!isArgsLengthOverridden());
-    JS_ASSERT(!isArgsStrictMode());
 }
 
 inline uint32
@@ -262,20 +261,6 @@ JSObject::setArgsCallee(const js::Value &callee)
 {
     JS_ASSERT(isArguments());
     fslots[JSSLOT_ARGS_CALLEE] = callee;
-}
-
-inline void
-JSObject::setArgsStrictMode()
-{
-    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= ARGS_CALLEE_IN_STRICT_MODE_BIT;
-    JS_ASSERT(isArgsStrictMode());
-}
-
-inline bool
-JSObject::isArgsStrictMode() const
-{
-    JS_ASSERT(isArguments());
-    return fslots[JSSLOT_ARGS_LENGTH].toInt32() & ARGS_CALLEE_IN_STRICT_MODE_BIT;
 }
 
 inline const js::Value &

@@ -184,6 +184,8 @@ struct JSFunction : public JSObject
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
     unsigned minArgs()       const { return FUN_MINARGS(this); }
 
+    inline bool inStrictMode() const;
+
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return u.i.nvars;
@@ -278,8 +280,9 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
 #endif
 
 /*
- * NB: the Arguments class is an uninitialized internal class that masquerades
- * (according to Object.prototype.toString.call(argsobj)) as "Object".
+ * NB: the Arguments classes are uninitialized internal classes that masquerade
+ * (according to Object.prototype.toString.call(arguments)) as "Arguments",
+ * while having Object.getPrototypeOf(arguments) === Object.prototype.
  *
  * WARNING (to alert embedders reading this private .h file): arguments objects
  * are *not* thread-safe and should not be used concurrently -- they should be
@@ -291,11 +294,26 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
  * single-threaded objects and GC heaps.
  */
 extern js::Class js_ArgumentsClass;
+namespace js {
+extern Class StrictArgumentsClass;
+}
+
+inline bool
+JSObject::isNormalArguments() const
+{
+    return getClass() == &js_ArgumentsClass;
+}
+
+inline bool
+JSObject::isStrictArguments() const
+{
+    return getClass() == &js::StrictArgumentsClass;
+}
 
 inline bool
 JSObject::isArguments() const
 {
-    return getClass() == &js_ArgumentsClass;
+    return isNormalArguments() || isStrictArguments();
 }
 
 #define JS_ARGUMENT_OBJECT_ON_TRACE ((void *)0xa126)
@@ -492,9 +510,8 @@ js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->a
 const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(19) - 1024;
 
 /*
- * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int jsval.
- * Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must fit JSVAL_INT_MAX. To assert that
- * we check first that the shift does not overflow uint32.
+ * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as an Int32
+ * Value.  Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must be less than JSVAL_INT_MAX.
  */
 JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
 JS_STATIC_ASSERT(((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
