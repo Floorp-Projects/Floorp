@@ -40,37 +40,31 @@
 // gSyncUI handles updating the tools menu
 let gSyncUI = {
   init: function SUI_init() {
-    let obs = [["weave:service:sync:start", "onActivityStart"],
-               ["weave:service:sync:finish", "onSyncFinish"],
-               ["weave:service:sync:error", "onSyncError"],
-               ["weave:service:sync:delayed", "onSyncDelay"],
-               ["weave:service:setup-complete", "onLoginFinish"],
-               ["weave:service:login:start", "onActivityStart"],
-               ["weave:service:login:finish", "onLoginFinish"],
-               ["weave:service:login:error", "onLoginError"],
-               ["weave:service:logout:finish", "onLogout"],
-               ["weave:service:start-over", "onStartOver"]];
+    // this will be the first notification fired during init
+    // we can set up everything else later
+    Services.obs.addObserver(this, "weave:service:ready", true);
+  },
+  initUI: function SUI_initUI() {
+    let obs = ["weave:service:sync:start",
+               "weave:service:sync:finish",
+               "weave:service:sync:error",
+               "weave:service:sync:delayed",
+               "weave:service:setup-complete",
+               "weave:service:login:start",
+               "weave:service:login:finish",
+               "weave:service:login:error",
+               "weave:service:logout:finish",
+               "weave:service:start-over"];
 
     // If this is a browser window?
     if (gBrowser) {
-      obs.push(["weave:notification:added", "onNotificationAdded"],
-               ["weave:notification:removed", "onNotificationRemoved"]);
+      obs.push("weave:notification:added", "weave:notification:removed");
     }
 
-    // Add the observers now and remove them on unload
     let self = this;
-    let addRem = function(add) {
-      obs.forEach(function([topic, func]) {
-        //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
-        //        of `this`. Fix in a followup. (bug 583347)
-        if (add)
-          Weave.Svc.Obs.add(topic, self[func], self);
-        else
-          Weave.Svc.Obs.remove(topic, self[func], self);
-      });
-    };
-    addRem(true);
-    window.addEventListener("unload", function() addRem(false), false);
+    obs.forEach(function(topic) {
+      Services.obs.addObserver(self, topic, true);
+    });
 
     // Find the alltabs-popup, only if there is a gBrowser
     if (gBrowser) {
@@ -80,7 +74,6 @@ let gSyncUI = {
         self.alltabsPopupShowing();
       }, true);
     }
-
     this.updateUI();
   },
 
@@ -242,7 +235,6 @@ let gSyncUI = {
     }
   },
 
-
   // Commands
   doUpdateMenu: function SUI_doUpdateMenu(event) {
     this._updateLastSyncItem();
@@ -369,7 +361,50 @@ let gSyncUI = {
 
     this.updateUI();
     this._updateLastSyncItem();
-  }
+  },
+  
+  observe: function SUI_observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:service:sync:start":
+        this.onActivityStart();
+        break;
+      case "weave:service:sync:finish":
+        this.onSyncFinish();
+        break;
+      case "weave:service:sync:error":
+        this.onSyncError();
+        break;
+      case "weave:service:sync:delayed":
+        this.onSyncDelay();
+        break;
+      case "weave:service:setup-complete":
+        this.onLoginFinish();
+        break;
+      case "weave:service:login:start":
+        this.onActivityStart();
+        break;
+      case "weave:service:login:finish":
+        this.onLoginFinish();
+        break;
+      case "weave:service:login:error":
+        this.onLoginError();
+        break;
+      case "weave:service:logout:finish":
+        this.onLogout();
+        break;
+      case "weave:service:start-over":
+        this.onStartOver();
+        break;
+      case "weave:service:ready":
+        this.initUI();
+        break;
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
+  ])
 };
 
 XPCOMUtils.defineLazyGetter(gSyncUI, "_stringBundle", function() {

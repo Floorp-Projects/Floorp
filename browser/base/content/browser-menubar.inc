@@ -594,7 +594,11 @@
             <menu id="tools-menu"
                   label="&toolsMenu.label;"
                   accesskey="&toolsMenu.accesskey;">
-              <menupopup id="menu_ToolsPopup">
+              <menupopup id="menu_ToolsPopup"
+#ifdef MOZ_SERVICES_SYNC
+                         onpopupshowing="gSyncUI.updateUI();"
+#endif
+                         >
               <menuitem id="menu_search"
                         label="&search.label;"
                         accesskey="&search.accesskey;"
