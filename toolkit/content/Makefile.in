@@ -83,6 +83,7 @@ DIRS += tests
 endif
 
 EXTRA_JS_MODULES = \
+  Geometry.jsm \
   InlineSpellChecker.jsm \
   PopupNotifications.jsm \
   $(NULL)
