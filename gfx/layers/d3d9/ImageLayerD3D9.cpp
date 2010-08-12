@@ -321,6 +321,9 @@ PlanarYCbCrImageD3D9::AllocateTextures()
   nsRefPtr<IDirect3DSurface9> tmpSurfaceCr;
 
   if (mManager->deviceManager()->IsD3D9Ex()) {
+    nsRefPtr<IDirect3DTexture9> tmpYTexture;
+    nsRefPtr<IDirect3DTexture9> tmpCbTexture;
+    nsRefPtr<IDirect3DTexture9> tmpCrTexture;
     // D3D9Ex does not support the managed pool, could use dynamic textures
     // here. But since an Image is immutable static textures are probably a
     // better idea.
@@ -333,24 +336,18 @@ PlanarYCbCrImageD3D9::AllocateTextures()
     mManager->device()->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
                             1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
                             getter_AddRefs(mCrTexture), NULL);
-    mManager->device()->CreateOffscreenPlainSurface(mData.mYSize.width,
-                                                    mData.mYSize.height,
-                                                    D3DFMT_L8,
-                                                    D3DPOOL_SYSTEMMEM,
-                                                    getter_AddRefs(tmpSurfaceY),
-                                                    NULL);
-    mManager->device()->CreateOffscreenPlainSurface(mData.mCbCrSize.width,
-                                                    mData.mCbCrSize.height,
-                                                    D3DFMT_L8,
-                                                    D3DPOOL_SYSTEMMEM,
-                                                    getter_AddRefs(tmpSurfaceCb),
-                                                    NULL);
-    mManager->device()->CreateOffscreenPlainSurface(mData.mCbCrSize.width,
-                                                    mData.mCbCrSize.height,
-                                                    D3DFMT_L8,
-                                                    D3DPOOL_SYSTEMMEM,
-                                                    getter_AddRefs(tmpSurfaceCr),
-                                                    NULL);
+    mManager->device()->CreateTexture(mData.mYSize.width, mData.mYSize.height,
+                            1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                            getter_AddRefs(tmpYTexture), NULL);
+    mManager->device()->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                            1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                            getter_AddRefs(tmpCbTexture), NULL);
+    mManager->device()->CreateTexture(mData.mCbCrSize.width, mData.mCbCrSize.height,
+                            1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                            getter_AddRefs(tmpCrTexture), NULL);
+    tmpYTexture->GetSurfaceLevel(0, getter_AddRefs(tmpSurfaceY));
+    tmpCbTexture->GetSurfaceLevel(0, getter_AddRefs(tmpSurfaceCb));
+    tmpCrTexture->GetSurfaceLevel(0, getter_AddRefs(tmpSurfaceCr));
     tmpSurfaceY->LockRect(&lockrectY, NULL, 0);
     tmpSurfaceCb->LockRect(&lockrectCb, NULL, 0);
     tmpSurfaceCr->LockRect(&lockrectCr, NULL, 0);
