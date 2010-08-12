@@ -276,7 +276,7 @@ void XXXNeverCalled()
     }
 
     nsXPCOMCycleCollectionParticipant();
-    nsCycleCollector_collect();
+    nsCycleCollector_collect(PR_FALSE);
 #ifdef XP_WIN
     sXPCOMHasLoadedNewDLLs = !sXPCOMHasLoadedNewDLLs;
     NS_SetHasLoadedNewDLLs();
