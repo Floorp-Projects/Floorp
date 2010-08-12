@@ -511,11 +511,6 @@ class FrameState
     void syncAndKill(Registers kill, Uses uses); 
 
     /*
-     * Syncs all outstanding stores to memory.
-     */
-    void syncAllRegs(uint32 mask);
-
-    /*
      * Reset the register state.
      */
     void resetRegState();
