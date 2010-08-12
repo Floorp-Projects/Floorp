@@ -1654,13 +1654,14 @@ class ScopeNameCompiler : public PICStubCompiler
             return disable("property is on proto of a scope object");
         
         sprop = (JSScopeProperty *)prop;
+
+        if (obj->getClass() == &js_CallClass)
+            return generateCallStub();
+
         if (!sprop->hasDefaultGetterOrIsMethod())
             return disable("getter");
         if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
             return disable("invalid slot");
-
-        if (obj->getClass() == &js_CallClass)
-            return generateCallStub();
 
         if (!obj->getParent())
             return generateGlobalStub();
