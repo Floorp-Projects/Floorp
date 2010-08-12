@@ -655,7 +655,10 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       if (!options.dontArrange) {
-        this.arrange();
+        // by default, we animate the item moving to its new position
+        let animate = typeof options.animate == "undefined" ? true :
+                      options.animate;
+        this.arrange({ animate: animate });
       }
       UI.setReorderTabsOnHide(this);
 
