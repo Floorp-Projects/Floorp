@@ -1265,31 +1265,6 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         js_MarkScriptFilename(script->filename);
 }
 
-JSBool
-js_NewScriptObject(JSContext *cx, JSScript *script)
-{
-    AutoScriptRooter root(cx, script);
-
-    JS_ASSERT(!script->u.object);
-    JS_ASSERT(script != JSScript::emptyScript());
-
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
-    if (!obj)
-        return JS_FALSE;
-    obj->setPrivate(script);
-    script->u.object = obj;
-
-    /* Clear the object's parent and proto, to avoid entraining stuff. */
-    obj->setParent(NULL);
-    obj->setProto(NULL);
-
-#ifdef CHECK_SCRIPT_OWNER
-    script->owner = NULL;
-#endif
-
-    return JS_TRUE;
-}
-
 typedef struct GSNCacheEntry {
     JSDHashEntryHdr     hdr;
     jsbytecode          *pc;
