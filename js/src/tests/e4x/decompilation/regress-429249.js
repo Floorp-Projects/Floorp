@@ -53,8 +53,9 @@ expect = 'function g() { return <x/>; }';
 actual = g + '';
 compareSource(expect, actual, summary + ' : before trap');
 
-if (typeof trap == 'function')
+if (typeof trap == 'function' && typeof setDebug == 'function')
 {
+    setDebug(true);
     trap(g, 0, "");
     actual = g + '';
     compareSource(expect, actual, summary + ' : after trap');
