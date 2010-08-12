@@ -41,7 +41,7 @@
 // see bug 586550
 #ifdef MOZ_PLATFORM_MAEMO
 #include <linux/version.h>
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28) 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) 
 #include <asm/procinfo.h>
 #else
 #include <asm/hwcap.h>
