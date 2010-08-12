@@ -1115,12 +1115,12 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper* aHelper,
                          const nsIID *iid, XPCNativeInterface **iface,
                          jsval *rval)
 {
+    NS_PRECONDITION(iface, "Who did that and why?");
+
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
     // This is one of the slowest things quick stubs do.
 
     JSContext *cx = lccx.GetJSContext();
-    if(!iface)
-        return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_NATIVE);
 
     // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
     // fact, this code is depending on the fact that the

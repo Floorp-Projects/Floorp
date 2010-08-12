@@ -292,23 +292,12 @@ endif # ENABLE_TRACEJIT
 ifdef ENABLE_METHODJIT
 
 ###############################################
-# BEGIN include sources for the Nitro assembler
+# BEGIN include sources for the method JIT
 #
-VPATH += 	$(srcdir)/assembler \
-		$(srcdir)/assembler/wtf \
-		$(srcdir)/assembler/jit \
-		$(srcdir)/assembler/assembler \
-		$(srcdir)/methodjit
+VPATH += 	$(srcdir)/methodjit
 
-CPPSRCS += 	Assertions.cpp \
-		ExecutableAllocatorPosix.cpp \
-		ExecutableAllocatorWin.cpp \
-		ExecutableAllocator.cpp \
-		ARMAssembler.cpp \
-		MacroAssemblerARM.cpp \
-		MethodJIT.cpp \
+CPPSRCS += 	MethodJIT.cpp \
 		BytecodeAnalyzer.cpp \
-		Logging.cpp \
 		StubCalls.cpp \
 		Compiler.cpp \
 		FrameState.cpp \
@@ -338,6 +327,71 @@ else
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif
+endif
+endif
+ifeq (arm, $(TARGET_CPU))
+#CPPSRCS		+= only_on_arm.cpp
+endif
+#
+# END enclude sources for the method JIT
+#############################################
+
+endif
+
+ifeq ($(TARGET_CPU), powerpc)
+
+VPATH +=	$(srcdir)/assembler \
+		$(srcdir)/assembler/wtf \
+		$(srcdir)/yarr/pcre \
+		$(NULL)
+
+CPPSRCS += 	pcre_compile.cpp \
+                pcre_exec.cpp \
+                pcre_tables.cpp \
+                pcre_xclass.cpp \
+                pcre_ucp_searchfuncs.cpp \
+		$(NULL)
+else
+
+###############################################
+# BEGIN include sources for the Nitro assembler
+#
+VPATH += 	$(srcdir)/assembler \
+		$(srcdir)/assembler/wtf \
+		$(srcdir)/assembler/jit \
+		$(srcdir)/assembler/assembler \
+		$(srcdir)/methodjit \
+		$(srcdir)/yarr \
+		$(srcdir)/yarr/yarr \
+		$(srcdir)/yarr/pcre \
+		$(srcdir)/yarr/wtf \
+		$(NONE)
+
+CPPSRCS += 	Assertions.cpp \
+		ExecutableAllocatorPosix.cpp \
+		ExecutableAllocatorWin.cpp \
+		ExecutableAllocator.cpp \
+		ARMAssembler.cpp \
+                Logging.cpp \
+		MacroAssemblerARM.cpp \
+		MacroAssemblerX86Common.cpp \
+		RegexCompiler.cpp \
+		RegexJIT.cpp \
+		pcre_compile.cpp \
+                pcre_exec.cpp \
+                pcre_tables.cpp \
+                pcre_xclass.cpp \
+                pcre_ucp_searchfuncs.cpp \
+		$(NONE)
+
+ifeq (86, $(findstring 86,$(TARGET_CPU)))
+ifeq (x86_64, $(TARGET_CPU))
+ifeq ($(OS_ARCH),WINNT)
+ASFILES +=	TrampolineMasmX64.asm
+endif
+#CPPSRCS		+= only_on_x86_64.cpp
+else
+#CPPSRCS		+= only_on_x86.cpp
 endif
 endif
 ifeq (arm, $(TARGET_CPU))
@@ -825,7 +879,7 @@ endif
 ## backwards to that point.  Ideally, merge with the rest of the
 ## Nitro assembler stuff, far above.
 ifdef ENABLE_METHODJIT
-INCLUDES +=	-I$(srcdir)/assembler
+INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 #
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just

@@ -27,13 +27,13 @@
 #ifndef ARMAssembler_h
 #define ARMAssembler_h
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE(ASSEMBLER) && CPU(ARM_THUMB2)
 
 #include "AssemblerBuffer.h"
-#include <wtf/Assertions.h>
-#include <wtf/Vector.h>
+#include "assembler/wtf/Assertions.h"
+#include "assembler/wtf/Vector.h"
 #include <stdint.h>
 
 namespace JSC {

@@ -27,12 +27,12 @@
 #ifndef AssemblerBufferWithConstantPool_h
 #define AssemblerBufferWithConstantPool_h
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER
 
 #include "AssemblerBuffer.h"
-#include <wtf/SegmentedVector.h>
+#include "assembler/wtf/SegmentedVector.h"
 
 #define ASSEMBLER_HAS_CONSTANT_POOL 1
 

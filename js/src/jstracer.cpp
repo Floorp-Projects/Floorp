@@ -2895,12 +2895,14 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
         debug_only_printf(LC_TMTracer, "string<%p> ", (void*)v.toString());
         break;
       case JSVAL_TYPE_NULL:
+        JS_ASSERT(v.isNull());
         debug_only_print0(LC_TMTracer, "null ");
         break;
       case JSVAL_TYPE_BOOLEAN:
         debug_only_printf(LC_TMTracer, "bool<%d> ", v.toBoolean());
         break;
       case JSVAL_TYPE_UNDEFINED:
+        JS_ASSERT(v.isUndefined());
         debug_only_print0(LC_TMTracer, "undefined ");
         break;
       case JSVAL_TYPE_MAGIC:
@@ -11494,10 +11496,21 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             args[2] = cx_ins;
             newobj_ins = lir->insCall(&js_NewInstance_ci, args);
             guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+
+            /*
+             * emitNativeCall may take a snapshot below. To avoid having a type
+             * mismatch (e.g., where get(&vp[1]) is an object and vp[1] is
+             * null), we make sure vp[1] is some object. The actual object
+             * doesn't matter; JSOP_NEW and InvokeConstructor both overwrite
+             * vp[1] without observing its value.
+             *
+             * N.B. tracing specializes for functions, so pick a non-function.
+             */
+            vp[1].setObject(*globalObj);
         }
         this_ins = newobj_ins;
     } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
-        this_ins = INS_CONSTOBJ(funobj->getParent());
+        RETURN_STOP("bound method test");
     } else {
         this_ins = get(&vp[1]);
 

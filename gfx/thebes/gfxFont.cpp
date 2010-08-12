@@ -2235,17 +2235,19 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         PRUint32 matchedLength = range.Length();
         gfxFont *matchedFont = (range.font ? range.font.get() : nsnull);
 
+        // create the glyph run for this range
+        aTextRun->AddGlyphRun(matchedFont ? matchedFont : mainFont,
+                              runStart, (matchedLength > 0));
         if (matchedFont) {
-            // create the glyph run for this range
-            aTextRun->AddGlyphRun(matchedFont, runStart, (matchedLength > 0));
-
             // do glyph layout and record the resulting positioned glyphs
-            matchedFont->InitTextRun(aContext, aTextRun, aString,
-                                     runStart, matchedLength, aRunScript);
-        } else {
-            // create the glyph run before calling SetMissing Glyph
-            aTextRun->AddGlyphRun(mainFont, runStart, matchedLength);
-
+            if (!matchedFont->InitTextRun(aContext, aTextRun, aString,
+                                          runStart, matchedLength,
+                                          aRunScript)) {
+                // glyph layout failed! treat as missing glyphs
+                matchedFont = nsnull;
+            }
+        }
+        if (!matchedFont) {
             for (PRUint32 index = runStart; index < runStart + matchedLength; index++) {
                 // Record the char code so we can draw a box with the Unicode value
                 if (NS_IS_HIGH_SURROGATE(aString[index]) &&
@@ -3627,6 +3629,8 @@ PRUint32
 gfxTextRun::FindFirstGlyphRunContaining(PRUint32 aOffset)
 {
     NS_ASSERTION(aOffset <= mCharacterCount, "Bad offset looking for glyphrun");
+    NS_ASSERTION(mCharacterCount == 0 || mGlyphRuns.Length() > 0,
+                 "non-empty text but no glyph runs present!");
     if (aOffset == mCharacterCount)
         return mGlyphRuns.Length();
     PRUint32 start = 0;

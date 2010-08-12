@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <wtf/Platform.h> // MOCO
- 
+#include "assembler/wtf/Platform.h"
+
 #if ENABLE_ASSEMBLER && WTF_CPU_ARM_TRADITIONAL
 
 #include "ARMAssembler.h"

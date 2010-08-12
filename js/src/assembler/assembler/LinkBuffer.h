@@ -26,7 +26,7 @@
 #ifndef LinkBuffer_h
 #define LinkBuffer_h
 
-#include <wtf/Platform.h>
+#include "assembler/wtf/Platform.h"
 
 #if ENABLE_ASSEMBLER
 
