@@ -45,7 +45,10 @@ class imgIContainer;
 class imgRequest;
 class imgRequestProxy;
 class imgStatusNotifyRunnable;
+class imgRequestNotifyRunnable;
 
+#include "nsCOMPtr.h"
+#include "nsIRunnable.h"
 #include "prtypes.h"
 #include "nscore.h"
 
@@ -76,6 +79,7 @@ public:
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(imgIContainer* aImage);
+  imgStatusTracker(const imgStatusTracker& aOther);
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
@@ -156,6 +160,9 @@ public:
 
 private:
   friend class imgStatusNotifyRunnable;
+  friend class imgRequestNotifyRunnable;
+
+  nsCOMPtr<nsIRunnable> mRequestRunnable;
 
   // A weak pointer to the imgIContainer, because the container owns us, and we
   // can't create a cycle.

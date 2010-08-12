@@ -783,6 +783,36 @@ nsExternalResourceMap::Traverse(nsCycleCollectionTraversalCallback* aCallback) c
   mMap.EnumerateRead(ExternalResourceTraverser, aCallback);
 }
 
+static PLDHashOperator
+ExternalResourceHider(nsIURI* aKey,
+                      nsExternalResourceMap::ExternalResource* aData,
+                      void* aClosure)
+{
+  aData->mViewer->Hide();
+  return PL_DHASH_NEXT;
+}
+
+void
+nsExternalResourceMap::HideViewers()
+{
+  mMap.EnumerateRead(ExternalResourceHider, nsnull);
+}
+
+static PLDHashOperator
+ExternalResourceShower(nsIURI* aKey,
+                       nsExternalResourceMap::ExternalResource* aData,
+                       void* aClosure)
+{
+  aData->mViewer->Show();
+  return PL_DHASH_NEXT;
+}
+
+void
+nsExternalResourceMap::ShowViewers()
+{
+  mMap.EnumerateRead(ExternalResourceShower, nsnull);
+}
+
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                                            nsIDocumentViewer* aViewer,
@@ -810,6 +840,9 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
       rv = NS_ERROR_NOT_AVAILABLE;
     } else {
       doc->SetDisplayDocument(aDisplayDocument);
+
+      // Make sure that hiding our viewer will tear down its presentation.
+      aViewer->SetSticky(PR_FALSE);
 
       rv = aViewer->Init(nsnull, nsIntRect(0, 0, 0, 0));
       if (NS_SUCCEEDED(rv)) {
@@ -3039,9 +3072,18 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = shell;
 
+  mExternalResourceMap.ShowViewers();
+
   shell.swap(*aInstancePtrResult);
 
   return NS_OK;
+}
+
+void
+nsDocument::DeleteShell()
+{
+  mExternalResourceMap.HideViewers();
+  mPresShell = nsnull;
 }
 
 static void
@@ -7815,4 +7857,3 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
   mCreatingStaticClone = PR_FALSE;
   return clonedDoc.forget();
 }
-

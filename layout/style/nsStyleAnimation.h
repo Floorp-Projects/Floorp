@@ -128,7 +128,6 @@ public:
                             const Value& aEndValue,
                             double aPortion,
                             Value& aResultValue) {
-    NS_ABORT_IF_FALSE(0.0 <= aPortion && aPortion <= 1.0, "out of range");
     return AddWeighted(aProperty, 1.0 - aPortion, aStartValue,
                        aPortion, aEndValue, aResultValue);
   }

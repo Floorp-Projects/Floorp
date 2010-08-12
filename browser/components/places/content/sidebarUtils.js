@@ -132,6 +132,6 @@ var SidebarUtils = {
   },
 
   clearURLFromStatusBar: function SU_clearURLFromStatusBar() {
-    window.top.XULBrowserWindow.setOverLink("", null);  
+    window.top.XULBrowserWindow.setOverLink("", null);
   }
 };

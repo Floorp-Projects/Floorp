@@ -249,7 +249,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
     case eAtomArray:
     {
       if (!EnsureEmptyAtomArray() ||
-          !GetAtomArrayValue()->AppendObjects(*otherCont->mAtomArray)) {
+          !GetAtomArrayValue()->AppendElements(*otherCont->mAtomArray)) {
         Reset();
         return;
       }
@@ -503,7 +503,7 @@ nsAttrValue::GetEnumString(nsAString& aResult, PRBool aRealTag) const
   NS_NOTREACHED("couldn't find value in EnumTable");
 }
 
-PRInt32
+PRUint32
 nsAttrValue::GetAtomCount() const
 {
   ValueType type = Type();
@@ -513,7 +513,7 @@ nsAttrValue::GetAtomCount() const
   }
 
   if (type == eAtomArray) {
-    return GetAtomArrayValue()->Count();
+    return GetAtomArrayValue()->Length();
   }
 
   return 0;
@@ -531,7 +531,7 @@ nsAttrValue::AtomAt(PRInt32 aIndex) const
 
   NS_ASSERTION(Type() == eAtomArray, "GetAtomCount must be confused");
   
-  return GetAtomArrayValue()->ObjectAt(aIndex);
+  return GetAtomArrayValue()->ElementAt(aIndex);
 }
 
 PRUint32
@@ -592,9 +592,11 @@ nsAttrValue::HashValue() const
     case eAtomArray:
     {
       PRUint32 retval = 0;
-      PRInt32 i, count = cont->mAtomArray->Count();
-      for (i = 0; i < count; ++i) {
-        retval ^= NS_PTR_TO_INT32(cont->mAtomArray->ObjectAt(i));
+      PRUint32 count = cont->mAtomArray->Length();
+      for (nsCOMPtr<nsIAtom> *cur = cont->mAtomArray->Elements(),
+                             *end = cur + count;
+           cur != end; ++cur) {
+        retval ^= NS_PTR_TO_INT32(cur->get());
       }
       return retval;
     }
@@ -690,18 +692,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       // For classlists we could be insensitive to order, however
       // classlists are never mapped attributes so they are never compared.
 
-      PRInt32 count = thisCont->mAtomArray->Count();
-      if (count != otherCont->mAtomArray->Count()) {
+      if (!(*thisCont->mAtomArray == *otherCont->mAtomArray)) {
         return PR_FALSE;
       }
 
-      PRInt32 i;
-      for (i = 0; i < count; ++i) {
-        if (thisCont->mAtomArray->ObjectAt(i) !=
-            otherCont->mAtomArray->ObjectAt(i)) {
-          return PR_FALSE;
-        }
-      }
       needsStringComparison = PR_TRUE;
       break;
     }
@@ -827,19 +821,21 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
     default:
     {
       if (Type() == eAtomArray) {
-        nsCOMArray<nsIAtom>* array = GetAtomArrayValue();
+        AtomArray* array = GetAtomArrayValue();
         if (aCaseSensitive == eCaseMatters) {
-          return array->IndexOf(aValue) >= 0;
+          return array->IndexOf(aValue) != AtomArray::NoIndex;
         }
 
         nsDependentAtomString val1(aValue);
 
-        for (PRInt32 i = 0, count = array->Count(); i < count; ++i) {
+        for (nsCOMPtr<nsIAtom> *cur = array->Elements(),
+                               *end = cur + array->Length();
+             cur != end; ++cur) {
           // For performance reasons, don't do a full on unicode case
           // insensitive string comparison. This is only used for quirks mode
           // anyway.
           if (nsContentUtils::EqualsIgnoreASCIICase(val1,
-                nsDependentAtomString(array->ObjectAt(i)))) {
+                nsDependentAtomString(*cur))) {
             return PR_TRUE;
           }
         }
@@ -913,9 +909,9 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     return;
   }
 
-  nsCOMArray<nsIAtom>* array = GetAtomArrayValue();
+  AtomArray* array = GetAtomArrayValue();
   
-  if (!array->AppendObject(classAtom)) {
+  if (!array->AppendElement(classAtom)) {
     Reset();
     return;
   }
@@ -930,7 +926,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
     classAtom = do_GetAtom(Substring(start, iter));
 
-    if (!array->AppendObject(classAtom)) {
+    if (!array->AppendElement(classAtom)) {
       Reset();
       return;
     }
@@ -1362,7 +1358,7 @@ nsAttrValue::EnsureEmptyAtomArray()
     return PR_FALSE;
   }
 
-  nsCOMArray<nsIAtom>* array = new nsCOMArray<nsIAtom>;
+  AtomArray* array = new AtomArray;
   if (!array) {
     Reset();
     return PR_FALSE;

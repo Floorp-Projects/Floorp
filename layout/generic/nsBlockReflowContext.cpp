@@ -278,24 +278,11 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     // from 10.3.3 to determine what to apply. At this point in the
     // reflow auto left/right margins will have a zero value.
 
-    nscoord x = mSpace.x + aFrameRS.mComputedMargin.left;
-    nscoord y = mSpace.y + mTopMargin.get() + aClearance;
+    mX = tx = mSpace.x + aFrameRS.mComputedMargin.left;
+    mY = ty = mSpace.y + mTopMargin.get() + aClearance;
 
     if ((mFrame->GetStateBits() & NS_BLOCK_FLOAT_MGR) == 0)
-      aFrameRS.mBlockDelta = mOuterReflowState.mBlockDelta + y - aLine->mBounds.y;
-
-    mX = x;
-    mY = y;
-
-    // Compute the translation to be used for adjusting the spacemanagager
-    // coordinate system for the frame.  The spacemanager coordinates are
-    // <b>inside</b> the callers border+padding, but the x/y coordinates
-    // are not (recall that frame coordinates are relative to the parents
-    // origin and that the parents border/padding is <b>inside</b> the
-    // parent frame. Therefore we have to subtract out the parents
-    // border+padding before translating.
-    tx = x - mOuterReflowState.mComputedBorderPadding.left;
-    ty = y - mOuterReflowState.mComputedBorderPadding.top;
+      aFrameRS.mBlockDelta = mOuterReflowState.mBlockDelta + ty - aLine->mBounds.y;
   }
 
   // Let frame know that we are reflowing it

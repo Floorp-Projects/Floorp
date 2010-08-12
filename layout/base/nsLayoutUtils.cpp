@@ -109,6 +109,7 @@
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 /**
  * A namespace class for static layout utilities.
@@ -1752,6 +1753,15 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
 
 static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
 {
+  if (aStyle.IsCalcUnit()) {
+    if (aStyle.CalcHasPercent()) {
+      return PR_FALSE;
+    }
+    // If it has no percents, we can pass 0 for the percentage basis.
+    aResult = nsRuleNode::ComputeComputedCalc(aStyle, 0);
+    return PR_TRUE;
+  }
+
   if (eStyleUnit_Coord != aStyle.GetUnit())
     return PR_FALSE;
 
@@ -2036,12 +2046,21 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
                         PROP_WIDTH, w)) {
     result = AddPercents(aType, w + coordOutsideWidth, pctOutsideWidth);
   }
-  else if (aType == MIN_WIDTH && eStyleUnit_Percent == styleWidth.GetUnit() &&
+  else if (aType == MIN_WIDTH &&
+           // The only cases of coord-percent-calc() units that
+           // GetAbsoluteCoord didn't handle are percent and calc()s
+           // containing percent.
+           styleWidth.IsCoordPercentCalcUnit() &&
            aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
     // A percentage width on replaced elements means they can shrink to 0.
     result = 0; // let |min| handle padding/border/margin
   }
   else {
+    // NOTE: We could really do a lot better for percents and for some
+    // cases of calc() containing percent (certainly including any where
+    // the coefficient on the percent is positive and there are no max()
+    // expressions).  However, doing better for percents wouldn't be
+    // backwards compatible.
     result = AddPercents(aType, result, pctTotal);
   }
 
@@ -2138,15 +2157,12 @@ nsLayoutUtils::ComputeWidthValue(
                   "width less than zero");
 
   nscoord result;
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    result = aCoord.GetCoordValue();
-    NS_ASSERTION(result >= 0, "width less than zero");
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    result = nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockWidth);
+    // The result of a calc() expression might be less than 0; we
+    // should clamp at runtime (below).  (Percentages and coords that
+    // are less than 0 have already been dropped by the parser.)
     result -= aContentEdgeToBoxSizing;
-  } else if (eStyleUnit_Percent == aCoord.GetUnit()) {
-    NS_ASSERTION(aCoord.GetPercentValue() >= 0.0f, "width less than zero");
-    result = NSToCoordFloorClamped(aContainingBlockWidth *
-                                   aCoord.GetPercentValue()) -
-             aContentEdgeToBoxSizing;
   } else if (eStyleUnit_Enumerated == aCoord.GetUnit()) {
     PRInt32 val = aCoord.GetIntValue();
     switch (val) {

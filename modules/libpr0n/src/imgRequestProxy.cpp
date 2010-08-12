@@ -69,7 +69,8 @@ imgRequestProxy::imgRequestProxy() :
   mIsInLoadGroup(PR_FALSE),
   mListenerIsStrongRef(PR_FALSE),
   mDecodeRequested(PR_FALSE),
-  mDeferNotifications(PR_FALSE)
+  mDeferNotifications(PR_FALSE),
+  mSentStartContainer(PR_FALSE)
 {
   /* member initializers and constructor code */
 
@@ -537,10 +538,11 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartContainer");
 
-  if (mListener && !mCanceled) {
+  if (mListener && !mCanceled && !mSentStartContainer) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
     mListener->OnStartContainer(this, image);
+    mSentStartContainer = PR_TRUE;
   }
 }
 
