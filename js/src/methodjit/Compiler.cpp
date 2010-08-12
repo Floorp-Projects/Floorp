@@ -944,13 +944,15 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRICTNE)
 
           BEGIN_CASE(JSOP_ITER)
-          {
+# if defined JS_CPU_X64
             prepareStubCall(Uses(1));
             masm.move(Imm32(PC[1]), Registers::ArgReg1);
             stubCall(stubs::Iter);
             frame.pop();
             frame.pushSynced();
-          }
+#else
+            iter(PC[1]);
+#endif
           END_CASE(JSOP_ITER)
 
           BEGIN_CASE(JSOP_MOREITER)
@@ -960,9 +962,13 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_MOREITER)
 
           BEGIN_CASE(JSOP_ENDITER)
+# if defined JS_CPU_X64
             prepareStubCall(Uses(1));
             stubCall(stubs::EndIter);
             frame.pop();
+#else
+            iterEnd();
+#endif
           END_CASE(JSOP_ENDITER)
 
           BEGIN_CASE(JSOP_POP)
@@ -3094,6 +3100,120 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     PC += JSOP_PROPINC_LENGTH;
 }
 
+void
+mjit::Compiler::iter(uintN flags)
+{
+    FrameEntry *fe = frame.peek(-1);
+
+    /*
+     * Stub the call if this is not a simple 'for in' loop or if the iterated
+     * value is known to not be an object.
+     */
+    if ((flags != JSITER_ENUMERATE) || fe->isNotType(JSVAL_TYPE_OBJECT)) {
+        prepareStubCall(Uses(1));
+        masm.move(Imm32(flags), Registers::ArgReg1);
+        stubCall(stubs::Iter);
+        frame.pop();
+        frame.pushSynced();
+        return;
+    }
+
+    if (!fe->isTypeKnown()) {
+        Jump notObject = frame.testObject(Assembler::NotEqual, fe);
+        stubcc.linkExit(notObject, Uses(1));
+    }
+
+    RegisterID reg = frame.tempRegForData(fe);
+
+    frame.pinReg(reg);
+    RegisterID ioreg = frame.allocReg();  /* Will hold iterator JSObject */
+    RegisterID nireg = frame.allocReg();  /* Will hold NativeIterator */
+    RegisterID T1 = frame.allocReg();
+    RegisterID T2 = frame.allocReg();
+    frame.unpinReg(reg);
+
+    /*
+     * Fetch the most recent iterator. TODO: bake this pointer in when
+     * iterator caches become per-compartment.
+     */
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), T1);
+#ifdef JS_THREADSAFE
+    masm.loadPtr(Address(T1, offsetof(JSContext, thread)), T1);
+    masm.loadPtr(Address(T1, offsetof(JSThread, data.lastNativeIterator)), ioreg);
+#else
+    masm.loadPtr(Address(T1, offsetof(JSContext, runtime)), T1);
+    masm.loadPtr(Address(T1, offsetof(JSRuntime, threadData.lastNativeIterator)), ioreg);
+#endif
+
+    /* Test for NULL. */
+    Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);
+    stubcc.linkExit(nullIterator, Uses(1));
+
+    /* Get NativeIterator from iter obj. :FIXME: X64, also most of this function */
+    Address privSlot(ioreg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
+    masm.loadPayload(privSlot, nireg);
+
+    /* Test for active iterator. */
+    Address flagsAddr(nireg, offsetof(NativeIterator, flags));
+    masm.load32(flagsAddr, T1);
+    masm.and32(Imm32(JSITER_ACTIVE), T1);
+    Jump activeIterator = masm.branchTest32(Assembler::NonZero, T1, T1);
+    stubcc.linkExit(activeIterator, Uses(1));
+
+    /* Compare shape of object with iterator. */
+    masm.loadShape(reg, T1);
+    masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
+    masm.load32(Address(T2, 0), T2);
+    Jump mismatchedObject = masm.branch32(Assembler::NotEqual, T1, T2);
+    stubcc.linkExit(mismatchedObject, Uses(1));
+
+    /* Compare shape of object's prototype with iterator. */
+    masm.loadPtr(Address(reg, offsetof(JSObject, proto)), T1);
+    masm.loadShape(T1, T1);
+    masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
+    masm.load32(Address(T2, sizeof(uint32)), T2);
+    Jump mismatchedProto = masm.branch32(Assembler::NotEqual, T1, T2);
+    stubcc.linkExit(mismatchedProto, Uses(1));
+
+    /*
+     * Compare object's prototype's prototype with NULL. The last native
+     * iterator will always have a prototype chain length of one
+     * (i.e. it must be a plain object), so we do not need to generate
+     * a loop here.
+     */
+    masm.loadPtr(Address(reg, offsetof(JSObject, proto)), T1);
+    masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
+    Jump overlongChain = masm.branchPtr(Assembler::NonZero, T1, T1);
+    stubcc.linkExit(overlongChain, Uses(1));
+
+    /* Found a match with the most recent iterator. Hooray! */
+
+    /* Mark iterator as active. */
+    masm.load32(flagsAddr, T1);
+    masm.or32(Imm32(JSITER_ACTIVE), T1);
+    masm.store32(T1, flagsAddr);
+
+    /* Chain onto the active iterator stack. */
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), T1);
+    masm.loadPtr(Address(T1, offsetof(JSContext, enumerators)), T2);
+    masm.storePtr(T2, Address(nireg, offsetof(NativeIterator, next)));
+    masm.storePtr(ioreg, Address(T1, offsetof(JSContext, enumerators)));
+
+    frame.freeReg(nireg);
+    frame.freeReg(T1);
+    frame.freeReg(T2);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(flags), Registers::ArgReg1);
+    stubcc.call(stubs::Iter);
+
+    /* Push the iterator object. */
+    frame.pop();
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, ioreg);
+
+    stubcc.rejoin(Changes(1));
+}
+
 /*
  * This big nasty function emits a fast-path for native iterators, producing
  * a temporary value on the stack for FORLOCAL,ARG,GLOBAL,etc ops to use.
@@ -3199,6 +3319,60 @@ mjit::Compiler::iterMore()
     stubcc.rejoin(Changes(1));
 
     jumpAndTrace(jFast, target, &j);
+}
+
+void
+mjit::Compiler::iterEnd()
+{
+    FrameEntry *fe= frame.peek(-1);
+    RegisterID reg = frame.tempRegForData(fe);
+
+    frame.pinReg(reg);
+    RegisterID T1 = frame.allocReg();
+    frame.unpinReg(reg);
+
+    /* Test clasp */
+    masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
+    Jump notIterator = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass));
+    stubcc.linkExit(notIterator, Uses(1));
+
+    /* Get private from iter obj. :FIXME: X64 */
+    Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
+    masm.loadPayload(privSlot, T1);
+
+    RegisterID T2 = frame.allocReg();
+
+    /* Load flags. */
+    Address flagAddr(T1, offsetof(NativeIterator, flags));
+    masm.loadPtr(flagAddr, T2);
+
+    /* Test for (flags == ENUMERATE | ACTIVE). */
+    Jump notEnumerate = masm.branch32(Assembler::NotEqual, T2,
+                                      Imm32(JSITER_ENUMERATE | JSITER_ACTIVE));
+    stubcc.linkExit(notEnumerate, Uses(1));
+
+    /* Clear active bit. */
+    masm.and32(Imm32(~JSITER_ACTIVE), T2);
+    masm.storePtr(T2, flagAddr);
+
+    /* Reset property cursor. */
+    masm.loadPtr(Address(T1, offsetof(NativeIterator, props_array)), T2);
+    masm.storePtr(T2, Address(T1, offsetof(NativeIterator, props_cursor)));
+
+    /* Advance enumerators list. */
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), T2);
+    masm.loadPtr(Address(T1, offsetof(NativeIterator, next)), T1);
+    masm.storePtr(T1, Address(T2, offsetof(JSContext, enumerators)));
+
+    frame.freeReg(T1);
+    frame.freeReg(T2);
+
+    stubcc.leave();
+    stubcc.call(stubs::EndIter);
+
+    frame.pop();
+
+    stubcc.rejoin(Changes(1));
 }
 
 void
