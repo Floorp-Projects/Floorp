@@ -197,7 +197,7 @@ let TabView = {
           charCode == 160) { // alt + space
 #else
       if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-          !event.altKey && charCode == 32) { // ctrl + space
+          event.altKey && charCode == 32) { // ctrl + alt + space
 #endif
         event.stopPropagation();
         event.preventDefault();
