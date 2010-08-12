@@ -146,7 +146,7 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIContainer *aImage,
                     "wrong type of imgIContainer for decoding into");
 
   // Store parameters
-  mImageContainer = static_cast<mozilla::imagelib::RasterImage*>(aImage);
+  mImage = static_cast<mozilla::imagelib::RasterImage*>(aImage);
   mObserver = aObserver;
   mFlags = aFlags;
 
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsGIFDecoder2::Close(PRUint32 aFlags)
 
   PR_FREEIF(mGIFStruct.local_colormap);
 
-  mImageContainer = nsnull;
+  mImage = nsnull;
 
   return NS_OK;
 }
@@ -201,7 +201,7 @@ nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
   nsIntRect r(mGIFStruct.x_offset, mGIFStruct.y_offset + fromRow, mGIFStruct.width, rows);
 
   // Update image  
-  nsresult rv = mImageContainer->FrameUpdated(mGIFStruct.images_decoded, r);
+  nsresult rv = mImage->FrameUpdated(mGIFStruct.images_decoded, r);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -209,7 +209,7 @@ nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
   // Offset to the frame position
   // Only notify observer(s) for first frame
   if (!mGIFStruct.images_decoded && mObserver) {
-    PRUint32 imgCurFrame = mImageContainer->GetCurrentFrameIndex();
+    PRUint32 imgCurFrame = mImage->GetCurrentFrameIndex();
     mObserver->OnDataAvailable(nsnull, imgCurFrame == PRUint32(mGIFStruct.images_decoded), &r);
   }
   return NS_OK;
@@ -268,7 +268,7 @@ nsGIFDecoder2::Write(const char *aBuffer, PRUint32 aCount)
     // If we're salvaging, send off notifications.
     // Note that we need to make sure that we have 2 frames, since that tells us
     // that the first frame is complete (the second could be in any state).
-    if (mImageContainer && mImageContainer->GetNumFrames() > 1) {
+    if (mImage && mImage->GetNumFrames() > 1) {
       EndGIF(/* aSuccess = */ PR_TRUE);
     }
 
@@ -292,9 +292,9 @@ void nsGIFDecoder2::BeginGIF()
 
   mGIFOpen = PR_TRUE;
 
-  mImageContainer->SetSize(mGIFStruct.screen_width, mGIFStruct.screen_height);
+  mImage->SetSize(mGIFStruct.screen_width, mGIFStruct.screen_height);
   if (mObserver)
-    mObserver->OnStartContainer(nsnull, mImageContainer);
+    mObserver->OnStartContainer(nsnull, mImage);
 
   // If we're doing a header-only decode, we have what we came for
   if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
@@ -308,15 +308,15 @@ void nsGIFDecoder2::EndGIF(PRBool aSuccess)
     return;
 
   if (aSuccess)
-    mImageContainer->DecodingComplete();
+    mImage->DecodingComplete();
 
   if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImageContainer);
+    mObserver->OnStopContainer(nsnull, mImage);
     mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
                             nsnull);
   }
 
-  mImageContainer->SetLoopCount(mGIFStruct.loop_count);
+  mImage->SetLoopCount(mGIFStruct.loop_count);
 
   mGIFOpen = PR_FALSE;
   mEnded = PR_TRUE;
@@ -331,8 +331,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
     // and the placeholder will remain on the screen. (Bug 37589)
     if (mGIFStruct.y_offset > 0) {
       PRInt32 imgWidth;
-      mImageContainer->GetWidth(&imgWidth);
-      PRUint32 imgCurFrame = mImageContainer->GetCurrentFrameIndex();
+      mImage->GetWidth(&imgWidth);
+      PRUint32 imgCurFrame = mImage->GetCurrentFrameIndex();
       nsIntRect r(0, 0, imgWidth, mGIFStruct.y_offset);
       if (mObserver)
         mObserver->OnDataAvailable(nsnull,
@@ -353,22 +353,22 @@ nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
   // and include transparency to allow for optimization of opaque images
   if (mGIFStruct.images_decoded) {
     // Image data is stored with original depth and palette
-    rv = mImageContainer->AppendPalettedFrame(mGIFStruct.x_offset, mGIFStruct.y_offset,
-                                              mGIFStruct.width, mGIFStruct.height,
-                                              format, aDepth, &mImageData, &imageDataLength,
-                                              &mColormap, &mColormapSize);
+    rv = mImage->AppendPalettedFrame(mGIFStruct.x_offset, mGIFStruct.y_offset,
+                                     mGIFStruct.width, mGIFStruct.height,
+                                     format, aDepth, &mImageData, &imageDataLength,
+                                     &mColormap, &mColormapSize);
   } else {
     // Regardless of depth of input, image is decoded into 24bit RGB
-    rv = mImageContainer->AppendFrame(mGIFStruct.x_offset, mGIFStruct.y_offset,
-                                      mGIFStruct.width, mGIFStruct.height,
-                                      format, &mImageData, &imageDataLength);
+    rv = mImage->AppendFrame(mGIFStruct.x_offset, mGIFStruct.y_offset,
+                             mGIFStruct.width, mGIFStruct.height,
+                             format, &mImageData, &imageDataLength);
   }
 
   if (NS_FAILED(rv))
     return rv;
 
-  mImageContainer->SetFrameDisposalMethod(mGIFStruct.images_decoded,
-                                          mGIFStruct.disposal_method);
+  mImage->SetFrameDisposalMethod(mGIFStruct.images_decoded,
+                                 mGIFStruct.disposal_method);
 
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mGIFStruct.images_decoded);
@@ -391,7 +391,7 @@ void nsGIFDecoder2::EndImageFrame()
     // This will clear the remaining bits of the placeholder. (Bug 37589)
     const PRUint32 realFrameHeight = mGIFStruct.height + mGIFStruct.y_offset;
     if (realFrameHeight < mGIFStruct.screen_height) {
-      PRUint32 imgCurFrame = mImageContainer->GetCurrentFrameIndex();
+      PRUint32 imgCurFrame = mImage->GetCurrentFrameIndex();
       nsIntRect r(0, realFrameHeight,
                   mGIFStruct.screen_width,
                   mGIFStruct.screen_height - realFrameHeight);
@@ -402,7 +402,7 @@ void nsGIFDecoder2::EndImageFrame()
     }
     // This transparency check is only valid for first frame
     if (mGIFStruct.is_transparent && !mSawTransparency) {
-      mImageContainer->SetFrameHasNoAlpha(mGIFStruct.images_decoded);
+      mImage->SetFrameHasNoAlpha(mGIFStruct.images_decoded);
     }
   }
   mCurrentRow = mLastFlushedRow = -1;
@@ -422,13 +422,13 @@ void nsGIFDecoder2::EndImageFrame()
     // image data, at least according to the spec, but we delay in setting the 
     // timeout for the image until here to help ensure that we have the whole 
     // image frame decoded before we go off and try to display another frame.
-    mImageContainer->SetFrameTimeout(mGIFStruct.images_decoded, mGIFStruct.delay_time);
-    mImageContainer->EndFrameDecode(mGIFStruct.images_decoded);
+    mImage->SetFrameTimeout(mGIFStruct.images_decoded, mGIFStruct.delay_time);
+    mImage->EndFrameDecode(mGIFStruct.images_decoded);
   }
 
   // Unconditionally increment images_decoded, because we unconditionally
   // append frames in BeginImageFrame(). This ensures that images_decoded
-  // always refers to the frame in mImageContainer we're currently decoding,
+  // always refers to the frame in mImage we're currently decoding,
   // even if some of them weren't decoded properly and thus are blank.
   mGIFStruct.images_decoded++;
 
