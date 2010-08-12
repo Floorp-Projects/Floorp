@@ -1400,9 +1400,9 @@
               // than closing the window right away. If the caller opts in, take
               // the fast path.
               if (closeWindow &&
-                 aCloseWindowFastpath &&
-                 this._removingTabs.length == 0 &&
-                 (this._windowIsClosing = window.closeWindow(true)))
+                  aCloseWindowFastpath &&
+                  this._removingTabs.length == 0 &&
+                  (this._windowIsClosing = window.closeWindow(true)))
                 return null;
 
               newTab = true;
