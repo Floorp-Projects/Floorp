@@ -82,6 +82,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsfuninlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 
@@ -179,20 +180,17 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    argsobj->init(&js_ArgumentsClass, proto, parent, PrivateValue(NULL));
-    argsobj->setArgsCallee(ObjectOrNullValue(callee));
+    bool strict = callee->getFunctionPrivate()->inStrictMode();
+    argsobj->init(strict ? &StrictArgumentsClass : &js_ArgumentsClass, proto, parent,
+                  PrivateValue(NULL));
     argsobj->setArgsLength(argc);
-    if (callee) {
-        JSFunction *fun = callee->getFunctionPrivate();
-        if (fun->isInterpreted() && fun->u.i.script->strictModeCode)
-            argsobj->setArgsStrictMode();
-    }
-
+    argsobj->setArgsCallee(ObjectValue(*callee));
     argsobj->map = cx->runtime->emptyArgumentsScope->hold();
 
     /* This must come after argsobj->map has been set. */
     if (!js_EnsureReservedSlots(cx, argsobj, argc))
         return NULL;
+
     return argsobj;
 }
 
@@ -551,8 +549,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     /*
      * For simplicity we use delete/set to replace the property with one
-     * backed by the default Object getter and setter. Note the we rely on
-     * args_delete to clear the corresponding reserved slot so the GC can
+     * backed by the default Object getter and setter. Note that we rely on
+     * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
     AutoValueRooter tvr(cx);
@@ -564,7 +562,7 @@ static JSBool
 args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
              JSObject **objp)
 {
-    JS_ASSERT(obj->isArguments());
+    JS_ASSERT(obj->isNormalArguments());
 
     *objp = NULL;
     bool valid = false;
@@ -576,41 +574,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (!obj->isArgsLengthOverridden())
             valid = true;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
-        if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE)) {
-            Value tmp = UndefinedValue();
-            PropertyOp getter = ArgGetter, setter = ArgSetter;
-            uintN attrs = JSPROP_SHARED;
-            if (obj->isArgsStrictMode()) {
-                PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
-
-                getter = setter = throwTypeError;
-                attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
-            }
-
-            if (!js_DefineProperty(cx, obj, id, &tmp, getter, setter, attrs))
-                return false;
-            *objp = obj;
-            return true;
-        }
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
-        /*
-         * Arguments objects have no caller property -- except when they were
-         * created from strict mode functions.  In that case the caller
-         * property is an immutable poison pill that throws a TypeError on
-         * getting or setting.
-         */
-        if (!obj->isArgsStrictMode())
-            return true;
-
-        PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
-        Value tmp = UndefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &tmp, throwTypeError, throwTypeError,
-                               JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)) {
-            return false;
-        }
-
-        *objp = obj;
-        return true;
+        if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE))
+            valid = true;
     }
 
     if (valid) {
@@ -629,7 +594,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 static JSBool
 args_enumerate(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isArguments());
+    JS_ASSERT(obj->isNormalArguments());
 
     /*
      * Trigger reflection in args_resolve using a series of js_LookupProperty
@@ -654,6 +619,161 @@ args_enumerate(JSContext *cx, JSObject *obj)
     }
     return true;
 }
+
+namespace {
+
+JSBool
+StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    LeaveTrace(cx);
+
+    if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
+        return true;
+
+    if (JSID_IS_INT(id)) {
+        /*
+         * arg can exceed the number of arguments if a script changed the
+         * prototype to point to another Arguments object with a bigger argc.
+         */
+        uintN arg = uintN(JSID_TO_INT(id));
+        if (arg < obj->getArgsInitialLength()) {
+            JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
+            if (fp) {
+                *vp = fp->argv[arg];
+            } else {
+                const Value &v = obj->getArgsElement(arg);
+                if (!v.isMagic(JS_ARGS_HOLE))
+                    *vp = v;
+            }
+        }
+    } else {
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
+        if (!obj->isArgsLengthOverridden())
+            vp->setInt32(obj->getArgsInitialLength());
+    }
+    return true;
+}
+
+JSBool
+StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
+        return true;
+
+    if (JSID_IS_INT(id)) {
+        uintN arg = uintN(JSID_TO_INT(id));
+        if (arg < obj->getArgsInitialLength()) {
+            obj->setArgsElement(arg, *vp);
+            return true;
+        }
+    } else {
+        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
+    }
+
+    /*
+     * For simplicity we use delete/set to replace the property with one
+     * backed by the default Object getter and setter. Note that we rely on
+     * args_delProperty to clear the corresponding reserved slot so the GC can
+     * collect its value.
+     */
+    AutoValueRooter tvr(cx);
+    return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
+           js_SetProperty(cx, obj, id, vp);
+}
+
+JSBool
+strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
+{
+    JS_ASSERT(obj->isStrictArguments());
+
+    *objp = NULL;
+    bool valid = false;
+    if (JSID_IS_INT(id)) {
+        uint32 arg = uint32(JSID_TO_INT(id));
+        if (arg < obj->getArgsInitialLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+            valid = true;
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+        if (!obj->isArgsLengthOverridden())
+            valid = true;
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
+        Value tmp = UndefinedValue();
+        PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
+        uintN attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
+        if (!js_DefineProperty(cx, obj, id, &tmp, throwTypeError, throwTypeError, attrs))
+            return false;
+
+        *objp = obj;
+        return true;
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
+        /*
+         * Strict mode arguments objects have an immutable poison-pill caller
+         * property that throws a TypeError on getting or setting.
+         */
+        PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
+        Value tmp = UndefinedValue();
+        if (!js_DefineProperty(cx, obj, id, &tmp, throwTypeError, throwTypeError,
+                               JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)) {
+            return false;
+        }
+
+        *objp = obj;
+        return true;
+    }
+
+    if (valid) {
+        /*
+         * XXX ECMA specs DontEnum even for indexed properties, contrary to
+         * other array-like objects.
+         */
+        Value tmp = UndefinedValue();
+        if (!js_DefineProperty(cx, obj, id, &tmp, StrictArgGetter, StrictArgSetter, JSPROP_SHARED))
+            return JS_FALSE;
+        *objp = obj;
+    }
+    return true;
+}
+
+JSBool
+strictargs_enumerate(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isStrictArguments());
+
+    /*
+     * Trigger reflection in strictargs_resolve using a series of
+     * js_LookupProperty calls.  Beware deleted properties!
+     */
+    JSObject *pobj;
+    JSProperty *prop;
+
+    // length
+    if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), &pobj, &prop))
+        return false;
+    if (prop)
+        pobj->dropProperty(cx, prop);
+
+    // callee
+    if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.calleeAtom), &pobj, &prop))
+        return false;
+    if (prop)
+        pobj->dropProperty(cx, prop);
+
+    // caller
+    if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.callerAtom), &pobj, &prop))
+        return false;
+    if (prop)
+        pobj->dropProperty(cx, prop);
+
+    for (uint32 i = 0, argc = obj->getArgsInitialLength(); i < argc; i++) {
+        if (!js_LookupProperty(cx, obj, INT_TO_JSID(i), &pobj, &prop))
+            return false;
+        if (prop)
+            pobj->dropProperty(cx, prop);
+    }
+
+    return true;
+}
+
+} // namespace
 
 #if JS_HAS_GENERATORS
 /*
@@ -685,11 +805,14 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 #endif
 
 /*
- * The Arguments class is not initialized via JS_InitClass, because arguments
+ * The Arguments classes aren't initialized via JS_InitClass, because arguments
  * objects have the initial value of Object.prototype as their [[Prototype]].
  * However, Object.prototype.toString.call(arguments) === "[object Arguments]"
- * per ES5 (although not ES3), so its class name is "Arguments" rather than
+ * per ES5 (although not ES3), so the class name is "Arguments" rather than
  * "Object".
+ */
+
+/*
  *
  * The JSClass functions below collaborate to lazily reflect and synchronize
  * actual argument values, argument count, and callee function object stored
@@ -717,6 +840,37 @@ Class js_ArgumentsClass = {
     NULL,           /* hasInstance */
     JS_CLASS_TRACE(args_or_call_trace)
 };
+
+namespace js {
+
+/*
+ * Strict mode arguments is significantly less magical than non-strict mode
+ * arguments, so it is represented by a different class while sharing some
+ * functionality.
+ */
+Class StrictArgumentsClass = {
+    "Arguments",
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_FIXED_RESERVED_SLOTS) |
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    PropertyStub,   /* addProperty */
+    args_delProperty,
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    strictargs_enumerate,
+    reinterpret_cast<JSResolveOp>(strictargs_resolve),
+    ConvertStub,
+    NULL,           /* finalize   */
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    JS_CLASS_TRACE(args_or_call_trace)
+};
+
+}
 
 const uint32 JSSLOT_CALLEE =                    JSSLOT_PRIVATE + 1;
 const uint32 JSSLOT_CALL_ARGUMENTS =            JSSLOT_PRIVATE + 2;
@@ -1669,7 +1823,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             PropertyOp getter, setter;
             uintN attrs = JSPROP_PERMANENT;
-            if (fun->isInterpreted() && fun->u.i.script->strictModeCode) {
+            if (fun->inStrictMode()) {
                 JSObject *throwTypeError = obj->getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);
@@ -3218,6 +3372,8 @@ js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
 JSAtom *
 JSFunction::findDuplicateFormal() const
 {
+    JS_ASSERT(isInterpreted());
+
     if (nargs <= 1)
         return NULL;
 

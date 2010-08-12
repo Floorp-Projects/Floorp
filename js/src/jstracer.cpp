@@ -13345,7 +13345,7 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
         return NULL;
 
     VMSideExit *exit = snapshot(MISMATCH_EXIT);
-    guardClass(obj_ins, &js_ArgumentsClass, exit, LOAD_CONST);
+    guardClass(obj_ins, obj->getClass(), exit, LOAD_CONST);
 
     LIns* args_ins = getFrameObjPtr(afp->addressArgsObj());
     LIns* cmp = lir->ins2(LIR_eqp, args_ins, obj_ins);
