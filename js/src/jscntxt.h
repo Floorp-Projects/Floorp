@@ -1122,10 +1122,18 @@ struct JSThread {
      */
     bool                gcWaiting;
 
-    /*
-     * The context running the requests.
-     */
-    JSContext           *requestContext;
+    /* The request depth for this thread. */
+    unsigned            requestDepth;
+
+    /* Number of JS_SuspendRequest calls withot JS_ResumeRequest. */
+    unsigned            suspendCount;
+
+# ifdef DEBUG
+    unsigned            checkRequestDepth;
+# endif   
+
+    /* Weak ref, for low-cost sealed title locking */
+    JSTitle             *lockedSealedTitle;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -1333,9 +1341,10 @@ struct JSRuntime {
      * are not guaranteed, so stores issued by one thread may be lost due to
      * unsynchronized read-modify-write cycles on other threads.
      */
-    JSPackedBool        gcPoke;
-    JSPackedBool        gcRunning;
-    JSPackedBool        gcRegenShapes;
+    bool                gcPoke;
+    bool                gcMarkAndSweep;
+    bool                gcRunning;
+    bool                gcRegenShapes;
 
     /*
      * During gc, if rt->gcRegenShapes &&
@@ -2031,17 +2040,9 @@ struct JSContext
  
 #ifdef JS_THREADSAFE
     JSThread            *thread;
-    jsrefcount          requestDepth;
-    /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
-    jsrefcount          outstandingRequests;
-    JSContext           *prevRequestContext;
-    jsrefcount          prevRequestDepth;
-# ifdef DEBUG
-    unsigned            checkRequestDepth;
-# endif    
-
-    JSTitle             *lockedSealedTitle; /* weak ref, for low-cost sealed
-                                               title locking */
+    unsigned            outstandingRequests;/* number of JS_BeginRequest calls
+                                               without the corresponding
+                                               JS_EndRequest. */
     JSCList             threadLinks;        /* JSThread contextList linkage */
 
 #define CX_FROM_THREAD_LINKS(tl) \
@@ -2334,22 +2335,24 @@ namespace js {
 class AutoCheckRequestDepth {
     JSContext *cx;
   public:
-    AutoCheckRequestDepth(JSContext *cx) : cx(cx) { cx->checkRequestDepth++; }
+    AutoCheckRequestDepth(JSContext *cx) : cx(cx) { cx->thread->checkRequestDepth++; }
 
     ~AutoCheckRequestDepth() {
-        JS_ASSERT(cx->checkRequestDepth != 0);
-        cx->checkRequestDepth--;
+        JS_ASSERT(cx->thread->checkRequestDepth != 0);
+        cx->thread->checkRequestDepth--;
     }
 };
 
 }
 
-# define CHECK_REQUEST(cx)                                                  \
-    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread);\
+# define CHECK_REQUEST(cx)                                                    \
+    JS_ASSERT((cx)->thread);                                                  \
+    JS_ASSERT((cx)->thread->requestDepth || (cx)->thread == (cx)->runtime->gcThread); \
     AutoCheckRequestDepth _autoCheckRequestDepth(cx);
 
 #else
-# define CHECK_REQUEST(cx)       ((void)0)
+# define CHECK_REQUEST(cx)          ((void) 0)
+# define CHECK_REQUEST_THREAD(cx)   ((void) 0)
 #endif
 
 static inline uintN
@@ -2375,17 +2378,13 @@ class AutoGCRooter {
       : down(cx->autoGCRooters), tag(tag), context(cx)
     {
         JS_ASSERT(this != cx->autoGCRooters);
-#ifdef JS_THREADSAFE
-        JS_ASSERT(cx->requestDepth != 0);
-#endif
+        CHECK_REQUEST(cx);
         cx->autoGCRooters = this;
     }
 
     ~AutoGCRooter() {
         JS_ASSERT(this == context->autoGCRooters);
-#ifdef JS_THREADSAFE
-        JS_ASSERT(context->requestDepth != 0);
-#endif
+        CHECK_REQUEST(context);
         context->autoGCRooters = down;
     }
 
@@ -2395,8 +2394,8 @@ class AutoGCRooter {
 #ifdef __GNUC__
 # pragma GCC visibility push(default)
 #endif
-    friend void ::js_TraceContext(JSTracer *trc, JSContext *acx);
-    friend void ::js_TraceRuntime(JSTracer *trc);
+    friend void MarkContext(JSTracer *trc, JSContext *acx);
+    friend void MarkRuntime(JSTracer *trc);
 #ifdef __GNUC__
 # pragma GCC visibility pop
 #endif
@@ -2501,7 +2500,7 @@ class AutoValueRooter : private AutoGCRooter
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void ::js_TraceRuntime(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
 
   private:
     Value val;
@@ -2530,7 +2529,7 @@ class AutoObjectRooter : private AutoGCRooter {
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void ::js_TraceRuntime(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
 
   private:
     JSObject *obj;
@@ -2611,7 +2610,7 @@ class AutoScopePropertyRooter : private AutoGCRooter {
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void ::js_TraceRuntime(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
 
   private:
     JSScopeProperty * const sprop;
@@ -2657,7 +2656,7 @@ class AutoIdRooter : private AutoGCRooter
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void ::js_TraceRuntime(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
 
   private:
     jsid id_;
@@ -2756,7 +2755,7 @@ class AutoXMLRooter : private AutoGCRooter {
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void ::js_TraceRuntime(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
 
   private:
     JSXML * const xml;
@@ -3112,7 +3111,8 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #endif
 
 #ifdef JS_THREADSAFE
-# define JS_ASSERT_REQUEST_DEPTH(cx)  JS_ASSERT((cx)->requestDepth >= 1)
+# define JS_ASSERT_REQUEST_DEPTH(cx)  (JS_ASSERT((cx)->thread),               \
+                                       JS_ASSERT((cx)->thread->requestDepth >= 1))
 #else
 # define JS_ASSERT_REQUEST_DEPTH(cx)  ((void) 0)
 #endif
