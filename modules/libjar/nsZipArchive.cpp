@@ -736,6 +736,12 @@ PRUint8* nsZipArchive::GetData(nsZipItem* aItem)
   return data + offset;
 }
 
+PRBool 
+nsZipArchive::CheckCRC(nsZipItem* aItem, PRUint8* aItemData) {
+  PRUint32 crc = crc32(0, (const unsigned char*)aItemData, aItem->Size());
+  return crc == aItem->CRC32();
+}
+
 //------------------------------------------
 // nsZipArchive constructor and destructor
 //------------------------------------------
