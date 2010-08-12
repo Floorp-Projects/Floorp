@@ -197,8 +197,34 @@ let TabView = {
           charCode == 160) { // alt + space
 #else
       if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-          event.altKey && charCode == 32) { // ctrl + alt + space
+          !event.altKey && charCode == 32) { // ctrl + space
 #endif
+
+        // Don't handle this event if it's coming from a node that might allow
+        // multiple keyboard selection like selects or trees
+        let node = event.target;
+        switch (node.namespaceURI) {
+          case "http://www.w3.org/1999/xhtml":
+            // xhtml:select only allows multiple when the attr is set
+            if (node.localName == "select" && node.hasAttribute("multiple"))
+              return;
+            break;
+
+          case "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul":
+            switch (node.localName) {
+              case "listbox":
+                // xul:listbox is by default single
+                if (node.getAttribute("seltype") == "multiple")
+                  return;
+                break;
+              case "tree":
+                // xul:tree is by default multiple
+                if (node.getAttribute("seltype") != "single")
+                  return;
+                break;
+            }
+        }
+
         event.stopPropagation();
         event.preventDefault();
         self.show();

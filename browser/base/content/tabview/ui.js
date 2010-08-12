@@ -644,7 +644,7 @@ var UIManager = {
             !event.ctrlKey) {
 #else
         if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-            event.altKey) {
+            !event.altKey) {
 #endif
           var activeTab = self.getActiveTab();
           if (activeTab)
