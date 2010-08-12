@@ -1102,6 +1102,8 @@ StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref)
             return JSDOUBLE_COMPARE(lval.toDouble(), ==, rval.toDouble(), JS_FALSE);
         if (lval.isObject())
             return EqualObjects(cx, &lval.toObject(), &rval.toObject());
+        if (lval.isUndefined())
+                return true;
         return lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
     }
 
