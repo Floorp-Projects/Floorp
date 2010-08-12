@@ -1815,7 +1815,7 @@ VisitFrameSlots(Visitor &visitor, JSContext *cx, unsigned depth,
                 return false;
         }
         visitor.setStackSlotKind("arguments");
-        if (!visitor.visitFrameObjPtr(&fp->argsobj, fp))
+        if (!visitor.visitFrameObjPtr(fp->addressArgsObj(), fp))
             return false;
         // We want to import and track |JSObject *scopeChain|, but the tracker
         // requires type |Value|. But the bits are the same, so we can import
@@ -3303,7 +3303,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
      */
     uint32 slot = cv->slot;
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (cx->fp->callobj == call) {
+    if (cx->fp->maybeCallObj() == call) {
         slot = T::adj_slot(cx->fp, slot);
         *result = state->stackBase[slot];
         return state->callstackBase[0]->get_typemap()[slot];
@@ -3449,8 +3449,8 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                if (fp->argsobj && fp->argsobj->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE)
-                    fp->argsobj->setPrivate(fp);
+                if (fp->hasArgsObj() && fp->getArgsObj()->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE)
+                    fp->getArgsObj()->setPrivate(fp);
 
                 JS_ASSERT(fp->argv[-1].isObjectOrNull());
                 JS_ASSERT(fp->callee()->isFunction());
@@ -3460,8 +3460,8 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
                     (fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
                     // Iff these fields are NULL, then |fp| was synthesized on trace exit, so
                     // we need to update the frame fields.
-                    if (!fp->callobj)
-                        fp->callobj = fp->scopeChain;
+                    if (!fp->hasCallObj())
+                        fp->setCallObj(fp->scopeChain);
 
                     // Iff scope chain's private is NULL, then |fp->scopeChain| was created
                     // on trace for a call, so we set the private field now. (Call objects
@@ -3863,7 +3863,7 @@ TraceRecorder::isValidFrameObjPtr(JSObject **p)
 {
     JSStackFrame *fp = cx->fp;
     for (; fp; fp = fp->down) {
-        if (&fp->scopeChain == p || &fp->argsobj == p)
+        if (&fp->scopeChain == p || fp->addressArgsObj() == p)
             return true;
     }
     return false;
@@ -5703,8 +5703,8 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     }
 
     /* Initialize the new stack frame. */
-    newfp->callobj = NULL;
-    newfp->argsobj = NULL;
+    newfp->setCallObj(NULL);
+    newfp->setArgsObj(NULL);
     newfp->script = newscript;
     newfp->fun = fun;
     newfp->argc = argc;
@@ -5779,8 +5779,8 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
 #endif
 
     fp->imacpc = NULL;
-    fp->callobj = NULL;
-    fp->argsobj = NULL;
+    fp->setCallObj(NULL);
+    fp->setArgsObj(NULL);
     fp->script = NULL;
     fp->thisv = state.nativeVp[1];
     fp->argc = state.nativeVpLen - 2;
@@ -10240,7 +10240,7 @@ TraceRecorder::clearFrameSlotsFromTracker(Tracker& which, JSStackFrame* fp, unsi
         vpstop = &fp->argv[argSlots(fp)];
         while (vp < vpstop)
             which.set(vp++, (LIns*)0);
-        which.set(&fp->argsobj, (LIns*)0);
+        which.set(fp->addressArgsObj(), (LIns*)0);
         which.set(&fp->scopeChain, (LIns*)0);
     }
     vp = &fp->slots()[0];
@@ -10282,7 +10282,7 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
 JS_REQUIRES_STACK void
 TraceRecorder::putActivationObjects()
 {
-    bool have_args = cx->fp->argsobj && cx->fp->argc;
+    bool have_args = cx->fp->hasArgsObj() && cx->fp->argc;
     bool have_call = cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags) && cx->fp->fun->countArgsAndVars();
 
     if (!have_args && !have_call)
@@ -10302,7 +10302,7 @@ TraceRecorder::putActivationObjects()
     }
 
     if (have_args) {
-        LIns* argsobj_ins = getFrameObjPtr(&cx->fp->argsobj);
+        LIns* argsobj_ins = getFrameObjPtr(cx->fp->addressArgsObj());
         LIns* args[] = { args_ins, argsobj_ins, cx_ins };
         lir->insCall(&js_PutArguments_ci, args);
     }
@@ -10390,8 +10390,8 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         set(vp, void_ins);
     }
 
-    nativeFrameTracker.set(&fp->argsobj, NULL);
-    setFrameObjPtr(&fp->argsobj, INS_NULL());
+    nativeFrameTracker.set(fp->addressArgsObj(), NULL);
+    setFrameObjPtr(fp->addressArgsObj(), INS_NULL());
     nativeFrameTracker.set(&fp->scopeChain, NULL);
 
     vp = fp->slots();
@@ -10656,7 +10656,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     if (cx->fp->flags & JSFRAME_OVERRIDE_ARGS)
         RETURN_STOP_A("Can't trace |arguments| if |arguments| is assigned to");
 
-    LIns* a_ins = getFrameObjPtr(&cx->fp->argsobj);
+    LIns* a_ins = getFrameObjPtr(cx->fp->addressArgsObj());
     LIns* args_ins;
     LIns* callee_ins = get(&cx->fp->argv[-2]);
     if (a_ins->isImmP()) {
@@ -10684,7 +10684,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     }
 
     stack(0, args_ins);
-    setFrameObjPtr(&cx->fp->argsobj, args_ins);
+    setFrameObjPtr(cx->fp->addressArgsObj(), args_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -12152,7 +12152,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     // that frame.
 
     LIns *fp_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER);
-    LIns *fpcallobj_ins = lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, callobj),
+    LIns *fpcallobj_ins = lir->insLoad(LIR_ldp, fp_ins, JSStackFrame::offsetCallObj(),
                                        ACCSET_OTHER);
     LIns *br1 = lir->insBranch(LIR_jf, lir->ins2(LIR_eqp, fpcallobj_ins, callobj_ins), NULL);
 
@@ -13338,7 +13338,7 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
     VMSideExit *exit = snapshot(MISMATCH_EXIT);
     guardClass(obj_ins, &js_ArgumentsClass, exit, LOAD_CONST);
 
-    LIns* args_ins = getFrameObjPtr(&afp->argsobj);
+    LIns* args_ins = getFrameObjPtr(afp->addressArgsObj());
     LIns* cmp = lir->ins2(LIR_eqp, args_ins, obj_ins);
     lir->insGuard(LIR_xf, cmp, createGuardRecord(exit));
     return afp;
@@ -15249,9 +15249,9 @@ TraceRecorder::record_JSOP_ARGCNT()
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
     // LIR, which will assert in alu().
-    if (cx->fp->argsobj && cx->fp->argsobj->isArgsLengthOverridden())
+    if (cx->fp->hasArgsObj() && cx->fp->getArgsObj()->isArgsLengthOverridden())
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
-    LIns *a_ins = getFrameObjPtr(&cx->fp->argsobj);
+    LIns *a_ins = getFrameObjPtr(cx->fp->addressArgsObj());
     if (callDepth == 0) {
         LIns *br = lir->insBranch(LIR_jt, lir->insEqP_0(a_ins), NULL);
         guardArgsLengthNotAssigned(a_ins);
