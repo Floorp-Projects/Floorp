@@ -1061,7 +1061,7 @@
                       onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
 #ifdef MOZ_SERVICES_SYNC
       <statusbarpanel id="sync-status-button"
-                      class="statusbarpanel-iconic-text"
+                      class="statusbarpanel-iconic"
                       image="chrome://browser/skin/sync-16.png"
                       label="&syncLogInItem.label;"
                       oncommand="gSyncUI.handleStatusbarButton();"
