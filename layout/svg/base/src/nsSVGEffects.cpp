@@ -74,7 +74,8 @@ NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 #pragma warning(disable:4355)
 #endif
 nsSVGRenderingObserver::nsSVGRenderingObserver(nsIURI *aURI,
-                                               nsIFrame *aFrame)
+                                               nsIFrame *aFrame,
+                                               PRBool aReferenceImage)
   : mElement(this), mFrame(aFrame),
     mFramePresShell(aFrame->PresContext()->PresShell()),
     mInObserverList(PR_FALSE)
@@ -83,7 +84,7 @@ nsSVGRenderingObserver::nsSVGRenderingObserver(nsIURI *aURI,
 #endif
 {
   // Start watching the target element
-  mElement.Reset(aFrame->GetContent(), aURI);
+  mElement.Reset(aFrame->GetContent(), aURI, PR_TRUE, aReferenceImage);
   StartListening();
 }
 
@@ -319,25 +320,25 @@ nsSVGPaintingProperty::DoUpdate()
 }
 
 static nsSVGRenderingObserver *
-CreateFilterProperty(nsIURI *aURI, nsIFrame *aFrame)
-{ return new nsSVGFilterProperty(aURI, aFrame); }
+CreateFilterProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+{ return new nsSVGFilterProperty(aURI, aFrame, aReferenceImage); }
 
 static nsSVGRenderingObserver *
-CreateMarkerProperty(nsIURI *aURI, nsIFrame *aFrame)
-{ return new nsSVGMarkerProperty(aURI, aFrame); }
+CreateMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+{ return new nsSVGMarkerProperty(aURI, aFrame, aReferenceImage); }
 
 static nsSVGRenderingObserver *
-CreateTextPathProperty(nsIURI *aURI, nsIFrame *aFrame)
-{ return new nsSVGTextPathProperty(aURI, aFrame); }
+CreateTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+{ return new nsSVGTextPathProperty(aURI, aFrame, aReferenceImage); }
 
 static nsSVGRenderingObserver *
-CreatePaintingProperty(nsIURI *aURI, nsIFrame *aFrame)
-{ return new nsSVGPaintingProperty(aURI, aFrame); }
+CreatePaintingProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+{ return new nsSVGPaintingProperty(aURI, aFrame, aReferenceImage); }
 
 static nsSVGRenderingObserver *
 GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
                   const FramePropertyDescriptor *aProperty,
-                  nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *))
+                  nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, PRBool))
 {
   if (!aURI)
     return nsnull;
@@ -347,7 +348,7 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
     static_cast<nsSVGRenderingObserver*>(props.Get(aProperty));
   if (prop)
     return prop;
-  prop = aCreate(aURI, aFrame);
+  prop = aCreate(aURI, aFrame, PR_FALSE);
   if (!prop)
     return nsnull;
   NS_ADDREF(prop);
@@ -382,7 +383,7 @@ nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
 static nsSVGRenderingObserver *
 GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
                         const FramePropertyDescriptor *aProperty,
-                        nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *))
+                        nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, PRBool))
 {
   FrameProperties props = aFrame->Properties();
   nsSVGEffects::URIObserverHashtable *hashtable =
@@ -395,7 +396,8 @@ GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
   nsSVGRenderingObserver* prop =
     static_cast<nsSVGRenderingObserver*>(hashtable->GetWeak(aURI));
   if (!prop) {
-    prop = aCreate(aURI, aFrame);
+    PRBool watchImage = aProperty == nsSVGEffects::BackgroundImageProperty();
+    prop = aCreate(aURI, aFrame, watchImage);
     hashtable->Put(aURI, prop);
   }
   return prop;
