@@ -1603,7 +1603,7 @@ mjit::Compiler::emitReturn()
         } else {
             /* if (callobj) ... */
             Jump callObj = masm.branchPtr(Assembler::NotEqual,
-                                          Address(JSFrameReg, offsetof(JSStackFrame, callobj)),
+                                          Address(JSFrameReg, JSStackFrame::offsetCallObj()),
                                           ImmPtr(0));
             stubcc.linkExit(callObj, Uses(frame.frameDepth()));
 
@@ -1615,7 +1615,7 @@ mjit::Compiler::emitReturn()
 
             /* if (arguments) ... */
             Jump argsObj = masm.branchPtr(Assembler::NotEqual,
-                                          Address(JSFrameReg, offsetof(JSStackFrame, argsobj)),
+                                          Address(JSFrameReg, JSStackFrame::offsetArgsObj()),
                                           ImmIntPtr(0));
             stubcc.linkExit(argsObj, Uses(0));
             stubcc.call(stubs::PutArgsObject);
