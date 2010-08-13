@@ -212,6 +212,10 @@ private:
   // Whether we want to defer our notifications by the non-virtual Observer
   // interfaces as image loads proceed.
   PRPackedBool mDeferNotifications;
+
+  // We only want to send OnStartContainer once for each proxy, but we might
+  // get multiple OnStartContainer calls (e.g. from multipart/x-mixed-replace).
+  PRPackedBool mSentStartContainer;
 };
 
 #endif // imgRequestProxy_h__

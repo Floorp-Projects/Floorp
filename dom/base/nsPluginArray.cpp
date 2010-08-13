@@ -189,9 +189,16 @@ nsPluginArray::GetPluginHost(nsIPluginHost** aPluginHost)
 }
 
 void
-nsPluginArray::SetDocShell(nsIDocShell* aDocShell)
+nsPluginArray::SetDocShell(nsIDocShell *aDocShell)
 {
   mDocShell = aDocShell;
+}
+
+void
+nsPluginArray::Invalidate()
+{
+  mDocShell = nsnull;
+  mNavigator = nsnull;
 }
 
 NS_IMETHODIMP

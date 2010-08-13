@@ -121,6 +121,7 @@ typedef std::wstring xpstring;
 #define CONVERT_UTF16_TO_XP_CHAR(x) x
 #define CONVERT_XP_CHAR_TO_UTF16(x) x
 #define XP_STRLEN(x) wcslen(x)
+#define my_strlen strlen
 #define CRASH_REPORTER_FILENAME "crashreporter.exe"
 #define PATH_SEPARATOR "\\"
 #define XP_PATH_SEPARATOR L"\\"
@@ -144,10 +145,11 @@ typedef std::string xpstring;
 #define XP_PATH_MAX PATH_MAX
 #ifdef XP_LINUX
 #define XP_STRLEN(x) my_strlen(x)
-#define XP_TTOA(time, buffer, base) my_itos(buffer, time, sizeof(buffer))
+#define XP_TTOA(time, buffer, base) my_timetostring(time, buffer, sizeof(buffer))
 #else
 #define XP_STRLEN(x) strlen(x)
 #define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
+#define my_strlen strlen
 #define sys_close close
 #define sys_fork fork
 #define sys_open open
@@ -223,6 +225,15 @@ static const char* kSubprocessBlacklist[] = {
 
 #endif  // MOZ_IPC
 
+#ifdef XP_LINUX
+inline void
+my_timetostring(time_t t, char* buffer, size_t buffer_length)
+{
+  my_memset(buffer, 0, buffer_length);
+  my_itos(buffer, t, my_int_len(t));
+}
+#endif
+
 #ifdef XP_WIN
 static void
 CreateFileFromPath(const xpstring& path, nsILocalFile** file)
@@ -294,11 +305,11 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
   int timeSinceLastCrashStringLen = 0;
 
   XP_TTOA(crashTime, crashTimeString, 10);
-  crashTimeStringLen = strlen(crashTimeString);
+  crashTimeStringLen = my_strlen(crashTimeString);
   if (lastCrashTime != 0) {
     timeSinceLastCrash = crashTime - lastCrashTime;
     XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString, 10);
-    timeSinceLastCrashStringLen = strlen(timeSinceLastCrashString);
+    timeSinceLastCrashStringLen = my_strlen(timeSinceLastCrashString);
   }
   // write crash time to file
   if (lastCrashTimeFilename[0] != 0) {
@@ -567,7 +578,8 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   // store application start time
   char timeString[32];
-  XP_TTOA(time(NULL), timeString, 10);
+  time_t startupTime = time(NULL);
+  XP_TTOA(startupTime, timeString, 10);
   AnnotateCrashReport(NS_LITERAL_CSTRING("StartupTime"),
                       nsDependentCString(timeString));
 

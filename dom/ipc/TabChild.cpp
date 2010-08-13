@@ -75,6 +75,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsWeakReference.h"
 
@@ -953,14 +954,45 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
   return true;
 }
 
+class UnloadScriptEvent : public nsRunnable
+{
+public:
+  UnloadScriptEvent(TabChild* aTabChild, TabChildGlobal* aTabChildGlobal)
+    : mTabChild(aTabChild), mTabChildGlobal(aTabChildGlobal)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
+    if (event) {
+      event->InitEvent(NS_LITERAL_STRING("unload"), PR_FALSE, PR_FALSE);
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+      privateEvent->SetTrusted(PR_TRUE);
+
+      PRBool dummy;
+      mTabChildGlobal->DispatchEvent(event, &dummy);
+    }
+
+    return NS_OK;
+  }
+
+  nsRefPtr<TabChild> mTabChild;
+  TabChildGlobal* mTabChildGlobal;
+};
+
 bool
 TabChild::RecvDestroy()
 {
-    DestroyWidget();
+  // Let the frame scripts know the child is being closed
+  nsContentUtils::AddScriptRunner(
+    new UnloadScriptEvent(this, mTabChildGlobal)
+  );
 
-    // XXX what other code in ~TabChild() should we be running here?
+  // XXX what other code in ~TabChild() should we be running here?
+  DestroyWidget();
 
-    return Send__delete__(this);
+  return Send__delete__(this);
 }
 
 bool

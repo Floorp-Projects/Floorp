@@ -19,7 +19,7 @@
 #endif
 
 [@AB_CD@]
-@BINPATH@/chrome/@AB_CD@.jar
+@BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/firefox-l10n.js
 @BINPATH@/searchplugins/*
@@ -401,7 +401,7 @@
 #endif
 
 ; [Browser Chrome Files]
-@BINPATH@/chrome/browser.jar
+@BINPATH@/chrome/browser@JAREXT@
 @BINPATH@/chrome/browser.manifest
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
@@ -409,7 +409,7 @@
 #if MOZ_UPDATE_CHANNEL == beta
 @BINPATH@/extensions/testpilot@labs.mozilla.com/*
 #endif
-@BINPATH@/chrome/toolkit.jar
+@BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 @BINPATH@/@PREF_DIR@/reporter.js
 #ifdef XP_UNIX
@@ -508,7 +508,7 @@
 @BINPATH@/@DLL_PREFIX@nssdbm3.chk
 #endif
 #endif
-@BINPATH@/chrome/pippki.jar
+@BINPATH@/chrome/pippki@JAREXT@
 @BINPATH@/chrome/pippki.manifest
 
 ; for Solaris SPARC

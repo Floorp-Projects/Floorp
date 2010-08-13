@@ -69,8 +69,6 @@ public:
 {
 }
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent;
-- (void)actOnKeyEquivalent:(NSEvent*)theEvent;
-- (void)performMenuUserInterfaceEffectsForEvent:(NSEvent*)theEvent;
 @end
 
 // Objective-C class used as action target for menu items
