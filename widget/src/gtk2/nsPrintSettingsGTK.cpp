@@ -591,10 +591,10 @@ void
 nsPrintSettingsGTK::InitUnwriteableMargin()
 {
   mUnwriteableMargin.SizeTo(
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH))
+   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH)),
+   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH)),
+   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH)),
+   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH))
   );
 }
 
@@ -721,8 +721,8 @@ nsPrintSettingsGTK::SetPaperSizeUnit(PRInt16 aPaperSizeUnit)
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetEffectivePageSize(double *aWidth, double *aHeight)
 {
-  *aWidth  = NS_INCHES_TO_TWIPS(gtk_paper_size_get_width(mPaperSize, GTK_UNIT_INCH));
-  *aHeight = NS_INCHES_TO_TWIPS(gtk_paper_size_get_height(mPaperSize, GTK_UNIT_INCH));
+  *aWidth  = NS_INCHES_TO_INT_TWIPS(gtk_paper_size_get_width(mPaperSize, GTK_UNIT_INCH));
+  *aHeight = NS_INCHES_TO_INT_TWIPS(gtk_paper_size_get_height(mPaperSize, GTK_UNIT_INCH));
 
   GtkPageOrientation gtkOrient = gtk_page_setup_get_orientation(mPageSetup);
 
