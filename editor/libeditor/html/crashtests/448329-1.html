@@ -15,6 +15,9 @@ function test448329(id,cmd) {
   var doc = elm.contentDocument;
   doc.designMode = "On";
 
+  // Work around getSelection depending on a presshell but not flushing to get
+  // one.
+  doc.body.offsetWidth;
   var s = doc.defaultView.getSelection();
 
   // Test document node
