@@ -2780,7 +2780,8 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     DBGLABEL(dbgJumpOffset);
     {
         pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExit(j, Uses(0));
+        stubcc.linkExitDirect(j, pic.slowPathStart);
+        frame.sync(stubcc.masm, Uses(0));
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
         pic.callReturn = stubcc.call(ic::Name);
