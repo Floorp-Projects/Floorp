@@ -113,6 +113,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
+!insertmacro SetAppLSPCategories
 !insertmacro SetBrandNameVars
 !insertmacro UpdateShortcutAppModelIDs
 !insertmacro UnloadUAC
@@ -374,7 +375,6 @@ Section "-Application" APP_IDX
   ${If} $TmpVal == "HKLM"
     ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
     ${SetStartMenuInternet}
-
     ${FixShellIconHandler}
 
     ; If we are writing to HKLM and create the quick launch and the desktop
@@ -397,6 +397,11 @@ Section "-Application" APP_IDX
 
   StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\$R9"
   ${CreateRegKey} "$TmpVal" "$0" 0
+
+  ${If} $TmpVal == "HKLM"
+    ; Set the permitted LSP Categories for WinVista and above
+    ${SetAppLSPCategories} ${LSP_CATEGORIES}
+  ${EndIf}
 
   ; Create shortcuts
   ${LogHeader} "Adding Shortcuts"
