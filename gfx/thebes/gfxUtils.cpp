@@ -35,8 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gfxImageSurface.h"
 #include "gfxUtils.h"
+#include "gfxContext.h"
+#include "gfxPlatform.h"
+
+#if defined(XP_WIN) || defined(WINCE)
+#include "gfxWindowsPlatform.h"
+#endif
 
 static PRUint8 sUnpremultiplyTable[256*256];
 static PRUint8 sPremultiplyTable[256*256];
@@ -196,3 +201,291 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
 #endif
     }
 }
+
+static PRBool
+IsSafeImageTransformComponent(gfxFloat aValue)
+{
+  return aValue >= -32768 && aValue <= 32767;
+}
+
+static void
+SetExtendAndFilterOnPattern(gfxPattern* aPattern,
+                            const gfxMatrix& aDeviceToImage,
+                            const gfxASurface::gfxSurfaceType aSurfaceType,
+                            const gfxPattern::GraphicsFilter aDefaultFilter)
+{
+    // In theory we can handle this using cairo's EXTEND_PAD,
+    // but implementation limitations mean we have to consult
+    // the surface type.
+    switch (aSurfaceType) {
+        case gfxASurface::SurfaceTypeXlib:
+        case gfxASurface::SurfaceTypeXcb:
+        {
+            // See bug 324698.  This is a workaround for EXTEND_PAD not being
+            // implemented correctly on linux in the X server.
+            //
+            // Set the filter to CAIRO_FILTER_FAST --- otherwise,
+            // pixman's sampling will sample transparency for the outside edges and we'll
+            // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
+            // available
+            //
+            // But don't do this for simple downscales because it's horrible.
+            // Downscaling means that device-space coordinates are
+            // scaled *up* to find the image pixel coordinates.
+            //
+            // aDeviceToImage is slightly stale because up above we may
+            // have adjusted the pattern's matrix ... but the adjustment
+            // is only a translation so the scale factors in aDeviceToImage
+            // are still valid.
+            PRBool isDownscale =
+                aDeviceToImage.xx >= 1.0 && aDeviceToImage.yy >= 1.0 &&
+                aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;
+            if (!isDownscale) {
+                aPattern->SetFilter(gfxPattern::FILTER_FAST);
+            }
+            break;
+        }
+
+        case gfxASurface::SurfaceTypeQuartz:
+        case gfxASurface::SurfaceTypeQuartzImage:
+            // Don't set EXTEND_PAD, Mac seems to be OK. Really?
+            aPattern->SetFilter(aDefaultFilter);
+            break;
+
+        default:
+            // turn on EXTEND_PAD.
+            // This is what we really want for all surface types, if the
+            // implementation was universally good.
+            aPattern->SetExtend(gfxPattern::EXTEND_PAD);
+            aPattern->SetFilter(aDefaultFilter);
+            break;
+    }
+}
+
+// EXTEND_PAD won't help us here; we have to create a temporary surface to hold
+// the subimage of pixels we're allowed to sample.
+static already_AddRefed<gfxPattern>
+CreateSamplingRestrictedPattern(gfxASurface* aSurface,
+                                gfxContext* aContext,
+                                const gfxMatrix& aUserSpaceToImageSpace,
+                                const gfxRect& aSourceRect,
+                                const gfxRect& aSubimage,
+                                const gfxImageSurface::gfxImageFormat aFormat)
+{
+    gfxRect userSpaceClipExtents = aContext->GetClipExtents();
+    // This isn't optimal --- if aContext has a rotation then GetClipExtents
+    // will have to do a bounding-box computation, and TransformBounds might
+    // too, so we could get a better result if we computed image space clip
+    // extents in one go --- but it doesn't really matter and this is easier
+    // to understand.
+    gfxRect imageSpaceClipExtents =
+        aUserSpaceToImageSpace.TransformBounds(userSpaceClipExtents);
+    // Inflate by one pixel because bilinear filtering will sample at most
+    // one pixel beyond the computed image pixel coordinate.
+    imageSpaceClipExtents.Outset(1.0);
+
+    gfxRect needed = imageSpaceClipExtents.Intersect(aSourceRect);
+    needed = needed.Intersect(aSubimage);
+    needed.RoundOut();
+
+    // if 'needed' is empty, nothing will be drawn since aFill
+    // must be entirely outside the clip region, so it doesn't
+    // matter what we do here, but we should avoid trying to
+    // create a zero-size surface.
+    if (needed.IsEmpty())
+        return nsnull;
+
+    gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
+    nsRefPtr<gfxASurface> temp =
+        gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, aFormat);
+    if (!temp || temp->CairoStatus())
+        return nsnull;
+
+    nsRefPtr<gfxPattern> tmpPattern = new gfxPattern(aSurface);
+    if (!tmpPattern)
+        return nsnull;
+
+    tmpPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+    tmpPattern->SetMatrix(gfxMatrix().Translate(needed.pos));
+
+    gfxContext tmpCtx(temp);
+    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx.SetPattern(tmpPattern);
+    tmpCtx.Paint();
+
+    nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);
+    if (!resultPattern)
+        return nsnull;
+
+    resultPattern->SetMatrix(
+        gfxMatrix(aUserSpaceToImageSpace).Multiply(gfxMatrix().Translate(-needed.pos)));
+    return resultPattern.forget();
+}
+
+// working around cairo/pixman bug (bug 364968)
+// Our device-space-to-image-space transform may not be acceptable to pixman.
+struct NS_STACK_CLASS AutoCairoPixmanBugWorkaround
+{
+    AutoCairoPixmanBugWorkaround(gfxContext*      aContext,
+                                 const gfxMatrix& aDeviceSpaceToImageSpace,
+                                 const gfxRect&   aFill,
+                                 const gfxASurface::gfxSurfaceType& aSurfaceType)
+     : mContext(aContext), mSucceeded(PR_TRUE), mPushedGroup(PR_FALSE)
+    {
+        // Quartz's limits for matrix are much larger than pixman
+        if (aSurfaceType == gfxASurface::SurfaceTypeQuartz)
+            return;
+
+        if (!IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.xx) ||
+            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.xy) ||
+            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.yx) ||
+            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.yy)) {
+            NS_WARNING("Scaling up too much, bailing out");
+            mSucceeded = PR_FALSE;
+            return;
+        }
+
+        if (IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.x0) &&
+            IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.y0))
+            return;
+
+        // We'll push a group, which will hopefully reduce our transform's
+        // translation so it's in bounds.
+        gfxMatrix currentMatrix = mContext->CurrentMatrix();
+        mContext->Save();
+
+        // Clip the rounded-out-to-device-pixels bounds of the
+        // transformed fill area. This is the area for the group we
+        // want to push.
+        mContext->IdentityMatrix();
+        gfxRect bounds = currentMatrix.TransformBounds(aFill);
+        bounds.RoundOut();
+        mContext->Clip(bounds);
+        mContext->SetMatrix(currentMatrix);
+        mContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+        mContext->SetOperator(gfxContext::OPERATOR_OVER);
+
+        mPushedGroup = PR_TRUE;
+    }
+
+    ~AutoCairoPixmanBugWorkaround()
+    {
+        if (mPushedGroup) {
+            mContext->PopGroupToSource();
+            mContext->Paint();
+            mContext->Restore();
+        }
+    }
+
+    PRBool PushedGroup() { return mPushedGroup; }
+    PRBool Succeeded() { return mSucceeded; }
+
+private:
+    gfxContext* mContext;
+    PRPackedBool mSucceeded;
+    PRPackedBool mPushedGroup;
+};
+
+/**
+ * This returns the fastest operator to use for solid surfaces which have no
+ * alpha channel or their alpha channel is uniformly opaque.
+ * This differs per render mode.
+ */
+static gfxContext::GraphicsOperator
+OptimalFillOperator()
+{
+#ifdef XP_WIN
+    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+        gfxWindowsPlatform::RENDER_DIRECT2D) {
+        // D2D -really- hates operator source.
+        return gfxContext::OPERATOR_OVER;
+    } else {
+#endif
+        return gfxContext::OPERATOR_SOURCE;
+#ifdef XP_WIN
+    }
+#endif
+}
+
+static gfxMatrix
+DeviceToImageTransform(gfxContext* aContext,
+                       const gfxMatrix& aUserSpaceToImageSpace)
+{
+    gfxFloat deviceX, deviceY;
+    nsRefPtr<gfxASurface> currentTarget =
+        aContext->CurrentSurface(&deviceX, &deviceY);
+    gfxMatrix currentMatrix = aContext->CurrentMatrix();
+    gfxMatrix deviceToUser = gfxMatrix(currentMatrix).Invert();
+    deviceToUser.Translate(-gfxPoint(-deviceX, -deviceY));
+    return gfxMatrix(deviceToUser).Multiply(aUserSpaceToImageSpace);
+}
+
+/* static */ void
+gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
+                           gfxASurface*     aSurface,
+                           const gfxMatrix& aUserSpaceToImageSpace,
+                           const gfxRect&   aSubimage,
+                           const gfxRect&   aSourceRect,
+                           const gfxRect&   aImageRect,
+                           const gfxRect&   aFill,
+                           const gfxImageSurface::gfxImageFormat aFormat,
+                           const gfxPattern::GraphicsFilter& aFilter)
+{
+    PRBool doTile = !aImageRect.Contains(aSourceRect);
+
+    nsRefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
+    gfxASurface::gfxSurfaceType surfaceType = currentTarget->GetType();
+    gfxMatrix currentMatrix = aContext->CurrentMatrix();
+    gfxMatrix deviceSpaceToImageSpace =
+        DeviceToImageTransform(aContext, aUserSpaceToImageSpace);
+
+    AutoCairoPixmanBugWorkaround workaround(aContext, deviceSpaceToImageSpace,
+                                            aFill, surfaceType);
+    if (!workaround.Succeeded())
+        return;
+
+    nsRefPtr<gfxPattern> pattern = new gfxPattern(aSurface);
+    pattern->SetMatrix(aUserSpaceToImageSpace);
+
+    // OK now, the hard part left is to account for the subimage sampling
+    // restriction. If all the transforms involved are just integer
+    // translations, then we assume no resampling will occur so there's
+    // nothing to do.
+    // XXX if only we had source-clipping in cairo!
+    if (!currentMatrix.HasNonIntegerTranslation() &&
+        !aUserSpaceToImageSpace.HasNonIntegerTranslation()) {
+        if (doTile) {
+            pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+        }
+    } else {
+        if (doTile || !aSubimage.Contains(aImageRect)) {
+            nsRefPtr<gfxPattern> restrictedPattern =
+                CreateSamplingRestrictedPattern(aSurface, aContext,
+                                                aUserSpaceToImageSpace,
+                                                aSourceRect, aSubimage, aFormat);
+            if (restrictedPattern) {
+                pattern.swap(restrictedPattern);
+            }
+        }
+        SetExtendAndFilterOnPattern(pattern, deviceSpaceToImageSpace, surfaceType,
+                                    aFilter);
+    }
+
+    gfxContext::GraphicsOperator op = aContext->CurrentOperator();
+    if ((op == gfxContext::OPERATOR_OVER || workaround.PushedGroup()) &&
+        aFormat == gfxASurface::ImageFormatRGB24) {
+        aContext->SetOperator(OptimalFillOperator());
+    }
+
+    // Phew! Now we can actually draw this image
+    aContext->NewPath();
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    pattern->SetFilter(gfxPattern::FILTER_FAST); 
+#endif
+    aContext->SetPattern(pattern);
+    aContext->Rectangle(aFill);
+    aContext->Fill();
+
+    aContext->SetOperator(op);
+}
+
