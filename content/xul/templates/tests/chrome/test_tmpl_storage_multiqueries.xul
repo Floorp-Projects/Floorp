@@ -38,7 +38,7 @@ var expectedOutput =
     <listitem anyid="true" label="Mammal: Nine-banded Armadillo" style="font-weight:bold"/>
     <listitem anyid="true" label="Mammal: Polar Bear"/>
     <listitem anyid="true" label="Mammal: aardvark"/>
-    <listitem anyid="true" label="Bird: Barn Owl" style="font-style: italic;"/>
+    <listitem anyid="true" label="Bird: Barn Owl" style="font-style:italic"/>
     <listitem anyid="true" label="Bird: Emu"/>
     <listitem anyid="true" label="Bird: Raven"/>
 </output>;
