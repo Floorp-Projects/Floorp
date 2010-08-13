@@ -2332,6 +2332,28 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
         }
       }
     }
+    // Sometimes, aInOutNode is the mozBR element itself.  In that case, we'll
+    // adjust the insertion point to the previous text node, if one exists, or
+    // to the parent anonymous DIV.
+    if (nsTextEditUtils::IsMozBR(*aInOutNode) && *aInOutOffset == 0) {
+      nsCOMPtr<nsIDOMNode> previous;
+      (*aInOutNode)->GetPreviousSibling(getter_AddRefs(previous));
+      nodeAsText = do_QueryInterface(previous);
+      if (nodeAsText) {
+        PRUint32 length;
+        res = nodeAsText->GetLength(&length);
+        if (NS_SUCCEEDED(res)) {
+          *aInOutOffset = PRInt32(length);
+          *aInOutNode = previous;
+        }
+      } else {
+        nsCOMPtr<nsIDOMNode> parent;
+        (*aInOutNode)->GetParentNode(getter_AddRefs(parent));
+        if (parent == GetRoot()) {
+          *aInOutNode = parent;
+        }
+      }
+    }
   }
   PRInt32 offset = *aInOutOffset;
   if (mInIMEMode)
