@@ -176,15 +176,12 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     }
     nscolor color;
     nsRect vis = i->GetVisibleRect();
-    fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)%s%s%s%s\n",
+    fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)%s%s\n",
             i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
             rect.x, rect.y, rect.width, rect.height,
             vis.x, vis.y, vis.width, vis.height,
             i->IsOpaque(aBuilder) ? " opaque" : "",
-            i->IsUniform(aBuilder, &color) ? " uniform" : "",
-            f && aBuilder->IsMovingFrame(f) ? " moving" : "",
-            f && aBuilder->IsMovingFrame(f) && !i->GetList() &&
-              i->IsVaryingRelativeToMovingFrame(aBuilder) ? " varying" : "");
+            i->IsUniform(aBuilder, &color) ? " uniform" : "");
     nsDisplayList* list = i->GetList();
     if (list) {
       PrintDisplayListTo(aBuilder, *list, aIndent + 4, aOutput);
