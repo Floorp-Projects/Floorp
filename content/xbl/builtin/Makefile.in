@@ -51,7 +51,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 DIRS	= gtk2
 else
-DIRS	= unix
+DIRS	= emacs
 endif
 endif
 endif
