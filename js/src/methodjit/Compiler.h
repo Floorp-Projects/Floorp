@@ -65,6 +65,7 @@ class Compiler
     typedef JSC::MacroAssembler::JumpList JumpList;
     typedef JSC::MacroAssembler::Call Call;
     typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
+    typedef JSC::MacroAssembler::DataLabel32 DataLabel32;
 
     struct BranchPatch {
         BranchPatch(const Jump &j, jsbytecode *pc)
@@ -81,7 +82,7 @@ class Compiler
         { }
         Label entry;
         Label stubEntry;
-        DataLabelPtr shapeVal;
+        DataLabel32 shape;
 #if defined JS_PUNBOX64
         uint32 patchValueOffset;
 #endif

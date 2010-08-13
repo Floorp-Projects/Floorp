@@ -289,7 +289,7 @@ mjit::Compiler::finishThisUp()
           case ic::MICInfo::GET:
           case ic::MICInfo::SET:
             script->mics[i].load = fullCode.locationOf(mics[i].load);
-            script->mics[i].shape = fullCode.locationOf(mics[i].shapeVal);
+            script->mics[i].shape = fullCode.locationOf(mics[i].shape);
             script->mics[i].stubCall = stubCode.locationOf(mics[i].call);
             script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
             script->mics[i].u.name.typeConst = mics[i].u.name.typeConst;
@@ -2117,7 +2117,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
 
-    Label inlineShapeLabel;
+    DataLabel32 inlineShapeLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                                     Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                     inlineShapeLabel);
@@ -2199,7 +2199,7 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
 
-    Label inlineShapeOffsetLabel;
+    DataLabel32 inlineShapeOffsetLabel;
     Jump jmpShapeGuard = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                                  Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                  inlineShapeOffsetLabel);
@@ -2335,7 +2335,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
 
-    Label inlineShapeLabel;
+    DataLabel32 inlineShapeLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                            inlineShapeLabel);
@@ -2497,7 +2497,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
 
-    Label inlineShapeLabel;
+    DataLabel32 inlineShapeLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                            inlineShapeLabel);
@@ -2663,7 +2663,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
-    Label inlineShapeOffsetLabel;
+    DataLabel32 inlineShapeOffsetLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                                     Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                     inlineShapeOffsetLabel);
@@ -2779,8 +2779,7 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     DBGLABEL(dbgJumpOffset);
     {
         pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExitDirect(j, pic.slowPathStart);
-        frame.sync(stubcc.masm, Uses(0));
+        stubcc.linkExit(j, Uses(0));
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
         pic.callReturn = stubcc.call(ic::Name);
@@ -3436,7 +3435,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
         objReg = frame.allocReg();
 
         masm.load32FromImm(&map->shape, objReg);
-        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, objReg, mic.shapeVal);
+        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
+                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)), mic.shape);
         masm.move(ImmPtr(obj), objReg);
     } else {
         objReg = frame.ownRegForData(fe);
@@ -3445,7 +3445,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
         masm.loadPtr(Address(objReg, offsetof(JSObject, map)), reg);
         masm.load32(Address(reg, offsetof(JSObjectMap, shape)), reg);
-        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, reg, mic.shapeVal);
+        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
+                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)), mic.shape);
         frame.freeReg(reg);
     }
     stubcc.linkExit(shapeGuard, Uses(0));
@@ -3528,7 +3529,9 @@ mjit::Compiler::jsop_setgname(uint32 index)
         objReg = frame.allocReg();
 
         masm.load32FromImm(&map->shape, objReg);
-        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, objReg, mic.shapeVal);
+        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
+                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                            mic.shape);
         masm.move(ImmPtr(obj), objReg);
     } else {
         objReg = frame.tempRegForData(objFe);
@@ -3537,7 +3540,9 @@ mjit::Compiler::jsop_setgname(uint32 index)
 
         masm.loadPtr(Address(objReg, offsetof(JSObject, map)), reg);
         masm.load32(Address(reg, offsetof(JSObjectMap, shape)), reg);
-        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, reg, mic.shapeVal);
+        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
+                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                            mic.shape);
         frame.freeReg(reg);
     }
     stubcc.linkExit(shapeGuard, Uses(2));
