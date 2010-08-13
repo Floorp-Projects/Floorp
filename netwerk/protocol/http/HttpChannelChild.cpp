@@ -49,6 +49,7 @@
 #include "nsHttpHandler.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsSerializationHelper.h"
 
 namespace mozilla {
 namespace net {
@@ -91,6 +92,7 @@ HttpChannelChild::HttpChannelChild()
   , mSendResumeAt(false)
   , mSuspendCount(0)
   , mIPCOpen(false)
+  , mKeptAlive(false)
   , mQueuePhase(PHASE_UNQUEUED)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
@@ -107,7 +109,29 @@ HttpChannelChild::~HttpChannelChild()
 
 // Override nsHashPropertyBag's AddRef: we don't need thread-safe refcnt
 NS_IMPL_ADDREF(HttpChannelChild)
-NS_IMPL_RELEASE(HttpChannelChild)
+
+NS_IMETHODIMP_(nsrefcnt) HttpChannelChild::Release()
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD(HttpChannelChild);
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "HttpChannelChild");
+
+  if (mRefCnt == 1 && mKeptAlive && mIPCOpen) {
+    mKeptAlive = false;
+    // Send_delete calls NeckoChild::DeallocPHttpChannel, which will release
+    // again to refcount==0
+    PHttpChannelChild::Send__delete__(this);
+    return 0;
+  }
+
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
 
 NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
@@ -123,6 +147,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAssociatedContentSecurity, GetAssociatedContentSecurity())
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -191,7 +216,8 @@ class StartRequestEvent : public ChildChannelEvent
                     const PRBool& isFromCache,
                     const PRBool& cacheEntryAvailable,
                     const PRUint32& cacheExpirationTime,
-                    const nsCString& cachedCharset)
+                    const nsCString& cachedCharset,
+                    const nsCString& securityInfoSerialization)
   : mChild(child)
   , mResponseHead(responseHead)
   , mUseResponseHead(useResponseHead)
@@ -199,13 +225,14 @@ class StartRequestEvent : public ChildChannelEvent
   , mCacheEntryAvailable(cacheEntryAvailable)
   , mCacheExpirationTime(cacheExpirationTime)
   , mCachedCharset(cachedCharset)
+  , mSecurityInfoSerialization(securityInfoSerialization)
   {}
 
   void Run() 
   { 
     mChild->OnStartRequest(mResponseHead, mUseResponseHead, mIsFromCache, 
                            mCacheEntryAvailable, mCacheExpirationTime, 
-                           mCachedCharset);
+                           mCachedCharset, mSecurityInfoSerialization);
   }
  private:
   HttpChannelChild* mChild;
@@ -215,6 +242,7 @@ class StartRequestEvent : public ChildChannelEvent
   PRBool mCacheEntryAvailable;
   PRUint32 mCacheExpirationTime;
   nsCString mCachedCharset;
+  nsCString mSecurityInfoSerialization;
 };
 
 bool 
@@ -223,15 +251,18 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const PRBool& isFromCache,
                                      const PRBool& cacheEntryAvailable,
                                      const PRUint32& cacheExpirationTime,
-                                     const nsCString& cachedCharset)
+                                     const nsCString& cachedCharset,
+                                     const nsCString& securityInfoSerialization)
 {
   if (ShouldEnqueue()) {
     EnqueueEvent(new StartRequestEvent(this, responseHead, useResponseHead,
                                        isFromCache, cacheEntryAvailable,
-                                       cacheExpirationTime, cachedCharset));
+                                       cacheExpirationTime, cachedCharset,
+                                       securityInfoSerialization));
   } else {
     OnStartRequest(responseHead, useResponseHead, isFromCache,
-                   cacheEntryAvailable, cacheExpirationTime, cachedCharset);
+                   cacheEntryAvailable, cacheExpirationTime, cachedCharset,
+                   securityInfoSerialization);
   }
   return true;
 }
@@ -242,12 +273,18 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const PRBool& isFromCache,
                                  const PRBool& cacheEntryAvailable,
                                  const PRUint32& cacheExpirationTime,
-                                 const nsCString& cachedCharset)
+                                 const nsCString& cachedCharset,
+                                 const nsCString& securityInfoSerialization)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
   if (useResponseHead && !mCanceled)
     mResponseHead = new nsHttpResponseHead(responseHead);
+
+  if (!securityInfoSerialization.IsEmpty()) {
+    NS_DeserializeObject(securityInfoSerialization, 
+                         getter_AddRefs(mSecurityInfo));
+  }
  
   mIsFromCache = isFromCache;
   mCacheEntryAvailable = cacheEntryAvailable;
@@ -379,14 +416,19 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
     mListener = 0;
     mListenerContext = 0;
     mCacheEntryAvailable = PR_FALSE;
-
     if (mLoadGroup)
       mLoadGroup->RemoveRequest(this, nsnull, statusCode);
   }
 
-  // This calls NeckoChild::DeallocPHttpChannel(), which deletes |this| if IPDL
-  // holds the last reference.  Don't rely on |this| existing after here.
-  PHttpChannelChild::Send__delete__(this);
+  if (!(mLoadFlags & LOAD_DOCUMENT_URI)) {
+    // This calls NeckoChild::DeallocPHttpChannel(), which deletes |this| if IPDL
+    // holds the last reference.  Don't rely on |this| existing after here.
+    PHttpChannelChild::Send__delete__(this);
+  } else {
+    // We need to keep the document loading channel alive for further 
+    // communication, mainly for collecting a security state values.
+    mKeptAlive = true;
+  }
 }
 
 class ProgressEvent : public ChildChannelEvent
@@ -755,9 +797,8 @@ HttpChannelChild::Resume()
 NS_IMETHODIMP
 HttpChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
-  // FIXME: Stub for bug 536301 .
   NS_ENSURE_ARG_POINTER(aSecurityInfo);
-  *aSecurityInfo = 0;
+  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
   return NS_OK;
 }
 
@@ -1076,6 +1117,137 @@ HttpChannelChild::SetChooseApplicationCache(PRBool aChooseApplicationCache)
   return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
+// HttpChannelChild::nsIAssociatedContentSecurity
+//-----------------------------------------------------------------------------
+
+bool
+HttpChannelChild::GetAssociatedContentSecurity(
+                    nsIAssociatedContentSecurity** _result)
+{
+  if (!mSecurityInfo)
+    return false;
+
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc =
+      do_QueryInterface(mSecurityInfo);
+  if (!assoc)
+    return false;
+
+  if (_result)
+    assoc.forget(_result);
+  return true;
+}
+
+/* attribute unsigned long countSubRequestsHighSecurity; */
+NS_IMETHODIMP
+HttpChannelChild::GetCountSubRequestsHighSecurity(
+                    PRInt32 *aSubRequestsHighSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->GetCountSubRequestsHighSecurity(aSubRequestsHighSecurity);
+}
+NS_IMETHODIMP
+HttpChannelChild::SetCountSubRequestsHighSecurity(
+                    PRInt32 aSubRequestsHighSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->SetCountSubRequestsHighSecurity(aSubRequestsHighSecurity);
+}
+
+/* attribute unsigned long countSubRequestsLowSecurity; */
+NS_IMETHODIMP
+HttpChannelChild::GetCountSubRequestsLowSecurity(
+                    PRInt32 *aSubRequestsLowSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->GetCountSubRequestsLowSecurity(aSubRequestsLowSecurity);
+}
+NS_IMETHODIMP
+HttpChannelChild::SetCountSubRequestsLowSecurity(
+                    PRInt32 aSubRequestsLowSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->SetCountSubRequestsLowSecurity(aSubRequestsLowSecurity);
+}
+
+/* attribute unsigned long countSubRequestsBrokenSecurity; */
+NS_IMETHODIMP 
+HttpChannelChild::GetCountSubRequestsBrokenSecurity(
+                    PRInt32 *aSubRequestsBrokenSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->GetCountSubRequestsBrokenSecurity(aSubRequestsBrokenSecurity);
+}
+NS_IMETHODIMP 
+HttpChannelChild::SetCountSubRequestsBrokenSecurity(
+                    PRInt32 aSubRequestsBrokenSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->SetCountSubRequestsBrokenSecurity(aSubRequestsBrokenSecurity);
+}
+
+/* attribute unsigned long countSubRequestsNoSecurity; */
+NS_IMETHODIMP
+HttpChannelChild::GetCountSubRequestsNoSecurity(PRInt32 *aSubRequestsNoSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->GetCountSubRequestsNoSecurity(aSubRequestsNoSecurity);
+}
+NS_IMETHODIMP
+HttpChannelChild::SetCountSubRequestsNoSecurity(PRInt32 aSubRequestsNoSecurity)
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  return assoc->SetCountSubRequestsNoSecurity(aSubRequestsNoSecurity);
+}
+
+NS_IMETHODIMP
+HttpChannelChild::Flush()
+{
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc;
+  if (!GetAssociatedContentSecurity(getter_AddRefs(assoc)))
+    return NS_OK;
+
+  nsresult rv;
+  PRInt32 hi, low, broken, no;
+
+  rv = assoc->GetCountSubRequestsHighSecurity(&hi);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = assoc->GetCountSubRequestsLowSecurity(&low);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = assoc->GetCountSubRequestsBrokenSecurity(&broken);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = assoc->GetCountSubRequestsNoSecurity(&no);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mIPCOpen)
+    SendUpdateAssociatedContentSecurity(hi, low, broken, no);
+
+  return NS_OK;
+}
 
 //------------------------------------------------------------------------------
 

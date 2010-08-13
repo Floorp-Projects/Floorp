@@ -83,6 +83,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../src/geolocation \
 		-I$(topsrcdir)/chrome/src \
 		-I$(topsrcdir)/uriloader/exthandler \
+		-I$(srcdir)/../../netwerk/base/src \
 		$(NULL)
 
 CXXFLAGS += $(TK_CFLAGS)
