@@ -101,6 +101,7 @@ class Compiler
             struct {
                 bool typeConst;
                 bool dataConst;
+                bool dataWrite;
             } name;
             struct {
                 uint32 pcOffs;
