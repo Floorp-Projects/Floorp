@@ -134,6 +134,18 @@ PKG_SUFFIX	= .cab
 INNER_MAKE_PACKAGE	= $(MAKE_CAB)
 INNER_UNMAKE_PACKAGE	= $(error Unpacking CAB files is not supported)
 endif
+ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
+PKG_SUFFIX	= .exe
+_MAKE_PACKAGE	= rm -f app.7z && \
+  mv $(MOZ_PKG_DIR) core && \
+  $(CYGWIN_WRAPPER) 7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 \
+    -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3 && \
+  mv core $(MOZ_PKG_DIR) && \
+  cat $(SFX_HEADER) app.7z > $(PACKAGE) && \
+  chmod 0755 $(PACKAGE)
+_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) && \
+  mv core $(MOZ_PKG_DIR)
+endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
 ifdef MOZ_DEBUG
@@ -357,10 +369,9 @@ else
 PKGCP_OS = unix
 endif
 
-# The following target stages files into three directories: one directory for
-# locale-independent files, one for locale-specific files, and one for optional
-# extensions based on the information in the MOZ_PKG_MANIFEST file and the
-# following vars:
+# The following target stages files into two directories: one directory for
+# core files, and one for optional extensions based on the information in
+# the MOZ_PKG_MANIFEST file and the following vars:
 # MOZ_NONLOCALIZED_PKG_LIST
 # MOZ_LOCALIZED_PKG_LIST
 # MOZ_OPTIONAL_PKG_LIST
@@ -373,41 +384,24 @@ $(PERL) -I$(MOZILLA_DIR)/xpinstall/packager -e 'use Packager; \
        Packager::Copy($1,$2,$3,$4,$5,$6,$7);'
 endef
 
-installer-stage: $(MOZ_PKG_MANIFEST)
+installer-stage: stage-package
 ifndef MOZ_PKG_MANIFEST
 	$(error MOZ_PKG_MANIFEST unspecified!)
 endif
 	@rm -rf $(DEPTH)/installer-stage $(DIST)/xpt
 	@echo "Staging installer files..."
-	@$(NSINSTALL) -D $(DEPTH)/installer-stage/nonlocalized
-	@$(NSINSTALL) -D $(DEPTH)/installer-stage/localized
-	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
-	@$(NSINSTALL) -D $(DIST)/xpt
-	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
-	  "$(call core_abspath,$(DEPTH)/installer-stage/nonlocalized)", \
-	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-	  $(foreach pkg,$(MOZ_NONLOCALIZED_PKG_LIST),$(PKG_ARG)) )
-	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
-	  "$(call core_abspath,$(DEPTH)/installer-stage/localized)", \
-	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-	  $(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) )
+	@$(NSINSTALL) -D $(DEPTH)/installer-stage/core
+	@cp -av $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
 ifdef MOZ_OPTIONAL_PKG_LIST
+	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
 	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
 	  "$(call core_abspath,$(DEPTH)/installer-stage/optional)", \
 	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
 	  $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
 endif
-	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x "$(XPIDL_LINK)"
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
-	  $(DEPTH)/installer-stage/nonlocalized/components/components.manifest \
-	  $(patsubst %,$(DIST)/manifests/%/components,$(MOZ_NONLOCALIZED_PKG_LIST))
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
-	  $(DEPTH)/installer-stage/nonlocalized/chrome/nonlocalized.manifest \
-	  $(patsubst %,$(DIST)/manifests/%/chrome,$(MOZ_NONLOCALIZED_PKG_LIST))
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
-	  $(DEPTH)/installer-stage/localized/chrome/localized.manifest \
-	  $(patsubst %,$(DIST)/manifests/%/chrome,$(MOZ_LOCALIZED_PKG_LIST))
-	printf "manifest components/interfaces.manifest\nmanifest components/components.manifest\nmanifest chrome/nonlocalized.manifest\nmanifest chrome/localized.manifest\n" > $(DEPTH)/installer-stage/nonlocalized/chrome.manifest
+ifdef MOZ_OMNIJAR
+	@(cd $(DEPTH)/installer-stage/core && $(PACK_OMNIJAR))
+endif
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(MOZ_PKG_DIR) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)

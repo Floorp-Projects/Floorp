@@ -3778,8 +3778,7 @@
       ; Check if the file exists in the source. If it does the new file will
       ; replace the existing file when the system is rebooted. If it doesn't
       ; the file will be deleted when the system is rebooted.
-      IfFileExists "$EXEDIR\nonlocalized$R9" end +1
-      IfFileExists "$EXEDIR\localized$R9" end +1
+      IfFileExists "$EXEDIR\core$R9" end +1
       IfFileExists "$EXEDIR\optional$R9" end +1
       Delete /REBOOTOK "$R1"
       ${LogMsg} "Delayed Delete File (Reboot Required): $R1"
