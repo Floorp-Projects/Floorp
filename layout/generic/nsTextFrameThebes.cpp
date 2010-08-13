@@ -3939,11 +3939,11 @@ public:
 #endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+    return mFrame->GetOverflowRect() + ToReferenceFrame();
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
-    if (nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()).Intersects(aRect)) {
+    if (nsRect(ToReferenceFrame(), mFrame->GetSize()).Intersects(aRect)) {
       aOutFrames->AppendElement(mFrame);
     }
   }
@@ -3962,7 +3962,7 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   nscoord appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   extraVisible.Inflate(appUnitsPerDevPixel, appUnitsPerDevPixel);
   static_cast<nsTextFrame*>(mFrame)->
-    PaintText(aCtx, aBuilder->ToReferenceFrame(mFrame), extraVisible);
+    PaintText(aCtx, ToReferenceFrame(), extraVisible);
 }
 
 NS_IMETHODIMP

@@ -1893,7 +1893,7 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
   mFrame->PresContext()->LookAndFeel()->
       GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
   aCtx->SetColor(bgColor);
-  aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
+  aCtx->FillRect(mRect + ToReferenceFrame());
 }
 
 class nsDisplayMathMLCharBackground : public nsDisplayItem {
@@ -1922,7 +1922,7 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
                                           nsIRenderingContext* aCtx)
 {
   const nsStyleBorder* border = mStyleContext->GetStyleBorder();
-  nsRect rect(mRect + aBuilder->ToReferenceFrame(mFrame));
+  nsRect rect(mRect + ToReferenceFrame());
   nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
                                         mVisibleRect, rect,
                                         mStyleContext, *border,
@@ -1946,8 +1946,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     nsRect rect;
     mChar->GetRect(rect);
-    nsPoint offset =
-      aBuilder->ToReferenceFrame(mFrame) + rect.TopLeft();
+    nsPoint offset = ToReferenceFrame() + rect.TopLeft();
     nsBoundingMetrics bm;
     mChar->GetBoundingMetrics(bm);
     return nsRect(offset.x + bm.leftBearing, offset.y,
@@ -1958,7 +1957,7 @@ public:
                      nsIRenderingContext* aCtx)
   {
     mChar->PaintForeground(mFrame->PresContext(), *aCtx,
-                           aBuilder->ToReferenceFrame(mFrame), mIsSelected);
+                           ToReferenceFrame(), mIsSelected);
   }
 
   NS_DISPLAY_DECL_NAME("MathMLCharForeground", TYPE_MATHML_CHAR_FOREGROUND)
@@ -1997,7 +1996,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   PRIntn skipSides = 0;
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext* styleContext = mFrame->GetStyleContext();
-  nsRect rect = mRect + aBuilder->ToReferenceFrame(mFrame);
+  nsRect rect = mRect + ToReferenceFrame();
   nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
                               mVisibleRect, rect, styleContext, skipSides);
   nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame,

@@ -114,13 +114,13 @@ private:
 
 nsRect
 nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 void
 nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
                                      nsIRenderingContext* aCtx) {
-  nsRect frameRect = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+  nsRect frameRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
   nsRect buttonRect;
   mBFR->GetButtonRect(frameRect, buttonRect);
@@ -178,7 +178,7 @@ void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 {
   NS_ASSERTION(mFrame, "No frame?");
   nsPresContext* pc = mFrame->PresContext();
-  nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+  nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
   
   // draw the border and background inside the focus and outline borders
   mBFR->PaintBorderAndBackground(pc, *aCtx, mVisibleRect, r,
@@ -193,7 +193,7 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
   if (!mFrame->IsThemed(disp) ||
       !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, mFrame, disp->mAppearance)) {
     // draw the focus and outline borders
-    nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+    nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
     mBFR->PaintOutlineAndFocusBorders(presContext, *aCtx, mVisibleRect, r);
   }
 }

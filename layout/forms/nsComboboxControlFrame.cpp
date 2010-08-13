@@ -1333,7 +1333,7 @@ void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
                                    nsIRenderingContext* aCtx)
 {
   static_cast<nsComboboxControlFrame*>(mFrame)
-    ->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    ->PaintFocus(*aCtx, ToReferenceFrame());
 }
 
 NS_IMETHODIMP

@@ -208,7 +208,7 @@ nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                          nsIRenderingContext* aCtx)
 {
   static_cast<nsFieldSetFrame*>(mFrame)->
-    PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame),
+    PaintBorderBackground(*aCtx, ToReferenceFrame(),
                           mVisibleRect, aBuilder->GetBackgroundPaintFlags());
 }
 
