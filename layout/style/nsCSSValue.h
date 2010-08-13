@@ -154,7 +154,8 @@ enum nsCSSUnit {
 
   // Metric
   eCSSUnit_Millimeter   = 207,    // (float) 1/1000 meter
-  eCSSUnit_Centimeter   = 208,    // (float) 1/100 meter
+  eCSSUnit_PhysicalMillimeter = 208,   // (float) 1/1000 meter
+  eCSSUnit_Centimeter   = 209,    // (float) 1/100 meter
 
   // US Typographic
   eCSSUnit_Pica         = 301,    // (float) 12 points == 1/6 inch
