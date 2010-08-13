@@ -741,6 +741,14 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       nsDependentString(GetOriginalURLValue()), aResult);
     aResult.Append(NS_LITERAL_STRING(")"));
   }
+  else if (eCSSUnit_Element == unit) {
+    aResult.Append(NS_LITERAL_STRING("-moz-element(#"));
+    nsAutoString tmpStr;
+    GetStringValue(tmpStr);
+    nsStyleUtil::AppendEscapedCSSIdent(
+      nsDependentString(tmpStr), aResult);
+    aResult.Append(NS_LITERAL_STRING(")"));
+  }
   else if (eCSSUnit_Percent == unit) {
     nsAutoString tmpStr;
     tmpStr.AppendFloat(GetPercentValue() * 100.0f);
@@ -846,6 +854,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Families:     break;
     case eCSSUnit_URL:          break;
     case eCSSUnit_Image:        break;
+    case eCSSUnit_Element:      break;
     case eCSSUnit_Array:        break;
     case eCSSUnit_Attr:
     case eCSSUnit_Cubic_Bezier:

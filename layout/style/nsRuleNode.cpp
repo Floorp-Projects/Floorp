@@ -955,6 +955,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       }
       break;
     }
+    case eCSSUnit_Element:
+      aResult.SetElementId(aValue.GetStringBufferValue());
+      break;
     case eCSSUnit_None:
       break;
     default:
