@@ -47,6 +47,10 @@ extern "C" {
 }
 #include "mozilla/TimeStamp.h"
 
+#if defined(XP_MACOSX)
+#define SA_PER_STREAM_VOLUME 1
+#endif
+
 using mozilla::TimeStamp;
 
 #ifdef PR_LOGGING
@@ -211,7 +215,14 @@ PRUint32 nsAudioStream::Available()
 void nsAudioStream::SetVolume(float aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
+#if defined(SA_PER_STREAM_VOLUME)
+  if (sa_stream_set_volume_abs(static_cast<sa_stream_t*>(mAudioHandle), aVolume) != SA_SUCCESS) {
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_set_volume_abs error"));
+    Shutdown();
+  }
+#else
   mVolume = aVolume;
+#endif
 }
 
 void nsAudioStream::Drain()

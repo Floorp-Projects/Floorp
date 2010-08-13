@@ -8,6 +8,10 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <style type="text/css" id="stylesheet"></style>
+  <style type="text/css">
+  /* For 'width', 'height', etc., need a constant size container. */
+  #display { width: 500px; height: 200px }
+  </style>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
@@ -58,6 +62,9 @@ function setup_initial_values(id, ivalprop, prereqprop) {
   window[ivalprop] = iframe.contentWindow.getComputedStyle(
                        iframe.contentDocument.documentElement.firstChild, "");
   var sheet = iframe.contentDocument.styleSheets[0];
+  // For 'width', 'height', etc., need a constant size container.
+  sheet.insertRule(":root { height: 200px; width: 500px }", sheet.cssRules.length);
+
   window[prereqprop] = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
 }
 

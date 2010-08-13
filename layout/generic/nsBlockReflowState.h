@@ -75,8 +75,6 @@ public:
                      PRBool aTopMarginRoot, PRBool aBottomMarginRoot,
                      PRBool aBlockNeedsFloatManager);
 
-  ~nsBlockReflowState();
-
   /**
    * Get the available reflow space (the area not occupied by floats)
    * for the current y coordinate. The available space is relative to
@@ -220,12 +218,15 @@ public:
 
   nscoord mBottomEdge;
 
-  // The content area to reflow child frames within. The x/y
-  // coordinates are known to be mBorderPadding.left and
-  // mBorderPadding.top. The width/height may be NS_UNCONSTRAINEDSIZE
-  // if the container reflowing this frame has given the frame an
-  // unconstrained area.
-  nsSize mContentArea;
+  // The content area to reflow child frames within.  This is within
+  // this frame's coordinate system, which means mContentArea.x ==
+  // BorderPadding().left and mContentArea.y == BorderPadding().top.
+  // The height may be NS_UNCONSTRAINEDSIZE, which indicates that there
+  // is no page/column boundary below (the common case).
+  // mContentArea.YMost() should only be called after checking that
+  // mContentArea.height is not NS_UNCONSTRAINEDSIZE; otherwise
+  // coordinate overflow may occur.
+  nsRect mContentArea;
 
   // Continuation out-of-flow float frames that need to move to our
   // next in flow are placed here during reflow.  It's a pointer to

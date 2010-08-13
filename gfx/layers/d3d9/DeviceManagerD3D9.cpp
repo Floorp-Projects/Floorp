@@ -85,7 +85,7 @@ SwapChainD3D9::Init(HWND hWnd)
   D3DPRESENT_PARAMETERS pp;
   memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
 
-  pp.BackBufferFormat = D3DFMT_UNKNOWN;
+  pp.BackBufferFormat = D3DFMT_A8R8G8B8;
   pp.SwapEffect = D3DSWAPEFFECT_COPY;
   pp.Windowed = TRUE;
   pp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -199,9 +199,9 @@ DeviceManagerD3D9::Init()
       }
   }
 
-  mFocusWnd = CreateWindow(kClassName, L"D3D9Window", WS_OVERLAPPEDWINDOW,
-                           CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL,
-                           NULL, GetModuleHandle(NULL), NULL);
+  mFocusWnd = ::CreateWindowW(kClassName, L"D3D9Window", WS_OVERLAPPEDWINDOW,
+                              CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL,
+                              NULL, GetModuleHandle(NULL), NULL);
 
   if (!mFocusWnd) {
     NS_WARNING("Failed to create DeviceManagerD3D9 Window.");
