@@ -1256,10 +1256,8 @@
       <parameter name="aAll"/>
       <body>
         <![CDATA[
-          var tabsToClose = this.tabs.length;
-
-          if (!aAll)
-            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
+          var tabsToClose = (aAll ? this.tabs.length : this.visibleTabs.length - 1)
+                            - gBrowser._numPinnedTabs;
           if (tabsToClose <= 1)
             return true;
 
