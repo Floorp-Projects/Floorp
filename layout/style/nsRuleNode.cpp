@@ -3101,7 +3101,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_List:
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size - nsPresContext::CSSPointsToAppUnits(2), 0);
         break;
     }
 #endif

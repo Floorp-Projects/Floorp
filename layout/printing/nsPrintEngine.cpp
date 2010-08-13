@@ -2021,7 +2021,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
   // Calculate scale factor from printer to screen
-  float printDPI = float(mPrt->mPrintDC->AppUnitsPerInch()) /
+  float printDPI = float(mPrt->mPrintDC->AppUnitsPerCSSInch()) /
                    float(mPrt->mPrintDC->AppUnitsPerDevPixel());
   aPO->mPresContext->SetPrintPreviewScale(mScreenDPI / printDPI);
 
@@ -2358,8 +2358,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
             nsIntMargin unwrtMarginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
             mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
-            nsMargin totalMargin = poPresContext->TwipsToAppUnits(marginTwips + 
-                                                              unwrtMarginTwips);
+            nsMargin totalMargin = poPresContext->CSSTwipsToAppUnits(marginTwips + 
+                                                                     unwrtMarginTwips);
             if (startPageNum == endPageNum) {
               {
                 startRect.y -= totalMargin.top;
