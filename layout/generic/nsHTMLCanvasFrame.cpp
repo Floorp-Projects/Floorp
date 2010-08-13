@@ -64,8 +64,8 @@ CanvasElementFromContent(nsIContent *content)
 
 class nsDisplayCanvas : public nsDisplayItem {
 public:
-  nsDisplayCanvas(nsIFrame* aFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayCanvas(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
@@ -283,7 +283,8 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCanvas(this));
+  rv = aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayCanvas(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DisplaySelectionOverlay(aBuilder, aLists,

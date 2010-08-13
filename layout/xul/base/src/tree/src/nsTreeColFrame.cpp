@@ -90,7 +90,9 @@ nsTreeColFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 class nsDisplayXULTreeColSplitterTarget : public nsDisplayItem {
 public:
-  nsDisplayXULTreeColSplitterTarget(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayXULTreeColSplitterTarget(nsDisplayListBuilder* aBuilder,
+                                    nsIFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULTreeColSplitterTarget);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -158,7 +160,7 @@ nsTreeColFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayXULTreeColSplitterTarget(this));
+      nsDisplayXULTreeColSplitterTarget(aBuilder, this));
 }
 
 NS_IMETHODIMP
