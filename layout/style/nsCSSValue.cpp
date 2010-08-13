@@ -232,30 +232,51 @@ imgIRequest* nsCSSValue::GetImageValue() const
   return mValue.mImage->mRequest;
 }
 
-nscoord nsCSSValue::GetLengthTwips() const
+nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
 {
   NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
 
-  if (IsFixedLengthUnit()) {
-    switch (mUnit) {
-    case eCSSUnit_Inch:        
-      return NS_INCHES_TO_TWIPS(mValue.mFloat);
+  float twips;
+  switch (mUnit) {
+  case eCSSUnit_Inch:        
+    twips = NS_INCHES_TO_TWIPS(mValue.mFloat);
+    break;
 
-    case eCSSUnit_Millimeter:
-      return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Centimeter:
-      return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
+  case eCSSUnit_Millimeter:
+    twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
+    break;
 
-    case eCSSUnit_Point:
-      return NS_POINTS_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Pica:
-      return NS_PICAS_TO_TWIPS(mValue.mFloat);
-    default:
-      NS_ERROR("should never get here");
-      break;
-    }
+  case eCSSUnit_Centimeter:
+    twips = NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
+    break;
+
+  case eCSSUnit_Pica:
+    twips = NS_PICAS_TO_TWIPS(mValue.mFloat);
+    break;
+
+  default:
+    NS_ERROR("should never get here");
+    return 0;
   }
-  return 0;
+
+  return aPresContext->TwipsToAppUnits(twips);
+}
+
+nscoord nsCSSValue::GetPixelLength() const
+{
+  NS_ASSERTION(IsPixelLengthUnit(), "not a fixed length unit");
+
+  switch (mUnit) {
+  case eCSSUnit_Pixel:
+    return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat);
+
+  case eCSSUnit_Point:
+    return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat*4/3);
+
+  default:
+    NS_ERROR("should never get here");
+    return 0;
+  }
 }
 
 void nsCSSValue::DoReset()
