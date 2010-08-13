@@ -752,11 +752,9 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) 
 }
 
 PRBool
-nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder)
+nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                    nsIFrame* aFrame)
 {
-  NS_ASSERTION(aBuilder->IsMovingFrame(mFrame),
-              "IsVaryingRelativeToMovingFrame called on non-moving frame!");
-
   // theme background overrides any other background and is never fixed
   if (mIsThemed)
     return PR_FALSE;
@@ -771,14 +769,12 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
   if (!bg->HasFixedBackground())
     return PR_FALSE;
 
-  nsIFrame* movingFrame = aBuilder->GetRootMovingFrame();
-  // movingFrame is the frame that is going to be moved. It must be equal
-  // to mFrame or some ancestor of mFrame, see assertion above.
-  // If mFrame is in the same document as movingFrame, then mFrame
-  // will move relative to its viewport, which means this display item will
-  // change when it is moved. If they are in different documents, we do not
-  // want to return true because mFrame won't move relative to its viewport.
-  return movingFrame->PresContext() == presContext;
+  // If aFrame is mFrame or an ancestor in this document, and aFrame is
+  // not the viewport frame, then moving aFrame will move mFrame
+  // relative to the viewport, so our fixed-pos background will change.
+  return aFrame->GetParent() &&
+    (aFrame == mFrame ||
+     nsLayoutUtils::IsProperAncestorFrame(aFrame, mFrame));
 }
 
 PRBool
@@ -1102,10 +1098,8 @@ PRBool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aCo
   return PR_FALSE;
 }
 
-PRBool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder) {
-  // The only existing consumer of IsVaryingRelativeToMovingFrame is
-  // nsLayoutUtils::ComputeRepaintRegionForCopy, which refrains from calling
-  // this on wrapped lists.
+PRBool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                         nsIFrame* aFrame) {
   NS_WARNING("nsDisplayWrapList::IsVaryingRelativeToMovingFrame called unexpectedly");
   // We could try to do something but let's conservatively just return PR_TRUE.
   return PR_TRUE;
