@@ -340,6 +340,7 @@ struct JSAtomState
     JSAtom              *ignoreCaseAtom;
     JSAtom              *indexAtom;
     JSAtom              *inputAtom;
+    JSAtom              *toISOStringAtom;
     JSAtom              *iteratorAtom;
     JSAtom              *joinAtom;
     JSAtom              *lastIndexAtom;

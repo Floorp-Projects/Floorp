@@ -332,3 +332,4 @@ MSG_DEF(JSMSG_BAD_PROXY_FIX,          249, 0, JSEXN_TYPEERR, "proxy was fixed wh
 MSG_DEF(JSMSG_INVALID_EVAL_SCOPE_ARG, 250, 0, JSEXN_EVALERR, "invalid eval scope argument")
 MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,    251, 3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")
 MSG_DEF(JSMSG_THROW_TYPE_ERROR,       252, 0, JSEXN_TYPEERR, "'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them")
+MSG_DEF(JSMSG_BAD_TOISOSTRING_PROP,   253, 0, JSEXN_TYPEERR, "toISOString property is not callable")
