@@ -1090,7 +1090,7 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 
 nsRect
 nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 PRBool
@@ -1143,7 +1143,7 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 {
   static_cast<nsTableFrame*>(mFrame)->
     PaintTableBorderBackground(*aCtx, mVisibleRect,
-                               aBuilder->ToReferenceFrame(mFrame),
+                               ToReferenceFrame(),
                                aBuilder->GetBackgroundPaintFlags());
 }
 

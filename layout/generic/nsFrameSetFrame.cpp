@@ -1643,7 +1643,7 @@ void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                     nsIRenderingContext* aCtx)
 {
   static_cast<nsHTMLFramesetBorderFrame*>(mFrame)->
-    PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    PaintBorder(*aCtx, ToReferenceFrame());
 }
 
 NS_IMETHODIMP
@@ -1838,6 +1838,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FramesetBlank", TYPE_FRAMESET_BLANK)
 };
+
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
                                    nsIRenderingContext* aCtx)
 {

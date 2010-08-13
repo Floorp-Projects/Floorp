@@ -1540,7 +1540,7 @@ InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
       if (item->IsFixedAndCoveringViewport(aBuilder)) {
         // FrameLayerBuilder takes care of scrolling these
       } else {
-        f->Invalidate(item->GetVisibleRect() - aBuilder->ToReferenceFrame(f));
+        f->Invalidate(item->GetVisibleRect() - item->ToReferenceFrame());
       }
     }
   }
