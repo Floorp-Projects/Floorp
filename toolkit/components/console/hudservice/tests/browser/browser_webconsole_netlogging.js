@@ -17,6 +17,8 @@ Cu.import("resource://gre/modules/HUDService.jsm");
 
 const TEST_NETWORK_REQUEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-network-request.html";
 
+const TEST_IMG = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-image.png";
+
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
@@ -29,7 +31,7 @@ function testOpenWebConsole()
   is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.getHeadsUpDisplay(hudId);
 
   testNetworkLogging();
 }
@@ -145,11 +147,24 @@ function testNetworkLogging()
 
     lastFinishedRequest = null
 
-    // All tests are done. Shutdown.
-    browser = null;
-    lastFinishedRequest = null;
-    HUDService.lastFinishedRequestCallback = null;
-    finishTest();
+    // Open the NetworkPanel. The functionality of the NetworkPanel is tested
+    // within the testNetworkPanel() function.
+    let filterBox = hud.querySelectorAll(".hud-filter-box")[0];
+    let networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    is (networkPanel, httpActivity.panels[0].get(), "Network panel stored on httpActivity object");
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+
+      ok(true, "NetworkPanel was opened");
+      networkPanel.panel.hidePopup();
+
+      // All tests are done. Shutdown.
+      browser = null;
+      lastFinishedRequest = null;
+      HUDService.lastFinishedRequestCallback = null;
+
+      finishTest();
+    }, true);
   }
 
   loggingGen = loggingGeneratorFunc();
