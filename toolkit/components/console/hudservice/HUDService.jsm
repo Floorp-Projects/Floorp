@@ -241,6 +241,15 @@ ResponseListener.prototype =
     if (HUDService.lastFinishedRequestCallback) {
       HUDService.lastFinishedRequestCallback(this.httpActivity);
     }
+
+    // Call update on all panels.
+    this.httpActivity.panels.forEach(function(weakRef) {
+      let panel = weakRef.get();
+      if (panel) {
+        panel.update();
+      }
+    });
+    this.httpActivity.response.isDone = true;
     this.httpActivity = null;
   },
 
@@ -456,6 +465,471 @@ var NetworkHelper =
 }
 
 // FIREBUG CODE END.
+
+///////////////////////////////////////////////////////////////////////////
+//// Helper for creating the network panel.
+
+/**
+ * Creates a DOMNode and sets all the attributes of aAttributes on the created
+ * element.
+ *
+ * @param nsIDOMDocument aDocument
+ *        Document to create the new DOMNode.
+ * @param string aTag
+ *        Name of the tag for the DOMNode.
+ * @param object aAttributes
+ *        Attributes set on the created DOMNode.
+ *
+ * @returns nsIDOMNode
+ */
+function createElement(aDocument, aTag, aAttributes)
+{
+  let node = aDocument.createElement(aTag);
+  for (var attr in aAttributes) {
+    node.setAttribute(attr, aAttributes[attr]);
+  }
+  return node;
+}
+
+/**
+ * Creates a new DOMNode and appends it to aParent.
+ *
+ * @param nsIDOMNode aParent
+ *        A parent node to append the created element.
+ * @param string aTag
+ *        Name of the tag for the DOMNode.
+ * @param object aAttributes
+ *        Attributes set on the created DOMNode.
+ *
+ * @returns nsIDOMNode
+ */
+function createAndAppendElement(aParent, aTag, aAttributes)
+{
+  let node = createElement(aParent.ownerDocument, aTag, aAttributes);
+  aParent.appendChild(node);
+  return node;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//// NetworkPanel
+
+/**
+ * Creates a new NetworkPanel.
+ *
+ * @param nsIDOMNode aParent
+ *        Parent node to append the created panel to.
+ * @param object aHttpActivity
+ *        HttpActivity to display in the panel.
+ */
+function NetworkPanel(aParent, aHttpActivity)
+{
+  let doc = aParent.ownerDocument;
+  this.httpActivity = aHttpActivity;
+
+  // Create the underlaying panel
+  this.panel = createElement(doc, "panel", {
+    label: HUDService.getStr("NetworkPanel.label"),
+    titlebar: "normal",
+    noautofocus: "true",
+    noautohide: "true",
+    close: "true"
+  });
+
+  // Create the browser that displays the NetworkPanel XHTML.
+  this.browser = createAndAppendElement(this.panel, "browser", {
+    src: "chrome://global/content/NetworkPanel.xhtml",
+    disablehistory: "true",
+    flex: "1"
+  });
+
+  // Destroy the panel when it's closed.
+  this.panel.addEventListener("popuphidden", function onPopupHide() {
+    self.panel.removeEventListener("popuphidden", onPopupHide, false);
+    self.panel.parentNode.removeChild(self.panel);
+    self.panel = null;
+    self.browser = null;
+    self.document = null;
+    self.httpActivity = null;
+  }, false);
+
+  // Set the document object and update the content once the panel is loaded.
+  let self = this;
+  this.panel.addEventListener("load", function onLoad() {
+    self.panel.removeEventListener("load", onLoad, true)
+    self.document = self.browser.contentWindow.document;
+    self.update();
+  }, true);
+
+  // Create the footer.
+  let footer = createElement(doc, "hbox", { align: "end" });
+  createAndAppendElement(footer, "spacer", { flex: 1 });
+
+  createAndAppendElement(footer, "resizer", { dir: "bottomend" });
+  this.panel.appendChild(footer);
+
+  aParent.appendChild(this.panel);
+}
+
+NetworkPanel.prototype =
+{
+  /**
+   * The current state of the output.
+   */
+  _state: 0,
+
+  /**
+   * State variables.
+   */
+  _INIT: 0,
+  _DISPLAYED_REQUEST_HEADER: 1,
+  _DISPLAYED_REQUEST_BODY: 2,
+  _DISPLAYED_RESPONSE_HEADER: 3,
+  _TRANSITION_CLOSED: 4,
+
+  /**
+   * Small helper function that is nearly equal to  HUDService.getFormatStr
+   * except that it prefixes aName with "NetworkPanel.".
+   *
+   * @param string aName
+   *        The name of an i10n string to format. This string is prefixed with
+   *        "NetworkPanel." before calling the HUDService.getFormatStr function.
+   * @param array aArray
+   *        Values used as placeholder for the i10n string.
+   * @returns string
+   *          The i10n formated string.
+   */
+  _format: function NP_format(aName, aArray)
+  {
+    return HUDService.getFormatStr("NetworkPanel." + aName, aArray);
+  },
+
+  /**
+   *
+   * @returns boolean
+   *          True if the response is an image, false otherwise.
+   */
+  get _responseIsImage()
+  {
+    let response = this.httpActivity.response;
+    if (!response || !response.header || !response.header["Content-Type"]) {
+      let request = this.httpActivity.request;
+      if (request.header["Accept"] &&
+          request.header["Accept"].indexOf("image/") != -1) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+    return response.header["Content-Type"].indexOf("image/") != -1;
+  },
+
+  /**
+   *
+   * @returns boolean
+   *          Returns true if the server responded that the request is already
+   *          in the browser's cache, false otherwise.
+   */
+  get _isResponseCached()
+  {
+    return this.httpActivity.response.status.indexOf("304") != -1;
+  },
+
+  /**
+   * Appends the node with id=aId by the text aValue.
+   *
+   * @param string aId
+   * @param string aValue
+   * @returns void
+   */
+  _appendTextNode: function NP_appendTextNode(aId, aValue)
+  {
+    let textNode = this.document.createTextNode(aValue);
+    this.document.getElementById(aId).appendChild(textNode);
+  },
+
+  /**
+   * Generates some HTML to display the key-value pair of the aList data. The
+   * generated HTML is added to node with id=aParentId.
+   *
+   * @param string aParentId
+   *        Id of the parent node to append the list to.
+   * @oaram object aList
+   *        Object that holds the key-value information to display in aParentId.
+   * @param boolean aIgnoreCookie
+   *        If true, the key-value named "Cookie" is not added to the list.
+   * @returns void
+   */
+  _appendList: function NP_appendList(aParentId, aList, aIgnoreCookie)
+  {
+    let parent = this.document.getElementById(aParentId);
+    let doc = this.document;
+
+    let sortedList = {};
+    Object.keys(aList).sort().forEach(function(aKey) {
+      sortedList[aKey] = aList[aKey];
+    });
+
+    for (let key in sortedList) {
+      if (aIgnoreCookie && key == "Cookie") {
+        continue;
+      }
+
+      /**
+       * The following code creates the HTML:
+       *
+       * <span class="property-name">${line}:</span>
+       * <span class="property-value">${aList[line]}</span><br>
+       *
+       * and adds it to parent.
+       */
+      let textNode = doc.createTextNode(key + ":");
+      let span = doc.createElement("span");
+      span.setAttribute("class", "property-name");
+      span.appendChild(textNode);
+      parent.appendChild(span);
+
+      textNode = doc.createTextNode(sortedList[key]);
+      span = doc.createElement("span");
+      span.setAttribute("class", "property-value");
+      span.appendChild(textNode);
+      parent.appendChild(span);
+
+      parent.appendChild(doc.createElement("br"));
+    }
+  },
+
+  /**
+   * Displays the node with id=aId.
+   *
+   * @param string aId
+   * @returns void
+   */
+  _displayNode: function NP_displayNode(aId)
+  {
+    this.document.getElementById(aId).style.display = "block";
+  },
+
+  /**
+   * Sets the request URL, request method, the timing information when the
+   * request started and the request header content on the NetworkPanel.
+   * If the request header contains cookie data, a list of sent cookies is
+   * generated and a special sent cookie section is displayed + the cookie list
+   * added to it.
+   *
+   * @returns void
+   */
+  _displayRequestHeader: function NP_displayRequestHeader()
+  {
+    let timing = this.httpActivity.timing;
+    let request = this.httpActivity.request;
+
+    this._appendTextNode("headUrl", this.httpActivity.url);
+    this._appendTextNode("headMethod", this.httpActivity.method);
+
+    this._appendTextNode("requestHeadersInfo",
+      ConsoleUtils.timestampString(timing.REQUEST_HEADER/1000));
+
+    this._appendList("requestHeadersContent", request.header, true);
+
+    if ("Cookie" in request.header) {
+      this._displayNode("requestCookie");
+
+      let cookies = request.header.Cookie.split(";");
+      let cookieList = {};
+      let cookieListSorted = {};
+      cookies.forEach(function(cookie) {
+        let name, value;
+        [name, value] = cookie.trim().split("=");
+        cookieList[name] = value;
+      });
+      this._appendList("requestCookieContent", cookieList);
+    }
+  },
+
+  /**
+   * Displays the request body section of the NetworkPanel and set the request
+   * body content on the NetworkPanel.
+   *
+   * @returns void
+   */
+  _displayRequestBody: function NP_displayRequestBody() {
+    this._displayNode("requestBody");
+    this._appendTextNode("requestBodyContent", this.httpActivity.request.body);
+  },
+
+  /**
+   * Displays the response section of the NetworkPanel, sets the response status,
+   * the duration between the start of the request and the receiving of the
+   * response header as well as the response header content on the the NetworkPanel.
+   *
+   * @returns void
+   */
+  _displayResponseHeader: function NP_displayResponseHeader()
+  {
+    let timing = this.httpActivity.timing;
+    let response = this.httpActivity.response;
+
+    this._appendTextNode("headStatus", response.status);
+
+    let deltaDuration =
+      Math.round((timing.RESPONSE_HEADER - timing.REQUEST_HEADER) / 1000);
+    this._appendTextNode("responseHeadersInfo",
+      this._format("durationMS", [deltaDuration]));
+
+    this._displayNode("responseContainer");
+    this._appendList("responseHeadersContent", response.header);
+  },
+
+  /**
+   * Displays the respones image section, sets the source of the image displayed
+   * in the image response section to the request URL and the duration between
+   * the receiving of the response header and the end of the request. Once the
+   * image is loaded, the size of the requested image is set.
+   *
+   * @returns void
+   */
+  _displayResponseImage: function NP_displayResponseImage()
+  {
+    let self = this;
+    let timing = this.httpActivity.timing;
+    let response = this.httpActivity.response;
+    let cached = "";
+
+    if (this._isResponseCached) {
+      cached = "Cached";
+    }
+
+    let imageNode = this.document.getElementById("responseImage" + cached +"Node");
+    imageNode.setAttribute("src", this.httpActivity.url);
+
+    // This function is called to set the imageInfo.
+    function setImageInfo() {
+      let deltaDuration =
+        Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
+      self._appendTextNode("responseImage" + cached + "Info",
+        self._format("imageSizeDeltaDurationMS", [
+          imageNode.width, imageNode.height, deltaDuration
+        ]
+      ));
+    }
+
+    // Check if the image is already loaded.
+    if (imageNode.width != 0) {
+      setImageInfo();
+    }
+    else {
+      // Image is not loaded yet therefore add a load event.
+      imageNode.addEventListener("load", function imageNodeLoad() {
+        imageNode.removeEventListener("load", imageNodeLoad, false);
+        setImageInfo();
+      }, false);
+    }
+
+    this._displayNode("responseImage" + cached);
+  },
+
+  /**
+   * Displays the response body section, sets the the duration between
+   * the receiving of the response header and the end of the request as well as
+   * the content of the response body on the NetworkPanel.
+   *
+   * @returns void
+   */
+  _displayResponseBody: function NP_displayResponseBody()
+  {
+    let timing = this.httpActivity.timing;
+    let response = this.httpActivity.response;
+
+    let deltaDuration =
+      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
+    this._appendTextNode("responseBodyInfo",
+      this._format("durationMS", [deltaDuration]));
+
+    this._displayNode("responseBody");
+    this._appendTextNode("responseBodyContent", response.body);
+  },
+
+  /**
+   * Displays the `no response body` section and sets the the duration between
+   * the receiving of the response header and the end of the request.
+   *
+   * @returns void
+   */
+  _displayNoResponseBody: function NP_displayNoResponseBody()
+  {
+    let timing = this.httpActivity.timing;
+
+    this._displayNode("responseNoBody");
+    let deltaDuration =
+      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
+    this._appendTextNode("responseNoBodyInfo",
+      this._format("durationMS", [deltaDuration]));
+  },
+
+  /**
+   * Updates the content of the NetworkPanel's browser.
+   *
+   * @returns void
+   */
+  update: function NP_update()
+  {
+    /**
+     * After the browser contentWindow is ready, the document object is set.
+     * If the document object isn't set yet, then the page is loaded and nothing
+     * can be updated.
+     */
+    if (!this.document) {
+      return;
+    }
+
+    let timing = this.httpActivity.timing;
+    let request = this.httpActivity.request;
+    let response = this.httpActivity.response;
+
+    switch (this._state) {
+      case this._INIT:
+        this._displayRequestHeader();
+        this._state = this._DISPLAYED_REQUEST_HEADER;
+        // FALL THROUGH
+
+      case this._DISPLAYED_REQUEST_HEADER:
+        // Process the request body if there is one.
+        if (request.body) {
+          this._displayRequestBody();
+          this._state = this._DISPLAYED_REQUEST_BODY;
+        }
+        // FALL THROUGH
+
+      case this._DISPLAYED_REQUEST_BODY:
+        // There is always a response header. Therefore we can skip here if
+        // we don't have a response header yet and don't have to try updating
+        // anything else in the NetworkPanel.
+        if (!response.header) {
+          break
+        }
+        this._displayResponseHeader();
+        this._state = this._DISPLAYED_RESPONSE_HEADER;
+        // FALL THROUGH
+
+      case this._DISPLAYED_RESPONSE_HEADER:
+        // Check if the transition is done.
+        if (timing.TRANSACTION_CLOSE && response.isDone) {
+          if (this._responseIsImage) {
+            this._displayResponseImage();
+          }
+          else if (response.body) {
+            this._displayResponseBody();
+          }
+          else {
+            this._displayNoResponseBody();
+          }
+          this._state = this._TRANSITION_CLOSED;
+        }
+        break;
+    }
+  }
+}
 
 function HUD_SERVICE()
 {
@@ -1008,6 +1482,11 @@ HUD_SERVICE.prototype =
    */
   unregisterDisplay: function HS_unregisterDisplay(aId)
   {
+    // Remove children from the output. If the output is not cleared, there can
+    // be leaks as some nodes has node.onclick = function; set and GC can't
+    // remove the nodes then.
+    HUDService.clearDisplay(aId);
+
     // remove HUD DOM node and
     // remove display references from local registries get the outputNode
     var outputNode = this.mixins.getOutputNodeById(aId);
@@ -1367,6 +1846,28 @@ HUD_SERVICE.prototype =
   lastFinishedRequestCallback: null,
 
   /**
+   * Opens a NetworkPanel.
+   *
+   * @param nsIDOMNode aNode
+   *        DOMNode to display the panel next to.
+   * @param object aHttpActivity
+   *        httpActivity object. The data of this object is displayed in the
+   *        NetworkPanel.
+   * @returns NetworkPanel
+   */
+  openNetworkPanel: function (aNode, aHttpActivity) {
+    let doc = aNode.ownerDocument;
+    let parent = doc.getElementById("mainPopupSet");
+    let netPanel = new NetworkPanel(parent, aHttpActivity);
+
+    let panel = netPanel.panel;
+    panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
+    panel.sizeTo(350, 400);
+    aHttpActivity.panels.push(Cu.getWeakReference(netPanel));
+    return netPanel;
+  },
+
+  /**
    * Begin observing HTTP traffic that we care about,
    * namely traffic that originates inside any context that a Heads Up Display
    * is active for.
@@ -1413,6 +1914,7 @@ HUD_SERVICE.prototype =
               method: aChannel.requestMethod,
               channel: aChannel,
 
+              panels: [],
               request: {
                 header: { }
               },
@@ -1450,6 +1952,13 @@ HUD_SERVICE.prototype =
             // Store the loggedNode and the httpActivity object for later reuse.
             httpActivity.messageObject = loggedNode;
             self.openRequests[httpActivity.id] = httpActivity;
+
+            // Make the network span clickable.
+            let linkNode = loggedNode.messageNode;
+            linkNode.setAttribute("aria-haspopup", "true");
+            linkNode.onclick = function() {
+              self.openNetworkPanel(linkNode, httpActivity);
+            }
           }
           else {
             // Iterate over all currently ongoing requests. If aChannel can't
@@ -1467,7 +1976,7 @@ HUD_SERVICE.prototype =
               return;
             }
 
-            let msgObject;
+            let msgObject, updatePanel = false;
             let data, textNode;
             // Store the time information for this activity subtype.
             httpActivity.timing[transCodes[aActivitySubtype]] = aTimestamp;
@@ -1481,7 +1990,7 @@ HUD_SERVICE.prototype =
                 if (!sentBody) {
                   // If the request URL is the same as the current page url, then
                   // we can try to get the posted text from the page directly.
-                  // This is necessary as otherwise the
+                  // This check is necessary as otherwise the
                   //   NetworkHelper.readPostTextFromPage
                   // function is called for image requests as well but these
                   // are not web pages and as such don't store the posted text
@@ -1549,7 +2058,17 @@ HUD_SERVICE.prototype =
                     self.getFormatStr("networkUrlWithStatusAndDuration", data)));
 
                 delete self.openRequests[item.id];
+                updatePanel = true;
                 break;
+            }
+
+            if (updatePanel) {
+              httpActivity.panels.forEach(function(weakRef) {
+                let panel = weakRef.get();
+                if (panel) {
+                  panel.update();
+                }
+              });
             }
           }
         }
