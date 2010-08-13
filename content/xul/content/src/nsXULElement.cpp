@@ -1944,9 +1944,12 @@ nsXULElement::EnsureLocalStyle()
                 Clone(*getter_AddRefs(ruleClone));
             NS_ENSURE_SUCCESS(rv, rv);
 
+            nsString stringValue;
+            protoattr->mValue.ToString(stringValue);
+
             nsAttrValue value;
             nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
-            value.SetTo(styleRule);
+            value.SetTo(styleRule, &stringValue);
 
             rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -2308,19 +2311,25 @@ nsresult nsXULElement::MakeHeavyweight()
             continue;
         }
 
-        // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
-        nsAttrValue attrValue(protoattr->mValue);
+        nsAttrValue attrValue;
         
         // Style rules need to be cloned.
-        if (attrValue.Type() == nsAttrValue::eCSSStyleRule) {
+        if (protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
             nsCOMPtr<nsICSSRule> ruleClone;
-            rv = attrValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
+            rv = protoattr->mValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
             NS_ENSURE_SUCCESS(rv, rv);
 
+            nsString stringValue;
+            protoattr->mValue.ToString(stringValue);
+
             nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
-            attrValue.SetTo(styleRule);
+            attrValue.SetTo(styleRule, &stringValue);
+        }
+        else {
+            attrValue.SetTo(protoattr->mValue);
         }
 
+        // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         if (protoattr->mName.IsAtom()) {
             rv = mAttrsAndChildren.SetAndTakeAttr(protoattr->mName.Atom(), attrValue);
         }
@@ -2837,7 +2846,7 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
                                      DocumentPrincipal(),
                                    getter_AddRefs(rule));
         if (rule) {
-            mAttributes[aPos].mValue.SetTo(rule);
+            mAttributes[aPos].mValue.SetTo(rule, &aValue);
 
             return NS_OK;
         }
