@@ -1398,8 +1398,7 @@
 
             var closeWindow = false;
             var newTab = false;
-            if (this.tabs.length - this._removingTabs.length == 1 && 
-                (!TabView || !TabView.isVisible())) {
+            if (this.tabs.length - this._removingTabs.length == 1) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
                               this.tabContainer._closeWindowWithLastTab;
