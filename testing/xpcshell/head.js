@@ -49,7 +49,7 @@ var _passed = true;
 var _tests_pending = 0;
 var _passedChecks = 0, _falsePassedChecks = 0;
 var _cleanupFunctions = [];
-var _pendingCallbacks = [];
+var _pendingTimers = [];
 
 function _dump(str) {
   if (typeof _XPCSHELL_PROCESS == "undefined") {
@@ -89,16 +89,34 @@ try { // nsIXULRuntime is not available in some configurations.
 }
 catch (e) { }
 
+/**
+ * Date.now() is not necessarily monotonically increasing (insert sob story
+ * about times not being the right tool to use for measuring intervals of time,
+ * robarnold can tell all), so be wary of error by erring by at least
+ * _timerFuzz ms.
+ */
+const _timerFuzz = 15;
 
-function _TimerCallback(func, timer) {
+function _Timer(func, delay) {
+  delay = Number(delay);
+  if (delay < 0)
+    do_throw("do_timeout() delay must be nonnegative");
+
   if (typeof func !== "function")
-    throw new Error("string callbacks no longer accepted; use a function!");
+    do_throw("string callbacks no longer accepted; use a function!");
 
   this._func = func;
+  this._start = Date.now();
+  this._delay = delay;
+
+  var timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+  timer.initWithCallback(this, delay + _timerFuzz, timer.TYPE_ONE_SHOT);
+
   // Keep timer alive until it fires
-  _pendingCallbacks.push(timer);
+  _pendingTimers.push(timer);
 }
-_TimerCallback.prototype = {
+_Timer.prototype = {
   QueryInterface: function(iid) {
     if (iid.Equals(Components.interfaces.nsITimerCallback) ||
         iid.Equals(Components.interfaces.nsISupports))
@@ -108,8 +126,26 @@ _TimerCallback.prototype = {
   },
 
   notify: function(timer) {
-    _pendingCallbacks.splice(_pendingCallbacks.indexOf(timer), 1);
-    this._func.call(null);
+    _pendingTimers.splice(_pendingTimers.indexOf(timer), 1);
+
+    // The current nsITimer implementation can undershoot, but even if it
+    // couldn't, paranoia is probably a virtue here given the potential for
+    // random orange on tinderboxen.
+    var end = Date.now();
+    var elapsed = end - this._start;
+    if (elapsed >= this._delay) {
+      try {
+        this._func.call(null);
+      } catch (e) {
+        do_throw("exception thrown from callLater callback: " + e);
+      }
+      return;
+    }
+
+    // Timer undershot, retry with a little overshoot to try to avoid more
+    // undershoots.
+    var newDelay = this._delay - elapsed;
+    do_timeout(newDelay, this._func);
   }
 };
 
@@ -223,11 +259,18 @@ function _load_files(aFiles) {
 
 /************** Functions to be used from the tests **************/
 
-
+/**
+ * Calls the given function at least the specified number of milliseconds later.
+ * The callback will not undershoot the given time, but it might overshoot --
+ * don't expect precision!
+ *
+ * @param delay : uint
+ *   the number of milliseconds to delay
+ * @param callback : function() : void
+ *   the function to call
+ */
 function do_timeout(delay, func) {
-  var timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(new _TimerCallback(func, timer), delay, timer.TYPE_ONE_SHOT);
+  new _Timer(func, Number(delay));
 }
 
 function do_execute_soon(callback) {
