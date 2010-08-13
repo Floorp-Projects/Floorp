@@ -261,7 +261,7 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
   var msgs = aOutputNode.querySelector(".hud-group").childNodes;
   for (var i = 1; i < msgs.length; i++) {
-    var message = msgs[i].innerHTML.indexOf(aMatchString);
+    var message = msgs[i].textContent.indexOf(aMatchString);
     if (message > -1) {
       ok(true, aSuccessErrObj.success);
       return;
