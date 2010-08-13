@@ -61,7 +61,7 @@ struct VMFrame
     void *scriptedReturn;
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64) || defined(JS_CPU_ARM)
-    uintptr_t               padding;
+    uint32 padding;
 #endif
 
     union Arguments {
