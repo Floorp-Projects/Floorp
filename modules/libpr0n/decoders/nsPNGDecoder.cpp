@@ -71,7 +71,7 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 /* limit image dimensions (bug #251381) */
 #define MOZ_PNG_MAX_DIMENSION 1000000L
 
-// For header-only decodes
+// For size decodes
 #define WIDTH_OFFSET 16
 #define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
@@ -242,11 +242,11 @@ nsPNGDecoder::InitInternal()
 #endif
 
   // Fire OnStartDecode at init time to support bug 512435
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+  if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
 
-  // For header-only decodes, we only need a small buffer
-  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+  // For size decodes, we only need a small buffer
+  if (IsSizeDecode()) {
     mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);
     if (!mHeaderBuf)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -303,7 +303,7 @@ nsPNGDecoder::ShutdownInternal(PRUint32 aFlags)
   // If we're a full/success decode but haven't sent stop notifications yet,
   // we didn't get all the data we needed. Send error notifications.
   if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !IsSizeDecode() &&
       !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
@@ -323,7 +323,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     goto error;
 
   // If we only want width/height, we don't need to go through libpng
-  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+  if (IsSizeDecode()) {
 
     // Are we done?
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS)

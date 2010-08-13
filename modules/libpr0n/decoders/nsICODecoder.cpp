@@ -90,7 +90,7 @@ nsresult
 nsICODecoder::InitInternal()
 {
   // Fire OnStartDecode at init time to support bug 512435
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+  if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
 
   return NS_OK;
@@ -102,7 +102,7 @@ nsICODecoder::ShutdownInternal(PRUint32 aFlags)
   nsresult rv = NS_OK;
 
   // Send notifications if appropriate
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+  if (!IsSizeDecode() &&
       !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
     // Tell the image that it's data has been updated 
     nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
@@ -240,7 +240,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
       rv = mObserver->OnStartContainer(nsnull, mImage);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+    if (IsSizeDecode())
       return NS_OK;
 
     if (mBIH.bpp <= 8) {
