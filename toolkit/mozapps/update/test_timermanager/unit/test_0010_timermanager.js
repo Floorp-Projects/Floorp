@@ -271,7 +271,7 @@ function check_test1thru6() {
        "registered\n");
   do_check_eq(count, 0);
 
-  do_timeout(0, run_test7());
+  do_timeout(0, run_test7);
 }
 
 function run_test7() {
