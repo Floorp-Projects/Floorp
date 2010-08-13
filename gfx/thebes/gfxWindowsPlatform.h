@@ -223,8 +223,6 @@ public:
 #endif
 
 protected:
-    void InitDisplayCaps();
-
     RenderMode mRenderMode;
 
     PRBool mUseClearTypeForDownloadableFonts;

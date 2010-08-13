@@ -87,8 +87,6 @@ public:
     }
 
 protected:
-    void InitDisplayCaps();
-
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:
