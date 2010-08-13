@@ -73,6 +73,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXREDirProvider.h"
 
+#include "mozilla/Omnijar.h"
 #ifdef MOZ_IPC
 #include "nsX11ErrorHandler.h"
 #include "base/at_exit.h"
@@ -435,6 +436,9 @@ XRE_InitChildProcess(int aArgc,
       // Allow ProcessChild to clean up after itself before going out of
       // scope and being deleted
       process->CleanUp();
+#ifdef MOZ_OMNIJAR
+      mozilla::SetOmnijar(nsnull);
+#endif
     }
   }
 
