@@ -313,12 +313,12 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
     case CSS_CM :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits * 2.54f / float(mAppUnitsPerInch);
+      *aReturn = mValue.mAppUnits * CM_PER_INCH_FLOAT / float(mAppUnitsPerInch);
       break;
     case CSS_MM :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits * 25.4f / float(mAppUnitsPerInch);
+      *aReturn = mValue.mAppUnits * MM_PER_INCH_FLOAT / float(mAppUnitsPerInch);
       break;
     case CSS_IN :
       if (mType != CSS_PX)
