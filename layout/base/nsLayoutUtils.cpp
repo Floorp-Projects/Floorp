@@ -1282,8 +1282,14 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   rv = aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
 
+  const PRBool paintAllContinuations = aFlags & PAINT_ALL_CONTINUATIONS;
+  NS_ASSERTION(!paintAllContinuations || !aFrame->GetPrevContinuation(),
+               "If painting all continuations, the frame must be "
+               "first-continuation");
+
   nsIAtom* frameType = aFrame->GetType();
-  if (NS_SUCCEEDED(rv) && frameType == nsGkAtoms::pageContentFrame) {
+  if (NS_SUCCEEDED(rv) && !paintAllContinuations &&
+      frameType == nsGkAtoms::pageContentFrame) {
     NS_ASSERTION(!(aFlags & PAINT_WIDGET_LAYERS),
       "shouldn't be painting with widget layers for page content frames");
     // We may need to paint out-of-flow frames whose placeholders are
@@ -1300,6 +1306,16 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       if (NS_FAILED(rv))
         break;
       y += page->GetSize().height;
+    }
+  }
+
+  if (paintAllContinuations) {
+    nsIFrame* currentFrame = aFrame;
+    while (NS_SUCCEEDED(rv) &&
+           (currentFrame = currentFrame->GetNextContinuation()) != nsnull) {
+      nsRect frameDirty = dirtyRect - builder.ToReferenceFrame(currentFrame);
+      rv = currentFrame->BuildDisplayListForStackingContext(&builder,
+                                                            frameDirty, &list);
     }
   }
 
