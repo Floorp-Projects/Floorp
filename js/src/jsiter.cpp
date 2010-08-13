@@ -1144,9 +1144,9 @@ js_NewGenerator(JSContext *cx)
     newfp->argv = vp + 2;
     newfp->rval = fp->rval;
     newfp->annotation = NULL;
-    newfp->scopeChain = fp->scopeChain;
-    JS_ASSERT(!fp->blockChain);
-    newfp->blockChain = NULL;
+    newfp->setScopeChain(fp->maybeScopeChain());
+    JS_ASSERT(!fp->hasBlockChain());
+    newfp->setBlockChain(NULL);
     newfp->flags = fp->flags | JSFRAME_GENERATOR | JSFRAME_FLOATING_GENERATOR;
 
     /* Copy in arguments and slots. */
