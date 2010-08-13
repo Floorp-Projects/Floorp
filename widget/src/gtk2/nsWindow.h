@@ -136,6 +136,7 @@ public:
                               nsWidgetInitData *aInitData);
     NS_IMETHOD         Destroy(void);
     virtual nsIWidget *GetParent();
+    virtual float      GetDPI();
     virtual nsresult   SetParent(nsIWidget* aNewParent);
     NS_IMETHOD         SetModal(PRBool aModal);
     NS_IMETHOD         IsVisible(PRBool & aState);
