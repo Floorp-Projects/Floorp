@@ -2260,8 +2260,8 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
     MarkValue(trc, fp->thisv, "this");
     MarkValue(trc, fp->rval, "rval");
-    if (fp->hasScopeChain())
-        JS_CALL_OBJECT_TRACER(trc, fp->getScopeChain(), "scope chain");
+    if (fp->scopeChain)
+        JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
 }
 
 void

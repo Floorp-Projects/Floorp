@@ -1735,7 +1735,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, NULL, filename, lineno)) {
-            JSObject *scopeChain = js_GetTopStackFrame(cx)->getScopeChain();
+            JSObject *scopeChain = js_GetTopStackFrame(cx)->scopeChain;
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
             uintN flags;
             if (pn && GetXMLSettingFlags(cx, &flags)) {
@@ -7227,7 +7227,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     fp = js_GetTopStackFrame(cx);
 
     obj = NULL;
-    for (tmp = fp->getScopeChain(); tmp; tmp = tmp->getParent()) {
+    for (tmp = fp->scopeChain; tmp; tmp = tmp->getParent()) {
         Class *clasp = tmp->getClass();
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
@@ -7440,7 +7440,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = js_GetTopStackFrame(cx)->getScopeChain();
+    obj = js_GetTopStackFrame(cx)->scopeChain;
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

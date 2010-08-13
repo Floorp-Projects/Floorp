@@ -1201,7 +1201,7 @@ GlobalSlotHash(JSContext* cx, unsigned slot)
         fp = fp->down;
 
     HashAccum(h, uintptr_t(fp->script), ORACLE_MASK);
-    HashAccum(h, uintptr_t(fp->getScopeChain()->getGlobal()->shape()), ORACLE_MASK);
+    HashAccum(h, uintptr_t(fp->scopeChain->getGlobal()->shape()), ORACLE_MASK);
     HashAccum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
 }
@@ -1821,7 +1821,7 @@ VisitFrameSlots(Visitor &visitor, JSContext *cx, unsigned depth,
         // requires type |Value|. But the bits are the same, so we can import
         // it with a cast and the (identity function) unboxing will be OK.
         visitor.setStackSlotKind("scopeChain");
-        if (!visitor.visitFrameObjPtr(fp->addressScopeChain(), fp))
+        if (!visitor.visitFrameObjPtr(&fp->scopeChain, fp))
             return false;
         visitor.setStackSlotKind("var");
         if (!visitor.visitStackSlots(fp->slots(), fp->script->nfixed, fp))
@@ -1873,7 +1873,7 @@ template <typename Visitor>
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitGlobalSlots(Visitor &visitor, JSContext *cx, SlotList &gslots)
 {
-    VisitGlobalSlots(visitor, cx, cx->fp->getScopeChain()->getGlobal(),
+    VisitGlobalSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
                      gslots.length(), gslots.data());
 }
 
@@ -1892,7 +1892,7 @@ static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitSlots(Visitor& visitor, JSContext* cx, unsigned callDepth,
            unsigned ngslots, uint16* gslots)
 {
-    VisitSlots(visitor, cx, cx->fp->getScopeChain()->getGlobal(),
+    VisitSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
                callDepth, ngslots, gslots);
 }
 
@@ -1910,7 +1910,7 @@ static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitSlots(Visitor &visitor, JSContext *cx, unsigned callDepth,
            const SlotList& slots)
 {
-    VisitSlots(visitor, cx, cx->fp->getScopeChain()->getGlobal(),
+    VisitSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
                callDepth, slots.length(), slots.data());
 }
 
@@ -2224,7 +2224,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     globalObj(tree->globalObj),
     outer(outer),
     outerArgc(outerArgc),
-    lexicalBlock(cx->fp->maybeBlockChain()),
+    lexicalBlock(cx->fp->blockChain),
     anchor(anchor),
     lir(NULL),
     cx_ins(NULL),
@@ -2255,7 +2255,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     generatedSpecializedNative(),
     tempTypeMap(cx)
 {
-    JS_ASSERT(globalObj == cx->fp->getScopeChain()->getGlobal());
+    JS_ASSERT(globalObj == cx->fp->scopeChain->getGlobal());
     JS_ASSERT(globalObj->scope()->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
@@ -3461,15 +3461,15 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
                     // Iff these fields are NULL, then |fp| was synthesized on trace exit, so
                     // we need to update the frame fields.
                     if (!fp->hasCallObj())
-                        fp->setCallObj(fp->getScopeChain());
+                        fp->setCallObj(fp->scopeChain);
 
                     // Iff scope chain's private is NULL, then |fp->scopeChain| was created
                     // on trace for a call, so we set the private field now. (Call objects
                     // that correspond to returned frames also have a NULL private, but such
                     // a call object would not occur as the |scopeChain| member of a frame,
                     // so we cannot be in that case here.)
-                    if (!fp->getScopeChain()->getPrivate())
-                        fp->getScopeChain()->setPrivate(fp);
+                    if (!fp->scopeChain->getPrivate())
+                        fp->scopeChain->setPrivate(fp);
                 }
                 fp->thisv = fp->argv[-1];
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
@@ -3863,7 +3863,7 @@ TraceRecorder::isValidFrameObjPtr(JSObject **p)
 {
     JSStackFrame *fp = cx->fp;
     for (; fp; fp = fp->down) {
-        if (fp->addressScopeChain() == p || fp->addressArgsObj() == p)
+        if (&fp->scopeChain == p || fp->addressArgsObj() == p)
             return true;
     }
     return false;
@@ -4273,9 +4273,9 @@ TraceRecorder::snapshot(ExitType exitType)
                                            nativeStackOffset(&cx->fp->argv[-2]) / sizeof(double) :
                                            0;
     exit->exitType = exitType;
-    exit->block = fp->maybeBlockChain();
-    if (fp->hasBlockChain())
-        tree->gcthings.addUnique(ObjectValue(*fp->getBlockChain()));
+    exit->block = fp->blockChain;
+    if (fp->blockChain)
+        tree->gcthings.addUnique(ObjectValue(*fp->blockChain));
     exit->pc = pc;
     exit->imacpc = fp->imacpc;
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
@@ -5671,7 +5671,14 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     cx->regs->sp = sp;
     cx->regs->pc = fi.pc;
     fp->imacpc = fi.imacpc;
-    fp->setBlockChain(fi.block);
+    fp->blockChain = fi.block;
+    fp->blockChain = fi.block;
+#ifdef DEBUG
+    if (fi.block != fp->blockChain) {
+        for (JSObject* obj = fi.block; obj != fp->blockChain; obj = obj->getParent())
+            JS_ASSERT(obj);
+    }
+#endif
 
     /*
      * Get pointer to new frame/slots, without changing global state.
@@ -5709,9 +5716,9 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
 #endif
     newfp->rval = UndefinedValue();
     newfp->annotation = NULL;
-    newfp->setScopeChain(NULL); // will be updated in FlushNativeStackFrame
+    newfp->scopeChain = NULL; // will be updated in FlushNativeStackFrame
     newfp->flags = fi.is_constructing() ? JSFRAME_CONSTRUCTING : 0;
-    newfp->setBlockChain(NULL);
+    newfp->blockChain = NULL;
     newfp->thisv.setNull(); // will be updated in FlushNativeStackFrame
     newfp->imacpc = NULL;
 
@@ -5781,8 +5788,9 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     fp->fun = GET_FUNCTION_PRIVATE(cx, fp->callee());
     fp->rval = UndefinedValue();
     fp->annotation = NULL;
-    fp->setScopeChain(cx->fp->maybeScopeChain());
-    fp->setBlockChain(NULL);
+    JS_ASSERT(cx->fp->scopeChain);
+    fp->scopeChain = cx->fp->scopeChain;
+    fp->blockChain = NULL;
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
 
     state.bailedSlowNativeRegs = *cx->regs;
@@ -6149,7 +6157,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
      * Make sure the shape of the global object still matches (this might flush
      * the JIT cache).
      */
-    JSObject* globalObj = cx->fp->getScopeChain()->getGlobal();
+    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
     if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
@@ -6655,7 +6663,7 @@ ExecuteTrace(JSContext* cx, Fragment* f, TracerState& state)
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
 ScopeChainCheck(JSContext* cx, TreeFragment* f)
 {
-    JS_ASSERT(f->globalObj == cx->fp->getScopeChain()->getGlobal());
+    JS_ASSERT(f->globalObj == cx->fp->scopeChain->getGlobal());
 
     /*
      * The JIT records and expects to execute with two scope-chain
@@ -6673,7 +6681,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
      * class types; once a global is found, it's checked for #1. Failing
      * either check causes an early return from execution.
      */
-    JSObject* child = cx->fp->getScopeChain();
+    JSObject* child = cx->fp->scopeChain;
     while (JSObject* parent = child->getParent()) {
         if (!js_IsCacheableNonGlobalScope(child)) {
             debug_only_print0(LC_TMTracer,"Blacklist: non-cacheable object on scope chain.\n");
@@ -7012,7 +7020,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
      */
     JSStackFrame* const fp = cx->fp;
 
-    fp->setBlockChain(innermost->block);
+    fp->blockChain = innermost->block;
 
     /*
      * If we are not exiting from an inlined frame, the state->sp is spbase.
@@ -7162,7 +7170,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
      * Make sure the shape of the global object still matches (this might flush
      * the JIT cache).
      */
-    JSObject* globalObj = cx->fp->getScopeChain()->getGlobal();
+    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
@@ -8078,7 +8086,7 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::scopeChain()
 {
     return cx->fp->callee()
-           ? getFrameObjPtr(cx->fp->addressScopeChain())
+           ? getFrameObjPtr(&cx->fp->scopeChain)
            : entryScopeChain();
 }
 
@@ -8092,7 +8100,7 @@ TraceRecorder::entryScopeChain() const
 {
     return lir->insLoad(LIR_ldp,
                         lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER),
-                        JSStackFrame::offsetScopeChain(), ACCSET_OTHER);
+                        offsetof(JSStackFrame, scopeChain), ACCSET_OTHER);
 }
 
 /*
@@ -8134,7 +8142,7 @@ JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, CVIPTR, DOU
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameResult& nr)
 {
-    JS_ASSERT(chainHead == cx->fp->getScopeChain());
+    JS_ASSERT(chainHead == cx->fp->scopeChain);
     JS_ASSERT(chainHead != globalObj);
 
     TraceMonitor &localtm = *traceMonitor;
@@ -10233,7 +10241,7 @@ TraceRecorder::clearFrameSlotsFromTracker(Tracker& which, JSStackFrame* fp, unsi
         while (vp < vpstop)
             which.set(vp++, (LIns*)0);
         which.set(fp->addressArgsObj(), (LIns*)0);
-        which.set(fp->addressScopeChain(), (LIns*)0);
+        which.set(&fp->scopeChain, (LIns*)0);
     }
     vp = &fp->slots()[0];
     vpstop = &fp->slots()[nslots];
@@ -10312,7 +10320,7 @@ TraceRecorder::putActivationObjects()
             slots_ins = INS_CONSTPTR(0);
         }
 
-        LIns* scopeChain_ins = getFrameObjPtr(cx->fp->addressScopeChain());
+        LIns* scopeChain_ins = getFrameObjPtr(&cx->fp->scopeChain);
         LIns* args[] = { slots_ins, INS_CONST(nslots), args_ins,
                          INS_CONST(cx->fp->fun->nargs), scopeChain_ins, cx_ins };
         lir->insCall(&js_PutCallObjectOnTrace_ci, args);
@@ -10336,7 +10344,7 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
         return false;
-    if (fp->hasBlockChain() || down->hasBlockChain())
+    if (fp->blockChain || down->blockChain)
         return false;
     if (*fp->script->code != JSOP_TRACE)
         return false;
@@ -10384,7 +10392,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
 
     nativeFrameTracker.set(fp->addressArgsObj(), NULL);
     setFrameObjPtr(fp->addressArgsObj(), INS_NULL());
-    nativeFrameTracker.set(fp->addressScopeChain(), NULL);
+    nativeFrameTracker.set(&fp->scopeChain, NULL);
 
     vp = fp->slots();
     vpstop = vp + fp->script->nfixed;
@@ -10404,7 +10412,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     if (cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags)) {
         // We need to make sure every part of the frame is known to the tracker
         // before taking a snapshot.
-        setFrameObjPtr(fp->addressScopeChain(), INS_NULL());
+        setFrameObjPtr(&fp->scopeChain, INS_NULL());
 
         if (js_IsNamedLambda(cx->fp->fun))
             RETURN_STOP_A("can't call named lambda heavyweight on trace");
@@ -10415,9 +10423,9 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         LIns* call_ins = lir->insCall(&js_CreateCallObjectOnTrace_ci, args);
         guard(false, lir->insEqP_0(call_ins), snapshot(OOM_EXIT));
 
-        setFrameObjPtr(fp->addressScopeChain(), call_ins);
+        setFrameObjPtr(&fp->scopeChain, call_ins);
     } else {
-        setFrameObjPtr(fp->addressScopeChain(), scopeChain_ins);
+        setFrameObjPtr(&fp->scopeChain, scopeChain_ins);
     }
 
     /*
@@ -10473,7 +10481,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
          * Make sure the shape of the global object still matches (this might
          * flush the JIT cache).
          */
-        JSObject* globalObj = cx->fp->getScopeChain()->getGlobal();
+        JSObject* globalObj = cx->fp->scopeChain->getGlobal();
         uint32 globalShape = -1;
         SlotList* globalSlots = NULL;
         if (!CheckGlobalObjectShape(cx, traceMonitor, globalObj, &globalShape, &globalSlots))
@@ -13074,7 +13082,7 @@ TraceRecorder::record_JSOP_SETELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLNAME()
 {
-    JSObject* obj = cx->fp->getScopeChain();
+    JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj) {
         Value* vp;
         LIns* ins;
@@ -13370,9 +13378,9 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     JS_ASSERT(argc < FrameInfo::CONSTRUCTING_FLAG);
 
     tree->gcthings.addUnique(fval);
-    fi->block = fp->maybeBlockChain();
-    if (fp->hasBlockChain())
-        tree->gcthings.addUnique(ObjectValue(*fp->getBlockChain()));
+    fi->block = fp->blockChain;
+    if (fp->blockChain)
+        tree->gcthings.addUnique(ObjectValue(*fp->blockChain));
     fi->pc = cx->regs->pc;
     fi->imacpc = fp->imacpc;
     fi->spdist = cx->regs->sp - fp->slots();
@@ -13616,7 +13624,7 @@ TraceRecorder::record_NativeCallComplete()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::name(Value*& vp, LIns*& ins, NameResult& nr)
 {
-    JSObject* obj = cx->fp->getScopeChain();
+    JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj)
         return scopeChainProp(obj, vp, ins, nr);
 
@@ -14718,7 +14726,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     JSObject *obj;
 
     if (!fp->fun) {
-        obj = fp->getScopeChain();
+        obj = fp->scopeChain;
 
 #ifdef DEBUG
         JSStackFrame *fp2 = fp;
@@ -14779,7 +14787,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     JSAtom *atom = atoms[GET_INDEX(cx->regs->pc)];
     jsid id = ATOM_TO_JSID(atom);
     JSContext *localCx = cx;
-    JSObject *obj2 = js_FindIdentifierBase(cx, fp->getScopeChain(), id);
+    JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
     if (!obj2)
         RETURN_ERROR_A("error in js_FindIdentifierBase");
     if (!TRACE_RECORDER(localCx))
@@ -15846,7 +15854,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
     /* We mustn't exit the lexical block we began recording in. */
-    if (cx->fp->getBlockChain() == lexicalBlock)
+    if (cx->fp->blockChain == lexicalBlock)
         return ARECORD_STOP;
     return ARECORD_CONTINUE;
 }

@@ -2967,7 +2967,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
 
     JSStackFrame *const fp = cx->fp;
-    JSObject *obj = fp->getScopeChain();
+    JSObject *obj = fp->scopeChain;
     JS_ASSERT(obj->getClass() == &js_BlockClass);
     JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
@@ -3001,7 +3001,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* We must clear the private slot even with errors. */
     obj->setPrivate(NULL);
-    fp->setScopeChain(obj->getParent());
+    fp->scopeChain = obj->getParent();
     return normalUnwind;
 }
 
@@ -3750,7 +3750,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (!start && (fp = cx->fp) != NULL)
-        start = fp->maybeScopeChain();
+        start = fp->scopeChain;
 
     if (start) {
         /* Find the topmost object in the scope chain. */
@@ -4469,7 +4469,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     JSProperty *prop;
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
-    scopeChain = js_GetTopStackFrame(cx)->getScopeChain();
+    scopeChain = js_GetTopStackFrame(cx)->scopeChain;
 
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
@@ -5575,7 +5575,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
     if (protoKey != JSProto_Null) {
         if (!scope) {
             if (cx->fp)
-                scope = cx->fp->maybeScopeChain();
+                scope = cx->fp->scopeChain;
             if (!scope) {
                 scope = cx->globalObject;
                 if (!scope) {
@@ -6440,10 +6440,10 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
             fprintf(stderr, " overridden_args");
         fputc('\n', stderr);
 
-        if (fp->hasScopeChain())
-            fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->getScopeChain());
-        if (fp->hasBlockChain())
-            fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->getBlockChain());
+        if (fp->scopeChain)
+            fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->scopeChain);
+        if (fp->blockChain)
+            fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
 
         fputc('\n', stderr);
     }

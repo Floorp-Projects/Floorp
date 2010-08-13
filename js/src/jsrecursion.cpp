@@ -186,7 +186,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     exit->numStackSlotsBelowCurrentFrame = cx->fp->down->argv ?
         nativeStackOffset(&cx->fp->argv[-2]) / sizeof(double) : 0;
     exit->exitType = UNSTABLE_LOOP_EXIT;
-    exit->block = cx->fp->down->maybeBlockChain();
+    exit->block = cx->fp->down->blockChain;
     exit->pc = downFrame->pc + JSOP_CALL_LENGTH;
     exit->imacpc = NULL;
     exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - tree->nativeStackBase;
@@ -596,7 +596,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     /* argsobj */
     slurpFrameObjPtrSlot(fp_ins, JSStackFrame::offsetArgsObj(), fp->addressArgsObj(), &info);
     /* scopeChain */
-    slurpFrameObjPtrSlot(fp_ins, JSStackFrame::offsetScopeChain(), fp->addressScopeChain(), &info);
+    slurpFrameObjPtrSlot(fp_ins, offsetof(JSStackFrame, scopeChain), &fp->scopeChain, &info);
     /* vars */
     LIns* slots_ins = addName(lir->ins2(LIR_addp, fp_ins, INS_CONSTWORD(sizeof(JSStackFrame))),
                               "slots");
