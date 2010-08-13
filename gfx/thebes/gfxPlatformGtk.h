@@ -122,9 +122,9 @@ public:
                                GdkDrawable *drawable);
     static GdkDrawable *GetGdkDrawable(gfxASurface *target);
 
-protected:
-    void InitDisplayCaps();
+    static PRInt32 GetDPI();
 
+protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:
