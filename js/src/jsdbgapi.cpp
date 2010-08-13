@@ -686,7 +686,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 fp->fun = fun;
                 fp->argv = vp + 2;
                 fp->scopeChain = closure->getParent();
-                fp->argsobj = NULL;
+                fp->setArgsObj(NULL);
 
                 /* Initialize regs. */
                 regs.pc = script ? script->code : NULL;
@@ -1238,7 +1238,10 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->getThisObject(cx);
+    if (fp->isDummyFrame())
+        return NULL;
+    else
+        return fp->getThisObject(cx);
 }
 
 JS_PUBLIC_API(JSFunction *)

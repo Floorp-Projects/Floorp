@@ -889,7 +889,8 @@ class TypedArrayTemplate
 
         // note the usage of JS_NewObject here -- we don't want the
         // constructor to be called!
-        JSObject *nobj = NewObject(cx, slowClass(), NULL, NULL);
+        JS_ASSERT(slowClass() != &js_FunctionClass);
+        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL);
         if (!nobj) {
             delete ntarray;
             return false;

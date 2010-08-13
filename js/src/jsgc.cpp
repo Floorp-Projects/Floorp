@@ -2250,11 +2250,10 @@ gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
-
-    if (fp->callobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
-    if (fp->argsobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments");
+    if (fp->hasCallObj())
+        JS_CALL_OBJECT_TRACER(trc, fp->getCallObj(), "call");
+    if (fp->hasArgsObj())
+        JS_CALL_OBJECT_TRACER(trc, fp->getArgsObj(), "arguments");
     if (fp->script)
         js_TraceScript(trc, fp->script);
 

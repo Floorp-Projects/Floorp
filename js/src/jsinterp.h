@@ -68,6 +68,7 @@ enum JSFrameFlags {
     JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
     JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
+    JSFRAME_DUMMY              = 0x200, /* frame is a dummy frame */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -82,9 +83,12 @@ enum JSFrameFlags {
  */
 struct JSStackFrame
 {
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
+  private:
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
+
+  public:
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSScript            *script;        /* script being interpreted */
     js::Value           thisv;          /* "this" pointer if in method */
     JSFunction          *fun;           /* function being called or null */
@@ -148,19 +152,6 @@ struct JSStackFrame
 
     void            *padding;
 
-    void putActivationObjects(JSContext *cx) {
-        /*
-         * The order of calls here is important as js_PutCallObject needs to
-         * access argsobj.
-         */
-        if (callobj) {
-            js_PutCallObject(cx, this);
-            JS_ASSERT(!argsobj);
-        } else if (argsobj) {
-            js_PutArgsObject(cx, this);
-        }
-    }
-
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
     jsbytecode *pc(JSContext *cx) const;
 
@@ -174,6 +165,71 @@ struct JSStackFrame
 
     js::Value *base() const {
         return slots() + script->nfixed;
+    }
+
+    /* Call object accessors */
+
+    bool hasCallObj() const {
+        return callobj != NULL;
+    }
+
+    JSObject* getCallObj() const {
+        JS_ASSERT(hasCallObj());
+        return callobj;
+    }
+
+    JSObject* maybeCallObj() const {
+        return callobj;
+    }
+
+    void setCallObj(JSObject *obj) {
+        callobj = obj;
+    }
+
+    static size_t offsetCallObj() {
+        return offsetof(JSStackFrame, callobj);
+    }
+
+    /* Arguments object accessors */
+
+    bool hasArgsObj() const {
+        return argsobj != NULL;
+    }
+
+    JSObject* getArgsObj() const {
+        JS_ASSERT(hasArgsObj());
+        return argsobj;
+    }
+
+    JSObject* maybeArgsObj() const {
+        return argsobj;
+    }
+
+    void setArgsObj(JSObject *obj) {
+        argsobj = obj;
+    }
+
+    JSObject** addressArgsObj() {
+        return &argsobj;
+    }
+
+    static size_t offsetArgsObj() {
+        return offsetof(JSStackFrame, argsobj);
+    }
+
+    /* Other accessors */
+
+    void putActivationObjects(JSContext *cx) {
+        /*
+         * The order of calls here is important as js_PutCallObject needs to
+         * access argsobj.
+         */
+        if (hasCallObj()) {
+            js_PutCallObject(cx, this);
+            JS_ASSERT(!hasArgsObj());
+        } else if (hasArgsObj()) {
+            js_PutArgsObject(cx, this);
+        }
     }
 
     const js::Value &calleeValue() {
@@ -206,12 +262,12 @@ struct JSStackFrame
 
     /*
      * Get the "variable object" (ES3 term) associated with the Execution
-     * Context's VariableEnvironment (ES5 10.3). The given CallStackSegment
+     * Context's VariableEnvironment (ES5 10.3). The given StackSegment
      * must contain this stack frame.
      */
-    JSObject *varobj(js::CallStackSegment *css) const;
+    JSObject *varobj(js::StackSegment *seg) const;
 
-    /* Short for: varobj(cx->activeCallStack()). */
+    /* Short for: varobj(cx->activeSegment()). */
     JSObject *varobj(JSContext *cx) const;
 
     inline JSObject *getThisObject(JSContext *cx);
@@ -222,7 +278,7 @@ struct JSStackFrame
         return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
 
-    bool isDummyFrame() const { return !script && !fun; }
+    bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
 };
 
 namespace js {
@@ -293,6 +349,31 @@ PrimitiveThisTest(JSFunction *fun, const Value &v)
 }
 
 /*
+ * Abstracts the layout of the stack passed to natives from the engine and from
+ * natives to js::Invoke.
+ */
+struct CallArgs
+{
+    Value *argv_;
+    uintN argc_;
+  protected:
+    CallArgs() {}
+    CallArgs(Value *argv, uintN argc) : argv_(argv), argc_(argc) {}
+  public:
+    Value *base() const { return argv_ - 2; }
+    Value &callee() const { return argv_[-2]; }
+    Value &thisv() const { return argv_[-1]; }
+    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
+    Value *argv() const { return argv_; }
+    uintN argc() const { return argc_; }
+    Value &rval() const { return argv_[-2]; }
+
+    JSObject *computeThis(JSContext *cx) const {
+        return ComputeThisFromArgv(cx, argv_);
+    }
+};
+
+/*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
  * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
  * i.e., there must have been no un-popped pushes to cx->stack(). Furthermore,
@@ -301,10 +382,7 @@ PrimitiveThisTest(JSFunction *fun, const Value &v)
  * be initialized actual arguments.
  */
 extern JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
-
-extern JS_REQUIRES_STACK JS_FRIEND_API(bool)
-InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
+Invoke(JSContext *cx, const CallArgs &args, uintN flags);
 
 /*
  * Consolidated js_Invoke flags simply rename certain JSFRAME_* flags, so that
@@ -357,7 +435,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *down, uintN flags, Value *result);
 
 extern JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args);
+InvokeConstructor(JSContext *cx, const CallArgs &args);
 
 extern JS_REQUIRES_STACK bool
 Interpret(JSContext *cx);
@@ -488,6 +566,7 @@ js_MeterSlotOpcode(JSOp op, uint32 slot);
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
+    JS_ASSERT(!isDummyFrame());
     if (flags & JSFRAME_COMPUTED_THIS)
         return &thisv.toObject();
     if (!js::ComputeThisFromArgv(cx, argv))

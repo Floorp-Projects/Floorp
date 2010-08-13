@@ -132,6 +132,6 @@ js_IntervalNow();
 
 /* Date constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Date(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
+js_Date(JSContext *cx, uintN argc, js::Value *vp);
 
 #endif /* jsdate_h___ */

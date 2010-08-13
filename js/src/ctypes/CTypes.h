@@ -236,11 +236,13 @@ JSBool TypeError(JSContext* cx, const char* expected, jsval actual);
  * ABI constants that specify the calling convention to use.
  * ctypes.default_abi corresponds to the cdecl convention, and in almost all
  * cases is the correct choice. ctypes.stdcall_abi is provided for calling
- * functions in the Microsoft Win32 API.
+ * stdcall functions on Win32, and implies stdcall symbol name decoration;
+ * ctypes.winapi_abi is just stdcall but without decoration.
  */
 enum ABICode {
   ABI_DEFAULT,
   ABI_STDCALL,
+  ABI_WINAPI,
   INVALID_ABI
 };
 
