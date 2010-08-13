@@ -142,12 +142,24 @@ private: // methods
     return ((1 << mPaletteDepth) * sizeof(PRUint32));
   }
 
-  /**
-   * This returns the fastest operator to use for solid surfaces which have no
-   * alpha channel or their alpha channel is uniformly opaque.
-   * This differs per render mode.
-   */
-  gfxContext::GraphicsOperator OptimalFillOperator();
+  struct SurfaceWithFormat {
+    nsRefPtr<gfxASurface> mSurface;
+    gfxImageSurface::gfxImageFormat mFormat;
+    SurfaceWithFormat() {}
+    SurfaceWithFormat(gfxASurface* aSurface, gfxImageSurface::gfxImageFormat aFormat)
+     : mSurface(aSurface), mFormat(aFormat) {}
+    PRBool IsValid() { return !!mSurface; }
+  };
+
+  SurfaceWithFormat SurfaceForDrawing(PRBool             aDoPadding,
+                                      PRBool             aDoPartialDecode,
+                                      PRBool             aDoTile,
+                                      const nsIntMargin& aPadding,
+                                      gfxMatrix&         aUserSpaceToImageSpace,
+                                      gfxRect&           aFill,
+                                      gfxRect&           aSubimage,
+                                      gfxRect&           aSourceRect,
+                                      gfxRect&           aImageRect);
 
 private: // data
   nsRefPtr<gfxImageSurface> mImageSurface;
