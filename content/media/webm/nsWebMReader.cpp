@@ -688,39 +688,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
-  if (HasVideo()) {
-    PRBool eof = PR_FALSE;
-    PRInt64 startTime = -1;
-    while (HasVideo() && !eof) {
-      while (mVideoQueue.GetSize() == 0 && !eof) {
-        PRBool skip = PR_FALSE;
-        eof = !DecodeVideoFrame(skip, 0);
-        MonitorAutoExit exitReaderMon(mMonitor);
-        MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
-        if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-          return NS_ERROR_FAILURE;
-        }
-      }
-      if (mVideoQueue.GetSize() == 0) {
-        break;
-      }
-      nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
-      // If the frame end time is less than the seek target, we won't want
-      // to display this frame after the seek, so discard it.
-      if (video && video->mEndTime < aTarget) {
-        if (startTime == -1) {
-          startTime = video->mTime;
-        }
-        mVideoQueue.PopFront();
-        video = nsnull;
-      } else {
-        video.forget();
-        break;
-      }
-    }
-    SEEK_LOG(PR_LOG_DEBUG, ("First video frame after decode is %lld", startTime));
-  }
-  return NS_OK;
+  return DecodeToTarget(aTarget);
 }
 
 nsresult nsWebMReader::GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime)

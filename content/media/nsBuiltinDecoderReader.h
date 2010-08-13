@@ -461,6 +461,10 @@ public:
 
 protected:
 
+  // Pumps the decode until we reach frames/samples required to play at
+  // time aTarget (ms).
+  nsresult DecodeToTarget(PRInt64 aTarget);
+
   // Reader decode function. Matches DecodeVideoFrame() and
   // DecodeAudioData().
   typedef PRBool (nsBuiltinDecoderReader::*DecodeFn)();
