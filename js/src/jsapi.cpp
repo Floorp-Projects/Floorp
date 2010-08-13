@@ -1823,7 +1823,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->fp)
-        return cx->fp->getScopeChain()->getGlobal();
+        return cx->fp->scopeChain->getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
