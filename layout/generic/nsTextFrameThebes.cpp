@@ -7131,3 +7131,14 @@ nsTextFrame::IsAtEndOfLine() const
 {
   return (GetStateBits() & TEXT_END_OF_LINE) != 0;
 }
+
+PRBool
+nsTextFrame::HasAnyNoncollapsedCharacters()
+{
+  gfxSkipCharsIterator iter = EnsureTextRun();
+  PRInt32 offset = GetContentOffset(),
+          offsetEnd = GetContentEnd();
+  PRInt32 skippedOffset = iter.ConvertOriginalToSkipped(offset);
+  PRInt32 skippedOffsetEnd = iter.ConvertOriginalToSkipped(offsetEnd);
+  return skippedOffset != skippedOffsetEnd;
+}
