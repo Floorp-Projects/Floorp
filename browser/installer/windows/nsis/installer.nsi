@@ -237,7 +237,7 @@ Section "-Application" APP_IDX
   SetDetailsPrint none
 
   ${LogHeader} "Installing Main Files"
-  ${CopyFilesFromDir} "$EXEDIR\nonlocalized" "$INSTDIR" \
+  ${CopyFilesFromDir} "$EXEDIR\core" "$INSTDIR" \
                       "$(ERROR_CREATE_DIRECTORY_PREFIX)" \
                       "$(ERROR_CREATE_DIRECTORY_SUFFIX)"
 
@@ -267,15 +267,6 @@ Section "-Application" APP_IDX
   ${LogUninstall} "File: \install_status.log"
   ${LogUninstall} "File: \install_wizard.log"
   ${LogUninstall} "File: \updates.xml"
-
-  SetDetailsPrint both
-  DetailPrint $(STATUS_INSTALL_LANG)
-  SetDetailsPrint none
-
-  ${LogHeader} "Installing Localized Files"
-  ${CopyFilesFromDir} "$EXEDIR\localized" "$INSTDIR" \
-                      "$(ERROR_CREATE_DIRECTORY_PREFIX)" \
-                      "$(ERROR_CREATE_DIRECTORY_SUFFIX)"
 
   ; Check if QuickTime is installed and copy the nsIQTScriptablePlugin.xpt from
   ; its plugins directory into the app's components directory.
@@ -529,8 +520,8 @@ SectionEnd
 Function CustomAbort
   ${If} "${AB_CD}" == "en-US"
   ${AndIf} "$PageName" != ""
-  ${AndIf} ${FileExists} "$EXEDIR\nonlocalized\distribution\distribution.ini"
-    ReadINIStr $0 "$EXEDIR\nonlocalized\distribution\distribution.ini" "Global" "about"
+  ${AndIf} ${FileExists} "$EXEDIR\core\distribution\distribution.ini"
+    ReadINIStr $0 "$EXEDIR\core\distribution\distribution.ini" "Global" "about"
     ClearErrors
     ${WordFind} "$0" "Funnelcake" "E#" $1
     ${Unless} ${Errors}
@@ -689,18 +680,18 @@ BrandingText " "
 
 Function preWelcome
   StrCpy $PageName "Welcome"
-  ${If} ${FileExists} "$EXEDIR\localized\distribution\modern-wizard.bmp"
+  ${If} ${FileExists} "$EXEDIR\core\distribution\modern-wizard.bmp"
     Delete "$PLUGINSDIR\modern-wizard.bmp"
-    CopyFiles /SILENT "$EXEDIR\localized\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
+    CopyFiles /SILENT "$EXEDIR\core\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
   ${EndIf}
 FunctionEnd
 
 Function preOptions
   StrCpy $PageName "Options"
-  ${If} ${FileExists} "$EXEDIR\localized\distribution\modern-header.bmp"
+  ${If} ${FileExists} "$EXEDIR\core\distribution\modern-header.bmp"
   ${AndIf} $hHeaderBitmap == ""
     Delete "$PLUGINSDIR\modern-header.bmp"
-    CopyFiles /SILENT "$EXEDIR\localized\distribution\modern-header.bmp" "$PLUGINSDIR\modern-header.bmp"
+    CopyFiles /SILENT "$EXEDIR\core\distribution\modern-header.bmp" "$PLUGINSDIR\modern-header.bmp"
     ${ChangeMUIHeaderImage} "$PLUGINSDIR\modern-header.bmp"
   ${EndIf}
   !insertmacro MUI_HEADER_TEXT "$(OPTIONS_PAGE_TITLE)" "$(OPTIONS_PAGE_SUBTITLE)"
@@ -926,7 +917,7 @@ FunctionEnd
 Function .onInit
   StrCpy $PageName ""
   StrCpy $LANGUAGE 0
-  ${SetBrandNameVars} "$EXEDIR\localized\distribution\setup.ini"
+  ${SetBrandNameVars} "$EXEDIR\core\distribution\setup.ini"
 
   ${InstallOnInitCommon} "$(WARN_MIN_SUPPORTED_OS_MSG)"
 
@@ -1009,9 +1000,8 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Bottom "70"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" State  "1"
 
-  ; There must always be nonlocalized and localized directories.
-  ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $R5 $R7 $R8
-  ${GetSize} "$EXEDIR\localized\" "/S=0K" $R6 $R7 $R8
+  ; There must always be a core directory.
+  ${GetSize} "$EXEDIR\core\" "/S=0K" $R5 $R7 $R8
   IntOp $R8 $R5 + $R6
   SectionSetSize ${APP_IDX} $R8
 
