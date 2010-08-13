@@ -446,14 +446,6 @@ nsWindow::Update()
     return NS_OK;
 }
 
-void
-nsWindow::Scroll(const nsIntPoint&,
-                 const nsTArray<nsIntRect>&,
-                 const nsTArray<nsIWidget::Configuration>&)
-{
-    ALOG("nsWindow[%p]::Scroll ignored!", (void*)this);
-}
-
 nsWindow*
 nsWindow::FindTopLevel()
 {

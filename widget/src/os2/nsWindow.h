@@ -184,9 +184,6 @@ public:
   virtual void          FreeNativeData(void* aDatum, PRUint32 aDataType);
   NS_IMETHOD            CaptureMouse(PRBool aCapture);
   virtual PRBool        HasPendingInputEvent();
-  virtual void          Scroll(const nsIntPoint& aDelta,
-                               const nsTArray<nsIntRect>& aDestRects,
-                               const nsTArray<Configuration>& aReconfigureChildren);
   NS_IMETHOD            GetBounds(nsIntRect& aRect);
   NS_IMETHOD            GetClientBounds(nsIntRect& aRect);
   virtual nsIntPoint    WidgetToScreenOffset();

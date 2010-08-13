@@ -926,16 +926,6 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
   return NS_OK;
 }
 
-void
-nsCocoaWindow::Scroll(const nsIntPoint& aDelta,
-                      const nsTArray<nsIntRect>& aDestRects,
-                      const nsTArray<Configuration>& aConfigurations)
-{
-  if (mPopupContentView) {
-    mPopupContentView->Scroll(aDelta, aDestRects, aConfigurations);
-  }
-}
-
 LayerManager*
 nsCocoaWindow::GetLayerManager()
 {
