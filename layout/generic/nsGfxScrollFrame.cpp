@@ -1712,7 +1712,8 @@ AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
             nsDisplayList* aSource, nsIFrame* aSourceFrame, PRBool aOwnLayer)
 {
   if (aOwnLayer) {
-    aDest->AppendNewToTop(new (aBuilder) nsDisplayOwnLayer(aSourceFrame, aSource));
+    aDest->AppendNewToTop(
+        new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource));
   } else {
     aDest->AppendToTop(aSource);
   }  

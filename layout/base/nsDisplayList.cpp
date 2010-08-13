@@ -626,8 +626,9 @@ RegisterThemeWidgetGeometry(nsIFrame* aFrame)
       borderBox.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
 }
 
-nsDisplayBackground::nsDisplayBackground(nsIFrame* aFrame)
-  : nsDisplayItem(aFrame)
+nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame)
+  : nsDisplayItem(aBuilder, aFrame)
 {
   MOZ_COUNT_CTOR(nsDisplayBackground);
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
@@ -1018,13 +1019,15 @@ nsDisplayBoxShadowInner::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return PR_TRUE;
 }
 
-nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
-  : nsDisplayItem(aFrame) {
+nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
+                                     nsIFrame* aFrame, nsDisplayList* aList)
+  : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aList);
 }
 
-nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayItem* aItem)
-  : nsDisplayItem(aFrame) {
+nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
+                                     nsIFrame* aFrame, nsDisplayItem* aItem)
+  : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aItem);
 }
 
@@ -1169,8 +1172,9 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
   return WrapEachDisplayItem(aBuilder, aLists.Outlines(), this);
 }
 
-nsDisplayOpacity::nsDisplayOpacity(nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aFrame, aList) {
+nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
+                                   nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aBuilder, aFrame, aList) {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
 }
 
@@ -1236,8 +1240,9 @@ PRBool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem*
   return PR_TRUE;
 }
 
-nsDisplayOwnLayer::nsDisplayOwnLayer(nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aFrame, aList) {
+nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
+                                     nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aBuilder, aFrame, aList) {
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 }
 
@@ -1256,16 +1261,18 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
-nsDisplayClip::nsDisplayClip(nsIFrame* aFrame, nsIFrame* aClippingFrame,
-        nsDisplayItem* aItem, const nsRect& aRect)
-   : nsDisplayWrapList(aFrame, aItem),
+nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
+                             nsIFrame* aFrame, nsIFrame* aClippingFrame,
+                             nsDisplayItem* aItem, const nsRect& aRect)
+   : nsDisplayWrapList(aBuilder, aFrame, aItem),
      mClippingFrame(aClippingFrame), mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
-nsDisplayClip::nsDisplayClip(nsIFrame* aFrame, nsIFrame* aClippingFrame,
-        nsDisplayList* aList, const nsRect& aRect)
-   : nsDisplayWrapList(aFrame, aList),
+nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
+                             nsIFrame* aFrame, nsIFrame* aClippingFrame,
+                             nsDisplayList* aList, const nsRect& aRect)
+   : nsDisplayWrapList(aBuilder, aFrame, aList),
      mClippingFrame(aClippingFrame), mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
@@ -1317,12 +1324,14 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
 nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
                                                 nsDisplayItem* aItem) {
   return new (aBuilder)
-    nsDisplayClip(aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
+    nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
 }
 
-nsDisplayZoom::nsDisplayZoom(nsIFrame* aFrame, nsDisplayList* aList,
+nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
+                             nsIFrame* aFrame, nsDisplayList* aList,
                              PRInt32 aAPD, PRInt32 aParentAPD)
-    : nsDisplayOwnLayer(aFrame, aList), mAPD(aAPD), mParentAPD(aParentAPD) {
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList), mAPD(aAPD),
+      mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
 }
 
@@ -1779,8 +1788,9 @@ nsRect nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
 }
 
 #ifdef MOZ_SVG
-nsDisplaySVGEffects::nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aFrame, aList), mEffectsFrame(aFrame),
+nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aBuilder, aFrame, aList), mEffectsFrame(aFrame),
       mBounds(aFrame->GetOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplaySVGEffects);
