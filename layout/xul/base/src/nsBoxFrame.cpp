@@ -1278,7 +1278,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
     nsPoint rectCenter(aRect.x + aRect.width / 2, aRect.y + aRect.height / 2);
     static_cast<nsBoxFrame*>(mFrame)->
-      DisplayDebugInfoFor(this, rectCenter - aBuilder->ToReferenceFrame(mFrame));
+      DisplayDebugInfoFor(this, rectCenter - ToReferenceFrame());
     aOutFrames->AppendElement(this);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder
@@ -1291,7 +1291,7 @@ nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
                          nsIRenderingContext* aCtx)
 {
   static_cast<nsBoxFrame*>(mFrame)->
-    PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    PaintXULDebugOverlay(*aCtx, ToReferenceFrame());
 }
 
 static void
@@ -1318,7 +1318,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                          "XULDebugBackground"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULDebug(Builder this));
+        nsDisplayXULDebug(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif

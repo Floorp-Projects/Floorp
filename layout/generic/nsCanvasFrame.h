@@ -196,7 +196,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
+    return frame->CanvasArea() + ToReferenceFrame();
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,

@@ -333,7 +333,7 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
                               nsIRenderingContext* aCtx)
 {
   static_cast<nsImageBoxFrame*>(mFrame)->
-    PaintImage(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame),
+    PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
                aBuilder->ShouldSyncDecodeImages()
                  ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
                  : (PRUint32) imgIContainer::FLAG_NONE);
