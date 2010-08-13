@@ -80,10 +80,10 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(nsICSSStyleRule* aValue)
+nsAttrValue::nsAttrValue(nsICSSStyleRule* aValue, const nsAString* aSerialized)
     : mBits(0)
 {
-  SetTo(aValue);
+  SetTo(aValue, aSerialized);
 }
 
 #ifdef MOZ_SVG
@@ -313,12 +313,13 @@ nsAttrValue::SetTo(PRInt16 aInt)
 }
 
 void
-nsAttrValue::SetTo(nsICSSStyleRule* aValue)
+nsAttrValue::SetTo(nsICSSStyleRule* aValue, const nsAString* aSerialized)
 {
   if (EnsureEmptyMiscContainer()) {
     MiscContainer* cont = GetMiscContainer();
     NS_ADDREF(cont->mCSSStyleRule = aValue);
     cont->mType = eCSSStyleRule;
+    SetMiscAtomOrString(aSerialized);
   }
 }
 
@@ -431,6 +432,7 @@ nsAttrValue::ToString(nsAString& aResult) const
       if (decl) {
         decl->ToString(aResult);
       }
+      const_cast<nsAttrValue*>(this)->SetMiscAtomOrString(&aResult);
 
       break;
     }
@@ -1260,7 +1262,10 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                "Trying to re-set atom or string!");
   if (aValue) {
     PRUint32 len = aValue->Length();
-    NS_ASSERTION(len, "Empty string?");
+    // We're allowing eCSSStyleRule attributes to store empty strings as it
+    // can be beneficial to store an empty style attribute as a parsed rule.
+    // Add other types as needed.
+    NS_ASSERTION(len || Type() == eCSSStyleRule, "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
       nsIAtom* atom = NS_NewAtom(*aValue);

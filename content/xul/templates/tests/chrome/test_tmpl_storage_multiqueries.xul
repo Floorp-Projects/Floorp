@@ -31,11 +31,11 @@ var notWorkingYetDynamic = false;
 var expectedOutput =
 <output>
     <listitem anyid="true" label="Mammal: African Elephant"/>
-    <listitem anyid="true" label="Mammal: Gorilla" style="font-weight: bold;"/>
+    <listitem anyid="true" label="Mammal: Gorilla" style="font-weight:bold"/>
     <listitem anyid="true" label="Mammal: HIPPOPOTAMUS"/>
     <listitem anyid="true" label="Mammal: LAMA"/>
     <listitem anyid="true" label="Mammal: Lion"/>
-    <listitem anyid="true" label="Mammal: Nine-banded Armadillo" style="font-weight: bold;"/>
+    <listitem anyid="true" label="Mammal: Nine-banded Armadillo" style="font-weight:bold"/>
     <listitem anyid="true" label="Mammal: Polar Bear"/>
     <listitem anyid="true" label="Mammal: aardvark"/>
     <listitem anyid="true" label="Bird: Barn Owl" style="font-style: italic;"/>
