@@ -765,31 +765,40 @@ nsPresContext::GetUserPreferences()
   SetBidi(bidiOptions, PR_FALSE);
 }
 
+PRBool
+nsPresContext::CheckDPIChange()
+{
+  PRInt32 oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
+  if (!mDeviceContext->CheckDPIChange())
+    return PR_FALSE;
+  if (mShell) {
+    mDeviceContext->FlushFontCache();
+
+    // Re-fetch the view manager's window dimensions in case there's a deferred
+    // resize which hasn't affected our mVisibleArea yet
+    nscoord oldWidthAppUnits, oldHeightAppUnits;
+    nsIViewManager* vm = mShell->GetViewManager();
+    vm->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
+    float oldWidthDevPixels = oldWidthAppUnits/oldAppUnitsPerDevPixel;
+    float oldHeightDevPixels = oldHeightAppUnits/oldAppUnitsPerDevPixel;
+
+    nscoord width = NSToCoordRound(oldWidthDevPixels*AppUnitsPerDevPixel());
+    nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
+    vm->SetWindowDimensions(width, height);
+
+    MediaFeatureValuesChanged(PR_TRUE);
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  }
+  return PR_TRUE;
+}
+
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
   nsDependentCString prefName(aPrefName);
   if (prefName.EqualsLiteral("layout.css.dpi") ||
       prefName.EqualsLiteral("layout.css.devPixelsPerPx")) {
-    PRInt32 oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
-    if (mDeviceContext->CheckDPIChange() && mShell) {
-      mDeviceContext->FlushFontCache();
-
-      // Re-fetch the view manager's window dimensions in case there's a deferred
-      // resize which hasn't affected our mVisibleArea yet
-      nscoord oldWidthAppUnits, oldHeightAppUnits;
-      nsIViewManager* vm = mShell->GetViewManager();
-      vm->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
-      float oldWidthDevPixels = oldWidthAppUnits/oldAppUnitsPerDevPixel;
-      float oldHeightDevPixels = oldHeightAppUnits/oldAppUnitsPerDevPixel;
-
-      nscoord width = NSToCoordRound(oldWidthDevPixels*AppUnitsPerDevPixel());
-      nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
-      vm->SetWindowDimensions(width, height);
-
-      MediaFeatureValuesChanged(PR_TRUE);
-      RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
-    }
+    CheckDPIChange();
     return;
   }
   if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("font."))) {
@@ -1510,6 +1519,11 @@ nsPresContext::ThemeChanged()
 void
 nsPresContext::ThemeChangedInternal()
 {
+  // We might have been torn down. If so, bail out now; we don't want to
+  // start poking possibly-dead widgets etc
+  if (!mShell)
+    return;
+
   mPendingThemeChanged = PR_FALSE;
   
   // Tell the theme that it changed, so it can flush any handles to stale theme
@@ -1527,6 +1541,12 @@ nsPresContext::ThemeChangedInternal()
 
   // This will force the system metrics to be generated the next time they're used
   nsCSSRuleProcessor::FreeSystemMetrics();
+
+  if (CheckDPIChange()) {
+    // DPI changes take care of MediaFeatureValuesChanged/
+    // RebuildAllStyleData.
+    return;
+  }
 
   // Changes to system metrics can change media queries on them.
   MediaFeatureValuesChanged(PR_TRUE);
