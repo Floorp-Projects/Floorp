@@ -256,7 +256,7 @@ nsBuiltinDecoderReader::GetSeekRange(const nsTArray<ByteRange>& ranges,
 }
 
 VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
-                                      PRInt64& aOutStartTime)
+                                                 PRInt64& aOutStartTime)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
 

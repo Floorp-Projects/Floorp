@@ -167,6 +167,7 @@ _TEST_FILES += \
 		320x240.ogv \
 		448636.ogv \
 		audio-overhang.ogg \
+		audio-gaps.ogg \
 		beta-phrasebook.ogg \
 		bogus.ogv \
 		bug495129.ogv \

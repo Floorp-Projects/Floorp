@@ -295,32 +295,30 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
   }
 
   float** pcm = 0;
-  PRUint32 samples = 0;
+  PRInt32 samples = 0;
   PRUint32 channels = mVorbisState->mInfo.channels;
   while ((samples = vorbis_synthesis_pcmout(&mVorbisState->mDsp, &pcm)) > 0) {
-    if (samples > 0) {
-      float* buffer = new float[samples * channels];
-      float* p = buffer;
-      for (PRUint32 i = 0; i < samples; ++i) {
-        for (PRUint32 j = 0; j < channels; ++j) {
-          *p++ = pcm[j][i];
-        }
+    float* buffer = new float[samples * channels];
+    float* p = buffer;
+    for (PRUint32 i = 0; i < samples; ++i) {
+      for (PRUint32 j = 0; j < channels; ++j) {
+        *p++ = pcm[j][i];
       }
-
-      PRInt64 duration = mVorbisState->Time((PRInt64)samples);
-      PRInt64 startTime = (mVorbisGranulepos != -1) ?
-        mVorbisState->Time(mVorbisGranulepos) : -1;
-      SoundData* s = new SoundData(mPageOffset,
-                                   startTime,
-                                   duration,
-                                   samples,
-                                   buffer,
-                                   channels);
-      if (mVorbisGranulepos != -1) {
-        mVorbisGranulepos += samples;
-      }
-      aChunks.AppendElement(s);
     }
+
+    PRInt64 duration = mVorbisState->Time((PRInt64)samples);
+    PRInt64 startTime = (mVorbisGranulepos != -1) ?
+      mVorbisState->Time(mVorbisGranulepos) : -1;
+    SoundData* s = new SoundData(mPageOffset,
+                                 startTime,
+                                 duration,
+                                 samples,
+                                 buffer,
+                                 channels);
+    if (mVorbisGranulepos != -1) {
+      mVorbisGranulepos += samples;
+    }
+    aChunks.AppendElement(s);
     if (vorbis_synthesis_read(&mVorbisState->mDsp, samples) != 0) {
       return NS_ERROR_FAILURE;
     }

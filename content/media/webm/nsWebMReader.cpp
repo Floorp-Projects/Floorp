@@ -118,6 +118,8 @@ nsWebMReader::nsWebMReader(nsBuiltinDecoder* aDecoder)
   mChannels(0),
   mVideoTrack(0),
   mAudioTrack(0),
+  mAudioSamples(0),
+  mAudioStartMs(-1),
   mHasVideo(PR_FALSE),
   mHasAudio(PR_FALSE)
 {
@@ -155,6 +157,8 @@ nsresult nsWebMReader::Init()
 
 nsresult nsWebMReader::ResetDecode()
 {
+  mAudioSamples = 0;
+  mAudioStartMs = -1;
   nsresult res = NS_OK;
   if (NS_FAILED(nsBuiltinDecoderReader::ResetDecode())) {
     res = NS_ERROR_FAILURE;
@@ -347,7 +351,43 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
     return PR_FALSE;
   }
 
+  const PRUint32 rate = mVorbisDsp.vi->rate;
   PRUint64 tstamp_ms = tstamp / NS_PER_MS;
+  if (mAudioStartMs == -1) {
+    // This is the first audio chunk. Assume the start time of our decode
+    // is the start of this chunk.
+    mAudioStartMs = tstamp_ms;
+  }
+  // If there's a gap between the start of this sound chunk and the end of
+  // the previous sound chunk, we need to increment the packet count so that
+  // the vorbis decode doesn't use data from before the gap to help decode
+  // from after the gap.
+  PRInt64 tstamp_samples = 0;
+  if (!MsToSamples(tstamp_ms, rate, tstamp_samples)) {
+    NS_WARNING("Int overflow converting WebM timestamp to samples");
+    return PR_FALSE;
+  }
+  PRInt64 decoded_samples = 0;
+  if (!MsToSamples(mAudioStartMs, rate, decoded_samples)) {
+    NS_WARNING("Int overflow converting WebM start time to samples");
+    return PR_FALSE;
+  }
+  if (!AddOverflow(decoded_samples, mAudioSamples, decoded_samples)) {
+    NS_WARNING("Int overflow adding decoded_samples");
+    return PR_FALSE;
+  }
+  if (tstamp_samples > decoded_samples) {
+#ifdef DEBUG
+    PRInt64 ms = 0;
+    LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lldms, %lld samples, in audio stream\n",
+      SamplesToMs(tstamp_samples - decoded_samples, rate, ms) ? ms: -1,
+      tstamp_samples - decoded_samples));
+#endif
+    mPacketCount++;
+    mAudioStartMs = tstamp_ms;
+    mAudioSamples = 0;
+  }
+
   for (PRUint32 i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -371,27 +411,40 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
     }
 
     float** pcm = 0;
-    PRUint32 samples = 0;
+    PRInt32 samples = 0;
+    PRInt32 total_samples = 0;
     while ((samples = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
-      if (samples > 0) {
-        float* buffer = new float[samples * mChannels];
-        float* p = buffer;
-        for (PRUint32 i = 0; i < samples; ++i) {
-          for (PRUint32 j = 0; j < mChannels; ++j) {
-            *p++ = pcm[j][i];
-          }
+      float* buffer = new float[samples * mChannels];
+      float* p = buffer;
+      for (PRUint32 i = 0; i < samples; ++i) {
+        for (PRUint32 j = 0; j < mChannels; ++j) {
+          *p++ = pcm[j][i];
         }
-
-        PRInt64 duration = samples * 1000 / mVorbisDsp.vi->rate;
-        SoundData* s = new SoundData(0,
-                                     tstamp_ms,
-                                     duration,
-                                     samples,
-                                     buffer,
-                                     mChannels);
-        mAudioQueue.Push(s);
-        tstamp_ms += duration;
       }
+
+      PRInt64 duration = 0;
+      if (!SamplesToMs(samples, rate, duration)) {
+        NS_WARNING("Int overflow converting WebM audio duration");
+        nestegg_free_packet(aPacket);
+        return PR_FALSE;
+      }
+      PRInt64 total_duration = 0;
+      if (!SamplesToMs(total_samples, rate, total_duration)) {
+        NS_WARNING("Int overflow converting WebM audio total_duration");
+        nestegg_free_packet(aPacket);
+        return PR_FALSE;
+      }
+      
+      PRInt64 time = tstamp_ms + total_duration;
+      total_samples += samples;
+      SoundData* s = new SoundData(0,
+                                   time,
+                                   duration,
+                                   samples,
+                                   buffer,
+                                   mChannels);
+      mAudioQueue.Push(s);
+      mAudioSamples += samples;
       if (vorbis_synthesis_read(&mVorbisDsp, samples) != 0) {
         nestegg_free_packet(aPacket);
         return PR_FALSE;
