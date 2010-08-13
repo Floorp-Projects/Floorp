@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test that document.mozSetImageElement() after a paint causes a repaint.
+-->
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body style="background-image: -moz-element(#e)">
+
+<div style="overflow:hidden; height:0;">
+  <div id="e" style="width: 50px; height: 50px; background: red;"></div>
+  <div id="white" style="width: 50px; height: 50px; background: white;"></div>
+</div>
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", function () {
+  document.mozSetImageElement("e", document.getElementById("white"));
+  document.documentElement.className = "";
+}, false);
+
+</script>
+</body>
+</html>

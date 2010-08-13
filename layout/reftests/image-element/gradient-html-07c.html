@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+     Test that diagonal repeating SVG gradients as -moz-element
+     using userSpaceOnUse render the same as using objectBoundingBox
+     with the right conversion.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+  <div style="width:300px; height:300px; background-image:-moz-element(#g); background-size: 100px;"></div>
+  <svg>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x2="300" y2="300">
+      <stop stop-color="lime" offset="0"></stop>
+      <stop stop-color="black" offset="1"></stop>
+    </linearGradient>
+  </svg>
+</body>
+</html>

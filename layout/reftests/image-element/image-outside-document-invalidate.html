@@ -1,0 +1,24 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test that document.mozSetImageElement() after an image load causes a repaint.
+-->
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body style="background: -moz-element(#e) red">
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", function () {
+  var img = new Image();
+  img.src = "data:image/gif;base64,R0lGODlhAQABAID/AP///wAAACwAAAAAAQABAAACAkQBADs="; /* 1x1 white gif */
+  document.mozSetImageElement("e", img);
+  img.onload = function () {
+    document.documentElement.className = "";
+  };
+}, false);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test painting simple patterns with offsets.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+  <div style="width:100px; height:100px; background:-moz-element(#p);"></div>
+  <div style="margin-top:100px; width:100px; height:100px;
+              background:-moz-element(#p); background-position:-10px -10px;"></div>
+
+  <svg>
+    <pattern id="p" patternUnits="userSpaceOnUse"
+             x="0" y="0" width="50" height="50">
+      <rect x="10" y="10" width="10" height="10" fill="lime"></rect>
+    </pattern> 
+  </svg>
+</body>
+</html>

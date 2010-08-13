@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test that painting in an out-of-document canvas causes a repaint.
+-->
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body style="background: -moz-element(#e) darkred">
+
+<script>
+
+var canvas = document.createElement("canvas");
+canvas.width = canvas.height = 1;
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 1, 1);
+window.addEventListener("MozReftestInvalidate", function () {
+  setTimeout(function () {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, 1, 1);
+    document.documentElement.className = "";
+  }, 0);
+}, false);
+
+document.mozSetImageElement("e", canvas);
+
+</script>
+</body>
+</html>

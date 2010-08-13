@@ -1,0 +1,33 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+     Multiple -moz-element background images
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+#box {
+  height: 100px;
+  width: 200px;
+  background: -moz-element(#lime) top left no-repeat,
+              -moz-element(#green) top right no-repeat red;
+}
+
+div > div {
+  width: 100px;
+  height: 100px;
+}
+
+</style>
+</head>
+<body style="margin:0">
+<div id="box"></div>
+
+<div style="overflow:hidden; height:0">
+  <div id="lime" style="background-color: lime"></div>
+  <div id="green" style="background-color: green"></div>
+</div>
+</body>
+</html>
