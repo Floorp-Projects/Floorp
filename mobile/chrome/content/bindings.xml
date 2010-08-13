@@ -1125,7 +1125,6 @@
           // XXX this should probably be removed with layers
           Browser.forceChromeReflow();
           Browser.contentScrollboxScroller.scrollBy(0, 0);
-          Browser._browserView.onAfterVisibleMove();
         ]]></body>
       </method>
     </implementation>

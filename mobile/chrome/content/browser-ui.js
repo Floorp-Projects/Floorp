@@ -1717,7 +1717,6 @@ var FormHelperUI = {
       let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
       if (deltaX != 0 || deltaY != 0) {
         Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
-        bv.onAfterVisibleMove();
       }
 
       Browser.animatedZoomTo(zoomRect);
