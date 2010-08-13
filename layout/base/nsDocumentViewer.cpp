@@ -926,8 +926,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         mPresContext->GetPrintSettings()->GetEffectivePageSize(&pageWidth,
                                                                &pageHeight);
         mPresContext->SetPageSize(
-          nsSize(mPresContext->TwipsToAppUnits(NSToIntFloor(pageWidth)),
-                 mPresContext->TwipsToAppUnits(NSToIntFloor(pageHeight))));
+          nsSize(mPresContext->CSSTwipsToAppUnits(NSToIntFloor(pageWidth)),
+                 mPresContext->CSSTwipsToAppUnits(NSToIntFloor(pageHeight))));
         mPresContext->SetIsRootPaginatedDocument(PR_TRUE);
         mPresContext->SetPageScale(1.0f);
       }
@@ -3675,7 +3675,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, docShell, mDocument, 
-                                  float(mDeviceContext->AppUnitsPerInch()) /
+                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
                                   mParentWidget,
@@ -3743,7 +3743,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, docShell, doc,
-                                  float(mDeviceContext->AppUnitsPerInch()) /
+                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
                                   mParentWidget,
@@ -3863,13 +3863,8 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
       sqf->GetDeadSpaceValue(&deadSpaceGapTwips);
     }
 
-    // To compute deadSpaceGap, use the same presContext as was used
-    // to layout the seqFrame. (That presContext may have different
-    // TwipsToAppUnits conversion from this->mPresContext)
-    nscoord deadSpaceGap = 
-      seqFrame->PresContext()->TwipsToAppUnits(deadSpaceGapTwips);
-
-    nscoord newYPosn = 
+    nscoord deadSpaceGap = nsPresContext::CSSTwipsToAppUnits(deadSpaceGapTwips);
+    nscoord newYPosn =
       nscoord(mPrintEngine->GetPrintPreviewScale() * 
               float(fndPageFrame->GetPosition().y - deadSpaceGap));
     sf->ScrollTo(nsPoint(pt.x, newYPosn), nsIScrollableFrame::INSTANT);
