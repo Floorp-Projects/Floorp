@@ -238,13 +238,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   NS_ASSERTION(aPresContext, "Must have prescontext");
 
   if (aValue.IsFixedLengthUnit()) {
-    return aPresContext->TwipsToAppUnits(aValue.GetLengthTwips());
+    return aValue.GetFixedLength(aPresContext);
   }
-  nsCSSUnit unit = aValue.GetUnit();
-  if (unit == eCSSUnit_Pixel) {
-    return nsPresContext::CSSPixelsToAppUnits(aValue.GetFloatValue());
+  if (aValue.IsPixelLengthUnit()) {
+    return aValue.GetPixelLength();
   }
-  // Common code for all units other than pixels:
+  // Common code for all units other than pixel-based units and fixed-length
+  // units:
   aCanStoreInRuleTree = PR_FALSE;
   const nsStyleFont *styleFont =
     aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
@@ -253,7 +253,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     // prefs into account?
     aFontSize = styleFont->mFont.size;
   }
-  switch (unit) {
+  switch (aValue.GetUnit()) {
     case eCSSUnit_RootEM: {
       nscoord rootFontSize;
 
@@ -1417,7 +1417,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   const nsCSSValue& size = fontData.mSize;
   const nsCSSValue& weight = fontData.mWeight;
   const nsCSSValue& stretch = fontData.mStretch;
-  if ((size.IsRelativeLengthUnit() && size.GetUnit() != eCSSUnit_Pixel) ||
+  if (size.IsRelativeLengthUnit() ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
@@ -2887,7 +2887,7 @@ struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
       size = CalcLengthWith(aValue, mParentSize, mParentFont,
                             nsnull, mPresContext, mAtRoot,
                             PR_TRUE, mCanStoreInRuleTree);
-      if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
+      if (!aValue.IsRelativeLengthUnit()) {
         size = nsStyleFont::ZoomText(mPresContext, size);
       }
     }
@@ -3653,8 +3653,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LEH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, canStoreInRuleTree);
-    if (textData.mLineHeight.IsFixedLengthUnit() ||
-        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel) {
+    if (textData.mLineHeight.IsLengthUnit() &&
+        !textData.mLineHeight.IsRelativeLengthUnit()) {
       nscoord lh = nsStyleFont::ZoomText(mPresContext,
                                          text->mLineHeight.GetCoordValue());
       nscoord minimumFontSize =
