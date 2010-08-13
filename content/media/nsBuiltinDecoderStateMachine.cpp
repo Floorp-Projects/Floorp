@@ -918,10 +918,6 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         PRInt64 seekTime = mSeekTime;
         mDecoder->StopProgressUpdates();
 
-        StopPlayback(AUDIO_SHUTDOWN);
-        StopDecodeThreads();
-        ResetPlayback();
-
         // SeekingStarted will do a UpdateReadyStateForData which will
         // inform the element and its users that we have no frames
         // to display
@@ -932,6 +928,12 @@ nsresult nsBuiltinDecoderStateMachine::Run()
           NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
         }
         if (mCurrentFrameTime != mSeekTime - mStartTime) {
+          // The seek target is different than the current playback position,
+          // we'll need to seek the playback position, so shutdown our decode
+          // and audio threads.
+          StopPlayback(AUDIO_SHUTDOWN);
+          StopDecodeThreads();
+          ResetPlayback();
           nsresult res;
           {
             MonitorAutoExit exitMon(mDecoder->GetMonitor());
