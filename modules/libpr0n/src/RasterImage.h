@@ -143,6 +143,7 @@ namespace mozilla {
 namespace imagelib {
 
 class imgDecodeWorker;
+class Decoder;
 
 class RasterImage : public mozilla::imagelib::Image,
                     public nsITimerCallback,
@@ -458,7 +459,7 @@ private: // data
   friend class DiscardTracker;
 
   // Decoder and friends
-  nsCOMPtr<imgIDecoder>          mDecoder;
+  nsRefPtr<Decoder>              mDecoder;
   nsRefPtr<imgDecodeWorker>      mWorker;
   PRUint32                       mBytesDecoded;
   PRUint32                       mDecoderFlags;
