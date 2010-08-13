@@ -286,6 +286,19 @@ protected:
   // on the state machine thread.
   void AdvanceFrame();
 
+  // Pushes up to aSamples samples of silence onto the audio hardware. Returns
+  // the number of samples acutally pushed to the hardware. This pushes up to
+  // 32KB worth of samples to the hardware before returning, so must be called
+  // in a loop to ensure that the desired number of samples are pushed to the
+  // hardware. This ensures that the playback position advances smoothly, and
+  // guarantees that we don't try to allocate an impossibly large chunk of
+  // memory in order to play back silence. Called on the audio thread.
+  PRUint32 PlaySilence(PRUint32 aSamples, PRUint32 aChannels);
+
+  // Pops an audio chunk from the front of the audio queue, and pushes its
+  // sound data to the audio hardware. Called on the audio thread.
+  PRUint32 PlayFromAudioQueue();
+
   // Stops the decode threads. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   void StopDecodeThreads();
