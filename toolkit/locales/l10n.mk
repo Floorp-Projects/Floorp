@@ -80,6 +80,9 @@ core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURD
 ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
 WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
+# Allows overriding the final destination of the repackaged file
+ZIP_OUT ?= $(_ABS_DIST)/$(PACKAGE)
+
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=$(MOZ_LANGPACK_EID) \
@@ -123,7 +126,6 @@ endif
 unpack: $(STAGEDIST)
 	@echo done unpacking
 
-repackage-zip: ZIP_OUT="$(_ABS_DIST)/$(PACKAGE)"
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:
 # call a hook for apps to put their uninstall helper.exe into the package
@@ -162,7 +164,7 @@ ifdef MOZ_OMNIJAR
 endif
 	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(DIST)/$(PACKAGE)"
+	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(ZIP_OUT)"
 ifeq (WINCE,$(OS_ARCH))
 	mv -f "$(DIST)/l10n-stage/$(PKG_BASENAME).cab" "$(DIST)/$(PKG_PATH)$(PKG_BASENAME).cab"
 endif
