@@ -1223,106 +1223,84 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
 }
 
+class AutoResolvingEntry {
+public:
+    AutoResolvingEntry() : entry(NULL) {}
+
+    /*
+     * Returns false on error. But N.B. if obj[id] was already being resolved,
+     * this is a no-op, and we silently treat that as success.
+     */
+    bool start(JSContext *cx, JSObject *obj, jsid id, uint32 flag) {
+        JS_ASSERT(!entry);
+        this->cx = cx;
+        key.obj = obj;
+        key.id = id;
+        this->flag = flag;
+        bool ok = !!js_StartResolving(cx, &key, flag, &entry);
+        JS_ASSERT_IF(!ok, !entry);
+        return ok;
+    }
+
+    ~AutoResolvingEntry() {
+        if (entry)
+            js_StopResolving(cx, &key, flag, NULL, 0);
+    }
+
+private:
+    JSContext *cx;
+    JSResolvingKey key;
+    uint32 flag;
+    JSResolvingEntry *entry;
+};
+
 JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
-    JSDHashTable *table;
-    JSBool resolving;
-    JSRuntime *rt;
-    JSResolvingKey key;
-    JSResolvingEntry *entry;
     JSObject *fun_proto, *obj_proto;
 
     /* If cx has no global object, use obj so prototypes can be found. */
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
 
-    /* Record Function and Object in cx->resolvingTable, if we are resolving. */
-    table = cx->resolvingTable;
-    resolving = (table && table->entryCount);
-    rt = cx->runtime;
-    key.obj = obj;
-    if (resolving) {
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]);
-        entry = (JSResolvingEntry *)
-                JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
-        if (entry && entry->key.obj && (entry->flags & JSRESFLAG_LOOKUP)) {
-            /* Already resolving Function, record Object too. */
-            JS_ASSERT(entry->key.obj == obj);
-            key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-            entry = (JSResolvingEntry *)
-                    JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
-        }
-        if (!entry) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-        JS_ASSERT(!entry->key.obj && entry->flags == 0);
-        entry->key = key;
-        entry->flags = JSRESFLAG_LOOKUP;
-    } else {
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-        if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry))
-            return NULL;
-
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]);
-        if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry)) {
-            key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-            JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-            return NULL;
-        }
-
-        table = cx->resolvingTable;
+    /* Record Function and Object in cx->resolvingTable. */
+    AutoResolvingEntry e1, e2;
+    JSAtom **classAtoms = cx->runtime->atomState.classAtoms;
+    if (!e1.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]), JSRESFLAG_LOOKUP) ||
+        !e2.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]), JSRESFLAG_LOOKUP)) {
+        return NULL;
     }
 
     /* Initialize the function class first so constructors can be made. */
-    if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto)) {
-        fun_proto = NULL;
-        goto out;
-    }
+    if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto))
+        return NULL;
     if (!fun_proto) {
         fun_proto = js_InitFunctionClass(cx, obj);
         if (!fun_proto)
-            goto out;
+            return NULL;
     } else {
         JSObject *ctor;
 
         ctor = JS_GetConstructor(cx, fun_proto);
-        if (!ctor) {
-            fun_proto = NULL;
-            goto out;
-        }
+        if (!ctor)
+            return NULL;
         obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
                             ObjectValue(*ctor), 0, 0, 0);
     }
 
     /* Initialize the object class next so Object.prototype works. */
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto)) {
-        fun_proto = NULL;
-        goto out;
-    }
+    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
+        return NULL;
     if (!obj_proto)
         obj_proto = js_InitObjectClass(cx, obj);
-    if (!obj_proto) {
-        fun_proto = NULL;
-        goto out;
-    }
+    if (!obj_proto)
+        return NULL;
 
     /* Function.prototype and the global object delegate to Object.prototype. */
     fun_proto->setProto(obj_proto);
     if (!obj->getProto())
         obj->setProto(obj_proto);
 
-out:
-    /* If resolving, remove the other entry (Object or Function) from table. */
-    JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-    if (!resolving) {
-        /* If not resolving, remove the first entry added above, for Object. */
-        JS_ASSERT(key.id ==                                                   \
-                  ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]));
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-        JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-    }
     return fun_proto;
 }
 
