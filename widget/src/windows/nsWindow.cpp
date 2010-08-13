@@ -1066,6 +1066,22 @@ nsIWidget* nsWindow::GetParent(void)
   return GetParentWindow(PR_FALSE);
 }
 
+float nsWindow::GetDPI()
+{
+  HDC dc = ::GetDC(mWnd);
+  if (!dc)
+    return 96.0f;
+
+  double heightInches = ::GetDeviceCaps(dc, VERTSIZE)/25.4;
+  int heightPx = ::GetDeviceCaps(dc, VERTRES);
+  ::ReleaseDC(mWnd, dc);
+  if (heightInches < 0.25) {
+    // Something's broken
+    return 96.0f;
+  }
+  return float(heightPx/heightInches);
+}
+
 nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
 {
   if (mIsTopWidgetWindow) {
