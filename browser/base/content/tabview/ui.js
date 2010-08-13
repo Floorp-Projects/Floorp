@@ -107,7 +107,12 @@ var UIManager = {
       this._currentTab = gBrowser.selectedTab;
 
       // ___ Dev Menu
-      this._addDevMenu();
+      // This dev menu is not meant for shipping, nor is it of general
+      // interest, but we still need it for the time being. Change the 
+      // false below to enable; just remember to change back before 
+      // committing. Bug 586721 will track the ultimate removal. 
+      if (false)
+        this._addDevMenu();
 
       // When you click on the background/empty part of TabView,
       // we create a new groupItem.
