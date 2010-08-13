@@ -662,7 +662,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
 #ifdef MOZ_IPC
   if (mRemoteFrame) {
-    contentType = eContentTypeUI;
+    contentType = eContentTypeContent;
   }
   else
 #endif
