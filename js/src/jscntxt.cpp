@@ -1101,6 +1101,7 @@ FreeContext(JSContext *cx)
     cx->regExpStatics.clear();
     VOUCH_DOES_NOT_REQUIRE_STACK();
     JS_FinishArenaPool(&cx->tempPool);
+    JS_FinishArenaPool(&cx->regExpPool);
 
     if (cx->lastMessage)
         js_free(cx->lastMessage);
