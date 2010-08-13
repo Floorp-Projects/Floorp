@@ -59,19 +59,6 @@
 #define PR_INT64_MIN (-PR_INT64_MAX - 1)
 #define PR_UINT64_MAX (~(PRUint64)(0))
 
-static PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32 &aResult)
-{
-  PRUint64 rl = static_cast<PRUint64>(a) * static_cast<PRUint64>(b);
-
-  if (rl > PR_UINT32_MAX) {
-    return PR_FALSE;
-  }
-
-  aResult = static_cast<PRUint32>(rl);
-
-  return PR_TRUE;
-}
-
 // This belongs in xpcom/monitor/Monitor.h, once we've made
 // mozilla::Monitor non-reentrant.
 namespace mozilla {
@@ -120,4 +107,23 @@ private:
 };
 
 } // namespace mozilla
+
+// Adds two 32bit unsigned numbers, retuns PR_TRUE if addition succeeded,
+// or PR_FALSE the if addition would result in an overflow.
+PRBool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult);
+ 
+// 32 bit integer multiplication with overflow checking. Returns PR_TRUE
+// if the multiplication was successful, or PR_FALSE if the operation resulted
+// in an integer overflow.
+PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult);
+
+// Adds two 64bit numbers, retuns PR_TRUE if addition succeeded, or PR_FALSE
+// if addition would result in an overflow.
+PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
+
+// 64 bit integer multiplication with overflow checking. Returns PR_TRUE
+// if the multiplication was successful, or PR_FALSE if the operation resulted
+// in an integer overflow.
+PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
+
 #endif
