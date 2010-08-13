@@ -67,7 +67,7 @@ ifeq ($(MOZ_BUILD_APP),camino) # {
 INSTALLER_DIR = camino/installer
 MOZ_PKG_APPNAME = camino
 APPNAME = Camino.app
-BUILDCONFIG_JAR = Contents/MacOS/chrome/toolkit.jar
+BUILDCONFIG_BASE = Contents/MacOS/chrome
 else # } {
 MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
 APPNAME = $(MOZ_APP_DISPLAYNAME)$(DBGTAG).app
@@ -77,8 +77,16 @@ INSTALLER_DIR = xulrunner/installer/mac
 APPNAME = XUL.framework
 APP_CONTENTS = Versions/Current
 endif # } xulrunner
-BUILDCONFIG_JAR = $(APP_CONTENTS)/chrome/toolkit.jar
+BUILDCONFIG_BASE = $(APP_CONTENTS)/chrome
 endif # } !camino
+
+ifeq ($(MOZ_CHROME_FILE_FORMAT),jar)
+BUILDCONFIG = $(BUILDCONFIG_BASE)/toolkit.jar
+FIX_MODE = jar
+else
+BUILDCONFIG = $(BUILDCONFIG_BASE)/toolkit/
+FIX_MODE = file
+endif
 
 postflight_all:
 # Build the universal package out of only the bits that would be released.
@@ -97,9 +105,9 @@ postflight_all:
 	      $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk
 # The only difference betewen the two trees now should be the
 # about:buildconfig page.  Fix it up.
-	$(TOPSRCDIR)/build/macosx/universal/fix-buildconfig \
-	  $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR) \
-	  $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG_JAR)
+	$(TOPSRCDIR)/build/macosx/universal/fix-buildconfig $(FIX_MODE) \
+	  $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG) \
+	  $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG)
 	mkdir -p $(DIST_UNI)/$(MOZ_PKG_APPNAME)
 	rm -f $(DIST_ARCH_2)/universal
 	ln -s $(DIST_UNI) $(DIST_ARCH_2)/universal
