@@ -171,6 +171,7 @@ _BROWSER_FILES = \
                  browser_visibleTabs.js \
                  browser_visibleTabs_contextMenu.js \
                  browser_visibleTabs_bookmarkAllPages.js \
+                 browser_visibleTabs_bookmarkAllTabs.js \
                  browser_visibleTabs_tabPreview.js \
                  discovery.html \
                  moz.png \

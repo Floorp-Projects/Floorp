@@ -125,7 +125,7 @@ var UIManager = {
 
       iQ(window).bind("beforeunload", function() {
         Array.forEach(gBrowser.tabs, function(tab) {
-          tab.hidden = false;
+          gBrowser.showTab(tab);
         });
       });
       iQ(window).bind("unload", function() {

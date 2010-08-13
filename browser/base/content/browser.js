@@ -6769,8 +6769,8 @@ var gBookmarkAllTabsHandler = {
     this._command = document.getElementById("Browser:BookmarkAllTabs");
     gBrowser.tabContainer.addEventListener("TabOpen", this, true);
     gBrowser.tabContainer.addEventListener("TabClose", this, true);
-    gBrowser.tabContainer.addEventListener("TabSelect", this, true);
-    gBrowser.tabContainer.addEventListener("TabMove", this, true);
+    gBrowser.tabContainer.addEventListener("TabShow", this, true);
+    gBrowser.tabContainer.addEventListener("TabHide", this, true);
     this._updateCommandState();
   },
 
