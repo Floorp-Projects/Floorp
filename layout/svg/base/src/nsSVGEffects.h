@@ -63,7 +63,8 @@ class nsSVGMaskFrame;
 class nsSVGRenderingObserver : public nsStubMutationObserver {
 public:
   typedef mozilla::dom::Element Element;
-  nsSVGRenderingObserver(nsIURI* aURI, nsIFrame *aFrame);
+  nsSVGRenderingObserver(nsIURI* aURI, nsIFrame *aFrame,
+                         PRBool aReferenceImage);
   virtual ~nsSVGRenderingObserver();
 
   // nsISupports
@@ -126,8 +127,9 @@ protected:
 class nsSVGFilterProperty :
   public nsSVGRenderingObserver, public nsISVGFilterProperty {
 public:
-  nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame)
-    : nsSVGRenderingObserver(aURI, aFilteredFrame) {}
+  nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame,
+                      PRBool aReferenceImage)
+    : nsSVGRenderingObserver(aURI, aFilteredFrame, aReferenceImage) {}
 
   /**
    * @return the filter frame, or null if there is no filter frame
@@ -147,8 +149,8 @@ private:
 
 class nsSVGMarkerProperty : public nsSVGRenderingObserver {
 public:
-  nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame)
-    : nsSVGRenderingObserver(aURI, aFrame) {}
+  nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+    : nsSVGRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate();
@@ -156,8 +158,8 @@ protected:
 
 class nsSVGTextPathProperty : public nsSVGRenderingObserver {
 public:
-  nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame)
-    : nsSVGRenderingObserver(aURI, aFrame) {}
+  nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+    : nsSVGRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate();
@@ -165,8 +167,8 @@ protected:
  
 class nsSVGPaintingProperty : public nsSVGRenderingObserver {
 public:
-  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame)
-    : nsSVGRenderingObserver(aURI, aFrame) {}
+  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+    : nsSVGRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate();
