@@ -189,7 +189,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
     nsPluginFile lib(pluginIfile);
 
-    nsresult rv = lib.LoadPlugin(&mLibrary);
+    nsresult rv = lib.LoadPlugin(mLibrary);
     NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 
