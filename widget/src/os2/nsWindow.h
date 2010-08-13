@@ -171,6 +171,7 @@ public:
                                nsWidgetInitData* aInitData = nsnull);
   NS_IMETHOD            Destroy();
   virtual nsIWidget*    GetParent();
+  virtual float         GetDPI();
   NS_IMETHOD            Enable(PRBool aState);
   NS_IMETHOD            IsEnabled(PRBool* aState);
   NS_IMETHOD            Show(PRBool aState);
