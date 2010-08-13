@@ -234,35 +234,9 @@ imgIRequest* nsCSSValue::GetImageValue() const
 
 nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
 {
-  NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
+  NS_ASSERTION(mUnit == eCSSUnit_PhysicalMillimeter, "not a fixed length unit");
 
-  float twips;
-  switch (mUnit) {
-  case eCSSUnit_Inch:        
-    twips = NS_INCHES_TO_TWIPS(mValue.mFloat);
-    break;
-
-  case eCSSUnit_Millimeter:
-    twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
-    break;
-
-  case eCSSUnit_PhysicalMillimeter:
-    twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
-    break;
-
-  case eCSSUnit_Centimeter:
-    twips = NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
-    break;
-
-  case eCSSUnit_Pica:
-    twips = NS_PICAS_TO_TWIPS(mValue.mFloat);
-    break;
-
-  default:
-    NS_ERROR("should never get here");
-    return 0;
-  }
-
+  float twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
   return aPresContext->TwipsToAppUnits(twips);
 }
 
@@ -270,17 +244,19 @@ nscoord nsCSSValue::GetPixelLength() const
 {
   NS_ASSERTION(IsPixelLengthUnit(), "not a fixed length unit");
 
+  double scaleFactor;
   switch (mUnit) {
-  case eCSSUnit_Pixel:
-    return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat);
-
-  case eCSSUnit_Point:
-    return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat*4/3);
-
+  case eCSSUnit_Pixel: return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat);
+  case eCSSUnit_Pica: scaleFactor = 16.0; break;
+  case eCSSUnit_Point: scaleFactor = 4/3.0; break;
+  case eCSSUnit_Inch: scaleFactor = 96.0; break;
+  case eCSSUnit_Millimeter: scaleFactor = 96/25.4; break;
+  case eCSSUnit_Centimeter: scaleFactor = 96/2.54; break;
   default:
     NS_ERROR("should never get here");
     return 0;
   }
+  return nsPresContext::CSSPixelsToAppUnits(float(mValue.mFloat*scaleFactor));
 }
 
 void nsCSSValue::DoReset()
