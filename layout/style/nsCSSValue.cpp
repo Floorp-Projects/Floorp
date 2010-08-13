@@ -236,8 +236,8 @@ nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
 {
   NS_ASSERTION(mUnit == eCSSUnit_PhysicalMillimeter, "not a fixed length unit");
 
-  float twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
-  return aPresContext->TwipsToAppUnits(twips);
+  float inches = mValue.mFloat / MM_PER_INCH_FLOAT;
+  return inches * aPresContext->DeviceContext()->AppUnitsPerPhysicalInch();
 }
 
 nscoord nsCSSValue::GetPixelLength() const

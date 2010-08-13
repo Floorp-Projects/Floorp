@@ -997,7 +997,7 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, PRUint32 aHint)
   PRBool isNearer = PR_FALSE;
   if (aHint & (NS_STRETCH_NEARER | NS_STRETCH_LARGEOP)) {
     float c = NS_MAX(float(b) * NS_MATHML_DELIMITER_FACTOR,
-                     float(b) - aPresContext->PointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
+                     float(b) - nsPresContext::CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
     isNearer = PRBool(float(PR_ABS(b - a)) <= (float(b) - c));
   }
   // Smaller: Mainly for transitory use, to compare two candidate

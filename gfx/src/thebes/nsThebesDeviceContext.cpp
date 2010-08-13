@@ -280,7 +280,7 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("#### Creating DeviceContext %p\n", this));
 
     mAppUnitsPerDevPixel = nscoord(-1);
-    mAppUnitsPerInch = nscoord(-1);
+    mAppUnitsPerPhysicalInch = nscoord(-1);
     mAppUnitsPerDevNotScaledPixel = nscoord(-1);
     mPixelScale = 1.0f;
 
@@ -685,7 +685,7 @@ nsThebesDeviceContext::SetDPI()
 
     NS_ASSERTION(dpi != -1.0, "no dpi set");
 
-    mAppUnitsPerInch = NS_lround(dpi * mAppUnitsPerDevNotScaledPixel);
+    mAppUnitsPerPhysicalInch = NS_lround(dpi * mAppUnitsPerDevNotScaledPixel);
     UpdateScaledAppUnits();
 
     return NS_OK;
@@ -1182,8 +1182,10 @@ nsThebesDeviceContext::CalcPrintingSize()
     }
 
     if (inPoints) {
-        mWidth = NSToCoordRound(float(size.width) * AppUnitsPerInch() / 72);
-        mHeight = NSToCoordRound(float(size.height) * AppUnitsPerInch() / 72);
+        // For printing, CSS inches and physical inches are identical
+        // so it doesn't matter which we use here
+        mWidth = NSToCoordRound(float(size.width) * AppUnitsPerPhysicalInch() / 72);
+        mHeight = NSToCoordRound(float(size.height) * AppUnitsPerPhysicalInch() / 72);
     } else {
         mWidth = NSToIntRound(size.width);
         mHeight = NSToIntRound(size.height);
@@ -1192,12 +1194,12 @@ nsThebesDeviceContext::CalcPrintingSize()
 
 PRBool nsThebesDeviceContext::CheckDPIChange() {
     PRInt32 oldDevPixels = mAppUnitsPerDevNotScaledPixel;
-    PRInt32 oldInches = mAppUnitsPerInch;
+    PRInt32 oldInches = mAppUnitsPerPhysicalInch;
 
     SetDPI();
 
     return oldDevPixels != mAppUnitsPerDevNotScaledPixel ||
-           oldInches != mAppUnitsPerInch;
+           oldInches != mAppUnitsPerPhysicalInch;
 }
 
 PRBool
