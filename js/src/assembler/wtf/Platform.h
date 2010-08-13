@@ -835,7 +835,7 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
     #define ENABLE_JIT 1
 #endif
 
-#if PLATFORM(QT)
+#if WTF_PLATFORM_QT
 #if WTF_CPU_X86_64 && WTF_PLATFORM_DARWIN
     #define ENABLE_JIT 1
 #elif WTF_CPU_X86 && WTF_PLATFORM_DARWIN
