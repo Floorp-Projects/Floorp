@@ -49,7 +49,7 @@
 == filter-clipped-rect-01.svg pass.svg
 == filter-filterRes-high-01.svg pass.svg
 == filter-filterRes-high-02.svg pass.svg
-== filter-filterRes-low-01.svg pass.svg
+random-if(d2d) == filter-filterRes-low-01.svg pass.svg
 == filter-inner-svg-01.svg pass.svg
 == filter-inner-svg-02.svg pass.svg
 == filter-inner-svg-03.svg pass.svg
