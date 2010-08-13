@@ -95,6 +95,8 @@
 #include "ImageLayers.h"
 #include "mozilla/dom/Element.h"
 #include "nsCanvasFrame.h"
+#include "gfxDrawable.h"
+#include "gfxUtils.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -3032,6 +3034,49 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
   aImage->Draw(ctx, aGraphicsFilter, drawingParams.mUserSpaceToImageSpace,
                drawingParams.mFillRect, drawingParams.mSubimage, aImageFlags);
   return NS_OK;
+}
+
+/* static */ void
+nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
+                                gfxDrawable*         aDrawable,
+                                gfxPattern::GraphicsFilter aFilter,
+                                const nsRect&        aDest,
+                                const nsRect&        aFill,
+                                const nsPoint&       aAnchor,
+                                const nsRect&        aDirty)
+{
+  nsCOMPtr<nsIDeviceContext> dc;
+  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  PRInt32 appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
+  gfxContext* ctx = aRenderingContext->ThebesContext();
+  gfxIntSize drawableSize = aDrawable->Size();
+  nsIntSize imageSize(drawableSize.width, drawableSize.height);
+
+  SnappedImageDrawingParameters drawingParams =
+    ComputeSnappedImageDrawingParameters(ctx, appUnitsPerDevPixel, aDest, aFill,
+                                         aAnchor, aDirty, imageSize);
+
+  if (!drawingParams.mShouldDraw)
+    return;
+
+  gfxContextMatrixAutoSaveRestore saveMatrix(ctx);
+  if (drawingParams.mResetCTM) {
+    ctx->IdentityMatrix();
+  }
+
+  gfxRect sourceRect =
+    drawingParams.mUserSpaceToImageSpace.Transform(drawingParams.mFillRect);
+  gfxRect imageRect(0, 0, imageSize.width, imageSize.height);
+  gfxRect subimage(drawingParams.mSubimage.x, drawingParams.mSubimage.y,
+                   drawingParams.mSubimage.width, drawingParams.mSubimage.height);
+
+  NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
+               "We must be allowed to sample *some* source pixels!");
+
+  gfxUtils::DrawPixelSnapped(ctx, aDrawable,
+                             drawingParams.mUserSpaceToImageSpace, subimage,
+                             sourceRect, imageRect, drawingParams.mFillRect,
+                             gfxASurface::ImageFormatARGB32, aFilter);
 }
 
 /* static */ nsresult
