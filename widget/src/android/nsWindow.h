@@ -119,9 +119,6 @@ public:
     NS_IMETHOD Invalidate(const nsIntRect &aRect,
                           PRBool aIsSynchronous);
     NS_IMETHOD Update();
-    void Scroll(const nsIntPoint&,
-                const nsTArray<nsIntRect>&,
-                const nsTArray<nsIWidget::Configuration>&);
     NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE);
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect);
     virtual nsIntPoint WidgetToScreenOffset();

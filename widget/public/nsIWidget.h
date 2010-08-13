@@ -111,8 +111,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xeedce486, 0xeb2b, 0x41af, \
-  { 0x9a, 0x25, 0x59, 0xd1, 0x0f, 0xd1, 0xd5, 0x6f } }
+  { 0x21eff578, 0x942a, 0x40ff, \
+    { 0x98, 0xb9, 0x75, 0x49, 0x0b, 0x68, 0x24, 0xa2 } }
 
 /*
  * Window shadow styles
@@ -769,31 +769,6 @@ class nsIWidget : public nsISupports {
      * of the widget.
      */
     virtual LayerManager* GetLayerManager() = 0;
-
-    /**
-     * Scroll a set of rectangles in this widget and (as simultaneously as
-     * possible) modify the specified child widgets.
-     * 
-     * This will invalidate areas of the children that have changed, unless
-     * they have just moved by the scroll amount, but does not need to
-     * invalidate any part of this widget, except where the scroll
-     * operation fails to blit because part of the window is unavailable
-     * (e.g. partially offscreen).
-     * 
-     * The caller guarantees that the rectangles in aDestRects are
-     * non-intersecting.
-     *
-     * @param aDelta amount to scroll (device pixels)
-     * @param aDestRects rectangles to copy into
-     * (device pixels relative to this widget)
-     * @param aReconfigureChildren commands to set the bounds and clip
-     * region of a subset of the children of this widget; these should
-     * be performed simultaneously with the scrolling, as far as possible,
-     * to avoid visual artifacts.
-     */
-    virtual void Scroll(const nsIntPoint& aDelta,
-                        const nsTArray<nsIntRect>& aDestRects,
-                        const nsTArray<Configuration>& aReconfigureChildren) = 0;
 
     /** 
      * Internal methods
