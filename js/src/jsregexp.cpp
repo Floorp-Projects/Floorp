@@ -182,6 +182,22 @@ RegExp::execute(JSContext *cx, JSString *input, size_t *lastIndex, bool test, Va
     const size_t pairCount = parenCount + 1;
     const size_t bufCount = pairCount * 3; /* Should be x2, but PCRE has... needs. */
     const size_t matchItemCount = pairCount * 2;
+
+    /*
+     * The regular expression arena pool is special... we want to hang on to it
+     * until a GC is performed so rapid subsequent regexp executions don't
+     * thrash malloc/freeing arena chunks.
+     *
+     * Stick a timestamp at the base of that pool.
+     */
+    if (!cx->regExpPool.first.next) {
+        int64 *timestamp;
+        JS_ARENA_ALLOCATE_CAST(timestamp, int64 *, &cx->regExpPool, sizeof *timestamp);
+        if (!timestamp)
+            return false;
+        *timestamp = JS_Now();
+    }
+
     AutoArenaAllocator aaa(&cx->regExpPool);
     int *buf = aaa.alloc<int>(bufCount);
     if (!buf)

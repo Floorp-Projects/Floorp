@@ -205,8 +205,8 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
 
     /* Initialize the frame. */
     newfp->ncode = NULL;
-    newfp->callobj = NULL;
-    newfp->argsobj = NULL;
+    newfp->setCallObj(NULL);
+    newfp->setArgsObj(NULL);
     newfp->script = newscript;
     newfp->fun = fun;
     newfp->argc = argc;
@@ -500,8 +500,8 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
 
     /* Initialize the frame. */
     newfp->ncode = NULL;
-    newfp->callobj = NULL;
-    newfp->argsobj = NULL;
+    newfp->setCallObj(NULL);
+    newfp->setArgsObj(NULL);
     newfp->script = newscript;
     newfp->fun = fun;
     newfp->argc = argc;
@@ -567,9 +567,9 @@ stubs::New(VMFrame &f, uint32 argc)
 void JS_FASTCALL
 stubs::PutCallObject(VMFrame &f)
 {
-    JS_ASSERT(f.fp->callobj);
+    JS_ASSERT(f.fp->hasCallObj());
     js_PutCallObject(f.cx, f.fp);
-    JS_ASSERT(!f.fp->argsobj);
+    JS_ASSERT(!f.fp->hasArgsObj());
 }
 
 void JS_FASTCALL

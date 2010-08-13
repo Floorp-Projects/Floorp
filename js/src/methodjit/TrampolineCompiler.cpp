@@ -111,14 +111,14 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
 #endif
     /* if (!callobj) stubs::PutCallObject */
     Jump noCallObj = masm.branchPtr(Assembler::Equal,
-                                    Address(JSFrameReg, offsetof(JSStackFrame, callobj)),
+                                    Address(JSFrameReg, JSStackFrame::offsetCallObj()),
                                     ImmPtr(0));
     masm.stubCall(stubs::PutCallObject, NULL, 0);
     noCallObj.linkTo(masm.label(), &masm);
 
     /* if (arguments) stubs::PutArgsObject */
     Jump noArgsObj = masm.branchPtr(Assembler::Equal,
-                                    Address(JSFrameReg, offsetof(JSStackFrame, argsobj)),
+                                    Address(JSFrameReg, JSStackFrame::offsetArgsObj()),
                                     ImmIntPtr(0));
     masm.stubCall(stubs::PutArgsObject, NULL, 0);
     noArgsObj.linkTo(masm.label(), &masm);
