@@ -965,6 +965,28 @@ nsChildView::GetParent()
   return mParentWidget;
 }
 
+float
+nsChildView::GetDPI()
+{
+  NSWindow* window = [mView window];
+  NSScreen* screen = [window screen];
+  if (!screen)
+    return 96.0f;
+
+  CGDirectDisplayID displayID =
+    [[[screen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
+  CGFloat heightMM = CGDisplayScreenSize(displayID).height;
+  size_t heightPx = CGDisplayPixelsHigh(displayID);
+  CGFloat scaleFactor = [window userSpaceScaleFactor];
+
+  // Currently we don't do our own scaling to take account
+  // of userSpaceScaleFactor, so every "pixel" we draw is actually
+  // userSpaceScaleFactor screen pixels. So divide the screen height
+  // by userSpaceScaleFactor to get the number of "device pixels"
+  // available.
+  return (heightPx / scaleFactor) / (heightMM / 25.4f);
+}
+
 LayerManager*
 nsChildView::GetLayerManager()
 {

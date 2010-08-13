@@ -821,6 +821,19 @@ nsWindow::GetParent(void)
     return mParent;
 }
 
+float
+nsWindow::GetDPI()
+{
+    Display *dpy = GDK_DISPLAY();
+    int defaultScreen = DefaultScreen(dpy);
+    double heightInches = DisplayHeightMM(dpy, defaultScreen)/25.4;
+    if (heightInches < 0.25) {
+        // Something's broken, but we'd better not crash.
+        return 96.0f;
+    }
+    return float(DisplayHeight(dpy, defaultScreen)/heightInches);
+}
+
 NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
