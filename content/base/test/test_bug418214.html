@@ -47,13 +47,22 @@ is(m2.getAttribute("style"), "border:: invalid",
 d2.style;
 s2.style;
 m2.style;
-   
-is(d2.getAttribute("style"), "",
-   "Getting .style should parse style on HTML");
-is(s2.getAttribute("style"), "",
-   "Getting .style should parse style on SVG");
+
+is(d2.getAttribute("style"), "border:: invalid",
+   "Getting .style shouldn't affect style attribute on HTML");
+is(s2.getAttribute("style"), "border:: invalid",
+   "Getting .style shouldn't affect style attribute on SVG");
 is(m2.getAttribute("style"), "border:: invalid",
-   "Getting .style shouldn't parse style on MathML");
+   "Getting .style shouldn't affect style attribute on MathML");
+
+d2.style.color = "green";
+s2.style.color = "green";
+is (m2.style, undefined, ".style shouldn't exist on MathML");
+
+is(d2.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on HTML");
+is(s2.getAttribute("style"), "color: green;",
+   "Getting .style should parse style on SVG");
 
 d = document.adoptNode(d);
 s = document.adoptNode(s);
@@ -70,12 +79,21 @@ $("display").appendChild(d);
 $("display").appendChild(s);
 $("display").appendChild(m);
 
-is(d.getAttribute("style"), "",
-   "Insertion should parse style on HTML");
-is(s.getAttribute("style"), "",
-   "Insertion should parse style on SVG");
-is(m.getAttribute("style"), "",
-   "Insertion should parse style on MathML");
+is(d.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on HTML");
+is(s.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on SVG");
+is(m.getAttribute("style"), "border:: invalid",
+   "Adopting should not parse style on MathML");
+
+d.style.color = "green";
+s.style.color = "green";
+is (m.style, undefined, ".style shouldn't exist on MathML");
+
+is(d.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on HTML");
+is(s.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on SVG");
 
 </script>
 </pre>
