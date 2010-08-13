@@ -568,6 +568,28 @@ nsIWidget* nsWindow::GetParent()
   return mParent;
 }
 
+static PRInt32 sDPI = 0;
+
+float nsWindow::GetDPI()
+{
+    if (!sDPI) {
+        // create DC compatible with the screen
+        HDC dc = DevOpenDC((HAB)1, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
+        if (dc > 0) {
+            // we do have a DC and we can query the DPI setting from it
+            LONG lDPI;
+            if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
+                sDPI = lDPI;
+            DevCloseDC(dc);
+        }
+        if (sDPI <= 0) {
+            // Fall back to something sane
+            sDPI = 96;
+        }
+    }
+    return sDPI;  
+}
+
 //-----------------------------------------------------------------------------
 
 NS_METHOD nsWindow::Enable(PRBool aState)
