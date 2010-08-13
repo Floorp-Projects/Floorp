@@ -54,8 +54,7 @@ Narcissus.parser = (function() {
    /*
     * The vanilla AST builder.
     */
-
-    VanillaBuilder = function VanillaBuilder() {
+    function VanillaBuilder() {
     }
 
     VanillaBuilder.prototype = {

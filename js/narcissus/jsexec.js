@@ -52,6 +52,7 @@ Narcissus.interpreter = (function() {
 
     var parser = Narcissus.parser;
     var definitions = Narcissus.definitions;
+    var hostGlobal = Narcissus.hostGlobal;
 
     // Set constants in the local scope.
     eval(definitions.consts);
@@ -67,7 +68,8 @@ Narcissus.interpreter = (function() {
         return re.test(e.toString());
     }
 
-    var global = {
+    // The underlying global object for narcissus.
+    var narcissusGlobal = {
         // Value properties.
         NaN: NaN, Infinity: Infinity, undefined: undefined,
 
@@ -96,15 +98,9 @@ Narcissus.interpreter = (function() {
                 throw THROW;
             }
         },
-        parseInt: parseInt, parseFloat: parseFloat,
-        isNaN: isNaN, isFinite: isFinite,
-        decodeURI: decodeURI, encodeURI: encodeURI,
-        decodeURIComponent: decodeURIComponent,
-        encodeURIComponent: encodeURIComponent,
 
         // Class constructors.  Where ECMA-262 requires C.length === 1, we declare
         // a dummy formal parameter.
-        Object: Object,
         Function: function Function(dummy) {
             var p = "", b = "", n = arguments.length;
             if (n) {
@@ -143,26 +139,63 @@ Narcissus.interpreter = (function() {
             }
             return s;
         },
-        Boolean: Boolean, Number: Number, Date: Date, RegExp: RegExp,
-        Error: Error, EvalError: EvalError, RangeError: RangeError,
-        ReferenceError: ReferenceError, SyntaxError: SyntaxError,
-        TypeError: TypeError, URIError: URIError,
 
-        // Other properties.
-        Math: Math,
+        //Don't want to proxy RegExp or some features won't work
+        RegExp: RegExp,
 
         // Extensions to ECMA.
-        snarf: snarf, evaluate: evaluate,
         load: function load(s) {
             if (typeof s !== "string")
                 return s;
 
             evaluate(snarf(s), s, 1)
         },
-        print: print,
         version: function() { return Narcissus.options.version; },
         quit: function() { throw END; }
     };
+
+    // Create global handler with needed modifications.
+    var globalHandler = definitions.makePassthruHandler(narcissusGlobal);
+    globalHandler.has = function(name) {
+        if (name in narcissusGlobal) { return true; }
+        // Hide Narcissus implementation code.
+        else if (name === "Narcissus") { return false; }
+        else { return (name in hostGlobal); }
+    };
+    globalHandler.get = function(receiver, name) {
+        if (narcissusGlobal.hasOwnProperty(name)) {
+            return narcissusGlobal[name];
+        }
+        var globalFun = hostGlobal[name];
+        if (definitions.isNativeCode(globalFun)) {
+            // Enables native browser functions like 'alert' to work correctly.
+            return Proxy.createFunction(
+                    definitions.makePassthruHandler(globalFun),
+                    function() { return globalFun.apply(hostGlobal, arguments); },
+                    function() {
+                        var a = arguments;
+                        switch (a.length) {
+                          case 0:
+                            return new globalFun();
+                          case 1:
+                            return new globalFun(a[0]);
+                          case 2:
+                            return new globalFun(a[0], a[1]);
+                          case 3:
+                            return new globalFun(a[0], a[1], a[2]);
+                          default:
+                            var argStr = "";
+                            for (var i=0; i<a.length; i++) {
+                                argStr += 'a[' + i + '],';
+                            }
+                            return eval('new ' + name + '(' + argStr.slice(0,-1) + ');');
+                        }
+                    });
+        }
+        else { return globalFun; };
+    };
+
+    var global = Proxy.create(globalHandler);
 
     // Helper to avoid Object.prototype.hasOwnProperty polluting scope objects.
     function hasDirectProperty(o, p) {
@@ -829,71 +862,10 @@ Narcissus.interpreter = (function() {
         definitions.defineProperty(proto, "constructor", this, false, false, true);
     }
 
-    function getPropertyDescriptor(obj, name) {
-        while (obj) {
-            if (({}).hasOwnProperty.call(obj, name))
-                return Object.getOwnPropertyDescriptor(obj, name);
-            obj = Object.getPrototypeOf(obj);
-        }
-    }
-
-    function getOwnProperties(obj) {
-        var map = {};
-        for (var name in Object.getOwnPropertyNames(obj))
-            map[name] = Object.getOwnPropertyDescriptor(obj, name);
-        return map;
-    }
-
     // Returns a new function wrapped with a Proxy.
     function newFunction(n, x) {
         var fobj = new FunctionObject(n, x.scope);
-
-        // Handler copied from
-        // http://wiki.ecmascript.org/doku.php?id=harmony:proxies&s=proxy%20object#examplea_no-op_forwarding_proxy
-        var handler = {
-            getOwnPropertyDescriptor: function(name) {
-                var desc = Object.getOwnPropertyDescriptor(fobj, name);
-
-                // a trapping proxy's properties must always be configurable
-                desc.configurable = true;
-                return desc;
-            },
-            getPropertyDescriptor: function(name) {
-                var desc = getPropertyDescriptor(fobj, name);
-
-                // a trapping proxy's properties must always be configurable
-                desc.configurable = true;
-                return desc;
-            },
-            getOwnPropertyNames: function() {
-                return Object.getOwnPropertyNames(fobj);
-            },
-            defineProperty: function(name, desc) {
-                Object.defineProperty(fobj, name, desc);
-            },
-            delete: function(name) { return delete fobj[name]; },
-            fix: function() {
-                if (Object.isFrozen(fobj)) {
-                    return getOwnProperties(fobj);
-                }
-
-                // As long as fobj is not frozen, the proxy won't allow itself to be fixed.
-                return undefined; // will cause a TypeError to be thrown
-            },
-
-            has: function(name) { return name in fobj; },
-            hasOwn: function(name) { return ({}).hasOwnProperty.call(fobj, name); },
-            get: function(receiver, name) { return fobj[name]; },
-
-            // bad behavior when set fails in non-strict mode
-            set: function(receiver, name, val) { fobj[name] = val; return true; },
-            enumerate: function() {
-                var result = [];
-                for (name in fobj) { result.push(name); };
-                return result;
-            },
-            keys: function() { return Object.keys(fobj); }
-        };
+        var handler = definitions.makePassthruHandler(fobj);
         var p = Proxy.createFunction(handler,
                                      function() { return fobj.__call__(this, arguments, x); },
                                      function() { return fobj.__construct__(arguments, x); });
@@ -1118,6 +1090,7 @@ Narcissus.interpreter = (function() {
     }
 
     return {
+        global: global,
         evaluate: evaluate,
         repl: repl
     };
