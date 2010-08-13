@@ -1,0 +1,49 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0; filter:url(#thresholdAt128);">
+  <div style="width:80px; height:40px; border:1px solid black;">
+    <div style="position:absolute; top:1px; left:1px;
+                border:10px solid blue; width:20px; height:20px; background:lime;"></div>
+    <div style="position:absolute; top:1px; left:41px;
+                border:10px solid blue; width:20px; height:20px; background:lime;"></div>
+  </div>
+  <div style="width:80px; height:40px; border:1px solid black;">
+    <div style="position:absolute; top:43px; left:1px;
+                width:40px; height:40px; overflow:hidden;">
+      <div style="border:10px solid blue; width:20px; height:20px;
+                  background:lime; -moz-transform:rotate(30deg);"></div>
+    </div>
+    <div style="position:absolute; top:43px; left:41px;
+                width:40px; height:40px; overflow:hidden;">
+      <div style="border:10px solid blue; width:20px; height:20px;
+                  background:lime; -moz-transform:rotate(30deg);"></div>
+    </div>
+  </div>
+  <div style="width:80px; height:40px; border:1px solid black;">
+    <div style="position:absolute; top:85px; left:1px;
+                width:40px; height:40px; overflow:hidden;">
+      <div style="border:10px solid blue; width:20px; height:20px;
+                  background:lime; -moz-transform:rotate(30deg);"></div>
+    </div>
+    <div style="position:absolute; top:85px; left:41px;
+                width:40px; height:40px; overflow:hidden;">
+      <div style="border:10px solid blue; width:20px; height:20px;
+                  background:lime; -moz-transform:rotate(30deg);"></div>
+    </div>
+  </div>
+  <svg>
+    <filter id="thresholdAt128" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix"
+           values="255 0 0 0 -128 
+                   0 255 0 0 -128 
+                   0 0 255 0 -128 
+                   0 0 0 255 -128"/>
+
+    </filter>
+  </svg>
+</body>
+</html>

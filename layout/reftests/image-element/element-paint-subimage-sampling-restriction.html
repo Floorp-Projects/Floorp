@@ -1,0 +1,39 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test zooming, image snapping and subimage sampling restriction.
+     This is like 446100-1a.html.
+-->
+<!DOCTYPE HTML>
+<html reftest-zoom="1.2" class="reftest-wait">
+<head>
+<style>
+div { margin:1em; }
+/* A 7x7px image, black with a 5x5 transparent box centered in it */
+div.box { background-image:-moz-element(#e5x5in7x7); }
+/* A 7x5px image, black with a 5x5 transparent box centered in it */
+div.vstrip { background-image:-moz-element(#e5x5in7x5); }
+/* A 5x7px image, black with a 5x5 transparent box centered in it */
+div.hstrip { background-image:-moz-element(#e5x5in5x7); }
+</style>
+</head>
+<body>
+<div class="box" style="background-position:-1px -1px; width:5px; height:5px;"></div>
+<div class="vstrip" style="background-position:-1px 0px; width:5px; height:22px;"></div>
+<div class="hstrip" style="background-position:0px -1px; width:22px; height:5px;"></div>
+<script>
+var waitingForLoad = 0;
+function setURLImage(name, url) {
+  var img = new Image();
+  img.src = url;
+  document.mozSetImageElement(name, img);
+  waitingForLoad++;
+  img.onload = function () { if (--waitingForLoad == 0) document.documentElement.className = ""; };
+}
+setURLImage("e5x5in7x7", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAYAAADEUlfTAAAAFklEQVQImWNgYGD4jwdDCCxgQCWxYgBX8hfpeym4dwAAAABJRU5ErkJggg==");
+setURLImage("e5x5in7x5", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAYAAACJmvbYAAAAFElEQVQImWNgYGD4z4Ad/GcYAEkAw+kJ94z5rSYAAAAASUVORK5CYII=");
+setURLImage("e5x5in5x7", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAHCAYAAADAp4fuAAAAE0lEQVQImWNgYGD4jwXTD2DYDgDN4Qn3yMcPlwAAAABJRU5ErkJggg==");
+</script>
+</body>
+</html>
