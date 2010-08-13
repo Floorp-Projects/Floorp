@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #if !defined jsjaeger_baseassembler_h__ && defined JS_METHODJIT
 #define jsjaeger_baseassembler_h__
 
@@ -181,9 +182,14 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
     }
 
     void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
-        m_assembler.movd_rr(lo, fpReg);
-        m_assembler.movd_rr(hi, FPRegisters::Temp0);
-        m_assembler.unpcklps_rr(FPRegisters::Temp0, fpReg);
+        if (MacroAssemblerX86Common::getSSEState() >= HasSSE4_1) {
+            m_assembler.movd_rr(lo, fpReg);
+            m_assembler.pinsrd_rr(hi, fpReg);
+        } else {
+            m_assembler.movd_rr(lo, fpReg);
+            m_assembler.movd_rr(hi, FPRegisters::Temp0);
+            m_assembler.unpcklps_rr(FPRegisters::Temp0, fpReg);
+        }
     }
 #endif
 
