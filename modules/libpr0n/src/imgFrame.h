@@ -47,6 +47,7 @@
 #include "gfxIFormats.h"
 #include "gfxContext.h"
 #include "gfxPattern.h"
+#include "gfxDrawable.h"
 #include "gfxImageSurface.h"
 #if defined(XP_WIN)
 #include "gfxWindowsSurface.h"
@@ -143,12 +144,12 @@ private: // methods
   }
 
   struct SurfaceWithFormat {
-    nsRefPtr<gfxASurface> mSurface;
+    nsRefPtr<gfxDrawable> mDrawable;
     gfxImageSurface::gfxImageFormat mFormat;
     SurfaceWithFormat() {}
-    SurfaceWithFormat(gfxASurface* aSurface, gfxImageSurface::gfxImageFormat aFormat)
-     : mSurface(aSurface), mFormat(aFormat) {}
-    PRBool IsValid() { return !!mSurface; }
+    SurfaceWithFormat(gfxDrawable* aDrawable, gfxImageSurface::gfxImageFormat aFormat)
+     : mDrawable(aDrawable), mFormat(aFormat) {}
+    PRBool IsValid() { return !!mDrawable; }
   };
 
   SurfaceWithFormat SurfaceForDrawing(PRBool             aDoPadding,
