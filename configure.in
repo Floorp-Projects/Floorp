@@ -7337,6 +7337,17 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_MALLOC_LIB=$withval)
 
 dnl ========================================================
+dnl = Use JS Call tracing
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(trace-jscalls,
+[  --enable-trace-jscalls  Enable JS call enter/exit callback (default=no)],
+    MOZ_TRACE_JSCALLS=1,
+    MOZ_TRACE_JSCALLS= )
+if test -n "$MOZ_TRACE_JSCALLS"; then
+    AC_DEFINE(MOZ_TRACE_JSCALLS)
+fi
+
+dnl ========================================================
 dnl = Use TraceVis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(tracevis,

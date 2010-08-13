@@ -94,6 +94,13 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
+#include "jsregexpinlines.h"
+#include "assembler/wtf/Platform.h"
+
+#if ENABLE_YARR_JIT
+#include "assembler/jit/ExecutableAllocator.h"
+#include "methodjit/Logging.h"
+#endif
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -557,6 +564,10 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
+#ifdef JS_METHODJIT_SPEW
+    JMCheckLogging();
+#endif
+
 #ifdef DEBUG
     functionMeterFilename = getenv("JS_FUNCTION_STATFILE");
     if (functionMeterFilename) {
@@ -575,6 +586,12 @@ JSRuntime::init(uint32 maxbytes)
 
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
+
+#if ENABLE_YARR_JIT
+    regExpAllocator = new JSC::ExecutableAllocator();
+    if (!regExpAllocator)
+        return false;
+#endif
 
     deflatedStringCache = new js::DeflatedStringCache();
     if (!deflatedStringCache || !deflatedStringCache->init())
@@ -640,6 +657,9 @@ JSRuntime::~JSRuntime()
      * calling js_FinishAtomState, which finalizes strings.
      */
     delete deflatedStringCache;
+#if ENABLE_YARR_JIT
+    delete regExpAllocator;
+#endif
     js_FinishGC(this);
 #ifdef JS_THREADSAFE
     if (gcLock)
@@ -805,6 +825,9 @@ JS_BeginRequest(JSContext *cx)
         cx->outstandingRequests++;
         cx->thread->requestContext = cx;
         rt->requestCount++;
+
+        if (rt->requestCount == 1 && rt->activityCallback)
+            rt->activityCallback(rt->activityCallbackArg, true);
     }
 #endif
 }
@@ -853,8 +876,11 @@ StopRequest(JSContext *cx)
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);
         rt->requestCount--;
-        if (rt->requestCount == 0)
+        if (rt->requestCount == 0) {
             JS_NOTIFY_REQUEST_DONE(rt);
+            if (rt->activityCallback)
+                rt->activityCallback(rt->activityCallbackArg, false);
+        }
     }
 }
 #endif
@@ -1197,106 +1223,84 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
 }
 
+class AutoResolvingEntry {
+public:
+    AutoResolvingEntry() : entry(NULL) {}
+
+    /*
+     * Returns false on error. But N.B. if obj[id] was already being resolved,
+     * this is a no-op, and we silently treat that as success.
+     */
+    bool start(JSContext *cx, JSObject *obj, jsid id, uint32 flag) {
+        JS_ASSERT(!entry);
+        this->cx = cx;
+        key.obj = obj;
+        key.id = id;
+        this->flag = flag;
+        bool ok = !!js_StartResolving(cx, &key, flag, &entry);
+        JS_ASSERT_IF(!ok, !entry);
+        return ok;
+    }
+
+    ~AutoResolvingEntry() {
+        if (entry)
+            js_StopResolving(cx, &key, flag, NULL, 0);
+    }
+
+private:
+    JSContext *cx;
+    JSResolvingKey key;
+    uint32 flag;
+    JSResolvingEntry *entry;
+};
+
 JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
-    JSDHashTable *table;
-    JSBool resolving;
-    JSRuntime *rt;
-    JSResolvingKey key;
-    JSResolvingEntry *entry;
     JSObject *fun_proto, *obj_proto;
 
     /* If cx has no global object, use obj so prototypes can be found. */
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
 
-    /* Record Function and Object in cx->resolvingTable, if we are resolving. */
-    table = cx->resolvingTable;
-    resolving = (table && table->entryCount);
-    rt = cx->runtime;
-    key.obj = obj;
-    if (resolving) {
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]);
-        entry = (JSResolvingEntry *)
-                JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
-        if (entry && entry->key.obj && (entry->flags & JSRESFLAG_LOOKUP)) {
-            /* Already resolving Function, record Object too. */
-            JS_ASSERT(entry->key.obj == obj);
-            key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-            entry = (JSResolvingEntry *)
-                    JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
-        }
-        if (!entry) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-        JS_ASSERT(!entry->key.obj && entry->flags == 0);
-        entry->key = key;
-        entry->flags = JSRESFLAG_LOOKUP;
-    } else {
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-        if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry))
-            return NULL;
-
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]);
-        if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry)) {
-            key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-            JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-            return NULL;
-        }
-
-        table = cx->resolvingTable;
+    /* Record Function and Object in cx->resolvingTable. */
+    AutoResolvingEntry e1, e2;
+    JSAtom **classAtoms = cx->runtime->atomState.classAtoms;
+    if (!e1.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]), JSRESFLAG_LOOKUP) ||
+        !e2.start(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]), JSRESFLAG_LOOKUP)) {
+        return NULL;
     }
 
     /* Initialize the function class first so constructors can be made. */
-    if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto)) {
-        fun_proto = NULL;
-        goto out;
-    }
+    if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto))
+        return NULL;
     if (!fun_proto) {
         fun_proto = js_InitFunctionClass(cx, obj);
         if (!fun_proto)
-            goto out;
+            return NULL;
     } else {
         JSObject *ctor;
 
         ctor = JS_GetConstructor(cx, fun_proto);
-        if (!ctor) {
-            fun_proto = NULL;
-            goto out;
-        }
+        if (!ctor)
+            return NULL;
         obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
                             ObjectValue(*ctor), 0, 0, 0);
     }
 
     /* Initialize the object class next so Object.prototype works. */
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto)) {
-        fun_proto = NULL;
-        goto out;
-    }
+    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
+        return NULL;
     if (!obj_proto)
         obj_proto = js_InitObjectClass(cx, obj);
-    if (!obj_proto) {
-        fun_proto = NULL;
-        goto out;
-    }
+    if (!obj_proto)
+        return NULL;
 
     /* Function.prototype and the global object delegate to Object.prototype. */
     fun_proto->setProto(obj_proto);
     if (!obj->getProto())
         obj->setProto(obj_proto);
 
-out:
-    /* If resolving, remove the other entry (Object or Function) from table. */
-    JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-    if (!resolving) {
-        /* If not resolving, remove the first entry added above, for Object. */
-        JS_ASSERT(key.id ==                                                   \
-                  ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]));
-        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
-        JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-    }
     return fun_proto;
 }
 
@@ -2850,6 +2854,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
     obj->setParent(parent);
     return true;
@@ -2890,10 +2895,12 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
-    JSObject *obj = NewObjectWithGivenProto(cx, Valueify(clasp), NULL, NULL);
-    if (obj && !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
-                                   PrivateValue(cx->compartment)))
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, Valueify(clasp), NULL, NULL);
+    if (obj &&
+        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
+                            PrivateValue(cx->compartment))) {
         return false;
+    }
     return obj;
 }
 
@@ -2918,11 +2925,16 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
+
+    JS_ASSERT(clasp != &js_FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
-    JSObject *obj = NewObject(cx, clasp, proto, parent);
+
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
+
     JS_ASSERT_IF(obj, obj->getParent());
     return obj;
 }
@@ -2932,11 +2944,15 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
+
+    JS_ASSERT(clasp != &js_FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
-    return NewObjectWithGivenProto(cx, clasp, proto, parent);
+
+    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3333,18 +3349,20 @@ JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp,
                 JSObject *proto, uintN attrs)
 {
-    JSObject *nobj;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    nobj = NewObject(cx, clasp, proto, obj);
+
+    JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
+
     if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), NULL, NULL, attrs, 0, 0))
         return NULL;
+
     return nobj;
 }
 
@@ -3500,12 +3518,10 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         }
         JS_UNLOCK_OBJ(cx, obj2);
     } else if (obj2->isProxy()) {
-        JS_ASSERT(obj == obj2);
-
         JSAutoResolveFlags rf(cx, flags);
         return own
-            ? JSProxy::getOwnPropertyDescriptor(cx, obj, id, desc)
-            : JSProxy::getPropertyDescriptor(cx, obj, id, desc);
+            ? JSProxy::getOwnPropertyDescriptor(cx, obj2, id, desc)
+            : JSProxy::getPropertyDescriptor(cx, obj2, id, desc);
     } else {
         if (!obj2->getAttributes(cx, id, &desc->attrs))
             return false;
@@ -3864,7 +3880,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    iterobj = NewObject(cx, &prop_iter_class, NULL, obj);
+    iterobj = NewNonFunction<WithProto::Class>(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4539,14 +4555,14 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, script);
     if (!script)
-        return NewObject(cx, &js_ScriptClass, NULL, NULL);
+        return NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
 
     JS_ASSERT(!script->u.object);
 
     {
         AutoScriptRooter root(cx, script);
 
-        obj = NewObject(cx, &js_ScriptClass, NULL, NULL);
+        obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
         if (obj) {
             obj->setPrivate(script);
             script->u.object = obj;
@@ -4852,13 +4868,12 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return NULL;
 
-    Value *vp = args.getvp();
-    vp[0].setObject(*ctor);
-    vp[1].setNull();
-    memcpy(vp + 2, argv, argc * sizeof(jsval));
+    args.callee().setObject(*ctor);
+    args.thisv().setNull();
+    memcpy(args.argv(), argv, argc * sizeof(jsval));
 
     bool ok = InvokeConstructor(cx, args);
-    JSObject *obj = ok ? vp[0].toObjectOrNull() : NULL;
+    JSObject *obj = ok ? args.rval().toObjectOrNull() : NULL;
 
     LAST_FRAME_CHECKS(cx, ok);
     return obj;
@@ -5393,14 +5408,11 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
 {
-    jschar *chars;
-    JSObject *obj;
-
     CHECK_REQUEST(cx);
-    chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    obj = js_NewRegExpObject(cx, NULL, chars, length, flags);
+    JSObject *obj = RegExp::createObject(cx, chars, length, flags);
     cx->free(chars);
     return obj;
 }
@@ -5409,22 +5421,17 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return js_NewRegExpObject(cx, NULL, chars, length, flags);
+    return RegExp::createObject(cx, chars, length, flags);
 }
 
 JS_PUBLIC_API(void)
 JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
 {
-    JSRegExpStatics *res;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
     /* No locking required, cx is thread-private and input must be live. */
-    res = &cx->regExpStatics;
-    res->clearRoots();
-    res->input = input;
-    res->multiline = multiline;
+    cx->regExpStatics.reset(input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -5438,7 +5445,7 @@ JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx)
 {
     /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clearRoots();
+    cx->regExpStatics.clear();
 }
 
 /* TODO: compile, execute, get/set other statics... */
@@ -5646,6 +5653,20 @@ JS_ClearContextThread(JSContext *cx)
     return 0;
 #endif
 }
+
+#ifdef MOZ_TRACE_JSCALLS
+JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
+{
+    cx->functionCallback = fcb;
+}
+
+JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx)
+{
+    return cx->functionCallback;
+}
+#endif
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
