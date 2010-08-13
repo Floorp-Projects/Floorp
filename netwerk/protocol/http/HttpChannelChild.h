@@ -60,20 +60,12 @@
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIAssociatedContentSecurity.h"
 
 namespace mozilla {
 namespace net {
 
 class ChildChannelEvent;
-
-// TODO: replace with IPDL states: bug 536319
-enum HttpChannelChildState {
-  HCC_NEW,
-  HCC_OPENED,
-  HCC_ONSTART,
-  HCC_ONDATA,
-  HCC_ONSTOP
-};
 
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
@@ -83,6 +75,7 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
                        , public nsIAsyncVerifyRedirectCallback
+                       , public nsIAssociatedContentSecurity
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -93,6 +86,7 @@ public:
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
   NS_DECL_NSIAPPLICATIONCACHECHANNEL
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
+  NS_DECL_NSIASSOCIATEDCONTENTSECURITY
 
   HttpChannelChild();
   virtual ~HttpChannelChild();
@@ -133,7 +127,8 @@ protected:
                           const PRBool& isFromCache,
                           const PRBool& cacheEntryAvailable,
                           const PRUint32& cacheExpirationTime,
-                          const nsCString& cachedCharset);
+                          const nsCString& cachedCharset,
+                          const nsCString& securityInfoSerialization);
   bool RecvOnDataAvailable(const nsCString& data, 
                            const PRUint32& offset,
                            const PRUint32& count);
@@ -147,10 +142,13 @@ protected:
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
 
+  bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nsnull);
+
 private:
   RequestHeaderTuples mRequestHeaders;
   nsRefPtr<HttpChannelChild> mRedirectChannelChild;
   nsCOMPtr<nsIURI> mRedirectOriginalURI;
+  nsCOMPtr<nsISupports> mSecurityInfo;
 
   PRPackedBool mIsFromCache;
   PRPackedBool mCacheEntryAvailable;
@@ -163,6 +161,7 @@ private:
   PRUint32 mSuspendCount;
 
   bool mIPCOpen;
+  bool mKeptAlive;
 
   // Workaround for Necko re-entrancy dangers. We buffer IPDL messages in a
   // queue if still dispatching previous one(s) to listeners/observers.
@@ -188,7 +187,8 @@ private:
                           const PRBool& isFromCache,
                           const PRBool& cacheEntryAvailable,
                           const PRUint32& cacheExpirationTime,
-                          const nsCString& cachedCharset);
+                          const nsCString& cachedCharset,
+                          const nsCString& securityInfoSerialization);
   void OnDataAvailable(const nsCString& data, 
                        const PRUint32& offset,
                        const PRUint32& count);
