@@ -2044,6 +2044,14 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   mScheduledShadowInvalidation = NO;
 }
 
+- (void) doCommandBySelector:(SEL)aSelector
+{
+  // We override this so that it won't beep if it can't act.
+  // We want to control the beeping for missing or disabled
+  // commands ourselves.
+  [self tryToPerform:aSelector with:nil];
+}
+
 @end
 
 // This class allows us to have a "unified toolbar" style window. It works like this:
