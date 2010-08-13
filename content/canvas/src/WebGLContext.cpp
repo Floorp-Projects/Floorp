@@ -56,6 +56,10 @@
 
 #include "GLContextProvider.h"
 
+#ifdef MOZ_SVG
+#include "nsSVGEffects.h"
+#endif
+
 #include "prenv.h"
 
 using namespace mozilla;
@@ -208,6 +212,10 @@ WebGLContext::Invalidate()
 {
     if (!mCanvasElement)
         return;
+
+#ifdef MOZ_SVG
+    nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
+#endif
 
     if (mInvalidated)
         return;

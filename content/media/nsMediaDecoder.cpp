@@ -54,6 +54,9 @@
 #include "nsPresContext.h"
 #include "nsDOMError.h"
 #include "nsDisplayList.h"
+#ifdef MOZ_SVG
+#include "nsSVGEffects.h"
+#endif
 
 #if defined(XP_MACOSX)
 #include "gfxQuartzImageSurface.h"
@@ -156,6 +159,10 @@ void nsMediaDecoder::Invalidate()
     // Only the layer needs to be updated here
     frame->InvalidateLayer(contentRect, nsDisplayItem::TYPE_VIDEO);
   }
+
+#ifdef MOZ_SVG
+  nsSVGEffects::InvalidateDirectRenderingObservers(mElement);
+#endif
 }
 
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)
