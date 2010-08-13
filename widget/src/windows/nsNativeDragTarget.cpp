@@ -365,15 +365,15 @@ nsNativeDragTarget::DragLeave()
 void
 nsNativeDragTarget::DragCancel()
 {
-  if (mDropTargetHelper) {
-    mDropTargetHelper->DragLeave();
-  }
-  if (mDragService) {
-    mDragService->EndDragSession(PR_FALSE);
-  }
-  // release the ref that we might have taken in DragEnter
+  // Cancel the drag session if we did DragEnter.
   if (mTookOwnRef) {
-    this->Release();
+    if (mDropTargetHelper) {
+      mDropTargetHelper->DragLeave();
+    }
+    if (mDragService) {
+      mDragService->EndDragSession(PR_FALSE);
+    }
+    this->Release(); // matching the AddRef in DragEnter
     mTookOwnRef = PR_FALSE;
   }
 }
