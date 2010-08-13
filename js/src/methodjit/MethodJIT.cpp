@@ -44,6 +44,7 @@
 #include "MonoIC.h"
 #include "PolyIC.h"
 #include "TrampolineCompiler.h"
+#include "jscntxtinlines.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -120,7 +121,7 @@ JS_STATIC_ASSERT(sizeof(VMFrame) % 16 == 0);
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x40);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
 
 asm volatile (
 ".text\n"
@@ -142,13 +143,14 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
      * rcx = inlineCallCount
      * fp must go into rbx
      */
-    "pushq %rcx"                         "\n"
-    "pushq %rdi"                         "\n"
-    "pushq %rsi"                         "\n"
+    "pushq %rsi"                         "\n" /* entryFp */
+    "pushq %rcx"                         "\n" /* inlineCallCount */
+    "pushq %rdi"                         "\n" /* cx */
+    "pushq %rsi"                         "\n" /* fp */
     "movq  %rsi, %rbx"                   "\n"
 
     /* Space for the rest of the VMFrame. */
-    "subq  $0x38, %rsp"                  "\n"
+    "subq  $0x30, %rsp"                  "\n"
 
     /* Set cx->regs and set the active frame (requires saving rdx). */
     "pushq %rdx"                         "\n"
@@ -204,7 +206,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
 JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 0x40);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x40);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
 
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
@@ -222,7 +224,7 @@ SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
     "andq %r11, %rdx"                       "\n" /* extract payload */
 
     "movq 0x60(%rbx), %rax"                 "\n" /* fp->ncode */
-    "movq 0x40(%rsp), %rbx"                 "\n" /* f.fp */
+    "movq 0x38(%rsp), %rbx"                 "\n" /* f.fp */
     "ret"                                   "\n"
 );
 
@@ -236,7 +238,7 @@ SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x20);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
 
 asm volatile (
 ".text\n"
@@ -252,11 +254,12 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
     /* Build the JIT frame. Push fields in order, 
      * then align the stack to form esp == VMFrame. */
-    "pushl 20(%ebp)"                     "\n"
+    "movl  12(%ebp), %ebx"               "\n"   /* fp */
+    "pushl %ebx"                         "\n"   /* entryFp */
+    "pushl 20(%ebp)"                     "\n"   /* inlineCallCount */
     "pushl 8(%ebp)"                      "\n"
-    "pushl 12(%ebp)"                     "\n"
-    "movl  12(%ebp), %ebx"               "\n"
-    "subl $0x1c, %esp"                   "\n"
+    "pushl %ebx"                         "\n"
+    "subl $0x18, %esp"                   "\n"
 
     /* Jump into the JIT'd code. */
     "pushl 16(%ebp)"                     "\n"
@@ -312,7 +315,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
 JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 0x28);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x3C);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x20);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
 
 asm volatile (
 ".text\n"
@@ -321,7 +324,7 @@ SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
     "movl 0x28(%ebx), %edx"                 "\n" /* fp->rval data */
     "movl 0x2C(%ebx), %ecx"                 "\n" /* fp->rval type */
     "movl 0x3C(%ebx), %eax"                 "\n" /* fp->ncode */
-    "movl 0x20(%esp), %ebx"                 "\n" /* f.fp */
+    "movl 0x1C(%esp), %ebx"                 "\n" /* f.fp */
     "ret"                                   "\n"
 );
 
@@ -458,7 +461,7 @@ SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x20);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
 
 extern "C" {
 
@@ -468,13 +471,13 @@ extern "C" {
             mov edx, [ebx + 0x28];
             mov ecx, [ebx + 0x2C];
             mov eax, [ebx + 0x3C];
-            mov ebx, [esp + 0x20];
+            mov ebx, [esp + 0x1C];
             ret;
         }
     }
 
     __declspec(naked) JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-                                              uintptr_t inlineCallCount)
+                                              Value *stackLimit)
     {
         __asm {
             /* Prologue. */
@@ -487,11 +490,12 @@ extern "C" {
 
             /* Build the JIT frame. Push fields in order, 
              * then align the stack to form esp == VMFrame. */
-            push [ebp+20];
-            push [ebp+8];
-            push [ebp+12];
-            mov  ebx, [ebp+12];
-            sub  esp, 0x1c;
+            mov  ebx, [ebp + 12];
+            push ebx;
+            push [ebp + 20];
+            push [ebp + 8];
+            push ebx;
+            sub  esp, 0x18;
 
             /* Jump into into the JIT'd code. */
             push [ebp+16];
@@ -606,7 +610,7 @@ ThreadData::Finish()
 }
 
 extern "C" JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-                                   uintptr_t inlineCallCount);
+                                   Value *stackLimit);
 
 JSBool
 mjit::JaegerShot(JSContext *cx)
@@ -619,7 +623,6 @@ mjit::JaegerShot(JSContext *cx)
     jsbytecode *pc = cx->regs->pc;
     JSStackFrame *fp = cx->fp;
     JSScript *script = fp->script;
-    uintptr_t inlineCallCount = 0;
 
     JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
 
@@ -646,14 +649,11 @@ mjit::JaegerShot(JSContext *cx)
 #ifdef DEBUG
     JSStackFrame *checkFp = fp;
 #endif
-#if 0
-    uintptr_t iCC = inlineCallCount;
-    while (iCC--)
-        checkFp = checkFp->down;
-#endif
+
+    Value *stackLimit = cx->stack().makeStackLimit(reinterpret_cast<Value*>(fp));
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-    JSBool ok = JaegerTrampoline(cx, fp, code, inlineCallCount);
+    JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit);
 
     JS_ASSERT(checkFp == cx->fp);
 
@@ -729,4 +729,11 @@ mjit::ProfileStubCall(VMFrame &f)
     StubCallsForOp[op]++;
 }
 #endif
+
+bool
+VMFrame::slowEnsureSpace(uint32 nslots)
+{
+    return cx->stack().ensureSpace(cx, reinterpret_cast<Value*>(fp), regs.sp,
+                                   stackLimit, nslots);
+}
 

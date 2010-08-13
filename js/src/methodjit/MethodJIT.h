@@ -60,10 +60,6 @@ struct VMFrame
     /* This must be the first entry on CPUs which push return addresses. */
     void *scriptedReturn;
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64) || defined(JS_CPU_ARM)
-    uint32 padding;
-#endif
-
     union Arguments {
         struct {
             void *ptr;
@@ -76,7 +72,8 @@ struct VMFrame
     JSFrameRegs  regs;
     JSStackFrame *fp;
     JSContext    *cx;
-    uint32       inlineCallCount;
+    Value        *stackLimit;
+    JSStackFrame *entryFp;
 
 #if defined(JS_CPU_X86)
     void *savedEBX;
@@ -136,6 +133,17 @@ struct VMFrame
 #endif
 
     JSRuntime *runtime() { return cx->runtime; }
+
+    bool slowEnsureSpace(uint32 nslots);
+
+    inline bool ensureSpace(uint32 nmissing, uint32 nslots) {
+        /* Fast check - if it's below the limit, it's safe to just get a frame. */
+        if (JS_LIKELY(regs.sp + nmissing + nslots < stackLimit))
+            return true;
+
+        /* Slower check that might have to commit memory or throw an error. */
+        return slowEnsureSpace(nmissing + nslots);
+    }
 };
 
 #ifdef JS_CPU_ARM
