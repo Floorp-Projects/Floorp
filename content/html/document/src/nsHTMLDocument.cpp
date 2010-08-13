@@ -3236,6 +3236,12 @@ nsHTMLDocument::EditingStateChanged()
     return TurnEditingOff();
   }
 
+  // Flush out style changes on our _parent_ document, if any, so that
+  // our check for a presshell won't get stale information.
+  if (mParentDocument) {
+    mParentDocument->FlushPendingNotifications(Flush_Style);
+  }
+
   // get editing session
   nsPIDOMWindow *window = GetWindow();
   if (!window)
