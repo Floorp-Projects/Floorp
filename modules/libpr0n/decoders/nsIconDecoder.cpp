@@ -70,7 +70,7 @@ nsresult
 nsIconDecoder::InitInternal()
 {
   // Fire OnStartDecode at init time to support bug 512435
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+  if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
 
   return NS_OK;
@@ -82,7 +82,7 @@ nsIconDecoder::ShutdownInternal(PRUint32 aFlags)
   // If we haven't notified of completion yet for a full/success decode, we
   // didn't finish. Notify in error mode
   if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !IsSizeDecode() &&
       !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
@@ -126,8 +126,8 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         if (mObserver)
           mObserver->OnStartContainer(nsnull, mImage);
 
-        // If We're doing a header-only decode, we're done
-        if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+        // If We're doing a size decode, we're done
+        if (IsSizeDecode()) {
           mState = iconStateFinished;
           break;
         }
