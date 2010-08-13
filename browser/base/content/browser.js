@@ -750,7 +750,7 @@ const gXPInstallObserver = {
         PopupNotifications.remove(notification);
 
       var needsRestart = installInfo.installs.some(function(i) {
-        return (i.addon.pendingOperations & AddonManager.PENDING_INSTALL) != 0;
+        return i.addon.pendingOperations != AddonManager.PENDING_NONE;
       });
 
       if (needsRestart) {
