@@ -1,0 +1,17 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test with background-size.
+-->
+<html>
+<body>
+  <div style="width:120px; height:120px; border:1px solid black;
+              background:-moz-element(#d) no-repeat;
+              background-size:100%"></div>
+  <div style="overflow:hidden; height:0;">
+    <div id="d" style="border:10px solid red; width:20px; height:20px;
+                       background:orange;"></div>
+  </div>
+</body>
+</html>

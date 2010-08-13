@@ -1,0 +1,17 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test a repeated background image with -moz-element().
+-->
+<html>
+<body>
+  <div style="width:100px; height:100px; background:-moz-element(#d);
+              background-attachment:fixed; position:absolute; left:25px; top:25px;"></div>
+  <div style="overflow:hidden; height:0;">
+    <div id="d" style="width:50px; height:50px;">
+      <div style="width:25px; height:25px; background:blue;"></div>
+    </div>
+  </div>
+</body>
+</html>

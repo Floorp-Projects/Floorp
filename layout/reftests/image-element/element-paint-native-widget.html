@@ -1,0 +1,21 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test if native widgets are painted correctly.
+-->
+<html>
+<body>
+  <div style="width:100%; height:100%; background:-moz-element(#w) no-repeat;"></div>
+  <div style="overflow:hidden; height:0;">
+    <div id="w">
+      <input type="text"/>
+      <div style="width:100px; height:100px; overflow:scroll;">
+        In 1629, Isaac Beeckman proposed an experiment in which a person would
+        observe the flash of a cannon reflecting off a mirror about one mile
+        (1.6 km) away.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<html>
+  <head>
+    <style>
+      span {
+        background-image: -moz-element(#g);
+        display: inline-block;
+        margin-left: 1px;
+      }
+      #repeat {
+        width: 38px;
+        height: 38px;
+        background-repeat: repeat;
+      }
+      #norepeat {
+        width: 19px;
+        height: 19px;
+        background-repeat: no-repeat;
+        background-position: center center;
+      }
+    </style>
+  </head>
+  <body>
+    <span id="repeat"></span><br/>
+    <span id="norepeat"></span>
+    <div style="overflow:hidden; height:0px">
+      <div id="g" style="width:17px; height:17px; border:1px solid red;
+                         background: orange;"></div>
+    </div>
+  </body>
+</html>
+
