@@ -48,6 +48,8 @@
 #include "nsGkAtoms.h"
 #include "SpanningCellSorter.h"
 
+namespace css = mozilla::css;
+
 #undef  DEBUG_TABLE_STRATEGY 
 
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aTableFrame)
@@ -120,11 +122,15 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
     // XXXldb Should we consider -moz-box-sizing?
 
     const nsStylePosition *stylePos = aFrame->GetStylePosition();
-    nsStyleUnit unit = stylePos->mWidth.GetUnit();
+    const nsStyleCoord &width = stylePos->mWidth;
+    nsStyleUnit unit = width.GetUnit();
+    // NOTE: We're ignoring calc() units here, for lack of a sensible
+    // idea for what to do with them.  This means calc() is basically
+    // handled like 'auto' for table cells and columns.
     if (unit == eStyleUnit_Coord) {
         hasSpecifiedWidth = PR_TRUE;
         nscoord w = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
-                      aFrame, 0, 0, 0, stylePos->mWidth);
+                                                     aFrame, 0, 0, 0, width);
         // Quirk: A cell with "nowrap" set and a coord value for the
         // width which is bigger than the intrinsic minimum width uses
         // that coord value as the minimum width.
@@ -139,9 +145,9 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         }
         prefCoord = NS_MAX(w, minCoord);
     } else if (unit == eStyleUnit_Percent) {
-        prefPercent = stylePos->mWidth.GetPercentValue();
+        prefPercent = width.GetPercentValue();
     } else if (unit == eStyleUnit_Enumerated && aIsCell) {
-        switch (stylePos->mWidth.GetIntValue()) {
+        switch (width.GetIntValue()) {
             case NS_STYLE_WIDTH_MAX_CONTENT:
                 // 'width' only affects pref width, not min
                 // width, so don't change anything

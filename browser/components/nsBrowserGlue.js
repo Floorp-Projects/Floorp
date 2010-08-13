@@ -128,6 +128,31 @@ BrowserGlue.prototype = {
     Services.prefs.savePrefFile(null);
   },
 
+#ifdef MOZ_SERVICES_SYNC
+  _setSyncAutoconnectDelay: function BG__setSyncAutoconnectDelay() {
+    // Assume that a non-zero value for services.sync.autoconnectDelay should override
+    if (Services.prefs.prefHasUserValue("services.sync.autoconnectDelay")) {
+      let prefDelay = Services.prefs.getIntPref("services.sync.autoconnectDelay");
+
+      if (prefDelay > 0)
+        return;
+    }
+
+    // delays are in seconds
+    const MAX_DELAY = 300;
+    let delay = 3;
+    let enum = Services.wm.getEnumerator("navigator:browser");
+    while (enum.hasMoreElements()) {
+      delay += enum.getNext().gBrowser.tabs.length;
+    }
+    delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
+
+    let syncTemp = {};
+    Cu.import("resource://services-sync/service.js", syncTemp);
+    syncTemp.Weave.Service.delayedAutoConnect(delay);
+  },
+#endif
+
   // nsIObserver implementation 
   observe: function BG_observe(subject, topic, data) {
     switch (topic) {
@@ -164,6 +189,11 @@ BrowserGlue.prototype = {
         break;
       case "browser-lastwindow-close-granted":
         this._setPrefToSaveSession();
+        break;
+#endif
+#ifdef MOZ_SERVICES_SYNC
+      case "weave:service:ready":
+        this._setSyncAutoconnectDelay();
         break;
 #endif
       case "session-save":
@@ -239,6 +269,9 @@ BrowserGlue.prototype = {
     os.addObserver(this, "browser-lastwindow-close-requested", false);
     os.addObserver(this, "browser-lastwindow-close-granted", false);
 #endif
+#ifdef MOZ_SERVICES_SYNC
+    os.addObserver(this, "weave:service:ready", false);
+#endif
     os.addObserver(this, "session-save", false);
     os.addObserver(this, "places-init-complete", false);
     this._isPlacesInitObserver = true;
@@ -262,6 +295,9 @@ BrowserGlue.prototype = {
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
     os.removeObserver(this, "browser-lastwindow-close-requested");
     os.removeObserver(this, "browser-lastwindow-close-granted");
+#endif
+#ifdef MOZ_SERVICES_SYNC
+    os.removeObserver(this, "weave:service:ready", false);
 #endif
     os.removeObserver(this, "session-save");
     if (this._isIdleObserver)
@@ -385,29 +421,6 @@ BrowserGlue.prototype = {
       temp.WinTaskbarJumpList.startup();
     }
 #endif
-#endif
-
-#ifdef MOZ_SERVICES_SYNC
-    // Assume that a non-zero value for services.sync.autoconnectDelay should override
-    if (Services.prefs.prefHasUserValue("services.sync.autoconnectDelay")) {
-      let prefDelay = Services.prefs.getIntPref("services.sync.autoconnectDelay");
-
-      if (prefDelay > 0)
-        return;
-    }
-
-    // delays are in seconds
-    const MAX_DELAY = 300;
-    let delay = 3;
-    let enum = Services.wm.getEnumerator("navigator:browser");
-    while (enum.hasMoreElements()) {
-      delay += enum.getNext().gBrowser.tabs.length;
-    }
-    delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
-
-    let syncTemp = {};
-    Cu.import("resource://services-sync/service.js", syncTemp);
-    syncTemp.Weave.Service.delayedAutoConnect(delay);
 #endif
   },
 
@@ -1387,7 +1400,7 @@ GeolocationPrompt.prototype = {
 
     chromeWin.PopupNotifications.show(browser, "geolocation", message, "geo-notification-icon",
                                       mainAction, secondaryActions);
-  },
+  }
 };
 
 var components = [BrowserGlue, GeolocationPrompt];

@@ -41,11 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/ContentParent.h"
-using mozilla::dom::ContentParent;
-#endif
-
 #if defined(XP_OS2) && defined(MOZ_OS2_HIGH_MEMORY)
 // os2safe.h has to be included before os2.h, needed for high mem
 #include <os2safe.h>
@@ -64,6 +59,11 @@ using mozilla::dom::ContentParent;
 #include "MozMeegoAppService.h"
 #endif // MOZ_ENABLE_MEEGOTOUCH
 #endif // MOZ_WIDGET_QT
+
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentParent.h"
+using mozilla::dom::ContentParent;
+#endif
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"

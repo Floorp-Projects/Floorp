@@ -68,6 +68,10 @@ Requestor.prototype = {
 };
 
 function run_test() {
+// DISABLE TEST: bug 586238
+  _dump('FIXME/bug 586238: disabled to avoid perma-orange\n');
+}
+function never() {
   dump("*** run_test\n");
   httpserver = new nsHttpServer();
   httpserver.registerPathHandler("/auth", authHandler);

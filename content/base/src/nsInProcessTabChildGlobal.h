@@ -121,6 +121,8 @@ public:
   {
     mChromeMessageManager = aParent;
   }
+
+  void DelayedDisconnect();
 protected:
   nsresult Init();
   nsresult InitTabChildGlobal();

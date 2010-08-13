@@ -79,6 +79,9 @@
 #include "nsTString.h"
 #include "string-template-undef.h"
 
+PR_STATIC_ASSERT(sizeof(PRUnichar) == 2);
+PR_STATIC_ASSERT(sizeof(nsString::char_type) == 2);
+PR_STATIC_ASSERT(sizeof(nsCString::char_type) == 1);
 
   /**
    * A helper class that converts a UTF-16 string to ASCII in a lossy manner
