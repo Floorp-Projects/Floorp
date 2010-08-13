@@ -1867,8 +1867,9 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
 
 class nsDisplayMathMLSelectionRect : public nsDisplayItem {
 public:
-  nsDisplayMathMLSelectionRect(nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aFrame), mRect(aRect) {
+  nsDisplayMathMLSelectionRect(nsDisplayListBuilder* aBuilder,
+                               nsIFrame* aFrame, const nsRect& aRect)
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSelectionRect);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1897,9 +1898,10 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
 
 class nsDisplayMathMLCharBackground : public nsDisplayItem {
 public:
-  nsDisplayMathMLCharBackground(nsIFrame* aFrame, const nsRect& aRect,
-      nsStyleContext* aStyleContext)
-    : nsDisplayItem(aFrame), mStyleContext(aStyleContext), mRect(aRect) {
+  nsDisplayMathMLCharBackground(nsDisplayListBuilder* aBuilder,
+                                nsIFrame* aFrame, const nsRect& aRect,
+                                nsStyleContext* aStyleContext)
+    : nsDisplayItem(aBuilder, aFrame), mStyleContext(aStyleContext), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1929,9 +1931,10 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
 
 class nsDisplayMathMLCharForeground : public nsDisplayItem {
 public:
-  nsDisplayMathMLCharForeground(nsIFrame* aFrame, nsMathMLChar* aChar,
-				PRBool aIsSelected)
-    : nsDisplayItem(aFrame), mChar(aChar), mIsSelected(aIsSelected) {
+  nsDisplayMathMLCharForeground(nsDisplayListBuilder* aBuilder,
+                                nsIFrame* aFrame, nsMathMLChar* aChar,
+				                        PRBool aIsSelected)
+    : nsDisplayItem(aBuilder, aFrame), mChar(aChar), mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1968,8 +1971,9 @@ private:
 #ifdef NS_DEBUG
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
 public:
-  nsDisplayMathMLCharDebug(nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aFrame), mRect(aRect) {
+  nsDisplayMathMLCharDebug(nsDisplayListBuilder* aBuilder,
+                           nsIFrame* aFrame, const nsRect& aRect)
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharDebug);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1981,8 +1985,9 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)
+
 private:
-  nsRect    mRect;
+  nsRect mRect;
 };
 
 void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
@@ -2026,7 +2031,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   // paint the selection background -- beware MathML frames overlap a lot
   if (aSelectedRect && !aSelectedRect->IsEmpty()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLSelectionRect(aForFrame, *aSelectedRect));
+        nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else if (mRect.width && mRect.height) {
@@ -2034,7 +2039,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
     if (styleContext != parentContext &&
         NS_GET_A(backg->mBackgroundColor) > 0) {
       rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayMathMLCharBackground(aForFrame, mRect, styleContext));
+          nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect, styleContext));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     //else
@@ -2043,12 +2048,12 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     rv = aLists.BorderBackground()->AppendToTop(new (aBuilder)
-        nsDisplayMathMLCharDebug(aForFrame, mRect));
+        nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
   }
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLCharForeground(aForFrame, this,
+        nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
                                       aSelectedRect && !aSelectedRect->IsEmpty()));
 }
 

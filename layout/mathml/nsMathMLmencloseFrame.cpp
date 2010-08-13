@@ -739,9 +739,10 @@ nsMathMLmencloseFrame::SetAdditionalStyleContext(PRInt32          aIndex,
 class nsDisplayNotation : public nsDisplayItem
 {
 public:
-  nsDisplayNotation(nsIFrame* aFrame, const nsRect& aRect,
+  nsDisplayNotation(nsDisplayListBuilder* aBuilder,
+                    nsIFrame* aFrame, const nsRect& aRect,
                     nscoord aThickness, nsMencloseNotation aType)
-    : nsDisplayItem(aFrame), mRect(aRect), 
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect), 
       mThickness(aThickness), mType(aType) {
     MOZ_COUNT_CTOR(nsDisplayNotation);
   }
@@ -823,7 +824,5 @@ nsMathMLmencloseFrame::DisplayNotation(nsDisplayListBuilder* aBuilder,
     return NS_OK;
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-                                          nsDisplayNotation(aFrame, aRect,
-                                                            aThickness,
-                                                            aType));
+      nsDisplayNotation(aBuilder, aFrame, aRect, aThickness, aType));
 }
