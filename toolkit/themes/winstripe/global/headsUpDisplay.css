@@ -168,3 +168,11 @@
     padding: 1px 0px;
     -moz-box-align: center;
 }
+
+.hud-console-filter-toolbar:-moz-system-metric(windows-default-theme) {
+    background: -moz-linear-gradient(top, #f2f7fd 0, #e9f2fc 12px, #e3eefb 12px, #e3eefb 100%);
+    border-top: 1px solid #fff;
+    border-bottom: 2px solid ThreeDShadow;
+    -moz-appearance: none !important;
+}
+
