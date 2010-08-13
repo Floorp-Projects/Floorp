@@ -137,17 +137,19 @@ nsresult
 PluginPRLibrary::NP_GetValue(void *future, NPPVariable aVariable,
 			     void *aValue, NPError* error)
 {
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
   if (mNP_GetValue) {
     *error = mNP_GetValue(future, aVariable, aValue);
   } else {
-    NP_GetValueFunc pfNP_GetValue = (NP_GetValueFunc)
-      PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
+    NP_GetValueFunc pfNP_GetValue = (NP_GetValueFunc)PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
     if (!pfNP_GetValue)
       return NS_ERROR_FAILURE;
     *error = pfNP_GetValue(future, aVariable, aValue);
   }
-
   return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)

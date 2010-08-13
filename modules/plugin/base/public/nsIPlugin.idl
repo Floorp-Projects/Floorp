@@ -47,7 +47,7 @@
 
 interface nsIPluginInstance;
 
-[uuid(843D6092-2BB0-4A21-8827-0510A52CA795)]
+[uuid(94C32FEA-5C50-49D3-9D3D-9047CD342777)]
 interface nsIPlugin : nsISupports
 {
   /**
@@ -66,29 +66,4 @@ interface nsIPlugin : nsISupports
    * @result - NS_OK if this operation was successful
    */
   void shutdown();
-
-  /**
-   * Returns the MIME description for the plugin. The MIME description 
-   * is a colon-separated string containg the plugin MIME type, plugin
-   * data file extension, and plugin name, e.g.:
-   *
-   * "application/x-simple-plugin:smp:Simple Sample Plug-in"
-   *
-   * (Corresponds to NPP_GetMIMEDescription.)
-   *
-   * @param aMIMEDescription - the resulting MIME description 
-   * @result                 - NS_OK if this operation was successful
-   */
-  void getMIMEDescription(out constCharPtr aMIMEDescription);
-
-  /**
-   * Returns the value of a variable associated with the plugin.
-   *
-   * (Corresponds to NPP_GetValue.)
-   *
-   * @param aVariable - the plugin variable to get
-   * @param aValue    - the address of where to store the resulting value
-   * @result          - NS_OK if this operation was successful
-   */
-  void getValue(in NPPVariable aVariable, in voidPtr aValue);
 };
