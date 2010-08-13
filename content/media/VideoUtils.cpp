@@ -174,3 +174,25 @@ PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   NS_ASSERTION(a * b == aResult, "We didn't overflow, but result is wrong!");
   return PR_TRUE;
 }
+
+// Converts from number of audio samples to milliseconds, given the specified
+// audio rate.
+PRBool SamplesToMs(PRInt64 aSamples, PRUint32 aRate, PRInt64& aOutMs)
+{
+  PRInt64 x;
+  if (!MulOverflow(aSamples, 1000, x))
+    return PR_FALSE;
+  aOutMs = x / aRate;
+  return PR_TRUE;
+}
+
+// Converts from milliseconds to number of audio samples, given the specified
+// audio rate.
+PRBool MsToSamples(PRInt64 aMs, PRUint32 aRate, PRInt64& aOutSamples)
+{
+  PRInt64 x;
+  if (!MulOverflow(aMs, aRate, x))
+    return PR_FALSE;
+  aOutSamples = x / 1000;
+  return PR_TRUE;
+}
