@@ -611,7 +611,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
         if (!global)
             return NULL;
     } else {
-        global = cx->fp->getScopeChain()->getGlobal();
+        global = cx->fp->scopeChain->getGlobal();
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 

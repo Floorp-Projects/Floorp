@@ -685,7 +685,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 fp->script = script;
                 fp->fun = fun;
                 fp->argv = vp + 2;
-                fp->setScopeChain(closure->getParent());
+                fp->scopeChain = closure->getParent();
                 fp->setArgsObj(NULL);
 
                 /* Initialize regs. */
@@ -1204,7 +1204,7 @@ JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->maybeScopeChain();
+    return fp->scopeChain;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1564,7 +1564,7 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
     PodZero(fp);
     fp->fun = fun;
     fp->argv = vp + 2;
-    fp->setScopeChain(scopeobj->getGlobal());
+    fp->scopeChain = scopeobj->getGlobal();
 
     regs.pc = NULL;
     regs.sp = fp->slots();
