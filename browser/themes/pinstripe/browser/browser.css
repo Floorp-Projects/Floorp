@@ -285,7 +285,7 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 #BMB_unsortedBookmarksFolderMenu {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
+  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png");
 }
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
