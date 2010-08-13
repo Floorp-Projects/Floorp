@@ -33,6 +33,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=240933
         synthesizeMouse(t, t.clientWidth / 2, 5, {}, window);
         is(t.selectionStart, 3, "The selection should be set before the newline");
         is(t.selectionEnd,   3, "The selection should be set before the newline");
+
+        t = document.getElementById("ta");
+        t.focus();
+        var val = t.value;
+        synthesizeKey("VK_ENTER", {});
+        is(t.value, val + "\n", "Pressing enter right after focusing the textarea should work");
         SimpleTest.finish();
       });
 
@@ -40,6 +46,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=240933
   </pre>
 
   <textarea id="t" rows="10" cols="10">abc
+</textarea>
+  <textarea id="ta" rows="10" cols="10">
+test
+
 </textarea>
 
 </body>
