@@ -56,6 +56,7 @@
 class imgIRequest;
 class nsIDocument;
 class nsIPrincipal;
+class nsPresContext;
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
@@ -156,7 +157,6 @@ enum nsCSSUnit {
   eCSSUnit_Centimeter   = 208,    // (float) 1/100 meter
 
   // US Typographic
-  eCSSUnit_Point        = 300,    // (float) 1/72 inch
   eCSSUnit_Pica         = 301,    // (float) 12 points == 1/6 inch
 
   // Length units - relative
@@ -167,7 +167,8 @@ enum nsCSSUnit {
   eCSSUnit_RootEM       = 803,    // (float) == root element font size
 
   // Screen relative measure
-  eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit
+  eCSSUnit_Point        = 900,    // (float) 4/3 of a CSS pixel
+  eCSSUnit_Pixel        = 901,    // (float) CSS pixel unit
 
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
@@ -230,10 +231,29 @@ public:
   nsCSSUnit GetUnit() const { return mUnit; }
   PRBool    IsLengthUnit() const
     { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pixel; }
+  /**
+   * A "fixed" length unit is one that means a specific physical length
+   * which we try to match based on the physical characteristics of an
+   * output device.
+   */
   PRBool    IsFixedLengthUnit() const  
     { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pica; }
+  /**
+   * What the spec calls relative length units is, for us, split
+   * between relative length units and pixel length units.
+   * 
+   * A "relative" length unit is a multiple of some derived metric,
+   * such as a font em-size, which itself was controlled by an input CSS
+   * length. Relative length units should not be scaled by zooming, since
+   * the underlying CSS length would already have been scaled.
+   */
   PRBool    IsRelativeLengthUnit() const  
-    { return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_Pixel; }
+    { return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_RootEM; }
+  /**
+   * A "pixel" length unit is a some multiple of CSS pixels.
+   */
+  PRBool    IsPixelLengthUnit() const
+    { return eCSSUnit_Point <= mUnit && mUnit <= eCSSUnit_Pixel; }
   PRBool    IsAngularUnit() const  
     { return eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Radian; }
   PRBool    IsFrequencyUnit() const  
@@ -343,7 +363,8 @@ public:
   // all over.
   imgIRequest* GetImageValue() const;
 
-  nscoord GetLengthTwips() const;
+  nscoord GetFixedLength(nsPresContext* aPresContext) const;
+  nscoord GetPixelLength() const;
 
   void Reset()  // sets to null
   {
