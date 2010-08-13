@@ -44,8 +44,8 @@
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMRect.h"
 
-nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
-  : mType(CSS_PX)
+nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(PRInt32 aAppUnitsPerInch)
+  : mType(CSS_PX), mAppUnitsPerInch(aAppUnitsPerInch)
 {
   mValue.mAppUnits = 0;
 }
@@ -313,31 +313,28 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
     case CSS_CM :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits * CM_PER_INCH_FLOAT /
-        nsPresContext::AppUnitsPerCSSInch();
+      *aReturn = mValue.mAppUnits * 2.54f / float(mAppUnitsPerInch);
       break;
     case CSS_MM :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits * MM_PER_INCH_FLOAT /
-        nsPresContext::AppUnitsPerCSSInch();
+      *aReturn = mValue.mAppUnits * 25.4f / float(mAppUnitsPerInch);
       break;
     case CSS_IN :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits / nsPresContext::AppUnitsPerCSSInch();
+      *aReturn = mValue.mAppUnits / float(mAppUnitsPerInch);
       break;
     case CSS_PT :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       *aReturn = mValue.mAppUnits * POINTS_PER_INCH_FLOAT / 
-        nsPresContext::AppUnitsPerCSSInch();
+        float(mAppUnitsPerInch);
       break;
     case CSS_PC :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits * 6.0f /
-        nsPresContext::AppUnitsPerCSSInch();
+      *aReturn = mValue.mAppUnits * 6.0f / float(mAppUnitsPerInch);
       break;
     case CSS_PERCENTAGE :
       if (mType != CSS_PERCENTAGE)

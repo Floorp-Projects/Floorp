@@ -232,31 +232,30 @@ imgIRequest* nsCSSValue::GetImageValue() const
   return mValue.mImage->mRequest;
 }
 
-nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
+nscoord nsCSSValue::GetLengthTwips() const
 {
-  NS_ASSERTION(mUnit == eCSSUnit_PhysicalMillimeter, "not a fixed length unit");
+  NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
 
-  float inches = mValue.mFloat / MM_PER_INCH_FLOAT;
-  return inches * aPresContext->DeviceContext()->AppUnitsPerPhysicalInch();
-}
+  if (IsFixedLengthUnit()) {
+    switch (mUnit) {
+    case eCSSUnit_Inch:        
+      return NS_INCHES_TO_TWIPS(mValue.mFloat);
 
-nscoord nsCSSValue::GetPixelLength() const
-{
-  NS_ASSERTION(IsPixelLengthUnit(), "not a fixed length unit");
+    case eCSSUnit_Millimeter:
+      return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
+    case eCSSUnit_Centimeter:
+      return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
 
-  double scaleFactor;
-  switch (mUnit) {
-  case eCSSUnit_Pixel: return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat);
-  case eCSSUnit_Pica: scaleFactor = 16.0; break;
-  case eCSSUnit_Point: scaleFactor = 4/3.0; break;
-  case eCSSUnit_Inch: scaleFactor = 96.0; break;
-  case eCSSUnit_Millimeter: scaleFactor = 96/25.4; break;
-  case eCSSUnit_Centimeter: scaleFactor = 96/2.54; break;
-  default:
-    NS_ERROR("should never get here");
-    return 0;
+    case eCSSUnit_Point:
+      return NS_POINTS_TO_TWIPS(mValue.mFloat);
+    case eCSSUnit_Pica:
+      return NS_PICAS_TO_TWIPS(mValue.mFloat);
+    default:
+      NS_ERROR("should never get here");
+      break;
+    }
   }
-  return nsPresContext::CSSPixelsToAppUnits(float(mValue.mFloat*scaleFactor));
+  return 0;
 }
 
 void nsCSSValue::DoReset()
@@ -881,7 +880,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
-    case eCSSUnit_PhysicalMillimeter: aResult.AppendLiteral("mozmm");   break;
     case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;

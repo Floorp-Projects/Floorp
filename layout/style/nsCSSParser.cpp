@@ -4122,7 +4122,7 @@ CSSParserImpl::ParseEnum(nsCSSValue& aValue,
 
 
 struct UnitInfo {
-  char name[6];  // needs to be long enough for the longest unit, with
+  char name[5];  // needs to be long enough for the longest unit, with
                  // terminating null.
   PRUint32 length;
   nsCSSUnit unit;
@@ -4142,7 +4142,6 @@ const UnitInfo UnitData[] = {
   { STR_WITH_LEN("ch"), eCSSUnit_Char, VARIANT_LENGTH },
   { STR_WITH_LEN("rem"), eCSSUnit_RootEM, VARIANT_LENGTH },
   { STR_WITH_LEN("mm"), eCSSUnit_Millimeter, VARIANT_LENGTH },
-  { STR_WITH_LEN("mozmm"), eCSSUnit_PhysicalMillimeter, VARIANT_LENGTH },
   { STR_WITH_LEN("pc"), eCSSUnit_Pica, VARIANT_LENGTH },
   { STR_WITH_LEN("deg"), eCSSUnit_Degree, VARIANT_ANGLE },
   { STR_WITH_LEN("grad"), eCSSUnit_Grad, VARIANT_ANGLE },

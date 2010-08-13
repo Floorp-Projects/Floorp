@@ -712,18 +712,6 @@ gfx_pango_fc_font_get_coverage(PangoFont *font, PangoLanguage *lang)
     return pango_coverage_ref(self->mCoverage);
 }
 
-static PRInt32
-GetDPI()
-{
-#if defined(MOZ_WIDGET_GTK2)
-    return gfxPlatformGtk::GetDPI();
-#elif defined(MOZ_WIDGET_QT)
-    return gfxQtPlatform::GetDPI();
-#else
-    return 96;
-#endif
-}
-
 static PangoFontDescription *
 gfx_pango_fc_font_describe(PangoFont *font)
 {
@@ -735,7 +723,7 @@ gfx_pango_fc_font_describe(PangoFont *font)
     gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
     if (gfxFont) {
         double pixelsize = gfxFont->GetStyle()->size;
-        double dpi = GetDPI();
+        double dpi = gfxPlatform::GetDPI();
         gint size = moz_pango_units_from_double(pixelsize * dpi / 72.0);
         pango_font_description_set_size(result, size);
     }
@@ -1732,7 +1720,8 @@ gfx_pango_font_map_get_resolution(PangoFcFontMap *fcfontmap,
                                   PangoContext *context)
 {
     // This merely enables the FC_SIZE field of the pattern to be accurate.
-    return GetDPI();
+    // We use gfxPlatform::GetDPI() much of the time...
+    return gfxPlatform::GetDPI();
 }
 
 #ifdef MOZ_WIDGET_GTK2

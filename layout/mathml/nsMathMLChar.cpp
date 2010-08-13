@@ -997,7 +997,7 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, PRUint32 aHint)
   PRBool isNearer = PR_FALSE;
   if (aHint & (NS_STRETCH_NEARER | NS_STRETCH_LARGEOP)) {
     float c = NS_MAX(float(b) * NS_MATHML_DELIMITER_FACTOR,
-                     float(b) - nsPresContext::CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
+                     float(b) - aPresContext->PointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
     isNearer = PRBool(float(PR_ABS(b - a)) <= (float(b) - c));
   }
   // Smaller: Mainly for transitory use, to compare two candidate
@@ -1867,9 +1867,8 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
 
 class nsDisplayMathMLSelectionRect : public nsDisplayItem {
 public:
-  nsDisplayMathMLSelectionRect(nsDisplayListBuilder* aBuilder,
-                               nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
+  nsDisplayMathMLSelectionRect(nsIFrame* aFrame, const nsRect& aRect)
+    : nsDisplayItem(aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSelectionRect);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1893,15 +1892,14 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
   mFrame->PresContext()->LookAndFeel()->
       GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
   aCtx->SetColor(bgColor);
-  aCtx->FillRect(mRect + ToReferenceFrame());
+  aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
 }
 
 class nsDisplayMathMLCharBackground : public nsDisplayItem {
 public:
-  nsDisplayMathMLCharBackground(nsDisplayListBuilder* aBuilder,
-                                nsIFrame* aFrame, const nsRect& aRect,
-                                nsStyleContext* aStyleContext)
-    : nsDisplayItem(aBuilder, aFrame), mStyleContext(aStyleContext), mRect(aRect) {
+  nsDisplayMathMLCharBackground(nsIFrame* aFrame, const nsRect& aRect,
+      nsStyleContext* aStyleContext)
+    : nsDisplayItem(aFrame), mStyleContext(aStyleContext), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1922,7 +1920,7 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
                                           nsIRenderingContext* aCtx)
 {
   const nsStyleBorder* border = mStyleContext->GetStyleBorder();
-  nsRect rect(mRect + ToReferenceFrame());
+  nsRect rect(mRect + aBuilder->ToReferenceFrame(mFrame));
   nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
                                         mVisibleRect, rect,
                                         mStyleContext, *border,
@@ -1931,10 +1929,9 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
 
 class nsDisplayMathMLCharForeground : public nsDisplayItem {
 public:
-  nsDisplayMathMLCharForeground(nsDisplayListBuilder* aBuilder,
-                                nsIFrame* aFrame, nsMathMLChar* aChar,
-				                        PRBool aIsSelected)
-    : nsDisplayItem(aBuilder, aFrame), mChar(aChar), mIsSelected(aIsSelected) {
+  nsDisplayMathMLCharForeground(nsIFrame* aFrame, nsMathMLChar* aChar,
+				PRBool aIsSelected)
+    : nsDisplayItem(aFrame), mChar(aChar), mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1946,7 +1943,8 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     nsRect rect;
     mChar->GetRect(rect);
-    nsPoint offset = ToReferenceFrame() + rect.TopLeft();
+    nsPoint offset =
+      aBuilder->ToReferenceFrame(mFrame) + rect.TopLeft();
     nsBoundingMetrics bm;
     mChar->GetBoundingMetrics(bm);
     return nsRect(offset.x + bm.leftBearing, offset.y,
@@ -1957,7 +1955,7 @@ public:
                      nsIRenderingContext* aCtx)
   {
     mChar->PaintForeground(mFrame->PresContext(), *aCtx,
-                           ToReferenceFrame(), mIsSelected);
+                           aBuilder->ToReferenceFrame(mFrame), mIsSelected);
   }
 
   NS_DISPLAY_DECL_NAME("MathMLCharForeground", TYPE_MATHML_CHAR_FOREGROUND)
@@ -1970,9 +1968,8 @@ private:
 #ifdef NS_DEBUG
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
 public:
-  nsDisplayMathMLCharDebug(nsDisplayListBuilder* aBuilder,
-                           nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
+  nsDisplayMathMLCharDebug(nsIFrame* aFrame, const nsRect& aRect)
+    : nsDisplayItem(aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharDebug);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1984,9 +1981,8 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)
-
 private:
-  nsRect mRect;
+  nsRect    mRect;
 };
 
 void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
@@ -1996,7 +1992,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   PRIntn skipSides = 0;
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext* styleContext = mFrame->GetStyleContext();
-  nsRect rect = mRect + ToReferenceFrame();
+  nsRect rect = mRect + aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
                               mVisibleRect, rect, styleContext, skipSides);
   nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame,
@@ -2030,7 +2026,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   // paint the selection background -- beware MathML frames overlap a lot
   if (aSelectedRect && !aSelectedRect->IsEmpty()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
+        nsDisplayMathMLSelectionRect(aForFrame, *aSelectedRect));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else if (mRect.width && mRect.height) {
@@ -2038,7 +2034,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
     if (styleContext != parentContext &&
         NS_GET_A(backg->mBackgroundColor) > 0) {
       rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayMathMLCharBackground(aBuilder, aForFrame, mRect, styleContext));
+          nsDisplayMathMLCharBackground(aForFrame, mRect, styleContext));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     //else
@@ -2047,12 +2043,12 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     rv = aLists.BorderBackground()->AppendToTop(new (aBuilder)
-        nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
+        nsDisplayMathMLCharDebug(aForFrame, mRect));
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
   }
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
+        nsDisplayMathMLCharForeground(aForFrame, this,
                                       aSelectedRect && !aSelectedRect->IsEmpty()));
 }
 

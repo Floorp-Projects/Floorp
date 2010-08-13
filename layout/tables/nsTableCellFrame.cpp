@@ -385,9 +385,7 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
 
 class nsDisplayTableCellBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableCellBackground(nsDisplayListBuilder* aBuilder,
-                               nsTableCellFrame* aFrame) :
-    nsDisplayTableItem(aBuilder, aFrame) {
+  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : nsDisplayTableItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -411,7 +409,7 @@ void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
                                          nsIRenderingContext* aCtx)
 {
   static_cast<nsTableCellFrame*>(mFrame)->
-    PaintBackground(*aCtx, mVisibleRect, ToReferenceFrame(),
+    PaintBackground(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame),
                     aBuilder->GetBackgroundPaintFlags());
 }
 
@@ -460,8 +458,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // display outset box-shadows if we need to.
     PRBool hasBoxShadow = !!(GetStyleBorder()->mBoxShadow);
     if (hasBoxShadow) {
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowOuter(this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -472,8 +470,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // The cell background was not painted by the nsTablePainter,
       // so we need to do it. We have special background processing here
       // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
-      nsDisplayTableItem* item =
-        new (aBuilder) nsDisplayTableCellBackground(aBuilder, this);
+      nsDisplayTableItem* item = new (aBuilder) nsDisplayTableCellBackground(this);
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
       item->UpdateForFrameBackground(this);
@@ -481,8 +478,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     // display inset box-shadows if we need to.
     if (hasBoxShadow) {
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowInner(this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -490,7 +487,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!tableFrame->IsBorderCollapse() && HasBorder() &&
         emptyCellStyle == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayBorder(aBuilder, this));
+          nsDisplayBorder(this));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -499,8 +496,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
-                           "TableCellSelection",
+          nsDisplayGeneric(this, ::PaintTableCellSelection, "TableCellSelection",
                            nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
       NS_ENSURE_SUCCESS(rv, rv);
     }

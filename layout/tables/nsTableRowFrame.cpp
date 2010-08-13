@@ -577,9 +577,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
  */
 class nsDisplayTableRowBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableRowBackground(nsDisplayListBuilder* aBuilder,
-                              nsTableRowFrame* aFrame) :
-    nsDisplayTableItem(aBuilder, aFrame) {
+  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : nsDisplayTableItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableRowBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -598,10 +596,11 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
                                    nsIRenderingContext* aCtx) {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
+  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
-                                 mVisibleRect, ToReferenceFrame(),
+                                 mVisibleRect, pt,
                                  aBuilder->GetBackgroundPaintFlags());
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
@@ -623,7 +622,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // We would use nsDisplayGeneric for this rare case except that we
     // need the background to be larger than the row frame in some
     // cases.
-    item = new (aBuilder) nsDisplayTableRowBackground(aBuilder, this);
+    item = new (aBuilder) nsDisplayTableRowBackground(this);
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);
   }
