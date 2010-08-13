@@ -1062,7 +1062,7 @@ float nsWindow::GetDPI()
   if (!dc)
     return 96.0f;
 
-  double heightInches = ::GetDeviceCaps(dc, VERTSIZE)/25.4;
+  double heightInches = ::GetDeviceCaps(dc, VERTSIZE)/MM_PER_INCH_FLOAT;
   int heightPx = ::GetDeviceCaps(dc, VERTRES);
   ::ReleaseDC(mWnd, dc);
   if (heightInches < 0.25) {
