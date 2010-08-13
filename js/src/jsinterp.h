@@ -84,12 +84,14 @@ enum JSFrameFlags {
  */
 struct JSStackFrame
 {
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
+  private:
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
-    JSScript            *script;        /* script being interpreted */
-    JSFunction          *fun;           /* function being called or null */
 
+  public:
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
+    JSScript            *script;        /* script being interpreted */
+	
     /*
      * The value of |this| in this stack frame, or JSVAL_NULL if |this|
      * is to be computed lazily on demand.
@@ -104,7 +106,7 @@ struct JSStackFrame
      * in both argv[-1] and thisv, the other frame's thisv is left null.
      */
     js::Value           thisv;          /* "this" pointer if in method */
-
+    JSFunction          *fun;           /* function being called or null */
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
     js::Value           rval;           /* function return value */
@@ -165,19 +167,6 @@ struct JSStackFrame
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
 
-    void putActivationObjects(JSContext *cx) {
-        /*
-         * The order of calls here is important as js_PutCallObject needs to
-         * access argsobj.
-         */
-        if (callobj) {
-            js_PutCallObject(cx, this);
-            JS_ASSERT(!argsobj);
-        } else if (argsobj) {
-            js_PutArgsObject(cx, this);
-        }
-    }
-
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
     jsbytecode *pc(JSContext *cx) const;
 
@@ -191,6 +180,71 @@ struct JSStackFrame
 
     js::Value *base() const {
         return slots() + script->nfixed;
+    }
+
+    /* Call object accessors */
+
+    bool hasCallObj() const {
+        return callobj != NULL;
+    }
+
+    JSObject* getCallObj() const {
+        JS_ASSERT(hasCallObj());
+        return callobj;
+    }
+
+    JSObject* maybeCallObj() const {
+        return callobj;
+    }
+
+    void setCallObj(JSObject *obj) {
+        callobj = obj;
+    }
+
+    static size_t offsetCallObj() {
+        return offsetof(JSStackFrame, callobj);
+    }
+
+    /* Arguments object accessors */
+
+    bool hasArgsObj() const {
+        return argsobj != NULL;
+    }
+
+    JSObject* getArgsObj() const {
+        JS_ASSERT(hasArgsObj());
+        return argsobj;
+    }
+
+    JSObject* maybeArgsObj() const {
+        return argsobj;
+    }
+
+    void setArgsObj(JSObject *obj) {
+        argsobj = obj;
+    }
+
+    JSObject** addressArgsObj() {
+        return &argsobj;
+    }
+
+    static size_t offsetArgsObj() {
+        return offsetof(JSStackFrame, argsobj);
+    }
+
+    /* Other accessors */
+
+    void putActivationObjects(JSContext *cx) {
+        /*
+         * The order of calls here is important as js_PutCallObject needs to
+         * access argsobj.
+         */
+        if (hasCallObj()) {
+            js_PutCallObject(cx, this);
+            JS_ASSERT(!hasArgsObj());
+        } else if (hasArgsObj()) {
+            js_PutArgsObject(cx, this);
+        }
     }
 
     const js::Value &calleeValue() {

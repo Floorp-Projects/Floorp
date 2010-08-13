@@ -93,9 +93,9 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, Value *vp)
     JSObject *argsobj;
 
     if (fp->flags & JSFRAME_OVERRIDE_ARGS) {
-        JS_ASSERT(fp->callobj);
+        JS_ASSERT(fp->hasCallObj());
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
-        return fp->callobj->getProperty(cx, id, vp);
+        return fp->getCallObj()->getProperty(cx, id, vp);
     }
     argsobj = js_GetArgsObject(cx, fp);
     if (!argsobj)
@@ -108,11 +108,11 @@ JSBool
 js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
 {
     if (fp->flags & JSFRAME_OVERRIDE_ARGS) {
-        JS_ASSERT(fp->callobj);
+        JS_ASSERT(fp->hasCallObj());
 
         jsid argumentsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
         Value v;
-        if (!fp->callobj->getProperty(cx, argumentsid, &v))
+        if (!fp->getCallObj()->getProperty(cx, argumentsid, &v))
             return false;
 
         JSObject *obj;
@@ -129,7 +129,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
     vp->setUndefined();
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
-        JSObject *argsobj = fp->argsobj;
+        JSObject *argsobj = fp->maybeArgsObj();
         if (arg < fp->argc) {
             if (argsobj) {
                 if (argsobj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
@@ -153,7 +153,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
                 return argsobj->getProperty(cx, id, vp);
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        JSObject *argsobj = fp->argsobj;
+        JSObject *argsobj = fp->maybeArgsObj();
         if (argsobj && argsobj->isArgsLengthOverridden())
             return argsobj->getProperty(cx, id, vp);
         vp->setInt32(fp->argc);
@@ -211,30 +211,29 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         fp = fp->down;
 
     /* Create an arguments object for fp only if it lacks one. */
-    JSObject *argsobj = fp->argsobj;
-    if (argsobj)
-        return argsobj;
+    if (fp->hasArgsObj())
+        return fp->getArgsObj();
 
     /* Compute the arguments object's parent slot from fp's scope chain. */
     JSObject *global = fp->scopeChain->getGlobal();
-    argsobj = NewArguments(cx, global, fp->argc, &fp->argv[-2].toObject());
+    JSObject *argsobj = NewArguments(cx, global, fp->argc, &fp->argv[-2].toObject());
     if (!argsobj)
         return argsobj;
 
     /* Link the new object to fp so it can get actual argument values. */
     argsobj->setPrivate(fp);
-    fp->argsobj = argsobj;
+    fp->setArgsObj(argsobj);
     return argsobj;
 }
 
 void
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *argsobj = fp->argsobj;
+    JSObject *argsobj = fp->getArgsObj();
     JS_ASSERT(argsobj->getPrivate() == fp);
     PutArguments(cx, argsobj, fp->argv);
     argsobj->setPrivate(NULL);
-    fp->argsobj = NULL;
+    fp->setArgsObj(NULL);
 }
 
 /*
@@ -779,13 +778,10 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
 JSObject *
 js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *callobj;
-
     /* Create a call object for fp only if it lacks one. */
     JS_ASSERT(fp->fun);
-    callobj = fp->callobj;
-    if (callobj)
-        return callobj;
+    if (fp->hasCallObj())
+        return fp->getCallObj();
 
 #ifdef DEBUG
     /* A call object should be a frame's outermost scope chain element.  */
@@ -820,7 +816,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    callobj = NewCallObject(cx, fp->fun, fp->scopeChain);
+    JSObject *callobj = NewCallObject(cx, fp->fun, fp->scopeChain);
     if (!callobj)
         return NULL;
 
@@ -828,7 +824,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     JS_ASSERT(fp->argv);
     JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->callee()));
     callobj->setSlot(JSSLOT_CALLEE, fp->calleeValue());
-    fp->callobj = callobj;
+    fp->setCallObj(callobj);
 
     /*
      * Push callobj on the top of the scope chain, and make it the
@@ -875,13 +871,12 @@ CopyValuesToCallObject(JSObject *callobj, int nargs, Value *argv, int nvars, Val
 void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *callobj = fp->callobj;
-    JS_ASSERT(callobj);
+    JSObject *callobj = fp->getCallObj();
 
     /* Get the arguments object to snapshot fp's actual argument values. */
-    if (fp->argsobj) {
+    if (fp->hasArgsObj()) {
         if (!(fp->flags & JSFRAME_OVERRIDE_ARGS))
-            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, ObjectOrNullValue(fp->argsobj));
+            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, ObjectOrNullValue(fp->getArgsObj()));
         js_PutArgsObject(cx, fp);
     }
 
@@ -911,7 +906,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     callobj->setPrivate(NULL);
-    fp->callobj = NULL;
+    fp->setCallObj(NULL);
 }
 
 JSBool JS_FASTCALL
