@@ -826,18 +826,12 @@ box[type="documenttab"]:only-child .documenttab-close {
   background-image: url("chrome://browser/skin/images/panel-shadow.png");
   background-repeat: repeat-x;
   -moz-box-shadow: black 0 2px 2px;
-}
-
-#identity-container[hasmenu="true"] {
   -moz-border-radius-bottomleft: 8px;
   -moz-border-radius-bottomright: 8px;
 }
 
 #identity-popup-container {
   padding: 8px; /* core spacing */
-}
-
-#identity-container[hasmenu="true"] > #identity-popup-container {
   background-image: -moz-linear-gradient(bottom, rgb(94,95,99) 0%, rgb(54,55,59) 25%, transparent);
   padding-bottom: 16px;
 }
@@ -897,10 +891,6 @@ box[type="documenttab"]:only-child .documenttab-close {
 }
 
 /* Page Actions popup   ---------------------------------------------------- */
-#identity-container[hasmenu="false"] > #pageactions-container {
-  display: none;
-}
-
 .prompt-buttons,
 #pageactions-container {
   background: rgb(210, 210, 210) -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%, rgba(235,235,235,0.4) 90%, rgba(185,185,185,0.4) 100%);
@@ -942,7 +932,7 @@ pageaction {
   }
 
   .prompt-button:nth-last-child(2):not(:nth-child(even)),
-  pageaction:nth-last-child(2):not(:nth-child(even)) {
+  pageaction[selector="second-last-child"][even=false] {
     background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 8px;
@@ -950,13 +940,13 @@ pageaction {
 
   .prompt-button:first-child,
   .prompt-button:nth-child(2),
-  pageaction:first-child,
-  pageaction:nth-child(2) {
+  pageaction[selector="first-child"],
+  pageaction[selector="second-child"] {
     background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%) !important;
   }
 
   .prompt-button:last-child:not(:nth-child(even)),
-  pageaction:last-child:not(:nth-child(even)) {
+  pageaction[selector="last-child"][even=false] {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 8px;
     -moz-border-radius-bottomright: 8px;
@@ -964,7 +954,7 @@ pageaction {
   }
 
   .prompt-button:last-child:not(:nth-child(odd)),
-  pageaction:last-child:not(:nth-child(odd)) {
+  pageaction[selector="last-child"][even=true] {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomright: 8px;
   }
@@ -972,19 +962,19 @@ pageaction {
 
 @media (max-width: 499px) {
   .prompt-button:last-child,
-  pageaction:last-child {
+  pageaction[selector="last-child"] {
     -moz-border-radius-bottomleft: 8px;
     -moz-border-radius-bottomright: 8px;
   }
 }
 
 .prompt-button:last-child,
-pageaction:last-child {
+pageaction[selector="last-child"] {
   background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
 }
 
 .prompt-button:first-child,
-pageaction:first-child {
+pageaction[selector="first-child"] {
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
