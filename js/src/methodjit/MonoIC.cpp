@@ -94,7 +94,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-    repatch.repatch(mic.shape, reinterpret_cast<void*>(shape));
+    repatch.repatch(mic.shape, shape);
 
     /* Patch loads. */
     JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
@@ -159,7 +159,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-    repatch.repatch(mic.shape, reinterpret_cast<void*>(shape));
+    repatch.repatch(mic.shape, shape);
 
     /* Patch loads. */
     JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
@@ -325,7 +325,7 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
           {
             /* Patch shape guard. */
             JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-            repatch.repatch(mic.shape, reinterpret_cast<void*>(JSObjectMap::INVALID_SHAPE));
+            repatch.repatch(mic.shape, JSObjectMap::INVALID_SHAPE);
 
             /* 
              * If the stub call was patched, leave it alone -- it probably will
