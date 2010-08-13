@@ -454,16 +454,15 @@ inline float NSCoordScale(nscoord aCoord, PRInt32 aFromAPP, PRInt32 aToAPP)
 /* 
  * Twips/unit conversions
  */
-inline nscoord NSUnitsToTwips(float aValue, float aPointsPerUnit)
+inline float NSUnitsToTwips(float aValue, float aPointsPerUnit)
 {
-  return NSToCoordRoundWithClamp(aValue * aPointsPerUnit * TWIPS_PER_POINT_FLOAT);
+  return aValue * aPointsPerUnit * TWIPS_PER_POINT_FLOAT;
 }
 
-inline float NSTwipsToUnits(nscoord aTwips, float aUnitsPerPoint)
+inline float NSTwipsToUnits(float aTwips, float aUnitsPerPoint)
 {
   return (aTwips * (aUnitsPerPoint / TWIPS_PER_POINT_FLOAT));
 }
-
 
 /// Unit conversion macros
 //@{
