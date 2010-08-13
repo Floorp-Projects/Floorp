@@ -594,6 +594,31 @@ js_InternalThrow(VMFrame &f)
     // Make sure sp is up to date.
     JS_ASSERT(cx->regs == &f.regs);
 
+    // Call the throw hook if necessary
+    JSThrowHook handler = f.cx->debugHooks->throwHook;
+    if (handler) {
+        Value rval;
+        switch (handler(cx, cx->fp->script, cx->regs->pc, Jsvalify(&rval),
+                        cx->debugHooks->throwHookData)) {
+          case JSTRAP_ERROR:
+            cx->throwing = JS_FALSE;
+            return NULL;
+
+          case JSTRAP_RETURN:
+            cx->throwing = JS_FALSE;
+            cx->fp->rval = rval;
+            return JS_FUNC_TO_DATA_PTR(void *,
+                   JS_METHODJIT_DATA(cx).trampolines.forceReturn);
+
+          case JSTRAP_THROW:
+            cx->exception = rval;
+            break;
+
+          default:
+            break;
+        }
+    }
+
     jsbytecode *pc = NULL;
     for (;;) {
         pc = FindExceptionHandler(cx);
