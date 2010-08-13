@@ -166,9 +166,7 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*        aPresContext,
  */
 class nsDisplayTableRowGroupBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableRowGroupBackground(nsDisplayListBuilder* aBuilder,
-                                   nsTableRowGroupFrame* aFrame) :
-    nsDisplayTableItem(aBuilder, aFrame) {
+  nsDisplayTableRowGroupBackground(nsTableRowGroupFrame* aFrame) : nsDisplayTableItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableRowGroupBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -188,10 +186,11 @@ nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
                                         nsIRenderingContext* aCtx) {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
+  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  mFrame->PresContext(), *aCtx,
-                                 mVisibleRect, ToReferenceFrame(),
+                                 mVisibleRect, pt,
                                  aBuilder->GetBackgroundPaintFlags());
   painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(mFrame));
 }
@@ -262,7 +261,7 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // This background is created regardless of whether this frame is
     // visible or not. Visibility decisions are delegated to the
     // table background painter.
-    item = new (aBuilder) nsDisplayTableRowGroupBackground(aBuilder, this);
+    item = new (aBuilder) nsDisplayTableRowGroupBackground(this);
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);
   }

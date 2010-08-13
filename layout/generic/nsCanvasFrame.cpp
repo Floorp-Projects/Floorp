@@ -254,7 +254,7 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  nsIRenderingContext* aCtx)
 {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-  nsPoint offset = ToReferenceFrame();
+  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
   if (NS_GET_A(mExtraBackgroundColor) > 0) {
@@ -276,8 +276,8 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
  */
 class nsDisplayCanvasFocus : public nsDisplayItem {
 public:
-  nsDisplayCanvasFocus(nsDisplayListBuilder* aBuilder, nsCanvasFrame *aFrame)
-    : nsDisplayItem(aBuilder, aFrame)
+  nsDisplayCanvasFocus(nsCanvasFrame *aFrame)
+    : nsDisplayItem(aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayCanvasFocus);
   }
@@ -289,14 +289,14 @@ public:
   {
     // This is an overestimate, but that's not a problem.
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + ToReferenceFrame();
+    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    frame->PaintFocus(*aCtx, ToReferenceFrame());
+    frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
   }
 
   NS_DISPLAY_DECL_NAME("CanvasFocus", TYPE_CANVAS_FOCUS)
@@ -325,7 +325,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // calling DisplayBorderBackgroundOutline.
   if (IsVisibleForPainting(aBuilder)) { 
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-           nsDisplayCanvasBackground(aBuilder, this));
+           nsDisplayCanvasBackground(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -362,7 +362,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
   
   return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayCanvasFocus(aBuilder, this));
+      nsDisplayCanvasFocus(this));
 }
 
 void

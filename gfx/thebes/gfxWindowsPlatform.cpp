@@ -521,6 +521,16 @@ gfxWindowsPlatform::WindowsOSVersion()
 }
 
 void
+gfxWindowsPlatform::InitDisplayCaps()
+{
+    HDC dc = GetDC((HWND)nsnull);
+
+    gfxPlatform::sDPI = GetDeviceCaps(dc, LOGPIXELSY);
+
+    ReleaseDC((HWND)nsnull, dc);
+}
+
+void
 gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
 {
     PRBool clearTextFontCaches = PR_TRUE;

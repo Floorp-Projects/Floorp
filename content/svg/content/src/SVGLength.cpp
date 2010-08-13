@@ -195,15 +195,15 @@ SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, PRUint8 aAxis) cons
     case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
       return 1.0f;
     case nsIDOMSVGLength::SVG_LENGTHTYPE_MM:
-      return INCHES_PER_MM_FLOAT * GetUserUnitsPerInch();
+      return INCHES_PER_MM_FLOAT * GetUserUnitsPerInch(aElement);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_CM:
-      return INCHES_PER_CM_FLOAT * GetUserUnitsPerInch();
+      return INCHES_PER_CM_FLOAT * GetUserUnitsPerInch(aElement);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_IN:
-      return GetUserUnitsPerInch();
+      return GetUserUnitsPerInch(aElement);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_PT:
-      return (1.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
+      return (1.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch(aElement);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_PC:
-      return (12.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
+      return (12.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch(aElement);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
       return GetUserUnitsPerPercent(aElement, aAxis);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
@@ -214,6 +214,22 @@ SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, PRUint8 aAxis) cons
       NS_NOTREACHED("Unknown unit type");
       return std::numeric_limits<float>::quiet_NaN();
   }
+}
+
+/* static */ float
+SVGLength::GetUserUnitsPerInch(const nsIContent *aContent)
+{
+  if (aContent) {
+    nsPresContext *context = nsContentUtils::GetContextForContent(
+                                           const_cast<nsIContent*>(aContent));
+    if (context) {
+      float uuPerInch = float(context->AppUnitsPerInch()) /
+                        float(nsPresContext::AppUnitsPerCSSPixel());
+      NS_ASSERTION(uuPerInch > 0.0f, "Non-positive user units per inch");
+      return uuPerInch;
+    }
+  }
+  return std::numeric_limits<float>::quiet_NaN();
 }
 
 /* static */ float

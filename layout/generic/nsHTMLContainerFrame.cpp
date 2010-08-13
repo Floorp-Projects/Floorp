@@ -73,10 +73,9 @@
 
 class nsDisplayTextDecoration : public nsDisplayItem {
 public:
-  nsDisplayTextDecoration(nsDisplayListBuilder* aBuilder,
-                          nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
+  nsDisplayTextDecoration(nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
                           nscolor aColor, nsLineBox* aLine)
-    : nsDisplayItem(aBuilder, aFrame), mLine(aLine), mColor(aColor),
+    : nsDisplayItem(aFrame), mLine(aLine), mColor(aColor),
       mDecoration(aDecoration) {
     MOZ_COUNT_CTOR(nsDisplayTextDecoration);
   }
@@ -97,9 +96,9 @@ public:
   }
 
 private:
-  nsLineBox* mLine;
-  nscolor    mColor;
-  PRUint8    mDecoration;
+  nsLineBox*            mLine;
+  nscolor               mColor;
+  PRUint8               mDecoration;
 };
 
 void
@@ -131,7 +130,8 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
     ascent = metrics.maxAscent;
   }
 
-  nsPoint pt = ToReferenceFrame();
+  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
+
   nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
   if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
     gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
@@ -152,16 +152,15 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 class nsDisplayTextShadow : public nsDisplayItem {
 public:
-  nsDisplayTextShadow(nsDisplayListBuilder* aBuilder,
-                      nsHTMLContainerFrame* aFrame,
+  nsDisplayTextShadow(nsHTMLContainerFrame* aFrame,
                       const PRUint8 aDecoration,
                       nsLineBox* aLine)
-    : nsDisplayItem(aBuilder, aFrame), mLine(aLine),
+    : nsDisplayItem(aFrame), mLine(aLine),
       mDecorationFlags(aDecoration) {
     MOZ_COUNT_CTOR(nsDisplayTextShadow);
   }
@@ -267,7 +266,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
     nscolor shadowColor =
       shadow->mHasColor ? shadow->mColor : mFrame->GetStyleColor()->mColor;
 
-    nsPoint pt = ToReferenceFrame() +
+    nsPoint pt = aBuilder->ToReferenceFrame(mFrame) +
       nsPoint(shadow->mXOffset, shadow->mYOffset);
     nsPoint linePt;
     if (mLine) {
@@ -324,7 +323,7 @@ nsRect
 nsDisplayTextShadow::GetBounds(nsDisplayListBuilder* aBuilder)
 {
   // Shadows are always painted in the overflow rect
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 nsresult
@@ -354,25 +353,25 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   // list, underneath the text and all decorations.
   if (GetStyleText()->mTextShadow) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextShadow(aBuilder, this, decorations, aLine));
+      nsDisplayTextShadow(this, decorations, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
                               underColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_OVERLINE,
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_OVERLINE,
                               overColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     nsresult rv = aAboveTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                               strikeColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }

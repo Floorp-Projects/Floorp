@@ -93,9 +93,8 @@ nsButtonFrameRenderer::isDisabled()
 
 class nsDisplayButtonBoxShadowOuter : public nsDisplayItem {
 public:
-  nsDisplayButtonBoxShadowOuter(nsDisplayListBuilder* aBuilder,
-                                nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
+  nsDisplayButtonBoxShadowOuter(nsButtonFrameRenderer* aRenderer)
+    : nsDisplayItem(aRenderer->GetFrame()), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBoxShadowOuter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -114,13 +113,13 @@ private:
 
 nsRect
 nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 void
 nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
                                      nsIRenderingContext* aCtx) {
-  nsRect frameRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  nsRect frameRect = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
 
   nsRect buttonRect;
   mBFR->GetButtonRect(frameRect, buttonRect);
@@ -131,9 +130,8 @@ nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
 class nsDisplayButtonBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayButtonBorderBackground(nsDisplayListBuilder* aBuilder,
-                                  nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
+  nsDisplayButtonBorderBackground(nsButtonFrameRenderer* aRenderer)
+    : nsDisplayItem(aRenderer->GetFrame()), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBorderBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -155,9 +153,8 @@ private:
 
 class nsDisplayButtonForeground : public nsDisplayItem {
 public:
-  nsDisplayButtonForeground(nsDisplayListBuilder* aBuilder,
-                            nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
+  nsDisplayButtonForeground(nsButtonFrameRenderer* aRenderer)
+    : nsDisplayItem(aRenderer->GetFrame()), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -178,7 +175,7 @@ void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 {
   NS_ASSERTION(mFrame, "No frame?");
   nsPresContext* pc = mFrame->PresContext();
-  nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   
   // draw the border and background inside the focus and outline borders
   mBFR->PaintBorderAndBackground(pc, *aCtx, mVisibleRect, r,
@@ -193,7 +190,7 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
   if (!mFrame->IsThemed(disp) ||
       !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, mFrame, disp->mAppearance)) {
     // draw the focus and outline borders
-    nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
+    nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
     mBFR->PaintOutlineAndFocusBorders(presContext, *aCtx, mVisibleRect, r);
   }
 }
@@ -205,16 +202,16 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
 {
   if (mFrame->GetStyleBorder()->mBoxShadow) {
     nsresult rv = aBackground->AppendNewToTop(new (aBuilder)
-        nsDisplayButtonBoxShadowOuter(aBuilder, this));
+        nsDisplayButtonBoxShadowOuter(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsresult rv = aBackground->AppendNewToTop(new (aBuilder)
-      nsDisplayButtonBorderBackground(aBuilder, this));
+      nsDisplayButtonBorderBackground(this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return aForeground->AppendNewToTop(new (aBuilder)
-      nsDisplayButtonForeground(aBuilder, this));
+      nsDisplayButtonForeground(this));
 }
 
 void

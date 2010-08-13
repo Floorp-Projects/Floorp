@@ -238,13 +238,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   NS_ASSERTION(aPresContext, "Must have prescontext");
 
   if (aValue.IsFixedLengthUnit()) {
-    return aValue.GetFixedLength(aPresContext);
+    return aPresContext->TwipsToAppUnits(aValue.GetLengthTwips());
   }
-  if (aValue.IsPixelLengthUnit()) {
-    return aValue.GetPixelLength();
+  nsCSSUnit unit = aValue.GetUnit();
+  if (unit == eCSSUnit_Pixel) {
+    return nsPresContext::CSSPixelsToAppUnits(aValue.GetFloatValue());
   }
-  // Common code for all units other than pixel-based units and fixed-length
-  // units:
+  // Common code for all units other than pixels:
   aCanStoreInRuleTree = PR_FALSE;
   const nsStyleFont *styleFont =
     aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
@@ -253,7 +253,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     // prefs into account?
     aFontSize = styleFont->mFont.size;
   }
-  switch (aValue.GetUnit()) {
+  switch (unit) {
     case eCSSUnit_RootEM: {
       nscoord rootFontSize;
 
@@ -1417,7 +1417,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   const nsCSSValue& size = fontData.mSize;
   const nsCSSValue& weight = fontData.mWeight;
   const nsCSSValue& stretch = fontData.mStretch;
-  if (size.IsRelativeLengthUnit() ||
+  if ((size.IsRelativeLengthUnit() && size.GetUnit() != eCSSUnit_Pixel) ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
@@ -2887,7 +2887,7 @@ struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
       size = CalcLengthWith(aValue, mParentSize, mParentFont,
                             nsnull, mPresContext, mAtRoot,
                             PR_TRUE, mCanStoreInRuleTree);
-      if (!aValue.IsRelativeLengthUnit()) {
+      if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
         size = nsStyleFont::ZoomText(mPresContext, size);
       }
     }
@@ -3101,7 +3101,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_List:
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size - nsPresContext::CSSPointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
         break;
     }
 #endif
@@ -3653,8 +3653,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LEH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, canStoreInRuleTree);
-    if (textData.mLineHeight.IsLengthUnit() &&
-        !textData.mLineHeight.IsRelativeLengthUnit()) {
+    if (textData.mLineHeight.IsFixedLengthUnit() ||
+        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel) {
       nscoord lh = nsStyleFont::ZoomText(mPresContext,
                                          text->mLineHeight.GetCoordValue());
       nscoord minimumFontSize =
