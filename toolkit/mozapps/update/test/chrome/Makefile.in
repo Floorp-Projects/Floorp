@@ -84,6 +84,7 @@ _CHROME_FILES = \
   test_0092_finishedBackground.xul \
   test_0111_neverButton_basic.xul \
   test_0112_neverButton_billboard.xul \
+  test_0113_showNeverForVersionRemovedWithPref.xul \
   test_0120_cert_valid_attributes_not_builtin.xul \
   test_0121_cert_invalid_attribute_name.xul \
   test_9999_cleanup.xul \

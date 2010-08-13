@@ -156,8 +156,8 @@ function check_test_pt02() {
   do_check_eq(bestUpdate.channel, "test_channel");
   do_check_false(bestUpdate.isCompleteUpdate);
   do_check_false(bestUpdate.isSecurityUpdate);
-  // Check the date is approximately equal
-  do_check_neq(bestUpdate.installDate, 0);
+  // Check that installDate is within 10 seconds of the current date.
+  do_check_true((Date.now() - bestUpdate.installDate) < 10000);
   do_check_eq(bestUpdate.statusText, null);
   // nsIUpdate:state returns an empty string when no action has been performed
   // on an available update
@@ -236,8 +236,8 @@ function check_test_pt03() {
   do_check_eq(bestUpdate.channel, "test_channel");
   do_check_false(bestUpdate.isCompleteUpdate);
   do_check_false(bestUpdate.isSecurityUpdate);
-  // Check the date is approximately equal
-  do_check_neq(bestUpdate.installDate, 0);
+  // Check that installDate is within 10 seconds of the current date.
+  do_check_true((Date.now() - bestUpdate.installDate) < 10000);
   do_check_eq(bestUpdate.statusText, null);
   // nsIUpdate:state returns an empty string when no action has been performed
   // on an available update
