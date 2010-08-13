@@ -317,7 +317,8 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
     return NS_OK;
   }
 
-  *aPixelUnitToMillimeterX = 25.4f / nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
+  *aPixelUnitToMillimeterX = MM_PER_INCH_FLOAT /
+      nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -340,7 +341,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
     return NS_OK;
   }
 
-  *aScreenPixelToMillimeterX = 25.4f /
+  *aScreenPixelToMillimeterX = MM_PER_INCH_FLOAT /
       nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
