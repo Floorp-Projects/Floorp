@@ -111,8 +111,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x21eff578, 0x942a, 0x40ff, \
-    { 0x98, 0xb9, 0x75, 0x49, 0x0b, 0x68, 0x24, 0xa2 } }
+  { 0x193fcc7a, 0x2456, 0x4625, \
+    { 0x85, 0x40, 0x38, 0xed, 0x00, 0x69, 0x93, 0xf5 } }
 
 /*
  * Window shadow styles
@@ -313,6 +313,20 @@ class nsIWidget : public nsISupports {
      *
      */
     virtual nsIWidget* GetSheetWindowParent(void) = 0;
+
+    /**
+     * Return the physical DPI of the screen containing the window ...
+     * the number of device pixels per inch.
+     */
+    virtual float GetDPI() = 0;
+
+    /**
+     * Return the default scale factor for the window. This is the
+     * default number of device pixels per CSS pixel to use. This should
+     * depend on OS/platform settings such as the Mac's "UI scale factor"
+     * or Windows' "font DPI".
+     */
+    virtual double GetDefaultScale() = 0;
 
     /**
      * Return the first child of this widget.  Will return null if
