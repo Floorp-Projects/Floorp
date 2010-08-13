@@ -544,7 +544,7 @@ var UIManager = {
       if (!self.getActiveTab() || iQ(":focus").length > 0) {
         // prevent the default action when tab is pressed so it doesn't gives
         // us problem with content focus.
-        if (event.which == 9) {
+        if (event.keyCode == KeyEvent.DOM_VK_TAB) {
           event.stopPropagation();
           event.preventDefault();
         }
@@ -566,17 +566,17 @@ var UIManager = {
       }
 
       var norm = null;
-      switch (event.which) {
-        case 39: // Right
+      switch (event.keyCode) {
+        case KeyEvent.DOM_VK_RIGHT:
           norm = function(a, me){return a.x > me.x};
           break;
-        case 37: // Left
+        case KeyEvent.DOM_VK_LEFT:
           norm = function(a, me){return a.x < me.x};
           break;
-        case 40: // Down
+        case KeyEvent.DOM_VK_DOWN:
           norm = function(a, me){return a.y > me.y};
           break;
-        case 38: // Up
+        case KeyEvent.DOM_VK_UP:
           norm = function(a, me){return a.y < me.y}
           break;
       }
@@ -590,7 +590,7 @@ var UIManager = {
         }
         event.stopPropagation();
         event.preventDefault();
-      } else if (event.which == 32) {
+      } else if (event.keyCode == KeyEvent.DOM_VK_SPACE) {
         // alt/control + space to zoom into the active tab.
 #ifdef XP_MACOSX
         if (event.altKey && !event.metaKey && !event.shiftKey &&
@@ -605,14 +605,16 @@ var UIManager = {
           event.stopPropagation();
           event.preventDefault();
         }
-      } else if (event.which == 27 || event.which == 13) {
+      } else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE || 
+                 event.keyCode == KeyEvent.DOM_VK_RETURN ||
+                 event.keyCode == KeyEvent.DOM_VK_ENTER) {
         // esc or return to zoom into the active tab.
         var activeTab = self.getActiveTab();
         if (activeTab)
           activeTab.zoomIn();
         event.stopPropagation();
         event.preventDefault();
-      } else if (event.which == 9) {
+      } else if (event.keyCode == KeyEvent.DOM_VK_TAB) {
         // tab/shift + tab to go to the next tab.
         var activeTab = self.getActiveTab();
         if (activeTab) {
