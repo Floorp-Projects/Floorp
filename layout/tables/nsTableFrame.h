@@ -76,8 +76,7 @@ static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
 class nsDisplayTableItem : public nsDisplayItem
 {
 public:
-  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) : 
-      nsDisplayItem(aBuilder, aFrame),
+  nsDisplayTableItem(nsIFrame* aFrame) : nsDisplayItem(aFrame),
       mPartHasFixedBackground(PR_FALSE) {}
 
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,

@@ -436,12 +436,7 @@ public:
 
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
-  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
-    mFrame(aFrame) {
-    if (aFrame) {
-      mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
-    }
-  }
+  nsDisplayItem(nsIFrame* aFrame) : mFrame(aFrame) {}
   virtual ~nsDisplayItem() {}
   
   void* operator new(size_t aSize,
@@ -501,7 +496,8 @@ public:
    * contains the area drawn by this display item
    */
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+    nsIFrame* f = GetUnderlyingFrame();
+    return nsRect(aBuilder->ToReferenceFrame(f), f->GetSize());
   }
   /**
    * @return PR_TRUE if the item is definitely opaque --- i.e., paints
@@ -639,14 +635,6 @@ public:
   PRBool RecomputeVisibility(nsDisplayListBuilder* aBuilder,
                              nsRegion* aVisibleRegion);
 
-  /**
-   * Returns the result of aBuilder->ToReferenceFrame(GetUnderlyingFrame())
-   */
-  const nsPoint& ToReferenceFrame() {
-    NS_ASSERTION(mFrame, "No frame?");
-    return mToReferenceFrame;
-  }
-
 protected:
   friend class nsDisplayList;
   
@@ -655,8 +643,6 @@ protected:
   }
   
   nsIFrame* mFrame;
-  // Result of ToReferenceFrame(mFrame), if mFrame is non-null
-  nsPoint   mToReferenceFrame;
   // This is the rectangle that needs to be painted.
   // nsDisplayList::ComputeVisibility sets this to the visible region
   // of the item by intersecting the current visible region with the bounds
@@ -1068,9 +1054,8 @@ public:
   typedef void (* PaintCallback)(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                                  const nsRect& aDirtyRect, nsPoint aFramePt);
 
-  nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   PaintCallback aPaint, const char* aName, Type aType)
-    : nsDisplayItem(aBuilder, aFrame), mPaint(aPaint)
+  nsDisplayGeneric(nsIFrame* aFrame, PaintCallback aPaint, const char* aName, Type aType)
+    : nsDisplayItem(aFrame), mPaint(aPaint)
 #ifdef DEBUG
       , mName(aName)
 #endif
@@ -1085,7 +1070,7 @@ public:
 #endif
   
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) {
-    mPaint(mFrame, aCtx, mVisibleRect, ToReferenceFrame());
+    mPaint(mFrame, aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame));
   }
   NS_DISPLAY_DECL_NAME(mName, mType)
 protected:
@@ -1111,10 +1096,9 @@ protected:
  */
 class nsDisplayReflowCount : public nsDisplayItem {
 public:
-  nsDisplayReflowCount(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                       const char* aFrameName,
+  nsDisplayReflowCount(nsIFrame* aFrame, const char* aFrameName,
                        PRUint32 aColor = 0)
-    : nsDisplayItem(aBuilder, aFrame),
+    : nsDisplayItem(aFrame),
       mFrameName(aFrameName),
       mColor(aColor)
   {
@@ -1127,7 +1111,7 @@ public:
 #endif
   
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) {
-    nsPoint pt = ToReferenceFrame();
+    nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
     nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
     mFrame->PresContext()->PresShell()->PaintCount(mFrameName, aCtx,
                                                       mFrame->PresContext(),
@@ -1144,8 +1128,8 @@ protected:
     if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
         PresContext()->PresShell()->IsPaintingFrameCounts()) {                \
       nsresult _rv =                                                          \
-        aLists.Outlines()->AppendNewToTop(                                    \
-            new (aBuilder) nsDisplayReflowCount(aBuilder, this, _name));      \
+        aLists.Outlines()->AppendNewToTop(new (aBuilder)                      \
+                                          nsDisplayReflowCount(this, _name)); \
       NS_ENSURE_SUCCESS(_rv, _rv);                                            \
     }                                                                         \
   PR_END_MACRO
@@ -1155,8 +1139,9 @@ protected:
     if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
         PresContext()->PresShell()->IsPaintingFrameCounts()) {                \
       nsresult _rv =                                                          \
-        aLists.Outlines()->AppendNewToTop(                                    \
-             new (aBuilder) nsDisplayReflowCount(aBuilder, this, _name, _color)); \
+        aLists.Outlines()->AppendNewToTop(new (aBuilder)                      \
+                                          nsDisplayReflowCount(this, _name,   \
+                                                               _color));      \
       NS_ENSURE_SUCCESS(_rv, _rv);                                            \
     }                                                                         \
   PR_END_MACRO
@@ -1182,9 +1167,8 @@ protected:
 
 class nsDisplayCaret : public nsDisplayItem {
 public:
-  nsDisplayCaret(nsDisplayListBuilder* aBuilder, nsIFrame* aCaretFrame,
-                 nsCaret *aCaret)
-    : nsDisplayItem(aBuilder, aCaretFrame), mCaret(aCaret) {
+  nsDisplayCaret(nsIFrame* aCaretFrame, nsCaret *aCaret)
+    : nsDisplayItem(aCaretFrame), mCaret(aCaret) {
     MOZ_COUNT_CTOR(nsDisplayCaret);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1195,7 +1179,7 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     // The caret returns a rect in the coordinates of mFrame.
-    return mCaret->GetCaretRect() + ToReferenceFrame();
+    return mCaret->GetCaretRect() + aBuilder->ToReferenceFrame(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Caret", TYPE_CARET)
@@ -1208,8 +1192,7 @@ protected:
  */
 class nsDisplayBorder : public nsDisplayItem {
 public:
-  nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayBorder(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1237,9 +1220,8 @@ public:
  */
 class nsDisplaySolidColor : public nsDisplayItem {
 public:
-  nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      const nsRect& aBounds, nscolor aColor)
-    : nsDisplayItem(aBuilder, aFrame), mBounds(aBounds), mColor(aColor) {
+  nsDisplaySolidColor(nsIFrame* aFrame, const nsRect& aBounds, nscolor aColor)
+    : nsDisplayItem(aFrame), mBounds(aBounds), mColor(aColor) {
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1274,7 +1256,7 @@ private:
  */
 class nsDisplayBackground : public nsDisplayItem {
 public:
-  nsDisplayBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  nsDisplayBackground(nsIFrame* aFrame);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayBackground() {
     MOZ_COUNT_DTOR(nsDisplayBackground);
@@ -1307,8 +1289,7 @@ protected:
  */
 class nsDisplayBoxShadowOuter : public nsDisplayItem {
 public:
-  nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayBoxShadowOuter(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1332,8 +1313,7 @@ private:
  */
 class nsDisplayBoxShadowInner : public nsDisplayItem {
 public:
-  nsDisplayBoxShadowInner(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayBoxShadowInner(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowInner);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1356,8 +1336,7 @@ private:
  */
 class nsDisplayOutline : public nsDisplayItem {
 public:
-  nsDisplayOutline(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayOutline(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayOutline);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1378,8 +1357,7 @@ public:
  */
 class nsDisplayEventReceiver : public nsDisplayItem {
 public:
-  nsDisplayEventReceiver(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayEventReceiver(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayEventReceiver);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1418,10 +1396,8 @@ public:
   /**
    * Takes all the items from aList and puts them in our list.
    */
-  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList);
-  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayItem* aItem);
+  nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList);
+  nsDisplayWrapList(nsIFrame* aFrame, nsDisplayItem* aItem);
   virtual ~nsDisplayWrapList();
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
@@ -1501,8 +1477,7 @@ protected:
  */
 class nsDisplayOpacity : public nsDisplayWrapList {
 public:
-  nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   nsDisplayList* aList);
+  nsDisplayOpacity(nsIFrame* aFrame, nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
 #endif
@@ -1524,8 +1499,7 @@ public:
  */
 class nsDisplayOwnLayer : public nsDisplayWrapList {
 public:
-  nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList);
+  nsDisplayOwnLayer(nsIFrame* aFrame, nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -1557,11 +1531,9 @@ public:
    * frame for this content, e.g. the frame whose z-index we have.
    * @param aClippingFrame the frame that is inducing the clipping.
    */
-  nsDisplayClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsIFrame* aClippingFrame, 
+  nsDisplayClip(nsIFrame* aFrame, nsIFrame* aClippingFrame, 
                 nsDisplayItem* aItem, const nsRect& aRect);
-  nsDisplayClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsIFrame* aClippingFrame,
+  nsDisplayClip(nsIFrame* aFrame, nsIFrame* aClippingFrame,
                 nsDisplayList* aList, const nsRect& aRect);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayClip();
@@ -1604,8 +1576,7 @@ public:
    * @param aParentAPD is the app units per dev pixel ratio of the parent
    * document.
    */
-  nsDisplayZoom(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsDisplayList* aList,
+  nsDisplayZoom(nsIFrame* aFrame, nsDisplayList* aList,
                 PRInt32 aAPD, PRInt32 aParentAPD);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayZoom();
@@ -1635,8 +1606,7 @@ private:
  */
 class nsDisplaySVGEffects : public nsDisplayWrapList {
 public:
-  nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList);
+  nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGEffects();
 #endif
@@ -1674,9 +1644,8 @@ public:
   /* Constructor accepts a display list, empties it, and wraps it up.  It also
    * ferries the underlying frame to the nsDisplayItem constructor.
    */
-  nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList) :
-    nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aList)
+  nsDisplayTransform(nsIFrame *aFrame, nsDisplayList *aList) :
+    nsDisplayItem(aFrame), mStoredList(aFrame, aList)
   {
     MOZ_COUNT_CTOR(nsDisplayTransform);
   }

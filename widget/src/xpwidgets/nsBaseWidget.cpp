@@ -351,16 +351,6 @@ nsIWidget* nsBaseWidget::GetSheetWindowParent(void)
   return nsnull;
 }
 
-float nsBaseWidget::GetDPI()
-{
-  return 96.0f;
-}
-
-double nsBaseWidget::GetDefaultScale()
-{
-  return 1.0;
-}
-
 //-------------------------------------------------------------------------
 //
 // Add a child to the list of children

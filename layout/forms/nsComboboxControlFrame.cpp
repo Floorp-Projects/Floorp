@@ -1313,9 +1313,8 @@ nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
 
 class nsDisplayComboboxFocus : public nsDisplayItem {
 public:
-  nsDisplayComboboxFocus(nsDisplayListBuilder* aBuilder,
-                         nsComboboxControlFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayComboboxFocus(nsComboboxControlFrame* aFrame)
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayComboboxFocus);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1333,7 +1332,7 @@ void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
                                    nsIRenderingContext* aCtx)
 {
   static_cast<nsComboboxControlFrame*>(mFrame)
-    ->PaintFocus(*aCtx, ToReferenceFrame());
+    ->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP
@@ -1368,8 +1367,8 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if ((!IsThemed(disp) ||
            !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting(aBuilder)) {
-        nsresult rv = aLists.Content()->AppendNewToTop(
-            new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));
+        nsresult rv = aLists.Content()->AppendNewToTop(new (aBuilder)
+                                                       nsDisplayComboboxFocus(this));
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

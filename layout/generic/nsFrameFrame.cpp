@@ -482,13 +482,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (NS_SUCCEEDED(rv)) {
     if (subdocRootFrame && parentAPD != subdocAPD) {
       nsDisplayZoom* zoomItem =
-        new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
+        new (aBuilder) nsDisplayZoom(subdocRootFrame, &childItems,
                                      subdocAPD, parentAPD);
       childItems.AppendToTop(zoomItem);
     }
     // Clip children to the child root frame's rectangle
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(aBuilder, this, this, &childItems,
+        new (aBuilder) nsDisplayClip(this, this, &childItems,
                                      subdocBoundsInParentUnits));
   }
   // delete childItems in case of OOM

@@ -311,9 +311,7 @@ nsImageBoxFrame::UpdateLoadFlags()
 
 class nsDisplayXULImage : public nsDisplayItem {
 public:
-  nsDisplayXULImage(nsDisplayListBuilder* aBuilder,
-                    nsImageBoxFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayXULImage(nsImageBoxFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULImage);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -333,7 +331,7 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
                               nsIRenderingContext* aCtx)
 {
   static_cast<nsImageBoxFrame*>(mFrame)->
-    PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
+    PaintImage(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame),
                aBuilder->ShouldSyncDecodeImages()
                  ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
                  : (PRUint32) imgIContainer::FLAG_NONE);
@@ -357,8 +355,7 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  return aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayXULImage(aBuilder, this));
+  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayXULImage(this));
 }
 
 void

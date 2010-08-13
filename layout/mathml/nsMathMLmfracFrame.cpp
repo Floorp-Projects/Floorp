@@ -585,10 +585,9 @@ nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstInde
 
 class nsDisplayMathMLSlash : public nsDisplayItem {
 public:
-  nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder,
-                       nsIFrame* aFrame, const nsRect& aRect,
+  nsDisplayMathMLSlash(nsIFrame* aFrame, const nsRect& aRect,
                        nscoord aThickness)
-    : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mThickness(aThickness) {
+    : nsDisplayItem(aFrame), mRect(aRect), mThickness(aThickness) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSlash);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -610,7 +609,8 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
 {
   // get the gfxRect
   nsPresContext* presContext = mFrame->PresContext();
-  gfxRect rect = presContext->AppUnitsToGfxUnits(mRect + ToReferenceFrame());
+  gfxRect rect = presContext->
+    AppUnitsToGfxUnits(mRect + aBuilder->ToReferenceFrame(mFrame));
   
   // paint with the current text color
   aCtx->SetColor(mFrame->GetStyleColor()->mColor);
@@ -636,5 +636,6 @@ nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
     return NS_OK;
   
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayMathMLSlash(aBuilder, aFrame, aRect, aThickness));
+                                          nsDisplayMathMLSlash(aFrame, aRect,
+                                                               aThickness));
 }

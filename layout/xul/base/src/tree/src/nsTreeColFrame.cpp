@@ -90,9 +90,7 @@ nsTreeColFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 class nsDisplayXULTreeColSplitterTarget : public nsDisplayItem {
 public:
-  nsDisplayXULTreeColSplitterTarget(nsDisplayListBuilder* aBuilder,
-                                    nsIFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayXULTreeColSplitterTarget(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULTreeColSplitterTarget);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -110,7 +108,7 @@ void
 nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                                            HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
-  nsRect rect = aRect - ToReferenceFrame();
+  nsRect rect = aRect - aBuilder->ToReferenceFrame(mFrame);
   // If we are in either in the first 4 pixels or the last 4 pixels, we're going to
   // do something really strange.  Check for an adjacent splitter.
   PRBool left = PR_FALSE;
@@ -160,7 +158,7 @@ nsTreeColFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayXULTreeColSplitterTarget(aBuilder, this));
+      nsDisplayXULTreeColSplitterTarget(this));
 }
 
 NS_IMETHODIMP

@@ -475,22 +475,17 @@ gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
 
 #endif
 
-static PRInt32 sDPI = 0;
-
-PRInt32
-gfxPlatformGtk::GetDPI()
+void
+gfxPlatformGtk::InitDisplayCaps()
 {
-    if (!sDPI) {
-        // Make sure init is run so we have a resolution
-        GdkScreen *screen = gdk_screen_get_default();
-        gtk_settings_get_for_screen(screen);
-        sDPI = PRInt32(round(gdk_screen_get_resolution(screen)));
-        if (sDPI <= 0) {
-            // Fall back to something sane
-            sDPI = 96;
-        }
+    // Make sure init is run so we have a resolution
+    GdkScreen *screen = gdk_screen_get_default();
+    gtk_settings_get_for_screen(screen);
+    gfxPlatform::sDPI = PRInt32(round(gdk_screen_get_resolution(screen)));
+    if (gfxPlatform::sDPI <= 0) {
+        // Fall back to something sane
+        gfxPlatform::sDPI = 96;
     }
-    return sDPI;
 }
 
 qcms_profile *

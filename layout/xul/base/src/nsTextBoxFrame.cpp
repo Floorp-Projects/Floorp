@@ -331,14 +331,12 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
 
 class nsDisplayXULTextBox : public nsDisplayItem {
 public:
-  nsDisplayXULTextBox(nsDisplayListBuilder* aBuilder,
-                      nsTextBoxFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayXULTextBox);
+  nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : nsDisplayItem(aFrame) {
+      MOZ_COUNT_CTOR(nsDisplayXULTextBox);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayXULTextBox() {
-    MOZ_COUNT_DTOR(nsDisplayXULTextBox);
+      MOZ_COUNT_DTOR(nsDisplayXULTextBox);
   }
 #endif
 
@@ -353,12 +351,12 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                            nsIRenderingContext* aCtx)
 {
   static_cast<nsTextBoxFrame*>(mFrame)->
-    PaintTitle(*aCtx, mVisibleRect, ToReferenceFrame());
+    PaintTitle(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
 nsRect
 nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 NS_IMETHODIMP
@@ -373,7 +371,7 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
     
     return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULTextBox(aBuilder, this));
+        nsDisplayXULTextBox(this));
 }
 
 void

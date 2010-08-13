@@ -2189,19 +2189,6 @@ nsWindow::GetParent(void)
     return mParent;
 }
 
-float
-nsWindow::GetDPI()
-{
-    QDesktopWidget* rootWindow = QApplication::desktop();
-    double heightInches = rootWindow->heightMM()/25.4;
-    if (heightInches < 0.25) {
-        // Something's broken, but we'd better not crash.
-        return 96.0f;
-    }
-
-    return float(rootWindow->height()/heightInches);
-}
-
 void
 nsWindow::DispatchActivateEvent(void)
 {

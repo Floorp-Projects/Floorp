@@ -201,6 +201,7 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mCoordCtx(nsnull),
     mViewportWidth(0),
     mViewportHeight(0),
+    mCoordCtxMmPerPx(0),
     mCurrentTranslate(0.0f, 0.0f),
     mCurrentScale(1.0f),
     mPreviousTranslate(0.0f, 0.0f),
@@ -308,7 +309,15 @@ nsSVGSVGElement::GetViewport(nsIDOMSVGRect * *aViewport)
 NS_IMETHODIMP
 nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
 {
-  *aPixelUnitToMillimeterX = MM_PER_INCH_FLOAT / 96;
+  // to correctly determine this, the caller would need to pass in the
+  // right PresContext...
+  nsPresContext *context = nsContentUtils::GetContextForContent(this);
+  if (!context) {
+    *aPixelUnitToMillimeterX = 0.28f; // 90dpi
+    return NS_OK;
+  }
+
+  *aPixelUnitToMillimeterX = 25.4f / nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -323,7 +332,16 @@ nsSVGSVGElement::GetPixelUnitToMillimeterY(float *aPixelUnitToMillimeterY)
 NS_IMETHODIMP
 nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
 {
-  *aScreenPixelToMillimeterX = MM_PER_INCH_FLOAT / 96;
+  // to correctly determine this, the caller would need to pass in the
+  // right PresContext...
+  nsPresContext *context = nsContentUtils::GetContextForContent(this);
+  if (!context) {
+    *aScreenPixelToMillimeterX = 0.28f; // 90dpi
+    return NS_OK;
+  }
+
+  *aScreenPixelToMillimeterX = 25.4f /
+      nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -1132,6 +1150,15 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     return float(nsSVGUtils::ComputeNormalizedHypotenuse(w, h));
   }
   return 0;
+}
+
+float
+nsSVGSVGElement::GetMMPerPx(PRUint8 aCtxType)
+{
+  if (mCoordCtxMmPerPx == 0.0f) {
+    GetScreenPixelToMillimeterX(&mCoordCtxMmPerPx);
+  }
+  return mCoordCtxMmPerPx;
 }
 
 //----------------------------------------------------------------------
