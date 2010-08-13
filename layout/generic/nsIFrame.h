@@ -1705,6 +1705,14 @@ public:
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /**
+   * Returns true if the frame contains any non-collapsed characters.
+   * This method is only available for text frames, and it will return false
+   * for all other frame types.
+   */
+  virtual PRBool HasAnyNoncollapsedCharacters()
+  { return PR_FALSE; }
+
+  /**
    * Accessor functions to get/set the associated view object
    *
    * GetView returns non-null if and only if |HasView| returns true.

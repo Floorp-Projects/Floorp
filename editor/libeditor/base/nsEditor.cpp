@@ -3624,8 +3624,9 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
         // and uses enhanced logic to find out in the HTML world.
         return IsTextInDirtyFrameVisible(aNode);
       }
-      if (resultFrame->GetSize().width > 0) 
-        return PR_TRUE;  // text node has width
+      if (resultFrame->HasAnyNoncollapsedCharacters()) {
+        return PR_TRUE;
+      }
       resultFrame = resultFrame->GetNextContinuation();
     }
   }
