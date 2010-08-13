@@ -685,7 +685,8 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
 {
   nsIFrame* f = aFrame;
   while (f != aStopAtAncestor) {
-    NS_ASSERTION(!IsPopup(f), "Should have stopped before popup");
+    if (IsPopup(f))
+      break;
     nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
