@@ -73,9 +73,10 @@
 
 class nsDisplayTextDecoration : public nsDisplayItem {
 public:
-  nsDisplayTextDecoration(nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
+  nsDisplayTextDecoration(nsDisplayListBuilder* aBuilder,
+                          nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
                           nscolor aColor, nsLineBox* aLine)
-    : nsDisplayItem(aFrame), mLine(aLine), mColor(aColor),
+    : nsDisplayItem(aBuilder, aFrame), mLine(aLine), mColor(aColor),
       mDecoration(aDecoration) {
     MOZ_COUNT_CTOR(nsDisplayTextDecoration);
   }
@@ -96,9 +97,9 @@ public:
   }
 
 private:
-  nsLineBox*            mLine;
-  nscolor               mColor;
-  PRUint8               mDecoration;
+  nsLineBox* mLine;
+  nscolor    mColor;
+  PRUint8    mDecoration;
 };
 
 void
@@ -157,10 +158,11 @@ nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
 
 class nsDisplayTextShadow : public nsDisplayItem {
 public:
-  nsDisplayTextShadow(nsHTMLContainerFrame* aFrame,
+  nsDisplayTextShadow(nsDisplayListBuilder* aBuilder,
+                      nsHTMLContainerFrame* aFrame,
                       const PRUint8 aDecoration,
                       nsLineBox* aLine)
-    : nsDisplayItem(aFrame), mLine(aLine),
+    : nsDisplayItem(aBuilder, aFrame), mLine(aLine),
       mDecorationFlags(aDecoration) {
     MOZ_COUNT_CTOR(nsDisplayTextShadow);
   }
@@ -353,25 +355,25 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   // list, underneath the text and all decorations.
   if (GetStyleText()->mTextShadow) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextShadow(this, decorations, aLine));
+      nsDisplayTextShadow(aBuilder, this, decorations, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
+      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
                               underColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_OVERLINE,
+      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_OVERLINE,
                               overColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     nsresult rv = aAboveTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                               strikeColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }

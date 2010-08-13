@@ -1007,7 +1007,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // box-shadow
   if (GetStyleBorder()->mBoxShadow) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBoxShadowOuter(this));
+        nsDisplayBoxShadowOuter(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1031,14 +1031,12 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Disabled file controls don't pass mouse events to their children, so we
   // put an invisible item in the display list above the children
   // just to catch events
-  // REVIEW: I'm not sure why we do this, but that's what nsFileControlFrame::
-  // GetFrameForPoint was doing
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) && 
       IsVisibleForPainting(aBuilder)) {
-    nsDisplayItem* item = new (aBuilder) nsDisplayEventReceiver(this);
-    if (!item)
-      return NS_ERROR_OUT_OF_MEMORY;
-    aLists.Content()->AppendToTop(item);
+    rv = aLists.Content()->AppendNewToTop(
+        new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   return DisplaySelectionOverlay(aBuilder, aLists);

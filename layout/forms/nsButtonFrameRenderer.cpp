@@ -93,8 +93,9 @@ nsButtonFrameRenderer::isDisabled()
 
 class nsDisplayButtonBoxShadowOuter : public nsDisplayItem {
 public:
-  nsDisplayButtonBoxShadowOuter(nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aRenderer->GetFrame()), mBFR(aRenderer) {
+  nsDisplayButtonBoxShadowOuter(nsDisplayListBuilder* aBuilder,
+                                nsButtonFrameRenderer* aRenderer)
+    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBoxShadowOuter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -130,8 +131,9 @@ nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
 class nsDisplayButtonBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayButtonBorderBackground(nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aRenderer->GetFrame()), mBFR(aRenderer) {
+  nsDisplayButtonBorderBackground(nsDisplayListBuilder* aBuilder,
+                                  nsButtonFrameRenderer* aRenderer)
+    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBorderBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -153,8 +155,9 @@ private:
 
 class nsDisplayButtonForeground : public nsDisplayItem {
 public:
-  nsDisplayButtonForeground(nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aRenderer->GetFrame()), mBFR(aRenderer) {
+  nsDisplayButtonForeground(nsDisplayListBuilder* aBuilder,
+                            nsButtonFrameRenderer* aRenderer)
+    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -202,16 +205,16 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
 {
   if (mFrame->GetStyleBorder()->mBoxShadow) {
     nsresult rv = aBackground->AppendNewToTop(new (aBuilder)
-        nsDisplayButtonBoxShadowOuter(this));
+        nsDisplayButtonBoxShadowOuter(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsresult rv = aBackground->AppendNewToTop(new (aBuilder)
-      nsDisplayButtonBorderBackground(this));
+      nsDisplayButtonBorderBackground(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return aForeground->AppendNewToTop(new (aBuilder)
-      nsDisplayButtonForeground(this));
+      nsDisplayButtonForeground(aBuilder, this));
 }
 
 void

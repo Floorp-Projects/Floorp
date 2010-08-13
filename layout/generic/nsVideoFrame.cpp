@@ -356,8 +356,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
 
 class nsDisplayVideo : public nsDisplayItem {
 public:
-  nsDisplayVideo(nsVideoFrame* aFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayVideo(nsDisplayListBuilder* aBuilder, nsVideoFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayVideo);
   }
@@ -423,7 +423,7 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (HasVideoElement() && !ShouldDisplayPoster()) {
     rv = aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayVideo(this));
+      new (aBuilder) nsDisplayVideo(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

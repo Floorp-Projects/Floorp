@@ -585,9 +585,10 @@ nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstInde
 
 class nsDisplayMathMLSlash : public nsDisplayItem {
 public:
-  nsDisplayMathMLSlash(nsIFrame* aFrame, const nsRect& aRect,
+  nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder,
+                       nsIFrame* aFrame, const nsRect& aRect,
                        nscoord aThickness)
-    : nsDisplayItem(aFrame), mRect(aRect), mThickness(aThickness) {
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mThickness(aThickness) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSlash);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -636,6 +637,5 @@ nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
     return NS_OK;
   
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-                                          nsDisplayMathMLSlash(aFrame, aRect,
-                                                               aThickness));
+      nsDisplayMathMLSlash(aBuilder, aFrame, aRect, aThickness));
 }

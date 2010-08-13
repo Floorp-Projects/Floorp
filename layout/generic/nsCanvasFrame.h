@@ -165,8 +165,8 @@ protected:
  */
 class nsDisplayCanvasBackground : public nsDisplayBackground {
 public:
-  nsDisplayCanvasBackground(nsIFrame *aFrame)
-    : nsDisplayBackground(aFrame)
+  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame)
+    : nsDisplayBackground(aBuilder, aFrame)
   {
     mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }

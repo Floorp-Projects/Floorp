@@ -1347,11 +1347,11 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // determine if we are printing
   if (type == nsPresContext::eContext_Print)
     return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin",
+        nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                          nsDisplayItem::TYPE_PRINT_PLUGIN));
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayPlugin(this));
+      nsDisplayPlugin(aBuilder, this));
 }
 
 void
