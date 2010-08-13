@@ -474,6 +474,9 @@ inline float NSTwipsToUnits(float aTwips, float aUnitsPerPoint)
 
 #define NS_PICAS_TO_TWIPS(x)          NSUnitsToTwips((x), 12.0f)                      // 12 points per pica
 
+#define NS_POINTS_TO_INT_TWIPS(x)     NSToIntRound(NS_POINTS_TO_TWIPS(x))
+#define NS_INCHES_TO_INT_TWIPS(x)     NSToIntRound(NS_INCHES_TO_TWIPS(x))
+
 #define NS_TWIPS_TO_POINTS(x)         NSTwipsToUnits((x), 1.0f)
 #define NS_TWIPS_TO_INCHES(x)         NSTwipsToUnits((x), 1.0f / POINTS_PER_INCH_FLOAT)
 
