@@ -148,17 +148,8 @@ enum nsCSSUnit {
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
 
-  // Length units - fixed
-  // US English
-  eCSSUnit_Inch         = 100,    // (float) 0.0254 meters
-
-  // Metric
-  eCSSUnit_Millimeter   = 207,    // (float) 1/1000 meter
-  eCSSUnit_PhysicalMillimeter = 208,   // (float) 1/1000 meter
-  eCSSUnit_Centimeter   = 209,    // (float) 1/100 meter
-
-  // US Typographic
-  eCSSUnit_Pica         = 301,    // (float) 12 points == 1/6 inch
+  // Physical length units
+  eCSSUnit_PhysicalMillimeter = 200,   // (float) 1/25.4 inch
 
   // Length units - relative
   // Font relative measure
@@ -169,7 +160,11 @@ enum nsCSSUnit {
 
   // Screen relative measure
   eCSSUnit_Point        = 900,    // (float) 4/3 of a CSS pixel
-  eCSSUnit_Pixel        = 901,    // (float) CSS pixel unit
+  eCSSUnit_Inch         = 901,    // (float) 96 CSS pixels
+  eCSSUnit_Millimeter   = 902,    // (float) 96/25.4 CSS pixels
+  eCSSUnit_Centimeter   = 903,    // (float) 96/2.54 CSS pixels
+  eCSSUnit_Pica         = 904,    // (float) 12 points == 16 CSS pixls
+  eCSSUnit_Pixel        = 905,    // (float) CSS pixel unit
 
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
@@ -231,14 +226,14 @@ public:
 
   nsCSSUnit GetUnit() const { return mUnit; }
   PRBool    IsLengthUnit() const
-    { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pixel; }
+    { return eCSSUnit_PhysicalMillimeter <= mUnit && mUnit <= eCSSUnit_Pixel; }
   /**
    * A "fixed" length unit is one that means a specific physical length
    * which we try to match based on the physical characteristics of an
    * output device.
    */
   PRBool    IsFixedLengthUnit() const  
-    { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pica; }
+    { return mUnit == eCSSUnit_PhysicalMillimeter; }
   /**
    * What the spec calls relative length units is, for us, split
    * between relative length units and pixel length units.
