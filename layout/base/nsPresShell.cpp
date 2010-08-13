@@ -5368,7 +5368,8 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             // wrap the item in an nsDisplayClip so that it can be clipped to
             // the selection. If the allocation fails, fall through and delete
             // the item below.
-            itemToInsert = new (aBuilder)nsDisplayClip(frame, frame, i, textRect);
+            itemToInsert = new (aBuilder)
+                nsDisplayClip(aBuilder, frame, frame, i, textRect);
           }
         }
         // Don't try to descend into subdocuments.
@@ -5715,8 +5716,8 @@ PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                          nsIFrame*             aFrame,
                                          const nsRect&         aBounds)
 {
-  return aList.AppendNewToBottom(
-      new (&aBuilder) nsDisplaySolidColor(aFrame, aBounds, NS_RGB(115, 115, 115)));
+  return aList.AppendNewToBottom(new (&aBuilder)
+    nsDisplaySolidColor(&aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115)));
 }
 
 static PRBool
@@ -5772,7 +5773,7 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   }
 
   return aList.AppendNewToBottom(
-      new (&aBuilder) nsDisplaySolidColor(aFrame, aBounds, bgcolor));
+      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
 }
 
 void PresShell::UpdateCanvasBackground()

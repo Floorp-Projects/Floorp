@@ -331,12 +331,14 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
 
 class nsDisplayXULTextBox : public nsDisplayItem {
 public:
-  nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : nsDisplayItem(aFrame) {
-      MOZ_COUNT_CTOR(nsDisplayXULTextBox);
+  nsDisplayXULTextBox(nsDisplayListBuilder* aBuilder,
+                      nsTextBoxFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayXULTextBox);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayXULTextBox() {
-      MOZ_COUNT_DTOR(nsDisplayXULTextBox);
+    MOZ_COUNT_DTOR(nsDisplayXULTextBox);
   }
 #endif
 
@@ -371,7 +373,7 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
     
     return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULTextBox(this));
+        nsDisplayXULTextBox(aBuilder, this));
 }
 
 void
