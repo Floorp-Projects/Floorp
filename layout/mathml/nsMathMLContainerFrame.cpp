@@ -145,7 +145,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   // Set color and font ...
   nsLayoutUtils::SetFontFromStyle(aCtx, mFrame->GetStyleContext());
 
-  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint pt = ToReferenceFrame();
   aCtx->SetColor(NS_RGB(255,0,0));
   aCtx->FillRect(nsRect(pt, mFrame->GetSize()));
   aCtx->SetColor(NS_RGB(255,255,255));

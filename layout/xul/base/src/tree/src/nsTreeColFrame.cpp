@@ -110,7 +110,7 @@ void
 nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                                            HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
-  nsRect rect = aRect - aBuilder->ToReferenceFrame(mFrame);
+  nsRect rect = aRect - ToReferenceFrame();
   // If we are in either in the first 4 pixels or the last 4 pixels, we're going to
   // do something really strange.  Check for an adjacent splitter.
   PRBool left = PR_FALSE;

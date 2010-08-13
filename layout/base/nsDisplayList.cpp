@@ -808,7 +808,7 @@ nsDisplayBackground::IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
                            nsIRenderingContext* aCtx) {
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   PRUint32 flags = aBuilder->GetBackgroundPaintFlags();
   nsDisplayItem* nextItem = GetAbove();
   if (nextItem && nextItem->GetUnderlyingFrame() == mFrame &&
@@ -824,21 +824,21 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
-    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+    return mFrame->GetOverflowRect() + ToReferenceFrame();
 
-  return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+  return nsRect(ToReferenceFrame(), mFrame->GetSize());
 }
 
 nsRect
 nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 void
 nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
                         nsIRenderingContext* aCtx) {
   // TODO join outlines together
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                mVisibleRect,
                                nsRect(offset, mFrame->GetSize()),
@@ -852,7 +852,7 @@ nsDisplayOutline::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     return PR_FALSE;
 
   const nsStyleOutline* outline = mFrame->GetStyleOutline();
-  nsRect borderBox(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+  nsRect borderBox(ToReferenceFrame(), mFrame->GetSize());
   if (borderBox.Contains(aVisibleRegion->GetBounds()) &&
       !nsLayoutUtils::HasNonZeroCorner(outline->mOutlineRadius)) {
     if (outline->mOutlineOffset >= 0) {
@@ -870,7 +870,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
                       nsIRenderingContext* aCtx) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
-  mCaret->PaintCaret(aBuilder, aCtx, mFrame, aBuilder->ToReferenceFrame(mFrame));
+  mCaret->PaintCaret(aBuilder, aCtx, mFrame, ToReferenceFrame());
 }
 
 PRBool
@@ -880,7 +880,7 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     return PR_FALSE;
 
   nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
-    aBuilder->ToReferenceFrame(mFrame);
+    ToReferenceFrame();
   const nsStyleBorder *styleBorder;
   if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
       !(styleBorder = mFrame->GetStyleBorder())->IsBorderImageLoaded() &&
@@ -900,7 +900,7 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                        nsIRenderingContext* aCtx) {
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
                               mVisibleRect,
                               nsRect(offset, mFrame->GetSize()),
@@ -942,7 +942,7 @@ ComputeDisjointRectangles(const nsRegion& aRegion,
 void
 nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
                                nsIRenderingContext* aCtx) {
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   nsRect borderRect = nsRect(offset, mFrame->GetSize());
   nsPresContext* presContext = mFrame->PresContext();
   nsAutoTArray<nsRect,10> rects;
@@ -959,7 +959,7 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 PRBool
@@ -971,7 +971,7 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // Store the actual visible region
   mVisibleRegion.And(*aVisibleRegion, mVisibleRect);
 
-  nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint origin = ToReferenceFrame();
   nsRect visibleBounds = aVisibleRegion->GetBounds();
   nsRect frameRect(origin, mFrame->GetSize());
   if (!frameRect.Contains(visibleBounds))
@@ -993,7 +993,7 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
                                nsIRenderingContext* aCtx) {
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   nsRect borderRect = nsRect(offset, mFrame->GetSize());
   nsPresContext* presContext = mFrame->PresContext();
   nsAutoTArray<nsRect,10> rects;
@@ -1541,7 +1541,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
                                                        LayerManager *aManager)
 {
   gfxMatrix newTransformMatrix =
-    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
+    GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
                                  mFrame->PresContext()->AppUnitsPerDevPixel(),
                                 nsnull);
   if (newTransformMatrix.IsSingular())
@@ -1577,7 +1577,7 @@ PRBool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
    * untransform the visible rect, since we want everything that's painting to
    * think that it's painting in its original rectangular coordinate space. */
   nsRegion untransformedVisible =
-    UntransformRect(mVisibleRect, mFrame, aBuilder->ToReferenceFrame(mFrame));
+    UntransformRect(mVisibleRect, mFrame, ToReferenceFrame());
 
   mStoredList.ComputeVisibility(aBuilder, &untransformedVisible);
   return PR_TRUE;
@@ -1602,7 +1602,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
    */
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfxMatrix matrix =
-    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
+    GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
                                 factor, nsnull);
   if (matrix.IsSingular())
     return;
@@ -1660,7 +1660,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
  */
 nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
 {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 /* The transform is opaque iff the transform consists solely of scales and

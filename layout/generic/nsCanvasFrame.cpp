@@ -254,7 +254,7 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  nsIRenderingContext* aCtx)
 {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
   if (NS_GET_A(mExtraBackgroundColor) > 0) {
@@ -289,14 +289,14 @@ public:
   {
     // This is an overestimate, but that's not a problem.
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
+    return frame->CanvasArea() + ToReferenceFrame();
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    frame->PaintFocus(*aCtx, ToReferenceFrame());
   }
 
   NS_DISPLAY_DECL_NAME("CanvasFocus", TYPE_CANVAS_FOCUS)

@@ -443,7 +443,7 @@ nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
   nsSVGOuterSVGFrame *outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
-  nsRect rectAtOrigin = aRect - aBuilder->ToReferenceFrame(mFrame);
+  nsRect rectAtOrigin = aRect - ToReferenceFrame();
   nsRect thisRect(nsPoint(0,0), outerSVGFrame->GetSize());
   if (!thisRect.Intersects(rectAtOrigin))
     return;
@@ -464,7 +464,7 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
                     nsIRenderingContext* aCtx)
 {
   static_cast<nsSVGOuterSVGFrame*>(mFrame)->
-    Paint(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame));
+    Paint(*aCtx, mVisibleRect, ToReferenceFrame());
 }
 
 // helper
