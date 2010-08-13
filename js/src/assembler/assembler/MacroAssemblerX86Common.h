@@ -1078,7 +1078,8 @@ public:
         NotCheckedSSE = 0,
         NoSSE = 1,
         HasSSE2 = 2,
-        HasSSE4_1 = 3 // implies HasSSE2
+        HasSSE4_1 = 3, // implies HasSSE2
+        HasSSE4_2 = 4  // implies HasSSE4_1
     };
 
     static SSECheckState getSSEState()
@@ -1131,7 +1132,10 @@ private:
 #endif
         static const int SSE2FeatureBit = 1 << 26;
         static const int SSE41FeatureBit = 1 << 19;
-        if (flags_ecx & SSE41FeatureBit)
+        static const int SSE42FeatureBit = 1 << 20;
+        if (flags_ecx & SSE42FeatureBit)
+            s_sseCheckState = HasSSE4_2;
+        else if (flags_ecx & SSE41FeatureBit)
             s_sseCheckState = HasSSE4_1;
         else if (flags_edx & SSE2FeatureBit)
             s_sseCheckState = HasSSE2;
@@ -1182,9 +1186,19 @@ private:
         // Only check once.
         ASSERT(s_sseCheckState != NotCheckedSSE);
 
-        return s_sseCheckState == HasSSE4_1;
+        return s_sseCheckState >= HasSSE4_1;
     }
 
+    static bool isSSE42Present()
+    {
+        if (s_sseCheckState == NotCheckedSSE) {
+            setSSECheckState();
+        }
+        // Only check once.
+        ASSERT(s_sseCheckState != NotCheckedSSE);
+
+        return s_sseCheckState >= HasSSE4_2;
+    }
 };
 
 } // namespace JSC
