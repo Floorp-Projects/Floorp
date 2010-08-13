@@ -366,6 +366,36 @@ nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
           GetEffectProperty(aURI, aFrame, aProp, CreatePaintingProperty));
 }
 
+static nsSVGRenderingObserver *
+GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
+                        const FramePropertyDescriptor *aProperty,
+                        nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *))
+{
+  FrameProperties props = aFrame->Properties();
+  nsSVGEffects::URIObserverHashtable *hashtable =
+    static_cast<nsSVGEffects::URIObserverHashtable*>(props.Get(aProperty));
+  if (!hashtable) {
+    hashtable = new nsSVGEffects::URIObserverHashtable();
+    hashtable->Init();
+    props.Set(aProperty, hashtable);
+  }
+  nsSVGRenderingObserver* prop =
+    static_cast<nsSVGRenderingObserver*>(hashtable->GetWeak(aURI));
+  if (!prop) {
+    prop = aCreate(aURI, aFrame);
+    hashtable->Put(aURI, prop);
+  }
+  return prop;
+}
+
+nsSVGPaintingProperty *
+nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
+                                        const FramePropertyDescriptor *aProp)
+{
+  return static_cast<nsSVGPaintingProperty*>(
+          GetEffectPropertyForURI(aURI, aFrame, aProp, CreatePaintingProperty));
+}
+
 nsSVGEffects::EffectProperties
 nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 {
@@ -420,6 +450,7 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   props.Delete(MarkerEndProperty());
   props.Delete(FillProperty());
   props.Delete(StrokeProperty());
+  props.Delete(BackgroundImageProperty());
 
   // Ensure that the filter is repainted correctly
   // We can't do that in DoUpdate as the referenced frame may not be valid
