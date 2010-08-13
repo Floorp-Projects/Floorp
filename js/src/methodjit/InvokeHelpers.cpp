@@ -86,7 +86,7 @@ using namespace JSC;
     } while (0)
 
 static bool
-InlineReturn(JSContext *cx, JSBool ok);
+InlineReturn(VMFrame &f, JSBool ok);
 
 static jsbytecode *
 FindExceptionHandler(JSContext *cx)
@@ -166,6 +166,14 @@ top:
     return NULL;
 }
 
+static inline void
+FixVMFrame(VMFrame &f, JSStackFrame *fp)
+{
+    f.fp->ncode = f.scriptedReturn;
+    JS_ASSERT(f.fp == fp->down);
+    f.fp = fp;
+}
+
 static inline bool
 CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
 {
@@ -179,11 +187,6 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
 
     JSScript *newscript = fun->u.i.script;
 
-    if (f.inlineCallCount >= JS_MAX_INLINE_CALL_COUNT) {
-        js_ReportOverRecursed(cx);
-        return false;
-    }
-
     /* Allocate the frame. */
     StackSpace &stack = cx->stack();
     uintN nslots = newscript->nslots;
@@ -192,13 +195,17 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     JSStackFrame *newfp;
     if (argc < funargs) {
         uintN missing = funargs - argc;
-        newfp = stack.getInlineFrame(cx, f.regs.sp, missing, nslots);
+        if (!f.ensureSpace(missing, nslots))
+            return false;
+        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, missing);
         if (!newfp)
             return false;
         for (Value *v = argv + argc, *end = v + missing; v != end; ++v)
             v->setUndefined();
     } else {
-        newfp = stack.getInlineFrame(cx, f.regs.sp, 0, nslots);
+        if (!f.ensureSpace(0, nslots))
+            return false;
+        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, 0);
         if (!newfp)
             return false;
     }
@@ -243,17 +250,9 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     }
 
     stack.pushInlineFrame(cx, fp, cx->regs->pc, newfp);
+    FixVMFrame(f, newfp);
 
     return true;
-}
-
-static inline void
-FixVMFrame(VMFrame &f, JSStackFrame *fp)
-{
-    f.inlineCallCount++;
-    f.fp->ncode = f.scriptedReturn;
-    JS_ASSERT(f.fp == fp->down);
-    f.fp = fp;
 }
 
 static inline bool
@@ -271,29 +270,32 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     if (cx->options & JSOPTION_METHODJIT) {
         if (!script->ncode) {
             if (mjit::TryCompile(cx, script, fp->fun, fp->scopeChain) == Compile_Error) {
-                InlineReturn(cx, JS_FALSE);
+                InlineReturn(f, JS_FALSE);
                 return false;
             }
         }
         JS_ASSERT(script->ncode);
         if (script->ncode != JS_UNJITTABLE_METHOD) {
-            FixVMFrame(f, fp);
             *pret = script->nmap[-1];
             return true;
         }
     }
 
     bool ok = !!Interpret(cx, cx->fp);
-    InlineReturn(cx, JS_TRUE);
+    InlineReturn(f, JS_TRUE);
 
     *pret = NULL;
     return ok;
 }
 
 static bool
-InlineReturn(JSContext *cx, JSBool ok)
+InlineReturn(VMFrame &f, JSBool ok)
 {
+    JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp;
+
+    JS_ASSERT(f.fp == cx->fp);
+    JS_ASSERT(f.fp != f.entryFp);
 
     JS_ASSERT(!fp->blockChain);
     JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
@@ -327,6 +329,7 @@ InlineReturn(JSContext *cx, JSBool ok)
     Value *newsp = fp->argv - 1;
 
     cx->stack().popInlineFrame(cx, fp, fp->down);
+    f.fp = cx->fp;
 
     cx->regs->sp = newsp;
     cx->regs->sp[-1] = fp->rval;
@@ -474,11 +477,6 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
 
     JSScript *newscript = fun->u.i.script;
 
-    if (f.inlineCallCount >= JS_MAX_INLINE_CALL_COUNT) {
-        js_ReportOverRecursed(cx);
-        return false;
-    }
-
     /* Allocate the frame. */
     StackSpace &stack = cx->stack();
     uintN nslots = newscript->nslots;
@@ -487,13 +485,17 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     JSStackFrame *newfp;
     if (argc < funargs) {
         uintN missing = funargs - argc;
-        newfp = stack.getInlineFrame(cx, f.regs.sp, missing, nslots);
+        if (!f.ensureSpace(missing, nslots))
+            return false;
+        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, missing);
         if (!newfp)
             return false;
         for (Value *v = argv + argc, *end = v + missing; v != end; ++v)
             v->setUndefined();
     } else {
-        newfp = stack.getInlineFrame(cx, f.regs.sp, 0, nslots);
+        if (!f.ensureSpace(0, nslots))
+            return false;
+        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, 0);
         if (!newfp)
             return false;
     }
@@ -527,6 +529,7 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->down = fp;
     fp->savedPC = f.regs.pc;
     cx->setCurrentFrame(newfp);
+    FixVMFrame(f, newfp);
 
     return true;
 }
@@ -539,8 +542,6 @@ stubs::Call(VMFrame &f, uint32 argc)
 {
     if (!CreateLightFrame(f, 0, argc))
         THROWV(NULL);
-
-    FixVMFrame(f, f.cx->fp);
 
     return f.fp->script->ncode;
 }
@@ -558,8 +559,6 @@ stubs::New(VMFrame &f, uint32 argc)
     f.regs.sp[-int(argc + 1)].setObject(*obj);
     if (!CreateLightFrame(f, JSFRAME_CONSTRUCTING, argc))
         THROWV(NULL);
-
-    FixVMFrame(f, f.cx->fp);
 
     return f.fp->script->ncode;
 }
@@ -625,19 +624,17 @@ js_InternalThrow(VMFrame &f)
         if (pc)
             break;
 
-        // If |f.inlineCallCount == 0|, then we are on the 'topmost' frame (where
-        // topmost means the first frame called into through js_Interpret). In this
-        // case, we still unwind, but we shouldn't return from a JS function, because
-        // we're not in a JS function.
-        bool lastFrame = (f.inlineCallCount == 0);
+        // If on the 'topmost' frame (where topmost means the first frame
+        // called into through js_Interpret). In this case, we still unwind,
+        // but we shouldn't return from a JS function, because we're not in a
+        // JS function.
+        bool lastFrame = (f.entryFp == f.fp);
         js_UnwindScope(cx, 0, cx->throwing);
         if (lastFrame)
             break;
 
         JS_ASSERT(f.regs.sp == cx->regs->sp);
-        InlineReturn(f.cx, JS_FALSE);
-        f.inlineCallCount--;
-        f.fp = cx->fp;
+        InlineReturn(f, JS_FALSE);
         f.scriptedReturn = cx->fp->ncode;
     }
 
@@ -663,11 +660,7 @@ stubs::GetCallObject(VMFrame &f)
 static inline void
 AdvanceReturnPC(JSContext *cx)
 {
-    /*
-     * Simulate an inline_return by advancing the pc, then
-     * finish off the imacro. The inlineCallCount passed is
-     * bogus here, but it doesn't really matter.
-     */
+    /* Simulate an inline_return by advancing the pc. */
     JS_ASSERT(*cx->regs->pc == JSOP_CALL ||
               *cx->regs->pc == JSOP_NEW ||
               *cx->regs->pc == JSOP_EVAL ||
@@ -710,7 +703,7 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
 
         /* Unwind and return. */
         ok &= bool(js_UnwindScope(cx, 0, cx->throwing));
-        InlineReturn(cx, ok);
+        InlineReturn(f, ok);
     }
 
     /* Update the VMFrame before leaving. */
@@ -780,7 +773,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                 /* Could be anywhere - restart outer loop. */
                 continue;
             }
-            InlineReturn(cx, JS_TRUE);
+            InlineReturn(f, JS_TRUE);
             AdvanceReturnPC(cx);
         } else {
             if (!PartialInterpret(cx)) {
@@ -795,7 +788,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                     JSOp op = JSOp(*cx->regs->pc);
                     if (op == JSOP_RETURN && !(cx->fp->flags & JSFRAME_BAILED_AT_RETURN))
                         fp->rval = f.regs.sp[-1];
-                    InlineReturn(cx, JS_TRUE);
+                    InlineReturn(f, JS_TRUE);
                     AdvanceReturnPC(cx);
                 }
             }
@@ -851,11 +844,11 @@ RunTracer(VMFrame &f)
     if (!cx->jitEnabled)
         return NULL;
 
-    JS_ASSERT_IF(f.inlineCallCount,
+    JS_ASSERT_IF(f.fp != f.entryFp,
                  entryFrame->down->script->isValidJitCode(f.scriptedReturn));
 
     bool blacklist;
-    uintN inlineCallCount = f.inlineCallCount;
+    uintN inlineCallCount = 0;
     tpa = MonitorTracePoint(f.cx, inlineCallCount, blacklist);
     JS_ASSERT(!TRACE_RECORDER(cx));
 
@@ -934,12 +927,10 @@ RunTracer(VMFrame &f)
             entryFrame->rval = f.regs.sp[-1];
 
         /* Don't pop the frame if it's maybe owned by an Invoke. */
-        if (f.inlineCallCount) {
-            if (!InlineReturn(cx, JS_TRUE))
+        if (f.fp != f.entryFp) {
+            if (!InlineReturn(f, JS_TRUE))
                 THROWV(NULL);
-            f.inlineCallCount--;
         }
-        f.fp = cx->fp;
         entryFrame->ncode = f.fp->ncode;
         void *retPtr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
         *f.returnAddressLocation() = retPtr;

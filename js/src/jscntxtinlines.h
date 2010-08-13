@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -105,6 +106,55 @@ StackSpace::isCurrentAndActive(JSContext *cx) const
     return currentSegment &&
            currentSegment->isActive() &&
            currentSegment == cx->getCurrentSegment();
+}
+
+/*
+ * SunSpider and v8bench have roughly an average of 9 slots per script.
+ * Our heuristic for a quick over-recursion check uses a generous slot
+ * count based on this estimate. We take this frame size and multiply it
+ * by the old recursion limit from the interpreter.
+ *
+ * Worst case, if an average size script (<=9 slots) over recurses, it'll
+ * effectively be the same as having increased the old inline call count
+ * to <= 5,000.
+ */
+static const uint32 MAX_STACK_USAGE = (VALUES_PER_STACK_FRAME + 18) * JS_MAX_INLINE_CALL_COUNT;
+
+JS_ALWAYS_INLINE Value *
+StackSpace::makeStackLimit(Value *start) const
+{
+    Value *limit = JS_MIN(start + MAX_STACK_USAGE, end);
+#ifdef XP_WIN
+    limit = JS_MIN(limit, commitEnd);
+#endif
+    return limit;
+}
+
+JS_ALWAYS_INLINE bool
+StackSpace::ensureSpace(JSContext *maybecx, Value *start, Value *from,
+                        Value *& limit, uint32 nslots) const
+{
+    JS_ASSERT(from == firstUnused());
+#ifdef XP_WIN
+    /*
+     * If commitEnd < limit, we're guaranteed that we reached the end of the
+     * commit depth, because stackLimit is MIN(commitEnd, limit). If we did
+     * reach this soft limit, check if we can bump the commit end without
+     * over-recursing.
+     */
+    ptrdiff_t nvals = VALUES_PER_STACK_FRAME + nslots;
+    if (commitEnd < limit && from + nvals < limit) {
+        if (!ensureSpace(maybecx, from, nvals))
+            return false;
+
+        /* Compute a new limit. */
+        limit = makeStackLimit(start);
+
+        return true;
+    }
+#endif
+    js_ReportOverRecursed(maybecx);
+    return false;
 }
 
 JS_ALWAYS_INLINE bool
@@ -276,19 +326,26 @@ InvokeFrameGuard::~InvokeFrameGuard()
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, Value *sp,
-                           uintN nmissing, uintN nfixed) const
+StackSpace::getInlineFrameUnchecked(JSContext *cx, Value *sp,
+                                    uintN nmissing) const
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->regs->sp == sp);
 
+    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
+    return fp;
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+StackSpace::getInlineFrame(JSContext *cx, Value *sp,
+                           uintN nmissing, uintN nfixed) const
+{
     ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, sp, nvals))
         return NULL;
 
-    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
-    return fp;
+    return getInlineFrameUnchecked(cx, sp, nmissing);
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void

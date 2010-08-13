@@ -1578,8 +1578,8 @@ mjit::Compiler::emitReturn()
      *     return;
      */
     Jump noInlineCalls = masm.branchPtr(Assembler::Equal,
-                                        FrameAddress(offsetof(VMFrame, inlineCallCount)),
-                                        ImmPtr(0));
+                                        FrameAddress(offsetof(VMFrame, entryFp)),
+                                        JSFrameReg);
     stubcc.linkExit(noInlineCalls, Uses(frame.frameDepth()));
     stubcc.masm.ret();
 
@@ -1634,7 +1634,6 @@ mjit::Compiler::emitReturn()
     masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ArgReg1);
     masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, fp)));
     masm.storePtr(Registers::ReturnReg, Address(Registers::ArgReg1, offsetof(JSContext, fp)));
-    masm.sub32(Imm32(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
 
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
