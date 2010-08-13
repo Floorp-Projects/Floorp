@@ -246,7 +246,6 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top"
            titlebar="normal"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
@@ -298,7 +297,6 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top"
            titlebar="normal"
            label="&inspectStylePanelTitle.label;">
         <listbox id="inspector-style-listbox" flex="1"/>
