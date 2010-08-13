@@ -143,7 +143,7 @@ StackSpace::ensureSpace(JSContext *maybecx, Value *start, Value *from,
      * over-recursing.
      */
     ptrdiff_t nvals = VALUES_PER_STACK_FRAME + nslots;
-    if (commitEnd < limit && from + nvals < limit) {
+    if (commitEnd <= limit && from + nvals < (start + MAX_STACK_USAGE)) {
         if (!ensureSpace(maybecx, from, nvals))
             return false;
 
