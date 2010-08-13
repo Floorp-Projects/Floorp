@@ -246,6 +246,10 @@ nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
     twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
     break;
 
+  case eCSSUnit_PhysicalMillimeter:
+    twips = NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
+    break;
+
   case eCSSUnit_Centimeter:
     twips = NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
     break;
@@ -892,6 +896,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
+    case eCSSUnit_PhysicalMillimeter: aResult.AppendLiteral("mozmm");   break;
     case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
