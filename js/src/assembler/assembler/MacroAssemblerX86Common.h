@@ -1074,6 +1074,24 @@ public:
         m_assembler.movzbl_rr(dest, dest);
     }
 
+    enum SSECheckState {
+        NotCheckedSSE = 0,
+        NoSSE = 1,
+        HasSSE2 = 2,
+        HasSSE4_1 = 3 // implies HasSSE2
+    };
+
+    static SSECheckState getSSEState()
+    {
+        if (s_sseCheckState == NotCheckedSSE) {
+            MacroAssemblerX86Common::setSSECheckState();
+        }
+        // Only check once.
+        ASSERT(s_sseCheckState != NotCheckedSSE);
+
+        return s_sseCheckState;
+    }
+
 protected:
     X86Assembler::Condition x86Condition(Condition cond)
     {
@@ -1081,9 +1099,45 @@ protected:
     }
 
 private:
-    // Only MacroAssemblerX86 should be using the following method; SSE2 is always available on
-    // x86_64, and clients & subclasses of MacroAssembler should be using 'supportsFloatingPoint()'.
     friend class MacroAssemblerX86;
+
+    static SSECheckState s_sseCheckState;
+
+    static void setSSECheckState()
+    {
+        // Default the flags value to zero; if the compiler is
+        // not MSVC or GCC we will read this as SSE2 not present.
+        int flags_edx = 0;
+        int flags_ecx = 0;
+#if WTF_COMPILER_MSVC
+        _asm {
+            mov eax, 1 // cpuid function 1 gives us the standard feature set
+            cpuid;
+            mov flags_ecx, ecx;
+            mov flags_edx, edx;
+        }
+#elif WTF_COMPILER_GCC
+        asm (
+             "movl $0x1, %%eax;"
+             "pushl %%ebx;"
+             "cpuid;"
+             "popl %%ebx;"
+             "movl %%ecx, %0;"
+             "movl %%edx, %1;"
+             : "=g" (flags_ecx), "=g" (flags_edx)
+             :
+             : "%eax", "%ecx", "%edx"
+             );
+#endif
+        static const int SSE2FeatureBit = 1 << 26;
+        static const int SSE41FeatureBit = 1 << 19;
+        if (flags_ecx & SSE41FeatureBit)
+            s_sseCheckState = HasSSE4_1;
+        else if (flags_edx & SSE2FeatureBit)
+            s_sseCheckState = HasSSE2;
+        else
+            s_sseCheckState = NoSSE;
+    }
 
 #if WTF_CPU_X86
 #if WTF_PLATFORM_MAC
@@ -1096,46 +1150,17 @@ private:
 
 #else // PLATFORM(MAC)
 
-    enum SSE2CheckState {
-        NotCheckedSSE2,
-        HasSSE2,
-        NoSSE2
-    };
-
     static bool isSSE2Present()
     {
-        if (s_sse2CheckState == NotCheckedSSE2) {
-            // Default the flags value to zero; if the compiler is
-            // not MSVC or GCC we will read this as SSE2 not present.
-            int flags = 0;
-#if WTF_COMPILER_MSVC
-            _asm {
-                mov eax, 1 // cpuid function 1 gives us the standard feature set
-                cpuid;
-                mov flags, edx;
-            }
-#elif WTF_COMPILER_GCC
-            asm (
-                 "movl $0x1, %%eax;"
-                 "pushl %%ebx;"
-                 "cpuid;"
-                 "popl %%ebx;"
-                 "movl %%edx, %0;"
-                 : "=g" (flags)
-                 :
-                 : "%eax", "%ecx", "%edx"
-                 );
-#endif
-            static const int SSE2FeatureBit = 1 << 26;
-            s_sse2CheckState = (flags & SSE2FeatureBit) ? HasSSE2 : NoSSE2;
+        if (s_sseCheckState == NotCheckedSSE) {
+            setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sse2CheckState != NotCheckedSSE2);
+        ASSERT(s_sseCheckState != NotCheckedSSE);
 
-        return s_sse2CheckState == HasSSE2;
+        return s_sseCheckState >= HasSSE2;
     }
     
-    static SSE2CheckState s_sse2CheckState;
 
 #endif // PLATFORM(MAC)
 #elif !defined(NDEBUG) // CPU(X86)
@@ -1148,6 +1173,18 @@ private:
     }
 
 #endif
+
+    static bool isSSE41Present()
+    {
+        if (s_sseCheckState == NotCheckedSSE) {
+            setSSECheckState();
+        }
+        // Only check once.
+        ASSERT(s_sseCheckState != NotCheckedSSE);
+
+        return s_sseCheckState == HasSSE4_1;
+    }
+
 };
 
 } // namespace JSC
