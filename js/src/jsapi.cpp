@@ -3518,12 +3518,10 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         }
         JS_UNLOCK_OBJ(cx, obj2);
     } else if (obj2->isProxy()) {
-        JS_ASSERT(obj == obj2);
-
         JSAutoResolveFlags rf(cx, flags);
         return own
-            ? JSProxy::getOwnPropertyDescriptor(cx, obj, id, desc)
-            : JSProxy::getPropertyDescriptor(cx, obj, id, desc);
+            ? JSProxy::getOwnPropertyDescriptor(cx, obj2, id, desc)
+            : JSProxy::getPropertyDescriptor(cx, obj2, id, desc);
     } else {
         if (!obj2->getAttributes(cx, id, &desc->attrs))
             return false;
