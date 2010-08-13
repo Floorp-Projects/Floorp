@@ -2012,6 +2012,58 @@ date_toISOString(JSContext *cx, uintN argc, Value *vp)
     return date_utc_format(cx, vp, print_iso_string);
 }
 
+namespace {
+
+/* ES5 15.9.5.44. */
+JSBool
+date_toJSON(JSContext *cx, uintN argc, Value *vp)
+{
+    /* Step 1. */
+    JSObject *obj = ComputeThisFromVp(cx, vp);
+    if (!obj)
+        return false;
+
+    /* Step 2. */
+    Value &tv = vp[0];
+    if (!DefaultValue(cx, obj, JSTYPE_NUMBER, &tv))
+        return false;
+
+    /* Step 3. */
+    if (tv.isDouble() && !JSDOUBLE_IS_FINITE(tv.toDouble())) {
+        vp->setNull();
+        return true;
+    }
+
+    /* Step 4. */
+    Value &toISO = vp[0];
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.toISOStringAtom), &toISO))
+        return false;
+
+    /* Step 5. */
+    if (!js_IsCallable(toISO)) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_TOISOSTRING_PROP);
+        return false;
+    }
+
+    /* Step 6. */
+    LeaveTrace(cx);
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, 0, args))
+        return false;
+
+    args.callee() = toISO;
+    args.thisv().setObject(*obj);
+
+    if (!Invoke(cx, args, 0))
+        return false;
+
+    *vp = args.rval();
+    return true;
+}
+
+}
+
 /* for Date.toLocaleString; interface to PRMJTime date struct.
  */
 static void
@@ -2407,7 +2459,7 @@ static JSFunctionSpec date_methods[] = {
     JS_FN("toDateString",        date_toDateString,       0,0),
     JS_FN("toTimeString",        date_toTimeString,       0,0),
     JS_FN("toISOString",         date_toISOString,        0,0),
-    JS_FN(js_toJSON_str,         date_toISOString,        0,0),
+    JS_FN(js_toJSON_str,         date_toJSON,             1,0),
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       date_toSource,           0,0),
 #endif
