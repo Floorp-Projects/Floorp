@@ -82,7 +82,7 @@ struct MICInfo {
 
     /* Used by GET/SET. */
     JSC::CodeLocationLabel load;
-    JSC::CodeLocationDataLabelPtr shape;
+    JSC::CodeLocationDataLabel32 shape;
     JSC::CodeLocationCall stubCall;
 #if defined JS_PUNBOX64
     uint32 patchValueOffset;
