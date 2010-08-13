@@ -38,6 +38,7 @@
 #include "gfxUtils.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "gfxDrawable.h"
 
 #if defined(XP_WIN) || defined(WINCE)
 #include "gfxWindowsPlatform.h"
@@ -208,69 +209,15 @@ IsSafeImageTransformComponent(gfxFloat aValue)
   return aValue >= -32768 && aValue <= 32767;
 }
 
-static void
-SetExtendAndFilterOnPattern(gfxPattern* aPattern,
-                            const gfxMatrix& aDeviceToImage,
-                            const gfxASurface::gfxSurfaceType aSurfaceType,
-                            const gfxPattern::GraphicsFilter aDefaultFilter)
-{
-    // In theory we can handle this using cairo's EXTEND_PAD,
-    // but implementation limitations mean we have to consult
-    // the surface type.
-    switch (aSurfaceType) {
-        case gfxASurface::SurfaceTypeXlib:
-        case gfxASurface::SurfaceTypeXcb:
-        {
-            // See bug 324698.  This is a workaround for EXTEND_PAD not being
-            // implemented correctly on linux in the X server.
-            //
-            // Set the filter to CAIRO_FILTER_FAST --- otherwise,
-            // pixman's sampling will sample transparency for the outside edges and we'll
-            // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
-            // available
-            //
-            // But don't do this for simple downscales because it's horrible.
-            // Downscaling means that device-space coordinates are
-            // scaled *up* to find the image pixel coordinates.
-            //
-            // aDeviceToImage is slightly stale because up above we may
-            // have adjusted the pattern's matrix ... but the adjustment
-            // is only a translation so the scale factors in aDeviceToImage
-            // are still valid.
-            PRBool isDownscale =
-                aDeviceToImage.xx >= 1.0 && aDeviceToImage.yy >= 1.0 &&
-                aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;
-            if (!isDownscale) {
-                aPattern->SetFilter(gfxPattern::FILTER_FAST);
-            }
-            break;
-        }
-
-        case gfxASurface::SurfaceTypeQuartz:
-        case gfxASurface::SurfaceTypeQuartzImage:
-            // Don't set EXTEND_PAD, Mac seems to be OK. Really?
-            aPattern->SetFilter(aDefaultFilter);
-            break;
-
-        default:
-            // turn on EXTEND_PAD.
-            // This is what we really want for all surface types, if the
-            // implementation was universally good.
-            aPattern->SetExtend(gfxPattern::EXTEND_PAD);
-            aPattern->SetFilter(aDefaultFilter);
-            break;
-    }
-}
-
 // EXTEND_PAD won't help us here; we have to create a temporary surface to hold
 // the subimage of pixels we're allowed to sample.
-static already_AddRefed<gfxPattern>
-CreateSamplingRestrictedPattern(gfxASurface* aSurface,
-                                gfxContext* aContext,
-                                const gfxMatrix& aUserSpaceToImageSpace,
-                                const gfxRect& aSourceRect,
-                                const gfxRect& aSubimage,
-                                const gfxImageSurface::gfxImageFormat aFormat)
+static already_AddRefed<gfxDrawable>
+CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
+                                 gfxContext* aContext,
+                                 const gfxMatrix& aUserSpaceToImageSpace,
+                                 const gfxRect& aSourceRect,
+                                 const gfxRect& aSubimage,
+                                 const gfxImageSurface::gfxImageFormat aFormat)
 {
     gfxRect userSpaceClipExtents = aContext->GetClipExtents();
     // This isn't optimal --- if aContext has a rotation then GetClipExtents
@@ -301,25 +248,18 @@ CreateSamplingRestrictedPattern(gfxASurface* aSurface,
     if (!temp || temp->CairoStatus())
         return nsnull;
 
-    nsRefPtr<gfxPattern> tmpPattern = new gfxPattern(aSurface);
-    if (!tmpPattern)
-        return nsnull;
-
-    tmpPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-    tmpPattern->SetMatrix(gfxMatrix().Translate(needed.pos));
-
     gfxContext tmpCtx(temp);
     tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx.SetPattern(tmpPattern);
-    tmpCtx.Paint();
+    aDrawable->Draw(&tmpCtx, needed - needed.pos, PR_TRUE,
+                    gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.pos));
 
     nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);
     if (!resultPattern)
         return nsnull;
 
-    resultPattern->SetMatrix(
-        gfxMatrix(aUserSpaceToImageSpace).Multiply(gfxMatrix().Translate(-needed.pos)));
-    return resultPattern.forget();
+    nsRefPtr<gfxDrawable> drawable = 
+        new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.pos));
+    return drawable.forget();
 }
 
 // working around cairo/pixman bug (bug 364968)
@@ -422,7 +362,7 @@ DeviceToImageTransform(gfxContext* aContext,
 
 /* static */ void
 gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
-                           gfxASurface*     aSurface,
+                           gfxDrawable*     aDrawable,
                            const gfxMatrix& aUserSpaceToImageSpace,
                            const gfxRect&   aSubimage,
                            const gfxRect&   aSourceRect,
@@ -435,7 +375,6 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
 
     nsRefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
     gfxASurface::gfxSurfaceType surfaceType = currentTarget->GetType();
-    gfxMatrix currentMatrix = aContext->CurrentMatrix();
     gfxMatrix deviceSpaceToImageSpace =
         DeviceToImageTransform(aContext, aUserSpaceToImageSpace);
 
@@ -444,31 +383,28 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     if (!workaround.Succeeded())
         return;
 
-    nsRefPtr<gfxPattern> pattern = new gfxPattern(aSurface);
-    pattern->SetMatrix(aUserSpaceToImageSpace);
+    nsRefPtr<gfxDrawable> drawable = aDrawable;
 
     // OK now, the hard part left is to account for the subimage sampling
     // restriction. If all the transforms involved are just integer
     // translations, then we assume no resampling will occur so there's
     // nothing to do.
     // XXX if only we had source-clipping in cairo!
-    if (!currentMatrix.HasNonIntegerTranslation() &&
-        !aUserSpaceToImageSpace.HasNonIntegerTranslation()) {
-        if (doTile) {
-            pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-        }
-    } else {
+    if (aContext->CurrentMatrix().HasNonIntegerTranslation() ||
+        aUserSpaceToImageSpace.HasNonIntegerTranslation()) {
         if (doTile || !aSubimage.Contains(aImageRect)) {
-            nsRefPtr<gfxPattern> restrictedPattern =
-                CreateSamplingRestrictedPattern(aSurface, aContext,
-                                                aUserSpaceToImageSpace,
-                                                aSourceRect, aSubimage, aFormat);
-            if (restrictedPattern) {
-                pattern.swap(restrictedPattern);
+            nsRefPtr<gfxDrawable> restrictedDrawable =
+              CreateSamplingRestrictedDrawable(aDrawable, aContext,
+                                               aUserSpaceToImageSpace, aSourceRect,
+                                               aSubimage, aFormat);
+            if (restrictedDrawable) {
+                drawable.swap(restrictedDrawable);
             }
         }
-        SetExtendAndFilterOnPattern(pattern, deviceSpaceToImageSpace, surfaceType,
-                                    aFilter);
+        // We no longer need to tile: Either we never needed to, or we already
+        // filled a surface with the tiled pattern; this surface can now be
+        // drawn without tiling.
+        doTile = PR_FALSE;
     }
 
     gfxContext::GraphicsOperator op = aContext->CurrentOperator();
@@ -477,14 +413,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
         aContext->SetOperator(OptimalFillOperator());
     }
 
-    // Phew! Now we can actually draw this image
-    aContext->NewPath();
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    pattern->SetFilter(gfxPattern::FILTER_FAST); 
-#endif
-    aContext->SetPattern(pattern);
-    aContext->Rectangle(aFill);
-    aContext->Fill();
+    drawable->Draw(aContext, aFill, doTile, aFilter, aUserSpaceToImageSpace);
 
     aContext->SetOperator(op);
 }

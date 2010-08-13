@@ -42,6 +42,8 @@
 #include "gfxPattern.h"
 #include "gfxImageSurface.h"
 
+class gfxDrawable;
+
 class THEBES_API gfxUtils {
 public:
     /*
@@ -60,7 +62,7 @@ public:
                                           gfxImageSurface *aDestSurface = nsnull);
 
     /**
-     * Draw a surface while working around limitations like bad support
+     * Draw something drawable while working around limitations like bad support
      * for EXTEND_PAD, lack of source-clipping, or cairo / pixman bugs with
      * extreme user-space-to-image-space transforms.
      *
@@ -73,7 +75,7 @@ public:
      * algorithm before passing them on to this method.
      */
     static void DrawPixelSnapped(gfxContext*      aContext,
-                                 gfxASurface*     aSurface,
+                                 gfxDrawable*     aDrawable,
                                  const gfxMatrix& aUserSpaceToImageSpace,
                                  const gfxRect&   aSubimage,
                                  const gfxRect&   aSourceRect,

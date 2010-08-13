@@ -409,16 +409,16 @@ imgFrame::SurfaceForDrawing(PRBool             aDoPadding,
                             gfxRect&           aSourceRect,
                             gfxRect&           aImageRect)
 {
+  gfxIntSize size(PRInt32(aImageRect.Width()), PRInt32(aImageRect.Height()));
   if (!aDoPadding && !aDoPartialDecode) {
     NS_ASSERTION(!mSinglePixel, "This should already have been handled");
-    return SurfaceWithFormat(ThebesSurface(), mFormat);
+    return SurfaceWithFormat(new gfxSurfaceDrawable(ThebesSurface(), size), mFormat);
   }
 
   gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 
   if (aDoTile || mSinglePixel) {
     // Create a temporary surface.
-    gfxIntSize size(PRInt32(aImageRect.Width()), PRInt32(aImageRect.Height()));
     // Give this surface an alpha channel because there are
     // transparent pixels in the padding or undecoded area
     gfxImageSurface::gfxImageFormat format = gfxASurface::ImageFormatARGB32;
@@ -437,7 +437,7 @@ imgFrame::SurfaceForDrawing(PRBool             aDoPadding,
     }
     tmpCtx.Rectangle(available);
     tmpCtx.Fill();
-    return SurfaceWithFormat(surface, format);
+    return SurfaceWithFormat(new gfxSurfaceDrawable(surface, size), format);
   }
 
   // Not tiling, and we have a surface, so we can account for
@@ -453,7 +453,10 @@ imgFrame::SurfaceForDrawing(PRBool             aDoPadding,
   aSourceRect = aSourceRect - gfxPoint(aPadding.left, aPadding.top);
   aImageRect = gfxRect(0, 0, mSize.width, mSize.height);
 
-  return SurfaceWithFormat(ThebesSurface(), mFormat);
+  gfxIntSize availableSize(mDecoded.width, mDecoded.height);
+  return SurfaceWithFormat(new gfxSurfaceDrawable(ThebesSurface(),
+                                                  availableSize),
+                           mFormat);
 }
 
 void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
@@ -489,7 +492,7 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
                       imageRect);
 
   if (surfaceResult.IsValid()) {
-    gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mSurface,
+    gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
                                userSpaceToImageSpace,
                                subimage, sourceRect, imageRect, fill,
                                surfaceResult.mFormat, aFilter);
