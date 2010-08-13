@@ -90,3 +90,10 @@
 <!ENTITY contextShareImage.label      "Share Image">
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">
+
+<!ENTITY pageactions.saveas.pdf      "Save As PDF">
+<!ENTITY pageactions.share.page      "Share Page">
+<!ENTITY pageactions.password.forget "Forget Password">
+<!ENTITY pageactions.reset           "Clear Site Preferences">
+<!ENTITY pageactions.findInPage      "Find In Page">
+<!ENTITY pageactions.search.addNew   "Add Search Engine">

@@ -411,6 +411,7 @@ var BrowserUI = {
 
     FormHelperUI.init();
     FindHelperUI.init();
+    PageActions.init();
 
     Contacts.init();
   },
@@ -1003,9 +1004,35 @@ var TapHighlightHelper = {
   hide: function hide() {
     this._overlay.style.display = "none";
   }
-}
+};
 
 var PageActions = {
+  init: function init() {
+    this.register("pageaction-reset", this.updatePagePermissions, this);
+    this.register("pageaction-password", this.updateForgetPassword, this);
+    this.register("pageaction-saveas", this.updatePageSaveAs, this);
+    this.register("pageaction-search", BrowserSearch.updatePageSearchEngines, BrowserSearch);
+  },
+
+  /**
+   * @param aId id of a pageaction element
+   * @param aCallback function that takes an element and returns true if it should be visible
+   * @param aThisObj (optional) scope object for aCallback
+   */
+  register: function register(aId, aCallback, aThisObj) {
+    this._handlers.push({id: aId, callback: aCallback, obj: aThisObj});
+  },
+
+  _handlers: [],
+
+  updateSiteMenu: function updateSiteMenu() {
+    this._handlers.forEach(function(action) {
+      let node = document.getElementById(action.id);
+      node.hidden = !action.callback.call(action.obj, node);
+    });
+    this._updateAttributes();
+  },
+
   get _loginManager() {
     delete this._loginManager;
     return this._loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -1030,58 +1057,39 @@ var PageActions = {
     }
   },
 
-  updatePagePermissions: function updatePagePermissions() {
-    this.removeItems("preferences");
-
+  updatePagePermissions: function updatePagePermissions(aNode) {
     let host = Browser.selectedBrowser.currentURI;
     let permissions = [];
 
     this._forEachPermissions(host, function(aType) {
-      permissions.push(aType);
+      permissions.push("pageactions." + aType);
     });
 
+    if (!this._loginManager.getLoginSavingEnabled(host.prePath)) {
+      permissions.push("pageactions.password");
+    }
+
+    let descriptions = permissions.map(function(s) Elements.browserBundle.getString(s));
+    aNode.setAttribute("description", descriptions.join(", "));
+
+    return (permissions.length > 0);
+  },
+
+  updateForgetPassword: function updateForgetPassword(aNode) {
+    let host = Browser.selectedBrowser.currentURI;
+    let logins = this._loginManager.findLogins({}, host.prePath, "", null);
+
+    return logins.some(function(login) login.hostname == host.prePath);
+  },
+
+  forgetPassword: function forgetPassword() {
+    let host = Browser.selectedBrowser.currentURI;
     let lm = this._loginManager;
-    if (!lm.getLoginSavingEnabled(host.prePath)) {
-      permissions.push("password");
-    }
 
-    // Show the clear site preferences button if needed
-    if (permissions.length) {
-      let title = Elements.browserBundle.getString("pageactions.reset");
-      let description = [];
-      for each(permission in permissions)
-        description.push(Elements.browserBundle.getString("pageactions." + permission));
-
-      let node = this.appendItem("preferences", title, description.join(", "));
-      node.addEventListener("click", function(event) {
-          PageActions.clearPagePermissions();
-          PageActions.removeItem(node);
-        },
-        false);
-    }
-
-    let siteLogins = [];
-    let allLogins = lm.findLogins({}, host.prePath, "", null);
-    for (let i = 0; i < allLogins.length; i++) {
-      let login = allLogins[i];
-      if (login.hostname != host.prePath)
-        continue;
-
-      siteLogins.push(login);
-    }
-
-    // Show only 1 password button for all the saved logins
-    if (siteLogins.length) {
-      let title = Elements.browserBundle.getString("pageactions.password.forget");
-      let node = this.appendItem("preferences", title, "");
-      node.addEventListener("click", function(event) {
-          for (let i = 0; i < siteLogins.length; i++)
-            lm.removeLogin(siteLogins[i]);
-  
-          PageActions.removeItem(node);
-        },
-        false);
-    }
+    lm.findLogins({}, host.prePath, "", null).forEach(function(login) {
+      if (login.hostname == host.prePath)
+        lm.removeLogin(siteLogins[i]);
+    });
   },
 
   clearPagePermissions: function clearPagePermissions() {
@@ -1096,7 +1104,7 @@ var PageActions = {
       lm.setLoginSavingEnabled(host.prePath, true);
   },
 
-  _savePageAsPDF: function saveAsPDF() {
+  savePageAsPDF: function saveAsPDF() {
     let strings = Elements.browserBundle;
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, strings.getString("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
@@ -1154,61 +1162,39 @@ var PageActions = {
     Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:SaveAs", data);
   },
 
-  updatePageSaveAs: function updatePageSaveAs() {
-    this.removeItems("saveas");
-
+  updatePageSaveAs: function updatePageSaveAs(aNode) {
     // Check for local XUL content
     let contentDocument = Browser.selectedBrowser.contentDocument;
-    if (contentDocument && contentDocument instanceof XULDocument)
-      return;
+    return !(contentDocument && contentDocument instanceof XULDocument);
+  },
 
-    let strings = Elements.browserBundle;
-    let node = this.appendItem("saveas", strings.getString("pageactions.saveas.pdf"), "");
-    node.onclick = function(event) {
-      PageActions._savePageAsPDF();
+  hideItem: function hideItem(aNode) {
+    aNode.hidden = true;
+    this._updateAttributes();
+  },
+
+  _updateAttributes: function _updateAttributes() {
+    let container = document.getElementById("pageactions-container");
+    let visibleNodes = container.querySelectorAll("pageaction:not([hidden=true])");
+    let len = visibleNodes.length;
+
+    let first = null, last = null;
+    for (let i = 0; i < len; i++) {
+      let node = visibleNodes[i];
+      node.removeAttribute("selector");
+      // Note: CSS indexes start at one, so even/odd are swapped.
+      node.setAttribute("even", (i % 2) ? "true" : "false");
     }
-  },
-
-  updateShare: function updateShare() {
-    this.removeItems("share");
-    let label = Elements.browserBundle.getString("pageactions.share.page");
-    let node = this.appendItem("share", label, "");
-    node.onclick = function(event) {
-      let browser = Browser.selectedBrowser;
-      SharingUI.show(browser.currentURI.spec, browser.contentTitle)
+    if (len >= 1) {
+      visibleNodes[0].setAttribute("selector", "first-child");
+      visibleNodes[len-1].setAttribute("selector", "last-child");
     }
-  },
-
-  appendItem: function appendItem(aType, aTitle, aDesc) {
-    let container = document.getElementById("pageactions-container");
-    let item = document.createElement("pageaction");
-    item.setAttribute("title", aTitle);
-    item.setAttribute("description", aDesc);
-    item.setAttribute("type", aType);
-    container.appendChild(item);
-
-    let identityContainer = document.getElementById("identity-container");
-    identityContainer.setAttribute("hasmenu", "true");
-    return item;
-  },
-
-  removeItem: function removeItem(aItem) {
-    let container = document.getElementById("pageactions-container");
-    container.removeChild(aItem);
-
-    let identityContainer = document.getElementById("identity-container");
-    identityContainer.setAttribute("hasmenu", container.hasChildNodes() ? "true" : "false");
-  },
-
-  removeItems: function removeItems(aType) {
-    let container = document.getElementById("pageactions-container");
-    let count = container.childNodes.length;
-    for (let i = count - 1; i >= 0; i--) {
-      if (aType == "" || container.childNodes[i].getAttribute("type") == aType)
-        this.removeItem(container.childNodes[i]);
+    if (len >= 2) {
+      visibleNodes[1].setAttribute("selector", "second-child");
+      visibleNodes[len-2].setAttribute("selector", "second-last-child");
     }
   }
-}
+};
 
 var NewTabPopup = {
   _timeout: 0,
@@ -1258,7 +1244,7 @@ var NewTabPopup = {
     BrowserUI.selectTab(this._tabs.pop());
     this.hide();
   }
-}
+};
 
 var BookmarkPopup = {
   get box() {
@@ -1303,7 +1289,7 @@ var BookmarkPopup = {
     else
       this.hide();
   }
-}
+};
 
 var BookmarkHelper = {
   _panel: null,
@@ -1480,15 +1466,6 @@ var FindHelperUI = {
   updateCommands: function findHelperUpdateCommands(aValue) {
     this._cmdPrevious.setAttribute("disabled", aValue == "");
     this._cmdNext.setAttribute("disabled", aValue == "");
-  },
-
-  updateFindInPage: function findHelperUpdateFindInPage() {
-    PageActions.removeItems("findinpage");
-    let title = Elements.browserBundle.getString("pageactions.findInPage");
-    let node = PageActions.appendItem("findinpage", title, "");
-    node.onclick = function(event) {
-      FindHelperUI.show();
-    };
   },
 
   _zoom: function _findHelperZoom(aElementRect) {
@@ -2133,8 +2110,7 @@ var ContextCommands = {
   },
 
   shareMedia: function cc_shareMedia() {
-    let state = ContextHelper.popupState;
-    SharingUI.show(state.mediaURL, null);
+    SharingUI.show(ContextHelper.popupState.mediaURL, null);
   },
 
   editBookmark: function cc_editBookmark() {

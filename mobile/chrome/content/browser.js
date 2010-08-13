@@ -1531,27 +1531,19 @@ const BrowserSearch = {
     return this._engines = Services.search.getVisibleEngines({ });
   },
 
-  updatePageSearchEngines: function() {
-    PageActions.removeItems("search");
-
+  updatePageSearchEngines: function updatePageSearchEngines(aNode) {
     let items = Browser.selectedBrowser.searchEngines;
     if (!items.length)
-      return;
+      return false;
 
     // XXX limit to the first search engine for now
-    let kMaxSearchEngine = 1;
-    for (let i = 0; i < kMaxSearchEngine; i++) {
-      let engine = items[i];
-      let item = PageActions.appendItem("search",
-                                        Elements.browserBundle.getString("pageactions.search.addNew"),
-                                        engine.title);
-
-      item.engine = engine;
-      item.onclick = function() {
-        BrowserSearch.addPermanentSearchEngine(item.engine);
-        PageActions.removeItem(item);
-      };
-    }
+    let engine = items[0];
+    aNode.setAttribute("description", engine.title);
+    aNode.onclick = function() {
+      BrowserSearch.addPermanentSearchEngine(engine);
+      PageActions.hideItem(aNode);
+    };
+    return true;
   },
 
   addPermanentSearchEngine: function (aEngine) {
@@ -1891,12 +1883,7 @@ IdentityHandler.prototype = {
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
 
-    // Update the site menu
-    FindHelperUI.updateFindInPage();
-    BrowserSearch.updatePageSearchEngines();
-    PageActions.updatePagePermissions();
-    PageActions.updatePageSaveAs();
-    PageActions.updateShare();
+    PageActions.updateSiteMenu();
   },
 
   show: function ih_show() {
