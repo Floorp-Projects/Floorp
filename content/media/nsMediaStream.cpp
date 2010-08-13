@@ -804,6 +804,13 @@ nsMediaChannelStream::IsSuspendedByCache()
   return mCacheSuspendCount > 0;
 }
 
+PRBool
+nsMediaChannelStream::IsSuspended()
+{
+  nsAutoLock lock(mLock);
+  return mSuspendCount > 0;
+}
+
 void
 nsMediaChannelStream::SetReadMode(nsMediaCacheStream::ReadMode aMode)
 {
@@ -891,6 +898,7 @@ public:
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) { return PR_MAX(aOffset, mSize); }
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset) { return PR_TRUE; }
   virtual PRBool  IsSuspendedByCache() { return PR_FALSE; }
+  virtual PRBool  IsSuspended() { return PR_FALSE; }
 
 private:
   // The file size, or -1 if not known. Immutable after Open().
