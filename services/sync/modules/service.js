@@ -269,7 +269,7 @@ WeaveSvc.prototype = {
 
     if (!this._checkCrypto()) {
       this.enabled = false;
-      this._log.error("Could not load the Weave crypto component. Disabling " +
+      this._log.info("Could not load the Weave crypto component. Disabling " +
                       "Weave, since it will not work correctly.");
     }
 
