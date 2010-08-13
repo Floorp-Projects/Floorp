@@ -91,6 +91,7 @@ _BROWSER_FILES = head.js \
                  signed-no-cn.xpi \
                  signed-untrusted.xpi \
                  signed-tampered.xpi \
+                 theme.xpi \
                  restartless.xpi \
                  incompatible.xpi \
                  empty.xpi \
