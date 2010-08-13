@@ -208,7 +208,7 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
                             nsIRenderingContext* aCtx)
 {
   static_cast<nsBulletFrame*>(mFrame)->
-    PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame), mVisibleRect);
+    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect);
 }
 
 NS_IMETHODIMP

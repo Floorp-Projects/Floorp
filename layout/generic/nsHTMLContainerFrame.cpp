@@ -131,8 +131,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
     ascent = metrics.maxAscent;
   }
 
-  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
-
+  nsPoint pt = ToReferenceFrame();
   nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
   if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
     gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
@@ -153,7 +152,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 class nsDisplayTextShadow : public nsDisplayItem {
@@ -268,7 +267,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
     nscolor shadowColor =
       shadow->mHasColor ? shadow->mColor : mFrame->GetStyleColor()->mColor;
 
-    nsPoint pt = aBuilder->ToReferenceFrame(mFrame) +
+    nsPoint pt = ToReferenceFrame() +
       nsPoint(shadow->mXOffset, shadow->mYOffset);
     nsPoint linePt;
     if (mLine) {
@@ -325,7 +324,7 @@ nsRect
 nsDisplayTextShadow::GetBounds(nsDisplayListBuilder* aBuilder)
 {
   // Shadows are always painted in the overflow rect
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  return mFrame->GetOverflowRect() + ToReferenceFrame();
 }
 
 nsresult

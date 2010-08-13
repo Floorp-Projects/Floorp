@@ -180,7 +180,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          LayerManager* aManager,
                          nsDisplayItem* aItem)
 {
-  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
+  nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
   nsIntSize videoSize = element->GetVideoSize(nsIntSize(0, 0));
   if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
@@ -380,7 +380,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     nsIFrame* f = GetUnderlyingFrame();
-    return f->GetContentRect() + aBuilder->ToReferenceFrame(f->GetParent());
+    return f->GetContentRect() - f->GetPosition() + ToReferenceFrame();
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,

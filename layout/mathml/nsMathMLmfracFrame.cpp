@@ -610,8 +610,7 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
 {
   // get the gfxRect
   nsPresContext* presContext = mFrame->PresContext();
-  gfxRect rect = presContext->
-    AppUnitsToGfxUnits(mRect + aBuilder->ToReferenceFrame(mFrame));
+  gfxRect rect = presContext->AppUnitsToGfxUnits(mRect + ToReferenceFrame());
   
   // paint with the current text color
   aCtx->SetColor(mFrame->GetStyleColor()->mColor);
