@@ -668,10 +668,7 @@ Invoke(JSContext *cx, const CallArgs &args, uintN flags)
             script = NULL;
         }
 
-        if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
-            /* Handle bound method special case. */
-            args.thisv().setObject(*funobj->getParent());
-        } else if (!args.thisv().isObjectOrNull()) {
+        if (!args.thisv().isObjectOrNull()) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
             if (PrimitiveThisTest(fun, args.thisv()))
                 return InvokeCommon(cx, fun, script, native, args, flags);
@@ -4620,7 +4617,6 @@ BEGIN_CASE(JSOP_APPLY)
             newfp->setScopeChain(obj->getParent());
             newfp->flags = flags;
             newfp->setBlockChain(NULL);
-            JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
             newfp->setThisValue(vp[1]);
             JS_ASSERT(!newfp->hasIMacroPC());
 
