@@ -39,6 +39,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=240933
         var val = t.value;
         synthesizeKey("VK_ENTER", {});
         is(t.value, val + "\n", "Pressing enter right after focusing the textarea should work");
+
+        t = document.getElementById("tb");
+        t.focus();
+        synthesizeKey("VK_ENTER", {});
+        is(t.value, "\n", "Pressing enter for the first time should work");
+        synthesizeKey("VK_ENTER", {});
+        is(t.value, "\n\n", "Pressing enter for the second time should work");
+        synthesizeKey("VK_BACK_SPACE", {});
+        is(t.value, "\n", "Pressing backspace for the first time should work");
+        synthesizeKey("VK_BACK_SPACE", {});
+        is(t.value, "", "Pressing backspace for the second time should work");
         SimpleTest.finish();
       });
 
@@ -51,6 +62,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=240933
 test
 
 </textarea>
+  <textarea id="tb" rows="10" cols="10"></textarea>
 
 </body>
 </html>
