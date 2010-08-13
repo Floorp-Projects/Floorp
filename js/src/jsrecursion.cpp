@@ -594,7 +594,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     for (unsigned i = 0; i < JS_MAX(fp->argc, fp->fun->nargs); i++)
         slurpSlot(argv_ins, i * sizeof(Value), &fp->argv[i], &info);
     /* argsobj */
-    slurpFrameObjPtrSlot(fp_ins, offsetof(JSStackFrame, argsobj), &fp->argsobj, &info);
+    slurpFrameObjPtrSlot(fp_ins, JSStackFrame::offsetArgsObj(), fp->addressArgsObj(), &info);
     /* scopeChain */
     slurpFrameObjPtrSlot(fp_ins, offsetof(JSStackFrame, scopeChain), &fp->scopeChain, &info);
     /* vars */

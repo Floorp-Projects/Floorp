@@ -41,16 +41,16 @@
  * Lexical scanner.
  */
 
-Narcissus.jslex = (function() {
+Narcissus.lexer = (function() {
 
-    var jsdefs = Narcissus.jsdefs;
+    var definitions = Narcissus.definitions;
 
     // Set constants in the local scope.
-    eval(jsdefs.consts);
+    eval(definitions.consts);
 
     // Build up a trie of operator tokens.
     var opTokens = {};
-    for (var op in jsdefs.opTypeNames) {
+    for (var op in definitions.opTypeNames) {
         if (op === '\n' || op === '.')
             continue;
 
@@ -82,7 +82,7 @@ Narcissus.jslex = (function() {
         get done() {
             // We need to set scanOperand to true here because the first thing
             // might be a regexp.
-            return this.peek(true) == END;
+            return this.peek(true) === END;
         },
 
         get token() {
@@ -90,7 +90,7 @@ Narcissus.jslex = (function() {
         },
 
         match: function (tt, scanOperand) {
-            return this.get(scanOperand) == tt || this.unget();
+            return this.get(scanOperand) === tt || this.unget();
         },
 
         mustMatch: function (tt) {
@@ -103,7 +103,7 @@ Narcissus.jslex = (function() {
             var tt, next;
             if (this.lookahead) {
                 next = this.tokens[(this.tokenIndex + this.lookahead) & 3];
-                tt = (this.scanNewlines && next.lineno != this.lineno)
+                tt = (this.scanNewlines && next.lineno !== this.lineno)
                      ? NEWLINE
                      : next.type;
             } else {
@@ -337,13 +337,13 @@ Narcissus.jslex = (function() {
             }
 
             var op = node.op;
-            if (jsdefs.assignOps[op] && input[this.cursor] === '=') {
+            if (definitions.assignOps[op] && input[this.cursor] === '=') {
                 this.cursor++;
                 token.type = ASSIGN;
-                token.assignOp = jsdefs.tokenIds[jsdefs.opTypeNames[op]];
+                token.assignOp = definitions.tokenIds[definitions.opTypeNames[op]];
                 op += '=';
             } else {
-                token.type = jsdefs.tokenIds[jsdefs.opTypeNames[op]];
+                token.type = definitions.tokenIds[definitions.opTypeNames[op]];
                 token.assignOp = null;
             }
 
@@ -363,7 +363,7 @@ Narcissus.jslex = (function() {
             this.cursor--;  // Put the non-word character back.
 
             var id = input.substring(token.start, this.cursor);
-            token.type = jsdefs.keywords[id] || IDENTIFIER;
+            token.type = definitions.keywords[id] || IDENTIFIER;
             token.value = id;
         },
 
@@ -379,7 +379,7 @@ Narcissus.jslex = (function() {
                 --this.lookahead;
                 this.tokenIndex = (this.tokenIndex + 1) & 3;
                 token = this.tokens[this.tokenIndex];
-                if (token.type != NEWLINE || this.scanNewlines)
+                if (token.type !== NEWLINE || this.scanNewlines)
                     return token.type;
             }
 
@@ -431,7 +431,7 @@ Narcissus.jslex = (function() {
          * Match depends on unget returning undefined.
          */
         unget: function () {
-            if (++this.lookahead == 4) throw "PANIC: too much lookahead!";
+            if (++this.lookahead === 4) throw "PANIC: too much lookahead!";
             this.tokenIndex = (this.tokenIndex - 1) & 3;
         },
 
@@ -463,7 +463,7 @@ Narcissus.jslex = (function() {
         }
     };
 
-    return { "Tokenizer": Tokenizer };
+    return { Tokenizer: Tokenizer };
 
 }());
 
