@@ -107,32 +107,32 @@ UNPACK_TAR       = tar -xf-
 
 ifeq ($(MOZ_PKG_FORMAT),TAR)
 PKG_SUFFIX	= .tar
-MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) > $(PACKAGE)
-UNMAKE_PACKAGE	= $(UNPACK_TAR) < $(UNPACKAGE)
+INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) > $(PACKAGE)
+INNER_UNMAKE_PACKAGE	= $(UNPACK_TAR) < $(UNPACKAGE)
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
-MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | gzip -vf9 > $(PACKAGE)
-UNMAKE_PACKAGE	= gunzip -c $(UNPACKAGE) | $(UNPACK_TAR)
+INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | gzip -vf9 > $(PACKAGE)
+INNER_UNMAKE_PACKAGE	= gunzip -c $(UNPACKAGE) | $(UNPACK_TAR)
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | gzip -vf9 > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
-MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | bzip2 -vf > $(PACKAGE)
-UNMAKE_PACKAGE	= bunzip2 -c $(UNPACKAGE) | $(UNPACK_TAR)
+INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | bzip2 -vf > $(PACKAGE)
+INNER_UNMAKE_PACKAGE	= bunzip2 -c $(UNPACKAGE) | $(UNPACK_TAR)
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
-MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
-UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
+INNER_MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
+INNER_UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
 endif
 ifeq ($(MOZ_PKG_FORMAT),CAB)
 PKG_SUFFIX	= .cab
-MAKE_PACKAGE	= $(MAKE_CAB)
-UNMAKE_PACKAGE	= $(error Unpacking CAB files is not supported)
+INNER_MAKE_PACKAGE	= $(MAKE_CAB)
+INNER_UNMAKE_PACKAGE	= $(error Unpacking CAB files is not supported)
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
@@ -169,11 +169,11 @@ endif
 ifndef PKG_DMG_SOURCE
 PKG_DMG_SOURCE = $(STAGEPATH)$(MOZ_PKG_DIR)
 endif
-MAKE_PACKAGE	= $(_ABS_MOZSRCDIR)/build/package/mac_osx/pkg-dmg \
+INNER_MAKE_PACKAGE	= $(_ABS_MOZSRCDIR)/build/package/mac_osx/pkg-dmg \
   --source "$(PKG_DMG_SOURCE)" --target "$(PACKAGE)" \
   --volname "$(MOZ_APP_DISPLAYNAME)" $(PKG_DMG_FLAGS)
 _ABS_DIST = $(call core_abspath,$(DIST))
-UNMAKE_PACKAGE	= \
+INNER_UNMAKE_PACKAGE	= \
   set -ex; \
   rm -rf $(_ABS_DIST)/unpack.tmp; \
   mkdir -p $(_ABS_DIST)/unpack.tmp; \
@@ -201,6 +201,40 @@ ifeq ($(MOZ_APP_NAME),xulrunner)
 SDK = $(SDK_PATH)$(MOZ_APP_NAME)-$(MOZ_PKG_VERSION).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
 endif
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
+endif
+
+ifdef MOZ_OMNIJAR
+OMNIJAR_FILES	= \
+  chrome \
+  chrome.manifest \
+  components/*.js \
+  components/*.xpt \
+  components/*.manifest \
+  modules \
+  res \
+  defaults \
+  greprefs.js \
+  $(NULL)
+
+NON_OMNIJAR_FILES = \
+  chrome/icons/\* \
+  res/cursors/\* \
+  res/MainMenu.nib/\* \
+  $(NULL)
+
+PACK_OMNIJAR	= \
+  rm -f omni.jar components/binary.manifest && \
+  grep -h '^binary-component' components/*.manifest > binary.manifest ; \
+  zip -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  mv binary.manifest components && \
+  printf "manifest components/binary.manifest\n" > chrome.manifest
+UNPACK_OMNIJAR	= unzip -o omni.jar && rm -f components/binary.manifest
+
+MAKE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && $(INNER_MAKE_PACKAGE)
+UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE) && (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(UNPACK_OMNIJAR))
+else
+MAKE_PACKAGE	= $(INNER_MAKE_PACKAGE)
+UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE)
 endif
 
 # dummy macro if we don't have PSM built
