@@ -52,14 +52,4 @@ ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
-# Preprocess some JS files!
-TileManager.js: $(srcdir)/content/TileManager.js.in
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-	cl -EP -C -nologo -I$(srcdir) $< > $@
-else
-	$(CC) -x c -C -E -P -I$(srcdir) $< > $@
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-export:: TileManager.js

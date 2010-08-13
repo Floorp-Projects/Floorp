@@ -260,13 +260,10 @@
             <!-- Content viewport -->
             <vbox class="window-width window-height">
               <stack id="tile-stack" class="window-width" flex="1">
-                <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
-                  <!-- Content viewport -->
-                  <html:div id="tile-container" style="overflow: hidden;" tabindex="-1">
-                    <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;">
-                    </html:canvas>
-                  </html:div>
-                </scrollbox>
+              <!-- Content viewport -->
+                <html:div id="browsers" style="overflow: hidden;"/>
+                <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;">
+                </html:canvas>
                 <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
                 </html:canvas>
               </stack>
@@ -562,7 +559,6 @@
 
   <box>
     <html:div style="position: relative; overflow: -moz-hidden-unscrollable; max-width: 0px; max-height: 0px; visibility: hidden;">
-      <html:div id="browsers" style="position: absolute;"/>
     </html:div>
   </box>
 
