@@ -43,7 +43,8 @@
 #include "nsReferencedElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGUtils.h"
-#include "nsTHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "nsURIHashKey.h"
 
 class nsSVGClipPathFrame;
 class nsSVGFilterFrame;
@@ -217,10 +218,17 @@ private:
 class nsSVGEffects {
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
+  typedef nsInterfaceHashtable<nsURIHashKey, nsIMutationObserver>
+    URIObserverHashtable;
 
   static void DestroySupports(void* aPropertyValue)
   {
     (static_cast<nsISupports*>(aPropertyValue))->Release();
+  }
+
+  static void DestroyHashtable(void* aPropertyValue)
+  {
+    delete static_cast<URIObserverHashtable*> (aPropertyValue);
   }
 
   NS_DECLARE_FRAME_PROPERTY(FilterProperty, DestroySupports)
@@ -232,6 +240,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(FillProperty, DestroySupports)
   NS_DECLARE_FRAME_PROPERTY(StrokeProperty, DestroySupports)
   NS_DECLARE_FRAME_PROPERTY(HrefProperty, DestroySupports)
+  NS_DECLARE_FRAME_PROPERTY(BackgroundImageProperty, DestroyHashtable)
 
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;
@@ -335,6 +344,13 @@ public:
   static nsSVGPaintingProperty *
   GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
                       const FramePropertyDescriptor *aProperty);
+  /**
+   * Get an nsSVGPaintingProperty for the frame for that URI, creating a fresh
+   * one if necessary
+   */
+  static nsSVGPaintingProperty *
+  GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
+                            const FramePropertyDescriptor *aProp);
 };
 
 #endif /*NSSVGEFFECTS_H_*/
