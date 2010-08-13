@@ -348,15 +348,15 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
 
   if (aCSSValue.IsFixedLengthUnit()) {
-    return aPresContext->TwipsToAppUnits(aCSSValue.GetLengthTwips());
+    return aCSSValue.GetFixedLength(aPresContext);
+  }
+  if (aCSSValue.IsPixelLengthUnit()) {
+    return aCSSValue.GetPixelLength();
   }
 
   nsCSSUnit unit = aCSSValue.GetUnit();
 
-  if (eCSSUnit_Pixel == unit) {
-    return nsPresContext::CSSPixelsToAppUnits(aCSSValue.GetFloatValue());
-  }
-  else if (eCSSUnit_EM == unit) {
+  if (eCSSUnit_EM == unit) {
     const nsStyleFont* font = aStyleContext->GetStyleFont();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
@@ -368,6 +368,8 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
 
+  // MathML doesn't specify other CSS units such as rem or ch
+  NS_ERROR("Unsupported unit");
   return 0;
 }
 
