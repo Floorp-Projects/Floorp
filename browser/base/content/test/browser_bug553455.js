@@ -406,6 +406,36 @@ function test_reload() {
       gBrowser.loadURI(TESTROOT2 + "enabled.html");
     });
   });
+},
+
+function test_theme() {
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "Theme XPI": "theme.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+  // Wait for the install confirmation dialog
+  wait_for_install_dialog(function(aWindow) {
+    aWindow.document.documentElement.acceptDialog();
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "Theme Test will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
+
+      gBrowser.removeTab(gBrowser.selectedTab);
+      Services.perms.remove("example.com", "install");
+      runNextTest();
+    });
+  });
 }
 ];
 
