@@ -62,7 +62,7 @@
 
 nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext) :
   nsSVGPatternFrameBase(aContext),
-  mLoopFlag(PR_FALSE), mPaintLoopFlag(PR_FALSE),
+  mLoopFlag(PR_FALSE),
   mNoHRefURI(PR_FALSE)
 {
 }
@@ -287,15 +287,15 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
     patternFrame->mSource = static_cast<nsSVGGeometryFrame*>(aSource);
   }
 
-  // Delay checking mPaintLoopFlag until here so we can give back a clear
-  // surface if there's a loop
-  if (!patternFrame->mPaintLoopFlag) {
-    patternFrame->mPaintLoopFlag = PR_TRUE;
+  // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
+  // give back a clear surface if there's a loop
+  if (!(patternFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)) {
+    patternFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
     for (nsIFrame* kid = firstKid; kid;
          kid = kid->GetNextSibling()) {
       nsSVGUtils::PaintFrameWithEffects(&tmpState, nsnull, kid);
     }
-    patternFrame->mPaintLoopFlag = PR_FALSE;
+    patternFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }
 
   patternFrame->mSource = nsnull;
