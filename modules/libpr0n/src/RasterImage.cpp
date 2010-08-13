@@ -159,7 +159,6 @@ RasterImage::RasterImage() :
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
-  mDecoderFlags(imgIDecoder::DECODER_FLAG_NONE),
   mHasSize(PR_FALSE),
   mDecodeOnDraw(PR_FALSE),
   mMultipart(PR_FALSE),
@@ -261,16 +260,12 @@ RasterImage::Init(imgIDecoderObserver *aObserver,
     return NS_OK;
   }
 
-  // Determine our decoder flags. If we're doing decode-on-draw,
-  // we want to do a quick first pass to get the size but nothing
-  // else. We instantiate another decoder later to do the full
-  // decoding.
-  PRUint32 dFlags = imgIDecoder::DECODER_FLAG_NONE;
-  if (mDecodeOnDraw)
-    dFlags |= imgIDecoder::DECODER_FLAG_HEADERONLY;
-
   // Instantiate the decoder
-  nsresult rv = InitDecoder(dFlags);
+  //
+  // If we're doing decode-on-draw, we want to do a quick first pass to get
+  // the size but nothing else. We instantiate another decoder later to do
+  // the full decoding.
+  nsresult rv = InitDecoder(/* aDoSizeDecode = */ mDecodeOnDraw);
   CONTAINER_ENSURE_SUCCESS(rv);
 
   // Mark us as initialized
@@ -1396,7 +1391,7 @@ RasterImage::NewSourceData()
 
   // We're decode-on-load here. Open up a new decoder just like what happens when
   // we call Init() for decode-on-load images.
-  rv = InitDecoder(imgIDecoder::DECODER_FLAG_NONE);
+  rv = InitDecoder(/* aDoSizeDecode = */ false);
   CONTAINER_ENSURE_SUCCESS(rv);
 
   return NS_OK;
@@ -2103,7 +2098,7 @@ RasterImage::StoringSourceData() {
 // Sets up a decoder for this image. It is an error to call this function
 // when decoding is already in process (ie - when mDecoder is non-null).
 nsresult
-RasterImage::InitDecoder(PRUint32 dFlags)
+RasterImage::InitDecoder(bool aDoSizeDecode)
 {
   // Ensure that the decoder is not already initialized
   NS_ABORT_IF_FALSE(!mDecoder, "Calling InitDecoder() while already decoding!");
@@ -2142,12 +2137,10 @@ RasterImage::InitDecoder(PRUint32 dFlags)
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
   }
 
-  // Store the flags for this decoder
-  mDecoderFlags = dFlags;
-
   // Initialize the decoder
   nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
-  nsresult result = mDecoder->Init(this, observer, dFlags);
+  mDecoder->SetSizeDecode(aDoSizeDecode);
+  nsresult result = mDecoder->Init(this, observer);
   CONTAINER_ENSURE_SUCCESS(result);
 
   // Create a decode worker
@@ -2175,6 +2168,9 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   // Ensure that the decoder is initialized
   NS_ABORT_IF_FALSE(mDecoder, "Calling ShutdownDecoder() with no active decoder!");
 
+  // Figure out what kind of decode we were doing before we get rid of our decoder
+  bool wasSizeDecode = mDecoder->IsSizeDecode();
+
   // Close the decoder with the appropriate flags
   mInDecoder = PR_TRUE;
   PRUint32 closeFlags = (aIntent == eShutdownIntent_Error)
@@ -2197,17 +2193,14 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   // We just shut down the decoder. If we didn't get what we want, but expected
   // to, flag an error
   PRBool failed = PR_FALSE;
-  if ((mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && !mHasSize)
+  if (wasSizeDecode && !mHasSize)
     failed = PR_TRUE;
-  if (!(mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && !mDecoded)
+  if (!wasSizeDecode && !mDecoded)
     failed = PR_TRUE;
   if ((aIntent == eShutdownIntent_Done) && failed) {
     DoError();
     return NS_ERROR_FAILURE;
   }
-
-  // Clear the flags
-  mDecoderFlags = imgIDecoder::DECODER_FLAG_NONE;
 
   // Reset number of decoded bytes
   mBytesDecoded = 0;
@@ -2295,11 +2288,11 @@ RasterImage::RequestDecode()
     return NS_OK;
 
   // If we've already got a full decoder running, we have nothing to do
-  if (mDecoder && !(mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY))
+  if (mDecoder && !mDecoder->IsSizeDecode())
     return NS_OK;
 
-  // If our callstack goes through a header-only decoder, we have a problem.
-  // We need to shutdown the header-only decoder and replace it with  a full
+  // If our callstack goes through a size decoder, we have a problem.
+  // We need to shutdown the size decode and replace it with  a full
   // decoder, but can't do that from within the decoder itself. Thus, we post
   // an asynchronous event to the event loop to do it later. Since
   // RequestDecode() is an asynchronous function this works fine (though it's
@@ -2312,8 +2305,8 @@ RasterImage::RequestDecode()
   }
 
 
-  // If we have a header-only decoder open, interrupt it and shut it down
-  if (mDecoder && (mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)) {
+  // If we have a size decode open, interrupt it and shut it down
+  if (mDecoder && mDecoder->IsSizeDecode()) {
     rv = ShutdownDecoder(eShutdownIntent_Interrupted);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
@@ -2321,7 +2314,7 @@ RasterImage::RequestDecode()
   // If we don't have a decoder, create one 
   if (!mDecoder) {
     NS_ABORT_IF_FALSE(mFrames.IsEmpty(), "Trying to decode to non-empty frame-array");
-    rv = InitDecoder(imgIDecoder::DECODER_FLAG_NONE);
+    rv = InitDecoder(/* aDoSizeDecode = */ false);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -2359,8 +2352,8 @@ RasterImage::SyncDecode()
   // disallow this type of call in the API, and check for it in API methods.
   NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
 
-  // If we have a header-only decoder open, shut it down
-  if (mDecoder && (mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)) {
+  // If we have a size decode open, shut it down
+  if (mDecoder && mDecoder->IsSizeDecode()) {
     rv = ShutdownDecoder(eShutdownIntent_Interrupted);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
@@ -2368,7 +2361,7 @@ RasterImage::SyncDecode()
   // If we don't have a decoder, create one 
   if (!mDecoder) {
     NS_ABORT_IF_FALSE(mFrames.IsEmpty(), "Trying to decode to non-empty frame-array");
-    rv = InitDecoder(imgIDecoder::DECODER_FLAG_NONE);
+    rv = InitDecoder(/* aDoSizeDecode = */ false);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -2518,7 +2511,7 @@ RasterImage::IsDecodeFinished()
                     "just shut down on SourceDataComplete!");
 
   // The decode is complete if we got what we wanted...
-  if (mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
+  if (mDecoder->IsSizeDecode()) {
     if (mHasSize)
       decodeFinished = PR_TRUE;
   }
@@ -2606,11 +2599,10 @@ imgDecodeWorker::Run()
   if (!image->mDecoder)
     return NS_OK;
 
-  // Header-only decodes are cheap and we more or less want them to be
+  // Size decodes are cheap and we more or less want them to be
   // synchronous. Write all the data in that case, otherwise write a
   // chunk
-  PRUint32 maxBytes =
-    (image->mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+  PRUint32 maxBytes = image->mDecoder->IsSizeDecode()
     ? image->mSourceData.Length() : DECODE_BYTES_AT_A_TIME;
 
   // Loop control

@@ -139,7 +139,7 @@ nsresult
 nsJPEGDecoder::InitInternal()
 {
   /* Fire OnStartDecode at init time to support bug 512435 */
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+  if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
 
   /* We set up the normal JPEG error routines, then override error_exit. */
@@ -189,7 +189,7 @@ nsJPEGDecoder::ShutdownInternal(PRUint32 aFlags)
    */
   if ((mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) &&
       (mState != JPEG_ERROR) &&
-      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !IsSizeDecode() &&
       !(aFlags & CLOSE_FLAG_DONTNOTIFY))
     this->Write(nsnull, 0);
 
@@ -206,7 +206,7 @@ nsJPEGDecoder::ShutdownInternal(PRUint32 aFlags)
   /* If we're doing a full decode and haven't notified of completion yet,
    * we must not have got everything we wanted. Send error notifications. */
   if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !IsSizeDecode() &&
       !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
@@ -261,8 +261,8 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (mObserver)
       mObserver->OnStartContainer(nsnull, mImage);
 
-    /* If we're doing a header-only decode, we're done. */
-    if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+    /* If we're doing a size decode, we're done. */
+    if (IsSizeDecode())
       return NS_OK;
 
     /* We're doing a full decode. */
