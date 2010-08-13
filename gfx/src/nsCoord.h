@@ -448,6 +448,8 @@ inline float NSCoordScale(nscoord aCoord, PRInt32 aFromAPP, PRInt32 aToAPP)
 #define TWIPS_PER_POINT_FLOAT         20.0f
 #define POINTS_PER_INCH_INT           72
 #define POINTS_PER_INCH_FLOAT         72.0f
+#define CM_PER_INCH_FLOAT             2.54f
+#define MM_PER_INCH_FLOAT             25.4f
 
 /* 
  * Twips/unit conversions

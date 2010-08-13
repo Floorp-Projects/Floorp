@@ -984,7 +984,7 @@ nsChildView::GetDPI()
   // userSpaceScaleFactor screen pixels. So divide the screen height
   // by userSpaceScaleFactor to get the number of "device pixels"
   // available.
-  return (heightPx / scaleFactor) / (heightMM / 25.4f);
+  return (heightPx / scaleFactor) / (heightMM / MM_PER_INCH_FLOAT);
 }
 
 LayerManager*

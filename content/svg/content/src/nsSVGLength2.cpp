@@ -207,7 +207,7 @@ nsSVGLength2::GetMMPerPixel(nsIFrame *aNonSVGFrame)
   nsPresContext* presContext = aNonSVGFrame->PresContext();
   float pixelsPerInch =
     presContext->AppUnitsToFloatCSSPixels(presContext->AppUnitsPerInch());
-  return 25.4f/pixelsPerInch;
+  return MM_PER_INCH_FLOAT/pixelsPerInch;
 }
 
 static float
@@ -277,11 +277,11 @@ nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx, PRUint8 aUnitType) const
   case nsIDOMSVGLength::SVG_LENGTHTYPE_CM:
     return GetMMPerPixel(aCtx) / 10.0f;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_IN:
-    return GetMMPerPixel(aCtx) / 25.4f;
+    return GetMMPerPixel(aCtx) / MM_PER_INCH_FLOAT;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PT:
-    return GetMMPerPixel(aCtx) * POINTS_PER_INCH_FLOAT / 25.4f;
+    return GetMMPerPixel(aCtx) * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PC:
-    return GetMMPerPixel(aCtx) * POINTS_PER_INCH_FLOAT / 24.4f / 12.0f;
+    return GetMMPerPixel(aCtx) * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT / 12.0f;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
     return 100.0f / GetAxisLength(aCtx);
   case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
@@ -310,11 +310,11 @@ nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, PRUint8 aUnitType) const
   case nsIDOMSVGLength::SVG_LENGTHTYPE_CM:
     return GetMMPerPixel(aFrame) / 10.0f;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_IN:
-    return GetMMPerPixel(aFrame) / 25.4f;
+    return GetMMPerPixel(aFrame) / MM_PER_INCH_FLOAT;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PT:
-    return GetMMPerPixel(aFrame) * POINTS_PER_INCH_FLOAT / 25.4f;
+    return GetMMPerPixel(aFrame) * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PC:
-    return GetMMPerPixel(aFrame) * POINTS_PER_INCH_FLOAT / 24.4f / 12.0f;
+    return GetMMPerPixel(aFrame) * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT / 12.0f;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
     return 100.0f / GetAxisLength(aFrame);
   case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
