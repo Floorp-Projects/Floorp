@@ -420,7 +420,9 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
 
 class nsDisplaySVG : public nsDisplayItem {
 public:
-  nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplaySVG(nsDisplayListBuilder* aBuilder,
+               nsSVGOuterSVGFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplaySVG);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -534,7 +536,8 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplaySVG(this));
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplaySVG(aBuilder, this));
 }
 
 void
