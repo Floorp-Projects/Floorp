@@ -138,6 +138,18 @@ nsPlacesDBFlush.prototype = {
           // Close the database connection, this was the last sync and we can't
           // ensure database coherence from now on.
           this._self._finalizeInternalStatements();
+
+          // Before closing the connection we have to set back journal mode to
+          // a backwards compatible value.  Newer journal modes like WAL make
+          // the database incompatible with old versions of the browser, setting
+          // an old mode restores database version.
+          // See http://www.sqlite.org/draft/wal.html
+          let journalStmt = this._self._db.createAsyncStatement(
+            "PRAGMA journal_mode = truncate"
+          );
+          journalStmt.executeAsync();
+          journalStmt.finalize();
+
           this._self._db.asyncClose();
         }
       }, Ci.nsIThread.DISPATCH_NORMAL);
