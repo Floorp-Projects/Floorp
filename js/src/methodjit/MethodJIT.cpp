@@ -733,7 +733,7 @@ mjit::ProfileStubCall(VMFrame &f)
 bool
 VMFrame::slowEnsureSpace(uint32 nslots)
 {
-    return cx->stack().ensureSpace(cx, reinterpret_cast<Value*>(fp), regs.sp,
+    return cx->stack().ensureSpace(cx, reinterpret_cast<Value*>(entryFp), regs.sp,
                                    stackLimit, nslots);
 }
 
