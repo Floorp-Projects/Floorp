@@ -93,12 +93,13 @@ public:
 	 * Loads the plugin into memory using NSPR's shared-library loading
 	 * mechanism. Handles platform differences in loading shared libraries.
 	 */
-	nsresult LoadPlugin(PRLibrary* &outLibrary);
+	nsresult LoadPlugin(PRLibrary **outLibrary);
 
 	/**
 	 * Obtains all of the information currently available for this plugin.
+	 * Has a library outparam which will be non-null if a library load was required.
 	 */
-	nsresult GetPluginInfo(nsPluginInfo &outPluginInfo);
+	nsresult GetPluginInfo(nsPluginInfo &outPluginInfo, PRLibrary **outLibrary);
 
   /**
 	 * Should be called after GetPluginInfo to free all allocated stuff
