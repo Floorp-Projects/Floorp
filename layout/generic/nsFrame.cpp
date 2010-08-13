@@ -1058,23 +1058,7 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
   if (!aFrame->GetAbsPosClipRect(aDisp, aRect, aFrame->GetSize()))
     return PR_FALSE;
 
-  // A moving frame should not be allowed to clip a non-moving frame.
-  // Abs-pos clipping always clips frames below it in the frame tree, except
-  // for when an abs-pos frame clips a fixed-pos frame. So when fixed-pos
-  // elements are present we do not allow a moving abs-pos frame with
-  // an out-of-flow descendant (which could be a fixed frame) child to clip
-  // anything. It's OK to not clip anything, even the moving children ...
-  // all that could happen is that we get unnecessarily conservative results
-  // for nsLayoutUtils::ComputeRepaintRegionForCopy ... but this is a rare
-  // situation.
-  if (aBuilder->HasMovingFrames() &&
-      aFrame->PresContext()->FrameManager()->GetRootFrame()->
-          GetFirstChild(nsGkAtoms::fixedList) &&
-      aBuilder->IsMovingFrame(aFrame))
-    return PR_FALSE;
-
   *aRect += aBuilder->ToReferenceFrame(aFrame);
-
   return PR_TRUE;
 }
 
