@@ -300,7 +300,6 @@ private:
 
   static HMODULE sLibraryHandle;
   static const PRUnichar kGestureLibraryName[];
-  static const PRUnichar kThemeLibraryName[];
 
   // Pan and feedback state
   nsPointWin mPanIntermediate;
