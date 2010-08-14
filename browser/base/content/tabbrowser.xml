@@ -510,9 +510,12 @@
                   this.mBrowser.mIconURL = null;
 
                 let browserHistory = this.mTabBrowser.mBrowserHistory;
-                if (this.mBrowser.lastURI)
-                  browserHistory.unregisterOpenPage(this.mBrowser.lastURI);
+                if (this.mBrowser.registeredOpenURI) {
+                  browserHistory.unregisterOpenPage(this.mBrowser.registeredOpenURI);
+                  delete this.mBrowser.registeredOpenURI;
+                }
                 browserHistory.registerOpenPage(aLocation);
+                this.mBrowser.registeredOpenURI = aLocation;
               }
 
               if (!this.mBlank) {
@@ -1433,8 +1436,10 @@
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
 
-            if (browser.currentURI)
-              this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
+            if (browser.registeredOpenURI) {
+              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              delete browser.registeredOpenURI;
+            }
 
             // We are no longer the primary content area.
             browser.setAttribute("type", "content-targetable");
@@ -2309,7 +2314,10 @@
         <![CDATA[
           for (var i = 0; i < this.mTabListeners.length; ++i) {
             let browser = this.getBrowserAtIndex(i);
-            this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
+            if (browser.registeredOpenURI) {
+              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              delete browser.registeredOpenURI;
+            }
             browser.webProgress.removeProgressListener(this.mTabFilters[i]);
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;
