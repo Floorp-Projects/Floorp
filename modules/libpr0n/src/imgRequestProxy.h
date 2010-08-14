@@ -44,7 +44,6 @@
 #include "imgIDecoderObserver.h"
 #include "nsISecurityInfoProvider.h"
 
-#include "imgIDecoder.h"
 #include "nsIRequestObserver.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"

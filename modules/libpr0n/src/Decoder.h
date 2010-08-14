@@ -42,19 +42,13 @@
 #include "RasterImage.h"
 
 #include "imgIDecoderObserver.h"
-#include "imgIDecoder.h"
 
 namespace mozilla {
 namespace imagelib {
 
-// XXX - We temporarily inherit imgIDecoder
-class Decoder : public imgIDecoder
+class Decoder
 {
 public:
-
-  // XXX - We should get rid of these when westop inheriting imgIDecoder
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODER
 
   Decoder();
   ~Decoder();
@@ -83,9 +77,7 @@ public:
    *
    * Notifications Sent: TODO
    */
-  // This is commented out while we inherit imgIDecoder because the signature
-  // is the same as the one in the idl.
-  // nsresult Write(const char* aBuffer, PRUint32 aCount);
+  nsresult Write(const char* aBuffer, PRUint32 aCount);
 
   /**
    * Informs the decoder that all the data has been written.
@@ -95,8 +87,7 @@ public:
   nsresult Finish();
 
   // We're not COM-y, so we don't get refcounts by default
-  // XXX - This is uncommented in a later patch when we stop inheriting imgIDecoder
-  // NS_INLINE_DECL_REFCOUNTING(Decoder)
+  NS_INLINE_DECL_REFCOUNTING(Decoder)
 
   /*
    * State.
