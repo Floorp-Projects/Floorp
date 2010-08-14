@@ -491,30 +491,16 @@ RasterImage::GetCurrentFrameRect(nsIntRect &aRect)
   return NS_OK;
 }
 
-nsresult
-RasterImage::GetCurrentFrameIndex(PRUint32 *aCurrentFrameIdx)
+PRUint32
+RasterImage::GetCurrentFrameIndex()
 {
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(aCurrentFrameIdx);
-  
-  *aCurrentFrameIdx = GetCurrentImgFrameIndex();
-
-  return NS_OK;
+  return GetCurrentImgFrameIndex();
 }
 
-nsresult
-RasterImage::GetNumFrames(PRUint32 *aNumFrames)
+PRUint32
+RasterImage::GetNumFrames()
 {
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(aNumFrames);
-
-  *aNumFrames = mFrames.Length();
-  
-  return NS_OK;
+  return mFrames.Length();
 }
 
 //******************************************************************************
@@ -663,25 +649,24 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
   return rv;
 }
 
-nsresult
-RasterImage::GetDataSize(PRUint32 *_retval)
+PRUint32
+RasterImage::GetDataSize()
 {
   if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(_retval);
+    return 0;
 
   // Start with 0
-  *_retval = 0;
+  PRUint32 size = 0;
 
   // Account for any compressed source data
-  *_retval += GetSourceDataSize();
-  NS_ABORT_IF_FALSE(StoringSourceData() || (*_retval == 0),
+  size += GetSourceDataSize();
+  NS_ABORT_IF_FALSE(StoringSourceData() || (size == 0),
                     "Non-zero source data size when we aren't storing it?");
 
   // Account for any uncompressed frames
-  *_retval += GetDecodedDataSize();
-  return NS_OK;
+  size += GetDecodedDataSize();
+
+  return size;
 }
 
 PRUint32
