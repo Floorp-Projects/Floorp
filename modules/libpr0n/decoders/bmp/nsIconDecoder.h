@@ -56,6 +56,11 @@
     { 0x99, 0x5, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b }   \
 }
 
+namespace mozilla {
+namespace imagelib {
+class RasterImage;
+} // namespace imagelib
+} // namespace mozilla
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // The icon decoder is a decoder specifically tailored for loading icons 
@@ -85,7 +90,7 @@ public:
   nsIconDecoder();
   virtual ~nsIconDecoder();
 
-  nsCOMPtr<imgIContainer> mImage;
+  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
   nsCOMPtr<imgIDecoderObserver> mObserver;
   PRUint32 mFlags;
   PRUint8 mWidth;

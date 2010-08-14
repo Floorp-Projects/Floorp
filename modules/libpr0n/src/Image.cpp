@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,12 +15,11 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010.
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Scott MacGregor <mscott@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,53 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/ModuleUtils.h"
-#include "nsServiceManagerUtils.h"
+#include "Image.h"
 
-#include "nsIconProtocolHandler.h"
-#include "nsIconURI.h"
-#include "nsIconChannel.h"
+namespace mozilla {
+namespace imagelib {
 
-// objects that just require generic constructors
-/******************************************************************************
- * Protocol CIDs
- */
-#define NS_ICONPROTOCOL_CID   { 0xd0f9db12, 0x249c, 0x11d5, { 0x99, 0x5, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } } 
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
-
-NS_DEFINE_NAMED_CID(NS_ICONPROTOCOL_CID);
-
-static const mozilla::Module::CIDEntry kIconCIDs[] = {
-  { &kNS_ICONPROTOCOL_CID, false, NULL, nsIconProtocolHandlerConstructor },
-  { NULL }
-};
-
-static const mozilla::Module::ContractIDEntry kIconContracts[] = {
-  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-icon", &kNS_ICONPROTOCOL_CID },
-  { NULL }
-};
-
-static const mozilla::Module::CategoryEntry kIconCategories[] = {
-  { NULL }
-};
-
-static void
-IconDecoderModuleDtor()
+// Constructor
+Image::Image() :
+  mStatusTracker(this),
+  mInitialized(PR_FALSE)
 {
-#ifdef MOZ_WIDGET_GTK2
-  nsIconChannel::Shutdown();
-#endif
 }
 
-static const mozilla::Module kIconModule = {
-  mozilla::Module::kVersion,
-  kIconCIDs,
-  kIconContracts,
-  kIconCategories,
-  NULL,
-  NULL,
-  IconDecoderModuleDtor
-};
-
-NSMODULE_DEFN(nsIconDecoderModule) = &kIconModule;
+} // namespace imagelib
+} // namespace mozilla

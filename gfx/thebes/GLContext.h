@@ -626,12 +626,12 @@ protected:
     template<size_t setlen>
     struct ExtensionBitset {
         ExtensionBitset() {
-            for (int i = 0; i < setlen; ++i)
+            for (size_t i = 0; i < setlen; ++i)
                 values[i] = false;
         }
 
-        bool& operator[](const int index) {
-            NS_ASSERTION(index >= 0 && index < setlen, "out of range");
+        bool& operator[](size_t index) {
+            NS_ASSERTION(index < setlen, "out of range");
             return values[index];
         }
 
