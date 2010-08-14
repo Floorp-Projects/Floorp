@@ -52,13 +52,13 @@ LIBXUL_LIBRARY  = 1
 
 CPPSRCS		= \
 			Image.cpp \
+			DiscardTracker.cpp \
 			imgContainer.cpp \
 			imgFrame.cpp \
 			imgLoader.cpp    \
 			imgRequest.cpp   \
 			imgRequestProxy.cpp \
 			imgTools.cpp \
-			imgDiscardTracker.cpp \
                         imgStatusTracker.cpp \
 			$(NULL)
 

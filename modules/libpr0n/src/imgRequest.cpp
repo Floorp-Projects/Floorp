@@ -82,7 +82,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
-#include "imgDiscardTracker.h"
+#include "DiscardTracker.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 
 #define DISCARD_PREF "image.mem.discardable"
