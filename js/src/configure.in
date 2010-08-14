@@ -206,6 +206,19 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
 
+MOZ_ARG_ENABLE_BOOL(shared-js,
+[  --disable-shared-js
+                          Do not create a shared library.],
+    DISABLE_SHARED_JS=0,
+    DISABLE_SHARED_JS=1)
+
+if test "$DISABLE_SHARED_JS" = "1" ; then
+  AC_DEFINE(STATIC_EXPORTABLE_JS_API)
+else
+  JS_SHARED_LIBRARY=1
+fi
+AC_SUBST(JS_SHARED_LIBRARY)
+
 dnl ========================================================
 dnl = Android uses a very custom (hacky) toolchain; we need to do this
 dnl = here, so that the compiler checks can succeed
