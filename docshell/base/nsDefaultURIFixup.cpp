@@ -48,6 +48,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
+#include "nsIBrowserSearchService.h"
 
 #include "nsIURIFixup.h"
 #include "nsDefaultURIFixup.h"
@@ -388,16 +389,43 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
         mPrefBranch->GetCharPref("keyword.URL", getter_Copies(url));
     }
 
-    // if we can't find a keyword.URL keywords won't work.
-    if (url.IsEmpty())
-        return NS_ERROR_NOT_AVAILABLE;
+    // If the pref is set and non-empty, use it.
+    if (!url.IsEmpty()) {
+        nsCAutoString spec;
+        nsresult rv = MangleKeywordIntoURI(PromiseFlatCString(aKeyword).get(),
+                                           url.get(), spec);
+        if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString spec;
-    nsresult rv = MangleKeywordIntoURI(PromiseFlatCString(aKeyword).get(),
-                                       url.get(), spec);
-    if (NS_FAILED(rv)) return rv;
+        return NS_NewURI(aURI, spec);
+    }
 
-    return NS_NewURI(aURI, spec);
+    // Try falling back to the search service's default search engine
+    nsCOMPtr<nsIBrowserSearchService> searchSvc = do_GetService("@mozilla.org/browser/search-service;1");
+    if (searchSvc) {
+        nsCOMPtr<nsISearchEngine> defaultEngine;
+        searchSvc->GetDefaultEngine(getter_AddRefs(defaultEngine));
+        if (defaultEngine) {
+            nsCOMPtr<nsISearchSubmission> submission;
+            defaultEngine->GetSubmission(NS_ConvertUTF8toUTF16(aKeyword),
+                                         EmptyString(),
+                                         getter_AddRefs(submission));
+            if (submission) {
+                // The submission depends on POST data (i.e. the search engine's
+                // "method" is POST), we can't use this engine for keyword
+                // searches
+                nsCOMPtr<nsIInputStream> postData;
+                submission->GetPostData(getter_AddRefs(postData));
+                if (postData) {
+                    return NS_ERROR_NOT_AVAILABLE;
+                }
+
+                return submission->GetUri(aURI);
+            }
+        }
+    }
+
+    // out of options
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)

@@ -140,6 +140,7 @@ XPIDLSRCS	= \
 		nsIURIWithPrincipal.idl \
 		nsIURIClassifier.idl \
 		nsIRedirectResultListener.idl \
+		nsIBrowserSearchService.idl \
 		$(NULL)
 
 EXPORTS		= \
