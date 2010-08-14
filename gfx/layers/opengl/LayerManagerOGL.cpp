@@ -501,7 +501,7 @@ LayerManagerOGL::Render()
   }
 
   nsIntRect rect;
-  mWidget->GetBounds(rect);
+  mWidget->GetClientBounds(rect);
   GLint width = rect.width;
   GLint height = rect.height;
 
