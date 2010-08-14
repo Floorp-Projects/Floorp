@@ -1048,7 +1048,7 @@ window.Items = {
           var bounds2 = pair2.bounds;
           if (bounds2.intersects(newBounds))
             blocked = true;
-          return;
+					return;
         });
 
         if (!blocked) {
