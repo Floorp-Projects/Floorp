@@ -57,7 +57,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
-#include "imgIDecoder.h"
 #include "nsIProperties.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
@@ -65,6 +64,9 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "imgDiscardTracker.h"
+
+class imgIDecoder;
+class nsIInputStream;
 
 #define NS_IMGCONTAINER_CID \
 { /* 376ff2c1-9bf6-418a-b143-3340c00112f7 */         \
