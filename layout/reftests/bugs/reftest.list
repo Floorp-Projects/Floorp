@@ -617,7 +617,7 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 373298-1.html 373298-1-ref.html
 == 373381-1.html 373381-1-ref.html
 == 373381-2.html 373381-2-ref.html
-== 373381-3.html 373381-3-ref.html
+random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373381-4.html 373381-4-ref.html
 == 375508-1.html 375508-1-ref.html
 == 373433-1.html 373433-1-ref.html
@@ -625,7 +625,7 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 372768-1.html 372768-1-ref.html
 == 373383-1.html 373383-1-ref.html
 == 374038-1.xul 374038-1-ref.xul
-== 374719-1.xul 374719-1-ref.xul
+random-if(d2d) == 374719-1.xul 374719-1-ref.xul
 == 374038-2.xul 374038-2-ref.xul
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375716-1.html 375716-1-ref.html
@@ -1245,7 +1245,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 478614-5.html 478614-5-ref.html
 == 478614-6.html 478614-6-ref.html
 == 478614-7.html 478614-7-ref.html
-== 478377-1.xul 478377-1-ref.xul
+random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 == 478811-1.html 478811-1-ref.html
 == 478811-2.html 478811-2-ref.html
 == 478811-3.html 478811-3-ref.html
