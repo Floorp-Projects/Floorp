@@ -288,6 +288,9 @@ protected:
   static LRESULT CALLBACK MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
   static VOID    CALLBACK HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime );
+#ifdef CAIRO_HAS_D2D_SURFACE
+  static BOOL    CALLBACK ClearD2DSurfaceCallback(HWND aChild, LPARAM aParam);
+#endif
 
   /**
    * Window utilities
@@ -445,6 +448,9 @@ protected:
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY
+#ifdef CAIRO_HAS_D2D_SURFACE
+  void                    ClearD2DSurface();
+#endif
 
 protected:
   nsCOMPtr<nsIWidget>   mParent;
