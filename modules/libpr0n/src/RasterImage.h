@@ -172,6 +172,108 @@ public:
   /* Triggers discarding. */
   void Discard();
 
+  /* Callbacks for decoders */
+  nsresult SetFrameDisposalMethod(PRUint32 aFrameNum,
+                                  PRInt32 aDisposalMethod);
+  nsresult SetFrameTimeout(PRUint32 aFrameNum, PRInt32 aTimeout);
+  nsresult SetFrameBlendMethod(PRUint32 aFrameNum, PRInt32 aBlendMethod);
+  nsresult SetFrameHasNoAlpha(PRUint32 aFrameNum);
+
+  /**
+   * Sets the size of the container. This should only be called by the
+   * decoder. This function may be called multiple times, but will throw an
+   * error if subsequent calls do not match the first.
+   */
+  nsresult SetSize(PRInt32 aWidth, PRInt32 aHeight);
+
+  nsresult EnsureCleanFrame(PRUint32 aFramenum, PRInt32 aX, PRInt32 aY,
+                            PRInt32 aWidth, PRInt32 aHeight,
+                            gfxASurface::gfxImageFormat aFormat,
+                            PRUint8** imageData,
+                            PRUint32* imageLength);
+
+  /**
+   * Adds to the end of the list of frames.
+   */
+  nsresult AppendFrame(PRInt32 aX, PRInt32 aY,
+                       PRInt32 aWidth, PRInt32 aHeight,
+                       gfxASurface::gfxImageFormat aFormat,
+                       PRUint8** imageData,
+                       PRUint32* imageLength);
+
+  nsresult AppendPalettedFrame(PRInt32 aX, PRInt32 aY,
+                               PRInt32 aWidth, PRInt32 aHeight,
+                               gfxASurface::gfxImageFormat aFormat,
+                               PRUint8 aPaletteDepth,
+                               PRUint8**  imageData,
+                               PRUint32*  imageLength,
+                               PRUint32** paletteData,
+                               PRUint32*  paletteLength);
+
+  nsresult FrameUpdated(PRUint32 aFrameNum, nsIntRect& aUpdatedRect);
+
+  /* notification when the current frame is done decoding */
+  nsresult EndFrameDecode(PRUint32 aFrameNum);
+
+  /* notification that the entire image has been decoded */
+  nsresult DecodingComplete();
+
+  /**
+   * Number of times to loop the image.
+   * @note -1 means forever.
+   */
+  void     SetLoopCount(PRInt32 aLoopCount);
+
+  /* Add compressed source data to the imgContainer.
+   *
+   * The decoder will use this data, either immediately or at draw time, to
+   * decode the image.
+   *
+   * XXX This method's only caller (WriteToContainer) ignores the return
+   * value. Should this just return void?
+   */
+  nsresult AddSourceData(const char *aBuffer, PRUint32 aCount);
+
+  /* Called after the all the source data has been added with addSourceData. */
+  virtual nsresult SourceDataComplete();
+
+  /* Called for multipart images when there's a new source image to add. */
+  virtual nsresult NewSourceData();
+
+  /**
+   * A hint of the number of bytes of source data that the image contains. If
+   * called early on, this can help reduce copying and reallocations by
+   * appropriately preallocating the source data buffer.
+   *
+   * We take this approach rather than having the source data management code do
+   * something more complicated (like chunklisting) because HTTP is by far the
+   * dominant source of images, and the Content-Length header is quite reliable.
+   * Thus, pre-allocation simplifies code and reduces the total number of
+   * allocations.
+   */
+  virtual nsresult SetSourceSizeHint(PRUint32 sizeHint);
+
+  // "Blend" method indicates how the current image is combined with the
+  // previous image.
+  enum {
+    // All color components of the frame, including alpha, overwrite the current
+    // contents of the frame's output buffer region
+    kBlendSource =  0,
+
+    // The frame should be composited onto the output buffer based on its alpha,
+    // using a simple OVER operation
+    kBlendOver
+  };
+
+  enum {
+    kDisposeClearAll         = -1, // Clear the whole image, revealing
+                                   // what was there before the gif displayed
+    kDisposeNotSpecified,   // Leave frame, let new frame draw on top
+    kDisposeKeep,           // Leave frame, let new frame draw on top
+    kDisposeClear,          // Clear the frame's area, revealing bg
+    kDisposeRestorePrevious // Restore the previous (composited) frame
+  };
+
 private:
   struct Anim
   {

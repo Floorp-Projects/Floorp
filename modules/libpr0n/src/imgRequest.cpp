@@ -87,6 +87,7 @@
 
 #define DISCARD_PREF "image.mem.discardable"
 #define DECODEONDRAW_PREF "image.mem.decodeondraw"
+#define SVG_MIMETYPE "image/svg+xml"
 
 using namespace mozilla::imagelib;
 
@@ -202,6 +203,9 @@ nsresult imgRequest::Init(nsIURI *aURI,
   NS_ABORT_IF_FALSE(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
+
+  // XXXdholbert For SVG support, this mImage-construction will need to happen
+  // later -- *after* we know image mimetype.
   nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/rasterimage;1");
   mImage = static_cast<Image*>(comImg.get());
 
@@ -725,10 +729,10 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
                     "Already have an image for non-multipart request");
 
   // If we're multipart, and our image is initialized, fix things up for another round
-  if (mIsMultiPartChannel && mImage->IsInitialized()) {
-
+  if (mIsMultiPartChannel && mImage->IsInitialized() &&
+      mImage->GetType() == imgIContainer::TYPE_RASTER) {
     // Inform the container that we have new source data
-    mImage->NewSourceData();
+    static_cast<RasterImage*>(mImage.get())->NewSourceData();
   }
 
   /*
@@ -863,10 +867,11 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // Tell the image that it has all of the source data. Note that this can
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
-  if (mImage->IsInitialized()) {
+  if (mImage->IsInitialized() &&
+      mImage->GetType() == imgIContainer::TYPE_RASTER) {
 
     // Notify the image
-    nsresult rv = mImage->SourceDataComplete();
+    nsresult rv = static_cast<RasterImage*>(mImage.get())->SourceDataComplete();
 
     // If we got an error in the SourceDataComplete() call, we don't want to
     // proceed as if nothing bad happened. However, we also want to give
@@ -914,7 +919,10 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   nsresult rv;
 
-  if (!mGotData) {
+  PRUint16 imageType;
+  if (mGotData) {
+    imageType = mImage->GetType();
+  } else {
     LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |First time through... finding mimetype|");
 
     mGotData = PR_TRUE;
@@ -951,6 +959,10 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
       LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
     }
+
+    /* now we have mimetype, so we can infer the image type that we want */
+    imageType = mContentType.EqualsLiteral(SVG_MIMETYPE) ?
+      imgIContainer::TYPE_VECTOR : imgIContainer::TYPE_RASTER;
 
     /* set our mimetype as a property */
     nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
@@ -1026,20 +1038,23 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       return NS_BINDING_ABORTED;
     }
 
-    /* Use content-length as a size hint for http channels. */
-    if (httpChannel) {
-      nsCAutoString contentLength;
-      rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
-                                          contentLength);
-      if (NS_SUCCEEDED(rv)) {
-        PRInt32 len = contentLength.ToInteger(&rv);
+    if (imageType == imgIContainer::TYPE_RASTER) {
+      /* Use content-length as a size hint for http channels. */
+      if (httpChannel) {
+        nsCAutoString contentLength;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
+                                            contentLength);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 len = contentLength.ToInteger(&rv);
 
-        // Pass anything usable on so that the Image can preallocate its
-        // source buffer
-        if (len > 0) {
-          PRUint32 sizeHint = (PRUint32) len;
-          sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
-          mImage->SetSourceSizeHint(sizeHint);
+          // Pass anything usable on so that the RasterImage can preallocate
+          // its source buffer
+          if (len > 0) {
+            PRUint32 sizeHint = (PRUint32) len;
+            sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
+            RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
+            rasterImage->SetSourceSizeHint(sizeHint);
+          }
         }
       }
     }
