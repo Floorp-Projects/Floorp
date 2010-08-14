@@ -1143,7 +1143,7 @@ js_NewGenerator(JSContext *cx)
     newfp->argc = fp->argc;
     newfp->argv = vp + 2;
     newfp->rval = fp->rval;
-    newfp->annotation = NULL;
+    newfp->setAnnotation(NULL);
     newfp->setScopeChain(fp->maybeScopeChain());
     JS_ASSERT(!fp->hasBlockChain());
     newfp->setBlockChain(NULL);
