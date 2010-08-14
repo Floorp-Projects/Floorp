@@ -245,7 +245,7 @@ struct PICInfo {
     uint32 stubsGenerated : 5;
 
     // Offset from start of fast path to initial shape guard.
-    int shapeGuard;
+    uint32 shapeGuard;
     
     // Return address of slow path call, as an offset from slowPathStart.
     uint32 callReturn;
