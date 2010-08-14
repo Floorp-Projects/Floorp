@@ -60,6 +60,8 @@
 
 #include "gfxContext.h"
 
+using namespace mozilla::imagelib;
+
 /* Accounting for compressed data */
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("CompressedImageAccounting");
@@ -192,7 +194,7 @@ imgContainer::~imgContainer()
              discardable_source_bytes));
   }
 
-  imgDiscardTracker::Remove(&mDiscardTrackerNode);
+  DiscardTracker::Remove(&mDiscardTrackerNode);
 
   // If we have a decoder open, shut it down
   if (mDecoder) {
@@ -1042,7 +1044,7 @@ NS_IMETHODIMP imgContainer::DecodingComplete(void)
   if (CanDiscard()) {
     NS_ABORT_IF_FALSE(!DiscardingActive(),
                       "We shouldn't have been discardable before this");
-    rv = imgDiscardTracker::Reset(&mDiscardTrackerNode);
+    rv = DiscardTracker::Reset(&mDiscardTrackerNode);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -1359,7 +1361,7 @@ NS_IMETHODIMP imgContainer::SourceDataComplete()
 
   // We now have one of the qualifications for discarding. Re-evaluate.
   if (CanDiscard()) {
-    nsresult rv = imgDiscardTracker::Reset(&mDiscardTrackerNode);
+    nsresult rv = DiscardTracker::Reset(&mDiscardTrackerNode);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
   return NS_OK;
@@ -2261,7 +2263,7 @@ imgContainer::WantDecodedFrames()
   if (CanDiscard()) {
     NS_ABORT_IF_FALSE(DiscardingActive(),
                       "Decoded and discardable but discarding not activated!");
-    rv = imgDiscardTracker::Reset(&mDiscardTrackerNode);
+    rv = DiscardTracker::Reset(&mDiscardTrackerNode);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -2433,7 +2435,7 @@ imgContainer::LockImage()
     return NS_ERROR_FAILURE;
 
   // Cancel the discard timer if it's there
-  imgDiscardTracker::Remove(&mDiscardTrackerNode);
+  DiscardTracker::Remove(&mDiscardTrackerNode);
 
   // Increment the lock count
   mLockCount++;
@@ -2463,7 +2465,7 @@ imgContainer::UnlockImage()
 
   // We now _might_ have one of the qualifications for discarding. Re-evaluate.
   if (CanDiscard()) {
-    nsresult rv = imgDiscardTracker::Reset(&mDiscardTrackerNode);
+    nsresult rv = DiscardTracker::Reset(&mDiscardTrackerNode);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
