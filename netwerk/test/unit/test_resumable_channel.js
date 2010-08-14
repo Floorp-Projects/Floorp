@@ -214,23 +214,24 @@ function run_test() {
 
     // Authentication (no password; working resume)
     // (should not give us any data)
-    // XXX skip all authentication tests for now, as they're busted on e10s (bug 587146)
+    // XXX skip authentication tests on e10s (bug 587146)
     try { // nsIXULRuntime is not available in some configurations.
       let processType = Components.classes["@mozilla.org/xre/runtime;1"].
                         getService(Components.interfaces.nsIXULRuntime).processType;
-      if (processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      if (processType != Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+        // 404 page (same content length as real content)
         var chan = make_channel("http://localhost:4444/range");
         chan.nsIResumableChannel.resumeAt(1, entityID);
-        chan.nsIHttpChannel.setRequestHeader("X-Need-Auth", "true", false);
-        chan.asyncOpen(new ChannelListener(test_auth_nopw, null, CL_EXPECT_FAILURE), null);
+        chan.nsIHttpChannel.setRequestHeader("X-Want-404", "true", false);
+        chan.asyncOpen(new ChannelListener(test_404, null, CL_EXPECT_FAILURE), null);
+        return;
       }
     } catch (e) { }
 
-    // 404 page (same content length as real content)
     var chan = make_channel("http://localhost:4444/range");
     chan.nsIResumableChannel.resumeAt(1, entityID);
-    chan.nsIHttpChannel.setRequestHeader("X-Want-404", "true", false);
-    chan.asyncOpen(new ChannelListener(test_404, null, CL_EXPECT_FAILURE), null);
+    chan.nsIHttpChannel.setRequestHeader("X-Need-Auth", "true", false);
+    chan.asyncOpen(new ChannelListener(test_auth_nopw, null, CL_EXPECT_FAILURE), null);
   }
 
   function test_auth_nopw(request, data, ctx) {
@@ -285,22 +286,11 @@ function run_test() {
     do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
     do_check_eq(request.nsIHttpChannel.responseStatus, 416);
 
-    // XXX skip redirect/resume tests, as they're busted on e10s (bug 587165)
-    try { // nsIXULRuntime is not available in some configurations.
-      let processType = Components.classes["@mozilla.org/xre/runtime;1"].
-                        getService(Components.interfaces.nsIXULRuntime).processType;
-      if (processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-        // Redirect + successful resume
-        var chan = make_channel("http://localhost:4444/redir");
-        chan.nsIHttpChannel.setRequestHeader("X-Redir-To", "http://localhost:4444/range", false);
-        chan.nsIResumableChannel.resumeAt(1, entityID);
-        chan.asyncOpen(new ChannelListener(test_redir_resume, null), null);
-      } else {
-        httpserver.stop(do_test_finished);
-      }
-    } catch (e) {
-      httpserver.stop(do_test_finished);
-    }
+    // Redirect + successful resume
+    var chan = make_channel("http://localhost:4444/redir");
+    chan.nsIHttpChannel.setRequestHeader("X-Redir-To", "http://localhost:4444/range", false);
+    chan.nsIResumableChannel.resumeAt(1, entityID);
+    chan.asyncOpen(new ChannelListener(test_redir_resume, null), null);
   }
 
   function test_redir_resume(request, data, ctx) {
