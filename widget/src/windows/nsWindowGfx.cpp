@@ -758,12 +758,6 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   HICON *aIcon) {
 
   nsresult rv;
-  PRUint32 nFrames;
-  rv = aContainer->GetNumFrames(&nFrames);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!nFrames)
-    return NS_ERROR_INVALID_ARG;
 
   // Get the image data
   nsRefPtr<gfxImageSurface> frame;
