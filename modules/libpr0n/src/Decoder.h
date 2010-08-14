@@ -64,7 +64,7 @@ public:
    */
 
   /**
-   * Initialize an image decoder.
+   * Initialize an image decoder. Decoders may not be re-initialized.
    *
    * @param aContainer The image container to decode to.
    * @param aObserver The observer for decode notification events.
@@ -93,15 +93,6 @@ public:
    * Notifications Sent: TODO
    */
   nsresult Finish();
-
-  /**
-   * Shuts down the decoder.
-   *
-   * Notifications Sent: None
-   *
-   * XXX - These flags will go away later in the patch stack
-   */
-  nsresult Shutdown(PRUint32 aFlags);
 
   // We're not COM-y, so we don't get refcounts by default
   // XXX - This is uncommented in a later patch when we stop inheriting imgIDecoder
@@ -134,7 +125,6 @@ protected:
   virtual nsresult InitInternal();
   virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
   virtual nsresult FinishInternal();
-  virtual nsresult ShutdownInternal(PRUint32 aFlags);
 
   /*
    * Progress notifications.

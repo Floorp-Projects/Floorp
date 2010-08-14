@@ -123,6 +123,10 @@ nsJPEGDecoder::nsJPEGDecoder()
 
 nsJPEGDecoder::~nsJPEGDecoder()
 {
+  // Step 8: Release JPEG decompression object
+  mInfo.src = nsnull;
+  jpeg_destroy_decompress(&mInfo);
+
   PR_FREEIF(mBackBuffer);
   if (mTransform)
     qcms_transform_release(mTransform);
@@ -176,11 +180,8 @@ nsJPEGDecoder::InitInternal()
 }
 
 nsresult
-nsJPEGDecoder::ShutdownInternal(PRUint32 aFlags)
+nsJPEGDecoder::FinishInternal()
 {
-  PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-         ("[this=%p] nsJPEGDecoder::Close\n", this));
-
   /* If we're not in any sort of error case, flush the decoder.
    *
    * XXXbholley - It seems wrong that this should be necessary, but at the
@@ -189,14 +190,8 @@ nsJPEGDecoder::ShutdownInternal(PRUint32 aFlags)
    */
   if ((mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) &&
       (mState != JPEG_ERROR) &&
-      !IsSizeDecode() &&
-      !(aFlags & CLOSE_FLAG_DONTNOTIFY))
+      !IsSizeDecode())
     this->Write(nsnull, 0);
-
-  /* Step 8: Release JPEG decompression object */
-  mInfo.src = nsnull;
-
-  jpeg_destroy_decompress(&mInfo);
 
   /* If we already know we're in an error state, don't
      bother flagging another one here. */
@@ -205,9 +200,7 @@ nsJPEGDecoder::ShutdownInternal(PRUint32 aFlags)
 
   /* If we're doing a full decode and haven't notified of completion yet,
    * we must not have got everything we wanted. Send error notifications. */
-  if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      !IsSizeDecode() &&
-      !mNotifiedDone)
+  if (!IsSizeDecode() && !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
   /* Otherwise, no problems. */
