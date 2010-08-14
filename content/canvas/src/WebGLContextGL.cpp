@@ -2863,7 +2863,7 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         nsPromiseFlatCString src(shader->Source());
         const char *s = src.get();
 
-        if (!ShCompile(compiler, &s, 1, EShOptSimple, debugFlags)) {
+        if (!ShCompile(compiler, &s, 1, EShOptNone, debugFlags)) {
             const char* info = ShGetInfoLog(compiler);
             if (info) {
                 shader->SetTranslationFailure(nsDependentCString(info));
