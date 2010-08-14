@@ -145,9 +145,9 @@ namespace imagelib {
 class imgDecodeWorker;
 
 class RasterImage : public mozilla::imagelib::Image,
-                     public nsITimerCallback,
-                     public nsIProperties,
-                     public nsSupportsWeakReference
+                    public nsITimerCallback,
+                    public nsIProperties,
+                    public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
