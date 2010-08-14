@@ -331,9 +331,10 @@ cairo_release_device(cairo_device_t *device)
     if (!newrefcnt) {
 	// Call the correct destructor
 	cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
-	FreeLibrary(d2d_device->mD3D10_1);
+        HMODULE d3d10_1 = d2d_device->mD3D10_1;
 	delete d2d_device;
 	_cairo_d2d_release_factory();
+        FreeLibrary(d3d10_1);
     }
     return newrefcnt;
 }
