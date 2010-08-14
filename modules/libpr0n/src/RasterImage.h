@@ -161,6 +161,16 @@ public:
   // C++-only version of imgIContainer::GetType, for convenience
   virtual PRUint16 GetType() { return imgIContainer::TYPE_RASTER; }
 
+  // Methods inherited from Image
+  nsresult Init(imgIDecoderObserver *aObserver,
+                const char* aMimeType,
+                PRUint32 aFlags);
+  nsresult GetCurrentFrameRect(nsIntRect& aRect);
+  nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx);
+  nsresult GetNumFrames(PRUint32* aNumFrames);
+  nsresult GetDataSize(PRUint32* aDataSize);
+
+  // Raster-specific methods
   static NS_METHOD WriteToContainer(nsIInputStream* in, void* closure,
                                     const char* fromRawSegment,
                                     PRUint32 toOffset, PRUint32 count,

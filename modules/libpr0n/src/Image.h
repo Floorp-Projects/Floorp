@@ -51,6 +51,62 @@ public:
   imgStatusTracker& GetStatusTracker() { return mStatusTracker; }
   PRBool IsInitialized() const { return mInitialized; }
 
+  /**
+   * Flags for Image initialization.
+   *
+   * Meanings:
+   *
+   * INIT_FLAG_NONE: Lack of flags
+   *
+   * INIT_FLAG_DISCARDABLE: The container should be discardable
+   *
+   * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
+   * decoding on load.
+   *
+   * INIT_FLAG_MULTIPART: The container will be used to display a stream of
+   * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
+   * and INIT_FLAG_DECODE_ON_DRAW must not be set.
+   */
+  static const PRUint32 INIT_FLAG_NONE           = 0x0;
+  static const PRUint32 INIT_FLAG_DISCARDABLE    = 0x1;
+  static const PRUint32 INIT_FLAG_DECODE_ON_DRAW = 0x2;
+  static const PRUint32 INIT_FLAG_MULTIPART      = 0x4;
+
+  /**
+   * Creates a new image container.
+   *
+   * @param aObserver Observer to send decoder and animation notifications to.
+   * @param aMimeType The mimetype of the image.
+   * @param aFlags Initialization flags of the INIT_FLAG_* variety.
+   */
+  virtual nsresult Init(imgIDecoderObserver* aObserver,
+                        const char* aMimeType,
+                        PRUint32 aFlags) = 0;
+
+  /**
+   * The rectangle defining the location and size of the currently displayed
+   * frame.  Should be an attribute, but can't be because of reference/pointer
+   * conflicts with native types in xpidl.
+   */
+  virtual nsresult GetCurrentFrameRect(nsIntRect& aRect) = 0;
+
+  /**
+   * The index of the current frame that would be drawn if the image was to be
+   * drawn now.
+   */
+  virtual nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx) = 0;
+
+  /**
+   * The total number of frames in this image.
+   */
+  virtual nsresult GetNumFrames(PRUint32* aNumFrames) = 0;
+
+  /**
+   * The size, in bytes, occupied by the significant data portions of the image.
+   * This includes both compressed source data and decoded frames.
+   */
+  virtual nsresult GetDataSize(PRUint32* aDataSize) = 0;
+
 protected:
   Image();
 

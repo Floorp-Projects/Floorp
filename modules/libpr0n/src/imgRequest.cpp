@@ -1020,13 +1020,13 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       isDiscardable = doDecodeOnDraw = PR_FALSE;
 
     // We have all the information we need
-    PRUint32 containerFlags = imgIContainer::INIT_FLAG_NONE;
+    PRUint32 containerFlags = Image::INIT_FLAG_NONE;
     if (isDiscardable)
-      containerFlags |= imgIContainer::INIT_FLAG_DISCARDABLE;
+      containerFlags |= Image::INIT_FLAG_DISCARDABLE;
     if (doDecodeOnDraw)
-      containerFlags |= imgIContainer::INIT_FLAG_DECODE_ON_DRAW;
+      containerFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
     if (mIsMultiPartChannel)
-      containerFlags |= imgIContainer::INIT_FLAG_MULTIPART;
+      containerFlags |= Image::INIT_FLAG_MULTIPART;
 
     // Initialize the image that we created in OnStartRequest(). This
     // instantiates a decoder behind the scenes, so if we don't have a decoder
