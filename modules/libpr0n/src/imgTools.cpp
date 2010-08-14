@@ -92,8 +92,8 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
     NS_ADDREF(image);
   }
 
-  // Initialize the container. If we're using the one from the caller, we
-  // require that it not be initialized
+  // Initialize the Image. If we're using the one from the caller, we
+  // require that it not be initialized.
   nsCString mimeType(aMimeType);
   rv = image->Init(nsnull, mimeType.get(), Image::INIT_FLAG_NONE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -111,16 +111,17 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Send the source data to the container. WriteToContainer always
+  // Send the source data to the Image. WriteToRasterImage always
   // consumes everything it gets.
   PRUint32 bytesRead;
-  rv = inStream->ReadSegments(RasterImage::WriteToContainer,
+  rv = inStream->ReadSegments(RasterImage::WriteToRasterImage,
                               static_cast<void*>(image),
                               length, &bytesRead);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ABORT_IF_FALSE(bytesRead == length, "WriteToRasterImage should consume everything!");
 
 
-  // Let the container know we've sent all the data
+  // Let the Image know we've sent all the data
   rv = image->SourceDataComplete();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -130,8 +131,8 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
 
 
 NS_IMETHODIMP imgTools::EncodeImage(imgIContainer *aContainer,
-                                          const nsACString& aMimeType,
-                                          nsIInputStream **aStream)
+                                    const nsACString& aMimeType,
+                                    nsIInputStream **aStream)
 {
     return EncodeScaledImage(aContainer, aMimeType, 0, 0, aStream);
 }
