@@ -76,6 +76,7 @@
 // bmp/ico
 #include "nsBMPDecoder.h"
 #include "nsICODecoder.h"
+#include "nsIconDecoder.h"
 #endif
 
 #ifdef IMG_BUILD_DECODER_png
@@ -122,6 +123,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJPEGEncoder)
 // bmp
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsICODecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBMPDecoder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconDecoder)
 #endif
 
 #ifdef IMG_BUILD_DECODER_png
@@ -149,6 +151,7 @@ NS_DEFINE_NAMED_CID(NS_JPEGENCODER_CID);
 #ifdef IMG_BUILD_DECODER_bmp
 NS_DEFINE_NAMED_CID(NS_ICODECODER_CID);
 NS_DEFINE_NAMED_CID(NS_BMPDECODER_CID);
+NS_DEFINE_NAMED_CID(NS_ICONDECODER_CID);
 #endif
 #ifdef IMG_BUILD_DECODER_png
 NS_DEFINE_NAMED_CID(NS_PNGDECODER_CID);
@@ -175,6 +178,7 @@ static const mozilla::Module::CIDEntry kImageCIDs[] = {
 #ifdef IMG_BUILD_DECODER_bmp
   { &kNS_ICODECODER_CID, false, NULL, nsICODecoderConstructor, },
   { &kNS_BMPDECODER_CID, false, NULL, nsBMPDecoderConstructor, },
+  { &kNS_ICONDECODER_CID, false, NULL, nsIconDecoderConstructor, },
 #endif
 #ifdef IMG_BUILD_DECODER_png
   { &kNS_PNGDECODER_CID, false, NULL, nsPNGDecoderConstructor, },
@@ -207,6 +211,7 @@ static const mozilla::Module::ContractIDEntry kImageContracts[] = {
   { "@mozilla.org/image/decoder;3?type=image/vnd.microsoft.icon", &kNS_ICODECODER_CID },
   { "@mozilla.org/image/decoder;3?type=image/bmp", &kNS_BMPDECODER_CID },
   { "@mozilla.org/image/decoder;3?type=image/x-ms-bmp", &kNS_BMPDECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/icon", &kNS_ICONDECODER_CID },
 #endif
 #ifdef IMG_BUILD_DECODER_png
   { "@mozilla.org/image/decoder;3?type=image/png", &kNS_PNGDECODER_CID },
@@ -232,6 +237,7 @@ static const mozilla::Module::CategoryEntry kImageCategories[] = {
   { "Gecko-Content-Viewers", "image/vnd.microsoft.icon", "@mozilla.org/content/document-loader-factory;1" },
   { "Gecko-Content-Viewers", "image/bmp", "@mozilla.org/content/document-loader-factory;1" },
   { "Gecko-Content-Viewers", "image/x-ms-bmp", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/icon", "@mozilla.org/content/document-loader-factory;1" },
 #endif
 #ifdef IMG_BUILD_DECODER_png
   { "Gecko-Content-Viewers", "image/png", "@mozilla.org/content/document-loader-factory;1" },
