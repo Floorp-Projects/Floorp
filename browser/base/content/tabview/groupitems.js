@@ -126,13 +126,15 @@ let GroupItem = function GroupItem(listOfEls, options) {
 
   // ___ New Tab Button
   this.$ntb = iQ("<div>")
+    .appendTo($container);
+
+  this.$ntb
     .addClass('newTabButton')
     .click(function() {
       self.newTab();
-    })
-    .attr('title',
-          "New tab")
-    .appendTo($container);
+    });
+
+  (this.$ntb)[0].title = 'New tab';
 
   // ___ Resizer
   this.$resizer = iQ("<div>")
@@ -167,7 +169,7 @@ let GroupItem = function GroupItem(listOfEls, options) {
   this.$titleContainer = iQ('.title-container', this.$titlebar);
   this.$title = iQ('.name', this.$titlebar);
   this.$titleShield = iQ('.title-shield', this.$titlebar);
-  this.setTitle(options.title || this.defaultName);
+  this.setTitle(options.title || "");
 
   var titleUnfocus = function() {
     self.$titleShield.show();
@@ -296,7 +298,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Variable: defaultName
   // The prompt text for the title field.
-  defaultName: "Name this tab group…",
+  defaultName: "name this groupItem...",
 
   // -----------
   // Function: setActiveTab
@@ -372,7 +374,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   adjustTitleSize: function() {
     Utils.assert(this.bounds, 'bounds needs to have been set');
     let closeButton = iQ('.close', this.container);
-    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css('right')),
+    var w = Math.min(this.bounds.width - closeButton.width() - closeButton.css('right'),
                      Math.max(150, this.getTitle().length * 6));
     // The * 6 multiplier calculation is assuming that characters in the title
     // are approximately 6 pixels wide. Bug 586545
@@ -653,10 +655,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       if (!options.dontArrange) {
-        // by default, we animate the item moving to its new position
-        let animate = typeof options.animate == "undefined" ? true :
-                      options.animate;
-        this.arrange({ animate: animate });
+        this.arrange();
       }
       UI.setReorderTabsOnHide(this);
 
@@ -1798,9 +1797,8 @@ window.GroupItems = {
   // Function: killNewTabGroup
   // Removes the New Tab Group, which is now defunct. See bug 575851 and comments therein.
   killNewTabGroup: function() {
-    let newTabGroupTitle = "New Tabs";
     this.groupItems.forEach(function(groupItem) {
-      if (groupItem.getTitle() == newTabGroupTitle && groupItem.locked.title) {
+      if (groupItem.getTitle() == 'New Tabs' && groupItem.locked.title) {
         groupItem.removeAll();
         groupItem.close();
       }
