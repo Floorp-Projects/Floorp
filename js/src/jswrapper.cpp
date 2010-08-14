@@ -490,6 +490,7 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
     PodZero(fp);  // fp->fun and fp->script are both NULL
     fp->argv = vp + 2;
     fp->scopeChain = obj->getGlobal();
+    fp->flags = JSFRAME_DUMMY;
 
     regs.pc = NULL;
     regs.sp = fp->slots();

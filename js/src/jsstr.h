@@ -73,6 +73,9 @@ js_GetDependentStringChars(JSString *str);
 extern JSString * JS_FASTCALL
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
+extern JSString * JS_FASTCALL
+js_ConcatStringsZ(JSContext *cx, const char *left, JSString *right);
+
 JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
 
 struct JSRopeBufferInfo {
@@ -1151,7 +1154,7 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote);
 
 extern JSBool
-js_String(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
+js_String(JSContext *cx, uintN argc, js::Value *vp);
 
 namespace js {
 

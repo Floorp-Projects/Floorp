@@ -1,0 +1,10 @@
+<html>
+    <script>
+        try {
+            parent.SimpleTest.ok(!("existingprop" in location), "got a new location object in the iframe");
+        } catch (e) {
+        }
+
+        location.iframeprop = 42;
+    </script>
+</html>

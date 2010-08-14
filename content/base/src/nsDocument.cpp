@@ -238,6 +238,13 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
                                        "mIdentifierMap mIdContentList element");
     aCallback->NoteXPCOMChild(static_cast<nsIContent*>(mIdContentList[i]));
   }
+
+  if (mImageElement) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
+                                       "mIdentifierMap mImageElement element");
+    nsIContent* imageElement = mImageElement;
+    aCallback->NoteXPCOMChild(imageElement);
+  }
 }
 
 void
@@ -250,6 +257,13 @@ PRBool
 nsIdentifierMapEntry::IsInvalidName()
 {
   return mNameContentList == NAME_NOT_VALID;
+}
+
+PRBool
+nsIdentifierMapEntry::IsEmpty()
+{
+  return mIdContentList.Count() == 0 && !mNameContentList &&
+         !mChangeCallbacks && !mImageElement;
 }
 
 nsresult
@@ -267,6 +281,12 @@ nsIdentifierMapEntry::GetIdElement()
   return static_cast<Element*>(mIdContentList.SafeElementAt(0));
 }
 
+Element*
+nsIdentifierMapEntry::GetImageIdElement()
+{
+  return mImageElement ? mImageElement.get() : GetIdElement();
+}
+
 void
 nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
 {
@@ -277,7 +297,7 @@ nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
 
 void
 nsIdentifierMapEntry::AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
-                                               void* aData)
+                                               void* aData, PRBool aForImage)
 {
   if (!mChangeCallbacks) {
     mChangeCallbacks = new nsTHashtable<ChangeCallbackEntry>;
@@ -286,17 +306,17 @@ nsIdentifierMapEntry::AddContentChangeCallback(nsIDocument::IDTargetObserver aCa
     mChangeCallbacks->Init();
   }
 
-  ChangeCallback cc = { aCallback, aData };
+  ChangeCallback cc = { aCallback, aData, aForImage };
   mChangeCallbacks->PutEntry(cc);
 }
 
 void
 nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
-                                                  void* aData)
+                                                  void* aData, PRBool aForImage)
 {
   if (!mChangeCallbacks)
     return;
-  ChangeCallback cc = { aCallback, aData };
+  ChangeCallback cc = { aCallback, aData, aForImage };
   mChangeCallbacks->RemoveEntry(cc);
   if (mChangeCallbacks->Count() == 0) {
     mChangeCallbacks = nsnull;
@@ -306,24 +326,32 @@ nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver 
 struct FireChangeArgs {
   Element* mFrom;
   Element* mTo;
+  PRBool mImageOnly;
+  PRBool mHaveImageOverride;
 };
 
 static PLDHashOperator
 FireChangeEnumerator(nsIdentifierMapEntry::ChangeCallbackEntry *aEntry, void *aArg)
 {
   FireChangeArgs* args = static_cast<FireChangeArgs*>(aArg);
+  // Don't fire image changes for non-image observers, and don't fire element
+  // changes for image observers when an image override is active.
+  if (aEntry->mKey.mForImage ? (args->mHaveImageOverride && !args->mImageOnly) :
+                               args->mImageOnly)
+    return PL_DHASH_NEXT;
   return aEntry->mKey.mCallback(args->mFrom, args->mTo, aEntry->mKey.mData)
       ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
 }
 
 void
 nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
-                                          Element* aNewElement)
+                                          Element* aNewElement,
+                                          PRBool aImageOnly)
 {
   if (!mChangeCallbacks)
     return;
 
-  FireChangeArgs args = { aOldElement, aNewElement };
+  FireChangeArgs args = { aOldElement, aNewElement, aImageOnly, !!mImageElement };
   mChangeCallbacks->EnumerateEntries(FireChangeEnumerator, &args);
 }
 
@@ -386,7 +414,7 @@ nsIdentifierMapEntry::AddIdElement(Element* aElement)
   return PR_TRUE;
 }
 
-PRBool
+void
 nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
 {
   // This should only be called while the document is in an update.
@@ -397,7 +425,7 @@ nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
   Element* currentElement =
     static_cast<Element*>(mIdContentList.SafeElementAt(0));
   if (!mIdContentList.RemoveElement(aElement))
-    return PR_FALSE;
+    return;
   if (currentElement == aElement) {
     FireChangeCallbacks(currentElement,
                         static_cast<Element*>(mIdContentList.SafeElementAt(0)));
@@ -405,7 +433,17 @@ nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
   // Make sure the release happens after the check above, since it'll
   // null out aContent.
   NS_RELEASE(aElement);
-  return mIdContentList.Count() == 0 && !mNameContentList && !mChangeCallbacks;
+}
+
+void
+nsIdentifierMapEntry::SetImageElement(Element* aElement)
+{
+  Element* oldElement = GetImageIdElement();
+  mImageElement = aElement;
+  Element* newElement = GetImageIdElement();
+  if (oldElement != newElement) {
+    FireChangeCallbacks(oldElement, newElement, PR_TRUE);
+  }
 }
 
 void
@@ -2482,7 +2520,8 @@ nsDocument::RemoveFromIdTable(Element *aElement, nsIAtom* aId)
   if (!entry) // Can be null for XML elements with changing ids.
     return;
 
-  if (entry->RemoveIdElement(aElement)) {
+  entry->RemoveIdElement(aElement);
+  if (entry->IsEmpty()) {
     mIdentifierMap.RawRemoveEntry(entry);
   }
 }
@@ -3875,7 +3914,7 @@ nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
 
 Element*
 nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
-                                void* aData)
+                                void* aData, PRBool aForImage)
 {
   nsDependentAtomString id(aID);
 
@@ -3885,13 +3924,13 @@ nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
   NS_ENSURE_TRUE(entry, nsnull);
 
-  entry->AddContentChangeCallback(aObserver, aData);
-  return entry->GetIdElement();
+  entry->AddContentChangeCallback(aObserver, aData, aForImage);
+  return aForImage ? entry->GetImageIdElement() : entry->GetIdElement();
 }
 
 void
-nsDocument::RemoveIDTargetObserver(nsIAtom* aID,
-                                   IDTargetObserver aObserver, void* aData)
+nsDocument::RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+                                   void* aData, PRBool aForImage)
 {
   nsDependentAtomString id(aID);
 
@@ -3903,7 +3942,35 @@ nsDocument::RemoveIDTargetObserver(nsIAtom* aID,
     return;
   }
 
-  entry->RemoveContentChangeCallback(aObserver, aData);
+  entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
+}
+
+NS_IMETHODIMP
+nsDocument::MozSetImageElement(const nsAString& aImageElementId,
+                               nsIDOMElement* aImageElement)
+{
+  if (aImageElementId.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aImageElement);
+  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aImageElementId);
+  if (entry) {
+    entry->SetImageElement(content ? content->AsElement() : nsnull);
+    if (entry->IsEmpty()) {
+      mIdentifierMap.RemoveEntry(aImageElementId);
+    }
+  }
+  return NS_OK;
+}
+
+Element*
+nsDocument::LookupImageElement(const nsAString& aId)
+{
+  if (aId.IsEmpty())
+    return nsnull;
+
+  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aId);
+  return entry ? entry->GetImageIdElement() : nsnull;
 }
 
 void

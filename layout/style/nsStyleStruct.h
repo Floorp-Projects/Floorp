@@ -186,13 +186,16 @@ private:
 enum nsStyleImageType {
   eStyleImageType_Null,
   eStyleImageType_Image,
-  eStyleImageType_Gradient
+  eStyleImageType_Gradient,
+  eStyleImageType_Element
 };
 
 /**
  * Represents a paintable image of one of the following types.
  * (1) A real image loaded from an external source.
  * (2) A CSS linear or radial gradient.
+ * (3) An element within a document, or an <img>, <video>, or <canvas> element
+ *     not in a document.
  * (*) Optionally a crop rect can be set to paint a partial (rectangular)
  * region of an image. (Currently, this feature is only supported with an
  * image of type (1)).
@@ -210,6 +213,7 @@ struct nsStyleImage {
   void SetNull();
   void SetImageData(imgIRequest* aImage);
   void SetGradientData(nsStyleGradient* aGradient);
+  void SetElementId(const PRUnichar* aElementId);
   void SetCropRect(nsStyleSides* aCropRect);
 
   nsStyleImageType GetType() const {
@@ -222,6 +226,10 @@ struct nsStyleImage {
   nsStyleGradient* GetGradientData() const {
     NS_ASSERTION(mType == eStyleImageType_Gradient, "Data is not a gradient!");
     return mGradient;
+  }
+  const PRUnichar* GetElementId() const {
+    NS_ASSERTION(mType == eStyleImageType_Element, "Data is not an element!");
+    return mElementId;
   }
   nsStyleSides* GetCropRect() const {
     NS_ASSERTION(mType == eStyleImageType_Image,
@@ -252,7 +260,8 @@ struct nsStyleImage {
   PRBool IsOpaque() const;
   /**
    * @return PR_TRUE if this image is fully loaded, and its size is calculated;
-   * always returns PR_TRUE if |mType| is |eStyleImageType_Gradient|.
+   * always returns PR_TRUE if |mType| is |eStyleImageType_Gradient| or
+   * |eStyleImageType_Element|.
    */
   PRBool IsComplete() const;
   /**
@@ -282,6 +291,7 @@ private:
   union {
     imgIRequest* mImage;
     nsStyleGradient* mGradient;
+    PRUnichar* mElementId;
   };
   // This is _currently_ used only in conjunction with eStyleImageType_Image.
   nsAutoPtr<nsStyleSides> mCropRect;
@@ -399,11 +409,15 @@ struct nsStyleBackground {
     // frame size when their dimensions are 'auto', images don't; both
     // types depend on the frame size when their dimensions are
     // 'contain', 'cover', or a percentage.
+    // -moz-element also depends on the frame size when the dimensions
+    // are 'auto' since it could be an SVG gradient or pattern which
+    // behaves exactly like a CSS gradient.
     PRBool DependsOnFrameSize(nsStyleImageType aType) const {
       if (aType == eStyleImageType_Image) {
         return mWidthType <= ePercentage || mHeightType <= ePercentage;
       } else {
-        NS_ABORT_IF_FALSE(aType == eStyleImageType_Gradient,
+        NS_ABORT_IF_FALSE(aType == eStyleImageType_Gradient ||
+                          aType == eStyleImageType_Element,
                           "unrecognized image type");
         return mWidthType <= eAuto || mHeightType <= eAuto;
       }

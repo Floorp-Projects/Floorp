@@ -108,6 +108,7 @@ enum nsCSSUnit {
   eCSSUnit_Attr         = 14,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Local_Font   = 15,     // (PRUnichar*) a local font name
   eCSSUnit_Font_Format  = 16,     // (PRUnichar*) a font format name
+  eCSSUnit_Element      = 17,     // (PRUnichar*) an element id
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
@@ -243,7 +244,7 @@ public:
     { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
 
   PRBool    UnitHasStringValue() const
-    { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Font_Format; }
+    { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
   PRBool    UnitHasArrayValue() const
     { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
 

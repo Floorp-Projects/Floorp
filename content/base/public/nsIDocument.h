@@ -118,8 +118,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xda512fdc, 0x2d83, 0x44b0, \
-  { 0xb0, 0x99, 0x00, 0xc6, 0xbb, 0x72, 0x39, 0xed } }
+{ 0xb2274bc3, 0x4a1c, 0x4e64, \
+  { 0x8d, 0xe4, 0x3b, 0xc6, 0x50, 0x28, 0x84, 0x38 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -313,17 +313,22 @@ public:
   /**
    * Add an IDTargetObserver for a specific ID. The IDTargetObserver
    * will be fired whenever the content associated with the ID changes
-   * in the future. At most one (aObserver, aData) pair can be registered
-   * for each ID.
+   * in the future. If aForImage is true, mozSetImageElement can override
+   * what content is associated with the ID. In that case the IDTargetObserver
+   * will be notified at those times when the result of LookupImageElement
+   * changes.
+   * At most one (aObserver, aData, aForImage) triple can be
+   * registered for each ID.
    * @return the content currently associated with the ID.
    */
   virtual Element* AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
-                                       void* aData) = 0;
+                                       void* aData, PRBool aForImage) = 0;
   /**
-   * Remove the (aObserver, aData) pair for a specific ID, if registered.
+   * Remove the (aObserver, aData, aForImage) triple for a specific ID, if
+   * registered.
    */
-  virtual void RemoveIDTargetObserver(nsIAtom* aID,
-                                      IDTargetObserver aObserver, void* aData) = 0;
+  virtual void RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+                                      void* aData, PRBool aForImage) = 0;
 
   /**
    * Get the Content-Type of this document.
@@ -675,13 +680,10 @@ public:
   /**
    * Add/Remove an element to the document's id and name hashes
    */
-  virtual void AddToIdTable(mozilla::dom::Element* aElement, nsIAtom* aId) = 0;
-  virtual void RemoveFromIdTable(mozilla::dom::Element* aElement,
-                                 nsIAtom* aId) = 0;
-  virtual void AddToNameTable(mozilla::dom::Element* aElement,
-                              nsIAtom* aName) = 0;
-  virtual void RemoveFromNameTable(mozilla::dom::Element* aElement,
-                                   nsIAtom* aName) = 0;
+  virtual void AddToIdTable(Element* aElement, nsIAtom* aId) = 0;
+  virtual void RemoveFromIdTable(Element* aElement, nsIAtom* aId) = 0;
+  virtual void AddToNameTable(Element* aElement, nsIAtom* aName) = 0;
+  virtual void RemoveFromNameTable(Element* aElement, nsIAtom* aName) = 0;
 
   //----------------------------------------------------------------------
 
@@ -1406,7 +1408,16 @@ public:
    * It prevents converting nsIDOMElement to mozill:dom::Element which is
    * already converted from mozilla::dom::Element.
    */
-  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId) = 0;
+  virtual Element* GetElementById(const nsAString& aElementId) = 0;
+
+  /**
+   * Lookup an image element using its associated ID, which is usually provided
+   * by |-moz-element()|. Similar to GetElementById, with the difference that
+   * elements set using mozSetImageElement have higher priority.
+   * @param aId the ID associated the element we want to lookup
+   * @return the element associated with |aId|
+   */
+  virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
   void ScheduleBeforePaintEvent();
   void BeforePaintEventFiring()

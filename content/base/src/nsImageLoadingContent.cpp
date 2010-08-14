@@ -76,6 +76,9 @@
 #include "nsContentPolicyUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMClassInfo.h"
+#ifdef MOZ_SVG
+#include "nsSVGEffects.h"
+#endif
 
 #include "mozAutoDocUpdate.h"
 
@@ -153,7 +156,7 @@ nsImageLoadingContent::~nsImageLoadingContent()
  */
 NS_IMETHODIMP
 nsImageLoadingContent::FrameChanged(imgIContainer* aContainer,
-                                    nsIntRect* aDirtyRect)
+                                    const nsIntRect* aDirtyRect)
 {
   LOOP_OVER_OBSERVERS(FrameChanged(aContainer, aDirtyRect));
   return NS_OK;
@@ -327,6 +330,11 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   } else {
     FireEvent(NS_LITERAL_STRING("error"));
   }
+
+#ifdef MOZ_SVG
+  nsCOMPtr<nsINode> thisNode = do_QueryInterface(this);
+  nsSVGEffects::InvalidateDirectRenderingObservers(thisNode->AsElement());
+#endif
 
   return NS_OK;
 }
