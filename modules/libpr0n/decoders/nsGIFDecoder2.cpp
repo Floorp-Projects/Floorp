@@ -126,6 +126,7 @@ nsGIFDecoder2::nsGIFDecoder2()
 
 nsGIFDecoder2::~nsGIFDecoder2()
 {
+  PR_FREEIF(mGIFStruct.local_colormap);
 }
 
 nsresult
@@ -143,17 +144,14 @@ nsGIFDecoder2::InitInternal()
 }
 
 nsresult
-nsGIFDecoder2::ShutdownInternal(PRUint32 aFlags)
+nsGIFDecoder2::FinishInternal()
 {
   // Send notifications if appropriate
-  if (!IsSizeDecode() &&
-      !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
+  if (!IsSizeDecode() && !mError) {
     if (mCurrentFrame == mGIFStruct.images_decoded)
       EndImageFrame();
     EndGIF(/* aSuccess = */ PR_TRUE);
   }
-
-  PR_FREEIF(mGIFStruct.local_colormap);
 
   return NS_OK;
 }

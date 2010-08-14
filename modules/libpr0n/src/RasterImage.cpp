@@ -2171,13 +2171,13 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   // Figure out what kind of decode we were doing before we get rid of our decoder
   bool wasSizeDecode = mDecoder->IsSizeDecode();
 
-  // Close the decoder with the appropriate flags
-  mInDecoder = PR_TRUE;
-  PRUint32 closeFlags = (aIntent == eShutdownIntent_Error)
-                          ? (PRUint32) imgIDecoder::CLOSE_FLAG_DONTNOTIFY
-                          : 0;
-  nsresult rv = mDecoder->Close(closeFlags);
-  mInDecoder = PR_FALSE;
+  // If we're not in error mode, finalize the decoder
+  nsresult rv = NS_OK;
+  if (aIntent != eShutdownIntent_Error) {
+    mInDecoder = PR_TRUE;
+    rv = mDecoder->Finish();
+    mInDecoder = PR_FALSE;
+  }
 
   // null out the decoder, _then_ check for errors on the close (otherwise the
   // error routine might re-invoke ShutdownDecoder)
