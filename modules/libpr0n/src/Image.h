@@ -94,18 +94,18 @@ public:
    * The index of the current frame that would be drawn if the image was to be
    * drawn now.
    */
-  virtual nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx) = 0;
+  virtual PRUint32 GetCurrentFrameIndex() = 0;
 
   /**
    * The total number of frames in this image.
    */
-  virtual nsresult GetNumFrames(PRUint32* aNumFrames) = 0;
+  virtual PRUint32 GetNumFrames() = 0;
 
   /**
    * The size, in bytes, occupied by the significant data portions of the image.
    * This includes both compressed source data and decoded frames.
    */
-  virtual nsresult GetDataSize(PRUint32* aDataSize) = 0;
+  virtual PRUint32 GetDataSize() = 0;
 
 protected:
   Image();
