@@ -162,8 +162,9 @@ _cairo_d2d_set_operator(cairo_d2d_device_t *device,
 }
 
 cairo_device_t *
-cairo_d2d_create_device()
+cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
 {
+    HRESULT hr;
     D3D10_RASTERIZER_DESC rastDesc;
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
@@ -176,68 +177,15 @@ cairo_d2d_create_device()
     D3D10_SUBRESOURCE_DATA data;
 
     cairo_d2d_device_t *device = new cairo_d2d_device_t;
+
+    device->mD3D10Device = d3d10device;
+
     device->mD3D10_1 = LoadLibraryA("d3d10_1.dll");
-    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
-	GetProcAddress(device->mD3D10_1, "D3D10CreateDevice1");
     D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
 	GetProcAddress(device->mD3D10_1, "D3D10CreateEffectFromMemory");
     D2D1CreateFactoryFunc createD2DFactory;
 
-    if (!createD3DDevice || !createEffect) {
-	goto FAILED;
-    }
-
-    /**
-     * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
-     * documentation on D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
-     * can be misleading. In fact, that flag gives no such indication. I pointed this
-     * out to Bas in my email. However, Microsoft is in fact using this flag to
-     * indicate "light weight" DX applications. By light weight they are essentially
-     * referring to applications that are not games. The idea is that when you create
-     * a DX game, the driver assumes that you will pretty much have a single instance
-     * and therefore it doesn't try to hold back when it comes to GPU resource
-     * allocation as long as it can crank out performance. In other words, the
-     * priority in regular DX applications is to make that one application run as fast
-     * as you can. For "light weight" applications, including D2D applications, the
-     * priorities are a bit different. Now you are no longer going to have a single
-     * (or very few) instances. You can have a lot of them (say, for example, a
-     * separate DX context/device per browser tab). In such cases, the GPU resource
-     * allocation scheme changes.
-     */
-    HRESULT hr = createD3DDevice(
-	NULL, 
-	D3D10_DRIVER_TYPE_HARDWARE,
-	NULL,
-	D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-	D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-	D3D10_FEATURE_LEVEL_10_1,
-	D3D10_1_SDK_VERSION,
-	&device->mD3D10Device);
-    if (FAILED(hr)) {
-	hr = createD3DDevice(
-	    NULL, 
-	    D3D10_DRIVER_TYPE_HARDWARE,
-	    NULL,
-	    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-	    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-	    D3D10_FEATURE_LEVEL_10_0,
-	    D3D10_1_SDK_VERSION,
-	    &device->mD3D10Device);
-	if (FAILED(hr)) {
-	    /* This is not guaranteed to be too fast! */
-	    hr = createD3DDevice(
-		NULL, 
-		D3D10_DRIVER_TYPE_HARDWARE,
-		NULL,
-		D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-		D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-		D3D10_FEATURE_LEVEL_9_3,
-		D3D10_1_SDK_VERSION,
-		&device->mD3D10Device);
-
-	}
-    }
-    if (FAILED(hr)) {
+    if (!createEffect) {
 	goto FAILED;
     }
 
@@ -300,6 +248,80 @@ cairo_d2d_create_device()
 FAILED:
     delete &device->base;
     return NULL;
+}
+
+cairo_device_t *
+cairo_d2d_create_device()
+{
+    HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
+    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
+	GetProcAddress(d3d10module, "D3D10CreateDevice1");
+
+    if (!createD3DDevice) {
+	return NULL;
+    }
+
+    RefPtr<ID3D10Device1> d3ddevice;
+
+    /**
+     * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
+     * documentation on D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+     * can be misleading. In fact, that flag gives no such indication. I pointed this
+     * out to Bas in my email. However, Microsoft is in fact using this flag to
+     * indicate "light weight" DX applications. By light weight they are essentially
+     * referring to applications that are not games. The idea is that when you create
+     * a DX game, the driver assumes that you will pretty much have a single instance
+     * and therefore it doesn't try to hold back when it comes to GPU resource
+     * allocation as long as it can crank out performance. In other words, the
+     * priority in regular DX applications is to make that one application run as fast
+     * as you can. For "light weight" applications, including D2D applications, the
+     * priorities are a bit different. Now you are no longer going to have a single
+     * (or very few) instances. You can have a lot of them (say, for example, a
+     * separate DX context/device per browser tab). In such cases, the GPU resource
+     * allocation scheme changes.
+     */
+    HRESULT hr = createD3DDevice(
+	NULL, 
+	D3D10_DRIVER_TYPE_HARDWARE,
+	NULL,
+	D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+	D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+	D3D10_FEATURE_LEVEL_10_1,
+	D3D10_1_SDK_VERSION,
+	&d3ddevice);
+    if (FAILED(hr)) {
+	hr = createD3DDevice(
+	    NULL, 
+	    D3D10_DRIVER_TYPE_HARDWARE,
+	    NULL,
+	    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+	    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+	    D3D10_FEATURE_LEVEL_10_0,
+	    D3D10_1_SDK_VERSION,
+	    &d3ddevice);
+	if (FAILED(hr)) {
+	    /* This is not guaranteed to be too fast! */
+	    hr = createD3DDevice(
+		NULL, 
+		D3D10_DRIVER_TYPE_HARDWARE,
+		NULL,
+		D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+		D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+		D3D10_FEATURE_LEVEL_9_3,
+		D3D10_1_SDK_VERSION,
+		&d3ddevice);
+
+	}
+    }
+    if (FAILED(hr)) {
+	return NULL;
+    }
+
+    cairo_device_t *device = cairo_d2d_create_device_from_d3d10device(d3ddevice);
+
+    // Free our reference to the modules. The created device should have its own.
+    FreeLibrary(d3d10module);
+    return device;
 }
 
 int
