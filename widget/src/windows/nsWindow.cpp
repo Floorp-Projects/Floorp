@@ -176,6 +176,7 @@
 #endif
 #include "LayerManagerOGL.h"
 #endif
+#include "BasicLayers.h"
 
 #if !defined(WINCE)
 #include "nsUXThemeConstants.h"
@@ -1140,6 +1141,12 @@ NS_METHOD nsWindow::Show(PRBool bState)
   // Set the status now so that anyone asking during ShowWindow or
   // SetWindowPos would get the correct answer.
   mIsVisible = bState;
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (!mIsVisible && wasVisible) {
+      ClearD2DSurface();
+  }
+#endif
 
   if (mWnd) {
     if (bState) {
@@ -7860,6 +7867,31 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
   }
 }
 #endif // WinCE
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+BOOL CALLBACK nsWindow::ClearD2DSurfaceCallback(HWND aWnd, LPARAM aMsg)
+{
+    nsWindow *window = nsWindow::GetNSWindowPtr(aWnd);
+    if (window) {
+        window->ClearD2DSurface();
+    }  
+    return TRUE;
+}
+
+void
+nsWindow::ClearD2DSurface()
+{
+    mD2DWindowSurface = nsnull;
+    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+        gfxWindowsPlatform::RENDER_DIRECT2D) {
+        // The layer manager holds onto a bunch of buffers created with create
+        // similar surface. This can consume quite a bit of VMEM for each tab,
+        // if a window is hidden we clear the layer manager to conserve VRAM.
+        mLayerManager = nsnull;
+    }
+    ::EnumChildWindows(mWnd, nsWindow::ClearD2DSurfaceCallback, NULL);
+}
+#endif
 
 static PRBool IsDifferentThreadWindow(HWND aWnd)
 {
