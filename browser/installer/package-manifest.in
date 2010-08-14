@@ -235,7 +235,6 @@
 #ifdef MOZ_ENABLE_XREMOTE
 @BINPATH@/components/toolkitremote.xpt
 #endif
-@BINPATH@/components/toolkitsearch.xpt
 @BINPATH@/components/txtsvc.xpt
 @BINPATH@/components/txmgr.xpt
 #ifdef MOZ_USE_NATIVE_UCONV
