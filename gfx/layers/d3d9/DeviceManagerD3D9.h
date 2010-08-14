@@ -106,9 +106,7 @@ class THEBES_API DeviceManagerD3D9
 public:
   DeviceManagerD3D9();
 
-  // We want the nsrefcnt return value. So we cannot use the inline refcnt macro
-  NS_IMPL_ADDREF(DeviceManagerD3D9)
-  NS_IMPL_RELEASE(DeviceManagerD3D9)
+  NS_INLINE_DECL_REFCOUNTING(DeviceManagerD3D9)
 
   bool Init();
 
@@ -143,6 +141,8 @@ public:
   nsTArray<ThebesLayerD3D9*> mThebesLayers;
 private:
   friend class SwapChainD3D9;
+
+  ~DeviceManagerD3D9();
 
   /**
    * This function verifies the device is ready for rendering, internally this
@@ -191,9 +191,6 @@ private:
 
   /* If this device supports dynamic textures */
   bool mHasDynamicTextures;
-
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 
   /**
    * Verifies all required device capabilities are present.
