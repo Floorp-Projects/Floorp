@@ -46,7 +46,7 @@ let TabView = {
     delete this.windowTitle;
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
-    let title = gNavigatorBundle.getFormattedString("tabView.title", [brandShortName]);
+    let title = gNavigatorBundle.getFormattedString("tabView2.title", [brandShortName]);
     return this.windowTitle = title;
   },
 
