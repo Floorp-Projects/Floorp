@@ -121,10 +121,8 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         // Grab the Height
         mHeight = (PRUint8)*aBuffer;
 
-        // Set up the container and signal
-        mImage->SetSize(mWidth, mHeight);
-        if (mObserver)
-          mObserver->OnStartContainer(nsnull, mImage);
+        // Post our size to the superclass
+        PostSize(mWidth, mHeight);
 
         // If We're doing a size decode, we're done
         if (IsSizeDecode()) {
