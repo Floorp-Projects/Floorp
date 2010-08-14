@@ -71,7 +71,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(e6984403-1253-48fa-8a16-a350f76ab6c9)]
+[scriptable, uuid(362e5b5f-f677-49e0-9a3c-03249c794624)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -229,41 +229,6 @@ interface imgIContainer : nsISupports
     */
   void unlockImage();
 
-  /************ Internal libpr0n use only below here. *****************/
-
-  /**
-   * Flags for imgIContainer initialization.
-   *
-   * Meanings:
-   *
-   * INIT_FLAG_NONE: Lack of flags
-   *
-   * INIT_FLAG_DISCARDABLE: The container should be discardable
-   *
-   * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
-   * decoding on load.
-   *
-   * INIT_FLAG_MULTIPART: The container will be used to display a stream of
-   * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
-   * and INIT_FLAG_DECODE_ON_DRAW must not be set.
-   */
-
-  const long INIT_FLAG_NONE           = 0x0;
-  const long INIT_FLAG_DISCARDABLE    = 0x1;
-  const long INIT_FLAG_DECODE_ON_DRAW = 0x2;
-  const long INIT_FLAG_MULTIPART      = 0x4;
-
-  /**
-   * Creates a new image container.
-   *
-   * @param aObserver Observer to send decoder and animation notifications to.
-   * @param aMimeType The mimetype of the image.
-   * @param aFlags Initialization flags of the INIT_FLAG_* variety.
-   */
-  void init(in imgIDecoderObserver aObserver,
-            in string aMimeType,
-            in PRUint32 aFlags);
-
   /**
    * Animation mode Constants
    *   0 = normal
@@ -275,30 +240,6 @@ interface imgIContainer : nsISupports
   const short kLoopOnceAnimMode = 2;
 
   attribute unsigned short animationMode;
-
-  /**
-   * The rectangle defining the location and size of the currently displayed frame.
-   * Should be an attribute, but can't be because of reference/pointer
-   * conflicts with native types in xpidl.
-   */
-  [noscript] void getCurrentFrameRect(in nsIntRect aFrameRect);
-
-  /**
-   * The index of the current frame that would be drawn if the image was to be
-   * drawn now.
-   */
-  readonly attribute unsigned long currentFrameIndex;
-
-  /**
-   * The total number of frames in this image.
-   */
-  readonly attribute unsigned long numFrames;
-
-  /**
-   * The size, in bytes, occupied by the significant data portions of the image.
-   * This includes both compressed source data and decoded frames.
-   */
-  readonly attribute unsigned long dataSize;
 
   /* Methods to control animation */
   void startAnimation();
