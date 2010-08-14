@@ -41,34 +41,6 @@
 namespace mozilla {
 namespace imagelib {
 
-// XXX - This goes away when we stop implementing imgIDecoder
-NS_IMPL_ISUPPORTS1(Decoder, imgIDecoder)
-
-/*
- * Translation layer from imgIDecoder to the interface we're actually going to use.
- */
-NS_IMETHODIMP
-Decoder::Init(imgIContainer *aImage,
-              imgIDecoderObserver *aObserver,
-              PRUint32 aFlags)
-{
-  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
-                    "wrong type of imgIContainer for decoding into");
-  return Init(static_cast<RasterImage*>(aImage), aObserver, aFlags);
-}
-
-NS_IMETHODIMP
-Decoder::Close(PRUint32 aFlags)
-{
-  NS_ABORT_IF_FALSE(0, "Not reached!");
-  return NS_OK;
-}
-
-NS_IMETHODIMP Decoder::Flush()
-{
-  return NS_OK;
-}
-
 Decoder::Decoder()
   : mFrameCount(0)
   , mInitialized(false)
@@ -106,8 +78,7 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
   return rv;
 }
 
-// XXX - This should stop being an IMETHODIMP when we stop inheriting imgIDecoder
-NS_IMETHODIMP
+nsresult
 Decoder::Write(const char* aBuffer, PRUint32 aCount)
 {
   // Pass the data along to the implementation
