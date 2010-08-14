@@ -149,8 +149,10 @@ public:
   void SendDiscard(imgRequestProxy* aProxy);
 
   /* non-virtual imgIContainerObserver methods */
-  void RecordFrameChanged(imgIContainer* aContainer, nsIntRect* aDirtyRect);
-  void SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer, nsIntRect* aDirtyRect);
+  void RecordFrameChanged(imgIContainer* aContainer,
+                          const nsIntRect* aDirtyRect);
+  void SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer,
+                        const nsIntRect* aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void RecordStartRequest();

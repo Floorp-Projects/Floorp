@@ -424,7 +424,8 @@ imgStatusTracker::SendDiscard(imgRequestProxy* aProxy)
 
 /* non-virtual imgIContainerObserver methods */
 void
-imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer, nsIntRect* aDirtyRect)
+imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer,
+                                     const nsIntRect* aDirtyRect)
 {
   // no bookkeeping necessary here - this is only for in-frame updates, which we
   // don't fire while we're recording
@@ -432,7 +433,7 @@ imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer, nsIntRect* aDirt
 
 void
 imgStatusTracker::SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer,
-                                   nsIntRect* aDirtyRect)
+                                   const nsIntRect* aDirtyRect)
 {
   if (!aProxy->NotificationsDeferred())
     aProxy->FrameChanged(aContainer, aDirtyRect);
