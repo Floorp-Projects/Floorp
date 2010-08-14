@@ -379,6 +379,17 @@ RasterImage::GetHeight(PRInt32 *aHeight)
   return NS_OK;
 }
 
+//******************************************************************************
+/* unsigned short GetType(); */
+NS_IMETHODIMP
+RasterImage::GetType(PRUint16 *aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+
+  *aType = imgIContainer::TYPE_RASTER;
+  return NS_OK;
+}
+
 imgFrame*
 RasterImage::GetImgFrame(PRUint32 framenum)
 {

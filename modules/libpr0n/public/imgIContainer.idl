@@ -85,6 +85,25 @@ interface imgIContainer : nsISupports
   readonly attribute PRInt32 height;
 
   /**
+    * Enumerated values for the 'type' attribute (below).
+    */
+  const unsigned short TYPE_RASTER = 0;
+  const unsigned short TYPE_VECTOR = 1;
+
+  /**
+   * The type of this image (one of the TYPE_* values above).
+   */
+  readonly attribute unsigned short type;
+
+  /**
+   * Direct C++ accessor for 'type' attribute, for convenience.
+   */
+%{C++
+  virtual PRUint16 GetType() = 0;
+%}
+
+
+  /**
    * Whether this image is animated. You can only be guaranteed that querying
    * this will not throw if STATUS_DECODE_COMPLETE is set on the imgIRequest.
    *
