@@ -41,7 +41,7 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
-#include "imgContainer.h"
+#include "RasterImage.h"
 #include "DiscardTracker.h"
 
 namespace mozilla {
