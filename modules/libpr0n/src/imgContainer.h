@@ -41,8 +41,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /** @file
- * This file declares the imgContainer class, which
- * handles static and animated image containers.
+ * This file declares the RasterImage class, which
+ * handles static and animated rasterized images.
  *
  * @author  Stuart Parmenter <pavlov@netscape.com>
  * @author  Chris Saari <saari@netscape.com>
@@ -50,8 +50,8 @@
  * @author  Andrew Smith <asmith15@learn.senecac.on.ca>
  */
 
-#ifndef __imgContainer_h__
-#define __imgContainer_h__
+#ifndef mozilla_imagelib_RasterImage_h_
+#define mozilla_imagelib_RasterImage_h_
 
 #include "Image.h"
 #include "nsCOMArray.h"
@@ -68,7 +68,7 @@
 class imgIDecoder;
 class nsIInputStream;
 
-#define NS_IMGCONTAINER_CID \
+#define NS_RASTERIMAGE_CID \
 { /* 376ff2c1-9bf6-418a-b143-3340c00112f7 */         \
      0x376ff2c1,                                     \
      0x9bf6,                                         \
@@ -82,7 +82,7 @@ class nsIInputStream;
  *
  * @par A Quick Walk Through
  * The decoder initializes this class and calls AppendFrame() to add a frame.
- * Once imgContainer detects more than one frame, it starts the animation
+ * Once RasterImage detects more than one frame, it starts the animation
  * with StartAnimation().
  *
  * @par
@@ -107,12 +107,12 @@ class nsIInputStream;
  * See comments in DoComposite() for more information and optimizations.
  *
  * @par
- * The rest of the imgContainer specific functions are used by DoComposite to
+ * The rest of the RasterImage specific functions are used by DoComposite to
  * destroy the old frame and build the new one.
  *
  * @note
  * <li> "Mask", "Alpha", and "Alpha Level" are interchangeable phrases in
- * respects to imgContainer.
+ * respects to RasterImage.
  *
  * @par
  * <li> GIFs never have more than a 1 bit alpha.
@@ -138,8 +138,13 @@ class nsIInputStream;
  * because the first two have public setters and the observer we only get
  * in Init().
  */
+
+namespace mozilla {
+namespace imagelib {
+
 class imgDecodeWorker;
-class imgContainer : public mozilla::imagelib::Image,
+
+class RasterImage : public mozilla::imagelib::Image,
                      public nsITimerCallback,
                      public nsIProperties,
                      public nsSupportsWeakReference
@@ -150,8 +155,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
 
-  imgContainer();
-  virtual ~imgContainer();
+  RasterImage();
+  virtual ~RasterImage();
 
   static NS_METHOD WriteToContainer(nsIInputStream* in, void* closure,
                                     const char* fromRawSegment,
@@ -315,7 +320,7 @@ private: // data
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
-  imgContainer::Anim*        mAnim;
+  RasterImage::Anim*        mAnim;
   
   //! See imgIContainer for mode constants
   PRUint16                   mAnimationMode;
@@ -328,14 +333,14 @@ private: // data
 
   // Discard members
   PRUint32                   mLockCount;
-  mozilla::imagelib::DiscardTrackerNode    mDiscardTrackerNode;
+  DiscardTrackerNode         mDiscardTrackerNode;
 
   // Source data members
   nsTArray<char>             mSourceData;
   nsCString                  mSourceDataMimeType;
 
   friend class imgDecodeWorker;
-  friend class mozilla::imagelib::DiscardTracker;
+  friend class DiscardTracker;
 
   // Decoder and friends
   nsCOMPtr<imgIDecoder>          mDecoder;
@@ -385,6 +390,8 @@ private: // data
 
 };
 
+// XXXdholbert These helper classes should move to be inside the
+// scope of the RasterImage class.
 // Decoding Helper Class
 //
 // We use this class to mimic the interactivity benefits of threading
@@ -428,6 +435,7 @@ class imgDecodeRequestor : public nsRunnable
     nsWeakPtr mContainer;
 };
 
+} // namespace imagelib
+} // namespace mozilla
 
-
-#endif /* __imgContainer_h__ */
+#endif /* mozilla_imagelib_RasterImage_h_ */

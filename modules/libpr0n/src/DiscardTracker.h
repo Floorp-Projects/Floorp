@@ -40,28 +40,28 @@
 
 #define DISCARD_TIMEOUT_PREF "image.mem.min_discard_timeout_ms"
 
-class imgContainer;
 class nsITimer;
 
 namespace mozilla {
 namespace imagelib {
+class RasterImage;
 
-// Struct to make an imgContainer insertable into the tracker list. This
-// is embedded within each imgContainer object, and we do 'this->curr = this'
-// on imgContainer construction. Thus, an imgContainer must always call
+// Struct to make a RasterImage insertable into the tracker list. This
+// is embedded within each RasterImage object, and we do 'this->curr = this'
+// on RasterImage construction. Thus, a RasterImage must always call
 // DiscardTracker::Remove() in its destructor to avoid having the tracker
 // point to bogus memory.
 struct DiscardTrackerNode
 {
-  // Pointer to the imgContainer that this node tracks
-  imgContainer *curr;
+  // Pointer to the RasterImage that this node tracks
+  RasterImage *curr;
 
   // Pointers to the previous and next nodes in the list
   DiscardTrackerNode *prev, *next;
 };
 
 /**
- * This static class maintains a linked list of imgContainer nodes. When Reset()
+ * This static class maintains a linked list of RasterImage nodes. When Reset()
  * is called, the node is removed from its position in the list (if it was there
  * before) and appended to the end. When Remove() is called, the node is removed
  * from the list. The timer fires once every MIN_DISCARD_TIMEOUT_MS ms. When it

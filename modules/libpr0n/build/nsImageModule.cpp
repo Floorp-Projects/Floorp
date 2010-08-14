@@ -99,8 +99,13 @@
 #endif
 
 // objects that just require generic constructors
+namespace mozilla {
+namespace imagelib {
+NS_GENERIC_FACTORY_CONSTRUCTOR(RasterImage)
+}
+}
+using namespace mozilla::imagelib;
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(imgLoader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgTools)
@@ -136,9 +141,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPNGEncoder)
 #endif
 
 NS_DEFINE_NAMED_CID(NS_IMGLOADER_CID);
-NS_DEFINE_NAMED_CID(NS_IMGCONTAINER_CID);
 NS_DEFINE_NAMED_CID(NS_IMGREQUESTPROXY_CID);
 NS_DEFINE_NAMED_CID(NS_IMGTOOLS_CID);
+NS_DEFINE_NAMED_CID(NS_RASTERIMAGE_CID);
 #ifdef IMG_BUILD_DECODER_gif
 NS_DEFINE_NAMED_CID(NS_GIFDECODER2_CID);
 #endif
@@ -163,9 +168,9 @@ NS_DEFINE_NAMED_CID(NS_PNGENCODER_CID);
 
 static const mozilla::Module::CIDEntry kImageCIDs[] = {
   { &kNS_IMGLOADER_CID, false, NULL, imgLoaderConstructor, },
-  { &kNS_IMGCONTAINER_CID, false, NULL, imgContainerConstructor, },
   { &kNS_IMGREQUESTPROXY_CID, false, NULL, imgRequestProxyConstructor, },
   { &kNS_IMGTOOLS_CID, false, NULL, imgToolsConstructor, },
+  { &kNS_RASTERIMAGE_CID, false, NULL, RasterImageConstructor, },
 #ifdef IMG_BUILD_DECODER_gif
   { &kNS_GIFDECODER2_CID, false, NULL, nsGIFDecoder2Constructor, },
 #endif
@@ -191,10 +196,10 @@ static const mozilla::Module::CIDEntry kImageCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kImageContracts[] = {
   { "@mozilla.org/image/cache;1", &kNS_IMGLOADER_CID },
-  { "@mozilla.org/image/container;3", &kNS_IMGCONTAINER_CID },
   { "@mozilla.org/image/loader;1", &kNS_IMGLOADER_CID },
   { "@mozilla.org/image/request;1", &kNS_IMGREQUESTPROXY_CID },
   { "@mozilla.org/image/tools;1", &kNS_IMGTOOLS_CID },
+  { "@mozilla.org/image/rasterimage;1", &kNS_RASTERIMAGE_CID },
 #ifdef IMG_BUILD_DECODER_gif
   { "@mozilla.org/image/decoder;3?type=image/gif", &kNS_GIFDECODER2_CID },
 #endif

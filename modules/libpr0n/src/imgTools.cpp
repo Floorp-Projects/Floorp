@@ -54,6 +54,8 @@
 #include "nsNetUtil.h"
 #include "imgContainer.h"
 
+using namespace mozilla::imagelib;
+
 /* ========== imgITools implementation ========== */
 
 
@@ -80,7 +82,7 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   NS_ENSURE_ARG_POINTER(aInStr);
   // If the caller didn't provide a container, create one
   if (!*aContainer) {
-    *aContainer = new imgContainer();
+    *aContainer = new RasterImage();
     if (!*aContainer)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aContainer);
@@ -108,7 +110,7 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   // Send the source data to the container. WriteToContainer always
   // consumes everything it gets.
   PRUint32 bytesRead;
-  rv = inStream->ReadSegments(imgContainer::WriteToContainer,
+  rv = inStream->ReadSegments(RasterImage::WriteToContainer,
                               static_cast<void*>(*aContainer),
                               length, &bytesRead);
   NS_ENSURE_SUCCESS(rv, rv);

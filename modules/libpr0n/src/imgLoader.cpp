@@ -90,12 +90,15 @@
 
 #include "mozilla/FunctionTimer.h"
 
+using namespace mozilla::imagelib;
+
 #if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsComponentManagerUtils.h"
+
 
 static void PrintImageDecoders()
 {
@@ -222,14 +225,14 @@ public:
     }
 
     nsRefPtr<imgRequest> req = entry->GetRequest();
-    imgContainer *container = (imgContainer*) req->mImage.get();
-    if (!container)
+    RasterImage *image = static_cast<RasterImage*>(req->mImage.get());
+    if (!image)
       return PL_DHASH_NEXT;
 
     if (rtype & RAW_BIT) {
-      arg->value += container->GetSourceDataSize();
+      arg->value += image->GetSourceDataSize();
     } else {
-      arg->value += container->GetDecodedDataSize();
+      arg->value += image->GetDecodedDataSize();
     }
 
     return PL_DHASH_NEXT;
