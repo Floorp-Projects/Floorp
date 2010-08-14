@@ -94,17 +94,13 @@ nsBMPDecoder::InitInternal()
 }
 
 nsresult
-nsBMPDecoder::ShutdownInternal(PRUint32 aFlags)
+nsBMPDecoder::FinishInternal()
 {
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Close()\n"));
-
     // We should never make multiple frames
     NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple BMP frames?");
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() &&
-        !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-        (GetFrameCount() == 1)) {
+    if (!IsSizeDecode() && !mError && (GetFrameCount() == 1)) {
         PostFrameStop();
         mImage->DecodingComplete();
         if (mObserver) {
