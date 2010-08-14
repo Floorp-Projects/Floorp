@@ -51,6 +51,7 @@ LIBXUL_LIBRARY  = 1
 
 
 CPPSRCS		= \
+			Image.cpp \
 			imgContainer.cpp \
 			imgFrame.cpp \
 			imgLoader.cpp    \

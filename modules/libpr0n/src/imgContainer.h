@@ -53,6 +53,7 @@
 #ifndef __imgContainer_h__
 #define __imgContainer_h__
 
+#include "Image.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
@@ -64,7 +65,6 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "imgDiscardTracker.h"
-#include "imgStatusTracker.h"
 
 #define NS_IMGCONTAINER_CID \
 { /* 376ff2c1-9bf6-418a-b143-3340c00112f7 */         \
@@ -137,7 +137,7 @@
  * in Init().
  */
 class imgDecodeWorker;
-class imgContainer : public imgIContainer, 
+class imgContainer : public mozilla::imagelib::Image,
                      public nsITimerCallback,
                      public nsIProperties,
                      public nsSupportsWeakReference
@@ -161,9 +161,6 @@ public:
 
   /* Triggers discarding. */
   void Discard();
-
-  imgStatusTracker& GetStatusTracker() { return mStatusTracker; }
-  PRBool IsInitialized() const { return mInitialized; }
 
 private:
   struct Anim
@@ -335,8 +332,6 @@ private: // data
   nsTArray<char>             mSourceData;
   nsCString                  mSourceDataMimeType;
 
-  imgStatusTracker    mStatusTracker;
-
   friend class imgDecodeWorker;
   friend class imgDiscardTracker;
 
@@ -350,7 +345,6 @@ private: // data
   PRPackedBool               mHasSize:1;       // Has SetSize() been called?
   PRPackedBool               mDecodeOnDraw:1;  // Decoding on draw?
   PRPackedBool               mMultipart:1;     // Multipart?
-  PRPackedBool               mInitialized:1;   // Have we been initalized?
   PRPackedBool               mDiscardable:1;   // Is container discardable?
   PRPackedBool               mHasSourceData:1; // Do we have source data?
 
