@@ -171,10 +171,10 @@ public:
   nsresult GetDataSize(PRUint32* aDataSize);
 
   // Raster-specific methods
-  static NS_METHOD WriteToContainer(nsIInputStream* in, void* closure,
-                                    const char* fromRawSegment,
-                                    PRUint32 toOffset, PRUint32 count,
-                                    PRUint32 *writeCount);
+  static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
+                                      const char* aFromRawSegment,
+                                      PRUint32 aToOffset, PRUint32 aCount,
+                                      PRUint32* aWriteCount);
 
   PRUint32 GetDecodedDataSize();
   PRUint32 GetSourceDataSize();
