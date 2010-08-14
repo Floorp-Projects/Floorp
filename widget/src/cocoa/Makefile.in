@@ -56,6 +56,7 @@ LIBXUL_LIBRARY = 1
 EXPORTS = \
 		mozView.h \
 		nsChangeObserver.h \
+		nsCocoaUtils.h \
 		$(NULL)
 
 CMMSRCS = \

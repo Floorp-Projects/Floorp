@@ -1,0 +1,11 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect x="15" y="15" width="30" height="30" fill="black"/>
+  <rect x="75" y="15" width="30" height="30" fill="black"/>
+  <rect x="15" y="75" width="30" height="30" fill="black"/>
+  <rect x="75" y="75" width="30" height="30" fill="black"/>
+
+</svg>

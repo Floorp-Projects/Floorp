@@ -148,8 +148,8 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
                  * is not enabled for debugging, fail the entire thread state.
                  */
                 JS_INIT_CLIST(&jsdthreadstate->links);
-                jsd_DestroyThreadState(jsdc, jsdthreadstate);
                 JS_EndRequest(jsdthreadstate->context);
+                jsd_DestroyThreadState(jsdc, jsdthreadstate);
                 return NULL;
             }
         }

@@ -50,7 +50,6 @@ LIBXUL_LIBRARY = 1
 
 EXTRA_DSO_LIBS	= gkgfx
 
-
 CPPSRCS		= nsPNGDecoder.cpp
 
 ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
@@ -61,5 +60,7 @@ ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
 DEFINES		+= -DMOZ_PNG_READ
 endif
 
-include $(topsrcdir)/config/rules.mk
+# nsPNGDecoder.cpp includes RasterImage.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
+include $(topsrcdir)/config/rules.mk

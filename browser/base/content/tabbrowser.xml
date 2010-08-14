@@ -510,9 +510,12 @@
                   this.mBrowser.mIconURL = null;
 
                 let browserHistory = this.mTabBrowser.mBrowserHistory;
-                if (this.mBrowser.lastURI)
-                  browserHistory.unregisterOpenPage(this.mBrowser.lastURI);
+                if (this.mBrowser.registeredOpenURI) {
+                  browserHistory.unregisterOpenPage(this.mBrowser.registeredOpenURI);
+                  delete this.mBrowser.registeredOpenURI;
+                }
                 browserHistory.registerOpenPage(aLocation);
+                this.mBrowser.registeredOpenURI = aLocation;
               }
 
               if (!this.mBlank) {
@@ -723,7 +726,7 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            if (TabView && TabView.isVisible()) {
+            if (window.TabView && TabView.isVisible()) {
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.windowTitle;
@@ -1250,10 +1253,8 @@
       <parameter name="aAll"/>
       <body>
         <![CDATA[
-          var tabsToClose = this.tabs.length;
-
-          if (!aAll)
-            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
+          var tabsToClose = (aAll ? this.tabs.length : this.visibleTabs.length - 1)
+                            - gBrowser._numPinnedTabs;
           if (tabsToClose <= 1)
             return true;
 
@@ -1400,8 +1401,7 @@
 
             var closeWindow = false;
             var newTab = false;
-            if (this.tabs.length - this._removingTabs.length == 1 && 
-                (!TabView || !TabView.isVisible())) {
+            if (this.tabs.length - this._removingTabs.length == 1) {
               closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                             !window.toolbar.visible ||
                               this.tabContainer._closeWindowWithLastTab;
@@ -1436,8 +1436,10 @@
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
 
-            if (browser.currentURI)
-              this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
+            if (browser.registeredOpenURI) {
+              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              delete browser.registeredOpenURI;
+            }
 
             // We are no longer the primary content area.
             browser.setAttribute("type", "content-targetable");
@@ -2312,7 +2314,10 @@
         <![CDATA[
           for (var i = 0; i < this.mTabListeners.length; ++i) {
             let browser = this.getBrowserAtIndex(i);
-            this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
+            if (browser.registeredOpenURI) {
+              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              delete browser.registeredOpenURI;
+            }
             browser.webProgress.removeProgressListener(this.mTabFilters[i]);
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;

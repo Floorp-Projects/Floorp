@@ -74,8 +74,6 @@ function LogFactory(aMessagePrefix)
 
 let log = LogFactory("*** HUDService:");
 
-const ELEMENT_NS_URI = "http://www.w3.org/1999/xhtml";
-const ELEMENT_NS = "html:";
 const HUD_STYLESHEET_URI = "chrome://global/skin/headsUpDisplay.css";
 const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
 
@@ -653,7 +651,7 @@ HUD_SERVICE.prototype =
   function HS_filterLogMessage(aFilterString, aMessageNode)
   {
     aFilterString = aFilterString.toLowerCase();
-    var messageText = aMessageNode.innerHTML.toLowerCase();
+    var messageText = aMessageNode.textContent.toLowerCase();
     var idx = messageText.indexOf(aFilterString);
     if (idx > -1) {
       return { strLength: aFilterString.length, strIndex: idx };
@@ -708,7 +706,7 @@ HUD_SERVICE.prototype =
       if (filtered) {
         // we have successfully filtered a message, we need to log it
         lastGroupNode.appendChild(aMessageNode);
-        aMessageNode.scrollIntoView(false);
+        ConsoleUtils.scrollToVisible(aMessageNode);
       }
       else {
         // we need to ignore this message by changing its css class - we are
@@ -720,7 +718,7 @@ HUD_SERVICE.prototype =
     else {
       // log everything
       lastGroupNode.appendChild(aMessageNode);
-      aMessageNode.scrollIntoView(false);
+      ConsoleUtils.scrollToVisible(aMessageNode);
     }
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
@@ -743,7 +741,7 @@ HUD_SERVICE.prototype =
   {
     if (aFilterState){
       aConsoleNode.appendChild(aMessageNode);
-      aMessageNode.scrollIntoView(false);
+      ConsoleUtils.scrollToVisible(aMessageNode);
     }
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
@@ -1664,15 +1662,8 @@ function HeadsUpDisplay(aConfig)
     }
     this.parentNode = parentNode;
   }
-  // create XUL, HTML and textNode Factories:
-  try  {
-    this.HTMLFactory = NodeFactory("html", "html", this.chromeDocument);
-  }
-  catch(ex) {
-    Cu.reportError(ex);
-  }
 
-  this.XULFactory = NodeFactory("xul", "xul", this.chromeDocument);
+  // create textNode Factory:
   this.textFactory = NodeFactory("text", "xul", this.chromeDocument);
 
   this.chromeWindow = HUDService.getChromeWindowFromContentWindow(this.contentWindow);
@@ -1797,30 +1788,6 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
-   * Shortcut to make HTML nodes
-   *
-   * @param string aTag
-   * @returns nsIDOMNode
-   */
-  makeHTMLNode:
-  function HUD_makeHTMLNode(aTag)
-  {
-    var element;
-
-    if (this.HTMLFactory) {
-      element = this.HTMLFactory(aTag);
-    }
-    else {
-      var ns = ELEMENT_NS;
-      var nsUri = ELEMENT_NS_URI;
-      var tag = ns + aTag;
-      element = this.chromeDocument.createElementNS(nsUri, tag);
-    }
-
-    return element;
-  },
-
-  /**
    * Shortcut to make XUL nodes
    *
    * @param string aTag
@@ -1829,7 +1796,7 @@ HeadsUpDisplay.prototype = {
   makeXULNode:
   function HUD_makeXULNode(aTag)
   {
-    return this.XULFactory(aTag);
+    return this.chromeDocument.createElement(aTag);
   },
 
   /**
@@ -1860,9 +1827,10 @@ HeadsUpDisplay.prototype = {
     consoleWrap.setAttribute("class", "hud-console-wrapper");
     consoleWrap.setAttribute("flex", "1");
 
-    this.outputNode = this.makeXULNode("vbox");
+    this.outputNode = this.makeXULNode("scrollbox");
     this.outputNode.setAttribute("class", "hud-output-node");
     this.outputNode.setAttribute("flex", "1");
+    this.outputNode.setAttribute("orient", "vertical");
     this.outputNode.setAttribute("context", this.hudId + "-output-contextmenu");
 
     this.filterSpacer = this.makeXULNode("spacer");
@@ -2099,7 +2067,6 @@ function HUDConsole(aHeadsUpDisplay)
   let hudId = hud.hudId;
   let outputNode = hud.outputNode;
   let chromeDocument = hud.chromeDocument;
-  let makeHTMLNode = hud.makeHTMLNode;
 
   aHeadsUpDisplay._console = this;
 
@@ -2116,7 +2083,7 @@ function HUDConsole(aHeadsUpDisplay)
     }
 
     let ts = ConsoleUtils.timestamp();
-    let messageNode = hud.makeHTMLNode("div");
+    let messageNode = hud.makeXULNode("label");
 
     let klass = "hud-msg-node hud-" + aLevel;
 
@@ -2174,17 +2141,14 @@ function HUDConsole(aHeadsUpDisplay)
 };
 
 /**
- * Creates a DOM Node factory for either XUL nodes or HTML nodes - as
- * well as textNodes
+ * Creates a DOM Node factory for XUL nodes - as well as textNodes
  * @param   aFactoryType
- *          "xul" or "html"
+ *          "xul" or "text"
  * @returns DOM Node Factory function
  */
 function NodeFactory(aFactoryType, aNameSpace, aDocument)
 {
   // aDocument is presumed to be a XULDocument
-  const ELEMENT_NS_URI = "http://www.w3.org/1999/xhtml";
-
   if (aFactoryType == "text") {
     function factory(aText) {
       return aDocument.createTextNode(aText);
@@ -2196,14 +2160,6 @@ function NodeFactory(aFactoryType, aNameSpace, aDocument)
       function factory(aTag)
       {
         return aDocument.createElement(aTag);
-      }
-      return factory;
-    }
-    else {
-      function factory(aTag)
-      {
-        var tag = "html:" + aTag;
-        return aDocument.createElementNS(ELEMENT_NS_URI, tag);
       }
       return factory;
     }
@@ -2456,9 +2412,6 @@ function JSTerm(aContext, aParentNode, aMixin)
   this.parentNode = aParentNode;
   this.mixins = aMixin;
 
-  this.elementFactory =
-    NodeFactory("html", "html", aParentNode.ownerDocument);
-
   this.xulElementFactory =
     NodeFactory("xul", "xul", aParentNode.ownerDocument);
 
@@ -2484,7 +2437,6 @@ JSTerm.prototype = {
   {
     this.createSandbox();
     this.inputNode = this.mixins.inputNode;
-    this.scrollToNode = this.mixins.scrollToNode;
     let eventHandlerKeyDown = this.keyDown();
     this.inputNode.addEventListener('keypress', eventHandlerKeyDown, false);
     let eventHandlerInput = this.inputEventHandler();
@@ -2582,7 +2534,7 @@ JSTerm.prototype = {
     let lastGroupNode = HUDService.appendGroupIfNecessary(this.outputNode,
                                                           Date.now());
 
-    var node = this.elementFactory("div");
+    var node = this.xulElementFactory("label");
     if (aIsInput) {
       node.setAttribute("class", "jsterm-input-line");
       aOutputMessage = "> " + aOutputMessage;
@@ -2602,7 +2554,7 @@ JSTerm.prototype = {
     node.appendChild(textNode);
 
     lastGroupNode.appendChild(node);
-    node.scrollIntoView(false);
+    ConsoleUtils.scrollToVisible(node);
   },
 
   clearOutput: function JST_clearOutput()
@@ -2938,9 +2890,6 @@ JSTermFirefoxMixin(aContext,
   this.setTimeout = aParentNode.ownerDocument.defaultView.setTimeout;
 
   if (aParentNode.ownerDocument) {
-    this.elementFactory =
-      NodeFactory("html", "html", aParentNode.ownerDocument);
-
     this.xulElementFactory =
       NodeFactory("xul", "xul", aParentNode.ownerDocument);
 
@@ -2969,22 +2918,17 @@ JSTermFirefoxMixin.prototype = {
 
     if (this.existingConsoleNode == undefined) {
       // create elements
-      let term = this.elementFactory("div");
+      let term = this.xulElementFactory("vbox");
       term.setAttribute("class", "jsterm-wrapper-node");
       term.setAttribute("flex", "1");
 
-      let outputNode = this.elementFactory("div");
+      let outputNode = this.xulElementFactory("vbox");
       outputNode.setAttribute("class", "jsterm-output-node");
 
-      let scrollToNode = this.elementFactory("div");
-      scrollToNode.setAttribute("class", "jsterm-scroll-to-node");
-
       // construction
-      outputNode.appendChild(scrollToNode);
       term.appendChild(outputNode);
       term.appendChild(inputNode);
 
-      this.scrollToNode = scrollToNode;
       this.outputNode = outputNode;
       this.inputNode = inputNode;
       this.term = term;
@@ -3029,9 +2973,6 @@ function LogMessage(aMessage, aLevel, aOutputNode, aActivityObject)
   this.level = aLevel;
   this.origin = aMessage.origin;
 
-  this.elementFactory =
-  NodeFactory("html", "html", aOutputNode.ownerDocument);
-
   this.xulElementFactory =
   NodeFactory("xul", "xul", aOutputNode.ownerDocument);
 
@@ -3049,7 +2990,7 @@ LogMessage.prototype = {
    */
   createLogNode: function LM_createLogNode()
   {
-    this.messageNode = this.elementFactory("div");
+    this.messageNode = this.xulElementFactory("label");
 
     var ts = ConsoleUtils.timestamp();
     var timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
@@ -3193,21 +3134,37 @@ ConsoleUtils = {
     klass += " hud-hidden";
     aMessageNode.setAttribute("class", klass);
     return aMessageNode;
+  },
+
+  /**
+   * Scrolls a node so that it's visible in its containing XUL "scrollbox"
+   * element.
+   *
+   * @param nsIDOMNode aNode
+   *        The node to make visible.
+   * @returns void
+   */
+  scrollToVisible: function ConsoleUtils_scrollToVisible(aNode) {
+    let scrollBoxNode = aNode.parentNode;
+    while (scrollBoxNode.tagName !== "scrollbox") {
+      scrollBoxNode = scrollBoxNode.parentNode;
+    }
+
+    let boxObject = scrollBoxNode.boxObject;
+    let nsIScrollBoxObject = boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    nsIScrollBoxObject.ensureElementIsVisible(aNode);
   }
 };
 
 /**
- * Creates a DOM Node factory for either XUL nodes or HTML nodes - as
- * well as textNodes
+ * Creates a DOM Node factory for XUL nodes - as well as textNodes
  * @param   aFactoryType
- *          "xul", "html" or "text"
+ *          "xul" or "text"
  * @returns DOM Node Factory function
  */
 function NodeFactory(aFactoryType, aNameSpace, aDocument)
 {
   // aDocument is presumed to be a XULDocument
-  const ELEMENT_NS_URI = "http://www.w3.org/1999/xhtml";
-
   if (aFactoryType == "text") {
     function factory(aText) {
       return aDocument.createTextNode(aText);
@@ -3218,13 +3175,6 @@ function NodeFactory(aFactoryType, aNameSpace, aDocument)
     if (aNameSpace == "xul") {
       function factory(aTag) {
         return aDocument.createElement(aTag);
-      }
-      return factory;
-    }
-    else {
-      function factory(aTag) {
-        var tag = "html:" + aTag;
-        return aDocument.createElementNS(ELEMENT_NS_URI, tag);
       }
       return factory;
     }

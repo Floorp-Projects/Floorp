@@ -1,0 +1,44 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+     Dynamic repaint with multiple -moz-element background images
+-->
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+
+#box {
+  height: 100px;
+  width: 200px;
+  background: -moz-element(#lime) top left no-repeat,
+              -moz-element(#green) top right no-repeat red;
+}
+
+div > div {
+  width: 100px;
+  height: 100px;
+}
+
+</style>
+</head>
+<body style="margin:0">
+<div id="box"></div>
+
+<div style="overflow:hidden; height:0">
+  <div id="lime" style="background-color: darkred"></div>
+  <div id="green" style="background-color: black"></div>
+</div>
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", function () {
+  document.getElementById("lime").style.backgroundColor = "lime";
+  document.getElementById("green").style.backgroundColor = "green";
+  document.documentElement.className = "";
+}, false);
+
+</script>
+
+</body>
+</html>

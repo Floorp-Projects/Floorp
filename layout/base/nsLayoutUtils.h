@@ -66,6 +66,7 @@ class nsClientRectList;
 #include "nsCSSPseudoElements.h"
 
 class nsBlockFrame;
+class gfxDrawable;
 
 /**
  * nsLayoutUtils is a namespace class used for various helper
@@ -516,7 +517,8 @@ public:
     PAINT_WIDGET_LAYERS = 0x04,
     PAINT_IGNORE_SUPPRESSION = 0x08,
     PAINT_IGNORE_VIEWPORT_SCROLLING = 0x10,
-    PAINT_HIDE_CARET = 0x20
+    PAINT_HIDE_CARET = 0x20,
+    PAINT_ALL_CONTINUATIONS = 0x40
   };
 
   /**
@@ -906,6 +908,29 @@ public:
                             const nsPoint&       aAnchor,
                             const nsRect&        aDirty,
                             PRUint32             aImageFlags);
+
+  /**
+   * Draw a drawable using the pixel snapping algorithm.
+   * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
+   *   @param aRenderingContext Where to draw the image, set up with an
+   *                            appropriate scale and transform for drawing in
+   *                            app units.
+   *   @param aDrawable         The drawable we want to draw.
+   *   @param aFilter           The graphics filter we should draw with.
+   *   @param aDest             Where one copy of the image should mapped to.
+   *   @param aFill             The area to be filled with copies of the
+   *                            image.
+   *   @param aAnchor           A point in aFill which we will ensure is
+   *                            pixel-aligned in the output.
+   *   @param aDirty            Pixels outside this area may be skipped.
+   */
+  static void DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
+                               gfxDrawable*         aDrawable,
+                               gfxPattern::GraphicsFilter aFilter,
+                               const nsRect&        aDest,
+                               const nsRect&        aFill,
+                               const nsPoint&       aAnchor,
+                               const nsRect&        aDirty);
 
   /**
    * Draw a whole image without scaling or tiling.

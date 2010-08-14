@@ -56,6 +56,12 @@
     {0xa7, 0xf8, 0xca, 0x39, 0x7e, 0x01, 0x79, 0xc4} \
 }
 
+namespace mozilla {
+namespace imagelib {
+class RasterImage;
+} // namespace imagelib
+} // namespace mozilla
+
 //////////////////////////////////////////////////////////////////////
 // nsGIFDecoder2 Definition
 
@@ -85,7 +91,9 @@ private:
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
-  nsCOMPtr<imgIContainer> mImageContainer;
+  // XXXdholbert This member variable should probably be renamed to "mImage"
+  // for consistency with nsPNGDecoder
+  nsRefPtr<mozilla::imagelib::RasterImage> mImageContainer;
   nsCOMPtr<imgIDecoderObserver> mObserver;
   PRUint32 mFlags;
   PRInt32 mCurrentRow;

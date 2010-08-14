@@ -720,6 +720,8 @@ public:
     void AddGCCallback(JSGCCallback cb);
     void RemoveGCCallback(JSGCCallback cb);
 
+    static void ActivityCallback(void *arg, PRBool active);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -758,6 +760,8 @@ private:
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
     nsTArray<JSGCCallback> extraGCCallbacks;
+    PRBool mWatchdogHibernating;
+    PRTime mLastActiveTime; // -1 if active NOW
 };
 
 /***************************************************************************/

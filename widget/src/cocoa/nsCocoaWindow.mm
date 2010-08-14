@@ -926,16 +926,6 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
   return NS_OK;
 }
 
-void
-nsCocoaWindow::Scroll(const nsIntPoint& aDelta,
-                      const nsTArray<nsIntRect>& aDestRects,
-                      const nsTArray<Configuration>& aConfigurations)
-{
-  if (mPopupContentView) {
-    mPopupContentView->Scroll(aDelta, aDestRects, aConfigurations);
-  }
-}
-
 LayerManager*
 nsCocoaWindow::GetLayerManager()
 {
@@ -2042,14 +2032,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   [super invalidateShadow];
   mScheduledShadowInvalidation = NO;
-}
-
-- (void) doCommandBySelector:(SEL)aSelector
-{
-  // We override this so that it won't beep if it can't act.
-  // We want to control the beeping for missing or disabled
-  // commands ourselves.
-  [self tryToPerform:aSelector with:nil];
 }
 
 @end

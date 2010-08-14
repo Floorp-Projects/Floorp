@@ -75,7 +75,8 @@ static PRBool EqualExceptRef(nsIURL* aURL1, nsIURL* aURL2)
 }
 
 void
-nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch)
+nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
+                           PRBool aWatch, PRBool aReferenceImage)
 {
   Unlink();
 
@@ -175,6 +176,8 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch
     atom.swap(mWatchID);
   }
 
+  mReferencingImage = aReferenceImage;
+
   HaveNewDocument(doc, aWatch, ref);
 }
 
@@ -195,6 +198,8 @@ nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
     atom.swap(mWatchID);
   }
 
+  mReferencingImage = PR_FALSE;
+
   HaveNewDocument(doc, aWatch, aID);
 }
 
@@ -205,7 +210,8 @@ nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
   if (aWatch) {
     mWatchDocument = aDocument;
     if (mWatchDocument) {
-      mElement = mWatchDocument->AddIDTargetObserver(mWatchID, Observe, this);
+      mElement = mWatchDocument->AddIDTargetObserver(mWatchID, Observe, this,
+                                                     mReferencingImage);
     }
     return;
   }
@@ -214,7 +220,8 @@ nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
     return;
   }
 
-  Element *e = aDocument->GetElementById(aRef);
+  Element *e = mReferencingImage ? aDocument->LookupImageElement(aRef) :
+                                   aDocument->GetElementById(aRef);
   if (e) {
     mElement = e;
   }
@@ -233,7 +240,8 @@ void
 nsReferencedElement::Unlink()
 {
   if (mWatchDocument && mWatchID) {
-    mWatchDocument->RemoveIDTargetObserver(mWatchID, Observe, this);
+    mWatchDocument->RemoveIDTargetObserver(mWatchID, Observe, this,
+                                           mReferencingImage);
   }
   if (mPendingNotification) {
     mPendingNotification->Clear();
@@ -242,6 +250,7 @@ nsReferencedElement::Unlink()
   mWatchDocument = nsnull;
   mWatchID = nsnull;
   mElement = nsnull;
+  mReferencingImage = PR_FALSE;
 }
 
 PRBool

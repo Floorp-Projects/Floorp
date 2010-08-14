@@ -95,6 +95,8 @@
 #include "ImageLayers.h"
 #include "mozilla/dom/Element.h"
 #include "nsCanvasFrame.h"
+#include "gfxDrawable.h"
+#include "gfxUtils.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -685,7 +687,8 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
 {
   nsIFrame* f = aFrame;
   while (f != aStopAtAncestor) {
-    NS_ASSERTION(!IsPopup(f), "Should have stopped before popup");
+    if (IsPopup(f))
+      break;
     nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
@@ -1279,8 +1282,14 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   rv = aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
 
+  const PRBool paintAllContinuations = aFlags & PAINT_ALL_CONTINUATIONS;
+  NS_ASSERTION(!paintAllContinuations || !aFrame->GetPrevContinuation(),
+               "If painting all continuations, the frame must be "
+               "first-continuation");
+
   nsIAtom* frameType = aFrame->GetType();
-  if (NS_SUCCEEDED(rv) && frameType == nsGkAtoms::pageContentFrame) {
+  if (NS_SUCCEEDED(rv) && !paintAllContinuations &&
+      frameType == nsGkAtoms::pageContentFrame) {
     NS_ASSERTION(!(aFlags & PAINT_WIDGET_LAYERS),
       "shouldn't be painting with widget layers for page content frames");
     // We may need to paint out-of-flow frames whose placeholders are
@@ -1297,6 +1306,16 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       if (NS_FAILED(rv))
         break;
       y += page->GetSize().height;
+    }
+  }
+
+  if (paintAllContinuations) {
+    nsIFrame* currentFrame = aFrame;
+    while (NS_SUCCEEDED(rv) &&
+           (currentFrame = currentFrame->GetNextContinuation()) != nsnull) {
+      nsRect frameDirty = dirtyRect - builder.ToReferenceFrame(currentFrame);
+      rv = currentFrame->BuildDisplayListForStackingContext(&builder,
+                                                            frameDirty, &list);
     }
   }
 
@@ -1355,7 +1374,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  list.ComputeVisibility(&builder, &visibleRegion, nsnull);
+  list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpPaintList) {
@@ -3031,6 +3050,49 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
   aImage->Draw(ctx, aGraphicsFilter, drawingParams.mUserSpaceToImageSpace,
                drawingParams.mFillRect, drawingParams.mSubimage, aImageFlags);
   return NS_OK;
+}
+
+/* static */ void
+nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
+                                gfxDrawable*         aDrawable,
+                                gfxPattern::GraphicsFilter aFilter,
+                                const nsRect&        aDest,
+                                const nsRect&        aFill,
+                                const nsPoint&       aAnchor,
+                                const nsRect&        aDirty)
+{
+  nsCOMPtr<nsIDeviceContext> dc;
+  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  PRInt32 appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
+  gfxContext* ctx = aRenderingContext->ThebesContext();
+  gfxIntSize drawableSize = aDrawable->Size();
+  nsIntSize imageSize(drawableSize.width, drawableSize.height);
+
+  SnappedImageDrawingParameters drawingParams =
+    ComputeSnappedImageDrawingParameters(ctx, appUnitsPerDevPixel, aDest, aFill,
+                                         aAnchor, aDirty, imageSize);
+
+  if (!drawingParams.mShouldDraw)
+    return;
+
+  gfxContextMatrixAutoSaveRestore saveMatrix(ctx);
+  if (drawingParams.mResetCTM) {
+    ctx->IdentityMatrix();
+  }
+
+  gfxRect sourceRect =
+    drawingParams.mUserSpaceToImageSpace.Transform(drawingParams.mFillRect);
+  gfxRect imageRect(0, 0, imageSize.width, imageSize.height);
+  gfxRect subimage(drawingParams.mSubimage.x, drawingParams.mSubimage.y,
+                   drawingParams.mSubimage.width, drawingParams.mSubimage.height);
+
+  NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
+               "We must be allowed to sample *some* source pixels!");
+
+  gfxUtils::DrawPixelSnapped(ctx, aDrawable,
+                             drawingParams.mUserSpaceToImageSpace, subimage,
+                             sourceRect, imageRect, drawingParams.mFillRect,
+                             gfxASurface::ImageFormatARGB32, aFilter);
 }
 
 /* static */ nsresult
