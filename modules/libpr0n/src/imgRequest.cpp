@@ -88,6 +88,8 @@
 #define DISCARD_PREF "image.mem.discardable"
 #define DECODEONDRAW_PREF "image.mem.decodeondraw"
 
+using namespace mozilla::imagelib;
+
 /* Kept up to date by a pref observer. */
 static PRBool gDecodeOnDraw = PR_FALSE;
 static PRBool gDiscardable = PR_FALSE;
@@ -201,7 +203,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
   nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/container;3");
-  mImage = static_cast<imgContainer*>(comImg.get());
+  mImage = static_cast<Image*>(comImg.get());
 
   mURI = aURI;
   mKeyURI = aKeyURI;
@@ -332,6 +334,12 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
     proxy->RemoveFromLoadGroup(PR_TRUE);
 
   return NS_OK;
+}
+
+PRBool imgRequest::IsReusable(void *aCacheId)
+{
+  return (mImage && mImage->GetStatusTracker().IsLoading()) ||
+    (aCacheId == mCacheId);
 }
 
 void imgRequest::CancelAndAbort(nsresult aStatus)
@@ -1026,7 +1034,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       if (NS_SUCCEEDED(rv)) {
         PRInt32 len = contentLength.ToInteger(&rv);
 
-        // Pass anything usable on so that the imgContainer can preallocate its
+        // Pass anything usable on so that the Image can preallocate its
         // source buffer
         if (len > 0) {
           PRUint32 sizeHint = (PRUint32) len;

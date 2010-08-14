@@ -63,9 +63,9 @@ enum {
 
 /*
  * The image status tracker is a class that encapsulates all the loading and
- * decoding status about an image (imgContainer), and makes it possible to send
- * notifications to imgRequestProxys, both synchronously (i.e., the status now)
- * and asynchronously (the status later).
+ * decoding status about an Image, and makes it possible to send notifications
+ * to imgRequestProxys, both synchronously (i.e., the status now) and
+ * asynchronously (the status later).
  *
  * When a new proxy needs to be notified of the current state of an image, call
  * the Notify() method on this class with the relevant proxy as its argument,
