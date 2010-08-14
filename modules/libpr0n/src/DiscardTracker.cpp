@@ -42,7 +42,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "imgContainer.h"
-#include "imgDiscardTracker.h"
+#include "DiscardTracker.h"
 
 namespace mozilla {
 namespace imagelib {

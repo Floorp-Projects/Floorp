@@ -65,7 +65,7 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 #include "imgTools.h"
-#include "imgDiscardTracker.h"
+#include "DiscardTracker.h"
 
 #ifdef IMG_BUILD_DECODER_gif
 // gif
