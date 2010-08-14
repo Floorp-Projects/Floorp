@@ -246,7 +246,6 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top"
            titlebar="normal"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
@@ -298,7 +297,6 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top"
            titlebar="normal"
            label="&inspectStylePanelTitle.label;">
         <listbox id="inspector-style-listbox" flex="1"/>
@@ -943,9 +941,9 @@
       </toolbarbutton>
 
       <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabViewButton.label;"
+                     label="&tabViewButton2.label;"
                      command="Browser:ToggleTabView"
-                     tooltiptext="&tabViewButton.tooltip;"
+                     tooltiptext="&tabViewButton2.tooltip;"
                      removable="true"/>
 
       <toolbarbutton id="tabs-closebutton"

@@ -50,7 +50,7 @@
 
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
-#include "imgContainer.h"
+#include "RasterImage.h"
 
 #include "imgILoader.h"
 #include "ImageLogging.h"
@@ -82,11 +82,14 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
-#include "imgDiscardTracker.h"
+#include "DiscardTracker.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 
 #define DISCARD_PREF "image.mem.discardable"
 #define DECODEONDRAW_PREF "image.mem.decodeondraw"
+#define SVG_MIMETYPE "image/svg+xml"
+
+using namespace mozilla::imagelib;
 
 /* Kept up to date by a pref observer. */
 static PRBool gDecodeOnDraw = PR_FALSE;
@@ -116,7 +119,7 @@ ReloadPrefs(nsIPrefBranch *aBranch)
     gDecodeOnDraw = decodeondraw;
 
   // Discard timeout
-  imgDiscardTracker::ReloadTimeout();
+  mozilla::imagelib::DiscardTracker::ReloadTimeout();
 }
 
 // Observer
@@ -200,8 +203,11 @@ nsresult imgRequest::Init(nsIURI *aURI,
   NS_ABORT_IF_FALSE(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
-  nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/container;3");
-  mImage = static_cast<imgContainer*>(comImg.get());
+
+  // XXXdholbert For SVG support, this mImage-construction will need to happen
+  // later -- *after* we know image mimetype.
+  nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/rasterimage;1");
+  mImage = static_cast<Image*>(comImg.get());
 
   mURI = aURI;
   mKeyURI = aKeyURI;
@@ -332,6 +338,12 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
     proxy->RemoveFromLoadGroup(PR_TRUE);
 
   return NS_OK;
+}
+
+PRBool imgRequest::IsReusable(void *aCacheId)
+{
+  return (mImage && mImage->GetStatusTracker().IsLoading()) ||
+    (aCacheId == mCacheId);
 }
 
 void imgRequest::CancelAndAbort(nsresult aStatus)
@@ -512,7 +524,7 @@ imgRequest::RequestDecode()
 
 /* [noscript] void frameChanged (in imgIContainer container, in nsIntRect dirtyRect); */
 NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container,
-                                       nsIntRect * dirtyRect)
+                                       const nsIntRect *dirtyRect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");
 
@@ -659,7 +671,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
                                               aStatusArg);
   }
 
-  // ImgContainer and everything below it is completely correct and
+  // RasterImage and everything below it is completely correct and
   // bulletproof about its handling of decoder notifications.
   // Unfortunately, here and above we have to make some gross and
   // inappropriate use of things to get things to work without
@@ -668,7 +680,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
   // the time being), OnStopDecode is just a companion to OnStopRequest
   // that signals success or failure of the _load_ (not the _decode_).
   // Within imgStatusTracker, we ignore OnStopDecode notifications from the
-  // decoder and container and generate our own every time we send
+  // decoder and RasterImage and generate our own every time we send
   // OnStopRequest. From within SendStopDecode, we actually send
   // OnStopContainer.  For more information, see bug 435296.
 
@@ -717,10 +729,10 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
                     "Already have an image for non-multipart request");
 
   // If we're multipart, and our image is initialized, fix things up for another round
-  if (mIsMultiPartChannel && mImage->IsInitialized()) {
-
-    // Inform the container that we have new source data
-    mImage->NewSourceData();
+  if (mIsMultiPartChannel && mImage->IsInitialized() &&
+      mImage->GetType() == imgIContainer::TYPE_RASTER) {
+    // Inform the RasterImage that we have new source data
+    static_cast<RasterImage*>(mImage.get())->NewSourceData();
   }
 
   /*
@@ -855,10 +867,11 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // Tell the image that it has all of the source data. Note that this can
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
-  if (mImage->IsInitialized()) {
+  if (mImage->IsInitialized() &&
+      mImage->GetType() == imgIContainer::TYPE_RASTER) {
 
     // Notify the image
-    nsresult rv = mImage->SourceDataComplete();
+    nsresult rv = static_cast<RasterImage*>(mImage.get())->SourceDataComplete();
 
     // If we got an error in the SourceDataComplete() call, we don't want to
     // proceed as if nothing bad happened. However, we also want to give
@@ -906,7 +919,10 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   nsresult rv;
 
-  if (!mGotData) {
+  PRUint16 imageType;
+  if (mGotData) {
+    imageType = mImage->GetType();
+  } else {
     LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |First time through... finding mimetype|");
 
     mGotData = PR_TRUE;
@@ -944,6 +960,10 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
     }
 
+    /* now we have mimetype, so we can infer the image type that we want */
+    imageType = mContentType.EqualsLiteral(SVG_MIMETYPE) ?
+      imgIContainer::TYPE_VECTOR : imgIContainer::TYPE_RASTER;
+
     /* set our mimetype as a property */
     nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
     if (contentType) {
@@ -973,7 +993,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
     //
-    // Figure out if our container initialization flags
+    // Figure out our Image initialization flags
     //
 
     // We default to the static globals
@@ -1000,38 +1020,41 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       isDiscardable = doDecodeOnDraw = PR_FALSE;
 
     // We have all the information we need
-    PRUint32 containerFlags = imgIContainer::INIT_FLAG_NONE;
+    PRUint32 imageFlags = Image::INIT_FLAG_NONE;
     if (isDiscardable)
-      containerFlags |= imgIContainer::INIT_FLAG_DISCARDABLE;
+      imageFlags |= Image::INIT_FLAG_DISCARDABLE;
     if (doDecodeOnDraw)
-      containerFlags |= imgIContainer::INIT_FLAG_DECODE_ON_DRAW;
+      imageFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
     if (mIsMultiPartChannel)
-      containerFlags |= imgIContainer::INIT_FLAG_MULTIPART;
+      imageFlags |= Image::INIT_FLAG_MULTIPART;
 
     // Initialize the image that we created in OnStartRequest(). This
     // instantiates a decoder behind the scenes, so if we don't have a decoder
     // for this mimetype we'll find out about it here.
-    rv = mImage->Init(this, mContentType.get(), containerFlags);
+    rv = mImage->Init(this, mContentType.get(), imageFlags);
     if (NS_FAILED(rv)) { // Probably bad mimetype
 
       this->Cancel(rv);
       return NS_BINDING_ABORTED;
     }
 
-    /* Use content-length as a size hint for http channels. */
-    if (httpChannel) {
-      nsCAutoString contentLength;
-      rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
-                                          contentLength);
-      if (NS_SUCCEEDED(rv)) {
-        PRInt32 len = contentLength.ToInteger(&rv);
+    if (imageType == imgIContainer::TYPE_RASTER) {
+      /* Use content-length as a size hint for http channels. */
+      if (httpChannel) {
+        nsCAutoString contentLength;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
+                                            contentLength);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 len = contentLength.ToInteger(&rv);
 
-        // Pass anything usable on so that the imgContainer can preallocate its
-        // source buffer
-        if (len > 0) {
-          PRUint32 sizeHint = (PRUint32) len;
-          sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
-          mImage->SetSourceSizeHint(sizeHint);
+          // Pass anything usable on so that the RasterImage can preallocate
+          // its source buffer
+          if (len > 0) {
+            PRUint32 sizeHint = (PRUint32) len;
+            sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
+            RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
+            rasterImage->SetSourceSizeHint(sizeHint);
+          }
         }
       }
     }
@@ -1042,19 +1065,19 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
   }
 
-  // WriteToContainer always consumes everything it gets
+  // WriteToRasterImage always consumes everything it gets
   PRUint32 bytesRead;
-  rv = inStr->ReadSegments(imgContainer::WriteToContainer,
+  rv = inStr->ReadSegments(RasterImage::WriteToRasterImage,
                            static_cast<void*>(mImage),
                            count, &bytesRead);
   if (NS_FAILED(rv)) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- "
-            "copy to container failed\n", this));
+            "copy to RasterImage failed\n", this));
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
     return NS_BINDING_ABORTED;
   }
-  NS_ABORT_IF_FALSE(bytesRead == count, "WriteToContainer should consume everything!");
+  NS_ABORT_IF_FALSE(bytesRead == count, "WriteToRasterImage should consume everything!");
 
   return NS_OK;
 }

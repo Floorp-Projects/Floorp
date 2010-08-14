@@ -990,11 +990,11 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
      * If lazy class initialization occurs for any Error subclass, then all
      * classes are initialized, starting with Error.  To avoid reentry and
      * redundant initialization, we must not pass a null proto parameter to
-     * NewObject below, when called for the Error superclass.  We need to
+     * NewNonFunction below, when called for the Error superclass.  We need to
      * ensure that Object.prototype is the proto of Error.prototype.
      *
      * See the equivalent code to ensure that parent_proto is non-null when
-     * JS_InitClass calls NewObject, in jsapi.c.
+     * js_InitClass calls NewObject, in jsobj.cpp.
      */
     if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
         return NULL;
@@ -1012,7 +1012,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     for (intN i = JSEXN_ERR; i != JSEXN_LIMIT; i++) {
         /* Make the prototype for the current constructor name. */
         JSObject *proto =
-            NewObject(cx, &js_ErrorClass, (i != JSEXN_ERR) ? error_proto : obj_proto, obj);
+            NewNonFunction<WithProto::Class>(cx, &js_ErrorClass, (i != JSEXN_ERR) ? error_proto : obj_proto, obj);
         if (!proto)
             return NULL;
         if (i == JSEXN_ERR) {

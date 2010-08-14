@@ -1231,8 +1231,10 @@ jsdScript::GetParameterNames(PRUint32* count, PRUnichar*** paramNames)
 
     JSAutoRequest ar(cx);
 
-    uintN nargs = JS_GetFunctionArgumentCount(cx, fun);
-    if (!fun || !JS_FunctionHasLocalNames(cx, fun) || nargs == 0) {
+    uintN nargs;
+    if (!fun ||
+        !JS_FunctionHasLocalNames(cx, fun) ||
+        (nargs = JS_GetFunctionArgumentCount(cx, fun)) == 0) {
         *count = 0;
         *paramNames = nsnull;
         return NS_OK;

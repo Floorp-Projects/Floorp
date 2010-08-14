@@ -43,6 +43,7 @@ const CR = Components.results;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
+const NS_GFXINFO_CONTRACTID = "@mozilla.org/gfx/info;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
@@ -334,7 +335,14 @@ function BuildConditionSandbox(aURL) {
     } catch(e) {
       sandbox.xulRuntime.XPCOMABI = "";
     }
-
+  
+    try {
+      // nsIGfxInfo is currently only implemented on Windows
+      sandbox.d2d = CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo).D2DEnabled;
+    } catch(e) {
+      sandbox.d2d = false;
+    }
+ 
     // Shortcuts for widget toolkits.
     sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
     sandbox.gtk2Widget = xr.widgetToolkit == "gtk2";

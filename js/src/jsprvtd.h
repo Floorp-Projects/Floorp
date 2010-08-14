@@ -81,6 +81,7 @@ extern "C++" {
 namespace js {
 struct Parser;
 struct Compiler;
+class RegExp;
 }
 }
 
@@ -112,7 +113,6 @@ typedef struct JSAtomMap            JSAtomMap;
 typedef struct JSAtomState          JSAtomState;
 typedef struct JSCodeSpec           JSCodeSpec;
 typedef struct JSPrinter            JSPrinter;
-typedef struct JSRegExp             JSRegExp;
 typedef struct JSRegExpStatics      JSRegExpStatics;
 typedef struct JSScope              JSScope;
 typedef struct JSScopeOps           JSScopeOps;
@@ -137,13 +137,16 @@ extern "C++" {
 
 namespace js {
 
+class RegExp;
+class RegExpStatics;
+class AutoStringRooter;
 class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
 class TraceRecorder;
 struct TraceMonitor;
 class StackSpace;
-class CallStackSegment;
+class StackSegment;
 
 class TokenStream;
 struct Token;

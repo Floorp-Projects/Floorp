@@ -19,6 +19,7 @@ EXPORTS	= \
 	gfxCachedTempSurface.h \
 	gfxColor.h \
 	gfxContext.h \
+	gfxDrawable.h \
 	gfxFont.h \
 	gfxFontConstants.h \
 	gfxFontUtils.h \
@@ -166,6 +167,7 @@ CPPSRCS	= \
 	gfxBlur.cpp \
 	gfxCachedTempSurface.cpp \
 	gfxContext.cpp \
+	gfxDrawable.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
 	gfxFontMissingGlyphs.cpp \

@@ -81,6 +81,7 @@ mailing address.
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
 #include "imgIContainerObserver.h"
+#include "RasterImage.h"
 
 #include "gfxColor.h"
 #include "gfxPlatform.h"
@@ -144,8 +145,11 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIContainer *aImage,
                                   imgIDecoderObserver *aObserver,
                                   PRUint32 aFlags)
 {
+  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                    "wrong type of imgIContainer for decoding into");
+
   // Store parameters
-  mImageContainer = aImage;
+  mImageContainer = static_cast<mozilla::imagelib::RasterImage*>(aImage);
   mObserver = aObserver;
   mFlags = aFlags;
 
