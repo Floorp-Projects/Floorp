@@ -510,7 +510,8 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(PRBool* hasData)
 
 /** imgIContainerObserver methods **/
 
-void imgRequestProxy::FrameChanged(imgIContainer *container, nsIntRect * dirtyRect)
+void imgRequestProxy::FrameChanged(imgIContainer *container,
+                                   const nsIntRect *dirtyRect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
