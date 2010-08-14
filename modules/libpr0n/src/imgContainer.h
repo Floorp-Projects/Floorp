@@ -63,7 +63,7 @@
 #include "nsTArray.h"
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
-#include "imgDiscardTracker.h"
+#include "DiscardTracker.h"
 
 class imgIDecoder;
 class nsIInputStream;
