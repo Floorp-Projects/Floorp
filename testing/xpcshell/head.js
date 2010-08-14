@@ -137,7 +137,7 @@ _Timer.prototype = {
       try {
         this._func.call(null);
       } catch (e) {
-        do_throw("exception thrown from callLater callback: " + e);
+        do_throw("exception thrown from do_timeout callback: " + e);
       }
       return;
     }
