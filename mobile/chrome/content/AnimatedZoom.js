@@ -63,6 +63,9 @@ function AnimatedZoom(aBrowserView) {
   this.snapshotRect.translateInside(viewportRect).restrictTo(viewportRect).expandToIntegers();
 
   this.snapshot = AnimatedZoom.createCanvas();
+  this.snapshotRect.width = Math.min(this.snapshotRect.width, this.snapshot.width);
+  this.snapshotRect.height = Math.min(this.snapshotRect.height, this.snapshot.height);
+
   let snapshotCtx = this.snapshot.MozGetIPCContext("2d")
   snapshotCtx.clearRect(0, 0, this.snapshotRect.width, this.snapshotRect.height);
   this.bv.renderToCanvas(this.snapshot, this.snapshotRect.width, this.snapshotRect.height, this.snapshotRect.clone());
