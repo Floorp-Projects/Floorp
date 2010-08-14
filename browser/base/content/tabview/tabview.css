@@ -347,11 +347,11 @@ input.name {
   padding-left: 20px;
 }
 
-.title-container:hover input.name {
+input.name:hover {
   border: 1px solid #ddd;
 }
 
-.title-container:hover input.name-locked {
+input.name-locked:hover {
   border: 1px solid transparent !important;
   cursor: default;
 }
@@ -366,7 +366,7 @@ input.defaultName {
   color: transparent;
 }
 
-.title-container:hover input.defaultName {
+input.defaultName:hover {
   color: #CCC;
 }
 
