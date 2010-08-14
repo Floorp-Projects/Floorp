@@ -314,7 +314,6 @@ nsresult
 nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   // We use gotos, so we need to declare variables here
-  nsresult rv;
   PRUint32 width = 0;
   PRUint32 height = 0;
 
@@ -350,14 +349,8 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION))
         goto error;
 
-      // Set the size
-      rv = mImage->SetSize(width, height);
-      if (NS_FAILED(rv))
-        goto error;
-
-      // Notify the observer that the container is up
-      if (mObserver)
-        mObserver->OnStartContainer(nsnull, mImage);
+      // Post our size to the superclass
+      PostSize(width, height);
     }
   }
 
@@ -538,7 +531,6 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   nsPNGDecoder *decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
-  nsresult rv;
 
   /* always decode to 24-bit RGB or 32-bit RGBA  */
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
@@ -548,14 +540,8 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION)
     longjmp(png_jmpbuf(decoder->mPNG), 1);
 
-  // Set the size and notify that the container is set up
-  rv = decoder->mImage->SetSize(width, height);
-
-  if (NS_FAILED(rv))
-    longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_UNEXPECTED
-
-  if (decoder->mObserver)
-    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
+  // Post our size to the superclass
+  decoder->PostSize(width, height);
 
   if (color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_expand(png_ptr);
