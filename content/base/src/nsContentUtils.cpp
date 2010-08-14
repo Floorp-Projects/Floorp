@@ -5789,6 +5789,10 @@ CloneSimpleValues(JSContext* cx,
   // ArrayBuffer objects.
   if (js_IsArrayBuffer(obj)) {
     js::ArrayBuffer* src = js::ArrayBuffer::fromJSObject(obj);
+    if (!src) {
+      return NS_ERROR_FAILURE;
+    }
+
     JSObject* newBuffer = js_CreateArrayBuffer(cx, src->byteLength);
     if (!newBuffer) {
       return NS_ERROR_FAILURE;
