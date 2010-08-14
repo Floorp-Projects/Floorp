@@ -2585,31 +2585,31 @@ imgDecodeWorker::Run()
   nsCOMPtr<imgIContainer> iContainer(do_QueryReferent(mContainer));
   if (!iContainer)
     return NS_OK;
-  RasterImage* container = static_cast<RasterImage*>(iContainer.get());
+  RasterImage* image = static_cast<RasterImage*>(iContainer.get());
 
-  NS_ABORT_IF_FALSE(container->mInitialized,
+  NS_ABORT_IF_FALSE(image->mInitialized,
                     "Worker active for uninitialized container!");
 
   // If we were pending, we're not anymore
-  container->mWorkerPending = PR_FALSE;
+  image->mWorkerPending = PR_FALSE;
 
   // If an error is flagged, it probably happened while we were waiting
   // in the event queue. Bail early, but no need to bother the run queue
   // by returning an error.
-  if (container->mError)
+  if (image->mError)
     return NS_OK;
 
   // If we don't have a decoder, we must have finished already (for example,
   // a synchronous decode request came while the worker was pending).
-  if (!container->mDecoder)
+  if (!image->mDecoder)
     return NS_OK;
 
   // Header-only decodes are cheap and we more or less want them to be
   // synchronous. Write all the data in that case, otherwise write a
   // chunk
   PRUint32 maxBytes =
-    (container->mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
-    ? container->mSourceData.Length() : DECODE_BYTES_AT_A_TIME;
+    (image->mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+    ? image->mSourceData.Length() : DECODE_BYTES_AT_A_TIME;
 
   // Loop control
   PRBool haveMoreData = PR_TRUE;
@@ -2619,26 +2619,26 @@ imgDecodeWorker::Run()
   // 1) We don't have any data left to decode
   // 2) The decode completes
   // 3) We hit the deadline and need to yield to keep the UI snappy
-  while (haveMoreData && !container->IsDecodeFinished() &&
+  while (haveMoreData && !image->IsDecodeFinished() &&
          (nsTime(PR_Now()) < deadline)) {
 
     // Decode a chunk of data
-    rv = container->DecodeSomeData(maxBytes);
+    rv = image->DecodeSomeData(maxBytes);
     if (NS_FAILED(rv)) {
-      container->DoError();
+      image->DoError();
       return rv;
     }
 
     // Figure out if we still have more data
     haveMoreData =
-      container->mSourceData.Length() > container->mBytesDecoded;
+      image->mSourceData.Length() > image->mBytesDecoded;
   }
 
   // If the decode finished, shutdown the decoder
-  if (container->IsDecodeFinished()) {
-    rv = container->ShutdownDecoder(RasterImage::eShutdownIntent_Done);
+  if (image->IsDecodeFinished()) {
+    rv = image->ShutdownDecoder(RasterImage::eShutdownIntent_Done);
     if (NS_FAILED(rv)) {
-      container->DoError();
+      image->DoError();
       return rv;
     }
   }
@@ -2646,7 +2646,7 @@ imgDecodeWorker::Run()
   // If Conditions 1 & 2 are still true, then the only reason we bailed was
   // because we hit the deadline. Repost ourselves to the end of the event
   // queue.
-  if (!container->IsDecodeFinished() && haveMoreData)
+  if (!image->IsDecodeFinished() && haveMoreData)
     return this->Dispatch();
 
   // Otherwise, return success
@@ -2660,37 +2660,40 @@ NS_METHOD imgDecodeWorker::Dispatch()
   nsCOMPtr<imgIContainer> iContainer(do_QueryReferent(mContainer));
   if (!iContainer)
     return NS_OK;
-  RasterImage* container = static_cast<RasterImage*>(iContainer.get());
+  RasterImage* image = static_cast<RasterImage*>(iContainer.get());
 
   // We should not be called if there's already a pending worker
-  NS_ABORT_IF_FALSE(!container->mWorkerPending,
+  NS_ABORT_IF_FALSE(!image->mWorkerPending,
                     "Trying to queue up worker with one already pending!");
 
   // Flag that we're pending
-  container->mWorkerPending = PR_TRUE;
+  image->mWorkerPending = PR_TRUE;
 
   // Dispatch
   return NS_DispatchToCurrentThread(this);
 }
 
 // nsIInputStream callback to copy the incoming image data directly to the 
-// container without processing. The RasterImage is passed as the closure.
+// RasterImage without processing. The RasterImage is passed as the closure.
 // Always reads everything it gets, even if the data is erroneous.
 NS_METHOD
-RasterImage::WriteToContainer(nsIInputStream* in, void* closure,
-                              const char* fromRawSegment, PRUint32 toOffset,
-                              PRUint32 count, PRUint32 *writeCount)
+RasterImage::WriteToRasterImage(nsIInputStream* /* unused */,
+                                void*          aClosure,
+                                const char*    aFromRawSegment,
+                                PRUint32       /* unused */,
+                                PRUint32       aCount,
+                                PRUint32*      aWriteCount)
 {
   // Retrieve the RasterImage
-  RasterImage* container = static_cast<RasterImage*>(closure);
+  RasterImage* image = static_cast<RasterImage*>(aClosure);
 
   // Copy the source data. We squelch the return value here, because returning
   // an error means that ReadSegments stops reading data, violating our
   // invariant that we read everything we get.
-  (void) container->AddSourceData(fromRawSegment, count);
+  (void) image->AddSourceData(aFromRawSegment, aCount);
 
   // We wrote everything we got
-  *writeCount = count;
+  *aWriteCount = aCount;
 
   return NS_OK;
 }

@@ -671,7 +671,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
                                               aStatusArg);
   }
 
-  // ImgContainer and everything below it is completely correct and
+  // RasterImage and everything below it is completely correct and
   // bulletproof about its handling of decoder notifications.
   // Unfortunately, here and above we have to make some gross and
   // inappropriate use of things to get things to work without
@@ -680,7 +680,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
   // the time being), OnStopDecode is just a companion to OnStopRequest
   // that signals success or failure of the _load_ (not the _decode_).
   // Within imgStatusTracker, we ignore OnStopDecode notifications from the
-  // decoder and container and generate our own every time we send
+  // decoder and RasterImage and generate our own every time we send
   // OnStopRequest. From within SendStopDecode, we actually send
   // OnStopContainer.  For more information, see bug 435296.
 
@@ -731,7 +731,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   // If we're multipart, and our image is initialized, fix things up for another round
   if (mIsMultiPartChannel && mImage->IsInitialized() &&
       mImage->GetType() == imgIContainer::TYPE_RASTER) {
-    // Inform the container that we have new source data
+    // Inform the RasterImage that we have new source data
     static_cast<RasterImage*>(mImage.get())->NewSourceData();
   }
 
@@ -993,7 +993,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
     //
-    // Figure out if our container initialization flags
+    // Figure out our Image initialization flags
     //
 
     // We default to the static globals
@@ -1020,18 +1020,18 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       isDiscardable = doDecodeOnDraw = PR_FALSE;
 
     // We have all the information we need
-    PRUint32 containerFlags = Image::INIT_FLAG_NONE;
+    PRUint32 imageFlags = Image::INIT_FLAG_NONE;
     if (isDiscardable)
-      containerFlags |= Image::INIT_FLAG_DISCARDABLE;
+      imageFlags |= Image::INIT_FLAG_DISCARDABLE;
     if (doDecodeOnDraw)
-      containerFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
+      imageFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
     if (mIsMultiPartChannel)
-      containerFlags |= Image::INIT_FLAG_MULTIPART;
+      imageFlags |= Image::INIT_FLAG_MULTIPART;
 
     // Initialize the image that we created in OnStartRequest(). This
     // instantiates a decoder behind the scenes, so if we don't have a decoder
     // for this mimetype we'll find out about it here.
-    rv = mImage->Init(this, mContentType.get(), containerFlags);
+    rv = mImage->Init(this, mContentType.get(), imageFlags);
     if (NS_FAILED(rv)) { // Probably bad mimetype
 
       this->Cancel(rv);
@@ -1065,19 +1065,19 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
   }
 
-  // WriteToContainer always consumes everything it gets
+  // WriteToRasterImage always consumes everything it gets
   PRUint32 bytesRead;
-  rv = inStr->ReadSegments(RasterImage::WriteToContainer,
+  rv = inStr->ReadSegments(RasterImage::WriteToRasterImage,
                            static_cast<void*>(mImage),
                            count, &bytesRead);
   if (NS_FAILED(rv)) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- "
-            "copy to container failed\n", this));
+            "copy to RasterImage failed\n", this));
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
     return NS_BINDING_ABORTED;
   }
-  NS_ABORT_IF_FALSE(bytesRead == count, "WriteToContainer should consume everything!");
+  NS_ABORT_IF_FALSE(bytesRead == count, "WriteToRasterImage should consume everything!");
 
   return NS_OK;
 }
