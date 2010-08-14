@@ -437,6 +437,7 @@ class SetPropCompiler : public PICStubCompiler
 
 #if defined JS_PUNBOX64
         pic.labels.setprop.stubShapeJump = masm.differenceBetween(start, stubShapeJumpLabel);
+        JS_ASSERT(pic.labels.setprop.stubShapeJump == masm.differenceBetween(start, stubShapeJumpLabel));
 #endif
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
@@ -968,6 +969,7 @@ class GetPropCompiler : public PICStubCompiler
 
 #if defined JS_PUNBOX64
         pic.labels.getprop.stubShapeJump = masm.differenceBetween(start, stubShapeJumpLabel);
+        JS_ASSERT(pic.labels.getprop.stubShapeJump == masm.differenceBetween(start, stubShapeJumpLabel));
 #endif
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
@@ -1327,6 +1329,7 @@ class GetElemCompiler : public PICStubCompiler
 
 #if defined JS_PUNBOX64
         pic.labels.getelem.stubShapeJump = masm.differenceBetween(start, stubShapeJump);
+        JS_ASSERT(pic.labels.getelem.stubShapeJump == masm.differenceBetween(start, stubShapeJump));
 #endif
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)

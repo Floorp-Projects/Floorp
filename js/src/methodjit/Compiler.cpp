@@ -349,6 +349,8 @@ mjit::Compiler::finishThisUp()
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].fastPathStart);
+        JS_ASSERT(script->pics[i].shapeGuard == masm.distanceOf(pics[i].shapeGuard) -
+                                     masm.distanceOf(pics[i].fastPathStart));
         script->pics[i].shapeRegHasBaseShape = true;
 
 # if defined JS_CPU_X64
@@ -2166,8 +2168,14 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
 #elif defined JS_PUNBOX64
     pic.labels.getprop.dslotsLoadOffset = masm.differenceBetween(pic.storeBack, dslotsLoadLabel);
+    JS_ASSERT(pic.labels.getprop.dslotsLoadOffset == masm.differenceBetween(pic.storeBack, dslotsLoadLabel));
+
     pic.labels.getprop.inlineShapeOffset = masm.differenceBetween(pic.shapeGuard, inlineShapeLabel);
+    JS_ASSERT(pic.labels.getprop.inlineShapeOffset == masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
+
     pic.labels.getprop.inlineValueOffset = masm.differenceBetween(pic.storeBack, inlineValueLoadLabel);
+    JS_ASSERT(pic.labels.getprop.inlineValueOffset == masm.differenceBetween(pic.storeBack, inlineValueLoadLabel));
+
     JS_ASSERT(masm.differenceBetween(inlineShapeLabel, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
 #endif
     /* GETPROP_INLINE_TYPE_GUARD's validity is asserted above. */
@@ -2258,9 +2266,17 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETELEM_INLINE_SHAPE_JUMP);
 #elif defined JS_PUNBOX64
     pic.labels.getelem.dslotsLoadOffset = masm.differenceBetween(pic.storeBack, dslotsLoadLabel);
+    JS_ASSERT(pic.labels.getelem.dslotsLoadOffset == masm.differenceBetween(pic.storeBack, dslotsLoadLabel));
+
     pic.labels.getelem.inlineShapeOffset = masm.differenceBetween(pic.shapeGuard, inlineShapeOffsetLabel);
+    JS_ASSERT(pic.labels.getelem.inlineShapeOffset == masm.differenceBetween(pic.shapeGuard, inlineShapeOffsetLabel));
+
     pic.labels.getelem.inlineAtomOffset = masm.differenceBetween(pic.shapeGuard, inlineAtomOffsetLabel);
+    JS_ASSERT(pic.labels.getelem.inlineAtomOffset == masm.differenceBetween(pic.shapeGuard, inlineAtomOffsetLabel));
+
     pic.labels.getelem.inlineValueOffset = masm.differenceBetween(pic.storeBack, inlineValueOffsetLabel);
+    JS_ASSERT(pic.labels.getelem.inlineValueOffset == masm.differenceBetween(pic.storeBack, inlineValueOffsetLabel));
+
     JS_ASSERT(masm.differenceBetween(inlineShapeOffsetLabel, dbgInlineShapeJump) == GETELEM_INLINE_SHAPE_JUMP);
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineAtomJump) ==
               pic.labels.getelem.inlineAtomOffset + GETELEM_INLINE_ATOM_JUMP);
@@ -2388,8 +2404,14 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
 #elif defined JS_PUNBOX64
     pic.labels.getprop.dslotsLoadOffset = masm.differenceBetween(pic.storeBack, dslotsLoadLabel);
+    JS_ASSERT(pic.labels.getprop.dslotsLoadOffset == masm.differenceBetween(pic.storeBack, dslotsLoadLabel));
+
     pic.labels.getprop.inlineShapeOffset = masm.differenceBetween(pic.shapeGuard, inlineShapeLabel);
+    JS_ASSERT(pic.labels.getprop.inlineShapeOffset == masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
+
     pic.labels.getprop.inlineValueOffset = masm.differenceBetween(pic.storeBack, inlineValueLoadLabel);
+    JS_ASSERT(pic.labels.getprop.inlineValueOffset == masm.differenceBetween(pic.storeBack, inlineValueLoadLabel));
+
     JS_ASSERT(masm.differenceBetween(inlineShapeLabel, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
 #endif
 
@@ -2560,8 +2582,14 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
 #elif defined JS_PUNBOX64
     pic.labels.getprop.dslotsLoadOffset = masm.differenceBetween(pic.storeBack, dslotsLoadLabel);
+    JS_ASSERT(pic.labels.getprop.dslotsLoadOffset == masm.differenceBetween(pic.storeBack, dslotsLoadLabel));
+
     pic.labels.getprop.inlineShapeOffset = masm.differenceBetween(pic.shapeGuard, inlineShapeLabel);
+    JS_ASSERT(pic.labels.getprop.inlineShapeOffset == masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
+
     pic.labels.getprop.inlineValueOffset = masm.differenceBetween(pic.storeBack, inlineValueLoadLabel);
+    JS_ASSERT(pic.labels.getprop.inlineValueOffset == masm.differenceBetween(pic.storeBack, inlineValueLoadLabel));
+
     JS_ASSERT(masm.differenceBetween(inlineShapeLabel, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
 #endif
 
@@ -2836,6 +2864,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, inlineJumpOffset) == BINDNAME_INLINE_JUMP_OFFSET);
 #elif defined JS_PUNBOX64
     pic.labels.bindname.inlineJumpOffset = masm.differenceBetween(pic.shapeGuard, inlineJumpOffset);
+    JS_ASSERT(pic.labels.bindname.inlineJumpOffset == masm.differenceBetween(pic.shapeGuard, inlineJumpOffset));
 #endif
 
     stubcc.rejoin(Changes(1));
@@ -3487,6 +3516,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     Label inlineValueLoadLabel =
         masm.loadValueAsComponents(address, treg, dreg);
     mic.patchValueOffset = masm.differenceBetween(mic.load, inlineValueLoadLabel);
+    JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, inlineValueLoadLabel));
 # endif
 
     frame.pushRegs(treg, dreg);
@@ -3612,6 +3642,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
      * load label and after the instruction to be patched.
      */
     mic.patchValueOffset = masm.differenceBetween(mic.load, masm.label());
+    JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, masm.label()));
 #endif
 
     if (objFe->isConstant())
