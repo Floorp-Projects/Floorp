@@ -1162,7 +1162,7 @@ JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->annotation && fp->script) {
+    if (fp->hasAnnotation() && fp->script) {
         JSPrincipals *principals = JS_StackFramePrincipals(cx, fp);
 
         if (principals && principals->globalPrivilegesEnabled(cx, principals)) {
@@ -1170,7 +1170,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
              * Give out an annotation only if privileges have not been revoked
              * or disabled globally.
              */
-            return fp->annotation;
+            return fp->getAnnotation();
         }
     }
 
@@ -1180,7 +1180,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(void)
 JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
 {
-    fp->annotation = annotation;
+    fp->setAnnotation(annotation);
 }
 
 JS_PUBLIC_API(void *)
