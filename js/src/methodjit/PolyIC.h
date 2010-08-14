@@ -223,7 +223,7 @@ struct PICInfo {
             // Offset from start of stub to jump target of second shape guard as Nitro
             // asm data location. This is 0 if there is only one shape guard in the
             // last stub.
-            int secondShapeGuard : 8;
+            int secondShapeGuard;
         } get;
         ValueRemat vr;
     } u;
@@ -245,7 +245,7 @@ struct PICInfo {
     uint32 stubsGenerated : 5;
 
     // Offset from start of fast path to initial shape guard.
-    int shapeGuard : 8;
+    int shapeGuard;
     
     // Return address of slow path call, as an offset from slowPathStart.
     uint32 callReturn;
