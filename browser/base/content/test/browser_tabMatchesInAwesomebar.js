@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
 
 const TEST_URL_BASES = [
   "http://example.org/browser/browser/base/content/test/dummy_page.html#tabmatch",
@@ -119,7 +118,14 @@ var gTestSteps = [
       });
     }, true);
     tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
-  }
+  },
+  function() {
+    info("Running step 7 - remove tab immediately");
+    let tab = gBrowser.addTab("about:blank");
+    gBrowser.removeTab(tab);
+    ensure_opentabs_match_db();
+    nextStep();
+  },
 ];
 
 
@@ -130,22 +136,32 @@ function test() {
 }
 
 function loadTab(tab, url) {
+  // Because adding visits is async, we will not be notified immediately.
+  let visited = false;
+
   tab.linkedBrowser.addEventListener("load", function (event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
-    if (--gTabWaitCount > 0)
-      return;
-    is(gTabWaitCount, 0,
-       "sanity check, gTabWaitCount should not be decremented below 0");
+    Services.obs.addObserver(
+      function (aSubject, aTopic, aData) {
+        if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
+          return;
+        Services.obs.removeObserver(arguments.callee, aTopic);
+        if (--gTabWaitCount > 0)
+          return;
+        is(gTabWaitCount, 0,
+           "sanity check, gTabWaitCount should not be decremented below 0");
 
-    try {
-      ensure_opentabs_match_db();
-    } catch (e) {
-      ok(false, "exception from ensure_openpages_match_db: " + e);
-    }
+        try {
+          ensure_opentabs_match_db();
+        } catch (e) {
+          ok(false, "exception from ensure_openpages_match_db: " + e);
+        }
 
-    executeSoon(nextStep);
+        executeSoon(nextStep);
+      }, "uri-visit-saved", false);
   }, true);
+
   gTabWaitCount++;
   tab.linkedBrowser.loadURI(url);
 }
