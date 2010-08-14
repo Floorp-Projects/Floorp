@@ -212,13 +212,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
         PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
 
-        // Set the size and notify
-        rv = mImage->SetSize(mBIH.width, real_height);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (mObserver) {
-            rv = mObserver->OnStartContainer(nsnull, mImage);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+        // Post our size to the superclass
+        PostSize(mBIH.width, real_height);
 
         // We have the size. If we're doing a size decode, we got what
         // we came for.
