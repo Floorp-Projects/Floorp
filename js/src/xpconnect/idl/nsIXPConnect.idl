@@ -399,7 +399,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(4abf8614-2b0c-495f-8c67-97115470b53c)]
+[uuid(7a3c8687-6f52-47d5-9b8e-2ed8bf86c415)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -412,16 +412,6 @@ interface nsIXPConnect : nsISupports
     void
     initClasses(in JSContextPtr aJSContext,
                 in JSObjectPtr  aGlobalJSObj);
-
-    /**
-     * Like initClasses, but only does some of the initialization on the
-     * existing global. In particular this function assumes that the outer
-     * window has already been connected to an inner window, so
-     * re-initializing things like XPCNativeWrapper is useless.
-     */
-    void
-    initClassesForOuterObject(in JSContextPtr aJSContext,
-                              in JSObjectPtr  aGlobalJSObj);
 
     /**
      * Creates a new global object using the given aCOMObj as the global
@@ -895,4 +885,11 @@ interface nsIXPConnect : nsISupports
 
     [notxpcom] void getNativeWrapperGetPropertyOp(out JSPropertyOp getProperty);
     [notxpcom] void getXrayWrapperPropertyHolderGetPropertyOp(out JSPropertyOp getProperty);
+
+    /**
+     * Creates a JS object holder around aObject that will hold the object
+     * alive for as long as the holder stays alive.
+     */
+    nsIXPConnectJSObjectHolder holdObject(in JSContextPtr aJSContext,
+                                          in JSObjectPtr aObject);
 };
