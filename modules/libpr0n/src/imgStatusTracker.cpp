@@ -42,6 +42,7 @@
 #include "imgRequest.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
+#include "Image.h"
 #include "ImageLogging.h"
 
 static nsresult
