@@ -437,7 +437,7 @@ public:
             }                                                           \
         } while(0)
 
-        printf_stderr("EGL Config: %d [0x%08x]", (int)cfg, (PRUint32)cfg);
+        printf_stderr("EGL Config: %d [%p]", (int)(intptr_t)cfg, cfg);
 
         ATTR(BUFFER_SIZE);
         ATTR(ALPHA_SIZE);
