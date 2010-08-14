@@ -118,7 +118,7 @@ ReloadPrefs(nsIPrefBranch *aBranch)
     gDecodeOnDraw = decodeondraw;
 
   // Discard timeout
-  imgDiscardTracker::ReloadTimeout();
+  mozilla::imagelib::DiscardTracker::ReloadTimeout();
 }
 
 // Observer

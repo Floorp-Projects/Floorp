@@ -328,14 +328,14 @@ private: // data
 
   // Discard members
   PRUint32                   mLockCount;
-  imgDiscardTrackerNode      mDiscardTrackerNode;
+  mozilla::imagelib::DiscardTrackerNode    mDiscardTrackerNode;
 
   // Source data members
   nsTArray<char>             mSourceData;
   nsCString                  mSourceDataMimeType;
 
   friend class imgDecodeWorker;
-  friend class imgDiscardTracker;
+  friend class mozilla::imagelib::DiscardTracker;
 
   // Decoder and friends
   nsCOMPtr<imgIDecoder>          mDecoder;

@@ -264,7 +264,7 @@ static void
 imglib_Shutdown()
 {
   imgLoader::Shutdown();
-  imgDiscardTracker::Shutdown();
+  mozilla::imagelib::DiscardTracker::Shutdown();
 }
 
 static const mozilla::Module kImageModule = {
