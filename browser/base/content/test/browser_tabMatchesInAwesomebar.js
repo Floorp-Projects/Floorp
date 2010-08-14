@@ -207,10 +207,10 @@ function ensure_opentabs_match_db() {
 
   try {
     var stmt = db.createStatement(
-                          "SELECT IFNULL(p_t.url, p.url) AS url, open_count, place_id " +
-                          "FROM moz_openpages_temp " +
-                          "LEFT JOIN moz_places p ON p.id=place_id " +
-                          "LEFT JOIN moz_places_temp p_t ON p_t.id=place_id");
+                          "SELECT t.url, open_count, IFNULL(p_t.id, p.id) " +
+                          "FROM moz_openpages_temp t " +
+                          "LEFT JOIN moz_places p ON p.url = t.url " +
+                          "LEFT JOIN moz_places_temp p_t ON p_t.url = t.url");
   } catch (e) {
     ok(false, "error creating db statement: " + e);
     return;
@@ -232,17 +232,9 @@ function ensure_opentabs_match_db() {
   }
 
   for (let url in tabs) {
-    // ignore URLs that should never be in the places db
-    if (!is_expected_in_db(url))
-      continue;
     ok(dbtabs.indexOf(url) > -1,
        "tab is open (" + tabs[url] + " times) and should recorded in db: " + url);
   }
-}
-
-function is_expected_in_db(url) {
-  var uri = Services.io.newURI(url, null, null);
-  return PlacesUtils.history.canAddURI(uri);
 }
 
 /**
