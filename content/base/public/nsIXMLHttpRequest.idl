@@ -47,6 +47,11 @@ interface nsIVariant;
 interface nsPIDOMWindow;
 interface nsIInputStream;
 
+%{C++
+// for jsval
+#include "jsapi.h"
+%}
+
 [scriptable, uuid(6ce0a193-b033-4c3d-b748-f851b09261f5)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
@@ -134,6 +139,12 @@ interface nsIXMLHttpRequest : nsISupports
    */
   readonly attribute AString responseText;
 
+  /**
+   * The response to the request as a typed array ArrayBuffer.
+   * NULL if the request is unsuccessful or
+   * has not yet been sent.
+   */
+  readonly attribute jsval /*ArrayBuffer*/ mozResponseArrayBuffer;
 
   /**
    * The status of the response to the request for HTTP requests.
