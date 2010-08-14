@@ -41,8 +41,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /** @file
- * This file declares the imgContainer class, which
- * handles static and animated image containers.
+ * This file declares the RasterImage class, which
+ * handles static and animated rasterized images.
  *
  * @author  Stuart Parmenter <pavlov@netscape.com>
  * @author  Chris Saari <saari@netscape.com>
@@ -50,23 +50,25 @@
  * @author  Andrew Smith <asmith15@learn.senecac.on.ca>
  */
 
-#ifndef __imgContainer_h__
-#define __imgContainer_h__
+#ifndef mozilla_imagelib_RasterImage_h_
+#define mozilla_imagelib_RasterImage_h_
 
+#include "Image.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
-#include "imgIDecoder.h"
 #include "nsIProperties.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
-#include "imgDiscardTracker.h"
-#include "imgStatusTracker.h"
+#include "DiscardTracker.h"
 
-#define NS_IMGCONTAINER_CID \
+class imgIDecoder;
+class nsIInputStream;
+
+#define NS_RASTERIMAGE_CID \
 { /* 376ff2c1-9bf6-418a-b143-3340c00112f7 */         \
      0x376ff2c1,                                     \
      0x9bf6,                                         \
@@ -80,7 +82,7 @@
  *
  * @par A Quick Walk Through
  * The decoder initializes this class and calls AppendFrame() to add a frame.
- * Once imgContainer detects more than one frame, it starts the animation
+ * Once RasterImage detects more than one frame, it starts the animation
  * with StartAnimation().
  *
  * @par
@@ -105,12 +107,12 @@
  * See comments in DoComposite() for more information and optimizations.
  *
  * @par
- * The rest of the imgContainer specific functions are used by DoComposite to
+ * The rest of the RasterImage specific functions are used by DoComposite to
  * destroy the old frame and build the new one.
  *
  * @note
  * <li> "Mask", "Alpha", and "Alpha Level" are interchangeable phrases in
- * respects to imgContainer.
+ * respects to RasterImage.
  *
  * @par
  * <li> GIFs never have more than a 1 bit alpha.
@@ -136,11 +138,16 @@
  * because the first two have public setters and the observer we only get
  * in Init().
  */
+
+namespace mozilla {
+namespace imagelib {
+
 class imgDecodeWorker;
-class imgContainer : public imgIContainer, 
-                     public nsITimerCallback,
-                     public nsIProperties,
-                     public nsSupportsWeakReference
+
+class RasterImage : public mozilla::imagelib::Image,
+                    public nsITimerCallback,
+                    public nsIProperties,
+                    public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -148,13 +155,26 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
 
-  imgContainer();
-  virtual ~imgContainer();
+  RasterImage();
+  virtual ~RasterImage();
 
-  static NS_METHOD WriteToContainer(nsIInputStream* in, void* closure,
-                                    const char* fromRawSegment,
-                                    PRUint32 toOffset, PRUint32 count,
-                                    PRUint32 *writeCount);
+  // C++-only version of imgIContainer::GetType, for convenience
+  virtual PRUint16 GetType() { return imgIContainer::TYPE_RASTER; }
+
+  // Methods inherited from Image
+  nsresult Init(imgIDecoderObserver *aObserver,
+                const char* aMimeType,
+                PRUint32 aFlags);
+  nsresult GetCurrentFrameRect(nsIntRect& aRect);
+  nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx);
+  nsresult GetNumFrames(PRUint32* aNumFrames);
+  nsresult GetDataSize(PRUint32* aDataSize);
+
+  // Raster-specific methods
+  static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
+                                      const char* aFromRawSegment,
+                                      PRUint32 aToOffset, PRUint32 aCount,
+                                      PRUint32* aWriteCount);
 
   PRUint32 GetDecodedDataSize();
   PRUint32 GetSourceDataSize();
@@ -162,8 +182,107 @@ public:
   /* Triggers discarding. */
   void Discard();
 
-  imgStatusTracker& GetStatusTracker() { return mStatusTracker; }
-  PRBool IsInitialized() const { return mInitialized; }
+  /* Callbacks for decoders */
+  nsresult SetFrameDisposalMethod(PRUint32 aFrameNum,
+                                  PRInt32 aDisposalMethod);
+  nsresult SetFrameTimeout(PRUint32 aFrameNum, PRInt32 aTimeout);
+  nsresult SetFrameBlendMethod(PRUint32 aFrameNum, PRInt32 aBlendMethod);
+  nsresult SetFrameHasNoAlpha(PRUint32 aFrameNum);
+
+  /**
+   * Sets the size of the container. This should only be called by the
+   * decoder. This function may be called multiple times, but will throw an
+   * error if subsequent calls do not match the first.
+   */
+  nsresult SetSize(PRInt32 aWidth, PRInt32 aHeight);
+
+  nsresult EnsureCleanFrame(PRUint32 aFramenum, PRInt32 aX, PRInt32 aY,
+                            PRInt32 aWidth, PRInt32 aHeight,
+                            gfxASurface::gfxImageFormat aFormat,
+                            PRUint8** imageData,
+                            PRUint32* imageLength);
+
+  /**
+   * Adds to the end of the list of frames.
+   */
+  nsresult AppendFrame(PRInt32 aX, PRInt32 aY,
+                       PRInt32 aWidth, PRInt32 aHeight,
+                       gfxASurface::gfxImageFormat aFormat,
+                       PRUint8** imageData,
+                       PRUint32* imageLength);
+
+  nsresult AppendPalettedFrame(PRInt32 aX, PRInt32 aY,
+                               PRInt32 aWidth, PRInt32 aHeight,
+                               gfxASurface::gfxImageFormat aFormat,
+                               PRUint8 aPaletteDepth,
+                               PRUint8**  imageData,
+                               PRUint32*  imageLength,
+                               PRUint32** paletteData,
+                               PRUint32*  paletteLength);
+
+  nsresult FrameUpdated(PRUint32 aFrameNum, nsIntRect& aUpdatedRect);
+
+  /* notification when the current frame is done decoding */
+  nsresult EndFrameDecode(PRUint32 aFrameNum);
+
+  /* notification that the entire image has been decoded */
+  nsresult DecodingComplete();
+
+  /**
+   * Number of times to loop the image.
+   * @note -1 means forever.
+   */
+  void     SetLoopCount(PRInt32 aLoopCount);
+
+  /* Add compressed source data to the imgContainer.
+   *
+   * The decoder will use this data, either immediately or at draw time, to
+   * decode the image.
+   *
+   * XXX This method's only caller (WriteToContainer) ignores the return
+   * value. Should this just return void?
+   */
+  nsresult AddSourceData(const char *aBuffer, PRUint32 aCount);
+
+  /* Called after the all the source data has been added with addSourceData. */
+  virtual nsresult SourceDataComplete();
+
+  /* Called for multipart images when there's a new source image to add. */
+  virtual nsresult NewSourceData();
+
+  /**
+   * A hint of the number of bytes of source data that the image contains. If
+   * called early on, this can help reduce copying and reallocations by
+   * appropriately preallocating the source data buffer.
+   *
+   * We take this approach rather than having the source data management code do
+   * something more complicated (like chunklisting) because HTTP is by far the
+   * dominant source of images, and the Content-Length header is quite reliable.
+   * Thus, pre-allocation simplifies code and reduces the total number of
+   * allocations.
+   */
+  virtual nsresult SetSourceSizeHint(PRUint32 sizeHint);
+
+  // "Blend" method indicates how the current image is combined with the
+  // previous image.
+  enum {
+    // All color components of the frame, including alpha, overwrite the current
+    // contents of the frame's output buffer region
+    kBlendSource =  0,
+
+    // The frame should be composited onto the output buffer based on its alpha,
+    // using a simple OVER operation
+    kBlendOver
+  };
+
+  enum {
+    kDisposeClearAll         = -1, // Clear the whole image, revealing
+                                   // what was there before the gif displayed
+    kDisposeNotSpecified,   // Leave frame, let new frame draw on top
+    kDisposeKeep,           // Leave frame, let new frame draw on top
+    kDisposeClear,          // Clear the frame's area, revealing bg
+    kDisposeRestorePrevious // Restore the previous (composited) frame
+  };
 
 private:
   struct Anim
@@ -316,7 +435,7 @@ private: // data
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
-  imgContainer::Anim*        mAnim;
+  RasterImage::Anim*        mAnim;
   
   //! See imgIContainer for mode constants
   PRUint16                   mAnimationMode;
@@ -329,16 +448,14 @@ private: // data
 
   // Discard members
   PRUint32                   mLockCount;
-  imgDiscardTrackerNode      mDiscardTrackerNode;
+  DiscardTrackerNode         mDiscardTrackerNode;
 
   // Source data members
   nsTArray<char>             mSourceData;
   nsCString                  mSourceDataMimeType;
 
-  imgStatusTracker    mStatusTracker;
-
   friend class imgDecodeWorker;
-  friend class imgDiscardTracker;
+  friend class DiscardTracker;
 
   // Decoder and friends
   nsCOMPtr<imgIDecoder>          mDecoder;
@@ -350,7 +467,6 @@ private: // data
   PRPackedBool               mHasSize:1;       // Has SetSize() been called?
   PRPackedBool               mDecodeOnDraw:1;  // Decoding on draw?
   PRPackedBool               mMultipart:1;     // Multipart?
-  PRPackedBool               mInitialized:1;   // Have we been initalized?
   PRPackedBool               mDiscardable:1;   // Is container discardable?
   PRPackedBool               mHasSourceData:1; // Do we have source data?
 
@@ -389,6 +505,8 @@ private: // data
 
 };
 
+// XXXdholbert These helper classes should move to be inside the
+// scope of the RasterImage class.
 // Decoding Helper Class
 //
 // We use this class to mimic the interactivity benefits of threading
@@ -432,6 +550,7 @@ class imgDecodeRequestor : public nsRunnable
     nsWeakPtr mContainer;
 };
 
+} // namespace imagelib
+} // namespace mozilla
 
-
-#endif /* __imgContainer_h__ */
+#endif /* mozilla_imagelib_RasterImage_h_ */

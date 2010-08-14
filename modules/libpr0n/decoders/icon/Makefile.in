@@ -83,18 +83,6 @@ CPPSRCS		= \
 		nsIconProtocolHandler.cpp \
 		$(NULL)
 
-ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
-USE_ICON_DECODER = 1
-endif
-ifeq (,$(filter-out Darwin OS2 BeOS,$(OS_ARCH)))
-USE_ICON_DECODER = 1
-endif
-
-ifdef USE_ICON_DECODER
-CPPSRCS		+= nsIconDecoder.cpp
-DEFINES		+= -DUSE_ICON_DECODER
-endif
-
 XPIDLSRCS	= nsIIconURI.idl
 
 SHARED_LIBRARY_LIBS = $(PLATFORM)/$(LIB_PREFIX)imgicon$(PLATFORM)_s.$(LIB_SUFFIX)

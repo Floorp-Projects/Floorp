@@ -42,7 +42,10 @@
 #include "imgRequest.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
+#include "Image.h"
 #include "ImageLogging.h"
+
+using namespace mozilla::imagelib;
 
 static nsresult
 GetResultFromImageStatus(PRUint32 aStatus)
@@ -54,7 +57,7 @@ GetResultFromImageStatus(PRUint32 aStatus)
   return NS_OK;
 }
 
-imgStatusTracker::imgStatusTracker(imgIContainer* aImage)
+imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
@@ -169,7 +172,7 @@ class imgStatusNotifyRunnable : public nsRunnable
     imgStatusTracker mStatus;
     // We have to hold on to a reference to the tracker's image, just in case
     // it goes away while we're in the event queue.
-    nsRefPtr<imgIContainer> mImage;
+    nsRefPtr<Image> mImage;
     nsRefPtr<imgRequestProxy> mProxy;
 };
 
@@ -424,7 +427,8 @@ imgStatusTracker::SendDiscard(imgRequestProxy* aProxy)
 
 /* non-virtual imgIContainerObserver methods */
 void
-imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer, nsIntRect* aDirtyRect)
+imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer,
+                                     const nsIntRect* aDirtyRect)
 {
   // no bookkeeping necessary here - this is only for in-frame updates, which we
   // don't fire while we're recording
@@ -432,7 +436,7 @@ imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer, nsIntRect* aDirt
 
 void
 imgStatusTracker::SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer,
-                                   nsIntRect* aDirtyRect)
+                                   const nsIntRect* aDirtyRect)
 {
   if (!aProxy->NotificationsDeferred())
     aProxy->FrameChanged(aContainer, aDirtyRect);

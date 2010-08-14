@@ -5337,7 +5337,8 @@ public:
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIntRect *dirtyRect);
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
+                          const nsIntRect *aDirtyRect);
   // imgIContainerObserver
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest,
                               imgIContainer *aContainer);
@@ -5606,10 +5607,10 @@ nsSVGFEImageElement::OnStopDecode(imgIRequest *aRequest,
 
 NS_IMETHODIMP
 nsSVGFEImageElement::FrameChanged(imgIContainer *aContainer,
-                                  nsIntRect *dirtyRect)
+                                  const nsIntRect *aDirtyRect)
 {
   nsresult rv =
-    nsImageLoadingContent::FrameChanged(aContainer, dirtyRect);
+    nsImageLoadingContent::FrameChanged(aContainer, aDirtyRect);
   Invalidate();
   return rv;
 }
