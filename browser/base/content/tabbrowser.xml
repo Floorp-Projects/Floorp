@@ -726,7 +726,7 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            if (window.TabView && TabView.isVisible()) {
+            if (TabView && TabView.isVisible()) {
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.windowTitle;

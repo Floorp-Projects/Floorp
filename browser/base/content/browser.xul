@@ -941,9 +941,9 @@
       </toolbarbutton>
 
       <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabViewButton2.label;"
+                     label="&tabViewButton.label;"
                      command="Browser:ToggleTabView"
-                     tooltiptext="&tabViewButton2.tooltip;"
+                     tooltiptext="&tabViewButton.tooltip;"
                      removable="true"/>
 
       <toolbarbutton id="tabs-closebutton"
