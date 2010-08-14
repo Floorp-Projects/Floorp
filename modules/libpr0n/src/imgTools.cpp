@@ -52,7 +52,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsStreamUtils.h"
 #include "nsNetUtil.h"
-#include "imgContainer.h"
+#include "RasterImage.h"
 
 using namespace mozilla::imagelib;
 

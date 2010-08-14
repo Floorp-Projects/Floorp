@@ -50,7 +50,7 @@
 
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
-#include "imgContainer.h"
+#include "RasterImage.h"
 
 #include "imgILoader.h"
 #include "ImageLogging.h"

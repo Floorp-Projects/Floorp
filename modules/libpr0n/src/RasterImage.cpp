@@ -47,7 +47,7 @@
 #include "ImageErrors.h"
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
-#include "imgContainer.h"
+#include "RasterImage.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
