@@ -88,15 +88,17 @@ struct JSStackFrame
     JSObject            *argsobj;       /* lazily created arguments object */
     JSObject            *scopeChain;    /* current scope chain */
     JSObject            *blockChain;    /* current static block */
+    void                *annotation;    /* used by Java security */
+    void                *hookData;      /* debugger call hook data */
+    JSVersion           callerVersion;  /* dynamic version of calling script */
 
   public:
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSScript            *script;        /* script being interpreted */
-    js::Value           thisv;          /* "this" pointer if in method */
     JSFunction          *fun;           /* function being called or null */
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
-    void                *annotation;    /* used by Java security */
+    js::Value           thisv;          /* "this" pointer if in method */
     js::Value           rval;           /* function return value */
 
     /* Maintained by StackSpace operations */
@@ -108,10 +110,6 @@ struct JSStackFrame
 #endif
 
     uint32          flags;          /* frame flags -- see below */
-
-    /* Members only needed for inline calls. */
-    void            *hookData;      /* debugger call hook data */
-    JSVersion       callerVersion;  /* dynamic version of calling script */
 
     void            *padding;
 
@@ -261,6 +259,54 @@ struct JSStackFrame
 
     void setBlockChain(JSObject *obj) {
         blockChain = obj;
+    }
+
+    /* Annotation accessors */
+
+    bool hasAnnotation() const {
+        return annotation != NULL;
+    }
+
+    void* getAnnotation() const {
+        JS_ASSERT(hasAnnotation());
+        return annotation;
+    }
+
+    void* maybeAnnotation() const {
+        return annotation;
+    }
+
+    void setAnnotation(void *annot) {
+        annotation = annot;
+    }
+
+    /* Debugger hook data accessors */
+
+    bool hasHookData() const {
+        return hookData != NULL;
+    }
+
+    void* getHookData() const {
+        JS_ASSERT(hasHookData());
+        return hookData;
+    }
+
+    void* maybeHookData() const {
+        return hookData;
+    }
+
+    void setHookData(void *data) {
+        hookData = data;
+    }
+
+    /* Version accessors */
+
+    JSVersion getCallerVersion() const {
+        return callerVersion;
+    }
+
+    void setCallerVersion(JSVersion version) {
+        callerVersion = version;
     }
 
     /* Other accessors */
