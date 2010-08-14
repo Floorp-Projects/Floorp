@@ -202,7 +202,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
   NS_ABORT_IF_FALSE(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
-  nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/container;3");
+  nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/rasterimage;1");
   mImage = static_cast<Image*>(comImg.get());
 
   mURI = aURI;
@@ -1052,7 +1052,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   // WriteToContainer always consumes everything it gets
   PRUint32 bytesRead;
-  rv = inStr->ReadSegments(imgContainer::WriteToContainer,
+  rv = inStr->ReadSegments(RasterImage::WriteToContainer,
                            static_cast<void*>(mImage),
                            count, &bytesRead);
   if (NS_FAILED(rv)) {
