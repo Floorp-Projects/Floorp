@@ -795,8 +795,8 @@ RasterImage::InternalAddFrame(PRUint32 framenum,
     // First Frame's refresh area is all of itself.
     // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR)
     PRInt32 frameDisposalMethod = mFrames[0]->GetFrameDisposalMethod();
-    if (frameDisposalMethod == imgIContainer::kDisposeClear ||
-        frameDisposalMethod == imgIContainer::kDisposeRestorePrevious)
+    if (frameDisposalMethod == kDisposeClear ||
+        frameDisposalMethod == kDisposeRestorePrevious)
       mAnim->firstFrameRefreshArea = mFrames[0]->GetRect();
   }
 
@@ -819,8 +819,7 @@ RasterImage::InternalAddFrame(PRUint32 framenum,
   return rv;
 }
 
-/* [noscript] void appendFrame (in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat, [array, size_is (imageLength)] out PRUint8 imageData, out unsigned long imageLength); */
-NS_IMETHODIMP
+nsresult
 RasterImage::AppendFrame(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
                          PRInt32 aHeight,
                          gfxASurface::gfxImageFormat aFormat,
@@ -839,8 +838,7 @@ RasterImage::AppendFrame(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
                           /* aPaletteLength = */ nsnull);
 }
 
-/* [noscript] void appendPalettedFrame (in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat, in PRUint8 aPaletteDepth, [array, size_is (imageLength)] out PRUint8 imageData, out unsigned long imageLength, [array, size_is (paletteLength)] out PRUint32 paletteData, out unsigned long paletteLength); */
-NS_IMETHODIMP
+nsresult
 RasterImage::AppendPalettedFrame(PRInt32 aX, PRInt32 aY,
                                  PRInt32 aWidth, PRInt32 aHeight,
                                  gfxASurface::gfxImageFormat aFormat,
@@ -863,8 +861,7 @@ RasterImage::AppendPalettedFrame(PRInt32 aX, PRInt32 aY,
                           paletteData, paletteLength);
 }
 
-/*  [noscript] void setSize(in long aWidth, in long aHeight); */
-NS_IMETHODIMP
+nsresult
 RasterImage::SetSize(PRInt32 aWidth, PRInt32 aHeight)
 {
   if (mError)
@@ -896,13 +893,7 @@ RasterImage::SetSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
-/*  [noscript] void ensureCleanFrame(in unsigned long aFramenum, in PRInt32 aX, 
-                                     in PRInt32 aY, in PRInt32 aWidth, 
-                                     in PRInt32 aHeight, in gfxImageFormat aFormat, 
-                                     [array, size_is(imageLength)]
-                                       out PRUint8 imageData,
-                                     out unsigned long imageLength); */
-NS_IMETHODIMP
+nsresult
 RasterImage::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
                               PRInt32 aWidth, PRInt32 aHeight,
                               gfxASurface::gfxImageFormat aFormat,
@@ -949,9 +940,7 @@ RasterImage::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
 }
 
 
-//******************************************************************************
-/* void frameUpdated (in unsigned long framenumber, in nsIntRect rect); */
-NS_IMETHODIMP
+nsresult
 RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
 {
   NS_ASSERTION(aFrameNum < mFrames.Length(), "Invalid frame index!");
@@ -967,10 +956,9 @@ RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
   return NS_OK;
 }
 
-//******************************************************************************
-/* void setFrameDisposalMethod (in unsigned long framenumber, in PRInt32 aDisposalMethod); */
-NS_IMETHODIMP
-RasterImage::SetFrameDisposalMethod(PRUint32 aFrameNum, PRInt32 aDisposalMethod)
+nsresult
+RasterImage::SetFrameDisposalMethod(PRUint32 aFrameNum,
+                                    PRInt32 aDisposalMethod)
 {
   if (mError)
     return NS_ERROR_FAILURE;
@@ -989,9 +977,7 @@ RasterImage::SetFrameDisposalMethod(PRUint32 aFrameNum, PRInt32 aDisposalMethod)
   return NS_OK;
 }
 
-//******************************************************************************
-/* void setFrameTimeout (in unsigned long framenumber, in PRInt32 aTimeout); */
-NS_IMETHODIMP
+nsresult
 RasterImage::SetFrameTimeout(PRUint32 aFrameNum, PRInt32 aTimeout)
 {
   if (mError)
@@ -1010,9 +996,7 @@ RasterImage::SetFrameTimeout(PRUint32 aFrameNum, PRInt32 aTimeout)
   return NS_OK;
 }
 
-//******************************************************************************
-/* void setFrameBlendMethod (in unsigned long framenumber, in PRInt32 aBlendMethod); */
-NS_IMETHODIMP
+nsresult
 RasterImage::SetFrameBlendMethod(PRUint32 aFrameNum, PRInt32 aBlendMethod)
 {
   if (mError)
@@ -1031,10 +1015,7 @@ RasterImage::SetFrameBlendMethod(PRUint32 aFrameNum, PRInt32 aBlendMethod)
   return NS_OK;
 }
 
-
-//******************************************************************************
-/* void setFrameHasNoAlpha (in unsigned long framenumber); */
-NS_IMETHODIMP
+nsresult
 RasterImage::SetFrameHasNoAlpha(PRUint32 aFrameNum)
 {
   if (mError)
@@ -1053,9 +1034,7 @@ RasterImage::SetFrameHasNoAlpha(PRUint32 aFrameNum)
   return NS_OK;
 }
 
-//******************************************************************************
-/* void endFrameDecode (in unsigned long framenumber); */
-NS_IMETHODIMP
+nsresult
 RasterImage::EndFrameDecode(PRUint32 aFrameNum)
 {
   if (mError)
@@ -1069,9 +1048,7 @@ RasterImage::EndFrameDecode(PRUint32 aFrameNum)
   return NS_OK;
 }
 
-//******************************************************************************
-/* void decodingComplete (); */
-NS_IMETHODIMP
+nsresult
 RasterImage::DecodingComplete()
 {
   if (mError)
@@ -1130,9 +1107,9 @@ RasterImage::SetAnimationMode(PRUint16 aAnimationMode)
   if (mError)
     return NS_ERROR_FAILURE;
 
-  NS_ASSERTION(aAnimationMode == imgIContainer::kNormalAnimMode ||
-               aAnimationMode == imgIContainer::kDontAnimMode ||
-               aAnimationMode == imgIContainer::kLoopOnceAnimMode,
+  NS_ASSERTION(aAnimationMode == kNormalAnimMode ||
+               aAnimationMode == kDontAnimMode ||
+               aAnimationMode == kLoopOnceAnimMode,
                "Wrong Animation Mode is being set!");
   
   switch (mAnimationMode = aAnimationMode) {
@@ -1247,41 +1224,20 @@ RasterImage::ResetAnimation()
   return NS_OK;
 }
 
-//******************************************************************************
-/* attribute long loopCount; */
-NS_IMETHODIMP
-RasterImage::GetLoopCount(PRInt32 *aLoopCount)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(aLoopCount);
-  
-  *aLoopCount = mLoopCount;
-  
-  return NS_OK;
-}
-
-//******************************************************************************
-/* attribute long loopCount; */
-NS_IMETHODIMP
+void
 RasterImage::SetLoopCount(PRInt32 aLoopCount)
 {
   if (mError)
-    return NS_ERROR_FAILURE;
+    return;
 
   // -1  infinite
   //  0  no looping, one iteration
   //  1  one loop, two iterations
   //  ...
   mLoopCount = aLoopCount;
-
-  return NS_OK;
 }
 
-//******************************************************************************
-/* void addSourceData(in nsIInputStream aInputStream, in unsigned long aCount); */
-NS_IMETHODIMP
+nsresult
 RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
 {
   if (mError)
@@ -1361,9 +1317,7 @@ get_header_str (char *buf, char *data, PRSize data_len)
   buf[i * 2] = 0;
 }
 
-//******************************************************************************
-/* void sourceDataComplete(); */
-NS_IMETHODIMP
+nsresult
 RasterImage::SourceDataComplete()
 {
   if (mError)
@@ -1423,9 +1377,7 @@ RasterImage::SourceDataComplete()
   return NS_OK;
 }
 
-//******************************************************************************
-/* void newSourceData(); */
-NS_IMETHODIMP
+nsresult
 RasterImage::NewSourceData()
 {
   nsresult rv;
@@ -1469,9 +1421,7 @@ RasterImage::NewSourceData()
   return NS_OK;
 }
 
-//******************************************************************************
-/* void setSourceSizeHint(in unsigned long sizeHint); */
-NS_IMETHODIMP
+nsresult
 RasterImage::SetSourceSizeHint(PRUint32 sizeHint)
 {
   if (sizeHint && StoringSourceData())
@@ -1612,9 +1562,9 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
   NS_ENSURE_ARG_POINTER(aFrameToUse);
 
   PRInt32 prevFrameDisposalMethod = aPrevFrame->GetFrameDisposalMethod();
-  if (prevFrameDisposalMethod == imgIContainer::kDisposeRestorePrevious &&
+  if (prevFrameDisposalMethod == kDisposeRestorePrevious &&
       !mAnim->compositingPrevFrame)
-    prevFrameDisposalMethod = imgIContainer::kDisposeClear;
+    prevFrameDisposalMethod = kDisposeClear;
 
   nsIntRect prevFrameRect = aPrevFrame->GetRect();
   PRBool isFullPrevFrame = (prevFrameRect.x == 0 && prevFrameRect.y == 0 &&
@@ -1624,8 +1574,8 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
   // Optimization: DisposeClearAll if the previous frame is the same size as
   //               container and it's clearing itself
   if (isFullPrevFrame && 
-      (prevFrameDisposalMethod == imgIContainer::kDisposeClear))
-    prevFrameDisposalMethod = imgIContainer::kDisposeClearAll;
+      (prevFrameDisposalMethod == kDisposeClear))
+    prevFrameDisposalMethod = kDisposeClearAll;
 
   PRInt32 nextFrameDisposalMethod = aNextFrame->GetFrameDisposalMethod();
   nsIntRect nextFrameRect = aNextFrame->GetRect();
@@ -1636,7 +1586,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
   if (!aNextFrame->GetIsPaletted()) {
     // Optimization: Skip compositing if the previous frame wants to clear the
     //               whole image
-    if (prevFrameDisposalMethod == imgIContainer::kDisposeClearAll) {
+    if (prevFrameDisposalMethod == kDisposeClearAll) {
       aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       *aFrameToUse = aNextFrame;
       return NS_OK;
@@ -1645,7 +1595,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     // Optimization: Skip compositing if this frame is the same size as the
     //               container and it's fully drawing over prev frame (no alpha)
     if (isFullNextFrame &&
-        (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious) &&
+        (nextFrameDisposalMethod != kDisposeRestorePrevious) &&
         !aNextFrame->GetHasAlpha()) {
       aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       *aFrameToUse = aNextFrame;
@@ -1656,17 +1606,17 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
   // Calculate area that needs updating
   switch (prevFrameDisposalMethod) {
     default:
-    case imgIContainer::kDisposeNotSpecified:
-    case imgIContainer::kDisposeKeep:
+    case kDisposeNotSpecified:
+    case kDisposeKeep:
       *aDirtyRect = nextFrameRect;
       break;
 
-    case imgIContainer::kDisposeClearAll:
+    case kDisposeClearAll:
       // Whole image container is cleared
       aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       break;
 
-    case imgIContainer::kDisposeClear:
+    case kDisposeClear:
       // Calc area that needs to be redrawn (the combination of previous and
       // this frame)
       // XXX - This could be done with multiple framechanged calls
@@ -1677,7 +1627,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
       aDirtyRect->UnionRect(nextFrameRect, prevFrameRect);
       break;
 
-    case imgIContainer::kDisposeRestorePrevious:
+    case kDisposeRestorePrevious:
       aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       break;
   }
@@ -1739,7 +1689,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
   if (doDisposal) {
     // Dispose of previous: clear, restore, or keep (copy)
     switch (prevFrameDisposalMethod) {
-      case imgIContainer::kDisposeClear:
+      case kDisposeClear:
         if (needToBlankComposite) {
           // If we just created the composite, it could have anything in it's
           // buffer. Clear whole frame
@@ -1750,18 +1700,18 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
         }
         break;
   
-      case imgIContainer::kDisposeClearAll:
+      case kDisposeClearAll:
         ClearFrame(mAnim->compositingFrame);
         break;
   
-      case imgIContainer::kDisposeRestorePrevious:
+      case kDisposeRestorePrevious:
         // It would be better to copy only the area changed back to
         // compositingFrame.
         if (mAnim->compositingPrevFrame) {
           CopyFrameImage(mAnim->compositingPrevFrame, mAnim->compositingFrame);
   
           // destroy only if we don't need it for this frame's disposal
-          if (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)
+          if (nextFrameDisposalMethod != kDisposeRestorePrevious)
             mAnim->compositingPrevFrame = nsnull;
         } else {
           ClearFrame(mAnim->compositingFrame);
@@ -1799,8 +1749,8 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
   // Check if the frame we are composing wants the previous image restored afer
   // it is done. Don't store it (again) if last frame wanted its image restored
   // too
-  if ((nextFrameDisposalMethod == imgIContainer::kDisposeRestorePrevious) &&
-      (prevFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)) {
+  if ((nextFrameDisposalMethod == kDisposeRestorePrevious) &&
+      (prevFrameDisposalMethod != kDisposeRestorePrevious)) {
     // We are storing the whole image.
     // It would be better if we just stored the area that nextFrame is going to
     // overwrite.
@@ -1844,7 +1794,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     // Then set the previous frame's disposal to CLEAR_ALL so we just draw the
     // frame next time around
     if (CopyFrameImage(mAnim->compositingFrame, aNextFrame)) {
-      aPrevFrame->SetFrameDisposalMethod(imgIContainer::kDisposeClearAll);
+      aPrevFrame->SetFrameDisposalMethod(kDisposeClearAll);
       mAnim->lastCompositedFrameIndex = -1;
       *aFrameToUse = aNextFrame;
       return NS_OK;
@@ -2035,7 +1985,7 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
   
   // first clear the surface if the blend flag says so
   PRInt32 blendMethod = aSrc->GetBlendMethod();
-  if (blendMethod == imgIContainer::kBlendSource) {
+  if (blendMethod == kBlendSource) {
     gfxContext::GraphicsOperator defaultOperator = dst.CurrentOperator();
     dst.SetOperator(gfxContext::OPERATOR_CLEAR);
     dst.Fill();
