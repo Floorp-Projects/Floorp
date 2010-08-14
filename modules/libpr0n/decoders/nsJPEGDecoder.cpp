@@ -402,8 +402,9 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
            ("        JPEGDecoderAccounting: nsJPEGDecoder::Write -- created image frame with %ux%u pixels",
             mInfo.image_width, mInfo.image_height));
 
-    if (mObserver)
-      mObserver->OnStartFrame(nsnull, 0);
+    // Tell the superclass we're starting a frame
+    PostFrameStart();
+
     mState = JPEG_START_DECOMPRESS;
   }
 
@@ -574,8 +575,7 @@ nsJPEGDecoder::NotifyDone(PRBool aSuccess)
   NS_ABORT_IF_FALSE(!mNotifiedDone, "calling NotifyDone twice!");
 
   // Notify
-  if (mObserver)
-    mObserver->OnStopFrame(nsnull, 0);
+  PostFrameStop();
   if (aSuccess)
     mImage->DecodingComplete();
   if (mObserver) {

@@ -332,8 +332,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
   mImage->SetFrameDisposalMethod(mGIFStruct.images_decoded,
                                  mGIFStruct.disposal_method);
 
-  if (mObserver)
-    mObserver->OnStartFrame(nsnull, mGIFStruct.images_decoded);
+  // Tell the superclass we're starting a frame
+  PostFrameStart();
 
   mCurrentFrame = mGIFStruct.images_decoded;
   return NS_OK;
@@ -370,8 +370,6 @@ void nsGIFDecoder2::EndImageFrame()
   mCurrentRow = mLastFlushedRow = -1;
   mCurrentPass = mLastFlushedPass = 0;
 
-  PRUint32 curframe = mGIFStruct.images_decoded;
-
   // Only add frame if we have any rows at all
   if (mGIFStruct.rows_remaining != mGIFStruct.height) {
     if (mGIFStruct.rows_remaining && mGIFStruct.images_decoded) {
@@ -394,8 +392,8 @@ void nsGIFDecoder2::EndImageFrame()
   // even if some of them weren't decoded properly and thus are blank.
   mGIFStruct.images_decoded++;
 
-  if (mObserver)
-    mObserver->OnStopFrame(nsnull, curframe);
+  // Tell the superclass we finished a frame
+  PostFrameStop();
 
   // Reset the transparent pixel
   if (mOldColor) {

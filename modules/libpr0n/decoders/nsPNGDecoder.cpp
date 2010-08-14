@@ -129,8 +129,8 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
     SetAnimFrameInfo();
 #endif
 
-  if (mObserver)
-    mObserver->OnStartFrame(nsnull, mImage->GetNumFrames() - 1);
+  // Tell the superclass we're starting a frame
+  PostFrameStart();
 
   PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
@@ -214,8 +214,7 @@ void nsPNGDecoder::EndImageFrame()
 #endif
 
   mImage->EndFrameDecode(numFrames - 1);
-  if (mObserver)
-    mObserver->OnStopFrame(nsnull, numFrames - 1);
+  PostFrameStop();
 }
 
 nsresult

@@ -101,9 +101,13 @@ nsICODecoder::ShutdownInternal(PRUint32 aFlags)
 {
   nsresult rv = NS_OK;
 
+  // We should never make multiple frames
+  NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple ICO frames?");
+
   // Send notifications if appropriate
   if (!IsSizeDecode() &&
-      !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
+      !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
+      (GetFrameCount() == 1)) {
     // Tell the image that it's data has been updated 
     nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
     rv = mImage->FrameUpdated(0, r);
@@ -111,8 +115,8 @@ nsICODecoder::ShutdownInternal(PRUint32 aFlags)
 
     if (mObserver) {
       mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
-      mObserver->OnStopFrame(nsnull, 0);
     }
+    PostFrameStop();
     mImage->DecodingComplete();
     if (mObserver) {
       mObserver->OnStopContainer(nsnull, 0);
@@ -289,10 +293,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                              gfxASurface::ImageFormatARGB32, (PRUint8**)&mImageData, &imageLength);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mObserver) {
-      mObserver->OnStartFrame(nsnull, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    // Tell the superclass we're starting a frame
+    PostFrameStart();
   }
 
   if (mColors && (mPos >= mImageOffset + BITMAPINFOSIZE) && 
