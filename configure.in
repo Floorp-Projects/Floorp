@@ -74,6 +74,18 @@ TARGET_OS="${target_os}"
 MOZ_DEB_TIMESTAMP=`date +"%a, %d  %b %Y %T %z"   2>&1` 
 AC_SUBST(MOZ_DEB_TIMESTAMP)
 
+MOZ_ARG_ENABLE_BOOL(shared-js,
+[  --enable-shared-js
+                          Create a shared JavaScript library.],
+    ENABLE_SHARED_JS=1,
+    ENABLE_SHARED_JS=0)
+
+if test "$ENABLE_SHARED_JS" = "1" ; then
+  JS_SHARED_LIBRARY=1
+else
+  AC_DEFINE(MOZ_STATIC_JS)
+fi
+AC_SUBST(JS_SHARED_LIBRARY)
 
 dnl ========================================================
 dnl =
@@ -1221,7 +1233,11 @@ MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
+if test -z "$JS_SHARED_LIBRARY" ; then
+MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -ljs_static'
+else
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
+fi
 DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core -lmozalloc'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
 XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom -lmozalloc'
@@ -2268,7 +2284,11 @@ ia64*-hpux*)
     MOZ_DEBUG_FLAGS='-Zi'
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
-    MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
+    if test -z "$JS_SHARED_LIBRARY" ; then
+       MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js_static.lib'
+    else
+       MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
+    fi
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
     STRIP='echo not_strip'
@@ -2328,7 +2348,11 @@ ia64*-hpux*)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32"
-        MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -lmozjs'
+        if test -z "$JS_SHARED_LIBRARY" ; then
+           MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -ljs_static'
+        else
+           MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
+        fi
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core -lmozalloc'
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
@@ -2374,7 +2398,11 @@ ia64*-hpux*)
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
     	MOZ_OPTIMIZE_FLAGS='-O1'
-        MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
+        if test -z "$JS_SHARED_LIBRARY" ; then
+           MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js_static.lib'
+        else
+           MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
+        fi
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
@@ -9221,6 +9249,9 @@ ac_configure_args="$ac_configure_args --enable-threadsafe"
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
     ac_configure_args="$ac_configure_args --enable-ctypes"
+fi
+if test -z "$JS_SHARED_LIBRARY" ; then
+    ac_configure_args="$ac_configure_args --disable-shared-js"
 fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
