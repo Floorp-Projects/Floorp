@@ -25,13 +25,13 @@
 
 #include "RegexJIT.h"
 
+#if ENABLE_ASSEMBLER
+
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "RegexCompiler.h"
 
 #include "yarr/pcre/pcre.h" // temporary, remove when fallback is removed.
-
-#if ENABLE_YARR_JIT
 
 using namespace WTF;
 
