@@ -1068,7 +1068,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha() { return PR_FALSE; }
+  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) { return PR_FALSE; }
 
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
@@ -1695,7 +1695,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha() { return PR_FALSE; }
+  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) { return PR_FALSE; }
 
   virtual StringAttributesInfo GetStringInfo();
 
@@ -2715,7 +2715,7 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
-                                PRUint32, Image*) { return PR_TRUE; }
+                                PRInt32, Image*) { return PR_TRUE; }
 
   virtual StringAttributesInfo GetStringInfo();
 
@@ -3898,7 +3898,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha() {
+  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) {
     return !mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
   }
 
@@ -5354,7 +5354,7 @@ private:
 
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
-                                PRUint32, Image*) { return PR_TRUE; }
+                                PRInt32, Image*) { return PR_TRUE; }
 
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
@@ -5689,12 +5689,15 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
-                                PRUint32 aInput, Image* aImage) {
-    if (aInput == 0 && aImage)
+                                PRInt32 aInput, Image* aImage) {
+    if (aInput == 0)
       return aImage->mColorModel.mColorSpace == ColorModel::SRGB;
 
     return nsSVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
                                                              aInput, aImage);
+  }
+  virtual PRBool OperatesOnPremultipledAlpha(PRInt32 aInput) {
+    return !(aInput == 1);
   }
 
   virtual NumberAttributesInfo GetNumberInfo();
