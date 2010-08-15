@@ -313,6 +313,7 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->fp == up && up->down == down);
     JS_ASSERT(up->savedPC == JSStackFrame::sInvalidPC);
+    JS_ASSERT(!up->hasIMacroPC());
 
     JSFrameRegs *regs = cx->regs;
     regs->pc = down->savedPC;
