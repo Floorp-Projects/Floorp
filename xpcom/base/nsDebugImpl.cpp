@@ -395,6 +395,12 @@ RealBreak()
    asm("int $3");
 #elif defined(__arm__)
    asm("BKPT #0");
+#elif defined(SOLARIS)
+#if defined(__i386__) || defined(__i386) || defined(__x86_64__)
+   asm("int $3");
+#else
+   raise(SIGTRAP);
+#endif
 #else
 #warning don't know how to break on this platform  
 #endif
@@ -496,6 +502,8 @@ Break(const char *aMsg)
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
    RealBreak();
 #elif defined(__arm__)
+   RealBreak();
+#elif defined(SOLARIS)
    RealBreak();
 #else
 #warning don't know how to break on this platform
