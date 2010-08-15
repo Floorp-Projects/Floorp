@@ -939,7 +939,7 @@ struct Parser : private js::AutoGCRooter
     {
         js::PodArrayZero(tempFreeList);
         setPrincipals(prin);
-        JS_ASSERT_IF(cfp, cfp->script);
+        JS_ASSERT_IF(cfp, cfp->hasScript());
     }
 
     ~Parser();

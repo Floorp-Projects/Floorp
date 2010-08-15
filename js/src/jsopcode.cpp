@@ -279,7 +279,7 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    return js_DisassembleAtPC(cx, cx->fp->script, true, stdout, cx->regs->pc);
+    return js_DisassembleAtPC(cx, cx->fp->getScript(), true, stdout, cx->regs->pc);
 }
 
 JSBool
@@ -2873,8 +2873,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (fp) {
                         while (!(fp->flags & JSFRAME_EVAL))
                             fp = fp->down;
-                        JS_ASSERT(fp->script == jp->script);
-                        JS_ASSERT(fp->down->fun == jp->fun);
+                        JS_ASSERT(fp->getScript() == jp->script);
+                        JS_ASSERT(fp->down->getFunction() == jp->fun);
                         JS_ASSERT(FUN_INTERPRETED(jp->fun));
                         JS_ASSERT(jp->script != jp->fun->u.i.script);
                         JS_ASSERT(jp->script->upvarsOffset != 0);
@@ -5082,14 +5082,14 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     
     /* Get scripted caller */
     FrameRegsIter i(cx);
-    while (!i.done() && !i.fp()->script)
+    while (!i.done() && !i.fp()->hasScript())
         ++i;
 
-    if (i.done() || !i.pc() || i.fp()->script->nslots == 0)
+    if (i.done() || !i.pc() || i.fp()->getSlotCount() == 0)
         goto do_fallback;
 
     fp = i.fp();
-    script = fp->script;
+    script = fp->getScript();
     pc = fp->hasIMacroPC() ? fp->getIMacroPC() : i.pc();
     JS_ASSERT(pc >= script->main && pc < script->code + script->length);
 
@@ -5170,7 +5170,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
         if (savedIMacroPC && size_t(pc - script->code) >= script->length)
             name = FAILED_EXPRESSION_DECOMPILER;
         else
-            name = DecompileExpression(cx, script, fp->fun, pc);
+            name = DecompileExpression(cx, script, fp->maybeFunction(), pc);
 
         if (savedIMacroPC) {
             if (fp == cx->fp)
