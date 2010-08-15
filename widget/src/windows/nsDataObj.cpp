@@ -830,8 +830,8 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
   }
   
   if ( image ) {
-    // use a the helper class to build up a bitmap. We now own the bits,
-    // and pass them back to the OS in |aSTG|.
+    // use the |nsImageToClipboard| helper class to build up a bitmap. We now own
+    // the bits, and pass them back to the OS in |aSTG|.
     nsImageToClipboard converter ( image );
     HANDLE bits = nsnull;
     nsresult rv = converter.GetPicture ( &bits );
