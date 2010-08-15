@@ -2014,8 +2014,8 @@ struct JSContext
     JSStackFrame *findFrameAtLevel(uintN targetLevel) {
         JSStackFrame *fp = this->fp;
         while (true) {
-            JS_ASSERT(fp && fp->script);
-            if (fp->script->staticLevel == targetLevel)
+            JS_ASSERT(fp && fp->hasScript());
+            if (fp->getScript()->staticLevel == targetLevel)
                 break;
             fp = fp->down;
         }
@@ -2299,14 +2299,14 @@ JS_ALWAYS_INLINE JSObject *
 JSStackFrame::varobj(js::StackSegment *seg) const
 {
     JS_ASSERT(seg->contains(this));
-    return fun ? maybeCallObj() : seg->getInitialVarObj();
+    return hasFunction() ? maybeCallObj() : seg->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE JSObject *
 JSStackFrame::varobj(JSContext *cx) const
 {
     JS_ASSERT(cx->activeSegment()->contains(this));
-    return fun ? maybeCallObj() : cx->activeSegment()->getInitialVarObj();
+    return hasFunction() ? maybeCallObj() : cx->activeSegment()->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE jsbytecode *
@@ -2348,7 +2348,8 @@ class AutoCheckRequestDepth {
 static inline uintN
 FramePCOffset(JSContext *cx, JSStackFrame* fp)
 {
-    return uintN((fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx)) - fp->script->code);
+    jsbytecode *pc = fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx);
+    return uintN(pc - fp->getScript()->code);
 }
 
 static inline JSAtom **
@@ -2356,7 +2357,7 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 {
     return fp->hasIMacroPC()
            ? COMMON_ATOMS_START(&cx->runtime->atomState)
-           : fp->script->atomMap.vector;
+           : fp->getScript()->atomMap.vector;
 }
 
 namespace js {

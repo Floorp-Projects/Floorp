@@ -89,18 +89,18 @@ struct JSStackFrame
     JSObject            *argsobj;       /* lazily created arguments object */
     JSObject            *scopeChain;    /* current scope chain */
     JSObject            *blockChain;    /* current static block */
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     void                *annotation;    /* used by Java security */
     void                *hookData;      /* debugger call hook data */
     JSVersion           callerVersion;  /* dynamic version of calling script */
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
-
-  public:
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
-    uintN               argc;           /* actual argument count */
-    js::Value           *argv;          /* base of argument stack slots */
     js::Value           thisv;          /* "this" pointer if in method */
     js::Value           rval;           /* function return value */
+
+  public:
+    uintN               argc;           /* actual argument count */
+    js::Value           *argv;          /* base of argument stack slots */
 
     /* Maintained by StackSpace operations */
     JSStackFrame        *down;          /* previous frame, part of
@@ -110,9 +110,9 @@ struct JSStackFrame
     static jsbytecode *const sInvalidPC;
 #endif
 
-    uint32          flags;          /* frame flags -- see below */
+    uint32              flags;          /* frame flags -- see below */
 
-    void            *padding;
+    void                *padding;
 
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
     jsbytecode *pc(JSContext *cx) const;
@@ -126,7 +126,7 @@ struct JSStackFrame
     }
 
     js::Value *base() const {
-        return slots() + script->nfixed;
+        return slots() + getScript()->nfixed;
     }
 
     /* Call object accessors */
@@ -262,6 +262,33 @@ struct JSStackFrame
         blockChain = obj;
     }
 
+    /* IMacroPC accessors. */
+
+    bool hasIMacroPC() const { return flags & JSFRAME_IN_IMACRO; }
+
+    /*
+     * @pre     hasIMacroPC
+     * @return  The PC at which an imacro started executing (guaranteed non-null. The PC of the
+     *          executing imacro must be in regs.pc, so the displaced
+     *          original value is stored here.
+     */
+    jsbytecode *getIMacroPC() const {
+        JS_ASSERT(flags & JSFRAME_IN_IMACRO);
+        return imacpc;
+    }
+
+    /* @return  The imacro pc if hasIMacroPC; otherwise, NULL. */
+    jsbytecode *maybeIMacroPC() const { return hasIMacroPC() ? getIMacroPC() : NULL; }
+
+    void clearIMacroPC() { flags &= ~JSFRAME_IN_IMACRO; }
+
+    void setIMacroPC(jsbytecode *newIMacPC) {
+        JS_ASSERT(newIMacPC);
+        JS_ASSERT(!(flags & JSFRAME_IN_IMACRO));
+        imacpc = newIMacPC;
+        flags |= JSFRAME_IN_IMACRO;
+    }
+
     /* Annotation accessors */
 
     bool hasAnnotation() const {
@@ -310,31 +337,90 @@ struct JSStackFrame
         callerVersion = version;
     }
 
-    /* IMacroPC accessors. */
+    /* Script accessors */
 
-    bool hasIMacroPC() const { return flags & JSFRAME_IN_IMACRO; }
-
-    /*
-     * @pre     hasIMacroPC
-     * @return  The PC at which an imacro started executing (guaranteed non-null. The PC of the
-     *          executing imacro must be in regs.pc, so the displaced
-     *          original value is stored here.
-     */
-    jsbytecode *getIMacroPC() const {
-        JS_ASSERT(flags & JSFRAME_IN_IMACRO);
-        return imacpc;
+    bool hasScript() const {
+        return script != NULL;
     }
 
-    /* @return  The imacro pc if hasIMacroPC; otherwise, NULL. */
-    jsbytecode *maybeIMacroPC() const { return hasIMacroPC() ? getIMacroPC() : NULL; }
+    JSScript* getScript() const {
+        JS_ASSERT(hasScript());
+        return script;
+    }
 
-    void clearIMacroPC() { flags &= ~JSFRAME_IN_IMACRO; }
+    JSScript* maybeScript() const {
+        return script;
+    }
 
-    void setIMacroPC(jsbytecode *newIMacPC) {
-        JS_ASSERT(newIMacPC);
-        JS_ASSERT(!(flags & JSFRAME_IN_IMACRO));
-        imacpc = newIMacPC;
-        flags |= JSFRAME_IN_IMACRO;
+    size_t getFixedCount() const {
+        return getScript()->nfixed;
+    }
+
+    size_t getSlotCount() const {
+        return getScript()->nslots;
+    }
+
+    void setScript(JSScript *s) {
+        script = s;
+    }
+
+    static size_t offsetScript() {
+        return offsetof(JSStackFrame, script);
+    }
+
+    /* Function accessors */
+
+    bool hasFunction() const {
+        return fun != NULL;
+    }
+
+    JSFunction* getFunction() const {
+        JS_ASSERT(hasFunction());
+        return fun;
+    }
+
+    JSFunction* maybeFunction() const {
+        return fun;
+    }
+
+    size_t getArgumentCount() const {
+        return getFunction()->nargs;
+    }
+
+    void setFunction(JSFunction *f) {
+        fun = f;
+    }
+
+    /* This-value accessors */
+
+    const js::Value& getThisValue() {
+        return thisv;
+    }
+
+    void setThisValue(const js::Value &v) {
+        thisv = v;
+    }
+
+    /* Return-value accessors */
+
+    const js::Value& getReturnValue() {
+        return rval;
+    }
+
+    void setReturnValue(const js::Value &v) {
+        rval = v;
+    }
+
+    void clearReturnValue() {
+        rval.setUndefined();
+    }
+
+    js::Value* addressReturnValue() {
+        return &rval;
+    }
+
+    static size_t offsetReturnValue() {
+        return offsetof(JSStackFrame, rval);
     }
 
     /* Other accessors */
@@ -399,6 +485,9 @@ struct JSStackFrame
     }
 
     bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
+
+    /* Contains static assertions for member alignment, don't call. */
+    inline void staticAsserts();
 };
 
 namespace js {
@@ -406,16 +495,20 @@ namespace js {
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
-JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(Value) == 0);
-JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(Value) == 0);
-
 } /* namespace js */
+
+inline void
+JSStackFrame::staticAsserts()
+{
+    JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(js::Value) == 0);
+    JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(js::Value) == 0);
+}
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
 {
-    JS_ASSERT(!fp->fun);
-    return fp->script->nfixed;
+    JS_ASSERT(!fp->hasFunction());
+    return fp->getScript()->nfixed;
 }
 
 /*
@@ -691,7 +784,7 @@ JSStackFrame::getThisObject(JSContext *cx)
         return &thisv.toObject();
     if (!js::ComputeThisFromArgv(cx, argv))
         return NULL;
-    thisv = argv[-1];
+    setThisValue(argv[-1]);
     flags |= JSFRAME_COMPUTED_THIS;
     return &thisv.toObject();
 }

@@ -1309,7 +1309,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                     JSStackFrame* fp = JS_GetScriptedCaller(cx, NULL);
                     if(fp)
                     {
-                        script = fp->script;
+                        script = fp->maybeScript();
                         callee = fp->callee();
                     }
                 }
