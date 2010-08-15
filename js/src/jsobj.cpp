@@ -951,7 +951,7 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
 #endif
 
     JS_ASSERT(principals || !(callbacks  && callbacks->findObjectPrincipals));
-    flags = JS_GetScriptFilenameFlags(caller->script);
+    flags = JS_GetScriptFilenameFlags(caller->getScript());
     if ((flags & JSFILENAME_PROTECTED) &&
         principals &&
         strcmp(principals->codebase, "[System Principal]")) {
@@ -960,13 +960,13 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
     }
 
     jsbytecode *pc = caller->pc(cx);
-    if (pc && js_GetOpcode(cx, caller->script, pc) == JSOP_EVAL) {
-        JS_ASSERT(js_GetOpcode(cx, caller->script, pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+    if (pc && js_GetOpcode(cx, caller->getScript(), pc) == JSOP_EVAL) {
+        JS_ASSERT(js_GetOpcode(cx, caller->getScript(), pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
         *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
     } else {
         *linenop = js_FramePCToLineNumber(cx, caller);
     }
-    return caller->script->filename;
+    return caller->getScript()->filename;
 }
 
 #ifndef EVAL_CACHE_CHAIN_LIMIT
@@ -1053,18 +1053,18 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      * when evaluating the code string.  Warn when such uses are seen so that
      * authors will know that support for eval(s, o) has been removed.
      */
-    if (argc > 1 && !caller->script->warnedAboutTwoArgumentEval) {
+    if (argc > 1 && !caller->getScript()->warnedAboutTwoArgumentEval) {
         static const char TWO_ARGUMENT_WARNING[] =
             "Support for eval(code, scopeObject) has been removed. "
             "Use |with (scopeObject) eval(code);| instead.";
         if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
             return JS_FALSE;
-        caller->script->warnedAboutTwoArgumentEval = true;
+        caller->getScript()->warnedAboutTwoArgumentEval = true;
     }
 
     /* From here on, control must exit through label out with ok set. */
     MUST_FLOW_THROUGH("out");
-    uintN staticLevel = caller->script->staticLevel + 1;
+    uintN staticLevel = caller->getScript()->staticLevel + 1;
 
     /*
      * Bring fp->scopeChain up to date. We're either going to use
@@ -1141,7 +1141,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      * calls to eval from global code are not cached.
      */
     JSScript **bucket = EvalCacheHash(cx, str);
-    if (!indirectCall && caller->fun) {
+    if (!indirectCall && caller->hasFunction()) {
         uintN count = 0;
         JSScript **scriptp = bucket;
 
@@ -1159,7 +1159,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                  */
                 JSFunction *fun = script->getFunction(0);
 
-                if (fun == caller->fun) {
+                if (fun == caller->getFunction()) {
                     /*
                      * Get the source string passed for safekeeping in the
                      * atom map by the prior eval to Compiler::compileScript.
@@ -2694,7 +2694,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
     JSOp op;
     JSAtom *atom;
 
-    script = cx->fp->script;
+    script = cx->fp->getScript();
     endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
         JS_ASSERT_IF(!cx->fp->hasIMacroPC(), script->code <= pc && pc < endpc);
@@ -2767,7 +2767,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
     JSStackFrame *const fp = js_GetTopStackFrame(cx);
     if (!fp || !(pc = cx->regs->pc))
         return defaultFlags;
-    cs = &js_CodeSpec[js_GetOpcode(cx, fp->script, pc)];
+    cs = &js_CodeSpec[js_GetOpcode(cx, fp->getScript(), pc)];
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
@@ -2776,7 +2776,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
         flags |= JSRESOLVE_ASSIGNING;
     } else if (cs->length >= 0) {
         pc += cs->length;
-        if (pc < cx->fp->script->code + cx->fp->script->length && Detecting(cx, pc))
+        if (pc < cx->fp->getScript()->code + cx->fp->getScript()->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
     if (format & JOF_DECLARING)
@@ -2978,7 +2978,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     /* See comments in CheckDestructuring from jsparse.cpp. */
     JS_ASSERT(count >= 1);
 
-    depth += fp->script->nfixed;
+    depth += fp->getFixedCount();
     obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots()[depth];
     if (normalUnwind && count > 1) {
         --count;
@@ -3007,8 +3007,8 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         fp = js_LiveFrameIfGenerator(fp);
-        index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(index < fp->script->nslots);
+        index += fp->getFixedCount() + OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->getSlotCount());
         *vp = fp->slots()[index];
         return true;
     }
@@ -3033,8 +3033,8 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         fp = js_LiveFrameIfGenerator(fp);
-        index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(index < fp->script->nslots);
+        index += fp->getFixedCount() + OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->getSlotCount());
         fp->slots()[index] = *vp;
         return true;
     }
@@ -4776,7 +4776,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
             op = (JSOp) *pc;
             if (op == JSOP_TRAP) {
                 JS_ASSERT_NOT_ON_TRACE(cx);
-                op = JS_GetTrapOpcode(cx, cx->fp->script, pc);
+                op = JS_GetTrapOpcode(cx, cx->fp->getScript(), pc);
             }
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
@@ -4868,7 +4868,7 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         return true;
 
     /* If neither cx nor the code is strict, then no check is needed. */
-    if (!(fp->script && fp->script->strictModeCode) &&
+    if (!(fp->hasScript() && fp->getScript()->strictModeCode) &&
         !JS_HAS_STRICT_OPTION(cx)) {
         return true;
     }
@@ -5265,8 +5265,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
                 if (fun != funobj) {
                     for (JSStackFrame *fp = cx->fp; fp; fp = fp->down) {
                         if (fp->callee() == fun &&
-                            fp->thisv.isObject() &&
-                            &fp->thisv.toObject() == obj) {
+                            fp->getThisValue().isObject() &&
+                            &fp->getThisValue().toObject() == obj) {
                             fp->setCalleeObject(*funobj);
                         }
                     }
@@ -6370,11 +6370,13 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         }
         fputc('\n', stderr);
 
-        if (fp->script)
-            fprintf(stderr, "file %s line %u\n", fp->script->filename, (unsigned) fp->script->lineno);
+        if (fp->hasScript()) {
+            fprintf(stderr, "file %s line %u\n",
+                    fp->getScript()->filename, (unsigned) fp->getScript()->lineno);
+        }
 
         if (jsbytecode *pc = i.pc()) {
-            if (!fp->script) {
+            if (!fp->hasScript()) {
                 fprintf(stderr, "*** pc && !script, skipping frame\n\n");
                 continue;
             }
@@ -6400,9 +6402,9 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->maybeCallObj());
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
-        MaybeDumpValue("this", fp->thisv);
+        MaybeDumpValue("this", fp->getThisValue());
         fprintf(stderr, "  rval: ");
-        dumpValue(fp->rval);
+        dumpValue(fp->getReturnValue());
         fputc('\n', stderr);
 
         fprintf(stderr, "  flags:");

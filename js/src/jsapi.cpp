@@ -4303,7 +4303,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      */
     if (!ComputeThisFromArgv(cx, argv))
         return JS_FALSE;
-    js_GetTopStackFrame(cx)->thisv = argv[-1];
+    js_GetTopStackFrame(cx)->setThisValue(argv[-1]);
     JS_ASSERT(cx->fp->argv == argv);
 
     /* Clear the last parameter in case too few arguments were passed. */
