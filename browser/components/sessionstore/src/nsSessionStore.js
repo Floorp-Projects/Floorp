@@ -1140,14 +1140,19 @@ SessionStoreService.prototype = {
    * Store all session data for a window
    * @param aWindow
    *        Window reference
+   * @param aPinnedOnly
+   *        Bool collect pinned tabs only
    */
-  _saveWindowHistory: function sss_saveWindowHistory(aWindow) {
+  _saveWindowHistory: function sss_saveWindowHistory(aWindow, aPinnedOnly) {
     var tabbrowser = aWindow.gBrowser;
     var tabs = tabbrowser.tabs;
     var tabsData = this._windows[aWindow.__SSi].tabs = [];
     
-    for (var i = 0; i < tabs.length; i++)
+    for (var i = 0; i < tabs.length; i++) {
+      if (aPinnedOnly && !tabs[i].pinned)
+        break;
       tabsData.push(this._collectTabData(tabs[i]));
+    }
     
     this._windows[aWindow.__SSi].selected = tabbrowser.mTabBox.selectedIndex + 1;
   },
@@ -1435,16 +1440,15 @@ SessionStoreService.prototype = {
    */
   _updateTextAndScrollData: function sss_updateTextAndScrollData(aWindow) {
     var browsers = aWindow.gBrowser.browsers;
-    for (var i = 0; i < browsers.length; i++) {
+    this._windows[aWindow.__SSi].tabs.forEach(function (tabData, i) {
+      if (browsers[i].__SS_data &&
+          browsers[i].__SS_data._tabStillLoading)
+        return; // ignore incompletely initialized tabs
       try {
-        var tabData = this._windows[aWindow.__SSi].tabs[i];
-        if (browsers[i].__SS_data &&
-            browsers[i].__SS_data._tabStillLoading)
-          continue; // ignore incompletely initialized tabs
         this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
       }
       catch (ex) { debug(ex); } // get as much data as possible, ignore failures (might succeed the next time)
-    }
+    }, this);
   },
 
   /**
@@ -1769,7 +1773,7 @@ SessionStoreService.prototype = {
         if (!this._isWindowLoaded(aWindow)) // window data is still in _statesToRestore
           return;
         if (aUpdateAll || this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
-          this._collectWindowData(aWindow);
+          this._collectWindowData(aWindow, aPinnedOnly);
         }
         else { // always update the window features (whose change alone never triggers a save operation)
           this._updateWindowFeatures(aWindow);
@@ -1857,12 +1861,12 @@ SessionStoreService.prototype = {
     return { windows: total };
   },
 
-  _collectWindowData: function sss_collectWindowData(aWindow) {
+  _collectWindowData: function sss_collectWindowData(aWindow, aPinnedOnly) {
     if (!this._isWindowLoaded(aWindow))
       return;
     
     // update the internal state data for this window
-    this._saveWindowHistory(aWindow);
+    this._saveWindowHistory(aWindow, aPinnedOnly);
     this._updateTextAndScrollData(aWindow);
     this._updateCookieHosts(aWindow);
     this._updateWindowFeatures(aWindow);
