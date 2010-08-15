@@ -137,6 +137,19 @@ var declarations = [
   "border-top-width: -moz-calc((2em) ",
 ];
 
+var selectors = [
+  ":not(",
+  ":not( ",
+  ":not(-",
+  ":not(- ",
+  ":not(>",
+  ":not(> ",
+  ":not(div p",
+  ":not(div p ",
+  ":not(div >",
+  ":not(div > ",
+];
+
 var textNode = document.createTextNode("");
 document.getElementById("style").appendChild(textNode);
 var cs = getComputedStyle(document.getElementById("display"), "");
@@ -150,6 +163,18 @@ for (var i = 0; i < declarations.length; ++i) {
      "color for declaration '" + declarations[i] + "'");
   is(cs.zIndex, i+1,
      "z-index for declaration '" + declarations[i] + "'");
+}
+
+for (var i = 0; i < selectors.length; ++i) {
+  var sheet = "@namespace html url(http://www.w3.org/1999/xhtml);\n" +
+              "#display { color: green } " +
+              selectors[i] + " x x x x x x x , #display { color: red } #display { color: red } ) , #display { color: red } " +
+              "#display { z-index: " + (i + 1) + " }";
+  textNode.data = sheet;
+  is(cs.color, "rgb(0, 128, 0)",
+     "color for selector '" + selectors[i] + "'");
+  is(cs.zIndex, i+1,
+     "z-index for selector '" + selectors[i] + "'");
 }
 
 </script>
