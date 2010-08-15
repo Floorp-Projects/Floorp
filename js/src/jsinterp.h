@@ -69,6 +69,7 @@ enum JSFrameFlags {
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
     JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
     JSFRAME_DUMMY              = 0x200, /* frame is a dummy frame */
+    JSFRAME_IN_IMACRO          = 0x400, /* frame has imacpc value available */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -91,9 +92,9 @@ struct JSStackFrame
     void                *annotation;    /* used by Java security */
     void                *hookData;      /* debugger call hook data */
     JSVersion           callerVersion;  /* dynamic version of calling script */
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
 
   public:
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
     uintN               argc;           /* actual argument count */
@@ -307,6 +308,33 @@ struct JSStackFrame
 
     void setCallerVersion(JSVersion version) {
         callerVersion = version;
+    }
+
+    /* IMacroPC accessors. */
+
+    bool hasIMacroPC() const { return flags & JSFRAME_IN_IMACRO; }
+
+    /*
+     * @pre     hasIMacroPC
+     * @return  The PC at which an imacro started executing (guaranteed non-null. The PC of the
+     *          executing imacro must be in regs.pc, so the displaced
+     *          original value is stored here.
+     */
+    jsbytecode *getIMacroPC() const {
+        JS_ASSERT(flags & JSFRAME_IN_IMACRO);
+        return imacpc;
+    }
+
+    /* @return  The imacro pc if hasIMacroPC; otherwise, NULL. */
+    jsbytecode *maybeIMacroPC() const { return hasIMacroPC() ? getIMacroPC() : NULL; }
+
+    void clearIMacroPC() { flags &= ~JSFRAME_IN_IMACRO; }
+
+    void setIMacroPC(jsbytecode *newIMacPC) {
+        JS_ASSERT(newIMacPC);
+        JS_ASSERT(!(flags & JSFRAME_IN_IMACRO));
+        imacpc = newIMacPC;
+        flags |= JSFRAME_IN_IMACRO;
     }
 
     /* Other accessors */

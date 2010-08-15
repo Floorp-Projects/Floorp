@@ -2697,7 +2697,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
     script = cx->fp->script;
     endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
-        JS_ASSERT_IF(!cx->fp->imacpc, script->code <= pc && pc < endpc);
+        JS_ASSERT_IF(!cx->fp->hasIMacroPC(), script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
         op = js_GetOpcode(cx, script, pc);
@@ -6378,9 +6378,9 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
                 fprintf(stderr, "*** pc && !script, skipping frame\n\n");
                 continue;
             }
-            if (fp->imacpc) {
+            if (fp->hasIMacroPC()) {
                 fprintf(stderr, "  pc in imacro at %p\n  called from ", pc);
-                pc = fp->imacpc;
+                pc = fp->getIMacroPC();
             } else {
                 fprintf(stderr, "  ");
             }
