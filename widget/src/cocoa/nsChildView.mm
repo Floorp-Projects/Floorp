@@ -470,6 +470,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mDrawing(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
+, mIsDispatchPaint(PR_FALSE)
 , mPluginInstanceOwner(nsnull)
 {
 #ifdef PR_LOGGING
@@ -1250,7 +1251,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // without regressing bug 409615.  See bug 435041.  (StartDrawPlugin() and
   // EndDrawPlugin() wrap every call to nsIPluginInstance::HandleEvent() --
   // not just calls that "draw" or paint.)
-  if (!mPluginIsCG || (mView != [NSView focusView])) {
+  if (!mPluginIsCG || mIsDispatchPaint) {
     if (mPluginDrawing)
       return NS_ERROR_FAILURE;
   }
@@ -1695,8 +1696,13 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     }
   }
 
+  PRBool restoreIsDispatchPaint = mIsDispatchPaint;
+  mIsDispatchPaint = mIsDispatchPaint || event->eventStructType == NS_PAINT_EVENT;
+
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
+
+  mIsDispatchPaint = restoreIsDispatchPaint;
 
   return NS_OK;
 }
