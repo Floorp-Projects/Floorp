@@ -729,8 +729,9 @@ AtSafePoint(JSContext *cx)
 }
 
 static inline JSBool
-PartialInterpret(JSContext *cx)
+PartialInterpret(VMFrame &f)
 {
+    JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp;
 
     JS_ASSERT(fp->imacpc || !fp->script->nmap ||
@@ -740,6 +741,8 @@ PartialInterpret(JSContext *cx)
     fp->flags |= JSFRAME_BAILING;
     ok = Interpret(cx, fp);
     fp->flags &= ~JSFRAME_BAILING;
+
+    f.fp = cx->fp;
 
     return ok;
 }
@@ -776,7 +779,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
             InlineReturn(f, JS_TRUE);
             AdvanceReturnPC(cx);
         } else {
-            if (!PartialInterpret(cx)) {
+            if (!PartialInterpret(f)) {
                 if (!SwallowErrors(f, entryFrame))
                     return false;
             } else {
@@ -907,7 +910,7 @@ RunTracer(VMFrame &f)
     /* Step 2. If there's an imacro on the entry frame, remove it. */
     entryFrame->flags &= ~JSFRAME_RECORDING;
     while (entryFrame->imacpc) {
-        if (!PartialInterpret(cx)) {
+        if (!PartialInterpret(f)) {
             if (!SwallowErrors(f, entryFrame))
                 THROWV(NULL);
         }
@@ -941,7 +944,7 @@ RunTracer(VMFrame &f)
     }
 
     /* Step 3.3. Do a partial interp, then restart the whole process. */
-    if (!PartialInterpret(cx)) {
+    if (!PartialInterpret(f)) {
         if (!SwallowErrors(f, entryFrame))
             THROWV(NULL);
     }
