@@ -1893,7 +1893,7 @@ js_GetCurrentBytecodePC(JSContext* cx)
         pc = cx->regs ? cx->regs->pc : NULL;
         if (!pc)
             return NULL;
-        imacpc = cx->fp->imacpc;
+        imacpc = cx->fp->maybeIMacroPC();
     }
 
     /*
@@ -1909,7 +1909,9 @@ js_CurrentPCIsInImacro(JSContext *cx)
 {
 #ifdef JS_TRACER
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    return (JS_ON_TRACE(cx) ? cx->bailExit->imacpc : cx->fp->imacpc) != NULL;
+    if (JS_ON_TRACE(cx))
+        return cx->bailExit->imacpc != NULL;
+    return cx->fp->hasIMacroPC();
 #else
     return false;
 #endif

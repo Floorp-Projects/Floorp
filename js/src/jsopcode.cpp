@@ -5090,7 +5090,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
     fp = i.fp();
     script = fp->script;
-    pc = fp->imacpc ? fp->imacpc : i.pc();
+    pc = fp->hasIMacroPC() ? fp->getIMacroPC() : i.pc();
     JS_ASSERT(pc >= script->main && pc < script->code + script->length);
 
     if (spindex != JSDVG_IGNORE_STACK) {
@@ -5153,13 +5153,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
     {
         jsbytecode* savepc = i.pc();
-        jsbytecode* imacpc = fp->imacpc;
-        if (imacpc) {
+        jsbytecode* savedIMacroPC = fp->maybeIMacroPC();
+        if (savedIMacroPC) {
             if (fp == cx->fp)
-                cx->regs->pc = imacpc;
+                cx->regs->pc = savedIMacroPC;
             else
-                fp->savedPC = imacpc;
-            fp->imacpc = NULL;
+                fp->savedPC = savedIMacroPC;
+            fp->clearIMacroPC();
         }
 
         /*
@@ -5167,17 +5167,17 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
          * value *inside* an imacro; this would confuse the decompiler.
          */
         char *name;
-        if (imacpc && size_t(pc - script->code) >= script->length)
+        if (savedIMacroPC && size_t(pc - script->code) >= script->length)
             name = FAILED_EXPRESSION_DECOMPILER;
         else
             name = DecompileExpression(cx, script, fp->fun, pc);
 
-        if (imacpc) {
+        if (savedIMacroPC) {
             if (fp == cx->fp)
-                cx->regs->pc = imacpc;
+                cx->regs->pc = savedIMacroPC;
             else
                 fp->savedPC = savepc;
-            fp->imacpc = imacpc;
+            fp->setIMacroPC(savedIMacroPC);
         }
 
         if (name != FAILED_EXPRESSION_DECOMPILER)
@@ -5463,8 +5463,8 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
      * the state-of-the-world at the *start* of the imacro.
      */
     JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp->imacpc);
-    intN pcdepth = ReconstructPCStack(cx, script, fp->imacpc, pcstack);
+    JS_ASSERT(fp->hasIMacroPC());
+    intN pcdepth = ReconstructPCStack(cx, script, fp->getIMacroPC(), pcstack);
     if (pcdepth < 0)
         return pcdepth;
     return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);
