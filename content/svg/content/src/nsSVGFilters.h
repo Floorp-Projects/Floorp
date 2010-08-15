@@ -119,21 +119,21 @@ protected:
 
 public:
   ColorModel
-  GetInputColorModel(nsSVGFilterInstance* aInstance, PRUint32 aInputIndex,
+  GetInputColorModel(nsSVGFilterInstance* aInstance, PRInt32 aInputIndex,
                      Image* aImage) {
     return ColorModel(
           (OperatesOnSRGB(aInstance, aInputIndex, aImage) ?
              ColorModel::SRGB : ColorModel::LINEAR_RGB),
-          (OperatesOnPremultipledAlpha() ?
+          (OperatesOnPremultipledAlpha(aInputIndex) ?
              ColorModel::PREMULTIPLIED : ColorModel::UNPREMULTIPLIED));
   }
 
   ColorModel
   GetOutputColorModel(nsSVGFilterInstance* aInstance) {
     return ColorModel(
-          (OperatesOnSRGB(aInstance, 0, nsnull) ?
+          (OperatesOnSRGB(aInstance, -1, nsnull) ?
              ColorModel::SRGB : ColorModel::LINEAR_RGB),
-          (OperatesOnPremultipledAlpha() ?
+          (OperatesOnPremultipledAlpha(-1) ?
              ColorModel::PREMULTIPLIED : ColorModel::UNPREMULTIPLIED));
   }
 
@@ -199,13 +199,13 @@ public:
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
   
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha() { return PR_TRUE; }
+  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) { return PR_TRUE; }
 
-  // Called either with aImage non-null, in which case this is
+  // Called either with aInputIndex >=0 in which case this is
   // testing whether the input 'aInputIndex' should be SRGB, or
-  // if aImage is null returns true if the output will be SRGB
+  // if aInputIndex is -1 returns true if the output will be SRGB
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
-                                PRUint32 aInputIndex, Image* aImage) {
+                                PRInt32 aInputIndex, Image* aImage) {
     nsIFrame* frame = GetPrimaryFrame();
     if (!frame) return PR_FALSE;
 
