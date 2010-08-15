@@ -1136,7 +1136,7 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
             cellData = (BCCellData*)cellMap->AppendCell(*this, nsnull, 0, PR_FALSE, damageArea);
           }
         }
-        else { // must be a the bottom of the table
+        else { // must be at the bottom of the table
           bcData = GetBottomMostBorder(xPos);
         }
       }

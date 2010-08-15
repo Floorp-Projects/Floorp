@@ -1100,7 +1100,7 @@ nsAccessible::TakeFocus()
   nsIContent* focusContent = mContent;
 
   // If the current element can't take real DOM focus and if it has an ID and
-  // ancestor with a the aria-activedescendant attribute present, then set DOM
+  // an ancestor with an aria-activedescendant attribute present, then set DOM
   // focus to that ancestor and set aria-activedescendant on the ancestor to
   // the ID of the desired element.
   if (!frame->IsFocusable()) {
