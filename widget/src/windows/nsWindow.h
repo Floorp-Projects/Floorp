@@ -277,6 +277,8 @@ protected:
    * Callbacks
    */
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  static LRESULT CALLBACK WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
   static BOOL CALLBACK    BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg);
   static BOOL CALLBACK    BroadcastMsg(HWND aTopWindow, LPARAM aMsg);
   static BOOL CALLBACK    DispatchStarvedPaints(HWND aTopWindow, LPARAM aMsg);
