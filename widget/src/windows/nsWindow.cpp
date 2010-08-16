@@ -4194,7 +4194,8 @@ static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
 }
 
 // The WndProc procedure for all nsWindows in this toolkit. This merely catches
-// exceptions and passes the real work to WindowProcInternal
+// exceptions and passes the real work to WindowProcInternal. See bug 587406
+// and http://msdn.microsoft.com/en-us/library/ms633573%28VS.85%29.aspx
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   __try {
