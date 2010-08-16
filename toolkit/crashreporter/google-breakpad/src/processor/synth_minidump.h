@@ -34,13 +34,13 @@
 // synth_minidump.h: Interface to SynthMinidump: fake minidump generator.
 //
 // We treat a minidump file as the concatenation of a bunch of
-// TestAssembler::Sections. The file header, stream directory,
+// test_assembler::Sections. The file header, stream directory,
 // streams, memory regions, strings, and so on --- each is a Section
 // that eventually gets appended to the minidump. Dump, Memory,
-// Context, Thread, and so on all inherit from TestAssembler::Section.
+// Context, Thread, and so on all inherit from test_assembler::Section.
 // For example:
 //
-//    using google_breakpad::TestAssembler::kLittleEndian;
+//    using google_breakpad::test_assembler::kLittleEndian;
 //    using google_breakpad::SynthMinidump::Context;
 //    using google_breakpad::SynthMinidump::Dump;
 //    using google_breakpad::SynthMinidump::Memory;
@@ -49,7 +49,7 @@
 //    Dump minidump(MD_NORMAL, kLittleEndian);
 //    
 //    Memory stack1(minidump, 0x569eb0a9);
-//    ... build contents of stack1 with TestAssembler::Section functions ...
+//    ... build contents of stack1 with test_assembler::Section functions ...
 //    
 //    MDRawContextX86 x86_context1;
 //    x86_context1.context_flags = MD_CONTEXT_X86;
@@ -69,7 +69,7 @@
 //    EXPECT_TRUE(minidump.GetContents(&contents));
 //    // contents now holds the bytes of a minidump file
 //
-// Because the TestAssembler classes let us write Label references to
+// Because the test_assembler classes let us write Label references to
 // sections before the Labels' values are known, this gives us
 // flexibility in how we put the dump together: minidump pieces can
 // hold the file offsets of other minidump pieces before the
@@ -103,7 +103,7 @@
 // memory list stream.
 //
 // If you forget to Add some Section, the Dump::GetContents call will
-// fail, as the TestAssembler::Labels used to cite the Section's
+// fail, as the test_assembler::Labels used to cite the Section's
 // contents from elsewhere will still be undefined.
 #ifndef PROCESSOR_SYNTH_MINIDUMP_H_
 #define PROCESSOR_SYNTH_MINIDUMP_H_
@@ -122,18 +122,18 @@ namespace google_breakpad {
 namespace SynthMinidump {
 
 using std::string;
-using TestAssembler::Endianness;
-using TestAssembler::kBigEndian;
-using TestAssembler::kLittleEndian;
-using TestAssembler::kUnsetEndian;
-using TestAssembler::Label;
+using test_assembler::Endianness;
+using test_assembler::kBigEndian;
+using test_assembler::kLittleEndian;
+using test_assembler::kUnsetEndian;
+using test_assembler::Label;
 
 class Dump;
 class Memory;
 class String;
 
-// A TestAssembler::Section which will be appended to a minidump.
-class Section: public TestAssembler::Section {
+// A test_assembler::Section which will be appended to a minidump.
+class Section: public test_assembler::Section {
  public:
   explicit Section(const Dump &dump);
 
@@ -145,7 +145,7 @@ class Section: public TestAssembler::Section {
   // bad, if such language exists. Having this function handle NULL
   // 'this' is convenient, but if it causes trouble, it's not hard to
   // do differently.)
-  void CiteLocationIn(TestAssembler::Section *section) const;
+  void CiteLocationIn(test_assembler::Section *section) const;
 
   // Note that this section's contents are complete, and that it has
   // been placed in the minidump file at OFFSET. The 'Add' member
@@ -165,11 +165,11 @@ class Section: public TestAssembler::Section {
 class Stream: public Section {
  public:
   // Create a stream of type TYPE.  You can append whatever contents
-  // you like to this stream using the TestAssembler::Section methods.
+  // you like to this stream using the test_assembler::Section methods.
   Stream(const Dump &dump, u_int32_t type) : Section(dump), type_(type) { }
 
   // Append an MDRawDirectory referring to this stream to SECTION.
-  void CiteStreamIn(TestAssembler::Section *section) const;
+  void CiteStreamIn(test_assembler::Section *section) const;
 
  private:
   // The type of this stream.
@@ -202,7 +202,7 @@ class String: public Section {
   String(const Dump &dump, const string &value);
 
   // Append an MDRVA referring to this string to SECTION.
-  void CiteStringIn(TestAssembler::Section *section) const;
+  void CiteStringIn(test_assembler::Section *section) const;
 };
 
 // A range of memory contents. 'Add'ing a memory range to a minidump
@@ -215,7 +215,7 @@ class Memory: public Section {
       : Section(dump), address_(address) { start() = address; }
 
   // Append an MDMemoryDescriptor referring to this memory range to SECTION.
-  void CiteMemoryIn(TestAssembler::Section *section) const;
+  void CiteMemoryIn(test_assembler::Section *section) const;
 
  private:
   // The process address from which these memory contents were taken.
@@ -297,10 +297,10 @@ class List: public Stream {
   Label count_label_;
 };
 
-class Dump: public TestAssembler::Section {
+class Dump: public test_assembler::Section {
  public:
 
-  // Create a TestAssembler::Section containing a minidump file whose
+  // Create a test_assembler::Section containing a minidump file whose
   // header uses the given values. ENDIANNESS determines the
   // endianness of the signature; we set this section's default
   // endianness by this.
