@@ -271,6 +271,11 @@ struct DeletingObjectEntry : public nsPtrHashKey<NPObject>
   bool mDeleted;
 };
 
+#ifdef XP_WIN
+// The private event used for double-pass widgetless plugin rendering.
+UINT DoublePassRenderingEvent();
+#endif
+
 } /* namespace plugins */
 
 } /* namespace mozilla */
