@@ -276,6 +276,11 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     PRInt32 rmode;
     if (NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
         if (rmode >= 0 && rmode < RENDER_MODE_MAX) {
+#ifdef CAIRO_HAS_DWRITE_FONT
+	    if (rmode != RENDER_DIRECT2D && !useDirectWrite) {
+		mDWriteFactory = nsnull;
+	    }
+#endif
 #ifndef CAIRO_HAS_DDRAW_SURFACE
             if (rmode == RENDER_DDRAW || rmode == RENDER_DDRAW_GL)
                 rmode = RENDER_IMAGE_STRETCH24;
