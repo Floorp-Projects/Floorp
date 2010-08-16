@@ -276,7 +276,7 @@ asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
 == 299837-2.xul 299837-2-ref.xul
-== 299837-3.xul 299837-3-ref.xul
+random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
