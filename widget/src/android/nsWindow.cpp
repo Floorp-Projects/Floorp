@@ -1365,11 +1365,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 AndroidBridge::Bridge()->ReturnIMEQueryResult(
                     nsnull, 0, 0, 0);
                 return;
-            } else if (!event.mWasAsync) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    event.mReply.mString.get(), 
-                    event.mReply.mString.Length(), 0, 0);
             }
+
+            AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                event.mReply.mString.get(), 
+                event.mReply.mString.Length(), 0, 0);
             //ALOGIME("IME:     -> l=%u", event.mReply.mString.Length());
         }
         return;
@@ -1411,13 +1411,21 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 AndroidBridge::Bridge()->ReturnIMEQueryResult(
                     nsnull, 0, 0, 0);
                 return;
-            } else if (!event.mWasAsync) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    event.mReply.mString.get(),
-                    event.mReply.mString.Length(), 
-                    event.GetSelectionStart(),
-                    event.GetSelectionEnd() - event.GetSelectionStart());
             }
+
+            int selStart = int(event.mReply.mOffset + 
+                            (event.mReply.mReversed ? 
+                                event.mReply.mString.Length() : 0));
+
+            int selLength = event.mReply.mReversed ?
+                                int(event.mReply.mString.Length()) : 
+                                -int(event.mReply.mString.Length());
+
+            AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                event.mReply.mString.get(),
+                event.mReply.mString.Length(), 
+                selStart, selLength);
+
             //ALOGIME("IME:     -> o=%u, l=%u", event.mReply.mOffset, event.mReply.mString.Length());
         }
         return;
@@ -1512,9 +1520,10 @@ NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(PRBool aFocus)
 {
     ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
-
-    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
-                             int(aFocus));
+    
+    if (AndroidBridge::Bridge())
+        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
+                                 int(aFocus));
     return NS_OK;
 }
 
