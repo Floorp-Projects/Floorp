@@ -575,7 +575,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     }
 
     /* Okay - good to emit the integer fast-path. */
-    MaybeJump overflow;
+    MaybeJump overflow, negZeroDone;
     switch (op) {
       case JSOP_ADD:
         if (reg.isSet())
@@ -593,9 +593,57 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
 
 #if !defined(JS_CPU_ARM)
       case JSOP_MUL:
+      {
         JS_ASSERT(reg.isSet());
+        
+        MaybeJump storeNegZero;
+        bool maybeNegZero = true;
+        bool hasConstant = (lhs->isConstant() || rhs->isConstant());
+        
+        if (hasConstant) {
+            value = (lhs->isConstant() ? lhs : rhs)->getValue().toInt32();
+            RegisterID nonConstReg = lhs->isConstant() ? regs.rhsData.reg() : regs.lhsData.reg();
+
+            if (value > 0)
+                maybeNegZero = false;
+            else if (value < 0)
+                storeNegZero = masm.branchTest32(Assembler::Zero, nonConstReg);
+            else
+                storeNegZero = masm.branch32(Assembler::LessThan, nonConstReg, Imm32(0));
+        }
         overflow = masm.branchMul32(Assembler::Overflow, reg.reg(), regs.result);
+
+        if (maybeNegZero) {
+            if (!hasConstant) {
+                Jump isZero = masm.branchTest32(Assembler::Zero, regs.result);
+                stubcc.linkExitDirect(isZero, stubcc.masm.label());
+                
+                /* Restore original value. */
+                if (regs.resultHasRhs) {
+                    if (regs.rhsNeedsRemat)
+                        stubcc.masm.loadPayload(frame.addressOf(rhs), regs.result);
+                    else
+                        stubcc.masm.move(regs.rhsData.reg(), regs.result);
+                } else {
+                    if (regs.lhsNeedsRemat)
+                        stubcc.masm.loadPayload(frame.addressOf(lhs), regs.result);
+                    else
+                        stubcc.masm.move(regs.lhsData.reg(), regs.result);
+                }
+                storeNegZero = stubcc.masm.branchOr32(Assembler::Signed, reg.reg(), regs.result);
+                stubcc.masm.xor32(regs.result, regs.result);
+                stubcc.crossJump(stubcc.masm.jump(), masm.label());
+                storeNegZero.getJump().linkTo(stubcc.masm.label(), &stubcc.masm);
+            } else {
+                JS_ASSERT(storeNegZero.isSet());
+                stubcc.linkExitDirect(storeNegZero.get(), stubcc.masm.label());
+            }
+            stubcc.masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
+            stubcc.masm.loadPayload(frame.addressOf(lhs), regs.result);
+            negZeroDone = stubcc.masm.jump();
+        }
         break;
+      }
 #endif
 
       default:
@@ -664,6 +712,8 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())
         stubcc.linkRejoin(doublePathDone.get());
+    if (negZeroDone.isSet())
+        stubcc.linkRejoin(negZeroDone.get());
     stubcc.linkRejoin(overflowDone.get());
 
     stubcc.rejoin(Changes(1));
