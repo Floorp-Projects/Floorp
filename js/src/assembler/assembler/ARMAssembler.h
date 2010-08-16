@@ -643,6 +643,50 @@ namespace JSC {
             emitInst(static_cast<ARMWord>(cc) | DTR | (isLoad ? DT_LOAD : 0) | OP2_OFSREG, rd, rb, rm);
         }
 
+        // Data transfers like this:
+        //  LDRB rd, [rb, +offset]
+        //  STRB rd, [rb, +offset]
+        void dtrb_u(bool isLoad, int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            char const * mnemonic = (isLoad) ? ("ldrb") : ("strb");
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #+%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
+            emitInst(static_cast<ARMWord>(cc) | DTR | DT_BYTE | (isLoad ? DT_LOAD : 0) | DT_UP, rd, rb, offset);
+        }
+
+        // Data transfers like this:
+        //  LDRB rd, [rb, +rm]
+        //  STRB rd, [rb, +rm]
+        void dtrb_ur(bool isLoad, int rd, int rb, int rm, Condition cc = AL)
+        {
+            char const * mnemonic = (isLoad) ? ("ldrb") : ("strb");
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, +%s]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
+            emitInst(static_cast<ARMWord>(cc) | DTR | DT_BYTE | (isLoad ? DT_LOAD : 0) | DT_UP | OP2_OFSREG, rd, rb, rm);
+        }
+
+        // Data transfers like this:
+        //  LDRB rd, [rb, -offset]
+        //  STRB rd, [rb, -offset]
+        void dtrb_d(bool isLoad, int rd, int rb, ARMWord offset, Condition cc = AL)
+        {
+            char const * mnemonic = (isLoad) ? ("ldrb") : ("strb");
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, #-%u]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), offset);
+            emitInst(static_cast<ARMWord>(cc) | DTR | DT_BYTE | (isLoad ? DT_LOAD : 0), rd, rb, offset);
+        }
+
+        // Data transfers like this:
+        //  LDRB rd, [rb, -rm]
+        //  STRB rd, [rb, -rm]
+        void dtrb_dr(bool isLoad, int rd, int rb, int rm, Condition cc = AL)
+        {
+            char const * mnemonic = (isLoad) ? ("ldrb") : ("strb");
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, [%s, -%s]\n", MAYBE_PAD, mnemonic, nameGpReg(rd), nameGpReg(rb), nameGpReg(rm));
+            emitInst(static_cast<ARMWord>(cc) | DTR | DT_BYTE | (isLoad ? DT_LOAD : 0) | OP2_OFSREG, rd, rb, rm);
+        }
+
         void ldrh_r(int rd, int rb, int rm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
@@ -1105,7 +1149,8 @@ namespace JSC {
 
         // Memory load/store helpers
 
-        void dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset, bool bytes = false);
+        void dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
+        void dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
         void baseIndexTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
 

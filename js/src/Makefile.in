@@ -834,13 +834,7 @@ endif
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just
 # the code in js/src/assembler.
-CXXFLAGS += -DUSE_SYSTEM_MALLOC=1
-
-ifeq (android,$(TARGET_VENDOR))
-CXXFLAGS += -DWTF_PLATFORM_ANDROID=1
-else
-CXXFLAGS += -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
-endif
+CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 
