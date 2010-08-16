@@ -90,12 +90,12 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
 
   [nsmenu popUpMenuPositioningItem:nil atLocation:screen_point inView:nil];
 
-  //[eventTimer invalidate];
-  //[eventProcessor release];
+  [eventTimer invalidate];
+  [eventProcessor release];
 
   return NPERR_NO_ERROR;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NPERR_GENERIC_ERROR);
 }
 
 void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop()
