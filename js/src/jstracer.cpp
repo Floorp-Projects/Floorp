@@ -4250,7 +4250,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (exitType == LOOP_EXIT) {
         for (unsigned n = 0; n < nexits; ++n) {
             VMSideExit* e = exits[n];
-            if (e->pc == pc && e->imacpc == fp->imacpc &&
+            if (e->pc == pc && (e->imacpc == fp->maybeIMacroPC()) &&
                 ngslots == e->numGlobalSlots &&
                 !memcmp(exits[n]->fullTypeMap(), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
@@ -4279,7 +4279,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (fp->hasBlockChain())
         tree->gcthings.addUnique(ObjectValue(*fp->getBlockChain()));
     exit->pc = pc;
-    exit->imacpc = fp->imacpc;
+    exit->imacpc = fp->maybeIMacroPC();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     exit->nativeCalleeWord = 0;
@@ -4869,7 +4869,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
      */
     JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOP ||
                *cx->regs->pc == JSOP_RETURN || *cx->regs->pc == JSOP_STOP) &&
-              !cx->fp->imacpc);
+              !cx->fp->hasIMacroPC());
 
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer,
@@ -5484,7 +5484,7 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
          * pointer and pretend we have reached the loop header.
          */
         if (pendingLoop) {
-            JS_ASSERT(!cx->fp->imacpc && (pc == cx->regs->pc || pc == cx->regs->pc + 1));
+            JS_ASSERT(!cx->fp->hasIMacroPC() && (pc == cx->regs->pc || pc == cx->regs->pc + 1));
             JSFrameRegs orig = *cx->regs;
 
             cx->regs->pc = (jsbytecode*)tree->ip;
@@ -5603,7 +5603,7 @@ TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
 {
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(!tm->needFlush);
-    JS_ASSERT_IF(cx->fp->imacpc, f->root != f);
+    JS_ASSERT_IF(cx->fp->hasIMacroPC(), f->root != f);
 
     tm->recorder = new TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
                                      expectedInnerExit, outer, outerArgc, recordReason,
@@ -5672,7 +5672,8 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     /* Fixup |fp| using |fi|. */
     cx->regs->sp = sp;
     cx->regs->pc = fi.pc;
-    fp->imacpc = fi.imacpc;
+    if (fi.imacpc)
+        fp->setIMacroPC(fi.imacpc);
     fp->setBlockChain(fi.block);
 
     /*
@@ -5715,7 +5716,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newfp->flags = fi.is_constructing() ? JSFRAME_CONSTRUCTING : 0;
     newfp->setBlockChain(NULL);
     newfp->thisv.setNull(); // will be updated in FlushNativeStackFrame
-    newfp->imacpc = NULL;
+    JS_ASSERT(!newfp->hasIMacroPC());
 
     /*
      * Note that fp->script is still the caller's script; set the callee
@@ -5773,7 +5774,6 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     JS_ASSERT(fun->u.n.extra == 0);
 #endif
 
-    fp->imacpc = NULL;
     fp->setCallObj(NULL);
     fp->setArgsObj(NULL);
     fp->script = NULL;
@@ -5786,6 +5786,7 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     fp->setScopeChain(cx->fp->getScopeChain());
     fp->setBlockChain(NULL);
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
+    JS_ASSERT(!fp->hasIMacroPC());
 
     state.bailedSlowNativeRegs = *cx->regs;
 
@@ -6902,7 +6903,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
             regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
             regs->sp += cs.ndefs;
             regs->pc += cs.length;
-            JS_ASSERT_IF(!cx->fp->imacpc,
+            JS_ASSERT_IF(!cx->fp->hasIMacroPC(),
                          cx->fp->slots() + cx->fp->script->nfixed +
                          js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
                          regs->sp);
@@ -7020,9 +7021,12 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
      * Otherwise spbase is whatever slots frames around us consume.
      */
     cx->regs->pc = innermost->pc;
-    fp->imacpc = innermost->imacpc;
+    if (innermost->imacpc)
+        fp->setIMacroPC(innermost->imacpc);
+    else
+        fp->clearIMacroPC();
     cx->regs->sp = fp->base() + (innermost->sp_adj / sizeof(double)) - calldepth_slots;
-    JS_ASSERT_IF(!fp->imacpc,
+    JS_ASSERT_IF(!fp->hasIMacroPC(),
                  fp->slots() + fp->script->nfixed +
                  js_ReconstructStackDepth(cx, fp->script, cx->regs->pc) == cx->regs->sp);
 
@@ -7038,7 +7042,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
                       fp->script->filename,
                       js_FramePCToLineNumber(cx, fp),
                       FramePCOffset(cx, fp),
-                      js_CodeName[fp->imacpc ? *fp->imacpc : *cx->regs->pc],
+                      js_CodeName[fp->hasIMacroPC() ? *fp->getIMacroPC() : *cx->regs->pc],
                       (void*)lr,
                       getExitName(lr->exitType),
                       (long long int)(cx->regs->sp - fp->base()),
@@ -7399,9 +7403,9 @@ TraceRecorder::monitorRecording(JSOp op)
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
             js_Disassemble1(cx, cx->fp->script, cx->regs->pc,
-                            cx->fp->imacpc
+                            cx->fp->hasIMacroPC()
                                 ? 0 : cx->regs->pc - cx->fp->script->code,
-                            !cx->fp->imacpc, stdout);
+                            !cx->fp->hasIMacroPC(), stdout);
         }
     )
 
@@ -7414,7 +7418,7 @@ TraceRecorder::monitorRecording(JSOp op)
 
     AbortableRecordingStatus status;
 #ifdef DEBUG
-    bool wasInImacro = (cx->fp->imacpc != NULL);
+    bool wasInImacro = (cx->fp->hasIMacroPC());
 #endif
     switch (op) {
       default:
@@ -7433,7 +7437,7 @@ TraceRecorder::monitorRecording(JSOp op)
 
     if (!JSOP_IS_IMACOP(op)) {
         JS_ASSERT(status != ARECORD_IMACRO);
-        JS_ASSERT_IF(!wasInImacro, localcx->fp->imacpc == NULL);
+        JS_ASSERT_IF(!wasInImacro, !localcx->fp->hasIMacroPC());
     }
 
     if (localtm.recorder) {
@@ -8076,7 +8080,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::updateAtoms()
 {
     atoms = FrameAtomBase(cx, cx->fp);
-    consts = cx->fp->imacpc || cx->fp->script->constOffset == 0
+    consts = cx->fp->hasIMacroPC() || cx->fp->script->constOffset == 0
            ? 0 
            : cx->fp->script->consts()->vector;
 }
@@ -8642,7 +8646,7 @@ JS_REQUIRES_STACK bool
 TraceRecorder::canCallImacro() const
 {
     /* We cannot nest imacros. */
-    return !cx->fp->imacpc;
+    return !cx->fp->hasIMacroPC();
 }
 
 JS_REQUIRES_STACK RecordingStatus
@@ -8655,9 +8659,9 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::callImacroInfallibly(jsbytecode* imacro)
 {
     JSStackFrame* fp = cx->fp;
-    JS_ASSERT(!fp->imacpc);
+    JS_ASSERT(!fp->hasIMacroPC());
     JSFrameRegs* regs = cx->regs;
-    fp->imacpc = regs->pc;
+    fp->setIMacroPC(regs->pc);
     regs->pc = imacro;
     updateAtoms();
     return RECORD_IMACRO;
@@ -10349,7 +10353,7 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if (fp->argc != fp->fun->nargs)
         return false;
-    if (fp->imacpc || down->imacpc)
+    if (fp->hasIMacroPC() || down->hasIMacroPC())
         return false;
     if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
         return false;
@@ -11311,8 +11315,8 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
                 // FIXME: Set pc to imacpc when recording JSOP_CALL inside the
                 //        JSOP_GETELEM imacro (bug 476559).
                 if ((*pc == JSOP_CALL) &&
-                    fp->imacpc && *fp->imacpc == JSOP_GETELEM)
-                    *argp = INS_CONSTPTR(fp->imacpc);
+                    fp->hasIMacroPC() && *fp->getIMacroPC() == JSOP_GETELEM)
+                    *argp = INS_CONSTPTR(fp->getIMacroPC());
                 else
                     *argp = INS_CONSTPTR(pc);
             } else if (argtype == 'D') { /* this, as a number */
@@ -13399,7 +13403,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     if (fp->hasBlockChain())
         tree->gcthings.addUnique(ObjectValue(*fp->getBlockChain()));
     fi->pc = cx->regs->pc;
-    fi->imacpc = fp->imacpc;
+    fi->imacpc = fp->maybeIMacroPC();
     fi->spdist = cx->regs->sp - fp->slots();
     fi->set_argc(uint16(argc), constructing);
     fi->callerHeight = stackSlots - (2 + argc);
@@ -13431,7 +13435,7 @@ TraceRecorder::record_JSOP_CALL()
     uintN argc = GET_ARGC(cx->regs->pc);
     cx->assertValidStackDepth(argc + 2);
     return InjectStatus(functionCall(argc,
-                                     (cx->fp->imacpc && *cx->fp->imacpc == JSOP_APPLY)
+                                     (cx->fp->hasIMacroPC() && *cx->fp->getIMacroPC() == JSOP_APPLY)
                                         ? JSOP_APPLY
                                         : JSOP_CALL));
 }
@@ -13472,7 +13476,7 @@ TraceRecorder::record_JSOP_APPLY()
     JSObject* aobj = NULL;
     LIns* aobj_ins = NULL;
 
-    JS_ASSERT(!cx->fp->imacpc);
+    JS_ASSERT(!cx->fp->hasIMacroPC());
 
     if (!IsFunctionObject(vp[0]))
         return record_JSOP_CALL();
@@ -13860,7 +13864,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
      * property gets it does (e.g., for 'toString' from JSOP_NEW) will not be
      * leaked to the calling script.
      */
-    if (isMethod && !cx->fp->imacpc) {
+    if (isMethod && !cx->fp->hasIMacroPC()) {
         enterDeepBailCall();
         LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
         v_ins = lir->insCall(&MethodReadBarrier_ci, args);
@@ -14336,7 +14340,7 @@ TraceRecorder::record_JSOP_LOCALDEC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_IMACOP()
 {
-    JS_ASSERT(cx->fp->imacpc);
+    JS_ASSERT(cx->fp->hasIMacroPC());
     return ARECORD_CONTINUE;
 }
 
@@ -15714,7 +15718,7 @@ TraceRecorder::record_JSOP_STOP()
 #endif
     JSStackFrame *fp = cx->fp;
 
-    if (fp->imacpc) {
+    if (fp->hasIMacroPC()) {
         /*
          * End of imacro, so return true to the interpreter immediately. The
          * interpreter's JSOP_STOP case will return from the imacro, back to

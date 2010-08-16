@@ -57,19 +57,20 @@ typedef struct JSFrameRegs {
 
 /* JS stack frame flags. */
 enum JSFrameFlags {
-    JSFRAME_CONSTRUCTING       =  0x01, /* frame is for a constructor invocation */
-    JSFRAME_OVERRIDE_ARGS      =  0x02, /* overridden arguments local variable */
-    JSFRAME_ASSIGNING          =  0x04, /* a complex (not simplex JOF_ASSIGNING) op
+    JSFRAME_CONSTRUCTING       =   0x01, /* frame is for a constructor invocation */
+    JSFRAME_OVERRIDE_ARGS      =   0x02, /* overridden arguments local variable */
+    JSFRAME_ASSIGNING          =   0x04, /* a complex (not simplex JOF_ASSIGNING) op
                                            is currently assigning to a property */
-    JSFRAME_DEBUGGER           =  0x08, /* frame for JS_EvaluateInStackFrame */
-    JSFRAME_EVAL               =  0x10, /* frame for obj_eval */
-    JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
-    JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
-    JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
-    JSFRAME_BAILING            = 0x100, /* walking out of a method JIT'd frame */
-    JSFRAME_RECORDING          = 0x200, /* recording a trace */
-    JSFRAME_BAILED_AT_RETURN   = 0x400, /* bailed at JSOP_RETURN */
-    JSFRAME_DUMMY              = 0x800, /* frame is a dummy frame */
+    JSFRAME_DEBUGGER           =   0x08, /* frame for JS_EvaluateInStackFrame */
+    JSFRAME_EVAL               =   0x10, /* frame for obj_eval */
+    JSFRAME_FLOATING_GENERATOR =   0x20, /* frame copy stored in a generator obj */
+    JSFRAME_YIELDING           =   0x40, /* js_Interpret dispatched JSOP_YIELD */
+    JSFRAME_GENERATOR          =   0x80, /* frame belongs to generator-iterator */
+    JSFRAME_BAILING            =  0x100, /* walking out of a method JIT'd frame */
+    JSFRAME_RECORDING          =  0x200, /* recording a trace */
+    JSFRAME_BAILED_AT_RETURN   =  0x400, /* bailed at JSOP_RETURN */
+    JSFRAME_DUMMY              =  0x800, /* frame is a dummy frame */
+    JSFRAME_IN_IMACRO          = 0x1000, /* frame has imacpc value available */
 	
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -87,9 +88,9 @@ struct JSStackFrame
   private:
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
 
   public:
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSScript            *script;        /* script being interpreted */
 	
     /*
@@ -332,6 +333,33 @@ struct JSStackFrame
 
     void setCallerVersion(JSVersion version) {
         callerVersion = version;
+    }
+
+    /* IMacroPC accessors. */
+
+    bool hasIMacroPC() const { return flags & JSFRAME_IN_IMACRO; }
+
+    /*
+     * @pre     hasIMacroPC
+     * @return  The PC at which an imacro started executing (guaranteed non-null. The PC of the
+     *          executing imacro must be in regs.pc, so the displaced
+     *          original value is stored here.
+     */
+    jsbytecode *getIMacroPC() const {
+        JS_ASSERT(flags & JSFRAME_IN_IMACRO);
+        return imacpc;
+    }
+
+    /* @return  The imacro pc if hasIMacroPC; otherwise, NULL. */
+    jsbytecode *maybeIMacroPC() const { return hasIMacroPC() ? getIMacroPC() : NULL; }
+
+    void clearIMacroPC() { flags &= ~JSFRAME_IN_IMACRO; }
+
+    void setIMacroPC(jsbytecode *newIMacPC) {
+        JS_ASSERT(newIMacPC);
+        JS_ASSERT(!(flags & JSFRAME_IN_IMACRO));
+        imacpc = newIMacPC;
+        flags |= JSFRAME_IN_IMACRO;
     }
 
     /* Other accessors */

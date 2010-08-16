@@ -1989,7 +1989,7 @@ InlineGetProp(VMFrame &f)
                 JS_ASSERT(entry->vword.isSprop());
                 JSScopeProperty *sprop = entry->vword.toSprop();
                 NATIVE_GET(cx, obj, obj2, sprop,
-                        f.fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
+                        f.fp->hasIMacroPC() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
                         &rval, return false);
             }
             break;
@@ -1998,7 +1998,7 @@ InlineGetProp(VMFrame &f)
         jsid id = ATOM_TO_JSID(atom);
         if (JS_LIKELY(!aobj->getOps()->getProperty)
                 ? !js_GetPropertyHelper(cx, obj, id,
-                    f.fp->imacpc
+                    f.fp->hasIMacroPC()
                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                     &rval)
