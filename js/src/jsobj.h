@@ -1354,6 +1354,9 @@ extern JSObject *
 js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, js::Value *argv);
 
+extern JSObject *
+js_NewInstance(JSContext *cx, JSObject *callee);
+
 extern jsid
 js_CheckForStringIndex(jsid id);
 

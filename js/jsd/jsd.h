@@ -708,11 +708,6 @@ jsd_GetScopeChainForStackFrame(JSDContext* jsdc,
                                JSDStackFrameInfo* jsdframe);
 
 extern JSBool
-jsd_IsStackFrameNative(JSDContext* jsdc, 
-                       JSDThreadState* jsdthreadstate,
-                       JSDStackFrameInfo* jsdframe);
-
-extern JSBool
 jsd_IsStackFrameDebugger(JSDContext* jsdc, 
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);

@@ -68,9 +68,6 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                            char* buf, int num,
                            JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
-    if(JS_IsNativeFrame(cx, fp))
-        return JS_sprintf_append(buf, "%d [native frame]\n", num);
-
     JSPropertyDescArray callProps = {0, nsnull};
     JSPropertyDescArray thisProps = {0, nsnull};
     JSObject* thisObj = nsnull;

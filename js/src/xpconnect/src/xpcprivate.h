@@ -1277,12 +1277,10 @@ extern JSBool
 XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 extern JSBool
-XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
-                  uintN argc, jsval *argv, jsval *vp);
+XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
-XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *vp);
+XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,

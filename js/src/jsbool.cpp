@@ -60,7 +60,8 @@ using namespace js;
 
 Class js_BooleanClass = {
     "Boolean",
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
+    JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -126,18 +127,20 @@ static JSFunctionSpec boolean_methods[] = {
 };
 
 static JSBool
-Boolean(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+Boolean(JSContext *cx, uintN argc, Value *vp)
 {
-    Value bval;
+    Value *argv = vp + 2;
+    bool b = argc != 0 ? js_ValueToBoolean(argv[0]) : false;
 
-    if (argc != 0)
-        bval.setBoolean(!!js_ValueToBoolean(argv[0]));
-    else
-        bval.setBoolean(false);
-    if (!JS_IsConstructing(cx))
-        *rval = bval;
-    else
-        obj->setPrimitiveThis(bval);
+    if (IsConstructing(vp)) {
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_BooleanClass);
+        if (!obj)
+            return false;
+        obj->setPrimitiveThis(BooleanValue(b));
+        vp->setObject(*obj);
+    } else {
+        vp->setBoolean(b);
+    }
     return true;
 }
 
