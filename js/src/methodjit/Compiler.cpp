@@ -512,7 +512,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETRVAL)
           {
             FrameEntry *fe = frame.peek(-1);
-            frame.storeTo(fe, Address(JSFrameReg, offsetof(JSStackFrame, rval)), true);
+            frame.storeTo(fe, Address(JSFrameReg, JSStackFrame::offsetReturnValue()), true);
             frame.pop();
           }
           END_CASE(JSOP_POPV)
@@ -520,7 +520,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_RETURN)
           {
             FrameEntry *fe = frame.peek(-1);
-            frame.storeTo(fe, Address(JSFrameReg, offsetof(JSStackFrame, rval)), true);
+            frame.storeTo(fe, Address(JSFrameReg, JSStackFrame::offsetReturnValue()), true);
             frame.pop();
             emitReturn();
           }
@@ -1640,7 +1640,7 @@ mjit::Compiler::emitReturn()
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
 
-    Address rval(JSFrameReg, offsetof(JSStackFrame, rval));
+    Address rval(JSFrameReg, JSStackFrame::offsetReturnValue());
     masm.loadPayload(rval, JSReturnReg_Data);
     masm.loadTypeTag(rval, JSReturnReg_Type);
     masm.move(Registers::ReturnReg, JSFrameReg);
@@ -2933,7 +2933,7 @@ mjit::Compiler::jsop_getarg(uint32 index)
 void
 mjit::Compiler::jsop_this()
 {
-    Address thisvAddr(JSFrameReg, offsetof(JSStackFrame, thisv));
+    Address thisvAddr(JSFrameReg, JSStackFrame::offsetThisValue());
     if (0 && !script->strictModeCode) {
         Jump null = masm.testNull(Assembler::Equal, thisvAddr);
         stubcc.linkExit(null, Uses(1));

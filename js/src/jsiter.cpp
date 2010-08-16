@@ -1320,7 +1320,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         JSObject *enumerators = cx->enumerators;
         cx->enumerators = gen->enumerators;
 
-        ok = RunScript(cx, fp->script, fp->fun, fp->getScopeChain());
+        ok = RunScript(cx, fp->maybeScript(), fp->maybeFunction(), fp->getScopeChain());
 
         /* Restore the original enumerators stack. */
         gen->enumerators = cx->enumerators;
