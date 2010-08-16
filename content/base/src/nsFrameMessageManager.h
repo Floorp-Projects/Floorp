@@ -38,6 +38,7 @@
 #define nsFrameMessageManager_h__
 
 #include "nsIFrameMessageManager.h"
+#include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
@@ -48,6 +49,8 @@
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
 #include "nsDataHashtable.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 
 class nsAXPCNativeCallContext;
 struct JSContext;
@@ -153,6 +156,8 @@ protected:
   nsTArray<nsString> mPendingScripts;
 };
 
+class nsScriptCacheCleaner;
+
 struct nsFrameScriptExecutorJSObjectHolder
 {
   nsFrameScriptExecutorJSObjectHolder(JSObject* aObject) : mObject(aObject) {}
@@ -173,6 +178,27 @@ protected:
   JSContext* mCx;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   static nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>* sCachedScripts;
+  static nsRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
+};
+
+class nsScriptCacheCleaner : public nsIObserver
+{
+  NS_DECL_ISUPPORTS
+
+  nsScriptCacheCleaner()
+  {
+    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+    if (obsSvc)
+      obsSvc->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+  }
+
+  NS_IMETHODIMP Observe(nsISupports *aSubject,
+                        const char *aTopic,
+                        const PRUnichar *aData)
+  {
+    nsFrameScriptExecutor::Shutdown();
+    return NS_OK;
+  }
 };
 
 #endif
