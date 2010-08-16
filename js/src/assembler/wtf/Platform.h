@@ -274,8 +274,8 @@
 #if !defined(WTF_CPU_ARM_TRADITIONAL) && !defined(WTF_CPU_ARM_THUMB2)
 #  if defined(thumb2) || defined(__thumb2__) \
   || ((defined(__thumb) || defined(__thumb__)) && WTF_THUMB_ARCH_VERSION == 4)
-#    define WTF_CPU_ARM_TRADITIONAL 0
-#    define WTF_CPU_ARM_THUMB2 1
+#    define WTF_CPU_ARM_TRADITIONAL 1
+#    define WTF_CPU_ARM_THUMB2 0
 #  elif WTF_ARM_ARCH_AT_LEAST(4)
 #    define WTF_CPU_ARM_TRADITIONAL 1
 #    define WTF_CPU_ARM_THUMB2 0
@@ -877,7 +877,8 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 #if (WTF_CPU_X86 \
  || WTF_CPU_X86_64 \
  || WTF_CPU_ARM_THUMB2 \
- || WTF_CPU_X86) && !WTF_PLATFORM_ANDROID
+ || WTF_CPU_ARM_TRADITIONAL \
+ || WTF_CPU_X86)
 #define ENABLE_YARR_JIT 1
 #else
 #define ENABLE_YARR_JIT 0
@@ -885,7 +886,7 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 
 #endif /* !defined(ENABLE_YARR_JIT) */
 
-#if (ENABLE_JIT || ENABLE_YARR_JIT) && !WTF_PLATFORM_ANDROID
+#if (ENABLE_JIT || ENABLE_YARR_JIT)
 #define ENABLE_ASSEMBLER 1
 #endif
 /* Setting this flag prevents the assembler from using RWX memory; this may improve
