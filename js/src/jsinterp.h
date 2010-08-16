@@ -110,8 +110,11 @@ struct JSStackFrame
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
     js::Value           rval;           /* function return value */
+
+  private:
     void                *annotation;    /* used by Java security */
 
+  public:
     /* Maintained by StackSpace operations */
     JSStackFrame        *down;          /* previous frame, part of
                                            stack layout invariant */
@@ -129,10 +132,12 @@ struct JSStackFrame
 
     uint32          flags;          /* frame flags -- see below */
 
+  private:
     /* Members only needed for inline calls. */
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
 
+  public:
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
     jsbytecode *pc(JSContext *cx) const;
 
