@@ -3837,6 +3837,49 @@ var XPIDatabase = {
 };
 
 /**
+ * Handles callbacks for HTTP channels of XPI downloads. We support
+ * prompting for auth dialogs and, optionally, to ignore bad certs.
+ *
+ * @param  aWindow
+ *         An optional DOM Element related to the request
+ * @param  aNeedBadCertHandling
+ *         Whether we should handle bad certs or not
+ */
+function XPINotificationCallbacks(aWindow, aNeedBadCertHandling) {
+  this.window = aWindow;
+
+  // Verify that we don't end up on an insecure channel if we haven't got a
+  // hash to verify with (see bug 537761 for discussion)
+  this.needBadCertHandling = aNeedBadCertHandling;
+
+  if (this.needBadCertHandling) {
+    Components.utils.import("resource://gre/modules/CertUtils.jsm");
+    this.badCertHandler = new BadCertHandler();
+  }
+}
+
+XPINotificationCallbacks.prototype = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsISupports) || iid.equals(Ci.nsIInterfaceRequestor))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  getInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIAuthPrompt2)) {
+      var factory = Cc["@mozilla.org/prompter;1"].
+                    getService(Ci.nsIPromptFactory);
+      return factory.getPrompt(this.window, Ci.nsIAuthPrompt);
+    }
+
+    if (this.needBadCertHandling)
+      return this.badCertHandler.getInterface(iid);
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+};
+
+/**
  * Instantiates an AddonInstall and passes the new object to a callback when
  * it is complete.
  *
@@ -4307,8 +4350,6 @@ AddonInstall.prototype = {
    * Starts downloading the add-on's XPI file.
    */
   startDownload: function AI_startDownload() {
-    Components.utils.import("resource://gre/modules/CertUtils.jsm");
-
     this.state = AddonManager.STATE_DOWNLOADING;
     if (!AddonManagerPrivate.callInstallListeners("onDownloadStarted",
                                                   this.listeners, this.wrapper)) {
@@ -4366,13 +4407,10 @@ AddonInstall.prototype = {
     listener.init(this, this.stream);
     try {
       this.channel = NetUtil.newChannel(this.sourceURI);
-      if (this.loadGroup)
-        this.channel.loadGroup = this.loadGroup;
-
-      // Verify that we don't end up on an insecure channel if we haven't got a
-      // hash to verify with (see bug 537761 for discussion)
-      if (!this.hash)
-        this.channel.notificationCallbacks = new BadCertHandler();
+      this.channel.notificationCallbacks =
+        new XPINotificationCallbacks(this.window, !this.hash);
+      this.channel.QueryInterface(Ci.nsIHttpChannelInternal)
+                  .forceAllowThirdPartyCookie = true;
       this.channel.asyncOpen(listener, null);
 
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
@@ -4408,11 +4446,6 @@ AddonInstall.prototype = {
    * @see nsIStreamListener
    */
   onStartRequest: function AI_onStartRequest(aRequest, aContext) {
-    // We must remove the request from the load group otherwise if the user
-    // closes the page that triggered it the download will be cancelled
-    if (this.loadGroup)
-      this.loadGroup.removeRequest(aRequest, null, Cr.NS_BINDING_RETARGETED);
-
     this.progress = 0;
     if (aRequest instanceof Ci.nsIChannel) {
       try {
