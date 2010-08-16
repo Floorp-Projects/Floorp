@@ -116,7 +116,7 @@ void OnDemandServer::LaunchOnDemand() {
   // and holding on to this port delays launching until the current process
   // exits!
   mach_port_deallocate(mach_task_self(), server_port_);
-  server_port_ = NULL;
+  server_port_ = MACH_PORT_DEAD;
 
   // Now, the service is still registered and all we need to do is send
   // a mach message to the service port in order to launch the server.

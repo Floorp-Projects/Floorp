@@ -68,7 +68,7 @@ int UTF8ToUTF16Char(const char *in, int in_length, u_int16_t out[2]) {
                                                  strictConversion);
 
     if (result == conversionOK)
-      return source_ptr - reinterpret_cast<const UTF8 *>(in);
+      return static_cast<int>(source_ptr - reinterpret_cast<const UTF8 *>(in));
 
     // Add another character to the input stream and try again
     source_ptr = reinterpret_cast<const UTF8 *>(in);
@@ -135,7 +135,7 @@ string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap) {
 
   // The maximum expansion would be 4x the size of the input string.
   const UTF16 *source_end_ptr = source_ptr + in.size();
-  int target_capacity = in.size() * 4;
+  size_t target_capacity = in.size() * 4;
   scoped_array<UTF8> target_buffer(new UTF8[target_capacity]);
   UTF8 *target_ptr = target_buffer.get();
   UTF8 *target_end_ptr = target_ptr + target_capacity;
@@ -145,8 +145,7 @@ string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap) {
 
   if (result == conversionOK) {
     const char *targetPtr = reinterpret_cast<const char *>(target_buffer.get());
-    string result(targetPtr);
-    return result;
+    return targetPtr;
   }
 
   return "";
