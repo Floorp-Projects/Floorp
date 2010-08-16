@@ -289,7 +289,7 @@ DEFAULT_GMAKE_FLAGS += \
 	OS_RELEASE="2.6" \
 	OS_LIBS= \
 	STANDARDS_CFLAGS="-std=gnu89" \
-	DSO_CFLAGS="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -DANDROID_VERSION=$(ANDROID_VERSION) -include $(topsrcdir)/security/manager/android_stub.h" \
+	DSO_CFLAGS="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -DANDROID_VERSION=$(ANDROID_VERSION) -include $(ABS_topsrcdir)/security/manager/android_stub.h" \
 	DSO_LDOPTS="-shared $(LDFLAGS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) " \
 	$(NULL)
 endif
