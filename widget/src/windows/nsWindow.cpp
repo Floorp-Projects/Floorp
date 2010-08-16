@@ -4182,8 +4182,30 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
  *
  **************************************************************/
 
-// The WndProc procedure for all nsWindows in this toolkit
+static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
+{
+#ifdef MOZ_CRASHREPORTER
+  nsCOMPtr<nsICrashReporter> cr =
+    do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  if (cr)
+    cr->WriteMinidumpForException(aExceptionInfo);
+#endif
+  return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// The WndProc procedure for all nsWindows in this toolkit. This merely catches
+// exceptions and passes the real work to WindowProcInternal
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  __try {
+    return WindowProcInternal(hWnd, msg, wParam, lParam);
+  }
+  __except(ReportException(GetExceptionInformation())) {
+    ::TerminateProcess(::GetCurrentProcess(), 253);
+  }
+}
+
+LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   NS_TIME_FUNCTION_MIN_FMT(5.0, "%s (line %d) (hWnd: %p, msg: %p, wParam: %p, lParam: %p",
                            MOZ_FUNCTION_NAME, __LINE__, hWnd, msg,
