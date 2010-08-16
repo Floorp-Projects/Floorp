@@ -1069,6 +1069,12 @@ StubEqualityOp(VMFrame &f)
 
     JSBool cond;
 
+    /* The string==string case is easily the hottest;  try it first. */
+    if (lval.isString() && rval.isString()) {
+        JSString *l = lval.toString();
+        JSString *r = rval.toString();
+        cond = js_EqualStrings(l, r) == EQ;
+    } else
 #if JS_HAS_XML_SUPPORT
     if ((lval.isObject() && lval.toObject().isXML()) ||
         (rval.isObject() && rval.toObject().isXML())) {
@@ -1079,11 +1085,8 @@ StubEqualityOp(VMFrame &f)
 #endif
 
     if (SameType(lval, rval)) {
-        if (lval.isString()) {
-            JSString *l = lval.toString();
-            JSString *r = rval.toString();
-            cond = js_EqualStrings(l, r) == EQ;
-        } else if (lval.isDouble()) {
+        JS_ASSERT(!lval.isString());    /* this case is handled above */
+        if (lval.isDouble()) {
             double l = lval.toDouble();
             double r = rval.toDouble();
             if (EQ)
@@ -1122,6 +1125,10 @@ StubEqualityOp(VMFrame &f)
                 rval = regs.sp[-1];
             }
 
+            /*
+             * The string==string case is repeated because DefaultValue() can
+             * convert lval/rval to strings. 
+             */
             if (lval.isString() && rval.isString()) {
                 JSString *l = lval.toString();
                 JSString *r = rval.toString();
