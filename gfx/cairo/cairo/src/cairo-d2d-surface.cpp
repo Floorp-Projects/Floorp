@@ -1660,13 +1660,10 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    extendMode = D2D1_EXTEND_MODE_CLAMP;
 	    key = &bitmap_key_nonextend;
 	    /** 
-	     * For image surfaces we create a slightly larger bitmap with
-	     * a transparent border around it for this case. Need to translate
-	     * for that.
+	     * We create a slightly larger bitmap with a transparent border
+	     * around it for this case. Need to translate for that.
 	     */
-	    if (surfacePattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
-		cairo_matrix_translate(&mat, -1.0, -1.0);
-	    }
+	    cairo_matrix_translate(&mat, -1.0, -1.0);
 	} else if (pattern->extend == CAIRO_EXTEND_REPEAT) {
 	    extendMode = D2D1_EXTEND_MODE_WRAP;
 	} else if (pattern->extend == CAIRO_EXTEND_REFLECT) {
@@ -1701,9 +1698,21 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    }
 
 	    _cairo_d2d_update_surface_bitmap(srcSurf);
-	    sourceBitmap = srcSurf->surfaceBitmap;
-
 	    _cairo_d2d_flush(srcSurf);
+
+	    if (pattern->extend == CAIRO_EXTEND_NONE) {
+		ID2D1Bitmap *srcSurfBitmap = srcSurf->surfaceBitmap;
+		d2dsurf->rt->CreateBitmap(
+		    D2D1::SizeU(srcSurfBitmap->GetPixelSize().width + 2,
+				srcSurfBitmap->GetPixelSize().height + 2),
+		    D2D1::BitmapProperties(srcSurfBitmap->GetPixelFormat()),
+		    &sourceBitmap);
+		D2D1_POINT_2U point = D2D1::Point2U(1, 1);
+		sourceBitmap->CopyFromBitmap(&point, srcSurfBitmap, NULL);
+	    } else {
+		sourceBitmap = srcSurf->surfaceBitmap;
+	    }
+
 	} else if (surfacePattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
 	    cairo_image_surface_t *srcSurf = 
 		reinterpret_cast<cairo_image_surface_t*>(surfacePattern->surface);
