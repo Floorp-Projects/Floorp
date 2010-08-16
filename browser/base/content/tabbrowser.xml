@@ -2618,8 +2618,7 @@
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "noclose");
             else {
-              // Grab the last tab for size comparison
-              let tab = this.tabbrowser.visibleTabs.pop();
+              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else
