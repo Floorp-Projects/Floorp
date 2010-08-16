@@ -228,6 +228,7 @@ struct ParamTraits<nsQueryContentEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    aResult->mWasAsync = PR_TRUE;
     return ReadParam(aMsg, aIter, static_cast<nsGUIEvent*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mOffset) &&
