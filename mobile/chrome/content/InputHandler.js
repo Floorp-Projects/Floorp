@@ -987,9 +987,9 @@ function KineticController(aPanBy, aEndCallback) {
 
 KineticController.prototype = {
   _reset: function _reset() {
-    if (this._timer != null) {
-      this._timer.cancel();
-      this._timer = null;
+    if (this._callback) {
+      removeEventListener("MozBeforePaint", this._callback, false);
+      this._callback = null;
     }
 
     if (this._brakesTimeout) {
@@ -1002,7 +1002,7 @@ KineticController.prototype = {
   },
 
   isActive: function isActive() {
-    return (this._timer != null);
+    return !!this._callback;
   },
 
   _startTimer: function _startTimer() {
