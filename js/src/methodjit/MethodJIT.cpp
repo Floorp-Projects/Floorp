@@ -330,8 +330,15 @@ SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
 
 # elif defined(JS_CPU_ARM)
 
-JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) == (sizeof(VMFrame)-4));
 JS_STATIC_ASSERT(sizeof(VMFrame) == 80);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) ==          (4*19));
+JS_STATIC_ASSERT(offsetof(VMFrame, entryFp) ==          (4*10));
+JS_STATIC_ASSERT(offsetof(VMFrame, stackLimit) ==       (4*9));
+JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) ==               (4*7));
+JS_STATIC_ASSERT(offsetof(VMFrame, oldRegs) ==          (4*4));
+JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
+JS_STATIC_ASSERT(offsetof(VMFrame, scriptedReturn) ==   (4*0));
 
 asm volatile (
 ".text\n"
@@ -363,7 +370,8 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ r6        ]   | considering that we might not use them anyway.
      *  [ r5        ]   |
      *  [ r4        ]   /
-     *  [ ICallCnt  ]
+     *  [ entryFp   ]
+     *  [ stkLimit  ]
      *  [ cx        ]
      *  [ fp        ]
      *  [ regs.sp   ]
@@ -380,10 +388,12 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      * JaegerTrampoline. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
-"   push    {r0,r3}"                            "\n"    /* inlineCallCount, cx */
+"   push    {r1}"                               "\n"    /* entryFp */
+"   push    {r3}"                               "\n"    /* stackLimit */
+"   push    {r0}"                               "\n"    /* cx */
 "   push    {r1}"                               "\n"    /* fp */
     /* Remaining fields are set elsewhere, but we need to leave space for them. */
-"   sub     sp, sp, #(4*8)"                     "\n"
+"   sub     sp, sp, #(4*7)"                     "\n"
 
 "   mov     r0, sp"                             "\n"
 "   mov     r4, r2"                             "\n"    /* Preserve r2 ('code') in a callee-saved register. */
@@ -404,7 +414,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
 "   bl  " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
-"   add     sp, sp, #(4*8 + 4*3)"               "\n"
+"   add     sp, sp, #(4*7 + 4*4)"               "\n"
 
     /* Set a 'true' return value to indicate successful completion. */
 "   mov     r0, #1"                         "\n"
@@ -427,7 +437,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 "   bxne    r0"                             "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
-"   add     sp, sp, #(4*8 + 4*3)"               "\n"
+"   add     sp, sp, #(4*7 + 4*4)"           "\n"
 
 "   pop     {r4-r11,pc}"                    "\n"
 );
