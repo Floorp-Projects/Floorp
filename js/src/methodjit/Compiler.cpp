@@ -2837,7 +2837,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.fastPathStart = masm.label();
 
     Address parent(pic.objReg, offsetof(JSObject, parent));
-    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+    masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetScopeChain()), pic.objReg);
 
     pic.shapeGuard = masm.label();
 #if defined JS_NUNBOX32
@@ -2904,7 +2904,7 @@ void
 mjit::Compiler::jsop_bindname(uint32 index)
 {
     RegisterID reg = frame.allocReg();
-    Address scopeChain(JSFrameReg, offsetof(JSStackFrame, scopeChain));
+    Address scopeChain(JSFrameReg, JSStackFrame::offsetScopeChain());
     masm.loadPtr(scopeChain, reg);
 
     Address address(reg, offsetof(JSObject, parent));

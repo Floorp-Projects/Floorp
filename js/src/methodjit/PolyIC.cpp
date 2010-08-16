@@ -1462,7 +1462,7 @@ class ScopeNameCompiler : public PICStubCompiler
         Assembler masm;
         JumpList fails(f.cx);
 
-        masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+        masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == holder);
         JS_ASSERT(holder == scopeChain->getGlobal());
@@ -1535,7 +1535,7 @@ class ScopeNameCompiler : public PICStubCompiler
         Assembler masm;
         Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
 
-        masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+        masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == holder);
         JS_ASSERT(holder != scopeChain->getGlobal());
@@ -1720,7 +1720,7 @@ class BindNameCompiler : public PICStubCompiler
         js::Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
 
         /* Guard on the shape of the scope chain. */
-        masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+        masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetScopeChain()), pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump firstShape = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                         Imm32(scopeChain->shape()));
@@ -2130,7 +2130,7 @@ ic::Name(VMFrame &f, uint32 index)
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
-    ScopeNameCompiler cc(f, script, f.fp->scopeChain, pic, atom, SlowName);
+    ScopeNameCompiler cc(f, script, f.fp->getScopeChain(), pic, atom, SlowName);
 
     if (!cc.update()) {
         cc.disable("error");
@@ -2179,7 +2179,7 @@ ic::BindName(VMFrame &f, uint32 index)
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
-    BindNameCompiler cc(f, script, f.fp->scopeChain, pic, atom, SlowBindName);
+    BindNameCompiler cc(f, script, f.fp->getScopeChain(), pic, atom, SlowBindName);
 
     JSObject *obj = cc.update();
     if (!obj) {

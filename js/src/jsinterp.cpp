@@ -631,7 +631,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     } else {
         JS_ASSERT(script);
         AutoPreserveEnumerators preserve(cx);
-        ok = RunScript(cx, script, fun, fp->scopeChain);
+        ok = RunScript(cx, script, fun, fp->getScopeChain());
     }
 
     DTrace::exitJSFun(cx, fp, fun, fp->rval);
@@ -944,7 +944,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
     AutoPreserveEnumerators preserve(cx);
-    JSBool ok = RunScript(cx, script, NULL, fp->scopeChain);
+    JSBool ok = RunScript(cx, script, NULL, fp->getScopeChain());
     if (result)
         *result = fp->rval;
 
@@ -3253,7 +3253,7 @@ END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
 BEGIN_CASE(JSOP_BINDGNAME)
-    PUSH_OBJECT(*fp->scopeChain->getGlobal());
+    PUSH_OBJECT(*fp->getScopeChain()->getGlobal());
 END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDNAME)
@@ -3961,7 +3961,7 @@ BEGIN_CASE(JSOP_GLOBALDEC)
     slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
     JSObject *obj;
-    obj = fp->scopeChain->getGlobal();
+    obj = fp->getScopeChain()->getGlobal();
     vp = &obj->getSlotRef(slot);
     goto do_int_fast_incop;
 END_CASE(JSOP_INCGLOBAL)
@@ -4276,7 +4276,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
     JSObject *obj;
     VALUE_TO_OBJECT(cx, &lref, obj);
 
-    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == fp->scopeChain->getGlobal());
+    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == fp->getScopeChain()->getGlobal());
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -4797,7 +4797,7 @@ BEGIN_CASE(JSOP_APPLY)
 #ifdef JS_METHODJIT
             /* Try to ensure methods are method JIT'd.  */
             {
-                JSObject *scope = newfp->scopeChain;
+                JSObject *scope = newfp->getScopeChain();
                 mjit::CompileStatus status = mjit::CanMethodJIT(cx, newscript, fun, scope);
                 if (status == mjit::Compile_Error)
                     goto error;
@@ -5402,7 +5402,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj = fp->getScopeChain()->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     PUSH_COPY(obj->getSlot(slot));
     if (op == JSOP_CALLGLOBAL)
@@ -5418,7 +5418,7 @@ BEGIN_CASE(JSOP_FORGLOBAL)
     PUSH_COPY(rval);
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj = fp->getScopeChain()->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     JS_LOCK_OBJ(cx, obj);
     {
@@ -5438,7 +5438,7 @@ BEGIN_CASE(JSOP_SETGLOBAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChain->getGlobal();
+    JSObject *obj = fp->getScopeChain()->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     {
         JS_LOCK_OBJ(cx, obj);
