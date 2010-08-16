@@ -568,6 +568,12 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 }
 
 bool
+TabParent::RecvQueryContentResult(const nsQueryContentEvent& event)
+{
+    return true;
+}
+
+bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           PRBool aSync,
                           const nsString& aJSON,
