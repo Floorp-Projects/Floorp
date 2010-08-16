@@ -351,7 +351,7 @@ js_PopInterpFrame(JSContext* cx, TracerState* state)
         return JS_FALSE;
     if (fp->imacpc)
         return JS_FALSE;
-    if (fp->blockChain)
+    if (fp->hasBlockChain())
         return JS_FALSE;
 
     fp->putActivationObjects(cx);
