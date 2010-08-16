@@ -1729,11 +1729,32 @@ struct nsStyleUIReset {
 };
 
 struct nsCursorImage {
-  nsCOMPtr<imgIRequest> mImage;
   PRBool mHaveHotspot;
   float mHotspotX, mHotspotY;
 
   nsCursorImage();
+  nsCursorImage(const nsCursorImage& aOther);
+  ~nsCursorImage();
+
+  nsCursorImage& operator=(const nsCursorImage& aOther);
+  /*
+   * We hide mImage and force access through the getter and setter so that we
+   * can lock the images we use. Cursor images are likely to be small, so we
+   * don't care about discarding them. See bug 512260.
+   * */
+  void SetImage(imgIRequest *aImage) {
+    if (mImage)
+      mImage->UnlockImage();
+    mImage = aImage;
+    if (mImage)
+      mImage->LockImage();
+  }
+  imgIRequest* GetImage() const {
+    return mImage;
+  }
+
+private:
+  nsCOMPtr<imgIRequest> mImage;
 };
 
 struct nsStyleUserInterface {

@@ -3831,7 +3831,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
             nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
             imgIRequest *req = arr->Item(0).GetImageValue();
             if (req) {
-              item->mImage = req;
+              item->SetImage(req);
               if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
                 item->mHaveHotspot = PR_TRUE;
                 item->mHotspotX = arr->Item(1).GetFloatValue(),
