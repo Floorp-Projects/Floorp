@@ -57,12 +57,27 @@ const DOWNLOAD_ERROR    = -228;
 const UNSUPPORTED_TYPE  = -244;
 const SUCCESS = 0;
 
+const MSG_INSTALL_ENABLED  = "WebInstallerIsInstallEnabled";
+const MSG_INSTALL_ADDONS   = "WebInstallerInstallAddonsFromWebpage";
+const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
+
+const CHILD_SCRIPT =
+  "chrome://mozapps/content/extensions/extensions-content.js";
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
 
 function amManager() {
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
+  var messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
+                       getService(Ci.nsIChromeFrameMessageManager);
+
+  messageManager.addMessageListener(MSG_INSTALL_ENABLED, this);
+  messageManager.addMessageListener(MSG_INSTALL_ADDONS, this);
+  messageManager.loadFrameScript(CHILD_SCRIPT, true, true);
 }
 
 amManager.prototype = {
@@ -165,6 +180,53 @@ amManager.prototype = {
 
   notify: function AMC_notify(aTimer) {
     AddonManagerPrivate.backgroundUpdateCheck();
+  },
+
+  /**
+   * messageManager callback function.
+   *
+   * Listens to requests from child processes for InstallTrigger
+   * activity, and sends back callbacks.
+   */
+  receiveMessage: function(aMessage) {
+    var payload = aMessage.json;
+    var referer = Services.io.newURI(payload.referer, null, null);
+    switch (aMessage.name) {
+      case MSG_INSTALL_ENABLED:
+        return this.isInstallEnabled(payload.mimetype, referer);
+
+      case MSG_INSTALL_ADDONS:
+        var callback = null;
+        if (payload.callbackId != -1) {
+          callback = {
+            onInstallEnded: function ITP_callback(url, status) {
+              // Doing it this way, instead of aMessage.target.messageManager,
+              // ensures it works in Firefox and not only Fennec. See bug
+              // 578172. TODO: Clean up this code once that bug is fixed
+              var flo = aMessage.target.QueryInterface(Ci.nsIFrameLoaderOwner);
+              var returnMessageManager = flo.frameLoader.messageManager;
+              returnMessageManager.sendAsyncMessage(MSG_INSTALL_CALLBACK,
+                { installerId: payload.installerId,
+                  callbackId: payload.callbackId, url: url, status: status }
+              );
+            },
+          };
+        }
+        var window;
+        try {
+          // Normal approach for single-process mode
+          window = aMessage.target.docShell
+                           .QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow).content;
+        } catch (e) {
+          // Fallback for multiprocess (e10s) mode. Appears to work but has
+          // not had a full suite of automated tests run on it.
+          window = aMessage.target.ownerDocument.defaultView;
+        }
+        return this.installAddonsFromWebpage(payload.mimetype,
+          window, referer, payload.uris, payload.hashes, payload.names,
+          payload.icons, callback, payload.uris.length);
+    }
   },
 
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),
