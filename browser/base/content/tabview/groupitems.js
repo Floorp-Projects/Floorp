@@ -656,11 +656,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this.arrange();
       }
       UI.setReorderTabsOnHide(this);
-
-      if (this._nextNewTabCallback) {
-        this._nextNewTabCallback.apply(this, [item])
-        this._nextNewTabCallback = null;
-      }
     } catch(e) {
       Utils.log('GroupItem.add error', e);
     }
@@ -1189,59 +1184,41 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     GroupItems.setActiveGroupItem(this);
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
+    // TabItems will have handled the new tab and added the tabItem property
+    let newItem = newTab.tabItem;
+
     var self = this;
-    var doNextTab = function(tab) {
-      var groupItem = GroupItems.getActiveGroupItem();
-
-      iQ(tab.container).css({opacity: 0});
-      var $anim = iQ("<div>")
-        .addClass('newTabAnimatee')
-        .css({
-          top: tab.bounds.top+5,
-          left: tab.bounds.left+5,
-          width: tab.bounds.width-10,
-          height: tab.bounds.height-10,
-          zIndex: 999,
-          opacity: 0
-        })
-        .appendTo("body")
-        .animate({
-          opacity: 1.0
-        }, {
-          duration: 500,
-          complete: function() {
-            $anim.animate({
-              top: 0,
-              left: 0,
-              width: window.innerWidth,
-              height: window.innerHeight
-            }, {
-              duration: 270,
-              complete: function() {
-                iQ(tab.container).css({opacity: 1});
-                newTab.tabItem.zoomIn(!url);
-                $anim.remove();
-                // We need a timeout here so that there is a chance for the
-                // new tab to get made! Otherwise it won't appear in the list
-                // of the groupItem's tab.
-                // TODO: This is probably a terrible hack that sets up a race
-                // condition. We need a better solution.
-                // Bug 586551
-                setTimeout(function() {
-                  self._sendToSubscribers("tabAdded", { groupItemId: self.id });
-                }, 1);
-              }
-            });
-          }
-        });
-    }
-
-    // TODO: Because this happens as a callback, there is
-    // sometimes a long delay before the animation occurs.
-    // We need to fix this--immediate response to a users
-    // actions is necessary for a good user experience.
-    // Bug 586552
-    self.onNextNewTab(doNextTab);
+    iQ(newItem.container).css({opacity: 0});
+    let $anim = iQ("<div>")
+      .addClass("newTabAnimatee")
+      .css({
+        top: newItem.bounds.top + 5,
+        left: newItem.bounds.left + 5,
+        width: newItem.bounds.width - 10,
+        height: newItem.bounds.height - 10,
+        zIndex: 999,
+        opacity: 0
+      })
+      .appendTo("body")
+      .animate({opacity: 1}, {
+        duration: 500,
+        complete: function() {
+          $anim.animate({
+            top: 0,
+            left: 0,
+            width: window.innerWidth,
+            height: window.innerHeight
+          }, {
+            duration: 270,
+            complete: function() {
+              iQ(newItem.container).css({opacity: 1});
+              newItem.zoomIn(!url);
+              $anim.remove();
+              self._sendToSubscribers("tabAdded", {groupItemId: self.id});
+            }
+          });
+        }
+      });
   },
 
   // ----------
@@ -1320,19 +1297,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Returns all children.
   getChildren: function() {
     return this._children;
-  },
-
-  // ---------
-  // Function: onNextNewTab
-  // Sets up a one-time handler that gets called the next time a
-  // tab is added to the groupItem.
-  //
-  // Parameters:
-  //  callback - the one-time callback that is fired when the next
-  //             time a tab is added to a groupItem; it gets passed the
-  //             new tab
-  onNextNewTab: function(callback) {
-    this._nextNewTabCallback = callback;
   }
 });
 
@@ -1757,6 +1721,7 @@ window.GroupItems = {
           gBrowser.selectTabAtIndex(index + 1);
         else
           gBrowser.selectTabAtIndex(index - 1);
+        shouldUpdateTabBar = true;
       } else {
         shouldShowTabView = true;
       }
