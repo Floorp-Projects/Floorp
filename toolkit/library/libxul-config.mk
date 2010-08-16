@@ -149,7 +149,6 @@ COMPONENT_LIBS += \
 	nsappshell \
 	txmgr \
 	commandlines \
-	extensions \
 	toolkitcomps \
 	pipboot \
 	pipnss \
