@@ -8,6 +8,17 @@
 
 SimpleTest.waitForExplicitFinish();
 
+function IsD2DEnabled() {
+    var enabled = false;
+
+    try {
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        enabled = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled;
+    } catch(e) {}
+    
+    return enabled;
+}
+
 </script>
 <!-- Includes all the tests in the content/canvas/tests except for test_bug397524.html -->
 
@@ -13807,13 +13818,15 @@ function test_2d_path_rect_zero_3() {
 var canvas = document.getElementById('c438');
 var ctx = canvas.getContext('2d');
 
-ctx.strokeStyle = '#f00';
-ctx.lineWidth = 100;
-ctx.beginPath();
-ctx.rect(50, 25, 0, 0);
-ctx.stroke();
-isPixel(ctx, 50,25, 0,0,0,0, 0);
-
+if (!IsD2DEnabled()) {
+    // Disabled for D2D until we can figure out Bug 587554.
+    ctx.strokeStyle = '#f00';
+    ctx.lineWidth = 100;
+    ctx.beginPath();
+    ctx.rect(50, 25, 0, 0);
+    ctx.stroke();
+    isPixel(ctx, 50,25, 0,0,0,0, 0);
+}
 
 }
 </script>
@@ -18054,11 +18067,13 @@ function test_2d_strokeRect_zero_1() {
 var canvas = document.getElementById('c580');
 var ctx = canvas.getContext('2d');
 
-ctx.strokeStyle = '#f00';
-ctx.lineWidth = 250;
-ctx.strokeRect(50, 25, 0, 0);
-isPixel(ctx, 50,25, 0,0,0,0, 0);
-
+if (!IsD2DEnabled()) {
+    // Disabled for D2D until we can figure out Bug 587554.
+    ctx.strokeStyle = '#f00';
+    ctx.lineWidth = 250;
+    ctx.strokeRect(50, 25, 0, 0);
+    isPixel(ctx, 50,25, 0,0,0,0, 0);
+}
 
 }
 </script>
