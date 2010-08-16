@@ -112,8 +112,8 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          * Don't force a call object for a lightweight function call, but do
          * insist that there is a call object for a heavyweight function call.
          */
-        JS_ASSERT(!fp->fun ||
-                  !(fp->fun->flags & JSFUN_HEAVYWEIGHT) ||
+        JS_ASSERT(!fp->hasFunction() ||
+                  !(fp->getFunction()->flags & JSFUN_HEAVYWEIGHT) ||
                   fp->hasCallObj());
         JS_ASSERT(fp->hasScopeChain());
         return fp->getScopeChain();
@@ -130,7 +130,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      * Also, identify the innermost compiler-allocated block we needn't clone.
      */
     JSObject *limitBlock, *limitClone;
-    if (fp->fun && !fp->hasCallObj()) {
+    if (fp->hasFunction() && !fp->hasCallObj()) {
         JS_ASSERT_IF(fp->getScopeChain()->getClass() == &js_BlockClass,
                      fp->getScopeChain()->getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
         if (!js_GetCallObject(cx, fp))
@@ -535,19 +535,23 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     SetValueRangeToUndefined(fp->slots(), nvars);
 
     /* Initialize frame. */
-    fp->thisv = args.thisv();
+    fp->setThisValue(args.thisv());
     fp->setCallObj(NULL);
     fp->setArgsObj(NULL);
-    fp->script = script;
-    fp->fun = fun;
+    fp->setScript(script);
+    fp->setFunction(fun);
     fp->argc = args.argc();
     fp->argv = args.argv();
-    fp->rval = (flags & JSINVOKE_CONSTRUCT) ? fp->thisv : UndefinedValue();
     fp->setAnnotation(NULL);
     fp->setScopeChain(NULL);
     fp->setBlockChain(NULL);
     fp->flags = flags;
     JS_ASSERT(!fp->hasIMacroPC());
+
+    if (flags & JSINVOKE_CONSTRUCT)
+        fp->setReturnValue(fp->getThisValue());
+    else
+        fp->clearReturnValue();
 
     /* Initialize regs. */
     JSFrameRegs &regs = frame.getRegs();
@@ -619,7 +623,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         JSBool alreadyThrowing = cx->throwing;
 #endif
         /* Primitive |this| should not be passed to slow natives. */
-        JSObject *thisp = fun ? fp->getThisObject(cx) : fp->thisv.toObjectOrNull();
+        JSObject *thisp = fun ? fp->getThisObject(cx) : fp->getThisValue().toObjectOrNull();
         ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, &fp->rval);
 
         JS_ASSERT(cx->fp == fp);
@@ -634,7 +638,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         ok = RunScript(cx, script, fun, fp->getScopeChain());
     }
 
-    DTrace::exitJSFun(cx, fp, fun, fp->rval);
+    DTrace::exitJSFun(cx, fp, fun, fp->getReturnValue());
 
     if (hookData) {
         hook = cx->debugHooks->callHook;
@@ -643,7 +647,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     }
 
     fp->putActivationObjects(cx);
-    args.rval() = fp->rval;
+    args.rval() = fp->getReturnValue();
     return ok;
 }
 
@@ -666,7 +670,7 @@ DoSlowCall(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = fp->getThisObject(cx);
     if (!obj)
         return false;
-    JS_ASSERT(ObjectValue(*obj) == fp->thisv);
+    JS_ASSERT(ObjectValue(*obj) == fp->getThisValue());
 
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     Class *clasp = callee->getClass();
@@ -857,11 +861,11 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (script->hasSharps) {
         JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
         Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
-        if (down && down->script && down->script->hasSharps) {
-            JS_ASSERT(down->script->nfixed >= SHARP_NSLOTS);
-            int base = (down->fun && !(down->flags & JSFRAME_SPECIAL))
-                       ? down->fun->sharpSlotBase(cx)
-                       : down->script->nfixed - SHARP_NSLOTS;
+        if (down && down->hasScript() && down->getScript()->hasSharps) {
+            JS_ASSERT(down->getFixedCount() >= SHARP_NSLOTS);
+            int base = (down->getFunction() && !(down->flags & JSFRAME_SPECIAL))
+                       ? down->getFunction()->sharpSlotBase(cx)
+                       : down->getFixedCount() - SHARP_NSLOTS;
             if (base < 0)
                 return false;
             sharps[0] = down->slots()[base];
@@ -879,8 +883,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         /* Propagate arg state for eval and the debugger API. */
         fp->setCallObj(down->maybeCallObj());
         fp->setArgsObj(NULL);
-        fp->fun = (script->staticLevel > 0) ? down->fun : NULL;
-        fp->thisv = down->thisv;
+        fp->setFunction((script->staticLevel > 0) ? down->maybeFunction() : NULL);
+        fp->setThisValue(down->getThisValue());
         fp->flags = flags;
         fp->argc = down->argc;
         fp->argv = down->argv;
@@ -900,8 +904,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     } else {
         fp->setCallObj(NULL);
         fp->setArgsObj(NULL);
-        fp->fun = NULL;
-        /* Ininitialize fp->thisv after pushExecuteFrame. */
+        fp->setFunction(NULL);
+        fp->setThisValue(UndefinedValue());  /* Make GC-safe until initialized below. */
         fp->flags = flags;
         fp->argc = 0;
         fp->argv = NULL;
@@ -920,8 +924,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JS_ASSERT(!initialVarObj->getOps()->defineProperty);
 
     JS_ASSERT(!fp->hasIMacroPC());
-    fp->script = script;
-    fp->rval.setUndefined();
+    fp->setScript(script);
+    fp->clearReturnValue();
     fp->setBlockChain(NULL);
 
     /* Initialize regs. */
@@ -936,7 +940,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSObject *thisp = chain->thisObject(cx);
         if (!thisp)
             return false;
-        fp->thisv.setObject(*thisp);
+        fp->setThisValue(ObjectValue(*thisp));
     }
 
     void *hookData = NULL;
@@ -946,7 +950,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     AutoPreserveEnumerators preserve(cx);
     JSBool ok = RunScript(cx, script, NULL, fp->getScopeChain());
     if (result)
-        *result = fp->rval;
+        *result = fp->getReturnValue();
 
     if (hookData) {
         if (JSInterpreterHook hook = cx->debugHooks->executeHook)
@@ -1410,16 +1414,16 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
     uintN slot = cookie.slot();
     Value *vp;
 
-    if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
-        vp = fp->slots() + fp->script->nfixed;
-    } else if (slot < fp->fun->nargs) {
+    if (!fp->hasFunction() || (fp->flags & JSFRAME_EVAL)) {
+        vp = fp->slots() + fp->getFixedCount();
+    } else if (slot < fp->getArgumentCount()) {
         vp = fp->argv;
     } else if (slot == UpvarCookie::CALLEE_SLOT) {
         vp = &fp->argv[-2];
         slot = 0;
     } else {
-        slot -= fp->fun->nargs;
-        JS_ASSERT(slot < fp->script->nslots);
+        slot -= fp->getArgumentCount();
+        JS_ASSERT(slot < fp->getSlotCount());
         vp = fp->slots();
     }
 
@@ -1447,10 +1451,10 @@ js_TraceOpcode(JSContext *cx)
      * Operations in prologues don't produce interesting values, and
      * js_DecompileValueGenerator isn't set up to handle them anyway.
      */
-    if (cx->tracePrevPc && regs->pc >= fp->script->main) {
+    if (cx->tracePrevPc && regs->pc >= fp->getScript()->main) {
         JSOp tracePrevOp = JSOp(*cx->tracePrevPc);
         ndefs = js_GetStackDefs(cx, &js_CodeSpec[tracePrevOp], tracePrevOp,
-                                fp->script, cx->tracePrevPc);
+                                fp->getScript(), cx->tracePrevPc);
 
         /*
          * If there aren't that many elements on the stack, then we have
@@ -1487,9 +1491,10 @@ js_TraceOpcode(JSContext *cx)
     }
 
     fprintf(tracefp, "%4u: ",
-            js_PCToLineNumber(cx, fp->script, fp->hasIMacroPC() ? fp->getIMacroPC() : regs->pc));
-    js_Disassemble1(cx, fp->script, regs->pc,
-                    regs->pc - fp->script->code,
+            js_PCToLineNumber(cx, fp->getScript(),
+                              fp->hasIMacroPC() ? fp->getIMacroPC() : regs->pc));
+    js_Disassemble1(cx, fp->getScript(), regs->pc,
+                    regs->pc - fp->getScript()->code,
                     JS_FALSE, tracefp);
     op = (JSOp) *regs->pc;
     nuses = js_GetStackUses(&js_CodeSpec[op], op, regs->pc);
@@ -1830,6 +1835,7 @@ namespace reprmeter {
 #define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObjectOrNull(obj)
 #define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
 #define POP_COPY_TO(v)           v = *--regs.sp
+#define POP_RETURN_VALUE()       fp->setReturnValue(*--regs.sp)
 
 #define POP_BOOLEAN(cx, vp, b)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -2250,7 +2256,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 
     /* Set registerized frame pointer and derived script pointer. */
     JSStackFrame *fp = cx->fp;
-    JSScript *script = fp->script;
+    JSScript *script = fp->getScript();
     JS_ASSERT(!script->isEmpty());
     JS_ASSERT(script->length > 1);
     JS_ASSERT(fp->thisv.isObjectOrNull());
@@ -2317,7 +2323,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         fp = cx->fp;                                                          \
-        script = fp->script;                                                  \
+        script = fp->getScript();                                             \
         atoms = FrameAtomBase(cx, fp);                                        \
         currentVersion = (JSVersion) script->version;                         \
         JS_ASSERT(cx->regs == &regs);                                         \
@@ -2549,7 +2555,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
               case JSTRAP_CONTINUE:
                 break;
               case JSTRAP_RETURN:
-                fp->rval = rval;
+                fp->setReturnValue(rval);
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
               case JSTRAP_THROW:
@@ -2666,7 +2672,7 @@ END_CASE(JSOP_POPN)
 BEGIN_CASE(JSOP_SETRVAL)
 BEGIN_CASE(JSOP_POPV)
     ASSERT_NOT_THROWING(cx);
-    POP_COPY_TO(fp->rval);
+    POP_RETURN_VALUE();
 END_CASE(JSOP_POPV)
 
 BEGIN_CASE(JSOP_ENTERWITH)
@@ -2692,10 +2698,10 @@ BEGIN_CASE(JSOP_LEAVEWITH)
 END_CASE(JSOP_LEAVEWITH)
 
 BEGIN_CASE(JSOP_RETURN)
-    POP_COPY_TO(fp->rval);
+    POP_RETURN_VALUE();
     /* FALL THROUGH */
 
-BEGIN_CASE(JSOP_RETRVAL)    /* fp->rval already set */
+BEGIN_CASE(JSOP_RETRVAL)    /* fp return value already set */
 BEGIN_CASE(JSOP_STOP)
 {
     /*
@@ -2734,9 +2740,9 @@ BEGIN_CASE(JSOP_STOP)
 #endif
 
     JS_ASSERT(regs.sp == fp->base());
-    if ((fp->flags & JSFRAME_CONSTRUCTING) && fp->rval.isPrimitive()) {
-        JS_ASSERT(!fp->thisv.isPrimitive());
-        fp->rval = fp->thisv;
+    if ((fp->flags & JSFRAME_CONSTRUCTING) && fp->getReturnValue().isPrimitive()) {
+        JS_ASSERT(!fp->getThisValue().isPrimitive());
+        fp->setReturnValue(fp->getThisValue());
     }
 
     interpReturnOK = true;
@@ -2760,7 +2766,7 @@ BEGIN_CASE(JSOP_STOP)
          */
         fp->putActivationObjects(cx);
 
-        DTrace::exitJSFun(cx, fp, fp->fun, fp->rval);
+        DTrace::exitJSFun(cx, fp, fp->getFunction(), fp->getReturnValue());
 
         /* Restore context version only if callee hasn't set version. */
         if (JS_LIKELY(cx->version == currentVersion)) {
@@ -2774,9 +2780,9 @@ BEGIN_CASE(JSOP_STOP)
          * passed in via |this|, and instrument this constructor invocation.
          */
         if (fp->flags & JSFRAME_CONSTRUCTING) {
-            if (fp->rval.isPrimitive()) {
-                JS_ASSERT(!fp->thisv.isPrimitive());
-                fp->rval = fp->thisv;
+            if (fp->getReturnValue().isPrimitive()) {
+                JS_ASSERT(!fp->getThisValue().isPrimitive());
+                fp->setReturnValue(fp->getThisValue());
             }
             JS_RUNTIME_METER(cx->runtime, constructs);
         }
@@ -2789,11 +2795,11 @@ BEGIN_CASE(JSOP_STOP)
 
         /* Propagate return value before fp is lost. */
         regs.sp = newsp;
-        regs.sp[-1] = fp->rval;
+        regs.sp[-1] = fp->getReturnValue();
 
         /* Sync interpreter registers. */
         fp = cx->fp;
-        script = fp->script;
+        script = fp->getScript();
         atoms = FrameAtomBase(cx, fp);
 
         /* Resume execution in the calling frame. */
@@ -3046,7 +3052,7 @@ BEGIN_CASE(JSOP_FORARG)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
     uintN slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->fun->nargs);
+    JS_ASSERT(slot < fp->getArgumentCount());
     JS_ASSERT(regs.sp[-1].isObject());
     if (!IteratorNext(cx, &regs.sp[-1].toObject(), &fp->argv[slot]))
         goto error;
@@ -3057,7 +3063,7 @@ BEGIN_CASE(JSOP_FORLOCAL)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
     uintN slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < fp->script->nslots);
+    JS_ASSERT(slot < fp->getSlotCount());
     JS_ASSERT(regs.sp[-1].isObject());
     if (!IteratorNext(cx, &regs.sp[-1].toObject(), &fp->slots()[slot]))
         goto error;
@@ -3979,7 +3985,7 @@ BEGIN_CASE(JSOP_ARGINC)
   do_arg_incop:
     // If we initialize in the declaration, MSVC complains that the labels skip init.
     slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->fun->nargs);
+    JS_ASSERT(slot < fp->getArgumentCount());
     METER_SLOT_OP(op, slot);
     vp = fp->argv + slot;
     goto do_int_fast_incop;
@@ -4000,7 +4006,7 @@ BEGIN_CASE(JSOP_LOCALINC)
    */
   do_local_incop:
     slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < fp->script->nslots);
+    JS_ASSERT(slot < fp->getSlotCount());
     vp = fp->slots() + slot;
     METER_SLOT_OP(op, slot);
     vp = fp->slots() + slot;
@@ -4025,7 +4031,7 @@ BEGIN_CASE(JSOP_LOCALINC)
 BEGIN_CASE(JSOP_THIS)
     if (!fp->getThisObject(cx))
         goto error;
-    PUSH_COPY(fp->thisv);
+    PUSH_COPY(fp->getThisValue());
 END_CASE(JSOP_THIS)
 
 BEGIN_CASE(JSOP_UNBRANDTHIS)
@@ -4055,7 +4061,7 @@ BEGIN_CASE(JSOP_GETARGPROP)
 {
     i = ARGNO_LEN;
     uint32 slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->fun->nargs);
+    JS_ASSERT(slot < fp->getArgumentCount());
     PUSH_COPY(fp->argv[slot]);
     goto do_getprop_body;
 }
@@ -4722,18 +4728,18 @@ BEGIN_CASE(JSOP_APPLY)
             /* Initialize stack frame. */
             newfp->setCallObj(NULL);
             newfp->setArgsObj(NULL);
-            newfp->script = newscript;
-            newfp->fun = fun;
+            newfp->setScript(newscript);
+            newfp->setFunction(fun);
             newfp->argc = argc;
             newfp->argv = vp + 2;
-            newfp->rval.setUndefined();
+            newfp->clearReturnValue();
             newfp->setAnnotation(NULL);
             newfp->setScopeChain(obj->getParent());
             newfp->flags = flags;
             newfp->setBlockChain(NULL);
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
             JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
-            newfp->thisv = vp[1];
+            newfp->setThisValue(vp[1]);
             JS_ASSERT(!newfp->hasIMacroPC());
 
             /* Push void to initialize local variables. */
@@ -5224,7 +5230,7 @@ BEGIN_CASE(JSOP_TRAP)
       case JSTRAP_ERROR:
         goto error;
       case JSTRAP_RETURN:
-        fp->rval = rval;
+        fp->setReturnValue(rval);
         interpReturnOK = JS_TRUE;
         goto forced_return;
       case JSTRAP_THROW:
@@ -5275,7 +5281,7 @@ BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)
 {
     uint32 slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->fun->nargs);
+    JS_ASSERT(slot < fp->getArgumentCount());
     METER_SLOT_OP(op, slot);
     PUSH_COPY(fp->argv[slot]);
     if (op == JSOP_CALLARG)
@@ -5286,7 +5292,7 @@ END_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_SETARG)
 {
     uint32 slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->fun->nargs);
+    JS_ASSERT(slot < fp->getArgumentCount());
     METER_SLOT_OP(op, slot);
     fp->argv[slot] = regs.sp[-1];
 }
@@ -5336,7 +5342,7 @@ END_CASE(JSOP_GETUPVAR)
 BEGIN_CASE(JSOP_GETUPVAR_DBG)
 BEGIN_CASE(JSOP_CALLUPVAR_DBG)
 {
-    JSFunction *fun = fp->fun;
+    JSFunction *fun = fp->getFunction();
     JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
     JS_ASSERT(fun->u.i.wrapper);
 
@@ -6218,7 +6224,7 @@ END_CASE(JSOP_INITELEM)
 BEGIN_CASE(JSOP_DEFSHARP)
 {
     uint32 slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < fp->script->nfixed);
+    JS_ASSERT(slot + 1 < fp->getFixedCount());
     const Value &lref = fp->slots()[slot];
     JSObject *obj;
     if (lref.isObject()) {
@@ -6248,7 +6254,7 @@ END_CASE(JSOP_DEFSHARP)
 BEGIN_CASE(JSOP_USESHARP)
 {
     uint32 slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < fp->script->nfixed);
+    JS_ASSERT(slot + 1 < fp->getFixedCount());
     const Value &lref = fp->slots()[slot];
     jsint i = (jsint) GET_UINT16(regs.pc + UINT16_LEN);
     Value rval;
@@ -6275,7 +6281,7 @@ END_CASE(JSOP_USESHARP)
 BEGIN_CASE(JSOP_SHARPINIT)
 {
     uint32 slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < fp->script->nfixed);
+    JS_ASSERT(slot + 1 < fp->getFixedCount());
     Value *vp = &fp->slots()[slot];
     Value rval = vp[1];
 
@@ -6437,7 +6443,7 @@ BEGIN_CASE(JSOP_DEBUGGER)
         case JSTRAP_CONTINUE:
             break;
         case JSTRAP_RETURN:
-            fp->rval = rval;
+            fp->setReturnValue(rval);
             interpReturnOK = JS_TRUE;
             goto forced_return;
         case JSTRAP_THROW:
@@ -6827,7 +6833,7 @@ BEGIN_CASE(JSOP_GENERATOR)
     if (!obj)
         goto error;
     JS_ASSERT(!fp->hasCallObj() && !fp->hasArgsObj());
-    fp->rval.setObject(*obj);
+    fp->setReturnValue(ObjectValue(*obj));
     interpReturnOK = true;
     if (entryFrame != fp)
         goto inline_return;
@@ -6841,7 +6847,7 @@ BEGIN_CASE(JSOP_YIELD)
                             JSDVG_SEARCH_STACK, fp->argv[-2], NULL);
         goto error;
     }
-    fp->rval = regs.sp[-1];
+    fp->setReturnValue(regs.sp[-1]);
     fp->flags |= JSFRAME_YIELDING;
     regs.pc += JSOP_YIELD_LENGTH;
     interpReturnOK = JS_TRUE;
@@ -6970,7 +6976,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 goto error;
               case JSTRAP_RETURN:
                 cx->throwing = JS_FALSE;
-                fp->rval = rval;
+                fp->setReturnValue(rval);
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
               case JSTRAP_THROW:
@@ -7035,7 +7041,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENTERBLOCK);
+                JS_ASSERT(js_GetOpcode(cx, fp->getScript(), regs.pc) == JSOP_ENTERBLOCK);
 
 #if JS_HAS_GENERATORS
                 /* Catch cannot intercept the closing of a generator. */
@@ -7064,7 +7070,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
-                JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENDITER);
+                JS_ASSERT(js_GetOpcode(cx, fp->getScript(), regs.pc) == JSOP_ENDITER);
                 AutoValueRooter tvr(cx, cx->exception);
                 cx->throwing = false;
                 ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
@@ -7088,7 +7094,7 @@ END_CASE(JSOP_ARRAYPUSH)
                         cx->exception.isMagic(JS_GENERATOR_CLOSING))) {
             cx->throwing = JS_FALSE;
             interpReturnOK = JS_TRUE;
-            fp->rval.setUndefined();
+            fp->clearReturnValue();
         }
 #endif
     }

@@ -200,7 +200,7 @@ AllowedToAct(JSContext *cx, jsid id)
     // Some code is running, we can't make the assumption, as above, but we
     // can't use a native frame, so clear fp.
     fp = nsnull;
-  } else if (!fp->script) {
+  } else if (!fp->hasScript()) {
     fp = nsnull;
   }
 
@@ -215,7 +215,7 @@ AllowedToAct(JSContext *cx, jsid id)
   // if they've been cloned into less privileged contexts.
   const char *filename;
   if (fp &&
-      (filename = fp->script->filename) &&
+      (filename = fp->getScript()->filename) &&
       !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return JS_TRUE;
   }
@@ -246,7 +246,7 @@ CheckFilename(JSContext *cx, jsid id, JSStackFrame *fp)
 {
   const char *filename;
   if (fp &&
-      (filename = fp->script->filename) &&
+      (filename = fp->getScript()->filename) &&
       !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return JS_TRUE;
   }

@@ -792,8 +792,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame &&
-        callerFrame->script &&
-        callerFrame->script->strictModeCode) {
+        callerFrame->hasScript() &&
+        callerFrame->getScript()->strictModeCode) {
         cg.flags |= TCF_STRICT_MODE_CODE;
         tokenStream.setStrictMode();
     }
@@ -816,13 +816,13 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
                 goto out;
         }
 
-        if (callerFrame && callerFrame->fun) {
+        if (callerFrame && callerFrame->hasFunction()) {
             /*
              * An eval script in a caller frame needs to have its enclosing
              * function captured in case it refers to an upvar, and someone
              * wishes to decompile it while it's running.
              */
-            funbox = parser.newObjectBox(FUN_OBJECT(callerFrame->fun));
+            funbox = parser.newObjectBox(FUN_OBJECT(callerFrame->getFunction()));
             if (!funbox)
                 goto out;
             funbox->emitLink = cg.objectList.lastbox;

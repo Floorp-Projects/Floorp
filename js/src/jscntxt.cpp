@@ -350,7 +350,7 @@ JS_REQUIRES_STACK void
 StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSStackFrame *fp,
                                            JSFrameRegs &regs)
 {
-    JS_ASSERT(!fp->script && FUN_SLOW_NATIVE(fp->fun));
+    JS_ASSERT(!fp->hasScript() && FUN_SLOW_NATIVE(fp->getFunction()));
     fp->down = cx->fp;
     seg->setPreviousInMemory(currentSegment);
     currentSegment = seg;
@@ -364,7 +364,7 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(currentSegment->getInitialFrame() == cx->fp);
-    JS_ASSERT(!cx->fp->script && FUN_SLOW_NATIVE(cx->fp->fun));
+    JS_ASSERT(!cx->fp->hasScript() && FUN_SLOW_NATIVE(cx->fp->getFunction()));
     cx->popSegmentAndFrame();
     currentSegment = currentSegment->getPreviousInMemory();
 }
@@ -1343,7 +1343,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
      */
     for (JSStackFrame *fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
         if (fp->pc(cx)) {
-            report->filename = fp->script->filename;
+            report->filename = fp->getScript()->filename;
             report->lineno = js_FramePCToLineNumber(cx, fp);
             break;
         }
@@ -1437,7 +1437,7 @@ checkReportFlags(JSContext *cx, uintN *flags)
          * the nearest scripted frame is strict, see bug 536306.
          */
         JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
-        if (fp && fp->script->strictModeCode)
+        if (fp && fp->getScript()->strictModeCode)
             *flags &= ~JSREPORT_WARNING;
         else if (JS_HAS_STRICT_OPTION(cx))
             *flags |= JSREPORT_WARNING;
@@ -1911,7 +1911,7 @@ js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         fp = js_GetTopStackFrame(cx);
     while (fp) {
-        if (fp->script)
+        if (fp->hasScript())
             return fp;
         fp = fp->down;
     }
