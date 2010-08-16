@@ -2953,12 +2953,23 @@ _cairo_d2d_mask(void			*surface,
 
     cairo_int_status_t status;
 
-    _begin_draw_state(d2dsurf);
-    status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
+    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(d2dsurf, clip);
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(d2dsurf);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
 
-    if (unlikely (status))
-	return status;
-
+	if (unlikely(status))
+	    return status;
+    }
+#endif
 
     status = (cairo_int_status_t)_cairo_surface_mask_extents (&d2dsurf->base,
 		    op, source,
@@ -2989,9 +3000,13 @@ _cairo_d2d_mask(void			*surface,
 	    (cairo_solid_pattern_t*)mask;
 	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
 	    brush->SetOpacity((FLOAT)solidPattern->color.alpha);
-	    d2dsurf->rt->FillRectangle(rect,
-				       brush);
+	    target_rt->FillRectangle(rect,
+				     brush);
 	    brush->SetOpacity(1.0);
+
+	    if (target_rt.get() != d2dsurf->rt.get()) {
+		return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
+	    }
 	    return CAIRO_INT_STATUS_SUCCESS;
 	}
     }
@@ -3004,17 +3019,21 @@ _cairo_d2d_mask(void			*surface,
     if (!d2dsurf->maskLayer) {
 	d2dsurf->rt->CreateLayer(&d2dsurf->maskLayer);
     }
-    d2dsurf->rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
-						 0,
-						 D2D1_ANTIALIAS_MODE_ALIASED,
-						 D2D1::IdentityMatrix(),
-						 1.0,
-						 opacityBrush),
-			   d2dsurf->maskLayer);
+    target_rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
+					       0,
+					       D2D1_ANTIALIAS_MODE_ALIASED,
+					       D2D1::IdentityMatrix(),
+					       1.0,
+					       opacityBrush),
+			 d2dsurf->maskLayer);
 
-    d2dsurf->rt->FillRectangle(rect,
-			       brush);
-    d2dsurf->rt->PopLayer();
+    target_rt->FillRectangle(rect,
+			     brush);
+    target_rt->PopLayer();
+
+    if (target_rt.get() != d2dsurf->rt.get()) {
+	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
+    }
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
