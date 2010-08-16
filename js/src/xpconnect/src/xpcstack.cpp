@@ -150,7 +150,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
 
         if(!failed)
         {
-            if (JS_IsNativeFrame(cx, fp))
+            if (!JS_IsScriptFrame(cx, fp))
                 self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
             else
                 self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;

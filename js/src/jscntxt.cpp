@@ -341,37 +341,6 @@ FrameGuard::~FrameGuard()
     cx->stack().popFrame(cx);
 }
 
-JS_REQUIRES_STACK void
-StackSpace::getSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *&seg, JSStackFrame *&fp)
-{
-    Value *start = firstUnused();
-    JS_ASSERT(size_t(end - start) >= VALUES_PER_STACK_SEGMENT + VALUES_PER_STACK_FRAME);
-    seg = new(start) StackSegment;
-    fp = reinterpret_cast<JSStackFrame *>(seg + 1);
-}
-
-JS_REQUIRES_STACK void
-StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSFrameRegs &regs)
-{
-    JS_ASSERT(!regs.fp->hasScript() && FUN_SLOW_NATIVE(regs.fp->getFunction()));
-    regs.fp->down = cx->maybefp();
-    seg->setPreviousInMemory(currentSegment);
-    currentSegment = seg;
-    cx->pushSegmentAndFrame(seg, regs);
-    seg->setInitialVarObj(NULL);
-}
-
-JS_REQUIRES_STACK void
-StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
-{
-    JS_ASSERT(isCurrentAndActive(cx));
-    JS_ASSERT(cx->hasActiveSegment());
-    JS_ASSERT(currentSegment->getInitialFrame() == cx->fp());
-    JS_ASSERT(!cx->fp()->hasScript() && FUN_SLOW_NATIVE(cx->fp()->getFunction()));
-    cx->popSegmentAndFrame();
-    currentSegment = currentSegment->getPreviousInMemory();
-}
-
 JS_REQUIRES_STACK bool
 StackSpace::pushDummyFrame(JSContext *cx, FrameGuard &fg, JSFrameRegs &regs, JSObject *scopeChain)
 {
@@ -1947,12 +1916,10 @@ js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 {
     if (!fp)
         fp = js_GetTopStackFrame(cx);
-    while (fp) {
-        if (fp->hasScript())
-            return fp;
+    while (fp && fp->isDummyFrame())
         fp = fp->down;
-    }
-    return NULL;
+    JS_ASSERT_IF(fp, fp->hasScript());
+    return fp;
 }
 
 jsbytecode*
@@ -2194,20 +2161,6 @@ JSContext::checkMallocGCPressure(void *p)
         }
     }
 }
-
-bool
-JSContext::isConstructing()
-{
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(this)) {
-        JS_ASSERT(bailExit);
-        return *bailExit->pc == JSOP_NEW;
-    }
-#endif
-    JSStackFrame *fp = js_GetTopStackFrame(this);
-    return fp && (fp->flags & JSFRAME_CONSTRUCTING);
-}
-
 
 /*
  * Release pool's arenas if the stackPool has existed for longer than the

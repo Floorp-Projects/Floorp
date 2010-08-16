@@ -604,27 +604,43 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
-inline JSBool
-CallJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
+JS_ALWAYS_INLINE bool
+CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
-    assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
-    JSBool ok = native(cx, thisobj, argc, argv, rval);
-    if (ok)
-        assertSameCompartment(cx, *rval);
-    return ok;
-}
-
-inline JSBool
-CallJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
-{
+#ifdef DEBUG
+    JSBool alreadyThrowing = cx->throwing;
+#endif
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
-    if (ok)
+    if (ok) {
         assertSameCompartment(cx, vp[0]);
+        JS_ASSERT_IF(!alreadyThrowing, !cx->throwing);
+    }
     return ok;
 }
 
-inline JSBool
+JS_ALWAYS_INLINE bool
+CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
+{
+#ifdef DEBUG
+    JSObject *callee = &vp[0].toObject();
+#endif
+
+    JS_ASSERT(vp[1].isMagic());
+    if (!CallJSNative(cx, native, argc, vp))
+        return false;
+    JS_ASSERT(!vp->isPrimitive());
+
+    /* 
+     * Even though its technically legal, if a native constructor returns the
+     * callee, there is a 99.9999% chance it is a bug. If any valid code
+     * actually wants the constructor to return the callee, this can be removed.
+     */
+    JS_ASSERT(callee != &vp[0].toObject());
+    return true;
+}
+
+JS_ALWAYS_INLINE bool
 CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
@@ -634,7 +650,7 @@ CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::V
     return ok;
 }
 
-inline JSBool
+JS_ALWAYS_INLINE bool
 CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);

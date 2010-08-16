@@ -531,18 +531,27 @@ Class js_NumberClass = {
 };
 
 static JSBool
-Number(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+Number(JSContext *cx, uintN argc, Value *vp)
 {
-    if (argc != 0) {
-        if (!ValueToNumber(cx, &argv[0]))
-            return JS_FALSE;
+    /* Sample JS_CALLEE before clobbering. */
+    bool isConstructing = IsConstructing(vp);
+
+    if (argc > 0) {
+        if (!ValueToNumber(cx, &vp[2]))
+            return false;
+        vp[0] = vp[2];
     } else {
-        argv[0].setInt32(0);
+        vp[0].setInt32(0);
     }
-    if (!JS_IsConstructing(cx))
-        *rval = argv[0];
-    else
-        obj->setPrimitiveThis(argv[0]);
+
+    if (!isConstructing)
+        return true;
+    
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass);
+    if (!obj)
+        return false;
+    obj->setPrimitiveThis(vp[0]);
+    vp->setObject(*obj);
     return true;
 }
 
