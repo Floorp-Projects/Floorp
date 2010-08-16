@@ -50,6 +50,15 @@
 #include "mozilla/plugins/PluginMessageUtils.h"
 #endif
 
+#ifdef MOZ_X11
+#include <cairo-xlib.h>
+#include "gfxXlibSurface.h"
+/* X headers suck */
+enum { XKeyPress = KeyPress };
+#ifdef KeyPress
+#undef KeyPress
+#endif
+
 #ifdef MOZ_WIDGET_QT
 #include <QWidget>
 #include <QKeyEvent>
@@ -170,15 +179,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "gfxQuartzNativeDrawing.h"
 #include "nsPluginUtilsOSX.h"
 #include "nsCoreAnimationSupport.h"
-#endif
-
-#ifdef MOZ_X11
-#include <cairo-xlib.h>
-#include "gfxXlibSurface.h"
-/* X headers suck */
-enum { XKeyPress = KeyPress };
-#ifdef KeyPress
-#undef KeyPress
 #endif
 
 #if (MOZ_PLATFORM_MAEMO == 5) && defined(MOZ_WIDGET_GTK2)
