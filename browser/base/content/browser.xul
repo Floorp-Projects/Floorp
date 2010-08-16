@@ -102,10 +102,7 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
-<deck flex="1" id="tab-view-deck">
-<vbox flex="1">
-
-# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
+# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
 
@@ -592,6 +589,9 @@
     </button>
   </hbox>
 #endif
+
+<deck flex="1" id="tab-view-deck">
+<vbox flex="1">
 
   <toolbox id="navigator-toolbox"
            defaultmode="icons" mode="icons"
