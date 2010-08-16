@@ -2771,7 +2771,7 @@ nsComputedDOMStyle::DoGetCursor(nsIDOMCSSValue** aValue)
     }
 
     nsCOMPtr<nsIURI> uri;
-    item->mImage->GetURI(getter_AddRefs(uri));
+    item->GetImage()->GetURI(getter_AddRefs(uri));
 
     nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
     if (!val || !itemList->AppendCSSValue(val)) {

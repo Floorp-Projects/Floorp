@@ -2605,6 +2605,32 @@ nsCursorImage::nsCursorImage()
 {
 }
 
+nsCursorImage::nsCursorImage(const nsCursorImage& aOther)
+  : mHaveHotspot(aOther.mHaveHotspot)
+  , mHotspotX(aOther.mHotspotX)
+  , mHotspotY(aOther.mHotspotY)
+{
+  SetImage(aOther.GetImage());
+}
+
+nsCursorImage::~nsCursorImage()
+{
+  SetImage(nsnull);
+}
+
+nsCursorImage&
+nsCursorImage::operator=(const nsCursorImage& aOther)
+{
+  if (this != &aOther) {
+    mHaveHotspot = aOther.mHaveHotspot;
+    mHotspotX = aOther.mHotspotX;
+    mHotspotY = aOther.mHotspotY;
+    SetImage(aOther.GetImage());
+  }
+
+  return *this;
+}
+
 nsStyleUserInterface::nsStyleUserInterface(void) 
 { 
   MOZ_COUNT_CTOR(nsStyleUserInterface);

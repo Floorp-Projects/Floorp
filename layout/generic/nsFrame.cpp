@@ -6240,10 +6240,10 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
                  *item_end = ui->mCursorArray + ui->mCursorArrayLength;
        item < item_end; ++item) {
     PRUint32 status;
-    nsresult rv = item->mImage->GetImageStatus(&status);
+    nsresult rv = item->GetImage()->GetImageStatus(&status);
     if (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_LOAD_COMPLETE)) {
       // This is the one we want
-      item->mImage->GetImage(getter_AddRefs(aCursor.mContainer));
+      item->GetImage()->GetImage(getter_AddRefs(aCursor.mContainer));
       aCursor.mHaveHotspot = item->mHaveHotspot;
       aCursor.mHotspotX = item->mHotspotX;
       aCursor.mHotspotY = item->mHotspotY;
