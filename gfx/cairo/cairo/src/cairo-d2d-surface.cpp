@@ -2492,7 +2492,7 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     }
     *image_out = 
 	(cairo_image_surface_t*)_cairo_image_surface_create_for_data_with_content((unsigned char*)data.pData,
-										  CAIRO_CONTENT_COLOR_ALPHA,
+										  d2dsurf->base.content,
 										  size.width,
 										  size.height,
 										  data.RowPitch);
