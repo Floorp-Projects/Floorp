@@ -1064,7 +1064,7 @@ _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style
     D2D1_LINE_JOIN line_join = D2D1_LINE_JOIN_MITER;
     switch (style->line_join) {
 	case CAIRO_LINE_JOIN_MITER:
-	    line_join = D2D1_LINE_JOIN_MITER;
+	    line_join = D2D1_LINE_JOIN_MITER_OR_BEVEL;
 	    break;
 	case CAIRO_LINE_JOIN_ROUND:
 	    line_join = D2D1_LINE_JOIN_ROUND;
