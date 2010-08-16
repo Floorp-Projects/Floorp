@@ -5710,7 +5710,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newfp->argv[-1].setMagic(JS_THIS_POISON);
 #endif
     newfp->rval = UndefinedValue();
-    newfp->annotation = NULL;
+    newfp->setAnnotation(NULL);
     newfp->setScopeChain(NULL); // will be updated in FlushNativeStackFrame
     newfp->flags = fi.is_constructing() ? JSFRAME_CONSTRUCTING : 0;
     newfp->setBlockChain(NULL);
@@ -5721,7 +5721,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
      * Note that fp->script is still the caller's script; set the callee
      * inline frame's idea of caller version from its version.
      */
-    newfp->callerVersion = (JSVersion) fp->script->version;
+    newfp->setCallerVersion((JSVersion) fp->script->version);
 
     /* Push inline frame. (Copied from js_Interpret.) */
     stack.pushInlineFrame(cx, fp, fi.pc, newfp);
@@ -5736,9 +5736,9 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
      */
     JSInterpreterHook hook = cx->debugHooks->callHook;
     if (hook) {
-        newfp->hookData = hook(cx, newfp, JS_TRUE, 0, cx->debugHooks->callHookData);
+        newfp->setHookData(hook(cx, newfp, JS_TRUE, 0, cx->debugHooks->callHookData));
     } else {
-        newfp->hookData = NULL;
+        newfp->setHookData(NULL);
     }
 
     /*
@@ -5782,8 +5782,8 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     fp->argv = state.nativeVp + 2;
     fp->fun = GET_FUNCTION_PRIVATE(cx, fp->callee());
     fp->rval = UndefinedValue();
-    fp->annotation = NULL;
-    fp->setScopeChain(cx->fp->maybeScopeChain());
+    fp->setAnnotation(NULL);
+    fp->setScopeChain(cx->fp->getScopeChain());
     fp->setBlockChain(NULL);
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
 
