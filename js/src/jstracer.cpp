@@ -16375,7 +16375,7 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
 
     JS_ASSERT(!TRACE_RECORDER(cx));
 
-    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
+    JSObject* globalObj = cx->fp->getScopeChain()->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
