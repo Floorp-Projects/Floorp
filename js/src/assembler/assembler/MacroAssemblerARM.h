@@ -253,7 +253,7 @@ public:
 
     void load8(ImplicitAddress address, RegisterID dest)
     {
-        m_assembler.dataTransfer32(true, dest, address.base, address.offset, true);
+        m_assembler.dataTransfer8(true, dest, address.base, address.offset);
     }
 
     void load32(ImplicitAddress address, RegisterID dest)
