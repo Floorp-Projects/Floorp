@@ -162,5 +162,18 @@ void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v)
   VOID_TO_NPVARIANT(*v);
 }
 
+#ifdef XP_WIN
+
+// The private event used for double-pass widgetless plugin rendering.
+UINT DoublePassRenderingEvent()
+{
+  static UINT gEventID = 0;
+  if (!gEventID)
+    gEventID = ::RegisterWindowMessage(L"MozDoublePassMsg");
+  return gEventID;
+}
+
+#endif
+
 } // namespace plugins
 } // namespace mozilla
