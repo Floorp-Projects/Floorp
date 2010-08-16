@@ -58,6 +58,7 @@ enum { XKeyPress = KeyPress };
 #ifdef KeyPress
 #undef KeyPress
 #endif
+#endif
 
 #ifdef MOZ_WIDGET_QT
 #include <QWidget>
@@ -181,6 +182,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "nsCoreAnimationSupport.h"
 #endif
 
+#ifdef MOZ_X11
 #if (MOZ_PLATFORM_MAEMO == 5) && defined(MOZ_WIDGET_GTK2)
 #define MOZ_COMPOSITED_PLUGINS 1
 #define MOZ_USE_IMAGE_EXPOSE   1
