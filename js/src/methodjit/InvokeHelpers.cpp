@@ -92,7 +92,7 @@ static jsbytecode *
 FindExceptionHandler(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp;
-    JSScript *script = fp->script;
+    JSScript *script = fp->getScript();
 
 top:
     if (cx->throwing && script->trynotesOffset) {
@@ -114,7 +114,7 @@ top:
 
             switch (tn->kind) {
                 case JSTRY_CATCH:
-                  JS_ASSERT(js_GetOpcode(cx, fp->script, pc) == JSOP_ENTERBLOCK);
+                  JS_ASSERT(js_GetOpcode(cx, fp->getScript(), pc) == JSOP_ENTERBLOCK);
 
 #if JS_HAS_GENERATORS
                   /* Catch cannot intercept the closing of a generator. */
@@ -150,7 +150,7 @@ top:
                    * pending exception.
                    */
                   AutoValueRooter tvr(cx, cx->exception);
-                  JS_ASSERT(js_GetOpcode(cx, fp->script, pc) == JSOP_ENDITER);
+                  JS_ASSERT(js_GetOpcode(cx, fp->getScript(), pc) == JSOP_ENDITER);
                   cx->throwing = JS_FALSE;
                   ok = !!js_CloseIterator(cx, &cx->regs->sp[-1].toObject());
                   cx->regs->sp -= 1;
@@ -214,17 +214,17 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->ncode = NULL;
     newfp->setCallObj(NULL);
     newfp->setArgsObj(NULL);
-    newfp->script = newscript;
-    newfp->fun = fun;
+    newfp->setScript(newscript);
+    newfp->setFunction(fun);
     newfp->argc = argc;
     newfp->argv = vp + 2;
-    newfp->rval.setUndefined();
+    newfp->clearReturnValue();
     newfp->setAnnotation(NULL);
     newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
     newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-    newfp->thisv = vp[1];
+    newfp->setThisValue(vp[1]);
     JS_ASSERT(!fp->hasIMacroPC());
 
     /* Push void to initialize local variables. */
@@ -263,13 +263,13 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 
     JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp;
-    JSScript *script = fp->script;
+    JSScript *script = fp->getScript();
     f.regs.pc = script->code;
     f.regs.sp = fp->base();
 
     if (cx->options & JSOPTION_METHODJIT) {
         if (!script->ncode) {
-            if (mjit::TryCompile(cx, script, fp->fun, fp->getScopeChain()) == Compile_Error) {
+            if (mjit::TryCompile(cx, script, fp->getFunction(), fp->getScopeChain()) == Compile_Error) {
                 InlineReturn(f, JS_FALSE);
                 return false;
             }
@@ -322,8 +322,8 @@ InlineReturn(VMFrame &f, JSBool ok)
 
     /* :TODO: version stuff */
 
-    if (fp->flags & JSFRAME_CONSTRUCTING && fp->rval.isPrimitive())
-        fp->rval = fp->thisv;
+    if (fp->flags & JSFRAME_CONSTRUCTING && fp->getReturnValue().isPrimitive())
+        fp->setReturnValue(fp->getThisValue());
 
     Value *newsp = fp->argv - 1;
 
@@ -331,7 +331,7 @@ InlineReturn(VMFrame &f, JSBool ok)
     f.fp = cx->fp;
 
     cx->regs->sp = newsp;
-    cx->regs->sp[-1] = fp->rval;
+    cx->regs->sp[-1] = fp->getReturnValue();
 
     return ok;
 }
@@ -359,7 +359,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
 
 #ifdef JS_MONOIC
-    ic::MICInfo &mic = f.fp->script->mics[argc];
+    ic::MICInfo &mic = f.fp->getScript()->mics[argc];
     argc = mic.argc;
 #endif
 
@@ -387,7 +387,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
         if (fun->isFastNative()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp->script, mic, fun, false);
+            ic::CallFastNative(cx, f.fp->getScript(), mic, fun, false);
 #endif
 #endif
 
@@ -410,7 +410,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
 
 #ifdef JS_MONOIC
-    ic::MICInfo &mic = f.fp->script->mics[argc];
+    ic::MICInfo &mic = f.fp->getScript()->mics[argc];
     argc = mic.argc;
 #endif
 
@@ -442,7 +442,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
         if (fun->isFastConstructor()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp->script, mic, fun, true);
+            ic::CallFastNative(cx, f.fp->getScript(), mic, fun, true);
 #endif
 #endif
 
@@ -503,17 +503,17 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->ncode = NULL;
     newfp->setCallObj(NULL);
     newfp->setArgsObj(NULL);
-    newfp->script = newscript;
-    newfp->fun = fun;
+    newfp->setScript(newscript);
+    newfp->setFunction(fun);
     newfp->argc = argc;
     newfp->argv = vp + 2;
-    newfp->rval.setUndefined();
+    newfp->clearReturnValue();
     newfp->setAnnotation(NULL);
     newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
     newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-    newfp->thisv = vp[1];
+    newfp->setThisValue(vp[1]);
     newfp->setHookData(NULL);
     JS_ASSERT(!fp->hasIMacroPC());
 
@@ -542,7 +542,7 @@ stubs::Call(VMFrame &f, uint32 argc)
     if (!CreateLightFrame(f, 0, argc))
         THROWV(NULL);
 
-    return f.fp->script->ncode;
+    return f.fp->getScript()->ncode;
 }
 
 /*
@@ -559,7 +559,7 @@ stubs::New(VMFrame &f, uint32 argc)
     if (!CreateLightFrame(f, JSFRAME_CONSTRUCTING, argc))
         THROWV(NULL);
 
-    return f.fp->script->ncode;
+    return f.fp->getScript()->ncode;
 }
 
 void JS_FASTCALL
@@ -580,8 +580,8 @@ void JS_FASTCALL
 stubs::CopyThisv(VMFrame &f)
 {
     JS_ASSERT(f.fp->flags & JSFRAME_CONSTRUCTING);
-    if (f.fp->rval.isPrimitive())
-        f.fp->rval = f.fp->thisv;
+    if (f.fp->getReturnValue().isPrimitive())
+        f.fp->setReturnValue(f.fp->getThisValue());
 }
 
 extern "C" void *
@@ -596,7 +596,7 @@ js_InternalThrow(VMFrame &f)
     JSThrowHook handler = f.cx->debugHooks->throwHook;
     if (handler) {
         Value rval;
-        switch (handler(cx, cx->fp->script, cx->regs->pc, Jsvalify(&rval),
+        switch (handler(cx, cx->fp->getScript(), cx->regs->pc, Jsvalify(&rval),
                         cx->debugHooks->throwHookData)) {
           case JSTRAP_ERROR:
             cx->throwing = JS_FALSE;
@@ -604,7 +604,7 @@ js_InternalThrow(VMFrame &f)
 
           case JSTRAP_RETURN:
             cx->throwing = JS_FALSE;
-            cx->fp->rval = rval;
+            cx->fp->setReturnValue(rval);
             return JS_FUNC_TO_DATA_PTR(void *,
                    JS_METHODJIT_DATA(cx).trampolines.forceReturn);
 
@@ -645,13 +645,13 @@ js_InternalThrow(VMFrame &f)
         return NULL;
     }
 
-    return cx->fp->script->pcToNative(pc);
+    return cx->fp->getScript()->pcToNative(pc);
 }
 
 void JS_FASTCALL
 stubs::GetCallObject(VMFrame &f)
 {
-    JS_ASSERT(f.fp->fun->isHeavyweight());
+    JS_ASSERT(f.fp->getFunction()->isHeavyweight());
     if (!js_GetCallObject(f.cx, f.fp))
         THROW();
 }
@@ -719,7 +719,7 @@ AtSafePoint(JSContext *cx)
     if (fp->hasIMacroPC())
         return false;
 
-    JSScript *script = fp->script;
+    JSScript *script = fp->getScript();
     if (!script->nmap)
         return false;
 
@@ -733,8 +733,8 @@ PartialInterpret(VMFrame &f)
     JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp;
 
-    JS_ASSERT(fp->hasIMacroPC() || !fp->script->nmap ||
-              !fp->script->nmap[cx->regs->pc - fp->script->code]);
+    JS_ASSERT(fp->hasIMacroPC() || !fp->getScript()->nmap ||
+              !fp->getScript()->nmap[cx->regs->pc - fp->getScript()->code]);
 
     JSBool ok = JS_TRUE;
     fp->flags |= JSFRAME_BAILING;
@@ -789,7 +789,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                 if (!cx->fp->hasIMacroPC() && FrameIsFinished(cx)) {
                     JSOp op = JSOp(*cx->regs->pc);
                     if (op == JSOP_RETURN && !(cx->fp->flags & JSFRAME_BAILED_AT_RETURN))
-                        fp->rval = f.regs.sp[-1];
+                        fp->setReturnValue(f.regs.sp[-1]);
                     InlineReturn(f, JS_TRUE);
                     AdvanceReturnPC(cx);
                 }
@@ -847,7 +847,7 @@ RunTracer(VMFrame &f)
         return NULL;
 
     JS_ASSERT_IF(f.fp != f.entryFp,
-                 entryFrame->down->script->isValidJitCode(f.scriptedReturn));
+                 entryFrame->down->getScript()->isValidJitCode(f.scriptedReturn));
 
     bool blacklist;
     uintN inlineCallCount = 0;
@@ -920,16 +920,16 @@ RunTracer(VMFrame &f)
 
     /* Step 3.1. If entryFrame is at a safe point, just leave. */
     if (AtSafePoint(cx)) {
-        uint32 offs = uint32(cx->regs->pc - entryFrame->script->code);
-        JS_ASSERT(entryFrame->script->nmap[offs]);
-        return entryFrame->script->nmap[offs];
+        uint32 offs = uint32(cx->regs->pc - entryFrame->getScript()->code);
+        JS_ASSERT(entryFrame->getScript()->nmap[offs]);
+        return entryFrame->getScript()->nmap[offs];
     }
 
     /* Step 3.2. If entryFrame is at a RETURN, then leave slightly differently. */
     if (JSOp op = FrameIsFinished(cx)) {
         /* We're not guaranteed that the RETURN was run. */
         if (op == JSOP_RETURN && !(entryFrame->flags & JSFRAME_BAILED_AT_RETURN))
-            entryFrame->rval = f.regs.sp[-1];
+            entryFrame->setReturnValue(f.regs.sp[-1]);
 
         /* Don't pop the frame if it's maybe owned by an Invoke. */
         if (f.fp != f.entryFp) {
@@ -958,7 +958,7 @@ RunTracer(VMFrame &f)
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::MICInfo &mic = script->mics[index];
 
     JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
