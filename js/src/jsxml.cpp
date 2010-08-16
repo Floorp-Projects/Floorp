@@ -197,10 +197,9 @@ IsDeclared(const JSObject *obj)
 }
 
 static JSBool
-xml_isXMLName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
 {
-    *rval = BOOLEAN_TO_JSVAL(js_IsXMLName(cx, argv[0]));
+    *vp = BOOLEAN_TO_JSVAL(js_IsXMLName(cx, argc ? vp[2] : JSVAL_VOID));
     return JS_TRUE;
 }
 
@@ -287,14 +286,14 @@ static JSPropertySpec namespace_props[] = {
 };
 
 static JSBool
-namespace_toString(JSContext *cx, uintN argc, jsval *vp)
+namespace_toString(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
 
-    obj = JS_THIS_OBJECT(cx, vp);
-    if (!JS_InstanceOf(cx, obj, Jsvalify(&js_NamespaceClass), vp + 2))
+    obj = ComputeThisFromVp(cx, vp);
+    if (!JS_InstanceOf(cx, obj, Jsvalify(&js_NamespaceClass), Jsvalify(vp + 2)))
         return JS_FALSE;
-    *vp = obj->getNameURI();
+    *vp = Valueify(obj->getNameURI());
     return JS_TRUE;
 }
 
@@ -440,7 +439,7 @@ static JSPropertySpec qname_props[] = {
 };
 
 static JSBool
-qname_toString(JSContext *cx, uintN argc, jsval *vp)
+qname_toString(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
     Class *clasp;
@@ -448,13 +447,13 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
     size_t length;
     jschar *chars;
 
-    obj = JS_THIS_OBJECT(cx, vp);
+    obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
     clasp = obj->getClass();
     if (clasp != &js_AttributeNameClass &&
         clasp != &js_AnyNameClass &&
-        !JS_InstanceOf(cx, obj, Jsvalify(&js_QNameClass), vp + 2)) {
+        !JS_InstanceOf(cx, obj, Jsvalify(&js_QNameClass), Jsvalify(vp + 2))) {
             return JS_FALSE;
     }
 
@@ -490,7 +489,7 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
@@ -635,8 +634,8 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         obj = NewBuiltinClassInstance(cx, &js_NamespaceClass);
         if (!obj)
             return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
     }
+    *rval = OBJECT_TO_JSVAL(obj);
     METER(xml_stats.xmlnamespace);
 
     empty = cx->runtime->emptyString;
@@ -689,16 +688,15 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             obj->setNamePrefix(STRING_TO_JSVAL(prefix));
         }
     }
-
     return JS_TRUE;
 }
 
 static JSBool
-Namespace(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+Namespace(JSContext *cx, uintN argc, Value *vp)
 {
-    return NamespaceHelper(cx,
-                           cx->isConstructing() ? obj : NULL,
-                           argc, Jsvalify(argv), Jsvalify(rval));
+    JSObject *thisobj = NULL;
+    (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    return NamespaceHelper(cx, thisobj, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
 /*
@@ -742,8 +740,8 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
         obj = NewBuiltinClassInstance(cx, clasp);
         if (!obj)
             return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
     }
+    *rval = OBJECT_TO_JSVAL(obj);
     METER(xml_stats.qname);
 
     if (isQName) {
@@ -829,18 +827,19 @@ out:
 }
 
 static JSBool
-QName(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+QName(JSContext *cx, uintN argc, Value *vp)
 {
-    return QNameHelper(cx, cx->isConstructing() ? obj : NULL,
-                       &js_QNameClass, argc, Jsvalify(argv), Jsvalify(rval));
+    JSObject *thisobj = NULL;
+    (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    return QNameHelper(cx, thisobj, &js_QNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
 static JSBool
-AttributeName(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
-              Value *rval)
+AttributeName(JSContext *cx, uintN argc, Value *vp)
 {
-    return QNameHelper(cx, cx->isConstructing() ? obj : NULL,
-                       &js_AttributeNameClass, argc, Jsvalify(argv), Jsvalify(rval));
+    JSObject *thisobj = NULL;
+    (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    return QNameHelper(cx, thisobj, &js_AttributeNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
 /*
@@ -5071,7 +5070,8 @@ out:
 
 JS_FRIEND_DATA(Class) js_XMLClass = {
     js_XML_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
+    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -6819,52 +6819,51 @@ static JSFunctionSpec xml_static_methods[] = {
 };
 
 static JSBool
-XML(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XML(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval v;
     JSXML *xml, *copy;
     JSObject *xobj, *vobj;
     Class *clasp;
 
-    v = argv[0];
+    jsval v = argc ? Jsvalify(vp[2]) : JSVAL_VOID;
+
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
         v = STRING_TO_JSVAL(cx->runtime->emptyString);
 
     xobj = ToXML(cx, v);
     if (!xobj)
         return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(xobj);
     xml = (JSXML *) xobj->getPrivate();
 
-    if (cx->isConstructing() && !JSVAL_IS_PRIMITIVE(v)) {
+    if (IsConstructing(vp) && !JSVAL_IS_PRIMITIVE(v)) {
         vobj = JSVAL_TO_OBJECT(v);
         clasp = vobj->getClass();
         if (clasp == &js_XMLClass ||
             (clasp->flags & JSCLASS_DOCUMENT_OBSERVER)) {
-            /* No need to lock obj, it's newly constructed and thread local. */
-            copy = DeepCopy(cx, xml, obj, 0);
+            copy = DeepCopy(cx, xml, NULL, 0);
             if (!copy)
                 return JS_FALSE;
-            JS_ASSERT(copy->object == obj);
-            *rval = OBJECT_TO_JSVAL(obj);
+            vp->setObject(*copy->object);
             return JS_TRUE;
         }
     }
+
+    vp->setObject(*xobj);
     return JS_TRUE;
 }
 
 static JSBool
-XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XMLList(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v;
     JSObject *vobj, *listobj;
     JSXML *xml, *list;
 
-    v = argv[0];
+    jsval v = argc ? vp[2] : JSVAL_VOID;
+
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
         v = STRING_TO_JSVAL(cx->runtime->emptyString);
 
-    if (cx->isConstructing() && !JSVAL_IS_PRIMITIVE(v)) {
+    if (IsConstructing(Valueify(vp)) && !JSVAL_IS_PRIMITIVE(v)) {
         vobj = JSVAL_TO_OBJECT(v);
         if (vobj->isXML()) {
             xml = (JSXML *) vobj->getPrivate();
@@ -6872,7 +6871,7 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
                 if (!listobj)
                     return JS_FALSE;
-                *rval = OBJECT_TO_JSVAL(listobj);
+                *vp = OBJECT_TO_JSVAL(listobj);
 
                 list = (JSXML *) listobj->getPrivate();
                 if (!Append(cx, list, xml))
@@ -6887,7 +6886,7 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!listobj)
         return JS_FALSE;
 
-    *rval = OBJECT_TO_JSVAL(listobj);
+    *vp = OBJECT_TO_JSVAL(listobj);
     return JS_TRUE;
 }
 
@@ -7079,7 +7078,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the XML class constructor and prototype. */
-    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, Valueify(XML), 1,
+    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
                          NULL, xml_methods,
                          xml_static_props, xml_static_methods);
     if (!proto)
@@ -7118,7 +7117,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the XMLList function and give it the same prototype as XML. */
-    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, 0);
+    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
@@ -7219,14 +7218,13 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
 JSBool
 js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
 {
-    JSStackFrame *fp;
     JSObject *ns, *obj, *tmp;
     jsval v;
 
-    fp = js_GetTopStackFrame(cx);
+    JSObject *scopeChain = JS_GetScopeChain(cx);
 
     obj = NULL;
-    for (tmp = fp->getScopeChain(); tmp; tmp = tmp->getParent()) {
+    for (tmp = scopeChain; tmp; tmp = tmp->getParent()) {
         Class *clasp = tmp->getClass();
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
@@ -7337,10 +7335,9 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
 }
 
 static JSBool
-anyname_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval)
+anyname_toString(JSContext *cx, uintN argc, jsval *vp)
 {
-    *rval = ATOM_TO_JSVAL(cx->runtime->atomState.starAtom);
+    *vp = ATOM_TO_JSVAL(cx->runtime->atomState.starAtom);
     return JS_TRUE;
 }
 

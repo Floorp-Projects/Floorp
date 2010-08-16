@@ -2929,6 +2929,15 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
+JS_PUBLIC_API(JSObject *)
+JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, *vp);
+
+    return js_NewInstance(cx, JSVAL_TO_OBJECT(*vp));
+}
+
 JS_PUBLIC_API(JSBool)
 JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
 {
@@ -4148,14 +4157,14 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
+js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs;
     JSObject *tmp;
-    FastNative native;
+    Native native;
 
     fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
-    JS_ASSERT((~fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) == 0);
+    JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
         js_ReportMissingArg(cx, *vp, 0);
@@ -4193,60 +4202,11 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     native =
 #ifdef JS_TRACER
              (fs->flags & JSFUN_TRCINFO)
-             ? (FastNative) JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
+             ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
              :
 #endif
-               (FastNative) fs->call;
+               Valueify(fs->call);
     return native(cx, argc, vp);
-}
-
-static JSBool
-js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
-                                    uintN argc, Value *argv, Value *rval)
-{
-    JSFunctionSpec *fs;
-    JSObject *tmp;
-
-    fs = (JSFunctionSpec *) argv[-2].toObject().getReservedSlot(0).toPrivate();
-    JS_ASSERT((fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) ==
-              JSFUN_GENERIC_NATIVE);
-
-    if (argc < 1) {
-        js_ReportMissingArg(cx, *(argv - 2), 0);
-        return JS_FALSE;
-    }
-
-    if (argv[0].isPrimitive()) {
-        /*
-         * Make sure that this is an object or null, as required by the generic
-         * functions.
-         */
-        if (!js_ValueToObjectOrNull(cx, argv[0], &tmp))
-            return JS_FALSE;
-        argv[0].setObjectOrNull(tmp);
-    }
-
-    /*
-     * Copy all actual (argc) arguments down over our |this| parameter,
-     * argv[-1], which is almost always the class constructor object, e.g.
-     * Array.  Then call the corresponding prototype native method with our
-     * first argument passed as |this|.
-     */
-    memmove(argv - 1, argv, argc * sizeof(jsval));
-
-    /*
-     * Follow Function.prototype.apply and .call by using the global object as
-     * the 'this' param if no args.
-     */
-    if (!ComputeThisFromArgv(cx, argv))
-        return JS_FALSE;
-    js_GetTopStackFrame(cx)->setThisValue(argv[-1]);
-    JS_ASSERT(cx->fp()->argv == argv);
-
-    /* Clear the last parameter in case too few arguments were passed. */
-    argv[--argc].setUndefined();
-
-    return fs->call(cx, &argv[-1].toObject(), argc, Jsvalify(argv), Jsvalify(rval));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4275,14 +4235,11 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             fun = JS_DefineFunction(cx, ctor, fs->name,
-                                    (flags & JSFUN_FAST_NATIVE)
-                                    ? (JSNative) js_generic_fast_native_method_dispatcher
-                                    : Jsvalify(js_generic_native_method_dispatcher),
+                                    Jsvalify(js_generic_native_method_dispatcher),
                                     fs->nargs + 1,
                                     flags & ~JSFUN_TRCINFO);
             if (!fun)
                 return JS_FALSE;
-            fun->u.n.extra = (uint16)fs->extra;
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long
@@ -4293,12 +4250,9 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                 return JS_FALSE;
         }
 
-        JS_ASSERT(!(flags & JSFUN_FAST_NATIVE) ||
-                  (uint16)(fs->extra >> 16) <= fs->nargs);
         fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
-        fun->u.n.extra = (uint16)fs->extra;
     }
     return JS_TRUE;
 }
@@ -4771,7 +4725,7 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fun, JSValueArray(argv, argc));
-    ok = InternalCall(cx, obj, ObjectValue(*fun), argc, Valueify(argv), Valueify(rval));
+    ok = ExternalInvoke(cx, obj, ObjectValue(*fun), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4787,7 +4741,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc, 
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
     JSBool ok = atom &&
                 js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
-                InternalCall(cx, obj, tvr.value(), argc, Valueify(argv), Valueify(rval));
+                ExternalInvoke(cx, obj, tvr.value(), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4800,7 +4754,7 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fval, JSValueArray(argv, argc));
-    ok = InternalCall(cx, obj, Valueify(fval), argc, Valueify(argv), Valueify(rval));
+    ok = ExternalInvoke(cx, obj, Valueify(fval), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4891,12 +4845,6 @@ JS_IsRunning(JSContext *cx)
     while (fp && fp->isDummyFrame())
         fp = fp->down;
     return fp != NULL;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_IsConstructing(JSContext *cx)
-{
-    return cx->isConstructing();
 }
 
 JS_PUBLIC_API(JSStackFrame *)

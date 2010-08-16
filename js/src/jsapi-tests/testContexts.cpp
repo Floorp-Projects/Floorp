@@ -11,7 +11,7 @@ BEGIN_TEST(testContexts_IsRunning)
         return true;
     }
 
-    static JSBool chk(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    static JSBool chk(JSContext *cx, uintN argc, jsval *vp)
     {
         JSRuntime *rt = JS_GetRuntime(cx);
         JSContext *acx = JS_NewContext(rt, 8192);

@@ -96,6 +96,7 @@ Probes::FunctionLineNumber(JSContext *cx, const JSFunction *fun)
  * This is used by the function-args and function-rval probes, which also
  * provide raw (unmasked) jsvals should type info be useful from D scripts.
  */
+#if 0
 static void *
 jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
 {
@@ -120,6 +121,7 @@ jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
 
     return argval.asGCThing();
 }
+#endif
 
 const char *
 Probes::FunctionName(JSContext *cx, const JSFunction *fun)

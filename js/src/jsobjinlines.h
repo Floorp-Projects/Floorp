@@ -453,13 +453,6 @@ JSObject::setDateUTCTime(const js::Value &time)
     fslots[JSSLOT_DATE_UTC_TIME] = time;
 }
 
-inline JSFunction *
-JSObject::getFunctionPrivate() const
-{
-    JS_ASSERT(isFunction());
-    return reinterpret_cast<JSFunction *>(getPrivate());
-}
-
 inline js::Value *
 JSObject::getFlatClosureUpvars() const
 {

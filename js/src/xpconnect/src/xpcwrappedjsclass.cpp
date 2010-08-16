@@ -1116,7 +1116,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     JSStackFrame * fp = nsnull;
                     while((fp = JS_FrameIterator(cx, &fp)))
                     {
-                        if(!JS_IsNativeFrame(cx, fp))
+                        if(JS_IsScriptFrame(cx, fp))
                         {
                             onlyNativeStackFrames = PR_FALSE;
                             break;

@@ -1008,8 +1008,7 @@ Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_CLASS_RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
-    JSCLASS_FAST_CONSTRUCTOR,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -1045,8 +1044,7 @@ Class js_ArrayClass = {
 Class js_SlowArrayClass = {
     "Array",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
-    JSCLASS_FAST_CONSTRUCTOR,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty,
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -2910,11 +2908,11 @@ array_every(JSContext *cx, uintN argc, Value *vp)
 #endif
 
 static JSBool
-array_isArray(JSContext *cx, uintN argc, jsval *vp)
+array_isArray(JSContext *cx, uintN argc, Value *vp)
 {
-    *vp = BOOLEAN_TO_JSVAL(argc > 0 &&
-                           !JSVAL_IS_PRIMITIVE(vp[2]) &&
-                           JSVAL_TO_OBJECT(vp[2])->wrappedObject(cx)->isArray());
+    vp->setBoolean(argc > 0 &&
+                   vp[2].isObject() &&
+                   vp[2].toObject().wrappedObject(cx)->isArray());
     return JS_TRUE;
 }
 
@@ -3038,7 +3036,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewPreallocatedArray, CONTEXT, OBJECT, I
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, (Native) js_Array, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
                                    NULL, array_methods, NULL, array_static_methods);
     if (!proto)
         return NULL;

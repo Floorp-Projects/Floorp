@@ -810,19 +810,6 @@ class StackSpace
     inline void popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down);
 
     /*
-     * For the special case of the slow native stack frame pushed and popped by
-     * tracing deep bail logic.
-     */
-    JS_REQUIRES_STACK
-    void getSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *&seg, JSStackFrame *&fp);
-
-    JS_REQUIRES_STACK
-    void pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSFrameRegs &regs);
-
-    JS_REQUIRES_STACK
-    void popSynthesizedSlowNativeFrame(JSContext *cx);
-
-    /*
      * For pushing a bookkeeping frame.
      */
     JS_REQUIRES_STACK
@@ -2360,8 +2347,6 @@ struct JSContext
         p->~T();
         this->free(p);
     }
-
-    bool isConstructing();
 
     void purge();
 
