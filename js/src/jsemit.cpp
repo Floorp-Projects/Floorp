@@ -1890,7 +1890,7 @@ static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
     JSContext *cx = cg->parser->context;
-    JSFunction *fun = cg->parser->callerFrame->fun;
+    JSFunction *fun = cg->parser->callerFrame->getFunction();
     uintN upvarLevel = fun->u.i.script->staticLevel;
 
     JSFunctionBox *funbox = cg->funbox;
@@ -2075,8 +2075,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (cg->flags & TCF_IN_FOR_INIT)
                 return JS_TRUE;
 
-            JS_ASSERT(caller->script);
-            if (!caller->fun)
+            JS_ASSERT(caller->hasScript());
+            if (!caller->hasFunction())
                 return JS_TRUE;
 
             /*
@@ -2105,7 +2105,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            JSFunction *fun = cg->parser->callerFrame->fun;
+            JSFunction *fun = cg->parser->callerFrame->getFunction();
             JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
             unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
             if (cg->skipSpansGenerator(skip))
@@ -2201,7 +2201,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSStackFrame *caller = cg->parser->callerFrame;
 #endif
         JS_ASSERT(caller);
-        JS_ASSERT(caller->script);
+        JS_ASSERT(caller->hasScript());
 
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
@@ -2210,7 +2210,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->compileAndGo());
-        JS_ASSERT(caller->fun && cg->parser->callerVarObj == evalcg->scopeChain);
+        JS_ASSERT(caller->hasFunction() && cg->parser->callerVarObj == evalcg->scopeChain);
 
         /*
          * Don't generate upvars on the left side of a for loop. See
