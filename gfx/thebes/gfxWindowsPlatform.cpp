@@ -191,7 +191,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     NS_RegisterMemoryReporter(new D2DCacheReporter());
     mD2DDevice = NULL;
 
-    if (isVistaOrHigher) {
+    if (isVistaOrHigher && 0) {
         // We need a DWriteFactory to work.
         HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
         D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
