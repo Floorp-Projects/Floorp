@@ -204,7 +204,6 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "ret"                                   "\n"
 );
 
-JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 0x40);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
 JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
 
@@ -313,7 +312,6 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "ret"                                "\n"
 );
 
-JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 0x28);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x3C);
 JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
 
