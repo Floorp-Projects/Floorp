@@ -1040,11 +1040,11 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_dasq(LIns *ins) {
+    void Assembler::asm_dasq(LIns*) {
         TODO(asm_dasq);
     }
 
-    void Assembler::asm_qasd(LIns *ins) {
+    void Assembler::asm_qasd(LIns*) {
         TODO(asm_qasd);
     }
 
