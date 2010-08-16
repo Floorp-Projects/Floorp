@@ -349,7 +349,7 @@ js_PopInterpFrame(JSContext* cx, TracerState* state)
         return JS_FALSE;
     if (fp->flags & JSFRAME_CONSTRUCTING)
         return JS_FALSE;
-    if (fp->imacpc)
+    if (fp->hasIMacroPC())
         return JS_FALSE;
     if (fp->hasBlockChain())
         return JS_FALSE;

@@ -225,7 +225,7 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->thisv = vp[1];
-    newfp->imacpc = NULL;
+    JS_ASSERT(!fp->hasIMacroPC());
 
     /* Push void to initialize local variables. */
     Value *newslots = newfp->slots();
@@ -514,8 +514,8 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->thisv = vp[1];
-    newfp->imacpc = NULL;
     newfp->setHookData(NULL);
+    JS_ASSERT(!fp->hasIMacroPC());
 
 #if 0
     /* :TODO: Switch version if currentVersion wasn't overridden. */
@@ -680,13 +680,13 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
         JSStackFrame *fp = cx->fp;
 
         /* Look for an imacro with hard-coded exception handlers. */
-        if (fp->imacpc && cx->throwing) {
-            cx->regs->pc = fp->imacpc;
-            fp->imacpc = NULL;
+        if (fp->hasIMacroPC() && cx->throwing) {
+            cx->regs->pc = fp->getIMacroPC();
+            fp->clearIMacroPC();
             if (ok)
                 break;
         }
-        JS_ASSERT(!fp->imacpc);
+        JS_ASSERT(!fp->hasIMacroPC());
 
         /* If there's an exception and a handler, set the pc and leave. */
         jsbytecode *pc = FindExceptionHandler(cx);
@@ -716,7 +716,7 @@ static inline bool
 AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp;
-    if (fp->imacpc)
+    if (fp->hasIMacroPC())
         return false;
 
     JSScript *script = fp->script;
@@ -733,7 +733,7 @@ PartialInterpret(VMFrame &f)
     JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp;
 
-    JS_ASSERT(fp->imacpc || !fp->script->nmap ||
+    JS_ASSERT(fp->hasIMacroPC() || !fp->script->nmap ||
               !fp->script->nmap[cx->regs->pc - fp->script->code]);
 
     JSBool ok = JS_TRUE;
@@ -786,7 +786,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                  * Partial interpret could have dropped us anywhere. Deduce the
                  * edge case: at a RETURN, needing to pop a frame.
                  */
-                if (!cx->fp->imacpc && FrameIsFinished(cx)) {
+                if (!cx->fp->hasIMacroPC() && FrameIsFinished(cx)) {
                     JSOp op = JSOp(*cx->regs->pc);
                     if (op == JSOP_RETURN && !(cx->fp->flags & JSFRAME_BAILED_AT_RETURN))
                         fp->rval = f.regs.sp[-1];
@@ -872,7 +872,7 @@ RunTracer(VMFrame &f)
       case TPA_Error:
         if (!SwallowErrors(f, entryFrame))
             THROWV(NULL);
-        JS_ASSERT(!cx->fp->imacpc);
+        JS_ASSERT(!cx->fp->hasIMacroPC());
         break;
 
       case TPA_RanStuff:
@@ -908,7 +908,7 @@ RunTracer(VMFrame &f)
 
     /* Step 2. If there's an imacro on the entry frame, remove it. */
     entryFrame->flags &= ~JSFRAME_RECORDING;
-    while (entryFrame->imacpc) {
+    while (entryFrame->hasIMacroPC()) {
         if (!PartialInterpret(f)) {
             if (!SwallowErrors(f, entryFrame))
                 THROWV(NULL);

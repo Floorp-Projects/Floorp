@@ -2432,13 +2432,13 @@ class AutoCheckRequestDepth {
 static inline uintN
 FramePCOffset(JSContext *cx, JSStackFrame* fp)
 {
-    return uintN((fp->imacpc ? fp->imacpc : fp->pc(cx)) - fp->script->code);
+    return uintN((fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx)) - fp->script->code);
 }
 
 static inline JSAtom **
 FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->imacpc
+    return fp->hasIMacroPC()
            ? COMMON_ATOMS_START(&cx->runtime->atomState)
            : fp->script->atomMap.vector;
 }
