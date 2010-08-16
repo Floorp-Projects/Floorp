@@ -52,6 +52,10 @@
 #include <DbgHelp.h>
 #include <string.h>
 #elif defined(XP_MACOSX)
+#if defined(MOZ_IPC)
+#  include "client/mac/crash_generation/client_info.h"
+#  include "client/mac/crash_generation/crash_generation_server.h"
+#endif
 #include "client/mac/handler/exception_handler.h"
 #include <string>
 #include <Carbon/Carbon.h>
@@ -104,11 +108,8 @@ CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 #if defined(MOZ_IPC)
 #include "nsIUUIDGenerator.h"
 
-#if !defined(XP_MACOSX)
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
-#endif
-
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
 #endif // MOZ_IPC
@@ -191,12 +192,10 @@ static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
 
 #if defined(MOZ_IPC)
-#if !defined(XP_MACOSX)
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
-#endif
 
-#  if defined(XP_WIN)
+#  if defined(XP_WIN) || defined(XP_MACOSX)
 // If crash reporting is disabled, we hand out this "null" pipe to the
 // child process and don't attempt to connect to a parent server.
 static const char kNullNotifyPipe[] = "-";
@@ -206,6 +205,7 @@ static char* childCrashNotifyPipe;
 static int serverSocketFd = -1;
 static int clientSocketFd = -1;
 static const int kMagicChildCrashReportFd = 42;
+
 #  endif
 
 // |dumpMapLock| must protect all access to |pidToMinidump|.
@@ -571,11 +571,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                      google_breakpad::ExceptionHandler::HANDLER_ALL);
 #else
                      true
-#endif
 #if defined(XP_MACOSX)
                        , NULL
 #endif
                       );
+#endif // XP_WIN32
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -604,11 +604,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
 bool GetEnabled()
 {
-#if defined(XP_MACOSX)
-  return gExceptionHandler != nsnull;
-#else
   return gExceptionHandler != nsnull && !gExceptionHandler->IsOutOfProcess();
-#endif
 }
 
 bool GetMinidumpPath(nsAString& aPath)
@@ -1469,16 +1465,27 @@ MoveToPending(nsIFile* dumpFile, nsIFile* extraFile)
     NS_SUCCEEDED(extraFile->MoveTo(pendingDir, EmptyString()));
 }
 
-#if !defined(XP_MACOSX)
 static void
 OnChildProcessDumpRequested(void* aContext,
+#ifdef XP_MACOSX
+                            const ClientInfo& aClientInfo,
+                            const xpstring& aFilePath
+#else
                             const ClientInfo* aClientInfo,
-                            const xpstring* aFilePath)
+                            const xpstring* aFilePath
+#endif
+                            )
 {
   nsCOMPtr<nsILocalFile> minidump;
   nsCOMPtr<nsILocalFile> extraFile;
 
-  CreateFileFromPath(*aFilePath, getter_AddRefs(minidump));
+  CreateFileFromPath(
+#ifdef XP_MACOSX
+                     aFilePath,
+#else
+                     *aFilePath,
+#endif
+                     getter_AddRefs(minidump));
 
   if (!WriteExtraForMinidump(minidump,
                              Blacklist(kSubprocessBlacklist,
@@ -1490,13 +1497,17 @@ OnChildProcessDumpRequested(void* aContext,
     MoveToPending(minidump, extraFile);
 
   {
-    PRUint32 pid = aClientInfo->pid();
+    PRUint32 pid =
+#ifdef XP_MACOSX
+      aClientInfo.pid();
+#else
+      aClientInfo->pid();
+#endif
 
     MutexAutoLock lock(*dumpMapLock);
     pidToMinidump->Put(pid, minidump);
   }
 }
-#endif  // XP_MACOSX
 
 static bool
 OOPInitialized()
@@ -1539,12 +1550,23 @@ OOPInit()
     NULL, NULL,                 // we don't care about process exit here
     true,                       // automatically generate dumps
     &dumpPath);
+
+#elif defined(XP_MACOSX)
+  childCrashNotifyPipe =
+    PR_smprintf("gecko-crash-server-pipe.%i",
+                static_cast<int>(getpid()));
+  const std::string dumpPath = gExceptionHandler->dump_path();
+
+  crashServer = new CrashGenerationServer(
+    childCrashNotifyPipe,
+    OnChildProcessDumpRequested, NULL,
+    NULL, NULL,
+    true, // automatically generate dumps
+    dumpPath);
 #endif
 
-#if !defined(XP_MACOSX)
   if (!crashServer->Start())
     NS_RUNTIMEABORT("can't start crash reporter server()");
-#endif
 
   pidToMinidump = new ChildMinidumpMap();
   pidToMinidump->Init();
@@ -1560,10 +1582,8 @@ OOPDeinit()
     return;
   }
 
-#if !defined(XP_MACOSX)
   delete crashServer;
   crashServer = NULL;
-#endif
 
   delete dumpMapLock;
   dumpMapLock = NULL;
@@ -1577,7 +1597,7 @@ OOPDeinit()
 #endif
 }
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 // Parent-side API for children
 const char*
 GetChildNotificationPipe()
@@ -1590,7 +1610,9 @@ GetChildNotificationPipe()
 
   return childCrashNotifyPipe;
 }
+#endif
 
+#if defined(XP_WIN)
 // Child-side API
 bool
 SetRemoteExceptionHandler(const nsACString& crashPipe)
@@ -1657,11 +1679,26 @@ SetRemoteExceptionHandler()
 
 //--------------------------------------------------
 #elif defined(XP_MACOSX)
-void
-CreateNotificationPipeForChild()
+// Child-side API
+bool
+SetRemoteExceptionHandler(const nsACString& crashPipe)
 {
-  if (GetEnabled() && !OOPInitialized())
-    OOPInit();
+  // crash reporting is disabled
+  if (crashPipe.Equals(kNullNotifyPipe))
+    return true;
+
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
+
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler("",
+                     NULL,    // no filter callback
+                     NULL,    // no minidump callback
+                     NULL,    // no callback context
+                     true,    // install signal handlers
+                     crashPipe.BeginReading());
+
+  // we either do remote or nothing, no fallback to regular crash reporting
+  return gExceptionHandler->IsOutOfProcess();
 }
 #endif  // XP_WIN
 
@@ -1726,7 +1763,7 @@ CurrentThreadId()
 #elif defined(XP_LINUX)
   return sys_gettid();
 #elif defined(XP_MACOSX)
-  return -1;
+  return mach_thread_self();
 #else
 #  error "Unsupported platform"
 #endif
@@ -1739,12 +1776,11 @@ CreatePairedMinidumps(ProcessHandle childPid,
                       nsILocalFile** childDump,
                       nsILocalFile** parentDump)
 {
-  if (!GetEnabled())
-    return false;
-
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
   return false;
 #else
+  if (!GetEnabled())
+    return false;
 
   // create the UUID for the hang dump as a pair
   nsresult rv;
@@ -1788,7 +1824,9 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &parentMinidump, &parentExtra, parentBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidump(
          gExceptionHandler->dump_path(),
+#ifndef XP_MACOSX
          true,                  // write exception stream
+#endif
          PairedDumpCallback,
          &parentCtx))
     return false;
@@ -1805,10 +1843,9 @@ CreatePairedMinidumps(ProcessHandle childPid,
   parentMinidump.swap(*parentDump);
 
   return true;
-#endif  // XP_MACOSX
+#endif
 }
 
-#if !defined(XP_MACOSX)
 bool
 UnsetRemoteExceptionHandler()
 {
@@ -1816,7 +1853,6 @@ UnsetRemoteExceptionHandler()
   gExceptionHandler = NULL;
   return true;
 }
-#endif  // XP_MACOSX
 
 #endif  // MOZ_IPC
 
