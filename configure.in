@@ -5952,7 +5952,7 @@ if test -n "$MOZ_WEBM"; then
         fi
       ;;
       esac
-      if test "$COMPILE_ENVIROMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
+      if test "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
         AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
       fi
     fi # end !WINNT_x86_MSVC
