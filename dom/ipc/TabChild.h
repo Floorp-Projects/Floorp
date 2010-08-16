@@ -191,10 +191,6 @@ public:
                               const PRInt32&  aCharCode,
                               const PRInt32&  aModifiers,
                               const bool&     aPreventDefault);
-    virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
-    virtual bool RecvTextEvent(const nsTextEvent& event);
-    virtual bool RecvQueryContentEvent(const nsQueryContentEvent& event);
-    virtual bool RecvSelectionEvent(const nsSelectionEvent& event);
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
@@ -288,8 +284,6 @@ public:
 protected:
     NS_OVERRIDE
     virtual bool RecvDestroy();
-
-    bool DispatchWidgetEvent(nsGUIEvent& event);
 
 private:
     void ActorDestroy(ActorDestroyReason why);
