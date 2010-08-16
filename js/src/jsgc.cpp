@@ -2272,12 +2272,12 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->getCallObj(), "call");
     if (fp->hasArgsObj())
         JS_CALL_OBJECT_TRACER(trc, fp->getArgsObj(), "arguments");
-    if (fp->script)
-        js_TraceScript(trc, fp->script);
+    if (fp->hasScript())
+        js_TraceScript(trc, fp->getScript());
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
-    MarkValue(trc, fp->thisv, "this");
-    MarkValue(trc, fp->rval, "rval");
+    MarkValue(trc, fp->getThisValue(), "this");
+    MarkValue(trc, fp->getReturnValue(), "rval");
     if (fp->hasScopeChain())
         JS_CALL_OBJECT_TRACER(trc, fp->getScopeChain(), "scope chain");
 }

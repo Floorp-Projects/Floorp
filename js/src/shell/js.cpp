@@ -1451,7 +1451,7 @@ ValueToScript(JSContext *cx, jsval v)
             script = (JSScript *) JS_GetPrivate(cx, obj);
         } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->getFloatingFrame()->fun;
+            fun = gen->getFloatingFrame()->getFunction();
             script = FUN_SCRIPT(fun);
         }
     }
@@ -1492,7 +1492,7 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
     uintN intarg;
     JSScript *script;
 
-    *scriptp = JS_GetScriptedCaller(cx, NULL)->script;
+    *scriptp = JS_GetScriptedCaller(cx, NULL)->getScript();
     *ip = 0;
     if (argc != 0) {
         v = argv[0];
@@ -1522,7 +1522,8 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     JSStackFrame *caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateUCInStackFrame(cx, caller,
                                    JS_GetStringChars(str), JS_GetStringLength(str),
-                                   caller->script->filename, caller->script->lineno,
+                                   caller->getScript()->filename,
+                                   caller->getScript()->lineno,
                                    rval)) {
         return JSTRAP_ERROR;
     }
@@ -1621,7 +1622,7 @@ LineToPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
         return JS_FALSE;
     }
-    script = JS_GetScriptedCaller(cx, NULL)->script;
+    script = JS_GetScriptedCaller(cx, NULL)->getScript();
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
     lineno = (i == 0) ? script->lineno : (uintN)i;
@@ -3149,8 +3150,8 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return false;
         }
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
-                                 fp->script->filename,
-                                 JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
+                                 fp->getScript()->filename,
+                                 JS_PCToLineNumber(cx, fp->getScript(), fp->pc(cx)),
                                  rval)) {
             return false;
         }
@@ -3185,7 +3186,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSStackFrame *const fp = fi.fp();
-    if (!fp->script) {
+    if (!fp->hasScript()) {
         JS_ReportError(cx, "cannot eval in non-script frame");
         return JS_FALSE;
     }
@@ -3195,8 +3196,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
         oldfp = JS_SaveFrameChain(cx);
 
     JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
-                                          fp->script->filename,
-                                          JS_PCToLineNumber(cx, fp->script,
+                                          fp->getScript()->filename,
+                                          JS_PCToLineNumber(cx, fp->getScript(),
                                                             fi.pc()),
                                           vp);
 
@@ -3918,9 +3919,9 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Get the currently executing script's name. */
     fp = JS_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp && fp->script->filename);
+    JS_ASSERT(fp && fp->getScript()->filename);
 #ifdef XP_UNIX
-    pathname = MakeAbsolutePathname(cx, fp->script->filename, filename);
+    pathname = MakeAbsolutePathname(cx, fp->getScript()->filename, filename);
     if (!pathname)
         return JS_FALSE;
 #else

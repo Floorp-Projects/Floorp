@@ -1222,7 +1222,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
                                            cx->debugHooks->
                                            debuggerHandlerData)) {
       case JSTRAP_RETURN:
-        fp->rval = js::Valueify(rval);
+        fp->setReturnValue(js::Valueify(rval));
         return JS_TRUE;
       case JSTRAP_ERROR:
         cx->throwing = JS_FALSE;
