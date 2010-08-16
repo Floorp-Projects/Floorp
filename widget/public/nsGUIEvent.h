@@ -1234,7 +1234,7 @@ private:
 public:
   nsQueryContentEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget) :
     nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_QUERY_CONTENT_EVENT),
-    mSucceeded(PR_FALSE)
+    mSucceeded(PR_FALSE), mWasAsync(PR_FALSE)
   {
   }
 
@@ -1262,6 +1262,7 @@ public:
   }
 
   PRBool mSucceeded;
+  PRPackedBool mWasAsync;
   struct {
     PRUint32 mOffset;
     PRUint32 mLength;
