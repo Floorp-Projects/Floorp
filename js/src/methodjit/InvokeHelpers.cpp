@@ -220,9 +220,9 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
     newfp->annotation = NULL;
-    newfp->scopeChain = funobj->getParent();
+    newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
-    newfp->blockChain = NULL;
+    newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->thisv = vp[1];
     newfp->imacpc = NULL;
@@ -269,7 +269,7 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 
     if (cx->options & JSOPTION_METHODJIT) {
         if (!script->ncode) {
-            if (mjit::TryCompile(cx, script, fp->fun, fp->scopeChain) == Compile_Error) {
+            if (mjit::TryCompile(cx, script, fp->fun, fp->getScopeChain()) == Compile_Error) {
                 InlineReturn(f, JS_FALSE);
                 return false;
             }
@@ -297,8 +297,8 @@ InlineReturn(VMFrame &f, JSBool ok)
     JS_ASSERT(f.fp == cx->fp);
     JS_ASSERT(f.fp != f.entryFp);
 
-    JS_ASSERT(!fp->blockChain);
-    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
+    JS_ASSERT(!fp->hasBlockChain());
+    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
 
     // Marker for debug support.
     void *hookData = fp->hookData;
@@ -510,9 +510,9 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
     newfp->annotation = NULL;
-    newfp->scopeChain = funobj->getParent();
+    newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
-    newfp->blockChain = NULL;
+    newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->thisv = vp[1];
     newfp->imacpc = NULL;

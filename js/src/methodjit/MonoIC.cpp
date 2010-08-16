@@ -66,7 +66,7 @@ PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp->scopeChain->getGlobal();
+    JSObject *obj = f.fp->getScopeChain()->getGlobal();
     ic::MICInfo &mic = f.fp->script->mics[index];
     JSAtom *atom = f.fp->script->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
@@ -130,7 +130,7 @@ PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp->scopeChain->getGlobal();
+    JSObject *obj = f.fp->getScopeChain()->getGlobal();
     ic::MICInfo &mic = f.fp->script->mics[index];
     JSAtom *atom = f.fp->script->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
