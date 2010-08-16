@@ -1190,9 +1190,9 @@ js_NewGenerator(JSContext *cx)
     newfp->argv = vp + 2;
     newfp->rval = fp->rval;
     newfp->annotation = NULL;
-    newfp->scopeChain = fp->scopeChain;
-    JS_ASSERT(!fp->blockChain);
-    newfp->blockChain = NULL;
+    newfp->setScopeChain(fp->maybeScopeChain());
+    JS_ASSERT(!fp->hasBlockChain());
+    newfp->setBlockChain(NULL);
     newfp->flags = fp->flags | JSFRAME_GENERATOR | JSFRAME_FLOATING_GENERATOR;
 
     /* Copy in arguments and slots. */
@@ -1320,7 +1320,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         JSObject *enumerators = cx->enumerators;
         cx->enumerators = gen->enumerators;
 
-        ok = RunScript(cx, fp->script, fp->fun, fp->scopeChain);
+        ok = RunScript(cx, fp->script, fp->fun, fp->getScopeChain());
 
         /* Restore the original enumerators stack. */
         gen->enumerators = cx->enumerators;
