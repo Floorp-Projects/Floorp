@@ -97,7 +97,7 @@ static bool
 IsScriptLive(JSContext *cx, JSScript *script)
 {
     for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (i.fp()->script == script)
+        if (i.fp()->maybeScript() == script)
             return true;
     }
     return false;

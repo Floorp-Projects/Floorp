@@ -632,7 +632,7 @@ mjit::JaegerShot(JSContext *cx)
     void *code;
     jsbytecode *pc = cx->regs->pc;
     JSStackFrame *fp = cx->fp;
-    JSScript *script = fp->script;
+    JSScript *script = fp->getScript();
 
     JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
 
@@ -651,8 +651,8 @@ mjit::JaegerShot(JSContext *cx)
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
 
-    JaegerSpew(JSpew_Prof, "entering jaeger script: %s, line %d\n", fp->script->filename,
-               fp->script->lineno);
+    JaegerSpew(JSpew_Prof, "entering jaeger script: %s, line %d\n", script->filename,
+               script->lineno);
     prof.start();
 #endif
 

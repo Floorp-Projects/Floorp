@@ -14644,7 +14644,7 @@ TraceRecorder::record_JSOP_FORGLOBAL()
     LIns* v_ins;
     CHECK_STATUS_A(unboxNextValue(v_ins));
 
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16096,7 +16096,7 @@ TraceRecorder::record_JSOP_SHARPINIT()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETGLOBAL()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16107,7 +16107,7 @@ TraceRecorder::record_JSOP_GETGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_SETGLOBAL()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16118,7 +16118,7 @@ TraceRecorder::record_JSOP_SETGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLGLOBAL()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16131,7 +16131,7 @@ TraceRecorder::record_JSOP_CALLGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GLOBALDEC()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16141,7 +16141,7 @@ TraceRecorder::record_JSOP_GLOBALDEC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DECGLOBAL()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16151,7 +16151,7 @@ TraceRecorder::record_JSOP_DECGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INCGLOBAL()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16161,7 +16161,7 @@ TraceRecorder::record_JSOP_INCGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GLOBALINC()
 {
-    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 

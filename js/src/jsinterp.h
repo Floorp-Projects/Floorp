@@ -89,8 +89,6 @@ struct JSStackFrame
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
-
-  public:
     JSScript            *script;        /* script being interpreted */
 	
     /*
@@ -108,11 +106,13 @@ struct JSStackFrame
      */
     js::Value           thisv;          /* "this" pointer if in method */
     JSFunction          *fun;           /* function being called or null */
+
+  public:
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
-    js::Value           rval;           /* function return value */
 
   private:
+    js::Value           rval;           /* function return value */
     void                *annotation;    /* used by Java security */
 
   public:
@@ -129,8 +129,8 @@ struct JSStackFrame
   private:
     JSObject        *scopeChain;
     JSObject        *blockChain;
-  public:
 
+  public:
     uint32          flags;          /* frame flags -- see below */
 
   private:
@@ -424,6 +424,10 @@ struct JSStackFrame
 
     void setThisValue(const js::Value &v) {
         thisv = v;
+    }
+
+    static size_t offsetThisValue() {
+        return offsetof(JSStackFrame, thisv);
     }
 
     /* Return-value accessors */

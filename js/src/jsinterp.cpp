@@ -604,7 +604,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         if (!thisp)
              return false;
         args.thisv().setObject(*thisp);
-        fp->thisv.setObject(*thisp);
+        fp->setThisValue(ObjectValue(*thisp));
     }
     JS_ASSERT_IF(!args.thisv().isPrimitive(), IsSaneThisObject(args.thisv().toObject()));
 
@@ -624,7 +624,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
 #endif
         /* Primitive |this| should not be passed to slow natives. */
         JSObject *thisp = fun ? fp->getThisObject(cx) : fp->getThisValue().toObjectOrNull();
-        ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, &fp->rval);
+        ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, fp->addressReturnValue());
 
         JS_ASSERT(cx->fp == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
@@ -2259,8 +2259,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
     JSScript *script = fp->getScript();
     JS_ASSERT(!script->isEmpty());
     JS_ASSERT(script->length > 1);
-    JS_ASSERT(fp->thisv.isObjectOrNull());
-    JS_ASSERT_IF(!fp->fun, !fp->thisv.isNull());
+    JS_ASSERT(fp->getThisValue().isObjectOrNull());
+    JS_ASSERT_IF(!fp->hasFunction(), !fp->getThisValue().isNull());
 
     if (!entryFrame)
         entryFrame = fp;

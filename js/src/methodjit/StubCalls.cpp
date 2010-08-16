@@ -369,7 +369,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
         return NULL;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
-        JSOp op2 = js_GetOpcode(cx, f.fp->script, f.regs.pc + JSOP_NAME_LENGTH);
+        JSOp op2 = js_GetOpcode(cx, f.fp->getScript(), f.regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             f.regs.sp++;
             f.regs.sp[-1].setUndefined();
@@ -848,7 +848,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
 
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp;
-    JSScript *script = fp->script;
+    JSScript *script = fp->getScript();
 
     /*
      * A top-level function defined in Global or Eval code (see ECMA-262
@@ -1354,7 +1354,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
     if (handler) {
         Value rval;
-        switch (handler(f.cx, f.cx->fp->script, pc, Jsvalify(&rval),
+        switch (handler(f.cx, f.cx->fp->getScript(), pc, Jsvalify(&rval),
                         f.cx->debugHooks->debuggerHandlerData)) {
           case JSTRAP_THROW:
             f.cx->throwing = JS_TRUE;
@@ -1363,7 +1363,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
 
           case JSTRAP_RETURN:
             f.cx->throwing = JS_FALSE;
-            f.cx->fp->rval = rval;
+            f.cx->fp->setReturnValue(rval);
             *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
                                          JS_METHODJIT_DATA(f.cx).trampolines.forceReturn);
             break;
@@ -1390,7 +1390,7 @@ stubs::Trap(VMFrame &f, jsbytecode *pc)
 {
     Value rval;
 
-    switch (JS_HandleTrap(f.cx, f.cx->fp->script, pc, Jsvalify(&rval))) {
+    switch (JS_HandleTrap(f.cx, f.cx->fp->getScript(), pc, Jsvalify(&rval))) {
       case JSTRAP_THROW:
         f.cx->throwing = JS_TRUE;
         f.cx->exception = rval;
@@ -1398,7 +1398,7 @@ stubs::Trap(VMFrame &f, jsbytecode *pc)
 
       case JSTRAP_RETURN:
         f.cx->throwing = JS_FALSE;
-        f.cx->fp->rval = rval;
+        f.cx->fp->setReturnValue(rval);
         *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
                                      JS_METHODJIT_DATA(f.cx).trampolines.forceReturn);
         break;
@@ -1417,7 +1417,7 @@ stubs::This(VMFrame &f)
 {
     if (!f.fp->getThisObject(f.cx))
         THROW();
-    f.regs.sp[-1] = f.fp->thisv;
+    f.regs.sp[-1] = f.fp->getThisValue();
 }
 
 void JS_FASTCALL
@@ -1524,7 +1524,7 @@ void JS_FASTCALL
 stubs::GetUpvar(VMFrame &f, uint32 ck)
 {
     /* :FIXME: We can do better, this stub isn't needed. */
-    uint32 staticLevel = f.fp->script->staticLevel;
+    uint32 staticLevel = f.fp->getScript()->staticLevel;
     UpvarCookie cookie;
     cookie.fromInteger(ck);
     f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
@@ -1598,7 +1598,7 @@ stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == f.fp->getScopeChain()) {
-        fun->setMethodAtom(f.fp->script->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+        fun->setMethodAtom(f.fp->getScript()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
         return obj;
     }
     return Lambda(f, fun);
@@ -1611,7 +1611,7 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == f.fp->getScopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-            fun->setMethodAtom(f.fp->script->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+            fun->setMethodAtom(f.fp->getScript()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
             return obj;
         }
     }
@@ -2431,7 +2431,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
     Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
     JS_ASSERT(regs.sp < vp);
-    JS_ASSERT(vp <= fp->slots() + fp->script->nslots);
+    JS_ASSERT(vp <= fp->slots() + fp->getScript()->nslots);
     SetValueRangeToUndefined(regs.sp, vp);
     regs.sp = vp;
 
@@ -2473,7 +2473,7 @@ stubs::LeaveBlock(VMFrame &f)
     JS_ASSERT(fp->getBlockChain()->getClass() == &js_BlockClass);
     uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->getBlockChain());
 
-    JS_ASSERT(blockDepth <= StackDepth(fp->script));
+    JS_ASSERT(blockDepth <= StackDepth(fp->getScript()));
 #endif
     /*
      * If we're about to leave the dynamic scope of a block that has been
@@ -2495,7 +2495,7 @@ void * JS_FASTCALL
 stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     jsbytecode *jpc = pc;
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
@@ -2564,7 +2564,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 {
     jsbytecode * const originalPC = origPc;
     jsbytecode *pc = originalPC;
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     uint32 jumpOffset = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
 

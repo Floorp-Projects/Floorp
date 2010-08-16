@@ -3295,22 +3295,6 @@ CanLeaveTrace(JSContext *cx)
 #endif
 }
 
-/*
- * Search the call stack for the nearest frame with static level targetLevel.
- * @param baseFrame If not provided, the context's current frame is used.
- */
-static JS_INLINE JSStackFrame *
-FindFrameAtLevel(JSContext *cx, uint16 targetLevel, JSStackFrame * const baseFrame = NULL)
-{
-    JSStackFrame *it = baseFrame ? baseFrame : cx->fp;
-    JS_ASSERT(it && it->script);
-    while (it->script->staticLevel != targetLevel) {
-        it = it->down;
-        JS_ASSERT(it && it->script);
-    }
-    return it;
-}
-
 extern void
 SetPendingException(JSContext *cx, const Value &v);
 

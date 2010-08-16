@@ -682,7 +682,7 @@ class GetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.hasTypeCheck());
         JS_ASSERT(pic.kind == ic::PICInfo::CALL);
 
-        if (!f.fp->script->compileAndGo)
+        if (!f.fp->getScript()->compileAndGo)
             return disable("String.prototype without compile-and-go");
 
         JSObject *holder;
@@ -1814,7 +1814,7 @@ class BindNameCompiler : public PICStubCompiler
 void JS_FASTCALL
 ic::GetProp(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     PICInfo &pic = script->pics[index];
 
     JSAtom *atom = pic.atom;
@@ -1872,7 +1872,7 @@ ic::GetProp(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::GetElem(VMFrame &f, uint32 picIndex)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     PICInfo &pic = script->pics[picIndex];
 
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
@@ -1902,7 +1902,7 @@ ic::GetElem(VMFrame &f, uint32 picIndex)
 static void JS_FASTCALL
 SetPropDumb(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
     JSAtom *atom = pic.atom;
@@ -1919,7 +1919,7 @@ SetPropDumb(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetPropSlow(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
 
@@ -1934,7 +1934,7 @@ ic::SetProp(VMFrame &f, uint32 index)
     if (!obj)
         THROW();
 
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
@@ -1978,7 +1978,7 @@ ic::SetProp(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 CallPropSlow(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     stubs::CallProp(f, pic.atom);
 }
@@ -1989,7 +1989,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *origAtom = pic.atom;
 
@@ -2126,7 +2126,7 @@ SlowName(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::Name(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
@@ -2146,7 +2146,7 @@ ic::Name(VMFrame &f, uint32 index)
         if (!cc.prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
             cc.disable("property not found");
-            JSOp op2 = js_GetOpcode(f.cx, f.fp->script, f.regs.pc + JSOP_NAME_LENGTH);
+            JSOp op2 = js_GetOpcode(f.cx, f.fp->getScript(), f.regs.pc + JSOP_NAME_LENGTH);
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp[0].setUndefined();
                 return;
@@ -2175,7 +2175,7 @@ SlowBindName(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::BindName(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->script;
+    JSScript *script = f.fp->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
