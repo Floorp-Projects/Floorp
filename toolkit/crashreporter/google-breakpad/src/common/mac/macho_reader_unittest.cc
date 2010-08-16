@@ -992,7 +992,7 @@ TEST_F(LoadCommand, None) {
   EXPECT_FALSE(reader.big_endian());
   EXPECT_EQ(CPU_TYPE_X86,         reader.cpu_type());
   EXPECT_EQ(CPU_SUBTYPE_I386_ALL, reader.cpu_subtype());
-  EXPECT_EQ(MH_EXECUTE,           reader.file_type());
+  EXPECT_EQ(static_cast<uint32_t>(MH_EXECUTE), reader.file_type());
   EXPECT_EQ(FileFlags(MH_TWOLEVEL |
                       MH_DYLDLINK |
                       MH_NOUNDEFS),
@@ -1018,7 +1018,7 @@ TEST_F(LoadCommand, Unknown) {
   EXPECT_TRUE(reader.big_endian());
   EXPECT_EQ(CPU_TYPE_X86,         reader.cpu_type());
   EXPECT_EQ(CPU_SUBTYPE_I386_ALL, reader.cpu_subtype());
-  EXPECT_EQ(MH_EXECUTE,           reader.file_type());
+  EXPECT_EQ(static_cast<uint32_t>(MH_EXECUTE), reader.file_type());
   EXPECT_EQ(FileFlags(MH_TWOLEVEL |
                       MH_DYLDLINK |
                       MH_NOUNDEFS),

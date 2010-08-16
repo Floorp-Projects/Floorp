@@ -117,7 +117,7 @@ bool DwarfCFIToModule::Entry(size_t offset, uint64 address, uint64 length,
   // address on entry to the function. So establish an initial .ra
   // rule citing the return address register.
   if (return_address_ < register_names_.size())
-    entry_->initial_rules[".ra"] = register_names_[return_address_];
+    entry_->initial_rules[ra_name_] = register_names_[return_address_];
 
   return true;
 }
@@ -126,11 +126,11 @@ string DwarfCFIToModule::RegisterName(int i) {
   assert(entry_);
   if (i < 0) {
     assert(i == kCFARegister);
-    return ".cfa";
+    return cfa_name_;
   }
   unsigned reg = i;
   if (reg == return_address_)
-    return ".ra";
+    return ra_name_;
 
   if (0 <= reg && reg < register_names_.size())
     return register_names_[reg];
@@ -144,12 +144,21 @@ string DwarfCFIToModule::RegisterName(int i) {
 void DwarfCFIToModule::Record(Module::Address address, int reg,
                               const string &rule) {
   assert(entry_);
+
+  // Place the name in our global set of strings, and then use the string
+  // from the set. Even though the assignment looks like a copy, all the
+  // major std::string implementations use reference counting internally,
+  // so the effect is to have all our data structures share copies of rules
+  // whenever possible. Since register names are drawn from a
+  // vector<string>, register names are already shared.
+  string shared_rule = *common_strings_.insert(rule).first;
+
   // Is this one of this entry's initial rules?
   if (address == entry_->address)
-    entry_->initial_rules[RegisterName(reg)] = rule;
+    entry_->initial_rules[RegisterName(reg)] = shared_rule;
   // File it under the appropriate address.
   else
-    entry_->rule_changes[address][RegisterName(reg)] = rule;
+    entry_->rule_changes[address][RegisterName(reg)] = shared_rule;
 }
 
 bool DwarfCFIToModule::UndefinedRule(uint64 address, int reg) {
