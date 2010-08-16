@@ -543,7 +543,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->argc = args.argc();
     fp->argv = args.argv();
     fp->rval = (flags & JSINVOKE_CONSTRUCT) ? fp->thisv : UndefinedValue();
-    fp->annotation = NULL;
+    fp->setAnnotation(NULL);
     fp->setScopeChain(NULL);
     fp->setBlockChain(NULL);
     fp->imacpc = NULL;
@@ -884,7 +884,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->flags = flags;
         fp->argc = down->argc;
         fp->argv = down->argv;
-        fp->annotation = down->annotation;
+        fp->setAnnotation(down->maybeAnnotation());
         fp->setScopeChain(chain);
 
         /*
@@ -905,7 +905,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->flags = flags;
         fp->argc = 0;
         fp->argv = NULL;
-        fp->annotation = NULL;
+        fp->setAnnotation(NULL);
 
         JSObject *innerizedChain = chain;
         OBJ_TO_INNER_OBJECT(cx, innerizedChain);
@@ -2744,10 +2744,9 @@ BEGIN_CASE(JSOP_STOP)
     {
         JS_ASSERT(!fp->hasBlockChain());
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
-        void *hookData = fp->hookData;
-        if (JS_UNLIKELY(hookData != NULL)) {
+        if (JS_UNLIKELY(fp->hasHookData())) {
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
-                hook(cx, fp, JS_FALSE, &interpReturnOK, hookData);
+                hook(cx, fp, JS_FALSE, &interpReturnOK, fp->getHookData());
                 CHECK_INTERRUPT_HANDLER();
             }
         }
@@ -2764,7 +2763,7 @@ BEGIN_CASE(JSOP_STOP)
 
         /* Restore context version only if callee hasn't set version. */
         if (JS_LIKELY(cx->version == currentVersion)) {
-            currentVersion = fp->callerVersion;
+            currentVersion = fp->getCallerVersion();
             if (currentVersion != cx->version)
                 js_SetVersion(cx, currentVersion);
         }
@@ -4727,7 +4726,7 @@ BEGIN_CASE(JSOP_APPLY)
             newfp->argc = argc;
             newfp->argv = vp + 2;
             newfp->rval.setUndefined();
-            newfp->annotation = NULL;
+            newfp->setAnnotation(NULL);
             newfp->setScopeChain(obj->getParent());
             newfp->flags = flags;
             newfp->setBlockChain(NULL);
@@ -4741,7 +4740,7 @@ BEGIN_CASE(JSOP_APPLY)
             SetValueRangeToUndefined(newfp->slots(), newsp);
 
             /* Switch version if currentVersion wasn't overridden. */
-            newfp->callerVersion = (JSVersion) cx->version;
+            newfp->setCallerVersion((JSVersion) cx->version);
             if (JS_LIKELY(cx->version == currentVersion)) {
                 currentVersion = (JSVersion) newscript->version;
                 if (JS_UNLIKELY(currentVersion != cx->version))
@@ -4767,11 +4766,11 @@ BEGIN_CASE(JSOP_APPLY)
 
             /* Call the debugger hook if present. */
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
-                fp->hookData = hook(cx, fp, JS_TRUE, 0,
-                                    cx->debugHooks->callHookData);
+                fp->setHookData(hook(cx, fp, JS_TRUE, 0,
+                                     cx->debugHooks->callHookData));
                 CHECK_INTERRUPT_HANDLER();
             } else {
-                fp->hookData = NULL;
+                fp->setHookData(NULL);
             }
 
             inlineCallCount++;
