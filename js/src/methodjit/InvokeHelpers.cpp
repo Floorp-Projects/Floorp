@@ -219,7 +219,7 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->argc = argc;
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
-    newfp->annotation = NULL;
+    newfp->setAnnotation(NULL);
     newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
     newfp->setBlockChain(NULL);
@@ -238,15 +238,15 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
         return false;
 
     /* :TODO: Switch version if currentVersion wasn't overridden. */
-    newfp->callerVersion = (JSVersion)cx->version;
+    newfp->setCallerVersion((JSVersion)cx->version);
 
     // Marker for debug support.
     if (JSInterpreterHook hook = cx->debugHooks->callHook) {
-        newfp->hookData = hook(cx, fp, JS_TRUE, 0,
-                               cx->debugHooks->callHookData);
+        newfp->setHookData(hook(cx, fp, JS_TRUE, 0,
+                                cx->debugHooks->callHookData));
         // CHECK_INTERRUPT_HANDLER();
     } else {
-        newfp->hookData = NULL;
+        newfp->setHookData(NULL);
     }
 
     stack.pushInlineFrame(cx, fp, cx->regs->pc, newfp);
@@ -301,8 +301,7 @@ InlineReturn(VMFrame &f, JSBool ok)
     JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
 
     // Marker for debug support.
-    void *hookData = fp->hookData;
-    if (JS_UNLIKELY(hookData != NULL)) {
+    if (JS_UNLIKELY(fp->hasHookData())) {
         JSInterpreterHook hook;
         JSBool status;
 
@@ -313,7 +312,7 @@ InlineReturn(VMFrame &f, JSBool ok)
              * optimizations and uninitialised warnings.
              */
             status = ok;
-            hook(cx, fp, JS_FALSE, &status, hookData);
+            hook(cx, fp, JS_FALSE, &status, fp->getHookData());
             ok = (status == JS_TRUE);
             // CHECK_INTERRUPT_HANDLER();
         }
@@ -509,18 +508,18 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->argc = argc;
     newfp->argv = vp + 2;
     newfp->rval.setUndefined();
-    newfp->annotation = NULL;
+    newfp->setAnnotation(NULL);
     newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
     newfp->setBlockChain(NULL);
     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->thisv = vp[1];
     newfp->imacpc = NULL;
-    newfp->hookData = NULL;
+    newfp->setHookData(NULL);
 
 #if 0
     /* :TODO: Switch version if currentVersion wasn't overridden. */
-    newfp->callerVersion = (JSVersion)cx->version;
+    newfp->setCallerVersion((JSVersion)cx->version);
 #endif
 
 #ifdef DEBUG
