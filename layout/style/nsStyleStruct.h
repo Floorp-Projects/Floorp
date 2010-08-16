@@ -1050,13 +1050,18 @@ struct nsStyleList {
   imgIRequest* GetListStyleImage() const { return mListStyleImage; }
   void SetListStyleImage(imgIRequest* aReq)
   {
+    if (mListStyleImage)
+      mListStyleImage->UnlockImage();
     mListStyleImage = aReq;
+    if (mListStyleImage)
+      mListStyleImage->LockImage();
   }
 
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited]
 private:
   nsCOMPtr<imgIRequest> mListStyleImage; // [inherited]
+  nsStyleList& operator=(const nsStyleList& aOther); // Not to be implemented
 public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };

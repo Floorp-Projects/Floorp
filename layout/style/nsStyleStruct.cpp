@@ -646,9 +646,9 @@ nsStyleList::~nsStyleList()
 nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStyleType(aSource.mListStyleType),
     mListStylePosition(aSource.mListStylePosition),
-    mListStyleImage(aSource.mListStyleImage),
     mImageRegion(aSource.mImageRegion)
 {
+  SetListStyleImage(aSource.GetListStyleImage());
   MOZ_COUNT_CTOR(nsStyleList);
 }
 
