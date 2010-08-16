@@ -6155,9 +6155,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
         LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
 
-        /* Set the property named by obj[id] to rval. */
-        if (!CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL, NULL))
-            goto error;
+        /* No need to check for duplicate property; the compiler already did. */
 
         uintN defineHow = (op == JSOP_INITMETHOD)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
@@ -6191,12 +6189,7 @@ BEGIN_CASE(JSOP_INITELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
 
-    /*
-     * Check for property redeclaration strict warning (we may be in an object
-     * initialiser, not an array initialiser).
-     */
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL, NULL))
-        goto error;
+    /* No need to check for duplicate property; the compiler already did. */
 
     /*
      * If rref is a hole, do not call JSObject::defineProperty. In this case,
