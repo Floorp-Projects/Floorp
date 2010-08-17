@@ -60,5 +60,6 @@ chrome.jar:
   content/share.xul                    (content/share.xul)
   content/AnimatedZoom.js              (content/AnimatedZoom.js)
   content/sync.js                      (content/sync.js)
+  content/LoginManagerChild.js         (content/LoginManagerChild.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul

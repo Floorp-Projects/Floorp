@@ -71,6 +71,7 @@ EXTRA_COMPONENTS = \
         AutoCompleteCache.js \
         AddonUpdateService.js \
         FormAutoComplete.js \
+        LoginManager.js \
 	$(NULL)
 
 DIRS =  phone \
