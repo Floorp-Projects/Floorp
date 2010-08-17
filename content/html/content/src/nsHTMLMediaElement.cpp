@@ -687,6 +687,7 @@ void nsHTMLMediaElement::ResumeLoad(PreloadAction aAction)
   mPreloadURI = nsnull;
   mPreloadAction = aAction;
   ChangeDelayLoadStatus(PR_TRUE);
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
   if (mIsLoadingFromSrcAttribute) {
     // We were loading from the element's src attribute.
     if (NS_FAILED(LoadResource(uri))) {
