@@ -5284,7 +5284,7 @@ then
 
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
-        AC_CHECK_PROGS(HOST_MOC, moc, "")
+        AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
     else
         MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtDBus -lQtXml -lQtOpenGL"
 
