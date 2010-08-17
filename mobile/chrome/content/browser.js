@@ -58,9 +58,6 @@ function getBrowser() {
 
 const kDefaultBrowserWidth = 800;
 
-// how many milliseconds before the mousedown and the overlay of an element
-const kTapOverlayTimeout = 200;
-
 // Override sizeToContent in the main window. It breaks things (bug 565887)
 window.sizeToContent = function() {
   Components.utils.reportError("window.sizeToContent is not allowed in this window");
@@ -1532,7 +1529,7 @@ const BrowserSearch = {
   },
 
   updatePageSearchEngines: function updatePageSearchEngines(aNode) {
-    let items = Browser.selectedBrowser.searchEngines;
+    let items = Browser.selectedBrowser.searchEngines.filter(this.isPermanentSearchEngine);
     if (!items.length)
       return false;
 
@@ -1546,14 +1543,20 @@ const BrowserSearch = {
     return true;
   },
 
-  addPermanentSearchEngine: function (aEngine) {
+  addPermanentSearchEngine: function addPermanentSearchEngine(aEngine) {
     let iconURL = BrowserUI._favicon.src;
     Services.search.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
 
     this._engines = null;
   },
 
-  updateSearchButtons: function() {
+  isPermanentSearchEngine: function isPermanentSearchEngine(aEngine) {
+    return !BrowserSearch.engines.some(function(item) {
+      return aEngine.title == item.name;
+    });
+  },
+
+  updateSearchButtons: function updateSearchButtons() {
     let container = document.getElementById("search-buttons");
     if (this._engines && container.hasChildNodes())
       return;
