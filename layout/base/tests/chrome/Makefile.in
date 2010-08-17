@@ -49,6 +49,8 @@ _CHROME_FILES = \
 	test_bug504311.xul \
 	test_bug514660.xul \
 	test_bug533845.xul \
+	test_bug551434.html \
+	bug551434_childframe.html \
 	test_chrome_content_integration.xul \
 	     chrome_content_integration_window.xul \
 	test_printpreview.xul \
