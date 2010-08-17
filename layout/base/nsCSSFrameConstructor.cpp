@@ -152,6 +152,8 @@
 #include "nsSVGOuterSVGFrame.h"
 #endif
 
+#include "nsRefreshDriver.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 

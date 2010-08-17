@@ -52,12 +52,14 @@ function FormHistory() {
 
 FormHistory.prototype = {
     classID          : Components.ID("{0c1bb408-71a2-403f-854a-3a0659829ded}"),
-    QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormHistory2, Ci.nsIObserver, Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference]),
+    QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormHistory2,
+                                              Ci.nsIObserver,
+                                              Ci.nsIFrameMessageListener,
+                                              ]),
 
     debug          : true,
     enabled        : true,
     saveHttpsForms : true,
-    prefBranch     : null,
 
     // The current database schema.
     dbSchema : {
@@ -124,15 +126,19 @@ FormHistory.prototype = {
 
     init : function() {
         let self = this;
-        this.prefBranch = Services.prefs.getBranch("browser.formfill.");
-        this.prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        this.prefBranch.addObserver("", this, true);
+
+        Services.prefs.addObserver("browser.formfill.", this, false);
+
         this.updatePrefs();
 
         this.dbStmts = {};
 
+        this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
+                              getService(Ci.nsIChromeFrameMessageManager);
+        this.messageManager.loadFrameScript("chrome://satchel/content/formSubmitListener.js", true);
+        this.messageManager.addMessageListener("FormHistory:FormSubmitEntries", this);
+
         // Add observers
-        Services.obs.addObserver(this, "earlyformsubmit", false);
         Services.obs.addObserver(function() { self.expireOldEntries() }, "idle-daily", false);
         Services.obs.addObserver(function() { self.expireOldEntries() }, "formhistory-expire-now", false);
 
@@ -155,6 +161,26 @@ FormHistory.prototype = {
     },
 
 
+    /* ---- message listener ---- */
+
+
+    receiveMessage: function receiveMessage(message) {
+        // Open a transaction so multiple adds happen in one commit
+        this.dbConnection.beginTransaction();
+
+        try {
+            let entries = message.json;
+            for (let i = 0; i < entries.length; i++) {
+                this.addEntry(entries[i].name, entries[i].value);
+            }
+        } finally {
+            // Don't need it to be atomic if there was an error.  Commit what
+            // we managed to put in the table.
+            this.dbConnection.commitTransaction();
+        }
+    },
+
+
     /* ---- nsIFormHistory2 interfaces ---- */
 
 
@@ -173,10 +199,10 @@ FormHistory.prototype = {
         let now = Date.now() * 1000; // microseconds
 
         let [id, guid] = this.getExistingEntryID(name, value);
+        let stmt;
 
         if (id != -1) {
             // Update existing entry
-            let stmt;
             let query = "UPDATE moz_formhistory SET timesUsed = timesUsed + 1, lastUsed = :lastUsed WHERE id = :id";
             let params = {
                             lastUsed : now,
@@ -360,87 +386,6 @@ FormHistory.prototype = {
     },
 
 
-    /* ---- nsIFormSubmitObserver interfaces ---- */
-
-
-    notify : function(form, domWin, actionURI, cancelSubmit) {
-        if (!this.enabled)
-            return;
-
-        this.log("Form submit observer notified.");
-
-        if (!this.saveHttpsForms) {
-            if (actionURI.schemeIs("https"))
-                return;
-            if (form.ownerDocument.documentURIObject.schemeIs("https"))
-                return;
-        }
-
-        if (form.hasAttribute("autocomplete") &&
-            form.getAttribute("autocomplete").toLowerCase() == "off")
-            return;
-
-        // Open a transaction so that multiple additions are efficient.
-        this.dbConnection.beginTransaction();
-
-        try {
-            let savedCount = 0;
-            for (let i = 0; i < form.elements.length; i++) {
-                let input = form.elements[i];
-                if (!(input instanceof Ci.nsIDOMHTMLInputElement))
-                    continue;
-
-                // Only use inputs that hold text values (not including type="password")
-                if (!input.mozIsTextField(true))
-                    continue;
-
-                // Bug 394612: If Login Manager marked this input, don't save it.
-                // The login manager will deal with remembering it.
-
-                // Don't save values when autocomplete=off is present.
-                if (input.hasAttribute("autocomplete") &&
-                    input.getAttribute("autocomplete").toLowerCase() == "off")
-                    continue;
-
-                let value = input.value.trim();
-
-                // Don't save empty or unchanged values.
-                if (!value || value == input.defaultValue.trim())
-                    continue;
-
-                // Don't save credit card numbers.
-                if (this.isValidCCNumber(value)) {
-                    this.log("skipping saving a credit card number");
-                    continue;
-                }
-
-                let name = input.name || input.id;
-                if (!name)
-                    continue;
-
-                // Limit stored data to 200 characters.
-                if (name.length > 200 || value.length > 200) {
-                    this.log("skipping input that has a name/value too large");
-                    continue;
-                }
-
-                // Limit number of fields stored per form.
-                if (savedCount++ >= 100) {
-                    this.log("not saving any more entries for this form.");
-                    break;
-                }
-
-                this.addEntry(name, value);
-            }
-        } catch (e) {
-            // Empty
-        } finally {
-            // Save whatever we've added so far.
-            this.dbConnection.commitTransaction();
-        }
-    },
-
-
     /* ---- helpers ---- */
 
 
@@ -564,7 +509,7 @@ FormHistory.prototype = {
         // Determine how many days of history we're supposed to keep.
         let expireDays = 180;
         try {
-            expireDays = this.prefBranch.getIntPref("expire_days");
+            expireDays = Services.prefs.getIntPref("browser.formfill.expire_days");
         } catch (e) { /* ignore */ }
 
         let expireTime = Date.now() - expireDays * DAY_IN_MS;
@@ -603,40 +548,10 @@ FormHistory.prototype = {
 
 
     updatePrefs : function () {
-        this.debug          = this.prefBranch.getBoolPref("debug");
-        this.enabled        = this.prefBranch.getBoolPref("enable");
-        this.saveHttpsForms = this.prefBranch.getBoolPref("saveHttpsForms");
+        this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
+        this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
+        this.saveHttpsForms = Services.prefs.getBoolPref("browser.formfill.saveHttpsForms");
     },
-
-
-    // Implements the Luhn checksum algorithm as described at
-    // http://wikipedia.org/wiki/Luhn_algorithm
-    isValidCCNumber : function (ccNumber) {
-        // Remove dashes and whitespace
-        ccNumber = ccNumber.replace(/[\-\s]/g, '');
-
-        let len = ccNumber.length;
-        if (len != 9 && len != 15 && len != 16)
-            return false;
-
-        if (!/^\d+$/.test(ccNumber))
-            return false;
-
-        let total = 0;
-        for (let i = 0; i < len; i++) {
-            let ch = parseInt(ccNumber[len - i - 1]);
-            if (i % 2 == 1) {
-                // Double it, add digits together if > 10
-                ch *= 2;
-                if (ch > 9)
-                    ch -= 9;
-            }
-            total += ch;
-        }
-        return total % 10 == 0;
-    },
-
-
 
 //**************************************************************************//
     // Database Creation & Access
