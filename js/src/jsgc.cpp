@@ -1352,6 +1352,8 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "\nTOTAL STATS:\n");
     fprintf(fp, "            bytes allocated: %lu\n", UL(rt->gcBytes));
     fprintf(fp, "            total GC arenas: %lu\n", UL(sumArenas));
+    fprintf(fp, "       max allocated arenas: %lu\n", ULSTAT(maxnallarenas));
+    fprintf(fp, "       max allocated chunks: %lu\n", ULSTAT(maxnchunks));
     fprintf(fp, "            total GC things: %lu\n", UL(sumThings));
     fprintf(fp, "        max total GC things: %lu\n", UL(sumMaxThings));
     fprintf(fp, "        GC cell utilization: %.1f%%\n",
@@ -1363,25 +1365,14 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
             UL(sumLocalAlloc), PERCENT(sumLocalAlloc, sumAlloc));
     fprintf(fp, "        allocation failures: %lu\n", UL(sumFail));
-    fprintf(fp, "         things born locked: %lu\n", ULSTAT(lockborn));
     fprintf(fp, "           valid lock calls: %lu\n", ULSTAT(lock));
     fprintf(fp, "         valid unlock calls: %lu\n", ULSTAT(unlock));
-    fprintf(fp, "       mark recursion depth: %lu\n", ULSTAT(depth));
-    fprintf(fp, "     maximum mark recursion: %lu\n", ULSTAT(maxdepth));
-    fprintf(fp, "     mark C recursion depth: %lu\n", ULSTAT(cdepth));
-    fprintf(fp, "   maximum mark C recursion: %lu\n", ULSTAT(maxcdepth));
     fprintf(fp, "      delayed tracing calls: %lu\n", ULSTAT(unmarked));
 #ifdef DEBUG
     fprintf(fp, "      max trace later count: %lu\n", ULSTAT(maxunmarked));
 #endif
     fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
     fprintf(fp, "  thing arenas freed so far: %lu\n", ULSTAT(afree));
-    fprintf(fp, "     stack segments scanned: %lu\n", ULSTAT(stackseg));
-    fprintf(fp, "stack segment slots scanned: %lu\n", ULSTAT(segslots));
-    fprintf(fp, "reachable closeable objects: %lu\n", ULSTAT(nclose));
-    fprintf(fp, "    max reachable closeable: %lu\n", ULSTAT(maxnclose));
-    fprintf(fp, "      scheduled close hooks: %lu\n", ULSTAT(closelater));
-    fprintf(fp, "  max scheduled close hooks: %lu\n", ULSTAT(maxcloselater));
     rt->gcStats.conservative.dump(fp);
 
 #undef UL
@@ -1647,10 +1638,8 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
     {
         AutoLockGC lock(rt);
         JS_ASSERT(!rt->gcRunning);
-        if (rt->gcRunning) {
-            METER(rt->gcStats.finalfail++);
+        if (rt->gcRunning)
             return NULL;
-        }
 
         bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
         bool doGC = canGC && IsGCThresholdReached(rt);

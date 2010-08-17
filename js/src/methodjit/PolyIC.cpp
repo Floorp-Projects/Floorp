@@ -1843,7 +1843,7 @@ ic::GetProp(VMFrame &f, uint32 index)
                         cc.disable("error");
                         THROW();
                     }
-                    f.regs.sp[-1].setInt32(int32_t(obj->getArgsLength()));
+                    f.regs.sp[-1].setInt32(int32_t(obj->getArgsInitialLength()));
                 }
                 return;
             }

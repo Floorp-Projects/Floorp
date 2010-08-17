@@ -525,7 +525,7 @@ stubs::GetElem(VMFrame &f)
                   ) {
             uint32 arg = uint32(rval.toInt32());
 
-            if (arg < obj->getArgsLength()) {
+            if (arg < obj->getArgsInitialLength()) {
                 JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
                 if (afp) {
                     copyFrom = &afp->argv[arg];
@@ -2159,7 +2159,7 @@ stubs::Length(VMFrame &f)
             regs.sp[-1].setNumber(length);
             return;
         } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-            uint32 length = obj->getArgsLength();
+            uint32 length = obj->getArgsInitialLength();
             JS_ASSERT(length < INT32_MAX);
             regs.sp[-1].setInt32(int32_t(length));
             return;
