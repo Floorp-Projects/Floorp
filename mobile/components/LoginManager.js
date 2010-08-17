@@ -87,11 +87,6 @@ LoginManager.prototype = {
     },
 
 
-    get _prefBranch() {
-       return Services.prefs.getBranch("signon.");
-    },
-
-
     _nsLoginInfo : null, // Constructor for nsILoginInfo implementation
     _debug    : false, // mirrors signon.debug
     _remember : true,  // mirrors signon.rememberSignons preference
@@ -119,15 +114,14 @@ LoginManager.prototype = {
             "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
 
         // Preferences. Add observer so we get notified of changes.
-        let prefBranch = this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        prefBranch.addObserver("", this, true);
+        Services.prefs.addObserver("signon.", this, false);
 
         // Get current preference values.
-        this._debug = prefBranch.getBoolPref("debug");
-        this._remember = prefBranch.getBoolPref("rememberSignons");
+        this._debug = Services.prefs.getBoolPref("signon.debug");
+        this._remember = Services.prefs.getBoolPref("signon.rememberSignons");
 
         // Listen for shutdown to clean up
-        Services.obs.addObserver(this, "xpcom-shutdown", true);
+        Services.obs.addObserver(this, "xpcom-shutdown", false);
     },
 
     /*
@@ -149,18 +143,8 @@ LoginManager.prototype = {
      */
     observe : function (subject, topic, data) {
         if (topic == "nsPref:changed") {
-            var prefName = data;
-            this._pwmgr.log("got change to " + prefName + " preference");
-
-            if (prefName == "debug") {
-                this._pwmgr._debug = 
-                    this._pwmgr.prefBranch.getBoolPref("debug");
-            } else if (prefName == "rememberSignons") {
-                this._pwmgr._remember =
-                    this._pwmgr.prefBranch.getBoolPref("rememberSignons");
-            } else {
-                this._pwmgr.log("Oops! Pref not handled, change ignored.");
-            }
+            this._pwmgr._debug    = Services.prefs.getBoolPref("signon.debug");
+            this._pwmgr._remember = Services.prefs.getBoolPref("signon.rememberSignons");
         } else if (topic == "xpcom-shutdown") {
             // Circular reference forms when we mark an input field as managed
             // by the password manager
@@ -218,9 +202,8 @@ LoginManager.prototype = {
                 }
 
                 // Since prompt services ask for window, we try to get the document
-                // window before resorting to the chrome window.  When Firefox is
-                // e10sified, prompt service will need to take browser elements.
-                var win = message.target.contentWindow || message.target.ownerDocument.defaultView;
+                // window.  Prompt service needs to take browser elements.
+                var win = message.target.contentWindow || null;
 
                 var formLogin = new this._nsLoginInfo();
 
