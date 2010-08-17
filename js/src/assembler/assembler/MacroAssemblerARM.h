@@ -1116,8 +1116,8 @@ protected:
                 m_assembler.add_r(ARMRegisters::S0, base, ARMAssembler::OP2_IMM | (offset >> 12) | (10 << 8));
                 m_assembler.dtr_u(true, ARMRegisters::S0, ARMRegisters::S0, offset & 0xfff);
             } else {
-                ARMWord reg = m_assembler.getImm(offset, ARMRegisters::S0);
-                m_assembler.dtr_ur(true, ARMRegisters::S0, base, reg);
+                m_assembler.moveImm(offset, ARMRegisters::S0);
+                m_assembler.dtr_ur(true, ARMRegisters::S0, base, ARMRegisters::S0);
             }
         } else  {
             offset = -offset;
@@ -1127,8 +1127,8 @@ protected:
                 m_assembler.sub_r(ARMRegisters::S0, base, ARMAssembler::OP2_IMM | (offset >> 12) | (10 << 8));
                 m_assembler.dtr_d(true, ARMRegisters::S0, ARMRegisters::S0, offset & 0xfff);
             } else {
-                ARMWord reg = m_assembler.getImm(offset, ARMRegisters::S0);
-                m_assembler.dtr_dr(true, ARMRegisters::S0, base, reg);
+                m_assembler.moveImm(offset, ARMRegisters::S0);
+                m_assembler.dtr_dr(true, ARMRegisters::S0, base, ARMRegisters::S0);
             }
         }
         m_assembler.blx(ARMRegisters::S0);
