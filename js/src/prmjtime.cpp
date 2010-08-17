@@ -146,34 +146,6 @@ PRMJ_LocalGMTDifference()
 #define G2037GMTMICROHI        0x00e45fab /* micro secs to 2037 high */
 #define G2037GMTMICROLOW       0x7a238000 /* micro secs to 2037 low */
 
-/* Convert from base time to extended time */
-static JSInt64
-PRMJ_ToExtendedTime(JSInt32 base_time)
-{
-    JSInt64 exttime;
-    JSInt64 g1970GMTMicroSeconds;
-    JSInt64 low;
-    JSInt32 diff;
-    JSInt64  tmp;
-    JSInt64  tmp1;
-
-    diff = PRMJ_LocalGMTDifference();
-    JSLL_UI2L(tmp, PRMJ_USEC_PER_SEC);
-    JSLL_I2L(tmp1,diff);
-    JSLL_MUL(tmp,tmp,tmp1);
-
-    JSLL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
-    JSLL_UI2L(low,G1970GMTMICROLOW);
-    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
-    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
-    JSLL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
-
-    JSLL_I2L(exttime,base_time);
-    JSLL_ADD(exttime,exttime,g1970GMTMicroSeconds);
-    JSLL_SUB(exttime,exttime,tmp);
-    return exttime;
-}
-
 #ifdef HAVE_SYSTEMTIMETOFILETIME
 
 static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
@@ -696,14 +668,6 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
 #endif
     return result;
 }
-
-/* table for number of days in a month */
-static int mtab[] = {
-    /* jan, feb,mar,apr,may,jun */
-    31,28,31,30,31,30,
-    /* july,aug,sep,oct,nov,dec */
-    31,31,30,31,30,31
-};
 
 JSInt64
 DSTOffsetCache::computeDSTOffsetMilliseconds(int64 localTimeSeconds)
