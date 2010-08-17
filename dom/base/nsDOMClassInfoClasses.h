@@ -447,6 +447,8 @@ DOMCI_CLASS(DataTransfer)
 
 DOMCI_CLASS(NotifyPaintEvent)
 
+DOMCI_CLASS(NotifyAudioAvailableEvent)
+
 DOMCI_CLASS(SimpleGestureEvent)
 
 DOMCI_CLASS(MozTouchEvent)
