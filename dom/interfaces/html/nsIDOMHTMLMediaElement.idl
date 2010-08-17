@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(b6c9f51d-237c-44d1-842d-996f4d62c843)]
+[scriptable, uuid(925c46e0-3795-11df-9879-0800200c9a66)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -72,6 +72,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short NETWORK_LOADED = 3;
   const unsigned short NETWORK_NO_SOURCE = 4;
   readonly attribute unsigned short networkState;
+           attribute DomString preload;  
   readonly attribute nsIDOMHTMLTimeRanges buffered;
   void load();
   DOMString canPlayType(in DOMString type);
@@ -92,7 +93,6 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   readonly attribute boolean ended;
   readonly attribute boolean mozAutoplayEnabled;
            attribute boolean autoplay;
-           attribute boolean autobuffer;
   void play();
   void pause();
 
