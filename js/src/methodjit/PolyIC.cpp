@@ -853,7 +853,7 @@ class GetPropCompiler : public PICStubCompiler
 
         if (pic.objNeedsRemat()) {
             if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.load32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
+                masm.loadPayload(Address(JSFrameReg, pic.objRemat()), pic.objReg);
             else
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
@@ -1210,7 +1210,7 @@ class GetElemCompiler : public PICStubCompiler
 
         if (pic.objNeedsRemat()) {
             if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.load32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
+                masm.loadPayload(Address(JSFrameReg, pic.objRemat()), pic.objReg);
             else
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
