@@ -5,13 +5,9 @@ const traceDepth = 490;
 
 var trace = true;
 
-function doEval() {
-    eval("");
-}
-
 function maybeTrace(x) {
     if (!trace)
-        doEval();
+        eval("");
     if (x <= 0)
         return 0;
     return maybeTrace(x-1);
