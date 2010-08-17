@@ -750,7 +750,7 @@ const gXPInstallObserver = {
         PopupNotifications.remove(notification);
 
       var needsRestart = installInfo.installs.some(function(i) {
-        return (i.addon.pendingOperations & AddonManager.PENDING_INSTALL) != 0;
+        return i.addon.pendingOperations != AddonManager.PENDING_NONE;
       });
 
       if (needsRestart) {
@@ -6769,8 +6769,8 @@ var gBookmarkAllTabsHandler = {
     this._command = document.getElementById("Browser:BookmarkAllTabs");
     gBrowser.tabContainer.addEventListener("TabOpen", this, true);
     gBrowser.tabContainer.addEventListener("TabClose", this, true);
-    gBrowser.tabContainer.addEventListener("TabSelect", this, true);
-    gBrowser.tabContainer.addEventListener("TabMove", this, true);
+    gBrowser.tabContainer.addEventListener("TabShow", this, true);
+    gBrowser.tabContainer.addEventListener("TabHide", this, true);
     this._updateCommandState();
   },
 

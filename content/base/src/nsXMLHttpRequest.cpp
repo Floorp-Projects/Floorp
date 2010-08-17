@@ -100,6 +100,7 @@
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsAsyncRedirectVerifyHelper.h"
+#include "jstypedarray.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -1232,6 +1233,35 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
   }
 
   return rv;
+}
+
+/* readonly attribute jsval (ArrayBuffer) mozResponseArrayBuffer; */
+NS_IMETHODIMP nsXMLHttpRequest::GetMozResponseArrayBuffer(jsval *aResult)
+{
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  if (!(mState & (XML_HTTP_REQUEST_COMPLETED |
+                  XML_HTTP_REQUEST_INTERACTIVE))) {
+    *aResult = JSVAL_NULL;
+    return NS_OK;
+  }
+
+  PRInt32 dataLen = mResponseBody.Length();
+  JSObject *obj = js_CreateArrayBuffer(cx, dataLen);
+  if (!obj)
+    return NS_ERROR_FAILURE;
+
+  *aResult = OBJECT_TO_JSVAL(obj);
+
+  if (dataLen > 0) {
+    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(obj);
+    NS_ASSERTION(abuf, "What happened?");
+    memcpy(abuf->data, mResponseBody.BeginReading(), dataLen);
+  }
+
+  return NS_OK;
 }
 
 /* readonly attribute unsigned long status; */

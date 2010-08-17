@@ -1939,10 +1939,8 @@ nsXULElement::EnsureLocalStyle()
         nsXULPrototypeAttribute *protoattr =
                   FindPrototypeAttribute(kNameSpaceID_None, nsGkAtoms::style);
         if (protoattr && protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
-            nsCOMPtr<nsICSSRule> ruleClone;
-            nsresult rv = protoattr->mValue.GetCSSStyleRuleValue()->
-                Clone(*getter_AddRefs(ruleClone));
-            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsICSSRule> ruleClone =
+                protoattr->mValue.GetCSSStyleRuleValue()->Clone();
 
             nsString stringValue;
             protoattr->mValue.ToString(stringValue);
@@ -1951,7 +1949,8 @@ nsXULElement::EnsureLocalStyle()
             nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
             value.SetTo(styleRule, &stringValue);
 
-            rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
+            nsresult rv =
+                mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     }
@@ -2315,9 +2314,8 @@ nsresult nsXULElement::MakeHeavyweight()
         
         // Style rules need to be cloned.
         if (protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
-            nsCOMPtr<nsICSSRule> ruleClone;
-            rv = protoattr->mValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
-            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsICSSRule> ruleClone =
+                protoattr->mValue.GetCSSStyleRuleValue()->Clone();
 
             nsString stringValue;
             protoattr->mValue.ToString(stringValue);

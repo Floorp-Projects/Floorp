@@ -176,6 +176,7 @@
 #endif
 #include "LayerManagerOGL.h"
 #endif
+#include "BasicLayers.h"
 
 #if !defined(WINCE)
 #include "nsUXThemeConstants.h"
@@ -378,6 +379,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mDisplayPanFeedback   = PR_FALSE;
   mTouchWindow          = PR_FALSE;
   mCustomNonClient      = PR_FALSE;
+  mCompositorFlag       = PR_FALSE;
   mHideChrome           = PR_FALSE;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -1140,6 +1142,12 @@ NS_METHOD nsWindow::Show(PRBool bState)
   // Set the status now so that anyone asking during ShowWindow or
   // SetWindowPos would get the correct answer.
   mIsVisible = bState;
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (!mIsVisible && wasVisible) {
+      ClearD2DSurface();
+  }
+#endif
 
   if (mWnd) {
     if (bState) {
@@ -1987,6 +1995,13 @@ nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, PRBool aReflowWindow)
 {
   if (!mCustomNonClient)
     return PR_FALSE;
+
+  // XXX Temp disable margins until frame rendering is supported
+  mCompositorFlag = PR_TRUE;
+  if(!nsUXThemeData::CheckForCompositor()) {
+    mCompositorFlag = PR_FALSE;
+    return PR_FALSE;
+  }
 
   mNonClientOffset.top = mNonClientOffset.bottom =
     mNonClientOffset.left = mNonClientOffset.right = 0;
@@ -4167,8 +4182,31 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
  *
  **************************************************************/
 
-// The WndProc procedure for all nsWindows in this toolkit
+static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
+{
+#ifdef MOZ_CRASHREPORTER
+  nsCOMPtr<nsICrashReporter> cr =
+    do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  if (cr)
+    cr->WriteMinidumpForException(aExceptionInfo);
+#endif
+  return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// The WndProc procedure for all nsWindows in this toolkit. This merely catches
+// exceptions and passes the real work to WindowProcInternal. See bug 587406
+// and http://msdn.microsoft.com/en-us/library/ms633573%28VS.85%29.aspx
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  __try {
+    return WindowProcInternal(hWnd, msg, wParam, lParam);
+  }
+  __except(ReportException(GetExceptionInformation())) {
+    ::TerminateProcess(::GetCurrentProcess(), 253);
+  }
+}
+
+LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   NS_TIME_FUNCTION_MIN_FMT(5.0, "%s (line %d) (hWnd: %p, msg: %p, wParam: %p, lParam: %p",
                            MOZ_FUNCTION_NAME, __LINE__, hWnd, msg,
@@ -4305,6 +4343,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   // Glass hit testing w/custom transparent margins
   LRESULT dwmHitResult;
   if (mCustomNonClient &&
+      mCompositorFlag &&
       nsUXThemeData::CheckForCompositor() &&
       nsUXThemeData::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
     *aRetValue = dwmHitResult;
@@ -4445,7 +4484,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // copies the valid information to the specified area within the new
       // client area. If the wParam parameter is FALSE, the application should
       // return zero.
-      if (mCustomNonClient) {
+      if (mCustomNonClient && mCompositorFlag) {
         if (!wParam) {
           result = PR_TRUE;
           *aRetValue = 0;
@@ -4485,7 +4524,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
        * composited desktop.
        */
 
-      if (!mCustomNonClient)
+      if (!mCustomNonClient || !mCompositorFlag)
         break;
 
       *aRetValue =
@@ -7860,6 +7899,31 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
   }
 }
 #endif // WinCE
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+BOOL CALLBACK nsWindow::ClearD2DSurfaceCallback(HWND aWnd, LPARAM aMsg)
+{
+    nsWindow *window = nsWindow::GetNSWindowPtr(aWnd);
+    if (window) {
+        window->ClearD2DSurface();
+    }  
+    return TRUE;
+}
+
+void
+nsWindow::ClearD2DSurface()
+{
+    mD2DWindowSurface = nsnull;
+    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+        gfxWindowsPlatform::RENDER_DIRECT2D) {
+        // The layer manager holds onto a bunch of buffers created with create
+        // similar surface. This can consume quite a bit of VMEM for each tab,
+        // if a window is hidden we clear the layer manager to conserve VRAM.
+        mLayerManager = nsnull;
+    }
+    ::EnumChildWindows(mWnd, nsWindow::ClearD2DSurfaceCallback, NULL);
+}
+#endif
 
 static PRBool IsDifferentThreadWindow(HWND aWnd)
 {

@@ -49,6 +49,7 @@ DIRS		+= test
 endif
 
 MODULE		= layout
+XPIDL_MODULE	= layout_forms
 LIBRARY_NAME	= gkforms_s
 LIBXUL_LIBRARY	= 1
 

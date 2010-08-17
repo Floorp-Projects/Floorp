@@ -162,8 +162,9 @@ _cairo_d2d_set_operator(cairo_d2d_device_t *device,
 }
 
 cairo_device_t *
-cairo_d2d_create_device()
+cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
 {
+    HRESULT hr;
     D3D10_RASTERIZER_DESC rastDesc;
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
@@ -176,68 +177,15 @@ cairo_d2d_create_device()
     D3D10_SUBRESOURCE_DATA data;
 
     cairo_d2d_device_t *device = new cairo_d2d_device_t;
+
+    device->mD3D10Device = d3d10device;
+
     device->mD3D10_1 = LoadLibraryA("d3d10_1.dll");
-    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
-	GetProcAddress(device->mD3D10_1, "D3D10CreateDevice1");
     D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
 	GetProcAddress(device->mD3D10_1, "D3D10CreateEffectFromMemory");
     D2D1CreateFactoryFunc createD2DFactory;
 
-    if (!createD3DDevice || !createEffect) {
-	goto FAILED;
-    }
-
-    /**
-     * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
-     * documentation on D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
-     * can be misleading. In fact, that flag gives no such indication. I pointed this
-     * out to Bas in my email. However, Microsoft is in fact using this flag to
-     * indicate "light weight" DX applications. By light weight they are essentially
-     * referring to applications that are not games. The idea is that when you create
-     * a DX game, the driver assumes that you will pretty much have a single instance
-     * and therefore it doesn't try to hold back when it comes to GPU resource
-     * allocation as long as it can crank out performance. In other words, the
-     * priority in regular DX applications is to make that one application run as fast
-     * as you can. For "light weight" applications, including D2D applications, the
-     * priorities are a bit different. Now you are no longer going to have a single
-     * (or very few) instances. You can have a lot of them (say, for example, a
-     * separate DX context/device per browser tab). In such cases, the GPU resource
-     * allocation scheme changes.
-     */
-    HRESULT hr = createD3DDevice(
-	NULL, 
-	D3D10_DRIVER_TYPE_HARDWARE,
-	NULL,
-	D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-	D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-	D3D10_FEATURE_LEVEL_10_1,
-	D3D10_1_SDK_VERSION,
-	&device->mD3D10Device);
-    if (FAILED(hr)) {
-	hr = createD3DDevice(
-	    NULL, 
-	    D3D10_DRIVER_TYPE_HARDWARE,
-	    NULL,
-	    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-	    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-	    D3D10_FEATURE_LEVEL_10_0,
-	    D3D10_1_SDK_VERSION,
-	    &device->mD3D10Device);
-	if (FAILED(hr)) {
-	    /* This is not guaranteed to be too fast! */
-	    hr = createD3DDevice(
-		NULL, 
-		D3D10_DRIVER_TYPE_HARDWARE,
-		NULL,
-		D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-		D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-		D3D10_FEATURE_LEVEL_9_3,
-		D3D10_1_SDK_VERSION,
-		&device->mD3D10Device);
-
-	}
-    }
-    if (FAILED(hr)) {
+    if (!createEffect) {
 	goto FAILED;
     }
 
@@ -302,6 +250,80 @@ FAILED:
     return NULL;
 }
 
+cairo_device_t *
+cairo_d2d_create_device()
+{
+    HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
+    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
+	GetProcAddress(d3d10module, "D3D10CreateDevice1");
+
+    if (!createD3DDevice) {
+	return NULL;
+    }
+
+    RefPtr<ID3D10Device1> d3ddevice;
+
+    /**
+     * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
+     * documentation on D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+     * can be misleading. In fact, that flag gives no such indication. I pointed this
+     * out to Bas in my email. However, Microsoft is in fact using this flag to
+     * indicate "light weight" DX applications. By light weight they are essentially
+     * referring to applications that are not games. The idea is that when you create
+     * a DX game, the driver assumes that you will pretty much have a single instance
+     * and therefore it doesn't try to hold back when it comes to GPU resource
+     * allocation as long as it can crank out performance. In other words, the
+     * priority in regular DX applications is to make that one application run as fast
+     * as you can. For "light weight" applications, including D2D applications, the
+     * priorities are a bit different. Now you are no longer going to have a single
+     * (or very few) instances. You can have a lot of them (say, for example, a
+     * separate DX context/device per browser tab). In such cases, the GPU resource
+     * allocation scheme changes.
+     */
+    HRESULT hr = createD3DDevice(
+	NULL, 
+	D3D10_DRIVER_TYPE_HARDWARE,
+	NULL,
+	D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+	D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+	D3D10_FEATURE_LEVEL_10_1,
+	D3D10_1_SDK_VERSION,
+	&d3ddevice);
+    if (FAILED(hr)) {
+	hr = createD3DDevice(
+	    NULL, 
+	    D3D10_DRIVER_TYPE_HARDWARE,
+	    NULL,
+	    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+	    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+	    D3D10_FEATURE_LEVEL_10_0,
+	    D3D10_1_SDK_VERSION,
+	    &d3ddevice);
+	if (FAILED(hr)) {
+	    /* This is not guaranteed to be too fast! */
+	    hr = createD3DDevice(
+		NULL, 
+		D3D10_DRIVER_TYPE_HARDWARE,
+		NULL,
+		D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+		D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+		D3D10_FEATURE_LEVEL_9_3,
+		D3D10_1_SDK_VERSION,
+		&d3ddevice);
+
+	}
+    }
+    if (FAILED(hr)) {
+	return NULL;
+    }
+
+    cairo_device_t *device = cairo_d2d_create_device_from_d3d10device(d3ddevice);
+
+    // Free our reference to the modules. The created device should have its own.
+    FreeLibrary(d3d10module);
+    return device;
+}
+
 int
 cairo_release_device(cairo_device_t *device)
 {
@@ -309,9 +331,10 @@ cairo_release_device(cairo_device_t *device)
     if (!newrefcnt) {
 	// Call the correct destructor
 	cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
-	FreeLibrary(d2d_device->mD3D10_1);
+        HMODULE d3d10_1 = d2d_device->mD3D10_1;
 	delete d2d_device;
 	_cairo_d2d_release_factory();
+        FreeLibrary(d3d10_1);
     }
     return newrefcnt;
 }
@@ -1041,7 +1064,7 @@ _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style
     D2D1_LINE_JOIN line_join = D2D1_LINE_JOIN_MITER;
     switch (style->line_join) {
 	case CAIRO_LINE_JOIN_MITER:
-	    line_join = D2D1_LINE_JOIN_MITER;
+	    line_join = D2D1_LINE_JOIN_MITER_OR_BEVEL;
 	    break;
 	case CAIRO_LINE_JOIN_ROUND:
 	    line_join = D2D1_LINE_JOIN_ROUND;
@@ -1637,13 +1660,10 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    extendMode = D2D1_EXTEND_MODE_CLAMP;
 	    key = &bitmap_key_nonextend;
 	    /** 
-	     * For image surfaces we create a slightly larger bitmap with
-	     * a transparent border around it for this case. Need to translate
-	     * for that.
+	     * We create a slightly larger bitmap with a transparent border
+	     * around it for this case. Need to translate for that.
 	     */
-	    if (surfacePattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
-		cairo_matrix_translate(&mat, -1.0, -1.0);
-	    }
+	    cairo_matrix_translate(&mat, -1.0, -1.0);
 	} else if (pattern->extend == CAIRO_EXTEND_REPEAT) {
 	    extendMode = D2D1_EXTEND_MODE_WRAP;
 	} else if (pattern->extend == CAIRO_EXTEND_REFLECT) {
@@ -1678,9 +1698,21 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    }
 
 	    _cairo_d2d_update_surface_bitmap(srcSurf);
-	    sourceBitmap = srcSurf->surfaceBitmap;
-
 	    _cairo_d2d_flush(srcSurf);
+
+	    if (pattern->extend == CAIRO_EXTEND_NONE) {
+		ID2D1Bitmap *srcSurfBitmap = srcSurf->surfaceBitmap;
+		d2dsurf->rt->CreateBitmap(
+		    D2D1::SizeU(srcSurfBitmap->GetPixelSize().width + 2,
+				srcSurfBitmap->GetPixelSize().height + 2),
+		    D2D1::BitmapProperties(srcSurfBitmap->GetPixelFormat()),
+		    &sourceBitmap);
+		D2D1_POINT_2U point = D2D1::Point2U(1, 1);
+		sourceBitmap->CopyFromBitmap(&point, srcSurfBitmap, NULL);
+	    } else {
+		sourceBitmap = srcSurf->surfaceBitmap;
+	    }
+
 	} else if (surfacePattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
 	    cairo_image_surface_t *srcSurf = 
 		reinterpret_cast<cairo_image_surface_t*>(surfacePattern->surface);
@@ -2460,7 +2492,7 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     }
     *image_out = 
 	(cairo_image_surface_t*)_cairo_image_surface_create_for_data_with_content((unsigned char*)data.pData,
-										  CAIRO_CONTENT_COLOR_ALPHA,
+										  d2dsurf->base.content,
 										  size.width,
 										  size.height,
 										  data.RowPitch);
@@ -2930,12 +2962,23 @@ _cairo_d2d_mask(void			*surface,
 
     cairo_int_status_t status;
 
-    _begin_draw_state(d2dsurf);
-    status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
+    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(d2dsurf, clip);
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(d2dsurf);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (d2dsurf, clip);
 
-    if (unlikely (status))
-	return status;
-
+	if (unlikely(status))
+	    return status;
+    }
+#endif
 
     status = (cairo_int_status_t)_cairo_surface_mask_extents (&d2dsurf->base,
 		    op, source,
@@ -2966,9 +3009,13 @@ _cairo_d2d_mask(void			*surface,
 	    (cairo_solid_pattern_t*)mask;
 	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
 	    brush->SetOpacity((FLOAT)solidPattern->color.alpha);
-	    d2dsurf->rt->FillRectangle(rect,
-				       brush);
+	    target_rt->FillRectangle(rect,
+				     brush);
 	    brush->SetOpacity(1.0);
+
+	    if (target_rt.get() != d2dsurf->rt.get()) {
+		return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
+	    }
 	    return CAIRO_INT_STATUS_SUCCESS;
 	}
     }
@@ -2981,17 +3028,21 @@ _cairo_d2d_mask(void			*surface,
     if (!d2dsurf->maskLayer) {
 	d2dsurf->rt->CreateLayer(&d2dsurf->maskLayer);
     }
-    d2dsurf->rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
-						 0,
-						 D2D1_ANTIALIAS_MODE_ALIASED,
-						 D2D1::IdentityMatrix(),
-						 1.0,
-						 opacityBrush),
-			   d2dsurf->maskLayer);
+    target_rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
+					       0,
+					       D2D1_ANTIALIAS_MODE_ALIASED,
+					       D2D1::IdentityMatrix(),
+					       1.0,
+					       opacityBrush),
+			 d2dsurf->maskLayer);
 
-    d2dsurf->rt->FillRectangle(rect,
-			       brush);
-    d2dsurf->rt->PopLayer();
+    target_rt->FillRectangle(rect,
+			     brush);
+    target_rt->PopLayer();
+
+    if (target_rt.get() != d2dsurf->rt.get()) {
+	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
+    }
     return CAIRO_INT_STATUS_SUCCESS;
 }
 

@@ -826,7 +826,9 @@ ExternalResourceHider(nsIURI* aKey,
                       nsExternalResourceMap::ExternalResource* aData,
                       void* aClosure)
 {
-  aData->mViewer->Hide();
+  if (aData->mViewer) {
+    aData->mViewer->Hide();
+  }
   return PL_DHASH_NEXT;
 }
 
