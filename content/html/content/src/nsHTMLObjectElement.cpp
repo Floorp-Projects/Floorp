@@ -151,6 +151,7 @@ nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo
     mIsDoneAddingChildren(!aFromParser)
 {
   RegisterFreezableElement();
+  SetIsNetworkCreated(aFromParser == NS_FROM_PARSER_NETWORK);
 }
 
 nsHTMLObjectElement::~nsHTMLObjectElement()
@@ -464,6 +465,7 @@ nsHTMLObjectElement::StartObjectLoad(PRBool aNotify)
     // get interpreted as the page itself, instead of absence of URI.
     LoadObject(nsnull, aNotify, ctype);
   }
+  SetIsNetworkCreated(PR_FALSE);
 }
 
 PRInt32

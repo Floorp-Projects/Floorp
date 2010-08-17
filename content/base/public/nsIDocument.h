@@ -118,8 +118,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xb2274bc3, 0x4a1c, 0x4e64, \
-  { 0x8d, 0xe4, 0x3b, 0xc6, 0x50, 0x28, 0x84, 0x38 } }
+{ 0xba594543, 0x95f6, 0x4160, \
+  { 0x90, 0x32, 0x82, 0x87, 0x16, 0x5d, 0x59, 0x7a } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1425,6 +1425,8 @@ public:
     mHavePendingPaint = PR_FALSE;
   }
 
+  // This returns true when the document tree is being teared down.
+  PRBool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
 protected:
   ~nsIDocument()
   {
@@ -1560,6 +1562,9 @@ protected:
 
   // True while this document is being cloned to a static document.
   PRPackedBool mCreatingStaticClone;
+
+  // True iff the document is being unlinked or deleted.
+  PRPackedBool mInUnlinkOrDeletion;
 
   // True if document has ever had script handling object.
   PRPackedBool mHasHadScriptHandlingObject;
