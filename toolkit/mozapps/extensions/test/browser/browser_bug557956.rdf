@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <RDF:Description about="urn:mozilla:extension:addon1@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon2@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>0</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon3@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>0</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon4@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon5@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon6@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon7@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>0</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+                <em:updateLink>http://example.com/browser/toolkit/mozapps/extensions/test/browser/browser_bug557956_7_2.xpi</em:updateLink>
+                <em:updateHash>sha1:18674cf7ad76664e0ead6280a43cc0c681180505</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon8@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>0</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+                <em:updateLink>http://example.com/browser/toolkit/mozapps/extensions/test/browser/browser_bug557956_8_2.xpi</em:updateLink>
+                <em:updateHash>sha1:d6240607c4f202226fa291d9b7e537ff2a309616</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:addon9@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>0</em:maxVersion>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+                <em:updateLink>http://example.com/browser/toolkit/mozapps/extensions/test/browser/browser_bug557956_9_2.xpi</em:updateLink>
+                <em:updateHash>sha1:b25d1ee94acc734a4a039d31c1620051bbbd5633</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+</RDF:RDF>
+

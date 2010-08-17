@@ -4,20 +4,20 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>bug511091@tests.mozilla.org</em:id>
+    <em:id>addon4@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
 
     <em:targetApplication>
       <Description>
-        <em:id>xpcshell@tests.mozilla.org</em:id>
+        <em:id>toolkit@mozilla.org</em:id>
         <em:minVersion>1</em:minVersion>
-        <em:maxVersion>1</em:maxVersion>
+        <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Icon test</em:name>
-    <em:iconURL>chrome://foo/content/bar</em:iconURL>
+    <em:name>Addon4</em:name>
+    <em:bootstrap>true</em:bootstrap>
 
   </Description>
 </RDF>
