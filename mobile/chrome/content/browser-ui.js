@@ -1088,7 +1088,7 @@ var PageActions = {
 
     lm.findLogins({}, host.prePath, "", null).forEach(function(login) {
       if (login.hostname == host.prePath)
-        lm.removeLogin(siteLogins[i]);
+        lm.removeLogin(login);
     });
   },
 

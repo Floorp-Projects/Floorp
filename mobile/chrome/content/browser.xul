@@ -333,7 +333,7 @@
         <pageaction id="pageaction-share" title="&pageactions.share.page;"
           onclick="SharingUI.show(getBrowser().currentURI.spec, getBrowser().contentTitle);"/>
         <pageaction id="pageaction-password" title="&pageactions.password.forget;"
-          onclick="PageActions.forgetPassword(); PageAction.hideItem(this);"/>
+          onclick="PageActions.forgetPassword(); PageActions.hideItem(this);"/>
         <pageaction id="pageaction-reset" title="&pageactions.reset;"
           onclick="PageActions.clearPagePermissions(); PageActions.hideItem(this);"/>
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
