@@ -9,6 +9,7 @@
 </head>
 <body>
 <p id="display"></p>
+<iframe id="iframe" src="https://example.com/tests/toolkit/components/satchel/test/subtst_form_submission_1.html"></iframe>
 <div id="content" style="display: none">
   
   <!-- ===== Things that should not be saved. ===== -->
@@ -222,9 +223,6 @@
     <button type="submit">Submit</button>
   </form>
 
-  <iframe id="iframe1" src="https://example.com/tests/toolkit/components/satchel/test/subtst_form_submission_1.html"></iframe>
-  <iframe id="iframe2" src="https://example.com/tests/toolkit/components/satchel/test/subtst_form_submission_1.html"></iframe>
-
   <!-- form data submitted through HTTPS, when browser.formfill.saveHttpsForms is true -->
   <form id="form109" action="https://www.example.com/" onsubmit="return checkSubmit(109)">
     <input type="text" name="test9">
@@ -347,7 +345,7 @@ function checkSubmit(formNum) {
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
 
-  
+
   // Check for expected storage state.
   switch (formNum) {
     // Test 1-20 should not save anything.
@@ -371,75 +369,63 @@ function checkSubmit(formNum) {
     case 18:
     case 19:
     case 20:
+    case 21:
         ok(!fh.hasEntries, "checking for empty storage");
         break;
-    // The other tests do save data...
+    case 100:
+        checkForSave("subtest2", "subtestValue", "checking saved subtest value");
+        break;
     case 101:
-        ok(fh.entryExists("test1", "savedValue"), "checking saved value");
+        checkForSave("test1", "savedValue", "checking saved value");
         break;
     case 102:
-        ok(fh.entryExists("test2", "savedValue"), "checking saved value");
+        checkForSave("test2", "savedValue", "checking saved value");
         break;
     case 103:
-        ok(fh.entryExists("test3", "savedValue"), "checking saved value");
+        checkForSave("test3", "savedValue", "checking saved value");
         break;
     case 104:
-        ok(fh.entryExists("test4", "trimTrailingAndLeadingSpace"), "checking saved value is trimmed on both sides");
+        checkForSave("test4", "trimTrailingAndLeadingSpace", "checking saved value is trimmed on both sides");
         break;
     case 105:
-        ok(fh.entryExists("test5", "trimTrailingAndLeadingWhitespace"), "checking saved value is trimmed on both sides");
+        checkForSave("test5", "trimTrailingAndLeadingWhitespace", "checking saved value is trimmed on both sides");
         break;
     case 106:
-        ok(fh.entryExists("test6", "00000000109181"), "checking saved value");
+        checkForSave("test6", "00000000109181", "checking saved value");
         break;
     case 107:
         for (var i = 0; i != ccNumbers.invalid16.length; i++) {
-          ok(fh.entryExists("test7_" + (i + 1), ccNumbers.invalid16[i]), "checking saved value");
+          checkForSave("test7_" + (i + 1), ccNumbers.invalid16[i], "checking saved value");
         }
         break;
     case 108:
         for (var i = 0; i != ccNumbers.invalid15.length; i++) {
-          ok(fh.entryExists("test8_" + (i + 1), ccNumbers.invalid15[i]), "checking saved value");
+          checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
         }
         break;
     case 109:
-        ok(fh.entryExists("test9", "savedValue"), "checking saved value");
+        checkForSave("test9", "savedValue", "checking saved value");
         break;
     case 110:
-        ok(fh.entryExists("test10", "savedValue"), "checking saved value");
+        checkForSave("test10", "savedValue", "checking saved value");
         break;
     default:
         ok(false, "Unexpected form submission");
         break;
   }
 
-  // Forms 13 and 14 would trigger a save-password notification. Tempoarily
+  // Forms 13 and 14 would trigger a save-password notification. Temporarily
   // disable pwmgr, then reenable it.
   if (formNum == 12)
       prefBranch.setBoolPref("signon.rememberSignons", false);
   if (formNum == 14)
       prefBranch.clearUserPref("signon.rememberSignons");
 
-  // Form 20 requires browser.formfill.saveHttpsForms to be false
-  // Run a couple subtests here, which submit forms from an HTTPS origin,
-  // these are loaded in iframes since the test suite isn't HTTPS. The subtest
-  // before the pref change should save a value, the (same) subtest run after
-  // the pref change should not.
-  if (formNum == 19) {
-    ok(true, "submitting subtest1");
-    var iframe = document.getElementById("iframe1");
-    iframe.contentDocument.forms[0].submit();
-    ok(fh.entryExists("subtest1", "subtestValue"), "checking saved subtest value");
-    fh.removeEntriesForName("subtest1");
-
+  // Forms 20 and 21 requires browser.formfill.saveHttpsForms to be false
+  if (formNum == 19)
     prefBranch.setBoolPref("browser.formfill.saveHttpsForms", false);
-
-    ok(true, "submitting subtest1");
-    iframe = document.getElementById("iframe2");
-    iframe.contentDocument.forms[0].submit();
-    ok(!fh.entryExists("subtest1", "subtestValue"), "checking unsaved subtest value");
-  }
-  if (formNum == 20)
+  // Reset preference now that 20 and 21 are over
+  if (formNum == 21)
     prefBranch.clearUserPref("browser.formfill.saveHttpsForms");
 
   // Form 109 requires browser.formfill.save_https_forms to be true;
@@ -453,30 +439,40 @@ function checkSubmit(formNum) {
 
   // End the test at the last form.
   if (formNum == 110) {
-    is(numSubmittedForms, 30, "Ensuring all forms were submitted.");
+    is(numSubmittedForms, 32, "Ensuring all forms were submitted.");
+    Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
     SimpleTest.finish();
     return false; // return false to cancel current form submission
   }
 
-  // submit the next form.
-  var button = getFormSubmitButton(formNum == 20 ? 101 : (formNum + 1));
-  button.click();
+  // This timeout is here so that button.click() is never called before this
+  // function returns. If button.click() is called before returning, a long
+  // chain of submits will happen recursively since the submit is dispatched
+  // immediately.
+  //
+  // This in itself is fine, but if there are errors in the code, mochitests
+  // will in some cases give you "server too busy", which is hard to debug!
+  //
+  setTimeout(function() {
+    checkObserver.waitForChecks(function() {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+      var nextFormNum = formNum == 21 ? 100 : (formNum + 1);
+
+      // Submit the next form. Special cases are Forms 21 and 100, which happen
+      // from an HTTPS domain in an iframe.
+      if (nextFormNum == 21 || nextFormNum == 100) {
+        ok(true, "submitting iframe test " + nextFormNum);
+        document.getElementById("iframe").contentWindow.clickButton(nextFormNum);
+      }
+      else {
+        var button = getFormSubmitButton(nextFormNum);
+        button.click();
+      }
+    });
+  }, 0);
 
   return false; // cancel current form submission
-}
-
-
-function getFormSubmitButton(formNum) {
-  var form = $("form" + formNum); // by id, not name
-  ok(form != null, "getting form " + formNum);
-
-  // we can't just call form.submit(), because that doesn't seem to
-  // invoke the form onsubmit handler.
-  var button = form.firstChild;
-  while (button && button.type != "submit") { button = button.nextSibling; }
-  ok(button != null, "getting form submit button");
-
-  return button;
 }
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -487,6 +483,8 @@ ok(fh != null, "Got formHistory service");
 
 var prefBranch = Components.classes["@mozilla.org/preferences-service;1"].
                  getService(Components.interfaces.nsIPrefBranch);
+
+Services.obs.addObserver(checkObserver, "satchel-storage-changed", false);
 
 window.onload = startTest;
 
