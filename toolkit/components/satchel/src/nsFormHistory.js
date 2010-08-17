@@ -55,7 +55,7 @@ FormHistory.prototype = {
     QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormHistory2,
                                               Ci.nsIObserver,
                                               Ci.nsIFrameMessageListener,
-                                              Ci.nsISupportsWeakReference]),
+                                              ]),
 
     debug          : true,
     enabled        : true,
@@ -129,7 +129,7 @@ FormHistory.prototype = {
 
         let prefBranch = Services.prefs.getBranch("browser.formfill.");
         prefBranch = prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        prefBranch.addObserver("", this, true);
+        prefBranch.addObserver("", this, false);
 
         this.updatePrefs();
 
