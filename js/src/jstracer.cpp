@@ -10357,7 +10357,7 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if (*fp->script->code != JSOP_TRACE)
         return false;
-    return !fp->getFunction()->isHeavyweight();
+    return !fp->fun->isHeavyweight();
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
