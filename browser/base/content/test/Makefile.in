@@ -147,6 +147,7 @@ _BROWSER_FILES = \
                  browser_drag.js \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
+                 browser_hide_removing.js \
                  browser_inspector_initialization.js \
                  browser_inspector_treeSelection.js \
                  browser_inspector_highlighter.js \
