@@ -132,9 +132,6 @@ class GeckoAppShell
         System.loadLibrary("ssl3");
         System.loadLibrary("smime3");
 
-        // JS
-        System.loadLibrary("mozjs");
-
         // XUL
         System.loadLibrary("xul");
 

@@ -76,6 +76,7 @@
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
 #include "nsIPrincipal.h"
+#include "nsWildCard.h"
 
 #include "nsIXPConnect.h"
 
@@ -365,22 +366,58 @@ RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
   // Get per-library whitelist/blacklist pref string
   // "dom.ipc.plugins.enabled.filename.dll" and fall back to the default value
   // of "dom.ipc.plugins.enabled"
+  // The "filename.dll" part can contain shell wildcard pattern
 
-  nsCAutoString pluginLibPref(aFilePath);
-  PRInt32 slashPos = pluginLibPref.RFindCharInSet("/\\");
+  nsCAutoString prefFile(aFilePath);
+  PRInt32 slashPos = prefFile.RFindCharInSet("/\\");
   if (kNotFound == slashPos)
     return PR_FALSE;
-  pluginLibPref.Cut(0, slashPos + 1);
-  ToLowerCase(pluginLibPref);
-  pluginLibPref.Insert("dom.ipc.plugins.enabled.", 0);
+  prefFile.Cut(0, slashPos + 1);
+  ToLowerCase(prefFile);
+
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.");
+
+  PRUint32 prefCount;
+  char** prefNames;
+  nsresult rv = prefs->GetChildList(prefGroupKey.get(),
+                                    &prefCount, &prefNames);
 
   PRBool oopPluginsEnabled = PR_FALSE;
-  if (NS_SUCCEEDED(prefs->GetBoolPref(pluginLibPref.get(),
-                                      &oopPluginsEnabled)))
-    return oopPluginsEnabled;
+  PRBool prefSet = PR_FALSE;
 
-  oopPluginsEnabled = PR_FALSE;
-  prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+  if (NS_SUCCEEDED(rv) && prefCount > 0) {
+    PRUint32 prefixLength = prefGroupKey.Length();
+    for (PRUint32 currentPref = 0; currentPref < prefCount; currentPref++) {
+      // Get the mask
+      const char* maskStart = prefNames[currentPref] + prefixLength;
+      PRBool match = PR_FALSE;
+
+      int valid = NS_WildCardValid(maskStart);
+      if (valid == INVALID_SXP) {
+         continue;
+      }
+      else if(valid == NON_SXP) {
+        // mask is not a shell pattern, compare it as normal string
+        match = (strcmp(prefFile.get(), maskStart) == 0);
+      }
+      else {
+        match = (NS_WildCardMatch(prefFile.get(), maskStart, 0) == MATCH);
+      }
+
+      if (match && NS_SUCCEEDED(prefs->GetBoolPref(prefNames[currentPref],
+                                                   &oopPluginsEnabled))) {
+        prefSet = PR_TRUE;
+        break;
+      }
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
+  }
+
+  if (!prefSet) {
+    oopPluginsEnabled = PR_FALSE;
+    prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+  }
+
   return oopPluginsEnabled;
 }
 

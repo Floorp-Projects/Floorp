@@ -114,8 +114,12 @@ nsUXThemeData::Initialize()
 {
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
-  sThemeDLL = ::LoadLibraryW(kThemeLibraryName);
-  if (sThemeDLL) {
+
+  PRInt32 version = nsWindow::GetWindowsVersion();
+  sIsXPOrLater = version >= WINXP_VERSION;
+  sIsVistaOrLater = version >= VISTA_VERSION;
+
+  if (GetThemeDLL()) {
     openTheme = (OpenThemeDataPtr)GetProcAddress(sThemeDLL, "OpenThemeData");
     closeTheme = (CloseThemeDataPtr)GetProcAddress(sThemeDLL, "CloseThemeData");
     drawThemeBG = (DrawThemeBackgroundPtr)GetProcAddress(sThemeDLL, "DrawThemeBackground");
@@ -132,22 +136,18 @@ nsUXThemeData::Initialize()
     isThemeBackgroundPartiallyTransparent = (IsThemeBackgroundPartiallyTransparentPtr)GetProcAddress(sThemeDLL, "IsThemeBackgroundPartiallyTransparent");
   }
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-   sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
-   if(sDwmDLL) {
-     dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
-     dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDLL, "DwmIsCompositionEnabled");
-     dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDLL, "DwmSetIconicThumbnail");
-     dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDLL, "DwmSetIconicLivePreviewBitmap");
-     dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmSetWindowAttribute");
-     dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDLL, "DwmInvalidateIconicBitmaps");
-     dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDLL, "DwmDefWindowProc");
-     CheckForCompositor();
-   }
+  if (GetDwmDLL()) {
+    dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
+    dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDLL, "DwmIsCompositionEnabled");
+    dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDLL, "DwmSetIconicThumbnail");
+    dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDLL, "DwmSetIconicLivePreviewBitmap");
+    dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmSetWindowAttribute");
+    dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDLL, "DwmInvalidateIconicBitmaps");
+    dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDLL, "DwmDefWindowProc");
+    CheckForCompositor();
+  }
 #endif
 
-  PRInt32 version = nsWindow::GetWindowsVersion();
-  sIsXPOrLater = version >= WINXP_VERSION;
-  sIsVistaOrLater = version >= VISTA_VERSION;
   Invalidate();
 }
 
@@ -184,6 +184,20 @@ nsUXThemeData::GetTheme(nsUXThemeClass cls) {
     sThemes[cls] = openTheme(NULL, GetClassName(cls));
   }
   return sThemes[cls];
+}
+
+HMODULE
+nsUXThemeData::GetThemeDLL() {
+  if (!sThemeDLL && sIsXPOrLater)
+    sThemeDLL = ::LoadLibraryW(kThemeLibraryName);
+  return sThemeDLL;
+}
+
+HMODULE
+nsUXThemeData::GetDwmDLL() {
+  if (!sDwmDLL && sIsVistaOrLater)
+    sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
+  return sDwmDLL;
 }
 
 const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {

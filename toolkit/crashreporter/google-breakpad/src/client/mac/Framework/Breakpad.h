@@ -110,16 +110,19 @@ typedef bool (*BreakpadFilterCallback)(int exception_type,
 // Key:                           Value:
 // BREAKPAD_PRODUCT               Product name (e.g., "MyAwesomeProduct")
 //                                This one is used as the key to identify
-//                                the product when uploading
+//                                the product when uploading. Falls back to
+//                                CFBundleName if not specified.
 //                                REQUIRED
 //
 // BREAKPAD_PRODUCT_DISPLAY       This is the display name, e.g. a pretty
 //                                name for the product when the crash_sender
-//                                pops up UI for the user.  Falls back to
+//                                pops up UI for the user. Falls back first to
+//                                CFBundleDisplayName and then to
 //                                BREAKPAD_PRODUCT if not specified.
 //
 // BREAKPAD_VERSION               Product version (e.g., 1.2.3), used
-//                                as metadata for crash report
+//                                as metadata for crash report. Falls back to
+//                                CFBundleVersion if not specified.
 //                                REQUIRED
 //
 // BREAKPAD_VENDOR                Vendor name, used in UI (e.g. "A report has

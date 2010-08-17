@@ -106,8 +106,7 @@ public:
    */
   inline PRUint32 GetLinkCount()
   {
-    AccCollector* links = GetLinkCollector();
-    return links ? links->Count() : 0;
+    return GetEmbeddedChildCount();
   }
 
   /**
@@ -115,8 +114,7 @@ public:
    */
   inline nsAccessible* GetLinkAt(PRUint32 aIndex)
   {
-    AccCollector* links = GetLinkCollector();
-    return links ? links->GetAccessibleAt(aIndex) : nsnull;
+    return GetEmbeddedChildAt(aIndex);
   }
 
   /**
@@ -124,8 +122,16 @@ public:
    */
   inline PRInt32 GetLinkIndex(nsAccessible* aLink)
   {
-    AccCollector* links = GetLinkCollector();
-    return links ? links->GetIndexAt(aLink) : -1;
+    return GetIndexOfEmbeddedChild(aLink);
+  }
+
+  /**
+   * Return link accessible at the given text offset.
+   */
+  inline PRInt32 GetLinkIndexAtOffset(PRUint32 aOffset)
+  {
+    nsAccessible* child = GetChildAtOffset(aOffset);
+    return GetLinkIndex(child);
   }
 
   /**
@@ -187,22 +193,45 @@ public:
                                       PRInt32 *aEndOffset);
 
   /**
-   * Return text offset the given child accessible of hypertext accessible.
+   * Return text offset of the given child accessible within hypertext
+   * accessible.
    *
    * @param  aChild           [in] accessible child to get text offset for
    * @param  aInvalidateAfter [in, optional] indicates whether invalidate
    *                           cached offsets for next siblings of the child
    */
   PRInt32 GetChildOffset(nsAccessible* aChild,
+                         PRBool aInvalidateAfter = PR_FALSE)
+  {
+    PRInt32 index = GetIndexOf(aChild);
+    return index == -1 ? -1 : GetChildOffset(index, aInvalidateAfter);
+  }
+
+  /**
+   * Return text offset for the child accessible index.
+   */
+  PRInt32 GetChildOffset(PRUint32 aChildIndex,
                          PRBool aInvalidateAfter = PR_FALSE);
+
+  /**
+   * Return child accessible at the given text offset.
+   *
+   * @param  aOffset  [in] the given text offset
+   */
+  PRInt32 GetChildIndexAtOffset(PRUint32 aOffset);
+
+  /**
+   * Return child accessible at the given text offset.
+   *
+   * @param  aOffset  [in] the given text offset
+   */
+  nsAccessible* GetChildAtOffset(PRUint32 aOffset)
+  {
+    return GetChildAt(GetChildIndexAtOffset(aOffset));
+  }
 
 protected:
   // nsHyperTextAccessible
-
-  /**
-   * Return link collection, create it if necessary.
-   */
-  AccCollector* GetLinkCollector();
 
   /*
    * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset
@@ -298,18 +327,6 @@ protected:
    * @return 1-based index for the line number with the caret
    */
   PRInt32 GetCaretLineNumber();
-
-  /**
-   * Return an accessible at the given hypertext offset.
-   *
-   * @param  aOffset       [out] the given hypertext offset
-   * @param  aAccIdx       [out] child index of returned accessible
-   * @param  aStartOffset  [out] start hypertext offset of returned accessible
-   * @param  aEndOffset    [out] end hypertext offset of returned accessible
-   */
-  nsAccessible *GetAccessibleAtOffset(PRInt32 aOffset, PRInt32 *aAccIdx,
-                                      PRInt32 *aStartOffset,
-                                      PRInt32 *aEndOffset);
 
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,

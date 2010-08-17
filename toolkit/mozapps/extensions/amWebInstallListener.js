@@ -253,6 +253,14 @@ Installer.prototype = {
   onInstallEnded: function(aInstall) {
     aInstall.removeListener(this);
     this.installed.push(aInstall);
+
+    // If installing a theme that is disabled and can be enabled then enable it
+    if (aInstall.addon.type == "theme" &&
+        aInstall.addon.userDisabled == true &&
+        aInstall.addon.appDisabled == false) {
+      aInstall.addon.userDisabled = false;
+    }
+
     this.checkAllInstalled();
   }
 };

@@ -47,3 +47,9 @@ nsresult GfxInfo::GetD2DEnabled(PRBool *aEnabled)
   *aEnabled = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
   return NS_OK;
 }
+
+nsresult GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+{
+  *aEnabled = gfxWindowsPlatform::GetPlatform()->DWriteEnabled();
+  return NS_OK;
+}

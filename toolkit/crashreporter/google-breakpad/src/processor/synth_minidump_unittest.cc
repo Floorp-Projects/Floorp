@@ -50,9 +50,9 @@ using google_breakpad::SynthMinidump::Stream;
 using google_breakpad::SynthMinidump::String;
 using google_breakpad::SynthMinidump::SystemInfo;
 using google_breakpad::SynthMinidump::Thread;
-using google_breakpad::TestAssembler::kBigEndian;
-using google_breakpad::TestAssembler::kLittleEndian;
-using google_breakpad::TestAssembler::Label;
+using google_breakpad::test_assembler::kBigEndian;
+using google_breakpad::test_assembler::kLittleEndian;
+using google_breakpad::test_assembler::Label;
 using std::string;
 
 TEST(Section, Simple) {

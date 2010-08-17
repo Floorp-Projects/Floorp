@@ -431,6 +431,7 @@ protected:
   PRPackedBool          mDrawing;
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
+  PRPackedBool          mIsDispatchPaint; // Is a paint event being dispatched
 
   NP_CGContext          mPluginCGContext;
 #ifndef NP_NO_QUICKDRAW
