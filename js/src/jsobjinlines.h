@@ -287,20 +287,6 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
 }
 
 inline const js::Value &
-JSObject::getDateLocalTime() const
-{
-    JS_ASSERT(isDate());
-    return fslots[JSSLOT_DATE_LOCAL_TIME];
-}
-
-inline void 
-JSObject::setDateLocalTime(const js::Value &time)
-{
-    JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_LOCAL_TIME] = time;
-}
-
-inline const js::Value &
 JSObject::getDateUTCTime() const
 {
     JS_ASSERT(isDate());
