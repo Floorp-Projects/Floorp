@@ -259,6 +259,16 @@ HttpChannelParent::RecvRedirect2Result(const nsresult& result,
   return true;
 }
 
+bool
+HttpChannelParent::RecvDocumentChannelCleanup()
+{
+  // We must clear the cache entry here, else we'll block other channels from
+  // reading it if we've got it open for writing.  
+  mCacheDescriptor = 0;
+
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // nsIRequestObserver and nsIStreamListener methods equivalents
 //-----------------------------------------------------------------------------
