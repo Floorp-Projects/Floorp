@@ -60,6 +60,15 @@
 #include "nsITransferable.h"
 #include "nsIVariant.h"
 
+#ifdef MOZ_IPC
+namespace mozilla {
+namespace dom {
+  class PBrowserParent;
+  class PBrowserChild;
+}
+}
+#endif // MOZ_IPC
+
 #ifdef ACCESSIBILITY
 class nsAccessible;
 #endif
@@ -509,6 +518,12 @@ protected:
     MOZ_COUNT_CTOR(nsEvent);
   }
 
+#ifdef MOZ_IPC
+  nsEvent()
+  {
+  }
+#endif // MOZ_IPC
+
 public:
   nsEvent(PRBool isTrusted, PRUint32 msg)
     : eventStructType(NS_EVENT),
@@ -559,6 +574,13 @@ protected:
       widget(w), pluginEvent(nsnull)
   {
   }
+
+#ifdef MOZ_IPC
+  nsGUIEvent()
+    : pluginEvent(nsnull)
+  {
+  }
+#endif // MOZ_IPC
 
 public:
   nsGUIEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
@@ -723,6 +745,12 @@ protected:
       isShift(PR_FALSE), isControl(PR_FALSE), isAlt(PR_FALSE), isMeta(PR_FALSE)
   {
   }
+
+#ifdef MOZ_IPC
+  nsInputEvent()
+  {
+  }
+#endif // MOZ_IPC
 
 public:
   nsInputEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
@@ -1020,6 +1048,16 @@ typedef nsTextRange* nsTextRangeArray;
 
 class nsTextEvent : public nsInputEvent
 {
+#ifdef MOZ_IPC
+private:
+  friend class mozilla::dom::PBrowserParent;
+  friend class mozilla::dom::PBrowserChild;
+
+  nsTextEvent()
+  {
+  }
+#endif // MOZ_IPC
+
 public:
   nsTextEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_TEXT_EVENT),
@@ -1038,6 +1076,16 @@ public:
 
 class nsCompositionEvent : public nsInputEvent
 {
+#ifdef MOZ_IPC
+private:
+  friend class mozilla::dom::PBrowserParent;
+  friend class mozilla::dom::PBrowserChild;
+
+  nsCompositionEvent()
+  {
+  }
+#endif // MOZ_IPC
+
 public:
   nsCompositionEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_COMPOSITION_EVENT)
@@ -1152,6 +1200,18 @@ public:
 
 class nsQueryContentEvent : public nsGUIEvent
 {
+#ifdef MOZ_IPC
+private:
+  friend class mozilla::dom::PBrowserParent;
+  friend class mozilla::dom::PBrowserChild;
+
+  nsQueryContentEvent()
+  {
+    mReply.mContentsRoot = nsnull;
+    mReply.mFocusedWidget = nsnull;
+  }
+#endif // MOZ_IPC
+
 public:
   nsQueryContentEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget) :
     nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_QUERY_CONTENT_EVENT),
@@ -1219,6 +1279,16 @@ public:
 
 class nsSelectionEvent : public nsGUIEvent
 {
+#ifdef MOZ_IPC
+private:
+  friend class mozilla::dom::PBrowserParent;
+  friend class mozilla::dom::PBrowserChild;
+
+  nsSelectionEvent()
+  {
+  }
+#endif // MOZ_IPC
+
 public:
   nsSelectionEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget) :
     nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_SELECTION_EVENT),
