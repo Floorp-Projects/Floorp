@@ -597,6 +597,18 @@ public:                                                                        \
 };                                                                             \
 NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
+#define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(_class,         \
+                                                               _base_class)    \
+class NS_CYCLE_COLLECTION_INNERCLASS                                           \
+ : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
+{                                                                              \
+public:                                                                        \
+  NS_IMETHOD RootAndUnlinkJSObjects(void *p);                                  \
+  NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);           \
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)           \
+};                                                                             \
+NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+
 /**
  * This implements a stub UnmarkPurple function for classes that want to be
  * traversed but whose AddRef/Release functions don't add/remove them to/from

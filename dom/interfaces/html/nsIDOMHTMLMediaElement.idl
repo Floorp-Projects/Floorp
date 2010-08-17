@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(b6c9f51d-237c-44d1-842d-996f4d62c843)]
+[scriptable, uuid(f748b7db-4ab9-4370-835d-59f30c8de57c)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -100,6 +100,16 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
            attribute boolean controls;
            attribute float volume;
            attribute boolean muted;
+
+  // Mozilla extension: extra stream metadata information, used as part
+  // of audioavailable events and the mozWriteAudio() method.  The
+  // mozFrameBufferLength method allows for the size of the framebuffer
+  // used within audioavailable events to be changed.  The new size must
+  // be a power of 2 between 512 and 32768.  The default size, for a
+  // media element with audio, is (mozChannels * 1024).
+  readonly attribute unsigned long mozChannels;
+  readonly attribute unsigned long mozSampleRate;
+           attribute unsigned long mozFrameBufferLength;
 
   // Mozilla extension: load data from another media element. This is like
   // load() but we don't run the resource selection algorithm; instead
