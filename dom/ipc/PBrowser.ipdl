@@ -48,11 +48,16 @@ include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "IPC/nsGUIEventIPC.h";
 
 using IPC::URI;
 using MagicWindowHandle;
 using RemoteDOMEvent;
 using gfxMatrix;
+using nsCompositionEvent;
+using nsTextEvent;
+using nsQueryContentEvent;
+using nsSelectionEvent;
 
 namespace mozilla {
 namespace dom {
@@ -105,6 +110,8 @@ parent:
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
 
+    QueryContentResult(nsQueryContentEvent event);
+
     PGeolocationRequest(URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
@@ -146,6 +153,14 @@ child:
              PRInt32 aCharCode,
              PRInt32 aModifiers,
              bool aPreventDefault);
+
+    CompositionEvent(nsCompositionEvent event);
+
+    TextEvent(nsTextEvent event);
+
+    QueryContentEvent(nsQueryContentEvent event);
+
+    SelectionEvent(nsSelectionEvent event);
 
     /**
      * Activate event forwarding from client to parent.

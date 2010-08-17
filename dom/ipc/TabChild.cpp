@@ -83,6 +83,8 @@
 #include "nsISecureBrowserUI.h"
 #include "nsISSLStatusProvider.h"
 #include "nsSerializationHelper.h"
+#include "nsIFrame.h"
+#include "nsIView.h"
 
 #ifdef MOZ_WIDGET_QT
 #include <QX11EmbedWidget>
@@ -720,15 +722,77 @@ TabChild::RecvKeyEvent(const nsString& aType,
   return true;
 }
 
+bool
+TabChild::RecvCompositionEvent(const nsCompositionEvent& event)
+{
+  nsCompositionEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+bool
+TabChild::RecvTextEvent(const nsTextEvent& event)
+{
+  nsTextEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  IPC::ParamTraits<nsTextEvent>::Free(event);
+  return true;
+}
+
+bool
+TabChild::RecvQueryContentEvent(const nsQueryContentEvent& event)
+{
+  nsQueryContentEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  // Send result back even if query failed
+  SendQueryContentResult(localEvent);
+  return true;
+}
+
+bool
+TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
+{
+  nsSelectionEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+bool
+TabChild::DispatchWidgetEvent(nsGUIEvent& event)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
+  NS_ENSURE_TRUE(window, false);
+
+  nsIDocShell *docShell = window->GetDocShell();
+  NS_ENSURE_TRUE(docShell, false);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, false);
+
+  nsIFrame *frame = presShell->GetRootFrame();
+  NS_ENSURE_TRUE(frame, false);
+
+  nsIView *view = frame->GetView();
+  NS_ENSURE_TRUE(view, false);
+
+  nsCOMPtr<nsIWidget> widget = view->GetNearestWidget(nsnull);
+  NS_ENSURE_TRUE(widget, false);
+
+  nsEventStatus status;
+  event.widget = widget;
+  NS_ENSURE_SUCCESS(widget->DispatchEvent(&event, status), false);
+  return true;
+}
+
 mozilla::ipc::PDocumentRendererChild*
-TabChild::AllocPDocumentRenderer(
-        const PRInt32& x,
-        const PRInt32& y,
-        const PRInt32& w,
-        const PRInt32& h,
-        const nsString& bgcolor,
-        const PRUint32& flags,
-        const bool& flush)
+TabChild::AllocPDocumentRenderer(const PRInt32& x,
+                                 const PRInt32& y,
+                                 const PRInt32& w,
+                                 const PRInt32& h,
+                                 const nsString& bgcolor,
+                                 const PRUint32& flags,
+                                 const bool& flush)
 {
     return new mozilla::ipc::DocumentRendererChild();
 }
