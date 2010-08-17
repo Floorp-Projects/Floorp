@@ -58,6 +58,7 @@ PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
 #define FAKE_BUFFER_SIZE 176400
+#define MILLISECONDS_PER_SECOND 1000
 
 void nsAudioStream::InitLibrary()
 {
@@ -85,7 +86,7 @@ nsAudioStream::~nsAudioStream()
   Shutdown();
 }
 
-void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
+nsresult nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
 {
   mRate = aRate;
   mChannels = aNumChannels;
@@ -98,15 +99,17 @@ void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aForm
                            aNumChannels) != SA_SUCCESS) {
     mAudioHandle = nsnull;
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_create_pcm error"));
-    return;
+    return NS_ERROR_FAILURE;
   }
-  
+
   if (sa_stream_open(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
     sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
     mAudioHandle = nsnull;
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_open error"));
-    return;
+    return NS_ERROR_FAILURE;
   }
+
+  return NS_OK;
 }
 
 void nsAudioStream::Shutdown()
@@ -118,7 +121,7 @@ void nsAudioStream::Shutdown()
   mAudioHandle = nsnull;
 }
 
-void nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
+nsresult nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
 {
   NS_ABORT_IF_FALSE(aCount % mChannels == 0,
                     "Buffer size must be divisible by channel count");
@@ -128,7 +131,7 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
   PRUint32 count = aCount + offset;
 
   if (!mAudioHandle)
-    return;
+    return NS_ERROR_FAILURE;
 
   nsAutoArrayPtr<short> s_data(new short[count]);
 
@@ -194,8 +197,11 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
     {
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
       Shutdown();
+      return NS_ERROR_FAILURE;
     }
   }
+
+  return NS_OK;
 }
 
 PRUint32 nsAudioStream::Available()
@@ -263,6 +269,16 @@ void nsAudioStream::Resume()
 
 PRInt64 nsAudioStream::GetPosition()
 {
+  PRInt64 sampleOffset = GetSampleOffset();
+  if(sampleOffset >= 0) {
+    return ((MILLISECONDS_PER_SECOND * sampleOffset) / mRate / mChannels);
+  }
+
+  return -1;
+}
+
+PRInt64 nsAudioStream::GetSampleOffset()
+{
   if (!mAudioHandle)
     return -1;
 
@@ -273,9 +289,8 @@ PRInt64 nsAudioStream::GetPosition()
   PRInt64 position = 0;
   if (sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle),
                              positionType, &position) == SA_SUCCESS) {
-    return ((1000 * position) / mRate / mChannels / sizeof(short));
+    return position / sizeof(short);
   }
 
   return -1;
 }
-
