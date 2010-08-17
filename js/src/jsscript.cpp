@@ -1030,13 +1030,25 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         {
             /*
              * We can probably use the immutable empty script singleton, just
-             * one hard case (nupvars != 0) may stand in our way.
+             * two hard cases (nupvars != 0, strict mode code) may stand in our
+             * way.
              */
             JSScript *empty = JSScript::emptyScript();
 
             if (cg->flags & TCF_IN_FUNCTION) {
                 fun = cg->fun;
-                JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
+                JS_ASSERT(fun->isInterpreted() && !FUN_SCRIPT(fun));
+                if (cg->flags & TCF_STRICT_MODE_CODE) {
+                    /*
+                     * We can't use a script singleton for empty strict mode
+                     * functions because they have poison-pill caller and
+                     * arguments properties:
+                     *
+                     * function strict() { "use strict"; }
+                     * strict.caller; // calls [[ThrowTypeError]] function
+                     */
+                    goto skip_empty;
+                }
                 if (fun->u.i.nupvars != 0) {
                     /*
                      * FIXME: upvar uses that were all optimized away may leave
@@ -1118,7 +1130,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         script->strictModeCode = true;
     if (cg->flags & TCF_COMPILE_N_GO)
         script->compileAndGo = true;
-    if (cg->flags & TCF_FUN_USES_EVAL)
+    if (cg->flags & TCF_FUN_CALLS_EVAL)
         script->usesEval = true;
 
     if (cg->upvarList.count != 0) {
