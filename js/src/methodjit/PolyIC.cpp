@@ -1218,7 +1218,7 @@ class GetElemCompiler : public PICStubCompiler
 
         if (pic.idNeedsRemat()) {
             if (pic.idRemat() >= sizeof(JSStackFrame))
-                masm.load32(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
+                masm.loadPayload(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
             else
                 masm.move(RegisterID(pic.idRemat()), pic.u.get.idReg);
             pic.u.get.idNeedsRemat = false;
