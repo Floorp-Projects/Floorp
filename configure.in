@@ -8065,6 +8065,10 @@ if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
     AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
 fi
 
+if test -z "$MOZ_ENABLE_LIBXUL" -a -n "$MOZ_OMNIJAR"; then
+    AC_MSG_ERROR([Omnijar packaging is incompatible with --disable-libxul. Please either --enable-libxul or --enable-chrome-format=jar|flat|symlink]);
+fi
+
 AC_SUBST(LIBXUL_LIBS)
 
 if test -n "$MOZ_ENABLE_LIBXUL"; then
