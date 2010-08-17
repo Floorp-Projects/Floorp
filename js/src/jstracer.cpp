@@ -8731,13 +8731,22 @@ TraceRecorder::tableswitch()
         high = GET_JUMPX_OFFSET(pc);
     }
 
+    /* 
+     * If there are no cases, this is a no-op. The default case immediately
+     * follows in the bytecode and is always taken, so we need no special
+     * action to handle it.
+     */
+    int count = high + 1 - low;
+    if (count == 0)
+        return ARECORD_CONTINUE;
+
     /* Cap maximum table-switch size for modesty. */
-    if ((high + 1 - low) > MAX_TABLE_SWITCH)
+    if (count > MAX_TABLE_SWITCH)
         return InjectStatus(switchop());
 
     /* Generate switch LIR. */
     SwitchInfo* si = new (traceAlloc()) SwitchInfo();
-    si->count = high + 1 - low;
+    si->count = count;
     si->table = 0;
     si->index = (uint32) -1;
     LIns* diff = lir->ins2(LIR_subi, v_ins, lir->insImmI(low));
