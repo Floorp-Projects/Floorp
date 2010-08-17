@@ -187,6 +187,7 @@ _TEST_FILES += \
 		bug504843.ogv \
 		bug506094.ogv \
 		bug516323.ogv \
+		bug516323.indexed.ogv \
 		bug520493.ogg \
 		bug520500.ogg \
 		bug520908.ogv \
