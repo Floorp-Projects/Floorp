@@ -343,7 +343,7 @@ struct AnchorMatrix
   inline bool sanitize (hb_sanitize_context_t *c, unsigned int cols) {
     TRACE_SANITIZE ();
     if (!c->check_struct (this)) return false;
-    if (unlikely (cols >= ((unsigned int) -1) / rows)) return false;
+    if (unlikely (rows > 0 && cols >= ((unsigned int) -1) / rows)) return false;
     unsigned int count = rows * cols;
     if (!c->check_array (matrix, matrix[0].static_size, count)) return false;
     for (unsigned int i = 0; i < count; i++)
