@@ -162,6 +162,8 @@
 #include "nsSMILAnimationController.h"
 #endif
 
+#include "nsRefreshDriver.h"
+
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
