@@ -1054,26 +1054,7 @@ private:
   friend class mozilla::dom::PBrowserChild;
 
   nsTextEvent()
-    : mOwnRangeArray(PR_FALSE), rangeArray(nsnull)
   {
-  }
-
-  PRPackedBool      mOwnRangeArray;
-
-public:
-  ~nsTextEvent()
-  {
-    if (mOwnRangeArray && rangeArray)
-      delete [] rangeArray;
-  }
-
-  nsTextRangeArray AllocRangeArray(PRUint32 aCount)
-  {
-    NS_ASSERTION(!rangeArray, "rangeArray already allocated");
-    mOwnRangeArray = PR_TRUE;
-    rangeCount = aCount;
-    rangeArray = new nsTextRange[aCount];
-    return rangeArray;
   }
 #endif // MOZ_IPC
 
@@ -1081,9 +1062,6 @@ public:
   nsTextEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_TEXT_EVENT),
       rangeCount(0), rangeArray(nsnull), isChar(PR_FALSE)
-#ifdef MOZ_IPC
-    , mOwnRangeArray(PR_FALSE)
-#endif
   {
   }
 

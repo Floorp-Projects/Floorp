@@ -179,16 +179,27 @@ struct ParamTraits<nsTextEvent>
         !ReadParam(aMsg, aIter, &aResult->rangeCount))
       return false;
 
-    if (!aResult->rangeCount)
+    if (!aResult->rangeCount) {
+      aResult->rangeArray = nsnull;
       return true;
+    }
 
-    if (!aResult->AllocRangeArray(aResult->rangeCount))
+    aResult->rangeArray = new nsTextRange[aResult->rangeCount];
+    if (!aResult->rangeArray)
       return false;
 
     for (PRUint32 index = 0; index < aResult->rangeCount; index++)
-      if (!ReadParam(aMsg, aIter, &aResult->rangeArray[index]))
+      if (!ReadParam(aMsg, aIter, &aResult->rangeArray[index])) {
+        Free(*aResult);
         return false;
+      }
     return true;
+  }
+
+  static void Free(const paramType& aResult)
+  {
+    if (aResult.rangeArray)
+      delete [] aResult.rangeArray;
   }
 };
 
