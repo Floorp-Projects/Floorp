@@ -453,19 +453,17 @@ var UIManager = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      self.tabOnFocus(tab);
+      self.onTabSelect(tab);
     });
   },
 
   // ----------
-  // Function: tabOnFocus
+  // Function: onTabSelect
   // Called when the user switches from one tab to another outside of the TabView UI.
-  tabOnFocus: function(tab) {
-    var self = this;
-    var focusTab = tab;
-    var currentTab = this._currentTab;
+  onTabSelect: function(tab) {
+    let currentTab = this._currentTab;
+    this._currentTab = tab;
 
-    this._currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
     if (this._isTabViewVisible() &&
         (this._closedLastVisibleTab || this._closedSelectedTabInTabView)) {
@@ -473,50 +471,33 @@ var UIManager = {
       this._closedSelectedTabInTabView = false;
       return;
     }
+    // reset these vars, just in case.
+    this._closedLastVisibleTab = false;
+    this._closedSelectedTabInTabView = false;
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
     if (this._isTabViewVisible())
       this.hideTabView();
 
-    // reset these vars, just in case.
-    this._closedLastVisibleTab = false;
-    this._closedSelectedTabInTabView = false;
-
-    // have things have changed while we were in timeout?
-    if (focusTab != self._currentTab)
-      return;
-
+    let oldItem = null;
     let newItem = null;
-    if (focusTab && focusTab.tabItem) {
-      newItem = focusTab.tabItem;
-      if (newItem.parent)
-        GroupItems.setActiveGroupItem(newItem.parent);
-      else {
-        GroupItems.setActiveGroupItem(null);
-        GroupItems.setActiveOrphanTab(newItem);
-      }
-      GroupItems.updateTabBar();
+    
+    if (currentTab && currentTab.tabItem)
+      oldItem = currentTab.tabItem;
+    if (tab && tab.tabItem) {
+      newItem = tab.tabItem;
+      GroupItems.updateActiveGroupItemAndTabBar(newItem);
     }
 
     // ___ prepare for when we return to TabView
-    let oldItem = null;
-    if (currentTab && currentTab.tabItem)
-      oldItem = currentTab.tabItem;
-
     if (newItem != oldItem) {
       if (oldItem)
         oldItem.setZoomPrep(false);
-
-      // if the last visible tab is removed, don't set zoom prep because
-      // we should be in the TabView interface.
-      let visibleTabCount = gBrowser.visibleTabs.length;
-      if (visibleTabCount > 0 && newItem && !self._isTabViewVisible())
+      if (newItem)
         newItem.setZoomPrep(true);
-    }
-    // the tab is already focused so the new and old items are the same.
-    else if (oldItem)
-      oldItem.setZoomPrep(!self._isTabViewVisible());
+    } else if (oldItem)
+      oldItem.setZoomPrep(true);
   },
 
   // ----------
