@@ -2582,7 +2582,7 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
 {
   NS_ENSURE_ARG(aNewInner);
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
-  JSObject *outerGlobal = (JSObject *)aOuterGlobal;
+  JSObject *myobject = (JSObject *)aOuterGlobal;
 
   // Make the inner and outer window both share the same
   // prototype. The prototype we share is the outer window's
@@ -2603,18 +2603,12 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   // Object.prototype. This way the outer also gets the benefits
   // of the global scope polluter, and the inner window's
   // Object.prototype.
-  JSObject *proto = JS_GetPrototype(mContext, outerGlobal);
-  JSObject *innerProto = JS_GetPrototype(mContext, newInnerJSObject);
-  JSObject *innerProtoProto = JS_GetPrototype(mContext, innerProto);
+  JSObject *proto = ::JS_GetPrototype(mContext, myobject);
+  JSObject *innerProto = ::JS_GetPrototype(mContext, newInnerJSObject);
+  JSObject *innerProtoProto = ::JS_GetPrototype(mContext, innerProto);
 
-  JS_SetPrototype(mContext, newInnerJSObject, proto);
-  JS_SetPrototype(mContext, proto, innerProtoProto);
-
-  // Now that we're connecting the outer global to the inner one,
-  // we must have transplanted it. The JS engine tries to maintain
-  // the global object's compartment as its default compartment,
-  // so update that now since it might have changed.
-  JS_SetGlobalObject(mContext, outerGlobal);
+  ::JS_SetPrototype(mContext, newInnerJSObject, proto);
+  ::JS_SetPrototype(mContext, proto, innerProtoProto);
   return NS_OK;
 }
 
@@ -2654,8 +2648,11 @@ nsJSContext::InitContext()
 
 nsresult
 nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                               nsIScriptGlobalObject *aCurrentInner)
+                               nsIPrincipal *aPrincipal)
 {
+  NS_PRECONDITION(!JS_GetGlobalObject(mContext),
+                  "Outer window already initialized");
+
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
   PRUint32 flags = 0;
 
@@ -2669,20 +2666,17 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
     // need to preserve the <!-- script hiding hack from JS-in-HTML daze
     // (introduced in 1995 for graceful script degradation in Netscape 1,
     // Mosaic, and other pre-JS browsers).
-    JS_SetOptions(mContext, JS_GetOptions(mContext) | JSOPTION_XML);
+    ::JS_SetOptions(mContext, ::JS_GetOptions(mContext) | JSOPTION_XML);
   }
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = xpc->WrapNative(mContext, aCurrentInner->GetGlobalJSObject(),
-                                aGlobalObject, NS_GET_IID(nsISupports),
-                                getter_AddRefs(holder));
+  nsresult rv =
+    xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
+                                         NS_GET_IID(nsISupports),
+                                         aPrincipal, EmptyCString(),
+                                         flags, getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Force our context's global object to be the outer.
-  JSObject *globalObj;
-  holder->GetJSObject(&globalObj);
-  JS_SetGlobalObject(mContext, globalObj);
 
   // Hold a strong reference to the wrapper for the global to avoid
   // rooting and unrooting the global object every time its AddRef()
@@ -2702,9 +2696,14 @@ nsJSContext::InitOuterWindow()
   // properties will be forwarded to the inner window.
   JS_ClearScope(mContext, global);
 
-  nsresult rv = NS_OK;
+  // Now that the inner and outer windows are connected, tell XPConnect to
+  // re-initialize the prototypes on the outer window's scope.
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  nsresult rv = xpc->InitClassesForOuterObject(mContext, global);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(sgo));
+
   if (ci) {
     jsval v;
 
