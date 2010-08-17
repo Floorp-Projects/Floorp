@@ -64,7 +64,9 @@ jsdtrace_fun_classname(const JSFunction *fun)
 static char *
 jsdtrace_filename(JSStackFrame *fp)
 {
-    return (fp && fp->script && fp->script->filename) ? (char *)fp->script->filename : dempty;
+    return (fp && fp->hasScript() && fp->getScript()->filename)
+           ? (char *)fp->getScript()->filename
+           : dempty;
 }
 
 static int
