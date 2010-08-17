@@ -1489,6 +1489,7 @@ nsDocument::~nsDocument()
 #endif
 
   mInDestructor = PR_TRUE;
+  mInUnlinkOrDeletion = PR_TRUE;
 
   // Clear mObservers to keep it in sync with the mutationobserver list
   mObservers.Clear();
@@ -1768,6 +1769,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
+  tmp->mInUnlinkOrDeletion = PR_TRUE;
+
   // Clear out our external resources
   tmp->mExternalResourceMap.Shutdown();
 
@@ -1807,6 +1810,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   //
   // In rare cases where you think an unlink will help here, add one
   // manually.
+
+  tmp->mInUnlinkOrDeletion = PR_FALSE;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -1964,6 +1969,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   // links one by one
   DestroyElementMaps();
 
+  PRBool oldVal = mInUnlinkOrDeletion;
+  mInUnlinkOrDeletion = PR_TRUE;
   PRUint32 count = mChildren.ChildCount();
   { // Scope for update
     MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);    
@@ -1980,6 +1987,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
       content->UnbindFromTree();
     }
   }
+  mInUnlinkOrDeletion = oldVal;
   mCachedRootElement = nsnull;
 
   // Reset our stylesheets
@@ -6948,10 +6956,13 @@ nsDocument::Destroy()
 
   RemovedFromDocShell();
 
+  PRBool oldVal = mInUnlinkOrDeletion;
+  mInUnlinkOrDeletion = PR_TRUE;
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
     mChildren.ChildAt(i)->DestroyContent();
   }
+  mInUnlinkOrDeletion = oldVal;
 
   mLayoutHistoryState = nsnull;
 
