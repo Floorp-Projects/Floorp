@@ -845,7 +845,6 @@ ContextHandler.registerType("callto", function(aState, aElement) {
 
 ContextHandler.registerType("link-saveable", function(aState, aElement) {
   let protocol = aState.linkProtocol;
-  dump(protocol+"\n");
   return (protocol && protocol != "mailto" && protocol != "javascript" && protocol != "news" && protocol != "snews");
 });
 
@@ -859,7 +858,6 @@ ContextHandler.registerType("image-loaded", function(aState, aElement) {
 });
 
 var FormSubmitObserver = {
-  
   init: function init(){
     addMessageListener("Browser:TabOpen", this);
     addMessageListener("Browser:TabClose", this);
