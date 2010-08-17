@@ -109,6 +109,13 @@ ClassNeedsXOW(const char *name)
       return strcmp(++name, "indow") == 0;
     case 'L':
       return strcmp(++name, "ocation") == 0;
+    case 'H':
+      if (strncmp(++name, "TML", 3))
+        break;
+      name += 3;
+      if (*name == 'I')
+        ++name;
+      return strcmp(name, "FrameElement") == 0;
     default:
       break;
   }

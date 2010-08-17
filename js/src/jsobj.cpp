@@ -1024,13 +1024,10 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     obj = obj->wrappedObject(cx);
 
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    if (!obj)
-        return JS_FALSE;
-
     /*
-     * Ban indirect uses of eval (nonglobal.eval = eval; nonglobal.eval(....))
-     * that attempt to use a non-global object as the scope object.
+     * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
+     * calls that attempt to use a non-global object as the "with" object in
+     * the former indirect case.
      */
     {
         JSObject *parent = obj->getParent();
@@ -1088,6 +1085,10 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     if (indirectCall) {
         /* Pretend that we're top level. */
         staticLevel = 0;
+
+        OBJ_TO_INNER_OBJECT(cx, obj);
+        if (!obj)
+            return JS_FALSE;
 
         if (!js_CheckPrincipalsAccess(cx, obj,
                                       JS_StackFramePrincipals(cx, caller),
