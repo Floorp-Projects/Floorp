@@ -127,9 +127,7 @@ FormHistory.prototype = {
     init : function() {
         let self = this;
 
-        let prefBranch = Services.prefs.getBranch("browser.formfill.");
-        prefBranch = prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        prefBranch.addObserver("", this, false);
+        Services.prefs.addObserver("browser.formfill.", this, false);
 
         this.updatePrefs();
 
@@ -511,8 +509,7 @@ FormHistory.prototype = {
         // Determine how many days of history we're supposed to keep.
         let expireDays = 180;
         try {
-            let prefBranch = Services.prefs.getBranch("browser.formfill.");
-            expireDays = prefBranch.getIntPref("expire_days");
+            expireDays = Services.prefs.getIntPref("browser.formfill.expire_days");
         } catch (e) { /* ignore */ }
 
         let expireTime = Date.now() - expireDays * DAY_IN_MS;
@@ -551,10 +548,9 @@ FormHistory.prototype = {
 
 
     updatePrefs : function () {
-        let prefBranch = Services.prefs.getBranch("browser.formfill.");
-        this.debug          = prefBranch.getBoolPref("debug");
-        this.enabled        = prefBranch.getBoolPref("enable");
-        this.saveHttpsForms = prefBranch.getBoolPref("saveHttpsForms");
+        this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
+        this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
+        this.saveHttpsForms = Services.prefs.getBoolPref("browser.formfill.saveHttpsForms");
     },
 
 //**************************************************************************//
