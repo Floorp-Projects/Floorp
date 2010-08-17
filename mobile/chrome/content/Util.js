@@ -224,60 +224,62 @@ let Util = {
 Util.Timeout = function(aCallback) {
   this._callback = aCallback;
   this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  this._active = false;
+  this._type = null;
 };
 
 Util.Timeout.prototype = {
   /** Timer callback. Don't call this manually. */
   notify: function notify() {
-    this._active = false;
+    if (this._type == this._timer.TYPE_ONE_SHOT)
+      this._type = null;
+
     if (this._callback.notify)
       this._callback.notify();
     else
       this._callback.apply(null);
   },
 
-  /** Do the callback once.  Cancels other timeouts on this object. */
-  once: function once(aDelay, aCallback) {
+  /** Helper function for once and interval. */
+  _start: function _start(aDelay, aType, aCallback) {
     if (aCallback)
       this._callback = aCallback;
     this.clear();
-    this._timer.initWithCallback(this, aDelay, this._timer.TYPE_ONE_SHOT);
-    this._active = true;
+    this._timer.initWithCallback(this, aDelay, aType);
+    this._type = aType;
     return this;
+  },
+
+  /** Do the callback once.  Cancels other timeouts on this object. */
+  once: function once(aDelay, aCallback) {
+    return this._start(aDelay, this._timer.TYPE_ONE_SHOT, aCallback);
   },
 
   /** Do the callback every aDelay msecs. Cancels other timeouts on this object. */
   interval: function interval(aDelay, aCallback) {
-    if (aCallback)
-      this._callback = aCallback;
-    this.clear();
-    this._timer.initWithCallback(this, aDelay, this._timer.TYPE_REPEATING_SLACK);
-    this._active = true;
-    return this;
+    return this._start(aDelay, this._timer.TYPE_REPEATING_SLACK, aCallback);
   },
 
   /** Clear any pending timeouts. */
   clear: function clear() {
-    if (this._active) {
+    if (this._type) {
       this._timer.cancel();
-      this._active = false;
+      this._type = null;
     }
     return this;
   },
 
   /** If there is a pending timeout, call it and cancel the timeout. */
   flush: function flush() {
-    if (this._active) {
-      this.clear();
+    if (this._type) {
       this.notify();
+      this.clear();
     }
     return this;
   },
 
   /** Return true iff we are waiting for a callback. */
   isPending: function isPending() {
-    return this._active;
+    return !!this._type;
   }
 };
 
