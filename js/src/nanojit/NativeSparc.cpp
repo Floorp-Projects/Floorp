@@ -537,7 +537,7 @@ namespace nanojit
         return at;
     }
 
-    NIns* Assembler::asm_branch_ov(LOpcode, NIns* targ)
+    NIns* Assembler::asm_branch_ov(LOpcode op, NIns* targ)
     {
         NIns* at = 0;
         underrunProtect(32);
@@ -552,7 +552,10 @@ namespace nanojit
         }
         NOP();
 
-        BVS(0, tt);
+        if( op == LIR_mulxovi || op == LIR_muljovi )
+            BNE(0, tt);
+        else
+            BVS(0, tt);
         return at;
     }
 
@@ -645,7 +648,7 @@ namespace nanojit
 
         Register rb = deprecated_UnknownReg;
         RegisterMask allow = GpRegs;
-        bool forceReg = (op == LIR_muli || op == LIR_mulxovi || !rhs->isImmI());
+        bool forceReg = (op == LIR_muli || op == LIR_mulxovi || op == LIR_muljovi || !rhs->isImmI());
 
         if (lhs != rhs && forceReg)
             {
@@ -679,8 +682,14 @@ namespace nanojit
                     ADDCC(rr, rb, rr);
                 else if (op == LIR_subi || op == LIR_subxovi)
                     SUBCC(rr, rb, rr);
-                else if (op == LIR_muli || op == LIR_mulxovi)
-                    MULX(rr, rb, rr);
+                else if (op == LIR_muli)
+                    SMULCC(rr, rb, rr);
+                else if (op == LIR_mulxovi || op == LIR_muljovi) {
+                    SUBCC(L4, L6, L4);
+                    SRAI(rr, 31, L6);
+                    RDY(L4);
+                    SMULCC(rr, rb, rr);
+                }
                 else if (op == LIR_andi)
                     AND(rr, rb, rr);
                 else if (op == LIR_ori)
