@@ -237,6 +237,7 @@ using namespace mozilla::layers;
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
 CapturingContentInfo nsIPresShell::gCaptureInfo;
+nsIContent* nsIPresShell::gKeyDownTarget;
 
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
@@ -1837,6 +1838,10 @@ PresShell::Destroy()
 #endif // ACCESSIBILITY
 
   MaybeReleaseCapturingContent();
+
+  if (gKeyDownTarget && gKeyDownTarget->GetOwnerDoc() == mDocument) {
+    NS_RELEASE(gKeyDownTarget);
+  }
 
   mContentToScrollTo = nsnull;
 
@@ -6460,6 +6465,30 @@ PresShell::HandleEvent(nsIView         *aView,
       // frame goes away while it is focused.
       if (!mCurrentEventContent || !GetCurrentEventFrame())
         mCurrentEventContent = mDocument->GetRootElement();
+
+      if (aEvent->message == NS_KEY_DOWN) {
+        NS_IF_RELEASE(gKeyDownTarget);
+        NS_IF_ADDREF(gKeyDownTarget = mCurrentEventContent);
+      }
+      else if ((aEvent->message == NS_KEY_PRESS || aEvent->message == NS_KEY_UP) &&
+               gKeyDownTarget) {
+        // If a different element is now focused for the keypress/keyup event
+        // than what was focused during the keydown event, check if the new
+        // focused element is not in a chrome document any more, and if so,
+        // retarget the event back at the keydown target. This prevents a
+        // content area from grabbing the focus from chrome in-between key
+        // events.
+        if (mCurrentEventContent &&
+            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetCurrentDoc()) &&
+            !nsContentUtils::IsChromeDoc(mCurrentEventContent->GetCurrentDoc())) {
+          mCurrentEventContent = gKeyDownTarget;
+        }
+
+        if (aEvent->message == NS_KEY_UP) {
+          NS_RELEASE(gKeyDownTarget);
+        }
+      }
+
       mCurrentEventFrame = nsnull;
         
       if (!mCurrentEventContent || !GetCurrentEventFrame() ||
