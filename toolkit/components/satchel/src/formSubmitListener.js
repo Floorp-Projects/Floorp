@@ -35,14 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const satchelFormListener = {
+var satchelFormListener = {
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver,
+                                            Ci.nsIDOMEventListener,
                                             Ci.nsObserver,
                                             Ci.nsISupportsWeakReference]),
 
@@ -55,9 +56,11 @@ const satchelFormListener = {
 
         let prefBranch = Services.prefs.getBranch("browser.formfill.");
         prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        prefBranch.addObserver("", this, true);
+        prefBranch.addObserver("", this, false);
 
         this.updatePrefs();
+
+        addEventListener("unload", this, false);
     },
 
     updatePrefs : function () {
@@ -99,6 +102,24 @@ const satchelFormListener = {
             return;
         dump("satchelFormListener: " + message + "\n");
         Services.console.logStringMessage("satchelFormListener: " + message);
+    },
+
+    /* ---- dom event handler ---- */
+
+    handleEvent: function(e) {
+        switch (e.type) {
+            case "unload":
+                Services.obs.removeObserver(this, "earlyformsubmit");
+
+                let prefBranch = Services.prefs.getBranch("browser.formfill.");
+                prefBranch.QueryInterface(Ci.nsIPrefBranch2);
+                prefBranch.removeObserver("", this);
+
+                break;
+            default:
+                this.log("Oops! Unexpected event: " + e.type);
+                break;
+        }
     },
 
     /* ---- nsIObserver interface ---- */
