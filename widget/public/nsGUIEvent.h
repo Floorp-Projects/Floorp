@@ -1242,6 +1242,20 @@ public:
     mInput.mLength = aLength;
   }
 
+  PRUint32 GetSelectionStart(void) const
+  {
+    NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT,
+                 "not querying selection");
+    return mReply.mOffset + (mReply.mReversed ? mReply.mString.Length() : 0);
+  }
+
+  PRUint32 GetSelectionEnd(void) const
+  {
+    NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT,
+                 "not querying selection");
+    return mReply.mOffset + (mReply.mReversed ? 0 : mReply.mString.Length());
+  }
+
   PRBool mSucceeded;
   PRPackedBool mWasAsync;
   struct {
