@@ -54,6 +54,7 @@
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/DocumentRendererShmemChild.h"
 #include "mozilla/ipc/DocumentRendererNativeIDChild.h"
+#include "mozilla/widget/nsGUIEventIPC.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
@@ -735,6 +736,7 @@ TabChild::RecvTextEvent(const nsTextEvent& event)
 {
   nsTextEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
+  IPC::ParamTraits<nsTextEvent>::Free(event);
   return true;
 }
 
