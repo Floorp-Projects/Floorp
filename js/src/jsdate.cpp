@@ -2057,7 +2057,6 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
 
     if (!Invoke(cx, args, 0))
         return false;
-
     *vp = args.rval();
     return true;
 }
