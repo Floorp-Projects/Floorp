@@ -962,7 +962,6 @@ DragData.prototype = {
  */
 function KineticController(aPanBy, aEndCallback) {
   this._panBy = aPanBy;
-  this._timer = null;
   this._beforeEnd = aEndCallback;
 
   // These are used to calculate the position of the scroll panes during kinetic panning. Think of
@@ -1035,11 +1034,10 @@ KineticController.prototype = {
     // Temporary "bins" so that we don't create new objects during pan.
     let aBin = new Point(0, 0);
     let v0Bin = new Point(0, 0);
+    let self = this;
 
     let callback = {
-      _self: this,
-      notify: function kineticTimerCallback(timer) {
-        let self = this._self;
+      handleEvent: function kineticHandleEvent(event) {
 
         if (!self.isActive())  // someone called end() on us between timer intervals
           return;
@@ -1047,7 +1045,7 @@ KineticController.prototype = {
         // To make animation end fast enough but to keep smoothness, average the ideal
         // time frame (smooth animation) with the actual time lapse (end fast enough).
         // Animation will never take longer than 2 times the ideal length of time.
-        let realt = Date.now() - self._initialTime;
+        let realt = event.timeStamp - self._initialTime;
         self._time += self._updateInterval;
         let t = (self._time + realt) / 2;
 
@@ -1079,14 +1077,14 @@ KineticController.prototype = {
         try { panned = self._panBy(Math.round(-dx), Math.round(-dy)); } catch (e) {}
         if (!panned)
           self.end();
+        else
+          mozRequestAnimationFrame();
       }
     };
 
-    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    //initialize our timer with updateInterval
-    this._timer.initWithCallback(callback,
-                                 this._updateInterval,
-                                 this._timer.TYPE_REPEATING_SLACK);
+    this._callback = callback;
+    addEventListener("MozBeforePaint", callback, false);
+    mozRequestAnimationFrame();
   },
 
   start: function start() {
@@ -1120,7 +1118,7 @@ KineticController.prototype = {
     this._acceleration.set(this._velocity.clone().map(sign).scale(-this._decelerationRate));
 
     this._position.set(0, 0);
-    this._initialTime = Date.now();
+    this._initialTime = mozAnimationStartTime;
     this._time = 0;
     this.momentumBuffer = [];
 
