@@ -53,21 +53,15 @@ var satchelFormListener = {
 
     init : function() {
         Services.obs.addObserver(this, "earlyformsubmit", false);
-
-        let prefBranch = Services.prefs.getBranch("browser.formfill.");
-        prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-        prefBranch.addObserver("", this, false);
-
+        Services.prefs.addObserver("browser.formfill.", this, false);
         this.updatePrefs();
-
         addEventListener("unload", this, false);
     },
 
     updatePrefs : function () {
-        let prefBranch = Services.prefs.getBranch("browser.formfill.");
-        this.debug          = prefBranch.getBoolPref("debug");
-        this.enabled        = prefBranch.getBoolPref("enable");
-        this.saveHttpsForms = prefBranch.getBoolPref("saveHttpsForms");
+        this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
+        this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
+        this.saveHttpsForms = Services.prefs.getBoolPref("browser.formfill.saveHttpsForms");
     },
 
     // Implements the Luhn checksum algorithm as described at
@@ -110,12 +104,9 @@ var satchelFormListener = {
         switch (e.type) {
             case "unload":
                 Services.obs.removeObserver(this, "earlyformsubmit");
-
-                let prefBranch = Services.prefs.getBranch("browser.formfill.");
-                prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-                prefBranch.removeObserver("", this);
-
+                Services.prefs.removeObserver("browser.formfill.", this);
                 break;
+
             default:
                 this.log("Oops! Unexpected event: " + e.type);
                 break;
