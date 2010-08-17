@@ -265,6 +265,7 @@
     STORAGE_MODULE                           \
     PLACES_MODULES                           \
     XULENABLED_MODULES                       \
+    MODULE(AddonsModule)                     \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
     JSDEBUGGER_MODULES                       \
