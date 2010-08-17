@@ -428,6 +428,7 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
     // We need to keep the document loading channel alive for further 
     // communication, mainly for collecting a security state values.
     mKeptAlive = true;
+    SendDocumentChannelCleanup();
   }
 }
 

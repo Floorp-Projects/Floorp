@@ -109,6 +109,7 @@ protected:
                                                    const PRInt32& low,
                                                    const PRInt32& broken,
                                                    const PRInt32& no);
+  virtual bool RecvDocumentChannelCleanup();
 
   virtual void ActorDestroy(ActorDestroyReason why);
 
