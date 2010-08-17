@@ -1650,19 +1650,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
     // Now we can just fix up the parent and return the wrapper
 
-    if(aNewParent)
-    {
-        if(!JS_SetParent(ccx, flat, aNewParent))
-            return NS_ERROR_FAILURE;
-
-        JSObject *nw;
-        if(wrapper &&
-           (nw = wrapper->GetWrapper()) &&
-           !JS_SetParent(ccx, nw, JS_GetGlobalForObject(ccx, aNewParent)))
-        {
-            return NS_ERROR_FAILURE;
-        }
-    }
+    if(aNewParent && !JS_SetParent(ccx, flat, aNewParent))
+        return NS_ERROR_FAILURE;
 
     *aWrapper = nsnull;
     wrapper.swap(*aWrapper);
