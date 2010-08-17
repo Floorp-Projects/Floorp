@@ -1609,6 +1609,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   if (IsFrozen()) {
     // This outer is now getting its first inner, thaw the outer now
     // that it's ready and is getting an inner window.
+    mContext->CreateOuterObject(this, aDocument->NodePrincipal());
+    mContext->DidInitializeContext();
+    mJSObject = (JSObject *)mContext->GetNativeGlobal();
 
     Thaw();
   }
@@ -1815,6 +1818,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                                 getter_AddRefs(holder));
       NS_ASSERTION(NS_SUCCEEDED(rv) && newGlobal && holder,
                    "Failed to get script global and holder");
+      newInnerWindow->mJSObject = (JSObject *)newGlobal;
 
       mCreatingInnerWindow = PR_FALSE;
       Thaw();
@@ -1868,20 +1872,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
 
     mInnerWindow = newInnerWindow;
-
-    if (!mJSObject) {
-      mContext->CreateOuterObject(this, newInnerWindow);
-      mContext->DidInitializeContext();
-      mJSObject = (JSObject *)mContext->GetNativeGlobal();
-    } else {
-      // XXX New global object and brain transplant!
-      nsIXPConnect *xpc = nsContentUtils::XPConnect();
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      xpc->ReparentWrappedNativeIfFound(cx, currentInner->mJSObject,
-                                        newInnerWindow->mJSObject,
-                                        ToSupports(this),
-                                        getter_AddRefs(holder));
-    }
   }
 
   if (!aState && !reUseInnerWindow) {
@@ -1938,6 +1928,37 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // we don't ever call SetNewDocument(nsnull), so no need to null
   // check xpc here.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  if (aState) {
+    // Restoring from session history.
+
+    nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
+    NS_ASSERTION(wsh, "What kind of weird state are you giving me here?");
+
+    // Restore the prototype for the Window/ChromeWindow class in
+    // the outer window scope.
+    nsCOMPtr<nsIClassInfo> ci =
+      do_QueryInterface((nsIScriptGlobalObject *)this);
+
+    rv = xpc->RestoreWrappedNativePrototype(cx, mJSObject, ci,
+                                            wsh->GetOuterProto());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Refresh the outer window's prototype to what it was when the
+    // window state was saved. This will make the outer window
+    // object (and wrapper) pick up the prototype it had when the
+    // window state was saved. This means Object.prototype etc from
+    // the old inner will again be on the outer window's prototype
+    // chain.
+
+    rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
+                                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = wrapper->RefreshPrototype();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (aDocument) {
     aDocument->SetScriptGlobalObject(newInnerWindow);
@@ -2004,10 +2025,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   mContext->GC();
   mContext->DidInitializeContext();
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
-                                       getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!wrapper) {
+    rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
+                                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = xpc->UpdateXOWs((JSContext *)GetContextInternal()->GetNativeContext(),
                        wrapper, nsIXPConnect::XPC_XOW_NAVIGATED);
