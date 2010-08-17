@@ -1,3 +1,0 @@
-toolkit.jar:
-%   content satchel %content/satchel/
-*   content/satchel/formSubmitListener.js            (src/formSubmitListener.js)

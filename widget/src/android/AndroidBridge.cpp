@@ -37,10 +37,7 @@
 
 #include <android/log.h>
 
-#ifdef MOZ_IPC
 #include "mozilla/dom/ContentChild.h"
-#include "nsXULAppAPI.h"
-#endif
 #include <pthread.h>
 #include <prthread.h>
 #include "nsXPCOMStrings.h"
@@ -195,12 +192,8 @@ AndroidBridge::NotifyIME(int aType, int aState)
     if (sBridge)
         JNI()->CallStaticVoidMethod(sBridge->mGeckoAppShellClass, 
                                     sBridge->jNotifyIME,  aType, aState);
-#ifdef MOZ_IPC
-    // It's possible that we are in chrome process
-    //  but sBridge is not initialized yet
-    else if (XRE_GetProcessType() == GeckoProcessType_Content)
+    else
         mozilla::dom::ContentChild::GetSingleton()->SendNotifyIME(aType, aState);
-#endif
 }
 
 void
@@ -208,11 +201,9 @@ AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
                                int aStart, int aEnd, int aNewEnd)
 {
     if (!sBridge) {
-#ifdef MOZ_IPC
         mozilla::dom::ContentChild::GetSingleton()->
             SendNotifyIMEChange(nsAutoString(aText), aTextLen,
                                 aStart, aEnd, aNewEnd);
-#endif
         return;
     }
 
