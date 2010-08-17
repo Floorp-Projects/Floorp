@@ -1202,6 +1202,11 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
     // -- head table data
     const HeadTable *headData = reinterpret_cast<const HeadTable*>(aFontData + headOffset);
 
+    if (headData->tableVersionNumber != HeadTable::HEAD_VERSION) {
+        NS_WARNING("invalid font (head table version)");
+        return PR_FALSE;
+    }
+
     if (headData->magicNumber != HeadTable::HEAD_MAGIC_NUMBER) {
         NS_WARNING("invalid font (head magic number)");
         return PR_FALSE;
@@ -1970,8 +1975,10 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     // -- head table data
     const HeadTable  *headData = reinterpret_cast<const HeadTable*>(aFontData + headOffset);
 
-    if (headData->magicNumber != HeadTable::HEAD_MAGIC_NUMBER)
+    if (headData->tableVersionNumber != HeadTable::HEAD_VERSION ||
+        headData->magicNumber != HeadTable::HEAD_MAGIC_NUMBER) {
         return NS_ERROR_FAILURE;
+    }
 
     eotHeader->checkSumAdjustment = headData->checkSumAdjustment;
 
