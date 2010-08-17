@@ -344,11 +344,11 @@ public:
    * @param aGlobalObject The script global object to use as our global.
    */
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                                     nsIScriptGlobalObject *aCurrentInner) = 0;
+                                     nsIPrincipal *aPrincipal) = 0;
 
   /**
    * Prepares this context for use with the current inner window for the
-   * context's global object. This must be called after CreateOuterObject.
+   * context's global object. This must be called after InitOuterWindow.
    */
   virtual nsresult InitOuterWindow() = 0;
 
