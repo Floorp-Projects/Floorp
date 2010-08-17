@@ -2899,7 +2899,9 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
-                (jsuint)slot < JS_BIT(16)) {
+                jsuint(slot) < JS_BIT(16) &&
+                (!cg->inStrictMode() ||
+                 (!cg->mutatesParameter() && !cg->callsEval()))) {
                 /*
                  * arguments[i]() requires arguments object as "this".
                  * Check that we never generates list for that usage.
@@ -2973,7 +2975,9 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
-                (jsuint)slot < JS_BIT(16)) {
+                jsuint(slot) < JS_BIT(16) &&
+                (!cg->inStrictMode() ||
+                 (!cg->mutatesParameter() && !cg->callsEval()))) {
                 left->pn_offset = right->pn_offset = top;
                 EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
                 return JS_TRUE;
@@ -3625,6 +3629,13 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
             return false;
     }
 
+    if (cg->needsEagerArguments()) {
+        CG_SWITCH_TO_PROLOG(cg);
+        if (js_Emit1(cx, cg, JSOP_ARGUMENTS) < 0 || js_Emit1(cx, cg, JSOP_POP) < 0)
+            return false;
+        CG_SWITCH_TO_MAIN(cg);
+    }
+
     if (cg->flags & TCF_FUN_UNBRAND_THIS) {
         if (js_Emit1(cx, cg, JSOP_UNBRANDTHIS) < 0)
             return false;
@@ -3701,7 +3712,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     }
 
     if (JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
-        !(cg->flags & TCF_FUN_USES_EVAL) &&
+        !(cg->flags & TCF_FUN_CALLS_EVAL) &&
         pn->pn_defn &&
         (((JSDefinition *)pn)->pn_dflags & PND_CLOSED))
     {
@@ -4536,7 +4547,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;
             op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
-            if ((pn->pn_dflags & PND_CLOSED) && !(cg->flags & TCF_FUN_USES_EVAL)) {
+            if ((pn->pn_dflags & PND_CLOSED) && !(cg->flags & TCF_FUN_CALLS_EVAL)) {
                 CG_SWITCH_TO_PROLOG(cg);
                 EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie.asInteger());
                 CG_SWITCH_TO_MAIN(cg);

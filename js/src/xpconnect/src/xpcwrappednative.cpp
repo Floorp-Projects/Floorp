@@ -1650,8 +1650,19 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
     // Now we can just fix up the parent and return the wrapper
 
-    if(aNewParent && !JS_SetParent(ccx, flat, aNewParent))
-        return NS_ERROR_FAILURE;
+    if(aNewParent)
+    {
+        if(!JS_SetParent(ccx, flat, aNewParent))
+            return NS_ERROR_FAILURE;
+
+        JSObject *nw;
+        if(wrapper &&
+           (nw = wrapper->GetWrapper()) &&
+           !JS_SetParent(ccx, nw, JS_GetGlobalForObject(ccx, aNewParent)))
+        {
+            return NS_ERROR_FAILURE;
+        }
+    }
 
     *aWrapper = nsnull;
     wrapper.swap(*aWrapper);
@@ -1728,12 +1739,8 @@ return_wrapper:
             {
                 XPCWrappedNativeProto* wrapper_proto =
                     isWN ? wrapper->GetProto() : GetSlimWrapperProto(cur);
-                XPCWrappedNativeScope* wrapper_scope =
-                    wrapper_proto ? wrapper_proto->GetScope() :
-                                    wrapper->GetScope();
                 if(proto != wrapper_proto &&
-                   (proto->GetScope() != wrapper_scope ||
-                    !protoClassInfo || !wrapper_proto ||
+                   (!protoClassInfo || !wrapper_proto ||
                     protoClassInfo != wrapper_proto->GetClassInfo()))
                     continue;
             }

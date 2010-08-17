@@ -5436,11 +5436,15 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
                   uintN pcdepth, jsbytecode *pc, jsbytecode *target,
                   jsbytecode **pcstack)
 {
-    size_t nbytes = StackDepth(script) * sizeof *pcstack;
-    jsbytecode** tmp_pcstack = (jsbytecode **) cx->malloc(nbytes);
-    if (!tmp_pcstack)
-        return -1;
-    memcpy(tmp_pcstack, pcstack, nbytes);
+    size_t nbytes;
+    jsbytecode** tmp_pcstack = NULL;
+    if (pcstack) {
+        nbytes = StackDepth(script) * sizeof *pcstack;
+        tmp_pcstack = (jsbytecode **) cx->malloc(nbytes);
+        if (!tmp_pcstack)
+            return -1;
+        memcpy(tmp_pcstack, pcstack, nbytes);
+    }
 
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
@@ -5476,12 +5480,15 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
     LOCAL_ASSERT(pc == target);
 
   success:
-    memcpy(pcstack, tmp_pcstack, nbytes);
-    cx->free(tmp_pcstack);
+    if (tmp_pcstack) {
+        memcpy(pcstack, tmp_pcstack, nbytes);
+        cx->free(tmp_pcstack);
+    }
     return pcdepth;
 
   failure:
-    cx->free(tmp_pcstack);
+    if (tmp_pcstack)
+        cx->free(tmp_pcstack);
     return -1;
 }
 
