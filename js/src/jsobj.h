@@ -528,16 +528,26 @@ struct JSObject {
      * Date-specific getters and setters.
      */
 
-  private:
-    // The second slot caches the local time;  it's initialized to NaN.
-    static const uint32 JSSLOT_DATE_UTC_TIME   = JSSLOT_PRIVATE;
-    static const uint32 JSSLOT_DATE_LOCAL_TIME = JSSLOT_PRIVATE + 1;
-
   public:
-    static const uint32 DATE_FIXED_RESERVED_SLOTS = 2;
+    static const uint32 JSSLOT_DATE_UTC_TIME = JSSLOT_PRIVATE;
 
-    inline const js::Value &getDateLocalTime() const;
-    inline void setDateLocalTime(const js::Value &pthis);
+    /*
+     * Cached slots holding local properties of the date.
+     * These are undefined until the first actual lookup occurs
+     * and are reset to undefined whenever the date's time is modified.
+     */
+    static const uint32 JSSLOT_DATE_COMPONENTS_START = JSSLOT_PRIVATE + 1;
+
+    static const uint32 JSSLOT_DATE_LOCAL_TIME = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_DATE_LOCAL_YEAR = JSSLOT_PRIVATE + 2;
+    static const uint32 JSSLOT_DATE_LOCAL_MONTH = JSSLOT_PRIVATE + 3;
+    static const uint32 JSSLOT_DATE_LOCAL_DATE = JSSLOT_PRIVATE + 4;
+    static const uint32 JSSLOT_DATE_LOCAL_DAY = JSSLOT_PRIVATE + 5;
+    static const uint32 JSSLOT_DATE_LOCAL_HOURS = JSSLOT_PRIVATE + 6;
+    static const uint32 JSSLOT_DATE_LOCAL_MINUTES = JSSLOT_PRIVATE + 7;
+    static const uint32 JSSLOT_DATE_LOCAL_SECONDS = JSSLOT_PRIVATE + 8;
+
+    static const uint32 DATE_CLASS_RESERVED_SLOTS = 9;
 
     inline const js::Value &getDateUTCTime() const;
     inline void setDateUTCTime(const js::Value &pthis);
