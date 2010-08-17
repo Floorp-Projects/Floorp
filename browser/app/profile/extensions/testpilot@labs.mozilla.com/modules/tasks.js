@@ -169,18 +169,26 @@ var TestPilotTask = {
   // event handlers:
 
   onExperimentStartup: function TestPilotTask_onExperimentStartup() {
+    // Called when experiment is to start running (either on Firefox
+    // startup, or when study first becomes IN_PROGRESS)
   },
 
   onExperimentShutdown: function TestPilotTask_onExperimentShutdown() {
+    // Called when experiment needs to stop running (either on Firefox
+    // shutdown, or on experiment reload, or on finishing or being canceled.)
+  },
+
+  doExperimentCleanup: function TestPilotTask_onExperimentCleanup() {
+    // Called when experiment has finished or been canceled; do any cleanup
+    // of user's profile.
   },
 
   onAppStartup: function TestPilotTask_onAppStartup() {
-    // Called by extension core when startup is complete.
+    // Called by extension core when Firefox startup is complete.
   },
 
   onAppShutdown: function TestPilotTask_onAppShutdown() {
-    // TODO: not implemented - should be called when firefox is ready to
-    // shut down.
+    // Called by extension core when Firefox is shutting down.
   },
 
   onEnterPrivateBrowsing: function TestPilotTask_onEnterPrivate() {
@@ -494,6 +502,13 @@ TestPilotExperiment.prototype = {
     }
   },
 
+  doExperimentCleanup: function TestPilotExperiment_doExperimentCleanup() {
+    if (this._handlers.doExperimentCleanup) {
+      this._logger.trace("Doing experiment cleanup.");
+      this._handlers.doExperimentCleanup();
+    }
+  },
+
   onEnterPrivateBrowsing: function TestPilotExperiment_onEnterPrivate() {
     this._logger.trace("Task is entering private browsing.");
     if (this.experimentIsRunning()) {
@@ -633,6 +648,7 @@ TestPilotExperiment.prototype = {
       this._logger.info("Passed End Date - Switched Task Status to Finished");
       this.changeStatus(TaskConstants.STATUS_FINISHED);
       this.onExperimentShutdown();
+      this.doExperimentCleanup();
 
       if (this._recursAutomatically) {
         this._reschedule();
@@ -800,8 +816,11 @@ TestPilotExperiment.prototype = {
     // database table of just opt-out messages; include study ID in metadata.
     let url = Application.prefs.getValue(DATA_UPLOAD_PREF, "") + "opt-out";
     let logger = this._logger;
+
+    this.onExperimentShutdown();
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
     this._dataStore.wipeAllData();
+    this.doExperimentCleanup();
     this._dateForDataDeletion = null;
     this._expirationDateForDataSubmission = null;
     logger.info("Opting out of test with reason " + reason);

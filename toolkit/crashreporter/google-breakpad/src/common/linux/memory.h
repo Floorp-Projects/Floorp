@@ -148,6 +148,24 @@ class wasteful_vector {
     return used_;
   }
 
+  void resize(unsigned sz, T c = T()) {
+    // No need to test "sz >= 0", as "sz" is unsigned.
+    if (sz <= used_) {
+      used_ = sz;
+    } else {
+      unsigned a = allocated_;
+      if (sz > a) {
+        while (sz > a) {
+          a *= 2;
+        }
+        Realloc(a);
+      }
+      while (sz > used_) {
+        a_[used_++] = c;
+      }
+    }
+  }
+
   T& operator[](size_t index) {
     return a_[index];
   }

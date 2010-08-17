@@ -3223,11 +3223,13 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
   }
   if (eSelectorParsingStatus_Error == parsingStatus) {
     REPORT_UNEXPECTED_TOKEN(PENegationBadInner);
+    SkipUntil(')');
     return parsingStatus;
   }
   // close the parenthesis
   if (!ExpectSymbol(')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PENegationNoClose);
+    SkipUntil(')');
     return eSelectorParsingStatus_Error;
   }
 

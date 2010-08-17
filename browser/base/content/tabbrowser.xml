@@ -726,7 +726,7 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            if (TabView && TabView.isVisible()) {
+            if (window.TabView && TabView.isVisible()) {
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.windowTitle;
@@ -769,7 +769,7 @@
             newBrowser.docShell.isActive = true;
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
-            this.mCurrentTab.hidden = false;
+            this.showTab(this.mCurrentTab);
 
             if (updatePageReport)
               this.mCurrentBrowser.updatePageReport();
@@ -1791,8 +1791,39 @@
         <body>
         <![CDATA[
           Array.forEach(this.tabs, function(tab) {
-            tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned && !tab.selected;
-          });
+            if (aTabs.indexOf(tab) == -1)
+              this.hideTab(tab);
+            else
+              this.showTab(tab);
+          }, this);
+        ]]>
+        </body>
+      </method>
+
+      <method name="showTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (aTab.hidden) {
+            aTab.hidden = false;
+            let event = document.createEvent("Events");
+            event.initEvent("TabShow", true, false);
+            aTab.dispatchEvent(event);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="hideTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (!aTab.hidden && !aTab.pinned && !aTab.selected) {
+            aTab.hidden = true;
+            let event = document.createEvent("Events");
+            event.initEvent("TabHide", true, false);
+            aTab.dispatchEvent(event);
+          }
         ]]>
         </body>
       </method>
@@ -2618,8 +2649,7 @@
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "noclose");
             else {
-              // Grab the last tab for size comparison
-              let tab = this.tabbrowser.visibleTabs.pop();
+              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else

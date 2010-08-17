@@ -122,18 +122,6 @@ namespace places {
   , DB_SET_PLACE_TITLE = 9
   };
 
-  enum JournalMode {
-    // Default SQLite jousrnal mode.
-    JOURNAL_DELETE = 0
-    // Can reduce fsyncs on Linux when journal is deleted (See bug 460315).
-    // We fallback to this mode when WAL is unavailable.
-  , JOURNAL_TRUNCATE
-    // Unsafe in case of crashes on database swap or low memory.
-  , JOURNAL_MEMORY
-    // Can reduce number of fsyncs.  We try to use this mode by default.
-  , JOURNAL_WAL
-  };
-
 } // namespace places
 } // namespace mozilla
 
@@ -481,7 +469,6 @@ protected:
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<nsIFile> mDBFile;
-  PRInt32 mDBPageSize;
 
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfo;     // kGetInfoIndex_* results
@@ -548,12 +535,6 @@ protected:
    *        Note: A valid database connection must be opened if this is true.
    */
   nsresult InitDBFile(PRBool aForceInit);
-
-  /**
-   * Set journal mode on the database.
-   */
-  nsresult SetJournalMode(enum mozilla::places::JournalMode aJournalMode);
-  enum mozilla::places::JournalMode mCurrentJournalMode;
 
   /**
    * Initializes the database.  This performs any necessary migrations for the

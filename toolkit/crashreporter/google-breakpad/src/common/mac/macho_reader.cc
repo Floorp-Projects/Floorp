@@ -130,7 +130,7 @@ bool FatReader::Read(const uint8_t *buffer, size_t size) {
       }
 
       object_files_[0].offset = 0;
-      object_files_[0].size = buffer_.Size();
+      object_files_[0].size = static_cast<uint32_t>(buffer_.Size());
       // This alignment is correct for 32 and 64-bit x86 and ppc.
       // See get_align in the lipo source for other architectures:
       // http://www.opensource.apple.com/source/cctools/cctools-773/misc/lipo.c

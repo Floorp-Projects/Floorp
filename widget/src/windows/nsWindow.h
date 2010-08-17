@@ -277,6 +277,8 @@ protected:
    * Callbacks
    */
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  static LRESULT CALLBACK WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
   static BOOL CALLBACK    BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg);
   static BOOL CALLBACK    BroadcastMsg(HWND aTopWindow, LPARAM aMsg);
   static BOOL CALLBACK    DispatchStarvedPaints(HWND aTopWindow, LPARAM aMsg);
@@ -288,6 +290,9 @@ protected:
   static LRESULT CALLBACK MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
   static VOID    CALLBACK HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime );
+#ifdef CAIRO_HAS_D2D_SURFACE
+  static BOOL    CALLBACK ClearD2DSurfaceCallback(HWND aChild, LPARAM aParam);
+#endif
 
   /**
    * Window utilities
@@ -445,6 +450,9 @@ protected:
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY
+#ifdef CAIRO_HAS_D2D_SURFACE
+  void                    ClearD2DSurface();
+#endif
 
 protected:
   nsCOMPtr<nsIWidget>   mParent;
@@ -498,6 +506,8 @@ protected:
   nsIntMargin           mNonClientMargins;
   // Indicates custom frames are enabled
   PRPackedBool          mCustomNonClient;
+  // Disable non client margins on non-comsitor desktops
+  PRPackedBool          mCompositorFlag;
   // Cached copy of L&F's resize border  
   PRInt32               mHorResizeMargin;
   PRInt32               mVertResizeMargin;

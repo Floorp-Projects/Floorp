@@ -658,7 +658,7 @@ bool IsNumPadDigit(int key_code, bool extended_key) {
     return true;
 
   // Check for num pad keys without NumLock.
-  // Note: there is no easy way to know if a the key that was pressed comes from
+  // Note: there is no easy way to know if a key that was pressed comes from
   //       the num pad or the rest of the keyboard.  Investigating how
   //       TranslateMessage() generates the WM_KEYCHAR from an
   //       ALT + <NumPad sequences> it appears it looks at the extended key flag

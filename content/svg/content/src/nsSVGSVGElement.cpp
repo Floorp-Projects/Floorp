@@ -68,10 +68,10 @@
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
 
-using namespace mozilla;
-
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 #endif // MOZ_SMIL
+
+using namespace mozilla;
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal, mElement)
 

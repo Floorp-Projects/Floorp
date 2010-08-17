@@ -33,6 +33,7 @@
 #include "client/mac/handler/exception_handler.h"
 #include "client/mac/handler/minidump_generator.h"
 #include "common/mac/macho_utilities.h"
+#include "common/mac/scoped_task_suspend-inl.h"
 
 #ifndef USE_PROTECTED_ALLOCATIONS
 #define USE_PROTECTED_ALLOCATIONS 0
@@ -221,7 +222,8 @@ ExceptionHandler::ExceptionHandler(const string &dump_path,
                                    FilterCallback filter,
                                    MinidumpCallback callback,
                                    void *callback_context,
-                                   bool install_handler)
+                                   bool install_handler,
+				   const char *port_name)
     : dump_path_(),
       filter_(filter),
       callback_(callback),
@@ -237,6 +239,8 @@ ExceptionHandler::ExceptionHandler(const string &dump_path,
   // This will update to the ID and C-string pointers
   set_dump_path(dump_path);
   MinidumpGenerator::GatherSystemInformation();
+  if (port_name)
+    crash_generation_client_.reset(new CrashGenerationClient(port_name));
   Setup(install_handler);
 }
 
@@ -293,8 +297,40 @@ bool ExceptionHandler::WriteMinidump() {
 bool ExceptionHandler::WriteMinidump(const string &dump_path,
                                      MinidumpCallback callback,
                                      void *callback_context) {
-  ExceptionHandler handler(dump_path, NULL, callback, callback_context, false);
+  ExceptionHandler handler(dump_path, NULL, callback, callback_context, false,
+			   NULL);
   return handler.WriteMinidump();
+}
+
+// static
+bool ExceptionHandler::WriteMinidumpForChild(mach_port_t child,
+					     mach_port_t child_blamed_thread,
+					     const string &dump_path,
+					     MinidumpCallback callback,
+					     void *callback_context) {
+  ScopedTaskSuspend suspend(child);
+
+  MinidumpGenerator generator(child, MACH_PORT_NULL);
+  string dump_id;
+  string dump_filename = generator.UniqueNameInDirectory(dump_path, &dump_id);
+
+  generator.SetExceptionInformation(EXC_BREAKPOINT,
+#if defined (__i386__) || defined(__x86_64__)
+				    EXC_I386_BPT,
+#elif defined (__ppc__) || defined (__ppc64__)
+				    EXC_PPC_BREAKPOINT,
+#else
+  #error architecture not supported
+#endif
+				    0,
+				    child_blamed_thread);
+  bool result = generator.Write(dump_filename.c_str());
+
+  if (callback) {
+    return callback(dump_path.c_str(), dump_id.c_str(),
+		    callback_context, result);
+  }
+  return result;
 }
 
 bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
@@ -312,6 +348,18 @@ bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
       if (exception_type && exception_code)
         _exit(exception_type);
     }
+  } else if (IsOutOfProcess()) {
+    if (exception_type && exception_code) {
+      // If this is a real exception, give the filter (if any) a chance to
+      // decide if this should be sent.
+      if (filter_ && !filter_(callback_context_))
+	return false;
+      return crash_generation_client_->RequestDumpForException(
+	         exception_type,
+		 exception_code,
+		 exception_subcode,
+		 thread_name);
+    }
   } else {
     string minidump_id;
 
@@ -321,7 +369,7 @@ bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
       MinidumpGenerator md;
       if (exception_type && exception_code) {
         // If this is a real exception, give the filter (if any) a chance to
-        // decided if this should be sent
+        // decide if this should be sent.
         if (filter_ && !filter_(callback_context_))
           return false;
 
@@ -453,10 +501,11 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
   // Wait for the exception info
   while (1) {
     receive.header.msgh_local_port = self->handler_port_;
-    receive.header.msgh_size = sizeof(receive);
+    receive.header.msgh_size = static_cast<mach_msg_size_t>(sizeof(receive));
     kern_return_t result = mach_msg(&(receive.header),
                                     MACH_RCV_MSG | MACH_RCV_LARGE, 0,
-                                    sizeof(receive), self->handler_port_,
+                                    receive.header.msgh_size,
+                                    self->handler_port_,
                                     MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 
 

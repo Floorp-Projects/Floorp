@@ -182,6 +182,11 @@ DeviceManagerD3D9::DeviceManagerD3D9()
 {
 }
 
+DeviceManagerD3D9::~DeviceManagerD3D9()
+{
+  LayerManagerD3D9::OnDeviceManagerDestroy(this);
+}
+
 bool
 DeviceManagerD3D9::Init()
 {

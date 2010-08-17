@@ -38,9 +38,12 @@
 
 #include "nsISupports.idl"
 
+/* NOTE: this interface is completely undesigned, not stable and likely to change */
+
 [scriptable, uuid(5C05E5B7-0FCC-4070-BF6B-58BC33ECA427)]
 interface nsIGfxInfo : nsISupports
 {
   readonly attribute boolean D2DEnabled;
+  readonly attribute boolean DWriteEnabled;
 };
 
