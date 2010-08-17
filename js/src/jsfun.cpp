@@ -2603,34 +2603,13 @@ js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
 JSObject *
 js_ValueToFunctionObject(JSContext *cx, Value *vp, uintN flags)
 {
-    JSFunction *fun;
-    JSStackFrame *caller;
-    JSPrincipals *principals;
-
     JSObject *funobj;
-    if (IsFunctionObject(*vp, &funobj))
-        return funobj;
-
-    fun = js_ValueToFunction(cx, vp, flags);
-    if (!fun)
-        return NULL;
-    vp->setObject(*fun);
-
-    caller = js_GetScriptedCaller(cx, NULL);
-    if (caller) {
-        principals = JS_StackFramePrincipals(cx, caller);
-    } else {
-        /* No scripted caller, don't allow access. */
-        principals = NULL;
-    }
-
-    if (!js_CheckPrincipalsAccess(cx, FUN_OBJECT(fun), principals,
-                                  fun->atom
-                                  ? fun->atom
-                                  : cx->runtime->atomState.anonymousAtom)) {
+    if (!IsFunctionObject(*vp, &funobj)) {
+        js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
-    return FUN_OBJECT(fun);
+
+    return funobj;
 }
 
 JSObject *
@@ -2641,7 +2620,9 @@ js_ValueToCallableObject(JSContext *cx, Value *vp, uintN flags)
         if (callable->isCallable())
             return callable;
     }
-    return js_ValueToFunctionObject(cx, vp, flags);
+
+    js_ReportIsNotFunction(cx, vp, flags);
+    return NULL;
 }
 
 void
