@@ -66,6 +66,18 @@ _TEST_FILES = \
 		iframe.html \
 		parent.html \
 		blank.html \
+		test_sessionhistory.html \
+		file_bug462076_1.html \
+		file_bug462076_2.html \
+		file_bug462076_3.html \
+		file_bug508537_1.html \
+		file_document_write_1.html \
+		file_static_and_dynamic_1.html \
+		frame0.html \
+		frame1.html \
+		frame2.html \
+		frame3.html \
+		goback.html \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))
