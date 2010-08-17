@@ -53,7 +53,7 @@
 
 #if !defined(XPCOM_GLUE_AVOID_NSPR)
 #include "prthread.h" /* needed for thread-safety checks */
-#include "pratom.h"   /* needed for PR_AtomicIncrement and PR_AtomicDecrement */
+#include "nsAtomicRefcnt.h" /* for NS_Atomic{Increment,Decrement}Refcnt */
 #endif
 
 #include "nsDebug.h"
@@ -1256,23 +1256,26 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
-  nsrefcnt count;                                                             \
-  count = PR_AtomicIncrement((PRInt32*)&mRefCnt);                             \
+  nsrefcnt count = NS_AtomicIncrementRefcnt(mRefCnt);                         \
   NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
-  return count;                                                               \
+  return (nsrefcnt) count;                                                    \
 }
 
 /**
  * Use this macro to implement the Release method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
+ *
+ * Note that we don't need to use an atomic operation to stabilize the refcnt.
+ * If the refcnt is released to 0, only the current thread has a reference to
+ * the object; we thus don't have to use an atomic set to inform other threads
+ * that we've changed the refcnt.
  */
 
 #define NS_IMPL_THREADSAFE_RELEASE(_class)                                    \
 NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 {                                                                             \
-  nsrefcnt count;                                                             \
   NS_PRECONDITION(0 != mRefCnt, "dup release");                               \
-  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);                            \
+  nsrefcnt count = NS_AtomicDecrementRefcnt(mRefCnt);                         \
   NS_LOG_RELEASE(this, count, #_class);                                       \
   if (0 == count) {                                                           \
     mRefCnt = 1; /* stabilize */                                              \
