@@ -27,7 +27,6 @@
  *   Gavin Sharp <gavin.sharp@gmail.com>
  *   Ben Combee <combee@mozilla.com>
  *   Roy Frostig <rfrostig@mozilla.com>
- *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,9 +56,6 @@ const kAxisLockRevertThreshold = 200;
 
 // Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
 const kStateActive = 0x00000001;
-
-// threshold in ms for touch and hold to stop kinetic scrolling
-const kKineticBrakesDelay = 50;
 
 /**
  * InputHandler
@@ -433,13 +429,10 @@ MouseModule.prototype = {
     let [targetScrollbox, targetScrollInterface]
       = this.getScrollboxFromElement(aEvent.target);
 
-    if (this._kinetic.isActive()) {
-      let oldInterface = this._targetScrollInterface;
-      if (targetScrollInterface != oldInterface)
-        this._kinetic.end(); // stop right away if targetScrollbox has changed
-      else
-        this._kinetic.brakesApplied(); // otherwise, stop soon
-    }
+    // stop kinetic panning if targetScrollbox has changed
+    let oldInterface = this._targetScrollInterface;
+    if (this._kinetic.isActive() && targetScrollInterface != oldInterface)
+      this._kinetic.end();
 
     let targetClicker = this.getClickerFromElement(aEvent.target);
 
@@ -992,11 +985,6 @@ KineticController.prototype = {
       this._callback = null;
     }
 
-    if (this._brakesTimeout) {
-      clearTimeout(this._brakesTimeout);
-      delete this._brakesTimeout;
-    }
-
     this.momentumBuffer = [];
     this._velocity.set(0, 0);
   },
@@ -1145,20 +1133,6 @@ KineticController.prototype = {
     }
 
     this.momentumBuffer.push({'t': now, 'dx' : dx, 'dy' : dy});
-
-    if (dx > 0 && dy > 0 && this._brakesTimeout) {
-      clearTimeout(this._brakesTimeout);
-      delete this._brakesTimeout;
-    }
-  },
-
-  /** Stop panning very soon if no more movement is added. */
-  brakesApplied: function brakesApplied() {
-    let self = this;
-    this._brakesTimeout = setTimeout(function() {
-      self.end();
-      delete self._brakesTimeout;
-    }, kKineticBrakesDelay);
   }
 };
 
