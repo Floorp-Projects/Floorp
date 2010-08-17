@@ -54,6 +54,8 @@ HelperAppLauncherDialog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
   show: function hald_show(aLauncher, aContext, aReason) {
+    const NS_BINDING_ABORTED = 0x804b0002;
+ 
     let window = aContext.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowInternal);
 
@@ -89,18 +91,31 @@ HelperAppLauncherDialog.prototype = {
                                              flags, save, open, nothing,
                                              null, {});
 
-      if (choice == 0)
+      if (choice == 0) {
         aLauncher.saveToDisk(null, false);
-      else if (choice == 1)
+      }
+      else if (choice == 1) {
         aLauncher.launchWithApplication(null, false);
+      }
+      else {
+        try {
+          aLauncher.cancel(NS_BINDING_ABORTED);
+        } catch(e) {} 
+      }
     } else {
       let choice = Services.prompt.confirmEx(window,
                                              title, message,
                                              flags, save, nothing, null,
                                              null, {});
 
-      if (choice == 0)
+      if (choice == 0) {
         aLauncher.saveToDisk(null, false);
+      }
+      else {
+        try {
+          aLauncher.cancel(NS_BINDING_ABORTED);
+        } catch(e) {} 
+      }
     }
   },
 
