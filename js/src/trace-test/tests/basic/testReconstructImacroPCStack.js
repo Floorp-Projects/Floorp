@@ -1,11 +1,10 @@
-var actual = "";
-var expect = "TypeError: x is not a function";
-
 x = Proxy.create((function () {
     return {
         get: function () {}
     }
 }()), Object.e)
+
+var hit = false;
 
 try {
     Function("\
@@ -17,7 +16,13 @@ try {
       }\
     ")()
 } catch (e) {
-    actual = "" + e;
+    hit = true;
+
+    var str = String(e);
+    var match = (str == "TypeError: x is not a function" ||
+                 str == "TypeError: can't convert x to number");
+
+    assertEq(match, true);
 }
 
-assertEq(actual, expect);
+assertEq(hit, true);
