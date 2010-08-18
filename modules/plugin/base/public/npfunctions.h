@@ -267,12 +267,17 @@ typedef struct _NPPluginData {   /* Alternate OS2 Plugin interface */
   unsigned long dwProductVersionMS;
   unsigned long dwProductVersionLS;
 } NPPluginData;
-NPError OSCALL NP_GetPluginData(NPPluginData * pPluginData);
+typedef NPError (*NP_GetPluginDataFunc)(NPPluginData*);
+NPError OSCALL  NP_GetPluginData(NPPluginData * pPluginData);
 #endif
-NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs);
-NPError OSCALL NP_Initialize(NPNetscapeFuncs* bFuncs);
-NPError OSCALL NP_Shutdown();
-char*          NP_GetMIMEDescription();
+typedef NPError (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
+NPError OSCALL  NP_GetEntryPoints(NPPluginFuncs* pFuncs);
+typedef NPError (*NP_InitializeFunc)(NPNetscapeFuncs*);
+NPError OSCALL  NP_Initialize(NPNetscapeFuncs* bFuncs);
+typedef NPError (*NP_ShutdownFunc)();
+NPError OSCALL  NP_Shutdown();
+typedef char*   (*NP_GetMIMEDescriptionFunc)();
+char*           NP_GetMIMEDescription();
 #ifdef __cplusplus
 }
 #endif
@@ -286,15 +291,22 @@ char*          NP_GetMIMEDescription();
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef char*      (*NP_GetPluginVersionFunc)();
 NP_EXPORT(char*)   NP_GetPluginVersion();
+typedef char*      (*NP_GetMIMEDescriptionFunc)();
 NP_EXPORT(char*)   NP_GetMIMEDescription();
 #ifdef XP_MACOSX
+typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*);
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs);
+typedef NPError    (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
 NP_EXPORT(NPError) NP_GetEntryPoints(NPPluginFuncs* pFuncs);
 #else
+typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
 #endif
+typedef NPError    (*NP_ShutdownFunc)();
 NP_EXPORT(NPError) NP_Shutdown();
+typedef NPError    (*NP_GetValueFunc)(void *, NPPVariable, void *);
 NP_EXPORT(NPError) NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
 #ifdef __cplusplus
 }

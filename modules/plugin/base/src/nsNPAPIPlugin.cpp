@@ -267,8 +267,6 @@ nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
 }
 #endif
 
-namespace {
-
 #ifdef MOZ_IPC
 
 #ifdef XP_MACOSX
@@ -311,8 +309,8 @@ static PRBool GMA9XXGraphics()
 }
 #endif
 
-inline PRBool
-RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
+PRBool
+nsNPAPIPlugin::RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
@@ -431,7 +429,7 @@ GetNewPluginLibrary(const char* aFilePath,
   nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
   nsPluginTag* tag = host->FindTagForLibrary(aLibrary);
   if (tag) {
-    if (aFilePath && RunPluginOOP(aFilePath, tag)) {
+    if (aFilePath && nsNPAPIPlugin::RunPluginOOP(aFilePath, tag)) {
       return PluginModuleParent::LoadModule(aFilePath);
     }
   }
@@ -439,14 +437,16 @@ GetNewPluginLibrary(const char* aFilePath,
   return new PluginPRLibrary(aFilePath, aLibrary);
 }
 
-} /* anonymous namespace */
-
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
 nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
                             nsIPlugin** aResult)
 {
   *aResult = nsnull;
+
+  if (!aFilePath || !aLibrary) {
+    return NS_ERROR_FAILURE;
+  }
 
   CheckClassInitialized();
 
@@ -468,14 +468,6 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 
   plugin->mLibrary = pluginLib;
   pluginLib->SetPlugin(plugin);
-
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-  // Do not initialize if the file path is NULL.
-  if (!aFilePath) {
-    *aResult = plugin.forget().get();
-    return NS_OK;
-  }
-#endif
 
   NPError pluginCallError;
   nsresult rv;
@@ -558,29 +550,6 @@ nsNPAPIPlugin::Shutdown()
     ::CloseResFile(mPluginRefNum);
 #endif
   return NS_OK;
-}
-
-nsresult
-nsNPAPIPlugin::GetMIMEDescription(const char* *resultingDesc)
-{
-  nsresult gmdResult = mLibrary->NP_GetMIMEDescription(resultingDesc);
-  if (gmdResult != NS_OK) {
-    return gmdResult;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsNPAPIPlugin::GetValue(NPPVariable variable, void *value)
-{
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsNPAPIPlugin::GetValue called: this=%p, variable=%d\n", this, variable));
-
-  NPError gvError;
-  mLibrary->NP_GetValue(nsnull, variable, value, &gvError);
-
-  return gvError;
 }
 
 // Create a new NPP GET or POST (given in the type argument) url
