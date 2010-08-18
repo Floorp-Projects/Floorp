@@ -120,6 +120,9 @@ GK_ATOM(attribute, "attribute")
 GK_ATOM(attributeSet, "attribute-set")
 GK_ATOM(aural, "aural")
 GK_ATOM(_auto, "auto")
+#ifdef MOZ_MEDIA
+GK_ATOM(autobuffer, "autobuffer")
+#endif
 GK_ATOM(autocheck, "autocheck")
 GK_ATOM(autocomplete, "autocomplete")
 GK_ATOM(autofocus, "autofocus")
@@ -761,9 +764,6 @@ GK_ATOM(preceding, "preceding")
 GK_ATOM(precedingSibling, "preceding-sibling")
 GK_ATOM(predicate, "predicate")
 GK_ATOM(prefix, "prefix")
-#ifdef MOZ_MEDIA
-GK_ATOM(preload, "preload")
-#endif
 GK_ATOM(preserve, "preserve")
 GK_ATOM(preserveSpace, "preserve-space")
 GK_ATOM(preventdefault, "preventdefault")
