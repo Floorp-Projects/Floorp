@@ -464,8 +464,9 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   // spec says to force discrete mode.
   if (GetCalcMode() == CALC_DISCRETE || NS_FAILED(rv)) {
     if (IsToAnimation()) {
-      // Two discrete values: our base value, and the val in our array
-      aResult = (simpleProgress < 0.5f) ? aBaseValue : aValues[0];
+      // SMIL 3, 12.6.4: Since a to animation has only 1 value, a discrete to
+      // animation will simply set the to value for the simple duration.
+      aResult = aValues[0];
     } else {
       PRUint32 index = (PRUint32) floor(simpleProgress * (aValues.Length()));
       aResult = aValues[index];
