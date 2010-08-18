@@ -1122,6 +1122,20 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
 }
 
 void
+nsSMILTimedElement::HandleTargetElementChange(Element* aNewTarget)
+{
+  PRUint32 count = mBeginSpecs.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    mBeginSpecs[i]->HandleTargetElementChange(aNewTarget);
+  }
+
+  count = mEndSpecs.Length();
+  for (PRUint32 j = 0; j < count; ++j) {
+    mEndSpecs[j]->HandleTargetElementChange(aNewTarget);
+  }
+}
+
+void
 nsSMILTimedElement::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 {
   PRUint32 count = mBeginSpecs.Length();
