@@ -126,7 +126,7 @@ void
 nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
 {
   if (mParams.mType != nsSMILTimeValueSpecParams::SYNCBASE &&
-      mParams.mType != nsSMILTimeValueSpecParams::EVENT)
+      !IsEventBased())
     return;
 
   NS_ABORT_IF_FALSE(aContextNode,
@@ -142,11 +142,15 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   // element.
   nsRefPtr<Element> oldReferencedElement = mReferencedElement.get();
 
-  // XXX Support default event targets
-  NS_ABORT_IF_FALSE(mParams.mDependentElemID, "NULL dependent element id");
-  nsString idStr;
-  mParams.mDependentElemID->ToString(idStr);
-  mReferencedElement.ResetWithID(aContextNode, idStr);
+  if (mParams.mDependentElemID) {
+    mReferencedElement.ResetWithID(aContextNode,
+        nsDependentAtomString(mParams.mDependentElemID));
+  } else if (IsEventBased()) {
+    Element* target = mOwner->GetTargetElement();
+    mReferencedElement.ResetWithElement(target);
+  } else {
+    NS_ABORT_IF_FALSE(PR_FALSE, "Syncbase element without ID");
+  }
   UpdateReferencedElement(oldReferencedElement, mReferencedElement.get());
 }
 
@@ -177,6 +181,15 @@ nsSMILTimeValueSpec::HandleNewInterval(nsSMILInterval& aInterval,
     new nsSMILInstanceTime(newTime, nsSMILInstanceTime::SOURCE_SYNCBASE, this,
                            &aInterval);
   mOwner->AddInstanceTime(newInstance, mIsBegin);
+}
+
+void
+nsSMILTimeValueSpec::HandleTargetElementChange(Element* aNewTarget)
+{
+  if (!IsEventBased() || mParams.mDependentElemID)
+    return;
+
+  mReferencedElement.ResetWithElement(aNewTarget);
 }
 
 void
@@ -292,7 +305,6 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
   NS_ABORT_IF_FALSE(mParams.mEventSymbol,
     "Attempting to register event-listener but there is no event name");
 
-  // XXX Support default event targets
   if (!aTarget)
     return;
 

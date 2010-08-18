@@ -79,6 +79,17 @@ public:
    */
   nsSMILTimeContainer* GetTimeContainer();
 
+  /*
+   * Returns the element targeted by the animation element. Needed for
+   * registering event listeners against the appropriate element.
+   */
+  mozilla::dom::Element* GetTargetElement()
+  {
+    return mAnimationElement ?
+        mAnimationElement->GetTargetElementContent() :
+        nsnull;
+  }
+
   /**
    * Methods for supporting the nsIDOMElementTimeControl interface.
    */
@@ -318,6 +329,12 @@ public:
    *                      not be null.
    */
   void BindToTree(nsIContent* aContextNode);
+
+  /**
+   * Called when the target of the animation has changed so that event
+   * registrations can be updated.
+   */
+  void HandleTargetElementChange(mozilla::dom::Element* aNewTarget);
 
   /**
    * Called when the timed element has been removed from a document so that
