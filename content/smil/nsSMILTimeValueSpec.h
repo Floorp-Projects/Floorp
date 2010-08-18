@@ -41,6 +41,7 @@
 #include "nsSMILTimeValueSpecParams.h"
 #include "nsReferencedElement.h"
 #include "nsAutoPtr.h"
+#include "nsIDOMEventListener.h"
 
 class nsAString;
 class nsSMILTimeValue;
@@ -68,6 +69,7 @@ public:
 
   nsresult SetSpec(const nsAString& aStringSpec, nsIContent* aContextNode);
   void     ResolveReferences(nsIContent* aContextNode);
+  PRBool   IsEventBased() const;
 
   void     HandleNewInterval(nsSMILInterval& aInterval,
                              const nsSMILTimeContainer* aSrcContainer);
@@ -85,10 +87,14 @@ public:
   void Unlink();
 
 protected:
-  void UpdateTimebase(nsIContent* aFrom, nsIContent* aTo);
-  void UnregisterFromTimebase(nsSMILTimedElement* aTimedElement);
+  void UpdateReferencedElement(nsIContent* aFrom, nsIContent* aTo);
+  void UnregisterFromReferencedElement(nsIContent* aContent);
   nsSMILTimedElement* GetTimedElementFromContent(nsIContent* aContent);
-  nsSMILTimedElement* GetTimebaseElement();
+  void RegisterEventListener(nsIContent* aTarget);
+  void UnregisterEventListener(nsIContent* aTarget);
+  nsIEventListenerManager* GetEventListenerManager(nsIContent* aTarget,
+      nsIDOMEventGroup** aSystemGroup);
+  void HandleEvent(nsIDOMEvent* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
                                       const nsSMILTimeContainer* aSrcContainer);
 
@@ -100,21 +106,40 @@ protected:
                                           // the target.
   nsSMILTimeValueSpecParams     mParams;
 
-  class TimebaseElement : public nsReferencedElement {
+  class TimeReferenceElement : public nsReferencedElement
+  {
   public:
-    TimebaseElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
+    TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
 
   protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) {
+    virtual void ElementChanged(Element* aFrom, Element* aTo)
+    {
       nsReferencedElement::ElementChanged(aFrom, aTo);
-      mSpec->UpdateTimebase(aFrom, aTo);
+      mSpec->UpdateReferencedElement(aFrom, aTo);
     }
     virtual PRBool IsPersistent() { return PR_TRUE; }
   private:
     nsSMILTimeValueSpec* mSpec;
   };
 
-  TimebaseElement mTimebase;
+  TimeReferenceElement mReferencedElement;
+
+  class EventListener : public nsIDOMEventListener
+  {
+  public:
+    EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
+    void Disconnect()
+    {
+      mSpec = nsnull;
+    }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDOMEVENTLISTENER
+
+  private:
+    nsSMILTimeValueSpec* mSpec;
+  };
+  nsCOMPtr<EventListener> mEventListener;
 };
 
 #endif // NS_SMILTIMEVALUESPEC_H_

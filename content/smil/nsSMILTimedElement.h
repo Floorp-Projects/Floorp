@@ -492,6 +492,7 @@ protected:
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   PRBool            HasPlayed() const { return !mOldIntervals.IsEmpty(); }
+  PRBool            EndHasEventConditions() const;
 
   // Hashtable callback methods
   PR_STATIC_CALLBACK(PLDHashOperator) NotifyNewIntervalCallback(
@@ -529,8 +530,6 @@ protected:
   };
   nsSMILRestartMode               mRestartMode;
   static nsAttrValue::EnumTable   sRestartModeTable[];
-
-  PRPackedBool                    mEndHasEventConditions;
 
   InstanceTimeList                mBeginInstances;
   InstanceTimeList                mEndInstances;
