@@ -295,6 +295,50 @@ function testNet()
   content.location = TEST_NETWORK_URI;
 }
 
+// General driver for filter tests.
+function testLiveFiltering(callback) {
+  HUDService.setFilterState(hudId, "network", true);
+  filterBox.value = "";
+
+  browser.addEventListener("DOMContentLoaded", function onTestNetLoad() {
+    browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
+
+    let display = HUDService.getDisplayByURISpec(TEST_NETWORK_URI);
+    let outputNode = display.querySelector(".hud-output-node");
+
+    function countNetworkNodes() {
+      let networkNodes = outputNode.querySelectorAll(".hud-network");
+      let displayedNetworkNodes = 0;
+      let view = outputNode.ownerDocument.defaultView;
+      for (let i = 0; i < networkNodes.length; i++) {
+        let computedStyle = view.getComputedStyle(networkNodes[i], null);
+        if (computedStyle.display !== "none") {
+          displayedNetworkNodes++;
+        }
+      }
+
+      return displayedNetworkNodes;
+    }
+
+    callback(countNetworkNodes);
+  }, false);
+
+  content.location = TEST_NETWORK_URI;
+}
+
+// Tests the live filtering for message types.
+function testLiveFilteringForMessageTypes() {
+  testLiveFiltering(function(countNetworkNodes) {
+    HUDService.setFilterState(hudId, "network", false);
+    is(countNetworkNodes(), 0, "the network nodes are hidden when the " +
+      "corresponding filter is switched off");
+
+    HUDService.setFilterState(hudId, "network", true);
+    isnot(countNetworkNodes(), 0, "the network nodes reappear when the " +
+      "corresponding filter is switched on");
+  });
+}
+
 function testOutputOrder()
 {
   let HUD = HUDService.hudWeakReferences[hudId].get();
@@ -922,6 +966,7 @@ function test() {
       testJSInputExpand();
       testPropertyPanel();
       testNet();
+      testLiveFilteringForMessageTypes();
     });
   }, false);
 }

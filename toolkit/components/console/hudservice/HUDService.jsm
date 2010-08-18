@@ -401,6 +401,62 @@ HUD_SERVICE.prototype =
   setFilterState: function HS_setFilterState(aHUDId, aToggleType, aState)
   {
     this.filterPrefs[aHUDId][aToggleType] = aState;
+    this.adjustVisibilityForMessageType(aHUDId, aToggleType, aState);
+  },
+
+  /**
+   * Temporarily lifts the subtree rooted at the given node out of the DOM for
+   * the duration of the supplied callback. This allows DOM mutations performed
+   * inside the callback to avoid triggering reflows.
+   *
+   * @param nsIDOMNode aNode
+   *        The node to remove from the tree.
+   * @param function aCallback
+   *        The callback, which should take no parameters. The return value of
+   *        the callback, if any, is ignored.
+   * @returns void
+   */
+  liftNode: function(aNode, aCallback) {
+    let parentNode = aNode.parentNode;
+    let siblingNode = aNode.nextSibling;
+    parentNode.removeChild(aNode);
+    aCallback();
+    parentNode.insertBefore(aNode, siblingNode);
+  },
+
+  /**
+   * Turns the display of log nodes on and off appropriately to reflect the
+   * adjustment of the message type filter named by @aMessageType.
+   *
+   * @param string aHUDId
+   *        The ID of the HUD to alter.
+   * @param string aMessageType
+   *        The message type being filtered ("network", "css", etc.)
+   * @param boolean aState
+   *        True if the filter named by @aMessageType is being turned on; false
+   *        otherwise.
+   * @returns void
+   */
+  adjustVisibilityForMessageType:
+  function HS_adjustVisibilityForMessageType(aHUDId, aMessageType, aState)
+  {
+    let displayNode = this.getOutputNodeById(aHUDId);
+    let outputNode = displayNode.querySelector(".hud-output-node");
+    let doc = outputNode.ownerDocument;
+
+    this.liftNode(outputNode, function() {
+      let xpath = ".//*[contains(@class, 'hud-msg-node') and " +
+        "contains(@class, 'hud-" + aMessageType + "')]";
+      let result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        if (aState) {
+          result.snapshotItem(i).classList.remove("hud-filtered-by-type");
+        } else {
+          result.snapshotItem(i).classList.add("hud-filtered-by-type");
+        }
+      }
+    });
   },
 
   /**
