@@ -738,15 +738,14 @@
           ]]>
         </body>
       </method>
-          
-      <field name="_AUTOSCROLL_SPEED">3</field>
+
       <field name="_AUTOSCROLL_SNAP">10</field>
       <field name="_scrollable">null</field>
-      <field name="_autoScrollTimer">null</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
       <field name="_screenX">null</field>
       <field name="_screenY">null</field>
+      <field name="_lastFrame">null</field>
       <field name="_autoScrollPopup">null</field>
       <field name="_autoScrollNeedsCleanup">false</field>
 
@@ -762,7 +761,7 @@
               window.removeEventListener("keydown", this, true);
               window.removeEventListener("keypress", this, true);
               window.removeEventListener("keyup", this, true);
-              clearInterval(this._autoScrollTimer);
+              window.removeEventListener("MozBeforePaint", this, true);
             }
          ]]>
        </body>
@@ -875,6 +874,9 @@
             this._startY = event.screenY;
             this._screenX = event.screenX;
             this._screenY = event.screenY;
+            this._scrollErrorX = 0;
+            this._scrollErrorY = 0;
+            this._lastFrame = window.mozAnimationStartTime;
 
             window.addEventListener("mousemove", this, true);
             window.addEventListener("mousedown", this, true);
@@ -883,12 +885,9 @@
             window.addEventListener("keydown", this, true);
             window.addEventListener("keypress", this, true);
             window.addEventListener("keyup", this, true);
+            window.addEventListener("MozBeforePaint", this, true);
 
-            this._scrollErrorX = 0;
-            this._scrollErrorY = 0;
-
-            this._autoScrollTimer = setInterval(function(self) { self.autoScrollLoop(); },
-                                                20, this);
+            window.mozRequestAnimationFrame();
          ]]>
        </body>
      </method>
@@ -922,21 +921,30 @@
      </method>
 
      <method name="autoScrollLoop">
+       <parameter name="timestamp"/>
        <body>
          <![CDATA[
+           // avoid long jumps when the browser hangs for more than
+           // |maxTimeDelta| ms
+           const maxTimeDelta = 100;
+           var timeDelta = Math.min(maxTimeDelta, timestamp - this._lastFrame);
+           // we used to scroll |_accelerate()| pixels every 20ms
+           var timeCompensation = timeDelta / 20;
+           this._lastFrame = timestamp;
+
            var actualScrollX = 0;
            var actualScrollY = 0;
            // don't bother scrolling vertically when the scrolldir is only horizontal
            // and the other way around
            var scrolldir = this._autoScrollPopup.getAttribute("scrolldir");
            if (scrolldir != 'EW') {
-             var y = this._accelerate(this._screenY, this._startY);
+             var y = this._accelerate(this._screenY, this._startY) * timeCompensation;
              var desiredScrollY = this._scrollErrorY + y;
              actualScrollY = this._roundToZero(desiredScrollY);
              this._scrollErrorY = (desiredScrollY - actualScrollY);
            }
            if (scrolldir != 'NS') {
-             var x = this._accelerate(this._screenX, this._startX);
+             var x = this._accelerate(this._screenX, this._startX) * timeCompensation;
              var desiredScrollX = this._scrollErrorX + x;
              actualScrollX = this._roundToZero(desiredScrollX);
              this._scrollErrorX = (desiredScrollX - actualScrollX);
@@ -948,6 +956,7 @@
              this._scrollable.scrollLeft += actualScrollX;
              this._scrollable.scrollTop += actualScrollY;
            }
+           window.mozRequestAnimationFrame();
          ]]>
        </body>
      </method>
@@ -994,6 +1003,9 @@
         <![CDATA[
           if (this._scrollable) {
             switch(aEvent.type) {
+              case "MozBeforePaint":
+                this.autoScrollLoop(aEvent.timeStamp);
+                break;
               case "mousemove": {
                 this._screenX = aEvent.screenX;
                 this._screenY = aEvent.screenY;
