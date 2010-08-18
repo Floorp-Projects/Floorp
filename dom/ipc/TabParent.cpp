@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/ExternalHelperAppParent.h"
 #include "TabParent.h"
 
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -805,6 +806,26 @@ TabParent::GetFrameLoader() const
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nsnull;
+}
+
+PExternalHelperAppParent*
+TabParent::AllocPExternalHelperApp(const IPC::URI& uri,
+                                   const nsCString& aMimeContentType,
+                                   const bool& aForceSave,
+                                   const PRInt64& aContentLength)
+{
+  ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
+  parent->AddRef();
+  parent->Init(this, aMimeContentType, aForceSave);
+  return parent;
+}
+
+bool
+TabParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
+{
+  ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
+  parent->Release();
+  return true;
 }
 
 } // namespace tabs
