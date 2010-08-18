@@ -1793,6 +1793,7 @@ nsEventStateManager::FireContextClick()
                              type == NS_FORM_INPUT_EMAIL ||
                              type == NS_FORM_INPUT_SEARCH ||
                              type == NS_FORM_INPUT_TEL ||
+                             type == NS_FORM_INPUT_URL ||
                              type == NS_FORM_INPUT_PASSWORD ||
                              type == NS_FORM_INPUT_FILE ||
                              type == NS_FORM_TEXTAREA);

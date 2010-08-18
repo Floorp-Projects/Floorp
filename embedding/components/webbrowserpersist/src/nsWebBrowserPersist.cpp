@@ -3353,6 +3353,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
                 case NS_FORM_INPUT_SEARCH:
                 case NS_FORM_INPUT_TEXT:
                 case NS_FORM_INPUT_TEL:
+                case NS_FORM_INPUT_URL:
                     nodeAsInput->GetValue(valueStr);
                     // Avoid superfluous value="" serialization
                     if (valueStr.IsEmpty())
