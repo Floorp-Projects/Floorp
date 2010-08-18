@@ -1913,6 +1913,7 @@ nsContentUtils::TrimCharsInSet(const char* aSet,
  */
 
 // static
+template<PRBool IsWhitespace(PRUnichar)>
 const nsDependentSubstring
 nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
 {
@@ -1922,7 +1923,7 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
   aStr.EndReading(end);
 
   // Skip whitespace characters in the beginning
-  while (start != end && nsCRT::IsAsciiSpace(*start)) {
+  while (start != end && IsWhitespace(*start)) {
     ++start;
   }
 
@@ -1931,7 +1932,7 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
     while (end != start) {
       --end;
 
-      if (!nsCRT::IsAsciiSpace(*end)) {
+      if (!IsWhitespace(*end)) {
         // Step back to the last non-whitespace character.
         ++end;
 
@@ -1945,6 +1946,16 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
 
   return Substring(start, end);
 }
+
+// Declaring the templates we are going to use avoid linking issues without
+// inlining the method. Considering there is not so much spaces checking
+// methods we can consider this to be better than inlining.
+template
+const nsDependentSubstring
+nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(const nsAString&, PRBool);
+template
+const nsDependentSubstring
+nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(const nsAString&, PRBool);
 
 static inline void KeyAppendSep(nsACString& aKey)
 {

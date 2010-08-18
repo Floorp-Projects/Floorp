@@ -2067,6 +2067,14 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
         aValue.StripChars(crlf);
       }
       break;
+    case NS_FORM_INPUT_URL:
+      {
+        PRUnichar crlf[] = { PRUnichar('\r'), PRUnichar('\n'), 0 };
+        aValue.StripChars(crlf);
+
+        aValue = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aValue);
+      }
+      break;
   }
 }
 
