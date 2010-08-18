@@ -538,6 +538,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Required, required)
 NS_IMPL_URI_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
@@ -1084,17 +1085,7 @@ nsHTMLInputElement::RadioSetChecked(PRBool aNotify)
   //
   // Find the selected radio button so we can deselect it
   //
-  nsCOMPtr<nsIDOMHTMLInputElement> currentlySelected;
-  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
-  // This is ONLY INITIALIZED IF container EXISTS
-  nsAutoString name;
-  PRBool nameExists = PR_FALSE;
-  if (container) {
-    nameExists = GetNameIfExists(name);
-    if (nameExists) {
-      container->GetCurrentRadioButton(name, getter_AddRefs(currentlySelected));
-    }
-  }
+  nsCOMPtr<nsIDOMHTMLInputElement> currentlySelected = GetSelectedRadioButton();
 
   //
   // Deselect the currently selected radio button
@@ -1117,7 +1108,9 @@ nsHTMLInputElement::RadioSetChecked(PRBool aNotify)
   // Let the group know that we are now the One True Radio Button
   //
   NS_ENSURE_SUCCESS(rv, rv);
-  if (container && nameExists) {
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  nsAutoString name;
+  if (container && GetNameIfExists(name)) {
     rv = container->SetCurrentRadioButton(name, this);
   }
 
@@ -1137,6 +1130,25 @@ nsHTMLInputElement::GetRadioGroupContainer()
     }
   }
   return retval;
+}
+
+already_AddRefed<nsIDOMHTMLInputElement>
+nsHTMLInputElement::GetSelectedRadioButton()
+{
+  nsIDOMHTMLInputElement* selected;
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+
+  if (!container) {
+    return nsnull;
+  }
+
+  nsAutoString name;
+  if (!GetNameIfExists(name)) {
+    return nsnull;
+  }
+
+  container->GetCurrentRadioButton(name, &selected);
+  return selected;
 }
 
 nsresult
@@ -1502,16 +1514,8 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
       case NS_FORM_INPUT_RADIO:
         {
-          nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
-          if (container) {
-            nsAutoString name;
-            if (GetNameIfExists(name)) {
-              nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
-              container->GetCurrentRadioButton(name,
-                                               getter_AddRefs(selectedRadioButton));
-              aVisitor.mItemData = selectedRadioButton;
-            }
-          }
+          nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton = GetSelectedRadioButton();
+          aVisitor.mItemData = selectedRadioButton;
 
           originalCheckedValue = GetChecked();
           if (!originalCheckedValue) {
@@ -2958,6 +2962,113 @@ nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent)
   return rv;
 }
 
+nsHTMLInputElement::ValueModeType
+nsHTMLInputElement::GetValueMode() const
+{
+  switch (mType)
+  {
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_IMAGE:
+      return VALUE_MODE_DEFAULT;
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+      return VALUE_MODE_DEFAULT_ON;
+    case NS_FORM_INPUT_FILE:
+      return VALUE_MODE_FILENAME;
+#ifdef DEBUG
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_TEL:
+      return VALUE_MODE_VALUE;
+    default:
+      NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
+      return VALUE_MODE_VALUE;
+#else // DEBUG
+    default:
+      return VALUE_MODE_VALUE;
+#endif // DEBUG
+  }
+}
+
+PRBool
+nsHTMLInputElement::IsMutable() const
+{
+  return !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) &&
+         GetCurrentDoc() &&
+         !(DoesReadOnlyApply() &&
+           HasAttr(kNameSpaceID_None, nsGkAtoms::readonly));
+}
+
+PRBool
+nsHTMLInputElement::DoesReadOnlyApply() const
+{
+  switch (mType)
+  {
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_IMAGE:
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_CHECKBOX:
+    // TODO:
+    // case NS_FORM_INPUT_COLOR:
+    // case NS_FORM_INPUT_RANGE:
+      return PR_FALSE;
+#ifdef DEBUG
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_TEL:
+      return PR_TRUE;
+    default:
+      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
+      return PR_TRUE;
+#else // DEBUG
+    default:
+      return PR_TRUE;
+#endif // DEBUG
+  }
+}
+
+PRBool
+nsHTMLInputElement::DoesRequiredApply() const
+{
+  switch (mType)
+  {
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_IMAGE:
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_SUBMIT:
+    // TODO:
+    // case NS_FORM_INPUT_COLOR:
+    // case NS_FORM_INPUT_RANGE:
+      return PR_FALSE;
+#ifdef DEBUG
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_TEL:
+      return PR_TRUE;
+    default:
+      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
+      return PR_TRUE;
+#else // DEBUG
+    default:
+      return PR_TRUE;
+#endif // DEBUG
+  }
+}
+
 // nsConstraintValidation
 
 PRBool
@@ -2974,6 +3085,44 @@ nsHTMLInputElement::IsTooLong()
   GetTextLength(&textLength);
 
   return (maxLength >= 0) && (textLength > maxLength);
+}
+
+PRBool
+nsHTMLInputElement::IsValueMissing()
+{
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) ||
+      !DoesRequiredApply()) {
+    return PR_FALSE;
+  }
+
+  if (GetValueMode() == VALUE_MODE_VALUE) {
+    if (!IsMutable()) {
+      return PR_FALSE;
+    }
+
+    nsAutoString value;
+    nsresult rv = GetValue(value);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    return value.IsEmpty();
+  }
+
+  if (mType == NS_FORM_INPUT_CHECKBOX) {
+    return !GetChecked();
+  }
+
+  if (mType == NS_FORM_INPUT_RADIO) {
+    nsCOMPtr<nsIDOMHTMLInputElement> selected = GetSelectedRadioButton();
+    return !selected;
+  }
+
+  if (mType == NS_FORM_INPUT_FILE) {
+    nsCOMArray<nsIFile> files;
+    GetFileArray(files);
+    return !files.Count();
+  }
+
+  return PR_FALSE;
 }
 
 PRBool
@@ -3011,6 +3160,29 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                  "ElementSuffersFromBeingTooLong",
                                                  params, 2, message);
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDATION_MESSAGE_VALUE_MISSING:
+    {
+      nsXPIDLString message;
+      nsCAutoString key;
+      switch (mType)
+      {
+        case NS_FORM_INPUT_FILE:
+          key.Assign("FileElementSuffersFromBeingMissing");
+          break;
+        case NS_FORM_INPUT_CHECKBOX:
+          key.Assign("CheckboxElementSuffersFromBeingMissing");
+          break;
+        case NS_FORM_INPUT_RADIO:
+          key.Assign("RadioElementSuffersFromBeingMissing");
+          break;
+        default:
+          key.Assign("TextElementSuffersFromBeingMissing");
+      }
+      rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                              key.get(), message);
       aValidationMessage = message;
       break;
     }
