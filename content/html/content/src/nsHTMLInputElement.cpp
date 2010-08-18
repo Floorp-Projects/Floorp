@@ -107,6 +107,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "nsTextEditRules.h"
 
@@ -133,6 +134,7 @@ static PRInt32 gSelectTextFieldOnFocus;
 static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
+  { "email", NS_FORM_INPUT_EMAIL },
   { "file", NS_FORM_INPUT_FILE },
   { "hidden", NS_FORM_INPUT_HIDDEN },
   { "reset", NS_FORM_INPUT_RESET },
@@ -147,7 +149,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[11];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[12];
 
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
@@ -319,6 +321,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch (mType) {
+    case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_PASSWORD:
@@ -452,6 +455,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // If we are changing type from File/Text/Tel/Passwd to other input types
       // we need save the mValue into value attribute
       if (mInputData.mValue &&
+          mType != NS_FORM_INPUT_EMAIL &&
           mType != NS_FORM_INPUT_TEXT &&
           mType != NS_FORM_INPUT_SEARCH &&
           mType != NS_FORM_INPUT_PASSWORD &&
@@ -1837,6 +1841,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
               (mType == NS_FORM_INPUT_TEXT ||
+               mType == NS_FORM_INPUT_EMAIL ||
                mType == NS_FORM_INPUT_SEARCH ||
                mType == NS_FORM_INPUT_PASSWORD ||
                mType == NS_FORM_INPUT_TEL ||
@@ -2390,6 +2395,7 @@ nsHTMLInputElement::SetDefaultValueAsValue()
     }
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
     {
@@ -2426,6 +2432,7 @@ nsHTMLInputElement::Reset()
       break;
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
       SetValueChanged(PR_FALSE);
@@ -2592,6 +2599,7 @@ nsHTMLInputElement::SaveState()
     // Never save passwords in session history
     case NS_FORM_INPUT_PASSWORD:
       break;
+    case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
@@ -2730,6 +2738,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
           break;
         }
 
+      case NS_FORM_INPUT_EMAIL:
       case NS_FORM_INPUT_SEARCH:
       case NS_FORM_INPUT_TEXT:
       case NS_FORM_INPUT_TEL:
@@ -2983,6 +2992,7 @@ nsHTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -3025,6 +3035,7 @@ nsHTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
       return PR_TRUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -3058,6 +3069,7 @@ nsHTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
       return PR_TRUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -3126,6 +3138,25 @@ nsHTMLInputElement::IsValueMissing()
 }
 
 PRBool
+nsHTMLInputElement::HasTypeMismatch()
+{
+  if (mType == NS_FORM_INPUT_EMAIL) {
+    nsAutoString value;
+    NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
+
+    if (value.IsEmpty()) {
+      return PR_FALSE;
+    }
+
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+           !IsValidEmailAddressList(value) :
+           !IsValidEmailAddress(value);
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
 nsHTMLInputElement::IsBarredFromConstraintValidation()
 {
   return mType == NS_FORM_INPUT_HIDDEN ||
@@ -3186,11 +3217,101 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       aValidationMessage = message;
       break;
     }
+    case VALIDATION_MESSAGE_TYPE_MISMATCH:
+    {
+      NS_ASSERTION(mType == NS_FORM_INPUT_EMAIL,
+                   "Only email type can suffer from a type mismatch!");
+
+      nsXPIDLString message;
+      rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                              "ElementSuffersFromInvalidEmail",
+                                              message);
+      aValidationMessage = message;
+      break;
+    }
     default:
       rv = nsConstraintValidation::GetValidationMessage(aValidationMessage, aType);
   }
 
   return rv;
+}
+
+//static
+PRBool
+nsHTMLInputElement::IsValidEmailAddressList(const nsAString& aValue)
+{
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
+    tokenizer(aValue, ',');
+
+  while (tokenizer.hasMoreTokens()) {
+    if (!IsValidEmailAddress(tokenizer.nextToken())) {
+      return PR_FALSE;
+    }
+  }
+
+  return !tokenizer.lastTokenEndedWithSeparator();
+}
+
+//static
+PRBool
+nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
+{
+  PRUint32 i = 0;
+  PRUint32 length = aValue.Length();
+
+  // If the email address is empty, begins with a '@' or ends with a '.',
+  // we know it's invalid.
+  if (length == 0 || aValue[0] == '@' || aValue[length-1] == '.') {
+    return PR_FALSE;
+  }
+
+  // Parsing the username.
+  for (; i < length && aValue[i] != '@'; ++i) {
+    PRUnichar c = aValue[i];
+
+    // The username characters have to be in this list to be valid.
+    if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
+          c == '.' || c == '!' || c == '#' || c == '$' || c == '%' ||
+          c == '&' || c == '\''|| c == '*' || c == '+' || c == '-' ||
+          c == '/' || c == '=' || c == '?' || c == '^' || c == '_' ||
+          c == '`' || c == '{' || c == '|' || c == '}' || c == '~' )) {
+      return PR_FALSE;
+    }
+  }
+
+  // There is no domain name (or it's one-character long),
+  // that's not a valid email address.
+  if (++i >= length) {
+    return PR_FALSE;
+  }
+
+  // The domain name can't begin with a dot.
+  if (aValue[i] == '.') {
+    return PR_FALSE;
+  }
+
+  // The domain name must have at least one dot which can't follow another dot,
+  // can't be the first nor the last domain name character.
+  PRBool dotFound = PR_FALSE;
+
+  // Parsing the domain name.
+  for (; i < length; ++i) {
+    PRUnichar c = aValue[i];
+
+    if (c == '.') {
+      dotFound = PR_TRUE;
+      // A dot can't follow a dot.
+      if (aValue[i-1] == '.') {
+        return PR_FALSE;
+      }
+    } else if (!(nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) ||
+                 c == '-')) {
+      // The domain characters have to be in this list to be valid.
+      return PR_FALSE;
+    }
+  }
+
+  return dotFound;
 }
 
 //

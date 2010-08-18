@@ -2706,6 +2706,7 @@ nsGenericHTMLFormElement::IsSingleLineTextControlInternal(PRBool aExcludePasswor
                                                           PRInt32 aType) const
 {
   return aType == NS_FORM_INPUT_TEXT ||
+         aType == NS_FORM_INPUT_EMAIL ||
          aType == NS_FORM_INPUT_SEARCH ||
          aType == NS_FORM_INPUT_TEL ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);

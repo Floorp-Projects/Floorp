@@ -214,6 +214,7 @@ public:
   // nsConstraintValidation
   PRBool   IsTooLong();
   PRBool   IsValueMissing();
+  PRBool   HasTypeMismatch();
   PRBool   IsBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidationMessageType aType);
@@ -245,6 +246,28 @@ protected:
     // throw the INVALID_STATE_ERR exception.
     VALUE_MODE_FILENAME
   };
+
+  /**
+   * This helper method returns true if aValue is a valid email address.
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address
+   *
+   * @param aValue  the email address to check.
+   * @result        whether the given string is a valid email address.
+   */
+  static PRBool IsValidEmailAddress(const nsAString& aValue);
+
+  /**
+   * This helper method returns true if aValue is a valid email address list.
+   * Email address list is a list of email address separated by comas (,) which
+   * can be surrounded by space charecters.
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address-list
+   *
+   * @param aValue  the email address list to check.
+   * @result        whether the given string is a valid email address list.
+   */
+  static PRBool IsValidEmailAddressList(const nsAString& aValue);
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,

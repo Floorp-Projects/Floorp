@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=555559
+-->
+<head>
+  <title>Test for Bug 555559</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=555559">Mozilla Bug 555559</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form>
+    <input type='email' name='email' id='i' oninvalid="invalidEventHandler(event);">
+  <form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 555559 **/
+
+// More checks are done in test_bug551670.html.
+
+var gInvalid = false;
+
+function invalidEventHandler(e)
+{
+  is(e.type, "invalid", "Invalid event type should be invalid");
+  gInvalid = true;
+}
+
+function todoCheckValidEmailAddress(element)
+{
+  gInvalid = false;
+  todo(!element.validity.typeMismatch,
+       "Element should not suffer from type mismatch");
+  todo(element.validity.valid, "Element should be valid");
+  todo(element.checkValidity(), "Element should be valid");
+  todo(!gInvalid, "The invalid event should not have been thrown");
+  todo_is(element.validationMessage, '',
+          "Validation message should be the empty string");
+}
+
+function checkValidEmailAddress(element)
+{
+  gInvalid = false;
+  ok(!element.validity.typeMismatch,
+     "Element should not suffer from type mismatch");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "Element should be valid");
+  ok(!gInvalid, "The invalid event should not have been thrown");
+  is(element.validationMessage, '',
+     "Validation message should be the empty string");
+}
+
+function checkInvalidEmailAddress(element)
+{
+  gInvalid = false;
+  ok(element.validity.typeMismatch,
+     "Element should suffer from type mismatch");
+  ok(!element.validity.valid, "Element should not be valid");
+  ok(!element.checkValidity(), "Element should not be valid");
+  ok(gInvalid, "The invalid event should have been thrown");
+  is(element.validationMessage, "The entered email address is not valid.",
+     "Validation message is not valid");
+}
+
+var email = document.forms[0].elements[0];
+is(email.type, 'email', "email state should be recognized");
+
+// This is not really a valid email address
+// but it should not be considered as invalid.
+email.value = '';
+checkValidEmailAddress(email);
+
+email.value = 'foo@bar.com';
+checkValidEmailAddress(email);
+
+email.value = ' foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar.com ';
+checkInvalidEmailAddress(email);
+
+email.value = 'tulip';
+checkInvalidEmailAddress(email);
+
+// Some checks on the user part of the address.
+email.value = '@bar.com';
+checkInvalidEmailAddress(email);
+
+var legalCharacters = "abcdefghijklmnopqrstuvwxyz";
+legalCharacters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+legalCharacters += "0123456789";
+legalCharacters += "!#$%&'*+-/=?^_`{|}~.";
+
+for each (c in legalCharacters)
+{
+  email.value = c + '@bar.com';
+  checkValidEmailAddress(email);
+}
+
+email.value = legalCharacters + '@bar.com';
+checkValidEmailAddress(email);
+
+// Checking stripped characters.
+email.value = 'f\noo@bar.com';
+todoCheckValidEmailAddress(email);
+
+email.value = 'f\roo@bar.com';
+todoCheckValidEmailAddress(email);
+
+// Testing some illegal characters.
+var illegalCharacters = "()<>[]:;@\, \t";
+
+for each (c in illegalCharacters)
+{
+  email.value = c + '@bar.com';
+  checkInvalidEmailAddress(email);
+}
+
+// Some checks on the domain part of the address.
+email.value = 'foo@bar';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@b';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar.';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@foo.bar';
+checkValidEmailAddress(email);
+
+email.value = 'foo@foo..bar';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@.bar';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@tulip.foo.bar';
+checkValidEmailAddress(email);
+
+email.value = 'foo@tulip.foo-bar';
+checkValidEmailAddress(email);
+
+email.value = 'foo@1.2';
+checkValidEmailAddress(email);
+
+email.value = 'foo@127.0.0.1';
+checkValidEmailAddress(email);
+
+email.value = 'foo@1.2.3.';
+checkInvalidEmailAddress(email);
+
+// Checking stripped characters.
+email.value = 'foo@b\nar.com';
+todoCheckValidEmailAddress(email);
+
+email.value = 'foo@b\rar.com';
+todoCheckValidEmailAddress(email);
+
+// Testing some illegal characters.
+illegalCharacters = "()<>[]:;@\,!#$%&'*+/=?^_`{|}~ \t";
+
+for each (c in illegalCharacters)
+{
+  email.value = 'foo@foo.bar' + c;
+  checkInvalidEmailAddress(email);
+}
+
+// Testing multiple: we are not going to re-test email validity, just multiple.
+email.multiple = true;
+
+email.value = 'foo@bar.com, foo@bar.com';
+checkValidEmailAddress(email);
+
+email.value = 'foo@bar.com,foo@bar.com';
+checkValidEmailAddress(email);
+
+email.value = 'foo@bar.com,foo@bar.com,foo@bar.com';
+checkValidEmailAddress(email);
+
+email.value = '     foo@bar.com     ,     foo@bar.com    ';
+checkValidEmailAddress(email);
+
+email.value = '\tfoo@bar.com\t,\tfoo@bar.com\t';
+checkValidEmailAddress(email);
+
+email.value = '\rfoo@bar.com\r,\rfoo@bar.com\r';
+checkValidEmailAddress(email);
+
+email.value = '\nfoo@bar.com\n,\nfoo@bar.com\n';
+checkValidEmailAddress(email);
+
+email.value = '\ffoo@bar.com\f,\ffoo@bar.com\f';
+checkValidEmailAddress(email);
+
+email.value = '\t foo@bar.com\r,\nfoo@bar.com\f';
+checkValidEmailAddress(email);
+
+email.value = 'foo@b,ar.com,foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar.com,foo@bar.com,';
+checkInvalidEmailAddress(email);
+
+email.value = '   foo@bar.com   ,   foo@bar.com   ,   ';
+checkInvalidEmailAddress(email);
+
+email.value = ',foo@bar.com,foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = ',foo@bar.com,foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar.com,,,foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar.com;foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = '<foo@bar.com>, <foo@bar.com>';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar, foo@bar.com';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo@bar.com, foo';
+checkInvalidEmailAddress(email);
+
+email.value = 'foo, foo@bar.com';
+checkInvalidEmailAddress(email);
+
+</script>
+</pre>
+</body>
+</html>
