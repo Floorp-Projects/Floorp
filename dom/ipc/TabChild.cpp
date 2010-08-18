@@ -54,6 +54,7 @@
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/DocumentRendererShmemChild.h"
 #include "mozilla/ipc/DocumentRendererNativeIDChild.h"
+#include "mozilla/dom/ExternalHelperAppChild.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
@@ -1233,3 +1234,24 @@ TabChildGlobal::GetPrincipal()
     return nsnull;
   return mTabChild->GetPrincipal();
 }
+
+PExternalHelperAppChild*
+TabChild::AllocPExternalHelperApp(const IPC::URI& uri,
+                                  const nsCString& aMimeContentType,
+                                  const bool& aForceSave,
+                                  const PRInt64& aContentLength)
+{
+  ExternalHelperAppChild *child = new ExternalHelperAppChild();
+  child->AddRef();
+  return child;
+}
+
+bool
+TabChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
+{
+  ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
+  child->Release();
+  return true;
+}
+
+
