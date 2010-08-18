@@ -3504,8 +3504,13 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
     mic.load = masm.label();
 # if defined JS_NUNBOX32
+#  if defined JS_CPU_ARM
+    DataLabel32 offsetAddress = masm.load64WithAddressOffsetPatch(address, treg, dreg);
+    JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
+#  else
     masm.loadPayload(address, dreg);
     masm.loadTypeTag(address, treg);
+#  endif
 # elif defined JS_PUNBOX64
     Label inlineValueLoadLabel =
         masm.loadValueAsComponents(address, treg, dreg);
@@ -3601,11 +3606,27 @@ mjit::Compiler::jsop_setgname(uint32 index)
         v = fe->getValue();
     }
 
-    mic.load = masm.label();
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Address address(objReg, slot);
 
+    mic.load = masm.label();
+
 #if defined JS_NUNBOX32
+# if defined JS_CPU_ARM
+    DataLabel32 offsetAddress;
+    if (mic.u.name.dataConst) {
+        offsetAddress = masm.moveWithPatch(Imm32(address.offset), JSC::ARMRegisters::S0);
+        masm.add32(address.base, JSC::ARMRegisters::S0);
+        masm.storeValue(v, Address(JSC::ARMRegisters::S0, 0));
+    } else {
+        if (mic.u.name.typeConst) {
+            offsetAddress = masm.store64WithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
+        } else {
+            offsetAddress = masm.store64WithAddressOffsetPatch(typeReg, dataReg, address);
+        }
+    }
+    JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
+# else
     if (mic.u.name.dataConst) {
         masm.storeValue(v, address);
     } else {
@@ -3615,6 +3636,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
             masm.storeTypeTag(typeReg, address);
         masm.storePayload(dataReg, address);
     }
+# endif
 #elif defined JS_PUNBOX64
     if (mic.u.name.dataConst) {
         /* Emits a single move. No code length variation. */
