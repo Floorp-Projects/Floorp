@@ -853,7 +853,7 @@ class GetPropCompiler : public PICStubCompiler
 
         if (pic.objNeedsRemat()) {
             if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.load32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
+                masm.loadPayload(Address(JSFrameReg, pic.objRemat()), pic.objReg);
             else
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
@@ -1210,7 +1210,7 @@ class GetElemCompiler : public PICStubCompiler
 
         if (pic.objNeedsRemat()) {
             if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.load32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
+                masm.loadPayload(Address(JSFrameReg, pic.objRemat()), pic.objReg);
             else
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
@@ -1218,7 +1218,7 @@ class GetElemCompiler : public PICStubCompiler
 
         if (pic.idNeedsRemat()) {
             if (pic.idRemat() >= sizeof(JSStackFrame))
-                masm.load32(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
+                masm.loadPayload(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
             else
                 masm.move(RegisterID(pic.idRemat()), pic.u.get.idReg);
             pic.u.get.idNeedsRemat = false;
@@ -1843,7 +1843,7 @@ ic::GetProp(VMFrame &f, uint32 index)
                         cc.disable("error");
                         THROW();
                     }
-                    f.regs.sp[-1].setInt32(int32_t(obj->getArgsLength()));
+                    f.regs.sp[-1].setInt32(int32_t(obj->getArgsInitialLength()));
                 }
                 return;
             }

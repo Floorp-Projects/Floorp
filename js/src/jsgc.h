@@ -556,14 +556,8 @@ struct JSGCArenaStats {
 };
 
 struct JSGCStats {
-    uint32  finalfail;  /* finalizer calls allocator failures */
-    uint32  lockborn;   /* things born locked */
     uint32  lock;       /* valid lock calls */
     uint32  unlock;     /* valid unlock calls */
-    uint32  depth;      /* mark tail recursion depth */
-    uint32  maxdepth;   /* maximum mark tail recursion depth */
-    uint32  cdepth;     /* mark recursion depth of C functions */
-    uint32  maxcdepth;  /* maximum mark recursion depth of C functions */
     uint32  unmarked;   /* number of times marking of GC thing's children were
                            delayed due to a low C stack */
 #ifdef DEBUG
@@ -572,12 +566,6 @@ struct JSGCStats {
 #endif
     uint32  poke;           /* number of potentially useful GC calls */
     uint32  afree;          /* thing arenas freed so far */
-    uint32  stackseg;       /* total extraordinary stack segments scanned */
-    uint32  segslots;       /* total stack segment value slots scanned */
-    uint32  nclose;         /* number of objects with close hooks */
-    uint32  maxnclose;      /* max number of objects with close hooks */
-    uint32  closelater;     /* number of close hooks scheduled to run */
-    uint32  maxcloselater;  /* max number of close hooks scheduled to run */
     uint32  nallarenas;     /* number of all allocated arenas */
     uint32  maxnallarenas;  /* maximum number of all allocated arenas */
     uint32  nchunks;        /* number of allocated chunks */

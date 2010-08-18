@@ -2115,8 +2115,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     pic.objRemat = frame.dataRematInfo(top);
 
     /* Guard on shape. */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
-    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
     DataLabel32 inlineShapeLabel;
@@ -2203,8 +2202,7 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     pic.fastPathStart = masm.label();
 
     /* Guard on shape. */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
-    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
     DataLabel32 inlineShapeOffsetLabel;
@@ -2347,8 +2345,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     frame.freeReg(pic.typeReg);
 
     /* Guard on shape. */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
-    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
     DataLabel32 inlineShapeLabel;
@@ -2515,8 +2512,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     pic.objRemat = frame.dataRematInfo(top);
 
     /* Guard on shape. */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
-    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
     DataLabel32 inlineShapeLabel;
@@ -2688,8 +2684,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     }
 
     /* Guard on shape. */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
-    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
     DataLabel32 inlineShapeOffsetLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
@@ -3473,8 +3468,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
         frame.pop();
         RegisterID reg = frame.allocReg();
 
-        masm.loadPtr(Address(objReg, offsetof(JSObject, map)), reg);
-        masm.load32(Address(reg, offsetof(JSObjectMap, shape)), reg);
+        masm.loadShape(objReg, reg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)), mic.shape);
         frame.freeReg(reg);
@@ -3510,8 +3504,13 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
     mic.load = masm.label();
 # if defined JS_NUNBOX32
+#  if defined JS_CPU_ARM
+    DataLabel32 offsetAddress = masm.load64WithAddressOffsetPatch(address, treg, dreg);
+    JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
+#  else
     masm.loadPayload(address, dreg);
     masm.loadTypeTag(address, treg);
+#  endif
 # elif defined JS_PUNBOX64
     Label inlineValueLoadLabel =
         masm.loadValueAsComponents(address, treg, dreg);
@@ -3569,8 +3568,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
         frame.pinReg(objReg);
         RegisterID reg = frame.allocReg();
 
-        masm.loadPtr(Address(objReg, offsetof(JSObject, map)), reg);
-        masm.load32(Address(reg, offsetof(JSObjectMap, shape)), reg);
+        masm.loadShape(objReg, reg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                             mic.shape);
@@ -3608,11 +3606,27 @@ mjit::Compiler::jsop_setgname(uint32 index)
         v = fe->getValue();
     }
 
-    mic.load = masm.label();
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Address address(objReg, slot);
 
+    mic.load = masm.label();
+
 #if defined JS_NUNBOX32
+# if defined JS_CPU_ARM
+    DataLabel32 offsetAddress;
+    if (mic.u.name.dataConst) {
+        offsetAddress = masm.moveWithPatch(Imm32(address.offset), JSC::ARMRegisters::S0);
+        masm.add32(address.base, JSC::ARMRegisters::S0);
+        masm.storeValue(v, Address(JSC::ARMRegisters::S0, 0));
+    } else {
+        if (mic.u.name.typeConst) {
+            offsetAddress = masm.store64WithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
+        } else {
+            offsetAddress = masm.store64WithAddressOffsetPatch(typeReg, dataReg, address);
+        }
+    }
+    JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
+# else
     if (mic.u.name.dataConst) {
         masm.storeValue(v, address);
     } else {
@@ -3622,6 +3636,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
             masm.storeTypeTag(typeReg, address);
         masm.storePayload(dataReg, address);
     }
+# endif
 #elif defined JS_PUNBOX64
     if (mic.u.name.dataConst) {
         /* Emits a single move. No code length variation. */
@@ -3739,10 +3754,9 @@ mjit::Compiler::jsop_instanceof()
 
     /* Quick test to avoid wrapped objects. */
     masm.loadPtr(Address(obj, offsetof(JSObject, clasp)), temp);
-    masm.load32(Address(temp, offsetof(Class, ext) +
-                              offsetof(ClassExtension, wrappedObject)),
-                temp);
-    j = masm.branchTest32(Assembler::NonZero, temp, temp);
+    masm.loadPtr(Address(temp, offsetof(Class, ext) +
+                              offsetof(ClassExtension, wrappedObject)), temp);
+    j = masm.branchTestPtr(Assembler::NonZero, temp, temp);
     stubcc.linkExit(j, Uses(3));
 
     Address protoAddr(obj, offsetof(JSObject, proto));
