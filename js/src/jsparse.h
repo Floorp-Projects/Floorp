@@ -486,9 +486,9 @@ public:
 #define PNX_DESTRUCT   0x200            /* destructuring special cases:
                                            1. shorthand syntax used, at present
                                               object destructuring ({x,y}) only;
-                                           2. the first child of function body
-                                              is code evaluating destructuring
-                                              arguments */
+                                           2. code evaluating destructuring
+                                              arguments occurs before function
+                                              body */
 #define PNX_HOLEY      0x400            /* array initialiser has holes */
 
     uintN frameLevel() const {
@@ -1061,8 +1061,13 @@ private:
      * Additional JS parsers.
      */
     bool recognizeDirectivePrologue(JSParseNode *pn);
+
+    enum FunctionType { GETTER, SETTER, GENERAL };
+    bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
+                           JSParseNode **list);
     JSParseNode *functionBody();
-    JSParseNode *functionDef(uintN lambda, bool namePermitted);
+    JSParseNode *functionDef(JSAtom *name, FunctionType type, uintN lambda);
+
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,
                                    js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
