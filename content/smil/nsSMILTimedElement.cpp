@@ -186,7 +186,6 @@ nsSMILTimedElement::nsSMILTimedElement()
   mAnimationElement(nsnull),
   mFillMode(FILL_REMOVE),
   mRestartMode(RESTART_ALWAYS),
-  mEndHasEventConditions(PR_FALSE),
   mInstanceSerialIndex(0),
   mClient(nsnull),
   mCurrentInterval(nsnull),
@@ -826,9 +825,6 @@ nsSMILTimedElement::SetEndSpec(const nsAString& aEndSpec,
                                nsIContent* aContextNode,
                                RemovalTestFunction aRemove)
 {
-  // XXX When implementing events etc., don't forget to ensure
-  // mEndHasEventConditions is set if the specification contains conditions that
-  // describe event-values, repeat-values or accessKey-values.
   return SetBeginOrEndSpec(aEndSpec, aContextNode, PR_FALSE /*!isBegin*/,
                            aRemove);
 }
@@ -1336,17 +1332,6 @@ nsSMILTimedElement::DoPostSeek()
     UpdateCurrentInterval();
   }
 
-  // XXX
-  // Note that SMIL gives the very cryptic description:
-  //   The associated time for the event is the document time before the seek.
-  //   This action does not resolve any times in the instance times list for end
-  //   times.
-  //
-  // The second sentence was added as a clarification in a SMIL 2.0 erratum.
-  // Presumably the intention is that we fire the event as implemented below but
-  // don't act on it. This makes sense at least for dependencies within the same
-  // time container. So we'll probably need to set a flag here to ensure we
-  // don't actually act on it when we implement event-based timing.
   switch (mSeekState)
   {
   case SEEK_FORWARD_FROM_ACTIVE:
@@ -1571,18 +1556,18 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
       }
 
       // If all the ends are before the beginning we have a bad interval UNLESS:
-      // a) We have end events which leave the interval open-ended, OR
-      // b) We never had any end attribute to begin with (and hence we should
+      // a) We never had any end attribute to begin with (and hence we should
       //    just use the active duration after allowing for the possibility of
-      //    an end instance provided by a DOM call)
-      // c) We have an end attribute but no end instances--this is a special
+      //    an end instance provided by a DOM call), OR
+      // b) We have an end attribute but no end instances--this is a special
       //    case that is needed for syncbase timing so that animations of the
       //    following sort: <animate id="a" end="a.begin+1s" ... /> can be
       //    resolved (see SVGT 1.2 Test Suite animate-elem-221-t.svg) by first
-      //    establishing an interval of unresolved duration.
-      PRBool openEndedIntervalOk = mEndHasEventConditions ||
-          mEndSpecs.IsEmpty() ||
-          mEndInstances.IsEmpty();
+      //    establishing an interval of unresolved duration, OR
+      // c) We have end events which leave the interval open-ended.
+      PRBool openEndedIntervalOk = mEndSpecs.IsEmpty() ||
+                                   mEndInstances.IsEmpty() ||
+                                   EndHasEventConditions();
       if (!tempEnd && !openEndedIntervalOk)
         return NS_ERROR_FAILURE; // Bad interval
 
@@ -1928,8 +1913,6 @@ nsSMILTimedElement::AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
 
   nsSMILTimeValue timeVal(timeWithOffset);
 
-  // XXX If we re-use this method for event-based timing we'll need to change it
-  // so we don't end up setting SOURCE_DOM for event-based times.
   nsRefPtr<nsSMILInstanceTime> instanceTime =
     new nsSMILInstanceTime(timeVal, nsSMILInstanceTime::SOURCE_DOM);
 
@@ -2104,6 +2087,16 @@ nsSMILTimedElement::GetPreviousInterval() const
   return mOldIntervals.IsEmpty()
     ? nsnull
     : mOldIntervals[mOldIntervals.Length()-1].get();
+}
+
+PRBool
+nsSMILTimedElement::EndHasEventConditions() const
+{
+  for (PRUint32 i = 0; i < mEndSpecs.Length(); ++i) {
+    if (mEndSpecs[i]->IsEventBased())
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 //----------------------------------------------------------------------

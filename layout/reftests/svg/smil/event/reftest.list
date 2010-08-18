@@ -1,0 +1,16 @@
+# Tests related to SVG Animation (using SMIL) that use event timing.
+
+== event-begin-1.svg green-box-ref.svg
+== event-begin-offset-1.svg green-box-ref.svg
+== event-begin-offset-2.svg green-box-ref.svg
+== event-begin-timeevent-1.svg green-box-ref.svg
+== event-begin-timeevent-2.svg green-box-ref.svg
+== event-begin-timeevent-3.svg green-box-ref.svg
+== event-begin-load-1.svg green-box-ref.svg
+== event-bubble-1.svg green-box-ref.svg
+== event-custom-1.svg green-box-ref.svg
+== event-end-1.svg green-box-ref.svg
+== event-end-2.svg green-box-ref.svg
+== event-end-open-1.svg green-box-ref.svg
+== event-preventDefault-1.svg green-box-ref.svg
+== event-seek-1.svg green-box-ref.svg
