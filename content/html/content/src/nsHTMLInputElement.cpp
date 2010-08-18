@@ -109,8 +109,15 @@
 #include "nsHTMLFormElement.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsContentUtils.h"
 
 #include "nsTextEditRules.h"
+
+// JS headers are needed for the pattern attribute.
+#include "jsapi.h"    // for js_SaveAndClearRegExpStatics 
+                      // and js_RestoreRegExpStatics
+#include "jsregexp.h" // for js::AutoValueRooter
+#include "jscntxt.h"
 
 #include "nsHTMLInputElement.h"
 
@@ -552,6 +559,7 @@ NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 //NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Size, size, 0)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, Pattern, pattern)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Placeholder, placeholder)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
                                 kInputDefaultType->tag)
@@ -3102,6 +3110,12 @@ nsHTMLInputElement::DoesRequiredApply() const
   }
 }
 
+PRBool
+nsHTMLInputElement::DoesPatternApply() const
+{
+  return IsSingleLineTextControl(PR_FALSE);
+}
+
 // nsConstraintValidation
 
 PRBool
@@ -3202,6 +3216,30 @@ nsHTMLInputElement::HasTypeMismatch()
 }
 
 PRBool
+nsHTMLInputElement::HasPatternMismatch()
+{
+  nsAutoString pattern;
+  if (!DoesPatternApply() || !GetAttr(kNameSpaceID_None, nsGkAtoms::pattern,
+                                      pattern)) {
+    return PR_FALSE;
+  }
+
+  nsAutoString value;
+  NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
+
+  if (value.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  nsIDocument* doc = GetOwnerDoc();
+  if (!doc) {
+    return PR_FALSE;
+  }
+
+  return !IsPatternMatching(value, pattern, doc);
+}
+
+PRBool
 nsHTMLInputElement::IsBarredFromConstraintValidation()
 {
   return mType == NS_FORM_INPUT_HIDDEN ||
@@ -3275,6 +3313,24 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       }
       rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                               key.get(), message);
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDATION_MESSAGE_PATTERN_MISMATCH:
+    {
+      nsXPIDLString message;
+      nsAutoString title;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
+      if (title.IsEmpty()) {
+        rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                "ElementSuffersFromPatternMismatch",
+                                                message);
+      } else {
+        const PRUnichar* params[] = { title.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "ElementSuffersFromPatternMismatchWithTitle",
+                                                   params, 1, message);
+      }
       aValidationMessage = message;
       break;
     }
@@ -3361,6 +3417,47 @@ nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
   }
 
   return dotFound;
+}
+
+//static
+PRBool
+nsHTMLInputElement::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
+                                      nsIDocument* aDocument)
+{
+  NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
+  NS_ENSURE_TRUE(aDocument->GetScriptGlobalObject(), PR_TRUE);
+
+  JSContext* ctx = (JSContext*) aDocument->GetScriptGlobalObject()->
+                                  GetContext()->GetNativeContext();
+  NS_ENSURE_TRUE(ctx, PR_TRUE);
+
+  JSAutoRequest ar(ctx);
+
+  // The pattern has to match the entire value.
+  aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
+  aPattern.Append(NS_LITERAL_STRING(")$"));
+
+  JSObject* re = JS_NewUCRegExpObject(ctx, reinterpret_cast<jschar*>
+                                             (aPattern.BeginWriting()),
+                                      aPattern.Length(), 0);
+  NS_ENSURE_TRUE(re, PR_TRUE);
+
+  js::AutoObjectRooter re_root(ctx, re);
+  js::AutoStringRooter tvr(ctx);
+  js::RegExpStatics statics(ctx);
+  jsval rval = JSVAL_NULL;
+  size_t idx = 0;
+  JSBool res;
+
+  js_SaveAndClearRegExpStatics(ctx, &statics, &tvr);
+
+  res = JS_ExecuteRegExp(ctx, re, reinterpret_cast<jschar*>
+                                    (aValue.BeginWriting()),
+                         aValue.Length(), &idx, JS_TRUE, &rval);
+
+  js_RestoreRegExpStatics(ctx, &statics);
+
+  return res == JS_FALSE || rval != JSVAL_NULL;
 }
 
 //

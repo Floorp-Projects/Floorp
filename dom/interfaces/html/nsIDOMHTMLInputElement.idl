@@ -51,7 +51,7 @@ interface nsIDOMValidityState;
   * http://www.w3.org/TR/DOM-Level-2-HTML/
   */
  
-[scriptable, uuid(ed3f8a4a-9894-4120-a7e6-4a18f3d8effd)]
+[scriptable, uuid(6f283298-168e-4787-bfe7-f207be2438df)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -72,6 +72,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute boolean               multiple;
            attribute DOMString             name;
 
+           attribute DOMString             pattern;
            attribute DOMString             placeholder;
            attribute boolean               readOnly;
            attribute boolean               required;

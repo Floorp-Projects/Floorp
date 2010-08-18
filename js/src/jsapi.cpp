@@ -5448,7 +5448,27 @@ JS_ClearRegExpRoots(JSContext *cx)
     cx->regExpStatics.clear();
 }
 
-/* TODO: compile, execute, get/set other statics... */
+JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+                 size_t *indexp, JSBool test, jsval *rval)
+{
+    CHECK_REQUEST(cx);
+
+    RegExp *re = RegExp::extractFrom(obj);
+    if (!re) {
+      return JS_FALSE;
+    }
+
+    JSString *str = js_NewStringCopyN(cx, chars, length);
+    if (!str) {
+        return JS_FALSE;
+    }
+    AutoValueRooter v(cx, StringValue(str));
+
+    return re->execute(cx, str, indexp, test, Valueify(rval));
+}
+
+/* TODO: compile, get/set other statics... */
 
 /************************************************************************/
 
