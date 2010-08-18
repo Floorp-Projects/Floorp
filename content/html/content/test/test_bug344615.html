@@ -69,6 +69,15 @@ checkInvalidURL(url);
 url.value = 'http://mozilla.com/';
 checkValidURL(url);
 
+url.value = 'http://mozil\nla\r.com/';
+checkValidURL(url);
+
+url.value = '  http://mozilla.com/  ';
+checkValidURL(url);
+
+url.value = '\r  http://mozilla.com/  \n';
+checkValidURL(url);
+
 url.value = 'file:///usr/bin/tulip';
 checkValidURL(url);
 
