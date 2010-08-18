@@ -1049,6 +1049,10 @@ nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
 PRBool
 nsHTMLTextAreaElement::IsTooLong()
 {
+  if (!mValueChanged) {
+    return PR_FALSE;
+  }
+
   PRInt32 maxLength = -1;
   PRInt32 textLength = -1;
 
