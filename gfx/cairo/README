@@ -138,6 +138,8 @@ disable-previous-scaled-font-cache.patch: Disable the previous-scaled-font-cache
  
 copyarea-with-alpha.patch: support simple overlapping self copies in (some) color_alpha xlib surfaces. https://bugs.freedesktop.org/show_bug.cgi?id=29250
 
+fix-clip-test.patch: Use y 498c10032ea3f8631a928cd7df96766f2c8ddca4
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
