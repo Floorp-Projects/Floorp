@@ -120,8 +120,7 @@ public:
 
 
 TabChild::TabChild(PRUint32 aChromeFlags)
-  : mCx(nsnull)
-  , mTabChildGlobal(nsnull)
+  : mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
 {
     printf("creating %d!\n", NS_IsMainThread());
@@ -507,12 +506,7 @@ TabChild::~TabChild()
       webBrowser->SetContainerWindow(nsnull);
     }
     if (mCx) {
-      nsIXPConnect* xpc = nsContentUtils::XPConnect();
-      if (xpc) {
-         xpc->ReleaseJSContext(mCx, PR_FALSE);
-      } else {
-        JS_DestroyContext(mCx);
-      }
+      DestroyCx();
     }
     mTabChildGlobal->mTabChild = nsnull;
 }
@@ -1008,55 +1002,7 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 bool
 TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
-  nsCString url = NS_ConvertUTF16toUTF8(aURL);
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
-  NS_ENSURE_SUCCESS(rv, true);
-  NS_NewChannel(getter_AddRefs(mChannel), uri);
-  NS_ENSURE_TRUE(mChannel, true);
-
-  nsCOMPtr<nsIInputStream> input;
-  mChannel->Open(getter_AddRefs(input));
-  nsString dataString;
-  if (input) {
-    const PRUint32 bufferSize = 256;
-    char buffer[bufferSize];
-    nsCString data;
-    PRUint32 avail = 0;
-    input->Available(&avail);
-    PRUint32 read = 0;
-    if (avail) {
-      while (NS_SUCCEEDED(input->Read(buffer, bufferSize, &read)) && read) {
-        data.Append(buffer, read);
-        read = 0;
-      }
-    }
-    nsScriptLoader::ConvertToUTF16(mChannel, (PRUint8*)data.get(), data.Length(),
-                                   EmptyString(), nsnull, dataString);
-  }
-
-  if (!dataString.IsEmpty()) {
-    JSAutoRequest ar(mCx);
-    nsCOMPtr<nsPIDOMWindow> w = do_GetInterface(mWebNav);
-    jsval retval;
-    JSObject* global = nsnull;
-    rv = mRootGlobal->GetJSObject(&global);
-    NS_ENSURE_SUCCESS(rv, false);
-    JSPrincipals* jsprin = nsnull;
-    mPrincipal->GetJSPrincipals(mCx, &jsprin);
-
-    nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
-
-    nsContentUtils::ThreadJSContextStack()->Push(mCx);
-    JSBool ret = JS_EvaluateUCScriptForPrincipals(mCx, global, jsprin,
-                                                  (jschar*)dataString.get(),
-                                                  dataString.Length(),
-                                                  url.get(), 1, &retval);
-    JSPRINCIPALS_DROP(mCx, jsprin);
-    JSContext *unused;
-    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
-    NS_ENSURE_TRUE(ret, true); // This gives us a useful warning!
-  }
+  LoadFrameScriptInternal(aURL);
   return true;
 }
 
@@ -1179,7 +1125,7 @@ TabChild::InitTabChildGlobal()
     xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
                                          NS_GET_IID(nsISupports),
                                          scope->GetPrincipal(), EmptyCString(),
-                                         flags, getter_AddRefs(mRootGlobal));
+                                         flags, getter_AddRefs(mGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
@@ -1187,11 +1133,11 @@ TabChild::InitTabChildGlobal()
   root->SetParentTarget(scope);
   
   JSObject* global = nsnull;
-  rv = mRootGlobal->GetJSObject(&global);
+  rv = mGlobal->GetJSObject(&global);
   NS_ENSURE_SUCCESS(rv, false);
 
   JS_SetGlobalObject(cx, global);
-
+  DidCreateCx();
   return true;
 }
 
