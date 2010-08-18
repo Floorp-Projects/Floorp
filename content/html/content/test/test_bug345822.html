@@ -145,6 +145,8 @@ function checkInputRequiredValidity(element)
 
   if (element.type == 'email') {
     element.value = 'foo@bar.com';
+  } else if (element.type == 'url') {
+    element.value = 'http://mozilla.org/';
   } else {
     element.value = 'foo';
   }
@@ -293,8 +295,8 @@ input.type = 'image';
 checkInputRequiredNotApply(input);
 
 // Now, checking for all types which accept the required attribute.
-// TODO: check 'url', 'datetime', 'date', 'month', 'week', 'time',
-//       'datetime-local' and 'number' when they will be implemented.
+// TODO: check 'datetime', 'date', 'month', 'week', 'time', 'datetime-local'
+//       and 'number' when they will be implemented.
 input.type = 'text';
 checkInputRequiredValidity(input);
 input.type = 'password';
@@ -310,6 +312,8 @@ checkInputRequiredValidity(input);
 input.type = 'tel';
 checkInputRequiredValidity(input);
 input.type = 'email';
+checkInputRequiredValidity(input);
+input.type = 'url';
 checkInputRequiredValidity(input);
 
 </script>

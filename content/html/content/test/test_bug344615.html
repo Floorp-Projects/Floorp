@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=344615
+-->
+<head>
+  <title>Test for Bug 344615</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=344615">Mozilla Bug 344615</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input type='url' id='i' oninvalid='invalidEventHandler(event);'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 344615 **/
+
+// More checks are done in test_bug551670.html.
+
+var gInvalid = false;
+
+function invalidEventHandler(e)
+{
+  is(e.type, "invalid", "Invalid event type should be invalid");
+  gInvalid = true;
+}
+
+function checkValidURL(element)
+{
+  gInvalid = false;
+  ok(!element.validity.typeMismatch,
+    "Element should not suffer from type mismatch");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "Element should be valid");
+  ok(!gInvalid, "The invalid event should not have been thrown");
+  is(element.validationMessage, '',
+    "Validation message should be the empty string");
+}
+
+function checkInvalidURL(element)
+{
+  gInvalid = false;
+  ok(element.validity.typeMismatch,
+    "Element should suffer from type mismatch");
+  ok(!element.validity.valid, "Element should not be valid");
+  ok(!element.checkValidity(), "Element should not be valid");
+  ok(gInvalid, "The invalid event should have been thrown");
+  is(element.validationMessage, "The entered URL is not valid.",
+    "Validation message should be related to invalid URL");
+}
+
+var url = document.getElementById('i');
+is(url.type, 'url', "url state should be recognized");
+
+// The empty string should not be considered as invalid.
+url.value = '';
+checkValidURL(url);
+
+// We are only testing obviously (in)valid URI's because the function used
+// to check if an URI is valid is not specific to this functionality.
+url.value = 'foo';
+checkInvalidURL(url);
+
+url.value = 'http://mozilla.com/';
+checkValidURL(url);
+
+url.value = 'file:///usr/bin/tulip';
+checkValidURL(url);
+
+url.value = '../../bar.html';
+checkInvalidURL(url);
+
+</script>
+</pre>
+</body>
+</html>

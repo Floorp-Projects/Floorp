@@ -69,6 +69,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEditor.h"
 #include "nsGUIEvent.h"
+#include "nsIIOService.h"
 
 #include "nsPresState.h"
 #include "nsLayoutErrors.h"
@@ -145,6 +146,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "submit", NS_FORM_INPUT_SUBMIT },
   { "tel", NS_FORM_INPUT_TEL },
   { "text", NS_FORM_INPUT_TEXT },
+  { "url", NS_FORM_INPUT_URL },
   { 0 }
 };
 
@@ -326,6 +328,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_URL:
       if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
@@ -460,6 +463,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
           mType != NS_FORM_INPUT_SEARCH &&
           mType != NS_FORM_INPUT_PASSWORD &&
           mType != NS_FORM_INPUT_TEL &&
+          mType != NS_FORM_INPUT_URL &&
           mType != NS_FORM_INPUT_FILE) {
         SetAttr(kNameSpaceID_None, nsGkAtoms::value,
                 NS_ConvertUTF8toUTF16(mInputData.mValue), PR_FALSE);
@@ -1845,6 +1849,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                mType == NS_FORM_INPUT_SEARCH ||
                mType == NS_FORM_INPUT_PASSWORD ||
                mType == NS_FORM_INPUT_TEL ||
+               mType == NS_FORM_INPUT_URL ||
                mType == NS_FORM_INPUT_FILE)) {
 
             PRBool isButton = PR_FALSE;
@@ -2399,6 +2404,7 @@ nsHTMLInputElement::SetDefaultValueAsValue()
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_URL:
     {
       nsAutoString resetVal;
       GetDefaultValue(resetVal);
@@ -2436,6 +2442,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_URL:
       SetValueChanged(PR_FALSE);
       break;
     default:
@@ -2604,6 +2611,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_HIDDEN:
       {
         if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
@@ -2743,6 +2751,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       case NS_FORM_INPUT_SEARCH:
       case NS_FORM_INPUT_TEXT:
       case NS_FORM_INPUT_TEL:
+      case NS_FORM_INPUT_URL:
       case NS_FORM_INPUT_HIDDEN:
         {
           SetValueInternal(inputState->GetValue(), PR_FALSE, PR_TRUE);
@@ -2994,6 +3003,7 @@ nsHTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_URL:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -3037,6 +3047,7 @@ nsHTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_URL:
       return PR_TRUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -3071,6 +3082,7 @@ nsHTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_URL:
       return PR_TRUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -3152,6 +3164,30 @@ nsHTMLInputElement::HasTypeMismatch()
     return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
            !IsValidEmailAddressList(value) :
            !IsValidEmailAddress(value);
+  } else if (mType == NS_FORM_INPUT_URL) {
+    nsAutoString value;
+    NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
+
+    if (value.IsEmpty()) {
+      return PR_FALSE;
+    }
+
+    /**
+     * TODO:
+     * The URL is not checked as the HTML5 specifications want it to be because
+     * there is no code to check for a valid URI/IRI according to 3986 and 3987
+     * RFC's at the moment, see bug 561586.
+     *
+     * RFC 3987 (IRI) implementation: bug 42899
+     *
+     * HTML5 specifications:
+     * http://dev.w3.org/html5/spec/infrastructure.html#valid-url
+     */
+    nsCOMPtr<nsIIOService> ioService = do_GetIOService();
+    nsCOMPtr<nsIURI> uri;
+
+    return !NS_SUCCEEDED(ioService->NewURI(NS_ConvertUTF16toUTF8(value), nsnull,
+                                           nsnull, getter_AddRefs(uri)));
   }
 
   return PR_FALSE;
@@ -3220,13 +3256,17 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     }
     case VALIDATION_MESSAGE_TYPE_MISMATCH:
     {
-      NS_ASSERTION(mType == NS_FORM_INPUT_EMAIL,
-                   "Only email type can suffer from a type mismatch!");
-
       nsXPIDLString message;
+      nsCAutoString key;
+      if (mType == NS_FORM_INPUT_EMAIL) {
+        key.AssignLiteral("ElementSuffersFromInvalidEmail");
+      } else if (mType == NS_FORM_INPUT_URL) {
+        key.AssignLiteral("ElementSuffersFromInvalidURL");
+      } else {
+        return NS_ERROR_UNEXPECTED;
+      }
       rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                              "ElementSuffersFromInvalidEmail",
-                                              message);
+                                              key.get(), message);
       aValidationMessage = message;
       break;
     }
