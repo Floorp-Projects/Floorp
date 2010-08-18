@@ -268,7 +268,7 @@ function eventQueue(aEventType)
 
     this.setEventHandler(invoker);
 
-    if (true || gA11yEventDumpToConsole)
+    if (gA11yEventDumpToConsole)
       dump("\nEvent queue: \n  invoke: " + invoker.getID() + "\n");
 
     if (invoker.invoke() == INVOKER_ACTION_FAILED) {
