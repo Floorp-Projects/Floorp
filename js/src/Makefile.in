@@ -386,9 +386,6 @@ CPPSRCS += 	Assertions.cpp \
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
-ifeq ($(OS_ARCH),WINNT)
-ASFILES +=	TrampolineMasmX64.asm
-endif
 #CPPSRCS		+= only_on_x86_64.cpp
 else
 #CPPSRCS		+= only_on_x86.cpp
@@ -875,17 +872,21 @@ endif
 ###############################################
 # BEGIN kludges for the Nitro assembler
 #
-## FIXME figure out where INCLUDES is being reset, and move this
-## backwards to that point.  Ideally, merge with the rest of the
-## Nitro assembler stuff, far above.
-ifdef ENABLE_METHODJIT
-INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
-#
+
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just
 # the code in js/src/assembler.
-CXXFLAGS += -DENABLE_ASSEMBLER=1 -DUSE_SYSTEM_MALLOC=1 -DENABLE_JIT=1
+CXXFLAGS += -DUSE_SYSTEM_MALLOC=1
 
+ifeq (android,$(TARGET_VENDOR))
+CXXFLAGS += -DWTF_PLATFORM_ANDROID=1
+else
+CXXFLAGS += -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
+endif
+
+INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
+
+ifdef ENABLE_METHODJIT
 # Build a standalone test program that exercises the assembler
 # sources a bit.
 TESTMAIN_OBJS = \
@@ -901,6 +902,7 @@ TESTMAIN_OBJS = \
 TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
 	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
 endif
+
 #
 # END kludges for the Nitro assembler
 ###############################################

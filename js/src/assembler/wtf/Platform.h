@@ -894,11 +894,11 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 #if !defined(ENABLE_YARR_JIT)
 
 /* YARR supports ARM, x86 & x86-64, and has been tested on Mac and Windows. */
-#if WTF_CPU_X86 \
+#if (WTF_CPU_X86 \
  || WTF_CPU_X86_64 \
  || WTF_CPU_ARM_THUMB2 \
  || WTF_CPU_ARM_TRADITIONAL \
- || WTF_CPU_X86
+ || WTF_CPU_X86) && !WTF_PLATFORM_ANDROID
 #define ENABLE_YARR_JIT 1
 #else
 #define ENABLE_YARR_JIT 0
@@ -906,7 +906,7 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 
 #endif /* !defined(ENABLE_YARR_JIT) */
 
-#if ENABLE_JIT || ENABLE_YARR_JIT
+#if (ENABLE_JIT || ENABLE_YARR_JIT) && !WTF_PLATFORM_ANDROID
 #define ENABLE_ASSEMBLER 1
 #endif
 /* Setting this flag prevents the assembler from using RWX memory; this may improve
