@@ -49,6 +49,8 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 
+using namespace mozilla::dom;
+
 //----------------------------------------------------------------------
 // Nested class: EventListener
 
@@ -95,7 +97,7 @@ nsSMILTimeValueSpec::~nsSMILTimeValueSpec()
 
 nsresult
 nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
-                             nsIContent* aContextNode)
+                             Element* aContextNode)
 {
   nsSMILTimeValueSpecParams params;
   nsresult rv =
@@ -135,17 +137,17 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   if (!aContextNode->IsInDoc())
     return;
 
-  // Hold ref to the old content so that it isn't destroyed in between resetting
+  // Hold ref to the old element so that it isn't destroyed in between resetting
   // the referenced element and using the pointer to update the referenced
   // element.
-  nsRefPtr<nsIContent> oldReferencedContent = mReferencedElement.get();
+  nsRefPtr<Element> oldReferencedElement = mReferencedElement.get();
 
   // XXX Support default event targets
   NS_ABORT_IF_FALSE(mParams.mDependentElemID, "NULL dependent element id");
   nsString idStr;
   mParams.mDependentElemID->ToString(idStr);
   mReferencedElement.ResetWithID(aContextNode, idStr);
-  UpdateReferencedElement(oldReferencedContent, mReferencedElement.get());
+  UpdateReferencedElement(oldReferencedElement, mReferencedElement.get());
 }
 
 PRBool
@@ -235,7 +237,7 @@ nsSMILTimeValueSpec::Unlink()
 // Implementation helpers
 
 void
-nsSMILTimeValueSpec::UpdateReferencedElement(nsIContent* aFrom, nsIContent* aTo)
+nsSMILTimeValueSpec::UpdateReferencedElement(Element* aFrom, Element* aTo)
 {
   if (aFrom == aTo)
     return;
@@ -243,7 +245,7 @@ nsSMILTimeValueSpec::UpdateReferencedElement(nsIContent* aFrom, nsIContent* aTo)
   UnregisterFromReferencedElement(aFrom);
 
   if (mParams.mType == nsSMILTimeValueSpecParams::SYNCBASE) {
-    nsSMILTimedElement* to = GetTimedElementFromContent(aTo);
+    nsSMILTimedElement* to = GetTimedElement(aTo);
     if (to) {
       to->AddDependent(*this);
     }
@@ -253,29 +255,29 @@ nsSMILTimeValueSpec::UpdateReferencedElement(nsIContent* aFrom, nsIContent* aTo)
 }
 
 void
-nsSMILTimeValueSpec::UnregisterFromReferencedElement(nsIContent* aContent)
+nsSMILTimeValueSpec::UnregisterFromReferencedElement(Element* aElement)
 {
-  if (!aContent)
+  if (!aElement)
     return;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::SYNCBASE) {
-    nsSMILTimedElement* timedElement = GetTimedElementFromContent(aContent);
+    nsSMILTimedElement* timedElement = GetTimedElement(aElement);
     if (timedElement) {
       timedElement->RemoveDependent(*this);
     }
     mOwner->RemoveInstanceTimesForCreator(this, mIsBegin);
   } else if (mParams.mType == nsSMILTimeValueSpecParams::EVENT) {
-    UnregisterEventListener(aContent);
+    UnregisterEventListener(aElement);
   }
 }
 
 nsSMILTimedElement*
-nsSMILTimeValueSpec::GetTimedElementFromContent(nsIContent* aContent)
+nsSMILTimeValueSpec::GetTimedElement(Element* aElement)
 {
-  if (!aContent)
+  if (!aElement)
     return nsnull;
 
-  nsCOMPtr<nsISMILAnimationElement> animElement = do_QueryInterface(aContent);
+  nsCOMPtr<nsISMILAnimationElement> animElement = do_QueryInterface(aElement);
   if (!animElement)
     return nsnull;
 
@@ -283,7 +285,7 @@ nsSMILTimeValueSpec::GetTimedElementFromContent(nsIContent* aContent)
 }
 
 void
-nsSMILTimeValueSpec::RegisterEventListener(nsIContent* aTarget)
+nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
 {
   NS_ABORT_IF_FALSE(mParams.mType == nsSMILTimeValueSpecParams::EVENT,
     "Attempting to register event-listener for non-event nsSMILTimeValueSpec");
@@ -312,7 +314,7 @@ nsSMILTimeValueSpec::RegisterEventListener(nsIContent* aTarget)
 }
 
 void
-nsSMILTimeValueSpec::UnregisterEventListener(nsIContent* aTarget)
+nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
 {
   if (!aTarget || !mEventListener)
     return;
@@ -331,7 +333,7 @@ nsSMILTimeValueSpec::UnregisterEventListener(nsIContent* aTarget)
 }
 
 nsIEventListenerManager*
-nsSMILTimeValueSpec::GetEventListenerManager(nsIContent* aTarget,
+nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
                                              nsIDOMEventGroup** aSystemGroup)
 {
   NS_ABORT_IF_FALSE(aTarget, "null target; can't get EventListenerManager");

@@ -106,14 +106,14 @@ nsSVGAnimationElement::Init()
 //----------------------------------------------------------------------
 // nsISMILAnimationElement methods
 
-const nsIContent&
-nsSVGAnimationElement::Content() const
+const Element&
+nsSVGAnimationElement::AsElement() const
 {
   return *this;
 }
 
-nsIContent&
-nsSVGAnimationElement::Content()
+Element&
+nsSVGAnimationElement::AsElement()
 {
   return *this;
 }
