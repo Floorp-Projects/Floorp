@@ -144,6 +144,7 @@ protected:
 };
 
 class TabChild : public PBrowserChild,
+                 public nsFrameScriptExecutor,
                  public nsIWebProgressListener2,
                  public nsIWebBrowserChrome2,
                  public nsIEmbeddingSiteWindow2,
@@ -303,11 +304,7 @@ private:
     bool InitTabChildGlobal();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> mRootGlobal;
-    JSContext* mCx;
-    nsCOMPtr<nsIChannel> mChannel;
     TabChildGlobal* mTabChildGlobal;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
     PRUint32 mChromeFlags;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
