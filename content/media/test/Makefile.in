@@ -139,10 +139,6 @@ _TEST_FILES = \
 		test_volume.html \
 		test_video_to_canvas.html \
 		use_large_cache.js \
-		test_a4_tone.html \
-		test_audiowrite.html \
-		file_audio_event_adopt_iframe.html \
-		test_audio_event_adopt.html \
 		$(NULL)
 
 # These tests are disabled until we figure out random failures.
@@ -208,7 +204,6 @@ _TEST_FILES += \
 		small-shot.ogg \
 		sound.ogg \
 		video-overhang.ogg \
-		file_a4_tone.ogg \
 		$(NULL)
 
 # Wave sample files
