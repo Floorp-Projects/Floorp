@@ -3860,14 +3860,23 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
     return obj;
 }
 
-/*
- * FIXME bug 535629: If one adds props, deletes earlier props, adds more, the
- * last added won't recycle the deleted props' slots.
- */
 bool
 JSObject::allocSlot(JSContext *cx, uint32 *slotp)
 {
     JS_ASSERT(freeslot >= JSSLOT_FREE(clasp));
+
+    if (inDictionaryMode() && lastProp->table) {
+        uint32 &last = lastProp->table->freeslot;
+        if (last != SHAPE_INVALID_SLOT) {
+            JS_ASSERT(last < freeslot);
+            *slotp = last;
+
+            Value &vref = getSlotRef(last);
+            last = vref.toPrivateUint32();
+            vref.setUndefined();
+            return true;
+        }
+    }
 
     if (freeslot >= numSlots() && !growSlots(cx, freeslot + 1))
         return false;
@@ -3884,9 +3893,20 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
 {
     JS_ASSERT(freeslot > JSSLOT_FREE(clasp));
 
-    lockedSetSlot(slot, UndefinedValue());
-    if (freeslot == slot + 1)
+    Value &vref = getSlotRef(slot);
+    if (freeslot == slot + 1) {
         freeslot = slot;
+    } else {
+        if (inDictionaryMode() && lastProp->table) {
+            uint32 &last = lastProp->table->freeslot;
+
+            JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < freeslot);
+            vref.setPrivateUint32(last);
+            last = slot;
+            return;
+        }
+    }
+    vref.setUndefined();
 }
 
 /* JSBOXEDWORD_INT_MAX as a string */
