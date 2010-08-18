@@ -26,12 +26,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549475
 var inputTypes =
 [
   "text", "password", "search", "telephone", "hidden", "checkbox", "radio",
-  "submit", "image", "reset", "button",
+  "submit", "image", "reset", "button", "email"
 ];
 
 var todoTypes =
 [
-  "email", "url", "number", "range", "color",
+  "url", "number", "range", "color",
   "date", "month", "week", "time", "datetime", "datetime-local",
 ];
 
@@ -48,11 +48,8 @@ function sanitizeValue(aType, aValue)
     case "password":
     case "search":
     case "telephone":
-    //case "email":
-      return aValue.replace(/[\n\r]/g, "");
     case "email":
-      // TODO: uncomment the previous email case when email is implemented.
-      return "";
+      return aValue.replace(/[\n\r]/g, "");
     case "url":
       // TODO: uncomment the next line when url is implemented.
       //return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, ""');
