@@ -5436,7 +5436,7 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
                   uintN pcdepth, jsbytecode *pc, jsbytecode *target,
                   jsbytecode **pcstack)
 {
-    size_t nbytes;
+    size_t nbytes = 0;
     jsbytecode** tmp_pcstack = NULL;
     if (pcstack) {
         nbytes = StackDepth(script) * sizeof *pcstack;
