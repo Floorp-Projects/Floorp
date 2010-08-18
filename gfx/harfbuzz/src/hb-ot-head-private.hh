@@ -42,7 +42,9 @@ struct head
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
     /* Shall we check for magicNumber here?  Who cares? */
-    return c->check_struct (this) && likely (version.major == 1);
+    return c->check_struct (this) &&
+      likely (version.major == 1) &&
+      likely (unitsPerEm >= 16 && unitsPerEm <= 16384);
   }
 
   FixedVersion	version;		/* Version of the head table--currently

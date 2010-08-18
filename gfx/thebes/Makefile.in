@@ -199,6 +199,12 @@ CPPSRCS += \
 	$(NULL)
 endif
 
+ifneq (,$(filter x86 x86_64,$(CPU_ARCH)))
+ifdef __GNUC__
+gfxAlphaRecovery.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS += -msse2
+endif
+endif
+
 SHARED_LIBRARY_LIBS += \
 	../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
 	$(NULL)

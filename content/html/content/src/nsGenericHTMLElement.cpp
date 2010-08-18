@@ -2873,7 +2873,7 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
     return NS_OK;
   }
 
-  mFrameLoader = nsFrameLoader::Create(this);
+  mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
   return NS_OK;
 }
 
@@ -2936,7 +2936,10 @@ nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
     // We're in a document now.  Kick off the frame load.
     LoadSrc();
   }
-  
+
+  // We're now in document and scripts may move us, so clear
+  // the mNetworkCreated flag.
+  mNetworkCreated = PR_FALSE;
   return rv;
 }
 
@@ -2997,7 +3000,7 @@ nsGenericHTMLFrameElement::CopyInnerTo(nsGenericElement* aDest) const
   if (doc->IsStaticDocument() && mFrameLoader) {
     nsGenericHTMLFrameElement* dest =
       static_cast<nsGenericHTMLFrameElement*>(aDest);
-    nsFrameLoader* fl = nsFrameLoader::Create(dest);
+    nsFrameLoader* fl = nsFrameLoader::Create(dest, PR_FALSE);
     NS_ENSURE_STATE(fl);
     dest->mFrameLoader = fl;
     static_cast<nsFrameLoader*>(mFrameLoader.get())->CreateStaticClone(fl);

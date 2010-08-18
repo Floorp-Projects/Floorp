@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="nextTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug  **/
+
+var testFiles =
+  [ "file_bug462076_1.html",         // Dynamic frames before onload
+    "file_bug462076_2.html",         // Dynamic frames when handling onload
+    "file_bug462076_3.html",         // Dynamic frames after onload
+    "file_bug508537_1.html",         // Dynamic frames and forward-back
+    "file_document_write_1.html",    // Session history + document.write
+    "file_static_and_dynamic_1.html" // Static and dynamic frames and forward-back
+  ];
+var testCount = 0; // Used by the test files.
+
+SimpleTest.waitForExplicitFinish();
+
+var testWindow;
+function nextTest_() {
+  if (testFiles.length) {
+    testCount = 0;
+    testWindow = window.open(testFiles.shift(), "", "width=300,height=300");
+    testWindow.onunload = function () { } //XXX
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+// Needed by file_document_write_1.html
+function isTestDynamic() {
+  var dyn = testWindow.document.getElementById("dynamic");
+  is(dyn, null, "Should have gone back to the static page!");
+  nextTest();
+  testWindow.close();
+}
+
+function nextTest() {
+  setTimeout(nextTest_, 1000);
+}
+
+</script>
+</pre>
+</body>
+</html>

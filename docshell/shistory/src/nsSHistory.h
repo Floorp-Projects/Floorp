@@ -112,6 +112,9 @@ protected:
   // content viewers to cache, based on amount of total memory
   static PRUint32 CalcMaxTotalViewers();
 
+  void RemoveDynEntries(PRInt32 aOldIndex, PRInt32 aNewIndex);
+
+  nsresult LoadNextPossibleEntry(PRInt32 aNewIndex, long aLoadType, PRUint32 aHistCmd);
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
   PRInt32 mIndex;

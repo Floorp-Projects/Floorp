@@ -1,0 +1,32 @@
+<!-- Test that event registration is updated when reparenting -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="reparent()">
+  <script xlink:href="event-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+    function reparent()
+    {
+      var svg = document.documentElement;
+      svg.pauseAnimations();
+      svg.setCurrentTime(0);
+      var circle    = document.getElementById('circle');
+      var rect      = document.getElementById('rect');
+      var animmove  = document.getElementById('anim-move');
+      var animcolor = document.getElementById('anim-color');
+      circle.appendChild(animmove);
+      rect.appendChild(animcolor);
+      click('rect');
+      delayedSnapshot(2);
+    }
+  </script>
+  <circle id="circle" r="10">
+    <set attributeName="fill" attributeType="CSS"
+      to="green" begin="click" dur="4s" id="anim-color"/>
+  </circle>
+  <rect width="100" height="100" fill="red" id="rect">
+    <animateTransform attributeName="transform" type="translate"
+      values="100; 100" calcMode="discrete"
+      begin="click" dur="4s" id="anim-move"/>
+  </rect>
+</svg>
