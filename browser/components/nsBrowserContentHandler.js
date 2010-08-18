@@ -853,8 +853,7 @@ nsDefaultCommandLineHandler.prototype = {
     }
   },
 
-  // XXX localize me... how?
-  helpInfo : "Usage: firefox [-flags] [<url>]\n",
+  helpInfo : "",
 };
 
 var components = [nsBrowserContentHandler, nsDefaultCommandLineHandler];
