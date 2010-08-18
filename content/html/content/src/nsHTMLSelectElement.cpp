@@ -194,6 +194,9 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLSelectElement)
 
+// nsConstraintValidation
+NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLSelectElement)
+
 NS_IMETHODIMP
 nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
@@ -1746,7 +1749,6 @@ nsHTMLSelectElement::VerifyOptionsArray()
   PRInt32 aIndex = 0;
   VerifyOptionsRecurse(this, aIndex, mOptions);
 }
-
 
 #endif
 

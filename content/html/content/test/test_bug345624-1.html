@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345624
+-->
+<head>
+  <title>Test for Bug 345624</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345624">Mozilla Bug 345624</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <fieldset id='f'></fieldset>
+  <input id='i' oninvalid="invalidEventHandler(event);">
+  <button id='b' oninvalid="invalidEventHandler(event);"></button>
+  <select id='s' oninvalid="invalidEventHandler(event);"></select>
+  <textarea id='t' oninvalid="invalidEventHandler(event);"></textarea>
+  <keygen id='k'></keygen>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 345624 **/
+
+var gInvalid = false;
+
+function invalidEventHandler(aEvent)
+{
+  function checkInvalidEvent(aEvent)
+  {
+    is(aEvent.type, "invalid", "Invalid event type should be invalid");
+    ok(!aEvent.bubbles, "Invalid event should not bubble");
+    ok(aEvent.cancelable, "Invalid event should be cancelable");
+  }
+
+  checkInvalidEvent(aEvent);
+
+  gInvalid = true;
+}
+
+function checkConstraintValidationAPIExist(element)
+{
+  ok('willValidate' in element, "willValidate is not available in the DOM");
+  ok('validationMessage' in element, "validationMessage is not available in the DOM");
+  ok('validity' in element, "validity is not available in the DOM");
+
+  if ('validity' in element) {
+    validity = element.validity;
+    ok('valueMissing' in validity, "validity.valueMissing is not available in the DOM");
+    ok('typeMismatch' in validity, "validity.typeMismatch is not available in the DOM");
+    ok('patternMismatch' in validity, "validity.patternMismatch is not available in the DOM");
+    ok('tooLong' in validity, "validity.tooLong is not available in the DOM");
+    ok('rangeUnderflow' in validity, "validity.rangeUnderflow is not available in the DOM");
+    ok('rangeOverflow' in validity, "validity.rangeOverflow is not available in the DOM");
+    ok('stepMismatch' in validity, "validity.stepMismatch is not available in the DOM");
+    ok('customError' in validity, "validity.customError is not available in the DOM");
+    ok('valid' in validity, "validity.valid is not available in the DOM");
+  }
+}
+
+function checkConstraintValidationAPIDefaultValues(element)
+{
+  // Not checking willValidate because the default value depends of the element
+
+  is(element.validationMessage, "", "validationMessage default value should be empty string");
+
+  ok(!element.validity.valueMissing, "The element should not suffer from a constraint validation");
+  ok(!element.validity.typeMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.patternMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.tooLong, "The element should not suffer from a constraint validation");
+  ok(!element.validity.rangeUnderflow, "The element should not suffer from a constraint validation");
+  ok(!element.validity.rangeOverflow, "The element should not suffer from a constraint validation");
+  ok(!element.validity.stepMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.customError, "The element should not suffer from a constraint validation");
+  ok(element.validity.valid, "The element should be valid by default");
+
+  ok(element.checkValidity(), "The element should be valid by default");
+}
+
+function checkSpecificWillValidate()
+{
+  // fieldset, keygen (TODO) and select elements
+  ok(!document.getElementById('f').willValidate, "Fielset element should be barred from constraint validation");
+  todo(!document.getElementById('k').willValidate, "Keygen element should be barred from constraint validation");
+  ok(document.getElementById('s').willValidate, "Select element should not be barred from constraint validation");
+
+  // input element
+  i = document.getElementById('i');
+  i.type = "hidden";
+  ok(!i.willValidate, "Hidden state input should be barred from constraint validation");
+  i.type = "reset";
+  ok(!i.willValidate, "Reset button state input should be barred from constraint validation");
+  i.type = "button";
+  ok(!i.willValidate, "Button state input should be barred from constraint validation");
+  i.type = "";
+  i.readOnly = 'true';
+  ok(!i.willValidate, "Readonly input should be barred from constraint validation");
+  i.removeAttribute('readOnly');
+  ok(i.willValidate, "Default input element should not be barred from constraint validation");
+
+  // button element
+  b = document.getElementById('b');
+  b.type = "reset";
+  ok(!b.willValidate, "Reset state button should be barred from constraint validation");
+  b.type = "button";
+  ok(!b.willValidate, "Button state button should be barred from constraint validation");
+  b.type = "";
+  ok(b.willValidate, "Default button element should not be barred from constraint validation");
+
+  // textarea element
+  t = document.getElementById('t');
+  t.readOnly = true;
+  ok(!t.willValidate, "Readonly textarea should be barred from constraint validation");
+  t.removeAttribute('readOnly');
+  ok(t.willValidate, "Default textarea element should not be barred from constraint validation");
+
+  // TODO: output  elements are always barred from constraint validation.
+  // TODO: PROGRESS
+  // TODO: METER
+}
+
+function checkCommonWillValidate(element)
+{
+  // Not checking the default value because it has been check previously
+
+  element.disabled = true;
+  ok(!element.willValidate, "Disabled element should be barred from constraint validation");
+  element.removeAttribute('disabled');
+
+  // TODO: If an element has a datalist element ancestor, it is barred from constraint validation.
+}
+
+function checkCustomError(element)
+{
+  element.setCustomValidity("message");
+  is(element.validationMessage, "message", "When the element has a custom validity message, validation message should return it");
+  ok(element.validity.customError, "The element should suffer from a custom error");
+  ok(!element.validity.valid, "The element should not be valid with a custom error");
+
+  element.setCustomValidity("");
+  is(element.validationMessage, "", "The element should not have a validation message when reseted");
+  ok(!element.validity.customError, "The element should not suffer anymore from a custom error");
+  ok(element.validity.valid, "The element should now be valid");
+}
+
+function checkCheckValidity(element)
+{
+  element.setCustomValidity("message");
+  ok(!element.checkValidity(), "checkValidity() should return false when the element is not valid");
+
+  ok(gInvalid, "Invalid event should have been handled");
+
+  gInvalid = false;
+  element.setCustomValidity("");
+
+  ok(element.checkValidity(), "Element should be valid");
+  ok(!gInvalid, "Invalid event should not have been handled");
+}
+
+function checkValidityStateObjectAliveWithoutElement(element)
+{
+  // We are creating a temporary element and getting it's ValidityState object.
+  // Then, we make sure it is removed by the garbage collector and we check the
+  // ValidityState default values (it should not crash).
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var v = document.createElement(element).validity;
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIDOMWindowUtils).garbageCollect();
+
+  ok(!v.valueMissing,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.typeMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.patternMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.tooLong,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.rangeUnderflow,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.rangeOverflow,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.stepMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.customError,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(v.valid, "When the element is not alive, it should be valid");
+}
+
+/* TODO: add <output> element when it will be implemented */
+checkConstraintValidationAPIExist(document.getElementById('f'));
+checkConstraintValidationAPIExist(document.getElementById('i'));
+checkConstraintValidationAPIExist(document.getElementById('b'));
+checkConstraintValidationAPIExist(document.getElementById('s'));
+checkConstraintValidationAPIExist(document.getElementById('t'));
+checkConstraintValidationAPIExist(document.getElementById('k'));
+
+/* TODO: add <output> element when it will be implemented */
+checkConstraintValidationAPIDefaultValues(document.getElementById('f'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('i'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('b'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('s'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('t'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('k'));
+
+checkSpecificWillValidate();
+
+// Not checking fieldset, output and keygen
+// because they are always barred from constraint validation.
+checkCommonWillValidate(document.getElementById('i'));
+checkCommonWillValidate(document.getElementById('b'));
+checkCommonWillValidate(document.getElementById('s'));
+checkCommonWillValidate(document.getElementById('t'));
+
+// Not checking fieldset, output and keygen
+// because they are always barred from constraint validation.
+checkCustomError(document.getElementById('i'));
+checkCustomError(document.getElementById('b'));
+checkCustomError(document.getElementById('s'));
+checkCustomError(document.getElementById('t'));
+
+// Not checking fieldset, output and keygen
+// because they are always barred from constraint validation.
+checkCheckValidity(document.getElementById('i'));
+checkCheckValidity(document.getElementById('b'));
+checkCheckValidity(document.getElementById('s'));
+checkCheckValidity(document.getElementById('t'));
+
+/* TODO: add "output" and "keygen" elements */
+checkValidityStateObjectAliveWithoutElement("fieldset");
+checkValidityStateObjectAliveWithoutElement("input");
+checkValidityStateObjectAliveWithoutElement("button");
+checkValidityStateObjectAliveWithoutElement("select");
+checkValidityStateObjectAliveWithoutElement("textarea");
+
+</script>
+</pre>
+</body>
+</html>

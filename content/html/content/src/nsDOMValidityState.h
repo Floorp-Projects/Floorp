@@ -14,14 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,42 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMHTMLElement.idl"
+#ifndef nsDOMValidityState_h__
+#define nsDOMValidityState_h__
 
-/**
- * The nsIDOMHTMLButtonElement interface is the interface to a [X]HTML
- * button element.
- *
- * For more information on this interface please see
- * http://www.w3.org/TR/DOM-Level-2-HTML/
- */
+#include "nsIDOMValidityState.h"
 
-interface nsIDOMValidityState;
+class nsConstraintValidation;
 
-[scriptable, uuid(5a1ef9b1-6782-4bee-a59e-7db1c352eb7d)]
-interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
+class nsDOMValidityState : public nsIDOMValidityState
 {
-           attribute boolean               autofocus;
-           attribute boolean               disabled;
-  readonly attribute nsIDOMHTMLFormElement form;
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMVALIDITYSTATE
 
-           attribute DOMString             name;
-           attribute DOMString             type;
-           attribute DOMString             value;
+  friend class nsConstraintValidation;
 
-           
-           attribute DOMString             accessKey;
-           attribute long                  tabIndex;
-  void                      blur();
-  void                      focus();
-  void                      click();
+protected:
+  // This function should be called by nsConstraintValidation
+  // to set mConstraintValidation to null to be sure it will not be called.
+  void Disconnect()
+  {
+    mConstraintValidation = nsnull;
+  }
 
-  // The following lines are parte of the constraint validation API, see:
-  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
-  readonly attribute boolean             willValidate;
-  readonly attribute nsIDOMValidityState validity;
-  readonly attribute DOMString           validationMessage;
-  boolean checkValidity();
-  void setCustomValidity(in DOMString error);
+  nsDOMValidityState(nsConstraintValidation* aConstraintValidation);
+
+  nsConstraintValidation*       mConstraintValidation;
 };
+
+#endif // nsDOMValidityState_h__
 

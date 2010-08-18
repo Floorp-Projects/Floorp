@@ -77,6 +77,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsISupportsPrimitives.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsConstraintValidation.h"
 
 #include "nsTextEditorState.h"
 
@@ -89,7 +90,8 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIDOMNSHTMLTextAreaElement,
                               public nsITextControlElement,
                               public nsIDOMNSEditableElement,
-                              public nsStubMutationObserver
+                              public nsStubMutationObserver,
+                              public nsConstraintValidation
 {
 public:
   nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -196,6 +198,13 @@ public:
                                            nsGenericHTMLFormElement)
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // nsConstraintValidation
+  PRBool   IsTooLong();
+  PRBool   IsBarredFromConstraintValidation();
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                ValidationMessageType aType);
+
 protected:
   using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
 
@@ -296,6 +305,9 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTextAreaElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLTextAreaElement)
+
+// nsConstraintValidation
+NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLTextAreaElement)
 
 
 NS_IMETHODIMP
@@ -1030,6 +1042,62 @@ nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
     static_cast<nsHTMLTextAreaElement*>(aDest)->SetValue(value);
   }
   return NS_OK;
+}
+
+// nsConstraintValidation
+
+PRBool
+nsHTMLTextAreaElement::IsTooLong()
+{
+  PRInt32 maxLength = -1;
+  PRInt32 textLength = -1;
+
+  GetMaxLength(&maxLength);
+  GetTextLength(&textLength);
+
+  return (maxLength >= 0) && (textLength > maxLength);
+}
+
+PRBool
+nsHTMLTextAreaElement::IsBarredFromConstraintValidation()
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+}
+
+nsresult
+nsHTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
+                                            ValidationMessageType aType)
+{
+  nsresult rv = NS_OK;
+
+  switch (aType)
+  {
+    case VALIDATION_MESSAGE_TOO_LONG:
+      {
+        nsXPIDLString message;
+        PRInt32 maxLength = -1;
+        PRInt32 textLength = -1;
+        nsAutoString strMaxLength;
+        nsAutoString strTextLength;
+
+        GetMaxLength(&maxLength);
+        GetTextLength(&textLength);
+
+        strMaxLength.AppendInt(maxLength);
+        strTextLength.AppendInt(textLength);
+
+        const PRUnichar* params[] = { strTextLength.get(), strMaxLength.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "ElementSuffersFromBeingTooLong",
+                                                   params, 2, message);
+        aValidationMessage = message;
+      }
+      break;
+    default:
+      rv = nsConstraintValidation::GetValidationMessage(aValidationMessage, aType);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP_(PRBool)

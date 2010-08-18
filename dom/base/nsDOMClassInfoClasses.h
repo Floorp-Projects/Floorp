@@ -143,6 +143,7 @@ DOMCI_CLASS(HTMLTextAreaElement)
 DOMCI_CLASS(HTMLTitleElement)
 DOMCI_CLASS(HTMLUListElement)
 DOMCI_CLASS(HTMLUnknownElement)
+DOMCI_CLASS(ValidityState)
 
 // CSS classes
 DOMCI_CLASS(CSSStyleRule)

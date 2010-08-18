@@ -561,6 +561,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onreset,                       NS_FORM_RESET, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::onchange,                      NS_FORM_CHANGE, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::onselect,                      NS_FORM_SELECTED, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::oninvalid,                     NS_FORM_INVALID, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::onload,                        NS_LOAD, EventNameType_All, NS_EVENT },
     { nsGkAtoms::onpopstate,                    NS_POPSTATE, EventNameType_HTMLXUL, NS_EVENT_NULL },
     { nsGkAtoms::onunload,                      NS_PAGE_UNLOAD,

@@ -52,6 +52,7 @@
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"
 #include "nsIHTMLCollection.h"
+#include "nsConstraintValidation.h"
 
 // PresState
 #include "nsXPCOM.h"
@@ -236,7 +237,8 @@ private:
  */
 class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLSelectElement,
-                            public nsISelectElement
+                            public nsISelectElement,
+                            public nsConstraintValidation
 {
 public:
   nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
