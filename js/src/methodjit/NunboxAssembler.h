@@ -153,7 +153,6 @@ class Assembler : public BaseAssembler
 
     /*
      * Stores type first, then payload.
-     * Returns label after type store. Useful for offset verification.
      */
     void storeValue(const Value &v, Address address) {
         jsval_layout jv;
