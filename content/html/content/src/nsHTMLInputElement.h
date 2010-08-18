@@ -49,6 +49,7 @@
 
 #include "nsTextEditorState.h"
 #include "nsCOMPtr.h"
+#include "nsConstraintValidation.h"
 
 //
 // Accessors for mBitField
@@ -80,7 +81,8 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsITextControlElement,
                            public nsIPhonetic,
                            public nsIDOMNSEditableElement,
-                           public nsIFileControlElement
+                           public nsIFileControlElement,
+                           public nsConstraintValidation
 {
 public:
   nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -199,6 +201,12 @@ public:
   void MaybeLoadImage();
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // nsConstraintValidation
+  PRBool   IsTooLong();
+  PRBool   IsBarredFromConstraintValidation();
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                ValidationMessageType aType);
 
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden

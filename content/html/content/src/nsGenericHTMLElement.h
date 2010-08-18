@@ -840,6 +840,11 @@ public:
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
+  /**
+   * Returns if the control can be disabled.
+   */
+  PRBool CanBeDisabled() const;
+
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
@@ -854,11 +859,6 @@ protected:
   {
     return PR_FALSE;
   }
-
-  /**
-   * Returns true if the control can be disabled
-   */
-  PRBool CanBeDisabled() const;
 
   void UpdateEditableFormControlState();
 
