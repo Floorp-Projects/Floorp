@@ -62,7 +62,7 @@ js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
     if (v.isString()) {
         str = v.toString();
         if (str->isAtomized()) {
-            cx->weakRoots.lastAtom = *atomp = STRING_TO_ATOM(str);
+            *atomp = STRING_TO_ATOM(str);
             return true;
         }
     } else {
