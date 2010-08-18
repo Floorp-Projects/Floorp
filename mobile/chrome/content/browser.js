@@ -564,9 +564,6 @@ var Browser = {
       Services.prefs.clearUserPref("extensions.disabledAddons");
     }
 
-    // Force commonly used border-images into the image cache
-    ImagePreloader.cache();
-
     messageManager.addMessageListener("Browser:ViewportMetadata", this);
     messageManager.addMessageListener("Browser:FormSubmit", this);
     messageManager.addMessageListener("Browser:KeyPress", this);
@@ -2698,36 +2695,6 @@ Tab.prototype = {
     return "[Tab " + (this._browser ? this._browser.currentURI.spec : "(no browser)") + "]";
   }
 };
-
-var ImagePreloader = {
-  cache: function ip_cache() {
-    // Preload images used in border-image CSS
-    let images = ["button-active", "button-default",
-                  "buttondark-active", "buttondark-default",
-                  "toggleon-active", "toggleon-inactive",
-                  "toggleoff-active", "toggleoff-inactive",
-                  "toggleleft-active", "toggleleft-inactive",
-                  "togglemiddle-active", "togglemiddle-inactive",
-                  "toggleright-active", "toggleright-inactive",
-                  "toggleboth-active", "toggleboth-inactive",
-                  "toggledarkleft-active", "toggledarkleft-inactive",
-                  "toggledarkmiddle-active", "toggledarkmiddle-inactive",
-                  "toggledarkright-active", "toggledarkright-inactive",
-                  "toggledarkboth-active", "toggledarkboth-inactive",
-                  "toolbarbutton-active", "toolbarbutton-default",
-                  "addons-active", "addons-default",
-                  "downloads-active", "downloads-default",
-                  "preferences-active", "preferences-default",
-                  "settings-active", "settings-open"];
-
-    let size = screen.width > 400 ? "-64" : "-36";
-    for (let i = 0; i < images.length; i++) {
-      let image = new Image();
-      image.src = "chrome://browser/skin/images/" + images[i] + size + ".png";
-    }
-  }
-};
-
 
 // Helper used to hide IPC / non-IPC differences for rendering to a canvas
 function rendererFactory(aBrowser, aCanvas) {
