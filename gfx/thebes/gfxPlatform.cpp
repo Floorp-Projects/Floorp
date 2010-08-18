@@ -86,8 +86,6 @@
 
 gfxPlatform *gPlatform = nsnull;
 
-PRInt32 gfxPlatform::sDPI = -1;
-
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nsnull;
 static qcms_profile *gCMSsRGBProfile = nsnull;
@@ -1061,13 +1059,6 @@ static void MigratePrefs()
         prefs->ClearUserPref(CMPrefNameOld);
     }
 
-}
-
-void
-gfxPlatform::InitDisplayCaps()
-{
-    // Fall back to something sane
-    gfxPlatform::sDPI = 96;
 }
 
 // default SetupClusterBoundaries, based on Unicode properties;

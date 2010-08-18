@@ -123,6 +123,7 @@ public:
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget *aNewParent);
   virtual nsIWidget*      GetParent(void);
+  virtual float           GetDPI();
   NS_IMETHOD              Show(PRBool bState);
   NS_IMETHOD              IsVisible(PRBool & aState);
   NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY);
@@ -309,6 +310,10 @@ protected:
 #if !defined(WINCE)
   static void             InitTrackPointHack();
 #endif
+  PRBool                  HasGlass() const {
+    return mTransparencyMode == eTransparencyGlass ||
+           mTransparencyMode == eTransparencyBorderlessGlass;
+  }
 
   /**
    * Event processing helpers

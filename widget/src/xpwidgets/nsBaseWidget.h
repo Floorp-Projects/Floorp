@@ -83,6 +83,8 @@ public:
   virtual nsIWidget*      GetParent(void);
   virtual nsIWidget*      GetTopLevelWidget();
   virtual nsIWidget*      GetSheetWindowParent(void);
+  virtual float           GetDPI();
+  virtual double          GetDefaultScale();
   virtual void            AddChild(nsIWidget* aChild);
   virtual void            RemoveChild(nsIWidget* aChild);
 

@@ -297,6 +297,7 @@ public:
 
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
+  virtual float           GetDPI();
 
   LayerManager*           GetLayerManager();
 

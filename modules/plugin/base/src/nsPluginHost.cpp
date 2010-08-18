@@ -301,6 +301,22 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
   return mDocs->Clear();
 }
 
+static PRBool UnloadPluginsASAP()
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    PRBool unloadPluginsASAP = PR_FALSE;
+    rv = pref->GetBoolPref("plugins.unloadASAP", &unloadPluginsASAP);
+    if (NS_SUCCEEDED(rv)) {
+      return unloadPluginsASAP;
+    }
+  }
+
+  NS_WARNING("Unable to retrieve pref: plugins.unloadASAP");
+  return PR_FALSE;
+}
+
 // helper struct for asynchronous handling of plugin unloading
 class nsPluginUnloadEvent : public nsRunnable {
 public:
@@ -415,9 +431,6 @@ nsPluginHost::GetInst()
 PRBool nsPluginHost::IsRunningPlugin(nsPluginTag * plugin)
 {
   if (!plugin)
-    return PR_FALSE;
-
-  if (!plugin->mLibrary)
     return PR_FALSE;
 
   for (int i = 0; i < plugin->mVariants; i++) {
@@ -867,16 +880,8 @@ void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag)
     }
   }
 
-  if (!hasInstance) {
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-      return;
-
-    PRBool unloadPluginsASAP = PR_FALSE;
-    rv = pref->GetBoolPref("plugins.unloadASAP", &unloadPluginsASAP);
-    if (NS_SUCCEEDED(rv) && unloadPluginsASAP)
-      aPluginTag->TryUnloadPlugin();
+  if (!hasInstance && UnloadPluginsASAP()) {
+    aPluginTag->TryUnloadPlugin();
   }
 }
 
@@ -1270,10 +1275,8 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   PR_LogFlush();
 #endif
 
-
-  nsresult result = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPluginInstance> instance;
-  nsCOMPtr<nsIPlugin> plugin;
+  nsresult rv = NS_ERROR_FAILURE;
+  
   const char* mimetype = nsnull;
 
   // if don't have a mimetype or no plugin can handle this mimetype
@@ -1300,8 +1303,10 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
 
+  nsCOMPtr<nsIPlugin> plugin;
   GetPlugin(mimetype, getter_AddRefs(plugin));
 
+  nsCOMPtr<nsIPluginInstance> instance;
   if (plugin) {
 #if defined(XP_WIN) && !defined(WINCE)
     static BOOL firstJavaPlugin = FALSE;
@@ -1311,17 +1316,18 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
       DWORD dw = GetCurrentDirectoryW(_MAX_PATH, origDir);
       NS_ASSERTION(dw <= _MAX_PATH, "Failed to obtain the current directory, which may lead to incorrect class loading");
       nsCOMPtr<nsIFile> binDirectory;
-      result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                      getter_AddRefs(binDirectory));
+      rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                  getter_AddRefs(binDirectory));
 
-      if (NS_SUCCEEDED(result)) {
+      if (NS_SUCCEEDED(rv)) {
         nsAutoString path;
         binDirectory->GetPath(path);
         restoreOrigDir = SetCurrentDirectoryW(path.get());
       }
     }
 #endif
-    result = plugin->CreatePluginInstance(getter_AddRefs(instance));
+
+    rv = plugin->CreatePluginInstance(getter_AddRefs(instance));
 
 #if defined(XP_WIN) && !defined(WINCE)
     if (!firstJavaPlugin && restoreOrigDir) {
@@ -1332,8 +1338,8 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 #endif
   }
 
-  if (NS_FAILED(result))
-    return result;
+  if (NS_FAILED(rv))
+    return rv;
 
   // it is adreffed here
   aOwner->SetInstance(instance);
@@ -1341,10 +1347,10 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   // this should not addref the instance or owner
   // except in some cases not Java, see bug 140931
   // our COM pointer will free the peer
-  result = instance->Initialize(aOwner, mimetype);
-  if (NS_FAILED(result)) {
+  rv = instance->Initialize(aOwner, mimetype);
+  if (NS_FAILED(rv)) {
     aOwner->SetInstance(nsnull);
-    return result;
+    return rv;
   }
 
   mInstances.AppendElement(static_cast<nsNPAPIPluginInstance*>(instance.get()));
@@ -1356,12 +1362,12 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
         ("nsPluginHost::TrySetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
-        aMimeType, result, aOwner, urlSpec2.get()));
+        aMimeType, rv, aOwner, urlSpec2.get()));
 
   PR_LogFlush();
 #endif
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1693,9 +1699,29 @@ static nsresult ConvertToNative(nsIUnicodeEncoder *aEncoder,
   return NS_OK;
 }
 
-static nsresult CreateNPAPIPlugin(const nsPluginTag *aPluginTag,
+static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
                                   nsIPlugin **aOutNPAPIPlugin)
 {
+  // If this is an in-process plugin we'll need to load it here if we haven't already.
+#ifdef MOZ_IPC
+  if (!aPluginTag->mLibrary &&
+      !nsNPAPIPlugin::RunPluginOOP(aPluginTag->mFileName.get(), aPluginTag)) {
+#else
+  if (!aPluginTag->mLibrary) {
+#endif
+    if (aPluginTag->mFullPath.IsEmpty())
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    file->InitWithPath(NS_ConvertUTF8toUTF16(aPluginTag->mFullPath));
+    nsPluginFile pluginFile(file);
+    PRLibrary* pluginLibrary = NULL;
+
+    if (NS_FAILED(pluginFile.LoadPlugin(&pluginLibrary)) || !pluginLibrary)
+      return NS_ERROR_FAILURE;
+
+    aPluginTag->mLibrary = pluginLibrary;
+  }
+
   nsresult rv;
   nsCOMPtr <nsIPlatformCharset> pcs =
     do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
@@ -1766,28 +1792,12 @@ NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin
       printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName.get());
 #endif
 
-    if (!pluginTag->mLibrary) { // if we haven't done this yet
-      if (pluginTag->mFullPath.IsEmpty())
-        return NS_ERROR_FAILURE;
-      nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-      file->InitWithPath(NS_ConvertUTF8toUTF16(pluginTag->mFullPath));
-      nsPluginFile pluginFile(file);
-      PRLibrary* pluginLibrary = NULL;
-
-      if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
-        return NS_ERROR_FAILURE;
-
-      pluginTag->mLibrary = pluginLibrary;
-    }
-
+    // Create a plugin object if necessary
     nsCOMPtr<nsIPlugin> plugin = pluginTag->mEntryPoint;
     if (!plugin) {
-      // Now lets try to get the entry point from an NPAPI plugin
       rv = CreateNPAPIPlugin(pluginTag, getter_AddRefs(plugin));
       if (NS_FAILED(rv))
         return rv;
-
-      NS_ASSERTION(plugin, "CreateNPAPIPlugin succeeded without setting 'plugin'");
       pluginTag->mEntryPoint = plugin;
     }
 
@@ -2041,18 +2051,12 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
     // if it is not found in cache info list or has been changed, create a new one
     if (!pluginTag) {
       nsPluginFile pluginFile(file);
-      PRLibrary* pluginLibrary = nsnull;
-
-      // load the plugin's library so we can ask it some questions, but not for Windows
-#ifndef XP_WIN
-      if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == nsnull)
-        continue;
-#endif
 
       // create a tag describing this plugin.
+      PRLibrary *library = nsnull;
       nsPluginInfo info;
       memset(&info, 0, sizeof(info));
-      nsresult res = pluginFile.GetPluginInfo(info);
+      nsresult res = pluginFile.GetPluginInfo(info, &library);
       // if we don't have mime type don't proceed, this is not a plugin
       if (NS_FAILED(res) || !info.fMimeTypeArray) {
         pluginFile.FreePluginInfo(info);
@@ -2061,11 +2065,10 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
 
       pluginTag = new nsPluginTag(&info);
       pluginFile.FreePluginInfo(info);
-
-      if (pluginTag == nsnull)
+      if (!pluginTag)
         return NS_ERROR_OUT_OF_MEMORY;
 
-      pluginTag->mLibrary = pluginLibrary;
+      pluginTag->mLibrary = library;
       pluginTag->mLastModifiedTime = fileModTime;
 
       nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
@@ -2099,6 +2102,13 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
         pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
         pluginTag->mNext = mCachedPlugins;
         mCachedPlugins = pluginTag;
+      }
+
+      // Plugin unloading is tag-based. If we created a new tag and loaded
+      // the library in the process then we want to attempt to unload it here.
+      // Only do this if the pref is set for aggressive unloading.
+      if (UnloadPluginsASAP()) {
+        pluginTag->TryUnloadPlugin();
       }
     }
 

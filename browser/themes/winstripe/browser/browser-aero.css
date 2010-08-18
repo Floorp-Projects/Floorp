@@ -17,7 +17,7 @@
 
 @media all and (-moz-windows-compositor) {
   #main-window:not(:-moz-lwtheme) {
-    -moz-appearance: -moz-win-glass;
+    -moz-appearance: -moz-win-borderless-glass;
     background: transparent;
   }
 
