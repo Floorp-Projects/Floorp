@@ -61,6 +61,7 @@
 #include "nsLayoutErrors.h"
 #include "nsFocusManager.h"
 #include "nsHTMLFormElement.h"
+#include "nsConstraintValidation.h"
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
 #define NS_OUTER_ACTIVATE_EVENT (1 << 1)
@@ -76,7 +77,8 @@ static const nsAttrValue::EnumTable kButtonTypeTable[] = {
 static const nsAttrValue::EnumTable* kButtonDefaultType = &kButtonTypeTable[2];
 
 class nsHTMLButtonElement : public nsGenericHTMLFormElement,
-                            public nsIDOMHTMLButtonElement
+                            public nsIDOMHTMLButtonElement,
+                            public nsConstraintValidation
 {
 public:
   nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -128,6 +130,10 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual void DoneCreatingElement();
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // nsConstraintValidation
+  PRBool IsBarredFromConstraintValidation();
+
 protected:
   virtual PRBool AcceptAutofocus() const
   {
@@ -180,6 +186,9 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLButtonElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLButtonElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLButtonElement)
+
+// nsConstraintValidation
+NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLButtonElement)
 
 // nsIDOMHTMLButtonElement
 
@@ -622,3 +631,13 @@ nsHTMLButtonElement::RestoreState(nsPresState* aState)
 
   return PR_FALSE;
 }
+
+// nsConstraintValidation
+
+PRBool
+nsHTMLButtonElement::IsBarredFromConstraintValidation()
+{
+  return (mType == NS_FORM_BUTTON_BUTTON ||
+          mType == NS_FORM_BUTTON_RESET);
+}
+

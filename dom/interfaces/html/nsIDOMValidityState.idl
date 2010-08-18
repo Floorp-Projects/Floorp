@@ -14,14 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,42 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMHTMLElement.idl"
+#include "domstubs.idl"
 
 /**
- * The nsIDOMHTMLButtonElement interface is the interface to a [X]HTML
- * button element.
+ * The nsIDOMValidityState interface is the interface to a ValidityState
+ * object which represents the validity states of an element.
  *
  * For more information on this interface please see
- * http://www.w3.org/TR/DOM-Level-2-HTML/
+ * http://dev.w3.org/html5/spec/forms.html#validitystate
  */
 
-interface nsIDOMValidityState;
-
-[scriptable, uuid(5a1ef9b1-6782-4bee-a59e-7db1c352eb7d)]
-interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
+[scriptable, uuid(5e62197a-9b74-4812-b5a2-ca102e886f7a)]
+interface nsIDOMValidityState : nsISupports
 {
-           attribute boolean               autofocus;
-           attribute boolean               disabled;
-  readonly attribute nsIDOMHTMLFormElement form;
-
-           attribute DOMString             name;
-           attribute DOMString             type;
-           attribute DOMString             value;
-
-           
-           attribute DOMString             accessKey;
-           attribute long                  tabIndex;
-  void                      blur();
-  void                      focus();
-  void                      click();
-
-  // The following lines are parte of the constraint validation API, see:
-  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
-  readonly attribute boolean             willValidate;
-  readonly attribute nsIDOMValidityState validity;
-  readonly attribute DOMString           validationMessage;
-  boolean checkValidity();
-  void setCustomValidity(in DOMString error);
+  readonly attribute boolean valueMissing;
+  readonly attribute boolean typeMismatch;
+  readonly attribute boolean patternMismatch;
+  readonly attribute boolean tooLong;
+  readonly attribute boolean rangeUnderflow;
+  readonly attribute boolean rangeOverflow;
+  readonly attribute boolean stepMismatch;
+  readonly attribute boolean customError;
+  readonly attribute boolean valid;
 };
-

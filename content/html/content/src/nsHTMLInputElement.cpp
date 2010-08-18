@@ -298,6 +298,8 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLInputElement)
 
+// nsConstraintValidation
+NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLInputElement)
 
 // nsIDOMNode
 
@@ -2956,6 +2958,65 @@ nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent)
   return rv;
 }
 
+// nsConstraintValidation
+
+PRBool
+nsHTMLInputElement::IsTooLong()
+{
+  // TODO: return PR_FALSE if dirty value flag is TRUE, see bug 549475.
+  PRInt32 maxLength = -1;
+  PRInt32 textLength = -1;
+
+  GetMaxLength(&maxLength);
+  GetTextLength(&textLength);
+
+  return (maxLength >= 0) && (textLength > maxLength);
+}
+
+PRBool
+nsHTMLInputElement::IsBarredFromConstraintValidation()
+{
+  return mType == NS_FORM_INPUT_HIDDEN ||
+         mType == NS_FORM_INPUT_BUTTON ||
+         mType == NS_FORM_INPUT_RESET ||
+         HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+}
+
+nsresult
+nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
+                                         ValidationMessageType aType)
+{
+  nsresult rv = NS_OK;
+
+  switch (aType)
+  {
+    case VALIDATION_MESSAGE_TOO_LONG:
+    {
+      nsXPIDLString message;
+      PRInt32 maxLength = -1;
+      PRInt32 textLength = -1;
+      nsAutoString strMaxLength;
+      nsAutoString strTextLength;
+
+      GetMaxLength(&maxLength);
+      GetTextLength(&textLength);
+
+      strMaxLength.AppendInt(maxLength);
+      strTextLength.AppendInt(textLength);
+
+      const PRUnichar* params[] = { strTextLength.get(), strMaxLength.get() };
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "ElementSuffersFromBeingTooLong",
+                                                 params, 2, message);
+      aValidationMessage = message;
+      break;
+    }
+    default:
+      rv = nsConstraintValidation::GetValidationMessage(aValidationMessage, aType);
+  }
+
+  return rv;
+}
 
 //
 // Visitor classes
