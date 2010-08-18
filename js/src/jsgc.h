@@ -347,21 +347,6 @@ struct JSGCFreeLists {
 extern void
 js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
 
-struct JSWeakRoots {
-    /* Most recently created things by type, members of the GC's root set. */
-    void              *finalizableNewborns[FINALIZE_LIMIT];
-
-    /* Atom root for the last-looked-up atom on this context. */
-    JSAtom            *lastAtom;
-
-    /* Root for the result of the most recent js_InternalInvoke call. */
-    void              *lastInternalResult;
-
-    void mark(JSTracer *trc);
-};
-
-#define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
-
 namespace js {
 
 #ifdef JS_THREADSAFE
