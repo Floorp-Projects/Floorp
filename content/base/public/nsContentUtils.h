@@ -385,6 +385,7 @@ public:
   static const nsDependentSubstring TrimCharsInSet(const char* aSet,
                                                    const nsAString& aValue);
 
+  template<PRBool IsWhitespace(PRUnichar)>
   static const nsDependentSubstring TrimWhitespace(const nsAString& aStr,
                                                    PRBool aTrimTrailing = PR_TRUE);
 
