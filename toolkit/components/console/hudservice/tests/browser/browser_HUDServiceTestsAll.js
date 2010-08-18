@@ -236,7 +236,7 @@ function testConsoleLoggingAPI(aMethod)
   filterBox.value = "foo";
   browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
   browser.contentWindow.wrappedJSObject.console[aMethod]("bar-baz");
-  var count = outputNode.querySelectorAll(".hud-hidden").length;
+  var count = outputNode.querySelectorAll(".hud-filtered-by-string").length;
   ok(count == 1, "1 hidden " + aMethod  + " node found");
   HUDService.clearDisplay(hudId);
 
@@ -245,7 +245,7 @@ function testConsoleLoggingAPI(aMethod)
   filterBox.value = "";
   HUDService.setFilterState(hudId, aMethod, false);
   browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
-  count = outputNode.querySelectorAll(".hud-hidden").length;
+  count = outputNode.querySelectorAll(".hud-filtered-by-string").length;
   ok(count == 0, aMethod + " logging tunred off, 0 messages logged");
   HUDService.clearDisplay(hudId);
   filterBox.value = "";

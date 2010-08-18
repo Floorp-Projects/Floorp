@@ -775,39 +775,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Filter each message being logged into the console
-   *
-   * @param string aFilterString
-   * @param nsIDOMNode aMessageNode
-   * @returns JS Object
-   */
-  filterLogMessage:
-  function HS_filterLogMessage(aFilterString, aMessageNode)
-  {
-    aFilterString = aFilterString.toLowerCase();
-    var messageText = aMessageNode.textContent.toLowerCase();
-    var idx = messageText.indexOf(aFilterString);
-    if (idx > -1) {
-      return { strLength: aFilterString.length, strIndex: idx };
-    }
-    else {
-      return null;
-    }
-  },
-
-  /**
-   * Get the filter textbox from a HeadsUpDisplay
-   *
-   * @param string aHUDId
-   * @returns nsIDOMNode
-   */
-  getFilterTextBox: function HS_getFilterTextBox(aHUDId)
-  {
-    var hud = this.getHeadsUpDisplay(aHUDId);
-    return hud.querySelectorAll(".hud-filter-box")[0];
-  },
-
-  /**
    * Logs a HUD-generated console message
    * @param object aMessage
    *        The message to log, which is a JS object, this is the
@@ -820,40 +787,18 @@ HUD_SERVICE.prototype =
    */
   logHUDMessage: function HS_logHUDMessage(aMessage,
                                            aConsoleNode,
-                                           aMessageNode,
-                                           aFilterState,
-                                           aFilterString)
+                                           aMessageNode)
   {
-    if (!aFilterState) {
-      // do not log anything
-      return;
-    }
-
     if (!aMessage) {
       throw new Error(ERRORS.MISSING_ARGS);
     }
 
     let lastGroupNode = this.appendGroupIfNecessary(aConsoleNode,
                                                     aMessage.timestamp);
-    if (aFilterString) {
-      var filtered = this.filterLogMessage(aFilterString, aMessageNode);
-      if (filtered) {
-        // we have successfully filtered a message, we need to log it
-        lastGroupNode.appendChild(aMessageNode);
-        ConsoleUtils.scrollToVisible(aMessageNode);
-      }
-      else {
-        // we need to ignore this message by changing its css class - we are
-        // still logging this, it is just hidden
-        var hiddenMessage = ConsoleUtils.hideLogMessage(aMessageNode);
-        lastGroupNode.appendChild(hiddenMessage);
-      }
-    }
-    else {
-      // log everything
-      lastGroupNode.appendChild(aMessageNode);
-      ConsoleUtils.scrollToVisible(aMessageNode);
-    }
+
+    lastGroupNode.appendChild(aMessageNode);
+    ConsoleUtils.scrollToVisible(aMessageNode);
+
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
   },
@@ -869,14 +814,11 @@ HUD_SERVICE.prototype =
    */
   logConsoleMessage: function HS_logConsoleMessage(aMessage,
                                                    aConsoleNode,
-                                                   aMessageNode,
-                                                   aFilterState,
-                                                   aFilterString)
+                                                   aMessageNode)
   {
-    if (aFilterState){
-      aConsoleNode.appendChild(aMessageNode);
-      ConsoleUtils.scrollToVisible(aMessageNode);
-    }
+    aConsoleNode.appendChild(aMessageNode);
+    ConsoleUtils.scrollToVisible(aMessageNode);
+
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
   },
@@ -898,15 +840,11 @@ HUD_SERVICE.prototype =
     }
 
     var hud = this.getHeadsUpDisplay(aMessage.hudId);
-    // check filter before logging to the outputNode
-    var filterState = this.getFilterState(aMessage.hudId, aMessage.logLevel);
-    var filterString = this.getFilterStringByHUDId(aMessage.hudId);
-
     switch (aMessage.origin) {
       case "network":
       case "HUDConsole":
       case "console-listener":
-        this.logHUDMessage(aMessage, aConsoleNode, aMessageNode, filterState, filterString);
+        this.logHUDMessage(aMessage, aConsoleNode, aMessageNode);
         break;
       default:
         // noop
@@ -1214,11 +1152,6 @@ HUD_SERVICE.prototype =
                 getAttribute("id");
       }
 
-      // check if network activity logging is "on":
-      if (!this.getFilterState(hudId, "network")) {
-        return;
-      }
-
       // get an id to attach to the dom node for lookup of node
       // when updating the log entry with additional http transactions
       var domId = "hud-log-node-" + this.sequenceId();
@@ -1274,14 +1207,6 @@ HUD_SERVICE.prototype =
 
     if (aActivityObject.flags in this.scriptErrorFlags) {
       logLevel = this.scriptErrorFlags[aActivityObject.flags];
-    }
-
-    // check if we should be logging this message:
-    var filterState = this.getFilterState(hudId, logLevel);
-
-    if (!filterState) {
-      // Ignore log message
-      return;
     }
 
     // in this case, the "activity object" is the
@@ -2227,14 +2152,6 @@ function HUDConsole(aHeadsUpDisplay)
 
   let sendToHUDService = function console_send(aLevel, aArguments)
   {
-    // check to see if logging is on for this level before logging!
-    var filterState = HUDService.getFilterState(hudId, aLevel);
-
-    if (!filterState) {
-      // Ignoring log message
-      return;
-    }
-
     let ts = ConsoleUtils.timestamp();
     let messageNode = hud.makeXULNode("label");
 
@@ -3389,19 +3306,6 @@ ConsoleUtils = {
       + pad(d.getMinutes()) + ":"
       + pad(d.getSeconds()) + ":"
       + pad(d.getMilliseconds(), true);
-  },
-
-  /**
-   * Hides a log message by changing its class
-   *
-   * @param nsIDOMNode aMessageNode
-   * @returns nsIDOMNode
-   */
-  hideLogMessage: function ConsoleUtils_hideLogMessage(aMessageNode) {
-    var klass = aMessageNode.getAttribute("class");
-    klass += " hud-hidden";
-    aMessageNode.setAttribute("class", klass);
-    return aMessageNode;
   },
 
   /**
