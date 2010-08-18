@@ -215,6 +215,7 @@ public:
   PRBool   IsTooLong();
   PRBool   IsValueMissing();
   PRBool   HasTypeMismatch();
+  PRBool   HasPatternMismatch();
   PRBool   IsBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidationMessageType aType);
@@ -268,6 +269,23 @@ protected:
    * @result        whether the given string is a valid email address list.
    */
   static PRBool IsValidEmailAddressList(const nsAString& aValue);
+
+  /**
+   * This helper method returns true if the aPattern pattern matches aValue.
+   * aPattern should not contain leading and trailing slashes (/).
+   * The pattern has to match the entire value not just a subset.
+   * aDocument must be a valid pointer (not null).
+   *
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#attr-input-pattern
+   *
+   * @param aValue    the string to check.
+   * @param aPattern  the string defining the pattern.
+   * @param aDocument the owner document of the element.
+   * @result          whether the given string is matches the pattern.
+   */
+  static PRBool IsPatternMatching(nsAString& aValue, nsAString& aPattern,
+                                  nsIDocument* aDocument);
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
@@ -409,6 +427,11 @@ protected:
    * Returns if the required attribute applies for the current type.
    */
   PRBool DoesRequiredApply() const;
+
+  /**
+   * Returns if the pattern attribute applies for the current type.
+   */
+  PRBool DoesPatternApply() const;
 
   void FreeData();
   nsTextEditorState *GetEditorState() const;

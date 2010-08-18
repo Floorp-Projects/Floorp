@@ -2925,7 +2925,11 @@ JS_ClearRegExpStatics(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx);
 
-/* TODO: compile, exec, get/set other statics... */
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+                 size_t *indexp, JSBool test, jsval *rval);
+
+/* TODO: compile, get/set other statics... */
 
 /************************************************************************/
 
