@@ -75,6 +75,7 @@ public:
 
   void     HandleNewInterval(nsSMILInterval& aInterval,
                              const nsSMILTimeContainer* aSrcContainer);
+  void     HandleTargetElementChange(Element* aNewTarget);
 
   // For created nsSMILInstanceTime objects
   PRBool   DependsOnBegin() const;
@@ -112,6 +113,11 @@ protected:
   {
   public:
     TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
+    void ResetWithElement(Element* aTo) {
+      nsRefPtr<Element> from = get();
+      Unlink();
+      ElementChanged(from, aTo);
+    }
 
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo)
