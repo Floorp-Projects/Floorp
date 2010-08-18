@@ -738,11 +738,9 @@
           ]]>
         </body>
       </method>
-          
-      <field name="_AUTOSCROLL_SPEED">3</field>
+
       <field name="_AUTOSCROLL_SNAP">10</field>
       <field name="_scrollable">null</field>
-      <field name="_autoScrollTimer">null</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
       <field name="_screenX">null</field>
@@ -762,7 +760,7 @@
               window.removeEventListener("keydown", this, true);
               window.removeEventListener("keypress", this, true);
               window.removeEventListener("keyup", this, true);
-              clearInterval(this._autoScrollTimer);
+              window.removeEventListener("MozBeforePaint", this, true);
             }
          ]]>
        </body>
@@ -875,6 +873,8 @@
             this._startY = event.screenY;
             this._screenX = event.screenX;
             this._screenY = event.screenY;
+            this._scrollErrorX = 0;
+            this._scrollErrorY = 0;
 
             window.addEventListener("mousemove", this, true);
             window.addEventListener("mousedown", this, true);
@@ -883,12 +883,9 @@
             window.addEventListener("keydown", this, true);
             window.addEventListener("keypress", this, true);
             window.addEventListener("keyup", this, true);
+            window.addEventListener("MozBeforePaint", this, true);
 
-            this._scrollErrorX = 0;
-            this._scrollErrorY = 0;
-
-            this._autoScrollTimer = setInterval(function(self) { self.autoScrollLoop(); },
-                                                20, this);
+            window.mozRequestAnimationFrame();
          ]]>
        </body>
      </method>
@@ -909,7 +906,7 @@
        <parameter name="start"/>
        <body>
          <![CDATA[
-            const speed = 12;
+            const speed = 10;
             var val = (curr - start) / speed;
 
             if (val > 1)
@@ -948,6 +945,7 @@
              this._scrollable.scrollLeft += actualScrollX;
              this._scrollable.scrollTop += actualScrollY;
            }
+           window.mozRequestAnimationFrame();
          ]]>
        </body>
      </method>
@@ -994,6 +992,9 @@
         <![CDATA[
           if (this._scrollable) {
             switch(aEvent.type) {
+              case "MozBeforePaint":
+                this.autoScrollLoop();
+                break;
               case "mousemove": {
                 this._screenX = aEvent.screenX;
                 this._screenY = aEvent.screenY;
