@@ -446,6 +446,19 @@ var tests = [
       this.box.parentNode.removeChild(this.box);
     }
   },
+  // Test that popupnotifications without popups have anchor icons shown
+  { // Test #15
+    run: function() {
+      let notifyObj = new basicNotification();
+      notifyObj.anchorID = "geo-notification-icon";
+      notifyObj.options = {neverShow: true};
+      showNotification(notifyObj);
+    },
+    updateNotShowing: function() {
+      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+            "geo anchor should be visible");
+    }
+  },
 ];
 
 function showNotification(notifyObj) {
