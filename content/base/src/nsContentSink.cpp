@@ -1812,6 +1812,7 @@ nsIAtom** const kDefaultAllowedAttributes [] = {
   &nsGkAtoms::alt,
   &nsGkAtoms::autocomplete,
 #ifdef MOZ_MEDIA
+  &nsGkAtoms::autobuffer,
   &nsGkAtoms::autoplay,
 #endif
   &nsGkAtoms::axis,
@@ -1871,7 +1872,6 @@ nsIAtom** const kDefaultAllowedAttributes [] = {
   &nsGkAtoms::pointSize,
 #ifdef MOZ_MEDIA
   &nsGkAtoms::poster,
-  &nsGkAtoms::preload,
 #endif
   &nsGkAtoms::prompt,
   &nsGkAtoms::readonly,
