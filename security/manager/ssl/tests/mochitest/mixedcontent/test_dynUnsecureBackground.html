@@ -17,10 +17,11 @@
     document.body.background =
       "http://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg";
 
-    window.setTimeout(function() {
+    waitForSecurityState("broken", function() 
+    {
       isSecurityState("broken", "document.body.background='http://...' changed to broken");
       finish();
-    }, 500);
+    });
   }
 
   function afterNavigationTest()
