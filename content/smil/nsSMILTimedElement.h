@@ -327,6 +327,8 @@ public:
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
   void Unlink();
 
+  typedef PRBool (*RemovalTestFunction)(nsSMILInstanceTime* aInstance);
+
 protected:
   // Typedefs
   typedef nsTArray<nsAutoPtr<nsSMILTimeValueSpec> > TimeValueSpecList;
@@ -358,9 +360,11 @@ protected:
   //
 
   nsresult          SetBeginSpec(const nsAString& aBeginSpec,
-                                 nsIContent* aContextNode);
+                                 nsIContent* aContextNode,
+                                 RemovalTestFunction aRemove);
   nsresult          SetEndSpec(const nsAString& aEndSpec,
-                               nsIContent* aContextNode);
+                               nsIContent* aContextNode,
+                               RemovalTestFunction aRemove);
   nsresult          SetSimpleDuration(const nsAString& aDurSpec);
   nsresult          SetMin(const nsAString& aMinSpec);
   nsresult          SetMax(const nsAString& aMaxSpec);
@@ -369,8 +373,8 @@ protected:
   nsresult          SetRepeatDur(const nsAString& aRepeatDurSpec);
   nsresult          SetFillMode(const nsAString& aFillModeSpec);
 
-  void              UnsetBeginSpec();
-  void              UnsetEndSpec();
+  void              UnsetBeginSpec(RemovalTestFunction aRemove);
+  void              UnsetEndSpec(RemovalTestFunction aRemove);
   void              UnsetSimpleDuration();
   void              UnsetMin();
   void              UnsetMax();
@@ -381,10 +385,12 @@ protected:
 
   nsresult          SetBeginOrEndSpec(const nsAString& aSpec,
                                       nsIContent* aContextNode,
-                                      PRBool aIsBegin);
-  void              ClearBeginOrEndSpecs(PRBool aIsBegin);
+                                      PRBool aIsBegin,
+                                      RemovalTestFunction aRemove);
+  void              ClearSpecs(TimeValueSpecList& aSpecs,
+                               InstanceTimeList& aInstances,
+                               RemovalTestFunction aRemove);
   void              RewindTiming();
-  void              RewindInstanceTimes(InstanceTimeList& aList);
   void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
 
   /**
@@ -524,13 +530,6 @@ protected:
   nsSMILRestartMode               mRestartMode;
   static nsAttrValue::EnumTable   sRestartModeTable[];
 
-  //
-  // We need to distinguish between attempting to set the begin spec and failing
-  // (in which case the mBeginSpecs array will be empty) and not attempting to
-  // set the begin spec at all. In the first case, we should act as if the begin
-  // was indefinite, and in the second, we should act as if begin was 0s.
-  //
-  PRPackedBool                    mBeginSpecSet;
   PRPackedBool                    mEndHasEventConditions;
 
   InstanceTimeList                mBeginInstances;
