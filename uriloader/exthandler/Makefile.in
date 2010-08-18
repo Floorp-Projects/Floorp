@@ -89,6 +89,15 @@ endif
 
 LOCAL_INCLUDES = -I$(srcdir)
 
+ifdef MOZ_IPC
+LOCAL_INCLUDES += -I$(topsrcdir)/dom/base \
+            -I$(topsrcdir)/dom/ipc \
+            -I$(topsrcdir)/content/base/src \
+            -I$(topsrcdir)/content/events/src \
+            -I$(topsrcdir)/netwerk/base/src \
+            -I$(topsrcdir)/netwerk/protocol/http
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OSHELPER	+= nsGNOMERegistry.cpp
 OSHELPER  += nsMIMEInfoUnix.cpp
@@ -117,9 +126,15 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSHELPER  += nsMIMEInfoOS2.cpp
 endif
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+    ExternalHelperAppParent.h \
+    ExternalHelperAppChild.h
+
 EXPORTS = \
 		$(OSDIR)/nsOSHelperAppService.h \
-			$(NULL)
+		$(NULL)
 
 XPIDLSRCS = \
 	nsCExternalHandlerService.idl	\
@@ -137,6 +152,12 @@ CPPSRCS	= \
 	nsLocalHandlerApp.cpp \
 	$(OSHELPER) \
 	$(NULL)
+
+ifdef MOZ_IPC
+CPPSRCS += \
+    ExternalHelperAppChild.cpp \
+    ExternalHelperAppParent.cpp
+endif
 
 ifdef MOZ_ENABLE_DBUS
 CPPSRCS += nsDBusHandlerApp.cpp
