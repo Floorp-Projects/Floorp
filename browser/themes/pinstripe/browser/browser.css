@@ -2110,16 +2110,13 @@ panel[dimmed="true"] {
 }
 
 /* Sync */
+
 #sync-status-button.statusbarpanel-iconic {
   padding: 0 5px;
 }
 
-/* Tab Context Menu */
-#context_tabViewMenu {
-  list-style-image: url(chrome://browser/skin/tabview/tabview-16.png);
-}
+/* Tab view context menu */
 
 #context_tabViewMenuPopup > menuitem.group {
-  padding-left: 40px;
+  -moz-padding-start: 40px;
 }
-
