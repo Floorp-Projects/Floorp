@@ -338,9 +338,6 @@ CPPSRCS += 	Assertions.cpp \
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
-ifeq ($(OS_ARCH),WINNT)
-ASFILES +=	TrampolineMasmX64.asm
-endif
 #CPPSRCS		+= only_on_x86_64.cpp
 else
 #CPPSRCS		+= only_on_x86.cpp
