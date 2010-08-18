@@ -309,6 +309,10 @@ protected:
 #if !defined(WINCE)
   static void             InitTrackPointHack();
 #endif
+  PRBool                  HasGlass() const {
+    return mTransparencyMode == eTransparencyGlass ||
+           mTransparencyMode == eTransparencyBorderlessGlass;
+  }
 
   /**
    * Event processing helpers
