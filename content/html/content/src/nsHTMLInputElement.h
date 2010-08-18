@@ -188,6 +188,15 @@ public:
    */
   virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
 
+ /**
+   * Helper function returning the currently selected button in the radio group.
+   * Returning null if the element is not a button or if there is no selectied
+   * button in the group.
+   *
+   * @return the selected button (or null).
+   */
+  already_AddRefed<nsIDOMHTMLInputElement> GetSelectedRadioButton();
+
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual void UpdateEditableState()
@@ -204,6 +213,7 @@ public:
 
   // nsConstraintValidation
   PRBool   IsTooLong();
+  PRBool   IsValueMissing();
   PRBool   IsBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidationMessageType aType);
@@ -212,6 +222,29 @@ protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
   using nsGenericHTMLFormElement::IsSingleLineTextControl;
+
+  /**
+   * The ValueModeType specifies how the value IDL attribute should behave.
+   *
+   * See: http://dev.w3.org/html5/spec/forms.html#dom-input-value
+   */
+  enum ValueModeType
+  {
+    // On getting, returns the value.
+    // On setting, sets value.
+    VALUE_MODE_VALUE,
+    // On getting, returns the value if present or the empty string.
+    // On setting, sets the value.
+    VALUE_MODE_DEFAULT,
+    // On getting, returns the value if present or "on".
+    // On setting, sets the value.
+    VALUE_MODE_DEFAULT_ON,
+    // On getting, returns "C:\fakepath\" followed by the file name of the
+    // first file of the selected files if any.
+    // On setting the empty string, empties the selected files list, otherwise
+    // throw the INVALID_STATE_ERR exception.
+    VALUE_MODE_FILENAME
+  };
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
@@ -329,6 +362,30 @@ protected:
    * a particular event.
    */
   PRBool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
+
+  /**
+   * Get the value mode of the element, depending of the type.
+   */
+  ValueModeType GetValueMode() const;
+
+  /**
+   * Get the mutable state of the element.
+   * When the element isn't mutable (immutable), the value or checkedness
+   * should not be changed by the user.
+   *
+   * See: http://dev.w3.org/html5/spec/forms.html#concept-input-mutable
+   */
+  PRBool IsMutable() const;
+
+  /**
+   * Returns if the readonly attribute applies for the current type.
+   */
+  PRBool DoesReadOnlyApply() const;
+
+  /**
+   * Returns if the required attribute applies for the current type.
+   */
+  PRBool DoesRequiredApply() const;
 
   void FreeData();
   nsTextEditorState *GetEditorState() const;

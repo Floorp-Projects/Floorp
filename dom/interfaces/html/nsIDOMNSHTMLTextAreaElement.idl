@@ -42,7 +42,7 @@
 interface nsIControllers;
 interface nsIDOMValidityState;
 
-[scriptable, uuid(2a7243d5-7958-4394-a063-64c68efa4a32)]
+[scriptable, uuid(df5dc23d-cf90-443e-bf56-cd3af021ebc7)]
 interface nsIDOMNSHTMLTextAreaElement : nsISupports
 {
            attribute boolean          autofocus;
@@ -53,6 +53,7 @@ interface nsIDOMNSHTMLTextAreaElement : nsISupports
   attribute long             selectionEnd;
   attribute long             maxLength;
   attribute DOMString        placeholder;
+  attribute boolean          required;
 
   /**
    * Reflects the wrap content attribute. Possible values are "soft, "hard" and

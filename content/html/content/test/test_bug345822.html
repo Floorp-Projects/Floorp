@@ -1,0 +1,313 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345822
+-->
+<head>
+  <title>Test for Bug 345822</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345822">Mozilla Bug 345822</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form>
+    <input name="input" id='i'>
+    <input name="input" id='r' type='radio'>
+    <textarea name="textarea" id='t'></textarea>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 345822 **/
+
+function checkRequiredAttribute(element)
+{
+  ok('required' in element, "Element should have the required attribute");
+
+  ok(!element.required, "Element required attribute should be disabled");
+  is(element.getAttribute('required'), null,
+    "Element required attribute should be disabled");
+
+  element.required = true;
+  ok(element.required, "Element required attribute should be enabled");
+  isnot(element.getAttribute('required'), null,
+    "Element required attribute should be enabled");
+
+  element.removeAttribute('required');
+  element.setAttribute('required', '');
+  ok(element.required, "Element required attribute should be enabled");
+  isnot(element.getAttribute('required'), null,
+    "Element required attribute should be enabled");
+
+  element.removeAttribute('required');
+  ok(!element.required, "Element required attribute should be disabled");
+  is(element.getAttribute('required'), null,
+    "Element required attribute should be disabled");
+}
+
+function checkNotSufferingFromBeingMissing(element)
+{
+  ok(!element.validity.valueMissing,
+    "Element should not suffer from value missing");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "Element should be valid");
+  is(element.validationMessage, "",
+    "Validation message should be the empty string");
+}
+
+function checkSufferingFromBeingMissing(element)
+{
+  ok(element.validity.valueMissing, "Element should suffer from value missing");
+  ok(!element.validity.valid, "Element should not be valid");
+  ok(!element.checkValidity(), "Element should not be valid");
+
+  if (element.type == 'checkbox')
+  {
+    is(element.validationMessage,
+      "This checkbox is mandatory, you have to check it.",
+      "Validation message is wrong");
+  }
+  else if (element.type == 'radio')
+  {
+    is(element.validationMessage,
+      "You have to select one of these options.",
+      "Validation message is wrong");
+  }
+  else if (input .type == 'file')
+  {
+    is(element.validationMessage,
+      "You have to select a file.",
+      "Validation message is wrong");
+  }
+  else // text fields
+  {
+    is(element.validationMessage,
+      "This field is mandatory, you have to fill it.",
+      "Validation message is wrong");
+  }
+}
+
+function checkTextareaRequiredValidity(element)
+{
+  element.value = '';
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element);
+
+  element.readOnly = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.readOnly = false;
+  checkSufferingFromBeingMissing(element);
+
+  element.value = 'foo';
+  checkNotSufferingFromBeingMissing(element);
+
+  element.value = '';
+  checkSufferingFromBeingMissing(element);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+}
+
+function checkInputRequiredNotApply(element)
+{
+  element.value = '';
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = false;
+}
+
+function checkInputRequiredValidity(element)
+{
+  element.value = '';
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element);
+
+  element.readOnly = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.readOnly = false;
+  checkSufferingFromBeingMissing(element);
+
+  element.value = 'foo';
+  checkNotSufferingFromBeingMissing(element);
+
+  element.value = '';
+  checkSufferingFromBeingMissing(element);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+}
+
+function checkInputRequiredValidityForCheckbox(element)
+{
+  element.checked = false;
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element);
+
+  element.checked = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.checked = false;
+  checkSufferingFromBeingMissing(element);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+}
+
+function checkInputRequiredValidityForRadio(element)
+{
+  element.checked = false;
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element);
+
+  element.checked = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.checked = false;
+  checkSufferingFromBeingMissing(element);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  // A required radio button should not suffer from value missing if another
+  // radio button from the same group is checked.
+  var element2 = document.createElement('input');//document.getElementById('r');
+  document.forms[0].appendChild(element2);
+  element2.name = 'input';
+  element2.type = 'radio';
+  element2.checked = false;
+  element2.required = false;
+
+  element.checked = false;
+  element.required = true;
+  checkSufferingFromBeingMissing(element);
+
+  element2.checked = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  // The other radio button should not be disabled.
+  // A disabled checked radio button in the radio group
+  // is enough to not suffer from value missing.
+  element2.disabled = true;
+  checkNotSufferingFromBeingMissing(element);
+
+  // If a radio button is not required but another radio button is required in
+  // the same group, the not required radio button should not suffer from value
+  // missing.
+  element2.disabled = false;
+  element2.checked = false;
+  element.required = false;
+  element2.required = true;
+  checkNotSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element2);
+}
+
+function checkInputRequiredValidityForFile(element)
+{
+  function createFileWithData(fileName, fileData) {
+    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                           .getService(Components.interfaces.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+    testFile.append(fileName);
+    var outStream = Components.
+                    classes["@mozilla.org/network/file-output-stream;1"].
+                    createInstance(Components.interfaces.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    return testFile;
+  }
+
+  // Need privileges to set a filename with .value.
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var file = createFileWithData("345822_file", "file content");
+
+  element.value = "";
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(element);
+
+  element.value = file.path;
+  checkNotSufferingFromBeingMissing(element);
+
+  element.value = "";
+  checkSufferingFromBeingMissing(element);
+
+  element.required = false;
+  checkNotSufferingFromBeingMissing(element);
+
+  file.remove(false);
+}
+
+var textarea = document.getElementById('t');
+var input    = document.getElementById('i');
+
+checkRequiredAttribute(textarea);
+checkTextareaRequiredValidity(textarea);
+
+// Every input element should have the required attribute.
+checkRequiredAttribute(input);
+
+// The required attribute behavior depend of the input type.
+// First of all, checks for the types which do not use the required attribute.
+// TODO: check 'color' and 'range' when they will be implemented.
+input.type = 'hidden';
+checkInputRequiredNotApply(input);
+input.type = 'submit';
+checkInputRequiredNotApply(input);
+input.type = 'button';
+checkInputRequiredNotApply(input);
+input.type = 'reset';
+checkInputRequiredNotApply(input);
+input.type = 'image';
+checkInputRequiredNotApply(input);
+
+// Now, checking for all types which accept the required attribute.
+// TODO: check 'url', 'email', 'datetime', 'date',
+//             'month', 'week', 'time', 'datetime-local' and 'number'
+//       when they will be implemented.
+input.type = 'text';
+checkInputRequiredValidity(input);
+input.type = 'password';
+checkInputRequiredValidity(input);
+input.type = 'checkbox';
+checkInputRequiredValidityForCheckbox(input);
+input.type = 'radio';
+checkInputRequiredValidityForRadio(input);
+input.type = 'file';
+checkInputRequiredValidityForFile(input);
+input.type = 'search';
+checkInputRequiredValidity(input);
+input.type = 'tel';
+checkInputRequiredValidity(input);
+
+</script>
+</pre>
+</body>
+</html>
