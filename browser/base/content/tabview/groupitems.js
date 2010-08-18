@@ -1654,15 +1654,15 @@ window.GroupItems = {
   // Returns the <tabItem>. If nothing is found, return null.
   getNextGroupItemTab: function(reverse) {
     var groupItems = Utils.copy(GroupItems.groupItems);
-    if (reverse)
-      groupItems = groupItems.reverse();
     var activeGroupItem = GroupItems.getActiveGroupItem();
     var activeOrphanTab = GroupItems.getActiveOrphanTab();
     var tabItem = null;
 
+    if (reverse)
+      groupItems = groupItems.reverse();
+
     if (!activeGroupItem) {
       if (groupItems.length > 0) {
-
         groupItems.some(function(groupItem) {
           var child = groupItem.getChild(0);
           if (child) {
@@ -1673,9 +1673,6 @@ window.GroupItems = {
         });
       }
     } else {
-      if (reverse)
-        groupItems = groupItems.reverse();
-
       var currentIndex;
       groupItems.some(function(groupItem, index) {
         if (groupItem == activeGroupItem) {
