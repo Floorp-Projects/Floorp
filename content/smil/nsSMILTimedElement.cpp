@@ -709,13 +709,13 @@ nsSMILTimedElement::Rewind()
   if (mAnimationElement->HasAnimAttr(nsGkAtoms::begin)) {
     nsAutoString attValue;
     mAnimationElement->GetAnimAttr(nsGkAtoms::begin, attValue);
-    SetBeginSpec(attValue, &mAnimationElement->Content(), RemoveNonDynamic);
+    SetBeginSpec(attValue, &mAnimationElement->AsElement(), RemoveNonDynamic);
   }
 
   if (mAnimationElement->HasAnimAttr(nsGkAtoms::end)) {
     nsAutoString attValue;
     mAnimationElement->GetAnimAttr(nsGkAtoms::end, attValue);
-    SetEndSpec(attValue, &mAnimationElement->Content(), RemoveNonDynamic);
+    SetEndSpec(attValue, &mAnimationElement->AsElement(), RemoveNonDynamic);
   }
 
   mPrevRegisteredMilestone = sMaxMilestone;
@@ -733,7 +733,8 @@ namespace
 
 PRBool
 nsSMILTimedElement::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
-                            nsAttrValue& aResult, nsIContent* aContextNode,
+                            nsAttrValue& aResult,
+                            Element* aContextNode,
                             nsresult* aParseResult)
 {
   PRBool foundMatch = PR_TRUE;
@@ -806,7 +807,7 @@ nsSMILTimedElement::UnsetAttr(nsIAtom* aAttribute)
 
 nsresult
 nsSMILTimedElement::SetBeginSpec(const nsAString& aBeginSpec,
-                                 nsIContent* aContextNode,
+                                 Element* aContextNode,
                                  RemovalTestFunction aRemove)
 {
   return SetBeginOrEndSpec(aBeginSpec, aContextNode, PR_TRUE /*isBegin*/,
@@ -822,7 +823,7 @@ nsSMILTimedElement::UnsetBeginSpec(RemovalTestFunction aRemove)
 
 nsresult
 nsSMILTimedElement::SetEndSpec(const nsAString& aEndSpec,
-                               nsIContent* aContextNode,
+                               Element* aContextNode,
                                RemovalTestFunction aRemove)
 {
   return SetBeginOrEndSpec(aEndSpec, aContextNode, PR_FALSE /*!isBegin*/,
@@ -1105,17 +1106,12 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
   // Resolve references to other parts of the tree
   PRUint32 count = mBeginSpecs.Length();
   for (PRUint32 i = 0; i < count; ++i) {
-    nsSMILTimeValueSpec* beginSpec = mBeginSpecs[i];
-    NS_ABORT_IF_FALSE(beginSpec,
-        "null nsSMILTimeValueSpec in list of begin specs");
-    beginSpec->ResolveReferences(aContextNode);
+    mBeginSpecs[i]->ResolveReferences(aContextNode);
   }
 
   count = mEndSpecs.Length();
   for (PRUint32 j = 0; j < count; ++j) {
-    nsSMILTimeValueSpec* endSpec = mEndSpecs[j];
-    NS_ABORT_IF_FALSE(endSpec, "null nsSMILTimeValueSpec in list of end specs");
-    endSpec->ResolveReferences(aContextNode);
+    mEndSpecs[j]->ResolveReferences(aContextNode);
   }
 
   // Clear any previous milestone since it might be been processed whilst we
@@ -1168,7 +1164,7 @@ nsSMILTimedElement::Unlink()
 
 nsresult
 nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
-                                      nsIContent* aContextNode,
+                                      Element* aContextNode,
                                       PRBool aIsBegin,
                                       RemovalTestFunction aRemove)
 {
@@ -2053,7 +2049,7 @@ nsSMILTimedElement::FireTimeEventAsync(PRUint32 aMsg, PRInt32 aDetail)
     return;
 
   nsCOMPtr<nsIRunnable> event =
-    new AsyncTimeEventRunner(&mAnimationElement->Content(), aMsg, aDetail);
+    new AsyncTimeEventRunner(&mAnimationElement->AsElement(), aMsg, aDetail);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 

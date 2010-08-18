@@ -65,6 +65,8 @@ public:
   nsSMILTimedElement();
   ~nsSMILTimedElement();
 
+  typedef mozilla::dom::Element Element;
+
   /*
    * Sets the owning animation element which this class uses to convert between
    * container times and to register timebase elements.
@@ -249,8 +251,8 @@ public:
    * @param aValue      The attribute value.
    * @param aResult     The nsAttrValue object that may be used for storing the
    *                    parsed result.
-   * @param aContextNode The node to use for context when resolving references
-   *                     to other elements.
+   * @param aContextNode The element to use for context when resolving
+   *                     references to other elements.
    * @param[out] aParseResult The result of parsing the attribute. Will be set
    *                          to NS_OK if parsing is successful.
    *
@@ -258,7 +260,7 @@ public:
    * otherwise.
    */
   PRBool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
-                 nsAttrValue& aResult, nsIContent* aContextNode,
+                 nsAttrValue& aResult, Element* aContextNode,
                  nsresult* aParseResult = nsnull);
 
   /**
@@ -360,10 +362,10 @@ protected:
   //
 
   nsresult          SetBeginSpec(const nsAString& aBeginSpec,
-                                 nsIContent* aContextNode,
+                                 Element* aContextNode,
                                  RemovalTestFunction aRemove);
   nsresult          SetEndSpec(const nsAString& aEndSpec,
-                               nsIContent* aContextNode,
+                               Element* aContextNode,
                                RemovalTestFunction aRemove);
   nsresult          SetSimpleDuration(const nsAString& aDurSpec);
   nsresult          SetMin(const nsAString& aMinSpec);
@@ -384,7 +386,7 @@ protected:
   void              UnsetFillMode();
 
   nsresult          SetBeginOrEndSpec(const nsAString& aSpec,
-                                      nsIContent* aContextNode,
+                                      Element* aContextNode,
                                       PRBool aIsBegin,
                                       RemovalTestFunction aRemove);
   void              ClearSpecs(TimeValueSpecList& aSpecs,
