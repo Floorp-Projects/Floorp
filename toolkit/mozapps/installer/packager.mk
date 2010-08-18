@@ -238,6 +238,7 @@ PACK_OMNIJAR	= \
   rm -f omni.jar components/binary.manifest && \
   grep -h '^binary-component' components/*.manifest > binary.manifest ; \
   zip -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  $(OPTIMIZE_JARS_CMD) $(DIST)/jarlog/ ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
 UNPACK_OMNIJAR	= unzip -o omni.jar && rm -f components/binary.manifest
@@ -448,6 +449,7 @@ else
 endif # DMG
 endif # MOZ_PKG_MANIFEST
 endif # UNIVERSAL_BINARY
+	$(OPTIMIZE_JARS_CMD) $(DIST)/jarlog/ $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/chrome
 ifndef PKG_SKIP_STRIP
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
