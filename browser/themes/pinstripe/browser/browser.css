@@ -159,7 +159,7 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   -moz-transform: scaleX(-1);
 }
 
-/* ----- BOOKMARK BUTTONS ----- */	
+/* ----- BOOKMARK BUTTONS ----- */
 
 toolbarbutton.bookmark-item {
   font-weight: bold;
@@ -272,7 +272,7 @@ toolbarbutton.bookmark-item > menupopup {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }
 
-/* ----- BOOKMARK MENUS ----- */	
+/* ----- BOOKMARK MENUS ----- */
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
@@ -288,7 +288,7 @@ toolbarbutton.bookmark-item > menupopup {
   list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png");
 }
 
-/* ----- PRIMARY TOOLBAR BUTTONS ----- */	
+/* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
 .toolbarbutton-1,
 #restore-button,
