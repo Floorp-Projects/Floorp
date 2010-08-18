@@ -803,7 +803,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
         if (down && down->hasScript() && down->getScript()->hasSharps) {
             JS_ASSERT(down->getFixedCount() >= SHARP_NSLOTS);
-            int base = (down->getFunction() && !(down->flags & JSFRAME_SPECIAL))
+            int base = (down->hasFunction() && !(down->flags & JSFRAME_SPECIAL))
                        ? down->getFunction()->sharpSlotBase(cx)
                        : down->getFixedCount() - SHARP_NSLOTS;
             if (base < 0)
