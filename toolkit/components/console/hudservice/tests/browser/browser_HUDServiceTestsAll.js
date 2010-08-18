@@ -226,6 +226,11 @@ function testGetContentWindowFromHUDId() {
   ok(window.document, "we have a contentWindow");
 }
 
+function setStringFilter(aValue)
+{
+  HUDService.adjustVisibilityOnSearchStringChange(hudId, aValue);
+}
+
 function testConsoleLoggingAPI(aMethod)
 {
   filterBox.value = "foo";
@@ -319,11 +324,7 @@ function testLiveFiltering(callback) {
 
       return displayedNetworkNodes;
     }
-
-    callback(countNetworkNodes);
-  }, false);
-
-  content.location = TEST_NETWORK_URI;
+callback(countNetworkNodes); }, false); content.location = TEST_NETWORK_URI;
 }
 
 // Tests the live filtering for message types.
@@ -336,6 +337,52 @@ function testLiveFilteringForMessageTypes() {
     HUDService.setFilterState(hudId, "network", true);
     isnot(countNetworkNodes(), 0, "the network nodes reappear when the " +
       "corresponding filter is switched on");
+  });
+}
+
+// Tests the live filtering on search strings.
+function testLiveFilteringForSearchStrings()
+{
+  testLiveFiltering(function(countNetworkNodes) {
+    setStringFilter("http");
+    isnot(countNetworkNodes(), 0, "the network nodes are not hidden when " +
+      "the search string is set to \"http\"");
+
+    setStringFilter("hxxp");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when the " +
+      "search string is set to \"hxxp\"");
+
+    setStringFilter("ht tp");
+    isnot(countNetworkNodes(), 0, "the network nodes are not hidden when " +
+      "the search string is set to \"ht tp\"");
+
+    setStringFilter(" zzzz   zzzz ");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when the " +
+      "search string is set to \" zzzz   zzzz \"");
+
+    setStringFilter("");
+    isnot(countNetworkNodes(), 0, "the network nodes are not hidden when " +
+      "the search string is removed");
+
+    setStringFilter("\u9f2c");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for weasels");
+
+    setStringFilter("\u0007");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for the bell character");
+
+    setStringFilter('"foo"');
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      'for the string "foo"');
+
+    setStringFilter("'foo'");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for the string 'foo'");
+
+    setStringFilter("foo\"bar'baz\"boo'");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for the string \"foo\"bar'baz\"boo'\"");
   });
 }
 
@@ -967,6 +1014,7 @@ function test() {
       testPropertyPanel();
       testNet();
       testLiveFilteringForMessageTypes();
+      testLiveFilteringForSearchStrings();
     });
   }, false);
 }
