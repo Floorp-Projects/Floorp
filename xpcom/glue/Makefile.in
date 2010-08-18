@@ -132,6 +132,7 @@ EXPORTS_mozilla = \
   Mutex.h \
   SSE.h \
   unused.h \
+  FileUtils.h \
   $(NULL)
 
 SDK_LIBRARY     =                        \
