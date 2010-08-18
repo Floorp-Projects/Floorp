@@ -79,6 +79,8 @@ nsConstraintValidation::GetValidationMessage(nsAString & aValidationMessage,
       aValidationMessage.Assign(mCustomValidity);
     } else if (IsTooLong()) {
       GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_TOO_LONG);
+    } else if (IsValueMissing()) {
+      GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_VALUE_MISSING);
     } else {
       // TODO: The other messages have not been written
       // because related constraint validation are not implemented yet.

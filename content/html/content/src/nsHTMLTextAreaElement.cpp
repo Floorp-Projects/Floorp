@@ -201,6 +201,7 @@ public:
 
   // nsConstraintValidation
   PRBool   IsTooLong();
+  PRBool   IsValueMissing();
   PRBool   IsBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidationMessageType aType);
@@ -251,6 +252,11 @@ protected:
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom *aName,
                                 const nsAString* aValue, PRBool aNotify);
+
+  /**
+   * Get the mutable state of the element.
+   */
+  PRBool IsMutable() const;
 };
 
 
@@ -409,6 +415,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLTextAreaElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
+NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Required, required)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Wrap, wrap)
@@ -1044,6 +1051,13 @@ nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
   return NS_OK;
 }
 
+PRBool
+nsHTMLTextAreaElement::IsMutable() const
+{
+  return (!HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) &&
+          !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
+}
+
 // nsConstraintValidation
 
 PRBool
@@ -1060,6 +1074,20 @@ nsHTMLTextAreaElement::IsTooLong()
   GetTextLength(&textLength);
 
   return (maxLength >= 0) && (textLength > maxLength);
+}
+
+PRBool
+nsHTMLTextAreaElement::IsValueMissing()
+{
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) || !IsMutable()) {
+    return PR_FALSE;
+  }
+
+  nsAutoString value;
+  nsresult rv = GetValue(value);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return value.IsEmpty();
 }
 
 PRBool
@@ -1094,6 +1122,15 @@ nsHTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                    "ElementSuffersFromBeingTooLong",
                                                    params, 2, message);
+        aValidationMessage = message;
+      }
+      break;
+    case VALIDATION_MESSAGE_VALUE_MISSING:
+      {
+        nsXPIDLString message;
+        rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                "TextElementSuffersFromBeingMissing",
+                                                message);
         aValidationMessage = message;
       }
       break;
