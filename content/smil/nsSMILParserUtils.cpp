@@ -60,7 +60,9 @@ const PRUint32 MSEC_PER_MIN  = 1000 * 60;
 const PRUint32 MSEC_PER_HOUR = 1000 * 60 * 60;
 const PRInt32  DECIMAL_BASE  = 10;
 
-#define ACCESSKEY_PREFIX NS_LITERAL_STRING("accesskey(")
+// XXX SVG/SMIL Animation use 'accessKey' whilst SMIL3 uses 'accesskey'
+//     We should allow both
+#define ACCESSKEY_PREFIX NS_LITERAL_STRING("accessKey(")
 #define REPEAT_PREFIX    NS_LITERAL_STRING("repeat(")
 #define WALLCLOCK_PREFIX NS_LITERAL_STRING("wallclock(")
 
@@ -362,6 +364,9 @@ ParseElementBaseTimeValueSpec(const nsAString& aSpec,
   // event-name
   // element-name.repeat(3)
   // event\.name
+  //
+  // Technically `repeat(3)' is permitted but the behaviour in this case is not
+  // defined (for SMIL Animation) so we don't support it here.
   //
 
   const PRUnichar* tokenStart = aSpec.BeginReading();

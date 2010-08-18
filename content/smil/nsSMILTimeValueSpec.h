@@ -98,6 +98,7 @@ protected:
   nsIEventListenerManager* GetEventListenerManager(Element* aElement,
       nsIDOMEventGroup** aSystemGroup);
   void HandleEvent(nsIDOMEvent* aEvent);
+  PRBool CheckEventDetail(nsIDOMEvent* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
                                       const nsSMILTimeContainer* aSrcContainer);
 
