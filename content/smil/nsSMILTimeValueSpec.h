@@ -64,10 +64,12 @@ class nsSMILInterval;
 class nsSMILTimeValueSpec
 {
 public:
+  typedef mozilla::dom::Element Element;
+
   nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, PRBool aIsBegin);
   ~nsSMILTimeValueSpec();
 
-  nsresult SetSpec(const nsAString& aStringSpec, nsIContent* aContextNode);
+  nsresult SetSpec(const nsAString& aStringSpec, Element* aContextNode);
   void     ResolveReferences(nsIContent* aContextNode);
   PRBool   IsEventBased() const;
 
@@ -87,12 +89,12 @@ public:
   void Unlink();
 
 protected:
-  void UpdateReferencedElement(nsIContent* aFrom, nsIContent* aTo);
-  void UnregisterFromReferencedElement(nsIContent* aContent);
-  nsSMILTimedElement* GetTimedElementFromContent(nsIContent* aContent);
-  void RegisterEventListener(nsIContent* aTarget);
-  void UnregisterEventListener(nsIContent* aTarget);
-  nsIEventListenerManager* GetEventListenerManager(nsIContent* aTarget,
+  void UpdateReferencedElement(Element* aFrom, Element* aTo);
+  void UnregisterFromReferencedElement(Element* aElement);
+  nsSMILTimedElement* GetTimedElement(Element* aElement);
+  void RegisterEventListener(Element* aElement);
+  void UnregisterEventListener(Element* aElement);
+  nsIEventListenerManager* GetEventListenerManager(Element* aElement,
       nsIDOMEventGroup** aSystemGroup);
   void HandleEvent(nsIDOMEvent* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,

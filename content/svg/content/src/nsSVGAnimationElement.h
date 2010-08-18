@@ -86,12 +86,12 @@ public:
                                 nsAttrValue& aResult);
 
   // nsISMILAnimationElement interface
-  virtual const nsIContent& Content() const;
-  virtual nsIContent& Content();
+  virtual const Element& AsElement() const;
+  virtual Element& AsElement();
   virtual const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
   virtual PRBool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
   virtual PRBool HasAnimAttr(nsIAtom* aAttName) const;
-  virtual mozilla::dom::Element* GetTargetElementContent();
+  virtual Element* GetTargetElementContent();
   virtual nsIAtom* GetTargetAttributeName() const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
   virtual nsSMILTimedElement& TimedElement();
