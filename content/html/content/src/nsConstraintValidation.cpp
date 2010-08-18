@@ -83,6 +83,8 @@ nsConstraintValidation::GetValidationMessage(nsAString & aValidationMessage,
       GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_VALUE_MISSING);
     } else if (HasTypeMismatch()) {
       GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_TYPE_MISMATCH);
+    } else if (HasPatternMismatch()) {
+      GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_PATTERN_MISMATCH);
     } else {
       // TODO: The other messages have not been written
       // because related constraint validation are not implemented yet.
