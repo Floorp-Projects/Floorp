@@ -679,6 +679,10 @@ NS_METHOD nsWindow::Destroy()
   }
   mLayerManager = nsnull;
 
+  /* We should clear our D2D window surface now and not wait for the GC to
+   * delete the nsWindow. */
+  mD2DWindowSurface = nsnull;
+
   // The DestroyWindow function destroys the specified window. The function sends WM_DESTROY
   // and WM_NCDESTROY messages to the window to deactivate it and remove the keyboard focus
   // from it. The function also destroys the window's menu, flushes the thread message queue,
