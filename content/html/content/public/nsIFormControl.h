@@ -92,6 +92,7 @@ enum InputElementTypes {
   NS_FORM_INPUT_SUBMIT,
   NS_FORM_INPUT_TEL,
   NS_FORM_INPUT_TEXT,
+  NS_FORM_INPUT_URL,
   eInputElementTypesMax
 };
 

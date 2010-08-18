@@ -2709,6 +2709,7 @@ nsGenericHTMLFormElement::IsSingleLineTextControlInternal(PRBool aExcludePasswor
          aType == NS_FORM_INPUT_EMAIL ||
          aType == NS_FORM_INPUT_SEARCH ||
          aType == NS_FORM_INPUT_TEL ||
+         aType == NS_FORM_INPUT_URL ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
 }
 
