@@ -177,10 +177,10 @@
 struct nsCycleCollectorParams
 {
     PRBool mDoNothing;
-    PRBool mDrawGraphs;
 #ifdef DEBUG_CC
     PRBool mReportStats;
     PRBool mHookMalloc;
+    PRBool mDrawGraphs;
     PRBool mFaultIsFatal;
     PRBool mLogPointers;
 
@@ -198,8 +198,7 @@ struct nsCycleCollectorParams
 
         mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS)
 #else
-        mDoNothing     (PR_FALSE),
-        mDrawGraphs    (PR_FALSE)
+        mDoNothing     (PR_FALSE)
 #endif
     {
 #ifdef DEBUG_CC
@@ -446,11 +445,10 @@ struct PtrInfo
     PRUint32 mRefCount;
     EdgePool::Iterator mFirstChild; // first
     EdgePool::Iterator mLastChild; // one after last
-    char *mName;
-    nsTArray<nsCString> mEdgeNames;
 
 #ifdef DEBUG_CC
     size_t mBytes;
+    char *mName;
     PRUint32 mLangID;
 
     // For finding roots in ExplainLiveExpectedGarbage (when there are
@@ -462,6 +460,8 @@ struct PtrInfo
     ReversedEdge* mReversedEdges; // linked list
     PtrInfo* mShortestPathToExpectedGarbage;
     nsCString* mShortestPathToExpectedGarbageEdgeName;
+
+    nsTArray<nsCString> mEdgeNames;
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
@@ -473,10 +473,10 @@ struct PtrInfo
           mInternalRefs(0),
           mRefCount(0),
           mFirstChild(),
-          mLastChild(),
-          mName(nsnull)
+          mLastChild()
 #ifdef DEBUG_CC
         , mBytes(0),
+          mName(nsnull),
           mLangID(aLangID),
           mSCCIndex(0),
           mReversedEdges(nsnull),
@@ -486,10 +486,12 @@ struct PtrInfo
     {
     }
 
+#ifdef DEBUG_CC
     void Destroy() {
         PL_strfree(mName);
         mEdgeNames.~nsTArray<nsCString>();
     }
+#endif
 
     // Allow NodePool::Block's constructor to compile.
     PtrInfo() {
@@ -529,15 +531,16 @@ public:
         NS_ASSERTION(!mBlocks, "Didn't call Clear()?");
     }
 
-    void Clear(PRBool aClearNames)
+    void Clear()
     {
-        if (aClearNames) {
+#ifdef DEBUG_CC
+        {
             Enumerator queue(*this);
             while (!queue.IsDone()) {
                 queue.GetNext()->Destroy();
             }
         }
-
+#endif
         Block *b = mBlocks;
         while (b) {
             Block *n = b->mNext;
@@ -648,8 +651,10 @@ struct GCGraph
 // Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
 typedef nsTHashtable<nsVoidPtrHashKey> PointerSet;
 
+#ifdef DEBUG_CC
 static void
 WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr);
+#endif
 
 static inline void
 ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp);
@@ -990,7 +995,7 @@ struct nsCycleCollector
     nsPurpleBufferEntry* Suspect2(nsISupports *n);
     PRBool Forget2(nsPurpleBufferEntry *e);
 
-    PRUint32 Collect(PRUint32 aTryCollections, PRBool aDrawGraph);
+    PRUint32 Collect(PRUint32 aTryCollections = 1);
     PRBool BeginCollection();
     PRBool FinishCollection();
     PRUint32 SuspectedCount();
@@ -998,18 +1003,17 @@ struct nsCycleCollector
 
     void ClearGraph()
     {
-        mGraph.mNodes.Clear(mParams.mDrawGraphs);
+        mGraph.mNodes.Clear();
         mGraph.mEdges.Clear();
         mGraph.mRootCount = 0;
     }
-
-    void MaybeDrawGraphs();
 
 #ifdef DEBUG_CC
     nsCycleCollectorStats mStats;    
 
     FILE *mPtrLog;
 
+    void MaybeDrawGraphs();
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
 
@@ -1297,12 +1301,13 @@ private:
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
+#ifdef DEBUG_CC
     nsCString mNextEdgeName;
+#endif
 
 public:
     GCGraphBuilder(GCGraph &aGraph,
-                   nsCycleCollectionLanguageRuntime **aRuntimes,
-                   PRBool aDrawGraph);
+                   nsCycleCollectionLanguageRuntime **aRuntimes);
     ~GCGraphBuilder();
     bool Initialized();
 
@@ -1337,8 +1342,7 @@ private:
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
-                               nsCycleCollectionLanguageRuntime **aRuntimes,
-                               PRBool aDrawGraph)
+                               nsCycleCollectionLanguageRuntime **aRuntimes)
     : mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
       mRuntimes(aRuntimes)
@@ -1346,13 +1350,11 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nsnull,
                            sizeof(PtrToNodeEntry), 32768))
         mPtrToNodeMap.ops = nsnull;
-#ifndef DEBUG_CC
-    if (aDrawGraph)
+#ifdef DEBUG_CC
+    // Do we need to set these all the time?
+    mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO |
+              nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
 #endif
-    {
-        mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO |
-                  nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
-    }
 }
 
 GCGraphBuilder::~GCGraphBuilder()
@@ -1456,10 +1458,8 @@ GCGraphBuilder::DescribeNode(CCNodeType type, nsrefcnt refCount,
 {
 #ifdef DEBUG_CC
     mCurrPi->mBytes = objSz;
+    mCurrPi->mName = PL_strdup(objName);
 #endif
-    if (WantDebugInfo()) {
-        mCurrPi->mName = PL_strdup(objName);
-    }
 
     if (type == RefCounted) {
         if (refCount == 0 || refCount == PR_UINT32_MAX)
@@ -1478,11 +1478,10 @@ GCGraphBuilder::DescribeNode(CCNodeType type, nsrefcnt refCount,
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteXPCOMChild(nsISupports *child) 
 {
-    nsCString edgeName;
-    if (WantDebugInfo()) {
-        edgeName.Assign(mNextEdgeName);
-        mNextEdgeName.Truncate();
-    }
+#ifdef DEBUG_CC
+    nsCString edgeName(mNextEdgeName);
+    mNextEdgeName.Truncate();
+#endif
     if (!child || !(child = canonicalize(child)))
         return; 
 
@@ -1498,9 +1497,9 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
         if (!childPi)
             return;
         mEdgeBuilder.Add(childPi);
-        if (WantDebugInfo()) {
-            mCurrPi->mEdgeNames.AppendElement(edgeName);
-        }
+#ifdef DEBUG_CC
+        mCurrPi->mEdgeNames.AppendElement(edgeName);
+#endif
         ++childPi->mInternalRefs;
     }
 }
@@ -1509,11 +1508,10 @@ NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteNativeChild(void *child,
                                 nsCycleCollectionParticipant *participant)
 {
-    nsCString edgeName;
-    if (WantDebugInfo()) {
-        edgeName.Assign(mNextEdgeName);
-        mNextEdgeName.Truncate();
-    }
+#ifdef DEBUG_CC
+    nsCString edgeName(mNextEdgeName);
+    mNextEdgeName.Truncate();
+#endif
     if (!child)
         return;
 
@@ -1523,17 +1521,19 @@ GCGraphBuilder::NoteNativeChild(void *child,
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
-    if (WantDebugInfo()) {
-        mCurrPi->mEdgeNames.AppendElement(edgeName);
-    }
+#ifdef DEBUG_CC
+    mCurrPi->mEdgeNames.AppendElement(edgeName);
+#endif
     ++childPi->mInternalRefs;
 }
 
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child) 
 {
+#ifdef DEBUG_CC
     nsCString edgeName(mNextEdgeName);
     mNextEdgeName.Truncate();
+#endif
     if (!child)
         return;
 
@@ -1556,18 +1556,18 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
-    if (WantDebugInfo()) {
-        mCurrPi->mEdgeNames.AppendElement(edgeName);
-    }
+#ifdef DEBUG_CC
+    mCurrPi->mEdgeNames.AppendElement(edgeName);
+#endif
     ++childPi->mInternalRefs;
 }
 
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteNextEdgeName(const char* name)
 {
-    if (WantDebugInfo()) {
-        mNextEdgeName = name;
-    }
+#ifdef DEBUG_CC
+    mNextEdgeName = name;
+#endif
 }
 
 static PRBool
@@ -2079,6 +2079,8 @@ nsCycleCollector::ForgetRuntime(PRUint32 langID)
     mRuntimes[langID] = nsnull;
 }
 
+
+#ifdef DEBUG_CC
 static void
 WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr)
 {
@@ -2106,35 +2108,62 @@ WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr)
                 "\", fillcolor=%s, fontcolor=%s]\n", 
                 (redPtr && redPtr == p ? "red" : (pi->mColor == black ? "black" : "white")),
                 (pi->mColor == black ? "white" : "black"));
-        PRInt32 i = 0;
         for (EdgePool::Iterator child = pi->mFirstChild,
                  child_end = pi->mLastChild;
              child != child_end; ++child) {
-            fprintf(stream, "n%p -> n%p [label=\"%s\"]\n", p,
-                    (*child)->mPointer, pi->mEdgeNames[i].get());
-            ++i;
+            fprintf(stream, "n%p -> n%p\n", p, (*child)->mPointer);
         }
     }
     
     fprintf(stream, "\n}\n");    
 }
 
-static PRUint32 gCounter;
 
 void 
 nsCycleCollector::MaybeDrawGraphs()
 {
     if (mParams.mDrawGraphs) {
-        FILE *stream;
-        char name[255];
-        sprintf(name, "cycle-graph-%d.dot", ++gCounter);
-        stream = fopen(name, "w");
-        WriteGraph(stream, mGraph, nsnull);
-        fclose(stream);
+        // We draw graphs only if there were any white nodes.
+        PRBool anyWhites = PR_FALSE;
+        NodePool::Enumerator fwetor(mGraph.mNodes);
+        while (!fwetor.IsDone())
+        {
+            PtrInfo *pinfo = fwetor.GetNext();
+            if (pinfo->mColor == white) {
+                anyWhites = PR_TRUE;
+                break;
+            }
+        }
+
+        if (anyWhites) {
+            // We can't just use _popen here because graphviz-for-windows
+            // doesn't set up its stdin stream properly, sigh.
+            FILE *stream;
+#ifdef WIN32
+            stream = fopen("c:\\cycle-graph.dot", "w+");
+#else
+            stream = popen("dotty -", "w");
+#endif
+            WriteGraph(stream, mGraph, nsnull);
+#ifdef WIN32
+            fclose(stream);
+            // Even dotty doesn't work terribly well on windows, since
+            // they execute lefty asynchronously. So we'll just run 
+            // lefty ourselves.
+            _spawnlp(_P_WAIT, 
+                     "lefty", 
+                     "lefty",
+                     "-e",
+                     "\"load('dotty.lefty');"
+                     "dotty.simple('c:\\cycle-graph.dot');\"",
+                     NULL);
+            unlink("c:\\cycle-graph.dot");
+#else
+            pclose(stream);
+#endif
+        }
     }
 }
-
-#ifdef DEBUG_CC
 
 class Suppressor :
     public nsCycleCollectionTraversalCallback
@@ -2387,7 +2416,7 @@ nsCycleCollector::Freed(void *n)
 #endif
 
 PRUint32
-nsCycleCollector::Collect(PRUint32 aTryCollections, PRBool aDrawGraph)
+nsCycleCollector::Collect(PRUint32 aTryCollections)
 {
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
     if (!mParams.mDoNothing && mParams.mHookMalloc)
@@ -2404,9 +2433,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections, PRBool aDrawGraph)
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
     PRTime start = PR_Now();
 #endif
-
-    PRBool drawGraphs = mParams.mDrawGraphs;
-    mParams.mDrawGraphs |= aDrawGraph;
 
     mCollectionInProgress = PR_TRUE;
 
@@ -2477,8 +2503,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections, PRBool aDrawGraph)
 
     mCollectionInProgress = PR_FALSE;
 
-    mParams.mDrawGraphs = drawGraphs;
-
 #ifdef XP_OS2
     // Now that the cycle collector has freed some memory, we can try to
     // force the C library to give back as much memory to the system as
@@ -2502,7 +2526,7 @@ nsCycleCollector::BeginCollection()
     if (mParams.mDoNothing)
         return PR_FALSE;
 
-    GCGraphBuilder builder(mGraph, mRuntimes, mParams.mDrawGraphs);
+    GCGraphBuilder builder(mGraph, mRuntimes);
     if (!builder.Initialized())
         return PR_FALSE;
 
@@ -2580,7 +2604,9 @@ nsCycleCollector::BeginCollection()
                (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
 
+#ifdef DEBUG_CC
         MaybeDrawGraphs();
+#endif
 
         mScanInProgress = PR_FALSE;
 
@@ -2666,7 +2692,7 @@ nsCycleCollector::Shutdown()
             mRuntimes[i]->CommenceShutdown();
     }
 
-    Collect(SHUTDOWN_COLLECTIONS(mParams), PR_FALSE);
+    Collect(SHUTDOWN_COLLECTIONS(mParams));
 
 #ifdef DEBUG_CC
     GCGraphBuilder builder(mGraph, mRuntimes);
@@ -3137,9 +3163,9 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e)
 
 
 PRUint32
-nsCycleCollector_collect(PRBool aDrawGraph)
+nsCycleCollector_collect()
 {
-    return sCollector ? sCollector->Collect(1, aDrawGraph) : 0;
+    return sCollector ? sCollector->Collect() : 0;
 }
 
 PRUint32
