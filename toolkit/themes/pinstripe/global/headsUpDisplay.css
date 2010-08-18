@@ -108,7 +108,7 @@
     width: 100%;
 }
 
-.hud-filtered-by-type {
+.hud-filtered-by-type, .hud-filtered-by-string {
     display: none;
 }
 
