@@ -836,7 +836,7 @@ var loginManager = {
                     break;
 
                 case "unload":
-                    Services.prefs.removeObserver("signon.", this._pwmgr);
+                    Services.prefs.removeObserver("signon.", this._pwmgr._observer);
                     Services.obs.removeObserver(this._pwmgr._observer, "earlyformsubmit");
                     break;
 
