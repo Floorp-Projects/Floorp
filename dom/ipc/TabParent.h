@@ -42,6 +42,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/dom/PExternalHelperApp.h"
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
@@ -100,11 +101,13 @@ class TabParent : public PBrowserParent
 public:
     TabParent();
     virtual ~TabParent();
+    nsIDOMElement* GetOwnerElement() { return mFrameElement; }
     void SetOwnerElement(nsIDOMElement* aElement) { mFrameElement = aElement; }
+    nsIBrowserDOMWindow *GetBrowserDOMWindow() { return mBrowserDOMWindow; }
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
-
+ 
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
     virtual bool RecvNotifyProgressChange(const PRInt64& aProgress,
@@ -143,6 +146,13 @@ public:
       delete aDialog;
       return true;
     }
+
+    virtual PExternalHelperAppParent* AllocPExternalHelperApp(
+            const IPC::URI& uri,
+            const nsCString& aMimeContentType,
+            const bool& aForceSave,
+            const PRInt64& aContentLength);
+    virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
