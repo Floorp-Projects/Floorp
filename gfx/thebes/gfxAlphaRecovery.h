@@ -59,6 +59,12 @@ public:
     static PRBool RecoverAlpha (gfxImageSurface *blackSurface,
                                 const gfxImageSurface *whiteSurface,
                                 Analysis *analysis = nsnull);
+
+    /* This does the save as the previous function, only using SSE2
+     * optimizations, usually this should not be called directly.
+     */
+    static PRBool RecoverAlphaSSE2 (gfxImageSurface *blackSurface,
+                                    const gfxImageSurface *whiteSurface);
 };
 
 #endif /* _GFXALPHARECOVERY_H_ */
