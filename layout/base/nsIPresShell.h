@@ -980,10 +980,7 @@ public:
     return mObservesMutationsForPrint;
   }
 
-  void SetIsActive(PRBool aIsActive)
-  {
-    mIsActive = aIsActive;
-  }
+  virtual nsresult SetIsActive(PRBool aIsActive) = 0;
 
   PRBool IsActive()
   {
@@ -1128,6 +1125,7 @@ protected:
   PRPackedBool              mPaintingSuppressed;  // For all documents we initially lock down painting.
   PRPackedBool              mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
   PRPackedBool              mIsActive;
+  PRPackedBool              mFrozen;
 
 #ifdef ACCESSIBILITY
   /**
@@ -1159,6 +1157,8 @@ protected:
   // Live pres shells, for memory and other tracking
   typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;
   static nsTHashtable<PresShellPtrKey> *sLiveShells;
+
+  static nsIContent* gKeyDownTarget;
 };
 
 /**

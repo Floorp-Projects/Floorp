@@ -104,7 +104,7 @@ nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
 
 nsSMILInstanceTime::~nsSMILInstanceTime()
 {
-  NS_ABORT_IF_FALSE(!mBaseInterval && !mCreator,
+  NS_ABORT_IF_FALSE(!mBaseInterval,
       "Destroying instance time without first calling Unlink()");
   NS_ABORT_IF_FALSE(mFixedEndpointRefCnt == 0,
       "Destroying instance time that is still used as the fixed endpoint of an "

@@ -485,7 +485,7 @@ nsPresContext::GetFontPreferences()
     mMinimumFontSize = CSSPixelsToAppUnits(size);
   }
   else if (unit == eUnit_pt) {
-    mMinimumFontSize = this->PointsToAppUnits(size);
+    mMinimumFontSize = CSSPointsToAppUnits(size);
   }
 
   // get attributes specific to each generic font
@@ -549,10 +549,10 @@ nsPresContext::GetFontPreferences()
     size = nsContentUtils::GetIntPref(pref.get());
     if (size > 0) {
       if (unit == eUnit_px) {
-        font->size = nsPresContext::CSSPixelsToAppUnits(size);
+        font->size = CSSPixelsToAppUnits(size);
       }
       else if (unit == eUnit_pt) {
-        font->size = this->PointsToAppUnits(size);
+        font->size = CSSPointsToAppUnits(size);
       }
     }
 

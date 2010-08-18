@@ -1978,7 +1978,11 @@ nsXULElement::LoadSrc()
     nsXULSlots* slots = static_cast<nsXULSlots*>(GetSlots());
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
     if (!slots->mFrameLoader) {
-        slots->mFrameLoader = nsFrameLoader::Create(this);
+        // PR_FALSE as the last parameter so that xul:iframe/browser/editor
+        // session history handling works like dynamic html:iframes.
+        // Usually xul elements are used in chrome, which doesn't have
+        // session history at all.
+        slots->mFrameLoader = nsFrameLoader::Create(this, PR_FALSE);
         NS_ENSURE_TRUE(slots->mFrameLoader, NS_OK);
     }
 

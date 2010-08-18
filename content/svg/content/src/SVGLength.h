@@ -215,25 +215,13 @@ private:
   float GetUserUnitsPerUnit(const nsSVGElement *aElement, PRUint8 aAxis) const;
 
   /**
-   * The conversion factor between user units (CSS px) and a CSS absolute unit
-   * (in this case inches) is the same for all elements in a given document,
-   * except for elements for which the factor is undefined. The conversion
-   * factor is undefined for elements that are not in a document tree, and for
-   * elements in a document tree that don't have a pres context (elements under
-   * a display:none iframe, or elements belonging to a data document (an XHR
-   * response document or a document created via createDocument()).
-   *
-   * This helper acts as the basis for conversion between user units and all
-   * CSS absolute units (the conversion factors between CSS absolute units are
-   * fixed). Inches are chosen as the canonical unit because that's what
-   * pres/device contexts store, so it makes sense for this helper to also work
-   * in those terms to eliminate unnecessary multiplications/divisions that
-   * must then be reversed.
-   *
-   * This function returns a positive value if the conversion factor is
-   * defined, otherwise it returns numeric_limits<float>::quiet_NaN().
+   * The conversion factor between user units (CSS px) and CSS inches is
+   * constant: 96 px per inch.
    */
-  static float GetUserUnitsPerInch(const nsIContent *aContent);
+  static float GetUserUnitsPerInch()
+  {
+    return 96.0;
+  }
 
   /**
    * The conversion factor between user units and percentage units depends on

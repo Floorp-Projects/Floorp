@@ -121,8 +121,6 @@
     <hbox id="updateCheckErrorNotFound" class="alertBox" hidden="true" align="top">
       <image id="alert"/>
       <description flex="1">&noupdates.error.desc;</description>
-      <button label="&details.label;" accesskey="&details.accesskey;"
-              oncommand="gUpdateWizard.showUpdateCheckErrors();"/>
     </hbox>
     <separator class="thin"/>
     <description id="noupdatesCheckEnabled" hidden="true">
@@ -176,8 +174,6 @@
               onpageshow="gInstallErrorsPage.onPageShow();">
     <hbox align="top" class="alertBox">
       <description flex="1">&installerrors.intro.label;</description>
-      <button label="&details.label;" accesskey="&details.accesskey;"
-              oncommand="gInstallErrorsPage.onShowErrors();"/>
     </hbox>
     <separator flex="1"/>
 #ifndef XP_MACOSX

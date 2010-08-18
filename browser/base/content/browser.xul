@@ -110,18 +110,6 @@
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
-      <menu id="context_tabViewMenu" class="menu-iconic" label="&moveTabTo.label;"
-            accesskey="&moveTabTo.accesskey;">
-        <menupopup id="context_tabViewMenuPopup" 
-                   onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
-          <menuitem label="&createNewGroup.label;" 
-                    accesskey="&createNewGroup.accesskey;" 
-                    oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);" />
-          <menuitem id="context_namedGroups" label="&namedGroups.label;" 
-                    disabled="true" />
-        </menupopup>
-      </menu>
-      <menuseparator/>
       <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
@@ -138,6 +126,17 @@
       <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
                 accesskey="&unpinTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
+      <menu id="context_tabViewMenu" label="&moveToGroup.label;"
+            accesskey="&moveToGroup.accesskey;">
+        <menupopup id="context_tabViewMenuPopup" 
+                   onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
+          <menuitem label="&moveToNewGroup.label;" 
+                    accesskey="&moveToNewGroup.accesskey;" 
+                    oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
+          <menuitem id="context_namedGroups" label="&namedGroups.label;" 
+                    disabled="true"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <menuitem id="context_bookmarkTab"
                 label="&bookmarkThisTab.label;"

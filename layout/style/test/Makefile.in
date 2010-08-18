@@ -158,6 +158,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_of_type_selectors.xhtml \
 		test_parse_rule.html \
 		test_parse_url.html \
+		test_pixel_lengths.html \
 		test_pointer-events.html \
 		test_property_database.html \
 		test_priority_preservation.html \

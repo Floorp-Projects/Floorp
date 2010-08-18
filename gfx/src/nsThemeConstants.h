@@ -236,6 +236,7 @@
 #define NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR                   224
 
 // Vista glass
+#define NS_THEME_WIN_BORDERLESS_GLASS                      229
 #define NS_THEME_WIN_GLASS                                 230
 
 // Windows themed window frame elements

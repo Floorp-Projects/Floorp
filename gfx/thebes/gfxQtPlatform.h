@@ -131,9 +131,10 @@ public:
     RenderMode GetRenderMode() { return mRenderMode; }
     void SetRenderMode(RenderMode rmode) { mRenderMode = rmode; }
 
+    static PRInt32 GetDPI();
+
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
-    void InitDisplayCaps();
 
 private:
     virtual qcms_profile *GetPlatformCMSOutputProfile();

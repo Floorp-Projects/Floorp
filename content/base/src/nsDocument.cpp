@@ -1489,6 +1489,7 @@ nsDocument::~nsDocument()
 #endif
 
   mInDestructor = PR_TRUE;
+  mInUnlinkOrDeletion = PR_TRUE;
 
   // Clear mObservers to keep it in sync with the mutationobserver list
   mObservers.Clear();
@@ -1576,6 +1577,11 @@ nsDocument::~nsDocument()
   for (PRUint32 i = 0; i < mFileDataUris.Length(); ++i) {
     nsFileDataProtocolHandler::RemoveFileDataEntry(mFileDataUris[i]);
   }
+
+  // We don't want to leave residual locks on images. Make sure we're in an
+  // unlocked state, and then clear the table.
+  SetImageLockingState(PR_FALSE);
+  mImageTracker.Clear();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
@@ -1768,6 +1774,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
+  tmp->mInUnlinkOrDeletion = PR_TRUE;
+
   // Clear out our external resources
   tmp->mExternalResourceMap.Shutdown();
 
@@ -1807,6 +1815,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   //
   // In rare cases where you think an unlink will help here, add one
   // manually.
+
+  tmp->mInUnlinkOrDeletion = PR_FALSE;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -1857,6 +1867,10 @@ nsDocument::Init()
 
   mScriptLoader = new nsScriptLoader(this);
   NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!mImageTracker.Init()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
@@ -1964,6 +1978,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   // links one by one
   DestroyElementMaps();
 
+  PRBool oldVal = mInUnlinkOrDeletion;
+  mInUnlinkOrDeletion = PR_TRUE;
   PRUint32 count = mChildren.ChildCount();
   { // Scope for update
     MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);    
@@ -1980,6 +1996,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
       content->UnbindFromTree();
     }
   }
+  mInUnlinkOrDeletion = oldVal;
   mCachedRootElement = nsnull;
 
   // Reset our stylesheets
@@ -6948,10 +6965,13 @@ nsDocument::Destroy()
 
   RemovedFromDocShell();
 
+  PRBool oldVal = mInUnlinkOrDeletion;
+  mInUnlinkOrDeletion = PR_TRUE;
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
     mChildren.ChildAt(i)->DestroyContent();
   }
+  mInUnlinkOrDeletion = oldVal;
 
   mLayoutHistoryState = nsnull;
 
@@ -7949,4 +7969,95 @@ nsIDocument::ScheduleBeforePaintEvent()
       mPresShell->GetPresContext()->RefreshDriver()->
         ScheduleBeforePaintEvent(this);
   }
+}
+
+nsresult
+nsDocument::AddImage(imgIRequest* aImage)
+{
+  NS_ENSURE_ARG_POINTER(aImage);
+
+  // See if the image is already in the hashtable. If it is, get the old count.
+  PRUint32 oldCount = 0;
+  mImageTracker.Get(aImage, &oldCount);
+
+  // Put the image in the hashtable, with the proper count.
+  PRBool success = mImageTracker.Put(aImage, oldCount + 1);
+  if (!success)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // If this is the first insertion and we're locking images, lock this image
+  // too.
+  if ((oldCount == 0) && mLockingImages) {
+    nsresult rv = aImage->LockImage();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return aImage->RequestDecode();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDocument::RemoveImage(imgIRequest* aImage)
+{
+  NS_ENSURE_ARG_POINTER(aImage);
+
+  // Get the old count. It should exist and be > 0.
+  PRUint32 count;
+  PRBool found = mImageTracker.Get(aImage, &count);
+  NS_ABORT_IF_FALSE(found, "Removing image that wasn't in the tracker!");
+  NS_ABORT_IF_FALSE(count > 0, "Entry in the cache tracker with count 0!");
+
+  // We're removing, so decrement the count.
+  count--;
+
+  // If the count is now zero, remove from the tracker.
+  // Otherwise, set the new value.
+  if (count == 0) {
+    mImageTracker.Remove(aImage);
+  } else {
+    mImageTracker.Put(aImage, count);
+  }
+
+  // If we removed the image from the tracker and we're locking images, unlock
+  // this image.
+  if ((count == 0) && mLockingImages)
+    return aImage->UnlockImage();
+
+  return NS_OK;
+}
+
+PLDHashOperator LockEnumerator(imgIRequest* aKey,
+                               PRUint32 aData,
+                               void*    userArg)
+{
+  aKey->LockImage();
+  aKey->RequestDecode();
+  return PL_DHASH_NEXT;
+}
+
+PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
+                                 PRUint32 aData,
+                                 void*    userArg)
+{
+  aKey->UnlockImage();
+  return PL_DHASH_NEXT;
+}
+
+
+nsresult
+nsDocument::SetImageLockingState(PRBool aLocked)
+{
+  // If there's no change, there's nothing to do.
+  if (mLockingImages == aLocked)
+    return NS_OK;
+
+  // Otherwise, iterate over our images and perform the appropriate action.
+  mImageTracker.EnumerateRead(aLocked ? LockEnumerator
+                                      : UnlockEnumerator,
+                              nsnull);
+
+  // Update state.
+  mLockingImages = aLocked;
+
+  return NS_OK;
 }

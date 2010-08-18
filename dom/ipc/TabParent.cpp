@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/ExternalHelperAppParent.h"
 #include "TabParent.h"
 
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -70,6 +71,11 @@
 #include "nsIPromptFactory.h"
 #include "nsIContent.h"
 #include "mozilla/unused.h"
+
+#ifdef ANDROID
+#include "AndroidBridge.h"
+using namespace mozilla;
+#endif
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
@@ -568,6 +574,32 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 }
 
 bool
+TabParent::RecvQueryContentResult(const nsQueryContentEvent& event)
+{
+#ifdef ANDROID
+  if (!event.mSucceeded) {
+    AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
+    return true;
+  }
+
+  switch (event.message) {
+  case NS_QUERY_TEXT_CONTENT:
+    AndroidBridge::Bridge()->ReturnIMEQueryResult(
+        event.mReply.mString.get(), event.mReply.mString.Length(), 0, 0);
+    break;
+  case NS_QUERY_SELECTED_TEXT:
+    AndroidBridge::Bridge()->ReturnIMEQueryResult(
+        event.mReply.mString.get(),
+        event.mReply.mString.Length(),
+        event.GetSelectionStart(),
+        event.GetSelectionEnd() - event.GetSelectionStart());
+    break;
+  }
+#endif
+  return true;
+}
+
+bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           PRBool aSync,
                           const nsString& aJSON,
@@ -774,6 +806,26 @@ TabParent::GetFrameLoader() const
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nsnull;
+}
+
+PExternalHelperAppParent*
+TabParent::AllocPExternalHelperApp(const IPC::URI& uri,
+                                   const nsCString& aMimeContentType,
+                                   const bool& aForceSave,
+                                   const PRInt64& aContentLength)
+{
+  ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
+  parent->AddRef();
+  parent->Init(this, aMimeContentType, aForceSave);
+  return parent;
+}
+
+bool
+TabParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
+{
+  ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
+  parent->Release();
+  return true;
 }
 
 } // namespace tabs

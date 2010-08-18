@@ -237,6 +237,7 @@ using namespace mozilla::layers;
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
 CapturingContentInfo nsIPresShell::gCaptureInfo;
+nsIContent* nsIPresShell::gKeyDownTarget;
 
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
@@ -956,6 +957,8 @@ public:
 
   virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot);
 
+  virtual NS_HIDDEN_(nsresult) SetIsActive(PRBool aIsActive);
+
 protected:
   virtual ~PresShell();
 
@@ -1362,6 +1365,7 @@ public:
 
 protected:
   void QueryIsActive();
+  nsresult UpdateImageLockingState();
 };
 
 class nsAutoCauseReflowNotifier
@@ -1596,6 +1600,7 @@ PresShell::PresShell()
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = PR_FALSE;
   mIsActive = PR_TRUE;
+  mFrozen = PR_FALSE;
 #ifdef DEBUG
   mPresArenaAllocCount = 0;
 #endif
@@ -1837,6 +1842,10 @@ PresShell::Destroy()
 #endif // ACCESSIBILITY
 
   MaybeReleaseCapturingContent();
+
+  if (gKeyDownTarget && gKeyDownTarget->GetOwnerDoc() == mDocument) {
+    NS_RELEASE(gKeyDownTarget);
+  }
 
   mContentToScrollTo = nsnull;
 
@@ -6460,6 +6469,30 @@ PresShell::HandleEvent(nsIView         *aView,
       // frame goes away while it is focused.
       if (!mCurrentEventContent || !GetCurrentEventFrame())
         mCurrentEventContent = mDocument->GetRootElement();
+
+      if (aEvent->message == NS_KEY_DOWN) {
+        NS_IF_RELEASE(gKeyDownTarget);
+        NS_IF_ADDREF(gKeyDownTarget = mCurrentEventContent);
+      }
+      else if ((aEvent->message == NS_KEY_PRESS || aEvent->message == NS_KEY_UP) &&
+               gKeyDownTarget) {
+        // If a different element is now focused for the keypress/keyup event
+        // than what was focused during the keydown event, check if the new
+        // focused element is not in a chrome document any more, and if so,
+        // retarget the event back at the keydown target. This prevents a
+        // content area from grabbing the focus from chrome in-between key
+        // events.
+        if (mCurrentEventContent &&
+            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetCurrentDoc()) &&
+            !nsContentUtils::IsChromeDoc(mCurrentEventContent->GetCurrentDoc())) {
+          mCurrentEventContent = gKeyDownTarget;
+        }
+
+        if (aEvent->message == NS_KEY_UP) {
+          NS_RELEASE(gKeyDownTarget);
+        }
+      }
+
       mCurrentEventFrame = nsnull;
         
       if (!mCurrentEventContent || !GetCurrentEventFrame() ||
@@ -7273,6 +7306,9 @@ PresShell::Freeze()
       presContext->RefreshDriver()->PresContext() == presContext) {
     presContext->RefreshDriver()->Freeze();
   }
+
+  mFrozen = PR_TRUE;
+  UpdateImageLockingState();
 }
 
 void
@@ -7338,6 +7374,10 @@ PresShell::Thaw()
   // Get the activeness of our presshell, as this might have changed
   // while we were in the bfcache
   QueryIsActive();
+
+  // We're now unfrozen
+  mFrozen = PR_FALSE;
+  UpdateImageLockingState();
 }
 
 //--------------------------------------------------------
@@ -8973,4 +9013,22 @@ void PresShell::QueryIsActive()
     if (NS_SUCCEEDED(rv))
       SetIsActive(isActive);
   }
+}
+
+nsresult
+PresShell::SetIsActive(PRBool aIsActive)
+{
+  mIsActive = aIsActive;
+  return UpdateImageLockingState();
+}
+
+/*
+ * Determines the current image locking state. Called when one of the
+ * dependent factors changes.
+ */
+nsresult
+PresShell::UpdateImageLockingState()
+{
+  // We're locked if we're both thawed and active.
+  return mDocument->SetImageLockingState(!mFrozen && mIsActive);
 }
