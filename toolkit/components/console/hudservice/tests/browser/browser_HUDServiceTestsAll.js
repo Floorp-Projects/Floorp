@@ -228,12 +228,16 @@ function testGetContentWindowFromHUDId() {
 
 function setStringFilter(aValue)
 {
+  let hud = HUDService.getHeadsUpDisplay(hudId);
+  hud.querySelector(".hud-filter-box").value = aValue;
   HUDService.adjustVisibilityOnSearchStringChange(hudId, aValue);
 }
 
 function testConsoleLoggingAPI(aMethod)
 {
-  filterBox.value = "foo";
+  HUDService.clearDisplay(hudId);
+
+  setStringFilter("foo");
   browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
   browser.contentWindow.wrappedJSObject.console[aMethod]("bar-baz");
   var count = outputNode.querySelectorAll(".hud-filtered-by-string").length;
@@ -242,13 +246,13 @@ function testConsoleLoggingAPI(aMethod)
 
   // now toggle the current method off - make sure no visible message
   // nodes are logged
-  filterBox.value = "";
+  setStringFilter("");
   HUDService.setFilterState(hudId, aMethod, false);
   browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
-  count = outputNode.querySelectorAll(".hud-filtered-by-string").length;
-  ok(count == 0, aMethod + " logging tunred off, 0 messages logged");
+  count = outputNode.querySelectorAll(".hud-filtered-by-type").length;
+  is(count, 1, aMethod + " logging turned off, 1 message hidden");
   HUDService.clearDisplay(hudId);
-  filterBox.value = "";
+  setStringFilter("");
 
   // test for multiple arguments.
   HUDService.clearDisplay(hudId);
@@ -279,7 +283,7 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 function testNet()
 {
   HUDService.setFilterState(hudId, "network", true);
-  filterBox.value = "";
+  setStringFilter("");
 
   browser.addEventListener("DOMContentLoaded", function onTestNetLoad () {
     browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
@@ -303,7 +307,7 @@ function testNet()
 // General driver for filter tests.
 function testLiveFiltering(callback) {
   HUDService.setFilterState(hudId, "network", true);
-  filterBox.value = "";
+  setStringFilter("");
 
   browser.addEventListener("DOMContentLoaded", function onTestNetLoad() {
     browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
