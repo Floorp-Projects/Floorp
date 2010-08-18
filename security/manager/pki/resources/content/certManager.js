@@ -414,7 +414,7 @@ function restoreCerts()
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
-          bundle.GetStringFromName("chooseP12RestoreFileDialog"),
+          bundle.GetStringFromName("chooseP12RestoreFileDialog2"),
           nsIFilePicker.modeOpen);
   fp.appendFilter(bundle.GetStringFromName("file_browse_PKCS12_spec"),
                   "*.p12; *.pfx");
