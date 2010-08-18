@@ -521,7 +521,7 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GarbageCollect(PRBool aDrawGraphs)
+nsDOMWindowUtils::GarbageCollect()
 {
   // Always permit this in debug builds.
 #ifndef DEBUG
@@ -530,7 +530,7 @@ nsDOMWindowUtils::GarbageCollect(PRBool aDrawGraphs)
   }
 #endif
 
-  nsJSContext::CC(aDrawGraphs);
+  nsJSContext::CC();
 
   return NS_OK;
 }

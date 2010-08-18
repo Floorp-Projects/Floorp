@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(bf4df3a0-4567-47ec-be6d-9ec60eaed63c)]
+[scriptable, uuid(1e042706-0343-4cba-a549-6a83eefb1835)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -258,12 +258,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * Will throw a DOM security error if called without UniversalXPConnect
    * privileges in non-debug builds. Available to all callers in debug builds.
-   *
-   * @param aDrawGraph when true, a cycle collection graph will be
-   * dumped to a file named cycle-graph-*.dot in the current working
-   * directory
    */
-  void garbageCollect([optional] in boolean aDrawGraph);
+  void garbageCollect();
 
   /**
    * Force processing of any queued paints
