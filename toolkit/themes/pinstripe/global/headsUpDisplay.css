@@ -88,10 +88,6 @@
     color: red; font-weight: bold;
 }
 
-.hud-hidden {
-    display: none;
-}
-
 .hud-msg-node {    
     width: 100%;
     margin-top: 0.3em; 
