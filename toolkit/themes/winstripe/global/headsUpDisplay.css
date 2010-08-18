@@ -106,6 +106,10 @@
     width: 100%;
 }
 
+.hud-filtered-by-type {
+    display: none;
+}
+
 .hud-filter-cat:-moz-system-metric(windows-default-theme) {
     color: GrayText;
 }
