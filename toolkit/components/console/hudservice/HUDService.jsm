@@ -533,6 +533,44 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Makes a newly-inserted node invisible if the user has filtered it out.
+   *
+   * @param string aHUDId
+   *        The ID of the HUD to alter.
+   * @param nsIDOMNode aNewNode
+   *        The newly-inserted console message.
+   * @returns void
+   */
+  adjustVisibilityForNewlyInsertedNode:
+  function HS_adjustVisibilityForNewlyInsertedNode(aHUDId, aNewNode) {
+    // Filter on the search string.
+    let searchString = this.getFilterStringByHUDId(aHUDId);
+    let xpath = ".[" + this.buildXPathFunctionForString(searchString) + "]";
+    let doc = aNewNode.ownerDocument;
+    let result = doc.evaluate(xpath, aNewNode, null,
+      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+    if (result.snapshotLength === 0) {
+      // The string filter didn't match, so the node is filtered.
+      aNewNode.classList.add("hud-filtered-by-string");
+    }
+
+    // Filter by the message type.
+    let classes = aNewNode.classList;
+    let msgType = null;
+    for (let i = 0; i < classes.length; i++) {
+      let klass = classes.item(i);
+      if (klass !== "hud-msg-node" && klass.indexOf("hud-") === 0) {
+        msgType = klass.substring(4);   // Strip off "hud-".
+        break;
+      }
+    }
+    if (msgType !== null && !this.getFilterState(aHUDId, msgType)) {
+      // The node is filtered by type.
+      aNewNode.classList.add("hud-filtered-by-type");
+    }
+  },
+
+  /**
    * Keeps a weak reference for each HeadsUpDisplay that is created
    *
    */
@@ -758,7 +796,7 @@ HUD_SERVICE.prototype =
   getFilterStringByHUDId: function HS_getFilterStringbyHUDId(aHUDId) {
     var hud = this.getHeadsUpDisplay(aHUDId);
     var filterStr = hud.querySelectorAll(".hud-filter-box")[0].value;
-    return filterStr || null;
+    return filterStr;
   },
 
   /**
@@ -1794,7 +1832,7 @@ HeadsUpDisplay.prototype = {
     var context = Cu.getWeakReference(aWindow);
 
     if (appName() == "FIREFOX") {
-      let outputCSSClassOverride = "hud-msg-node hud-console";
+      let outputCSSClassOverride = "hud-msg-node";
       let mixin = new JSTermFirefoxMixin(context, aParentNode, aExistingConsole, outputCSSClassOverride);
       this.jsterm = new JSTerm(context, aParentNode, mixin);
     }
@@ -1891,6 +1929,16 @@ HeadsUpDisplay.prototype = {
     this.outputNode.setAttribute("flex", "1");
     this.outputNode.setAttribute("orient", "vertical");
     this.outputNode.setAttribute("context", this.hudId + "-output-contextmenu");
+
+    this.outputNode.addEventListener("DOMNodeInserted", function(ev) {
+      // DOMNodeInserted is also called when the output node is being *itself*
+      // (re)inserted into the DOM (which happens during a search, for
+      // example). For this reason, we need to ensure that we only check
+      // message nodes.
+      if (ev.target.classList.contains("hud-msg-node")) {
+        HUDService.adjustVisibilityForNewlyInsertedNode(self.hudId, ev.target);
+      }
+    }, false);
 
     this.filterSpacer = this.makeXULNode("spacer");
     this.filterSpacer.setAttribute("flex", "1");
