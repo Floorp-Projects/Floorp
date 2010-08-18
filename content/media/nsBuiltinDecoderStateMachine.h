@@ -116,7 +116,6 @@ not yet time to display the next frame.
 #include "nsThreadUtils.h"
 #include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
-#include "nsAudioAvailableEventManager.h"
 #include "nsHTMLMediaElement.h"
 #include "mozilla/Monitor.h"
 
@@ -294,13 +293,11 @@ protected:
   // hardware. This ensures that the playback position advances smoothly, and
   // guarantees that we don't try to allocate an impossibly large chunk of
   // memory in order to play back silence. Called on the audio thread.
-  PRUint32 PlaySilence(PRUint32 aSamples, PRUint32 aChannels,
-                       PRUint64 aSampleOffset);
+  PRUint32 PlaySilence(PRUint32 aSamples, PRUint32 aChannels);
 
   // Pops an audio chunk from the front of the audio queue, and pushes its
-  // sound data to the audio hardware. MozAudioAvailable sample data is also
-  // queued here. Called on the audio thread.
-  PRUint32 PlayFromAudioQueue(PRUint64 aSampleOffset, PRUint32 aChannels);
+  // sound data to the audio hardware. Called on the audio thread.
+  PRUint32 PlayFromAudioQueue();
 
   // Stops the decode threads. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
@@ -457,12 +454,7 @@ protected:
   // PR_FALSE while decode threads should be running. Accessed on audio, 
   // state machine and decode threads. Syncrhonised by decoder monitor.
   PRPackedBool mStopDecodeThreads;
-
-private:
-  // Manager for queuing and dispatching MozAudioAvailable events.  The
-  // event manager is accessed from the state machine and audio threads,
-  // and takes care of synchronizing access to its internal queue.
-  nsAudioAvailableEventManager mEventManager;
 };
+
 
 #endif
