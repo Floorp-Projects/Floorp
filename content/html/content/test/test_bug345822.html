@@ -77,7 +77,7 @@ function checkSufferingFromBeingMissing(element)
       "You have to select one of these options.",
       "Validation message is wrong");
   }
-  else if (input .type == 'file')
+  else if (element.type == 'file')
   {
     is(element.validationMessage,
       "You have to select a file.",
@@ -143,7 +143,11 @@ function checkInputRequiredValidity(element)
   element.readOnly = false;
   checkSufferingFromBeingMissing(element);
 
-  element.value = 'foo';
+  if (element.type == 'email') {
+    element.value = 'foo@bar.com';
+  } else {
+    element.value = 'foo';
+  }
   checkNotSufferingFromBeingMissing(element);
 
   element.value = '';
@@ -289,9 +293,8 @@ input.type = 'image';
 checkInputRequiredNotApply(input);
 
 // Now, checking for all types which accept the required attribute.
-// TODO: check 'url', 'email', 'datetime', 'date',
-//             'month', 'week', 'time', 'datetime-local' and 'number'
-//       when they will be implemented.
+// TODO: check 'url', 'datetime', 'date', 'month', 'week', 'time',
+//       'datetime-local' and 'number' when they will be implemented.
 input.type = 'text';
 checkInputRequiredValidity(input);
 input.type = 'password';
@@ -305,6 +308,8 @@ checkInputRequiredValidityForFile(input);
 input.type = 'search';
 checkInputRequiredValidity(input);
 input.type = 'tel';
+checkInputRequiredValidity(input);
+input.type = 'email';
 checkInputRequiredValidity(input);
 
 </script>
