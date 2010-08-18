@@ -60,7 +60,7 @@
 
 #define STRING_TO_ATOM(str)       (JS_ASSERT(str->isAtomized()),             \
                                    (JSAtom *)str)
-#define ATOM_TO_STRING(atom)      ((JSString *)atom)
+#define ATOM_TO_STRING(atom)      ((JSString *)(atom))
 #define ATOM_TO_JSVAL(atom)       STRING_TO_JSVAL(ATOM_TO_STRING(atom))
 
 /* Engine-internal extensions of jsid */
