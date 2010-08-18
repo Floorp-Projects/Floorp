@@ -79,6 +79,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsfuninlines.h"
 #include "jspropertycacheinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -3453,8 +3454,10 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                if (fp->hasArgsObj() && fp->getArgsObj()->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE)
+                if (fp->hasArgsObj() && fp->getArgsObj()->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE) {
+                    JS_ASSERT(fp->getArgsObj()->isNormalArguments());
                     fp->getArgsObj()->setPrivate(fp);
+                }
 
                 JS_ASSERT(fp->argv[-1].isObjectOrNull());
                 JS_ASSERT(fp->callee()->isFunction());
@@ -8748,13 +8751,22 @@ TraceRecorder::tableswitch()
         high = GET_JUMPX_OFFSET(pc);
     }
 
+    /* 
+     * If there are no cases, this is a no-op. The default case immediately
+     * follows in the bytecode and is always taken, so we need no special
+     * action to handle it.
+     */
+    int count = high + 1 - low;
+    if (count == 0)
+        return ARECORD_CONTINUE;
+
     /* Cap maximum table-switch size for modesty. */
-    if ((high + 1 - low) > MAX_TABLE_SWITCH)
+    if (count > MAX_TABLE_SWITCH)
         return InjectStatus(switchop());
 
     /* Generate switch LIR. */
     SwitchInfo* si = new (traceAlloc()) SwitchInfo();
-    si->count = high + 1 - low;
+    si->count = count;
     si->table = 0;
     si->index = (uint32) -1;
     LIns* diff = lir->ins2(LIR_subi, v_ins, lir->insImmI(low));
@@ -10297,7 +10309,7 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
 JS_REQUIRES_STACK void
 TraceRecorder::putActivationObjects()
 {
-    bool have_args = cx->fp->hasArgsObj() && cx->fp->argc;
+    bool have_args = cx->fp->hasArgsObj() && !cx->fp->getArgsObj()->isStrictArguments() && cx->fp->argc > 0;
     bool have_call = cx->fp->hasFunction() &&
         JSFUN_HEAVYWEIGHT_TEST(cx->fp->getFunction()->flags) &&
         cx->fp->getFunction()->countArgsAndVars();
@@ -10660,7 +10672,7 @@ TraceRecorder::record_JSOP_IFNE()
 }
 
 LIns*
-TraceRecorder::newArguments(LIns* callee_ins)
+TraceRecorder::newArguments(LIns* callee_ins, bool strict)
 {
     LIns* global_ins = INS_CONSTOBJ(globalObj);
     LIns* argc_ins = INS_CONST(cx->fp->argc);
@@ -10668,6 +10680,15 @@ TraceRecorder::newArguments(LIns* callee_ins)
     LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
     LIns* call_ins = lir->insCall(&js_Arguments_ci, args);
     guard(false, lir->insEqP_0(call_ins), OOM_EXIT);
+
+    if (strict) {
+        JSStackFrame* fp = cx->fp;
+        uintN argc = fp->argc;
+        LIns* argsSlots_ins = NULL;
+        for (uintN i = 0; i < argc; i++)
+            stobj_set_dslot(call_ins, i, argsSlots_ins, fp->argv[i], get(&fp->argv[i]));
+    }
+
     return call_ins;
 }
 
@@ -10680,12 +10701,15 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     if (cx->fp->flags & JSFRAME_OVERRIDE_ARGS)
         RETURN_STOP_A("Can't trace |arguments| if |arguments| is assigned to");
 
+    JSStackFrame* const fp = cx->fp;
+
     LIns* a_ins = getFrameObjPtr(cx->fp->addressArgsObj());
     LIns* args_ins;
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    LIns* callee_ins = get(&fp->argv[-2]);
+    bool strict = fp->getFunction()->inStrictMode();
     if (a_ins->isImmP()) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
-        args_ins = newArguments(callee_ins);
+        args_ins = newArguments(callee_ins, strict);
     } else {
         // Generate LIR to create arguments only if it has not already been created.
 
@@ -10698,7 +10722,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
         LIns* label1 = lir->ins0(LIR_label);
         br1->setTarget(label1);
 
-        LIns* call_ins = newArguments(callee_ins);
+        LIns* call_ins = newArguments(callee_ins, strict);
         lir->insStore(call_ins, mem_ins, 0, ACCSET_OTHER);
 
         LIns* label2 = lir->ins0(LIR_label);
@@ -10708,7 +10732,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     }
 
     stack(0, args_ins);
-    setFrameObjPtr(cx->fp->addressArgsObj(), args_ins);
+    setFrameObjPtr(fp->addressArgsObj(), args_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -13361,7 +13385,7 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
         return NULL;
 
     VMSideExit *exit = snapshot(MISMATCH_EXIT);
-    guardClass(obj_ins, &js_ArgumentsClass, exit, LOAD_CONST);
+    guardClass(obj_ins, obj->getClass(), exit, LOAD_CONST);
 
     LIns* args_ins = getFrameObjPtr(afp->addressArgsObj());
     LIns* cmp = lir->ins2(LIR_eqp, args_ins, obj_ins);
@@ -15272,10 +15296,10 @@ TraceRecorder::record_JSOP_ARGSUB()
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
-    // The following implements IsOverriddenArgsLength on trace.
-    // The '2' bit is set if length was overridden.
+    // The following implements JSObject::isArgsLengthOverridden on trace.
+    // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = stobj_get_fslot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
-    LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(2));
+    LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
     guard(true, lir->insEqI_0(ovr_ins), snapshot(BRANCH_EXIT));
     return len_ins;
 }
@@ -15973,9 +15997,11 @@ TraceRecorder::record_JSOP_LENGTH()
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 
-        // slot_ins is the value from the slot; right-shift by 2 bits to get
-        // the length (see GetArgsLength in jsfun.cpp).
-        LIns* v_ins = lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi, slot_ins, 1));
+        // slot_ins is the value from the slot; right-shift to get the length
+        // (see JSObject::getArgsInitialLength in jsfun.cpp).
+        LIns* v_ins =
+            lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi,
+                                             slot_ins, JSObject::ARGS_PACKED_BITS_COUNT));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }

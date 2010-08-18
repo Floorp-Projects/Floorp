@@ -283,6 +283,16 @@ public:
         return dataLabel;
     }
 
+    DataLabel32 load64WithAddressOffsetPatch(Address address, RegisterID hi, RegisterID lo)
+    {
+        DataLabel32 dataLabel(this);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
+        m_assembler.dtr_u(true, lo, ARMRegisters::S0, 0);
+        m_assembler.dtr_u(true, hi, ARMRegisters::S0, 4);
+        return dataLabel;
+    }
+
     Label loadPtrWithPatchToLEA(Address address, RegisterID dest)
     {
         Label label(this);
@@ -309,6 +319,27 @@ public:
         DataLabel32 dataLabel(this);
         m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
         m_assembler.dtr_ur(false, src, address.base, ARMRegisters::S0);
+        return dataLabel;
+    }
+
+    DataLabel32 store64WithAddressOffsetPatch(RegisterID hi, RegisterID lo, Address address)
+    {
+        DataLabel32 dataLabel(this);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
+        m_assembler.dtr_u(false, lo, ARMRegisters::S0, 0);
+        m_assembler.dtr_u(false, hi, ARMRegisters::S0, 4);
+        return dataLabel;
+    }
+
+    DataLabel32 store64WithAddressOffsetPatch(Imm32 hi, RegisterID lo, Address address)
+    {
+        DataLabel32 dataLabel(this);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.getImm(hi.m_value, ARMRegisters::S1);
+        m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
+        m_assembler.dtr_u(false, lo, ARMRegisters::S0, 0);
+        m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 4);
         return dataLabel;
     }
 
@@ -435,6 +466,13 @@ public:
         } else
             m_assembler.cmp_r(left, m_assembler.getImm(right.m_value, ARMRegisters::S0));
         return Jump(m_assembler.jmp(ARMCondition(cond), useConstantPool));
+    }
+
+    // As branch32, but allow the value ('right') to be patched.
+    Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, DataLabel32 &dataLabel)
+    {
+        dataLabel = moveWithPatch(right, ARMRegisters::S1);
+        return branch32(cond, left, ARMRegisters::S1, true);
     }
 
     Jump branch32(Condition cond, RegisterID left, Address right)
@@ -822,6 +860,13 @@ public:
         return dataLabel;
     }
 
+    DataLabel32 moveWithPatch(Imm32 initialValue, RegisterID dest)
+    {
+        DataLabel32 dataLabel(this);
+        m_assembler.ldr_un_imm(dest, initialValue.m_value);
+        return dataLabel;
+    }
+
     Jump branchPtrWithPatch(Condition cond, RegisterID left, DataLabelPtr& dataLabel, ImmPtr initialRightValue = ImmPtr(0))
     {
         dataLabel = moveWithPatch(initialRightValue, ARMRegisters::S1);
@@ -1116,8 +1161,8 @@ protected:
                 m_assembler.add_r(ARMRegisters::S0, base, ARMAssembler::OP2_IMM | (offset >> 12) | (10 << 8));
                 m_assembler.dtr_u(true, ARMRegisters::S0, ARMRegisters::S0, offset & 0xfff);
             } else {
-                ARMWord reg = m_assembler.getImm(offset, ARMRegisters::S0);
-                m_assembler.dtr_ur(true, ARMRegisters::S0, base, reg);
+                m_assembler.moveImm(offset, ARMRegisters::S0);
+                m_assembler.dtr_ur(true, ARMRegisters::S0, base, ARMRegisters::S0);
             }
         } else  {
             offset = -offset;
@@ -1127,8 +1172,8 @@ protected:
                 m_assembler.sub_r(ARMRegisters::S0, base, ARMAssembler::OP2_IMM | (offset >> 12) | (10 << 8));
                 m_assembler.dtr_d(true, ARMRegisters::S0, ARMRegisters::S0, offset & 0xfff);
             } else {
-                ARMWord reg = m_assembler.getImm(offset, ARMRegisters::S0);
-                m_assembler.dtr_dr(true, ARMRegisters::S0, base, reg);
+                m_assembler.moveImm(offset, ARMRegisters::S0);
+                m_assembler.dtr_dr(true, ARMRegisters::S0, base, ARMRegisters::S0);
             }
         }
         m_assembler.blx(ARMRegisters::S0);

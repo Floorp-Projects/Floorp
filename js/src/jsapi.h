@@ -1687,6 +1687,12 @@ struct JSClass {
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
+/* Additional global reserved slots, beyond those for standard prototypes. */
+#define JSRESERVED_GLOBAL_SLOTS_COUNT     3
+#define JSRESERVED_GLOBAL_COMPARTMENT     (JSProto_LIMIT * 3)
+#define JSRESERVED_GLOBAL_THIS            (JSRESERVED_GLOBAL_COMPARTMENT + 1)
+#define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
+
 /*
  * ECMA-262 requires that most constructors used internally create objects
  * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)
@@ -1698,11 +1704,9 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
-#define JSCLASS_GLOBAL_FLAGS \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + 2))
-
-#define JSRESERVED_GLOBAL_COMPARTMENT (JSProto_LIMIT * 3)
-#define JSRESERVED_GLOBAL_THIS        (JSRESERVED_GLOBAL_COMPARTMENT + 1)
+#define JSCLASS_GLOBAL_FLAGS                                                  \
+    (JSCLASS_IS_GLOBAL |                                                      \
+     JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + JSRESERVED_GLOBAL_SLOTS_COUNT))
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)

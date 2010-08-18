@@ -457,7 +457,13 @@ JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant)
     } else if (JSVAL_IS_INT(val)) {
       INT32_TO_NPVARIANT(JSVAL_TO_INT(val), *variant);
     } else if (JSVAL_IS_DOUBLE(val)) {
-      DOUBLE_TO_NPVARIANT(JSVAL_TO_DOUBLE(val), *variant);
+      jsdouble d = JSVAL_TO_DOUBLE(val);
+      jsint i;
+      if (JS_DoubleIsInt32(d, &i)) {
+        INT32_TO_NPVARIANT(i, *variant);
+      } else {
+        DOUBLE_TO_NPVARIANT(d, *variant);
+      }
     } else if (JSVAL_IS_STRING(val)) {
       JSString *jsstr = JSVAL_TO_STRING(val);
       nsDependentString str((PRUnichar *)::JS_GetStringChars(jsstr),

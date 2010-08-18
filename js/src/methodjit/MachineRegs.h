@@ -130,14 +130,21 @@ struct Registers {
           (1 << JSC::ARMRegisters::r0)
         | (1 << JSC::ARMRegisters::r1)
         | (1 << JSC::ARMRegisters::r2);
+    // r3 is reserved as a scratch register for the assembler.
 
     static const uint32 SavedRegs =
           (1 << JSC::ARMRegisters::r4)
         | (1 << JSC::ARMRegisters::r5)
         | (1 << JSC::ARMRegisters::r6)
         | (1 << JSC::ARMRegisters::r7)
+    // r8 is reserved as a scratch register for the assembler.
         | (1 << JSC::ARMRegisters::r9)
         | (1 << JSC::ARMRegisters::r10);
+    // r11 is reserved for JSFrameReg.
+    // r12 is IP, and is used for stub calls.
+    // r13 is SP and must always point to VMFrame whilst in generated code.
+    // r14 is LR and is used for return sequences.
+    // r15 is PC (program counter).
 
     static const uint32 SingleByteRegs = TempRegs | SavedRegs;
 #else

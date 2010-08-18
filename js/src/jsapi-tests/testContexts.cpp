@@ -85,6 +85,8 @@ BEGIN_TEST(testContexts_bug563735)
     JSBool ok;
     {
         JSAutoRequest req(cx2);
+        JSAutoCrossCompartmentCall crossCall;
+        CHECK(crossCall.enter(cx2, global));
         jsval v = JSVAL_NULL;
         ok = JS_SetProperty(cx2, global, "x", &v);
     }
