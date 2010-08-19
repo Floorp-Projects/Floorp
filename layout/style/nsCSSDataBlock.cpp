@@ -71,17 +71,8 @@ struct CDBValueStorage {
     nsCSSValue value;
 };
 
-struct CDBPointerStorage {
-    nsCSSProperty property;
-    void *value;
-};
-
 enum {
-    CDBValueStorage_advance = sizeof(CDBValueStorage),
-    // round up using the closest estimate we can get of the alignment
-    // requirements of nsCSSValue:
-    CDBPointerStorage_advance = PR_ROUNDUP(sizeof(CDBPointerStorage),
-                                sizeof(CDBValueStorage) - sizeof(nsCSSValue))
+    CDBValueStorage_advance = sizeof(CDBValueStorage)
 };
 
 /*
@@ -106,34 +97,6 @@ inline nsCSSValue* ValueAtCursor(char *aCursor) {
 
 inline const nsCSSValue* ValueAtCursor(const char *aCursor) {
     return & reinterpret_cast<const CDBValueStorage*>(aCursor)->value;
-}
-
-inline void*& PointerAtCursor(char *aCursor) {
-    return reinterpret_cast<CDBPointerStorage*>(aCursor)->value;
-}
-
-inline void* PointerAtCursor(const char *aCursor) {
-    return reinterpret_cast<const CDBPointerStorage*>(aCursor)->value;
-}
-
-inline nsCSSValueList*& ValueListAtCursor(char *aCursor) {
-    return * reinterpret_cast<nsCSSValueList**>
-                             (& reinterpret_cast<CDBPointerStorage*>(aCursor)->value);
-}
-
-inline nsCSSValueList* ValueListAtCursor(const char *aCursor) {
-    return static_cast<nsCSSValueList*>
-                      (reinterpret_cast<const CDBPointerStorage*>(aCursor)->value);
-}
-
-inline nsCSSValuePairList*& ValuePairListAtCursor(char *aCursor) {
-    return * reinterpret_cast<nsCSSValuePairList**>
-                             (& reinterpret_cast<CDBPointerStorage*>(aCursor)->value);
-}
-
-inline nsCSSValuePairList* ValuePairListAtCursor(const char *aCursor) {
-    return static_cast<nsCSSValuePairList*>
-                      (reinterpret_cast<const CDBPointerStorage*>(aCursor)->value);
 }
 
 static PRBool
@@ -168,7 +131,12 @@ static void
 TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument,
                     nsCSSProperty aProperty)
 {
-  if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0)) {
+  if (aValue.GetUnit() == eCSSUnit_List) {
+    for (const nsCSSValueList* l = aValue.GetListValue(); l; l = l->mNext) {
+      TryToStartImageLoad(l->mValue, aDocument, aProperty);
+    }
+  } else if (nsCSSProps::PropHasFlags(aProperty,
+                                      CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0)) {
     if (aValue.GetUnit() == eCSSUnit_Array) {
       TryToStartImageLoadOnValue(aValue.GetArrayValue()->Item(0), aDocument);
     }
@@ -246,39 +214,11 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     }
                     cursor += CDBValueStorage_advance;
                 } break;
-
-                case eCSSType_ValueList: {
-                    void** target = static_cast<void**>(prop);
-                    if (!*target) {
-                        if (ShouldStartImageLoads(aRuleData, iProp)) {
-                            for (nsCSSValueList* l = ValueListAtCursor(cursor);
-                                 l; l = l->mNext) {
-                                TryToStartImageLoad(l->mValue, doc, iProp);
-                            }
-                        }
-
-                        void* val = PointerAtCursor(cursor);
-                        NS_ASSERTION(val, "oops");
-                        *target = val;
-
-                        if (nsCSSProps::PropHasFlags(iProp,
-                                CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED) &&
-                            ShouldIgnoreColors(aRuleData))
-                        {
-                            *target = nsnull;
-                        }
-                    }
-                    cursor += CDBPointerStorage_advance;
-                } break;
             }
         } else {
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
                     cursor += CDBValueStorage_advance;
-                } break;
-
-                case eCSSType_ValueList: {
-                    cursor += CDBPointerStorage_advance;
                 } break;
             }
         }
@@ -311,18 +251,11 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
                 case eCSSType_Value: {
                     return ValueAtCursor(cursor);
                 }
-                case eCSSType_ValueList: {
-                    return &PointerAtCursor(const_cast<char*>(cursor));
-                }
             }
         }
         switch (nsCSSProps::kTypeTable[iProp]) {
             case eCSSType_Value: {
                 cursor += CDBValueStorage_advance;
-            } break;
-
-            case eCSSType_ValueList: {
-                cursor += CDBPointerStorage_advance;
             } break;
         }
     }
@@ -358,18 +291,6 @@ nsCSSCompressedDataBlock::Clone() const
                 cursor += CDBValueStorage_advance;
                 result_cursor +=  CDBValueStorage_advance;
             } break;
-
-            case eCSSType_ValueList: {
-                void *copy = ValueListAtCursor(cursor)->Clone();
-                if (!copy) {
-                    // so the destructor knows where to stop clearing
-                    result->mBlockEnd = result_cursor;
-                    return nsnull;
-                }
-                PointerAtCursor(result_cursor) = copy;
-                cursor += CDBPointerStorage_advance;
-                result_cursor += CDBPointerStorage_advance;
-            } break;
         }
     }
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
@@ -396,13 +317,6 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
                 NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
                 val->~nsCSSValue();
                 cursor += CDBValueStorage_advance;
-            } break;
-
-            case eCSSType_ValueList: {
-                nsCSSValueList* val = ValueListAtCursor(cursor);
-                NS_ASSERTION(val, "oops");
-                delete val;
-                cursor += CDBPointerStorage_advance;
             } break;
         }
     }
@@ -431,16 +345,6 @@ nsCSSCompressedDataBlock::MoveValue(void *aSource, void *aDest,
       dest->~nsCSSValue();
       memcpy(dest, source, sizeof(nsCSSValue));
       new (source) nsCSSValue();
-    } break;
-
-    case eCSSType_ValueList: {
-      nsCSSValueList **source = static_cast<nsCSSValueList**>(aSource);
-      nsCSSValueList **dest = static_cast<nsCSSValueList**>(aDest);
-      if (**source != **dest)
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
     } break;
   }
 }
@@ -500,15 +404,6 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
                 memcpy(dest, val, sizeof(nsCSSValue));
                 cursor += CDBValueStorage_advance;
             } break;
-
-            case eCSSType_ValueList: {
-                void* val = PointerAtCursor(cursor);
-                void** dest = static_cast<void**>(prop);
-                NS_ASSERTION(val, "oops");
-                NS_ASSERTION(!*dest, "expanding into non-empty block");
-                *dest = val;
-                cursor += CDBPointerStorage_advance;
-            } break;
         }
     }
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
@@ -556,14 +451,6 @@ nsCSSExpandedDataBlock::ComputeSize()
                                  "null value while computing size");
 #endif
                     increment = CDBValueStorage_advance;
-                } break;
-
-                case eCSSType_ValueList: {
-#ifdef DEBUG
-                    void* val = *static_cast<void**>(prop);
-                    NS_ASSERTION(val, "Null pointer while computing size");
-#endif
-                    increment = CDBPointerStorage_advance;
                 } break;
             }
             if (mPropertiesImportant.HasPropertyAt(iHigh, iLow))
@@ -636,17 +523,6 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                     new (val) nsCSSValue();
                     cursor += CDBValueStorage_advance;
                 } break;
-
-                case eCSSType_ValueList: {
-                    void*& val = *static_cast<void**>(prop);
-                    NS_ASSERTION(val, "Null pointer while compressing");
-                    CDBPointerStorage *storage =
-                        reinterpret_cast<CDBPointerStorage*>(cursor);
-                    storage->property = iProp;
-                    storage->value = val;
-                    val = nsnull;
-                    cursor += CDBPointerStorage_advance;
-                } break;
             }
             result->mStyleBits |=
                 nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]);
@@ -712,14 +588,6 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
         case eCSSType_Value: {
             nsCSSValue* val = static_cast<nsCSSValue*>(prop);
             val->Reset();
-        } break;
-
-        case eCSSType_ValueList: {
-            nsCSSValueList*& val = *static_cast<nsCSSValueList**>(prop);
-            if (val) {
-                delete val;
-                val = nsnull;
-            }
         } break;
     }
 }
@@ -805,11 +673,6 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
                 nsCSSValue* val = static_cast<nsCSSValue*>(prop);
                 NS_ASSERTION(val->GetUnit() == eCSSUnit_Null,
                              "not initial state");
-            } break;
-
-            case eCSSType_ValueList: {
-                nsCSSValueList* val = *static_cast<nsCSSValueList**>(prop);
-                NS_ASSERTION(val == nsnull, "not initial state");
             } break;
         }
     }
