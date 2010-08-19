@@ -10070,74 +10070,55 @@ TraceRecorder::unbox_int_id(LIns *id_ins)
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::getThis(LIns*& this_ins)
 {
-    /*
-     * JSStackFrame::getThisObject updates cx->fp->argv[-1], so sample it into 'original' first.
-     */
-    Value original = NullValue();
-    if (cx->fp->argv) {
-        original = cx->fp->argv[-1];
-        if (!original.isPrimitive()) {
-            if (original.toObject().hasClass(&js_WithClass))
-                RETURN_STOP("can't trace getThis on With object");
-            guardNotClass(get(&cx->fp->argv[-1]), &js_WithClass, snapshot(MISMATCH_EXIT),
-                          LOAD_NORMAL);
-        }
+    JSStackFrame *fp = cx->fp;
+    JS_ASSERT_IF(fp->argv, fp->argv[-1] == fp->getThisValue());
+
+    if (!fp->hasFunction()) {
+        // Top-level code. It is an invariant of the interpreter that fp->thisv
+        // is non-null. Furthermore, we would not be recording if globalObj
+        // were not at the end of the scope chain, so `this` can only be one
+        // object, which we can burn into the trace.
+
+        JS_ASSERT(!fp->argv);
+        JS_ASSERT(!fp->getThisValue().isPrimitive());
+
+#ifdef DEBUG
+        JSObject *obj = globalObj->thisObject(cx);
+        if (!obj)
+            RETURN_ERROR("thisObject hook failed");
+        JS_ASSERT(fp->getThisValue().toObjectOrNull() == obj);
+#endif
+
+        this_ins = INS_CONSTOBJ(fp->getThisValue().toObjectOrNull());
+        return RECORD_CONTINUE;
     }
 
-    JSObject* thisObj = cx->fp->getThisObject(cx);
-    if (!thisObj)
-        RETURN_ERROR("fp->getThisObject failed");
+    Value& thisv = fp->argv[-1];
+    JS_ASSERT(thisv == fp->getThisValue() || fp->getThisValue().isNull());
 
-    /* In global code, bake in the global object as 'this' object. */
-    if (!cx->fp->callee()) {
-        JS_ASSERT(callDepth == 0);
-        this_ins = INS_CONSTOBJ(thisObj);
+    JS_ASSERT(fp->callee()->getGlobal() == globalObj);
 
+    if (!thisv.isNull()) {
         /*
-         * We don't have argv[-1] in global code, so we don't update the
-         * tracker here.
+         * fp->argv[-1] has already been computed. Since the type-specialization
+         * of traces distinguishes between null and objects, the same will be
+         * true at run time (or we won't get this far).
          */
+        this_ins = get(&fp->argv[-1]);
         return RECORD_CONTINUE;
     }
 
-    Value& thisv = cx->fp->argv[-1];
-    JS_ASSERT(thisv.isObject());
-
     /*
-     * Traces type-specialize between null and objects, so if we currently see
-     * a null value in argv[-1], this trace will only match if we see null at
-     * runtime as well.  Bake in the global object as 'this' object, updating
-     * the tracker as well. We can only detect this condition prior to calling
-     * JSStackFrame::getThisObject, since it updates the interpreter's copy of
-     * argv[-1].
+     * Compute fp->argv[-1] now. The result is globalObj->thisObject(),
+     * which is trace-constant. getThisObject writes back to fp->argv[-1],
+     * so do the same on trace.
      */
-    Class* clasp = NULL;
-    if (original.isNull() ||
-        (((clasp = original.toObject().getClass()) == &js_CallClass) ||
-         (clasp == &js_BlockClass))) {
-        if (clasp)
-            guardClass(get(&thisv), clasp, snapshot(BRANCH_EXIT), LOAD_NORMAL);
-        JS_ASSERT(!thisv.isPrimitive());
-        if (thisObj != globalObj)
-            RETURN_STOP("global object was wrapped while recording");
-        this_ins = INS_CONSTOBJ(thisObj);
-        set(&thisv, this_ins);
-        return RECORD_CONTINUE;
-    }
-
-    this_ins = get(&thisv);
-
-    JSObject* wrappedGlobal = globalObj->thisObject(cx);
-    if (!wrappedGlobal)
-        RETURN_ERROR("globalObj->thisObject hook threw in getThis");
-
-    /*
-     * The only unwrapped object that needs to be wrapped that we can get here
-     * is the global object obtained throught the scope chain.
-     */
-    this_ins = lir->insChoose(lir->insEqP_0(stobj_get_parent(this_ins)),
-                               INS_CONSTOBJ(wrappedGlobal),
-                               this_ins, avmplus::AvmCore::use_cmov());
+    JSObject *obj = fp->getThisObject(cx);
+    if (!obj)
+        RETURN_ERROR("getThisObject failed");
+    JS_ASSERT(fp->argv[-1] == ObjectOrNullValue(obj));
+    this_ins = INS_CONSTOBJ(obj);
+    set(&fp->argv[-1], this_ins);
     return RECORD_CONTINUE;
 }
 
@@ -13138,7 +13119,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         NameResult nr;
         CHECK_STATUS_A(scopeChainProp(obj, vp, ins, nr));
         stack(0, ins);
-        stack(1, INS_CONSTOBJ(globalObj));
+        stack(1, INS_NULL());
         return ARECORD_CONTINUE;
     }
 
@@ -13152,7 +13133,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         RETURN_STOP_A("callee is not an object");
 
     stack(0, INS_CONSTOBJ(&pcval.toFunObj()));
-    stack(1, obj_ins);
+    stack(1, INS_NULL());
     return ARECORD_CONTINUE;
 }
 
@@ -15887,7 +15868,7 @@ TraceRecorder::record_JSOP_GETTHISPROP()
 
     /*
      * It's safe to just use cx->fp->thisv here because getThis() returns
-     * ARECORD_STOP if thisv is not available.
+     * ARECORD_STOP or ARECORD_ERROR if thisv is not available.
      */
     CHECK_STATUS_A(getProp(&cx->fp->getThisValue().toObject(), this_ins));
     return ARECORD_CONTINUE;
