@@ -45,14 +45,6 @@ namespace nanojit
 
     #ifdef _DEBUG
 
-    uint32_t RegAlloc::countActive()
-    {
-        int cnt = 0;
-        for(Register i=FirstReg; i <= LastReg; i = nextreg(i))
-            cnt += active[i] ? 1 : 0;
-        return cnt;
-    }
-
     bool RegAlloc::isConsistent(Register r, LIns* i) const
     {
         NanoAssert(r != deprecated_UnknownReg);
