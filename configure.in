@@ -4559,7 +4559,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.8.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+    AM_PATH_NSPR(4.8.6, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4878,7 +4878,6 @@ MOZ_MORK=
 MOZ_MORKREADER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_NO_ACTIVEX_SUPPORT=1
-MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
 MOZ_RAW=1
@@ -5741,7 +5740,7 @@ dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
-[  --disable-dbm       Disable building dbm],
+[  --disable-dbm           Disable building dbm],
     NSS_DISABLE_DBM=1,
     NSS_DISABLE_DBM=)
 
@@ -5891,7 +5890,7 @@ dnl ========================================================
 dnl = Disable VP8 decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(webm,
-[  --disable-webm         Disable support for WebM media (VP8 video and Vorbis audio)],
+[  --disable-webm          Disable support for WebM media (VP8 video and Vorbis audio)],
     MOZ_WEBM=,
     MOZ_WEBM=1)
 
@@ -8703,7 +8702,6 @@ AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
-AC_SUBST(MOZ_NO_INSPECTOR_APIS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_SMIL)

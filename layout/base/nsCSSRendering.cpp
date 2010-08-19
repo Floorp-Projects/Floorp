@@ -3627,7 +3627,7 @@ ImageRenderer::PrepareImage()
     if (!((mFlags & FLAG_SYNC_DECODE_IMAGES) &&
           (mType == eStyleImageType_Image) &&
           (NS_SUCCEEDED(mImage->GetImageData()->GetImage(getter_AddRefs(img))) && img)))
-    return PR_FALSE;
+      return PR_FALSE;
   }
 
   switch (mType) {

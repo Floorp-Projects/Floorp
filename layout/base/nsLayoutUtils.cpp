@@ -1004,6 +1004,9 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
 {
   nsPoint viewOffset;
   nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
+  if (!viewWidget) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
 
   nsIWidget* fromRoot;
   nsIntPoint fromOffset = GetWidgetOffset(aWidget, fromRoot);
@@ -1396,7 +1399,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       // paint in a window, so make sure we flush out any retained layer
       // trees before *and after* we draw
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
-    } else {
+    } else if (widget) {
       // XXX we should simplify this API now that dirtyWindowRegion always
       // covers the entire window
       widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
