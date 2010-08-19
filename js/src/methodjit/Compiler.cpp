@@ -167,21 +167,25 @@ mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *sco
     return status;
 }
 
+void
+mjit::Compiler::saveReturnAddress()
+{
+#ifndef JS_CPU_ARM
+    masm.pop(Registers::ReturnReg);
+    restoreFrameRegs(masm);
+    masm.storePtr(Registers::ReturnReg, Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
+#else
+    restoreFrameRegs(masm);
+    masm.storePtr(JSC::ARMRegisters::lr, Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
+#endif
+}
+
 CompileStatus
 mjit::Compiler::generatePrologue()
 {
     invokeLabel = masm.label();
-#ifdef JS_CPU_ARM
-    /* 
-     * Unlike x86/x64, the return address is not automatically pushed onto the stack during a call
-     * (blx). To compensate, we explicitly push it here.
-     *
-     * NOTE: The ABI requires that we maintain 8-byte stack alignment at function boundaries. The
-     * trampoline always enters this function with an unaligned stack so we can re-align it.
-     */
-    masm.push(JSC::ARMRegisters::lr);
-#endif
-    restoreFrameRegs(masm);
+
+    saveReturnAddress();
 
     /*
      * If there is no function, then this can only be called via JaegerShot(),
@@ -190,10 +194,7 @@ mjit::Compiler::generatePrologue()
     if (fun) {
         Jump j = masm.jump();
         invokeLabel = masm.label();
-#ifdef JS_CPU_ARM
-        masm.push(JSC::ARMRegisters::lr);
-#endif
-        restoreFrameRegs(masm);
+        saveReturnAddress();
 
         /* Set locals to undefined. */
         for (uint32 i = 0; i < script->nslots; i++) {
@@ -1571,6 +1572,7 @@ mjit::Compiler::emitReturn()
                                         FrameAddress(offsetof(VMFrame, entryFp)),
                                         JSFrameReg);
     stubcc.linkExit(noInlineCalls, Uses(frame.frameDepth()));
+    stubcc.masm.restoreReturnAddress();
     stubcc.masm.ret();
 
     JS_ASSERT_IF(!fun, JSOp(*PC) == JSOP_STOP);
@@ -1631,13 +1633,12 @@ mjit::Compiler::emitReturn()
     Address rval(JSFrameReg, JSStackFrame::offsetReturnValue());
     masm.loadPayload(rval, JSReturnReg_Data);
     masm.loadTypeTag(rval, JSReturnReg_Type);
+    masm.restoreReturnAddress();
     masm.move(Registers::ReturnReg, JSFrameReg);
-    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), Registers::ReturnReg);
 #ifdef DEBUG
     masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
                   Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
 #endif
-
     masm.ret();
 }
 
@@ -1824,19 +1825,11 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     }
 
     /* Fast-path: return address contains scripted call. */
-
-    masm.addPtr(Imm32(sizeof(void*)), Registers::StackPointer);
     masm.call(Registers::ReturnReg);
 #if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
     masm.callLabel = masm.label();
 #endif
     ADD_CALLSITE(false);
-
-    /*
-     * The scripted call returns a register triplet, containing the jsval and
-     * the current f.scriptedReturn.
-     */
-    masm.push(Registers::ReturnReg);
 
     /*
      * Functions invoked with |new| can return, for some reason, primitive

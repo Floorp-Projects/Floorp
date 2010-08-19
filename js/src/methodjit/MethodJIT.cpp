@@ -49,6 +49,55 @@
 using namespace js;
 using namespace js::mjit;
 
+/*
+ * Explanation of VMFrame activation and various helper thunks below.
+ *
+ * JaegerTrampoline  - Executes a method JIT-compiled JSFunction. This function
+ *    creates a VMFrame on the machine stack and calls into JIT'd code. The JIT'd
+ *    code will eventually return to the VMFrame.
+ *
+ *  - Called from C++ function EnterMethodJIT.
+ *  - Parameters: cx, fp, code, stackLimit, safePoint
+ *  - Notes: safePoint is used in combination with SafePointTrampoline,
+ *           explained further down.
+ *
+ * JaegerThrowpoline - Calls into an exception handler from JIT'd code, and if a
+ *    scripted exception handler is not found, unwinds the VMFrame and returns
+ *    to C++.
+ *
+ *  - To start exception handling, we return from a stub call to the throwpoline.
+ *  - On entry to the throwpoline, the normal conditions of the jit-code ABI
+ *    are satisfied.
+ *  - To do the unwinding and find out where to continue executing, we call
+ *    js_InternalThrow.
+ *  - js_InternalThrow may return 0, which means the place to continue, if any,
+ *    is above this JaegerShot activation, so we just return, in the same way
+ *    the trampoline does.
+ *  - Otherwise, js_InternalThrow returns a jit-code address to continue execution
+ *    at. Because the jit-code ABI conditions are satisfied, we can just jump to
+ *    that point.
+ *
+ *
+ * SafePointTrampoline  - Inline script calls link their return addresses through
+ *    JSStackFrame::ncode. This includes the return address that unwinds back
+ *    to JaegerTrampoline. However, the tracer integration code often wants to
+ *    enter a method JIT'd function at an arbitrary safe point. Safe points
+ *    do not have the return address linking code that the method prologue has.
+ *    SafePointTrampoline is a thunk which correctly links the initial return
+ *    address. It is used in JaegerShotAtSafePoint, and passed as the "script
+ *    code" parameter. Using the "safePoint" parameter to JaegerTrampoline, it
+ *    correctly jumps to the intended point in the method.
+ *
+ *  - Used by JaegerTrampoline()
+ *
+ * InjectJaegerReturn - Implements the tail of InlineReturn. This is needed for
+ *    tracer integration, where a "return" opcode might not be a safe-point,
+ *    and thus the return path must be injected by hijacking the stub return
+ *    address.
+ *
+ *  - Used by RunTracer()
+ */
+
 #ifdef JS_METHODJIT_PROFILE_STUBS
 static const size_t STUB_CALLS_FOR_OP_COUNT = 255;
 static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
@@ -150,27 +199,31 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "movq  %rsi, %rbx"                   "\n"
 
     /* Space for the rest of the VMFrame. */
-    "subq  $0x30, %rsp"                  "\n"
+    "subq  $0x28, %rsp"                  "\n"
 
-    /* Set cx->regs and set the active frame (requires saving rdx). */
+    /*
+     * This is actually part of the VMFrame, but we need to save |r8| for
+     * SafePointTrampoline.
+     */
+    "pushq %r8"                          "\n"
+
+    /* Set cx->regs and set the active frame. Save rdx and align frame in one. */
     "pushq %rdx"                         "\n"
     "movq  %rsp, %rdi"                   "\n"
     "call " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
     "movq  %rsp, %rdi"                   "\n"
     "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
-    "popq  %rdx"                         "\n"
 
     /*
-     * Jump into into the JIT'd code. The call implicitly fills in
-     * the precious f.scriptedReturn member of VMFrame.
+     * Jump into into the JIT'd code.
      */
-    "call *%rdx"                         "\n"
-    "leaq -8(%rsp), %rdi"                "\n"
+    "call *0(%rsp)"                      "\n"
+    "movq %rsp, %rdi"                    "\n"
     "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
-    "leaq -8(%rsp), %rdi"                "\n"
+    "movq %rsp, %rdi"                    "\n"
     "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
-    "addq $0x50, %rsp"                   "\n"
+    "addq $0x58, %rsp"                   "\n"
     "popq %rbx"                          "\n"
     "popq %r15"                          "\n"
     "popq %r14"                          "\n"
@@ -212,8 +265,17 @@ JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 
 asm volatile (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
-SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
+".globl " SYMBOL_STRING(SafePointTrampoline)   "\n"
+SYMBOL_STRING(SafePointTrampoline) ":"         "\n"
+    "popq %rax"                             "\n"
+    "movq %rax, 0x60(%rbx)"                 "\n"
+    "jmp  *8(%rsp)"                         "\n"
+);
+
+asm volatile (
+".text\n"
+".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
+SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
     "movq 0x40(%rbx), %rcx"                 "\n" /* fp->rval type (as value) */
     "movq $0xFFFF800000000000, %r11"         "\n" /* load type mask (JSVAL_TAG_MASK) */
     "andq %r11, %rcx"                       "\n" /* extract type */
@@ -224,6 +286,7 @@ SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
 
     "movq 0x60(%rbx), %rax"                 "\n" /* fp->ncode */
     "movq 0x38(%rsp), %rbx"                 "\n" /* f.fp */
+    "pushq %rax"                            "\n"
     "ret"                                   "\n"
 );
 
@@ -253,28 +316,26 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
     /* Build the JIT frame. Push fields in order, 
      * then align the stack to form esp == VMFrame. */
-    "movl  12(%ebp), %ebx"               "\n"   /* fp */
+    "movl  12(%ebp), %ebx"               "\n"   /* load fp */
     "pushl %ebx"                         "\n"   /* entryFp */
-    "pushl 20(%ebp)"                     "\n"   /* inlineCallCount */
-    "pushl 8(%ebp)"                      "\n"
-    "pushl %ebx"                         "\n"
-    "subl $0x18, %esp"                   "\n"
+    "pushl 20(%ebp)"                     "\n"   /* stackLimit */
+    "pushl 8(%ebp)"                      "\n"   /* cx */
+    "pushl %ebx"                         "\n"   /* fp */
+    "subl $0x1C, %esp"                   "\n"
 
     /* Jump into the JIT'd code. */
-    "pushl 16(%ebp)"                     "\n"
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
-    "popl  %edx"                         "\n"
 
-    "call  *%edx"                        "\n"
-    "leal  -4(%esp), %ecx"               "\n"
+    "call  *16(%ebp)"                    "\n"
+    "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
-    "leal  -4(%esp), %ecx"               "\n"
+    "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
-    "addl $0x28, %esp"                   "\n"
+    "addl $0x2C, %esp"                   "\n"
     "popl %ebx"                          "\n"
     "popl %edi"                          "\n"
     "popl %esi"                          "\n"
@@ -317,13 +378,27 @@ JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
 
 asm volatile (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
-SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
+".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
+SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
     "movl 0x28(%ebx), %edx"                 "\n" /* fp->rval data */
     "movl 0x2C(%ebx), %ecx"                 "\n" /* fp->rval type */
     "movl 0x3C(%ebx), %eax"                 "\n" /* fp->ncode */
     "movl 0x1C(%esp), %ebx"                 "\n" /* f.fp */
+    "pushl %eax"                            "\n"
     "ret"                                   "\n"
+);
+
+/*
+ * Take the fifth parameter from JaegerShot() and jump to it. This makes it so
+ * we can jump into arbitrary JIT code, which won't have the frame-fixup prologue.
+ */
+asm volatile (
+".text\n"
+".globl " SYMBOL_STRING(SafePointTrampoline)   "\n"
+SYMBOL_STRING(SafePointTrampoline) ":"         "\n"
+    "popl %eax"                             "\n"
+    "movl %eax, 0x3C(%ebx)"                 "\n"
+    "jmp  *24(%ebp)"                        "\n"
 );
 
 # elif defined(JS_CPU_ARM)
@@ -336,15 +411,35 @@ JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
 JS_STATIC_ASSERT(offsetof(VMFrame, fp) ==               (4*7));
 JS_STATIC_ASSERT(offsetof(VMFrame, oldRegs) ==          (4*4));
 JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
-JS_STATIC_ASSERT(offsetof(VMFrame, scriptedReturn) ==   (4*0));
+JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 60);
 
 asm volatile (
 ".text\n"
-".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
-SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
+".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
+SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
     /* Restore frame regs. */
-    "ldr r11, [sp, #32]"                    "\n"
+    "ldr r1, [r11, #40]"                    "\n" /* fp->rval data */
+    "ldr r2, [r11, #44]"                    "\n" /* fp->rval type */
+    "ldr r0, [r11, #60]"                    "\n" /* fp->ncode */
+    "ldr r11, [sp, #28]"                    "\n" /* load f.fp */
     "bx  r0"                                "\n"
+);
+
+asm volatile (
+".text\n"
+".globl " SYMBOL_STRING(SafePointTrampoline)  "\n"
+SYMBOL_STRING(SafePointTrampoline) ":"
+    /*
+     * On entry to SafePointTrampoline:
+     *         r11 = fp
+     *      sp[80] = safePoint
+     */
+    "ldr    ip, [sp, #80]"                  "\n"
+    /* Save the return address (in JaegerTrampoline) to fp->ncode. */
+    "str    lr, [r11, #60]"                 "\n"
+    /* Jump to 'safePoint' via 'ip' because a load into the PC from an address on
+     * the stack looks like a return, and may upset return stack prediction. */
+    "bx     ip"                             "\n"
 );
 
 asm volatile (
@@ -353,10 +448,11 @@ asm volatile (
 SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /*
      * On entry to JaegerTrampoline:
-     *      r0 = cx
-     *      r1 = fp
-     *      r2 = code
-     *      r3 = inlineCallCount
+     *         r0 = cx
+     *         r1 = fp
+     *         r2 = code
+     *         r3 = stackLimit
+     *      sp[0] = safePoint
      *
      * The VMFrame for ARM looks like this:
      *  [ lr        ]   \
@@ -376,14 +472,12 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ regs.pc   ]
      *  [ oldRegs   ]
      *  [ previous  ]
-     *  [ args.ptr  ]
+     *  [ args.ptr3 ]
      *  [ args.ptr2 ]
-     *  [ srpt. ret ]   } Scripted return.
+     *  [ args.ptr  ]
      */
     
-    /* Push callee-saved registers. TODO: Do we actually need to push all of them? If the
-     * compiled JavaScript function is EABI-compliant, we only need to push what we use in
-     * JaegerTrampoline. */
+    /* Push callee-saved registers. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
 "   push    {r1}"                               "\n"    /* entryFp */
@@ -393,17 +487,18 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /* Remaining fields are set elsewhere, but we need to leave space for them. */
 "   sub     sp, sp, #(4*7)"                     "\n"
 
+    /* Preserve 'code' (r2) in an arbitrary callee-saved register. */
+"   mov     r4, r2"                             "\n"
+    /* Preserve 'fp' (r1) in r11 (JSFrameReg) for SafePointTrampoline. */
+"   mov     r11, r1"                            "\n"
+
 "   mov     r0, sp"                             "\n"
-"   mov     r4, r2"                             "\n"    /* Preserve r2 ('code') in a callee-saved register. */
 "   bl  " SYMBOL_STRING_RELOC(SetVMFrameRegs)   "\n"
 "   mov     r0, sp"                             "\n"
 "   bl  " SYMBOL_STRING_RELOC(PushActiveVMFrame)"\n"
 
-    /* Call the compiled JavaScript function. We do this with an unaligned sp because the compiled
-     * script explicitly pushes the return value into f->scriptedReturn. */
-"   add     sp, sp, #(4*1)"                     "\n"
+    /* Call the compiled JavaScript function. */
 "   blx     r4"                                 "\n"
-"   sub     sp, sp, #(4*1)"                     "\n"
 
     /* Tidy up. */
 "   mov     r0, sp"                             "\n"
@@ -423,20 +518,22 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
-    /* Restore 'f', as it will have been clobbered. */
+    /* Find the VMFrame pointer for js_InternalThrow. */
 "   mov     r0, sp"                         "\n"
 
     /* Call the utility function that sets up the internal throw routine. */
 "   bl  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
     
-    /* If 0 was returned, just bail out as normal. Otherwise, we have a 'catch' or 'finally' clause
-     * to execute. */
+    /* If js_InternalThrow found a scripted handler, jump to it. Otherwise, tidy
+     * up and return. */
 "   cmp     r0, #0"                         "\n"
 "   bxne    r0"                             "\n"
 
-    /* Skip past the parameters we pushed (such as cx and the like). */
-"   add     sp, sp, #(4*7 + 4*4)"           "\n"
-
+    /* Tidy up, then return '0' to represent an unhandled exception. */
+"   mov     r0, sp"                             "\n"
+"   bl  " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+"   add     sp, sp, #(4*7 + 4*4)"               "\n"
+"   mov     r0, #0"                         "\n"
 "   pop     {r4-r11,pc}"                    "\n"
 );
 
@@ -473,19 +570,29 @@ JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
 
 extern "C" {
 
-    __declspec(naked) void JaegerFromTracer()
+    __declspec(naked) void InjectJaegerReturn()
     {
         __asm {
             mov edx, [ebx + 0x28];
             mov ecx, [ebx + 0x2C];
             mov eax, [ebx + 0x3C];
             mov ebx, [esp + 0x1C];
+            push eax;
             ret;
         }
     }
 
+    __declspec(naked) void SafePointTrampoline()
+    {
+        __asm {
+            pop eax;
+            mov eax, [ebx + 0x3C];
+            jmp [ebp + 24];
+        }
+    }
+
     __declspec(naked) JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-                                              Value *stackLimit)
+                                              Value *stackLimit, void *safePoint)
     {
         __asm {
             /* Prologue. */
@@ -503,23 +610,21 @@ extern "C" {
             push [ebp + 20];
             push [ebp + 8];
             push ebx;
-            sub  esp, 0x18;
+            sub  esp, 0x1C;
 
             /* Jump into into the JIT'd code. */
-            push [ebp+16];
             mov  ecx, esp;
             call SetVMFrameRegs;
             mov  ecx, esp;
             call PushActiveVMFrame;
-            pop  edx;
 
-            call edx;
-            lea  ecx, [esp-4];
+            call [ebp + 16];
+            mov  ecx, esp;
             call PopActiveVMFrame;
-            lea  ecx, [esp-4];
+            mov  ecx, esp;
             call UnsetVMFrameRegs;
 
-            add esp, 0x28
+            add esp, 0x2C;
 
             pop ebx;
             pop edi;
@@ -618,39 +723,22 @@ ThreadData::Finish()
 }
 
 extern "C" JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-                                   Value *stackLimit);
+                                   Value *stackLimit, void *safePoint);
+extern "C" void SafePointTrampoline();
 
-JSBool
-mjit::JaegerShot(JSContext *cx)
+static inline JSBool
+EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
 {
     JS_ASSERT(cx->regs);
-
     JS_CHECK_RECURSION(cx, return JS_FALSE;);
-
-    void *code;
-    jsbytecode *pc = cx->regs->pc;
-    JSStackFrame *fp = cx->fp;
-    JSScript *script = fp->getScript();
-
-    JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
-
-#ifdef JS_TRACER
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "attempt to enter method JIT while recording");
-#endif
-
-    if (pc == script->code)
-        code = script->nmap[-1];
-    else
-        code = script->nmap[pc - script->code];
-
-    JS_ASSERT(code);
 
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
+    JSScript *script = fp->getScript();
 
-    JaegerSpew(JSpew_Prof, "entering jaeger script: %s, line %d\n", script->filename,
-               script->lineno);
+    JaegerSpew(JSpew_Prof, "%s jaeger script: %s, line %d\n",
+               safePoint ? "dropping" : "entering",
+               script->filename, script->lineno);
     prof.start();
 #endif
 
@@ -661,7 +749,7 @@ mjit::JaegerShot(JSContext *cx)
     Value *stackLimit = cx->stack().makeStackLimit(reinterpret_cast<Value*>(fp));
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-    JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit);
+    JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit, safePoint);
 
     JS_ASSERT(checkFp == cx->fp);
 
@@ -671,6 +759,37 @@ mjit::JaegerShot(JSContext *cx)
 #endif
 
     return ok;
+}
+
+JSBool
+mjit::JaegerShot(JSContext *cx)
+{
+    JSScript *script = cx->fp->getScript();
+
+    JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
+
+#ifdef JS_TRACER
+    if (TRACE_RECORDER(cx))
+        AbortRecording(cx, "attempt to enter method JIT while recording");
+#endif
+
+    JS_ASSERT(cx->regs->pc == script->code);
+
+    void *code = script->nmap[-1];
+
+    return EnterMethodJIT(cx, cx->fp, code, NULL);
+}
+
+JSBool
+js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
+{
+#ifdef JS_TRACER
+    JS_ASSERT(!TRACE_RECORDER(cx));
+#endif
+
+    void *code = JS_FUNC_TO_DATA_PTR(void *, SafePointTrampoline);
+
+    return EnterMethodJIT(cx, cx->fp, code, safePoint);
 }
 
 template <typename T>
@@ -720,13 +839,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->mics = NULL;
     }
 #endif
-
-# if 0 /* def JS_TRACER */
-    if (script->trees) {
-        cx->free(script->trees);
-        script->trees = NULL;
-    }
-# endif
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS

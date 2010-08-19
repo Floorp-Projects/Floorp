@@ -137,8 +137,10 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     Address rval(JSFrameReg, JSStackFrame::offsetReturnValue());
     masm.loadPayload(rval, JSReturnReg_Data);
     masm.loadTypeTag(rval, JSReturnReg_Type);
+
+    masm.restoreReturnAddress();
+
     masm.move(Registers::ReturnReg, JSFrameReg);
-    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), Registers::ReturnReg);
 #ifdef DEBUG
     masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
                   Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
