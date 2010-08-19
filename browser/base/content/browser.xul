@@ -533,6 +533,7 @@
                       command="View:PageSource"/>
             <menuseparator/>
             <menuitem id="appmenu_pageInspect"
+                      type="checkbox"
                       label="&inspectMenu.label;"
                       command="Tools:Inspect"/>
             <menuitem id="appmenu_webConsole"
