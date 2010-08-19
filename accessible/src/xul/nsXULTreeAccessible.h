@@ -64,6 +64,10 @@ const PRUint32 kDefaultTreeCacheSize = 256;
 class nsXULTreeAccessible : public nsXULSelectableAccessible
 {
 public:
+  using nsAccessible::GetChildCount;
+  using nsAccessible::GetChildAt;
+  using nsAccessible::GetChildAtPoint;
+
   nsXULTreeAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports and cycle collection
@@ -162,6 +166,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXULTreeAccessible,
 class nsXULTreeItemAccessibleBase : public nsAccessibleWrap
 {
 public:
+  using nsAccessible::GetParent;
+
   nsXULTreeItemAccessibleBase(nsIContent *aContent, nsIWeakReference *aShell,
                               nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow);
