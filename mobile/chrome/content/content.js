@@ -431,12 +431,12 @@ Content.prototype = {
 
       case "Browser:MouseDown":
         this._overlayTimeout.clear();
-        this._overlayTimeout.clear();
 
         let element = elementFromPoint(x, y);
         if (!element)
           return;
 
+// XXX somehow this always take up the entire screen
 /*        if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
           this._overlayTimeout.once(kTapOverlayTimeout, function() {
             let rects = getContentClientRects(element);

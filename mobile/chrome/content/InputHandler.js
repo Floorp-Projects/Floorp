@@ -561,7 +561,7 @@ MouseModule.prototype = {
    * Check if the event concern the browser content
    */
   _targetIsContent: function _targetIsContent(aEvent) {
-    return aEvent.view !== window;
+    return aEvent.view !== window || aEvent.target.tagName == "browser";
   },
 
   /**
@@ -1296,7 +1296,7 @@ GestureModule.prototype = {
     this._owner.grab(this);
 
     // hide element highlight
-    document.getElementById("tile-container").customClicker.panBegin();
+    //document.getElementById("tile-container").customClicker.panBegin();
 
     // create the AnimatedZoom object for fast arbitrary zooming
     this._pinchZoom = new AnimatedZoom(bv);

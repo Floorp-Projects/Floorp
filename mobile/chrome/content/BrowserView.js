@@ -412,7 +412,6 @@ BrowserView.prototype = {
     let scaley = (destHeight / srcRect.height) || 1;
 
     srcRect.restrictTo(bvs.viewportRect);
-    this._tileManager.renderRectToCanvas(srcRect, destCanvas, scalex, scaley);
   },
 
   viewportToBrowser: function viewportToBrowser(x) {
