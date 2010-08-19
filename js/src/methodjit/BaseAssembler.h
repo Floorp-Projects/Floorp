@@ -313,17 +313,17 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
         return MacroAssembler::call(reg);
     }
 
-    void restoreReturnAddress()
-    {
-#ifndef JS_CPU_ARM
-        /* X86 and X64's "ret" instruction expects a return address on the stack. */
-        push(Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
-#else
-        /* ARM returns either using its link register (LR) or directly from the stack, but masm.ret()
-         * always emits a return to LR. */
-        load32(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), JSC::ARMRegisters::lr);
-#endif
+#if defined(JS_CPU_ARM)
+    void ret() {
+        /* The return sequence emitted by the ARM macro-assembler assumes that the return address
+         * is in LR. We could load it into LR before calling it, but it's probably better to simply
+         * pop into the PC. (Note that JaegerTrampoline expects the return sequence to pop this
+         * single word from the stack, so the stack will be unaligned on return from JIT code.
+         * JaegerTrampoline fixes this up.) */
+        MacroAssembler::pop(JSC::ARMRegisters::pc);
     }
+    // #else fall back to the inherited implementation in MacroAssembler::ret().
+#endif
 
     void finalize(uint8 *ncode) {
         JSC::JITCode jc(ncode, size());

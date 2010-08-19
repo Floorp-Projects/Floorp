@@ -56,7 +56,7 @@ using namespace js::mjit;
  *    creates a VMFrame on the machine stack and calls into JIT'd code. The JIT'd
  *    code will eventually return to the VMFrame.
  *
- *  - Called from C++ function EnterMethodJIT.
+ *  - Called from C++ functions JaegerShot and JaegerBomb.
  *  - Parameters: cx, fp, code, stackLimit, safePoint
  *  - Notes: safePoint is used in combination with SafePointTrampoline,
  *           explained further down.
@@ -73,9 +73,10 @@ using namespace js::mjit;
  *  - js_InternalThrow may return 0, which means the place to continue, if any,
  *    is above this JaegerShot activation, so we just return, in the same way
  *    the trampoline does.
- *  - Otherwise, js_InternalThrow returns a jit-code address to continue execution
- *    at. Because the jit-code ABI conditions are satisfied, we can just jump to
- *    that point.
+ *  - Otherwise, js_InternalThrow returns a jit-code address to continue
+ *    execution
+ *    at. Because the jit-code ABI conditions are satisfied, we can just jump
+ *    to that point.
  *
  *
  * SafePointTrampoline  - Inline script calls link their return addresses through
@@ -84,9 +85,9 @@ using namespace js::mjit;
  *    enter a method JIT'd function at an arbitrary safe point. Safe points
  *    do not have the return address linking code that the method prologue has.
  *    SafePointTrampoline is a thunk which correctly links the initial return
- *    address. It is used in JaegerShotAtSafePoint, and passed as the "script
- *    code" parameter. Using the "safePoint" parameter to JaegerTrampoline, it
- *    correctly jumps to the intended point in the method.
+ *    address. It is used in JaegerBomb, and passed as the "script code"
+ *    parameter. Using the "safePoint" parameter to JaegerTrampoline, it correctly
+ *    jumps to the intended point in the method.
  *
  *  - Used by JaegerTrampoline()
  *
@@ -215,7 +216,8 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
 
     /*
-     * Jump into into the JIT'd code.
+     * Jump into into the JIT'd code. The call implicitly fills in
+     * the precious f.scriptedReturn member of VMFrame.
      */
     "call *0(%rsp)"                      "\n"
     "movq %rsp, %rdi"                    "\n"
@@ -411,7 +413,9 @@ JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
 JS_STATIC_ASSERT(offsetof(VMFrame, fp) ==               (4*7));
 JS_STATIC_ASSERT(offsetof(VMFrame, oldRegs) ==          (4*4));
 JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
+JS_STATIC_ASSERT(offsetof(VMFrame, scriptedReturn) ==   (4*0));
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 60);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) == 40);
 
 asm volatile (
 ".text\n"
@@ -429,17 +433,9 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(SafePointTrampoline)  "\n"
 SYMBOL_STRING(SafePointTrampoline) ":"
-    /*
-     * On entry to SafePointTrampoline:
-     *         r11 = fp
-     *      sp[80] = safePoint
-     */
-    "ldr    ip, [sp, #80]"                  "\n"
-    /* Save the return address (in JaegerTrampoline) to fp->ncode. */
-    "str    lr, [r11, #60]"                 "\n"
-    /* Jump to 'safePoint' via 'ip' because a load into the PC from an address on
-     * the stack looks like a return, and may upset return stack prediction. */
-    "bx     ip"                             "\n"
+    "str lr, [r11, #60]"                    "\n"
+    /* This should load the fifth parameter from JaegerTrampoline and jump to it. */
+    ""                                 "\n"
 );
 
 asm volatile (
@@ -448,11 +444,10 @@ asm volatile (
 SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /*
      * On entry to JaegerTrampoline:
-     *         r0 = cx
-     *         r1 = fp
-     *         r2 = code
-     *         r3 = stackLimit
-     *      sp[0] = safePoint
+     *      r0 = cx
+     *      r1 = fp
+     *      r2 = code
+     *      r3 = inlineCallCount
      *
      * The VMFrame for ARM looks like this:
      *  [ lr        ]   \
@@ -472,12 +467,14 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ regs.pc   ]
      *  [ oldRegs   ]
      *  [ previous  ]
-     *  [ args.ptr3 ]
-     *  [ args.ptr2 ]
      *  [ args.ptr  ]
+     *  [ args.ptr2 ]
+     *  [ srpt. ret ]   } Scripted return.
      */
     
-    /* Push callee-saved registers. */
+    /* Push callee-saved registers. TODO: Do we actually need to push all of them? If the
+     * compiled JavaScript function is EABI-compliant, we only need to push what we use in
+     * JaegerTrampoline. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
 "   push    {r1}"                               "\n"    /* entryFp */
@@ -487,12 +484,8 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /* Remaining fields are set elsewhere, but we need to leave space for them. */
 "   sub     sp, sp, #(4*7)"                     "\n"
 
-    /* Preserve 'code' (r2) in an arbitrary callee-saved register. */
-"   mov     r4, r2"                             "\n"
-    /* Preserve 'fp' (r1) in r11 (JSFrameReg) for SafePointTrampoline. */
-"   mov     r11, r1"                            "\n"
-
 "   mov     r0, sp"                             "\n"
+"   mov     r4, r2"                             "\n"    /* Preserve r2 ('code') in a callee-saved register. */
 "   bl  " SYMBOL_STRING_RELOC(SetVMFrameRegs)   "\n"
 "   mov     r0, sp"                             "\n"
 "   bl  " SYMBOL_STRING_RELOC(PushActiveVMFrame)"\n"
@@ -518,22 +511,20 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
-    /* Find the VMFrame pointer for js_InternalThrow. */
+    /* Restore 'f', as it will have been clobbered. */
 "   mov     r0, sp"                         "\n"
 
     /* Call the utility function that sets up the internal throw routine. */
 "   bl  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
     
-    /* If js_InternalThrow found a scripted handler, jump to it. Otherwise, tidy
-     * up and return. */
+    /* If 0 was returned, just bail out as normal. Otherwise, we have a 'catch' or 'finally' clause
+     * to execute. */
 "   cmp     r0, #0"                         "\n"
 "   bxne    r0"                             "\n"
 
-    /* Tidy up, then return '0' to represent an unhandled exception. */
-"   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
-"   add     sp, sp, #(4*7 + 4*4)"               "\n"
-"   mov     r0, #0"                         "\n"
+    /* Skip past the parameters we pushed (such as cx and the like). */
+"   add     sp, sp, #(4*7 + 4*4)"           "\n"
+
 "   pop     {r4-r11,pc}"                    "\n"
 );
 
