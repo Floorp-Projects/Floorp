@@ -16,7 +16,7 @@ for (var i = 0; i < gAudioTests.length; ++i) {
   if (!a1.canPlayType(test.type))
     continue;
 
-  is(a1.getAttribute("autobuffer"), "autobuffer", "Autobuffer automatically set");
+  is(a1.getAttribute("preload"), "auto", "preload:auto automatically set");
   is(a1.src, "", "Src set?");
 }
 </script>

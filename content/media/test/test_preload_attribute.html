@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479863
 
 <video id='v1' onerror="event.stopPropagation();"></video><audio id='a1' onerror="ev
 ent.stopPropagation();"></audio>
-<video id='v2' onerror="event.stopPropagation();" autobuffer></video><audio id='a2' on
-error="event.stopPropagation();" autobuffer></audio>
+<video id='v2' onerror="event.stopPropagation();" preload="auto"></video><audio id='a2' on
+error="event.stopPropagation();" preload="auto"></audio>
 
 <pre id="test">
 <script type="application/javascript">
@@ -27,17 +27,19 @@ var v1 = document.getElementById('v1');
 var a1 = document.getElementById('a1');
 var v2 = document.getElementById('v2');
 var a2 = document.getElementById('a2');
-ok(!v1.autobuffer, "v1.autobuffer should be false by default");
-ok(!a1.autobuffer, "v1.autobuffer should be false by default");
-ok(v2.autobuffer, "v2.autobuffer should be true");
-ok(a2.autobuffer, "v2.autobuffer should be true");
+is(v1.getAttribute("preload"), undefined, "video preload via getAttribute should be undefined by default");
+is(a1.getAttribute("preload"), undefined, "video preload via getAttribute should be undefined by default");
+is(v1.preload, "", "v1.preload should be undefined by default");
+is(a1.preload, "", "a1.preload should be undefined by default");
+is(v2.preload, "auto", "v2.preload should be auto");
+is(a2.preload, "auto", "a2.preload should be auto");
 
-v1.autobuffer = true;
-a1.autobuffer = true;
-ok(v1.autobuffer, "video.autobuffer not true");
-ok(a1.autobuffer, "audio.autobuffer not true");
-is(v1.getAttribute("autobuffer"), "", "video autobuffer attribute not set");
-is(a1.getAttribute("autobuffer"), "", "video autobuffer attribute not set");
+v1.preload = "auto";
+a1.preload = "auto";
+is(v1.preload, "auto", "video.preload should be auto");
+is(a1.preload, "auto", "audio.preload should be auto");
+is(v1.getAttribute("preload"), "auto", "video preload attribute should be auto");
+is(a1.getAttribute("preload"), "auto", "video preload attribute should be auto");
 
 </script>
 </pre>

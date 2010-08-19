@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479863
 </div>
 
 <video id='v1' onerror="event.stopPropagation()"></video>
-<video id='v2' onerror="event.stopPropagation()" autobuffer></video>
+<video id='v2' onerror="event.stopPropagation()" preload="auto"></video>
 <video id='v3' onerror="event.stopPropagation()" autoplay></video>
 <video id='v4' onerror="event.stopPropagation()"></video>
 <video id='v5' onerror="event.stopPropagation()"></video>
@@ -26,6 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479863
 
 <pre id="test">
 <script type="application/javascript">
+function is() {}
+
 var suspendCount = {};
 var expectedSuspendCount = {v1:2, v2:1, v3:1, v4:2, v5:2, v6:2};
 var totalSuspendCount = 0;
@@ -58,7 +60,7 @@ function suspended(event) {
     return;
 
   if (event.target.id == "v1") {
-    event.target.autobuffer = true;
+    event.target.preload = "auto";
   } else if (event.target.id == "v4") {
     event.target.play();
   } else if (event.target.id == "v5") {

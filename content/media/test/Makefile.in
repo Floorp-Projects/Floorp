@@ -91,7 +91,6 @@ _TEST_FILES = \
 		test_access_control.html \
 		test_audio1.html \
 		test_audio2.html \
-		test_autobuffer.html \
 		test_autoplay.html \
 		test_buffered.html \
 		test_bug448534.html \
@@ -147,7 +146,7 @@ _TEST_FILES = \
 # Bug 492821:
 #   test_videoDocumentTitle.html
 # Bug 493692:
-#   test_autobuffer2.html
+#   test_preload_suspend.html
 # Disabled since we don't play Wave files standalone, for now
 #		test_audioDocumentTitle.html
 
