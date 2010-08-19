@@ -96,6 +96,10 @@ XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
 // trigger the display of a new group.
 const NEW_GROUP_DELAY = 5000;
 
+// The amount of time in milliseconds that we wait before performing a live
+// search.
+const SEARCH_DELAY = 200;
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -401,6 +405,169 @@ HUD_SERVICE.prototype =
   setFilterState: function HS_setFilterState(aHUDId, aToggleType, aState)
   {
     this.filterPrefs[aHUDId][aToggleType] = aState;
+    this.adjustVisibilityForMessageType(aHUDId, aToggleType, aState);
+  },
+
+  /**
+   * Temporarily lifts the subtree rooted at the given node out of the DOM for
+   * the duration of the supplied callback. This allows DOM mutations performed
+   * inside the callback to avoid triggering reflows.
+   *
+   * @param nsIDOMNode aNode
+   *        The node to remove from the tree.
+   * @param function aCallback
+   *        The callback, which should take no parameters. The return value of
+   *        the callback, if any, is ignored.
+   * @returns void
+   */
+  liftNode: function(aNode, aCallback) {
+    let parentNode = aNode.parentNode;
+    let siblingNode = aNode.nextSibling;
+    parentNode.removeChild(aNode);
+    aCallback();
+    parentNode.insertBefore(aNode, siblingNode);
+  },
+
+  /**
+   * Turns the display of log nodes on and off appropriately to reflect the
+   * adjustment of the message type filter named by @aMessageType.
+   *
+   * @param string aHUDId
+   *        The ID of the HUD to alter.
+   * @param string aMessageType
+   *        The message type being filtered ("network", "css", etc.)
+   * @param boolean aState
+   *        True if the filter named by @aMessageType is being turned on; false
+   *        otherwise.
+   * @returns void
+   */
+  adjustVisibilityForMessageType:
+  function HS_adjustVisibilityForMessageType(aHUDId, aMessageType, aState)
+  {
+    let displayNode = this.getOutputNodeById(aHUDId);
+    let outputNode = displayNode.querySelector(".hud-output-node");
+    let doc = outputNode.ownerDocument;
+
+    this.liftNode(outputNode, function() {
+      let xpath = ".//*[contains(@class, 'hud-msg-node') and " +
+        "contains(@class, 'hud-" + aMessageType + "')]";
+      let result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        if (aState) {
+          result.snapshotItem(i).classList.remove("hud-filtered-by-type");
+        } else {
+          result.snapshotItem(i).classList.add("hud-filtered-by-type");
+        }
+      }
+    });
+  },
+
+  /**
+   * Returns the source code of the XPath contains() function necessary to
+   * match the given query string.
+   *
+   * @param string The query string to convert.
+   * @returns string
+   */
+  buildXPathFunctionForString: function HS_buildXPathFunctionForString(aStr)
+  {
+    let words = aStr.split(/\s+/), results = [];
+    for (let i = 0; i < words.length; i++) {
+      let word = words[i];
+      if (word === "") {
+        continue;
+      }
+
+      let result;
+      if (word.indexOf('"') === -1) {
+        result = '"' + word + '"';
+      }
+      else if (word.indexOf("'") === -1) {
+        result = "'" + word + "'";
+      }
+      else {
+        result = 'concat("' + word.replace(/"/g, "\", '\"', \"") + '")';
+      }
+
+      results.push("contains(., " + result + ")");
+    }
+
+    return (results.length === 0) ? "true()" : results.join(" and ");
+  },
+
+  /**
+   * Turns the display of log nodes on and off appropriately to reflect the
+   * adjustment of the search string.
+   *
+   * @param string aHUDId
+   *        The ID of the HUD to alter.
+   * @param string aSearchString
+   *        The new search string.
+   * @returns void
+   */
+  adjustVisibilityOnSearchStringChange:
+  function HS_adjustVisibilityOnSearchStringChange(aHUDId, aSearchString)
+  {
+    let fn = this.buildXPathFunctionForString(aSearchString);
+    let displayNode = this.getOutputNodeById(aHUDId);
+    let outputNode = displayNode.querySelector(".hud-output-node");
+    let doc = outputNode.ownerDocument;
+    this.liftNode(outputNode, function() {
+      let xpath = './/*[contains(@class, "hud-msg-node") and ' +
+        'not(contains(@class, "hud-filtered-by-string")) and not(' + fn + ')]';
+      let result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        result.snapshotItem(i).classList.add("hud-filtered-by-string");
+      }
+
+      xpath = './/*[contains(@class, "hud-msg-node") and contains(@class, ' +
+        '"hud-filtered-by-string") and ' + fn + ']';
+      result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        result.snapshotItem(i).classList.remove("hud-filtered-by-string");
+      }
+    });
+  },
+
+  /**
+   * Makes a newly-inserted node invisible if the user has filtered it out.
+   *
+   * @param string aHUDId
+   *        The ID of the HUD to alter.
+   * @param nsIDOMNode aNewNode
+   *        The newly-inserted console message.
+   * @returns void
+   */
+  adjustVisibilityForNewlyInsertedNode:
+  function HS_adjustVisibilityForNewlyInsertedNode(aHUDId, aNewNode) {
+    // Filter on the search string.
+    let searchString = this.getFilterStringByHUDId(aHUDId);
+    let xpath = ".[" + this.buildXPathFunctionForString(searchString) + "]";
+    let doc = aNewNode.ownerDocument;
+    let result = doc.evaluate(xpath, aNewNode, null,
+      Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+    if (result.snapshotLength === 0) {
+      // The string filter didn't match, so the node is filtered.
+      aNewNode.classList.add("hud-filtered-by-string");
+    }
+
+    // Filter by the message type.
+    let classes = aNewNode.classList;
+    let msgType = null;
+    for (let i = 0; i < classes.length; i++) {
+      let klass = classes.item(i);
+      if (klass !== "hud-msg-node" && klass.indexOf("hud-") === 0) {
+        msgType = klass.substring(4);   // Strip off "hud-".
+        break;
+      }
+    }
+    if (msgType !== null && !this.getFilterState(aHUDId, msgType)) {
+      // The node is filtered by type.
+      aNewNode.classList.add("hud-filtered-by-type");
+    }
   },
 
   /**
@@ -629,14 +796,8 @@ HUD_SERVICE.prototype =
   getFilterStringByHUDId: function HS_getFilterStringbyHUDId(aHUDId) {
     var hud = this.getHeadsUpDisplay(aHUDId);
     var filterStr = hud.querySelectorAll(".hud-filter-box")[0].value;
-    return filterStr || null;
+    return filterStr;
   },
-
-  /**
-   * The filter strings per HeadsUpDisplay
-   *
-   */
-  hudFilterStrings: {},
 
   /**
    * Update the filter text in the internal tracking object for all
@@ -647,41 +808,8 @@ HUD_SERVICE.prototype =
    */
   updateFilterText: function HS_updateFiltertext(aTextBoxNode)
   {
-    var hudId = aTextBoxNode.getAttribute(hudId);
-    this.hudFilterStrings[hudId] = aTextBoxNode.value || null;
-  },
-
-  /**
-   * Filter each message being logged into the console
-   *
-   * @param string aFilterString
-   * @param nsIDOMNode aMessageNode
-   * @returns JS Object
-   */
-  filterLogMessage:
-  function HS_filterLogMessage(aFilterString, aMessageNode)
-  {
-    aFilterString = aFilterString.toLowerCase();
-    var messageText = aMessageNode.textContent.toLowerCase();
-    var idx = messageText.indexOf(aFilterString);
-    if (idx > -1) {
-      return { strLength: aFilterString.length, strIndex: idx };
-    }
-    else {
-      return null;
-    }
-  },
-
-  /**
-   * Get the filter textbox from a HeadsUpDisplay
-   *
-   * @param string aHUDId
-   * @returns nsIDOMNode
-   */
-  getFilterTextBox: function HS_getFilterTextBox(aHUDId)
-  {
-    var hud = this.getHeadsUpDisplay(aHUDId);
-    return hud.querySelectorAll(".hud-filter-box")[0];
+    var hudId = aTextBoxNode.getAttribute("hudId");
+    this.adjustVisibilityOnSearchStringChange(hudId, aTextBoxNode.value);
   },
 
   /**
@@ -697,40 +825,18 @@ HUD_SERVICE.prototype =
    */
   logHUDMessage: function HS_logHUDMessage(aMessage,
                                            aConsoleNode,
-                                           aMessageNode,
-                                           aFilterState,
-                                           aFilterString)
+                                           aMessageNode)
   {
-    if (!aFilterState) {
-      // do not log anything
-      return;
-    }
-
     if (!aMessage) {
       throw new Error(ERRORS.MISSING_ARGS);
     }
 
     let lastGroupNode = this.appendGroupIfNecessary(aConsoleNode,
                                                     aMessage.timestamp);
-    if (aFilterString) {
-      var filtered = this.filterLogMessage(aFilterString, aMessageNode);
-      if (filtered) {
-        // we have successfully filtered a message, we need to log it
-        lastGroupNode.appendChild(aMessageNode);
-        ConsoleUtils.scrollToVisible(aMessageNode);
-      }
-      else {
-        // we need to ignore this message by changing its css class - we are
-        // still logging this, it is just hidden
-        var hiddenMessage = ConsoleUtils.hideLogMessage(aMessageNode);
-        lastGroupNode.appendChild(hiddenMessage);
-      }
-    }
-    else {
-      // log everything
-      lastGroupNode.appendChild(aMessageNode);
-      ConsoleUtils.scrollToVisible(aMessageNode);
-    }
+
+    lastGroupNode.appendChild(aMessageNode);
+    ConsoleUtils.scrollToVisible(aMessageNode);
+
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
   },
@@ -746,14 +852,11 @@ HUD_SERVICE.prototype =
    */
   logConsoleMessage: function HS_logConsoleMessage(aMessage,
                                                    aConsoleNode,
-                                                   aMessageNode,
-                                                   aFilterState,
-                                                   aFilterString)
+                                                   aMessageNode)
   {
-    if (aFilterState){
-      aConsoleNode.appendChild(aMessageNode);
-      ConsoleUtils.scrollToVisible(aMessageNode);
-    }
+    aConsoleNode.appendChild(aMessageNode);
+    ConsoleUtils.scrollToVisible(aMessageNode);
+
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
   },
@@ -775,15 +878,11 @@ HUD_SERVICE.prototype =
     }
 
     var hud = this.getHeadsUpDisplay(aMessage.hudId);
-    // check filter before logging to the outputNode
-    var filterState = this.getFilterState(aMessage.hudId, aMessage.logLevel);
-    var filterString = this.getFilterStringByHUDId(aMessage.hudId);
-
     switch (aMessage.origin) {
       case "network":
       case "HUDConsole":
       case "console-listener":
-        this.logHUDMessage(aMessage, aConsoleNode, aMessageNode, filterState, filterString);
+        this.logHUDMessage(aMessage, aConsoleNode, aMessageNode);
         break;
       default:
         // noop
@@ -1091,11 +1190,6 @@ HUD_SERVICE.prototype =
                 getAttribute("id");
       }
 
-      // check if network activity logging is "on":
-      if (!this.getFilterState(hudId, "network")) {
-        return;
-      }
-
       // get an id to attach to the dom node for lookup of node
       // when updating the log entry with additional http transactions
       var domId = "hud-log-node-" + this.sequenceId();
@@ -1151,14 +1245,6 @@ HUD_SERVICE.prototype =
 
     if (aActivityObject.flags in this.scriptErrorFlags) {
       logLevel = this.scriptErrorFlags[aActivityObject.flags];
-    }
-
-    // check if we should be logging this message:
-    var filterState = this.getFilterState(hudId, logLevel);
-
-    if (!filterState) {
-      // Ignore log message
-      return;
     }
 
     // in this case, the "activity object" is the
@@ -1746,7 +1832,7 @@ HeadsUpDisplay.prototype = {
     var context = Cu.getWeakReference(aWindow);
 
     if (appName() == "FIREFOX") {
-      let outputCSSClassOverride = "hud-msg-node hud-console";
+      let outputCSSClassOverride = "hud-msg-node";
       let mixin = new JSTermFirefoxMixin(context, aParentNode, aExistingConsole, outputCSSClassOverride);
       this.jsterm = new JSTerm(context, aParentNode, mixin);
     }
@@ -1844,6 +1930,16 @@ HeadsUpDisplay.prototype = {
     this.outputNode.setAttribute("orient", "vertical");
     this.outputNode.setAttribute("context", this.hudId + "-output-contextmenu");
 
+    this.outputNode.addEventListener("DOMNodeInserted", function(ev) {
+      // DOMNodeInserted is also called when the output node is being *itself*
+      // (re)inserted into the DOM (which happens during a search, for
+      // example). For this reason, we need to ensure that we only check
+      // message nodes.
+      if (ev.target.classList.contains("hud-msg-node")) {
+        HUDService.adjustVisibilityForNewlyInsertedNode(self.hudId, ev.target);
+      }
+    }, false);
+
     this.filterSpacer = this.makeXULNode("spacer");
     this.filterSpacer.setAttribute("flex", "1");
 
@@ -1903,12 +1999,31 @@ HeadsUpDisplay.prototype = {
    */
   setFilterTextBoxEvents: function HUD_setFilterTextBoxEvents()
   {
-    var self = this;
-    function keyPress(aEvent)
+    var filterBox = this.filterBox;
+    function onChange()
     {
-      HUDService.updateFilterText(aEvent.target);
+      // To improve responsiveness, we let the user finish typing before we
+      // perform the search.
+
+      if (this.timer == null) {
+        let timerClass = Cc["@mozilla.org/timer;1"];
+        this.timer = timerClass.createInstance(Ci.nsITimer);
+      } else {
+        this.timer.cancel();
+      }
+
+      let timerEvent = {
+        notify: function setFilterTextBoxEvents_timerEvent_notify() {
+          HUDService.updateFilterText(filterBox);
+        }
+      };
+
+      this.timer.initWithCallback(timerEvent, SEARCH_DELAY,
+        Ci.nsITimer.TYPE_ONE_SHOT);
     }
-    this.filterBox.addEventListener("keydown", keyPress, false);
+
+    filterBox.addEventListener("command", onChange, false);
+    filterBox.addEventListener("input", onChange, false);
   },
 
   /**
@@ -2085,14 +2200,6 @@ function HUDConsole(aHeadsUpDisplay)
 
   let sendToHUDService = function console_send(aLevel, aArguments)
   {
-    // check to see if logging is on for this level before logging!
-    var filterState = HUDService.getFilterState(hudId, aLevel);
-
-    if (!filterState) {
-      // Ignoring log message
-      return;
-    }
-
     let ts = ConsoleUtils.timestamp();
     let messageNode = hud.makeXULNode("label");
 
@@ -3247,19 +3354,6 @@ ConsoleUtils = {
       + pad(d.getMinutes()) + ":"
       + pad(d.getSeconds()) + ":"
       + pad(d.getMilliseconds(), true);
-  },
-
-  /**
-   * Hides a log message by changing its class
-   *
-   * @param nsIDOMNode aMessageNode
-   * @returns nsIDOMNode
-   */
-  hideLogMessage: function ConsoleUtils_hideLogMessage(aMessageNode) {
-    var klass = aMessageNode.getAttribute("class");
-    klass += " hud-hidden";
-    aMessageNode.setAttribute("class", klass);
-    return aMessageNode;
   },
 
   /**

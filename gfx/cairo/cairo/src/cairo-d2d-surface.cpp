@@ -238,6 +238,7 @@ cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
     memset(&rastDesc, 0, sizeof(rastDesc));
     rastDesc.CullMode = D3D10_CULL_NONE;
     rastDesc.FillMode = D3D10_FILL_SOLID;
+    rastDesc.DepthClipEnable = TRUE;
     hr = device->mD3D10Device->CreateRasterizerState(&rastDesc, &device->mRasterizerState);
     if (FAILED(hr)) {
 	goto FAILED;

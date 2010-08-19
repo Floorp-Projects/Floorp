@@ -62,16 +62,16 @@ function process_tree_type(d)
 
   if (t.typedef !== undefined)
     if (isRed(TYPE_NAME(d)))
-      error("Typedef declaration is annotated JS_REQUIRES_STACK: the annotation should be on the type itself", t.loc);
+      warning("Typedef declaration is annotated JS_REQUIRES_STACK: the annotation should be on the type itself", t.loc);
   
   if (hasAttribute(t, RED)) {
-    error("Non-function is annotated JS_REQUIRES_STACK", t.loc);
+    warning("Non-function is annotated JS_REQUIRES_STACK", t.loc);
     return;
   }
   
   for (let st = t; st !== undefined && st.isPointer; st = st.type) {
     if (hasAttribute(st, RED)) {
-      error("Non-function is annotated JS_REQUIRES_STACK", t.loc);
+      warning("Non-function is annotated JS_REQUIRES_STACK", t.loc);
       return;
     }
     
@@ -166,7 +166,7 @@ function RedGreenCheck(fndecl, trace) {
             if (loc !== undefined)
               return loc;
           }
-          return location_of(DECL_SAVED_TREE(fndecl));
+          return location_of(fndecl);
         }
                   
         switch (TREE_CODE(t)) {
@@ -179,9 +179,9 @@ function RedGreenCheck(fndecl, trace) {
               self.hasRed = true;
             }
             break;
-          case CALL_EXPR:
+          case GIMPLE_CALL:
           {
-            let callee = call_function_decl(t);
+            let callee = gimple_call_fndecl(t);
             if (callee) {
               if (isRed(callee)) {
                 let calleeName = dehydra_convert(callee).name;
@@ -196,7 +196,7 @@ function RedGreenCheck(fndecl, trace) {
               let fntype = TREE_CHECK(
                 TREE_TYPE( // the function type
                   TREE_TYPE( // the function pointer type
-                    CALL_EXPR_FN(t)
+                    gimple_call_fn(t)
                   )
                 ),
                 FUNCTION_TYPE, METHOD_TYPE);
@@ -240,7 +240,7 @@ RedGreenCheck.prototype.flowState = function(isn, state) {
   let green = stackState != 1 && stackState != ESP.NOT_REACHED;
   let redInfo = isn.redInfo;
   if (green && redInfo) {
-    error(redInfo[0], redInfo[1]);
+    warning(redInfo[0], redInfo[1]);
     isn.redInfo = undefined;  // avoid duplicate messages about this instruction
   }
 
@@ -283,15 +283,14 @@ function assignCheck(source, destType, locfunc)
       return;
     
     if (isRed(sourcefn))
-      error("Assigning non-JS_REQUIRES_STACK function pointer from JS_REQUIRES_STACK function " + dehydra_convert(sourcefn).name, locfunc());
-  }
-  else {
-    let sourceType = TREE_TYPE(TREE_TYPE(source).tree_check(POINTER_TYPE));
+      warning("Assigning non-JS_REQUIRES_STACK function pointer from JS_REQUIRES_STACK function " + dehydra_convert(sourcefn).name, locfunc());
+  } else if (TREE_TYPE(source).tree_code() == POINTER_TYPE) {
+    let sourceType = TREE_TYPE(TREE_TYPE(source));
     switch (TREE_CODE(sourceType)) {
       case FUNCTION_TYPE:
       case METHOD_TYPE:
         if (isRed(sourceType))
-          error("Assigning non-JS_REQUIRES_STACK function pointer from JS_REQUIRES_STACK function pointer", locfunc());
+          warning("Assigning non-JS_REQUIRES_STACK function pointer from JS_REQUIRES_STACK function pointer", locfunc());
         break;
     }
   }
@@ -321,7 +320,7 @@ function functionPointerWalk(t, baseloc)
     }
                   
     switch (TREE_CODE(t)) {
-      case GIMPLE_MODIFY_STMT: {
+      case GIMPLE_ASSIGN: {
         let [dest, source] = t.operands();
         assignCheck(source, TREE_TYPE(dest), getLocation);
         break;
@@ -341,12 +340,15 @@ function functionPointerWalk(t, baseloc)
               assignCheck(ce.value, eltype, getLocation);
             break;
           }
+          case LANG_TYPE:
+            // these can be safely ignored
+            break;
           default:
             warning("Unexpected type in initializer: " + TREE_CODE(TREE_TYPE(t)), getLocation());
         }
         break;
       }
-      case CALL_EXPR: {
+      case GIMPLE_CALL: {
         // Check that the arguments to a function and the declared types
         // of those arguments are compatible.
         let ops = t.operands();
@@ -369,5 +371,5 @@ function functionPointerCheck(fndecl)
   let cfg = function_decl_cfg(fndecl);
   for (let bb in cfg_bb_iterator(cfg))
     for (let isn in bb_isn_iterator(bb))
-      functionPointerWalk(isn, DECL_SAVED_TREE(fndecl));
+      functionPointerWalk(isn, fndecl);
 }

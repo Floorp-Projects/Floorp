@@ -690,9 +690,16 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Can the float fit here?
   PRBool keepFloatOnSameLine = PR_FALSE;
 
+  // Are we required to place at least part of the float because we're
+  // at the top of the page (to avoid an infinite loop of pushing and
+  // breaking).
+  PRBool mustPlaceFloat =
+    mReflowState.mFlags.mIsTopOfPage && IsAdjacentWithTop();
+
   for (;;) {
     if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
-        floatAvailableSpace.mRect.height <= 0) {
+        floatAvailableSpace.mRect.height <= 0 &&
+        !mustPlaceFloat) {
       // No space, nowhere to put anything.
       PushFloatPastBreak(aFloat);
       return PR_FALSE;
@@ -759,6 +766,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
                                           adjustedAvailableSpace.width,
                                           aFloat, offsets);
     }
+
+    mustPlaceFloat = PR_FALSE;
   }
 
   // If the float is continued, it will get the same absolute x value as its prev-in-flow
@@ -810,8 +819,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // do the same.
   if ((mContentArea.height != NS_UNCONSTRAINEDSIZE &&
        adjustedAvailableSpace.height == NS_UNCONSTRAINEDSIZE &&
-       (!mReflowState.mFlags.mIsTopOfPage || !IsAdjacentWithTop() ||
-        pushedDown) &&
+       !mustPlaceFloat &&
        aFloat->GetSize().height + floatMargin.TopBottom() >
          mContentArea.YMost() - floatY) ||
       NS_FRAME_IS_TRUNCATED(reflowStatus)) {
@@ -869,7 +877,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
     mFloatManager->IncludeInDamage(top, bottom);
   }
 
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
+  if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {
     mBlock->SplitFloat(*this, aFloat, reflowStatus);
   }
 

@@ -620,6 +620,8 @@ xpicleanup@BIN_SUFFIX@
   components/storage-Legacy.js
   components/storage-mozStorage.js
   components/txEXSLTRegExFunctions.js
+  components/WeaveCrypto.js
+  components/Weave.js
   components/WebContentConverter.js
   defaults/autoconfig/platform.js
   defaults/autoconfig/prefcalls.js
@@ -628,8 +630,8 @@ xpicleanup@BIN_SUFFIX@
   defaults/pref/firefox.js
   defaults/pref/firefox-l10n.js
   defaults/pref/reporter.js
+  defaults/pref/services-sync.js
   defaults/profile/bookmarks.html
-  defaults/profile/chrome
   defaults/profile/chrome/userChrome-example.css
   defaults/profile/chrome/userContent-example.css
   defaults/profile/localstore.rdf
@@ -668,8 +670,45 @@ xpicleanup@BIN_SUFFIX@
   modules/PluralForm.jsm
   modules/PopupNotifications.jsm
   modules/Services.jsm
+  modules/services-sync/auth.js
+  modules/services-sync/base_records/collection.js
+  modules/services-sync/base_records/crypto.js
+  modules/services-sync/base_records/keys.js
+  modules/services-sync/base_records/wbo.js
+  modules/services-sync/constants.js
+  modules/services-sync/engines/bookmarks.js
+  modules/services-sync/engines/clients.js
+  modules/services-sync/engines/forms.js
+  modules/services-sync/engines/history.js
+  modules/services-sync/engines.js
+  modules/services-sync/engines/passwords.js
+  modules/services-sync/engines/prefs.js
+  modules/services-sync/engines/tabs.js
+  modules/services-sync/ext/Observers.js
+  modules/services-sync/ext/Preferences.js
+  modules/services-sync/ext/StringBundle.js
+  modules/services-sync/ext/Sync.js
+  modules/services-sync/identity.js
+  modules/services-sync/log4moz.js
+  modules/services-sync/notifications.js
+  modules/services-sync/resource.js
+  modules/services-sync/service.js
+  modules/services-sync/status.js
+  modules/services-sync/stores.js
+  modules/services-sync/trackers.js
+  modules/services-sync/type_records/bookmark.js
+  modules/services-sync/type_records/clients.js
+  modules/services-sync/type_records/forms.js
+  modules/services-sync/type_records/history.js
+  modules/services-sync/type_records/passwords.js
+  modules/services-sync/type_records/prefs.js
+  modules/services-sync/type_records/tabs.js
+  modules/services-sync/util.js
   modules/SpatialNavigation.js
   modules/stylePanel.jsm
+  modules/tabview/AllTabs.jsm
+  modules/tabview/groups.jsm
+  modules/tabview/utils.jsm
   modules/utils.js
   modules/WindowDraggingUtils.jsm
   #ifdef XP_WIN
@@ -683,7 +722,6 @@ xpicleanup@BIN_SUFFIX@
   res/dtd/mathml.dtd
   res/dtd/xhtml11.dtd
   res/EditorOverride.css
-  res/entityTables
   res/entityTables/html40Latin1.properties
   res/entityTables/html40Special.properties
   res/entityTables/html40Symbols.properties
@@ -745,7 +783,6 @@ xpicleanup@BIN_SUFFIX@
   components/commandhandler.xpt
   components/commandlines.xpt
   components/composer.xpt
-  components/content.xpt
   components/content.xpt
   components/content_base.xpt
   components/content_html.xpt

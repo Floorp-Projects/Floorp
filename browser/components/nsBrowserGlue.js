@@ -438,7 +438,7 @@ BrowserGlue.prototype = {
       var browser = browserEnum.getNext();
       var tabbrowser = browser.document.getElementById("content");
       if (tabbrowser)
-        pagecount += tabbrowser.browsers.length - tabbrowser._numPinnedTabs;
+        pagecount += tabbrowser.browsers.length;
     }
 
     this._saveSession = false;
@@ -469,7 +469,7 @@ BrowserGlue.prototype = {
                             getService(Ci.nsIPrivateBrowsingService).
                             privateBrowsingEnabled;
     if (!showPrompt || inPrivateBrowsing)
-      return;
+      return false;
 
     var quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
     var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
