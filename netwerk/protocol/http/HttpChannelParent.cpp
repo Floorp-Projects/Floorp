@@ -51,6 +51,9 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIBadCertListener2.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsSerializationHelper.h"
+#include "nsISerializable.h"
+#include "nsIAssociatedContentSecurity.h"
 
 namespace mozilla {
 namespace net {
@@ -123,11 +126,11 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))
-    return false;       // TODO: cancel request (bug 536317), return true
+    return SendCancelEarly(rv);
 
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, ios, nsnull, nsnull, loadFlags);
   if (NS_FAILED(rv))
-    return false;       // TODO: cancel request (bug 536317), return true
+    return SendCancelEarly(rv);
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   httpChan->SetRemoteChannel(true);
@@ -159,9 +162,9 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   if (uploadStreamInfo != eUploadStream_null) {
     nsCOMPtr<nsIInputStream> stream;
     rv = NS_NewPostDataStream(getter_AddRefs(stream), false, uploadStreamData, 0);
-    if (!NS_SUCCEEDED(rv)) {
-      return false;   // TODO: cancel request (bug 536317), return true
-    }
+    if (NS_FAILED(rv))
+      return SendCancelEarly(rv);
+
     httpChan->InternalSetUploadStream(stream);
     // We're casting uploadStreamInfo into PRBool here on purpose because
     // we know possible values are either 0 or 1. See uploadStreamInfoType.
@@ -176,7 +179,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   rv = httpChan->AsyncOpen(mChannelListener, nsnull);
   if (NS_FAILED(rv))
-    return false;       // TODO: cancel request (bug 536317), return true
+    return SendCancelEarly(rv);
 
   return true;
 }
@@ -204,6 +207,18 @@ HttpChannelParent::RecvResume()
 }
 
 bool
+HttpChannelParent::RecvCancel(const nsresult& status)
+{
+  // May receive cancel before channel has been constructed!
+  if (mChannel) {
+    nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+    httpChan->Cancel(status);
+  }
+  return true;
+}
+
+
+bool
 HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 {
   if (mCacheDescriptor)
@@ -213,11 +228,44 @@ HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 }
 
 bool
+HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
+                                                       const PRInt32& low,
+                                                       const PRInt32& broken,
+                                                       const PRInt32& no)
+{
+  nsHttpChannel *chan = static_cast<nsHttpChannel *>(mChannel.get());
+
+  nsCOMPtr<nsISupports> secInfo;
+  chan->GetSecurityInfo(getter_AddRefs(secInfo));
+
+  nsCOMPtr<nsIAssociatedContentSecurity> assoc = do_QueryInterface(secInfo);
+  if (!assoc)
+    return true;
+
+  assoc->SetCountSubRequestsHighSecurity(high);
+  assoc->SetCountSubRequestsLowSecurity(low);
+  assoc->SetCountSubRequestsBrokenSecurity(broken);
+  assoc->SetCountSubRequestsNoSecurity(no);
+
+  return true;
+}
+
+bool
 HttpChannelParent::RecvRedirect2Result(const nsresult& result, 
                                        const RequestHeaderTuples& changedHeaders)
 {
   if (mChannelListener)
     mChannelListener->OnContentRedirectResultReceived(result, changedHeaders);
+  return true;
+}
+
+bool
+HttpChannelParent::RecvDocumentChannelCleanup()
+{
+  // We must clear the cache entry here, else we'll block other channels from
+  // reading it if we've got it open for writing.  
+  mCacheDescriptor = 0;
+
   return true;
 }
 
@@ -239,7 +287,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   PRBool isFromCache = false;
   chan->IsFromCache(&isFromCache);
-  PRUint32 expirationTime;
+  PRUint32 expirationTime = nsICache::NO_EXPIRATION_TIME;
   chan->GetCacheTokenExpirationTime(&expirationTime);
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);
@@ -248,11 +296,21 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   // It could be already released by nsHttpChannel at that time.
   chan->GetCacheToken(getter_AddRefs(mCacheDescriptor));
 
+  nsCString secInfoSerialization;
+  nsCOMPtr<nsISupports> secInfoSupp;
+  chan->GetSecurityInfo(getter_AddRefs(secInfoSupp));
+  if (secInfoSupp) {
+    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
+    if (secInfoSer)
+      NS_SerializeToString(secInfoSer, secInfoSerialization);
+  }
+
   if (mIPCClosed || 
       !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
                           !!responseHead, isFromCache,
                           mCacheDescriptor ? PR_TRUE : PR_FALSE,
-                          expirationTime, cachedCharset)) {
+                          expirationTime, cachedCharset, secInfoSerialization)) 
+  {
     return NS_ERROR_UNEXPECTED; 
   }
   return NS_OK;
@@ -280,20 +338,14 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
 {
   LOG(("HttpChannelParent::OnDataAvailable [this=%x]\n", this));
  
-  nsresult rv;
-
   nsCString data;
-  data.SetLength(aCount);
-  char * p = data.BeginWriting();
-  PRUint32 bytesRead;
-  rv = aInputStream->Read(p, aCount, &bytesRead);
-  data.EndWriting();
-  if (!NS_SUCCEEDED(rv) || bytesRead != aCount) {
-    return rv;              // TODO: cancel request locally (bug 536317)
-  }
+  nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (mIPCClosed || !SendOnDataAvailable(data, aOffset, bytesRead))
+  if (mIPCClosed || !SendOnDataAvailable(data, aOffset, aCount))
     return NS_ERROR_UNEXPECTED; 
+
   return NS_OK;
 }
 

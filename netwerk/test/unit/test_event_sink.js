@@ -105,12 +105,6 @@ function makeChan(url) {
 var httpserv = null;
 
 function run_test() {
-// DISABLE TEST: bug 586205
-_dump('FIXME/bug 586205: disabled to avoid perma-orange\n');
-}
-function never() {
-
-
   httpserv = new nsHttpServer();
   httpserv.registerPathHandler("/redirect", redirect);
   httpserv.registerPathHandler("/redirectfile", redirectfile);

@@ -18,10 +18,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   <script type="application/javascript">
     var gParagraphAcc;
 
+    function testLinkIndexAtOffset(aID, aOffset, aIndex)
+    {
+      var htAcc = getAccessible(aID, [nsIAccessibleHyperText]);
+      is(htAcc.getLinkIndexAtOffset(aOffset), aIndex,
+         "Wrong link index at offset " + aOffset + " for ID " + aID + "!");
+    }
+
     function testThis(aID, aCharIndex, aExpectedLinkIndex, aName)
     {
-      is(gParagraphAcc.getLinkIndexAtOffset(aCharIndex), aExpectedLinkIndex,
-         "Wrong link index at offset " + aCharIndex + " for ID " + aID + "!");
+      testLinkIndexAtOffset(gParagraphAcc, aCharIndex, aExpectedLinkIndex);
 
       var linkAcc = gParagraphAcc.getLinkAt(aExpectedLinkIndex);
       ok(linkAcc, "No accessible for link " + aID + "!");
@@ -95,6 +101,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
         is(linkIdx, jdx, "Wrong link index for 'p3'!");
       };
 
+      // getLinkIndexAtOffset, causes the offsets to be cached;
+      testLinkIndexAtOffset("p4", 0, 0); // 1st 'mozilla' link
+      testLinkIndexAtOffset("p4", 1, 1); // 2nd 'mozilla' link
+      testLinkIndexAtOffset("p4", 2, -1); // ' ' of ' te' text node
+      testLinkIndexAtOffset("p4", 3, -1); // 't' of ' te' text node
+      testLinkIndexAtOffset("p4", 5, -1); // 'x' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 7, -1); // ' ' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 8, 2); // 3d 'mozilla' link
+      testLinkIndexAtOffset("p4", 9, 2); // the end, latest link
+
+      // the second pass to make sure link indexes are calculated propertly from
+      // cached offsets.
+      testLinkIndexAtOffset("p4", 0, 0); // 1st 'mozilla' link
+      testLinkIndexAtOffset("p4", 1, 1); // 2nd 'mozilla' link
+      testLinkIndexAtOffset("p4", 2, -1); // ' ' of ' te' text node
+      testLinkIndexAtOffset("p4", 3, -1); // 't' of ' te' text node
+      testLinkIndexAtOffset("p4", 5, -1); // 'x' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 7, -1); // ' ' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 8, 2); // 3d 'mozilla' link
+      testLinkIndexAtOffset("p4", 9, 2); // the end, latest link
+
       SimpleTest.finish();
     }
 
@@ -150,5 +177,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   </p>
   <p id="p2"><a href="http://mozilla.org">mozilla.org</a></p>
   <p id="p3"></p>
+  <p id="p4"><a href="www">mozilla</a><a href="www">mozilla</a><span> te</span><span>xt </span><a href="www">mozilla</a></p>
 </body>
 </html>

@@ -29,7 +29,7 @@ var htmlEditor = document.getElementById("htmlEditor");
 
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 const kIsWin = navigator.platform.indexOf("Win") == 0;
-const kIsLinux = navigator.platform.indexOf("Linux") == 0;
+const kIsLinux = navigator.platform.indexOf("Linux") == 0 || navigator.platform.indexOf("SunOS") == 0 ;
 
 function runTests()
 {

@@ -72,7 +72,7 @@ NS_IMETHODIMP nsTreeImageListener::OnDataAvailable(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsTreeImageListener::FrameChanged(imgIContainer *aContainer,
-                                                nsIntRect *dirtyRect)
+                                                const nsIntRect *aDirtyRect)
 {
   Invalidate();
   return NS_OK;

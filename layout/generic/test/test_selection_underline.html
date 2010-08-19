@@ -63,15 +63,19 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0;
  *   5: font-family: mplus-1p-regular.ttf; font-size: 52px;
  */
 var gFontMetrics = [];
+
 if (kIsWin) {
-  gFontMetrics = [
-    { emHeight: 16, ascent: 13, offset: -2, lineHeight: 1, descentLimit:  3 },
-    { emHeight: 16, ascent: 17, offset: -2, lineHeight: 1, descentLimit:  5 },
-    { emHeight: 32, ascent: 26, offset: -4, lineHeight: 1, descentLimit:  6 },
-    { emHeight: 32, ascent: 34, offset: -4, lineHeight: 2, descentLimit: 10 },
-    { emHeight: 52, ascent: 42, offset: -7, lineHeight: 1, descentLimit: 10 },
-    { emHeight: 52, ascent: 56, offset: -7, lineHeight: 3, descentLimit: 17 }
-  ];
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  if (!Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).DWriteEnabled) {
+    gFontMetrics = [
+      { emHeight: 16, ascent: 13, offset: -2, lineHeight: 1, descentLimit:  3 },
+      { emHeight: 16, ascent: 17, offset: -2, lineHeight: 1, descentLimit:  5 },
+      { emHeight: 32, ascent: 26, offset: -4, lineHeight: 1, descentLimit:  6 },
+      { emHeight: 32, ascent: 34, offset: -4, lineHeight: 2, descentLimit: 10 },
+      { emHeight: 52, ascent: 42, offset: -7, lineHeight: 1, descentLimit: 10 },
+      { emHeight: 52, ascent: 56, offset: -7, lineHeight: 3, descentLimit: 17 }
+    ];
+  }
 }
 
 /*

@@ -7,8 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482976
 -->
 <window title="Mozilla Bug 482976" onload="run1()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<iframe src="data:text/html;charset=utf-8,&lt;body onload='window.parent.loadedChild()'&gt;&lt;q&gt;"></iframe>
-<iframe src="about:blank"/>
+<iframe src="about:blank" type="content"></iframe>
+<iframe src="about:blank" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
 var is = window.opener.wrappedJSObject.is;

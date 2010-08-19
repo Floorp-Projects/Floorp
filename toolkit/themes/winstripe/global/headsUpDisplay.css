@@ -56,7 +56,7 @@
     font-weight: bold;
 }
 
-.hud-output-node div {
+.hud-output-node * {
     -moz-user-select: text;
     white-space: pre-wrap;
     -moz-user-focus: normal;
@@ -86,10 +86,6 @@
     color: red; font-weight: bold;
 }
 
-.hud-hidden {
-    display: none;
-}
-
 .hud-msg-node {    
     width: 100%;
     margin-top: 0.3em; 
@@ -104,6 +100,10 @@
     overflow-x: auto; overflow: auto;
     font: 1em monospace; background-color: white;
     width: 100%;
+}
+
+.hud-filtered-by-type, .hud-filtered-by-string {
+    display: none;
 }
 
 .hud-filter-cat:-moz-system-metric(windows-default-theme) {

@@ -296,10 +296,16 @@ public:
   { return gfxFloat(aAppUnits) / AppUnitsPerDevPixel(); }
 
   /**
-   * Gets the number of app units in one inch; this is the device's DPI
-   * times AppUnitsPerDevPixel().
+   * Gets the number of app units in one physical inch; this is the
+   * device's DPI times AppUnitsPerDevPixel().
    */
-  PRInt32 AppUnitsPerInch() const { return mAppUnitsPerInch; }
+  PRInt32 AppUnitsPerPhysicalInch() const { return mAppUnitsPerPhysicalInch; }
+
+  /**
+   * Gets the number of app units in one CSS inch; this is the
+   * 96 times AppUnitsPerCSSPixel.
+   */
+  static PRInt32 AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
 
   /**
    * Fill in an nsFont based on the ID of a system font.  This function
@@ -469,7 +475,7 @@ public:
   /**
    * Check to see if the DPI has changed
    * @return whether there was actually a change in the DPI
-   *         (whether AppUnitsPerDevPixel() or AppUnitsPerInch() changed)
+   *         (whether AppUnitsPerDevPixel() or AppUnitsPerPhysicalInch() changed)
   */
   virtual PRBool CheckDPIChange() = 0;
 
@@ -494,7 +500,7 @@ public:
 
 protected:
   PRInt32 mAppUnitsPerDevPixel;
-  PRInt32 mAppUnitsPerInch;
+  PRInt32 mAppUnitsPerPhysicalInch;
   PRInt32 mAppUnitsPerDevNotScaledPixel;
   float  mPixelScale;
 };

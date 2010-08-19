@@ -172,12 +172,10 @@ public:
   }
 
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   nsRegion* aVisibleRegionBeforeMove)
+                                   nsRegion* aVisibleRegion)
   {
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
-           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
-                                                  aVisibleRegionBeforeMove);
+           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion);
   }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder)
   {

@@ -315,10 +315,17 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx, const gfxPoint& offset)
     // no need to do all this if not blurring
     if (mBlurRadius.width != 0 || mBlurRadius.height != 0) {
         nsTArray<unsigned char> tempAlphaDataBuf;
-        if (!tempAlphaDataBuf.SetLength(mImageSurface->GetDataSize()))
-            return; // OOM
+        PRSize szB = mImageSurface->GetDataSize();
+        if (!tempAlphaDataBuf.SetLength(szB))
+           return; // OOM
 
         unsigned char* tmpData = tempAlphaDataBuf.Elements();
+        // .SetLength above doesn't initialise the new elements since
+        // they are unsigned chars and so have no default constructor.
+        // So we have to initialise them by hand.
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=582668#c10
+        memset(tmpData, 0, szB);
+
         PRInt32 stride = mImageSurface->Stride();
         PRInt32 rows = mImageSurface->Height();
 

@@ -1091,11 +1091,8 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
     NS_ADDREF(*aAttributes = attributes);
   }
 
-  PRInt32 offsetAccIdx = -1;
-  PRInt32 startOffset = 0, endOffset = 0;
-  nsAccessible *offsetAcc = GetAccessibleAtOffset(aOffset, &offsetAccIdx,
-                                                  &startOffset, &endOffset);
-  if (!offsetAcc) {
+  nsAccessible* accAtOffset = GetChildAtOffset(aOffset);
+  if (!accAtOffset) {
     // Offset 0 is correct offset when accessible has empty text. Include
     // default attributes if they were requested, otherwise return empty set.
     if (aOffset == 0) {
@@ -1108,17 +1105,21 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
     return NS_ERROR_INVALID_ARG;
   }
 
+  PRInt32 accAtOffsetIdx = accAtOffset->GetIndexInParent();
+  PRInt32 startOffset = GetChildOffset(accAtOffsetIdx);
+  PRInt32 endOffset = GetChildOffset(accAtOffsetIdx + 1);
   PRInt32 offsetInAcc = aOffset - startOffset;
 
-  nsTextAttrsMgr textAttrsMgr(this, aIncludeDefAttrs, offsetAcc, offsetAccIdx);
+  nsTextAttrsMgr textAttrsMgr(this, aIncludeDefAttrs, accAtOffset,
+                              accAtOffsetIdx);
   nsresult rv = textAttrsMgr.GetAttributes(*aAttributes, &startOffset,
                                            &endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Compute spelling attributes on text accessible only.
-  nsIFrame *offsetFrame = offsetAcc->GetFrame();
+  nsIFrame *offsetFrame = accAtOffset->GetFrame();
   if (offsetFrame && offsetFrame->GetType() == nsAccessibilityAtoms::textFrame) {
-    nsCOMPtr<nsIDOMNode> node = offsetAcc->GetDOMNode();
+    nsCOMPtr<nsIDOMNode> node = accAtOffset->GetDOMNode();
 
     PRInt32 nodeOffset = 0;
     nsresult rv = RenderedToContentOffset(offsetFrame, offsetInAcc,
@@ -1369,7 +1370,7 @@ nsHyperTextAccessible::GetLinkIndex(nsIAccessibleHyperLink* aLink,
 }
 
 NS_IMETHODIMP
-nsHyperTextAccessible::GetLinkIndexAtOffset(PRInt32 aCharIndex,
+nsHyperTextAccessible::GetLinkIndexAtOffset(PRInt32 aOffset,
                                             PRInt32* aLinkIndex)
 {
   NS_ENSURE_ARG_POINTER(aLinkIndex);
@@ -1378,29 +1379,7 @@ nsHyperTextAccessible::GetLinkIndexAtOffset(PRInt32 aCharIndex,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 characterCount = 0;
-  PRInt32 linkIndex = 0;
-
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0;
-       childIdx < childCount && characterCount <= aCharIndex; childIdx++) {
-    nsAccessible *childAcc = mChildren[childIdx];
-
-    PRUint32 role = nsAccUtils::Role(childAcc);
-    if (role == nsIAccessibleRole::ROLE_TEXT_LEAF ||
-        role == nsIAccessibleRole::ROLE_STATICTEXT) {
-      characterCount += nsAccUtils::TextLength(childAcc);
-    }
-    else {
-      if (characterCount ++ == aCharIndex) {
-        *aLinkIndex = linkIndex;
-        break;
-      }
-      if (role != nsIAccessibleRole::ROLE_WHITESPACE) {
-        ++ linkIndex;
-      }
-    }
-  }
+  *aLinkIndex = GetLinkIndexAtOffset(aOffset);
   return NS_OK;
 }
 
@@ -2043,7 +2022,6 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
 void
 nsHyperTextAccessible::InvalidateChildren()
 {
-  mLinks = nsnull;
   mOffsets.Clear();
 
   nsAccessibleWrap::InvalidateChildren();
@@ -2110,69 +2088,76 @@ nsresult nsHyperTextAccessible::RenderedToContentOffset(nsIFrame *aFrame, PRUint
 // nsHyperTextAccessible public
 
 PRInt32
-nsHyperTextAccessible::GetChildOffset(nsAccessible* aChild,
+nsHyperTextAccessible::GetChildOffset(PRUint32 aChildIndex,
                                       PRBool aInvalidateAfter)
 {
-  PRInt32 index = GetIndexOf(aChild);
-  if (index == -1 || index == 0)
-    return index;
+  if (aChildIndex == 0)
+    return aChildIndex;
 
-  PRInt32 count = mOffsets.Length() - index;
+  PRInt32 count = mOffsets.Length() - aChildIndex;
   if (count > 0) {
     if (aInvalidateAfter)
-      mOffsets.RemoveElementsAt(index, count);
+      mOffsets.RemoveElementsAt(aChildIndex, count);
 
-    return mOffsets[index - 1];
+    return mOffsets[aChildIndex - 1];
   }
 
   PRUint32 lastOffset = mOffsets.IsEmpty() ?
     0 : mOffsets[mOffsets.Length() - 1];
 
   EnsureChildren();
-  while (mOffsets.Length() < index) {
+  while (mOffsets.Length() < aChildIndex) {
     nsAccessible* child = mChildren[mOffsets.Length()];
     lastOffset += nsAccUtils::TextLength(child);
     mOffsets.AppendElement(lastOffset);
   }
 
-  return mOffsets[index - 1];
-}
-////////////////////////////////////////////////////////////////////////////////
-// nsHyperTextAccessible protected
-
-AccCollector*
-nsHyperTextAccessible::GetLinkCollector()
-{
-  if (IsDefunct())
-    return nsnull;
-
-  if (!mLinks)
-    mLinks = new AccCollector(this, filters::GetEmbeddedObject);
-  return mLinks;
+  return mOffsets[aChildIndex - 1];
 }
 
-nsAccessible *
-nsHyperTextAccessible::GetAccessibleAtOffset(PRInt32 aOffset, PRInt32 *aAccIdx,
-                                             PRInt32 *aStartOffset,
-                                             PRInt32 *aEndOffset)
+PRInt32
+nsHyperTextAccessible::GetChildIndexAtOffset(PRUint32 aOffset)
 {
-  PRInt32 startOffset = 0, endOffset = 0;
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *child = mChildren[childIdx];
-    endOffset += nsAccUtils::TextLength(child);
-    if (endOffset > aOffset) {
-      *aStartOffset = startOffset;
-      *aEndOffset = endOffset;
-      *aAccIdx = childIdx;
-      return child;
+  PRUint32 lastOffset = 0;
+  PRUint32 offsetCount = mOffsets.Length();
+  if (offsetCount > 0) {
+    lastOffset = mOffsets[offsetCount - 1];
+    if (aOffset < lastOffset) {
+      PRUint32 low = 0, high = offsetCount;
+      while (high > low) {
+        PRUint32 mid = (high + low) >> 1;
+        if (mOffsets[mid] == aOffset)
+          return mid < offsetCount - 1 ? mid + 1 : mid;
+
+        if (mOffsets[mid] < aOffset)
+          low = mid + 1;
+        else
+          high = mid;
+      }
+      if (high == offsetCount)
+        return -1;
+
+      return low;
     }
-
-    startOffset = endOffset;
   }
 
-  return nsnull;
+  PRUint32 childCount = GetChildCount();
+  while (mOffsets.Length() < childCount) {
+    nsAccessible* child = GetChildAt(mOffsets.Length());
+    lastOffset += nsAccUtils::TextLength(child);
+    mOffsets.AppendElement(lastOffset);
+    if (aOffset < lastOffset)
+      return mOffsets.Length() - 1;
+  }
+
+  if (aOffset == lastOffset)
+    return mOffsets.Length() - 1;
+
+  return -1;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHyperTextAccessible protected
 
 nsresult
 nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,

@@ -61,6 +61,12 @@
     {0xbe, 0x07, 0xd1, 0x6e, 0xeb, 0x4c, 0x50, 0xed} \
 }
 
+namespace mozilla {
+namespace imagelib {
+class RasterImage;
+} // namespace imagelib
+} // namespace mozilla
+
 class nsPNGDecoder : public imgIDecoder
 {
 public:
@@ -79,7 +85,7 @@ public:
   void NotifyDone(PRBool aSuccess);
 
 public:
-  nsCOMPtr<imgIContainer> mImage;
+  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
   nsCOMPtr<imgIDecoderObserver> mObserver;
   PRUint32 mFlags;
 

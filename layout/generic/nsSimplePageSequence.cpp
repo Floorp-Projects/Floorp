@@ -118,13 +118,13 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   mSelectionHeight(-1),
   mYSelOffset(0)
 {
-  nscoord halfInch = PresContext()->TwipsToAppUnits(NS_INCHES_TO_TWIPS(0.5));
+  nscoord halfInch = PresContext()->CSSTwipsToAppUnits(NS_INCHES_TO_TWIPS(0.5));
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
 
   // XXX Unsafe to assume successful allocation
   mPageData = new nsSharedPageData();
   mPageData->mHeadFootFont = new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif));
-  mPageData->mHeadFootFont->size = PresContext()->PointsToAppUnits(10);
+  mPageData->mHeadFootFont->size = nsPresContext::CSSPointsToAppUnits(10);
 
   nsresult rv;
   mPageData->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
@@ -190,7 +190,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     nsIntMargin marginTwips;
     mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
-    mMargin = aPresContext->TwipsToAppUnits(marginTwips + unwriteableTwips);
+    mMargin = aPresContext->CSSTwipsToAppUnits(marginTwips + unwriteableTwips);
 
     PRInt16 printType;
     mPageData->mPrintSettings->GetPrintRange(&printType);
@@ -200,14 +200,14 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     mPageData->mPrintSettings->GetEdgeInTwips(edgeTwips);
 
     // sanity check the values. three inches are sometimes needed
-    PRInt32 inchInTwips = NS_INCHES_TO_TWIPS(3.0);
+    PRInt32 inchInTwips = NS_INCHES_TO_INT_TWIPS(3.0);
     edgeTwips.top = NS_MIN(NS_MAX(edgeTwips.top, 0), inchInTwips);
     edgeTwips.bottom = NS_MIN(NS_MAX(edgeTwips.bottom, 0), inchInTwips);
     edgeTwips.left = NS_MIN(NS_MAX(edgeTwips.left, 0), inchInTwips);
     edgeTwips.right = NS_MIN(NS_MAX(edgeTwips.right, 0), inchInTwips);
 
     mPageData->mEdgePaperMargin =
-      aPresContext->TwipsToAppUnits(edgeTwips + unwriteableTwips);
+      aPresContext->CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
   }
 
   // *** Special Override ***
@@ -232,13 +232,13 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   PRInt32 gapInTwips = nsContentUtils::GetIntPref("print.print_extra_margin");
   gapInTwips = NS_MAX(0, gapInTwips);
 
-  nscoord extraGap = aPresContext->TwipsToAppUnits(gapInTwips);
+  nscoord extraGap = aPresContext->CSSTwipsToAppUnits(gapInTwips);
   extraGap = NS_MIN(extraGap, extraThreshold); // clamp to 1/10 of the largest dim of the page
 
   nscoord  deadSpaceGap = 0;
   if (isPrintPreview) {
     GetDeadSpaceValue(&gapInTwips);
-    deadSpaceGap = aPresContext->TwipsToAppUnits(gapInTwips);
+    deadSpaceGap = aPresContext->CSSTwipsToAppUnits(gapInTwips);
   }
 
   nsMargin extraMargin(0,0,0,0);
@@ -618,7 +618,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
       if (nsIPrintSettings::kLandscapeOrientation == orientation) {
         // Shift up by one landscape-page-height (in points) before we rotate.
         float offset = POINTS_PER_INCH_FLOAT *
-           (mCurrentPageFrame->GetSize().height / float(dc->AppUnitsPerInch()));
+           (mCurrentPageFrame->GetSize().height / float(dc->AppUnitsPerCSSInch()));
         renderingContext->ThebesContext()->Translate(gfxPoint(offset, 0));
         renderingContext->ThebesContext()->Rotate(M_PI/2);
       }

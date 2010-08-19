@@ -290,7 +290,8 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
                                                    aRenderingContext,
                                                    aPlaceOrigin,
                                                    aDesiredSize,
-                                                   this, 0, 0, PresContext()->PointsToAppUnits(0.5f));
+                                                   this, 0, 0,
+                                                   nsPresContext::CSSPointsToAppUnits(0.5f));
   }
 
   ////////////////////////////////////

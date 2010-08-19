@@ -80,8 +80,9 @@ function test() {
             "text containing | and # is correctly restored");
       is(win.frames[1].document.getElementById("out2").value, "",
             "id prefixes can't be faked");
-      isnot(win.frames[0].frames[1].document.getElementById("in1").value, "",
-            "id prefixes aren't mixed up");
+      // Disabled for now, Bug 588077
+      // isnot(win.frames[0].frames[1].document.getElementById("in1").value, "",
+      //       "id prefixes aren't mixed up");
       is(win.frames[1].frames[0].document.getElementById("in1").value, "",
             "id prefixes aren't mixed up");
       

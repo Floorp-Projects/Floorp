@@ -390,10 +390,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
 nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsAccessible *aAccessible, PRInt32 aStart,
                        nsAString& aModifiedText, PRBool aIsInserted,
-                       PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput) :
-  nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
-             aAccessible, aIsAsynch, aIsFromUserInput, eAllowDupes),
-  mStart(aStart), mIsInserted(aIsInserted), mModifiedText(aModifiedText)
+                       PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput)
+  : nsAccEvent(aIsInserted ?
+               static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_INSERTED) :
+               static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_REMOVED),
+               aAccessible, aIsAsynch, aIsFromUserInput, eAllowDupes)
+  , mStart(aStart)
+  , mIsInserted(aIsInserted)
+  , mModifiedText(aModifiedText)
 {
 }
 

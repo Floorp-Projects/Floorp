@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 /*
  * $_
  *
@@ -112,3 +117,60 @@ function cleanUpFormHist() {
   formhist.removeAllEntries();
 }
 cleanUpFormHist();
+
+
+var checkObserver = {
+  verifyStack: [],
+  callback: null,
+
+  waitForChecks: function(callback) {
+    if (this.verifyStack.length == 0)
+      callback();
+    else
+      this.callback = callback;
+  },
+
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    if (data != "addEntry" && data != "modifyEntry")
+      return;
+    ok(this.verifyStack.length > 0, "checking if saved form data was expected");
+
+    // Make sure that every piece of data we expect to be saved is saved, and no
+    // more. Here it is assumed that for every entry satchel saves or modifies, a
+    // message is sent.
+    //
+    // We don't actually check the content of the message, but just that the right
+    // quantity of messages is received.
+    // - if there are too few messages, test will time out
+    // - if there are too many messages, test will error out here
+    //
+    var expected = this.verifyStack.shift();
+    ok(fh.entryExists(expected.name, expected.value), expected.message);
+
+    if (this.verifyStack.length == 0) {
+      var callback = this.callback;
+      this.callback = null;
+      callback();
+    }
+  }
+};
+
+function checkForSave(name, value, message) {
+  checkObserver.verifyStack.push({ name : name, value: value, message: message });
+}
+
+
+function getFormSubmitButton(formNum) {
+  var form = $("form" + formNum); // by id, not name
+  ok(form != null, "getting form " + formNum);
+
+  // we can't just call form.submit(), because that doesn't seem to
+  // invoke the form onsubmit handler.
+  var button = form.firstChild;
+  while (button && button.type != "submit") { button = button.nextSibling; }
+  ok(button != null, "getting form submit button");
+
+  return button;
+}

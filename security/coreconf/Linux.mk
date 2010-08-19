@@ -154,6 +154,12 @@ ZDEFS_FLAG		= -Wl,-z,defs
 DSO_LDOPTS		+= $(if $(findstring 2.11.90.0.8,$(shell ld -v)),,$(ZDEFS_FLAG))
 LDFLAGS			+= $(ARCHFLAG)
 
+# On Maemo, we need to use the -rpath-link flag for even the standard system
+# library directories.
+ifdef _SBOX_DIR
+LDFLAGS			+= -Wl,-rpath-link,/usr/lib:/lib
+endif
+
 # INCLUDES += -I/usr/include -Y/usr/include/linux
 G++INCLUDES		= -I/usr/include/g++
 

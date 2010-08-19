@@ -54,13 +54,13 @@
 int
 main(int argc, char* argv[])
 {
-#if defined(MOZ_CRASHREPORTER) && !defined(XP_MACOSX)
+#if defined(MOZ_CRASHREPORTER)
     if (argc < 2)
         return 1;
     const char* const crashReporterArg = argv[--argc];
 
-#  if defined(XP_WIN)
-    // on windows, |crashReporterArg| is the named pipe on which the
+#  if defined(XP_WIN) || defined(XP_MACOSX)
+    // on windows and mac, |crashReporterArg| is the named pipe on which the
     // server is listening for requests, or "-" if crash reporting is
     // disabled.
     if (0 != strcmp("-", crashReporterArg)

@@ -196,7 +196,7 @@ NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
-                                          nsIntRect *dirtyRect)
+                                          const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
@@ -206,7 +206,7 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
   
-  nsRect r = dirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
+  nsRect r = aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 
   DoRedraw(&r);
 
