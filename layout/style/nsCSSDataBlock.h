@@ -91,11 +91,16 @@ public:
     const nsCSSValue* ValueFor(nsCSSProperty aProperty) const;
 
     /**
-     * As above, but provides mutable access to a value slot.
+     * Attempt to replace the value for |aProperty| stored in this block
+     * with the matching value stored in |aFromBlock|.
+     * This method will fail (returning PR_FALSE) if |aProperty| is not
+     * already in this block.  It will set |aChanged| to true if it
+     * actually made a change to the block, but regardless, if it
+     * returns PR_TRUE, the value in |aFromBlock| was erased.
      */
-    nsCSSValue* SlotForValue(nsCSSProperty aProperty) {
-      return const_cast<nsCSSValue*>(ValueFor(aProperty));
-    }
+    PRBool TryReplaceValue(nsCSSProperty aProperty,
+                           nsCSSExpandedDataBlock& aFromBlock,
+                           PRBool* aChanged);
 
     /**
      * Clone this block, or return null on out-of-memory.
@@ -106,15 +111,6 @@ public:
      * Create a new nsCSSCompressedDataBlock holding no declarations.
      */
     static nsCSSCompressedDataBlock* CreateEmptyBlock();
-
-    /**
-     * Does a fast move of aSource to aDest.  The previous value in
-     * aDest is cleanly destroyed, and aSource is cleared.  Returns
-     * true if, before the copy, the value at aSource compared unequal
-     * to the value at aDest; false otherwise.
-     */
-    static PRBool MoveValue(nsCSSValue* aSource, nsCSSValue* aDest);
-
 
 private:
     PRInt32 mStyleBits; // the structs for which we have data, according to

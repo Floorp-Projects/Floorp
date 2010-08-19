@@ -1124,12 +1124,9 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     // same importance level, then we can just copy our parsed value
     // directly into the declaration without going through the whole
     // expand/compress thing.
-    nsCSSValue* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
-    if (valueSlot) {
-      *aChanged = nsCSSCompressedDataBlock::
-        MoveValue(mTempData.PropertyAt(aPropID), valueSlot);
-      mTempData.ClearPropertyBit(aPropID);
-    } else {
+    if (!aDeclaration->TryReplaceValue(aPropID, aIsImportant, mTempData,
+                                       aChanged)) {
+      // Do it the slow way
       aDeclaration->ExpandTo(&mData);
       *aChanged = mData.TransferFromBlock(mTempData, aPropID, aIsImportant,
                                           PR_TRUE, PR_FALSE, aDeclaration);

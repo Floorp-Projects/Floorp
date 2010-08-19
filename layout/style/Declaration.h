@@ -153,35 +153,42 @@ public:
   }
 
   /**
-   * Return a pointer to our current value for this property.
-   * Only returns non-null if the property is longhand, set, and
-   * has the indicated importance level.
-   *
-   * May only be called when not expanded, and the caller must call
-   * EnsureMutable first.
+   * Attempt to replace the value for |aProperty| stored in this
+   * declaration with the matching value from |aFromBlock|.
+   * This method may only be called on a mutable declaration.
+   * It will fail (returning PR_FALSE) if |aProperty| is shorthand,
+   * is not already in this declaration, or does not have the indicated
+   * importance level.  If it returns PR_TRUE, it erases the value in
+   * |aFromBlock|.  |aChanged| is set to PR_TRUE if the declaration
+   * changed as a result of the call, and to PR_FALSE otherwise.
    */
-  nsCSSValue* SlotForValue(nsCSSProperty aProperty, PRBool aIsImportant) {
+  PRBool TryReplaceValue(nsCSSProperty aProperty, PRBool aIsImportant,
+                         nsCSSExpandedDataBlock& aFromBlock,
+                         PRBool* aChanged)
+  {
     AssertMutable();
     NS_ABORT_IF_FALSE(mData, "called while expanded");
 
     if (nsCSSProps::IsShorthand(aProperty)) {
-      return nsnull;
+      *aChanged = PR_FALSE;
+      return PR_FALSE;
     }
     nsCSSCompressedDataBlock *block = aIsImportant ? mImportantData : mData;
     // mImportantData might be null
     if (!block) {
-      return nsnull;
+      *aChanged = PR_FALSE;
+      return PR_FALSE;
     }
 
-    nsCSSValue *slot = block->SlotForValue(aProperty);
 #ifdef DEBUG
     {
       nsCSSCompressedDataBlock *other = aIsImportant ? mData : mImportantData;
-      NS_ABORT_IF_FALSE(!slot || !other || !other->ValueFor(aProperty),
+      NS_ABORT_IF_FALSE(!other || !other->ValueFor(aProperty) ||
+                        !block->ValueFor(aProperty),
                         "Property both important and not?");
     }
 #endif
-    return slot;
+    return block->TryReplaceValue(aProperty, aFromBlock, aChanged);
   }
 
   PRBool HasNonImportantValueFor(nsCSSProperty aProperty) const {
