@@ -38,17 +38,13 @@
 /* representation of simple property values within CSS declarations */
 
 #include "nsCSSValue.h"
-#include "nsString.h"
-#include "nsCSSProps.h"
-#include "nsReadableUtils.h"
+
 #include "imgIRequest.h"
-#include "nsIDocument.h"
-#include "nsContentUtils.h"
 #include "nsIPrincipal.h"
-#include "nsMathUtils.h"
+#include "nsCSSProps.h"
+#include "nsContentUtils.h"
 #include "nsStyleUtil.h"
 #include "CSSCalc.h"
-#include "prenv.h"  // for paint forcing
 
 namespace css = mozilla::css;
 
@@ -774,17 +770,17 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         aResult.AppendLiteral("-moz-linear-gradient(");
     }
 
-    if (gradient->mBgPosX.GetUnit() != eCSSUnit_None ||
-        gradient->mBgPosY.GetUnit() != eCSSUnit_None ||
+    if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
+        gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None ||
         gradient->mAngle.GetUnit() != eCSSUnit_None) {
-      if (gradient->mBgPosX.GetUnit() != eCSSUnit_None) {
-        gradient->mBgPosX.AppendToString(eCSSProperty_background_position,
-                                         aResult);
+      if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
+        gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
+                                                aResult);
         aResult.AppendLiteral(" ");
       }
-      if (gradient->mBgPosY.GetUnit() != eCSSUnit_None) {
-        gradient->mBgPosY.AppendToString(eCSSProperty_background_position,
-                                         aResult);
+      if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
+        gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
+                                                aResult);
         aResult.AppendLiteral(" ");
       }
       if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
@@ -905,6 +901,214 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
   }
 }
 
+// --- nsCSSValueList -----------------
+
+nsCSSValueList::~nsCSSValueList()
+{
+  MOZ_COUNT_DTOR(nsCSSValueList);
+  NS_CSS_DELETE_LIST_MEMBER(nsCSSValueList, this, mNext);
+}
+
+nsCSSValueList*
+nsCSSValueList::Clone() const
+{
+  nsCSSValueList* result = new nsCSSValueList(*this);
+  nsCSSValueList* dest = result;
+  const nsCSSValueList* src = this->mNext;
+  while (src) {
+    dest->mNext = new nsCSSValueList(*src);
+    dest = dest->mNext;
+    src = src->mNext;
+  }
+  return result;
+}
+
+void
+nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  const nsCSSValueList* val = this;
+  for (;;) {
+    val->mValue.AppendToString(aProperty, aResult);
+    val = val->mNext;
+    if (!val)
+      break;
+
+    if (nsCSSProps::PropHasFlags(aProperty,
+                                 CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
+      aResult.Append(PRUnichar(','));
+    aResult.Append(PRUnichar(' '));
+  }
+}
+
+bool
+nsCSSValueList::operator==(const nsCSSValueList& aOther) const
+{
+  if (this == &aOther)
+    return true;
+
+  const nsCSSValueList *p1 = this, *p2 = &aOther;
+  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
+    if (p1->mValue != p2->mValue)
+      return false;
+  }
+  return !p1 && !p2; // true if same length, false otherwise
+}
+
+// --- nsCSSRect -----------------
+
+nsCSSRect::nsCSSRect(void)
+{
+  MOZ_COUNT_CTOR(nsCSSRect);
+}
+
+nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
+  : mTop(aCopy.mTop),
+    mRight(aCopy.mRight),
+    mBottom(aCopy.mBottom),
+    mLeft(aCopy.mLeft)
+{
+  MOZ_COUNT_CTOR(nsCSSRect);
+}
+
+nsCSSRect::~nsCSSRect()
+{
+  MOZ_COUNT_DTOR(nsCSSRect);
+}
+
+void
+nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  const nsCSSUnit topUnit = mTop.GetUnit();
+  if (topUnit == eCSSUnit_Inherit ||
+      topUnit == eCSSUnit_Initial ||
+      topUnit == eCSSUnit_RectIsAuto) {
+    NS_ABORT_IF_FALSE(mRight.GetUnit() == topUnit &&
+                      mBottom.GetUnit() == topUnit &&
+                      mLeft.GetUnit() == topUnit,
+                      "parser should make all sides have the same unit");
+    if (topUnit == eCSSUnit_RectIsAuto)
+      aResult.AppendLiteral("auto");
+    else
+      mTop.AppendToString(aProperty, aResult);
+  } else {
+    aResult.AppendLiteral("rect(");
+    mTop.AppendToString(aProperty, aResult);
+    NS_NAMED_LITERAL_STRING(comma, ", ");
+    aResult.Append(comma);
+    mRight.AppendToString(aProperty, aResult);
+    aResult.Append(comma);
+    mBottom.AppendToString(aProperty, aResult);
+    aResult.Append(comma);
+    mLeft.AppendToString(aProperty, aResult);
+    aResult.Append(PRUnichar(')'));
+  }
+}
+
+void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
+{
+  mTop = aValue;
+  mRight = aValue;
+  mBottom = aValue;
+  mLeft = aValue;
+}
+
+PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
+
+/* static */ const nsCSSRect::side_type nsCSSRect::sides[4] = {
+  &nsCSSRect::mTop,
+  &nsCSSRect::mRight,
+  &nsCSSRect::mBottom,
+  &nsCSSRect::mLeft,
+};
+
+// --- nsCSSValuePair -----------------
+
+void
+nsCSSValuePair::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  mXValue.AppendToString(aProperty, aResult);
+  // Only output a Y value if it's different from the X value,
+  // or if it's a background-position value other than 'initial'
+  // or 'inherit', or if it's a -moz-transform-origin value other
+  // than 'initial' or 'inherit', or if it's a background-size
+  // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
+  if (mYValue != mXValue ||
+      ((aProperty == eCSSProperty_background_position ||
+        aProperty == eCSSProperty__moz_transform_origin) &&
+       mXValue.GetUnit() != eCSSUnit_Inherit &&
+       mXValue.GetUnit() != eCSSUnit_Initial) ||
+      (aProperty == eCSSProperty_background_size &&
+       mXValue.GetUnit() != eCSSUnit_Inherit &&
+       mXValue.GetUnit() != eCSSUnit_Initial &&
+       mXValue.GetUnit() != eCSSUnit_Enumerated)) {
+    aResult.Append(PRUnichar(' '));
+    mYValue.AppendToString(aProperty, aResult);
+  }
+}
+
+// --- nsCSSValuePairList -----------------
+
+nsCSSValuePairList::~nsCSSValuePairList()
+{
+  MOZ_COUNT_DTOR(nsCSSValuePairList);
+  NS_CSS_DELETE_LIST_MEMBER(nsCSSValuePairList, this, mNext);
+}
+
+nsCSSValuePairList*
+nsCSSValuePairList::Clone() const
+{
+  nsCSSValuePairList* result = new nsCSSValuePairList(*this);
+  nsCSSValuePairList* dest = result;
+  const nsCSSValuePairList* src = this->mNext;
+  while (src) {
+    dest->mNext = new nsCSSValuePairList(*src);
+    dest = dest->mNext;
+    src = src->mNext;
+  }
+  return result;
+}
+
+void
+nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
+                                   nsAString& aResult) const
+{
+  const nsCSSValuePairList* item = this;
+  for (;;) {
+    NS_ABORT_IF_FALSE(item->mXValue.GetUnit() != eCSSUnit_Null,
+                      "unexpected null unit");
+    item->mXValue.AppendToString(aProperty, aResult);
+    if (item->mXValue.GetUnit() != eCSSUnit_Inherit &&
+        item->mXValue.GetUnit() != eCSSUnit_Initial &&
+        item->mYValue.GetUnit() != eCSSUnit_Null) {
+      aResult.Append(PRUnichar(' '));
+      item->mYValue.AppendToString(aProperty, aResult);
+    }
+    item = item->mNext;
+    if (!item)
+      break;
+
+    if (nsCSSProps::PropHasFlags(aProperty,
+                                 CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
+      aResult.Append(PRUnichar(','));
+    aResult.Append(PRUnichar(' '));
+  }
+}
+
+bool
+nsCSSValuePairList::operator==(const nsCSSValuePairList& aOther) const
+{
+  if (this == &aOther)
+    return true;
+
+  const nsCSSValuePairList *p1 = this, *p2 = &aOther;
+  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
+    if (p1->mXValue != p2->mXValue ||
+        p1->mYValue != p2->mYValue)
+      return false;
+  }
+  return !p1 && !p2; // true if same length, false otherwise
+}
+
 nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
                      nsIPrincipal* aOriginPrincipal)
   : mURI(aURI),
@@ -992,8 +1196,7 @@ nsCSSValueGradient::nsCSSValueGradient(PRBool aIsRadial,
                                        PRBool aIsRepeating)
   : mIsRadial(aIsRadial),
     mIsRepeating(aIsRepeating),
-    mBgPosX(eCSSUnit_None),
-    mBgPosY(eCSSUnit_None),
+    mBgPos(eCSSUnit_None),
     mAngle(eCSSUnit_None),
     mRadialShape(eCSSUnit_None),
     mRadialSize(eCSSUnit_None)

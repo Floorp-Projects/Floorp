@@ -845,10 +845,10 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   }
 
   // bg-position
-  SetGradientCoord(gradient->mBgPosX, aPresContext, aContext,
+  SetGradientCoord(gradient->mBgPos.mXValue, aPresContext, aContext,
                    aResult.mBgPosX, aCanStoreInRuleTree);
 
-  SetGradientCoord(gradient->mBgPosY, aPresContext, aContext,
+  SetGradientCoord(gradient->mBgPos.mYValue, aPresContext, aContext,
                    aResult.mBgPosY, aCanStoreInRuleTree);
 
   aResult.mRepeating = gradient->mIsRepeating;

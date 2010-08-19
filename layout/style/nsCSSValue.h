@@ -40,23 +40,21 @@
 #ifndef nsCSSValue_h___
 #define nsCSSValue_h___
 
-#include "nsColor.h"
-#include "nsString.h"
-#include "nsCoord.h"
-#include "nsCSSProperty.h"
-#include "nsCSSKeywords.h"
-#include "nsIURI.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsCRTGlue.h"
+#include "nsCSSKeywords.h"
+#include "nsCSSProperty.h"
+#include "nsColor.h"
+#include "nsCoord.h"
+#include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
-#include "nsISupportsImpl.h"
 
 class imgIRequest;
 class nsIDocument;
 class nsIPrincipal;
 class nsPresContext;
+class nsIURI;
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
@@ -192,7 +190,7 @@ public:
 
   struct Image;
   friend struct Image;
-  
+
   // for valueless units only (null, auto, inherit, none, all, normal)
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
@@ -399,11 +397,11 @@ public:
   // Returns an already addrefed buffer.  Can return null on allocation
   // failure.
   static nsStringBuffer* BufferFromString(const nsString& aValue);
-  
+
   struct URL {
     // Methods are not inline because using an nsIPrincipal means requiring
     // caps, which leads to REQUIRES hell, since this header is included all
-    // over.    
+    // over.
 
     // aString must not be null.
     // aOriginPrincipal must not be null.
@@ -472,80 +470,6 @@ protected:
     Image*     mImage;
     nsCSSValueGradient* mGradient;
   }         mValue;
-};
-
-struct nsCSSValueGradientStop {
-public:
-  nsCSSValueGradientStop();
-  // needed to keep bloat logs happy when we use the nsTArray in nsCSSValueGradient
-  nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther);
-  ~nsCSSValueGradientStop();
-
-  nsCSSValue mLocation;
-  nsCSSValue mColor;
-
-  PRBool operator==(const nsCSSValueGradientStop& aOther) const
-  {
-    return (mLocation == aOther.mLocation &&
-            mColor == aOther.mColor);
-  }
-
-  PRBool operator!=(const nsCSSValueGradientStop& aOther) const
-  {
-    return !(*this == aOther);
-  }
-};
-
-struct nsCSSValueGradient {
-  nsCSSValueGradient(PRBool aIsRadial, PRBool aIsRepeating);
-
-  // true if gradient is radial, false if it is linear
-  PRPackedBool mIsRadial;
-  PRPackedBool mIsRepeating;
-  // line position and angle
-  nsCSSValue mBgPosX;
-  nsCSSValue mBgPosY;
-  nsCSSValue mAngle;
-
-  // Only meaningful if mIsRadial is true
-  nsCSSValue mRadialShape;
-  nsCSSValue mRadialSize;
-
-  nsTArray<nsCSSValueGradientStop> mStops;
-
-  PRBool operator==(const nsCSSValueGradient& aOther) const
-  {
-    if (mIsRadial != aOther.mIsRadial ||
-        mIsRepeating != aOther.mIsRepeating ||
-        mBgPosX != aOther.mBgPosX ||
-        mBgPosY != aOther.mBgPosY ||
-        mAngle != aOther.mAngle ||
-        mRadialShape != aOther.mRadialShape ||
-        mRadialSize != aOther.mRadialSize)
-      return PR_FALSE;
-
-    if (mStops.Length() != aOther.mStops.Length())
-      return PR_FALSE;
-
-    for (PRUint32 i = 0; i < mStops.Length(); i++) {
-      if (mStops[i] != aOther.mStops[i])
-        return PR_FALSE;
-    }
-
-    return PR_TRUE;
-  }
-
-  PRBool operator!=(const nsCSSValueGradient& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValueGradient)
-
-private:
-  // not to be implemented
-  nsCSSValueGradient(const nsCSSValueGradient& aOther);
-  nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther);
 };
 
 struct nsCSSValue::Array {
@@ -649,6 +573,228 @@ private:
   // not to be implemented
   Array(const Array& aOther);
   Array& operator=(const Array& aOther);
+};
+
+// Prefer nsCSSValue::Array for lists of fixed size.
+struct nsCSSValueList {
+  nsCSSValueList() : mNext(nsnull) { MOZ_COUNT_CTOR(nsCSSValueList); }
+  ~nsCSSValueList();
+
+  nsCSSValueList* Clone() const;  // makes a deep copy
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
+  bool operator==(nsCSSValueList const& aOther) const;
+  bool operator!=(const nsCSSValueList& aOther) const
+  { return !(*this == aOther); }
+
+  nsCSSValue      mValue;
+  nsCSSValueList* mNext;
+
+private:
+  nsCSSValueList(const nsCSSValueList& aCopy) // makes a shallow copy
+    : mValue(aCopy.mValue), mNext(nsnull)
+  {
+    MOZ_COUNT_CTOR(nsCSSValueList);
+  }
+};
+
+struct nsCSSRect {
+  nsCSSRect(void);
+  nsCSSRect(const nsCSSRect& aCopy);
+  ~nsCSSRect();
+
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
+  PRBool operator==(const nsCSSRect& aOther) const {
+    return mTop == aOther.mTop &&
+           mRight == aOther.mRight &&
+           mBottom == aOther.mBottom &&
+           mLeft == aOther.mLeft;
+  }
+
+  PRBool operator!=(const nsCSSRect& aOther) const {
+    return mTop != aOther.mTop ||
+           mRight != aOther.mRight ||
+           mBottom != aOther.mBottom ||
+           mLeft != aOther.mLeft;
+  }
+
+  void SetAllSidesTo(const nsCSSValue& aValue);
+
+  void Reset() {
+    mTop.Reset();
+    mRight.Reset();
+    mBottom.Reset();
+    mLeft.Reset();
+  }
+
+  PRBool HasValue() const {
+    return
+      mTop.GetUnit() != eCSSUnit_Null ||
+      mRight.GetUnit() != eCSSUnit_Null ||
+      mBottom.GetUnit() != eCSSUnit_Null ||
+      mLeft.GetUnit() != eCSSUnit_Null;
+  }
+
+  nsCSSValue mTop;
+  nsCSSValue mRight;
+  nsCSSValue mBottom;
+  nsCSSValue mLeft;
+
+  typedef nsCSSValue nsCSSRect::*side_type;
+  static const side_type sides[4];
+};
+
+struct nsCSSValuePair {
+  nsCSSValuePair()
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
+  nsCSSValuePair(nsCSSUnit aUnit)
+    : mXValue(aUnit), mYValue(aUnit)
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
+  nsCSSValuePair(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
+    : mXValue(aXValue), mYValue(aYValue)
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
+  nsCSSValuePair(const nsCSSValuePair& aCopy)
+    : mXValue(aCopy.mXValue), mYValue(aCopy.mYValue)
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
+  ~nsCSSValuePair()
+  {
+    MOZ_COUNT_DTOR(nsCSSValuePair);
+  }
+
+  PRBool operator==(const nsCSSValuePair& aOther) const {
+    return mXValue == aOther.mXValue &&
+           mYValue == aOther.mYValue;
+  }
+
+  PRBool operator!=(const nsCSSValuePair& aOther) const {
+    return mXValue != aOther.mXValue ||
+           mYValue != aOther.mYValue;
+  }
+
+  void SetBothValuesTo(const nsCSSValue& aValue) {
+    mXValue = aValue;
+    mYValue = aValue;
+  }
+
+  void Reset() {
+    mXValue.Reset();
+    mYValue.Reset();
+  }
+
+  PRBool HasValue() const {
+    return mXValue.GetUnit() != eCSSUnit_Null ||
+           mYValue.GetUnit() != eCSSUnit_Null;
+  }
+
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
+  nsCSSValue mXValue;
+  nsCSSValue mYValue;
+};
+
+// Maybe should be replaced with nsCSSValueList and nsCSSValue::Array?
+struct nsCSSValuePairList {
+  nsCSSValuePairList() : mNext(nsnull) { MOZ_COUNT_CTOR(nsCSSValuePairList); }
+  ~nsCSSValuePairList();
+
+  nsCSSValuePairList* Clone() const; // makes a deep copy
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
+  bool operator==(const nsCSSValuePairList& aOther) const;
+  bool operator!=(const nsCSSValuePairList& aOther) const
+  { return !(*this == aOther); }
+
+  nsCSSValue          mXValue;
+  nsCSSValue          mYValue;
+  nsCSSValuePairList* mNext;
+
+private:
+  nsCSSValuePairList(const nsCSSValuePairList& aCopy) // makes a shallow copy
+    : mXValue(aCopy.mXValue), mYValue(aCopy.mYValue), mNext(nsnull)
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePairList);
+  }
+};
+
+struct nsCSSValueGradientStop {
+public:
+  nsCSSValueGradientStop();
+  // needed to keep bloat logs happy when we use the nsTArray in nsCSSValueGradient
+  nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther);
+  ~nsCSSValueGradientStop();
+
+  nsCSSValue mLocation;
+  nsCSSValue mColor;
+
+  PRBool operator==(const nsCSSValueGradientStop& aOther) const
+  {
+    return (mLocation == aOther.mLocation &&
+            mColor == aOther.mColor);
+  }
+
+  PRBool operator!=(const nsCSSValueGradientStop& aOther) const
+  {
+    return !(*this == aOther);
+  }
+};
+
+struct nsCSSValueGradient {
+  nsCSSValueGradient(PRBool aIsRadial, PRBool aIsRepeating);
+
+  // true if gradient is radial, false if it is linear
+  PRPackedBool mIsRadial;
+  PRPackedBool mIsRepeating;
+  // line position and angle
+  nsCSSValuePair mBgPos;
+  nsCSSValue mAngle;
+
+  // Only meaningful if mIsRadial is true
+  nsCSSValue mRadialShape;
+  nsCSSValue mRadialSize;
+
+  nsTArray<nsCSSValueGradientStop> mStops;
+
+  PRBool operator==(const nsCSSValueGradient& aOther) const
+  {
+    if (mIsRadial != aOther.mIsRadial ||
+        mIsRepeating != aOther.mIsRepeating ||
+        mBgPos != aOther.mBgPos ||
+        mAngle != aOther.mAngle ||
+        mRadialShape != aOther.mRadialShape ||
+        mRadialSize != aOther.mRadialSize)
+      return PR_FALSE;
+
+    if (mStops.Length() != aOther.mStops.Length())
+      return PR_FALSE;
+
+    for (PRUint32 i = 0; i < mStops.Length(); i++) {
+      if (mStops[i] != aOther.mStops[i])
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+  }
+
+  PRBool operator!=(const nsCSSValueGradient& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueGradient)
+
+private:
+  // not to be implemented
+  nsCSSValueGradient(const nsCSSValueGradient& aOther);
+  nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther);
 };
 
 #endif /* nsCSSValue_h___ */
