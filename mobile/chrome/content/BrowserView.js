@@ -157,23 +157,6 @@ BrowserView.Util = {
     return new BrowserView.BrowserViewportState(new Rect(0, 0, 800, 800), 0, 0, 1);
   },
 
-  getViewportStateFromBrowser: function getViewportStateFromBrowser(browser) {
-    return browser.__BrowserView__vps;
-  },
-
-  getNewBatchOperationState: function getNewBatchOperationState() {
-    return {
-      viewportSizeChanged: false,
-      dirtyAll: false
-    };
-  },
-
-  initContainer: function initContainer(container, visibleRect) {
-    container.style.width = visibleRect.width  + 'px';
-    container.style.height = visibleRect.height + 'px';
-    container.style.overflow = '-moz-hidden-unscrollable';
-  },
-
   ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
     let message = {};
     message.target = aBrowser;
@@ -252,8 +235,6 @@ BrowserView.prototype = {
   },
 
   setZoomLevel: function setZoomLevel(zoomLevel) {
-    getBrowser().style.MozTransformOrigin = "left top";
-    getBrowser().style.MozTransform = "scale(" + zoomLevel + ")";
     return;
 
     let bvs = this._browserViewportState;
@@ -267,6 +248,7 @@ BrowserView.prototype = {
       bvs.zoomLevel = newZoomLevel; // side-effect: now scale factor in transformations is newZoomLevel
       bvs.viewportRect.right  = this.browserToViewport(browserW);
       bvs.viewportRect.bottom = this.browserToViewport(browserH);
+      this._viewportChanged();
 
       if (this._browser) {
         let event = document.createEvent("Events");
@@ -358,14 +340,8 @@ BrowserView.prototype = {
     viewport.bottom = bvs.zoomLevel * json.height;
 
     if (browser == this._browser) {
-      // Page has now loaded enough to allow zooming.
-      let sizeChanged = oldRight != viewport.right || oldBottom != viewport.bottom;
+      this._viewportChanged();
       this.updateDefaultZoom();
-      if (vis.right > viewport.right || vis.bottom > viewport.bottom) {
-        // Content has shrunk outside of the visible rectangle.
-        // XXX for some reason scroller doesn't know it is outside its bounds
-        Browser.contentScrollboxScroller.scrollBy(0, 0);
-      }
     }
   },
 
@@ -500,6 +476,13 @@ BrowserView.prototype = {
   browserToViewportCanvasContext: function browserToViewportCanvasContext(ctx) {
     let f = this.browserToViewport(1.0);
     ctx.scale(f, f);
+  },
+
+  _viewportChanged: function() {
+    getBrowser().style.MozTransformOrigin = "left top";
+    getBrowser().style.MozTransform = "scale(" + this.getZoomLevel() + ")";
+    getBrowser().style.width = (800 / this.getZoomLevel()) + "px";
+    getBrowser().style.height = (800 / this.getZoomLevel()) + "px";
   },
 };
 
