@@ -1202,8 +1202,6 @@
             b._fastFind = this.fastFind;
             b.droppedLinkHandler = handleDroppedLink;
 
-            this.tabContainer.adjustTabstrip();
-
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
             // even if the event listener opens or closes tabs.
@@ -2850,6 +2848,8 @@
         <body><![CDATA[
           if (tab.parentNode != this)
             return;
+
+          this.adjustTabstrip();
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
