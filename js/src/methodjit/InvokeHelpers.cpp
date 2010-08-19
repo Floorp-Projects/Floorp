@@ -169,7 +169,6 @@ top:
 static inline void
 FixVMFrame(VMFrame &f, JSStackFrame *fp)
 {
-    f.fp->ncode = f.scriptedReturn;
     JS_ASSERT(f.fp == fp->down);
     f.fp = fp;
 }
@@ -500,7 +499,6 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     }
 
     /* Initialize the frame. */
-    newfp->ncode = NULL;
     newfp->setCallObj(NULL);
     newfp->setArgsObj(NULL);
     newfp->setScript(newscript);
@@ -634,7 +632,6 @@ js_InternalThrow(VMFrame &f)
 
         JS_ASSERT(f.regs.sp == cx->regs->sp);
         InlineReturn(f, JS_FALSE);
-        f.scriptedReturn = cx->fp->ncode;
     }
 
     JS_ASSERT(f.regs.sp == cx->regs->sp);
@@ -768,7 +765,8 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
         fp->flags &= ~JSFRAME_RECORDING;
 
         if (AtSafePoint(cx)) {
-            if (!JaegerShot(cx)) {
+            JSScript *script = fp->getScript();
+            if (!JaegerShotAtSafePoint(cx, script->nmap[cx->regs->pc - script->code])) {
                 if (!SwallowErrors(f, entryFrame))
                     return false;
 
@@ -846,9 +844,6 @@ RunTracer(VMFrame &f)
     if (!cx->jitEnabled)
         return NULL;
 
-    JS_ASSERT_IF(f.fp != f.entryFp,
-                 entryFrame->down->getScript()->isValidJitCode(f.scriptedReturn));
-
     bool blacklist;
     uintN inlineCallCount = 0;
     tpa = MonitorTracePoint(f.cx, inlineCallCount, blacklist);
@@ -884,9 +879,12 @@ RunTracer(VMFrame &f)
      * The tracer could have dropped us off on any frame at any position.
      * Well, it could not have removed frames (recursion is disabled).
      *
-     * Frames after the entryFrame cannot be entered via JaegerShot()
-     * unless each is at a safe point. We can JaegerShot these frames
-     * individually, but we must unwind to the entryFrame.
+     * Frames after the entryFrame cannot be entered via JaegerShotAtSafePoint()
+     * unless each is at a safe point. We can JaegerShotAtSafePoint these
+     * frames individually, but we must unwind to the entryFrame.
+     *
+     * Note carefully that JaegerShotAtSafePoint can resume methods at
+     * arbitrary safe points whereas JaegerShot cannot.
      *
      * If we land on entryFrame without a safe point in sight, we'll end up
      * at the RETURN op. This is an edge case with two paths:
@@ -895,10 +893,8 @@ RunTracer(VMFrame &f)
      *    move the return value down.
      * 2) The entryFrame is NOT the last inline frame. Pop the frame.
      *
-     * In both cases, we hijack the stub to return to JaegerFromTracer. This
-     * moves |oldFp->rval| into the scripted return registers, places the
-     * new f.scriptedReturn in the machine return register, and returns to its
-     * caller safely.
+     * In both cases, we hijack the stub to return to InjectJaegerReturn. This
+     * moves |oldFp->rval| into the scripted return registers.
      */
 
   restart:
@@ -936,8 +932,7 @@ RunTracer(VMFrame &f)
             if (!InlineReturn(f, JS_TRUE))
                 THROWV(NULL);
         }
-        entryFrame->ncode = f.fp->ncode;
-        void *retPtr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
+        void *retPtr = JS_FUNC_TO_DATA_PTR(void *, InjectJaegerReturn);
         *f.returnAddressLocation() = retPtr;
         return NULL;
     }

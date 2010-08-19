@@ -136,11 +136,6 @@ Recompiler::recompile()
          f != NULL;
          f = f->previous) {
 
-        if (script->isValidJitCode(f->scriptedReturn)) {
-            if (!toPatch.append(findPatch(&f->scriptedReturn)))
-                return false;
-        }
-
         void **machineReturn = f->returnAddressLocation();
         if (script->isValidJitCode(*machineReturn)) {
             if (!toPatch.append(findPatch(machineReturn)))
