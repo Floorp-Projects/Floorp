@@ -869,7 +869,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
     mFloatManager->IncludeInDamage(top, bottom);
   }
 
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
+  if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {
     mBlock->SplitFloat(*this, aFloat, reflowStatus);
   }
 
