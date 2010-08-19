@@ -44,20 +44,7 @@
  * stylesheet
  */
 
-#include "nscore.h"
-#include "prlog.h"
 #include "mozilla/css/Declaration.h"
-#include "nsString.h"
-#include "nsIAtom.h"
-#include "nsUnicharUtils.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-#include "nsCSSProps.h"
-#include "nsFont.h"
-#include "nsReadableUtils.h"
-#include "nsStyleUtil.h"
-#include "nsStyleConsts.h"
-#include "nsCOMPtr.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -120,8 +107,9 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
   CompressFrom(&data);
 }
 
-PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
-                                        nsAString& aResult) const
+PRBool
+Declaration::AppendValueToString(nsCSSProperty aProperty,
+                                 nsAString& aResult) const
 {
   NS_ABORT_IF_FALSE(0 <= aProperty &&
                     aProperty < eCSSProperty_COUNT_no_shorthands,
@@ -631,7 +619,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           aValue.Append(PRUnichar(' '));
           dur->mValue.AppendToString(eCSSProperty_transition_duration,aValue);
           aValue.Append(PRUnichar(' '));
-          tim->mValue.AppendToString(eCSSProperty_transition_timing_function, aValue);
+          tim->mValue.AppendToString(eCSSProperty_transition_timing_function,
+                                     aValue);
           aValue.Append(PRUnichar(' '));
           del->mValue.AppendToString(eCSSProperty_transition_delay, aValue);
           aValue.Append(PRUnichar(' '));
@@ -705,29 +694,20 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
 
   // Calling ValueFor is inefficient, but we can assume '!important' is rare.
 
-  if (nsCSSProps::IsShorthand(aProperty)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-      if (*p == eCSSProperty__x_system_font) {
-        // The system_font subproperty doesn't count.
-        continue;
-      }
-      if (!mImportantData->ValueFor(*p)) {
-        return PR_FALSE;
-      }
+  if (!nsCSSProps::IsShorthand(aProperty)) {
+    return mImportantData->ValueFor(aProperty) != nsnull;
+  }
+
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
+    if (*p == eCSSProperty__x_system_font) {
+      // The system_font subproperty doesn't count.
+      continue;
     }
-    return PR_TRUE;
+    if (!mImportantData->ValueFor(*p)) {
+      return PR_FALSE;
+    }
   }
-
-  return mImportantData->ValueFor(aProperty) != nsnull;
-}
-
-/* static */ void
-Declaration::AppendImportanceToString(PRBool aIsImportant,
-                                      nsAString& aString)
-{
-  if (aIsImportant) {
-   aString.AppendLiteral(" ! important");
-  }
+  return PR_TRUE;
 }
 
 void
@@ -746,8 +726,9 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
     AppendValueToString(aProperty, aResult);
   else
     aResult.Append(aValue);
-  PRBool  isImportant = GetValueIsImportant(aProperty);
-  AppendImportanceToString(isImportant, aResult);
+  if (GetValueIsImportant(aProperty)) {
+    aResult.AppendLiteral(" ! important");
+  }
   aResult.AppendLiteral("; ");
 }
 
@@ -828,8 +809,7 @@ Declaration::ToString(nsAString& aString) const
         //   (2) its value is the hidden system font value and it matches
         //       the hidden system font subproperty in importance, and
         //       we output the system font subproperty.
-        const nsCSSValue *val =
-          systemFontData->ValueFor(property);
+        const nsCSSValue *val = systemFontData->ValueFor(property);
         if (property == eCSSProperty__x_system_font ||
             (haveSystemFont && val && val->GetUnit() == eCSSUnit_System_Font)) {
           doneProperty = PR_TRUE;
@@ -838,18 +818,20 @@ Declaration::ToString(nsAString& aString) const
     }
     if (doneProperty)
       continue;
-    
+
     NS_ASSERTION(value.IsEmpty(), "value should be empty now");
     AppendPropertyAndValueToString(property, value, aString);
   }
   if (! aString.IsEmpty()) {
-    // if the string is not empty, we have a trailing whitespace we should remove
+    // if the string is not empty, we have trailing whitespace we
+    // should remove
     aString.Truncate(aString.Length() - 1);
   }
 }
 
 #ifdef DEBUG
-void Declaration::List(FILE* out, PRInt32 aIndent) const
+void
+Declaration::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
