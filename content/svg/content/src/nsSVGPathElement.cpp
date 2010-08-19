@@ -48,6 +48,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGPoint.h"
 #include "gfxContext.h"
+#include "gfxPlatform.h"
 
 nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
                                                   { &nsGkAtoms::pathLength, 0 };
@@ -1041,7 +1042,7 @@ nsSVGPathList::Playback(gfxContext *aCtx)
 already_AddRefed<gfxFlattenedPath>
 nsSVGPathList::GetFlattenedPath(const gfxMatrix& aMatrix)
 {
-  gfxContext ctx(nsSVGUtils::GetThebesComputationalSurface());
+  gfxContext ctx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   ctx.SetMatrix(aMatrix);
   Playback(&ctx);
