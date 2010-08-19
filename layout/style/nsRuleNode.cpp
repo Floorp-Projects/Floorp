@@ -1757,20 +1757,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
         }
         break;
 
-      case eCSSType_ValuePairList:
-        {
-          ++total;
-          const nsCSSValuePairList* valuePairList =
-              ValuePairListAtOffset(aRuleDataStruct, prop->offset);
-          if (valuePairList) {
-            ++specified;
-            if (eCSSUnit_Inherit == valuePairList->mXValue.GetUnit()) {
-              ++inherited;
-            }
-          }
-        }
-        break;
-
       default:
         NS_NOTREACHED("unknown type");
         break;
@@ -1930,8 +1916,6 @@ nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
   colorData.mBackImage = nsnull;
   colorData.mBackRepeat = nsnull;
   colorData.mBackAttachment = nsnull;
-  colorData.mBackPosition = nsnull;
-  colorData.mBackSize = nsnull;
   colorData.mBackClip = nsnull;
   colorData.mBackOrigin = nsnull;
 
@@ -2034,7 +2018,6 @@ nsRuleNode::GetContentData(nsStyleContext* aContext)
   ruleData.mContentData = &contentData;
 
   const void* res = WalkRuleTree(eStyleStruct_Content, aContext, &ruleData, &contentData);
-  contentData.mCounterIncrement = contentData.mCounterReset = nsnull;
   contentData.mContent = nsnull; // We are sharing with some style rule.  It really owns the data.
   return res;
 }
@@ -2046,9 +2029,7 @@ nsRuleNode::GetQuotesData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Quotes), mPresContext, aContext);
   ruleData.mContentData = &contentData;
 
-  const void* res = WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData);
-  contentData.mQuotes = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData);
 }
 
 const void*
@@ -2134,9 +2115,6 @@ UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
         break;
       case eCSSType_ValueList:
         ValueListAtOffset(aRuleDataStruct, prop->offset) = nsnull;
-        break;
-      case eCSSType_ValuePairList:
-        ValuePairListAtOffset(aRuleDataStruct, prop->offset) = nsnull;
         break;
       default:
         NS_NOTREACHED("unknown type");
@@ -4789,6 +4767,78 @@ SetBackgroundList(nsStyleContext* aStyleContext,
 
 template <class ComputedValueItem>
 static void
+SetBackgroundPairList(nsStyleContext* aStyleContext,
+                      const nsCSSValue& aValue,
+                      nsAutoTArray< nsStyleBackground::Layer, 1> &aLayers,
+                      const nsAutoTArray<nsStyleBackground::Layer, 1>
+                                                                 &aParentLayers,
+                      ComputedValueItem nsStyleBackground::Layer::*
+                                                                aResultLocation,
+                      ComputedValueItem aInitialValue,
+                      PRUint32 aParentItemCount,
+                      PRUint32& aItemCount,
+                      PRUint32& aMaxItemCount,
+                      PRBool& aRebuild,
+                      PRBool& aCanStoreInRuleTree)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aRebuild = PR_TRUE;
+    aCanStoreInRuleTree = PR_FALSE;
+    if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
+      NS_WARNING("out of memory");
+      aParentItemCount = aLayers.Length();
+    }
+    aItemCount = aParentItemCount;
+    for (PRUint32 i = 0; i < aParentItemCount; ++i) {
+      aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
+    }
+    break;
+
+  case eCSSUnit_Initial:
+    aRebuild = PR_TRUE;
+    aItemCount = 1;
+    aLayers[0].*aResultLocation = aInitialValue;
+    break;
+
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    aRebuild = PR_TRUE;
+    aItemCount = 0;
+    const nsCSSValuePairList* item = aValue.GetPairListValue();
+    do {
+      NS_ASSERTION(item->mXValue.GetUnit() != eCSSUnit_Inherit &&
+                   item->mXValue.GetUnit() != eCSSUnit_Initial &&
+                   item->mYValue.GetUnit() != eCSSUnit_Inherit &&
+                   item->mYValue.GetUnit() != eCSSUnit_Initial,
+                   "unexpected unit");
+      ++aItemCount;
+      if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
+        NS_WARNING("out of memory");
+        --aItemCount;
+        break;
+      }
+      BackgroundItemComputer<nsCSSValuePairList, ComputedValueItem>
+        ::ComputeValue(aStyleContext, item,
+                       aLayers[aItemCount-1].*aResultLocation,
+                       aCanStoreInRuleTree);
+      item = item->mNext;
+    } while (item);
+  } break;
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected unit");
+  }
+
+  if (aItemCount > aMaxItemCount)
+    aMaxItemCount = aItemCount;
+}
+
+template <class ComputedValueItem>
+static void
 FillBackgroundList(nsAutoTArray< nsStyleBackground::Layer, 1> &aLayers,
     ComputedValueItem nsStyleBackground::Layer::* aResultLocation,
     PRUint32 aItemCount, PRUint32 aFillCount)
@@ -4869,20 +4919,20 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   // background-position: enum, length, percent (flags), inherit [pair list]
   nsStyleBackground::Position initialPosition;
   initialPosition.SetInitialValues();
-  SetBackgroundList(aContext, colorData.mBackPosition, bg->mLayers,
-                    parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
-                    initialPosition, parentBG->mPositionCount,
-                    bg->mPositionCount, maxItemCount, rebuild,
-                    canStoreInRuleTree);
+  SetBackgroundPairList(aContext, colorData.mBackPosition, bg->mLayers,
+                        parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
+                        initialPosition, parentBG->mPositionCount,
+                        bg->mPositionCount, maxItemCount, rebuild,
+                        canStoreInRuleTree);
 
   // background-size: enum, length, auto, inherit, initial [pair list]
   nsStyleBackground::Size initialSize;
   initialSize.SetInitialValues();
-  SetBackgroundList(aContext, colorData.mBackSize, bg->mLayers,
-                    parentBG->mLayers, &nsStyleBackground::Layer::mSize,
-                    initialSize, parentBG->mSizeCount,
-                    bg->mSizeCount, maxItemCount, rebuild,
-                    canStoreInRuleTree);
+  SetBackgroundPairList(aContext, colorData.mBackSize, bg->mLayers,
+                        parentBG->mLayers, &nsStyleBackground::Layer::mSize,
+                        initialSize, parentBG->mSizeCount,
+                        bg->mSizeCount, maxItemCount, rebuild,
+                        canStoreInRuleTree);
 
   if (rebuild) {
     // Delete any extra items.  We need to keep layers in which any
@@ -5732,89 +5782,107 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   }
 
   // counter-increment: [string [int]]+, none, inherit
-  nsCSSValuePairList* ourIncrement = contentData.mCounterIncrement;
-  if (ourIncrement) {
-    if (eCSSUnit_None == ourIncrement->mXValue.GetUnit() ||
-        eCSSUnit_Initial == ourIncrement->mXValue.GetUnit()) {
-      content->AllocateCounterIncrements(0);
-    }
-    else if (eCSSUnit_Inherit == ourIncrement->mXValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      count = parentContent->CounterIncrementCount();
-      if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
-        while (0 < count--) {
-          const nsStyleCounterData *data =
-            parentContent->GetCounterIncrementAt(count);
-          content->SetCounterIncrementAt(count, data->mCounter, data->mValue);
-        }
+  switch (contentData.mCounterIncrement.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_None:
+  case eCSSUnit_Initial:
+    content->AllocateCounterIncrements(0);
+    break;
+
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    count = parentContent->CounterIncrementCount();
+    if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
+      while (0 < count--) {
+        const nsStyleCounterData *data =
+          parentContent->GetCounterIncrementAt(count);
+        content->SetCounterIncrementAt(count, data->mCounter, data->mValue);
       }
     }
-    else if (eCSSUnit_Ident == ourIncrement->mXValue.GetUnit()) {
-      count = 0;
-      while (ourIncrement) {
-        count++;
-        ourIncrement = ourIncrement->mNext;
-      }
-      if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
-        count = 0;
-        ourIncrement = contentData.mCounterIncrement;
-        while (ourIncrement) {
-          PRInt32 increment;
-          if (eCSSUnit_Integer == ourIncrement->mYValue.GetUnit()) {
-            increment = ourIncrement->mYValue.GetIntValue();
-          }
-          else {
-            increment = 1;
-          }
-          ourIncrement->mXValue.GetStringValue(buffer);
-          content->SetCounterIncrementAt(count++, buffer, increment);
-          ourIncrement = ourIncrement->mNext;
-        }
-      }
+    break;
+
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourIncrement =
+      contentData.mCounterIncrement.GetPairListValue();
+    NS_ABORT_IF_FALSE(ourIncrement->mXValue.GetUnit() == eCSSUnit_Ident,
+                      "unexpected value unit");
+    count = 0;
+    for (const nsCSSValuePairList* p = ourIncrement; p; p = p->mNext)
+      count++;
+    if (NS_FAILED(content->AllocateCounterIncrements(count))) {
+      break;
     }
+
+    count = 0;
+    for (const nsCSSValuePairList* p = ourIncrement; p; p = p->mNext, count++) {
+      PRInt32 increment;
+      if (p->mYValue.GetUnit() == eCSSUnit_Integer) {
+        increment = p->mYValue.GetIntValue();
+      } else {
+        increment = 1;
+      }
+      p->mXValue.GetStringValue(buffer);
+      content->SetCounterIncrementAt(count, buffer, increment);
+    }
+  } break;
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected value unit");
   }
 
   // counter-reset: [string [int]]+, none, inherit
-  nsCSSValuePairList* ourReset = contentData.mCounterReset;
-  if (ourReset) {
-    if (eCSSUnit_None == ourReset->mXValue.GetUnit() ||
-        eCSSUnit_Initial == ourReset->mXValue.GetUnit()) {
-      content->AllocateCounterResets(0);
-    }
-    else if (eCSSUnit_Inherit == ourReset->mXValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      count = parentContent->CounterResetCount();
-      if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
-        while (0 < count--) {
-          const nsStyleCounterData *data =
-            parentContent->GetCounterResetAt(count);
-          content->SetCounterResetAt(count, data->mCounter, data->mValue);
-        }
+  switch (contentData.mCounterReset.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_None:
+  case eCSSUnit_Initial:
+    content->AllocateCounterResets(0);
+    break;
+
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    count = parentContent->CounterResetCount();
+    if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
+      while (0 < count--) {
+        const nsStyleCounterData *data =
+          parentContent->GetCounterResetAt(count);
+        content->SetCounterResetAt(count, data->mCounter, data->mValue);
       }
     }
-    else if (eCSSUnit_Ident == ourReset->mXValue.GetUnit()) {
-      count = 0;
-      while (ourReset) {
-        count++;
-        ourReset = ourReset->mNext;
-      }
-      if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
-        count = 0;
-        ourReset = contentData.mCounterReset;
-        while (ourReset) {
-          PRInt32 reset;
-          if (eCSSUnit_Integer == ourReset->mYValue.GetUnit()) {
-            reset = ourReset->mYValue.GetIntValue();
-          }
-          else {
-            reset = 0;
-          }
-          ourReset->mXValue.GetStringValue(buffer);
-          content->SetCounterResetAt(count++, buffer, reset);
-          ourReset = ourReset->mNext;
-        }
-      }
+    break;
+
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourReset =
+      contentData.mCounterReset.GetPairListValue();
+    NS_ABORT_IF_FALSE(ourReset->mXValue.GetUnit() == eCSSUnit_Ident,
+                      "unexpected value unit");
+    count = 0;
+    for (const nsCSSValuePairList* p = ourReset; p; p = p->mNext)
+      count++;
+    if (NS_FAILED(content->AllocateCounterResets(count))) {
+      break;
     }
+
+    count = 0;
+    for (const nsCSSValuePairList* p = ourReset; p; p = p->mNext, count++) {
+      PRInt32 reset;
+      if (p->mYValue.GetUnit() == eCSSUnit_Integer) {
+        reset = p->mYValue.GetIntValue();
+      } else {
+        reset = 0;
+      }
+      p->mXValue.GetStringValue(buffer);
+      content->SetCounterResetAt(count, buffer, reset);
+    }
+  } break;
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected value unit");
   }
 
   // marker-offset: length, auto, inherit
@@ -5846,38 +5914,45 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
                           Content, contentData)
 
   // quotes: inherit, initial, none, [string string]+
-  nsCSSValuePairList* ourQuotes = contentData.mQuotes;
-  if (ourQuotes) {
-    if (eCSSUnit_Inherit == ourQuotes->mXValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      quotes->CopyFrom(*parentQuotes);
-    }
-    else if (eCSSUnit_Initial == ourQuotes->mXValue.GetUnit()) {
-      quotes->SetInitial();
-    }
-    else if (eCSSUnit_None == ourQuotes->mXValue.GetUnit()) {
-      quotes->AllocateQuotes(0);
-    }
-    else if (eCSSUnit_String == ourQuotes->mXValue.GetUnit()) {
-      nsAutoString  buffer;
-      nsAutoString  closeBuffer;
-      PRUint32 count = 0;
+  switch (contentData.mQuotes.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    quotes->CopyFrom(*parentQuotes);
+    break;
+  case eCSSUnit_Initial:
+    quotes->SetInitial();
+    break;
+  case eCSSUnit_None:
+    quotes->AllocateQuotes(0);
+    break;
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourQuotes = contentData.mQuotes.GetPairListValue();
+    nsAutoString buffer;
+    nsAutoString closeBuffer;
+    PRUint32 count = 0;
 
-      while (ourQuotes) {
-        count++;
-        ourQuotes = ourQuotes->mNext;
-      }
-      if (NS_SUCCEEDED(quotes->AllocateQuotes(count))) {
-        count = 0;
-        ourQuotes = contentData.mQuotes;
-        while (ourQuotes) {
-          ourQuotes->mXValue.GetStringValue(buffer);
-          ourQuotes->mYValue.GetStringValue(closeBuffer);
-          quotes->SetQuotesAt(count++, buffer, closeBuffer);
-          ourQuotes = ourQuotes->mNext;
-        }
-      }
+    for (const nsCSSValuePairList* p = ourQuotes; p; p = p->mNext) {
+      count++;
     }
+    if (NS_FAILED(quotes->AllocateQuotes(count))) {
+      break;
+    }
+    count = 0;
+    while (ourQuotes) {
+      NS_ABORT_IF_FALSE(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
+                        ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
+                        "improper list contents for quotes");
+      ourQuotes->mXValue.GetStringValue(buffer);
+      ourQuotes->mYValue.GetStringValue(closeBuffer);
+      quotes->SetQuotesAt(count++, buffer, closeBuffer);
+      ourQuotes = ourQuotes->mNext;
+    }
+  } break;
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected value unit");
   }
 
   COMPUTE_END_INHERITED(Quotes, quotes)
@@ -6658,10 +6733,8 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
         colorData.mBackImage = nsnull;
         colorData.mBackRepeat = nsnull;
         colorData.mBackAttachment = nsnull;
-        colorData.mBackPosition = nsnull;
         colorData.mBackClip = nsnull;
         colorData.mBackOrigin = nsnull;
-        colorData.mBackSize = nsnull;
 
         if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
             ruleData.mLevel == nsStyleSet::eUserSheet) {

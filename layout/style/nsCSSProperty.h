@@ -83,8 +83,7 @@ enum nsCSSProperty {
 // See nsCSSPropList.h for uses.
 enum nsCSSType {
   eCSSType_Value,
-  eCSSType_ValueList,
-  eCSSType_ValuePairList
+  eCSSType_ValueList
 };
 
 // The "descriptors" that can appear in a @font-face rule.
