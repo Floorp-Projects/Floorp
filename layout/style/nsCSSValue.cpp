@@ -51,8 +51,8 @@ namespace css = mozilla::css;
 nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
-               aUnit == eCSSUnit_EnumColor, "not an int value");
+  NS_ABORT_IF_FALSE(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
+                    aUnit == eCSSUnit_EnumColor, "not an int value");
   if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
       aUnit == eCSSUnit_EnumColor) {
     mValue.mInt = aValue;
@@ -66,7 +66,7 @@ nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
 nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION(eCSSUnit_Percent <= aUnit, "not a float value");
+  NS_ABORT_IF_FALSE(eCSSUnit_Percent <= aUnit, "not a float value");
   if (eCSSUnit_Percent <= aUnit) {
     mValue.mFloat = aValue;
   }
@@ -79,7 +79,7 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
 nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION(UnitHasStringValue(), "not a string value");
+  NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
   if (UnitHasStringValue()) {
     mValue.mString = BufferFromString(aValue);
     if (NS_UNLIKELY(!mValue.mString)) {
@@ -97,7 +97,7 @@ nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
 nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION(UnitHasArrayValue(), "bad unit");
+  NS_ABORT_IF_FALSE(UnitHasArrayValue(), "bad unit");
   mValue.mArray = aValue;
   mValue.mArray->AddRef();
 }
@@ -181,7 +181,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mPairListDependent = aCopy.mValue.mPairListDependent;
   }
   else {
-    NS_NOTREACHED("unknown unit");
+    NS_ABORT_IF_FALSE(false, "unknown unit");
   }
 }
 
@@ -257,20 +257,21 @@ double nsCSSValue::GetAngleValueInRadians() const
   case eCSSUnit_Grad:   return angle * M_PI / 200.0;
 
   default:
-    NS_NOTREACHED("unrecognized angular unit");
+    NS_ABORT_IF_FALSE(false, "unrecognized angular unit");
     return 0.0;
   }
 }
 
 imgIRequest* nsCSSValue::GetImageValue() const
 {
-  NS_ASSERTION(mUnit == eCSSUnit_Image, "not an Image value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
   return mValue.mImage->mRequest;
 }
 
 nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
 {
-  NS_ASSERTION(mUnit == eCSSUnit_PhysicalMillimeter, "not a fixed length unit");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_PhysicalMillimeter,
+                    "not a fixed length unit");
 
   float inches = mValue.mFloat / MM_PER_INCH_FLOAT;
   return inches * aPresContext->DeviceContext()->AppUnitsPerPhysicalInch();
@@ -278,7 +279,7 @@ nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
 
 nscoord nsCSSValue::GetPixelLength() const
 {
-  NS_ASSERTION(IsPixelLengthUnit(), "not a fixed length unit");
+  NS_ABORT_IF_FALSE(IsPixelLengthUnit(), "not a fixed length unit");
 
   double scaleFactor;
   switch (mUnit) {
@@ -321,8 +322,8 @@ void nsCSSValue::DoReset()
 
 void nsCSSValue::SetIntValue(PRInt32 aValue, nsCSSUnit aUnit)
 {
-  NS_ASSERTION(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
-               aUnit == eCSSUnit_EnumColor, "not an int value");
+  NS_ABORT_IF_FALSE(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
+                    aUnit == eCSSUnit_EnumColor, "not an int value");
   Reset();
   if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
       aUnit == eCSSUnit_EnumColor) {
@@ -340,7 +341,7 @@ void nsCSSValue::SetPercentValue(float aValue)
 
 void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit)
 {
-  NS_ASSERTION(eCSSUnit_Number <= aUnit, "not a float value");
+  NS_ABORT_IF_FALSE(eCSSUnit_Number <= aUnit, "not a float value");
   Reset();
   if (eCSSUnit_Number <= aUnit) {
     mUnit = aUnit;
@@ -353,7 +354,7 @@ void nsCSSValue::SetStringValue(const nsString& aValue,
 {
   Reset();
   mUnit = aUnit;
-  NS_ASSERTION(UnitHasStringValue(), "not a string unit");
+  NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string unit");
   if (UnitHasStringValue()) {
     mValue.mString = BufferFromString(aValue);
     if (NS_UNLIKELY(!mValue.mString)) {
@@ -376,7 +377,7 @@ void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
 {
   Reset();
   mUnit = aUnit;
-  NS_ASSERTION(UnitHasArrayValue(), "bad unit");
+  NS_ABORT_IF_FALSE(UnitHasArrayValue(), "bad unit");
   mValue.mArray = aValue;
   mValue.mArray->AddRef();
 }
@@ -539,7 +540,7 @@ void nsCSSValue::SetDummyInheritValue()
 
 void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 {
-  NS_PRECONDITION(eCSSUnit_URL == mUnit, "Not a URL value!");
+  NS_ABORT_IF_FALSE(eCSSUnit_URL == mUnit, "Not a URL value!");
   nsCSSValue::Image* image =
     new nsCSSValue::Image(mValue.mURL->mURI,
                           mValue.mURL->mString,
@@ -733,7 +734,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
    */
   else if (eCSSUnit_Function == unit) {
     const nsCSSValue::Array* array = GetArrayValue();
-    NS_ASSERTION(array->Count() >= 1, "Functions must have at least one element for the name.");
+    NS_ABORT_IF_FALSE(array->Count() >= 1,
+                      "Functions must have at least one element for the name.");
 
     /* Append the function name. */
     const nsCSSValue& functionName = array->Item(0);
@@ -823,7 +825,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     if (nsCSSProps::GetColorName(GetIntValue(), str)){
       AppendASCIItoUTF16(str, aResult);
     } else {
-      NS_NOTREACHED("bad color value");
+      NS_ABORT_IF_FALSE(false, "bad color value");
     }
   }
   else if (eCSSUnit_Color == unit) {
@@ -919,11 +921,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         (gradient->mRadialShape.GetUnit() != eCSSUnit_None ||
          gradient->mRadialSize.GetUnit() != eCSSUnit_None)) {
       if (gradient->mRadialShape.GetUnit() != eCSSUnit_None) {
-        NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_Enumerated,
-                     "bad unit for radial gradient shape");
+        NS_ABORT_IF_FALSE(gradient->mRadialShape.GetUnit() ==
+                          eCSSUnit_Enumerated,
+                          "bad unit for radial gradient shape");
         PRInt32 intValue = gradient->mRadialShape.GetIntValue();
-        NS_ASSERTION(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
-                     "radial gradient with linear shape?!");
+        NS_ABORT_IF_FALSE(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                          "radial gradient with linear shape?!");
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
                                nsCSSProps::kRadialGradientShapeKTable),
                            aResult);
@@ -931,8 +934,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       }
 
       if (gradient->mRadialSize.GetUnit() != eCSSUnit_None) {
-        NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_Enumerated,
-                     "bad unit for radial gradient size");
+        NS_ABORT_IF_FALSE(gradient->mRadialSize.GetUnit() ==
+                          eCSSUnit_Enumerated,
+                          "bad unit for radial gradient size");
         PRInt32 intValue = gradient->mRadialSize.GetIntValue();
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
                                nsCSSProps::kRadialGradientSizeKTable),
@@ -975,7 +979,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_All:          aResult.AppendLiteral("all"); break;
     case eCSSUnit_Dummy:
     case eCSSUnit_DummyInherit:
-      NS_NOTREACHED("should never serialize");
+      NS_ABORT_IF_FALSE(false, "should never serialize");
       break;
 
     case eCSSUnit_String:       break;
@@ -1236,7 +1240,7 @@ nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
     mReferrer(aReferrer),
     mOriginPrincipal(aOriginPrincipal)
 {
-  NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
+  NS_ABORT_IF_FALSE(aOriginPrincipal, "Must have an origin principal");
   mString->AddRef();
 }
 

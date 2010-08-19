@@ -179,14 +179,13 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
     const char* cursor_end = BlockEnd();
     while (cursor < cursor_end) {
         nsCSSProperty iProp = PropertyAtCursor(cursor);
-        NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                     "out of range");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
         if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
             aRuleData->mSIDs) {
             nsCSSValue* target = aRuleData->ValueFor(iProp);
             if (target->GetUnit() == eCSSUnit_Null) {
                 const nsCSSValue *val = ValueAtCursor(cursor);
-                NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
+                NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null, "oops");
                 if (ShouldStartImageLoads(aRuleData, iProp)) {
                     TryToStartImageLoad(*val, doc, iProp);
                 }
@@ -215,14 +214,14 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
         }
         cursor += CDBValueStorage_advance;
     }
-    NS_ASSERTION(cursor == cursor_end, "inconsistent data");
+    NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 }
 
 const nsCSSValue*
 nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
 {
-    NS_PRECONDITION(!nsCSSProps::IsShorthand(aProperty),
-                    "Don't call for shorthands");
+    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
+                      "Don't call for shorthands");
 
     // If we have no data for this struct, then return immediately.
     // This optimization should make us return most of the time, so we
@@ -236,14 +235,13 @@ nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
     const char* cursor_end = BlockEnd();
     while (cursor < cursor_end) {
         nsCSSProperty iProp = PropertyAtCursor(cursor);
-        NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                     "out of range");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
         if (iProp == aProperty) {
             return ValueAtCursor(cursor);
         }
         cursor += CDBValueStorage_advance;
     }
-    NS_ASSERTION(cursor == cursor_end, "inconsistent data");
+    NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 
     return nsnull;
 }
@@ -282,8 +280,7 @@ nsCSSCompressedDataBlock::Clone() const
 
     while (cursor < cursor_end) {
         nsCSSProperty iProp = PropertyAtCursor(cursor);
-        NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                     "out of range");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
         PropertyAtCursor(result_cursor) = iProp;
 
         const nsCSSValue* val = ValueAtCursor(cursor);
@@ -292,11 +289,11 @@ nsCSSCompressedDataBlock::Clone() const
         cursor += CDBValueStorage_advance;
         result_cursor +=  CDBValueStorage_advance;
     }
-    NS_ASSERTION(cursor == cursor_end, "inconsistent data");
+    NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 
     result->mBlockEnd = result_cursor;
     result->mStyleBits = mStyleBits;
-    NS_ASSERTION(result->DataSize() == DataSize(), "wrong size");
+    NS_ABORT_IF_FALSE(result->DataSize() == DataSize(), "wrong size");
 
     return result.forget();
 }
@@ -307,15 +304,14 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
     const char* cursor_end = BlockEnd();
     while (cursor < cursor_end) {
         nsCSSProperty iProp = PropertyAtCursor(cursor);
-        NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                     "out of range");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
 
         const nsCSSValue* val = ValueAtCursor(cursor);
-        NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
+        NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null, "oops");
         val->~nsCSSValue();
         cursor += CDBValueStorage_advance;
     }
-    NS_ASSERTION(cursor == cursor_end, "inconsistent data");
+    NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 }
 
 /* static */ nsCSSCompressedDataBlock*
@@ -359,26 +355,25 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
     const char* cursor_end = aBlock->BlockEnd();
     while (cursor < cursor_end) {
         nsCSSProperty iProp = PropertyAtCursor(cursor);
-        NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                     "out of range");
-        NS_ASSERTION(!HasPropertyBit(iProp),
-                     "compressed block has property multiple times");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
+        NS_ABORT_IF_FALSE(!HasPropertyBit(iProp),
+                          "compressed block has property multiple times");
         SetPropertyBit(iProp);
         if (aImportant)
             SetImportantBit(iProp);
 
         const nsCSSValue* val = ValueAtCursor(cursor);
         nsCSSValue* dest = PropertyAt(iProp);
-        NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
-        NS_ASSERTION(dest->GetUnit() == eCSSUnit_Null,
-                     "expanding into non-empty block");
+        NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null, "oops");
+        NS_ABORT_IF_FALSE(dest->GetUnit() == eCSSUnit_Null,
+                          "expanding into non-empty block");
 #ifdef NS_BUILD_REFCNT_LOGGING
         dest->~nsCSSValue();
 #endif
         memcpy(dest, val, sizeof(nsCSSValue));
         cursor += CDBValueStorage_advance;
     }
-    NS_ASSERTION(cursor == cursor_end, "inconsistent data");
+    NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 
     // Don't destroy remnants of what we just copied
     aBlock->mBlockEnd = aBlock->Block();
@@ -389,7 +384,7 @@ void
 nsCSSExpandedDataBlock::Expand(nsCSSCompressedDataBlock *aNormalBlock,
                                nsCSSCompressedDataBlock *aImportantBlock)
 {
-    NS_PRECONDITION(aNormalBlock, "unexpected null block");
+    NS_ABORT_IF_FALSE(aNormalBlock, "unexpected null block");
     AssertInitialState();
 
     DoExpand(aNormalBlock, PR_FALSE);
@@ -409,10 +404,9 @@ nsCSSExpandedDataBlock::ComputeSize()
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
-            NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                         "out of range");
-            NS_ASSERTION(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
-                         "null value while computing size");
+            NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
+            NS_ABORT_IF_FALSE(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
+                              "null value while computing size");
             if (mPropertiesImportant.HasPropertyAt(iHigh, iLow))
                 result.important += CDBValueStorage_advance;
             else
@@ -454,16 +448,15 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
-            NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
-                         "out of range");
+            NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
             PRBool important =
                 mPropertiesImportant.HasPropertyAt(iHigh, iLow);
             char *&cursor = important ? cursor_important : cursor_normal;
             nsCSSCompressedDataBlock *result =
                 important ? result_important : result_normal;
             nsCSSValue* val = PropertyAt(iProp);
-            NS_ASSERTION(val->GetUnit() != eCSSUnit_Null,
-                         "Null value while compressing");
+            NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null,
+                              "Null value while compressing");
             CDBValueStorage *storage =
                 reinterpret_cast<CDBValueStorage*>(cursor);
             storage->property = iProp;
@@ -476,13 +469,14 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
     }
 
     result_normal->mBlockEnd = cursor_normal;
-    NS_ASSERTION(result_normal->DataSize() == ptrdiff_t(size.normal),
-                 "size miscalculation");
+    NS_ABORT_IF_FALSE(result_normal->DataSize() == ptrdiff_t(size.normal),
+                      "size miscalculation");
 
     if (result_important) {
         result_important->mBlockEnd = cursor_important;
-        NS_ASSERTION(result_important->DataSize() == ptrdiff_t(size.important),
-                     "size miscalculation");
+        NS_ABORT_IF_FALSE(result_important->DataSize() ==
+                          ptrdiff_t(size.important),
+                          "size miscalculation");
     }
 
     ClearSets();
@@ -495,7 +489,8 @@ void
 nsCSSExpandedDataBlock::AddLonghandProperty(nsCSSProperty aProperty,
                                             const nsCSSValue& aValue)
 {
-    NS_ASSERTION(!nsCSSProps::IsShorthand(aProperty), "property out of range");
+    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
+                      "property out of range");
     nsCSSValue& storage = *static_cast<nsCSSValue*>(PropertyAt(aProperty));
     storage = aValue;
     SetPropertyBit(aProperty);
@@ -533,9 +528,7 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 void
 nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 {
-    NS_ABORT_IF_FALSE(0 <= aPropID &&
-                      aPropID < eCSSProperty_COUNT_no_shorthands,
-                      "out of range");
+    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aPropID), "out of range");
 
     ClearPropertyBit(aPropID);
     ClearImportantBit(aPropID);
@@ -574,7 +567,7 @@ nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                             css::Declaration* aDeclaration)
 {
   PRBool changed = PR_FALSE;
-  NS_ASSERTION(aFromBlock.HasPropertyBit(aPropID), "oops");
+  NS_ABORT_IF_FALSE(aFromBlock.HasPropertyBit(aPropID), "oops");
   if (aIsImportant) {
     if (!HasImportantBit(aPropID))
       changed = PR_TRUE;
@@ -619,8 +612,8 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
     mPropertiesImportant.AssertIsEmpty("not initial state");
 
     for (PRUint32 i = 0; i < eCSSProperty_COUNT_no_shorthands; ++i) {
-        NS_ASSERTION(PropertyAt(nsCSSProperty(i))->GetUnit() == eCSSUnit_Null,
-                     "not initial state");
+        NS_ABORT_IF_FALSE(PropertyAt(nsCSSProperty(i))->GetUnit() ==
+                          eCSSUnit_Null, "not initial state");
     }
 }
 #endif
