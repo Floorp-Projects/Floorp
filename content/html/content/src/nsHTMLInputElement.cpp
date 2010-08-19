@@ -2471,8 +2471,7 @@ nsHTMLInputElement::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                                      nsIContent* aSubmitElement)
+nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   nsresult rv = NS_OK;
 
@@ -2486,7 +2485,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
   if (disabled || mType == NS_FORM_INPUT_RESET ||
       mType == NS_FORM_INPUT_BUTTON ||
       ((mType == NS_FORM_INPUT_SUBMIT || mType == NS_FORM_INPUT_IMAGE) &&
-       aSubmitElement != this) ||
+       aFormSubmission->GetOriginatingElement() != this) ||
       ((mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX) &&
        !GetChecked())) {
     return NS_OK;

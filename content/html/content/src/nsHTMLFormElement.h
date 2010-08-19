@@ -304,10 +304,8 @@ protected:
    * their data pumped into the FormSubmitter.
    *
    * @param aFormSubmission the form submission object
-   * @param aSubmitElement the element that was clicked on (nsnull if none)
    */
-  nsresult WalkFormElements(nsFormSubmission* aFormSubmission,
-                            nsIContent* aSubmitElement);
+  nsresult WalkFormElements(nsFormSubmission* aFormSubmission);
 
   /**
    * Notify any submit observers of the submit.
