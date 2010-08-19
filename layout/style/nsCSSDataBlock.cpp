@@ -492,6 +492,16 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
 }
 
 void
+nsCSSExpandedDataBlock::AddLonghandProperty(nsCSSProperty aProperty,
+                                            const nsCSSValue& aValue)
+{
+    NS_ASSERTION(!nsCSSProps::IsShorthand(aProperty), "property out of range");
+    nsCSSValue& storage = *static_cast<nsCSSValue*>(PropertyAt(aProperty));
+    storage = aValue;
+    SetPropertyBit(aProperty);
+}
+
+void
 nsCSSExpandedDataBlock::Clear()
 {
     for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
