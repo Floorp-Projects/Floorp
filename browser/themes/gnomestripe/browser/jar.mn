@@ -42,6 +42,7 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon.png        (feeds/audioFeedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png      (feeds/audioFeedIcon16.png)
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
+  skin/classic/browser/feeds/subscribe-ui.css         (feeds/subscribe-ui.css)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/calendar.png            (places/calendar.png)
