@@ -697,6 +697,8 @@ protected:
 
     friend nsresult
     NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
+    friend void
+    NS_TrustedNewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
 
     static already_AddRefed<nsXULElement>
     Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
