@@ -688,6 +688,11 @@ nsresult nsView::CreateWidget(const nsIID &aWindowIID,
     NS_RELEASE(mWindow);
   }
 
+  nsresult rv = LoadWidget(aWindowIID);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   PRBool initDataPassedIn = PR_TRUE;
   nsWidgetInitData initData;
   if (!aWidgetInitData) {
@@ -702,47 +707,45 @@ nsresult nsView::CreateWidget(const nsIID &aWindowIID,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  if (NS_OK == LoadWidget(aWindowIID))
-  {
-    nsCOMPtr<nsIDeviceContext> dx;
-    mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  nsCOMPtr<nsIDeviceContext> dx;
+  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
 
-    if (aNative && aWidgetInitData->mWindowType != eWindowType_popup)
-      mWindow->Create(nsnull, aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-    else
-    {
-      if (!initDataPassedIn && GetParent() && 
-          GetParent()->GetViewManager() != mViewManager)
-        initData.mListenForResizes = PR_TRUE;
-      if (aParentWidget) {
-        NS_ASSERTION(aWidgetInitData->mWindowType == eWindowType_popup,
-                     "popup widget type expected");
-        mWindow->Create(aParentWidget, nsnull, trect,
+  if (aNative && aWidgetInitData->mWindowType != eWindowType_popup) {
+    mWindow->Create(nsnull, aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+  }
+  else {
+    if (!initDataPassedIn && GetParent() && 
+        GetParent()->GetViewManager() != mViewManager)
+      initData.mListenForResizes = PR_TRUE;
+    if (aParentWidget) {
+      NS_ASSERTION(aWidgetInitData->mWindowType == eWindowType_popup,
+                   "popup widget type expected");
+      mWindow->Create(aParentWidget, nsnull, trect,
+                      ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+    }
+    else {
+      nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                            : nsnull;
+      if (aWidgetInitData->mWindowType == eWindowType_popup) {
+        // Without a parent, we can't make a popup.  This can happen
+        // when printing
+        if (!parentWidget)
+          return NS_ERROR_FAILURE;
+        mWindow->Create(nsnull, parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
+                        ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+      } else {
+        mWindow->Create(parentWidget, nsnull, trect,
                         ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
       }
-      else {
-        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
-                                              : nsnull;
-        if (aWidgetInitData->mWindowType == eWindowType_popup) {
-          // Without a parent, we can't make a popup.  This can happen
-          // when printing
-          if (!parentWidget)
-            return NS_ERROR_FAILURE;
-          mWindow->Create(nsnull, parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
-                          ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-        } else {
-          mWindow->Create(parentWidget, nsnull, trect,
-                          ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-        }
-      }
     }
-    if (aEnableDragDrop) {
-      mWindow->EnableDragDrop(PR_TRUE);
-    }
-      
-    // propagate the z-index to the widget.
-    UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
   }
+
+  if (aEnableDragDrop) {
+    mWindow->EnableDragDrop(PR_TRUE);
+  }
+      
+  // propagate the z-index to the widget.
+  UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
 
   //make sure visibility state is accurate
 
@@ -825,20 +828,16 @@ void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
 //
 nsresult nsView::LoadWidget(const nsCID &aClassIID)
 {
-  ViewWrapper* wrapper = new ViewWrapper(this);
-  if (!wrapper)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(wrapper); // Will be released in ~nsView
+  NS_ABORT_IF_FALSE(!mWindow, "Already have a widget?");
 
   nsresult rv = CallCreateInstance(aClassIID, &mWindow);
-
-  if (NS_SUCCEEDED(rv)) {
-    // Set the widget's client data
-    mWindow->SetClientData(wrapper);
-  } else {
-    delete wrapper;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
+  ViewWrapper* wrapper = new ViewWrapper(this);
+  NS_ADDREF(wrapper); // Will be released in ~nsView
+  mWindow->SetClientData(wrapper);
   return rv;
 }
 
