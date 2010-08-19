@@ -87,6 +87,22 @@ inline const nsCSSValue* ValueAtCursor(const char *aCursor) {
     return & reinterpret_cast<const CDBValueStorage*>(aCursor)->value;
 }
 
+/**
+ * Does a fast move of aSource to aDest.  The previous value in
+ * aDest is cleanly destroyed, and aSource is cleared.  Returns
+ * true if, before the copy, the value at aSource compared unequal
+ * to the value at aDest; false otherwise.
+ */
+static PRBool
+MoveValue(nsCSSValue* aSource, nsCSSValue* aDest)
+{
+    PRBool changed = (*aSource != *aDest);
+    aDest->~nsCSSValue();
+    memcpy(aDest, aSource, sizeof(nsCSSValue));
+    new (aSource) nsCSSValue();
+    return changed;
+}
+
 static PRBool
 ShouldIgnoreColors(nsRuleData *aRuleData)
 {
@@ -232,6 +248,26 @@ nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
     return nsnull;
 }
 
+PRBool
+nsCSSCompressedDataBlock::TryReplaceValue(nsCSSProperty aProperty,
+                                          nsCSSExpandedDataBlock& aFromBlock,
+                                          PRBool *aChanged)
+{
+    nsCSSValue* newValue = aFromBlock.PropertyAt(aProperty);
+    NS_ABORT_IF_FALSE(newValue && newValue->GetUnit() != eCSSUnit_Null,
+                      "cannot replace with empty value");
+
+    const nsCSSValue* oldValue = ValueFor(aProperty);
+    if (!oldValue) {
+        *aChanged = PR_FALSE;
+        return PR_FALSE;
+    }
+
+    *aChanged = MoveValue(newValue, const_cast<nsCSSValue*>(oldValue));
+    aFromBlock.ClearPropertyBit(aProperty);
+    return PR_TRUE;
+}
+
 nsCSSCompressedDataBlock*
 nsCSSCompressedDataBlock::Clone() const
 {
@@ -288,16 +324,6 @@ nsCSSCompressedDataBlock::CreateEmptyBlock()
     nsCSSCompressedDataBlock *result = new(0) nsCSSCompressedDataBlock();
     result->mBlockEnd = result->Block();
     return result;
-}
-
-/* static */ PRBool
-nsCSSCompressedDataBlock::MoveValue(nsCSSValue *aSource, nsCSSValue *aDest)
-{
-    PRBool changed = (*aSource != *aDest);
-    aDest->~nsCSSValue();
-    memcpy(aDest, aSource, sizeof(nsCSSValue));
-    new (aSource) nsCSSValue();
-    return changed;
 }
 
 /*****************************************************************************/
@@ -571,8 +597,7 @@ nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
    * the destination, copying memory directly, and then using placement
    * new.
    */
-  changed |= nsCSSCompressedDataBlock::MoveValue(aFromBlock.PropertyAt(aPropID),
-                                                 PropertyAt(aPropID));
+  changed |= MoveValue(aFromBlock.PropertyAt(aPropID), PropertyAt(aPropID));
   return changed;
 }
 
