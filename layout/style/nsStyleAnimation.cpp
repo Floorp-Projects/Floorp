@@ -124,13 +124,14 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 {
   Unit commonUnit = GetCommonUnit(aStartValue.GetUnit(), aEndValue.GetUnit());
 
-  PRBool success = PR_TRUE;
   switch (commonUnit) {
     case eUnit_Null:
+    case eUnit_Auto:
     case eUnit_None:
+    case eUnit_Normal:
     case eUnit_UnparsedString:
-      success = PR_FALSE;
-      break;
+      return PR_FALSE;
+
     case eUnit_Enumerated:
       switch (aProperty) {
         case eCSSProperty_font_stretch: {
@@ -138,44 +139,42 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           PRInt32 startInt = aStartValue.GetIntValue();
           PRInt32 endInt = aEndValue.GetIntValue();
           aDistance = PR_ABS(endInt - startInt);
-          break;
+          return PR_TRUE;
         }
         default:
-          success = PR_FALSE;
-          break;
+          return PR_FALSE;
       }
-      break;
    case eUnit_Visibility: {
       PRInt32 startVal =
         aStartValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       PRInt32 endVal =
         aEndValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       aDistance = PR_ABS(startVal - endVal);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Integer: {
       PRInt32 startInt = aStartValue.GetIntValue();
       PRInt32 endInt = aEndValue.GetIntValue();
       aDistance = PR_ABS(endInt - startInt);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
       aDistance = fabs(double(endCoord - startCoord));
-      break;
+      return PR_TRUE;
     }
     case eUnit_Percent: {
       float startPct = aStartValue.GetPercentValue();
       float endPct = aEndValue.GetPercentValue();
       aDistance = fabs(double(endPct - startPct));
-      break;
+      return PR_TRUE;
     }
     case eUnit_Float: {
       float startFloat = aStartValue.GetFloatValue();
       float endFloat = aEndValue.GetFloatValue();
       aDistance = fabs(double(endFloat - startFloat));
-      break;
+      return PR_TRUE;
     }
     case eUnit_Color: {
       // http://www.w3.org/TR/smil-animation/#animateColorElement says
@@ -212,7 +211,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       double diffB = startB - endB;
       aDistance = sqrt(diffA * diffA + diffR * diffR +
                        diffG * diffG + diffB * diffB);
-      break;
+      return PR_TRUE;
     }
     case eUnit_CSSValuePair: {
       const nsCSSValuePair *pair1 = aStartValue.GetCSSValuePairValue();
@@ -250,7 +249,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       }
 
       aDistance = sqrt(squareDistance);
-      break;
+      return PR_TRUE;
     }
     case eUnit_CSSRect: {
       const nsCSSRect *rect1 = aStartValue.GetCSSRectValue();
@@ -286,7 +285,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       }
 
       aDistance = sqrt(squareDistance);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Dasharray: {
       // NOTE: This produces results on substantially different scales
@@ -300,8 +299,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                        normValue1) ||
           !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
                        normValue2)) {
-        success = PR_FALSE;
-        break;
+        return PR_FALSE;
       }
 
       double squareDistance = 0.0;
@@ -335,7 +333,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       }
 
       aDistance = sqrt(squareDistance);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Shadow: {
       // Call AddWeighted to make us lists of the same length.
@@ -344,8 +342,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                        normValue1) ||
           !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
                        normValue2)) {
-        success = PR_FALSE;
-        break;
+        return PR_FALSE;
       }
 
       const nsCSSValueList *shadow1 = normValue1.GetCSSValueListValue();
@@ -404,7 +401,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
         NS_ABORT_IF_FALSE(!shadow1 == !shadow2, "lists should be same length");
       }
       aDistance = sqrt(squareDistance);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Transform: {
       const nsCSSValueList *list1 = aStartValue.GetCSSValueListValue();
@@ -448,7 +445,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       squareDistance += diff * diff;
 
       aDistance = sqrt(squareDistance);
-      break;
+      return PR_TRUE;
     }
     case eUnit_CSSValuePairList: {
       const nsCSSValuePairList *list1 = aStartValue.GetCSSValuePairListValue();
@@ -463,8 +460,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           const nsCSSValue &v1 = list1->*(pairListValues[i]);
           const nsCSSValue &v2 = list2->*(pairListValues[i]);
           if (v1.GetUnit() != v2.GetUnit()) {
-            success = PR_FALSE;
-            break; // to failure case
+            return PR_FALSE;
           }
           double diff = 0.0;
           switch (v1.GetUnit()) {
@@ -476,34 +472,26 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
               break;
             default:
               if (v1 != v2) {
-                success = PR_FALSE;
+                return PR_FALSE;
               }
               break;
           }
           squareDistance += diff * diff;
         }
-        if (!success) {
-          break; // to failure case
-        }
-
         list1 = list1->mNext;
         list2 = list2->mNext;
       } while (list1 && list2);
       if (list1 || list2) {
-        // We can't interpolate lists of different lengths.  (Also,
-        // failure cases above break to here.)
-        success = PR_FALSE;
-      } else {
-        aDistance = sqrt(squareDistance);
+        // We can't interpolate lists of different lengths.
+        return PR_FALSE;
       }
-      break;
+      aDistance = sqrt(squareDistance);
+      return PR_TRUE;
     }
-    default:
-      NS_NOTREACHED("Can't compute distance using the given common unit");
-      success = PR_FALSE;
-      break;
   }
-  return success;
+
+  NS_ABORT_IF_FALSE(false, "Can't compute distance using the given common unit");
+  return PR_FALSE;
 }
 
 inline void
@@ -1183,13 +1171,14 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
   // that in GetCommonUnit? in which case maybe ConvertToCommonUnit would be
   // better.)
 
-  PRBool success = PR_TRUE;
   switch (commonUnit) {
     case eUnit_Null:
+    case eUnit_Auto:
     case eUnit_None:
+    case eUnit_Normal:
     case eUnit_UnparsedString:
-      success = PR_FALSE;
-      break;
+      return PR_FALSE;
+
     case eUnit_Enumerated:
       switch (aProperty) {
         case eCSSProperty_font_stretch: {
@@ -1197,13 +1186,11 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
                                     aCoeff2 * double(aValue2.GetIntValue()));
           aResultValue.SetIntValue(result, eUnit_Enumerated);
-          break;
+          return PR_TRUE;
         }
         default:
-          success = PR_FALSE;
-          break;
+          return PR_FALSE;
       }
-      break;
     case eUnit_Visibility: {
       PRInt32 val1 = aValue1.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       PRInt32 val2 = aValue2.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
@@ -1211,7 +1198,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       PRInt32 result = interp > 0.0 ? NS_STYLE_VISIBILITY_VISIBLE
                                     : NS_STYLE_VISIBILITY_HIDDEN;
       aResultValue.SetIntValue(result, eUnit_Visibility);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Integer: {
       // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
@@ -1223,25 +1210,25 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         result -= result % 100;
       }
       aResultValue.SetIntValue(result, eUnit_Integer);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Coord: {
       aResultValue.SetCoordValue(NSToCoordRound(
         aCoeff1 * aValue1.GetCoordValue() +
         aCoeff2 * aValue2.GetCoordValue()));
-      break;
+      return PR_TRUE;
     }
     case eUnit_Percent: {
       aResultValue.SetPercentValue(
         aCoeff1 * aValue1.GetPercentValue() +
         aCoeff2 * aValue2.GetPercentValue());
-      break;
+      return PR_TRUE;
     }
     case eUnit_Float: {
       aResultValue.SetFloatValue(
         aCoeff1 * aValue1.GetFloatValue() +
         aCoeff2 * aValue2.GetFloatValue());
-      break;
+      return PR_TRUE;
     }
     case eUnit_Color: {
       nscolor color1 = aValue1.GetColorValue();
@@ -1277,7 +1264,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         resultColor = NS_RGBA(Rres, Gres, Bres, Ares);
       }
       aResultValue.SetColorValue(resultColor);
-      break;
+      return PR_TRUE;
     }
     case eUnit_CSSValuePair: {
       const nsCSSValuePair *pair1 = aValue1.GetCSSValuePairValue();
@@ -1315,7 +1302,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
 
       aResultValue.SetAndAdoptCSSValuePairValue(result.forget(),
                                                 eUnit_CSSValuePair);
-      break;
+      return PR_TRUE;
     }
     case eUnit_CSSRect: {
       const nsCSSRect *rect1 = aValue1.GetCSSRectValue();
@@ -1354,7 +1341,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       }
 
       aResultValue.SetAndAdoptCSSRectValue(result.forget(), eUnit_CSSRect);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Dasharray: {
       const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
@@ -1417,7 +1404,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
 
       aResultValue.SetAndAdoptCSSValueListValue(result.forget(),
                                                 eUnit_Dasharray);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Shadow: {
       // This is implemented according to:
@@ -1456,14 +1443,13 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                               0.0, longShadow->mValue,
                               resultTail)) {
             return PR_FALSE;
-            break;
           }
 
           longShadow = longShadow->mNext;
         }
       }
       aResultValue.SetAndAdoptCSSValueListValue(result.forget(), eUnit_Shadow);
-      break;
+      return PR_TRUE;
     }
     case eUnit_Transform: {
       const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
@@ -1539,7 +1525,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       do {
         nsCSSValuePairList *item = new nsCSSValuePairList;
         if (!item) {
-          break; // to failure case
+          return PR_FALSE;
         }
         *resultTail = item;
         resultTail = &item->mNext;
@@ -1553,8 +1539,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           const nsCSSValue &v2 = list2->*(pairListValues[i]);
           nsCSSValue &vr = item->*(pairListValues[i]);
           if (v1.GetUnit() != v2.GetUnit()) {
-            success = PR_FALSE;
-            break; // to failure case
+            return PR_FALSE;
           }
           switch (v1.GetUnit()) {
             case eCSSUnit_Pixel:
@@ -1564,36 +1549,28 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
               AddCSSValuePercent(aCoeff1, v1, aCoeff2, v2, vr);
               break;
             default:
-              if (v1 == v2) {
-                vr = v1;
-              } else {
-                success = PR_FALSE;
+              if (v1 != v2) {
+                return PR_FALSE;
               }
+              vr = v1;
               break;
           }
         }
-        if (!success) {
-          break; // to failure case
-        }
-
         list1 = list1->mNext;
         list2 = list2->mNext;
       } while (list1 && list2);
       if (list1 || list2) {
-        // We can't interpolate lists of different lengths.  (Also,
-        // failure cases above break to here.)
-        success = PR_FALSE;
-      } else {
-        aResultValue.SetAndAdoptCSSValuePairListValue(result.forget());
+        // We can't interpolate lists of different lengths.
+        return PR_FALSE;
       }
-      break;
+
+      aResultValue.SetAndAdoptCSSValuePairListValue(result.forget());
+      return PR_TRUE;
     }
-    default:
-      NS_NOTREACHED("Can't interpolate using the given common unit");
-      success = PR_FALSE;
-      break;
   }
-  return success;
+
+  NS_ABORT_IF_FALSE(false, "Can't interpolate using the given common unit");
+  return PR_FALSE;
 }
 
 already_AddRefed<nsICSSStyleRule>
