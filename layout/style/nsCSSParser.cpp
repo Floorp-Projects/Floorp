@@ -4884,14 +4884,7 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, PRBool aIsRadial,
 
     // if we got an angle, we might now have a comma, ending the gradient-line
     if (!haveAngle || !ExpectSymbol(',', PR_TRUE)) {
-      // This intermediate is necessary because nsCSSValueGradient cannot
-      // contain a nsCSSValuePair (because the latter type is defined in
-      // nsCSSStruct.h rather than nsCSSValue.h).
-      nsCSSValuePair bgPos;
-      if (ParseBoxPositionValues(bgPos, PR_FALSE)) {
-        cssGradient->mBgPosX = bgPos.mXValue;
-        cssGradient->mBgPosY = bgPos.mYValue;
-      } else {
+      if (!ParseBoxPositionValues(cssGradient->mBgPos, PR_FALSE)) {
         SkipUntil(')');
         return PR_FALSE;
       }

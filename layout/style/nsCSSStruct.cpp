@@ -43,21 +43,8 @@
  * representation of complex values for CSS properties
  */
 
-#include "nscore.h"
 #include "nsCSSStruct.h"
 #include "nsString.h"
-#include "nsIAtom.h"
-#include "nsUnicharUtils.h"
-#include "nsCRT.h"
-#include "nsCSSProps.h"
-#include "nsFont.h"
-
-#include "nsStyleConsts.h"
-
-#include "nsCOMPtr.h"
-#include "nsReadableUtils.h"
-#include "nsPrintfCString.h"
-#include "prlog.h"
 
 // --- nsCSSFont -----------------
 
@@ -69,58 +56,6 @@ nsCSSFont::nsCSSFont(void)
 nsCSSFont::~nsCSSFont(void)
 {
   MOZ_COUNT_DTOR(nsCSSFont);
-}
-
-// --- nsCSSValueList -----------------
-
-nsCSSValueList::~nsCSSValueList()
-{
-  MOZ_COUNT_DTOR(nsCSSValueList);
-  NS_CSS_DELETE_LIST_MEMBER(nsCSSValueList, this, mNext);
-}
-
-nsCSSValueList*
-nsCSSValueList::Clone() const
-{
-  nsCSSValueList* result = new nsCSSValueList(*this);
-  nsCSSValueList* dest = result;
-  const nsCSSValueList* src = this->mNext;
-  while (src) {
-    dest->mNext = new nsCSSValueList(*src);
-    dest = dest->mNext;
-    src = src->mNext;
-  }
-  return result;
-}
-
-void
-nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
-{
-  const nsCSSValueList* val = this;
-  for (;;) {
-    val->mValue.AppendToString(aProperty, aResult);
-    val = val->mNext;
-    if (!val)
-      break;
-
-    if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-      aResult.Append(PRUnichar(','));
-    aResult.Append(PRUnichar(' '));
-  }
-}
-
-bool
-nsCSSValueList::operator==(const nsCSSValueList& aOther) const
-{
-  if (this == &aOther)
-    return true;
-
-  const nsCSSValueList *p1 = this, *p2 = &aOther;
-  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
-    if (p1->mValue != p2->mValue)
-      return false;
-  }
-  return !p1 && !p2; // true if same length, false otherwise
 }
 
 // --- nsCSSColor -----------------
@@ -163,73 +98,6 @@ nsCSSText::~nsCSSText(void)
   MOZ_COUNT_DTOR(nsCSSText);
   delete mTextShadow;
 }
-
-// --- nsCSSRect -----------------
-
-nsCSSRect::nsCSSRect(void)
-{
-  MOZ_COUNT_CTOR(nsCSSRect);
-}
-
-nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
-  : mTop(aCopy.mTop),
-    mRight(aCopy.mRight),
-    mBottom(aCopy.mBottom),
-    mLeft(aCopy.mLeft)
-{
-  MOZ_COUNT_CTOR(nsCSSRect);
-}
-
-nsCSSRect::~nsCSSRect()
-{
-  MOZ_COUNT_DTOR(nsCSSRect);
-}
-
-void
-nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
-{
-  const nsCSSUnit topUnit = mTop.GetUnit();
-  if (topUnit == eCSSUnit_Inherit ||
-      topUnit == eCSSUnit_Initial ||
-      topUnit == eCSSUnit_RectIsAuto) {
-    NS_ASSERTION(mRight.GetUnit() == topUnit &&
-                 mBottom.GetUnit() == topUnit &&
-                 mLeft.GetUnit() == topUnit,
-                 "parser should make all sides have the same unit");
-    if (topUnit == eCSSUnit_RectIsAuto)
-      aResult.AppendLiteral("auto");
-    else
-      mTop.AppendToString(aProperty, aResult);
-  } else {
-    aResult.AppendLiteral("rect(");
-    mTop.AppendToString(aProperty, aResult);
-    NS_NAMED_LITERAL_STRING(comma, ", ");
-    aResult.Append(comma);
-    mRight.AppendToString(aProperty, aResult);
-    aResult.Append(comma);
-    mBottom.AppendToString(aProperty, aResult);
-    aResult.Append(comma);
-    mLeft.AppendToString(aProperty, aResult);
-    aResult.Append(PRUnichar(')'));
-  }
-}
-
-void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
-{
-  mTop = aValue;
-  mRight = aValue;
-  mBottom = aValue;
-  mLeft = aValue;
-}
-
-PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
-
-/* static */ const nsCSSRect::side_type nsCSSRect::sides[4] = {
-  &nsCSSRect::mTop,
-  &nsCSSRect::mRight,
-  &nsCSSRect::mBottom,
-  &nsCSSRect::mLeft,
-};
 
 // --- nsCSSCornerSizes -----------------
 
@@ -393,93 +261,6 @@ nsCSSPage::nsCSSPage(void)
 nsCSSPage::~nsCSSPage(void)
 {
   MOZ_COUNT_DTOR(nsCSSPage);
-}
-
-// --- nsCSSValuePair -----------------
-
-void
-nsCSSValuePair::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
-{
-  mXValue.AppendToString(aProperty, aResult);
-  if (mYValue != mXValue ||
-      ((aProperty == eCSSProperty_background_position ||
-        aProperty == eCSSProperty__moz_transform_origin) &&
-       mXValue.GetUnit() != eCSSUnit_Inherit &&
-       mXValue.GetUnit() != eCSSUnit_Initial) ||
-      (aProperty == eCSSProperty_background_size &&
-       mXValue.GetUnit() != eCSSUnit_Inherit &&
-       mXValue.GetUnit() != eCSSUnit_Initial &&
-       mXValue.GetUnit() != eCSSUnit_Enumerated)) {
-    // Only output a Y value if it's different from the X value,
-    // or if it's a background-position value other than 'initial'
-    // or 'inherit', or if it's a -moz-transform-origin value other
-    // than 'initial' or 'inherit', or if it's a background-size
-    // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
-    aResult.Append(PRUnichar(' '));
-    mYValue.AppendToString(aProperty, aResult);
-  }
-}
-
-// --- nsCSSValuePairList -----------------
-
-nsCSSValuePairList::~nsCSSValuePairList()
-{
-  MOZ_COUNT_DTOR(nsCSSValuePairList);
-  NS_CSS_DELETE_LIST_MEMBER(nsCSSValuePairList, this, mNext);
-}
-
-nsCSSValuePairList*
-nsCSSValuePairList::Clone() const
-{
-  nsCSSValuePairList* result = new nsCSSValuePairList(*this);
-  nsCSSValuePairList* dest = result;
-  const nsCSSValuePairList* src = this->mNext;
-  while (src) {
-    dest->mNext = new nsCSSValuePairList(*src);
-    dest = dest->mNext;
-    src = src->mNext;
-  }
-  return result;
-}
-
-void
-nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
-                                   nsAString& aResult) const
-{
-  const nsCSSValuePairList* val = this;
-  for (;;) {
-    NS_ABORT_IF_FALSE(val->mXValue.GetUnit() != eCSSUnit_Null,
-                      "unexpected null unit");
-    val->mXValue.AppendToString(aProperty, aResult);
-    if (val->mXValue.GetUnit() != eCSSUnit_Inherit &&
-        val->mXValue.GetUnit() != eCSSUnit_Initial &&
-        val->mYValue.GetUnit() != eCSSUnit_Null) {
-      aResult.Append(PRUnichar(' '));
-      val->mYValue.AppendToString(aProperty, aResult);
-    }
-    val = val->mNext;
-    if (!val)
-      break;
-
-    if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-      aResult.Append(PRUnichar(','));
-    aResult.Append(PRUnichar(' '));
-  }
-}
-
-bool
-nsCSSValuePairList::operator==(const nsCSSValuePairList& aOther) const
-{
-  if (this == &aOther)
-    return true;
-
-  const nsCSSValuePairList *p1 = this, *p2 = &aOther;
-  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
-    if (p1->mXValue != p2->mXValue ||
-        p1->mYValue != p2->mYValue)
-      return false;
-  }
-  return !p1 && !p2; // true if same length, false otherwise
 }
 
 // --- nsCSSContent -----------------
