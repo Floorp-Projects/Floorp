@@ -3773,7 +3773,7 @@ mjit::Compiler::jsop_instanceof()
 
 /*
  * Note: This function emits tracer hooks into the OOL path. This means if
- * used in the middle of an in-progress slow path, the stream will be
+ * it is used in the middle of an in-progress slow path, the stream will be
  * hopelessly corrupted. Take care to only call this before linkExits() and
  * after rejoin()s.
  */
