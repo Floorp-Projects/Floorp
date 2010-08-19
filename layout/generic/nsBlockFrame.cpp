@@ -316,6 +316,11 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // Now clear mFrames, since we've destroyed all the frames in it.
   mFrames.Clear();
 
+  nsFrameList* pushedFloats = RemovePushedFloats();
+  if (pushedFloats) {
+    pushedFloats->DestroyFrom(aDestructRoot);
+  }
+
   // destroy overflow lines now
   nsLineList* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
