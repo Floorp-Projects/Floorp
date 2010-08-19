@@ -676,6 +676,8 @@ static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 //***    nsDocShell: Object Management
 //*****************************************************************************
 
+static PRUint64 gDocshellIDCounter = 0;
+
 // Note: operator new zeros our memory
 nsDocShell::nsDocShell():
     nsDocLoader(),
@@ -715,6 +717,7 @@ nsDocShell::nsDocShell():
     , mInEnsureScriptEnv(PR_FALSE)
 #endif
 {
+    mHistoryID = ++gDocshellIDCounter;
     if (gDocShellCount++ == 0) {
         NS_ASSERTION(sURIFixup == nsnull,
                      "Huh, sURIFixup not null in first nsDocShell ctor!");
@@ -1225,7 +1228,19 @@ nsDocShell::LoadURI(nsIURI * aURI,
             nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(parentAsItem));
             if (parent) {
                 // Get the ShEntry for the child from the parent
-                parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
+                nsCOMPtr<nsISHEntry> currentSH;
+                PRBool oshe = PR_FALSE;
+                parent->GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
+                PRBool dynamicallyAddedChild = mDynamicallyCreated;
+                if (!dynamicallyAddedChild && !oshe && currentSH) {
+                    currentSH->HasDynamicallyAddedChild(&dynamicallyAddedChild);
+                }
+                if (!dynamicallyAddedChild) {
+                    // Only use the old SHEntry, if we're sure enough that
+                    // it wasn't originally for some other frame.
+                    parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
+                }
+
                 // Make some decisions on the child frame's loadType based on the 
                 // parent's loadType. 
                 if (mCurrentURI == nsnull) {
@@ -2957,6 +2972,13 @@ nsDocShell::SetChildOffset(PRUint32 aChildOffset)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetHistoryID(PRUint64* aID)
+{
+  *aID = mHistoryID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetIsInUnload(PRBool* aIsInUnload)
 {
     *aIsInUnload = mFiredUnloadEvent;
@@ -3009,30 +3031,19 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     NS_ASSERTION(mChildList.Count() > 0,
                  "child list must not be empty after a successful add");
 
-    // Set the child's index in the parent's children list 
-    // XXX What if the parent had different types of children?
-    // XXX in that case docshell hierarchy and SH hierarchy won't match.
-    {
-        nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
-        if (childDocShell) {
-            // If there are frameloaders in the finalization list, reduce
-            // the offset so that the SH hierarchy is more likely to match the
-            // docshell hierarchy
-            nsCOMPtr<nsIDocument> doc = do_GetInterface(GetAsSupports(this));
-            PRUint32 offset = mChildList.Count() - 1;
-            if (doc) {
-               PRUint32 oldChildCount = offset; // Current child count - 1
-               for (PRUint32 i = 0; i < oldChildCount; ++i) {
-                 nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
-                 if (doc->FrameLoaderScheduledToBeFinalized(child)) {
-                   --offset;
-                 }
-               }
-            }
-
-            childDocShell->SetChildOffset(offset);
+    nsCOMPtr<nsIDocShellHistory> docshellhistory = do_QueryInterface(aChild);
+    PRBool dynamic = PR_FALSE;
+    docshellhistory->GetCreatedDynamically(&dynamic);
+    if (!dynamic) {
+        nsCOMPtr<nsISHEntry> currentSH;
+        PRBool oshe = PR_FALSE;
+        GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
+        if (currentSH) {
+            currentSH->HasDynamicallyAddedChild(&dynamic);
         }
     }
+    nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
+    childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Count() - 1);
 
     /* Set the child's global history if the parent has one */
     if (mGlobalHistory) {
@@ -3395,6 +3406,89 @@ nsDocShell::GetUseGlobalHistory(PRBool *aUseGlobalHistory)
 {
     *aUseGlobalHistory = (mGlobalHistory != nsnull);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::RemoveFromSessionHistory()
+{
+    nsCOMPtr<nsISHistoryInternal> internalHistory;
+    nsCOMPtr<nsISHistory> sessionHistory;
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if (root) {
+        nsCOMPtr<nsIWebNavigation> rootAsWebnav =
+            do_QueryInterface(root);
+        if (rootAsWebnav) {
+            rootAsWebnav->GetSessionHistory(getter_AddRefs(sessionHistory));
+            internalHistory = do_QueryInterface(sessionHistory);
+        }
+    }
+    if (!internalHistory) {
+        return NS_OK;
+    }
+
+    PRInt32 index = 0;
+    sessionHistory->GetIndex(&index);
+    nsAutoTArray<PRUint64, 16> ids;
+    ids.AppendElement(mHistoryID);
+    internalHistory->RemoveEntries(ids, index);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetCreatedDynamically(PRBool aDynamic)
+{
+    mDynamicallyCreated = aDynamic;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetCreatedDynamically(PRBool* aDynamic)
+{
+    *aDynamic = mDynamicallyCreated;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetCurrentSHEntry(nsISHEntry** aEntry, PRBool* aOSHE)
+{
+    *aOSHE = PR_FALSE;
+    *aEntry = nsnull;
+    if (mLSHE) {
+        NS_ADDREF(*aEntry = mLSHE);
+    } else if (mOSHE) {
+        NS_ADDREF(*aEntry = mOSHE);
+        *aOSHE = PR_TRUE;
+    }
+    return NS_OK;
+}
+
+void
+nsDocShell::ClearFrameHistory(nsISHEntry* aEntry)
+{
+  nsCOMPtr<nsISHContainer> shcontainer = do_QueryInterface(aEntry);
+  nsCOMPtr<nsISHistory> rootSH;
+  GetRootSessionHistory(getter_AddRefs(rootSH));
+  nsCOMPtr<nsISHistoryInternal> history = do_QueryInterface(rootSH);
+  if (!history || !shcontainer) {
+    return;
+  }
+
+  PRInt32 count = 0;
+  shcontainer->GetChildCount(&count);
+  nsAutoTArray<PRUint64, 16> ids;
+  for (PRInt32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsISHEntry> child;
+    shcontainer->GetChildAt(i, getter_AddRefs(child));
+    if (child) {
+      PRUint64 id = 0;
+      child->GetDocshellID(&id);
+      ids.AppendElement(id);
+    }
+  }
+  PRInt32 index = 0;
+  rootSH->GetIndex(&index);
+  history->RemoveEntries(ids, index);
 }
 
 //-------------------------------------
@@ -5633,6 +5727,31 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
             if (mCurrentURI &&
                 NS_SUCCEEDED(uri->Equals(mCurrentURI, &equalUri)) &&
                 !equalUri) {
+
+                nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+                GetSameTypeParent(getter_AddRefs(parentAsItem));
+                nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(parentAsItem));
+                PRBool inOnLoadHandler = PR_FALSE;
+                if (parentDS) {
+                  parentDS->GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+                }
+                if (inOnLoadHandler) {
+                    // We're handling parent's load event listener, which causes
+                    // document.write in a subdocument.
+                    // Need to clear the session history for all child
+                    // docshells so that we can handle them like they would
+                    // all be added dynamically.
+                    nsCOMPtr<nsIDocShellHistory> parent =
+                        do_QueryInterface(parentAsItem);
+                    if (parent) {
+                        PRBool oshe = PR_FALSE;
+                        nsCOMPtr<nsISHEntry> entry;
+                        parent->GetCurrentSHEntry(getter_AddRefs(entry), &oshe);
+                        static_cast<nsDocShell*>(parent.get())->
+                            ClearFrameHistory(entry);
+                    }
+                }
+
                 // This is a document.write(). Get the made-up url
                 // from the channel and store it in session history.
                 rv = AddToSessionHistory(uri, wcwgChannel, nsnull,
@@ -8098,7 +8217,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             /* Set the title for the Global History entry for this anchor url.
              */
-            if (mGlobalHistory) {
+            nsCOMPtr<IHistory> history = services::GetHistoryService();
+            if (history) {
+                history->SetURITitle(aURI, mTitle);
+            }
+            else if (mGlobalHistory) {
                 mGlobalHistory->SetPageTitle(aURI, mTitle);
             }
 
@@ -8198,6 +8321,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     // If we have a saved content viewer in history, restore and show it now.
     if (aSHEntry && (mLoadType & LOAD_CMD_HISTORY)) {
+        // Make sure our history ID points to the same ID as
+        // SHEntry's docshell ID.
+        aSHEntry->GetDocshellID(&mHistoryID);
+
         // It's possible that the previous viewer of mContentViewer is the
         // viewer that will end up in aSHEntry when it gets closed.  If that's
         // the case, we need to go ahead and force it into its shentry so we
@@ -9045,7 +9172,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
            ("  shAvailable=%i updateHistory=%i equalURI=%i\n",
             shAvailable, updateHistory, equalUri));
 
-    if (mCurrentURI && !mOSHE && aLoadType != LOAD_ERROR_PAGE) {
+    if (shAvailable && mCurrentURI && !mOSHE && aLoadType != LOAD_ERROR_PAGE) {
         NS_ASSERTION(IsAboutBlank(mCurrentURI), "no SHEntry for a non-transient viewer?");
     }
 #endif
@@ -9106,6 +9233,28 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
             mLSHE->SetCacheKey(cacheKey);
         else if (mOSHE)
             mOSHE->SetCacheKey(cacheKey);
+
+        // Since we're force-reloading, clear all the sub frame history.
+        ClearFrameHistory(mLSHE);
+        ClearFrameHistory(mOSHE);
+    }
+
+    if (aLoadType == LOAD_RELOAD_NORMAL) {
+        nsCOMPtr<nsISHEntry> currentSH;
+        PRBool oshe = PR_FALSE;
+        GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
+        PRBool dynamicallyAddedChild = PR_FALSE;
+        if (currentSH) {
+          currentSH->HasDynamicallyAddedChild(&dynamicallyAddedChild);
+        }
+        if (dynamicallyAddedChild) {
+          ClearFrameHistory(currentSH);
+        }
+    }
+
+    if (aLoadType == LOAD_REFRESH) {
+        ClearFrameHistory(mLSHE);
+        ClearFrameHistory(mOSHE);
     }
 
     if (updateHistory && shAvailable) { 
@@ -9595,7 +9744,9 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
                   nsnull,            // LayoutHistory state
                   cacheKey,          // CacheKey
                   mContentTypeHint,  // Content-type
-                  owner);            // Channel or provided owner
+                  owner,             // Channel or provided owner
+                  mHistoryID,
+                  mDynamicallyCreated);
     entry->SetReferrerURI(referrerURI);
     /* If cache got a 'no-store', ask SH not to store
      * HistoryLayoutState. By default, SH will set this
@@ -9795,6 +9946,8 @@ nsDocShell::WalkHistoryEntries(nsISHEntry *aRootEntry,
         if (!childEntry) {
             // childEntry can be null for valid reasons, for example if the
             // docshell at index i never loaded anything useful.
+            // Remember to clone also nulls in the child array (bug 464064).
+            aCallback(nsnull, nsnull, i, aData);
             continue;
         }
 
@@ -9847,6 +10000,15 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
     PRUint32 cloneID = data->cloneID;
     nsISHEntry *replaceEntry = data->replaceEntry;
 
+    nsCOMPtr<nsISHContainer> container =
+      do_QueryInterface(data->destTreeParent);
+    if (!aEntry) {
+      if (container) {
+        container->AddChild(nsnull, aEntryIndex);
+      }
+      return NS_OK;
+    }
+    
     PRUint32 srcID;
     aEntry->GetID(&srcID);
 
@@ -9874,8 +10036,6 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
             aShell->SwapHistoryEntries(aEntry, dest);
     }
 
-    nsCOMPtr<nsISHContainer> container =
-        do_QueryInterface(data->destTreeParent);
     if (container)
         container->AddChild(dest, aEntryIndex);
 

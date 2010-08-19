@@ -465,9 +465,10 @@ nsFontSizeTextAttr::Format(const nscoord& aValue, nsAString& aFormattedValue)
   // ATK does not specify a unit and will likely follow IA2 here.
   //
   // XXX todo: consider sharing this code with layout module? (bug 474621)
-  float inches = static_cast<float>(aValue) /
-    static_cast<float>(mDC->AppUnitsPerInch());
-  int pts = static_cast<int>(inches * 72 + .5); // 72 pts per inch
+  float px =
+    NSAppUnitsToFloatPixels(aValue, nsIDeviceContext::AppUnitsPerCSSPixel());
+  // Each pt is 4/3 of a CSS pixel.
+  int pts = NS_lround(px*3/4);
 
   nsAutoString value;
   value.AppendInt(pts);

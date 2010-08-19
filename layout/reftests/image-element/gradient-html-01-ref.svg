@@ -1,0 +1,11 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="url(#g)"/>
+  <linearGradient id="g" x2="0" y2="1">
+    <stop stop-color="lime" offset="0"/>
+    <stop stop-color="lime" stop-opacity="0" offset="1"/>
+  </linearGradient>
+</svg>

@@ -73,6 +73,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXREDirProvider.h"
 
+#include "mozilla/Omnijar.h"
 #ifdef MOZ_IPC
 #include "nsX11ErrorHandler.h"
 #include "base/at_exit.h"
@@ -257,11 +258,10 @@ XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsILocalFile** aDump)
   return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
 }
 
-#if !defined(XP_MACOSX)
 PRBool
 XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
 #elif defined(OS_LINUX)
   return CrashReporter::SetRemoteExceptionHandler();
@@ -269,7 +269,6 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 #  error "OOP crash reporter unsupported on this platform"
 #endif
 }
-#endif // !XP_MACOSX
 #endif // if defined(MOZ_CRASHREPORTER)
 
 #if defined(XP_WIN)
@@ -435,6 +434,9 @@ XRE_InitChildProcess(int aArgc,
       // Allow ProcessChild to clean up after itself before going out of
       // scope and being deleted
       process->CleanUp();
+#ifdef MOZ_OMNIJAR
+      mozilla::SetOmnijar(nsnull);
+#endif
     }
   }
 

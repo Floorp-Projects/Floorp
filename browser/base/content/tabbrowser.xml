@@ -88,8 +88,13 @@
       <field name="tabs" readonly="true">
         this.tabContainer.childNodes;
       </field>
-      <property name="visibleTabs" readonly="true"
-                onget="return Array.filter(this.tabs, function(tab) !tab.hidden);"/>
+      <property name="visibleTabs" readonly="true">
+        <getter><![CDATA[
+          return Array.filter(this.tabs, function(tab) {
+            return !tab.hidden && this._removingTabs.indexOf(tab) == -1;
+          }, this);
+        ]]></getter>
+      </property>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -510,9 +515,12 @@
                   this.mBrowser.mIconURL = null;
 
                 let browserHistory = this.mTabBrowser.mBrowserHistory;
-                if (this.mBrowser.lastURI)
-                  browserHistory.unregisterOpenPage(this.mBrowser.lastURI);
+                if (this.mBrowser.registeredOpenURI) {
+                  browserHistory.unregisterOpenPage(this.mBrowser.registeredOpenURI);
+                  delete this.mBrowser.registeredOpenURI;
+                }
                 browserHistory.registerOpenPage(aLocation);
+                this.mBrowser.registeredOpenURI = aLocation;
               }
 
               if (!this.mBlank) {
@@ -723,7 +731,13 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            if (window.TabView && TabView.isVisible()) {
+              // ToDo: this will be removed when we gain ability to draw to the menu bar.
+              // Bug 586175
+              this.ownerDocument.title = TabView.windowTitle;
+            } else {
+              this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            }
           ]]>
         </body>
       </method>
@@ -760,7 +774,7 @@
             newBrowser.docShell.isActive = true;
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
-            this.mCurrentTab.hidden = false;
+            this.showTab(this.mCurrentTab);
 
             if (updatePageReport)
               this.mCurrentBrowser.updatePageReport();
@@ -1429,8 +1443,10 @@
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
 
-            if (browser.currentURI)
-              this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
+            if (browser.registeredOpenURI) {
+              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              delete browser.registeredOpenURI;
+            }
 
             // We are no longer the primary content area.
             browser.setAttribute("type", "content-targetable");
@@ -1578,16 +1594,14 @@
               return;
             }
 
-            let removing = this._removingTabs;
-            function keepRemaining(tab) {
-              // A tab remains only if it's not being removed nor blurred
-              return removing.indexOf(tab) == -1 && tab != aTab;
+            // Switch to a visible tab unless there aren't any others remaining
+            let remainingTabs = this.visibleTabs;
+            let numTabs = remainingTabs.length;
+            if (numTabs == 0 || numTabs == 1 && remainingTabs[0] == aTab) {
+              remainingTabs = Array.filter(this.tabs, function(tab) {
+                return this._removingTabs.indexOf(tab) == -1;
+              }, this);
             }
-
-            // Switch to a visible tab unless there aren't any remaining
-            let remainingTabs = this.visibleTabs.filter(keepRemaining);
-            if (remainingTabs.length == 0)
-              remainingTabs = Array.filter(this.tabs, keepRemaining);
 
             // Try to find a remaining tab that comes after the given tab
             var tab = aTab;
@@ -1782,8 +1796,40 @@
         <body>
         <![CDATA[
           Array.forEach(this.tabs, function(tab) {
-            tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned && !tab.selected;
-          });
+            if (aTabs.indexOf(tab) == -1)
+              this.hideTab(tab);
+            else
+              this.showTab(tab);
+          }, this);
+        ]]>
+        </body>
+      </method>
+
+      <method name="showTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (aTab.hidden) {
+            aTab.hidden = false;
+            let event = document.createEvent("Events");
+            event.initEvent("TabShow", true, false);
+            aTab.dispatchEvent(event);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="hideTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
+              this._removingTabs.indexOf(aTab) == -1) {
+            aTab.hidden = true;
+            let event = document.createEvent("Events");
+            event.initEvent("TabHide", true, false);
+            aTab.dispatchEvent(event);
+          }
         ]]>
         </body>
       </method>
@@ -2305,7 +2351,10 @@
         <![CDATA[
           for (var i = 0; i < this.mTabListeners.length; ++i) {
             let browser = this.getBrowserAtIndex(i);
-            this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
+            if (browser.registeredOpenURI) {
+              this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
+              delete browser.registeredOpenURI;
+            }
             browser.webProgress.removeProgressListener(this.mTabFilters[i]);
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;
@@ -2606,8 +2655,7 @@
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "noclose");
             else {
-              // Grab the last tab for size comparison
-              let tab = this.tabbrowser.visibleTabs.pop();
+              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else

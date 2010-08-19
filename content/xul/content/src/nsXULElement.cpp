@@ -1939,16 +1939,18 @@ nsXULElement::EnsureLocalStyle()
         nsXULPrototypeAttribute *protoattr =
                   FindPrototypeAttribute(kNameSpaceID_None, nsGkAtoms::style);
         if (protoattr && protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
-            nsCOMPtr<nsICSSRule> ruleClone;
-            nsresult rv = protoattr->mValue.GetCSSStyleRuleValue()->
-                Clone(*getter_AddRefs(ruleClone));
-            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsICSSRule> ruleClone =
+                protoattr->mValue.GetCSSStyleRuleValue()->Clone();
+
+            nsString stringValue;
+            protoattr->mValue.ToString(stringValue);
 
             nsAttrValue value;
             nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
-            value.SetTo(styleRule);
+            value.SetTo(styleRule, &stringValue);
 
-            rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
+            nsresult rv =
+                mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     }
@@ -1976,7 +1978,11 @@ nsXULElement::LoadSrc()
     nsXULSlots* slots = static_cast<nsXULSlots*>(GetSlots());
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
     if (!slots->mFrameLoader) {
-        slots->mFrameLoader = nsFrameLoader::Create(this);
+        // PR_FALSE as the last parameter so that xul:iframe/browser/editor
+        // session history handling works like dynamic html:iframes.
+        // Usually xul elements are used in chrome, which doesn't have
+        // session history at all.
+        slots->mFrameLoader = nsFrameLoader::Create(this, PR_FALSE);
         NS_ENSURE_TRUE(slots->mFrameLoader, NS_OK);
     }
 
@@ -2308,19 +2314,24 @@ nsresult nsXULElement::MakeHeavyweight()
             continue;
         }
 
-        // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
-        nsAttrValue attrValue(protoattr->mValue);
+        nsAttrValue attrValue;
         
         // Style rules need to be cloned.
-        if (attrValue.Type() == nsAttrValue::eCSSStyleRule) {
-            nsCOMPtr<nsICSSRule> ruleClone;
-            rv = attrValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
-            NS_ENSURE_SUCCESS(rv, rv);
+        if (protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
+            nsCOMPtr<nsICSSRule> ruleClone =
+                protoattr->mValue.GetCSSStyleRuleValue()->Clone();
+
+            nsString stringValue;
+            protoattr->mValue.ToString(stringValue);
 
             nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
-            attrValue.SetTo(styleRule);
+            attrValue.SetTo(styleRule, &stringValue);
+        }
+        else {
+            attrValue.SetTo(protoattr->mValue);
         }
 
+        // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         if (protoattr->mName.IsAtom()) {
             rv = mAttrsAndChildren.SetAndTakeAttr(protoattr->mName.Atom(), attrValue);
         }
@@ -2837,7 +2848,7 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
                                      DocumentPrincipal(),
                                    getter_AddRefs(rule));
         if (rule) {
-            mAttributes[aPos].mValue.SetTo(rule);
+            mAttributes[aPos].mValue.SetTo(rule, &aValue);
 
             return NS_OK;
         }

@@ -68,6 +68,7 @@ struct _cairo_d2d_device
     RefPtr<ID3D10Buffer> mQuadBuffer;
     RefPtr<ID3D10RasterizerState> mRasterizerState;
     RefPtr<ID3D10BlendState> mBlendStates[MAX_OPERATORS];
+    int mVRAMUsage;
 };
 typedef struct _cairo_d2d_device cairo_d2d_device_t;
 

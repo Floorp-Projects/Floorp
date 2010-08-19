@@ -60,7 +60,7 @@ pref("browser.bookmarks.max_backups",       5);
 
 pref("browser.cache.disk.enable",           true);
 #ifndef WINCE
-pref("browser.cache.disk.capacity",         51200);
+pref("browser.cache.disk.capacity",         256000);
 #else
 pref("browser.cache.disk.capacity",         20000);
 #endif
@@ -1196,17 +1196,19 @@ pref("layout.css.report_errors", true);
 // Should the :visited selector ever match (otherwise :link matches instead)?
 pref("layout.css.visited_links_enabled", true);
 
-// Override DPI. A value of -1 means use the maxium of 96 and the system DPI.
+// Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the
 // interpretation of physical units such as "pt".
 pref("layout.css.dpi", -1);
 
 // Set the number of device pixels per CSS pixel. A value <= 0 means choose
-// automatically based on the DPI. A positive value is used as-is. This effectively
-// controls the size of a CSS "px". This is only used for pixel-based
-// (screen) output devices.
-pref("layout.css.devPixelsPerPx", "-1");
+// automatically based on user settings for the platform (e.g., "UI scale factor"
+// on Mac). A positive value is used as-is. This effectively controls the size
+// of a CSS "px". This is only used for windows on the screen, not for printing.
+// XXX the default value here should be 0, but before we can set it to 0,
+// we have to get this feature working on all platforms.
+pref("layout.css.devPixelsPerPx", "1.0");
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction

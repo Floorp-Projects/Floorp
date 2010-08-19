@@ -42,46 +42,68 @@ use Archive::Zip(':ERROR_CODES');
 
 my ($BUILDCONFIG);
 
-sub fixBuildconfig($$);
+sub fixBuildconfig($$$);
 
 $BUILDCONFIG = 'content/global/buildconfig.html';
 
-if (scalar(@ARGV) != 2) {
-  print STDERR ("usage: fix-buildconfig <zipfile1> <zipfile2>\n");
+if (scalar(@ARGV) != 3) {
+  print STDERR ("usage: fix-buildconfig <jar|file> <file1> <file2>\n");
   exit(1);
 }
 
-if (!fixBuildconfig($ARGV[0], $ARGV[1])) {
+if (!fixBuildconfig($ARGV[0], $ARGV[1], $ARGV[2])) {
   exit(1);
 }
 
 exit(0);
 
-sub fixBuildconfig($$) {
-  my ($zipPath1, $zipPath2);
-  ($zipPath1, $zipPath2) = @_;
+sub fixBuildconfig($$$) {
+  my ($mode, $path1, $path2);
+  ($mode, $path1, $path2) = @_;
 
-  my ($ze, $zip1, $zip2);
-
-  $zip1 = Archive::Zip->new();
-  if (($ze = $zip1->read($zipPath1)) != AZ_OK) {
-    print STDERR ($0.': could not read "'.$zipPath1.'": error '.$ze."\n");
-    return 0;
-  }
-  $zip2 = Archive::Zip->new();
-  if (($ze = $zip2->read($zipPath2)) != AZ_OK) {
-    print STDERR ($0.': could not read "'.$zipPath2.'": error '.$ze."\n");
+  if ($mode ne 'jar' && $mode ne 'file') {
+    print STDERR ($0.': must specify jar or file\n');
     return 0;
   }
 
   my ($contents1, $contents2);
-  if (!defined($contents1 = $zip1->contents($BUILDCONFIG))) {
-    print STDERR ($0.': could not get "'.$BUILDCONFIG.'" from "'.$zipPath1.'"'.
+  my ($ze, $zip1, $zip2);
+
+  if ($mode eq 'jar') {
+    $zip1 = Archive::Zip->new();
+    if (($ze = $zip1->read($path1)) != AZ_OK) {
+      print STDERR ($0.': could not read "'.$path1.'": error '.$ze."\n");
+      return 0;
+    }
+    $zip2 = Archive::Zip->new();
+    if (($ze = $zip2->read($path2)) != AZ_OK) {
+      print STDERR ($0.': could not read "'.$path2.'": error '.$ze."\n");
+      return 0;
+    }
+
+    $contents1 = $zip1->contents($BUILDCONFIG);
+    $contents2 = $zip2->contents($BUILDCONFIG);
+  } elsif ($mode eq 'file') {
+    local($/);
+    my ($file1, $file2);
+
+    open($file1, '<'.$path1.$BUILDCONFIG) or return 0;
+    open($file2, '<'.$path2.$BUILDCONFIG) or return 0;
+
+    $contents1 = <$file1>;
+    $contents2 = <$file2>;
+
+    close($file1);
+    close($file2);
+  }
+
+  if (!defined($contents1)) {
+    print STDERR ($0.': could not get "'.$BUILDCONFIG.'" from "'.$path1.'"'.
                   "\n");
     return 0;
   }
-  if (!defined($contents2 = $zip2->contents($BUILDCONFIG))) {
-    print STDERR ($0.': could not get "'.$BUILDCONFIG.'" from "'.$zipPath2.'"'.
+  if (!defined($contents2)) {
+    print STDERR ($0.': could not get "'.$BUILDCONFIG.'" from "'.$path2.'"'.
                   "\n");
     return 0;
   }
@@ -117,25 +139,37 @@ sub fixBuildconfig($$) {
   my ($contentsNew);
   $contentsNew = join("\n", @linesNew);
 
-  if (!defined($zip1->contents($BUILDCONFIG, $contentsNew))) {
-    print STDERR ($0.': could not set "'.$BUILDCONFIG.'" to "'.$zipPath1.'"'.
-                  "\n");
-    return 0;
-  }
-  if (!defined($zip2->contents($BUILDCONFIG, $contentsNew))) {
-    print STDERR ($0.': could not set "'.$BUILDCONFIG.'" to "'.$zipPath2.'"'.
-                  "\n");
-    return 0;
-  }
+  if ($mode eq 'jar') {
+    if (!defined($zip1->contents($BUILDCONFIG, $contentsNew))) {
+      print STDERR ($0.': could not set "'.$BUILDCONFIG.'" to "'.$path1.'"'.
+                    "\n");
+      return 0;
+    }
+    if (!defined($zip2->contents($BUILDCONFIG, $contentsNew))) {
+      print STDERR ($0.': could not set "'.$BUILDCONFIG.'" to "'.$path2.'"'.
+                    "\n");
+      return 0;
+    }
 
+    if (($ze = $zip1->overwrite()) != AZ_OK) {
+      print STDERR ($0.': could not write "'.$path1.'": error '.$ze."\n");
+      return 0;
+    }
+    if (($ze = $zip2->overwrite()) != AZ_OK) {
+      print STDERR ($0.': could not write "'.$path2.'": error '.$ze."\n");
+      return 0;
+    }
+  } elsif ($mode eq 'file') {
+    my ($file1, $file2);
 
-  if (($ze = $zip1->overwrite()) != AZ_OK) {
-    print STDERR ($0.': could not write "'.$zipPath1.'": error '.$ze."\n");
-    return 0;
-  }
-  if (($ze = $zip2->overwrite()) != AZ_OK) {
-    print STDERR ($0.': could not write "'.$zipPath2.'": error '.$ze."\n");
-    return 0;
+    open($file1, '>'.$path1.$BUILDCONFIG) or return 0;
+    open($file2, '>'.$path2.$BUILDCONFIG) or return 0;
+
+    print $file1 ($contentsNew);
+    print $file2 ($contentsNew);
+
+    close($file1);
+    close($file2);
   }
 
   return 1;

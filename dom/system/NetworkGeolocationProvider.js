@@ -369,8 +369,12 @@ WifiGeoPositionProvider.prototype = {
                     // no match, lets cache
                     LOG("New Access Token: " + newAccessToken + "\n" + accessTokenPrefName);
                     
-                    prefService.setIntPref(accessTokenPrefName + ".time", nowInSeconds());
-                    prefService.setCharPref(accessTokenPrefName, newAccessToken);
+                    try {
+                        prefService.setIntPref(accessTokenPrefName + ".time", nowInSeconds());
+                        prefService.setCharPref(accessTokenPrefName, newAccessToken);
+                    } catch (x) {
+                        // XXX temporary hack for bug 575346 to allow geolocation to function
+                    }
                 }
             }
 

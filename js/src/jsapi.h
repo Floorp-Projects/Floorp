@@ -1190,10 +1190,8 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
  */
 #define JS_TYPED_ROOTING_API
 
-extern JS_PUBLIC_API(void)
-JS_ClearNewbornRoots(JSContext *cx);
-
 /* Obsolete rooting APIs. */
+#define JS_ClearNewbornRoots(cx) ((void) 0)
 #define JS_EnterLocalRootScope(cx) (JS_TRUE)
 #define JS_LeaveLocalRootScope(cx) ((void) 0)
 #define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)

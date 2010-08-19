@@ -54,10 +54,6 @@ function makeChan(url) {
 var httpserv = null;
 
 function run_test() {
-// DISABLE TEST: bug 586238
-  _dump('FIXME/bug 586238: disabled to avoid perma-orange\n');
-}
-function never() {
   httpserv = new nsHttpServer();
   httpserv.registerPathHandler("/woo", data);
   httpserv.start(4444);

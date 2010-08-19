@@ -56,6 +56,7 @@
 class imgIRequest;
 class nsIDocument;
 class nsIPrincipal;
+class nsPresContext;
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
@@ -108,6 +109,7 @@ enum nsCSSUnit {
   eCSSUnit_Attr         = 14,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Local_Font   = 15,     // (PRUnichar*) a local font name
   eCSSUnit_Font_Format  = 16,     // (PRUnichar*) a font format name
+  eCSSUnit_Element      = 17,     // (PRUnichar*) an element id
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
@@ -146,17 +148,8 @@ enum nsCSSUnit {
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
 
-  // Length units - fixed
-  // US English
-  eCSSUnit_Inch         = 100,    // (float) 0.0254 meters
-
-  // Metric
-  eCSSUnit_Millimeter   = 207,    // (float) 1/1000 meter
-  eCSSUnit_Centimeter   = 208,    // (float) 1/100 meter
-
-  // US Typographic
-  eCSSUnit_Point        = 300,    // (float) 1/72 inch
-  eCSSUnit_Pica         = 301,    // (float) 12 points == 1/6 inch
+  // Physical length units
+  eCSSUnit_PhysicalMillimeter = 200,   // (float) 1/25.4 inch
 
   // Length units - relative
   // Font relative measure
@@ -166,7 +159,12 @@ enum nsCSSUnit {
   eCSSUnit_RootEM       = 803,    // (float) == root element font size
 
   // Screen relative measure
-  eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit
+  eCSSUnit_Point        = 900,    // (float) 4/3 of a CSS pixel
+  eCSSUnit_Inch         = 901,    // (float) 96 CSS pixels
+  eCSSUnit_Millimeter   = 902,    // (float) 96/25.4 CSS pixels
+  eCSSUnit_Centimeter   = 903,    // (float) 96/2.54 CSS pixels
+  eCSSUnit_Pica         = 904,    // (float) 12 points == 16 CSS pixls
+  eCSSUnit_Pixel        = 905,    // (float) CSS pixel unit
 
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
@@ -228,11 +226,30 @@ public:
 
   nsCSSUnit GetUnit() const { return mUnit; }
   PRBool    IsLengthUnit() const
-    { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pixel; }
+    { return eCSSUnit_PhysicalMillimeter <= mUnit && mUnit <= eCSSUnit_Pixel; }
+  /**
+   * A "fixed" length unit is one that means a specific physical length
+   * which we try to match based on the physical characteristics of an
+   * output device.
+   */
   PRBool    IsFixedLengthUnit() const  
-    { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pica; }
+    { return mUnit == eCSSUnit_PhysicalMillimeter; }
+  /**
+   * What the spec calls relative length units is, for us, split
+   * between relative length units and pixel length units.
+   * 
+   * A "relative" length unit is a multiple of some derived metric,
+   * such as a font em-size, which itself was controlled by an input CSS
+   * length. Relative length units should not be scaled by zooming, since
+   * the underlying CSS length would already have been scaled.
+   */
   PRBool    IsRelativeLengthUnit() const  
-    { return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_Pixel; }
+    { return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_RootEM; }
+  /**
+   * A "pixel" length unit is a some multiple of CSS pixels.
+   */
+  PRBool    IsPixelLengthUnit() const
+    { return eCSSUnit_Point <= mUnit && mUnit <= eCSSUnit_Pixel; }
   PRBool    IsAngularUnit() const  
     { return eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Radian; }
   PRBool    IsFrequencyUnit() const  
@@ -243,7 +260,7 @@ public:
     { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
 
   PRBool    UnitHasStringValue() const
-    { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Font_Format; }
+    { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
   PRBool    UnitHasArrayValue() const
     { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
 
@@ -342,7 +359,8 @@ public:
   // all over.
   imgIRequest* GetImageValue() const;
 
-  nscoord GetLengthTwips() const;
+  nscoord GetFixedLength(nsPresContext* aPresContext) const;
+  nscoord GetPixelLength() const;
 
   void Reset()  // sets to null
   {

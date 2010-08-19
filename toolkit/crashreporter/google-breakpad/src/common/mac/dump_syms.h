@@ -83,7 +83,17 @@ class DumpSymbols {
   // object file, then the dumper will dump the object file whose
   // architecture matches that of this dumper program.
   bool SetArchitecture(cpu_type_t cpu_type, cpu_subtype_t cpu_subtype);
-
+  
+  // If this dumper's file includes an object file for |arch_name|, then select 
+  // that object file for dumping, and return true. Otherwise, return false, 
+  // and leave this dumper's selected architecture unchanged.
+  //
+  // By default, if this dumper's file contains only one object file, then
+  // the dumper will dump those symbols; and if it contains more than one
+  // object file, then the dumper will dump the object file whose
+  // architecture matches that of this dumper program.
+  bool SetArchitecture(const std::string &arch_name);
+  
   // Return a pointer to an array of 'struct fat_arch' structures,
   // describing the object files contained in this dumper's file. Set
   // *|count| to the number of elements in the array. The returned array is

@@ -1,12 +1,14 @@
 <!ENTITY testpilot.brand.label                      "Test Pilot">
 <!-- browser window: menu and status bar -->
 <!ENTITY testpilot.settings.label                   "Settings">
-<!ENTITY testpilot.settings.notifyMeWhen.label      "Notify me when">
+<!ENTITY testpilot.settings.dataSubmission.label    "Data Submission">
+<!ENTITY testpilot.settings.notifications.label     "Notifications">
+<!ENTITY testpilot.settings.notifyWhen.label        "Notify me when…">
 <!ENTITY testpilot.settings.readyToSubmit.label     "A study is ready to submit">
 <!ENTITY testpilot.settings.newStudy.label          "There's a new study">
 <!ENTITY testpilot.settings.hasNewResults.label     "A study has new results">
 <!ENTITY testpilot.settings.alwaysSubmitData.label  "Automatically submit my data (don't ask me)">
-<!ENTITY testpilot.allStudies.label                 "All Your User Studies">
+<!ENTITY testpilot.allYourStudies.label             "All Your User Studies…">
 <!ENTITY testpilot.about.label                      "About Test Pilot">
 
 <!-- all studies window -->

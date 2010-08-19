@@ -295,32 +295,30 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
   }
 
   float** pcm = 0;
-  PRUint32 samples = 0;
+  PRInt32 samples = 0;
   PRUint32 channels = mVorbisState->mInfo.channels;
   while ((samples = vorbis_synthesis_pcmout(&mVorbisState->mDsp, &pcm)) > 0) {
-    if (samples > 0) {
-      float* buffer = new float[samples * channels];
-      float* p = buffer;
-      for (PRUint32 i = 0; i < samples; ++i) {
-        for (PRUint32 j = 0; j < channels; ++j) {
-          *p++ = pcm[j][i];
-        }
+    float* buffer = new float[samples * channels];
+    float* p = buffer;
+    for (PRUint32 i = 0; i < samples; ++i) {
+      for (PRUint32 j = 0; j < channels; ++j) {
+        *p++ = pcm[j][i];
       }
-
-      PRInt64 duration = mVorbisState->Time((PRInt64)samples);
-      PRInt64 startTime = (mVorbisGranulepos != -1) ?
-        mVorbisState->Time(mVorbisGranulepos) : -1;
-      SoundData* s = new SoundData(mPageOffset,
-                                   startTime,
-                                   duration,
-                                   samples,
-                                   buffer,
-                                   channels);
-      if (mVorbisGranulepos != -1) {
-        mVorbisGranulepos += samples;
-      }
-      aChunks.AppendElement(s);
     }
+
+    PRInt64 duration = mVorbisState->Time((PRInt64)samples);
+    PRInt64 startTime = (mVorbisGranulepos != -1) ?
+      mVorbisState->Time(mVorbisGranulepos) : -1;
+    SoundData* s = new SoundData(mPageOffset,
+                                 startTime,
+                                 duration,
+                                 samples,
+                                 buffer,
+                                 channels);
+    if (mVorbisGranulepos != -1) {
+      mVorbisGranulepos += samples;
+    }
+    aChunks.AppendElement(s);
     if (vorbis_synthesis_read(&mVorbisState->mDsp, samples) != 0) {
       return NS_ERROR_FAILURE;
     }
@@ -1055,78 +1053,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
       NS_ASSERTION(mVorbisGranulepos == -1, "SeekBisection must reset Vorbis decode");
     }
   }
-
-  // Decode forward to the seek target frame. Start with video, if we have it.
-  // We should pass a keyframe while doing this.
-  if (HasVideo()) {
-    PRBool eof = PR_FALSE;
-    PRInt64 startTime = -1;
-    while (HasVideo() && !eof) {
-      while (mVideoQueue.GetSize() == 0 && !eof) {
-        PRBool skip = PR_FALSE;
-        eof = !DecodeVideoFrame(skip, 0);
-        {
-          MonitorAutoExit exitReaderMon(mMonitor);
-          MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
-          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-            return NS_ERROR_FAILURE;
-          }
-        }
-      }
-      if (mVideoQueue.GetSize() == 0) {
-        break;
-      }
-      nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
-      // If the frame end time is less than the seek target, we won't want
-      // to display this frame after the seek, so discard it.
-      if (video && video->mEndTime < aTarget) {
-        if (startTime == -1) {
-          startTime = video->mTime;
-        }
-        mVideoQueue.PopFront();
-        video = nsnull;
-      } else {
-        video.forget();
-        break;
-      }
-    }
-    {
-      MonitorAutoExit exitReaderMon(mMonitor);
-      MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
-      if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-    SEEK_LOG(PR_LOG_DEBUG, ("First video frame after decode is %lld", startTime));
-  }
-
-  if (HasAudio()) {
-    // Decode audio forward to the seek target.
-    nsAutoPtr<SoundData> audio;
-    bool eof = PR_FALSE;
-    while (HasAudio() && !eof) {
-      while (!eof && mAudioQueue.GetSize() == 0) {
-        eof = !DecodeAudioData();
-        {
-          MonitorAutoExit exitReaderMon(mMonitor);
-          MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
-          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-            return NS_ERROR_FAILURE;
-          }
-        }
-      }
-      audio = mAudioQueue.PeekFront();
-      if (audio && audio->mTime + audio->mDuration <= aTarget) {
-        mAudioQueue.PopFront();
-        audio = nsnull;
-      } else {
-        audio.forget();
-        break;
-      }
-    }
-  }
-
-  return NS_OK;
+  return DecodeToTarget(aTarget);
 }
 
 enum PageSyncResult {

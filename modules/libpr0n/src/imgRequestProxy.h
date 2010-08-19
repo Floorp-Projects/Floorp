@@ -44,7 +44,6 @@
 #include "imgIDecoderObserver.h"
 #include "nsISecurityInfoProvider.h"
 
-#include "imgIContainer.h"
 #include "imgIDecoder.h"
 #include "nsIRequestObserver.h"
 #include "nsIChannel.h"
@@ -67,6 +66,12 @@
 class imgRequestNotifyRunnable;
 class imgStatusNotifyRunnable;
 
+namespace mozilla {
+namespace imagelib {
+class Image;
+} // namespace imagelib
+} // namespace mozilla
+
 class imgRequestProxy : public imgIRequest, public nsISupportsPriority, public nsISecurityInfoProvider
 {
 public:
@@ -81,7 +86,8 @@ public:
 
   // Callers to Init or ChangeOwner are required to call NotifyListener after
   // (although not immediately after) doing so.
-  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgContainer* aImage,
+  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup,
+                mozilla::imagelib::Image* aImage,
                 nsIURI* aURI, imgIDecoderObserver *aObserver);
 
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
@@ -158,7 +164,8 @@ protected:
   void OnDiscard       ();
 
   /* non-virtual imgIContainerObserver methods */
-  void FrameChanged(imgIContainer *aContainer, nsIntRect * aDirtyRect);
+  void FrameChanged(imgIContainer *aContainer,
+                    const nsIntRect *aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void OnStartRequest();
@@ -190,7 +197,7 @@ private:
 
   // The image we represent. Is null until data has been received, and is then
   // set by imgRequest.
-  nsRefPtr<imgContainer> mImage;
+  nsRefPtr<mozilla::imagelib::Image> mImage;
 
   // Our principal. Is null until data has been received from the channel, and
   // is then set by imgRequest.

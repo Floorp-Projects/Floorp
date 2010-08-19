@@ -511,6 +511,10 @@ NS_IMETHODIMP nsNSSSocketInfo::SetCountSubRequestsNoSecurity(PRInt32 aSubRequest
   mSubRequestsNoSecurity = aSubRequestsNoSecurity;
   return NS_OK;
 }
+NS_IMETHODIMP nsNSSSocketInfo::Flush()
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetShortSecurityDescription(PRUnichar** aText) {
@@ -598,10 +602,27 @@ nsNSSSocketInfo::StartTLS()
   return ActivateSSL();
 }
 
+static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
+#define NSSSOCKETINFOMAGIC { 0xa9863a23, 0x26b8, 0x4a9c, \
+  { 0x83, 0xf1, 0xe9, 0xda, 0xdb, 0x36, 0xb8, 0x30 } }
+static NS_DEFINE_CID(kNSSSocketInfoMagic, NSSSOCKETINFOMAGIC);
+
 NS_IMETHODIMP
 nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
-  stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsIX509Cert*, mCert),
-                              NS_GET_IID(nsISupports), PR_TRUE);
+  stream->WriteID(kNSSSocketInfoMagic);
+
+  // Store the flag if there is the certificate present
+  stream->WriteBoolean(!!mCert);
+
+  // As we are reading the object our self, not using ReadObject, we have
+  // to store it here 'manually' as well, mimicking our object stream
+  // implementation.
+  nsCOMPtr<nsISerializable> certSerializable = do_QueryInterface(mCert);
+  if (certSerializable) {
+    stream->WriteID(kNSSCertificateCID);
+    stream->WriteID(NS_GET_IID(nsISupports));
+    certSerializable->Write(stream);
+  }
 
   // Store the version number of the binary stream data format.
   // The 0xFFFF0000 mask is included to the version number
@@ -609,7 +630,7 @@ nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
   // field stored in times before versioning has been introduced.
   // This mask value has been chosen as mSecurityState could
   // never be assigned such value.
-  PRUint32 version = 2;
+  PRUint32 version = 3;
   stream->Write32(version | 0xFFFF0000);
   stream->Write32(mSecurityState);
   stream->WriteWStringZ(mShortDesc.get());
@@ -625,28 +646,90 @@ nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
   return NS_OK;
 }
 
+static bool CheckUUIDEquals(PRUint32 m0,
+                            nsIObjectInputStream* stream,
+                            const nsCID& id)
+{
+  nsID tempID;
+  tempID.m0 = m0;
+  stream->Read16(&tempID.m1);
+  stream->Read16(&tempID.m2);
+  for (int i = 0; i < 8; ++i)
+    stream->Read8(&tempID.m3[i]);
+  return tempID.Equals(id);
+}
+
 NS_IMETHODIMP
 nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
-  nsCOMPtr<nsISupports> obj;
-  stream->ReadObject(PR_TRUE, getter_AddRefs(obj));
-  mCert = reinterpret_cast<nsNSSCertificate*>(obj.get());
+  nsresult rv;
 
   PRUint32 version;
-  stream->Read32(&version);
+  PRBool certificatePresent;
+
+  // Check what we have here...
+  PRUint32 UUID_0;
+  stream->Read32(&UUID_0);
+  if (UUID_0 == kNSSSocketInfoMagic.m0) {
+    // It seems this stream begins with our magic ID, check it really is there
+    if (!CheckUUIDEquals(UUID_0, stream, kNSSSocketInfoMagic))
+      return NS_ERROR_FAILURE;
+
+    // OK, this seems to be our stream, now continue to check there is
+    // the certificate
+    stream->ReadBoolean(&certificatePresent);
+    stream->Read32(&UUID_0);
+  }
+  else {
+    // There is no magic, assume there is a certificate present as in versions
+    // prior to those with the magic didn't store that flag; we check the 
+    // certificate is present by cheking the CID then
+    certificatePresent = PR_TRUE;
+  }
+
+  if (certificatePresent && UUID_0 == kNSSCertificateCID.m0) {
+    // It seems there is the certificate CID present, check it now; we only
+    // have this single certificate implementation at this time.
+    if (!CheckUUIDEquals(UUID_0, stream, kNSSCertificateCID))
+      return NS_ERROR_FAILURE;
+
+    // OK, we have read the CID of the certificate, check the interface ID
+    nsID tempID;
+    stream->ReadID(&tempID);
+    if (!tempID.Equals(NS_GET_IID(nsISupports)))
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISerializable> serializable =
+        do_CreateInstance(kNSSCertificateCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    serializable->Read(stream);
+    mCert = reinterpret_cast<nsNSSCertificate*>(serializable.get());
+
+    // We are done with reading the certificate, now read the version
+    // as we did before.
+    stream->Read32(&version);
+  }
+  else {
+    // There seems not to be the certificate present in the stream.
+    version = UUID_0;
+    mCert = nsnull;
+  }
+
   // If the version field we have just read is not masked with 0xFFFF0000
   // then it is stored mSecurityState field and this is version 1 of
   // the binary data stream format.
   if ((version & 0xFFFF0000) == 0xFFFF0000) {
-      version &= ~0xFFFF0000;
-      stream->Read32(&mSecurityState);
+    version &= ~0xFFFF0000;
+    stream->Read32(&mSecurityState);
   }
   else {
-      mSecurityState = version;
-      version = 1;
+    mSecurityState = version;
+    version = 1;
   }
   stream->ReadString(mShortDesc);
   stream->ReadString(mErrorMessage);
 
+  nsCOMPtr<nsISupports> obj;
   stream->ReadObject(PR_TRUE, getter_AddRefs(obj));
   mSSLStatus = reinterpret_cast<nsSSLStatus*>(obj.get());
 

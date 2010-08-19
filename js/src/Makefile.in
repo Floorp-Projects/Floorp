@@ -119,8 +119,11 @@ endif
 # In fact, we now build both a static and a shared library, as the
 # JS shell would like to link to the static library.
 
+ifdef JS_SHARED_LIBRARY
 FORCE_SHARED_LIB = 1
+endif
 FORCE_STATIC_LIB = 1
+DIST_INSTALL = 1
 
 VPATH		= $(srcdir)
 
@@ -157,6 +160,7 @@ CPPSRCS		= \
 		jsprf.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
+		jsreflect.cpp \
 		jsregexp.cpp \
 		jsscan.cpp \
 		jsscope.cpp \
@@ -220,6 +224,7 @@ INSTALLED_HEADERS = \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
+		jsreflect.h \
 		jsregexp.h \
 		jsscan.h \
 		jsscope.h \
@@ -681,7 +686,7 @@ endif
 ifeq ($(OS_ARCH),IRIX)
 ifndef GNU_CC
 _COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
-jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.cpp Makefile.in
+jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsreflect.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CXX) -o $@ -c $(_COMPILE_CFLAGS) $<
@@ -876,13 +881,7 @@ endif
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just
 # the code in js/src/assembler.
-CXXFLAGS += -DUSE_SYSTEM_MALLOC=1
-
-ifeq (android,$(TARGET_VENDOR))
-CXXFLAGS += -DWTF_PLATFORM_ANDROID=1
-else
-CXXFLAGS += -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
-endif
+CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 

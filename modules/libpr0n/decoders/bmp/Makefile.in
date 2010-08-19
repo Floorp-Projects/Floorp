@@ -50,6 +50,9 @@ MODULE_NAME	= nsBMPModule
 LIBXUL_LIBRARY  = 1
 
 
-CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp
+CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp nsIconDecoder.cpp
+
+# ns[BMP,ICO,Icon]Decoder.cpp all include RasterImage.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
 include $(topsrcdir)/config/rules.mk

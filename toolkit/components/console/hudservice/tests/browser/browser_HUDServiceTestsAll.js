@@ -226,24 +226,33 @@ function testGetContentWindowFromHUDId() {
   ok(window.document, "we have a contentWindow");
 }
 
+function setStringFilter(aValue)
+{
+  let hud = HUDService.getHeadsUpDisplay(hudId);
+  hud.querySelector(".hud-filter-box").value = aValue;
+  HUDService.adjustVisibilityOnSearchStringChange(hudId, aValue);
+}
+
 function testConsoleLoggingAPI(aMethod)
 {
-  filterBox.value = "foo";
+  HUDService.clearDisplay(hudId);
+
+  setStringFilter("foo");
   browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
   browser.contentWindow.wrappedJSObject.console[aMethod]("bar-baz");
-  var count = outputNode.querySelectorAll(".hud-hidden").length;
+  var count = outputNode.querySelectorAll(".hud-filtered-by-string").length;
   ok(count == 1, "1 hidden " + aMethod  + " node found");
   HUDService.clearDisplay(hudId);
 
   // now toggle the current method off - make sure no visible message
   // nodes are logged
-  filterBox.value = "";
+  setStringFilter("");
   HUDService.setFilterState(hudId, aMethod, false);
   browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
-  count = outputNode.querySelectorAll(".hud-hidden").length;
-  ok(count == 0, aMethod + " logging tunred off, 0 messages logged");
+  count = outputNode.querySelectorAll(".hud-filtered-by-type").length;
+  is(count, 1, aMethod + " logging turned off, 1 message hidden");
   HUDService.clearDisplay(hudId);
-  filterBox.value = "";
+  setStringFilter("");
 
   // test for multiple arguments.
   HUDService.clearDisplay(hudId);
@@ -261,7 +270,7 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
   var msgs = aOutputNode.querySelector(".hud-group").childNodes;
   for (var i = 1; i < msgs.length; i++) {
-    var message = msgs[i].innerHTML.indexOf(aMatchString);
+    var message = msgs[i].textContent.indexOf(aMatchString);
     if (message > -1) {
       ok(true, aSuccessErrObj.success);
       return;
@@ -274,7 +283,7 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 function testNet()
 {
   HUDService.setFilterState(hudId, "network", true);
-  filterBox.value = "";
+  setStringFilter("");
 
   browser.addEventListener("DOMContentLoaded", function onTestNetLoad () {
     browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
@@ -293,6 +302,92 @@ function testNet()
   }, false);
 
   content.location = TEST_NETWORK_URI;
+}
+
+// General driver for filter tests.
+function testLiveFiltering(callback) {
+  HUDService.setFilterState(hudId, "network", true);
+  setStringFilter("");
+
+  browser.addEventListener("DOMContentLoaded", function onTestNetLoad() {
+    browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
+
+    let display = HUDService.getDisplayByURISpec(TEST_NETWORK_URI);
+    let outputNode = display.querySelector(".hud-output-node");
+
+    function countNetworkNodes() {
+      let networkNodes = outputNode.querySelectorAll(".hud-network");
+      let displayedNetworkNodes = 0;
+      let view = outputNode.ownerDocument.defaultView;
+      for (let i = 0; i < networkNodes.length; i++) {
+        let computedStyle = view.getComputedStyle(networkNodes[i], null);
+        if (computedStyle.display !== "none") {
+          displayedNetworkNodes++;
+        }
+      }
+
+      return displayedNetworkNodes;
+    }
+callback(countNetworkNodes); }, false); content.location = TEST_NETWORK_URI;
+}
+
+// Tests the live filtering for message types.
+function testLiveFilteringForMessageTypes() {
+  testLiveFiltering(function(countNetworkNodes) {
+    HUDService.setFilterState(hudId, "network", false);
+    is(countNetworkNodes(), 0, "the network nodes are hidden when the " +
+      "corresponding filter is switched off");
+
+    HUDService.setFilterState(hudId, "network", true);
+    isnot(countNetworkNodes(), 0, "the network nodes reappear when the " +
+      "corresponding filter is switched on");
+  });
+}
+
+// Tests the live filtering on search strings.
+function testLiveFilteringForSearchStrings()
+{
+  testLiveFiltering(function(countNetworkNodes) {
+    setStringFilter("http");
+    isnot(countNetworkNodes(), 0, "the network nodes are not hidden when " +
+      "the search string is set to \"http\"");
+
+    setStringFilter("hxxp");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when the " +
+      "search string is set to \"hxxp\"");
+
+    setStringFilter("ht tp");
+    isnot(countNetworkNodes(), 0, "the network nodes are not hidden when " +
+      "the search string is set to \"ht tp\"");
+
+    setStringFilter(" zzzz   zzzz ");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when the " +
+      "search string is set to \" zzzz   zzzz \"");
+
+    setStringFilter("");
+    isnot(countNetworkNodes(), 0, "the network nodes are not hidden when " +
+      "the search string is removed");
+
+    setStringFilter("\u9f2c");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for weasels");
+
+    setStringFilter("\u0007");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for the bell character");
+
+    setStringFilter('"foo"');
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      'for the string "foo"');
+
+    setStringFilter("'foo'");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for the string 'foo'");
+
+    setStringFilter("foo\"bar'baz\"boo'");
+    is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
+      "for the string \"foo\"bar'baz\"boo'\"");
+  });
 }
 
 function testOutputOrder()
@@ -385,7 +480,7 @@ function testJSInputAndOutputStyling() {
     "JS input node is of the CSS class 'jsterm-input-line'");
 
   let jsOutputNode = outputChildren[2];
-  isnot(jsOutputNode.childNodes[0].nodeValue.indexOf("4"), -1,
+  isnot(jsOutputNode.childNodes[0].textContent.indexOf("4"), -1,
     "JS output node contains '4'");
   isnot(jsOutputNode.getAttribute("class").indexOf("jsterm-output-line"), -1,
     "JS output node is of the CSS class 'jsterm-output-line'");
@@ -624,8 +719,50 @@ function testExecutionScope()
   is(/location;/.test(outputChildren[1].childNodes[0].nodeValue), true,
     "'location;' written to output");
 
-  isnot(outputChildren[2].childNodes[0].nodeValue.indexOf(TEST_URI), -1,
+  isnot(outputChildren[2].childNodes[0].textContent.indexOf(TEST_URI), -1,
     "command was executed in the window scope");
+}
+
+function testPropertyPanel()
+{
+  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var jsterm = HUD.jsterm;
+
+  let propPanel = jsterm.openPropertyPanel("Test", [
+    1,
+    /abc/,
+    null,
+    undefined,
+    function test() {},
+    {}
+  ]);
+  is (propPanel.treeView.rowCount, 6, "six elements shown in propertyPanel");
+  propPanel.destroy();
+
+  propPanel = jsterm.openPropertyPanel("Test2", {
+    "0.02": 0,
+    "0.01": 1,
+    "02":   2,
+    "1":    3,
+    "11":   4,
+    "1.2":  5,
+    "1.1":  6,
+    "foo":  7,
+    "bar":  8
+  });
+  is (propPanel.treeView.rowCount, 9, "nine elements shown in propertyPanel");
+
+  let treeRows = propPanel.treeView._rows;
+  is (treeRows[0].display, "0.01: 1", "1. element is okay");
+  is (treeRows[1].display, "0.02: 0", "2. element is okay");
+  is (treeRows[2].display, "1: 3",    "3. element is okay");
+  is (treeRows[3].display, "1.1: 6",  "4. element is okay");
+  is (treeRows[4].display, "1.2: 5",  "5. element is okay");
+  is (treeRows[5].display, "02: 2",   "6. element is okay");
+  is (treeRows[6].display, "11: 4",   "7. element is okay");
+  is (treeRows[7].display, "bar: 8",  "8. element is okay");
+  is (treeRows[8].display, "foo: 7",  "9. element is okay");
+  propPanel.destroy();
 }
 
 function testIteration() {
@@ -878,7 +1015,10 @@ function test() {
       testCompletion();
       testPropertyProvider();
       testJSInputExpand();
+      testPropertyPanel();
       testNet();
+      testLiveFilteringForMessageTypes();
+      testLiveFilteringForSearchStrings();
     });
   }, false);
 }

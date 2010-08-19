@@ -965,7 +965,7 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   mInnerView = innerView;
   viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
-  if (aContentType != eContentTypeContentFrame) {
+  if (aContentType == eContentTypeContent) {
     // widget needed.
     nsresult rv = innerView->CreateWidget(kCChildCID, nsnull, nsnull,
                                           PR_TRUE, PR_TRUE, aContentType);

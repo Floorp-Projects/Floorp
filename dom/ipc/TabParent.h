@@ -42,6 +42,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/dom/PExternalHelperApp.h"
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
@@ -52,6 +53,8 @@
 #include "nsWeakReference.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIAuthPromptProvider.h"
+#include "nsISSLStatusProvider.h"
+#include "nsISecureBrowserUI.h"
 
 class nsFrameLoader;
 class nsIURI;
@@ -92,15 +95,19 @@ class TabParent : public PBrowserParent
                 , public nsITabParent 
                 , public nsIWebProgress
                 , public nsIAuthPromptProvider
+                , public nsISecureBrowserUI
+                , public nsISSLStatusProvider
 {
 public:
     TabParent();
     virtual ~TabParent();
+    nsIDOMElement* GetOwnerElement() { return mFrameElement; }
     void SetOwnerElement(nsIDOMElement* aElement) { mFrameElement = aElement; }
+    nsIBrowserDOMWindow *GetBrowserDOMWindow() { return mBrowserDOMWindow; }
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
-
+ 
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
     virtual bool RecvNotifyProgressChange(const PRInt64& aProgress,
@@ -112,7 +119,11 @@ public:
     virtual bool RecvNotifyLocationChange(const nsCString& aUri);
     virtual bool RecvNotifyStatusChange(const nsresult& status,
                                         const nsString& message);
-    virtual bool RecvNotifySecurityChange(const PRUint32& aState);
+    virtual bool RecvNotifySecurityChange(const PRUint32& aState,
+                                          const PRBool& aUseSSLStatusObject,
+                                          const nsString& aTooltip,
+                                          const nsCString& aSecInfoAsString);
+
     virtual bool RecvRefreshAttempted(const nsCString& aURI,
                                       const PRInt32& aMillis,
                                       const bool& aSameURI,
@@ -124,6 +135,7 @@ public:
                                  nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const nsString& aJSON);
+    virtual bool RecvQueryContentResult(const nsQueryContentEvent& event);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
@@ -134,6 +146,13 @@ public:
       delete aDialog;
       return true;
     }
+
+    virtual PExternalHelperAppParent* AllocPExternalHelperApp(
+            const IPC::URI& uri,
+            const nsCString& aMimeContentType,
+            const bool& aForceSave,
+            const PRInt64& aContentLength);
+    virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
@@ -188,6 +207,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESS
     NS_DECL_NSIAUTHPROMPTPROVIDER
+    NS_DECL_NSISECUREBROWSERUI
+    NS_DECL_NSISSLSTATUSPROVIDER
 
     void HandleDelayedDialogs();
 protected:
@@ -223,6 +244,10 @@ protected:
     nsTArray<DelayedDialogData*> mDelayedDialogs;
 
     PRBool ShouldDelayDialogs();
+
+    PRUint32 mSecurityState;
+    nsString mSecurityTooltipText;
+    nsCOMPtr<nsISupports> mSecurityStatusObject;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;

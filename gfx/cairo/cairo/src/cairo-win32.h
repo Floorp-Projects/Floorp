@@ -142,6 +142,9 @@ typedef struct _cairo_device cairo_device_t;
 cairo_device_t *
 cairo_d2d_create_device();
 
+cairo_device_t *
+cairo_d2d_create_device_from_d3d10device(struct ID3D10Device1 *device);
+
 /**
  * Releases a D2D device.
  *
@@ -255,6 +258,13 @@ void cairo_d2d_release_dc(cairo_surface_t *surcace, const cairo_rectangle_int_t 
  * internal image surface cache.
  */
 int cairo_d2d_get_image_surface_cache_usage();
+
+/**
+ * Get an estimate of the amount of VRAM which is currently used by the d2d
+ * surfaces for a device. This does -not- include the internal image surface
+ * cache.
+ */
+int cairo_d2d_get_surface_vram_usage(cairo_device_t *device);
 #endif
 
 CAIRO_END_DECLS

@@ -568,6 +568,28 @@ nsIWidget* nsWindow::GetParent()
   return mParent;
 }
 
+static PRInt32 sDPI = 0;
+
+float nsWindow::GetDPI()
+{
+    if (!sDPI) {
+        // create DC compatible with the screen
+        HDC dc = DevOpenDC((HAB)1, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
+        if (dc > 0) {
+            // we do have a DC and we can query the DPI setting from it
+            LONG lDPI;
+            if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
+                sDPI = lDPI;
+            DevCloseDC(dc);
+        }
+        if (sDPI <= 0) {
+            // Fall back to something sane
+            sDPI = 96;
+        }
+    }
+    return sDPI;  
+}
+
 //-----------------------------------------------------------------------------
 
 NS_METHOD nsWindow::Enable(PRBool aState)
@@ -734,131 +756,6 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 PRBool nsWindow::HasPendingInputEvent()
 {
   return (WinQueryQueueStatus(HWND_DESKTOP) & (QS_KEY | QS_MOUSE)) != 0;
-}
-
-//-----------------------------------------------------------------------------
-// Scroll the bits of a window.
-
-static
-PRBool ClipRegionContainedInRect(const nsTArray<nsIntRect>& aClipRects,
-                                 const nsIntRect& aRect)
-{
-  for (PRUint32 i = 0; i < aClipRects.Length(); ++i) {
-    if (!aRect.Contains(aClipRects[i])) {
-      return PR_FALSE;
-    }
-  }
-  return PR_TRUE;
-}
-
-void nsWindow::Scroll(const nsIntPoint& aDelta,
-                      const nsTArray<nsIntRect>& aDestRects,
-                      const nsTArray<Configuration>& aConfigurations)
-{
-  // Build the set of widgets that are to be moved by the scroll
-  // amount.
-  nsTHashtable<nsPtrHashKey<nsWindow> > scrolledWidgets;
-  scrolledWidgets.Init();
-  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-    const Configuration& configuration = aConfigurations[i];
-    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
-    NS_ASSERTION(w->GetParent() == this,
-                 "Configured widget is not a child");
-    if (configuration.mBounds == w->mBounds + aDelta) {
-      scrolledWidgets.PutEntry(w);
-    }
-  }
-
-  // This prevents screen corruption while scrolling during
-  // a Moz-originated drag - the hps isn't actually used but
-  // fetching it unlocks the screen so it can be updated.
-  HPS hps = 0;
-  CheckDragStatus(ACTION_SCROLL, &hps);
-
-  // Step through each rectangle to be scrolled.
-  for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
-    nsIntRect affectedRect;
-    affectedRect.UnionRect(iter.Rect(), iter.Rect() - aDelta);
-
-    ULONG flags = SW_INVALIDATERGN;
-
-    // For each child window, see if it intersects the scroll rect.
-    for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
-         w = static_cast<nsWindow*>(w->GetNextSibling())) {
-
-      // If it intersects, we want to scroll it but only if it
-      // hasn't been scrolled previously;  keep track of this
-      // using the entries in scrolledWidgets.
-      if (w->mBounds.Intersects(affectedRect)) {
-        nsPtrHashKey<nsWindow>* entry = scrolledWidgets.GetEntry(w);
-
-        // If there's an entry for this child, it hasn't been
-        // scrolled yet, so enable SW_SCROLLCHILDREN & remove
-        // its entry to prevent it from being scrolled again.
-        if (entry) {
-          flags |= SW_SCROLLCHILDREN;
-          scrolledWidgets.RawRemoveEntry(entry);
-        } else {
-          // Otherwise, if it has already been scrolled (or wasn't supposed
-          // to be scrolled), disable SW_SCROLLCHILDREN.  This may result in
-          // some children not being scrolled when they should be.  That's
-          // OK because ConfigureChildren() will reposition them later.
-          flags &= ~SW_SCROLLCHILDREN;
-          break;
-        }
-      }
-    }
-
-    if (flags & SW_SCROLLCHILDREN) {
-      for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-        const Configuration& configuration = aConfigurations[i];
-        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
-
-        // If a widget straddles the scroll area, SW_SCROLLCHILDREN
-        // will cause the part in the scroll area to be updated,
-        // but not the part outside it [at least on Windows].  For
-        // these widgets, we have to invalidate them to get both
-        // parts updated after the scroll.
-        if (w->mWnd && w->mBounds.Intersects(affectedRect)) {
-          if (!ClipRegionContainedInRect(configuration.mClipRegion,
-                                         affectedRect - 
-                                         (w->mBounds.TopLeft() + aDelta))) {
-            WinInvalidateRect(w->mWnd, 0, FALSE);
-          }
-
-          // Send a WM_VRNDISABLED to the plugin child of this widget.
-          // If it's a plugin that blits directly to the screen, this
-          // will halt its output during the scroll.  If it's anything
-          // else, this will have no effect.
-          HWND hPlugin = WinQueryWindow(w->mWnd, QW_TOP);
-          if (hPlugin) {
-            WinSendMsg(hPlugin, WM_VRNDISABLED, 0, 0);
-          }
-        }
-      }
-    }
-
-    // Note that when SW_SCROLLCHILDREN is used, WM_MOVE messages
-    // are sent which will update the mBounds of the children.
-    RECTL clip;
-    clip.xLeft   = affectedRect.x;
-    clip.xRight  = affectedRect.x + affectedRect.width;
-    clip.yTop    = mBounds.height - affectedRect.y;
-    clip.yBottom = clip.yTop - affectedRect.height;
-
-    WinScrollWindow(mWnd, aDelta.x, -aDelta.y, &clip, &clip, 0, 0, flags);
-    Update();
-  }
-
-  // Make sure all children actually get positioned, sized & clipped
-  // correctly.  If SW_SCROLLCHILDREN already moved widgets to their
-  // correct locations, then the WinSetWindowPos calls this triggers
-  // will just be no-ops.
-  ConfigureChildren(aConfigurations);
-
-  if (hps) {
-    ReleaseIfDragHPS(hps);
-  }
 }
 
 //=============================================================================
@@ -2949,15 +2846,46 @@ PRBool nsWindow::DispatchResizeEvent(PRInt32 aX, PRInt32 aY)
 PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
                                     PRBool aIsContextMenuKey, PRInt16 aButton)
 {
+  NS_ENSURE_TRUE(aEventType, PR_FALSE);
+
   nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal,
                      aIsContextMenuKey
                      ? nsMouseEvent::eContextMenuKey
                      : nsMouseEvent::eNormal);
   event.button = aButton;
 
-  // Mouse leave & enter messages don't seem to have position built in.
-  if (aEventType &&
-      aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT) {
+  if (aEventType == NS_MOUSE_ENTER || aEventType == NS_MOUSE_EXIT) {
+    // Ignore enter/leave msgs forwarded from the frame to FID_CLIENT
+    // because we're only interested msgs involving the content area.
+    if (HWNDFROMMP(mp1) != mWnd) {
+      return FALSE;
+    }
+
+    // If the mouse has exited the content area and entered either an
+    // unrelated window or what Windows would call the nonclient area
+    // (i.e. frame, titlebar, etc.), mark this as a toplevel exit.
+    // Note: exits to and from menus will also be marked toplevel.
+    if (aEventType == NS_MOUSE_EXIT) {
+      HWND  hTop;
+      HWND  hCur = mWnd;
+      HWND  hDesk = WinQueryDesktopWindow(0, 0);
+      while (hCur && hCur != hDesk) {
+        hTop = hCur;
+        hCur = WinQueryWindow(hCur, QW_PARENT);
+      }
+
+      // event.exit was init'ed to eChild, so we don't need an 'else'
+      hTop = WinWindowFromID(hTop, FID_CLIENT);
+      if (!hTop || !WinIsChild(HWNDFROMMP(mp2), hTop)) {
+        event.exit = nsMouseEvent::eTopLevel;
+      }
+    }
+
+    InitEvent(event, nsnull);
+    event.isShift   = isKeyDown(VK_SHIFT);
+    event.isControl = isKeyDown(VK_CTRL);
+    event.isAlt     = isKeyDown(VK_ALT) || isKeyDown(VK_ALTGRAF);
+  } else {
     POINTL ptl;
     if (aEventType == NS_CONTEXTMENU && aIsContextMenuKey) {
       WinQueryPointerPos(HWND_DESKTOP, &ptl);
@@ -2974,11 +2902,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
     event.isShift   = (usFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
     event.isControl = (usFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
     event.isAlt     = (usFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
-  } else {
-    InitEvent(event, nsnull);
-    event.isShift   = isKeyDown(VK_SHIFT);
-    event.isControl = isKeyDown(VK_CTRL);
-    event.isAlt     = isKeyDown(VK_ALT) || isKeyDown(VK_ALTGRAF);
   }
   event.isMeta = PR_FALSE;
 

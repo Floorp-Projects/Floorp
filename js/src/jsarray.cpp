@@ -3051,12 +3051,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, const Value *vector)
      */
     JS_ASSERT(obj->getProto());
 
-    if (!InitArrayObject(cx, obj, length, vector))
-        obj = NULL;
-
-    /* Set/clear newborn root, in case we lost it.  */
-    cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
-    return obj;
+    return InitArrayObject(cx, obj, length, vector) ? obj : NULL;
 }
 
 JSObject *

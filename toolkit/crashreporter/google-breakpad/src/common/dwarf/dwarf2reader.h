@@ -242,7 +242,7 @@ class CompilationUnit {
   // The abbreviation tells how to read a DWARF2/3 DIE, and consist of a
   // tag and a list of attributes, as well as the data form of each attribute.
   struct Abbrev {
-    uint32 number;
+    uint64 number;
     enum DwarfTag tag;
     bool has_children;
     AttributeList attributes;

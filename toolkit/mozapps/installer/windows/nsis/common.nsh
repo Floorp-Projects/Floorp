@@ -782,11 +782,11 @@
 
       !ifndef NO_LOG
         IfErrors 0 +3
-        FileWriteUTF16LE $fhInstallLog "  ** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **$\r$\n"
+        ${LogMsg} "** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **"
         GoTo +4
         StrCmp "$R9" "1" +1 +2
-        FileWrite $fhUninstallLog "RegVal: $R5 | $R6 | $R7$\r$\n"
-        FileWriteUTF16LE $fhInstallLog "  Added Registry String: $R5 | $R6 | $R7 | $R8$\r$\n"
+        ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
+        ${LogMsg} "Added Registry String: $R5 | $R6 | $R7 | $R8"
       !endif
 
       Exch $R5
@@ -890,11 +890,11 @@
 
       !ifndef NO_LOG
         IfErrors 0 +3
-        FileWriteUTF16LE $fhInstallLog "  ** ERROR Adding Registry DWord: $R5 | $R6 | $R7 | $R8 **$\r$\n"
+        ${LogMsg} "** ERROR Adding Registry DWord: $R5 | $R6 | $R7 | $R8 **"
         GoTo +4
         StrCmp "$R9" "1" +1 +2
-        FileWrite $fhUninstallLog "RegVal: $R5 | $R6 | $R7$\r$\n"
-        FileWriteUTF16LE $fhInstallLog "  Added Registry DWord: $R5 | $R6 | $R7 | $R8$\r$\n"
+        ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
+        ${LogMsg} "Added Registry DWord: $R5 | $R6 | $R7 | $R8"
       !endif
 
       Exch $R5
@@ -998,11 +998,11 @@
 
       !ifndef NO_LOG
         IfErrors 0 +3
-        FileWriteUTF16LE $fhInstallLog "  ** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **$\r$\n"
+        ${LogMsg} "** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **"
         GoTo +4
         StrCmp "$R9" "1" +1 +2
-        FileWrite $fhUninstallLog "RegVal: $R5 | $R6 | $R7$\r$\n"
-        FileWriteUTF16LE $fhInstallLog "  Added Registry String: $R5 | $R6 | $R7 | $R8$\r$\n"
+        ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
+        ${LogMsg} "Added Registry String: $R5 | $R6 | $R7 | $R8"
       !endif
 
       Exch $R5
@@ -1124,11 +1124,11 @@
       !ifndef NO_LOG
         ; if $R5 is not 0 then there was an error creating the registry key.
         IntCmp $R5 0 +3 +3
-        FileWriteUTF16LE $fhInstallLog "  ** ERROR Adding Registry Key: $R7 | $R8 **$\r$\n"
+        ${LogMsg} "** ERROR Adding Registry Key: $R7 | $R8 **"
         GoTo +4
         StrCmp "$R9" "1" +1 +2
-        FileWrite $fhUninstallLog "RegKey: $R7 | $R8$\r$\n"
-        FileWriteUTF16LE $fhInstallLog "  Added Registry Key: $R7 | $R8$\r$\n"
+        ${LogUninstall} "RegKey: $R7 | $R8"
+        ${LogMsg} "Added Registry Key: $R7 | $R8"
       !endif
 
       Pop $R4
@@ -3778,8 +3778,7 @@
       ; Check if the file exists in the source. If it does the new file will
       ; replace the existing file when the system is rebooted. If it doesn't
       ; the file will be deleted when the system is rebooted.
-      IfFileExists "$EXEDIR\nonlocalized$R9" end +1
-      IfFileExists "$EXEDIR\localized$R9" end +1
+      IfFileExists "$EXEDIR\core$R9" end +1
       IfFileExists "$EXEDIR\optional$R9" end +1
       Delete /REBOOTOK "$R1"
       ${LogMsg} "Delayed Delete File (Reboot Required): $R1"
@@ -5317,6 +5316,20 @@
       ${LogMsg} "App Version: $R8"
       ${LogMsg} "GRE Version: $R9"
 
+      ${If} ${IsWin2000}
+        ${LogMsg} "OS Name    : Windows 2000"
+      ${ElseIf} ${IsWinXP}
+        ${LogMsg} "OS Name    : Windows XP"
+      ${ElseIf} ${IsWin2003}
+        ${LogMsg} "OS Name    : Windows 2003"
+      ${ElseIf} ${IsWinVista}
+        ${LogMsg} "OS Name    : Windows Vista"
+      ${ElseIf} ${AtLeastWinVista} ; Workaround for NSIS 2.33 WinVer.nsh not knowing Win7
+        ${LogMsg} "OS Name    : Windows 7 or above"
+      ${Else}
+        ${LogMsg} "OS Name    : Unable to detect"
+      ${EndIf}
+
       Pop $9
       Pop $R0
       Pop $R1
@@ -5774,7 +5787,121 @@
 !define DeleteShortcutsLogFile "!insertmacro DeleteShortcutsLogFile"
 
 ################################################################################
-# Macros for managing Win7 install features
+# Macros for managing specific Windows version features
+
+/**
+ * Sets the permitted layered service provider (LSP) categories on Windows
+ * Vista and above for the application. Consumers should call this after an
+ * installation log section has completed since this macro will log the results
+ * to the installation log along with a header.
+ *
+ * !IMPORTANT - When calling this macro from an uninstaller do not specify a
+ *              parameter. The paramter is hardcoded with 0x00000000 to remove
+ *              the LSP category for the application when performing an
+ *              uninstall.
+ *
+ * @param   _LSP_CATEGORIES
+ *          The permitted LSP categories for the application. When called by an
+ *          uninstaller this will always be 0x00000000.
+ *
+ * $R5 = error code popped from the stack for the WSCSetApplicationCategory call
+ * $R6 = return value from the WSCSetApplicationCategory call
+ * $R7 = string length for the long path to the main application executable
+ * $R8 = long path to the main application executable
+ * $R9 = _LSP_CATEGORIES
+ */
+!macro SetAppLSPCategories
+
+  !ifndef ${_MOZFUNC_UN}SetAppLSPCategories
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}SetAppLSPCategories "!insertmacro ${_MOZFUNC_UN}SetAppLSPCategoriesCall"
+
+    Function ${_MOZFUNC_UN}SetAppLSPCategories
+      ${Unless} ${AtLeastWinVista}
+        Return
+      ${EndUnless}
+
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+      Push $R5
+
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR\${FileMainEXE}" $R8
+      StrLen $R7 "$R8"
+
+      ; Remove existing categories by setting the permitted categories to
+      ; 0x00000000 since new categories are ANDed with existing categories. If
+      ; the param value stored in $R9 is 0x00000000 then skip the removal since
+      ; the categories  will be removed by the second call to
+      ; WSCSetApplicationCategory.
+      StrCmp "$R9" "0x00000000" +2 +1
+      System::Call "Ws2_32::WSCSetApplicationCategory(w r18, i r17, w n, i 0,\
+                                                      i 0x00000000, i n, *i) i"
+
+      ; Set the permitted LSP categories
+      System::Call "Ws2_32::WSCSetApplicationCategory(w r18, i r17, w n, i 0,\
+                                                      i r19, i n, *i .s) i.r16"
+      Pop $R5
+
+!ifndef NO_LOG
+      ${LogHeader} "Setting Permitted LSP Categories"
+      StrCmp "$R6" 0 +3 +1
+      ${LogMsg} "** ERROR Setting LSP Categories: $R5 **"
+      GoTo +2
+      ${LogMsg} "Permitted LSP Categories: $R9"
+!endif
+
+      ClearErrors
+
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro SetAppLSPCategoriesCall _LSP_CATEGORIES
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_LSP_CATEGORIES}"
+  Call SetAppLSPCategories
+  !verbose pop
+!macroend
+
+!macro un.SetAppLSPCategoriesCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "0x00000000"
+  Call un.SetAppLSPCategories
+  !verbose pop
+!macroend
+
+!macro un.SetAppLSPCategories
+  !ifndef un.SetAppLSPCategories
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro SetAppLSPCategories
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
 
 /**
  * Update Start Menu and Taskbar lnk files that point to the current install

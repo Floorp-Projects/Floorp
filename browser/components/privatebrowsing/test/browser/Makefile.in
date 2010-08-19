@@ -46,11 +46,8 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES =  \
 		browser_console_clear.js \
-		browser_privatebrowsing_beforeunload_enter.js \
-		browser_privatebrowsing_beforeunload_exit.js \
 		browser_privatebrowsing_certexceptionsui.js \
 		browser_privatebrowsing_commandline_toggle.js \
-		browser_privatebrowsing_cookieacceptdialog.js \
 		browser_privatebrowsing_crh.js \
 		browser_privatebrowsing_downloadmonitor.js \
 		browser_privatebrowsing_fastswitch.js \
@@ -86,6 +83,15 @@ _BROWSER_TEST_FILES =  \
 		staller.sjs \
 		title.sjs \
 		$(NULL)
+
+# Turn off private browsing tests that perma-timeout on Linux.
+ifneq (Linux,$(OS_ARCH))
+_BROWSER_TEST_FILES += \
+		browser_privatebrowsing_beforeunload_enter.js \
+		browser_privatebrowsing_beforeunload_exit.js \
+		browser_privatebrowsing_cookieacceptdialog.js \
+		$(NULL)
+endif
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
