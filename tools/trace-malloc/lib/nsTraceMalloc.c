@@ -606,6 +606,10 @@ static PLHashTable *filenames = NULL;
 /* Table mapping method names to logged 'N' record serial numbers. */
 static PLHashTable *methods = NULL;
 
+/*
+ * Presumes that its caller is holding tmlock, but may temporarily exit
+ * the lock.
+ */
 static callsite *
 calltree(void **stack, size_t num_stack_entries, tm_thread *t)
 {
@@ -623,13 +627,6 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
     size_t stack_index;
     nsCodeAddressDetails details;
     nsresult rv;
-
-    /*
-     * FIXME bug 391749: We should really lock only the minimum amount
-     * that we need to in this function, because it makes some calls
-     * that could lock in the system's shared library loader.
-     */
-    TM_ENTER_LOCK(t);
 
     maxstack = (num_stack_entries > tmstats.calltree_maxstack);
     if (maxstack) {
@@ -893,11 +890,9 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
     if (maxstack)
         calltree_maxstack_top = site;
 
-    TM_EXIT_LOCK(t);
     return site;
 
   fail:
-    TM_EXIT_LOCK(t);
     return NULL;
 }
 
@@ -977,9 +972,10 @@ backtrace(tm_thread *t, int skip, int *immediate_abort)
         PR_ASSERT(info->entries * 2 == new_stack_buffer_size); /* same stack */
     }
 
+    TM_ENTER_LOCK(t);
+
     site = calltree(info->buffer, info->entries, t);
 
-    TM_ENTER_LOCK(t);
     tmstats.backtrace_calls++;
     if (!site) {
         tmstats.backtrace_failures++;
