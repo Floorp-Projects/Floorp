@@ -379,6 +379,8 @@ var Browser = {
         if (getBrowser().contentWindow) {
           getBrowser().contentWindow.scrollBy(x, y);
         }
+        else {
+        }
       },
 
       scrollTo: function(x, y) {
@@ -389,8 +391,15 @@ var Browser = {
       },
 
       getPosition: function(scrollX, scrollY) {
-        let cwu = Util.getWindowUtils(getBrowser().contentWindow);
-        cwu.getScrollXY(false, scrollX, scrollY);
+        // FIXME ROMAXA
+        if (getBrowser().contentWindow) {
+          let cwu = Util.getWindowUtils(getBrowser().contentWindow);
+          cwu.getScrollXY(false, scrollX, scrollY);
+        }
+        else {
+          scrollX.value = 0;
+          scrollY.value = 0;
+        }
       }
     };
 
@@ -1251,8 +1260,6 @@ var Browser = {
   getScrollboxPosition: function getScrollboxPosition(scroller) {
     let x = {};
     let y = {};
-    // FIXME ROMAXA
-    return new Point(0, 0);
     scroller.getPosition(x, y);
     return new Point(x.value, y.value);
   },
@@ -1545,31 +1552,34 @@ ContentCustomClicker.prototype = {
   },
 
   mouseDown: function mouseDown(aX, aY) {
-    // Ensure that the content process has gets an activate event
+// XXX disable highlight for now
+/*    // Ensure that the content process has gets an activate event
     let browser = this._browserView.getBrowser();
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     try {
       fl.activateRemoteFrame();
     } catch (e) {}
-    this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
+    this._dispatchMouseEvent("Browser:MouseDown", aX, aY); */
   },
 
   mouseUp: function mouseUp(aX, aY) {
   },
 
   panBegin: function panBegin() {
-    TapHighlightHelper.hide();
+// XXX
+/*    TapHighlightHelper.hide();
 
-    this._dispatchMouseEvent("Browser:MouseCancel");
+    this._dispatchMouseEvent("Browser:MouseCancel"); */
   },
 
   singleClick: function singleClick(aX, aY, aModifiers) {
-    TapHighlightHelper.hide();
+// XXX
+/*    TapHighlightHelper.hide();
 
     // Cancel the mouse click if we are showing a context menu
     if (!ContextHelper.popupState)
       this._dispatchMouseEvent("Browser:MouseUp", aX, aY, aModifiers);
-    this._dispatchMouseEvent("Browser:MouseCancel");
+    this._dispatchMouseEvent("Browser:MouseCancel"); */
   },
 
   doubleClick: function doubleClick(aX1, aY1, aX2, aY2) {

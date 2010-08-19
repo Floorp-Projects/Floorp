@@ -174,11 +174,6 @@ BrowserView.Util = {
     container.style.overflow = '-moz-hidden-unscrollable';
   },
 
-  resizeContainerToViewport: function resizeContainerToViewport(container, viewportRect) {
-    container.style.width = viewportRect.width  + 'px';
-    container.style.height = viewportRect.height + 'px';
-  },
-
   ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
     let message = {};
     message.target = aBrowser;
@@ -230,7 +225,6 @@ BrowserView.prototype = {
     this._visibleRectFactory = visibleRectFactory;
 
     messageManager.addMessageListener("Browser:MozScrolledAreaChanged", this);
-    messageManager.addMessageListener("Browser:PageScroll", this);
   },
 
   uninit: function uninit() {
@@ -258,6 +252,8 @@ BrowserView.prototype = {
   },
 
   setZoomLevel: function setZoomLevel(zoomLevel) {
+    getBrowser().style.MozTransformOrigin = "left top";
+    getBrowser().style.MozTransform = "scale(" + zoomLevel + ")";
     return;
 
     let bvs = this._browserViewportState;
@@ -271,7 +267,6 @@ BrowserView.prototype = {
       bvs.zoomLevel = newZoomLevel; // side-effect: now scale factor in transformations is newZoomLevel
       bvs.viewportRect.right  = this.browserToViewport(browserW);
       bvs.viewportRect.bottom = this.browserToViewport(browserH);
-      this._viewportChanged(true, true);
 
       if (this._browser) {
         let event = document.createEvent("Events");
@@ -307,36 +302,6 @@ BrowserView.prototype = {
     return rounded || 1.0;
   },
 
-  beginOffscreenOperation: function beginOffscreenOperation(rect) {
-    return;
-
-    if (this._offscreenDepth == 0) {
-      let vis = this.getVisibleRect();
-      rect = rect || vis;
-      let zoomRatio = vis.width / rect.width;
-      let viewBuffer = Elements.viewBuffer;
-      viewBuffer.width = vis.width;
-      viewBuffer.height = vis.height;
-
-      this._tileManager.renderRectToCanvas(rect, viewBuffer, zoomRatio, zoomRatio, false);
-      viewBuffer.style.display = "block";
-      window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).processUpdates();
-      this.pauseRendering();
-    }
-    this._offscreenDepth++;
-  },
-
-  commitOffscreenOperation: function commitOffscreenOperation() {
-    return;
-
-    this._offscreenDepth--;
-    if (this._offscreenDepth == 0) {
-      this.resumeRendering();
-      Elements.viewBuffer.style.display = "none";
-    }
-  },
-
   /**
    * Swap out the current browser and browser viewport state with a new pair.
    */
@@ -361,9 +326,6 @@ BrowserView.prototype = {
       browser.setAttribute("type", "content-primary");
       browser.setAttribute("style", "display: block;");
       browser.messageManager.sendAsyncMessage("Browser:Focus", {});
-
-      if (browserChanged)
-        this._viewportChanged(true, true);
     }
   },
 
@@ -373,24 +335,10 @@ BrowserView.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
-      case "Browser:PageScroll":
-        this.updatePageScroll(aMessage);
-        break;
       case "Browser:MozScrolledAreaChanged":
         this.updateScrolledArea(aMessage);
         break;
     }
-  },
-
-  /** If browser scrolls, pan content to new scroll area. */
-  updatePageScroll: function updatePageScroll(aMessage) {
-    if (aMessage.target != this._browser || this._ignorePageScroll)
-      return;
-  },
-
-  _ignorePageScroll: false,
-  ignorePageScroll: function ignorePageScroll(aIgnoreScroll) {
-    this._ignorePageScroll = aIgnoreScroll;
   },
 
   updateScrolledArea: function updateScrolledArea(aMessage) {
@@ -412,12 +360,11 @@ BrowserView.prototype = {
     if (browser == this._browser) {
       // Page has now loaded enough to allow zooming.
       let sizeChanged = oldRight != viewport.right || oldBottom != viewport.bottom;
-      this._viewportChanged(sizeChanged, false);
       this.updateDefaultZoom();
       if (vis.right > viewport.right || vis.bottom > viewport.bottom) {
         // Content has shrunk outside of the visible rectangle.
         // XXX for some reason scroller doesn't know it is outside its bounds
-//        Browser.contentScrollboxScroller.scrollBy(0, 0);
+        Browser.contentScrollboxScroller.scrollBy(0, 0);
       }
     }
   },
@@ -492,45 +439,6 @@ BrowserView.prototype = {
     return bvs.metaData.allowZoom;
   },
 
-  //
-  // MozAfterPaint events do not guarantee to inform us of all
-  // invalidated paints (See
-  // https://developer.mozilla.org/en/Gecko-Specific_DOM_Events#Important_notes
-  // for details on what the event *does* guarantee).  This is only an
-  // issue when the same current <browser> is used to navigate to a
-  // new page.  Unless a zoom was issued during the page transition
-  // (e.g. a call to setZoomLevel() or something of that nature), we
-  // aren't guaranteed that we've actually invalidated the entire
-  // page.  We don't want to leave bits of the previous page in the
-  // view of the new one, so this method exists as a way for Browser
-  // to inform us that the page is changing, and that we really ought
-  // to invalidate everything.  Ideally, we wouldn't have to rely on
-  // this being called, and we would get proper invalidates for the
-  // whole page no matter what is or is not visible.
-  //
-  // Note that calling this function isn't necessary in almost all
-  // cases, but should be done for correctness.  Most of the time, one
-  // of the following two conditions is satisfied.  Either
-  //
-  //   (1) Pages have different widths so the Browser calls a
-  //       updateDefaultZoom() which forces a dirtyAll, or
-  //   (2) MozAfterPaint does indeed inform us of dirtyRects covering
-  //       the entire page (everything that could possibly become
-  //       visible).
-  /**
-   * Invalidates the entire page by throwing away any cached graphical
-   * portions of the view and refusing to allow a updateDefaultZoom() until
-   * the next explicit update of the viewport dimensions.
-   *
-   * This method should be called when the <browser> last set by
-   * setBrowser() is about to navigate to a new page.
-   */
-  invalidateEntireView: function invalidateEntireView() {
-    if (this._browserViewportState) {
-      this._viewportChanged(false, true);
-    }
-  },
-
   /**
    * Render a rectangle within the browser viewport to the destination canvas
    * under the given scale.
@@ -592,21 +500,6 @@ BrowserView.prototype = {
   browserToViewportCanvasContext: function browserToViewportCanvasContext(ctx) {
     let f = this.browserToViewport(1.0);
     ctx.scale(f, f);
-  },
-
-  // -----------------------------------------------------------
-  // Private instance methods
-  //
-
-  _viewportChanged: function _viewportChanged(viewportSizeChanged, dirtyAll) {
-    this._applyViewportChanges(viewportSizeChanged, dirtyAll);
-  },
-
-  _applyViewportChanges: function _applyViewportChanges(viewportSizeChanged, dirtyAll) {
-    let bvs = this._browserViewportState;
-    if (bvs) {
-      BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
-    }
   },
 };
 

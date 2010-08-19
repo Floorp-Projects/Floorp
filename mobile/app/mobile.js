@@ -42,8 +42,8 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);
 #ifdef MOZ_IPC
-//pref("browser.tabs.remote", false);
-pref("browser.tabs.remote", true);
+pref("browser.tabs.remote", false);
+//pref("browser.tabs.remote", true);
 #else
 pref("browser.tabs.remote", false);
 #endif
