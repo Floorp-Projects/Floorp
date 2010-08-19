@@ -92,7 +92,7 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 {
   nsCSSExpandedDataBlock data;
   ExpandTo(&data);
-  NS_ASSERTION(!mData && !mImportantData, "Expand didn't null things out");
+  NS_ABORT_IF_FALSE(!mData && !mImportantData, "Expand didn't null things out");
 
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
@@ -168,8 +168,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     }
     ++totalCount;
     const nsCSSValue *val = mData->ValueFor(*p);
-    NS_ASSERTION(!val || !mImportantData || !mImportantData->ValueFor(*p),
-                 "can't be in both blocks");
+    NS_ABORT_IF_FALSE(!val || !mImportantData || !mImportantData->ValueFor(*p),
+                      "can't be in both blocks");
     if (!val && mImportantData) {
       ++importantCount;
       val = mImportantData->ValueFor(*p);
@@ -212,33 +212,33 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     case eCSSProperty_border_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
-                     kNotFound, "first subprop must be top");
-      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[1]).Find("-right") !=
-                     kNotFound, "second subprop must be right");
-      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[2]).Find("-bottom") !=
-                     kNotFound, "third subprop must be bottom");
-      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
-                     kNotFound, "fourth subprop must be left");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
+                        kNotFound, "first subprop must be top");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[1]).Find("-right") !=
+                        kNotFound, "second subprop must be right");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[2]).Find("-bottom") !=
+                        kNotFound, "third subprop must be bottom");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
+                        kNotFound, "fourth subprop must be left");
       const nsCSSValue &topValue = *data->ValueFor(subprops[0]);
       const nsCSSValue &rightValue = *data->ValueFor(subprops[1]);
       const nsCSSValue &bottomValue = *data->ValueFor(subprops[2]);
       const nsCSSValue &leftValue = *data->ValueFor(subprops[3]);
 
-      NS_ASSERTION(topValue.GetUnit() != eCSSUnit_Null, "null top");
+      NS_ABORT_IF_FALSE(topValue.GetUnit() != eCSSUnit_Null, "null top");
       topValue.AppendToString(subprops[0], aValue);
       if (topValue != rightValue || topValue != leftValue ||
           topValue != bottomValue) {
         aValue.Append(PRUnichar(' '));
-        NS_ASSERTION(rightValue.GetUnit() != eCSSUnit_Null, "null right");
+        NS_ABORT_IF_FALSE(rightValue.GetUnit() != eCSSUnit_Null, "null right");
         rightValue.AppendToString(subprops[1], aValue);
         if (topValue != bottomValue || rightValue != leftValue) {
           aValue.Append(PRUnichar(' '));
-          NS_ASSERTION(bottomValue.GetUnit() != eCSSUnit_Null, "null bottom");
+          NS_ABORT_IF_FALSE(bottomValue.GetUnit() != eCSSUnit_Null, "null bottom");
           bottomValue.AppendToString(subprops[2], aValue);
           if (rightValue != leftValue) {
             aValue.Append(PRUnichar(' '));
-            NS_ASSERTION(leftValue.GetUnit() != eCSSUnit_Null, "null left");
+            NS_ABORT_IF_FALSE(leftValue.GetUnit() != eCSSUnit_Null, "null left");
             leftValue.AppendToString(subprops[3], aValue);
           }
         }
@@ -321,11 +321,11 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     case eCSSProperty_outline: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ASSERTION(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
-                                  NS_LITERAL_CSTRING("-color")) ||
-                   StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
-                                  NS_LITERAL_CSTRING("-color-value")),
-                   "third subprop must be the color property");
+      NS_ABORT_IF_FALSE(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
+                                       NS_LITERAL_CSTRING("-color")) ||
+                        StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
+                                       NS_LITERAL_CSTRING("-color-value")),
+                        "third subprop must be the color property");
       const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
       PRBool isMozUseTextColor =
         colorValue->GetUnit() == eCSSUnit_Enumerated &&
@@ -363,8 +363,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     case eCSSProperty_border_end_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
-                   "not box property with physical vs. logical cascading");
+      NS_ABORT_IF_FALSE(subprops[3] == eCSSProperty_UNKNOWN,
+                        "not box property with physical vs. logical cascading");
       AppendValueToString(subprops[0], aValue);
       break;
     }
@@ -416,10 +416,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         aValue.Append(PRUnichar(' '));
         position->mYValue.AppendToString(eCSSProperty_background_position,
                                          aValue);
-        NS_ASSERTION(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
-                     origin->mValue.GetUnit() == eCSSUnit_Enumerated,
-                     "should not be inherit/initial within list and "
-                     "should have returned early for real inherit/initial");
+        NS_ABORT_IF_FALSE(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
+                          origin->mValue.GetUnit() == eCSSUnit_Enumerated,
+                          "should not be inherit/initial within list and "
+                          "should have returned early for real inherit/initial");
         if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
             origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
@@ -674,7 +674,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       break;
     }
     default:
-      NS_NOTREACHED("no other shorthands");
+      NS_ABORT_IF_FALSE(false, "no other shorthands");
       break;
   }
 }
@@ -715,11 +715,11 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
                                             nsAutoString& aValue,
                                             nsAString& aResult) const
 {
-  NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "property enum out of range");
-  NS_ASSERTION((aProperty < eCSSProperty_COUNT_no_shorthands) ==
-                 aValue.IsEmpty(),
-               "aValue should be given for shorthands but not longhands");
+  NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                    "property enum out of range");
+  NS_ABORT_IF_FALSE((aProperty < eCSSProperty_COUNT_no_shorthands) ==
+                    aValue.IsEmpty(),
+                    "aValue should be given for shorthands but not longhands");
   AppendASCIItoUTF16(nsCSSProps::GetStringValue(aProperty), aResult);
   aResult.AppendLiteral(": ");
   if (aValue.IsEmpty())
@@ -789,9 +789,9 @@ Declaration::ToString(nsAString& aString) const
         break;
       }
 
-      NS_ASSERTION(shorthand != eCSSProperty_font ||
-                   *(shorthands + 1) == eCSSProperty_UNKNOWN,
-                   "font should always be the only containing shorthand");
+      NS_ABORT_IF_FALSE(shorthand != eCSSProperty_font ||
+                        *(shorthands + 1) == eCSSProperty_UNKNOWN,
+                        "font should always be the only containing shorthand");
       if (shorthand == eCSSProperty_font) {
         if (haveSystemFont && !didSystemFont) {
           // Output the shorthand font declaration that we will
@@ -819,7 +819,7 @@ Declaration::ToString(nsAString& aString) const
     if (doneProperty)
       continue;
 
-    NS_ASSERTION(value.IsEmpty(), "value should be empty now");
+    NS_ABORT_IF_FALSE(value.IsEmpty(), "value should be empty now");
     AppendPropertyAndValueToString(property, value, aString);
   }
   if (! aString.IsEmpty()) {
@@ -858,14 +858,14 @@ Declaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
 void
 Declaration::InitializeEmpty()
 {
-  NS_ASSERTION(!mData && !mImportantData, "already initialized");
+  NS_ABORT_IF_FALSE(!mData && !mImportantData, "already initialized");
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
 }
 
 Declaration*
 Declaration::EnsureMutable()
 {
-  NS_ASSERTION(mData, "should only be called when not expanded");
+  NS_ABORT_IF_FALSE(mData, "should only be called when not expanded");
   if (!IsMutable()) {
     return new Declaration(*this);
   } else {

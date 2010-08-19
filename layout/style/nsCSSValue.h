@@ -217,7 +217,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
+    NS_ABORT_IF_FALSE(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
@@ -286,27 +286,28 @@ public:
 
   PRInt32 GetIntValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated ||
-                 mUnit == eCSSUnit_EnumColor,
-                 "not an int value");
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Integer ||
+                      mUnit == eCSSUnit_Enumerated ||
+                      mUnit == eCSSUnit_EnumColor,
+                      "not an int value");
     return mValue.mInt;
   }
 
   float GetPercentValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_Percent, "not a percent value");
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Percent, "not a percent value");
     return mValue.mFloat;
   }
 
   float GetFloatValue() const
   {
-    NS_ASSERTION(eCSSUnit_Number <= mUnit, "not a float value");
+    NS_ABORT_IF_FALSE(eCSSUnit_Number <= mUnit, "not a float value");
     return mValue.mFloat;
   }
 
   float GetAngleValue() const
   {
-    NS_ASSERTION(eCSSUnit_Degree <= mUnit &&
+    NS_ABORT_IF_FALSE(eCSSUnit_Degree <= mUnit &&
                  mUnit <= eCSSUnit_Radian, "not an angle value");
     return mValue.mFloat;
   }
@@ -316,7 +317,7 @@ public:
 
   nsAString& GetStringValue(nsAString& aBuffer) const
   {
-    NS_ASSERTION(UnitHasStringValue(), "not a string value");
+    NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
     aBuffer.Truncate();
     PRUint32 len = NS_strlen(GetBufferValue(mValue.mString));
     mValue.mString->ToString(len, aBuffer);
@@ -325,13 +326,13 @@ public:
 
   const PRUnichar* GetStringBufferValue() const
   {
-    NS_ASSERTION(UnitHasStringValue(), "not a string value");
+    NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
     return GetBufferValue(mValue.mString);
   }
 
   nscolor GetColorValue() const
   {
-    NS_ASSERTION((mUnit == eCSSUnit_Color), "not a color value");
+    NS_ABORT_IF_FALSE((mUnit == eCSSUnit_Color), "not a color value");
     return mValue.mColor;
   }
 
@@ -339,13 +340,13 @@ public:
 
   Array* GetArrayValue() const
   {
-    NS_ASSERTION(UnitHasArrayValue(), "not an array value");
+    NS_ABORT_IF_FALSE(UnitHasArrayValue(), "not an array value");
     return mValue.mArray;
   }
 
   nsIURI* GetURLValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
                  "not a URL value");
     return mUnit == eCSSUnit_URL ?
       mValue.mURL->mURI : mValue.mImage->mURI;
@@ -353,7 +354,7 @@ public:
 
   nsCSSValueGradient* GetGradientValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_Gradient, "not a gradient value");
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Gradient, "not a gradient value");
     return mValue.mGradient;
   }
 
@@ -374,14 +375,14 @@ public:
   {
     // Not allowing this for Image values, because if the caller takes
     // a ref to them they won't be able to delete them properly.
-    NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL, "not a URL value");
     return mValue.mURL;
   }
 
   const PRUnichar* GetOriginalURLValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
-                 "not a URL value");
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
+                      "not a URL value");
     return GetBufferValue(mUnit == eCSSUnit_URL ?
                             mValue.mURL->mString :
                             mValue.mImage->mString);
@@ -532,12 +533,12 @@ struct nsCSSValue::Array {
   }
 
   nsCSSValue& operator[](size_t aIndex) {
-    NS_ASSERTION(aIndex < mCount, "out of range");
+    NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
     return mArray[aIndex];
   }
 
   const nsCSSValue& operator[](size_t aIndex) const {
-    NS_ASSERTION(aIndex < mCount, "out of range");
+    NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
     return mArray[aIndex];
   }
 
@@ -740,14 +741,14 @@ struct nsCSSRect_heap : public nsCSSRect {
 inline nsCSSRect&
 nsCSSValue::GetRectValue()
 {
-  NS_ASSERTION(mUnit == eCSSUnit_Rect, "not a pair value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a pair value");
   return *mValue.mRect;
 }
 
 inline const nsCSSRect&
 nsCSSValue::GetRectValue() const
 {
-  NS_ASSERTION(mUnit == eCSSUnit_Rect, "not a pair value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a pair value");
   return *mValue.mRect;
 }
 
@@ -824,14 +825,14 @@ struct nsCSSValuePair_heap : public nsCSSValuePair {
 inline nsCSSValuePair&
 nsCSSValue::GetPairValue()
 {
-  NS_ASSERTION(mUnit == eCSSUnit_Pair, "not a pair value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Pair, "not a pair value");
   return *mValue.mPair;
 }
 
 inline const nsCSSValuePair&
 nsCSSValue::GetPairValue() const
 {
-  NS_ASSERTION(mUnit == eCSSUnit_Pair, "not a pair value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Pair, "not a pair value");
   return *mValue.mPair;
 }
 

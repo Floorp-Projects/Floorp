@@ -116,8 +116,8 @@ public:
    * After calling, |aExpandedData| should be in its initial state.
    */
   void CompressFrom(nsCSSExpandedDataBlock *aExpandedData) {
-    NS_ASSERTION(!mData, "oops");
-    NS_ASSERTION(!mImportantData, "oops");
+    NS_ABORT_IF_FALSE(!mData, "oops");
+    NS_ABORT_IF_FALSE(!mImportantData, "oops");
     aExpandedData->Compress(getter_Transfers(mData),
                             getter_Transfers(mImportantData));
     aExpandedData->AssertInitialState();
@@ -134,7 +134,7 @@ public:
     AssertMutable();
     aExpandedData->AssertInitialState();
 
-    NS_ASSERTION(mData, "oops");
+    NS_ABORT_IF_FALSE(mData, "oops");
     aExpandedData->Expand(mData.forget(), mImportantData.forget());
   }
 

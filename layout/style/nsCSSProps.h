@@ -148,7 +148,7 @@ public:
   static nsCSSProperty LookupProperty(const nsACString& aProperty);
 
   static inline PRBool IsShorthand(nsCSSProperty aProperty) {
-    NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                  "out of range");
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
@@ -196,8 +196,8 @@ private:
 public:
   static inline PRBool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
   {
-    NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-                 "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
@@ -210,9 +210,9 @@ private:
 public:
   static inline
   const nsCSSProperty * SubpropertyEntryFor(nsCSSProperty aProperty) {
-    NS_ASSERTION(eCSSProperty_COUNT_no_shorthands <= aProperty &&
-                 aProperty < eCSSProperty_COUNT,
-                 "out of range");
+    NS_ABORT_IF_FALSE(eCSSProperty_COUNT_no_shorthands <= aProperty &&
+                      aProperty < eCSSProperty_COUNT,
+                      "out of range");
     return nsCSSProps::kSubpropertyTable[aProperty -
                                          eCSSProperty_COUNT_no_shorthands];
   }
@@ -221,9 +221,10 @@ public:
   // properties containing |aProperty|, sorted from those that contain
   // the most properties to those that contain the least.
   static const nsCSSProperty * ShorthandsContaining(nsCSSProperty aProperty) {
-    NS_ASSERTION(gShorthandsContainingPool, "uninitialized");
-    NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-                 "out of range");
+    NS_ABORT_IF_FALSE(gShorthandsContainingPool, "uninitialized");
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                      aProperty < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
     return gShorthandsContainingTable[aProperty];
   }
 private:
