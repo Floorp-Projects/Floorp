@@ -98,8 +98,9 @@ public:
    */
   nsFSURLEncoded(const nsACString& aCharset,
                  PRInt32 aMethod,
-                 nsIDocument* aDocument)
-    : nsEncodingFormSubmission(aCharset),
+                 nsIDocument* aDocument,
+                 nsIContent* aOriginatingElement)
+    : nsEncodingFormSubmission(aCharset, aOriginatingElement),
       mMethod(aMethod),
       mDocument(aDocument),
       mWarnedFileControl(PR_FALSE)
@@ -403,8 +404,9 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
 
 // --------------------------------------------------------------------------
 
-nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset)
-    : nsEncodingFormSubmission(aCharset)
+nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
+                                             nsIContent* aOriginatingElement)
+    : nsEncodingFormSubmission(aCharset, aOriginatingElement)
 {
   mPostDataStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -595,8 +597,8 @@ nsFSMultipartFormData::AddPostDataStream()
 class nsFSTextPlain : public nsEncodingFormSubmission
 {
 public:
-  nsFSTextPlain(const nsACString& aCharset)
-    : nsEncodingFormSubmission(aCharset)
+  nsFSTextPlain(const nsACString& aCharset, nsIContent* aOriginatingElement)
+    : nsEncodingFormSubmission(aCharset, aOriginatingElement)
   {
   }
 
@@ -691,8 +693,9 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
 // --------------------------------------------------------------------------
 
-nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset)
-  : nsFormSubmission(aCharset)
+nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
+                                                   nsIContent* aOriginatingElement)
+  : nsFormSubmission(aCharset, aOriginatingElement)
 {
   nsCAutoString charset(aCharset);
   // canonical name is passed so that we just have to check against
@@ -800,6 +803,7 @@ GetEnumAttr(nsGenericHTMLElement* aContent,
 
 nsresult
 GetSubmissionFromForm(nsGenericHTMLElement* aForm,
+                      nsIContent* aOriginatingElement,
                       nsFormSubmission** aFormSubmission)
 {
   // Get all the information necessary to encode the form data
@@ -821,10 +825,10 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
   // Choose encoder
   if (method == NS_FORM_METHOD_POST &&
       enctype == NS_FORM_ENCTYPE_MULTIPART) {
-    *aFormSubmission = new nsFSMultipartFormData(charset);
+    *aFormSubmission = new nsFSMultipartFormData(charset, aOriginatingElement);
   } else if (method == NS_FORM_METHOD_POST &&
              enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
-    *aFormSubmission = new nsFSTextPlain(charset);
+    *aFormSubmission = new nsFSTextPlain(charset, aOriginatingElement);
   } else {
     nsIDocument* doc = aForm->GetOwnerDoc();
     if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
@@ -835,7 +839,8 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
       SendJSWarning(doc, "ForgotPostWarning",
                     &enctypeStrPtr, 1);
     }
-    *aFormSubmission = new nsFSURLEncoded(charset, method, doc);
+    *aFormSubmission = new nsFSURLEncoded(charset, method, doc,
+                                          aOriginatingElement);
   }
   NS_ENSURE_TRUE(*aFormSubmission, NS_ERROR_OUT_OF_MEMORY);
 

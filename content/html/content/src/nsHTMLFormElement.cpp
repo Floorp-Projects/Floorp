@@ -753,13 +753,13 @@ nsHTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
   //
   // Get the submission object
   //
-  rv = GetSubmissionFromForm(this, aFormSubmission);
+  rv = GetSubmissionFromForm(this, originatingElement, aFormSubmission);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   //
   // Dump the data into the submission object
   //
-  rv = WalkFormElements(*aFormSubmission, originatingElement);
+  rv = WalkFormElements(*aFormSubmission);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   return NS_OK;
@@ -944,8 +944,7 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
 
 
 nsresult
-nsHTMLFormElement::WalkFormElements(nsFormSubmission* aFormSubmission,
-                                    nsIContent* aSubmitElement)
+nsHTMLFormElement::WalkFormElements(nsFormSubmission* aFormSubmission)
 {
   nsTArray<nsGenericHTMLFormElement*> sortedControls;
   nsresult rv = mControls->GetSortedControls(sortedControls);
@@ -957,7 +956,7 @@ nsHTMLFormElement::WalkFormElements(nsFormSubmission* aFormSubmission,
   PRUint32 len = sortedControls.Length();
   for (PRUint32 i = 0; i < len; ++i) {
     // Tell the control to submit its name/value pairs to the submission
-    sortedControls[i]->SubmitNamesValues(aFormSubmission, aSubmitElement);
+    sortedControls[i]->SubmitNamesValues(aFormSubmission);
   }
 
   return NS_OK;
@@ -1485,7 +1484,7 @@ nsHTMLFormElement::GetFormData(nsIDOMFormData** aFormData)
 {
   nsRefPtr<nsFormData> fd = new nsFormData();
 
-  nsresult rv = WalkFormElements(fd, nsnull);
+  nsresult rv = WalkFormElements(fd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aFormData = fd.forget().get();
