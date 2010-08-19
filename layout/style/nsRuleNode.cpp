@@ -553,6 +553,31 @@ nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
   return css::ComputeCalc(aValue, ops);
 }
 
+/* Given an enumerated value that represents a box position, converts it to
+ * a float representing the percentage of the box it corresponds to.  For
+ * example, "center" becomes 0.5f.
+ *
+ * @param aEnumValue The enumerated value.
+ * @return The float percent it corresponds to.
+ */
+static float
+GetFloatFromBoxPosition(PRInt32 aEnumValue)
+{
+  switch (aEnumValue) {
+  case NS_STYLE_BG_POSITION_LEFT:
+  case NS_STYLE_BG_POSITION_TOP:
+    return 0.0f;
+  case NS_STYLE_BG_POSITION_RIGHT:
+  case NS_STYLE_BG_POSITION_BOTTOM:
+    return 1.0f;
+  default:
+    NS_NOTREACHED("unexpected value");
+    // fall through
+  case NS_STYLE_BG_POSITION_CENTER:
+    return 0.5f;
+  }
+}
+
 #define SETCOORD_NORMAL                 0x01   // N
 #define SETCOORD_AUTO                   0x02   // A
 #define SETCOORD_INHERIT                0x04   // H
@@ -570,6 +595,7 @@ nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
 #define SETCOORD_CALC_LENGTH_ONLY       0x4000
 #define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
 #define SETCOORD_STORE_CALC             0x00010000
+#define SETCOORD_BOX_POSITION           0x00020000 // exclusive with _ENUMERATED
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -622,6 +648,10 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   else if (((aMask & SETCOORD_ENUMERATED) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Enumerated)) {
     aCoord.SetIntValue(aValue.GetIntValue(), eStyleUnit_Enumerated);
+  }
+  else if (((aMask & SETCOORD_BOX_POSITION) != 0) &&
+           (aValue.GetUnit() == eCSSUnit_Enumerated)) {
+    aCoord.SetPercentValue(GetFloatFromBoxPosition(aValue.GetIntValue()));
   }
   else if (((aMask & SETCOORD_AUTO) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Auto)) {
@@ -708,28 +738,27 @@ static inline PRBool SetAbsCoord(const nsCSSValue& aValue,
   return rv;
 }
 
-/* Given an enumerated value that represents a box position, converts it to
- * a float representing the percentage of the box it corresponds to.  For
- * example, "center" becomes 0.5f.
- *
- * @param aEnumValue The enumerated value.
- * @return The float percent it corresponds to.
+/* Given a specified value that might be a pair value, call SetCoord twice,
+ * either using each member of the pair, or using the unpaired value twice.
  */
-static float GetFloatFromBoxPosition(PRInt32 aEnumValue)
+static PRBool
+SetPairCoords(const nsCSSValue& aValue,
+              nsStyleCoord& aCoordX, nsStyleCoord& aCoordY,
+              const nsStyleCoord& aParentX, const nsStyleCoord& aParentY,
+              PRInt32 aMask, nsStyleContext* aStyleContext,
+              nsPresContext* aPresContext, PRBool& aCanStoreInRuleTree)
 {
-  switch (aEnumValue) {
-  case NS_STYLE_BG_POSITION_LEFT:
-  case NS_STYLE_BG_POSITION_TOP:
-    return 0.0f;
-  case NS_STYLE_BG_POSITION_RIGHT:
-  case NS_STYLE_BG_POSITION_BOTTOM:
-    return 1.0f;
-  default:
-    NS_NOTREACHED("unexpected value");
-    // fall through
-  case NS_STYLE_BG_POSITION_CENTER:
-    return 0.5f;
-  }
+  const nsCSSValue& valX =
+    aValue.GetUnit() == eCSSUnit_Pair ? aValue.GetPairValue().mXValue : aValue;
+  const nsCSSValue& valY =
+    aValue.GetUnit() == eCSSUnit_Pair ? aValue.GetPairValue().mYValue : aValue;
+
+  PRBool cX = SetCoord(valX, aCoordX, aParentX, aMask, aStyleContext,
+                       aPresContext, aCanStoreInRuleTree);
+  PRBool cY = SetCoord(valY, aCoordY, aParentY, aMask, aStyleContext,
+                       aPresContext, aCanStoreInRuleTree);
+  NS_ABORT_IF_FALSE(cX == cY, "changed one but not the other");
+  return cX;
 }
 
 static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
@@ -797,14 +826,9 @@ static void SetGradientCoord(const nsCSSValue& aValue, nsPresContext* aPresConte
                              nsStyleContext* aContext, nsStyleCoord& aResult,
                              PRBool& aCanStoreInRuleTree)
 {
-  // If coordinate is an enumerated type, handle it explicitly.
-  if (aValue.GetUnit() == eCSSUnit_Enumerated) {
-    aResult.SetPercentValue(GetFloatFromBoxPosition(aValue.GetIntValue()));
-    return;
-  }
-
   // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-  if (!SetCoord(aValue, aResult, nsStyleCoord(), SETCOORD_LPO,
+  if (!SetCoord(aValue, aResult, nsStyleCoord(),
+                SETCOORD_LPO | SETCOORD_BOX_POSITION,
                 aContext, aPresContext, aCanStoreInRuleTree)) {
     NS_NOTREACHED("unexpected unit for gradient anchor point");
     aResult.SetNoneValue();
@@ -1382,16 +1406,6 @@ ExamineCSSValue(const nsCSSValue& aValue,
 }
 
 static void
-ExamineCSSValuePair(const nsCSSValuePair* aValuePair,
-                    PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
-{
-  NS_PRECONDITION(aValuePair, "Must have a value pair");
-
-  ExamineCSSValue(aValuePair->mXValue, aSpecifiedCount, aInheritedCount);
-  ExamineCSSValue(aValuePair->mYValue, aSpecifiedCount, aInheritedCount);
-}
-
-static void
 ExamineCSSRect(const nsCSSRect* aRect,
                PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
 {
@@ -1679,20 +1693,6 @@ RectAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
                          (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
-inline nsCSSValuePair*
-ValuePairAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return reinterpret_cast<nsCSSValuePair*>
-                         (reinterpret_cast<char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSValuePair*
-ValuePairAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return reinterpret_cast<const nsCSSValuePair*>
-                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
-
 inline nsCSSValueList*&
 ValueListAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
@@ -1759,12 +1759,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
         total += 4;
         ExamineCSSRect(RectAtOffset(aRuleDataStruct, prop->offset),
                        specified, inherited);
-        break;
-
-      case eCSSType_ValuePair:
-        total += 2;
-        ExamineCSSValuePair(ValuePairAtOffset(aRuleDataStruct, prop->offset),
-                            specified, inherited);
         break;
 
       case eCSSType_ValueList:
@@ -2158,9 +2152,6 @@ UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
         break;
       case eCSSType_Rect:
         RectAtOffset(aRuleDataStruct, prop->offset)->Reset();
-        break;
-      case eCSSType_ValuePair:
-        ValuePairAtOffset(aRuleDataStruct, prop->offset)->Reset();
         break;
       case eCSSType_ValueList:
         ValueListAtOffset(aRuleDataStruct, prop->offset) = nsnull;
@@ -4460,44 +4451,19 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
 
   /* Convert -moz-transform-origin. */
-  if (displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null ||
-      displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null) {
-
-    /* If X coordinate is an enumerated type, handle it explicitly. */
-    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mXValue.GetUnit())
-      display->mTransformOrigin[0].SetPercentValue
-        (GetFloatFromBoxPosition
-         (displayData.mTransformOrigin.mXValue.GetIntValue()));
-    else {
-      /* Convert lengths, percents, and inherit.  Default value is 50%. */
+  if (displayData.mTransformOrigin.GetUnit() != eCSSUnit_Null) {
 #ifdef DEBUG
-      PRBool result =
+    PRBool result =
 #endif
-        SetCoord(displayData.mTransformOrigin.mXValue,
-                 display->mTransformOrigin[0],
-                 parentDisplay->mTransformOrigin[0],
-                 SETCOORD_LPH | SETCOORD_INITIAL_HALF,
-                 aContext, mPresContext, canStoreInRuleTree);
-      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
-    }
-
-    /* If Y coordinate is an enumerated type, handle it explicitly. */
-    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mYValue.GetUnit())
-      display->mTransformOrigin[1].SetPercentValue
-        (GetFloatFromBoxPosition
-         (displayData.mTransformOrigin.mYValue.GetIntValue()));
-    else {
-      /* Convert lengths, percents, initial, inherit. */
-#ifdef DEBUG
-      PRBool result =
-#endif
-        SetCoord(displayData.mTransformOrigin.mYValue,
-                 display->mTransformOrigin[1],
-                 parentDisplay->mTransformOrigin[1],
-                 SETCOORD_LPH | SETCOORD_INITIAL_HALF,
-                 aContext, mPresContext, canStoreInRuleTree);
-      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
-    }
+      SetPairCoords(displayData.mTransformOrigin,
+                    display->mTransformOrigin[0],
+                    display->mTransformOrigin[1],
+                    parentDisplay->mTransformOrigin[0],
+                    parentDisplay->mTransformOrigin[1],
+                    SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                    SETCOORD_BOX_POSITION,
+                    aContext, mPresContext, canStoreInRuleTree);
+    NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
   }
 
   COMPUTE_END_RESET(Display, display)
@@ -5208,12 +5174,20 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   // -moz-border-radius: length, percent, inherit
   {
     const nsCSSCornerSizes& borderRadius = marginData.mBorderRadius;
-    NS_FOR_CSS_HALF_CORNERS(corner) {
-      nsStyleCoord parentCoord = parentBorder->mBorderRadius.Get(corner);
-      if (SetCoord(borderRadius.GetHalfCorner(corner),
-                   coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
-                   aContext, mPresContext, canStoreInRuleTree))
-        border->mBorderRadius.Set(corner, coord);
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      int cx = NS_FULL_TO_HALF_CORNER(corner, false);
+      int cy = NS_FULL_TO_HALF_CORNER(corner, true);
+      const nsCSSValue& radius = borderRadius.GetCorner(corner);
+      nsStyleCoord parentX = parentBorder->mBorderRadius.Get(cx);
+      nsStyleCoord parentY = parentBorder->mBorderRadius.Get(cy);
+      nsStyleCoord coordX, coordY;
+
+      if (SetPairCoords(radius, coordX, coordY, parentX, parentY,
+                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                        aContext, mPresContext, canStoreInRuleTree)) {
+        border->mBorderRadius.Set(cx, coordX);
+        border->mBorderRadius.Set(cy, coordY);
+      }
     }
   }
 
@@ -5407,12 +5381,20 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   {
     nsStyleCoord coord;
     const nsCSSCornerSizes& outlineRadius = marginData.mOutlineRadius;
-    NS_FOR_CSS_HALF_CORNERS(corner) {
-      nsStyleCoord parentCoord = parentOutline->mOutlineRadius.Get(corner);
-      if (SetCoord(outlineRadius.GetHalfCorner(corner),
-                   coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
-                   aContext, mPresContext, canStoreInRuleTree))
-        outline->mOutlineRadius.Set(corner, coord);
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      int cx = NS_FULL_TO_HALF_CORNER(corner, false);
+      int cy = NS_FULL_TO_HALF_CORNER(corner, true);
+      const nsCSSValue& radius = outlineRadius.GetCorner(corner);
+      nsStyleCoord parentX = parentOutline->mOutlineRadius.Get(cx);
+      nsStyleCoord parentY = parentOutline->mOutlineRadius.Get(cy);
+      nsStyleCoord coordX, coordY;
+
+      if (SetPairCoords(radius, coordX, coordY, parentX, parentY,
+                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                        aContext, mPresContext, canStoreInRuleTree)) {
+        outline->mOutlineRadius.Set(cx, coordX);
+        outline->mOutlineRadius.Set(cy, coordY);
+      }
     }
   }
 
@@ -5621,31 +5603,26 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
               SETDSC_ENUMERATED, parentTable->mBorderCollapse,
               NS_STYLE_BORDER_SEPARATE, 0, 0, 0, 0);
 
-  // border-spacing-x: length, inherit
-  nsStyleCoord tempCoord;
-  if (SetCoord(tableData.mBorderSpacing.mXValue, tempCoord,
-               nsStyleCoord(parentTable->mBorderSpacingX,
-                            nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
-               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
-               aContext, mPresContext, canStoreInRuleTree)) {
-    table->mBorderSpacingX = tempCoord.GetCoordValue();
-  } else {
-    NS_ASSERTION(tableData.mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null,
-                 "unexpected unit");
-  }
+  if (tableData.mBorderSpacing.GetUnit() != eCSSUnit_Null) {
+    // border-spacing-x/y: length, inherit
+    nsStyleCoord parentX(parentTable->mBorderSpacingX,
+                         nsStyleCoord::CoordConstructor);
+    nsStyleCoord parentY(parentTable->mBorderSpacingY,
+                         nsStyleCoord::CoordConstructor);
+    nsStyleCoord coordX, coordY;
 
-  // border-spacing-y: length, inherit
-  if (SetCoord(tableData.mBorderSpacing.mYValue, tempCoord,
-               nsStyleCoord(parentTable->mBorderSpacingY,
-                            nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
-               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
-               aContext, mPresContext, canStoreInRuleTree)) {
-    table->mBorderSpacingY = tempCoord.GetCoordValue();
-  } else {
-    NS_ASSERTION(tableData.mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null,
-                 "unexpected unit");
+#ifdef DEBUG
+    PRBool result =
+#endif
+      SetPairCoords(tableData.mBorderSpacing,
+                    coordX, coordY, parentX, parentY,
+                    SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+                    SETCOORD_CALC_LENGTH_ONLY |
+                    SETCOORD_CALC_CLAMP_NONNEGATIVE,
+                    aContext, mPresContext, canStoreInRuleTree);
+    NS_ASSERTION(result, "malformed table border value");
+    table->mBorderSpacingX = coordX.GetCoordValue();
+    table->mBorderSpacingY = coordY.GetCoordValue();
   }
 
   // caption-side: enum, inherit, initial
@@ -6066,37 +6043,46 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
 }
 
 static void
-SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
+SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
             nsPresContext* aPresContext, nsStyleContext *aContext,
             nsStyleSVGPaint& aResult, nsStyleSVGPaintType aInitialPaintType,
             PRBool& aCanStoreInRuleTree)
 {
   nscolor color;
 
-  if (aValue.mXValue.GetUnit() == eCSSUnit_Inherit) {
+  if (aValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
     aCanStoreInRuleTree = PR_FALSE;
-  } else if (aValue.mXValue.GetUnit() == eCSSUnit_None) {
+  } else if (aValue.GetUnit() == eCSSUnit_None) {
     aResult.SetType(eStyleSVGPaintType_None);
-  } else if (aValue.mXValue.GetUnit() == eCSSUnit_Initial) {
+  } else if (aValue.GetUnit() == eCSSUnit_Initial) {
     aResult.SetType(aInitialPaintType);
     aResult.mPaint.mColor = NS_RGB(0, 0, 0);
     aResult.mFallbackColor = NS_RGB(0, 0, 0);
-  } else if (aValue.mXValue.GetUnit() == eCSSUnit_URL) {
-    aResult.SetType(eStyleSVGPaintType_Server);
-    aResult.mPaint.mPaintServer = aValue.mXValue.GetURLValue();
-    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
-    if (aValue.mYValue.GetUnit() == eCSSUnit_None) {
-      aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
-    } else {
-      NS_ASSERTION(aValue.mYValue.GetUnit() != eCSSUnit_Inherit, "cannot inherit fallback colour");
-      SetColor(aValue.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext,
-               aResult.mFallbackColor, aCanStoreInRuleTree);
-    }
-  } else if (SetColor(aValue.mXValue, parentPaint.mPaint.mColor, aPresContext,
-                      aContext, color, aCanStoreInRuleTree)) {
+  } else if (SetColor(aValue, NS_RGB(0, 0, 0), aPresContext, aContext,
+                      color, aCanStoreInRuleTree)) {
     aResult.SetType(eStyleSVGPaintType_Color);
     aResult.mPaint.mColor = color;
+  } else if (aValue.GetUnit() == eCSSUnit_Pair) {
+    const nsCSSValuePair& pair = aValue.GetPairValue();
+    NS_ABORT_IF_FALSE(pair.mXValue.GetUnit() == eCSSUnit_URL,
+                      "malformed paint server value");
+
+    aResult.SetType(eStyleSVGPaintType_Server);
+    aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
+    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+
+    if (pair.mYValue.GetUnit() == eCSSUnit_None) {
+      aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
+    } else {
+      NS_ABORT_IF_FALSE(pair.mYValue.GetUnit() != eCSSUnit_Inherit,
+                        "cannot inherit fallback colour");
+      SetColor(pair.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext,
+               aResult.mFallbackColor, aCanStoreInRuleTree);
+    }
+  } else {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Null,
+                      "malformed paint server value");
   }
 }
 
