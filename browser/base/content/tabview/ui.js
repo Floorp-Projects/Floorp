@@ -608,10 +608,15 @@ var UIManager = {
       } else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE || 
                  event.keyCode == KeyEvent.DOM_VK_RETURN ||
                  event.keyCode == KeyEvent.DOM_VK_ENTER) {
-        // esc or return to zoom into the active tab.
-        var activeTab = self.getActiveTab();
-        if (activeTab)
-          activeTab.zoomIn();
+        let activeTab = self.getActiveTab();
+        let activeGroupItem = GroupItems.getActiveGroupItem();
+
+        if (activeGroupItem && activeGroupItem.expanded && 
+            event.keyCode == KeyEvent.DOM_VK_ESCAPE)
+          activeGroupItem.collapse();
+        else if (activeTab)
+            activeTab.zoomIn();
+
         event.stopPropagation();
         event.preventDefault();
       } else if (event.keyCode == KeyEvent.DOM_VK_TAB) {
