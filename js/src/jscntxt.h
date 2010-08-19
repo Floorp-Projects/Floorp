@@ -2005,9 +2005,6 @@ struct JSContext
     /* Top-level object and pointer to top stack frame's scope chain. */
     JSObject            *globalObject;
 
-    /* Storage to root recently allocated GC things and script result. */
-    JSWeakRoots         weakRoots;
-
     /* Regular expression class statics. */
     js::RegExpStatics   regExpStatics;
 
@@ -2495,48 +2492,25 @@ class AutoGCRooter {
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
         SPROP =        -2, /* js::AutoScopePropertyRooter */
-        WEAKROOTS =    -3, /* js::AutoSaveWeakRoots */
-        PARSER =       -4, /* js::Parser */
-        SCRIPT =       -5, /* js::AutoScriptRooter */
-        ENUMERATOR =   -6, /* js::AutoEnumStateRooter */
-        IDARRAY =      -7, /* js::AutoIdArray */
-        DESCRIPTORS =  -8, /* js::AutoPropDescArrayRooter */
-        NAMESPACES =   -9, /* js::AutoNamespaceArray */
-        XML =         -10, /* js::AutoXMLRooter */
-        OBJECT =      -11, /* js::AutoObjectRooter */
-        ID =          -12, /* js::AutoIdRooter */
-        VALVECTOR =   -13, /* js::AutoValueVector */
-        DESCRIPTOR =  -14, /* js::AutoPropertyDescriptorRooter */
-        STRING =      -15, /* js::AutoStringRooter */
-        IDVECTOR =    -16  /* js::AutoIdVector */
+        PARSER =       -3, /* js::Parser */
+        SCRIPT =       -4, /* js::AutoScriptRooter */
+        ENUMERATOR =   -5, /* js::AutoEnumStateRooter */
+        IDARRAY =      -6, /* js::AutoIdArray */
+        DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
+        NAMESPACES =   -8, /* js::AutoNamespaceArray */
+        XML =          -9, /* js::AutoXMLRooter */
+        OBJECT =      -10, /* js::AutoObjectRooter */
+        ID =          -11, /* js::AutoIdRooter */
+        VALVECTOR =   -12, /* js::AutoValueVector */
+        DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
+        STRING =      -14, /* js::AutoStringRooter */
+        IDVECTOR =    -15  /* js::AutoIdVector */
     };
 
     private:
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter &ida);
     void operator=(AutoGCRooter &ida);
-};
-
-class AutoPreserveWeakRoots : private AutoGCRooter
-{
-  public:
-    explicit AutoPreserveWeakRoots(JSContext *cx
-                                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, WEAKROOTS), savedRoots(cx->weakRoots)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    ~AutoPreserveWeakRoots()
-    {
-        context->weakRoots = savedRoots;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    JSWeakRoots savedRoots;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* FIXME(bug 332648): Move this into a public header. */

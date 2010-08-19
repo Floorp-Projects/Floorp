@@ -184,6 +184,12 @@ private:
   PRUint32 mVideoTrack;
   PRUint32 mAudioTrack;
 
+  // Time in ms of the start of the first audio sample we've decoded.
+  PRInt64 mAudioStartMs;
+
+  // Number of samples we've decoded since decoding began at mAudioStartMs.
+  PRUint64 mAudioSamples;
+
   // Booleans to indicate if we have audio and/or video data
   PRPackedBool mHasVideo;
   PRPackedBool mHasAudio;

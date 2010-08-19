@@ -667,60 +667,6 @@ nsWindow::Update()
     return NS_OK;
 }
 
-void
-nsWindow::Scroll(const nsIntPoint& aDelta,
-                 const nsTArray<nsIntRect>& aDestRects,
-                 const nsTArray<nsIWidget::Configuration>& aConfigurations)
-{
-    if (!mWidget) {
-        NS_ERROR("No widget to scroll.");
-        return;
-    }
-
-    nsAutoTArray<nsWindow*,1> windowsToShow;
-    // Hide any widgets that are becoming invisible or that are moving.
-    // Moving widgets are hidden for the duration of the scroll so that
-    // the XCopyArea treats their drawn pixels as part of the window
-    // that should be scrolled. This works well when the widgets are
-    // moving because they're being scrolled, which is normally true.
-    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-        const Configuration& configuration = aConfigurations[i];
-        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
-        NS_ASSERTION(w->GetParent() == this,
-                     "Configuration widget is not a child");
-        if (w->mIsShown &&
-            (configuration.mClipRegion.IsEmpty() ||
-             configuration.mBounds != w->mBounds)) {
-            w->NativeShow(PR_FALSE);
-            windowsToShow.AppendElement(w);
-        }
-    }
-
-    for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
-        const nsIntRect & r = iter.Rect();
-        QRegion goodReg(QRect(r.x, r.y, r.width, r.height));
-        goodReg = goodReg.subtracted(mDirtyScrollArea);
-
-        const QVector<QRect> myRects = goodReg.rects();
-        for (QVector<QRect>::const_iterator it = myRects.constBegin(); it < myRects.constEnd(); ++it) {
-            QRect rect(*it);
-            mWidget->scroll(aDelta.x, aDelta.y, rect);
-            // Calculate dirty area which is need to be updated
-            QRegion dirtyReg(rect);
-            rect.translate(aDelta.x, aDelta.y);
-            dirtyReg = dirtyReg.subtracted(rect);
-            mDirtyScrollArea = mDirtyScrollArea.united(dirtyReg);
-        }
-    }
-
-    ConfigureChildren(aConfigurations);
-
-    // Show windows again...
-    for (PRUint32 i = 0; i < windowsToShow.Length(); ++i) {
-        windowsToShow[i]->NativeShow(PR_TRUE);
-    }
-}
-
 // Returns the graphics view widget for this nsWindow by iterating
 // the chain of parents until a toplevel window with a view/scene is found.
 // (This function always returns something or asserts if the precondition
@@ -2241,6 +2187,19 @@ nsIWidget *
 nsWindow::GetParent(void)
 {
     return mParent;
+}
+
+float
+nsWindow::GetDPI()
+{
+    QDesktopWidget* rootWindow = QApplication::desktop();
+    double heightInches = rootWindow->heightMM()/25.4;
+    if (heightInches < 0.25) {
+        // Something's broken, but we'd better not crash.
+        return 96.0f;
+    }
+
+    return float(rootWindow->height()/heightInches);
 }
 
 void

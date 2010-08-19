@@ -264,7 +264,7 @@ nsPresContext::~nsPresContext()
 
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
-  if (mRefreshDriver) {
+  if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
     mRefreshDriver->Disconnect();
   }
 
@@ -485,7 +485,7 @@ nsPresContext::GetFontPreferences()
     mMinimumFontSize = CSSPixelsToAppUnits(size);
   }
   else if (unit == eUnit_pt) {
-    mMinimumFontSize = this->PointsToAppUnits(size);
+    mMinimumFontSize = CSSPointsToAppUnits(size);
   }
 
   // get attributes specific to each generic font
@@ -549,10 +549,10 @@ nsPresContext::GetFontPreferences()
     size = nsContentUtils::GetIntPref(pref.get());
     if (size > 0) {
       if (unit == eUnit_px) {
-        font->size = nsPresContext::CSSPixelsToAppUnits(size);
+        font->size = CSSPixelsToAppUnits(size);
       }
       else if (unit == eUnit_pt) {
-        font->size = this->PointsToAppUnits(size);
+        font->size = CSSPointsToAppUnits(size);
       }
     }
 
@@ -891,9 +891,35 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   if (!mTransitionManager)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mRefreshDriver = new nsRefreshDriver(this);
-  if (!mRefreshDriver)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (mDocument->GetDisplayDocument()) {
+    NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
+                 mDocument->GetDisplayDocument()->GetShell()->GetPresContext(),
+                 "Why are we being initialized?");
+    mRefreshDriver = mDocument->GetDisplayDocument()->GetShell()->
+      GetPresContext()->RefreshDriver();
+  } else {
+    // We don't have our container set yet at this point
+    nsCOMPtr<nsISupports> ourContainer = mDocument->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> ourItem = do_QueryInterface(ourContainer);
+    if (ourItem) {
+      nsCOMPtr<nsIDocShellTreeItem> parentItem;
+      ourItem->GetSameTypeParent(getter_AddRefs(parentItem));
+      nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentItem);
+      if (parentDocShell) {
+        nsCOMPtr<nsIPresShell> parentPresShell;
+        parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+        if (parentPresShell) {
+          mRefreshDriver = parentPresShell->GetPresContext()->RefreshDriver();
+        }
+      }
+    }
+
+    if (!mRefreshDriver) {
+      mRefreshDriver = new nsRefreshDriver(this);
+      if (!mRefreshDriver)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
@@ -2510,7 +2536,7 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
 #endif
 
     nsRegion visibleRegion(bounds);
-    list.ComputeVisibility(&builder, &visibleRegion, nsnull);
+    list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
     if (gDumpPluginList) {

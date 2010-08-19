@@ -49,10 +49,13 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
+#include "Image.h"
 #include "ImageErrors.h"
 #include "ImageLogging.h"
 
 #include "nspr.h"
+
+using namespace mozilla::imagelib;
 
 NS_IMPL_ISUPPORTS4(imgRequestProxy, imgIRequest, nsIRequest,
                    nsISupportsPriority, nsISecurityInfoProvider)
@@ -109,7 +112,7 @@ imgRequestProxy::~imgRequestProxy()
   }
 }
 
-nsresult imgRequestProxy::Init(imgRequest* request, nsILoadGroup* aLoadGroup, imgContainer* aImage,
+nsresult imgRequestProxy::Init(imgRequest* request, nsILoadGroup* aLoadGroup, Image* aImage,
                                nsIURI* aURI, imgIDecoderObserver* aObserver)
 {
   NS_PRECONDITION(!mOwner && !mListener, "imgRequestProxy is already initialized");
@@ -510,7 +513,8 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(PRBool* hasData)
 
 /** imgIContainerObserver methods **/
 
-void imgRequestProxy::FrameChanged(imgIContainer *container, nsIntRect * dirtyRect)
+void imgRequestProxy::FrameChanged(imgIContainer *container,
+                                   const nsIntRect *dirtyRect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
@@ -709,7 +713,7 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  nsRefPtr<imgContainer> frame = static_cast<imgContainer*>(currentFrame.get());
+  nsRefPtr<Image> frame = static_cast<Image*>(currentFrame.get());
 
   // Create a static imgRequestProxy with our new extracted frame.
   nsRefPtr<imgRequestProxy> req = new imgRequestProxy();

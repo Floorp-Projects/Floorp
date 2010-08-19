@@ -131,7 +131,7 @@ public:
   // nsICSSRule methods
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override nsCSSGroupRule
   virtual PRInt32 GetType() const;
-  virtual nsresult Clone(nsICSSRule*& aClone) const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
@@ -172,7 +172,7 @@ public:
 
   // nsICSSRule methods
   virtual PRInt32 GetType() const;
-  virtual nsresult Clone(nsICSSRule*& aClone) const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
@@ -265,7 +265,7 @@ public:
   DECL_STYLE_RULE_INHERIT
 
   virtual PRInt32 GetType() const;
-  virtual nsresult Clone(nsICSSRule*& aClone) const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE

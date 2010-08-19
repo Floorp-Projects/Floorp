@@ -111,8 +111,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xeedce486, 0xeb2b, 0x41af, \
-  { 0x9a, 0x25, 0x59, 0xd1, 0x0f, 0xd1, 0xd5, 0x6f } }
+  { 0x193fcc7a, 0x2456, 0x4625, \
+    { 0x85, 0x40, 0x38, 0xed, 0x00, 0x69, 0x93, 0xf5 } }
 
 /*
  * Window shadow styles
@@ -313,6 +313,20 @@ class nsIWidget : public nsISupports {
      *
      */
     virtual nsIWidget* GetSheetWindowParent(void) = 0;
+
+    /**
+     * Return the physical DPI of the screen containing the window ...
+     * the number of device pixels per inch.
+     */
+    virtual float GetDPI() = 0;
+
+    /**
+     * Return the default scale factor for the window. This is the
+     * default number of device pixels per CSS pixel to use. This should
+     * depend on OS/platform settings such as the Mac's "UI scale factor"
+     * or Windows' "font DPI".
+     */
+    virtual double GetDefaultScale() = 0;
 
     /**
      * Return the first child of this widget.  Will return null if
@@ -769,31 +783,6 @@ class nsIWidget : public nsISupports {
      * of the widget.
      */
     virtual LayerManager* GetLayerManager() = 0;
-
-    /**
-     * Scroll a set of rectangles in this widget and (as simultaneously as
-     * possible) modify the specified child widgets.
-     * 
-     * This will invalidate areas of the children that have changed, unless
-     * they have just moved by the scroll amount, but does not need to
-     * invalidate any part of this widget, except where the scroll
-     * operation fails to blit because part of the window is unavailable
-     * (e.g. partially offscreen).
-     * 
-     * The caller guarantees that the rectangles in aDestRects are
-     * non-intersecting.
-     *
-     * @param aDelta amount to scroll (device pixels)
-     * @param aDestRects rectangles to copy into
-     * (device pixels relative to this widget)
-     * @param aReconfigureChildren commands to set the bounds and clip
-     * region of a subset of the children of this widget; these should
-     * be performed simultaneously with the scrolling, as far as possible,
-     * to avoid visual artifacts.
-     */
-    virtual void Scroll(const nsIntPoint& aDelta,
-                        const nsTArray<nsIntRect>& aDestRects,
-                        const nsTArray<Configuration>& aReconfigureChildren) = 0;
 
     /** 
      * Internal methods

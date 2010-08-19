@@ -19,6 +19,7 @@ EXPORTS	= \
 	gfxCachedTempSurface.h \
 	gfxColor.h \
 	gfxContext.h \
+	gfxDrawable.h \
 	gfxFont.h \
 	gfxFontConstants.h \
 	gfxFontUtils.h \
@@ -166,6 +167,7 @@ CPPSRCS	= \
 	gfxBlur.cpp \
 	gfxCachedTempSurface.cpp \
 	gfxContext.cpp \
+	gfxDrawable.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
 	gfxFontMissingGlyphs.cpp \
@@ -195,6 +197,12 @@ ifdef MOZ_IPC
 CPPSRCS += \
 	gfxSharedImageSurface.cpp \
 	$(NULL)
+endif
+
+ifneq (,$(filter x86 x86_64,$(CPU_ARCH)))
+ifdef __GNUC__
+gfxAlphaRecovery.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS += -msse2
+endif
 endif
 
 SHARED_LIBRARY_LIBS += \

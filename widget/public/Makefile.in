@@ -46,6 +46,12 @@ MODULE		= widget
 XPIDL_MODULE	= widget
 GRE_MODULE	= 1
 
+EXPORTS_NAMESPACES = IPC
+
+EXPORTS_IPC = \
+		nsGUIEventIPC.h \
+		$(NULL)
+
 EXPORTS		= \
 		nsIWidget.h \
 		nsGUIEvent.h \
@@ -120,6 +126,7 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 		nsITaskbarPreviewButton.idl \
 		nsIJumpListBuilder.idl \
 		nsIJumpListItem.idl \
+		nsIGfxInfo.idl \
 		$(NULL)
 endif
 

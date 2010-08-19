@@ -1614,7 +1614,6 @@ LastDitchGC(JSContext *cx)
     JS_ASSERT(!JS_ON_TRACE(cx));
 
     /* The last ditch GC preserves weak roots and all atoms. */
-    AutoPreserveWeakRoots save(cx);
     AutoKeepAtoms keep(cx->runtime);
 
     /*
@@ -1728,7 +1727,6 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
     JSGCThing *thing = *freeListp;
     if (thing) {
         *freeListp = thing->link;
-        cx->weakRoots.finalizableNewborns[thingKind] = thing;
         CheckGCFreeListLink(thing);
         METER(cx->runtime->gcStats.arenaStats[thingKind].localalloc++);
         return thing;
@@ -1748,8 +1746,6 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
     *freeListp = thing->link;
 
     CheckGCFreeListLink(thing);
-
-    cx->weakRoots.finalizableNewborns[thingKind] = thing;
 
     return thing;
 }
@@ -2271,40 +2267,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->getScopeChain(), "scope chain");
 }
 
-void
-JSWeakRoots::mark(JSTracer *trc)
-{
-#ifdef DEBUG
-    const char * const newbornNames[] = {
-        "newborn_object",             /* FINALIZE_OBJECT */
-        "newborn_function",           /* FINALIZE_FUNCTION */
-#if JS_HAS_XML_SUPPORT
-        "newborn_xml",                /* FINALIZE_XML */
-#endif
-        "newborn_short_string",       /* FINALIZE_SHORT_STRING */
-        "newborn_string",             /* FINALIZE_STRING */
-        "newborn_external_string0",   /* FINALIZE_EXTERNAL_STRING0 */
-        "newborn_external_string1",   /* FINALIZE_EXTERNAL_STRING1 */
-        "newborn_external_string2",   /* FINALIZE_EXTERNAL_STRING2 */
-        "newborn_external_string3",   /* FINALIZE_EXTERNAL_STRING3 */
-        "newborn_external_string4",   /* FINALIZE_EXTERNAL_STRING4 */
-        "newborn_external_string5",   /* FINALIZE_EXTERNAL_STRING5 */
-        "newborn_external_string6",   /* FINALIZE_EXTERNAL_STRING6 */
-        "newborn_external_string7",   /* FINALIZE_EXTERNAL_STRING7 */
-    };
-#endif
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(finalizableNewborns); ++i) {
-        void *newborn = finalizableNewborns[i];
-        if (newborn) {
-            JS_CALL_TRACER(trc, newborn, GetFinalizableTraceKind(i),
-                           newbornNames[i]);
-        }
-    }
-    if (lastAtom)
-        MarkString(trc, ATOM_TO_STRING(lastAtom), "lastAtom");
-    MarkGCThing(trc, lastInternalResult, "lastInternalResult");
-}
-
 inline void
 AutoGCRooter::trace(JSTracer *trc)
 {
@@ -2315,10 +2277,6 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case SPROP:
         static_cast<AutoScopePropertyRooter *>(this)->sprop->trace(trc);
-        return;
-
-      case WEAKROOTS:
-        static_cast<AutoPreserveWeakRoots *>(this)->savedRoots.mark(trc);
         return;
 
       case PARSER:
@@ -2417,7 +2375,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     /* Mark other roots-by-definition in acx. */
     if (acx->globalObject && !JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
         JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
-    acx->weakRoots.mark(trc);
     if (acx->throwing) {
         MarkValue(trc, acx->exception, "exception");
     } else {
@@ -3046,8 +3003,6 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
         while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
             acx->purge();
     }
-
-    JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
 /*

@@ -1,0 +1,53 @@
+/* This file is for platform-specific CSS for TabView, and is loaded after the
+  platform-independent tabview.css, to allow overwriting.
+*/
+
+.close {
+  background: url(chrome://global/skin/icons/Close.gif) no-repeat;
+}
+
+#bg {
+  background: -moz-linear-gradient(top,#F1F5FB,#EDF4FB);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -999999;
+}
+
+.newTabButtonAlt {
+  position: absolute;
+  cursor: pointer;
+  z-index: 99999;
+  border: none;
+  -moz-border-radius: 4px;
+  font-size: 50px;
+  line-height: 50px;
+  height: 57px !important;
+  width: 70px !important;
+  margin-top: 4px !important;
+  text-align: center;
+  background-color: #B9CDEB;
+  -moz-box-shadow: inset 0px 0px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.3);
+}
+
+.newTabButtonAlt > span {
+  color: #D9E7FC;
+  text-shadow: 0px 0px 7px rgba(0,0,0,.4), 0 -1px 0 rgba(255,255,255,.6);
+  font-weight: bold;
+}
+
+.newTabGroup {
+  background-color: #D9E7FC;
+  border: none;
+  border-top: 1px solid rgba(127,127,127,.5);
+  -moz-border-radius: 0.1em;
+  -moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
+}
+
+.inNewTabGroup .favicon {
+  background-color: #D9E7FC;
+  -moz-box-shadow: none;
+}
+

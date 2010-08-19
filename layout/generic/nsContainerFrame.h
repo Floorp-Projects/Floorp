@@ -390,10 +390,12 @@ protected:
                              const nsFrameList& aOverflowFrames);
 
   /**
-   * Destroy the overflow list and any frames that are on  it.
+   * Destroy the overflow list and any frames that are on it.
+   * Calls DestructFrom() insead of Destruct() on the frames if
+   * aDestructRoot is non-null.
    */
   void DestroyOverflowList(nsPresContext* aPresContext,
-                           nsIFrame*      aDestructRoot = nsnull);
+                           nsIFrame*      aDestructRoot);
 
   /**
    * Moves any frames on both the prev-in-flow's overflow list and the

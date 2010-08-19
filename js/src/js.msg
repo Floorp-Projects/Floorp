@@ -333,4 +333,5 @@ MSG_DEF(JSMSG_INVALID_EVAL_SCOPE_ARG, 250, 0, JSEXN_EVALERR, "invalid eval scope
 MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,    251, 3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")
 MSG_DEF(JSMSG_THROW_TYPE_ERROR,       252, 0, JSEXN_TYPEERR, "'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them")
 MSG_DEF(JSMSG_BAD_TOISOSTRING_PROP,   253, 0, JSEXN_TYPEERR, "toISOString property is not callable")
-MSG_DEF(JSMSG_NEED_DEBUG_MODE,        254, 0, JSEXN_ERR, "function can be called only in debug mode")
+MSG_DEF(JSMSG_BAD_PARSE_NODE,         254, 0, JSEXN_INTERNALERR, "bad parse node")
+MSG_DEF(JSMSG_NEED_DEBUG_MODE,        255, 0, JSEXN_ERR, "function can be called only in debug mode")

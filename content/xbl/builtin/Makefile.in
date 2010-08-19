@@ -48,10 +48,10 @@ else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS	= mac
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-DIRS	= gtk2
-else
+ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS	= unix
+else
+DIRS	= emacs
 endif
 endif
 endif

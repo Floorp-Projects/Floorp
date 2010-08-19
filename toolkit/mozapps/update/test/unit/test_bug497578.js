@@ -67,7 +67,7 @@ function run_test() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
   Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
 
-  do_timeout(0, run_test_pt1);
+  do_execute_soon(run_test_pt1);
 }
 
 function end_test() {
@@ -104,8 +104,8 @@ function run_test_pt1() {
   dump("Testing: private browsing is auto-started\n");
   do_check_true(privBrowsing.autoStarted);
 
-  // Use a timeout to give private browsing time to reset necko.
-  do_timeout(0, run_test_pt2);
+  // Give private browsing time to reset necko.
+  do_execute_soon(run_test_pt2);
 }
 function run_test_pt2() {
   dump("Testing: update count should equal 1\n");

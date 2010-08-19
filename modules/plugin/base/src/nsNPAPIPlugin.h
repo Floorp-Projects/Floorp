@@ -104,6 +104,8 @@ public:
   // minidump was written.
   void PluginCrashed(const nsAString& pluginDumpID,
                      const nsAString& browserDumpID);
+  
+  static PRBool RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag);
 #endif
 
 protected:

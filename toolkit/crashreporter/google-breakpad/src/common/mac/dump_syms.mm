@@ -54,6 +54,10 @@
 #include "common/stabs_reader.h"
 #include "common/stabs_to_module.h"
 
+#ifndef CPU_TYPE_ARM
+#define CPU_TYPE_ARM (static_cast<cpu_type_t>(12))
+#endif //  CPU_TYPE_ARM
+
 using dwarf2reader::ByteReader;
 using google_breakpad::DwarfCUToModule;
 using google_breakpad::DwarfLineToModule;
@@ -176,7 +180,7 @@ bool DumpSymbols::SetArchitecture(cpu_type_t cpu_type,
   // Find the best match for the architecture the user requested.
   const struct fat_arch *best_match
     = NXFindBestFatArch(cpu_type, cpu_subtype, &object_files_[0],
-                        object_files_.size());
+                        static_cast<uint32_t>(object_files_.size()));
   if (!best_match) return false;
 
   // Record the selected object file.
@@ -184,6 +188,15 @@ bool DumpSymbols::SetArchitecture(cpu_type_t cpu_type,
   return true;
 }
 
+bool DumpSymbols::SetArchitecture(const std::string &arch_name) {
+  bool arch_set = false;
+  const NXArchInfo *arch_info = NXGetArchInfoFromName(arch_name.c_str());
+  if (arch_info) {
+    arch_set = SetArchitecture(arch_info->cputype, arch_info->cpusubtype);
+  }
+  return arch_set;
+}
+  
 string DumpSymbols::Identifier() {
   FileID file_id([object_filename_ fileSystemRepresentation]);
   unsigned char identifier_bytes[16];
@@ -436,12 +449,16 @@ bool DumpSymbols::WriteSymbolFile(FILE *stream) {
       = NXGetArchInfoFromCpuType(selected_object_file_->cputype,
                                  selected_object_file_->cpusubtype);
 
+  const char *selected_arch_name = selected_arch_info->name;
+  if (strcmp(selected_arch_name, "i386") == 0)
+    selected_arch_name = "x86";
+
   // Produce a name to use in error messages that includes the
   // filename, and the architecture, if there is more than one.
   selected_object_name_ = [object_filename_ UTF8String];
   if (object_files_.size() > 1) {
     selected_object_name_ += ", architecture ";
-    selected_object_name_ + selected_arch_info->name;
+    selected_object_name_ + selected_arch_name;
   }
 
   // Compute a module name, to appear in the MODULE record.
@@ -454,7 +471,7 @@ bool DumpSymbols::WriteSymbolFile(FILE *stream) {
   identifier += "0";
 
   // Create a module to hold the debugging information.
-  Module module([module_name UTF8String], "mac", selected_arch_info->name, 
+  Module module([module_name UTF8String], "mac", selected_arch_name, 
                 identifier);
 
   // Parse the selected object file.

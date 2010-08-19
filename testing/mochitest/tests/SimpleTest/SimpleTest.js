@@ -301,6 +301,8 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     function info(msg) {
       if (SimpleTest._logEnabled)
         SimpleTest._logResult({result: true, name: msg}, "TEST-INFO");
+      else
+        dump("TEST-INFO | " + msg + "\n");
     }
 
     function debugFocusLog(prefix) {

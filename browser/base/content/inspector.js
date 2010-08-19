@@ -61,40 +61,16 @@ const INSPECTOR_INVISIBLE_ELEMENTS = {
  *
  * @param aBrowser
  *        The XUL browser object for the content window being highlighted.
- * @param aColor
- *        A string containing an RGB color for the panel background.
- * @param aBorderSize
- *        A number representing the border thickness of the panel.
- * @param anOpacity
- *        A number representing the alpha value of the panel background.
  */
-function PanelHighlighter(aBrowser, aColor, aBorderSize, anOpacity)
+function PanelHighlighter(aBrowser)
 {
   this.panel = document.getElementById("highlighter-panel");
   this.panel.hidden = false;
   this.browser = aBrowser;
   this.win = this.browser.contentWindow;
-  this.backgroundColor = aColor;
-  this.border = aBorderSize;
-  this.opacity = anOpacity;
-  this.updatePanelStyles();
 }
 
 PanelHighlighter.prototype = {
-  
-  /**
-   * Update the panel's style object with current settings.
-   * TODO see bugXXXXXX, https://wiki.mozilla.org/Firefox/Projects/Inspector#0.7
-   * and, https://wiki.mozilla.org/Firefox/Projects/Inspector#1.0.
-   */
-  updatePanelStyles: function PanelHighlighter_updatePanelStyles()
-  {
-    let style = this.panel.style;
-    style.backgroundColor = this.backgroundColor;
-    style.border = "solid blue " + this.border + "px";
-    style.MozBorderRadius = "4px";
-    style.opacity = this.opacity;
-  },
 
   /**
    * Highlight this.node, unhilighting first if necessary.
@@ -517,12 +493,6 @@ InspectorTreeView.prototype = {
  */
 var InspectorUI = {
   browser: null,
-  _showTreePanel: true,
-  _showStylePanel: true,
-  _showDOMPanel: false,
-  highlightColor: "#EEEE66",
-  highlightThickness: 4,
-  highlightOpacity: 0.4,
   selectEventsSuppressed: false,
   inspecting: false,
 
@@ -559,7 +529,7 @@ var InspectorUI = {
    */
   toggleStylePanel: function IUI_toggleStylePanel()
   {
-    if (this._showStylePanel) {
+    if (this.isStylePanelOpen) {
       this.stylePanel.hidePopup();
     } else {
       this.openStylePanel();
@@ -567,7 +537,21 @@ var InspectorUI = {
         this.updateStylePanel(this.treeView.selectedNode);
       }
     }
-    this._showStylePanel = !this._showStylePanel;
+  },
+
+  /**
+   * Toggle the DOM panel. Invoked from the toolbar's DOM button.
+   */
+  toggleDOMPanel: function IUI_toggleDOMPanel()
+  {
+    if (this.isDOMPanelOpen) {
+      this.domPanel.hidePopup();
+    } else {
+      this.openDOMPanel();
+      if (this.treeView.selectedNode) {
+        this.updateDOMPanel(this.treeView.selectedNode);
+      }
+    }
   },
 
   /**
@@ -591,6 +575,16 @@ var InspectorUI = {
   },
 
   /**
+   * Is the DOM panel open?
+   *
+   * @returns boolean
+   */
+  get isDOMPanelOpen()
+  {
+    return this.domPanel && this.domPanel.state == "open";
+  },
+
+  /**
    * Open the inspector's tree panel and initialize it.
    */
   openTreePanel: function IUI_openTreePanel()
@@ -603,7 +597,8 @@ var InspectorUI = {
       const panelWidthRatio = 7 / 8;
       const panelHeightRatio = 1 / 5;
       let bar = document.getElementById("status-bar");
-      this.treePanel.openPopup(bar, "overlap", 120, -120, false, false);
+      this.treePanel.openPopupAtScreen(this.win.screenX + 80,
+        this.win.outerHeight + this.win.screenY);
       this.treePanel.sizeTo(this.win.outerWidth * panelWidthRatio, 
         this.win.outerHeight * panelHeightRatio);
       this.tree = document.getElementById("inspector-tree");
@@ -616,15 +611,28 @@ var InspectorUI = {
    */
   openStylePanel: function IUI_openStylePanel()
   {
-    if (!this.stylePanel) {
+    if (!this.stylePanel)
       this.stylePanel = document.getElementById("inspector-style-panel");
-      this.stylePanel.hidden = false;
-    }
     if (!this.isStylePanelOpen) {
+      this.stylePanel.hidden = false;
       // open at top right of browser panel, offset by 20px from top.
       this.stylePanel.openPopup(this.browser, "end_before", 0, 20, false, false);
       // size panel to 200px wide by half browser height - 60.
       this.stylePanel.sizeTo(200, this.win.outerHeight / 2 - 60);
+    }
+  },
+
+  /**
+   * Open the DOM panel if not already onscreen.
+   */
+  openDOMPanel: function IUI_openDOMPanel()
+  {
+    if (!this.isDOMPanelOpen) {
+      // open at middle right of browser panel, offset by 20px from middle.
+      this.domPanel.openPopup(this.browser, "end_before", 0,
+        this.win.outerHeight / 2 - 20, false, false);
+      // size panel to 200px wide by half browser height - 60.
+      this.domPanel.sizeTo(200, this.win.outerHeight / 2 - 60);
     }
   },
 
@@ -644,11 +652,6 @@ var InspectorUI = {
     }
   },
 
-  openDOMPanel: function IUI_openDOMPanel()
-  {
-    // # todo bug 561782
-  },
-
   /**
    * Open inspector UI. tree, style and DOM panels if enabled. Add listeners for
    * document scrolling, resize and tabContainer.TabSelect.
@@ -658,24 +661,31 @@ var InspectorUI = {
     // initialization
     this.browser = gBrowser.selectedBrowser;
     this.win = this.browser.contentWindow;
-    if (!this.style) {
-      Cu.import("resource:///modules/stylePanel.jsm", this);
-      this.style.initialize();
-    }
+
+    // DOM panel initialization and loading (via PropertyPanel.jsm)
+    let domPanelTitle = this.strings.GetStringFromName("dom.domPanelTitle");
+    let parent = document.getElementById("inspector-style-panel").parentNode;
+    this.propertyPanel = new (this.PropertyPanel)(parent, document, domPanelTitle, {});
+
+    // additional DOM panel setup needed for unittest identification and use
+    this.domPanel = this.propertyPanel.panel;
+    this.domPanel.setAttribute("id", "inspector-dom-panel");
+    this.domBox = this.propertyPanel.tree;
+    this.domTreeView = this.propertyPanel.treeView;
 
     // open inspector UI
-    if (this._showTreePanel) {
-      this.openTreePanel();
-    }
-    if (this._showStylePanel) {
-      this.styleBox = document.getElementById("inspector-style-listbox");
-      this.clearStylePanel();
-      this.openStylePanel();
-    }
-    if (this._showDOMPanel) {
-      this.openDOMPanel();
-    }
-    this.inspectorBundle = Services.strings.createBundle("chrome://browser/locale/inspector.properties");
+    this.openTreePanel();
+
+    // style panel setup and activation
+    this.styleBox = document.getElementById("inspector-style-listbox");
+    this.clearStylePanel();
+    this.openStylePanel();
+
+    // DOM panel setup and activation
+    this.clearDOMPanel();
+    this.openDOMPanel();
+
+    // setup highlighter and start inspecting
     this.initializeHighlighter();
     this.startInspecting();
     this.win.document.addEventListener("scroll", this, false);
@@ -689,8 +699,7 @@ var InspectorUI = {
    */
   initializeHighlighter: function IUI_initializeHighlighter()
   {
-    this.highlighter = new PanelHighlighter(this.browser, this.highlightColor,
-      this.highlightThickness, this.highlightOpacity);
+    this.highlighter = new PanelHighlighter(this.browser);
   },
 
   /**
@@ -714,6 +723,12 @@ var InspectorUI = {
     if (this.isStylePanelOpen) {
       this.stylePanel.hidePopup();
     }
+    if (this.domPanel) {
+      this.domPanel.hidePopup();
+      this.domBox = null;
+      this.domTreeView = null;
+      this.propertyPanel.destroy();
+    }
     this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
   },
@@ -727,6 +742,7 @@ var InspectorUI = {
     this.attachPageListeners();
     this.inspecting = true;
     this.toggleDimForPanel(this.stylePanel);
+    this.toggleDimForPanel(this.domPanel);
   },
 
   /**
@@ -740,8 +756,10 @@ var InspectorUI = {
     this.detachPageListeners();
     this.inspecting = false;
     this.toggleDimForPanel(this.stylePanel);
+    this.toggleDimForPanel(this.domPanel);
     if (this.treeView.selection) {
       this.updateStylePanel(this.treeView.selectedNode);
+      this.updateDOMPanel(this.treeView.selectedNode);
     }
   },
 
@@ -757,7 +775,7 @@ var InspectorUI = {
   },
 
   /**
-   * add a new item to the listbox
+   * Add a new item to the style panel listbox.
    *
    * @param aLabel
    *        A bit of text to put in the listitem's label attribute.
@@ -768,7 +786,7 @@ var InspectorUI = {
    */
   addStyleItem: function IUI_addStyleItem(aLabel, aType, aContent)
   {
-    let itemLabelString = this.inspectorBundle.GetStringFromName("style.styleItemLabel");
+    let itemLabelString = this.strings.GetStringFromName("style.styleItemLabel");
     let item = document.createElement("listitem");
 
     // Do not localize these strings
@@ -791,7 +809,7 @@ var InspectorUI = {
    */
   createStyleRuleItems: function IUI_createStyleRuleItems(aRules)
   {
-    let selectorLabel = this.inspectorBundle.GetStringFromName("style.selectorLabel");
+    let selectorLabel = this.strings.GetStringFromName("style.selectorLabel");
 
     aRules.forEach(function(rule) {
       this.addStyleItem(selectorLabel, "selector", rule.id);
@@ -821,7 +839,7 @@ var InspectorUI = {
   {
     this.createStyleRuleItems(aRules);
     let inheritedString = 
-        this.inspectorBundle.GetStringFromName("style.inheritedFrom");
+        this.strings.GetStringFromName("style.inheritedFrom");
     aSections.forEach(function(section) {
       let sectionTitle = section.element.tagName;
       if (section.element.id)
@@ -842,6 +860,14 @@ var InspectorUI = {
   },
 
   /**
+   * Remove all items from the DOM Panel's listbox.
+   */
+  clearDOMPanel: function IUI_clearStylePanel()
+  {
+    this.domTreeView.data = {};
+  },
+
+  /**
    * Update the contents of the style panel with styles for the currently
    * inspected node.
    *
@@ -850,13 +876,28 @@ var InspectorUI = {
    */
   updateStylePanel: function IUI_updateStylePanel(aNode)
   {
-    if (this.inspecting || !this.isStylePanelOpen)
+    if (this.inspecting || !this.isStylePanelOpen) {
       return;
+    }
+
     let rules = [], styleSections = [], usedProperties = {};
     this.style.getInheritedRules(aNode, styleSections, usedProperties);
     this.style.getElementRules(aNode, rules, usedProperties);
     this.clearStylePanel();
     this.createStyleItems(rules, styleSections);
+  },
+
+  /**
+   * Update the contents of the DOM panel with name/value pairs for the
+   * currently-inspected node.
+   */
+  updateDOMPanel: function IUI_updateDOMPanel(aNode)
+  {
+    if (this.inspecting || !this.isDOMPanelOpen) {
+      return;
+    }
+
+    this.domTreeView.data = aNode;
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -908,11 +949,11 @@ var InspectorUI = {
       return false;
     }
 
-    let treeView = this.treeView;
-    let node = treeView.selectedNode;
+    let node = this.treeView.selectedNode;
     this.highlighter.highlightNode(node);
     this.stopInspecting();
     this.updateStylePanel(node);
+    this.updateDOMPanel(node);
     return true;
   },
 
@@ -955,6 +996,7 @@ var InspectorUI = {
     this.treeView.selectedNode = aNode;
     this.selectEventsSuppressed = false;
     this.updateStylePanel(aNode);
+    this.updateDOMPanel(aNode);
   },
 
   /**
@@ -1000,7 +1042,33 @@ var InspectorUI = {
   },
 }
 
+/////////////////////////////////////////////////////////////////////////
+//// Initializors
+
 XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
   return document.getElementById("Tools:Inspect");
+});
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
+  return Services.strings.createBundle("chrome://browser/locale/inspector.properties");
+});
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "PropertyTreeView", function () {
+  var obj = {};
+  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  return obj.PropertyTreeView;
+});
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "PropertyPanel", function () {
+  var obj = {};
+  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  return obj.PropertyPanel;
+});
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "style", function () {
+  var obj = {};
+  Cu.import("resource:///modules/stylePanel.jsm", obj);
+  obj.style.initialize();
+  return obj.style;
 });
 
