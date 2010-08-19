@@ -6691,10 +6691,18 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
           if (outOfFlowFrame->GetParent() == this) {
             nsFrameList* list = GetPushedFloats();
             if (!list || !list->RemoveFrameIfPresent(outOfFlowFrame)) {
-              mFloats.RemoveFrame(outOfFlowFrame);
+              if (aFromOverflow) {
+                nsAutoOOFFrameList oofs(this);
+                oofs.mList.RemoveFrame(outOfFlowFrame);
+              } else {
+                mFloats.RemoveFrame(outOfFlowFrame);
+              }
             }
             aList.AppendFrame(nsnull, outOfFlowFrame);
           }
+          // FIXME: By not pulling floats whose parent is one of our
+          // later siblings, are we risking the pushed floats getting
+          // out-of-order?
         } else {
           // Make sure that its parent is us. Otherwise we don't want
           // to mess around with it because it belongs to someone
