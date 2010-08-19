@@ -345,7 +345,7 @@ JS_REQUIRES_STACK void
 StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSStackFrame *fp,
                                            JSFrameRegs &regs)
 {
-    JS_ASSERT(!fp->script && FUN_SLOW_NATIVE(fp->fun));
+    JS_ASSERT(!fp->hasScript() && FUN_SLOW_NATIVE(fp->getFunction()));
     fp->down = cx->fp;
     seg->setPreviousInMemory(currentSegment);
     currentSegment = seg;
@@ -359,7 +359,7 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(currentSegment->getInitialFrame() == cx->fp);
-    JS_ASSERT(!cx->fp->script && FUN_SLOW_NATIVE(cx->fp->fun));
+    JS_ASSERT(!cx->fp->hasScript() && FUN_SLOW_NATIVE(cx->fp->getFunction()));
     cx->popSegmentAndFrame();
     currentSegment = currentSegment->getPreviousInMemory();
 }
@@ -1312,7 +1312,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
      */
     for (JSStackFrame *fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
         if (fp->pc(cx)) {
-            report->filename = fp->script->filename;
+            report->filename = fp->getScript()->filename;
             report->lineno = js_FramePCToLineNumber(cx, fp);
             break;
         }
@@ -1406,7 +1406,7 @@ checkReportFlags(JSContext *cx, uintN *flags)
          * the nearest scripted frame is strict, see bug 536306.
          */
         JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
-        if (fp && fp->script->strictModeCode)
+        if (fp && fp->getScript()->strictModeCode)
             *flags &= ~JSREPORT_WARNING;
         else if (JS_HAS_STRICT_OPTION(cx))
             *flags |= JSREPORT_WARNING;
@@ -1870,7 +1870,7 @@ js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         fp = js_GetTopStackFrame(cx);
     while (fp) {
-        if (fp->script)
+        if (fp->hasScript())
             return fp;
         fp = fp->down;
     }
@@ -1893,7 +1893,7 @@ js_GetCurrentBytecodePC(JSContext* cx)
         pc = cx->regs ? cx->regs->pc : NULL;
         if (!pc)
             return NULL;
-        imacpc = cx->fp->imacpc;
+        imacpc = cx->fp->maybeIMacroPC();
     }
 
     /*
@@ -1909,7 +1909,9 @@ js_CurrentPCIsInImacro(JSContext *cx)
 {
 #ifdef JS_TRACER
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    return (JS_ON_TRACE(cx) ? cx->bailExit->imacpc : cx->fp->imacpc) != NULL;
+    if (JS_ON_TRACE(cx))
+        return cx->bailExit->imacpc != NULL;
+    return cx->fp->hasIMacroPC();
 #else
     return false;
 #endif
@@ -1925,6 +1927,8 @@ DSTOffsetCache::purge()
      */
     offsetMilliseconds = 0;
     rangeStartSeconds = rangeEndSeconds = INT64_MIN;
+    oldOffsetMilliseconds = 0;
+    oldRangeStartSeconds = oldRangeEndSeconds = INT64_MIN;
 
 #ifdef JS_METER_DST_OFFSET_CACHING
     totalCalculations = 0;

@@ -343,15 +343,15 @@ js_PopInterpFrame(JSContext* cx, TracerState* state)
      * some things we just don't want to handle. In those cases, the trace will
      * MISMATCH_EXIT.
      */
-    if (fp->hookData)
+    if (fp->hasHookData())
         return JS_FALSE;
-    if (cx->version != fp->callerVersion)
+    if (cx->version != fp->getCallerVersion())
         return JS_FALSE;
     if (fp->flags & JSFRAME_CONSTRUCTING)
         return JS_FALSE;
-    if (fp->imacpc)
+    if (fp->hasIMacroPC())
         return JS_FALSE;
-    if (fp->blockChain)
+    if (fp->hasBlockChain())
         return JS_FALSE;
 
     fp->putActivationObjects(cx);
