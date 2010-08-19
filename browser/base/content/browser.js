@@ -1450,12 +1450,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler.init();
 
-  // Attach a listener to watch for "command" events bubbling up from error
-  // pages.  This lets us fix bugs like 401575 which require error page UI to
-  // do privileged things, without letting error pages have any privilege
-  // themselves.
-  gBrowser.addEventListener("command", BrowserOnCommand, false);
-
   ctrlTab.readPref();
   gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
   gPrefService.addObserver(allTabs.prefName, allTabs, false);
@@ -2491,9 +2485,9 @@ function BrowserImport()
 /**
  * Handle command events bubbling up from error page content
  */
-function BrowserOnCommand(event) {
+function BrowserOnClick(event) {
     // Don't trust synthetic events
-    if (!event.isTrusted)
+    if (!event.isTrusted || event.target.localName != "button")
       return;
 
     var ot = event.originalTarget;
@@ -4080,6 +4074,7 @@ var XULBrowserWindow = {
   onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
     const nsIWebProgressListener = Ci.nsIWebProgressListener;
     const nsIChannel = Ci.nsIChannel;
+
     if (aStateFlags & nsIWebProgressListener.STATE_START &&
         aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
 
@@ -4526,16 +4521,32 @@ var CombinedStopReload = {
 };
 
 var TabsProgressListener = {
-#ifdef MOZ_CRASHREPORTER
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+#ifdef MOZ_CRASHREPORTER
     if (aRequest instanceof Ci.nsIChannel &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT &&
         gCrashReporter.enabled) {
       gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
     }
-  },
 #endif
+
+    // Attach a listener to watch for "click" events bubbling up from error
+    // pages and other similar page. This lets us fix bugs like 401575 which
+    // require error page UI to do privileged things, without letting error
+    // pages have any privilege themselves.
+    // We can't look for this during onLocationChange since at that point the
+    // document URI is not yet the about:-uri of the error page.
+
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        /^about:/.test(aBrowser.contentWindow.document.documentURI)) {
+      aBrowser.addEventListener("click", BrowserOnClick, false);
+      aBrowser.addEventListener("pagehide", function () {
+        aBrowser.removeEventListener("click", BrowserOnClick, false);
+        aBrowser.removeEventListener("pagehide", arguments.callee, true);
+      }, true);
+    }
+  },
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
     // Filter out any sub-frame loads
