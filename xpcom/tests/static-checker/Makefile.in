@@ -61,6 +61,7 @@ STACK_FAILURE_TESTCASES = \
   StackConditional.cpp \
   StackAggrInit.cpp \
   StackCondBad.cpp \
+  StackFalsePositive.cpp \
   $(NULL)
 
 STACK_PASS_TESTCASES = \
