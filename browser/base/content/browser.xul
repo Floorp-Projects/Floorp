@@ -128,13 +128,11 @@
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
-        <menupopup id="context_tabViewMenuPopup" 
+        <menupopup id="context_tabViewMenuPopup"
                    onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
-          <menuitem label="&moveToNewGroup.label;" 
-                    accesskey="&moveToNewGroup.accesskey;" 
+          <menuseparator id="context_tabViewNamedGroups" hidden="true"/>
+          <menuitem label="&moveToNewGroup.label;"
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
-          <menuitem id="context_namedGroups" label="&namedGroups.label;" 
-                    disabled="true"/>
         </menupopup>
       </menu>
       <menuseparator/>
