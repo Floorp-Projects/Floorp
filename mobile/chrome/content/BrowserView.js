@@ -479,10 +479,10 @@ BrowserView.prototype = {
   },
 
   _viewportChanged: function() {
-    getBrowser().style.MozTransformOrigin = "left top";
+/*    getBrowser().style.MozTransformOrigin = "left top";
     getBrowser().style.MozTransform = "scale(" + this.getZoomLevel() + ")";
     getBrowser().style.width = (800 / this.getZoomLevel()) + "px";
-    getBrowser().style.height = (800 / this.getZoomLevel()) + "px";
+    getBrowser().style.height = (800 / this.getZoomLevel()) + "px"; */
   },
 };
 
