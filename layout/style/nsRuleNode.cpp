@@ -1405,18 +1405,6 @@ ExamineCSSValue(const nsCSSValue& aValue,
   }
 }
 
-static void
-ExamineCSSRect(const nsCSSRect* aRect,
-               PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
-{
-  NS_PRECONDITION(aRect, "Must have a rect");
-
-  NS_FOR_CSS_SIDES(side) {
-    ExamineCSSValue(aRect->*(nsCSSRect::sides[side]),
-                    aSpecifiedCount, aInheritedCount);
-  }
-}
-
 static nsRuleNode::RuleDetail
 CheckFontCallback(const nsRuleDataStruct& aData,
                   nsRuleNode::RuleDetail aResult)
@@ -1753,12 +1741,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
         ++total;
         ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
                         specified, inherited);
-        break;
-
-      case eCSSType_Rect:
-        total += 4;
-        ExamineCSSRect(RectAtOffset(aRuleDataStruct, prop->offset),
-                       specified, inherited);
         break;
 
       case eCSSType_ValueList:
@@ -2149,9 +2131,6 @@ UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
     switch (prop->type) {
       case eCSSType_Value:
         ValueAtOffset(aRuleDataStruct, prop->offset).Reset();
-        break;
-      case eCSSType_Rect:
-        RectAtOffset(aRuleDataStruct, prop->offset)->Reset();
         break;
       case eCSSType_ValueList:
         ValueListAtOffset(aRuleDataStruct, prop->offset) = nsnull;
@@ -4312,62 +4291,74 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               NS_STYLE_RESIZE_NONE, 0, 0, 0, 0);
 
   // clip property: length, auto, inherit
-  if (eCSSUnit_Inherit == displayData.mClip.mTop.GetUnit()) { // if one is inherit, they all are
+  switch (displayData.mClip.GetUnit()) {
+  case eCSSUnit_Inherit:
     canStoreInRuleTree = PR_FALSE;
     display->mClipFlags = parentDisplay->mClipFlags;
     display->mClip = parentDisplay->mClip;
-  }
-  // if one is initial or auto (rect), they all are
-  else if (eCSSUnit_Initial == displayData.mClip.mTop.GetUnit() ||
-           eCSSUnit_RectIsAuto == displayData.mClip.mTop.GetUnit()) {
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Auto:
     display->mClipFlags = NS_STYLE_CLIP_AUTO;
     display->mClip.SetRect(0,0,0,0);
-  }
-  else if (eCSSUnit_Null != displayData.mClip.mTop.GetUnit()) {
-    display->mClipFlags = 0; // clear it
+    break;
 
-    if (eCSSUnit_Auto == displayData.mClip.mTop.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Rect: {
+    const nsCSSRect& clipRect = displayData.mClip.GetRectValue();
+
+    display->mClipFlags = NS_STYLE_CLIP_RECT;
+
+    if (clipRect.mTop.GetUnit() == eCSSUnit_Auto) {
       display->mClip.y = 0;
       display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
     }
-    else if (displayData.mClip.mTop.IsLengthUnit()) {
-      display->mClip.y = CalcLength(displayData.mClip.mTop, aContext,
+    else if (clipRect.mTop.IsLengthUnit()) {
+      display->mClip.y = CalcLength(clipRect.mTop, aContext,
                                     mPresContext, canStoreInRuleTree);
     }
-    if (eCSSUnit_Auto == displayData.mClip.mBottom.GetUnit()) {
+
+    if (clipRect.mBottom.GetUnit() == eCSSUnit_Auto) {
       // Setting to NS_MAXSIZE for the 'auto' case ensures that
       // the clip rect is nonempty. It is important that mClip be
       // nonempty if the actual clip rect could be nonempty.
       display->mClip.height = NS_MAXSIZE;
       display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
     }
-    else if (displayData.mClip.mBottom.IsLengthUnit()) {
-      display->mClip.height = CalcLength(displayData.mClip.mBottom, aContext,
+    else if (clipRect.mBottom.IsLengthUnit()) {
+      display->mClip.height = CalcLength(clipRect.mBottom, aContext,
                                          mPresContext, canStoreInRuleTree) -
                               display->mClip.y;
     }
-    if (eCSSUnit_Auto == displayData.mClip.mLeft.GetUnit()) {
+
+    if (clipRect.mLeft.GetUnit() == eCSSUnit_Auto) {
       display->mClip.x = 0;
       display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
     }
-    else if (displayData.mClip.mLeft.IsLengthUnit()) {
-      display->mClip.x = CalcLength(displayData.mClip.mLeft, aContext,
+    else if (clipRect.mLeft.IsLengthUnit()) {
+      display->mClip.x = CalcLength(clipRect.mLeft, aContext,
                                     mPresContext, canStoreInRuleTree);
     }
-    if (eCSSUnit_Auto == displayData.mClip.mRight.GetUnit()) {
+
+    if (clipRect.mRight.GetUnit() == eCSSUnit_Auto) {
       // Setting to NS_MAXSIZE for the 'auto' case ensures that
       // the clip rect is nonempty. It is important that mClip be
       // nonempty if the actual clip rect could be nonempty.
       display->mClip.width = NS_MAXSIZE;
       display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
     }
-    else if (displayData.mClip.mRight.IsLengthUnit()) {
-      display->mClip.width = CalcLength(displayData.mClip.mRight, aContext,
+    else if (clipRect.mRight.IsLengthUnit()) {
+      display->mClip.width = CalcLength(clipRect.mRight, aContext,
                                         mPresContext, canStoreInRuleTree) -
                              display->mClip.x;
     }
-    display->mClipFlags &= ~NS_STYLE_CLIP_TYPE_MASK;
-    display->mClipFlags |= NS_STYLE_CLIP_RECT;
+  } break;
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unrecognized clip unit");
   }
 
   if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
@@ -5454,45 +5445,52 @@ nsRuleNode::ComputeListData(void* aStartStruct,
               NS_STYLE_LIST_STYLE_POSITION_OUTSIDE, 0, 0, 0, 0);
 
   // image region property: length, auto, inherit
-  if (eCSSUnit_Inherit == listData.mImageRegion.mTop.GetUnit()) { // if one is inherit, they all are
+  switch (listData.mImageRegion.GetUnit()) {
+  case eCSSUnit_Inherit:
     canStoreInRuleTree = PR_FALSE;
     list->mImageRegion = parentList->mImageRegion;
-  }
-  // if one is -moz-initial or auto (rect), they all are
-  else if (eCSSUnit_Initial == listData.mImageRegion.mTop.GetUnit() ||
-           eCSSUnit_RectIsAuto == listData.mImageRegion.mTop.GetUnit()) {
-    list->mImageRegion.Empty();
-  }
-  else if (eCSSUnit_Null != listData.mImageRegion.mTop.GetUnit()) {
-    if (eCSSUnit_Auto == listData.mImageRegion.mTop.GetUnit())
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Auto:
+    list->mImageRegion.SetRect(0,0,0,0);
+    break;
+
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Rect: {
+    const nsCSSRect& rgnRect = listData.mImageRegion.GetRectValue();
+
+    if (rgnRect.mTop.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.y = 0;
-    else if (listData.mImageRegion.mTop.IsLengthUnit())
+    else if (rgnRect.mTop.IsLengthUnit())
       list->mImageRegion.y =
-        CalcLength(listData.mImageRegion.mTop, aContext, mPresContext,
-                   canStoreInRuleTree);
+        CalcLength(rgnRect.mTop, aContext, mPresContext, canStoreInRuleTree);
 
-    if (eCSSUnit_Auto == listData.mImageRegion.mBottom.GetUnit())
+    if (rgnRect.mBottom.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.height = 0;
-    else if (listData.mImageRegion.mBottom.IsLengthUnit())
+    else if (rgnRect.mBottom.IsLengthUnit())
       list->mImageRegion.height =
-        CalcLength(listData.mImageRegion.mBottom, aContext, mPresContext,
-                   canStoreInRuleTree) -
-        list->mImageRegion.y;
+        CalcLength(rgnRect.mBottom, aContext, mPresContext,
+                   canStoreInRuleTree) - list->mImageRegion.y;
 
-    if (eCSSUnit_Auto == listData.mImageRegion.mLeft.GetUnit())
+    if (rgnRect.mLeft.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.x = 0;
-    else if (listData.mImageRegion.mLeft.IsLengthUnit())
+    else if (rgnRect.mLeft.IsLengthUnit())
       list->mImageRegion.x =
-        CalcLength(listData.mImageRegion.mLeft, aContext, mPresContext,
-                   canStoreInRuleTree);
+        CalcLength(rgnRect.mLeft, aContext, mPresContext, canStoreInRuleTree);
 
-    if (eCSSUnit_Auto == listData.mImageRegion.mRight.GetUnit())
+    if (rgnRect.mRight.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.width = 0;
-    else if (listData.mImageRegion.mRight.IsLengthUnit())
+    else if (rgnRect.mRight.IsLengthUnit())
       list->mImageRegion.width =
-        CalcLength(listData.mImageRegion.mRight, aContext, mPresContext,
-                   canStoreInRuleTree) -
-        list->mImageRegion.x;
+        CalcLength(rgnRect.mRight, aContext, mPresContext,
+                   canStoreInRuleTree) - list->mImageRegion.x;
+  } break;
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unrecognized image-region unit");
   }
 
   COMPUTE_END_INHERITED(List, list)

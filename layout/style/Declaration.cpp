@@ -138,10 +138,6 @@ PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
       static_cast<const nsCSSValue*>(storage)->
         AppendToString(aProperty, aResult);
       break;
-    case eCSSType_Rect:
-      static_cast<const nsCSSRect*>(storage)->
-        AppendToString(aProperty, aResult);
-      break;
     case eCSSType_ValueList:
       (*static_cast<nsCSSValueList*const*>(storage))->
         AppendToString(aProperty, aResult);
@@ -211,10 +207,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       case eCSSType_Value: {
         const nsCSSValue *val = static_cast<const nsCSSValue*>(storage);
         unit = val->GetUnit();
-      } break;
-      case eCSSType_Rect: {
-        const nsCSSRect *rect = static_cast<const nsCSSRect*>(storage);
-        unit = rect->mTop.GetUnit();
       } break;
       case eCSSType_ValueList: {
         const nsCSSValueList* item =

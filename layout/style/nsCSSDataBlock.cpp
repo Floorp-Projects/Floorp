@@ -52,30 +52,23 @@ namespace css = mozilla::css;
 
 /*
  * nsCSSCompressedDataBlock holds property-value pairs corresponding
- * to CSS declaration blocks.  The value is stored in one of the four
- * CSS data types: nsCSSValue, nsCSSRect, nsCSSValueList, and
- * nsCSSValuePairList, which each correspond to a value of the
- * nsCSSType enumeration.
+ * to CSS declaration blocks.  The value is stored in one of the three
+ * CSS data types: nsCSSValue, nsCSSValueList, and nsCSSValuePairList,
+ * which each correspond to a value of the nsCSSType enumeration.
  *
  * The storage strategy uses the CDB*Storage structs below to help
  * ensure that all the types remain properly aligned.  nsCSSValue's
  * alignment requirements cannot be weaker than any others, since it
  * contains a pointer and an enumeration.
  *
- * The simple types, nsCSSValue and nsCSSRect have the nsCSSValue or
- * nsCSSRect objects stored in the block.  The list types have only a
- * pointer to the first element in the list stored in the block.
+ * nsCSSValue objects are stored directly in the block; list types
+ * have only a pointer to the first element in the list stored in the
+ * block.
  */
 
 struct CDBValueStorage {
     nsCSSProperty property;
     nsCSSValue value;
-};
-
-struct CDBRectStorage {
-    nsCSSProperty property;
-    nsCSSRect value;
-
 };
 
 struct CDBPointerStorage {
@@ -85,7 +78,6 @@ struct CDBPointerStorage {
 
 enum {
     CDBValueStorage_advance = sizeof(CDBValueStorage),
-    CDBRectStorage_advance = sizeof(CDBRectStorage),
     // round up using the closest estimate we can get of the alignment
     // requirements of nsCSSValue:
     CDBPointerStorage_advance = PR_ROUNDUP(sizeof(CDBPointerStorage),
@@ -114,14 +106,6 @@ inline nsCSSValue* ValueAtCursor(char *aCursor) {
 
 inline const nsCSSValue* ValueAtCursor(const char *aCursor) {
     return & reinterpret_cast<const CDBValueStorage*>(aCursor)->value;
-}
-
-inline nsCSSRect* RectAtCursor(char *aCursor) {
-    return & reinterpret_cast<CDBRectStorage*>(aCursor)->value;
-}
-
-inline const nsCSSRect* RectAtCursor(const char *aCursor) {
-    return & reinterpret_cast<const CDBRectStorage*>(aCursor)->value;
 }
 
 inline void*& PointerAtCursor(char *aCursor) {
@@ -263,24 +247,6 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     cursor += CDBValueStorage_advance;
                 } break;
 
-                case eCSSType_Rect: {
-                    NS_ABORT_IF_FALSE(!nsCSSProps::PropHasFlags(iProp,
-                        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED),
-                        "this case needs to handle color properties");
-                    const nsCSSRect* val = RectAtCursor(cursor);
-                    NS_ASSERTION(val->HasValue(), "oops");
-                    nsCSSRect* target = static_cast<nsCSSRect*>(prop);
-                    if (target->mTop.GetUnit() == eCSSUnit_Null)
-                        target->mTop = val->mTop;
-                    if (target->mRight.GetUnit() == eCSSUnit_Null)
-                        target->mRight = val->mRight;
-                    if (target->mBottom.GetUnit() == eCSSUnit_Null)
-                        target->mBottom = val->mBottom;
-                    if (target->mLeft.GetUnit() == eCSSUnit_Null)
-                        target->mLeft = val->mLeft;
-                    cursor += CDBRectStorage_advance;
-                } break;
-
                 case eCSSType_ValueList:
                 case eCSSType_ValuePairList: {
                     void** target = static_cast<void**>(prop);
@@ -310,10 +276,6 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
                     cursor += CDBValueStorage_advance;
-                } break;
-
-                case eCSSType_Rect: {
-                    cursor += CDBRectStorage_advance;
                 } break;
 
                 case eCSSType_ValueList:
@@ -351,9 +313,6 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
                 case eCSSType_Value: {
                     return ValueAtCursor(cursor);
                 }
-                case eCSSType_Rect: {
-                    return RectAtCursor(cursor);
-                }
                 case eCSSType_ValueList:
                 case eCSSType_ValuePairList: {
                     return &PointerAtCursor(const_cast<char*>(cursor));
@@ -363,10 +322,6 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
         switch (nsCSSProps::kTypeTable[iProp]) {
             case eCSSType_Value: {
                 cursor += CDBValueStorage_advance;
-            } break;
-
-            case eCSSType_Rect: {
-                cursor += CDBRectStorage_advance;
             } break;
 
             case eCSSType_ValueList:
@@ -406,15 +361,6 @@ nsCSSCompressedDataBlock::Clone() const
                 new (result_val) nsCSSValue(*val);
                 cursor += CDBValueStorage_advance;
                 result_cursor +=  CDBValueStorage_advance;
-            } break;
-
-            case eCSSType_Rect: {
-                const nsCSSRect* val = RectAtCursor(cursor);
-                NS_ASSERTION(val->HasValue(), "oops");
-                nsCSSRect* result_val = RectAtCursor(result_cursor);
-                new (result_val) nsCSSRect(*val);
-                cursor += CDBRectStorage_advance;
-                result_cursor += CDBRectStorage_advance;
             } break;
 
             case eCSSType_ValueList:
@@ -470,13 +416,6 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
                 cursor += CDBValueStorage_advance;
             } break;
 
-            case eCSSType_Rect: {
-                const nsCSSRect* val = RectAtCursor(cursor);
-                NS_ASSERTION(val->HasValue(), "oops");
-                val->~nsCSSRect();
-                cursor += CDBRectStorage_advance;
-            } break;
-
             case eCSSType_ValueList: {
                 nsCSSValueList* val = ValueListAtCursor(cursor);
                 NS_ASSERTION(val, "oops");
@@ -517,16 +456,6 @@ nsCSSCompressedDataBlock::MoveValue(void *aSource, void *aDest,
       dest->~nsCSSValue();
       memcpy(dest, source, sizeof(nsCSSValue));
       new (source) nsCSSValue();
-    } break;
-
-    case eCSSType_Rect: {
-      nsCSSRect *source = static_cast<nsCSSRect*>(aSource);
-      nsCSSRect *dest = static_cast<nsCSSRect*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSRect();
-      memcpy(dest, source, sizeof(nsCSSRect));
-      new (source) nsCSSRect();
     } break;
 
     case eCSSType_ValueList: {
@@ -609,19 +538,6 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
                 cursor += CDBValueStorage_advance;
             } break;
 
-            case eCSSType_Rect: {
-                const nsCSSRect* val = RectAtCursor(cursor);
-                nsCSSRect* dest = static_cast<nsCSSRect*>(prop);
-                NS_ASSERTION(val->HasValue(), "oops");
-                NS_ASSERTION(!dest->HasValue(),
-                             "expanding into non-empty block");
-#ifdef NS_BUILD_REFCNT_LOGGING
-                dest->~nsCSSRect();
-#endif
-                memcpy(dest, val, sizeof(nsCSSRect));
-                cursor += CDBRectStorage_advance;
-            } break;
-
             case eCSSType_ValueList:
             case eCSSType_ValuePairList: {
                 void* val = PointerAtCursor(cursor);
@@ -678,15 +594,6 @@ nsCSSExpandedDataBlock::ComputeSize()
                                  "null value while computing size");
 #endif
                     increment = CDBValueStorage_advance;
-                } break;
-
-                case eCSSType_Rect: {
-#ifdef DEBUG
-                    nsCSSRect* val = static_cast<nsCSSRect*>(prop);
-                    NS_ASSERTION(val->HasValue(),
-                                 "Valueless rect while computing size");
-#endif
-                    increment = CDBRectStorage_advance;
                 } break;
 
                 case eCSSType_ValueList:
@@ -769,18 +676,6 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                     cursor += CDBValueStorage_advance;
                 } break;
 
-                case eCSSType_Rect: {
-                    nsCSSRect* val = static_cast<nsCSSRect*>(prop);
-                    NS_ASSERTION(val->HasValue(),
-                                 "Valueless rect while compressing");
-                    CDBRectStorage *storage =
-                        reinterpret_cast<CDBRectStorage*>(cursor);
-                    storage->property = iProp;
-                    memcpy(&storage->value, val, sizeof(nsCSSRect));
-                    new (val) nsCSSRect();
-                    cursor += CDBRectStorage_advance;
-                } break;
-
                 case eCSSType_ValueList:
                 case eCSSType_ValuePairList: {
                     void*& val = *static_cast<void**>(prop);
@@ -856,11 +751,6 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
     switch (nsCSSProps::kTypeTable[aPropID]) {
         case eCSSType_Value: {
             nsCSSValue* val = static_cast<nsCSSValue*>(prop);
-            val->Reset();
-        } break;
-
-        case eCSSType_Rect: {
-            nsCSSRect* val = static_cast<nsCSSRect*>(prop);
             val->Reset();
         } break;
 
@@ -963,18 +853,6 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
             case eCSSType_Value: {
                 nsCSSValue* val = static_cast<nsCSSValue*>(prop);
                 NS_ASSERTION(val->GetUnit() == eCSSUnit_Null,
-                             "not initial state");
-            } break;
-
-            case eCSSType_Rect: {
-                nsCSSRect* val = static_cast<nsCSSRect*>(prop);
-                NS_ASSERTION(val->mTop.GetUnit() == eCSSUnit_Null,
-                             "not initial state");
-                NS_ASSERTION(val->mRight.GetUnit() == eCSSUnit_Null,
-                             "not initial state");
-                NS_ASSERTION(val->mBottom.GetUnit() == eCSSUnit_Null,
-                             "not initial state");
-                NS_ASSERTION(val->mLeft.GetUnit() == eCSSUnit_Null,
                              "not initial state");
             } break;
 

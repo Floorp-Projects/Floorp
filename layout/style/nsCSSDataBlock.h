@@ -107,11 +107,6 @@ public:
                         "type mismatch");
       return static_cast<const nsCSSValue*>(StorageFor(aProperty));
     }
-    const nsCSSRect* RectStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Rect,
-                        "type mismatch");
-      return static_cast<const nsCSSRect*>(StorageFor(aProperty));
-    }
     const nsCSSValueList*const*
     ValueListStorageFor(nsCSSProperty aProperty) const {
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==

@@ -227,7 +227,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mPosition;
   nsCSSValue mFloat;
   nsCSSValue mClear;
-  nsCSSRect  mClip;
+  nsCSSValue mClip;
   nsCSSValue mOverflowX;
   nsCSSValue mOverflowY;
   nsCSSValue mResize;
@@ -345,7 +345,7 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSValue mType;
   nsCSSValue mImage;
   nsCSSValue mPosition;
-  nsCSSRect  mImageRegion;
+  nsCSSValue mImageRegion;
 private:
   nsCSSList(const nsCSSList& aOther); // NOT IMPLEMENTED
 };

@@ -126,7 +126,7 @@ nsCSSValue::nsCSSValue(nsCSSValueGradient* aValue)
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
-  if (mUnit <= eCSSUnit_RectIsAuto) {
+  if (mUnit <= eCSSUnit_DummyInherit) {
     // nothing to do, but put this important case first
   }
   else if (eCSSUnit_Percent <= mUnit) {
@@ -162,6 +162,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mPair = aCopy.mValue.mPair;
     mValue.mPair->AddRef();
   }
+  else if (eCSSUnit_Rect == mUnit) {
+    mValue.mRect = aCopy.mValue.mRect;
+    mValue.mRect->AddRef();
+  }
   else {
     NS_NOTREACHED("unknown unit");
   }
@@ -179,7 +183,7 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
 PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
   if (mUnit == aOther.mUnit) {
-    if (mUnit <= eCSSUnit_RectIsAuto) {
+    if (mUnit <= eCSSUnit_DummyInherit) {
       return PR_TRUE;
     }
     else if (UnitHasStringValue()) {
@@ -206,6 +210,9 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
+    }
+    else if (eCSSUnit_Rect == mUnit) {
+      return *mValue.mRect == *aOther.mValue.mRect;
     }
     else {
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -276,6 +283,8 @@ void nsCSSValue::DoReset()
     mValue.mGradient->Release();
   } else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair->Release();
+  } else if (eCSSUnit_Rect == mUnit) {
+    mValue.mRect->Release();
   }
   mUnit = eCSSUnit_Null;
 }
@@ -397,6 +406,15 @@ void nsCSSValue::SetPairValue(const nsCSSValue& xValue,
   mUnit = eCSSUnit_Pair;
   mValue.mPair = new nsCSSValuePair_heap(xValue, yValue);
   mValue.mPair->AddRef();
+}
+
+nsCSSRect& nsCSSValue::SetRectValue()
+{
+  Reset();
+  mUnit = eCSSUnit_Rect;
+  mValue.mRect = new nsCSSRect_heap;
+  mValue.mRect->AddRef();
+  return *mValue.mRect;
 }
 
 void nsCSSValue::SetAutoValue()
@@ -872,6 +890,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.AppendLiteral(")");
   } else if (eCSSUnit_Pair == unit) {
     GetPairValue().AppendToString(aProperty, aResult);
+  } else if (eCSSUnit_Rect == unit) {
+    GetRectValue().AppendToString(aProperty, aResult);
   }
 
   switch (unit) {
@@ -885,7 +905,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_All:          aResult.AppendLiteral("all"); break;
     case eCSSUnit_Dummy:
     case eCSSUnit_DummyInherit:
-    case eCSSUnit_RectIsAuto:
       NS_NOTREACHED("should never serialize");
       break;
 
@@ -919,6 +938,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
     case eCSSUnit_Pair:         break;
+    case eCSSUnit_Rect:         break;
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
@@ -1023,30 +1043,22 @@ nsCSSRect::~nsCSSRect()
 void
 nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 {
-  const nsCSSUnit topUnit = mTop.GetUnit();
-  if (topUnit == eCSSUnit_Inherit ||
-      topUnit == eCSSUnit_Initial ||
-      topUnit == eCSSUnit_RectIsAuto) {
-    NS_ABORT_IF_FALSE(mRight.GetUnit() == topUnit &&
-                      mBottom.GetUnit() == topUnit &&
-                      mLeft.GetUnit() == topUnit,
-                      "parser should make all sides have the same unit");
-    if (topUnit == eCSSUnit_RectIsAuto)
-      aResult.AppendLiteral("auto");
-    else
-      mTop.AppendToString(aProperty, aResult);
-  } else {
-    aResult.AppendLiteral("rect(");
-    mTop.AppendToString(aProperty, aResult);
-    NS_NAMED_LITERAL_STRING(comma, ", ");
-    aResult.Append(comma);
-    mRight.AppendToString(aProperty, aResult);
-    aResult.Append(comma);
-    mBottom.AppendToString(aProperty, aResult);
-    aResult.Append(comma);
-    mLeft.AppendToString(aProperty, aResult);
-    aResult.Append(PRUnichar(')'));
-  }
+  NS_ABORT_IF_FALSE(mTop.GetUnit() != eCSSUnit_Null &&
+                    mTop.GetUnit() != eCSSUnit_Inherit &&
+                    mTop.GetUnit() != eCSSUnit_Initial,
+                    "parser should have used a bare value");
+
+  NS_NAMED_LITERAL_STRING(comma, ", ");
+
+  aResult.AppendLiteral("rect(");
+  mTop.AppendToString(aProperty, aResult);
+  aResult.Append(comma);
+  mRight.AppendToString(aProperty, aResult);
+  aResult.Append(comma);
+  mBottom.AppendToString(aProperty, aResult);
+  aResult.Append(comma);
+  mLeft.AppendToString(aProperty, aResult);
+  aResult.Append(PRUnichar(')'));
 }
 
 void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
@@ -1057,7 +1069,8 @@ void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
   mLeft = aValue;
 }
 
-PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
+PR_STATIC_ASSERT(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
+                 NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3);
 
 /* static */ const nsCSSRect::side_type nsCSSRect::sides[4] = {
   &nsCSSRect::mTop,
