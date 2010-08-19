@@ -736,7 +736,7 @@ namespace nanojit
                 // GP arg
                 if (r <= R10) {
                     asm_regarg(ty, arg, r);
-                    r = nextreg(r);
+                    r = Register(r + 1);
                     param_size += sizeof(void*);
                 } else {
                     // put arg on stack
@@ -746,11 +746,11 @@ namespace nanojit
                 // double
                 if (fr <= F13) {
                     asm_regarg(ty, arg, fr);
-                    fr = nextreg(fr);
+                    fr = Register(fr + 1);
                 #ifdef NANOJIT_64BIT
-                    r = nextreg(r);
+                    r = Register(r + 1);
                 #else
-                    r = nextreg(nextreg(r)); // skip 2 gpr's
+                    r = Register(r + 2); // skip 2 gpr's
                 #endif
                     param_size += sizeof(double);
                 } else {
@@ -1390,7 +1390,6 @@ namespace nanojit
     void Assembler::nRegisterResetAll(RegAlloc &regs) {
         regs.clear();
         regs.free = SavedRegs | 0x1ff8 /* R3-12 */ | 0x3ffe00000000LL /* F1-13 */;
-        debug_only(regs.managed = regs.free);
     }
 
 #ifdef NANOJIT_64BIT
