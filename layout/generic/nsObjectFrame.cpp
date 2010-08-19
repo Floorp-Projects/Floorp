@@ -2306,6 +2306,16 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
     NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
     rootPC->UnregisterPluginForGeometryUpdates(this);
+
+    // Make sure the plugin is hidden in case an update of plugin geometry
+    // hasn't happened since this plugin became hidden.
+    nsIWidget* parent = mWidget->GetParent();
+    if (parent) {
+      nsTArray<nsIWidget::Configuration> configurations;
+      GetEmptyClipConfiguration(&configurations);
+      parent->ConfigureChildren(configurations);
+      DidSetWidgetGeometry();
+    }
   }
 
   // Transfer the reference to the instance owner onto the stack so
