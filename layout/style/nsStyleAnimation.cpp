@@ -1820,10 +1820,8 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     case eUnit_Dasharray:
     case eUnit_Shadow:
     case eUnit_Transform:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_ValueList, "type mismatch");
-      *static_cast<nsCSSValueList**>(aSpecifiedValue) =
-        aComputedValue.GetCSSValueListValue();
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetDependentListValue(aComputedValue.GetCSSValueListValue());
       break;
     case eUnit_CSSValuePairList:
       static_cast<nsCSSValue*>(aSpecifiedValue)->
@@ -1849,14 +1847,10 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     return PR_TRUE;
   }
   nsCSSValue val;
-  nsCSSValueList* vl = nsnull;
   void *storage;
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
       storage = &val;
-      break;
-    case eCSSType_ValueList:
-      storage = &vl;
       break;
     default:
       NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");
@@ -1872,9 +1866,6 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
       val.AppendToString(aProperty, aSpecifiedValue);
-      break;
-    case eCSSType_ValueList:
-      vl->AppendToString(aProperty, aSpecifiedValue);
       break;
     default:
       NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");

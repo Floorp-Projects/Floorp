@@ -58,6 +58,7 @@
 #include "nsStyleUtil.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace css {
@@ -138,10 +139,6 @@ PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
       static_cast<const nsCSSValue*>(storage)->
         AppendToString(aProperty, aResult);
       break;
-    case eCSSType_ValueList:
-      (*static_cast<nsCSSValueList*const*>(storage))->
-        AppendToString(aProperty, aResult);
-      break;
   }
   return PR_TRUE;
 }
@@ -203,12 +200,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       case eCSSType_Value: {
         const nsCSSValue *val = static_cast<const nsCSSValue*>(storage);
         unit = val->GetUnit();
-      } break;
-      case eCSSType_ValueList: {
-        const nsCSSValueList* item =
-            *static_cast<nsCSSValueList*const*>(storage);
-        NS_ABORT_IF_FALSE(item, "null not allowed in compressed block");
-        unit = item->mValue.GetUnit();
       } break;
     }
     if (unit == eCSSUnit_Inherit) {
@@ -419,18 +410,23 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       // background-origin that are different and not the default
       // values.  (We omit them if they're both default.)
       const nsCSSValueList *image =
-        * data->ValueListStorageFor(eCSSProperty_background_image);
+        data->ValueStorageFor(eCSSProperty_background_image)->
+        GetListValue();
       const nsCSSValueList *repeat =
-        * data->ValueListStorageFor(eCSSProperty_background_repeat);
+        data->ValueStorageFor(eCSSProperty_background_repeat)->
+        GetListValue();
       const nsCSSValueList *attachment =
-        * data->ValueListStorageFor(eCSSProperty_background_attachment);
+        data->ValueStorageFor(eCSSProperty_background_attachment)->
+        GetListValue();
       const nsCSSValuePairList *position =
         data->ValueStorageFor(eCSSProperty_background_position)->
         GetPairListValue();
       const nsCSSValueList *clip =
-        * data->ValueListStorageFor(eCSSProperty_background_clip);
+        data->ValueStorageFor(eCSSProperty_background_clip)->
+        GetListValue();
       const nsCSSValueList *origin =
-        * data->ValueListStorageFor(eCSSProperty_background_origin);
+        data->ValueStorageFor(eCSSProperty_background_origin)->
+        GetListValue();
       const nsCSSValuePairList *size =
         data->ValueStorageFor(eCSSProperty_background_size)->
         GetPairListValue();
@@ -621,45 +617,80 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       break;
     }
     case eCSSProperty_transition: {
-#define NUM_TRANSITION_SUBPROPS 4
-      const nsCSSProperty* subprops =
-        nsCSSProps::SubpropertyEntryFor(aProperty);
-#ifdef DEBUG
-      for (int i = 0; i < NUM_TRANSITION_SUBPROPS; ++i) {
-        NS_ASSERTION(nsCSSProps::kTypeTable[subprops[i]] == eCSSType_ValueList,
-                     "type mismatch");
-      }
-      NS_ASSERTION(subprops[NUM_TRANSITION_SUBPROPS] == eCSSProperty_UNKNOWN,
-                   "length mismatch");
-#endif
-      const nsCSSValueList* val[NUM_TRANSITION_SUBPROPS];
-      for (int i = 0; i < NUM_TRANSITION_SUBPROPS; ++i) {
-        val[i] = *data->ValueListStorageFor(subprops[i]);
-      }
-      // Merge the lists of the subproperties into a single list.
-      for (;;) {
-        for (int i = 0; i < NUM_TRANSITION_SUBPROPS; ++i) {
-          val[i]->mValue.AppendToString(subprops[i], aValue);
+      const nsCSSValue &transProp =
+        *data->ValueStorageFor(eCSSProperty_transition_property);
+      const nsCSSValue &transDuration =
+        *data->ValueStorageFor(eCSSProperty_transition_duration);
+      const nsCSSValue &transTiming =
+        *data->ValueStorageFor(eCSSProperty_transition_timing_function);
+      const nsCSSValue &transDelay =
+        *data->ValueStorageFor(eCSSProperty_transition_delay);
+
+      NS_ABORT_IF_FALSE(transDuration.GetUnit() == eCSSUnit_List ||
+                        transDuration.GetUnit() == eCSSUnit_ListDep,
+                        nsPrintfCString(32, "bad t-duration unit %d",
+                                        transDuration.GetUnit()).get());
+      NS_ABORT_IF_FALSE(transTiming.GetUnit() == eCSSUnit_List ||
+                        transTiming.GetUnit() == eCSSUnit_ListDep,
+                        nsPrintfCString(32, "bad t-timing unit %d",
+                                        transTiming.GetUnit()).get());
+      NS_ABORT_IF_FALSE(transDelay.GetUnit() == eCSSUnit_List ||
+                        transDelay.GetUnit() == eCSSUnit_ListDep,
+                        nsPrintfCString(32, "bad t-delay unit %d",
+                                        transDelay.GetUnit()).get());
+
+      const nsCSSValueList* dur = transDuration.GetListValue();
+      const nsCSSValueList* tim = transTiming.GetListValue();
+      const nsCSSValueList* del = transDelay.GetListValue();
+
+      if (transProp.GetUnit() == eCSSUnit_None ||
+          transProp.GetUnit() == eCSSUnit_All) {
+        // If any of the other three lists has more than one element,
+        // we can't use the shorthand.
+        if (!dur->mNext && !tim->mNext && !del->mNext) {
+          transProp.AppendToString(eCSSProperty_transition_property, aValue);
           aValue.Append(PRUnichar(' '));
-          val[i] = val[i]->mNext;
+          dur->mValue.AppendToString(eCSSProperty_transition_duration,aValue);
+          aValue.Append(PRUnichar(' '));
+          tim->mValue.AppendToString(eCSSProperty_transition_timing_function, aValue);
+          aValue.Append(PRUnichar(' '));
+          del->mValue.AppendToString(eCSSProperty_transition_delay, aValue);
+          aValue.Append(PRUnichar(' '));
+        } else {
+          aValue.Truncate();
         }
-        // Remove the last space.
-        aValue.Truncate(aValue.Length() - 1);
-
-        PR_STATIC_ASSERT(NUM_TRANSITION_SUBPROPS == 4);
-        if (!val[0] || !val[1] || !val[2] || !val[3]) {
-          break;
+      } else {
+        NS_ABORT_IF_FALSE(transProp.GetUnit() == eCSSUnit_List ||
+                          transProp.GetUnit() == eCSSUnit_ListDep,
+                          nsPrintfCString(32, "bad t-prop unit %d",
+                                          transProp.GetUnit()).get());
+        const nsCSSValueList* pro = transProp.GetListValue();
+        for (;;) {
+          pro->mValue.AppendToString(eCSSProperty_transition_property,
+                                        aValue);
+          aValue.Append(PRUnichar(' '));
+          dur->mValue.AppendToString(eCSSProperty_transition_duration,
+                                        aValue);
+          aValue.Append(PRUnichar(' '));
+          tim->mValue.AppendToString(eCSSProperty_transition_timing_function,
+                                        aValue);
+          aValue.Append(PRUnichar(' '));
+          del->mValue.AppendToString(eCSSProperty_transition_delay,
+                                        aValue);
+          pro = pro->mNext;
+          dur = dur->mNext;
+          tim = tim->mNext;
+          del = del->mNext;
+          if (!pro || !dur || !tim || !del) {
+            break;
+          }
+          aValue.AppendLiteral(", ");
         }
-        aValue.AppendLiteral(", ");
+        if (pro || dur || tim || del) {
+          // Lists not all the same length, can't use shorthand.
+          aValue.Truncate();
+        }
       }
-
-      PR_STATIC_ASSERT(NUM_TRANSITION_SUBPROPS == 4);
-      if (val[0] || val[1] || val[2] || val[3]) {
-        // The sublists are different lengths, so this can't be
-        // represented as the shorthand.
-        aValue.Truncate();
-      }
-#undef NUM_TRANSITION_SUBPROPS
       break;
     }
 

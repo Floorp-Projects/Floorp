@@ -69,8 +69,10 @@
 #define CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED (1<<4)
 
 // A property that needs to have image loads started when a URL value
-// for the property is used for an element.  Supported only for
-// eCSSType_Value and eCSSType_ValueList.
+// for the property is used for an element.  This is supported only
+// for a few possible value formats: image directly in the value; list
+// of images; and with CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0, image in slot
+// 0 of an array, or list of such arrays.
 #define CSS_PROPERTY_START_IMAGE_LOADS            (1<<5)
 
 // Should be set only for properties with START_IMAGE_LOADS.  Indicates

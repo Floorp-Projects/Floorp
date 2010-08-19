@@ -97,20 +97,6 @@ protected:
   static const corner_type corners[4];
 };
 
-struct nsCSSValueListRect {
-  nsCSSValueListRect(void);
-  nsCSSValueListRect(const nsCSSValueListRect& aCopy);
-  ~nsCSSValueListRect();
-
-  nsCSSValueList* mTop;
-  nsCSSValueList* mRight;
-  nsCSSValueList* mBottom;
-  nsCSSValueList* mLeft;
-
-  typedef nsCSSValueList* nsCSSValueListRect::*side_type;
-  static const side_type sides[4];
-};
-
 /****************************************************************************/
 
 struct nsCSSStruct {
@@ -164,27 +150,22 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
   ~nsCSSColor(void);
 
-  nsCSSValue      mColor;
-  nsCSSValue      mBackColor;
-  nsCSSValueList* mBackImage;
-  nsCSSValueList* mBackRepeat;
-  nsCSSValueList* mBackAttachment;
-  nsCSSValue      mBackPosition;
-  nsCSSValue      mBackSize;
-  nsCSSValueList* mBackClip;
-  nsCSSValueList* mBackOrigin;
-  nsCSSValue      mBackInlinePolicy;
+  nsCSSValue mColor;
+  nsCSSValue mBackColor;
+  nsCSSValue mBackImage;
+  nsCSSValue mBackRepeat;
+  nsCSSValue mBackAttachment;
+  nsCSSValue mBackPosition;
+  nsCSSValue mBackSize;
+  nsCSSValue mBackClip;
+  nsCSSValue mBackOrigin;
+  nsCSSValue mBackInlinePolicy;
 private:
   nsCSSColor(const nsCSSColor& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataColor : public nsCSSColor {
   nsRuleDataColor() {}
-
-  // A little bit of a hack here:  now that background-image is
-  // represented by a value list, attribute mapping code needs a place
-  // to store one item in a value list in order to map a simple value.
-  nsCSSValueList mTempBackImage;
 private:
   nsRuleDataColor(const nsRuleDataColor& aOther); // NOT IMPLEMENTED
 };
@@ -201,7 +182,7 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mTextAlign;
   nsCSSValue mTextIndent;
   nsCSSValue mDecoration;
-  nsCSSValueList* mTextShadow; // NEW
+  nsCSSValue mTextShadow; // NEW
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
@@ -234,12 +215,12 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mPointerEvents;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
-  nsCSSValueList *mTransform; // List of Arrays containing transform information
+  nsCSSValue mTransform; // List of Arrays containing transform information
   nsCSSValue mTransformOrigin;
-  nsCSSValueList* mTransitionProperty;
-  nsCSSValueList* mTransitionDuration;
-  nsCSSValueList* mTransitionTimingFunction;
-  nsCSSValueList* mTransitionDelay;
+  nsCSSValue mTransitionProperty;
+  nsCSSValue mTransitionDuration;
+  nsCSSValue mTransitionTimingFunction;
+  nsCSSValue mTransitionDelay;
 
   // temp fix for bug 24000 
   nsCSSValue mBreakBefore;
@@ -288,7 +269,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mBorderLeftColorRTLSource;
   nsCSSValue  mBorderRightColorLTRSource;
   nsCSSValue  mBorderRightColorRTLSource;
-  nsCSSValueListRect mBorderColors;
+  nsCSSRect   mBorderColors;
   nsCSSRect   mBorderStyle;
   nsCSSValue  mBorderStartStyle;
   nsCSSValue  mBorderEndStyle;
@@ -304,7 +285,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSCornerSizes mOutlineRadius;
   nsCSSValue  mFloatEdge; // NEW
   nsCSSValue  mBorderImage;
-  nsCSSValueList* mBoxShadow;
+  nsCSSValue  mBoxShadow;
 private:
   nsCSSMargin(const nsCSSMargin& aOther); // NOT IMPLEMENTED
 };
@@ -419,11 +400,11 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(void);
   ~nsCSSContent(void);
 
-  nsCSSValueList*     mContent;
-  nsCSSValue          mCounterIncrement;
-  nsCSSValue          mCounterReset;
-  nsCSSValue          mMarkerOffset;
-  nsCSSValue          mQuotes;
+  nsCSSValue mContent;
+  nsCSSValue mCounterIncrement;
+  nsCSSValue mCounterReset;
+  nsCSSValue mMarkerOffset;
+  nsCSSValue mQuotes;
 private:
   nsCSSContent(const nsCSSContent& aOther); // NOT IMPLEMENTED
 };
@@ -438,15 +419,15 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(void);
   ~nsCSSUserInterface(void);
 
-  nsCSSValue      mUserInput;
-  nsCSSValue      mUserModify;
-  nsCSSValue      mUserSelect;
-  nsCSSValue      mUserFocus;
-  
-  nsCSSValueList* mCursor;
-  nsCSSValue      mForceBrokenImageIcon;
-  nsCSSValue      mIMEMode;
-  nsCSSValue      mWindowShadow;
+  nsCSSValue mUserInput;
+  nsCSSValue mUserModify;
+  nsCSSValue mUserSelect;
+  nsCSSValue mUserFocus;
+
+  nsCSSValue mCursor;
+  nsCSSValue mForceBrokenImageIcon;
+  nsCSSValue mIMEMode;
+  nsCSSValue mWindowShadow;
 private:
   nsCSSUserInterface(const nsCSSUserInterface& aOther); // NOT IMPLEMENTED
 };
@@ -554,7 +535,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mStopColor;
   nsCSSValue mStopOpacity;
   nsCSSValue mStroke;
-  nsCSSValueList *mStrokeDasharray;
+  nsCSSValue mStrokeDasharray;
   nsCSSValue mStrokeDashoffset;
   nsCSSValue mStrokeLinecap;
   nsCSSValue mStrokeLinejoin;
