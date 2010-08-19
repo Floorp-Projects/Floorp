@@ -25,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=392567
 var dataUrl = "http://mochi.test:8888/tests/content/html/content/test/bug392567.jar";
 var jarUrl = "jar:" + dataUrl + "!/index.html";
 var httpUrl = location.href.replace(/\.html.*/, "_404");
+var previousDir = location.href.replace(/test\/[^\/]*$/, "");
 
 var form = document.forms.testForm;
 var frame = frames.testFrame;
@@ -39,7 +40,10 @@ var tests = [
   ["data:text/html,<html>How%20about%20this?</html>", "data:text/html,<html>How%20about%20this?$PARAMS"],
   [httpUrl, httpUrl + "?$PARAMS"],
   [httpUrl + "?httpTest1=httpTest2", httpUrl + "?$PARAMS"],
-  [httpUrl + "?httpTest3=httpTest4#httpTest5", httpUrl + "?$PARAMS#httpTest5"]
+  [httpUrl + "?httpTest3=httpTest4#httpTest5", httpUrl + "?$PARAMS#httpTest5"],
+  ["", jarUrl + "?key=value0"],
+  [" ", jarUrl + "?key=value0"],
+  ["../", previousDir + "?$PARAMS"],
 ];
 
 var currentTest = -1;
@@ -54,7 +58,9 @@ function runNextTest() {
     return;
   }
 
-  form.action = tests[currentTest][0];
+  form.setAttribute("action", tests[currentTest][0]);
+  is(form.action, tests[currentTest][0],
+     "action IDL attribute should reflect the action content attribute");
   form.key.value = "value" + currentTest;
   form.submit();
 }

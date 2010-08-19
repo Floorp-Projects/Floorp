@@ -375,29 +375,13 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
                                 kFormDefaultMethod->tag)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
-
-NS_IMETHODIMP
-nsHTMLFormElement::GetAction(nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue);
-  if (aValue.IsEmpty()) {
-    // Avoid resolving action="" to the base uri, bug 297761.
-    return NS_OK;
-  }
-  return GetURIAttr(nsGkAtoms::action, nsnull, aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::SetAction(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue, PR_TRUE);
-}
 
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
@@ -1347,7 +1331,11 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   // Grab the URL string
   //
   nsAutoString action;
-  GetAction(action);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::action, action);
+  // Avoid resolving action="" to the base uri, bug 297761.
+  if (!action.IsEmpty()) {
+    GetURIAttr(nsGkAtoms::action, nsnull, action);
+  }
 
   //
   // Form the full action URL
