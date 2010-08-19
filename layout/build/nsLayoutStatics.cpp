@@ -100,9 +100,7 @@
 #include "nsXULPrototypeCache.h"
 #include "nsXULTooltipListener.h"
 
-#ifndef MOZ_NO_INSPECTOR_APIS
 #include "inDOMView.h"
-#endif
 #endif
 
 #ifdef MOZ_MATHML
@@ -216,9 +214,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-#ifndef MOZ_NO_INSPECTOR_APIS
   inDOMView::InitAtoms();
-#endif
 
 #endif
 
