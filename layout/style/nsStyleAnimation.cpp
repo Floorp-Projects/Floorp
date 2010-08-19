@@ -1760,16 +1760,9 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       static_cast<nsCSSValue*>(aSpecifiedValue)->SetAutoValue();
       break;
     case eUnit_None:
-      if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
-        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                            eCSSType_ValuePair, "type mismatch");
-        static_cast<nsCSSValuePair*>(aSpecifiedValue)->
-          SetBothValuesTo(nsCSSValue(eCSSUnit_None));
-      } else {
-        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                          "type mismatch");
-        static_cast<nsCSSValue*>(aSpecifiedValue)->SetNoneValue();
-      }
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->SetNoneValue();
       break;
     case eUnit_Enumerated:
     case eUnit_Visibility:
@@ -1805,26 +1798,26 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       break;
     case eUnit_Color:
       // colors can be alone, or part of a paint server
-      if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
-        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                            eCSSType_ValuePair, "type mismatch");
-        nsCSSValue val;
-        val.SetColorValue(aComputedValue.GetColorValue());
-        static_cast<nsCSSValuePair*>(aSpecifiedValue)->
-          SetBothValuesTo(val);
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetColorValue(aComputedValue.GetColorValue());
+      break;
+    case eUnit_CSSValuePair: {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      // Rule node processing expects pair values to be collapsed to a
+      // single value if both halves would be equal, for most but not
+      // all properties.  At present, all animatable properties that
+      // use pairs do expect collapsing.
+      const nsCSSValuePair* pair = aComputedValue.GetCSSValuePairValue();
+      if (pair->mXValue == pair->mYValue) {
+        *static_cast<nsCSSValue*>(aSpecifiedValue) = pair->mXValue;
       } else {
-        NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                          "type mismatch");
         static_cast<nsCSSValue*>(aSpecifiedValue)->
-          SetColorValue(aComputedValue.GetColorValue());
+          SetPairValue(pair);
       }
-      break;
-    case eUnit_CSSValuePair:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_ValuePair, "type mismatch");
-      *static_cast<nsCSSValuePair*>(aSpecifiedValue) =
-        *aComputedValue.GetCSSValuePairValue();
-      break;
+    } break;
     case eUnit_CSSRect:
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
                           eCSSType_Rect, "type mismatch");
@@ -1864,20 +1857,17 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     aComputedValue.GetStringValue(aSpecifiedValue);
     return PR_TRUE;
   }
-  nsCSSValuePair vp;
+  nsCSSValue val;
   nsCSSRect rect;
   nsCSSValueList* vl = nsnull;
   nsCSSValuePairList* vpl = nsnull;
   void *storage;
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
-      storage = &vp.mXValue;
+      storage = &val;
       break;
     case eCSSType_Rect:
       storage = &rect;
-      break;
-    case eCSSType_ValuePair:
-      storage = &vp;
       break;
     case eCSSType_ValueList:
       storage = &vl;
@@ -1898,13 +1888,10 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
 
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
-      vp.mXValue.AppendToString(aProperty, aSpecifiedValue);
+      val.AppendToString(aProperty, aSpecifiedValue);
       break;
     case eCSSType_Rect:
       rect.AppendToString(aProperty, aSpecifiedValue);
-      break;
-    case eCSSType_ValuePair:
-      vp.AppendToString(aProperty, aSpecifiedValue);
       break;
     case eCSSType_ValueList:
       vl->AppendToString(aProperty, aSpecifiedValue);

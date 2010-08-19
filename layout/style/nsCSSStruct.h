@@ -54,26 +54,16 @@ struct nsCSSCornerSizes {
   ~nsCSSCornerSizes();
 
   // argument is a "full corner" constant from nsStyleConsts.h
-  nsCSSValuePair const & GetFullCorner(PRUint32 aCorner) const {
-    return (this->*corners[aCorner]);
+  nsCSSValue const & GetCorner(PRUint32 aCorner) const {
+    return this->*corners[aCorner];
   }
-  nsCSSValuePair & GetFullCorner(PRUint32 aCorner) {
-    return (this->*corners[aCorner]);
-  }
-
-  // argument is a "half corner" constant from nsStyleConsts.h
-  const nsCSSValue& GetHalfCorner(PRUint32 hc) const {
-    nsCSSValuePair const & fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
-    return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
-  }
-  nsCSSValue & GetHalfCorner(PRUint32 hc) {
-    nsCSSValuePair& fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
-    return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
+  nsCSSValue & GetCorner(PRUint32 aCorner) {
+    return this->*corners[aCorner];
   }
 
   PRBool operator==(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
+      if (this->GetCorner(corner) != aOther.GetCorner(corner))
         return PR_FALSE;
     }
     return PR_TRUE;
@@ -81,7 +71,7 @@ struct nsCSSCornerSizes {
 
   PRBool operator!=(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
+      if (this->GetCorner(corner) != aOther.GetCorner(corner))
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -89,7 +79,7 @@ struct nsCSSCornerSizes {
 
   PRBool HasValue() const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetFullCorner(corner).HasValue())
+      if (this->GetCorner(corner).GetUnit() != eCSSUnit_Null)
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -97,13 +87,13 @@ struct nsCSSCornerSizes {
 
   void Reset();
 
-  nsCSSValuePair mTopLeft;
-  nsCSSValuePair mTopRight;
-  nsCSSValuePair mBottomRight;
-  nsCSSValuePair mBottomLeft;
+  nsCSSValue mTopLeft;
+  nsCSSValue mTopRight;
+  nsCSSValue mBottomRight;
+  nsCSSValue mBottomLeft;
 
 protected:
-  typedef nsCSSValuePair nsCSSCornerSizes::*corner_type;
+  typedef nsCSSValue nsCSSCornerSizes::*corner_type;
   static const corner_type corners[4];
 };
 
@@ -245,7 +235,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
   nsCSSValueList *mTransform; // List of Arrays containing transform information
-  nsCSSValuePair mTransformOrigin;
+  nsCSSValue mTransformOrigin;
   nsCSSValueList* mTransitionProperty;
   nsCSSValueList* mTransitionDuration;
   nsCSSValueList* mTransitionTimingFunction;
@@ -371,7 +361,7 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   ~nsCSSTable(void);
 
   nsCSSValue mBorderCollapse;
-  nsCSSValuePair mBorderSpacing;
+  nsCSSValue mBorderSpacing;
   nsCSSValue mCaptionSide;
   nsCSSValue mEmptyCells;
   
@@ -414,7 +404,7 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   ~nsCSSPage(void);
 
   nsCSSValue mMarks;
-  nsCSSValuePair mSize;
+  nsCSSValue mSize;
 private:
   nsCSSPage(const nsCSSPage& aOther); // NOT IMPLEMENTED
 };
@@ -548,7 +538,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mColorInterpolation;
   nsCSSValue mColorInterpolationFilters;
   nsCSSValue mDominantBaseline;
-  nsCSSValuePair mFill;
+  nsCSSValue mFill;
   nsCSSValue mFillOpacity;
   nsCSSValue mFillRule;
   nsCSSValue mFilter;
@@ -563,7 +553,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mShapeRendering;
   nsCSSValue mStopColor;
   nsCSSValue mStopOpacity;
-  nsCSSValuePair mStroke;
+  nsCSSValue mStroke;
   nsCSSValueList *mStrokeDasharray;
   nsCSSValue mStrokeDashoffset;
   nsCSSValue mStrokeLinecap;

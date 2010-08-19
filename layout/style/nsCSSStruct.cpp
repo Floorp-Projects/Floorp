@@ -124,7 +124,7 @@ void
 nsCSSCornerSizes::Reset()
 {
   NS_FOR_CSS_FULL_CORNERS(corner) {
-    this->GetFullCorner(corner).Reset();
+    this->GetCorner(corner).Reset();
   }
 }
 

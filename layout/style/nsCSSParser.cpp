@@ -522,8 +522,7 @@ protected:
                            const nsCSSValue& aValue);
 
 #ifdef MOZ_SVG
-  PRBool ParsePaint(nsCSSValuePair* aResult,
-                    nsCSSProperty aPropID);
+  PRBool ParsePaint(nsCSSProperty aPropID);
   PRBool ParseDasharray();
   PRBool ParseMarker();
 #endif
@@ -5096,21 +5095,20 @@ CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
   // required first value
   if (! ParseNonNegativeVariant(dimenX, VARIANT_HLP, nsnull))
     return PR_FALSE;
-  // optional second value (forbidden if first value is inherit/initial)
-  if (dimenX.GetUnit() == eCSSUnit_Inherit ||
-      dimenX.GetUnit() == eCSSUnit_Initial ||
-      ! ParseNonNegativeVariant(dimenY, VARIANT_LP, nsnull))
-    dimenY = dimenX;
 
-  NS_ASSERTION(nsCSSProps::kTypeTable[aPropID] == eCSSType_ValuePair,
-               nsPrintfCString(64, "type error (property='%s')",
-                               nsCSSProps::GetStringValue(aPropID).get())
-               .get());
-  nsCSSValuePair& storage =
-    *static_cast<nsCSSValuePair*>(mTempData.PropertyAt(aPropID));
-  storage.mXValue = dimenX;
-  storage.mYValue = dimenY;
-  mTempData.SetPropertyBit(aPropID);
+  // optional second value (forbidden if first value is inherit/initial)
+  if (dimenX.GetUnit() != eCSSUnit_Inherit &&
+      dimenX.GetUnit() != eCSSUnit_Initial) {
+    ParseNonNegativeVariant(dimenY, VARIANT_LP, nsnull);
+  }
+
+  if (dimenX == dimenY || dimenY.GetUnit() == eCSSUnit_Null) {
+    AppendValue(aPropID, dimenX);
+  } else {
+    nsCSSValue value;
+    value.SetPairValue(dimenX, dimenY);
+    AppendValue(aPropID, value);
+  }
   return PR_TRUE;
 }
 
@@ -5173,10 +5171,16 @@ CSSParserImpl::ParseBoxCornerRadii(nsCSSCornerSizes& aRadii,
   }
 
   NS_FOR_CSS_SIDES(side) {
-    nsCSSValuePair& corner =
-      aRadii.GetFullCorner(NS_SIDE_TO_FULL_CORNER(side, PR_FALSE));
-    corner.mXValue = dimenX.*nsCSSRect::sides[side];
-    corner.mYValue = dimenY.*nsCSSRect::sides[side];
+    nsCSSValue& corner =
+      aRadii.GetCorner(NS_SIDE_TO_FULL_CORNER(side, PR_FALSE));
+    nsCSSValue& x = dimenX.*nsCSSRect::sides[side];
+    nsCSSValue& y = dimenY.*nsCSSRect::sides[side];
+
+    if (x == y) {
+      corner = x;
+    } else {
+      corner.SetPairValue(x, y);
+    }
     mTempData.SetPropertyBit(aPropIDs[side]);
   }
   return PR_TRUE;
@@ -5406,9 +5410,8 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
 
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
-    return ParsePaint(&mTempData.mSVG.mFill, eCSSProperty_fill);
   case eCSSProperty_stroke:
-    return ParsePaint(&mTempData.mSVG.mStroke, eCSSProperty_stroke);
+    return ParsePaint(aPropID);
   case eCSSProperty_stroke_dasharray:
     return ParseDasharray();
   case eCSSProperty_marker:
@@ -6799,33 +6802,28 @@ CSSParserImpl::ParseBorderImage()
 PRBool
 CSSParserImpl::ParseBorderSpacing()
 {
-  nsCSSValue  xValue;
-  if (ParseNonNegativeVariant(xValue, VARIANT_HL | VARIANT_CALC, nsnull)) {
-    if (xValue.IsLengthUnit() || xValue.IsCalcUnit()) {
-      // We have one length. Get the optional second length.
-      nsCSSValue yValue;
-      if (ParseNonNegativeVariant(yValue, VARIANT_LENGTH | VARIANT_CALC,
-                                  nsnull)) {
-        // We have two numbers
-        if (ExpectEndProperty()) {
-          mTempData.mTable.mBorderSpacing.mXValue = xValue;
-          mTempData.mTable.mBorderSpacing.mYValue = yValue;
-          mTempData.SetPropertyBit(eCSSProperty_border_spacing);
-          return PR_TRUE;
-        }
-        return PR_FALSE;
-      }
-    }
-
-    // We have one length which is the horizontal spacing. Create a value for
-    // the vertical spacing which is equal
-    if (ExpectEndProperty()) {
-      mTempData.mTable.mBorderSpacing.SetBothValuesTo(xValue);
-      mTempData.SetPropertyBit(eCSSProperty_border_spacing);
-      return PR_TRUE;
-    }
+  nsCSSValue xValue, yValue;
+  if (!ParseNonNegativeVariant(xValue, VARIANT_HL | VARIANT_CALC, nsnull)) {
+    return PR_FALSE;
   }
-  return PR_FALSE;
+
+  // If we have one length, get the optional second length.
+  // set the second value equal to the first.
+  if (xValue.IsLengthUnit() || xValue.IsCalcUnit()) {
+    ParseNonNegativeVariant(yValue, VARIANT_LENGTH | VARIANT_CALC, nsnull);
+  }
+
+  if (!ExpectEndProperty()) {
+    return PR_FALSE;
+  }
+
+  if (yValue == xValue || yValue.GetUnit() == eCSSUnit_Null) {
+    mTempData.mTable.mBorderSpacing = xValue;
+  } else {
+    mTempData.mTable.mBorderSpacing.SetPairValue(xValue, yValue);
+  }
+  mTempData.SetPropertyBit(eCSSProperty_border_spacing);
+  return PR_TRUE;
 }
 
 PRBool
@@ -8192,12 +8190,22 @@ PRBool CSSParserImpl::ParseMozTransform()
 
 PRBool CSSParserImpl::ParseMozTransformOrigin()
 {
-  /* Read in a box position, fail if we can't. */
-  if (!ParseBoxPositionValues(mTempData.mDisplay.mTransformOrigin, PR_TRUE) ||
-      !ExpectEndProperty())
+  nsCSSValuePair position;
+  if (!ParseBoxPositionValues(position, PR_TRUE) || !ExpectEndProperty())
     return PR_FALSE;
 
-  /* Set the property bit and return. */
+  // Unlike many other uses of pairs, this position should always be stored
+  // as a pair, even if the values are the same, so it always serializes as
+  // a pair, and to keep the computation code simple.
+  if (position.mXValue.GetUnit() == eCSSUnit_Inherit ||
+      position.mXValue.GetUnit() == eCSSUnit_Initial) {
+    NS_ABORT_IF_FALSE(position.mXValue == position.mYValue,
+                      "inherit/initial only half?");
+    mTempData.mDisplay.mTransformOrigin = position.mXValue;
+  } else {
+    mTempData.mDisplay.mTransformOrigin.SetPairValue(position.mXValue,
+                                                     position.mYValue);
+  }
   mTempData.SetPropertyBit(eCSSProperty__moz_transform_origin);
   return PR_TRUE;
 }
@@ -8677,27 +8685,24 @@ CSSParserImpl::ParseQuotes()
 PRBool
 CSSParserImpl::ParseSize()
 {
-  nsCSSValue width;
-  if (ParseVariant(width, VARIANT_AHKL, nsCSSProps::kPageSizeKTable)) {
-    if (width.IsLengthUnit()) {
-      nsCSSValue  height;
-      if (ParseVariant(height, VARIANT_LENGTH, nsnull)) {
-        if (ExpectEndProperty()) {
-          mTempData.mPage.mSize.mXValue = width;
-          mTempData.mPage.mSize.mYValue = height;
-          mTempData.SetPropertyBit(eCSSProperty_size);
-          return PR_TRUE;
-        }
-        return PR_FALSE;
-      }
-    }
-    if (ExpectEndProperty()) {
-      mTempData.mPage.mSize.SetBothValuesTo(width);
-      mTempData.SetPropertyBit(eCSSProperty_size);
-      return PR_TRUE;
-    }
+  nsCSSValue width, height;
+  if (!ParseVariant(width, VARIANT_AHKL, nsCSSProps::kPageSizeKTable)) {
+    return PR_FALSE;
   }
-  return PR_FALSE;
+  if (width.IsLengthUnit()) {
+    ParseVariant(height, VARIANT_LENGTH, nsnull);
+  }
+  if (!ExpectEndProperty()) {
+    return PR_FALSE;
+  }
+
+  if (width == height || height.GetUnit() == eCSSUnit_Null) {
+    mTempData.mPage.mSize = width;
+  } else {
+    mTempData.mPage.mSize.SetPairValue(width, height);
+  }
+  mTempData.SetPropertyBit(eCSSProperty_size);
+  return PR_TRUE;
 }
 
 PRBool
@@ -9321,26 +9326,25 @@ CSSParserImpl::SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector)
 
 #ifdef MOZ_SVG
 PRBool
-CSSParserImpl::ParsePaint(nsCSSValuePair* aResult,
-                          nsCSSProperty aPropID)
+CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
 {
-  if (!ParseVariant(aResult->mXValue,
-                    VARIANT_HC | VARIANT_NONE | VARIANT_URL,
-                    nsnull))
+  nsCSSValue x, y;
+  if (!ParseVariant(x, VARIANT_HC | VARIANT_NONE | VARIANT_URL, nsnull))
     return PR_FALSE;
-
-  if (aResult->mXValue.GetUnit() == eCSSUnit_URL) {
-    if (!ParseVariant(aResult->mYValue, VARIANT_COLOR | VARIANT_NONE,
-                     nsnull))
-      aResult->mYValue.SetColorValue(NS_RGB(0, 0, 0));
-  } else {
-    aResult->mYValue = aResult->mXValue;
+  if (x.GetUnit() == eCSSUnit_URL) {
+    if (!ParseVariant(y, VARIANT_COLOR | VARIANT_NONE, nsnull))
+      y.SetColorValue(NS_RGB(0, 0, 0));
   }
-
   if (!ExpectEndProperty())
     return PR_FALSE;
 
-  mTempData.SetPropertyBit(aPropID);
+  if (x.GetUnit() != eCSSUnit_URL) {
+    AppendValue(aPropID, x);
+  } else {
+    nsCSSValue val;
+    val.SetPairValue(x, y);
+    AppendValue(aPropID, val);
+  }
   return PR_TRUE;
 }
 
