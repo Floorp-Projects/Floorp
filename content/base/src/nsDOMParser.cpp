@@ -272,6 +272,10 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   if (!document) return NS_ERROR_FAILURE;
 
+  if (nsContentUtils::IsSystemPrincipal(mOriginalPrincipal)) {
+    document->ForceEnableXULXBL();
+  }
+
   rv = document->StartDocumentLoad(kLoadAsData, parserChannel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
