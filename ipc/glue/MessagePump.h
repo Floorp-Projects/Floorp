@@ -76,6 +76,7 @@ public:
 
   virtual void Run(base::MessagePump::Delegate* aDelegate);
   virtual void ScheduleWork();
+  virtual void ScheduleWorkForNestedLoop();
   virtual void ScheduleDelayedWork(const base::Time& delayed_work_time);
 
   void DoDelayedWork(base::MessagePump::Delegate* aDelegate);

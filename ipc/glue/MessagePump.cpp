@@ -52,12 +52,6 @@ using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
 using base::Time;
 
-namespace {
-
-bool gRunningSetNestableTasksAllowed = false;
-
-} /* anonymous namespace */
-
 NS_IMPL_THREADSAFE_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
 
 NS_IMETHODIMP
@@ -68,15 +62,13 @@ DoWorkRunnable::Run()
   if (loop) {
     bool nestableTasksAllowed = loop->NestableTasksAllowed();
 
-    gRunningSetNestableTasksAllowed = true;
+    // MessageLoop::RunTask() disallows nesting, but our Frankenvent
+    // will always dispatch DoWork() below from what looks to
+    // MessageLoop like a nested context.  So we unconditionally allow
+    // nesting here.
     loop->SetNestableTasksAllowed(true);
-    gRunningSetNestableTasksAllowed = false;
-
     loop->DoWork();
-
-    gRunningSetNestableTasksAllowed = true;
     loop->SetNestableTasksAllowed(nestableTasksAllowed);
-    gRunningSetNestableTasksAllowed = false;
   }
   return NS_OK;
 }
@@ -150,10 +142,6 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
 void
 MessagePump::ScheduleWork()
 {
-  if (gRunningSetNestableTasksAllowed) {
-    return;
-  }
-
   // Make sure the event loop wakes up.
   if (mThread) {
     mThread->Dispatch(mDoWorkEvent, NS_DISPATCH_NORMAL);
@@ -164,6 +152,15 @@ MessagePump::ScheduleWork()
     NS_DispatchToMainThread(mDoWorkEvent, NS_DISPATCH_NORMAL);
   }
   event_.Signal();
+}
+
+void
+MessagePump::ScheduleWorkForNestedLoop()
+{
+  // This method is called when our MessageLoop has just allowed
+  // nested tasks.  In our setup, whenever that happens we know that
+  // DoWork() will be called "soon", so there's no need to pay the
+  // cost of what will be a no-op nsThread::Dispatch(mDoWorkEvent).
 }
 
 void
