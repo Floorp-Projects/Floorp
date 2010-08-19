@@ -251,7 +251,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 
 #include "nsIBoxObject.h"
 
-#ifndef MOZ_NO_INSPECTOR_APIS
 #ifdef MOZ_XUL
 #include "inDOMView.h"
 #endif /* MOZ_XUL */
@@ -260,7 +259,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "inFlasher.h"
 #include "inCSSValueSearch.h"
 #include "inDOMUtils.h"
-#endif /* MOZ_NO_INSPECTOR_APIS */
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -502,7 +500,6 @@ MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObj
 MAKE_CTOR(CreateNewContainerBoxObject,  nsIBoxObject,           NS_NewContainerBoxObject)
 #endif // MOZ_XUL
 
-#ifndef MOZ_NO_INSPECTOR_APIS
 #ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
 #endif
@@ -510,7 +507,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
-#endif
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
@@ -755,7 +751,6 @@ NS_DEFINE_NAMED_CID(NS_CONTAINERBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_SCROLLBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_TREEBOXOBJECT_CID);
 #endif // MOZ_XUL
-#ifndef MOZ_NO_INSPECTOR_APIS
 #ifdef MOZ_XUL
 NS_DEFINE_NAMED_CID(IN_DOMVIEW_CID);
 #endif
@@ -763,7 +758,6 @@ NS_DEFINE_NAMED_CID(IN_DEEPTREEWALKER_CID);
 NS_DEFINE_NAMED_CID(IN_FLASHER_CID);
 NS_DEFINE_NAMED_CID(IN_CSSVALUESEARCH_CID);
 NS_DEFINE_NAMED_CID(IN_DOMUTILS_CID);
-#endif // MOZ_NO_INSPECTOR_APIS
 NS_DEFINE_NAMED_CID(NS_NAMESPACEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_EVENTLISTENERMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMEVENTGROUP_CID);
@@ -905,7 +899,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SCROLLBOXOBJECT_CID, false, NULL, CreateNewScrollBoxObject },
   { &kNS_TREEBOXOBJECT_CID, false, NULL, CreateNewTreeBoxObject },
 #endif // MOZ_XUL
-#ifndef MOZ_NO_INSPECTOR_APIS
 #ifdef MOZ_XUL
   { &kIN_DOMVIEW_CID, false, NULL, inDOMViewConstructor },
 #endif
@@ -913,7 +906,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kIN_FLASHER_CID, false, NULL, inFlasherConstructor },
   { &kIN_CSSVALUESEARCH_CID, false, NULL, inCSSValueSearchConstructor },
   { &kIN_DOMUTILS_CID, false, NULL, inDOMUtilsConstructor },
-#endif // MOZ_NO_INSPECTOR_APIS
   { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
   { &kNS_EVENTLISTENERMANAGER_CID, false, NULL, CreateEventListenerManager },
   { &kNS_DOMEVENTGROUP_CID, false, NULL, CreateDOMEventGroup },
@@ -1050,7 +1042,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/layout/xul-boxobject-scrollbox;1", &kNS_SCROLLBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-tree;1", &kNS_TREEBOXOBJECT_CID },
 #endif // MOZ_XUL
-#ifndef MOZ_NO_INSPECTOR_APIS
 #ifdef MOZ_XUL
   { "@mozilla.org/inspector/dom-view;1", &kIN_DOMVIEW_CID },
 #endif
@@ -1058,7 +1049,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/inspector/flasher;1", &kIN_FLASHER_CID },
   { "@mozilla.org/inspector/search;1?type=cssvalue", &kIN_CSSVALUESEARCH_CID },
   { "@mozilla.org/inspector/dom-utils;1", &kIN_DOMUTILS_CID },
-#endif // MOZ_NO_INSPECTOR_APIS
   { NS_NAMESPACEMANAGER_CONTRACTID, &kNS_NAMESPACEMANAGER_CID },
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
 #ifdef MOZ_SVG

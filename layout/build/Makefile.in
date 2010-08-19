@@ -209,14 +209,10 @@ SHARED_LIBRARY_LIBS += \
 		$(NULL)
 endif
 
-ifndef MOZ_NO_INSPECTOR_APIS
 LOCAL_INCLUDES  += \
       -I$(srcdir)/../inspector/src \
       $(NULL)
 SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
-else
-DEFINES += -DMOZ_NO_INSPECTOR_APIS
-endif
 
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
