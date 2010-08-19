@@ -926,7 +926,7 @@ stack_callback(void *pc, void *closure)
  * sem_pool_lock in Mac OS X pthreads); the caller should bail out
  * without doing anything (such as acquiring locks).
  */
-callsite *
+static callsite *
 backtrace(tm_thread *t, int skip, int *immediate_abort)
 {
     callsite *site;
