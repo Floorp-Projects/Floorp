@@ -1570,6 +1570,11 @@ nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
   mGfxContext = aContext->ThebesContext();
 }
 
+nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
+  mRenderMode(NORMAL), mGfxContext(aContext)
+{
+}
+
 nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
   mRenderMode(NORMAL)
 {

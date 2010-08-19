@@ -369,6 +369,53 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 
 #include "jemalloc.h"
 
+/* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
+ * happen to override mmap() and call dlsym() from their overridden
+ * mmap(). The problem is that dlsym() calls malloc(), and this ends
+ * up in a dead lock in jemalloc.
+ * On these systems, we prefer to directly use the system call.
+ * We do that for Linux systems and kfreebsd with GNU userland.
+ * Note sanity checks are not done (alignment of offset, ...) because
+ * the uses of mmap are pretty limited, in jemalloc.
+ *
+ * On Alpha, glibc has a bug that prevents syscall() to work for system
+ * calls with 6 arguments
+ */
+#if (defined(MOZ_MEMORY_LINUX) && !defined(__alpha__)) || \
+    (defined(MOZ_MEMORY_BSD) && defined(__GLIBC__))
+#include <sys/syscall.h>
+#if defined(SYS_mmap) || defined(SYS_mmap2)
+static inline
+void *_mmap(void *addr, size_t length, int prot, int flags,
+            int fd, off_t offset)
+{
+/* S390 only passes one argument to the mmap system call, which is a
+ * pointer to a structure containing the arguments */
+#ifdef __s390__
+	struct {
+		void *addr;
+		size_t length;
+		int prot;
+		int flags;
+		int fd;
+		off_t offset;
+	} args = { addr, length, prot, flags, fd, offset };
+	return (void *) syscall(SYS_mmap, &args);
+#else
+#ifdef SYS_mmap2
+	return (void *) syscall(SYS_mmap2, addr, length, prot, flags,
+	                       fd, offset >> 12);
+#else
+	return (void *) syscall(SYS_mmap, addr, length, prot, flags,
+                               fd, offset);
+#endif
+#endif
+}
+#define mmap _mmap
+#define munmap(a, l) syscall(SYS_munmap, a, l)
+#endif
+#endif
+
 #ifdef MOZ_MEMORY_DARWIN
 static const bool __isthreaded = true;
 #endif
@@ -984,8 +1031,10 @@ struct arena_s {
  * Data.
  */
 
+#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
 /* Number of CPUs. */
 static unsigned		ncpus;
+#endif
 
 /* VM page size. */
 static size_t		pagesize;
@@ -4913,6 +4962,7 @@ huge_dalloc(void *ptr)
 	base_node_dealloc(node);
 }
 
+#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
 #ifdef MOZ_MEMORY_BSD
 static inline unsigned
 malloc_ncpus(void)
@@ -5022,6 +5072,7 @@ malloc_ncpus(void)
 	return (1);
 }
 #endif
+#endif
 
 static void
 malloc_print_stats(void)
@@ -5061,7 +5112,9 @@ malloc_print_stats(void)
 #endif
 		_malloc_message("\n", "", "", "");
 
+#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
 		_malloc_message("CPUs: ", umax2s(ncpus, s), "\n", "");
+#endif
 		_malloc_message("Max arenas: ", umax2s(narenas, s), "\n", "");
 #ifdef MALLOC_BALANCE
 		_malloc_message("Arena balance threshold: ",
@@ -5233,10 +5286,14 @@ malloc_init_hard(void)
 
 		pagesize = (unsigned) result;
 
+#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
 		ncpus = info.dwNumberOfProcessors;
+#endif
 	}
 #else
+#ifndef MOZ_MEMORY_NARENAS_DEFAULT_ONE
 	ncpus = malloc_ncpus();
+#endif
 
 	result = sysconf(_SC_PAGESIZE);
 	assert(result != -1);

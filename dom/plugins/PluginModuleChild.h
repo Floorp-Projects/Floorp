@@ -195,6 +195,14 @@ public:
 
 #ifdef OS_MACOSX
     void ProcessNativeEvents();
+    
+    void PluginShowWindow(uint32_t window_id, bool modal, CGRect r) {
+        SendPluginShowWindow(window_id, modal, r.origin.x, r.origin.y, r.size.width, r.size.height);
+    }
+
+    void PluginHideWindow(uint32_t window_id) {
+        SendPluginHideWindow(window_id);
+    }
 #endif
 
 private:

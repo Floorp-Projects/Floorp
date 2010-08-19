@@ -9,6 +9,7 @@ toolkit.jar:
 +  skin/classic/global/findBar.css
 +  skin/classic/global/global.css
 +  skin/classic/global/groupbox.css
++  skin/classic/global/headsUpDisplay.css
 +  skin/classic/global/listbox.css
 +  skin/classic/global/menu.css
 +  skin/classic/global/menulist.css
@@ -20,6 +21,7 @@ toolkit.jar:
 +  skin/classic/global/printPageSetup.css
 +  skin/classic/global/printPreview.css
 +  skin/classic/global/radio.css
++  skin/classic/global/scrollbox.css
 +  skin/classic/global/splitter.css
 +  skin/classic/global/tabbox.css
 +  skin/classic/global/textbox.css

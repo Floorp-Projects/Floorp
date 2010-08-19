@@ -92,6 +92,9 @@ _CHROME_FILES += native_menus_window.xul \
                test_platform_colors.xul \
                test_standalone_native_menu.xul \
                standalone_native_menu_window.xul \
+               test_bug586713.xul \
+               bug586713_window.xul \
+               test_key_event_counts.xul \
                $(NULL)
 endif
 

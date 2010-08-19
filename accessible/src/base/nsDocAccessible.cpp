@@ -1710,9 +1710,11 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     aChangeType == nsIAccessibilityService::FRAME_SHOW ||
     aChangeType == nsIAccessibilityService::NODE_APPEND;
 
+#ifdef DEBUG
   PRBool isChanging =
     aChangeType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE ||
     aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE;
+#endif
 
   NS_ASSERTION(isChanging || isHiding || isShowing,
                "Incorrect aChangeEventType passed in");

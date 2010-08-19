@@ -85,7 +85,7 @@ SwapChainD3D9::Init(HWND hWnd)
   D3DPRESENT_PARAMETERS pp;
   memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
 
-  pp.BackBufferFormat = D3DFMT_UNKNOWN;
+  pp.BackBufferFormat = D3DFMT_A8R8G8B8;
   pp.SwapEffect = D3DSWAPEFFECT_COPY;
   pp.Windowed = TRUE;
   pp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -180,6 +180,11 @@ SwapChainD3D9::Reset()
 DeviceManagerD3D9::DeviceManagerD3D9()
   : mHasDynamicTextures(false)
 {
+}
+
+DeviceManagerD3D9::~DeviceManagerD3D9()
+{
+  LayerManagerD3D9::OnDeviceManagerDestroy(this);
 }
 
 bool

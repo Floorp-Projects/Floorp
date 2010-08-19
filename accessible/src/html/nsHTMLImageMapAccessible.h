@@ -81,8 +81,9 @@ private:
  */
 class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
 {
-
 public:
+  using nsAccessible::GetChildAtPoint;
+
   nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible

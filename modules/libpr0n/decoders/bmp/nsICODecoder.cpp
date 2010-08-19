@@ -47,6 +47,7 @@
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
+#include "RasterImage.h"
 #include "imgIContainerObserver.h"
 
 #include "nsIInterfaceRequestor.h"
@@ -55,7 +56,7 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 
-#include "nsAutoPtr.h"
+using namespace mozilla::imagelib;
 
 NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 
@@ -93,8 +94,11 @@ NS_IMETHODIMP nsICODecoder::Init(imgIContainer *aImage,
                                  imgIDecoderObserver *aObserver,
                                  PRUint32 aFlags)
 {
+  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                    "wrong type of imgIContainer for decoding into");
+
   // Grab parameters
-  mImage = aImage;
+  mImage = static_cast<RasterImage*>(aImage);
   mObserver = aObserver;
   mFlags = aFlags;
 
@@ -280,18 +284,15 @@ nsICODecoder::Write(const char* aBuffer, PRUint32 aCount)
     }
 
     if (mIsCursor) {
-      nsCOMPtr<nsIProperties> props(do_QueryInterface(mImage));
-      if (props) {
-        nsCOMPtr<nsISupportsPRUint32> intwrapx = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
-        nsCOMPtr<nsISupportsPRUint32> intwrapy = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
+      nsCOMPtr<nsISupportsPRUint32> intwrapx = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
+      nsCOMPtr<nsISupportsPRUint32> intwrapy = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
 
-        if (intwrapx && intwrapy) {
-          intwrapx->SetData(mDirEntry.mXHotspot);
-          intwrapy->SetData(mDirEntry.mYHotspot);
+      if (intwrapx && intwrapy) {
+        intwrapx->SetData(mDirEntry.mXHotspot);
+        intwrapy->SetData(mDirEntry.mYHotspot);
 
-          props->Set("hotspotX", intwrapx);
-          props->Set("hotspotY", intwrapy);
-        }
+        mImage->Set("hotspotX", intwrapx);
+        mImage->Set("hotspotY", intwrapy);
       }
     }
 

@@ -76,9 +76,9 @@ struct hb_ot_layout_context_t
   } info;
 
   /* Convert from font-space to user-space */
-  /* XXX div-by-zero / speed up */
-  inline hb_position_t scale_x (int16_t v) { return (int64_t) this->font->x_scale * v / this->face->head_table->unitsPerEm; }
-  inline hb_position_t scale_y (int16_t v) { return (int64_t) this->font->y_scale * v / this->face->head_table->unitsPerEm; }
+  /* XXX speed up */
+  inline hb_position_t scale_x (int16_t v) { return (int64_t) this->font->x_scale * v / this->face->units_per_em; }
+  inline hb_position_t scale_y (int16_t v) { return (int64_t) this->font->y_scale * v / this->face->units_per_em; }
 };
 
 

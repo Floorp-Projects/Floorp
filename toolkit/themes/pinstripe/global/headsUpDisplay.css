@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,6 +35,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+%include shared.inc
 
 .hud-box {
     border-bottom: 1px solid #aaa;
@@ -55,7 +58,7 @@
     font-weight: bold;
 }
 
-.hud-output-node div {
+.hud-output-node * {
     -moz-user-select: text;
     white-space: pre-wrap;
     -moz-user-focus: normal;
@@ -85,10 +88,6 @@
     color: red; font-weight: bold;
 }
 
-.hud-hidden {
-    display: none;
-}
-
 .hud-msg-node {    
     width: 100%;
     margin-top: 0.3em; 
@@ -103,6 +102,10 @@
     overflow-x: auto; overflow: auto;
     font: 1em monospace; background-color: white;
     width: 100%;
+}
+
+.hud-filtered-by-type, .hud-filtered-by-string {
+    display: none;
 }
 
 .hud-group:first-child .hud-divider {
@@ -165,8 +168,10 @@
     font-size: 1.2em;
 }
 
-/* these need to be revised ... */
 .hud-console-filter-toolbar {
-    padding: 1px 0px;
+    background: @scopeBarBackground@ !important;
+    border-bottom: @scopeBarSeparatorBorder@;
+    padding: 0px 1px;
+    -moz-appearance: none !important;
     -moz-box-align: center;
 }

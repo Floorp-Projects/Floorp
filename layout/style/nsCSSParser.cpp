@@ -120,6 +120,7 @@ namespace css = mozilla::css;
 #define VARIANT_ZERO_ANGLE    0x02000000  // unitless zero for angles
 #define VARIANT_CALC          0x04000000  // eCSSUnit_Calc
 #define VARIANT_CALC_NO_MIN_MAX 0x08000000 // no min() and max() for calc()
+#define VARIANT_ELEMENT       0x10000000  // eCSSUnit_Element
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -158,6 +159,8 @@ namespace css = mozilla::css;
 #define VARIANT_ANGLE_OR_ZERO (VARIANT_ANGLE | VARIANT_ZERO_ANGLE)
 #define VARIANT_TRANSFORM_LPCALC (VARIANT_LP | VARIANT_CALC | \
                                   VARIANT_CALC_NO_MIN_MAX)
+#define VARIANT_IMAGE (VARIANT_URL | VARIANT_NONE | VARIANT_GRADIENT | \
+                       VARIANT_IMAGE_RECT | VARIANT_ELEMENT)
 
 //----------------------------------------------------------------------
 
@@ -562,6 +565,7 @@ protected:
   PRBool TranslateDimension(nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
   PRBool ParseImageRect(nsCSSValue& aImage);
+  PRBool ParseElement(nsCSSValue& aValue);
   PRBool ParseColorStop(nsCSSValueGradient* aGradient);
   PRBool ParseGradient(nsCSSValue& aValue, PRBool aIsRadial,
                        PRBool aIsRepeating);
@@ -3219,11 +3223,13 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
   }
   if (eSelectorParsingStatus_Error == parsingStatus) {
     REPORT_UNEXPECTED_TOKEN(PENegationBadInner);
+    SkipUntil(')');
     return parsingStatus;
   }
   // close the parenthesis
   if (!ExpectSymbol(')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PENegationNoClose);
+    SkipUntil(')');
     return eSelectorParsingStatus_Error;
   }
 
@@ -4118,7 +4124,7 @@ CSSParserImpl::ParseEnum(nsCSSValue& aValue,
 
 
 struct UnitInfo {
-  char name[5];  // needs to be long enough for the longest unit, with
+  char name[6];  // needs to be long enough for the longest unit, with
                  // terminating null.
   PRUint32 length;
   nsCSSUnit unit;
@@ -4138,6 +4144,7 @@ const UnitInfo UnitData[] = {
   { STR_WITH_LEN("ch"), eCSSUnit_Char, VARIANT_LENGTH },
   { STR_WITH_LEN("rem"), eCSSUnit_RootEM, VARIANT_LENGTH },
   { STR_WITH_LEN("mm"), eCSSUnit_Millimeter, VARIANT_LENGTH },
+  { STR_WITH_LEN("mozmm"), eCSSUnit_PhysicalMillimeter, VARIANT_LENGTH },
   { STR_WITH_LEN("pc"), eCSSUnit_Pica, VARIANT_LENGTH },
   { STR_WITH_LEN("deg"), eCSSUnit_Degree, VARIANT_ANGLE },
   { STR_WITH_LEN("grad"), eCSSUnit_Grad, VARIANT_ANGLE },
@@ -4436,6 +4443,11 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       eCSSToken_Function == tk->mType &&
       tk->mIdent.LowerCaseEqualsLiteral("-moz-image-rect")) {
     return ParseImageRect(aValue);
+  }
+  if ((aVariantMask & VARIANT_ELEMENT) != 0 &&
+      eCSSToken_Function == tk->mType &&
+      tk->mIdent.LowerCaseEqualsLiteral("-moz-element")) {
+    return ParseElement(aValue);
   }
   if ((aVariantMask & VARIANT_COLOR) != 0) {
     if ((mNavQuirkMode && !IsParsingCompoundProperty()) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
@@ -4739,6 +4751,32 @@ CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
       break;
 
     aImage = newFunction;
+    return PR_TRUE;
+  }
+
+  SkipUntil(')');
+  return PR_FALSE;
+}
+
+// <element>: -moz-element(# <element_id> )
+PRBool
+CSSParserImpl::ParseElement(nsCSSValue& aValue)
+{
+  // A non-iterative for loop to break out when an error occurs.
+  for (;;) {
+    if (!GetToken(PR_TRUE))
+      break;
+
+    if (mToken.mType == eCSSToken_ID) {
+      aValue.SetStringValue(mToken.mIdent, eCSSUnit_Element);
+    } else {
+      UngetToken();
+      break;
+    }
+
+    if (!ExpectSymbol(')', PR_TRUE))
+      break;
+
     return PR_TRUE;
   }
 
@@ -5592,9 +5630,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
     // Used only internally.
-    return ParseVariant(aValue,
-                        VARIANT_HUO | VARIANT_GRADIENT | VARIANT_IMAGE_RECT,
-                        nsnull);
+    return ParseVariant(aValue, VARIANT_IMAGE | VARIANT_INHERIT, nsnull);
   case eCSSProperty__moz_background_inline_policy:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundInlinePolicyKTable);
@@ -6379,7 +6415,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect"))) {
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect") ||
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-element"))) {
       if (haveImage)
         return PR_FALSE;
       haveImage = PR_TRUE;

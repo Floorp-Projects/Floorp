@@ -61,27 +61,30 @@ inline bool TypedMDRVA<MDType>::AllocateArray(size_t count) {
 }
 
 template<typename MDType>
-inline bool TypedMDRVA<MDType>::AllocateObjectAndArray(unsigned int count,
-                                                       size_t size) {
-  assert(count && size);
+inline bool TypedMDRVA<MDType>::AllocateObjectAndArray(size_t count,
+                                                       size_t length) {
+  assert(count && length);
   allocation_state_ = SINGLE_OBJECT_WITH_ARRAY;
-  return UntypedMDRVA::Allocate(minidump_size<MDType>::size() + count * size);
+  return UntypedMDRVA::Allocate(minidump_size<MDType>::size() + count * length);
 }
 
 template<typename MDType>
 inline bool TypedMDRVA<MDType>::CopyIndex(unsigned int index, MDType *item) {
   assert(allocation_state_ == ARRAY);
-  return writer_->Copy(position_ + index * minidump_size<MDType>::size(), item,
-                       minidump_size<MDType>::size());
+  return writer_->Copy(
+      static_cast<MDRVA>(position_ + index * minidump_size<MDType>::size()), 
+      item, minidump_size<MDType>::size());
 }
 
 template<typename MDType>
 inline bool TypedMDRVA<MDType>::CopyIndexAfterObject(unsigned int index,
                                                      const void *src, 
-                                                     size_t size) {
+                                                     size_t length) {
   assert(allocation_state_ == SINGLE_OBJECT_WITH_ARRAY);
-  return writer_->Copy(position_ + minidump_size<MDType>::size() + index * size,
-                       src, size);
+  return writer_->Copy(
+      static_cast<MDRVA>(position_ + minidump_size<MDType>::size() 
+                         + index * length),
+      src, length);
 }
 
 template<typename MDType>

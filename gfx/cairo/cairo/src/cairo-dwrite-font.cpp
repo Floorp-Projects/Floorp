@@ -604,8 +604,6 @@ _cairo_dwrite_scaled_font_init_glyph_metrics(cairo_dwrite_scaled_font_t *scaled_
         extents.width > 0 && extents.height > 0) {
         extents.width += scaled_font->mat_inverse.xx * 2;
         extents.x_bearing -= scaled_font->mat_inverse.xx;
-        extents.height += scaled_font->mat_inverse.yy * 2;
-        extents.y_bearing -= scaled_font->mat_inverse.yy;
     }
 
     _cairo_scaled_glyph_set_metrics (scaled_glyph,

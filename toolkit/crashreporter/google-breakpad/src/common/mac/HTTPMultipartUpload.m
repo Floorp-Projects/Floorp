@@ -28,6 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import "HTTPMultipartUpload.h"
+#import "GTMDefines.h"
 
 @interface HTTPMultipartUpload(PrivateMethods)
 - (NSString *)multipartBoundary;
@@ -148,7 +149,6 @@
       timeoutInterval:10.0 ];
 
   NSMutableData *postBody = [NSMutableData data];
-  int i, count;
 
   [req setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@",
     boundary_] forHTTPHeaderField:@"Content-type"];
@@ -157,8 +157,8 @@
   NSArray *parameterKeys = [parameters_ allKeys];
   NSString *key;
 
-  count = [parameterKeys count];
-  for (i = 0; i < count; ++i) {
+  NSInteger count = [parameterKeys count];
+  for (NSInteger i = 0; i < count; ++i) {
     key = [parameterKeys objectAtIndex:i];
     [postBody appendData:[self formDataForKey:key
                                         value:[parameters_ objectForKey:key]]];
@@ -167,7 +167,7 @@
   // Add any files to the message
   NSArray *fileNames = [files_ allKeys];
   count = [fileNames count];
-  for (i = 0; i < count; ++i) {
+  for (NSInteger i = 0; i < count; ++i) {
     NSString *name = [fileNames objectAtIndex:i];
     id fileOrData = [files_ objectForKey:name];
     NSData *fileData;

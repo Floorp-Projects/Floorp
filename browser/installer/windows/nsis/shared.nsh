@@ -57,6 +57,7 @@
     ${RegCleanUninstall}
     ${UpdateProtocolHandlers}
     ${FixShellIconHandler}
+    ${SetAppLSPCategories} ${LSP_CATEGORIES}
 
     ; Only update the Clients\StartMenuInternet registry key values if they
     ; don't exist or this installation is the same as the one set in those keys.

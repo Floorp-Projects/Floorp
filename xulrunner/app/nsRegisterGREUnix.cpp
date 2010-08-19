@@ -53,6 +53,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <mozilla/FileUtils.h>
 
 // If we can't register <buildid>.conf, we try to create a unique filename
 // by looping through <buildid>_<int>.conf, but if something is seriously wrong
@@ -61,25 +62,6 @@
 
 static const char kRegFileGlobal[] = "global.reginfo";
 static const char kRegFileUser[] = "user.reginfo";
-
-class AutoFDClose
-{
-public:
-  AutoFDClose(PRFileDesc* fd = nsnull) : mFD(fd) { }
-  ~AutoFDClose() { if (mFD) PR_Close(mFD); }
-
-  PRFileDesc* operator= (PRFileDesc *fd) {
-    if (mFD) PR_Close(mFD);
-    mFD = fd;
-    return fd;
-  }
-
-  operator PRFileDesc* () { return mFD; }
-  PRFileDesc** operator &() { *this = nsnull; return &mFD; }
-
-private:
-  PRFileDesc *mFD;
-};
 
 static PRBool
 MakeConfFile(const char *regfile, const nsCString &greHome,

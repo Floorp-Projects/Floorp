@@ -318,9 +318,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     childArgv.push_back("false");
   }
 #  elif defined(XP_MACOSX)
-  // Call the stub for initialization side effects.  Eventually this
-  // code will be unified with that above.
-  CrashReporter::CreateNotificationPipeForChild();
+  childArgv.push_back(CrashReporter::GetChildNotificationPipe());
 #  endif  // OS_LINUX
 #endif
 

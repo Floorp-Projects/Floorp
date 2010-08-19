@@ -82,6 +82,8 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
   NS_DECL_NSIOBSERVER
 
 public:
+  using nsAccessible::GetParent;
+
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
                   nsIWeakReference* aShell);
   virtual ~nsDocAccessible();

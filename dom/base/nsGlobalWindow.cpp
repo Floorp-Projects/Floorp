@@ -222,6 +222,8 @@
 
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 
+#include "nsRefreshDriver.h"
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -3507,6 +3509,38 @@ nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
     return NS_OK;
 
   *aResult = presShell->GetPaintCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::MozRequestAnimationFrame()
+{
+  FORWARD_TO_INNER(MozRequestAnimationFrame, (), NS_ERROR_NOT_INITIALIZED);
+
+  if (!mDoc) {
+    return NS_OK;
+  }
+
+  mDoc->ScheduleBeforePaintEvent();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetMozAnimationStartTime(PRInt64 *aTime)
+{
+  FORWARD_TO_INNER(GetMozAnimationStartTime, (aTime), NS_ERROR_NOT_INITIALIZED);
+
+  if (mDoc) {
+    nsIPresShell* presShell = mDoc->GetShell();
+    if (presShell) {
+      *aTime = presShell->GetPresContext()->RefreshDriver()->
+        MostRecentRefreshEpochTime() / PR_USEC_PER_MSEC;
+      return NS_OK;
+    }
+  }
+
+  // If all else fails, just be compatible with Date.now()
+  *aTime = JS_Now() / PR_USEC_PER_MSEC;
   return NS_OK;
 }
 
@@ -9773,6 +9807,10 @@ nsNavigator::nsNavigator(nsIDocShell *aDocShell)
 
 nsNavigator::~nsNavigator()
 {
+  if (mMimeTypes)
+    mMimeTypes->Invalidate();
+  if (mPlugins)
+    mPlugins->Invalidate();
 }
 
 //*****************************************************************************
@@ -10197,8 +10235,15 @@ nsNavigator::LoadingNewDocument()
   // Release these so that they will be recreated for the
   // new document (if requested).  The plugins or mime types
   // arrays may have changed.  See bug 150087.
-  mMimeTypes = nsnull;
-  mPlugins = nsnull;
+  if (mMimeTypes) {
+    mMimeTypes->Invalidate();
+    mMimeTypes = nsnull;
+  }
+
+  if (mPlugins) {
+    mPlugins->Invalidate();
+    mPlugins = nsnull;
+  }
 
   if (mGeolocation)
   {

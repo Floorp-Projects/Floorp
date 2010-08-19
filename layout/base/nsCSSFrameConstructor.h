@@ -52,7 +52,6 @@
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsCSSPseudoElements.h"
-#include "nsRefreshDriver.h"
 #include "RestyleTracker.h"
 
 class nsIDocument;
@@ -72,6 +71,7 @@ class ChildIterator;
 class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
 struct PendingBinding;
+class nsRefreshDriver;
 
 typedef void (nsLazyFrameConstructionCallback)
              (nsIContent* aContent, nsIFrame* aFrame, void* aArg);
@@ -79,8 +79,10 @@ typedef void (nsLazyFrameConstructionCallback)
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
 
-class nsCSSFrameConstructor : public nsARefreshObserver
+class nsCSSFrameConstructor
 {
+  friend class nsRefreshDriver;
+
 public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::css::RestyleTracker RestyleTracker;
@@ -89,15 +91,6 @@ public:
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
-
-  // Matches signature on nsARefreshObserver.  Just like
-  // NS_DECL_ISUPPORTS, but without the QI part.
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-protected:
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
-public:
 
   struct RestyleData;
   friend struct RestyleData;
@@ -351,9 +344,6 @@ public:
   {
     PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint, PR_TRUE);
   }
-
-  // nsARefreshObserver
-  virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   /**
    * Notify the frame constructor that an element needs to have its
@@ -1871,9 +1861,6 @@ private:
   PRPackedBool        mObservingRefreshDriver : 1;
   // True if we're in the middle of a nsRefreshDriver refresh
   PRPackedBool        mInStyleRefresh : 1;
-  // True if we're in the middle of a nsRefreshDriver refresh and haven't yet
-  // called CreateNeededFrames
-  PRPackedBool        mInLazyFCRefresh : 1;
   PRUint32            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
 

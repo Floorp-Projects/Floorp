@@ -266,6 +266,12 @@ PRBool nsContentUtils::sInitialized = PR_FALSE;
 nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>
   *nsContentUtils::sPrefCallbackTable = nsnull;
 
+#ifdef MOZ_IPC
+#ifdef ANDROID
+nsFrameLoader *nsContentUtils::sActiveFrameLoader = nsnull;
+#endif
+#endif
+
 static PLDHashTable sEventListenerManagersHash;
 
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
@@ -665,6 +671,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onvolumechange,                NS_VOLUMECHANGE, EventNameType_HTML, NS_EVENT_NULL },
 #endif // MOZ_MEDIA
     { nsGkAtoms::onMozAfterPaint,               NS_AFTERPAINT, EventNameType_None, NS_EVENT },
+    { nsGkAtoms::onMozBeforePaint,              NS_BEFOREPAINT, EventNameType_None, NS_EVENT_NULL },
 
     { nsGkAtoms::onMozScrolledAreaChanged,      NS_SCROLLEDAREACHANGED, EventNameType_None, NS_SCROLLAREA_EVENT },
 
@@ -5788,6 +5795,10 @@ CloneSimpleValues(JSContext* cx,
   // ArrayBuffer objects.
   if (js_IsArrayBuffer(obj)) {
     js::ArrayBuffer* src = js::ArrayBuffer::fromJSObject(obj);
+    if (!src) {
+      return NS_ERROR_FAILURE;
+    }
+
     JSObject* newBuffer = js_CreateArrayBuffer(cx, src->byteLength);
     if (!newBuffer) {
       return NS_ERROR_FAILURE;
@@ -6203,6 +6214,17 @@ nsContentUtils::IsFocusedContent(nsIContent* aContent)
 
   return fm && fm->GetFocusedContent() == aContent;
 }
+
+#ifdef MOZ_IPC
+#ifdef ANDROID
+// static
+already_AddRefed<nsFrameLoader>
+nsContentUtils::GetActiveFrameLoader()
+{
+  return nsCOMPtr<nsFrameLoader>(sActiveFrameLoader).forget();
+}
+#endif
+#endif
 
 void nsContentUtils::RemoveNewlines(nsString &aString)
 {

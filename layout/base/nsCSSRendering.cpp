@@ -79,6 +79,12 @@
 #include "nsStyleStructInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
+#include "nsContentUtils.h"
+#ifdef MOZ_SVG
+#include "nsSVGEffects.h"
+#include "nsSVGIntegrationUtils.h"
+#include "gfxDrawable.h"
+#endif
 
 #include "nsCSSRenderingBorders.h"
 
@@ -95,7 +101,7 @@ public:
   enum {
     FLAG_SYNC_DECODE_IMAGES = 0x01
   };
-  ImageRenderer(nsIFrame* aForFrame, const nsStyleImage& aImage, PRUint32 aFlags);
+  ImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage, PRUint32 aFlags);
   ~ImageRenderer();
   /**
    * Populates member variables to get ready for rendering.
@@ -121,10 +127,14 @@ public:
 
 private:
   nsIFrame*                 mForFrame;
-  nsStyleImage              mImage;
+  const nsStyleImage*       mImage;
   nsStyleImageType          mType;
   nsCOMPtr<imgIContainer>   mImageContainer;
   nsRefPtr<nsStyleGradient> mGradientData;
+#ifdef MOZ_SVG
+  nsIFrame*                 mPaintServerFrame;
+  nsLayoutUtils::SurfaceFromElementResult mImageElementSurface;
+#endif
   PRBool                    mIsReady;
   nsSize                    mSize;
   PRUint32                  mFlags;
@@ -2386,7 +2396,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   PRUint32 irFlags = 0;
   if (aFlags & nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES)
     irFlags |= ImageRenderer::FLAG_SYNC_DECODE_IMAGES;
-  ImageRenderer imageRenderer(aForFrame, aLayer.mImage, irFlags);
+  ImageRenderer imageRenderer(aForFrame, &aLayer.mImage, irFlags);
   if (!imageRenderer.PrepareImage()) {
     // There's no image or it's not ready to be painted.
     return;
@@ -3582,13 +3592,16 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 // ImageRenderer
 // ------------------
 ImageRenderer::ImageRenderer(nsIFrame* aForFrame,
-                                       const nsStyleImage& aImage,
-                                       PRUint32 aFlags)
+                             const nsStyleImage* aImage,
+                             PRUint32 aFlags)
   : mForFrame(aForFrame)
   , mImage(aImage)
-  , mType(aImage.GetType())
+  , mType(aImage->GetType())
   , mImageContainer(nsnull)
   , mGradientData(nsnull)
+#ifdef MOZ_SVG
+  , mPaintServerFrame(nsnull)
+#endif
   , mIsReady(PR_FALSE)
   , mSize(0, 0)
   , mFlags(aFlags)
@@ -3602,9 +3615,9 @@ ImageRenderer::~ImageRenderer()
 PRBool
 ImageRenderer::PrepareImage()
 {
-  if (mImage.IsEmpty() || !mImage.IsComplete()) {
+  if (mImage->IsEmpty() || !mImage->IsComplete()) {
     // Make sure the image is actually decoding
-    mImage.RequestDecode();
+    mImage->RequestDecode();
 
     // We can not prepare the image for rendering if it is not fully loaded.
     //
@@ -3613,25 +3626,25 @@ ImageRenderer::PrepareImage()
     nsCOMPtr<imgIContainer> img;
     if (!((mFlags & FLAG_SYNC_DECODE_IMAGES) &&
           (mType == eStyleImageType_Image) &&
-          (NS_SUCCEEDED(mImage.GetImageData()->GetImage(getter_AddRefs(img))) && img)))
-    return PR_FALSE;
+          (NS_SUCCEEDED(mImage->GetImageData()->GetImage(getter_AddRefs(img))) && img)))
+      return PR_FALSE;
   }
 
   switch (mType) {
     case eStyleImageType_Image:
     {
       nsCOMPtr<imgIContainer> srcImage;
-      mImage.GetImageData()->GetImage(getter_AddRefs(srcImage));
-      NS_ABORT_IF_FALSE(srcImage, "If srcImage is null, mImage.IsComplete() "
+      mImage->GetImageData()->GetImage(getter_AddRefs(srcImage));
+      NS_ABORT_IF_FALSE(srcImage, "If srcImage is null, mImage->IsComplete() "
                                   "should have returned false");
 
-      if (!mImage.GetCropRect()) {
+      if (!mImage->GetCropRect()) {
         mImageContainer.swap(srcImage);
       } else {
         nsIntRect actualCropRect;
         PRBool isEntireImage;
         PRBool success =
-          mImage.ComputeActualCropRect(actualCropRect, &isEntireImage);
+          mImage->ComputeActualCropRect(actualCropRect, &isEntireImage);
         NS_ASSERTION(success, "ComputeActualCropRect() should not fail here");
         if (!success || actualCropRect.IsEmpty()) {
           // The cropped image has zero size
@@ -3660,9 +3673,38 @@ ImageRenderer::PrepareImage()
       break;
     }
     case eStyleImageType_Gradient:
-      mGradientData = mImage.GetGradientData();
+      mGradientData = mImage->GetGradientData();
       mIsReady = PR_TRUE;
       break;
+#ifdef MOZ_SVG
+    case eStyleImageType_Element:
+    {
+      nsAutoString elementId =
+        NS_LITERAL_STRING("#") + nsDependentString(mImage->GetElementId());
+      nsCOMPtr<nsIURI> targetURI;
+      nsCOMPtr<nsIURI> base = mForFrame->GetContent()->GetBaseURI();
+      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), elementId,
+                                                mForFrame->GetContent()->GetCurrentDoc(), base);
+      nsSVGPaintingProperty* property = nsSVGEffects::GetPaintingPropertyForURI(
+          targetURI, mForFrame->GetFirstContinuation(),
+          nsSVGEffects::BackgroundImageProperty());
+      if (!property)
+        return PR_FALSE;
+      mPaintServerFrame = property->GetReferencedFrame();
+
+      // If the referenced element doesn't have a frame we might still be able
+      // to paint it if it's an <img>, <canvas>, or <video> element.
+      if (!mPaintServerFrame) {
+        nsCOMPtr<nsIDOMElement> imageElement =
+          do_QueryInterface(property->GetReferencedElement());
+        mImageElementSurface = nsLayoutUtils::SurfaceFromElement(imageElement);
+        if (!mImageElementSurface.mSurface)
+          return PR_FALSE;
+      }
+      mIsReady = PR_TRUE;
+      break;
+    }
+#endif
     case eStyleImageType_Null:
     default:
       break;
@@ -3691,6 +3733,32 @@ ImageRenderer::ComputeSize(const nsSize& aDefault)
     case eStyleImageType_Gradient:
       mSize = aDefault;
       break;
+#ifdef MOZ_SVG
+    case eStyleImageType_Element:
+    {
+      if (mPaintServerFrame) {
+        if (mPaintServerFrame->IsFrameOfType(nsIFrame::eSVG)) {
+          mSize = aDefault;
+        } else {
+          // The intrinsic image size for a generic nsIFrame paint server is
+          // the frame's bbox size rounded to device pixels.
+          PRInt32 appUnitsPerDevPixel =
+            mForFrame->PresContext()->AppUnitsPerDevPixel();
+          nsRect rect =
+            nsSVGIntegrationUtils::GetNonSVGUserSpace(mPaintServerFrame);
+          nsRect size = rect - rect.TopLeft();
+          nsIntRect rounded = size.ToNearestPixels(appUnitsPerDevPixel);
+          mSize = rounded.ToAppUnits(appUnitsPerDevPixel).Size();
+        }
+      } else {
+        NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
+        gfxIntSize size = mImageElementSurface.mSize;
+        mSize.width = nsPresContext::CSSPixelsToAppUnits(size.width);
+        mSize.height = nsPresContext::CSSPixelsToAppUnits(size.height);
+      }
+      break;
+    }
+#endif
     case eStyleImageType_Null:
     default:
       mSize.SizeTo(0, 0);
@@ -3713,8 +3781,12 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
     return;
   }
 
-  if (aDest.IsEmpty() || aFill.IsEmpty())
+  if (aDest.IsEmpty() || aFill.IsEmpty() ||
+      mSize.width <= 0 || mSize.height <= 0)
     return;
+
+  gfxPattern::GraphicsFilter graphicsFilter =
+    nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
   switch (mType) {
     case eStyleImageType_Image:
@@ -3723,7 +3795,7 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
                              ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
                              : (PRUint32) imgIContainer::FLAG_NONE;
       nsLayoutUtils::DrawImage(&aRenderingContext, mImageContainer,
-          nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame),
+          graphicsFilter,
           aDest, aFill, aAnchor, aDirty, drawFlags);
       break;
     }
@@ -3731,6 +3803,23 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
           mGradientData, aDirty, aDest, aFill);
       break;
+#ifdef MOZ_SVG
+    case eStyleImageType_Element:
+      if (mPaintServerFrame) {
+        nsSVGIntegrationUtils::DrawPaintServer(
+            &aRenderingContext, mForFrame, mPaintServerFrame, graphicsFilter,
+            aDest, aFill, aAnchor, aDirty, mSize);
+      } else {
+        NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
+        nsRefPtr<gfxDrawable> surfaceDrawable =
+          new gfxSurfaceDrawable(mImageElementSurface.mSurface,
+                                 mImageElementSurface.mSize);
+        nsLayoutUtils::DrawPixelSnapped(
+            &aRenderingContext, surfaceDrawable, graphicsFilter,
+            aDest, aFill, aAnchor, aDirty);
+      }
+      break;
+#endif
     case eStyleImageType_Null:
     default:
       break;

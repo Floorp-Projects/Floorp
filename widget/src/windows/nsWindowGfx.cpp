@@ -541,20 +541,24 @@ DDRAW_FAILED:
             BasicLayerManager::BUFFER_NONE;
           if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
 # if defined(MOZ_XUL) && !defined(WINCE)
-            if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
-              doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
-           } else if (eTransparencyTransparent == mTransparencyMode) {
-              // If we're rendering with translucency, we're going to be
-              // rendering the whole window; make sure we clear it first
-              thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-              thebesContext->Paint();
-              thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
-            } else
-#endif
-            {
-              // If we're not doing translucency, then double buffer
-              doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
+            switch (mTransparencyMode) {
+              case eTransparencyGlass:
+              case eTransparencyBorderlessGlass:
+              default:
+                // If we're not doing translucency, then double buffer
+                doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
+                break;
+              case eTransparencyTransparent:
+                // If we're rendering with translucency, we're going to be
+                // rendering the whole window; make sure we clear it first
+                thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+                thebesContext->Paint();
+                thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
+                break;
             }
+#else
+            doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
+#endif
           }
 
           {
@@ -758,12 +762,6 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   HICON *aIcon) {
 
   nsresult rv;
-  PRUint32 nFrames;
-  rv = aContainer->GetNumFrames(&nFrames);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!nFrames)
-    return NS_ERROR_INVALID_ARG;
 
   // Get the image data
   nsRefPtr<gfxImageSurface> frame;

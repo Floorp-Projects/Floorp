@@ -107,7 +107,7 @@ private:
   PRUint8 mCtxType; // X, Y or Unspecified
   PRPackedBool mIsAnimated;
   
-  static float GetMMPerPixel(nsIFrame *aNonSVGFrame);
+  static float GetMMPerPixel() { return MM_PER_INCH_FLOAT / 96; }
   float GetAxisLength(nsIFrame *aNonSVGFrame) const;
   static float GetEmLength(nsIFrame *aFrame)
     { return nsSVGUtils::GetFontSize(aFrame); }

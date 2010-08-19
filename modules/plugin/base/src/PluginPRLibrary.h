@@ -41,23 +41,12 @@
 
 #include "mozilla/PluginLibrary.h"
 #include "nsNPAPIPlugin.h"
+#include "npfunctions.h"
 
 namespace mozilla {
 
 class PluginPRLibrary : public PluginLibrary
 {
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    typedef NPError (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
-#else
-    typedef NPError (OSCALL *NP_InitializeFunc)(NPNetscapeFuncs*);
-#endif
-    typedef NPError (OSCALL *NP_ShutdownFunc)();
-    typedef char* (*NP_GetMIMEDescriptionFunc)();
-    typedef NPError (*NP_GetValueFunc)(void *, NPPVariable, void*);
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
-    typedef NPError (OSCALL *NP_GetEntryPointsFunc)(NPPluginFuncs*);
-#endif
-
 public:
     PluginPRLibrary(const char* aFilePath, PRLibrary* aLibrary) :
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -67,7 +56,9 @@ public:
 #endif
         mNP_Shutdown(nsnull),
         mNP_GetMIMEDescription(nsnull),
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
         mNP_GetValue(nsnull),
+#endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
         mNP_GetEntryPoints(nsnull),
 #endif
@@ -103,9 +94,9 @@ public:
             return false;
 #endif
 
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
         mNP_GetValue = (NP_GetValueFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
-#ifndef XP_MACOSX
         if (!mNP_GetValue)
             return false;
 #endif
@@ -146,7 +137,9 @@ private:
     NP_InitializeFunc mNP_Initialize;
     NP_ShutdownFunc mNP_Shutdown;
     NP_GetMIMEDescriptionFunc mNP_GetMIMEDescription;
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     NP_GetValueFunc mNP_GetValue;
+#endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
     NP_GetEntryPointsFunc mNP_GetEntryPoints;
 #endif

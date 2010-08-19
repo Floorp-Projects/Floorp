@@ -71,7 +71,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(bf6db598-3833-400b-9e53-ec220cb2496c)]
+[scriptable, uuid(74470127-87eb-4f79-8293-1616fe9cb689)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -528,4 +528,10 @@ interface nsIDocShell : nsISupports
    * like image frame discarding. Docshells are active unless told otherwise.
    */
   attribute boolean isActive;
+
+
+  /**
+   * The ID of the docshell in the session history.
+   */
+  readonly attribute unsigned long long historyID;
 };
