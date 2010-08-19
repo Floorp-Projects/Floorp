@@ -117,8 +117,7 @@ public:
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRUint32) GetType() const { return mType; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement);
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();

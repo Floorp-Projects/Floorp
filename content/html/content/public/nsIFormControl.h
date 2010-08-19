@@ -101,8 +101,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x0dc5083b, 0xb0a8, 0x48c4, \
- { 0xb2, 0xeb, 0xc2, 0x4f, 0xfb, 0x7e, 0xc2, 0x8e } }
+{ 0xc2f7723a, 0x106a, 0x47ef, \
+ { 0xa9, 0xff, 0x4b, 0x4f, 0x73, 0x47, 0xe7, 0xa6 } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -158,11 +158,8 @@ public:
    * submission object
    * @param aFormSubmission the form submission to notify of names/values/files
    *                       to submit
-   * @param aSubmitElement the element that was pressed to submit (possibly
-   *                       null)
    */
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement) = 0;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) = 0;
 
   /**
    * Save to presentation state.  The form control will determine whether it
