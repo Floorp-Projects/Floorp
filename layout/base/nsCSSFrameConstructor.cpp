@@ -3264,10 +3264,10 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
 
 #if defined(XP_MACOSX) || defined(XP_BEOS) 
       static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
-      view->CreateWidget(kCPopUpCID, &widgetData, nsnull);
+      view->CreateWidgetForPopup(kCPopUpCID, &widgetData);
 #else
       static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-      view->CreateWidget(kCChildCID, &widgetData, nsnull);
+      view->CreateWidgetForPopup(kCChildCID, &widgetData);
 #endif
     }
   }

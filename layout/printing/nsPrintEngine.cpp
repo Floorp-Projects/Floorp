@@ -1996,12 +1996,15 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // unnecessary and unexpected
   // Also, no widget should be needed except for the top-level document
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
-    nsNativeWidget widget = nsnull;
+    nsIWidget* widget = nsnull;
     if (!frame)
-      widget = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
-    rv = rootView->CreateWidget(kWidgetCID, nsnull,
-                                widget, PR_TRUE, PR_TRUE,
-                                eContentTypeContent);
+      widget = mParentWidget;
+    rv = widget ? rootView->CreateWidgetForParent(kWidgetCID, widget, nsnull,
+                                                  PR_TRUE, PR_TRUE,
+                                                  eContentTypeContent)
+                : rootView->CreateWidget(kWidgetCID, nsnull,
+                                         PR_TRUE, PR_TRUE,
+                                         eContentTypeContent);
     NS_ENSURE_SUCCESS(rv, rv);
     aPO->mWindow = rootView->GetWidget();
     aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
