@@ -836,6 +836,7 @@ public:
                                                         nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
+  NS_IMETHOD_(PRBool) ShouldIgnoreInvalidation();
   NS_IMETHOD_(void) WillPaint(PRBool aWillSendDidPaint);
   NS_IMETHOD_(void) DidPaint();
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
@@ -7193,6 +7194,12 @@ PresShell::IsVisible()
   PRBool res = PR_TRUE;
   bw->GetVisibility(&res);
   return res;
+}
+
+NS_IMETHODIMP_(PRBool)
+PresShell::ShouldIgnoreInvalidation()
+{
+  return mPaintingSuppressed;
 }
 
 NS_IMETHODIMP_(void)
