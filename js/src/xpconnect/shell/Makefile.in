@@ -57,9 +57,13 @@ LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(LIBXUL_LIBS) \
 		$(XPCOM_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NSPR_LIBS) \
 		$(NULL)
+
+ifdef JS_SHARED_LIBRARY
+LIBS +=	$(MOZ_JS_LIBS)
+endif
+
+LIBS +=	$(NSPR_LIBS)
 
 NSDISTMODE = copy
 

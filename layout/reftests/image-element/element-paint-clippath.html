@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test with clip-path.
+-->
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+  <div style="width:200px; height:200px;
+              clip-path:url(#c);
+              background:-moz-element(#d);"></div>
+
+  <div style="overflow:hidden; height:0;">
+    <div id="d" style="width:200px; height:200px; background:lime;"></div>
+  </div>
+  <svg height="0">
+    <clipPath id="c" clipPathUnits="userSpaceOnUse">
+      <rect x="50" y="50" width="50" height="50"></rect>
+    </clipPath>
+  </svg>
+</body>
+</html>

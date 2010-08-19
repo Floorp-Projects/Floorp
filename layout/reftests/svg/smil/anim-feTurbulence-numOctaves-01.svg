@@ -165,6 +165,7 @@
       <animate attributeName="numOctaves"
                calcMode="discrete"
                begin="0s" dur="10.1s"
+               from="1"
                to="4"
                fill="freeze"/>
     </feTurbulence>
@@ -177,6 +178,7 @@
       <animate attributeName="numOctaves"
                calcMode="discrete"
                begin="0s" dur="10s"
+               from="1"
                to="4"
                fill="freeze"/>
     </feTurbulence>
@@ -192,6 +194,7 @@
       <animate attributeName="numOctaves"
                calcMode="discrete"
                begin="0s" dur="10.1s"
+               from="4"
                to="1"
                fill="freeze"/>
     </feTurbulence>
@@ -204,6 +207,7 @@
       <animate attributeName="numOctaves"
                calcMode="discrete"
                begin="0s" dur="10s"
+               from="4"
                to="1"
                fill="freeze"/>
     </feTurbulence>

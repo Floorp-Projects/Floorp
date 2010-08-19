@@ -385,8 +385,8 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
 
   // Otherwise, we're looking at a non-system file with a handle on an
   // implicit wrapper. This is a bug! Deny access.
-  NS_ERROR("Implicit native wrapper in content code");
-  return JS_FALSE;
+  NS_WARNING("Implicit native wrapper in content code");
+  return JS_TRUE;
 #else
   return JS_TRUE;
 #endif

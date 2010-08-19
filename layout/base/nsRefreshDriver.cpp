@@ -46,6 +46,11 @@
 #include "nsComponentManagerUtils.h"
 #include "prlog.h"
 #include "nsAutoPtr.h"
+#include "nsCSSFrameConstructor.h"
+#include "nsIDocument.h"
+#include "nsGUIEvent.h"
+#include "nsEventDispatcher.h"
+#include "jsapi.h"
 
 /*
  * TODO:
@@ -77,6 +82,14 @@ nsRefreshDriver::MostRecentRefresh() const
   const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
 
   return mMostRecentRefresh;
+}
+
+PRInt64
+nsRefreshDriver::MostRecentRefreshEpochTime() const
+{
+  const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
+
+  return mMostRecentRefreshEpochTime;
 }
 
 PRBool
@@ -140,12 +153,17 @@ nsRefreshDriver::ObserverCount() const
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
     sum += mObservers[i].Length();
   }
+  sum += mStyleFlushObservers.Length();
+  sum += mLayoutFlushObservers.Length();
+  sum += mBeforePaintTargets.Length();
   return sum;
 }
 
 void
 nsRefreshDriver::UpdateMostRecentRefresh()
 {
+  // Call JS_Now first, since that can have nonzero latency in some rare cases.
+  mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
 }
 
@@ -214,14 +232,41 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
       }
     }
     if (i == 0) {
+      // Don't just loop while we have things in mBeforePaintTargets,
+      // the whole point is that event handlers should readd the
+      // target as needed.
+      nsTArray<nsIDocument*> targets;
+      targets.SwapElements(mBeforePaintTargets);
+      PRInt64 eventTime = mMostRecentRefreshEpochTime / PR_USEC_PER_MSEC;
+      for (PRUint32 i = 0; i < targets.Length(); ++i) {
+        targets[i]->BeforePaintEventFiring();
+      }
+      for (PRUint32 i = 0; i < targets.Length(); ++i) {
+        nsEvent ev(PR_TRUE, NS_BEFOREPAINT);
+        ev.time = eventTime;
+        nsEventDispatcher::Dispatch(targets[i], nsnull, &ev);
+      }
+
       // This is the Flush_Style case.
-      // FIXME: Maybe we should only flush if the WillRefresh calls did
-      // something?  It's probably ok as-is, though, especially as we
-      // hook up more things here (or to the replacement of this class).
-      presShell->FlushPendingNotifications(Flush_Style);
+      while (!mStyleFlushObservers.IsEmpty() &&
+             mPresContext && mPresContext->GetPresShell()) {
+        PRUint32 idx = mStyleFlushObservers.Length() - 1;
+        nsCOMPtr<nsIPresShell> shell = mStyleFlushObservers[idx];
+        mStyleFlushObservers.RemoveElementAt(idx);
+        shell->FrameConstructor()->mObservingRefreshDriver = PR_FALSE;
+        shell->FlushPendingNotifications(Flush_Style);
+      }
     } else if  (i == 1) {
       // This is the Flush_Layout case.
-      presShell->FlushPendingNotifications(Flush_InterruptibleLayout);
+      while (!mLayoutFlushObservers.IsEmpty() &&
+             mPresContext && mPresContext->GetPresShell()) {
+        PRUint32 idx = mLayoutFlushObservers.Length() - 1;
+        nsCOMPtr<nsIPresShell> shell = mLayoutFlushObservers[idx];
+        mLayoutFlushObservers.RemoveElementAt(idx);
+        shell->mReflowScheduled = PR_FALSE;
+        shell->mSuppressInterruptibleReflows = PR_FALSE;
+        shell->FlushPendingNotifications(Flush_InterruptibleLayout);
+      }
     }
   }
 
@@ -265,3 +310,20 @@ nsRefreshDriver::IsRefreshObserver(nsARefreshObserver *aObserver,
   return array.Contains(aObserver);
 }
 #endif
+
+PRBool
+nsRefreshDriver::ScheduleBeforePaintEvent(nsIDocument* aDocument)
+{
+  NS_ASSERTION(mBeforePaintTargets.IndexOf(aDocument) ==
+               mBeforePaintTargets.NoIndex,
+               "Shouldn't have a paint event posted for this document");
+  PRBool appended = mBeforePaintTargets.AppendElement(aDocument) != nsnull;
+  EnsureTimerStarted();
+  return appended;
+}
+
+void
+nsRefreshDriver::RevokeBeforePaintEvent(nsIDocument* aDocument)
+{
+  mBeforePaintTargets.RemoveElement(aDocument);
+}

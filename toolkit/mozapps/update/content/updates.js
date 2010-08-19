@@ -40,6 +40,7 @@
 
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Firefox's macBrowserOverlay.xul includes scripts that define Cc, Ci, and Cr
 // so we have to use different names.
@@ -71,8 +72,6 @@ const STATE_FAILED            = "failed";
 const SRCEVT_FOREGROUND       = 1;
 const SRCEVT_BACKGROUND       = 2;
 
-var gConsole    = null;
-var gPref       = null;
 var gLogEnabled = false;
 var gUpdatesFoundPageId;
 
@@ -94,7 +93,7 @@ var gUpdatesFoundPageId;
 function LOG(module, string) {
   if (gLogEnabled) {
     dump("*** AUS:UI " + module + ":" + string + "\n");
-    gConsole.logStringMessage("AUS:UI " + module + ":" + string);
+    Services.console.logStringMessage("AUS:UI " + module + ":" + string);
   }
 }
 
@@ -122,7 +121,7 @@ function openUpdateURL(event) {
  */
 function getPref(func, preference, defaultValue) {
   try {
-    return gPref[func](preference);
+    return Services.prefs[func](preference);
   }
   catch (e) {
     LOG("General", "getPref - failed to get preference: " + preference);
@@ -257,7 +256,7 @@ var gUpdates = {
     // this version again unless they manually select "Check for Updates..."
     // which will clear all of the "never" prefs.
     var neverPrefName = PREF_APP_UPDATE_NEVER_BRANCH + this.update.appVersion;
-    gPref.setBoolPref(neverPrefName, true);
+    Services.prefs.setBoolPref(neverPrefName, true);
   },
 
   /**
@@ -331,10 +330,6 @@ var gUpdates = {
   onLoad: function() {
     this.wiz = document.documentElement;
 
-    gPref = CoC["@mozilla.org/preferences-service;1"].
-            getService(CoI.nsIPrefBranch2);
-    gConsole = CoC["@mozilla.org/consoleservice;1"].
-               getService(CoI.nsIConsoleService);
     gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false)
 
     this.strings = document.getElementById("updateStrings");
@@ -507,11 +502,8 @@ var gUpdates = {
       return;
     }
 
-    var ai = CoC["@mozilla.org/xre/app-info;1"].getService(CoI.nsIXULAppInfo);
-    var vc = CoC["@mozilla.org/xpcom/version-comparator;1"].
-             getService(CoI.nsIVersionComparator);
     if (!this.update.appVersion ||
-        vc.compare(this.update.appVersion, ai.version) == 0) {
+        Services.vc.compare(this.update.appVersion, Services.appinfo.version) == 0) {
       aCallback(false);
       return;
     }
@@ -581,6 +573,13 @@ var gCheckingPage = {
   onPageShow: function() {
     gUpdates.setButtons(null, null, null, false, true);
     gUpdates.wiz.getButton("cancel").focus();
+
+    // Clear all of the "never" prefs to handle the scenario where the user
+    // clicked "never" for an update, selected "Check for Updates...", and
+    // then canceled.  If we don't clear the "never" prefs future
+    // notifications will never happen.
+    Services.prefs.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
+
     this._checker = CoC["@mozilla.org/updates/update-checker;1"].
                     createInstance(CoI.nsIUpdateChecker);
     this._checker.checkForUpdates(this.updateListener, true);
@@ -682,14 +681,13 @@ var gPluginsPage = {
    * Initialize
    */
   onPageShow: function() {
-    if (gPref.getPrefType(PREF_PLUGINS_UPDATEURL) == gPref.PREF_INVALID) {
+    var prefs = Services.prefs;
+    if (prefs.getPrefType(PREF_PLUGINS_UPDATEURL) == prefs.PREF_INVALID) {
       gUpdates.wiz.goTo("noupdatesfound");
       return;
     }
     
-    var formatter = CoC["@mozilla.org/toolkit/URLFormatterService;1"].
-                       getService(CoI.nsIURLFormatter);
-    this._url = formatter.formatURLPref(PREF_PLUGINS_UPDATEURL);
+    this._url = Services.urlFormatter.formatURLPref(PREF_PLUGINS_UPDATEURL);
     var link = document.getElementById("pluginupdateslink");
     link.setAttribute("href", this._url);
 
@@ -848,9 +846,7 @@ var gIncompatibleCheckPage = {
  */
 var gManualUpdatePage = {
   onPageShow: function() {
-    var formatter = CoC["@mozilla.org/toolkit/URLFormatterService;1"].
-                    getService(CoI.nsIURLFormatter);
-    var manualURL = formatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
+    var manualURL = Services.urlFormatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
     var manualUpdateLinkLabel = document.getElementById("manualUpdateLinkLabel");
     manualUpdateLinkLabel.value = manualURL;
     manualUpdateLinkLabel.setAttribute("url", manualURL);
@@ -902,12 +898,6 @@ var gUpdatesFoundBasicPage = {
     var updateTitle = gUpdates.getAUSString("updatesfound_" + update.type +
                                             ".title");
     document.getElementById("updatesFoundBasicHeader").setAttribute("label", updateTitle);
-
-    // Clear all of the "never" prefs to handle the scenario where the user
-    // clicked "never" for an update, selected "Check for Updates...", and
-    // then canceled.  If we don't clear the "never" prefs future
-    // notifications will never happen.
-    gPref.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
   },
 
   onExtra1: function() {
@@ -955,11 +945,9 @@ var gUpdatesFoundBillboardPage = {
 
     var billboardTestURL = getPref("getCharPref", PREF_APP_UPDATE_BILLBOARD_TEST_URL, null);
     if (billboardTestURL) {
-      var ioServ = CoC["@mozilla.org/network/io-service;1"].
-               getService(CoI.nsIIOService);
       // Allow file urls when testing the billboard and fallback to the
       // normal method if the URL isn't a file.
-      var scheme = ioServ.newURI(billboardTestURL, null, null).scheme;
+      var scheme = Services.io.newURI(billboardTestURL, null, null).scheme;
       if (scheme == "file")
         remoteContent.testFileUrl = update.billboardURL;
       else
@@ -967,12 +955,6 @@ var gUpdatesFoundBillboardPage = {
     }
     else
       remoteContent.url = update.billboardURL;
-
-    // Clear all of the "never" prefs to handle the scenario where the user
-    // clicked "never" for an update, selected "Check for Updates...", and
-    // then canceled.  If we don't clear the "never" prefs future
-    // notifications will never happen.
-    gPref.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
 
     this._billboardLoaded = true;
   },
@@ -1414,8 +1396,7 @@ var gDownloadingPage = {
       var title = gUpdates.getAUSString("resumePausedAfterCloseTitle");
       var message = gUpdates.getAUSString("resumePausedAfterCloseMsg",
                                           [gUpdates.brandName]);
-      var ps = CoC["@mozilla.org/embedcomp/prompt-service;1"].
-               getService(CoI.nsIPromptService);
+      var ps = Services.prompt;
       var flags = ps.STD_YES_NO_BUTTONS;
       // Focus the software update wizard before prompting. This will raise
       // the software update wizard if it is minimized making it more obvious
@@ -1546,27 +1527,21 @@ var gDownloadingPage = {
         // the update object.
         this.removeDownloadListener();
         gUpdates.wiz.goTo("errors");
+        break;
       }
-      else {
-        // Verification failed for a partial patch, complete patch is now
-        // downloading so return early and do NOT remove the download listener!
+      // Verification failed for a partial patch, complete patch is now
+      // downloading so return early and do NOT remove the download listener!
 
-        // Reset the progress meter to "undertermined" mode so that we don't
-        // show old progress for the new download of the "complete" patch.
-        this._downloadProgress.mode = "undetermined";
-        this._pauseButton.disabled = true;
-
-        var verificationFailed = document.getElementById("verificationFailed");
-        verificationFailed.hidden = false;
-
-        return;
-      }
+      // Reset the progress meter to "undertermined" mode so that we don't
+      // show old progress for the new download of the "complete" patch.
+      this._downloadProgress.mode = "undetermined";
+      this._pauseButton.disabled = true;
+      document.getElementById("verificationFailed").hidden = false;
       break;
     case CoR.NS_BINDING_ABORTED:
       LOG("gDownloadingPage", "onStopRequest - pausing download");
-      // Return early, do not remove UI listener since the user may resume
-      // downloading again.
-      return;
+      // Do not remove UI listener since the user may resume downloading again.
+      break;
     case CoR.NS_OK:
       LOG("gDownloadingPage", "onStopRequest - patch verification succeeded");
       this.removeDownloadListener();
@@ -1594,7 +1569,7 @@ var gDownloadingPage = {
 };
 
 /**
- * The "There was an error applying the update's patch" page.
+ * The "There was an error during the update" page.
  */
 var gErrorsPage = {
   /**
@@ -1612,9 +1587,7 @@ var gErrorsPage = {
 
     var errorReason = document.getElementById("errorReason");
     errorReason.value = statusText;
-    var formatter = CoC["@mozilla.org/toolkit/URLFormatterService;1"].
-                    getService(CoI.nsIURLFormatter);
-    var manualURL = formatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
+    var manualURL = Services.urlFormatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL;
     errorLinkLabel.setAttribute("url", manualURL);
@@ -1740,12 +1713,10 @@ var gInstalledPage = {
    * Initialize
    */
   onPageShow: function() {
-    var ai = CoC["@mozilla.org/xre/app-info;1"].getService(CoI.nsIXULAppInfo);
-
     var branding = document.getElementById("brandStrings");
     try {
       // whatsNewURL should just be a pref (bug 546609).
-      var url = branding.getFormattedString("whatsNewURL", [ai.version]);
+      var url = branding.getFormattedString("whatsNewURL", [Services.appinfo.version]);
       var whatsnewLink = document.getElementById("whatsnewLink");
       whatsnewLink.setAttribute("url", url);
       whatsnewLink.hidden = false;

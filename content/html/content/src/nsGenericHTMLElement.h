@@ -45,6 +45,7 @@
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsFrameLoader.h"
 #include "nsGkAtoms.h"
+#include "nsContentCreatorFunctions.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -909,9 +910,11 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIFrameLoaderOwner
 {
 public:
-  nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                            PRUint32 aFromParser)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    mNetworkCreated = aFromParser == NS_FROM_PARSER_NETWORK;
   }
   virtual ~nsGenericHTMLFrameElement();
 
@@ -958,6 +961,10 @@ protected:
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
+  // True when the element is created by the parser
+  // using NS_FROM_PARSER_NETWORK flag.
+  // If the element is modified, it may lose the flag.
+  PRPackedBool            mNetworkCreated;
 };
 
 //----------------------------------------------------------------------

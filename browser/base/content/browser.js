@@ -178,6 +178,7 @@ let gInitialPages = [
 #include inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
+#include browser-tabview.js
 
 #ifdef MOZ_SERVICES_SYNC
 #include browser-syncui.js
@@ -749,7 +750,7 @@ const gXPInstallObserver = {
         PopupNotifications.remove(notification);
 
       var needsRestart = installInfo.installs.some(function(i) {
-        return (i.addon.pendingOperations & AddonManager.PENDING_INSTALL) != 0;
+        return i.addon.pendingOperations != AddonManager.PENDING_NONE;
       });
 
       if (needsRestart) {
@@ -1523,6 +1524,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // initialize the sync UI
   gSyncUI.init();
 #endif
+
+  TabView.init();
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
@@ -2357,10 +2360,11 @@ function losslessDecodeURI(aURI) {
   value = value.replace(/[\v\x0c\x1c\x1d\x1e\x1f\u2028\u2029\ufffc]/g,
                         encodeURIComponent);
 
-  // Encode default ignorable characters. (bug 546013)
+  // Encode default ignorable characters (bug 546013)
+  // except ZWNJ (U+200C) and ZWJ (U+200D) (bug 582186).
   // This includes all bidirectional formatting characters.
   // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-  value = value.replace(/[\u00ad\u034f\u115f-\u1160\u17b4-\u17b5\u180b-\u180d\u200b-\u200f\u202a-\u202e\u2060-\u206f\u3164\ufe00-\ufe0f\ufeff\uffa0\ufff0-\ufff8]|\ud834[\udd73-\udd7a]|[\udb40-\udb43][\udc00-\udfff]/g,
+  value = value.replace(/[\u00ad\u034f\u115f-\u1160\u17b4-\u17b5\u180b-\u180d\u200b\u200e-\u200f\u202a-\u202e\u2060-\u206f\u3164\ufe00-\ufe0f\ufeff\uffa0\ufff0-\ufff8]|\ud834[\udd73-\udd7a]|[\udb40-\udb43][\udc00-\udfff]/g,
                         encodeURIComponent);
   return value;
 }
@@ -6769,6 +6773,8 @@ var gBookmarkAllTabsHandler = {
     this._command = document.getElementById("Browser:BookmarkAllTabs");
     gBrowser.tabContainer.addEventListener("TabOpen", this, true);
     gBrowser.tabContainer.addEventListener("TabClose", this, true);
+    gBrowser.tabContainer.addEventListener("TabShow", this, true);
+    gBrowser.tabContainer.addEventListener("TabHide", this, true);
     this._updateCommandState();
   },
 

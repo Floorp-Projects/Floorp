@@ -68,10 +68,6 @@ Requestor.prototype = {
 };
 
 function run_test() {
-// DISABLE TEST: bug 586238
-  _dump('FIXME/bug 586238: disabled to avoid perma-orange\n');
-}
-function never() {
   dump("*** run_test\n");
   httpserver = new nsHttpServer();
   httpserver.registerPathHandler("/auth", authHandler);
@@ -215,20 +211,27 @@ function never() {
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody);
 
-    // XXX skip all authentication tests for now, as they're busted on e10s (bug 537782)
 
     // Authentication (no password; working resume)
     // (should not give us any data)
-    /*var chan = make_channel("http://localhost:4444/range");
-    chan.nsIResumableChannel.resumeAt(1, entityID);
-    chan.nsIHttpChannel.setRequestHeader("X-Need-Auth", "true", false);
-    chan.asyncOpen(new ChannelListener(test_auth_nopw, null, CL_EXPECT_FAILURE), null);*/
+    // XXX skip authentication tests on e10s (bug 587146)
+    try { // nsIXULRuntime is not available in some configurations.
+      let processType = Components.classes["@mozilla.org/xre/runtime;1"].
+                        getService(Components.interfaces.nsIXULRuntime).processType;
+      if (processType != Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+        // 404 page (same content length as real content)
+        var chan = make_channel("http://localhost:4444/range");
+        chan.nsIResumableChannel.resumeAt(1, entityID);
+        chan.nsIHttpChannel.setRequestHeader("X-Want-404", "true", false);
+        chan.asyncOpen(new ChannelListener(test_404, null, CL_EXPECT_FAILURE), null);
+        return;
+      }
+    } catch (e) { }
 
-    // 404 page (same content length as real content)
     var chan = make_channel("http://localhost:4444/range");
     chan.nsIResumableChannel.resumeAt(1, entityID);
-    chan.nsIHttpChannel.setRequestHeader("X-Want-404", "true", false);
-    chan.asyncOpen(new ChannelListener(test_404, null, CL_EXPECT_FAILURE), null);
+    chan.nsIHttpChannel.setRequestHeader("X-Need-Auth", "true", false);
+    chan.asyncOpen(new ChannelListener(test_auth_nopw, null, CL_EXPECT_FAILURE), null);
   }
 
   function test_auth_nopw(request, data, ctx) {

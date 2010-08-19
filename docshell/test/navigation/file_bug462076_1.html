@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <title>Bug 462076</title>
+    <script>
+      var srcs = [ "frame0.html",
+                   "frame1.html",
+                   "frame2.html",
+                   "frame3.html" ];
+
+      var checkCount = 0;
+
+      function makeFrame(index) {
+        var ifr = document.createElement("iframe");
+        ifr.src = srcs[index];
+        ifr.onload = checkFrame;
+        document.getElementById("container" + index).appendChild(ifr);
+      }
+
+      function runTest() {
+        var randomNumber = Math.floor(Math.random() * 4);
+        for (var i = randomNumber; i < 4; ++i) {
+          makeFrame(i);
+        }
+        for (var i = 0; i < randomNumber; ++i) {
+          makeFrame(i);
+        }
+      }
+
+      function checkFrame(evt) {
+        var ifr = evt.target;
+        opener.ok(new String(ifr.contentWindow.location).indexOf(ifr.src) >= 0,
+           "Wrong document loaded (" + ifr.src + ", " + 
+           ifr.contentWindow.location + ")!");
+
+        if (++checkCount == 4) {
+          if (++opener.testCount == 10) {
+            opener.nextTest();
+            window.close();
+          } else {
+            window.location.reload();
+          }
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="container0"></div>
+    <div id="container1"></div>
+    <div id="container2"></div>
+    <div id="container3"></div>
+    <script>
+      runTest();
+    </script>
+  </body>
+</html>

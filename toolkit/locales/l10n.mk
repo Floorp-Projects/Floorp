@@ -80,6 +80,9 @@ core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURD
 ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
 WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
+# Allows overriding the final destination of the repackaged file
+ZIP_OUT ?= $(_ABS_DIST)/$(PACKAGE)
+
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=$(MOZ_LANGPACK_EID) \
@@ -95,7 +98,7 @@ clobber-%:
 
 
 PACKAGER_NO_LIBS = 1
-include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -123,7 +126,6 @@ endif
 unpack: $(STAGEDIST)
 	@echo done unpacking
 
-repackage-zip: ZIP_OUT="$(_ABS_DIST)/$(PACKAGE)"
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:
 # call a hook for apps to put their uninstall helper.exe into the package
@@ -146,7 +148,7 @@ ifeq (WINCE,$(OS_ARCH))
 	  $(MAKE_CAB)
 endif
 ifdef MOZ_MAKE_COMPLETE_MAR
-	$(MAKE) -C $(DEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
+	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
 	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
 	  DIST="$(_ABS_DIST)"
@@ -157,9 +159,12 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj
 endif
 endif
+ifdef MOZ_OMNIJAR
+	@(cd $(STAGEDIST) && $(UNPACK_OMNIJAR))
+endif
 	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(DIST)/$(PACKAGE)"
+	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(ZIP_OUT)"
 ifeq (WINCE,$(OS_ARCH))
 	mv -f "$(DIST)/l10n-stage/$(PKG_BASENAME).cab" "$(DIST)/$(PKG_PATH)$(PKG_BASENAME).cab"
 endif
@@ -171,7 +176,7 @@ APP_DEFINES = $(firstword $(wildcard $(LOCALE_SRCDIR)/defines.inc) \
                           $(srcdir)/en-US/defines.inc)
 TK_DEFINES = $(firstword \
    $(wildcard $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc) \
-   $(topsrcdir)/toolkit/locales/en-US/defines.inc)
+   $(MOZILLA_DIR)/toolkit/locales/en-US/defines.inc)
 
 langpack-%: LANGPACK_FILE=$(_ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-%: AB_CD=$*
@@ -179,7 +184,7 @@ langpack-%: XPI_NAME=locale-$*
 langpack-%: libs-%
 	@echo "Making langpack $(LANGPACK_FILE)"
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(TK_DEFINES) -I$(APP_DEFINES) $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
+	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(TK_DEFINES) -I$(APP_DEFINES) $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest -x chrome/$(AB_CD).manifest
 
@@ -207,7 +212,7 @@ endif
 endif
 
 generate-snippet-%:
-	$(PYTHON) $(topsrcdir)/tools/update-packaging/generatesnippet.py \
+	$(PYTHON) $(MOZILLA_DIR)/tools/update-packaging/generatesnippet.py \
           --mar-path=$(_ABS_DIST)/update \
           --application-ini-file=$(STAGEDIST)/application.ini \
           --locale=$* \

@@ -87,7 +87,7 @@ var originalStrings = [
 var clipboardHTML = [
   '<p id=\"test0\">This text should be copied.</p>',
   '<p id=\"test1\">This text should be copied.</p>',
-  '<p id=\"test2\">This<span style=\"-moz-user-select: text;\"> text should</span> be copied.</p>'
+  '<p id=\"test2\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>'
 ];
 
 // expected results for clipboard text/unicode
@@ -101,7 +101,7 @@ var clipboardUnicode = [
 var innerHTMLStrings = [
   'This text should be copied.',
   'This text should<span style=\"-moz-user-select: none;\"> NOT</span> be copied.',
-  'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text;\"> text should</span> NOT</span> be copied.'
+  'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.'
 ];
 
 // expected results for pasting into a TEXTAREA

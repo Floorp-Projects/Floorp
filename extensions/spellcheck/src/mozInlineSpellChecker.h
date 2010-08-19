@@ -279,7 +279,7 @@ public:
                         mozInlineSpellStatus* aStatus,
                         PRBool* aDoneChecking);
 
-  // helper routine to determine if a point is inside of a the passed in selection.
+  // helper routine to determine if a point is inside of the passed in selection.
   nsresult IsPointInSelection(nsISelection *aSelection,
                               nsIDOMNode *aNode,
                               PRInt32 aOffset,

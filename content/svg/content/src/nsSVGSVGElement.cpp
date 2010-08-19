@@ -68,10 +68,10 @@
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
 
-using namespace mozilla;
-
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 #endif // MOZ_SMIL
+
+using namespace mozilla;
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal, mElement)
 
@@ -201,7 +201,6 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mCoordCtx(nsnull),
     mViewportWidth(0),
     mViewportHeight(0),
-    mCoordCtxMmPerPx(0),
     mCurrentTranslate(0.0f, 0.0f),
     mCurrentScale(1.0f),
     mPreviousTranslate(0.0f, 0.0f),
@@ -309,15 +308,7 @@ nsSVGSVGElement::GetViewport(nsIDOMSVGRect * *aViewport)
 NS_IMETHODIMP
 nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
 {
-  // to correctly determine this, the caller would need to pass in the
-  // right PresContext...
-  nsPresContext *context = nsContentUtils::GetContextForContent(this);
-  if (!context) {
-    *aPixelUnitToMillimeterX = 0.28f; // 90dpi
-    return NS_OK;
-  }
-
-  *aPixelUnitToMillimeterX = 25.4f / nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
+  *aPixelUnitToMillimeterX = MM_PER_INCH_FLOAT / 96;
   return NS_OK;
 }
 
@@ -332,16 +323,7 @@ nsSVGSVGElement::GetPixelUnitToMillimeterY(float *aPixelUnitToMillimeterY)
 NS_IMETHODIMP
 nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
 {
-  // to correctly determine this, the caller would need to pass in the
-  // right PresContext...
-  nsPresContext *context = nsContentUtils::GetContextForContent(this);
-  if (!context) {
-    *aScreenPixelToMillimeterX = 0.28f; // 90dpi
-    return NS_OK;
-  }
-
-  *aScreenPixelToMillimeterX = 25.4f /
-      nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
+  *aScreenPixelToMillimeterX = MM_PER_INCH_FLOAT / 96;
   return NS_OK;
 }
 
@@ -1150,15 +1132,6 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     return float(nsSVGUtils::ComputeNormalizedHypotenuse(w, h));
   }
   return 0;
-}
-
-float
-nsSVGSVGElement::GetMMPerPx(PRUint8 aCtxType)
-{
-  if (mCoordCtxMmPerPx == 0.0f) {
-    GetScreenPixelToMillimeterX(&mCoordCtxMmPerPx);
-  }
-  return mCoordCtxMmPerPx;
 }
 
 //----------------------------------------------------------------------

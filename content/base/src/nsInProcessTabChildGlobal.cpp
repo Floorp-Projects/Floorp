@@ -49,6 +49,7 @@
 #include "nsScriptLoader.h"
 #include "nsIJSContextStack.h"
 #include "nsFrameLoader.h"
+#include "nsIPrivateDOMEvent.h"
 
 bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aMessage,
@@ -117,7 +118,6 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
 
 nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 {
-  Disconnect();
   NS_ASSERTION(!mCx, "Couldn't release JSContext?!?");
 }
 
@@ -182,13 +182,38 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
 void
 nsInProcessTabChildGlobal::Disconnect()
 {
+  // Let the frame scripts know the child is being closed. We do any other
+  // cleanup after the event has been fired. See DelayedDisconnect
+  nsContentUtils::AddScriptRunner(
+     NS_NewRunnableMethod(this, &nsInProcessTabChildGlobal::DelayedDisconnect)
+  );
+}
+
+void
+nsInProcessTabChildGlobal::DelayedDisconnect()
+{
+  // Don't let the event escape
+  mOwner = nsnull;
+
+  // Fire the "unload" event
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
+  if (event) {
+    event->InitEvent(NS_LITERAL_STRING("unload"), PR_FALSE, PR_FALSE);
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+    privateEvent->SetTrusted(PR_TRUE);
+
+    PRBool dummy;
+    nsDOMEventTargetHelper::DispatchEvent(event, &dummy);
+  }
+
+  // Continue with the Disconnect cleanup
   nsCOMPtr<nsIDOMWindow> win = do_GetInterface(mDocShell);
   nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(win);
   if (pwin) {
     pwin->SetChromeEventHandler(pwin->GetChromeEventHandler());
   }
   mDocShell = nsnull;
-  mOwner = nsnull;
   mChromeMessageManager = nsnull;
   if (mMessageManager) {
     static_cast<nsFrameMessageManager*>(mMessageManager.get())->Disconnect();
@@ -271,7 +296,6 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
 
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);
-  JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 1 * 1024 * 1024);
 
   JSAutoRequest ar(cx);
   nsIXPConnect* xpc = nsContentUtils::XPConnect();

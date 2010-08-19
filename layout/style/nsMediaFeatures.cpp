@@ -236,7 +236,7 @@ GetResolution(nsPresContext* aPresContext, const nsMediaFeature*,
 {
     // Resolution values are in device pixels, not CSS pixels.
     nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
-    float dpi = float(dx->AppUnitsPerInch()) / float(dx->AppUnitsPerDevPixel());
+    float dpi = float(dx->AppUnitsPerPhysicalInch()) / float(dx->AppUnitsPerDevPixel());
     aResult.SetFloatValue(dpi, eCSSUnit_Inch);
     return NS_OK;
 }

@@ -49,10 +49,10 @@ skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-r
 skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
 skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 != resizer-bottomend.xul blank-window.xul
-== resizer-bottomend.xul resizer-bottomright.xul
+random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086 
 != resizer-bottomend.xul resizer-bottomend-rtl.xul
 skip-if(gtk2Widget) != resizer-bottomend-rtl.xul blank-window.xul
-skip-if(gtk2Widget) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
+skip-if(gtk2Widget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul # bug 581086
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html

@@ -391,6 +391,9 @@ DEFINES += \
 		-DIMPL_THEBES \
 		$(NULL)
 
+ifndef JS_SHARED_LIBRARY
+DEFINES += -DSTATIC_EXPORTABLE_JS_API
+endif
 ifndef MOZ_NATIVE_ZLIB
 DEFINES += -DZLIB_INTERNAL
 endif
@@ -842,3 +845,5 @@ ifdef TIERS
 DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
 STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
 endif
+
+OPTIMIZE_JARS_CMD = $(PYTHON) $(call core_abspath,$(topsrcdir)/config/optimizejars.py)

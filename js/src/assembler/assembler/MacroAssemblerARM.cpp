@@ -34,7 +34,7 @@
 
 #include "MacroAssemblerARM.h"
 
-#if WTF_PLATFORM_LINUX
+#if WTF_PLATFORM_LINUX || WTF_PLATFORM_ANDROID
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

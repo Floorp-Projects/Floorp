@@ -251,6 +251,8 @@ public:
   // nsMediaDecoder::NotifySuspendedStatusChanged is called when this
   // changes.
   virtual PRBool IsSuspendedByCache() = 0;
+  // Returns true if this stream has been suspended.
+  virtual PRBool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
   // any data which overlaps uncached data, or if aCount bytes otherwise can't
   // be read, this function will return failure. This function be called from
@@ -366,6 +368,7 @@ public:
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset);
   virtual PRBool  IsSuspendedByCache();
+  virtual PRBool  IsSuspended();
 
   class Listener : public nsIStreamListener,
                    public nsIInterfaceRequestor,

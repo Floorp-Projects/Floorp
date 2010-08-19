@@ -420,13 +420,21 @@ GetScopeFunction(JSContext *cx, JSObject *outerObj)
     return nsnull;
   }
 
-  if (JSVAL_IS_OBJECT(v)) {
-    return JSVAL_TO_OBJECT(v);
+  JSObject *unsafeObj = GetUnsafeObject(cx, outerObj);
+  JSObject *scopeobj = JS_GetGlobalForObject(cx, unsafeObj);
+  OBJ_TO_INNER_OBJECT(cx, scopeobj);
+  if (!scopeobj) {
+    return nsnull;
   }
 
-  JSObject *unsafeObj = GetUnsafeObject(cx, outerObj);
-  JSFunction *fun = JS_NewFunction(cx, DummyNative, 0, 0,
-                                   JS_GetGlobalForObject(cx, unsafeObj),
+  if (JSVAL_IS_OBJECT(v)) {
+    JSObject *funobj = JSVAL_TO_OBJECT(v);
+    if (JS_GetGlobalForObject(cx, funobj) == scopeobj) {
+      return funobj;
+    }
+  }
+
+  JSFunction *fun = JS_NewFunction(cx, DummyNative, 0, 0, scopeobj,
                                    "SJOWContentBoundary");
   if (!fun) {
     return nsnull;

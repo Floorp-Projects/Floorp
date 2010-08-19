@@ -208,3 +208,16 @@ function isSecurityState(expectedState, message, test)
       throw "Invalid isSecurityState state";
   }
 }
+
+function waitForSecurityState(expectedState, callback)
+{
+  var roundsLeft = 200; // Wait for 20 seconds (=200*100ms)
+  var interval =
+  window.setInterval(function() {
+    isSecurityState(expectedState, "", function(isok) {if (isok) {roundsLeft = 0;}});
+    if (!roundsLeft--) {
+      window.clearInterval(interval);
+      callback();
+    }
+  }, 100);
+}

@@ -66,8 +66,7 @@ struct _hb_face_t {
   hb_destroy_func_t    destroy;
   void                *user_data;
 
-  hb_blob_t *head_blob;
-  const struct head *head_table;
+  unsigned int         units_per_em;
 
   struct hb_ot_layout_t *ot_layout;
 };

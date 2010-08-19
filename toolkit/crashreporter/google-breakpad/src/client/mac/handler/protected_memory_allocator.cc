@@ -59,7 +59,7 @@ ProtectedMemoryAllocator::~ProtectedMemoryAllocator() {
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-char *ProtectedMemoryAllocator::Allocate(size_t bytes) {
+char *ProtectedMemoryAllocator::Allocate(vm_size_t bytes) {
   if (valid_ && next_alloc_offset_ + bytes <= pool_size_) {
     char *p = (char*)base_address_ + next_alloc_offset_;
     next_alloc_offset_ += bytes;

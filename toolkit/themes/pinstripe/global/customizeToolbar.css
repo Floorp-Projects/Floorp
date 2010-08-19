@@ -37,33 +37,33 @@
  ***** END LICENSE BLOCK ***** */
 
 #palette-box {
-	margin-top: 2px;
+  margin-top: 2px;
 }
 #palette-box > hbox > toolbarpaletteitem {
-	padding: 2px;
-	margin: 0px;
+  padding: 2px;
+  margin: 0px;
 }
 
 #main-box {
-	padding: 12px;
+  padding: 12px;
 }
 
 #main-box > separator {
-	-moz-appearance: none;
-	border-bottom: none;
+  -moz-appearance: none;
+  border-bottom: none;
 } 
 
 #instructions {
-	font: menu;
-	font-weight: bold;
-	line-height: 16pt;
+  font: menu;
+  font-weight: bold;
+  line-height: 16pt;
 }
 
 hbox button {
-	font: menu;
+  font: menu;
 }
 
 #main-box > box > button {
-	min-height: 19px; /* aqua size for small buttons */
-	font: message-box;
+  min-height: 19px; /* aqua size for small buttons */
+  font: message-box;
 }

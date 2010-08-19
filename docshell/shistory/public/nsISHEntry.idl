@@ -58,7 +58,7 @@ class nsDocShellEditorData;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
 
-[scriptable, uuid(62b0603f-57ca-439e-a0fb-6f6978500755)]
+[scriptable, uuid(39b73c3a-48eb-4189-8069-247279c3c42d)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -188,7 +188,9 @@ interface nsISHEntry : nsIHistoryEntry
                            in nsIInputStream inputStream,
                            in nsILayoutHistoryState layoutHistoryState,
                            in nsISupports cacheKey, in ACString contentType,
-                           in nsISupports owner);
+                           in nsISupports owner,
+                           in unsigned long long docshellID,
+                           in boolean dynamicCreation);
 
     nsISHEntry clone();
 
@@ -229,6 +231,23 @@ interface nsISHEntry : nsIHistoryEntry
 
     /** Returns true if this shistory entry is storing a detached editor. */
     [noscript, notxpcom] boolean hasDetachedEditor();
+
+    /**
+     * Returns true if the related docshell was added because of
+     * dynamic addition of an iframe/frame.
+     */
+    boolean isDynamicallyAdded();
+
+    /**
+     * Returns true if any of the child entries returns true
+     * when isDynamicallyAdded is called on it.
+     */
+    boolean hasDynamicallyAddedChild();
+
+    /**
+     * The history ID of the docshell.
+     */
+    attribute unsigned long long docshellID;
 };
 
 
