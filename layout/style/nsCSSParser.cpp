@@ -4993,12 +4993,7 @@ CSSParserImpl::ParseChoice(nsCSSValue aValues[],
 void
 CSSParserImpl::AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue)
 {
-  NS_ASSERTION(0 <= aPropID && aPropID < eCSSProperty_COUNT_no_shorthands,
-               "property out of range");
-  nsCSSValue& storage =
-      *static_cast<nsCSSValue*>(mTempData.PropertyAt(aPropID));
-  storage = aValue;
-  mTempData.SetPropertyBit(aPropID);
+  mTempData.AddLonghandProperty(aPropID, aValue);
 }
 
 /**
