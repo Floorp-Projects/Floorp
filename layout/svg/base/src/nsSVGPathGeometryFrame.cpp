@@ -46,6 +46,7 @@
 #include "nsSVGRect.h"
 #include "nsSVGPathGeometryElement.h"
 #include "gfxContext.h"
+#include "gfxPlatform.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -169,7 +170,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   PRBool isHit = PR_FALSE;
 
-  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  gfxContext context(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   GeneratePath(&context);
   gfxPoint userSpacePoint =
@@ -249,7 +250,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
   mRect.Empty();
 
-  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  gfxContext context(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   GeneratePath(&context);
   context.IdentityMatrix();
@@ -361,7 +362,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
     // XXX ReportToConsole
     return gfxRect(0.0, 0.0, 0.0, 0.0);
   }
-  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  gfxContext context(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
   GeneratePath(&context, &aToBBoxUserspace);
   context.IdentityMatrix();
   return context.GetUserPathExtent();
