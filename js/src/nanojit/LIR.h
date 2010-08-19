@@ -289,32 +289,9 @@ namespace nanojit
     struct MiniAccSet { MiniAccSetVal val; };
     static const MiniAccSet MINI_ACCSET_MULTIPLE = { 99 };
 
-#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
-    extern "C" unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
-    # pragma intrinsic(_BitScanReverse)
-
-    // Returns the index of the most significant bit that is set.
-    static int msbSet(uint32_t x) {
-        unsigned long idx;
-        _BitScanReverse(&idx, (unsigned long)(x | 1)); // the '| 1' ensures a 0 result when x==0
-        return idx;
-    }
-#elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-    static int msbSet(uint32_t x) {
-        return 31 - __builtin_clz(x | 1);
-    }
-#else
-    static int msbSet(uint32_t x) {     // slow fallback version
-        for (int i = 31; i >= 0; i--)
-            if ((1 << i) & x) 
-                return i;
-        return 0;
-    }
-#endif
-
     static MiniAccSet compressAccSet(AccSet accSet) {
         if (isSingletonAccSet(accSet)) {
-            MiniAccSet ret = { uint8_t(msbSet(accSet)) };
+            MiniAccSet ret = { uint8_t(msbSet32(accSet)) };
             return ret;
         }
 

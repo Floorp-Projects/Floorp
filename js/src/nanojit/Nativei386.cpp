@@ -1112,7 +1112,6 @@ namespace nanojit
         a.free = SavedRegs | ScratchRegs;
         if (!_config.i386_sse2)
             a.free &= ~XmmRegs;
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* targ)

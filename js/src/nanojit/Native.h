@@ -99,15 +99,6 @@
 
 namespace nanojit {
 
-    inline Register nextreg(Register r) {
-        return Register(r+1);
-    }
-
-    inline Register prevreg(Register r) {
-        return Register(r-1);
-    }
-
-
     class Fragment;
     struct SideExit;
     struct SwitchInfo;

@@ -234,7 +234,6 @@ namespace nanojit
     {
         a.clear();
         a.free = GpRegs | FpRegs;
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* location)
