@@ -184,7 +184,6 @@ public:
   // Ditto but as a string, return "" when not found.
   static const nsAFlatCString& ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[]);
 
-  static const nsCSSType       kTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const PRInt32* const  kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];

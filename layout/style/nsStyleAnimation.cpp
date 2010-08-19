@@ -1738,93 +1738,67 @@ PRBool
 nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                                  nsPresContext* aPresContext,
                                  const Value& aComputedValue,
-                                 void* aSpecifiedValue)
+                                 nsCSSValue& aSpecifiedValue)
 {
   NS_ABORT_IF_FALSE(aPresContext, "null pres context");
 
   switch (aComputedValue.GetUnit()) {
     case eUnit_Normal:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->SetNormalValue();
+      aSpecifiedValue.SetNormalValue();
       break;
     case eUnit_Auto:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->SetAutoValue();
+      aSpecifiedValue.SetAutoValue();
       break;
     case eUnit_None:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->SetNoneValue();
+      aSpecifiedValue.SetNoneValue();
       break;
     case eUnit_Enumerated:
     case eUnit_Visibility:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
+      aSpecifiedValue.
         SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Enumerated);
       break;
     case eUnit_Integer:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
+      aSpecifiedValue.
         SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Integer);
       break;
-    case eUnit_Coord: {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      nscoordToCSSValue(aComputedValue.GetCoordValue(),
-                        *static_cast<nsCSSValue*>(aSpecifiedValue));
+    case eUnit_Coord:
+      nscoordToCSSValue(aComputedValue.GetCoordValue(), aSpecifiedValue);
       break;
-    }
     case eUnit_Percent:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
-        SetPercentValue(aComputedValue.GetPercentValue());
+      aSpecifiedValue.SetPercentValue(aComputedValue.GetPercentValue());
       break;
     case eUnit_Float:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
+      aSpecifiedValue.
         SetFloatValue(aComputedValue.GetFloatValue(), eCSSUnit_Number);
       break;
     case eUnit_Color:
       // colors can be alone, or part of a paint server
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
-        SetColorValue(aComputedValue.GetColorValue());
+      aSpecifiedValue.SetColorValue(aComputedValue.GetColorValue());
       break;
     case eUnit_CSSValuePair: {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
       // Rule node processing expects pair values to be collapsed to a
       // single value if both halves would be equal, for most but not
       // all properties.  At present, all animatable properties that
       // use pairs do expect collapsing.
       const nsCSSValuePair* pair = aComputedValue.GetCSSValuePairValue();
       if (pair->mXValue == pair->mYValue) {
-        *static_cast<nsCSSValue*>(aSpecifiedValue) = pair->mXValue;
+        aSpecifiedValue = pair->mXValue;
       } else {
-        static_cast<nsCSSValue*>(aSpecifiedValue)->
-          SetPairValue(pair);
+        aSpecifiedValue.SetPairValue(pair);
       }
     } break;
     case eUnit_CSSRect: {
-      nsCSSRect& rect = static_cast<nsCSSValue*>(aSpecifiedValue)->
-        SetRectValue();
+      nsCSSRect& rect = aSpecifiedValue.SetRectValue();
       rect = *aComputedValue.GetCSSRectValue();
     } break;
     case eUnit_Dasharray:
     case eUnit_Shadow:
     case eUnit_Transform:
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
+      aSpecifiedValue.
         SetDependentListValue(aComputedValue.GetCSSValueListValue());
       break;
     case eUnit_CSSValuePairList:
-      static_cast<nsCSSValue*>(aSpecifiedValue)->
+      aSpecifiedValue.
         SetDependentPairListValue(aComputedValue.GetCSSValuePairListValue());
       break;
     default:
@@ -1847,30 +1821,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     return PR_TRUE;
   }
   nsCSSValue val;
-  void *storage;
-  switch (nsCSSProps::kTypeTable[aProperty]) {
-    case eCSSType_Value:
-      storage = &val;
-      break;
-    default:
-      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");
-      storage = nsnull;
-      break;
-  }
-
   if (!nsStyleAnimation::UncomputeValue(aProperty, aPresContext,
-                                        aComputedValue, storage)) {
+                                        aComputedValue, val)) {
     return PR_FALSE;
   }
 
-  switch (nsCSSProps::kTypeTable[aProperty]) {
-    case eCSSType_Value:
-      val.AppendToString(aProperty, aSpecifiedValue);
-      break;
-    default:
-      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");
-      return PR_FALSE;
-  }
+  val.AppendToString(aProperty, aSpecifiedValue);
   return PR_TRUE;
 }
 

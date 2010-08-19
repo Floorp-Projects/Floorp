@@ -50,9 +50,9 @@ struct PropertyOffsetInfo {
 
 const PropertyOffsetInfo kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,     \
-                               member_, type_, kwtable_)                     \
+                               member_, kwtable_)                            \
       { size_t(-1), size_t(-1) },
-  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, \
+  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
                    kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
       { offsetof(nsRuleData, m##datastruct_##Data),                          \
         offsetof(nsRuleData##datastruct_, member_) },
@@ -63,8 +63,8 @@ const PropertyOffsetInfo kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
 
 } // anon namespace
 
-void*
-nsRuleData::StorageFor(nsCSSProperty aProperty)
+nsCSSValue*
+nsRuleData::ValueFor(nsCSSProperty aProperty)
 {
   NS_ABORT_IF_FALSE(aProperty < eCSSProperty_COUNT_no_shorthands,
                     "invalid or shorthand property");
@@ -77,5 +77,5 @@ nsRuleData::StorageFor(nsCSSProperty aProperty)
     (reinterpret_cast<char*>(this) + offsets.struct_offset);
   NS_ABORT_IF_FALSE(cssstruct, "substructure pointer should never be null");
 
-  return reinterpret_cast<void*>(cssstruct + offsets.member_offset);
+  return reinterpret_cast<nsCSSValue*>(cssstruct + offsets.member_offset);
 }
