@@ -55,6 +55,8 @@
 class nsLeafAccessible : public nsAccessibleWrap
 {
 public:
+  using nsAccessible::GetChildAtPoint;
+
   nsLeafAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports
