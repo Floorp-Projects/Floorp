@@ -101,6 +101,7 @@ enum nsCSSUnit {
   eCSSUnit_DummyInherit = 9,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
   eCSSUnit_RectIsAuto   = 10,     // (n/a) 'auto' for an entire rect()
+
   eCSSUnit_String       = 11,     // (PRUnichar*) a string value
   eCSSUnit_Ident        = 12,     // (PRUnichar*) a string value
   eCSSUnit_Families     = 13,     // (PRUnichar*) a string value
@@ -108,11 +109,13 @@ enum nsCSSUnit {
   eCSSUnit_Local_Font   = 15,     // (PRUnichar*) a local font name
   eCSSUnit_Font_Format  = 16,     // (PRUnichar*) a font format name
   eCSSUnit_Element      = 17,     // (PRUnichar*) an element id
+
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
   eCSSUnit_Cubic_Bezier = 23,     // (nsCSSValue::Array*) a list of float values
-  eCSSUnit_Function     = 24,     // (nsCSSValue::Array*) a function with parameters.  First elem of array is name,
+  eCSSUnit_Function     = 24,     // (nsCSSValue::Array*) a function with
+                                  //  parameters.  First elem of array is name,
                                   //  the rest of the values are arguments.
 
   // The top level of a calc() expression is either -moz-calc()
@@ -139,10 +142,15 @@ enum nsCSSUnit {
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
   eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
-  eCSSUnit_Integer      = 50,     // (int) simple value
-  eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
+
+  eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
+
+  eCSSUnit_Integer      = 70,     // (int) simple value
+  eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
+
   eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
   eCSSUnit_Color        = 81,     // (nscolor) an RGBA value
+
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
 
@@ -179,6 +187,8 @@ enum nsCSSUnit {
 };
 
 struct nsCSSValueGradient;
+struct nsCSSValuePair;
+struct nsCSSValuePair_heap;
 
 class nsCSSValue {
 public:
@@ -335,6 +345,9 @@ public:
     return mValue.mGradient;
   }
 
+  inline nsCSSValuePair& GetPairValue(); // body below
+  inline const nsCSSValuePair& GetPairValue() const; // body below
+
   URL* GetURLStructValue() const
   {
     // Not allowing this for Image values, because if the caller takes
@@ -378,6 +391,8 @@ public:
   void SetURLValue(nsCSSValue::URL* aURI);
   void SetImageValue(nsCSSValue::Image* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
+  void SetPairValue(const nsCSSValuePair* aPair);
+  void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetAutoValue();
   void SetInheritValue();
   void SetInitialValue();
@@ -469,6 +484,7 @@ protected:
     URL*       mURL;
     Image*     mImage;
     nsCSSValueGradient* mGradient;
+    nsCSSValuePair_heap* mPair;
   }         mValue;
 };
 
@@ -700,6 +716,34 @@ struct nsCSSValuePair {
   nsCSSValue mXValue;
   nsCSSValue mYValue;
 };
+
+// nsCSSValuePair_heap differs from nsCSSValuePair only in being
+// refcounted.  It should not be necessary to use this class directly;
+// it's an implementation detail of nsCSSValue.
+struct nsCSSValuePair_heap : public nsCSSValuePair {
+  // forward constructor
+  nsCSSValuePair_heap(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
+    : nsCSSValuePair(aXValue, aYValue)
+  {}
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValuePair_heap)
+};
+
+// This has to be here so that the relationship between nsCSSValuePair
+// and nsCSSValuePair_heap is visible.
+inline nsCSSValuePair&
+nsCSSValue::GetPairValue()
+{
+  NS_ASSERTION(mUnit == eCSSUnit_Pair, "not a pair value");
+  return *mValue.mPair;
+}
+
+inline const nsCSSValuePair&
+nsCSSValue::GetPairValue() const
+{
+  NS_ASSERTION(mUnit == eCSSUnit_Pair, "not a pair value");
+  return *mValue.mPair;
+}
 
 // Maybe should be replaced with nsCSSValueList and nsCSSValue::Array?
 struct nsCSSValuePairList {

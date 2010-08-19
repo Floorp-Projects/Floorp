@@ -142,10 +142,6 @@ PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
       static_cast<const nsCSSRect*>(storage)->
         AppendToString(aProperty, aResult);
       break;
-    case eCSSType_ValuePair:
-      static_cast<const nsCSSValuePair*>(storage)->
-        AppendToString(aProperty, aResult);
-      break;
     case eCSSType_ValueList:
       (*static_cast<nsCSSValueList*const*>(storage))->
         AppendToString(aProperty, aResult);
@@ -219,10 +215,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       case eCSSType_Rect: {
         const nsCSSRect *rect = static_cast<const nsCSSRect*>(storage);
         unit = rect->mTop.GetUnit();
-      } break;
-      case eCSSType_ValuePair: {
-        const nsCSSValuePair *pair = static_cast<const nsCSSValuePair*>(storage);
-        unit = pair->mXValue.GetUnit();
       } break;
       case eCSSType_ValueList: {
         const nsCSSValueList* item =
@@ -309,44 +301,42 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
-    case eCSSProperty__moz_border_radius: 
+    case eCSSProperty__moz_border_radius:
     case eCSSProperty__moz_outline_radius: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ASSERTION(nsCSSProps::kTypeTable[subprops[0]] == eCSSType_ValuePair &&
-                   nsCSSProps::kTypeTable[subprops[1]] == eCSSType_ValuePair &&
-                   nsCSSProps::kTypeTable[subprops[2]] == eCSSType_ValuePair &&
-                   nsCSSProps::kTypeTable[subprops[3]] == eCSSType_ValuePair,
-                   "type mismatch");
-      const nsCSSValuePair* vals[4] = {
-        data->ValuePairStorageFor(subprops[0]),
-        data->ValuePairStorageFor(subprops[1]),
-        data->ValuePairStorageFor(subprops[2]),
-        data->ValuePairStorageFor(subprops[3])
+      const nsCSSValue* vals[4] = {
+        data->ValueStorageFor(subprops[0]),
+        data->ValueStorageFor(subprops[1]),
+        data->ValueStorageFor(subprops[2]),
+        data->ValueStorageFor(subprops[3])
       };
-
-      vals[0]->mXValue.AppendToString(subprops[0], aValue);
-      aValue.Append(PRUnichar(' '));
-      vals[1]->mXValue.AppendToString(subprops[1], aValue);
-      aValue.Append(PRUnichar(' '));
-      vals[2]->mXValue.AppendToString(subprops[2], aValue);
-      aValue.Append(PRUnichar(' '));
-      vals[3]->mXValue.AppendToString(subprops[3], aValue);
 
       // For compatibility, only write a slash and the y-values
       // if they're not identical to the x-values.
-      if (vals[0]->mXValue != vals[0]->mYValue ||
-          vals[1]->mXValue != vals[1]->mYValue ||
-          vals[2]->mXValue != vals[2]->mYValue ||
-          vals[3]->mXValue != vals[3]->mYValue) {
+      PRBool needY = PR_FALSE;
+      for (int i = 0; i < 4; i++) {
+        if (vals[i]->GetUnit() == eCSSUnit_Pair) {
+          needY = PR_TRUE;
+          vals[i]->GetPairValue().mXValue.AppendToString(subprops[i], aValue);
+        } else {
+          vals[i]->AppendToString(subprops[i], aValue);
+        }
+        if (i < 3)
+          aValue.Append(PRUnichar(' '));
+      }
+
+      if (needY) {
         aValue.AppendLiteral(" / ");
-        vals[0]->mYValue.AppendToString(subprops[0], aValue);
-        aValue.Append(PRUnichar(' '));
-        vals[1]->mYValue.AppendToString(subprops[1], aValue);
-        aValue.Append(PRUnichar(' '));
-        vals[2]->mYValue.AppendToString(subprops[2], aValue);
-        aValue.Append(PRUnichar(' '));
-        vals[3]->mYValue.AppendToString(subprops[3], aValue);
+        for (int i = 0; i < 4; i++) {
+          if (vals[i]->GetUnit() == eCSSUnit_Pair) {
+            vals[i]->GetPairValue().mYValue.AppendToString(subprops[i], aValue);
+          } else {
+            vals[i]->AppendToString(subprops[i], aValue);
+          }
+          if (i < 3)
+            aValue.Append(PRUnichar(' '));
+        }
       }
       break;
     }

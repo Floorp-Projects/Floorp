@@ -283,8 +283,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // 100% on all corners
       nsCSSCornerSizes& corners = aData->mMarginData->mBorderRadius;
 
-      NS_FOR_CSS_HALF_CORNERS(hc) {
-        nsCSSValue& dimen = corners.GetHalfCorner(hc);
+      NS_FOR_CSS_FULL_CORNERS(c) {
+        nsCSSValue& dimen = corners.GetCorner(c);
         if (dimen.GetUnit() == eCSSUnit_Null) {
           dimen.SetPercentValue(1.0f);
         }

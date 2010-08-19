@@ -158,6 +158,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mGradient = aCopy.mValue.mGradient;
     mValue.mGradient->AddRef();
   }
+  else if (eCSSUnit_Pair == mUnit) {
+    mValue.mPair = aCopy.mValue.mPair;
+    mValue.mPair->AddRef();
+  }
   else {
     NS_NOTREACHED("unknown unit");
   }
@@ -199,6 +203,9 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Gradient == mUnit) {
       return *mValue.mGradient == *aOther.mValue.mGradient;
+    }
+    else if (eCSSUnit_Pair == mUnit) {
+      return *mValue.mPair == *aOther.mValue.mPair;
     }
     else {
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -267,6 +274,8 @@ void nsCSSValue::DoReset()
     mValue.mImage->Release();
   } else if (eCSSUnit_Gradient == mUnit) {
     mValue.mGradient->Release();
+  } else if (eCSSUnit_Pair == mUnit) {
+    mValue.mPair->Release();
   }
   mUnit = eCSSUnit_Null;
 }
@@ -355,6 +364,39 @@ void nsCSSValue::SetGradientValue(nsCSSValueGradient* aValue)
   mUnit = eCSSUnit_Gradient;
   mValue.mGradient = aValue;
   mValue.mGradient->AddRef();
+}
+
+void nsCSSValue::SetPairValue(const nsCSSValuePair* aValue)
+{
+  // pairs should not be used for null/inherit/initial values
+  NS_ABORT_IF_FALSE(aValue &&
+                    aValue->mXValue.GetUnit() != eCSSUnit_Null &&
+                    aValue->mYValue.GetUnit() != eCSSUnit_Null &&
+                    aValue->mXValue.GetUnit() != eCSSUnit_Inherit &&
+                    aValue->mYValue.GetUnit() != eCSSUnit_Inherit &&
+                    aValue->mXValue.GetUnit() != eCSSUnit_Initial &&
+                    aValue->mYValue.GetUnit() != eCSSUnit_Initial,
+                    "missing or inappropriate pair value");
+  Reset();
+  mUnit = eCSSUnit_Pair;
+  mValue.mPair = new nsCSSValuePair_heap(aValue->mXValue, aValue->mYValue);
+  mValue.mPair->AddRef();
+}
+
+void nsCSSValue::SetPairValue(const nsCSSValue& xValue,
+                              const nsCSSValue& yValue)
+{
+  NS_ABORT_IF_FALSE(xValue.GetUnit() != eCSSUnit_Null &&
+                    yValue.GetUnit() != eCSSUnit_Null &&
+                    xValue.GetUnit() != eCSSUnit_Inherit &&
+                    yValue.GetUnit() != eCSSUnit_Inherit &&
+                    xValue.GetUnit() != eCSSUnit_Initial &&
+                    yValue.GetUnit() != eCSSUnit_Initial,
+                    "inappropriate pair value");
+  Reset();
+  mUnit = eCSSUnit_Pair;
+  mValue.mPair = new nsCSSValuePair_heap(xValue, yValue);
+  mValue.mPair->AddRef();
 }
 
 void nsCSSValue::SetAutoValue()
@@ -828,6 +870,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     }
 
     aResult.AppendLiteral(")");
+  } else if (eCSSUnit_Pair == unit) {
+    GetPairValue().AppendToString(aProperty, aResult);
   }
 
   switch (unit) {
@@ -874,6 +918,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
+    case eCSSUnit_Pair:         break;
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
@@ -1024,23 +1069,11 @@ PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM =
 // --- nsCSSValuePair -----------------
 
 void
-nsCSSValuePair::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+nsCSSValuePair::AppendToString(nsCSSProperty aProperty,
+                               nsAString& aResult) const
 {
   mXValue.AppendToString(aProperty, aResult);
-  // Only output a Y value if it's different from the X value,
-  // or if it's a background-position value other than 'initial'
-  // or 'inherit', or if it's a -moz-transform-origin value other
-  // than 'initial' or 'inherit', or if it's a background-size
-  // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
-  if (mYValue != mXValue ||
-      ((aProperty == eCSSProperty_background_position ||
-        aProperty == eCSSProperty__moz_transform_origin) &&
-       mXValue.GetUnit() != eCSSUnit_Inherit &&
-       mXValue.GetUnit() != eCSSUnit_Initial) ||
-      (aProperty == eCSSProperty_background_size &&
-       mXValue.GetUnit() != eCSSUnit_Inherit &&
-       mXValue.GetUnit() != eCSSUnit_Initial &&
-       mXValue.GetUnit() != eCSSUnit_Enumerated)) {
+  if (mYValue.GetUnit() != eCSSUnit_Null) {
     aResult.Append(PRUnichar(' '));
     mYValue.AppendToString(aProperty, aResult);
   }

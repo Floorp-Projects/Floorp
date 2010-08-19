@@ -313,7 +313,7 @@ CSS_PROP_BORDER(
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderRadius.mTopLeft,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_TopLeft)
@@ -324,7 +324,7 @@ CSS_PROP_BORDER(
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderRadius.mTopRight,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_TopRight)
@@ -335,7 +335,7 @@ CSS_PROP_BORDER(
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderRadius.mBottomRight,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_BottomRight)
@@ -346,7 +346,7 @@ CSS_PROP_BORDER(
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
     mBorderRadius.mBottomLeft,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_BottomLeft)
@@ -362,7 +362,7 @@ CSS_PROP_OUTLINE(
     0,
     Margin,
     mOutlineRadius.mTopLeft,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleOutline, mOutlineRadius),
     eStyleAnimType_Corner_TopLeft)
@@ -373,7 +373,7 @@ CSS_PROP_OUTLINE(
     0,
     Margin,
     mOutlineRadius.mTopRight,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleOutline, mOutlineRadius),
     eStyleAnimType_Corner_TopRight)
@@ -384,7 +384,7 @@ CSS_PROP_OUTLINE(
     0,
     Margin,
     mOutlineRadius.mBottomRight,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleOutline, mOutlineRadius),
     eStyleAnimType_Corner_BottomRight)
@@ -395,7 +395,7 @@ CSS_PROP_OUTLINE(
     0,
     Margin,
     mOutlineRadius.mBottomLeft,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleOutline, mOutlineRadius),
     eStyleAnimType_Corner_BottomLeft)
@@ -1006,7 +1006,7 @@ CSS_PROP_TABLEBORDER(
     0,
     Table,
     mBorderSpacing,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom) // XXX bug 3935
@@ -2245,7 +2245,7 @@ CSS_PROP_BACKENDONLY(
     0,
     Page,
     mSize,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     kPageSizeKTable)
 CSS_PROP_BACKENDONLY(
     speak,
@@ -2387,7 +2387,7 @@ CSS_PROP_DISPLAY(
     0,
     Display,
     mTransformOrigin,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
@@ -2802,7 +2802,7 @@ CSS_PROP_SVG(
     0,
     SVG,
     mFill,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleSVG, mFill),
     eStyleAnimType_PaintServer)
@@ -2972,7 +2972,7 @@ CSS_PROP_SVG(
     0,
     SVG,
     mStroke,
-    eCSSType_ValuePair,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleSVG, mStroke),
     eStyleAnimType_PaintServer)
