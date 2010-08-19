@@ -58,7 +58,9 @@ const nsIDOMXULElement     = I.nsIDOMXULElement;
 const nsIDOMProcessingInstruction = I.nsIDOMProcessingInstruction;
 
 function DOMParser() {
-  return C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
+  var parser = C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
+  parser.init();
+  return parser;
 }
 
 var __testsDirectory = null;
