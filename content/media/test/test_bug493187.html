@@ -54,7 +54,7 @@ for (var i=0; i<gSeekTests.length; ++i) {
   v._name = test.name;
   v._seeked = false;
   v._finished = false;
-  v.autobuffer = true;
+  v.preload = "auto";
   v.addEventListener("loadedmetadata", start, false);
   v.addEventListener("canplaythrough", canPlayThrough, false);
   v.addEventListener("seeking", startSeeking, false);
