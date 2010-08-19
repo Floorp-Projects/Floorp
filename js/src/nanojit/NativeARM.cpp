@@ -623,7 +623,7 @@ Assembler::asm_arg(ArgType ty, LIns* arg, Register& r, int& stkd)
         // pre-assign registers R0-R3 for arguments (if they fit)
         if (r < R4) {
             asm_regarg(ty, arg, r);
-            r = nextreg(r);
+            r = Register(r + 1);
         } else {
             asm_stkarg(arg, stkd);
             stkd += 4;
@@ -657,14 +657,14 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
     // R3 if r is R3 to start with, and will force the argument to go on
     // the stack.
     if ((r == R1) || (r == R3)) {
-        r = nextreg(r);
+        r = Register(r + 1);
     }
 #endif
 
     if (r < R3) {
         Register    ra = r;
-        Register    rb = nextreg(r);
-        r = nextreg(rb);
+        Register    rb = Register(r + 1);
+        r = Register(rb + 1);
 
 #ifdef NJ_ARM_EABI
         // EABI requires that 64-bit arguments are aligned on even-numbered
@@ -687,12 +687,8 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
         // We only have one register left, but the legacy ABI requires that we
         // put 32 bits of the argument in the register (R3) and the remaining
         // 32 bits on the stack.
-        Register    ra = r;
-        r = nextreg(r);
-
-        // This really just checks that nextreg() works properly, as we know
-        // that r was previously R3.
-        NanoAssert(r == R4);
+        Register    ra = r; // R3
+        r = R4;
 
         // We're splitting the argument between registers and the stack.  This
         // must be the first time that the stack is used, so stkd must be at 0.
@@ -967,8 +963,6 @@ Assembler::nRegisterResetAll(RegAlloc& a)
         rmask(R10) | rmask(LR);
     if (_config.arm_vfp)
         a.free |= FpRegs;
-
-    debug_only(a.managed = a.free);
 }
 
 static inline ConditionCode

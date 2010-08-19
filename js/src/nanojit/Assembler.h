@@ -315,7 +315,11 @@ namespace nanojit
             Register    registerAlloc(LIns* ins, RegisterMask allow, RegisterMask prefer);
             Register    registerAllocTmp(RegisterMask allow);
             void        registerResetAll();
-            void        evictAllActiveRegs();
+            void        evictAllActiveRegs() {
+                // The evicted set will be be intersected with activeSet(),
+                // so use an all-1s mask to avoid an extra load or call.
+                evictSomeActiveRegs(~RegisterMask(0));
+            }
             void        evictSomeActiveRegs(RegisterMask regs);
             void        evictScratchRegsExcept(RegisterMask ignore);
             void        intersectRegisterState(RegAlloc& saved);
