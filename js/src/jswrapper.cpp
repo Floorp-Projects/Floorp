@@ -381,7 +381,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * we parent all wrappers to the global object in their home compartment.
      * This loses us some transparency, and is generally very cheesy.
      */
-    JSObject *global = cx->fp ? cx->fp->scopeChain->getGlobal() : cx->globalObject;
+    JSObject *global = cx->fp ? cx->fp->getScopeChain()->getGlobal() : cx->globalObject;
     wrapper->setParent(global);
     return true;
 }
@@ -489,7 +489,7 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
     JSStackFrame *fp = frame.getFrame();
     PodZero(fp);  // fp->fun and fp->script are both NULL
     fp->argv = vp + 2;
-    fp->scopeChain = obj->getGlobal();
+    fp->setScopeChain(obj->getGlobal());
     fp->flags = JSFRAME_DUMMY;
 
     regs.pc = NULL;
