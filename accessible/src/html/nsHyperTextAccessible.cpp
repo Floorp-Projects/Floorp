@@ -2137,7 +2137,7 @@ nsHyperTextAccessible::GetChildIndexAtOffset(PRUint32 aOffset)
       if (high == offsetCount)
         return -1;
 
-      return low < offsetCount - 1 ? low + 1 : low;
+      return low;
     }
   }
 
