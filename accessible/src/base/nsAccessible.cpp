@@ -103,6 +103,8 @@
 #include "nsIDOMCharacterData.h"
 #endif
 
+#include "mozilla/unused.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible. nsISupports
@@ -2885,7 +2887,7 @@ PRInt32
 nsAccessible::GetIndexInParent()
 {
   // XXX: call GetParent() to repair the tree if it's broken.
-  nsAccessible* parent = GetParent();
+  GetParent();
   return mIndexInParent;
 }
 

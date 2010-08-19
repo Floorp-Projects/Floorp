@@ -665,7 +665,35 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
   }
 }
 
-NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
+static PRBool
+ShouldIgnoreInvalidation(nsViewManager* aVM)
+{
+  while (aVM) {
+    nsIViewObserver* vo = aVM->GetViewObserver();
+    if (vo && vo->ShouldIgnoreInvalidation()) {
+      return PR_TRUE;
+    }
+    nsView* view = aVM->GetRootView()->GetParent();
+    aVM = view ? view->GetViewManager() : nsnull;
+  }
+  return PR_FALSE;
+}
+
+nsresult nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect,
+                                   PRUint32 aUpdateFlags)
+{
+  // If painting is suppressed in the presshell or an ancestor drop all
+  // invalidates, it will invalidate everything when it unsuppresses.
+  if (ShouldIgnoreInvalidation(this)) {
+    return NS_OK;
+  }
+
+  return UpdateViewNoSuppression(aView, aRect, aUpdateFlags);
+}
+
+NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
+                                                     const nsRect &aRect,
+                                                     PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
 
