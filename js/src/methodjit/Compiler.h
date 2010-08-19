@@ -225,8 +225,6 @@ class Compiler
     void addCallSite(uint32 id, bool stub);
 
     /* Emitting helpers. */
-    void saveReturnAddress();
-    void restoreReturnAddress(Assembler &masm);
     void restoreFrameRegs(Assembler &masm);
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     void iter(uintN flags);
