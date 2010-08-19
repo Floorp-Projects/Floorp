@@ -480,9 +480,7 @@ protected:
   PRBool RequireWhitespace();
 
   // for 'clip' and '-moz-image-region'
-  PRBool ParseRect(nsCSSRect& aRect,
-                   nsCSSProperty aPropID);
-  PRBool DoParseRect(nsCSSRect& aRect);
+  PRBool ParseRect(nsCSSProperty aPropID);
   PRBool ParseContent();
   PRBool ParseCounterData(nsCSSValuePairList** aResult,
                           nsCSSProperty aPropID);
@@ -5332,7 +5330,7 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty_box_shadow:
     return ParseBoxShadow();
   case eCSSProperty_clip:
-    return ParseRect(mTempData.mDisplay.mClip, eCSSProperty_clip);
+    return ParseRect(eCSSProperty_clip);
   case eCSSProperty__moz_column_rule:
     return ParseBorderSide(kColumnRuleIDs, PR_FALSE);
   case eCSSProperty_content:
@@ -5350,8 +5348,7 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty_font:
     return ParseFont();
   case eCSSProperty_image_region:
-    return ParseRect(mTempData.mList.mImageRegion,
-                     eCSSProperty_image_region);
+    return ParseRect(eCSSProperty_image_region);
   case eCSSProperty_list_style:
     return ParseListStyle();
   case eCSSProperty_margin:
@@ -7394,57 +7391,48 @@ CSSParserImpl::RequireWhitespace()
 }
 
 PRBool
-CSSParserImpl::ParseRect(nsCSSRect& aRect, nsCSSProperty aPropID)
-{
-  nsCSSRect rect;
-  PRBool result;
-  if ((result = DoParseRect(rect)) &&
-      rect != aRect) {
-    aRect = rect;
-    mTempData.SetPropertyBit(aPropID);
-  }
-  return result;
-}
-
-PRBool
-CSSParserImpl::DoParseRect(nsCSSRect& aRect)
+CSSParserImpl::ParseRect(nsCSSProperty aPropID)
 {
   if (! GetToken(PR_TRUE)) {
     return PR_FALSE;
   }
-  if (eCSSToken_Ident == mToken.mType) {
+
+  nsCSSValue val;
+
+  if (mToken.mType == eCSSToken_Ident) {
     nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
     switch (keyword) {
       case eCSSKeyword_auto:
-        if (ExpectEndProperty()) {
-          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_RectIsAuto));
-          return PR_TRUE;
+        if (!ExpectEndProperty()) {
+          return PR_FALSE;
         }
+        val.SetAutoValue();
         break;
       case eCSSKeyword_inherit:
-        if (ExpectEndProperty()) {
-          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Inherit));
-          return PR_TRUE;
+        if (!ExpectEndProperty()) {
+          return PR_FALSE;
         }
+        val.SetInheritValue();
         break;
       case eCSSKeyword__moz_initial:
-        if (ExpectEndProperty()) {
-          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Initial));
-          return PR_TRUE;
+        if (!ExpectEndProperty()) {
+          return PR_FALSE;
         }
+        val.SetInitialValue();
         break;
       default:
         UngetToken();
-        break;
+        return PR_FALSE;
     }
-  } else if ((eCSSToken_Function == mToken.mType) &&
+  } else if (mToken.mType == eCSSToken_Function &&
              mToken.mIdent.LowerCaseEqualsLiteral("rect")) {
+    nsCSSRect& rect = val.SetRectValue();
     NS_FOR_CSS_SIDES(side) {
-      if (! ParseVariant(aRect.*(nsCSSRect::sides[side]),
+      if (! ParseVariant(rect.*(nsCSSRect::sides[side]),
                          VARIANT_AL, nsnull)) {
         return PR_FALSE;
       }
-      if (3 != side) {
+      if (side < 3) {
         // skip optional commas between elements
         (void)ExpectSymbol(',', PR_TRUE);
       }
@@ -7452,13 +7440,16 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect)
     if (!ExpectSymbol(')', PR_TRUE)) {
       return PR_FALSE;
     }
-    if (ExpectEndProperty()) {
-      return PR_TRUE;
+    if (!ExpectEndProperty()) {
+      return PR_FALSE;
     }
   } else {
     UngetToken();
+    return PR_FALSE;
   }
-  return PR_FALSE;
+
+  AppendValue(aPropID, val);
+  return PR_TRUE;
 }
 
 #define VARIANT_CONTENT (VARIANT_STRING | VARIANT_URL | VARIANT_COUNTER | VARIANT_ATTR | \

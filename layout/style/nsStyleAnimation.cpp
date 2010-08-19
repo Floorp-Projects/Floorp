@@ -278,9 +278,6 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           case eCSSUnit_Auto:
             diff = 0;
             break;
-          case eCSSUnit_RectIsAuto:
-            // Standalone "auto" value isn't additive/interpolatable
-            return PR_FALSE;
           default:
             NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
             return PR_FALSE;
@@ -1350,9 +1347,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
             }
             (result->*member).SetAutoValue();
             break;
-          case eCSSUnit_RectIsAuto:
-            // Standalone "auto" value isn't interpolatable
-            return PR_FALSE;
           default:
             NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
             return PR_FALSE;
@@ -1818,12 +1812,11 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
           SetPairValue(pair);
       }
     } break;
-    case eUnit_CSSRect:
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_Rect, "type mismatch");
-      *static_cast<nsCSSRect*>(aSpecifiedValue) =
-        *aComputedValue.GetCSSRectValue();
-      break;
+    case eUnit_CSSRect: {
+      nsCSSRect& rect = static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetRectValue();
+      rect = *aComputedValue.GetCSSRectValue();
+    } break;
     case eUnit_Dasharray:
     case eUnit_Shadow:
     case eUnit_Transform:
@@ -1858,16 +1851,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     return PR_TRUE;
   }
   nsCSSValue val;
-  nsCSSRect rect;
   nsCSSValueList* vl = nsnull;
   nsCSSValuePairList* vpl = nsnull;
   void *storage;
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
       storage = &val;
-      break;
-    case eCSSType_Rect:
-      storage = &rect;
       break;
     case eCSSType_ValueList:
       storage = &vl;
@@ -1889,9 +1878,6 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
       val.AppendToString(aProperty, aSpecifiedValue);
-      break;
-    case eCSSType_Rect:
-      rect.AppendToString(aProperty, aSpecifiedValue);
       break;
     case eCSSType_ValueList:
       vl->AppendToString(aProperty, aSpecifiedValue);
@@ -2239,10 +2225,10 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_clip: {
           const nsStyleDisplay *display =
             static_cast<const nsStyleDisplay*>(styleStruct);
-          nsCSSRect *vrect = new nsCSSRect;
           if (!(display->mClipFlags & NS_STYLE_CLIP_RECT)) {
-            vrect->SetAllSidesTo(nsCSSValue(eCSSUnit_RectIsAuto));
+            aComputedValue.SetAutoValue();
           } else {
+            nsCSSRect *vrect = new nsCSSRect;
             const nsRect &srect = display->mClip;
             if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
               vrect->mTop.SetAutoValue();
@@ -2264,8 +2250,8 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             } else {
               nscoordToCSSValue(srect.x, vrect->mLeft);
             }
+            aComputedValue.SetAndAdoptCSSRectValue(vrect, eUnit_CSSRect);
           }
-          aComputedValue.SetAndAdoptCSSRectValue(vrect, eUnit_CSSRect);
           break;
         }
 
