@@ -515,13 +515,11 @@ protected:
 
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
-  PRBool ParseBoxProperties(nsCSSRect& aResult,
-                            const nsCSSProperty aPropIDs[]);
+  PRBool ParseBoxProperties(const nsCSSProperty aPropIDs[]);
   PRBool ParseDirectionalBoxProperty(nsCSSProperty aProperty,
                                      PRInt32 aSourceType);
   PRBool ParseBoxCornerRadius(const nsCSSProperty aPropID);
-  PRBool ParseBoxCornerRadii(nsCSSCornerSizes& aRadii,
-                             const nsCSSProperty aPropIDs[]);
+  PRBool ParseBoxCornerRadii(const nsCSSProperty aPropIDs[]);
   PRInt32 ParseChoice(nsCSSValue aValues[],
                       const nsCSSProperty aPropIDs[], PRInt32 aNumIDs);
   PRBool ParseColor(nsCSSValue& aValue);
@@ -5002,8 +5000,7 @@ CSSParserImpl::AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue)
  * existing values.
  */
 PRBool
-CSSParserImpl::ParseBoxProperties(nsCSSRect& aResult,
-                                  const nsCSSProperty aPropIDs[])
+CSSParserImpl::ParseBoxProperties(const nsCSSProperty aPropIDs[])
 {
   // Get up to four values for the property
   PRInt32 count = 0;
@@ -5039,9 +5036,8 @@ CSSParserImpl::ParseBoxProperties(nsCSSRect& aResult,
   }
 
   NS_FOR_CSS_SIDES (index) {
-    mTempData.SetPropertyBit(aPropIDs[index]);
+    AppendValue(aPropIDs[index], result.*(nsCSSRect::sides[index]));
   }
-  aResult = result;
   return PR_TRUE;
 }
 
@@ -5089,8 +5085,7 @@ CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 }
 
 PRBool
-CSSParserImpl::ParseBoxCornerRadii(nsCSSCornerSizes& aRadii,
-                                   const nsCSSProperty aPropIDs[])
+CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
 {
   // Rectangles are used as scratch storage.
   // top => top-left, right => top-right,
@@ -5147,17 +5142,16 @@ CSSParserImpl::ParseBoxCornerRadii(nsCSSCornerSizes& aRadii,
   }
 
   NS_FOR_CSS_SIDES(side) {
-    nsCSSValue& corner =
-      aRadii.GetCorner(NS_SIDE_TO_FULL_CORNER(side, PR_FALSE));
     nsCSSValue& x = dimenX.*nsCSSRect::sides[side];
     nsCSSValue& y = dimenY.*nsCSSRect::sides[side];
 
     if (x == y) {
-      corner = x;
+      AppendValue(aPropIDs[side], x);
     } else {
-      corner.SetPairValue(x, y);
+      nsCSSValue pair;
+      pair.SetPairValue(x, y);
+      AppendValue(aPropIDs[side], pair);
     }
-    mTempData.SetPropertyBit(aPropIDs[side]);
   }
   return PR_TRUE;
 }
@@ -5282,11 +5276,9 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     return ParseDirectionalBoxProperty(eCSSProperty_border_start_style,
                                        NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty__moz_border_radius:
-    return ParseBoxCornerRadii(mTempData.mMargin.mBorderRadius,
-                               kBorderRadiusIDs);
+    return ParseBoxCornerRadii(kBorderRadiusIDs);
   case eCSSProperty__moz_outline_radius:
-    return ParseBoxCornerRadii(mTempData.mMargin.mOutlineRadius,
-                               kOutlineRadiusIDs);
+    return ParseBoxCornerRadii(kOutlineRadiusIDs);
 
   case eCSSProperty__moz_border_radius_topLeft:
   case eCSSProperty__moz_border_radius_topRight:
@@ -6626,20 +6618,20 @@ CSSParserImpl::ParseBorderColor()
 
   // do this now, in case 4 values weren't specified
   InitBoxPropsAsPhysical(kBorderColorSources);
-  return ParseBoxProperties(mTempData.mMargin.mBorderColor,
-                            kBorderColorIDs);
+  return ParseBoxProperties(kBorderColorIDs);
 }
 
 PRBool
 CSSParserImpl::ParseBorderImage()
 {
-  if (ParseVariant(mTempData.mMargin.mBorderImage,
-                   VARIANT_INHERIT | VARIANT_NONE, nsnull)) {
-    mTempData.SetPropertyBit(eCSSProperty_border_image);
+  nsCSSValue val;
+  if (ParseVariant(val, VARIANT_INHERIT | VARIANT_NONE, nsnull)) {
+    AppendValue(eCSSProperty_border_image, val);
     return PR_TRUE;
   }
 
-  // <uri> [<number> | <percentage>]{1,4} [ / <border-width>{1,4} ]? [stretch | repeat | round]{0,2}
+  // <uri> [<number> | <percentage>]{1,4}
+  //       [ / <border-width>{1,4} ]? [stretch | repeat | round]{0,2}
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(11);
   if (!arr) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -6708,8 +6700,8 @@ CSSParserImpl::ParseBorderImage()
     return PR_FALSE;
   }
 
-  mTempData.mMargin.mBorderImage.SetArrayValue(arr, eCSSUnit_Array);
-  mTempData.SetPropertyBit(eCSSProperty_border_image);
+  val.SetArrayValue(arr, eCSSUnit_Array);
+  AppendValue(eCSSProperty_border_image, val);
 
   return PR_TRUE;
 }
@@ -6733,11 +6725,12 @@ CSSParserImpl::ParseBorderSpacing()
   }
 
   if (yValue == xValue || yValue.GetUnit() == eCSSUnit_Null) {
-    mTempData.mTable.mBorderSpacing = xValue;
+    AppendValue(eCSSProperty_border_spacing, xValue);
   } else {
-    mTempData.mTable.mBorderSpacing.SetPairValue(xValue, yValue);
+    nsCSSValue pair;
+    pair.SetPairValue(xValue, yValue);
+    AppendValue(eCSSProperty_border_spacing, pair);
   }
-  mTempData.SetPropertyBit(eCSSProperty_border_spacing);
   return PR_TRUE;
 }
 
@@ -6806,11 +6799,9 @@ CSSParserImpl::ParseBorderSide(const nsCSSProperty aPropIDs[],
       default:                  extraValue.SetNoneValue();       break;
     }
     NS_FOR_CSS_SIDES(side) {
-      mTempData.mMargin.mBorderColors.*(nsCSSRect::sides[side]) = extraValue;
-      mTempData.SetPropertyBit(kBorderColorsProps[side]);
+      AppendValue(kBorderColorsProps[side], extraValue);
     }
-    mTempData.mMargin.mBorderImage = extraValue;
-    mTempData.SetPropertyBit(eCSSProperty_border_image);
+    AppendValue(eCSSProperty_border_image, extraValue);
   }
   else {
     // Just set our one side
@@ -6868,8 +6859,7 @@ CSSParserImpl::ParseBorderStyle()
 
   // do this now, in case 4 values weren't specified
   InitBoxPropsAsPhysical(kBorderStyleSources);
-  return ParseBoxProperties(mTempData.mMargin.mBorderStyle,
-                            kBorderStyleIDs);
+  return ParseBoxProperties(kBorderStyleIDs);
 }
 
 PRBool
@@ -6885,8 +6875,7 @@ CSSParserImpl::ParseBorderWidth()
 
   // do this now, in case 4 values weren't specified
   InitBoxPropsAsPhysical(kBorderWidthSources);
-  return ParseBoxProperties(mTempData.mMargin.mBorderWidth,
-                            kBorderWidthIDs);
+  return ParseBoxProperties(kBorderWidthIDs);
 }
 
 PRBool
@@ -7991,12 +7980,12 @@ PRBool CSSParserImpl::ParseMozTransformOrigin()
       position.mXValue.GetUnit() == eCSSUnit_Initial) {
     NS_ABORT_IF_FALSE(position.mXValue == position.mYValue,
                       "inherit/initial only half?");
-    mTempData.mDisplay.mTransformOrigin = position.mXValue;
+    AppendValue(eCSSProperty__moz_transform_origin, position.mXValue);
   } else {
-    mTempData.mDisplay.mTransformOrigin.SetPairValue(position.mXValue,
-                                                     position.mYValue);
+    nsCSSValue pair;
+    pair.SetPairValue(&position);
+    AppendValue(eCSSProperty__moz_transform_origin, pair);
   }
-  mTempData.SetPropertyBit(eCSSProperty__moz_transform_origin);
   return PR_TRUE;
 }
 
@@ -8282,8 +8271,7 @@ CSSParserImpl::ParseMargin()
 
   // do this now, in case 4 values weren't specified
   InitBoxPropsAsPhysical(kMarginSources);
-  return ParseBoxProperties(mTempData.mMargin.mMargin,
-                            kMarginSideIDs);
+  return ParseBoxProperties(kMarginSideIDs);
 }
 
 PRBool
@@ -8394,8 +8382,7 @@ CSSParserImpl::ParsePadding()
 
   // do this now, in case 4 values weren't specified
   InitBoxPropsAsPhysical(kPaddingSources);
-  return ParseBoxProperties(mTempData.mMargin.mPadding,
-                            kPaddingSideIDs);
+  return ParseBoxProperties(kPaddingSideIDs);
 }
 
 PRBool
@@ -8473,11 +8460,12 @@ CSSParserImpl::ParseSize()
   }
 
   if (width == height || height.GetUnit() == eCSSUnit_Null) {
-    mTempData.mPage.mSize = width;
+    AppendValue(eCSSProperty_size, width);
   } else {
-    mTempData.mPage.mSize.SetPairValue(width, height);
+    nsCSSValue pair;
+    pair.SetPairValue(width, height);
+    AppendValue(eCSSProperty_size, pair);
   }
-  mTempData.SetPropertyBit(eCSSProperty_size);
   return PR_TRUE;
 }
 
