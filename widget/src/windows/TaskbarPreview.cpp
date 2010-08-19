@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Rob Arnold <tellrob@gmail.com>
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,26 +70,64 @@ namespace mozilla {
 namespace widget {
 
 namespace {
-/* Helper method to create a canvas rendering context backed by the given surface
+
+// Shared by all TaskbarPreviews to avoid the expensive creation process.
+// Manually refcounted (see gInstCount) by the ctor and dtor of TaskbarPreview.
+// This is done because static constructors aren't allowed for perf reasons.
+nsIDOMCanvasRenderingContext2D* gCtx = NULL;
+// Used in tracking the number of previews. Used in freeing
+// the static 2d rendering context on shutdown.
+PRUint32 gInstCount = 0;
+
+/* Helper method to lazily create a canvas rendering context and associate a given
+ * surface with it.
  *
  * @param shell The docShell used by the canvas context for text settings and other
  *              misc things.
  * @param surface The gfxSurface backing the context
  * @param width The width of the given surface
  * @param height The height of the given surface
- * @param aCtx Out-param - a canvas context backed by the given surface
  */
 nsresult
-CreateRenderingContext(nsIDocShell *shell, gfxASurface *surface, PRUint32 width, PRUint32 height, nsICanvasRenderingContextInternal **aCtx) {
+GetRenderingContext(nsIDocShell *shell, gfxASurface *surface,
+                    PRUint32 width, PRUint32 height) {
   nsresult rv;
-  nsCOMPtr<nsICanvasRenderingContextInternal> ctx(do_CreateInstance(
-    "@mozilla.org/content/canvas-rendering-context;1?id=2d", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ctx->InitializeWithSurface(shell, surface, width, height);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMCanvasRenderingContext2D> ctx = gCtx;
 
-  NS_ADDREF(*aCtx = ctx);
-  return NS_OK;
+  if (!ctx) {
+    // create the canvas rendering context
+    ctx = do_CreateInstance("@mozilla.org/content/canvas-rendering-context;1?id=2d", &rv);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Could not create nsICanvasRenderingContextInternal for tab previews!");
+      return rv;
+    }
+    NS_ADDREF(ctx);
+    gCtx = ctx;
+  }
+
+  nsCOMPtr<nsICanvasRenderingContextInternal> ctxI = do_QueryInterface(ctx, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Set the surface we'll use to render.
+  return ctxI->InitializeWithSurface(shell, surface, width, height);
+}
+
+/* Helper method for freeing surface resources associated with the rendering context.
+ */
+void
+ResetRenderingContext() {
+  if (!gCtx)
+    return;
+
+  nsresult rv;
+  nsCOMPtr<nsICanvasRenderingContextInternal> ctxI = do_QueryInterface(gCtx, &rv);
+  if (NS_FAILED(rv))
+    return;
+  if (NS_FAILED(ctxI->Reset())) {
+    NS_RELEASE(gCtx);
+    gCtx = nsnull;
+  }
 }
 
 }
@@ -102,6 +141,8 @@ TaskbarPreview::TaskbarPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewControl
 {
   // TaskbarPreview may outlive the WinTaskbar that created it
   ::CoInitialize(NULL);
+
+  gInstCount++;
 
   WindowHook &hook = GetWindowHook();
   hook.AddMonitor(WM_DESTROY, MainWindowHook, this);
@@ -117,6 +158,9 @@ TaskbarPreview::~TaskbarPreview() {
 
   // Make sure to release before potentially uninitializing COM
   mTaskbar = NULL;
+
+  if (--gInstCount == 0)
+    NS_IF_RELEASE(gCtx);
 
   ::CoUninitialize();
 }
@@ -351,19 +395,15 @@ TaskbarPreview::DrawBitmap(PRUint32 width, PRUint32 height, PRBool isPreview) {
   if (!shell)
     return;
 
-  nsCOMPtr<nsICanvasRenderingContextInternal> ctxI;
-  rv = CreateRenderingContext(shell, surface, width, height, getter_AddRefs(ctxI));
-
-  nsCOMPtr<nsIDOMCanvasRenderingContext2D> ctx = do_QueryInterface(ctxI);
+  rv = GetRenderingContext(shell, surface, width, height);
+  if (NS_FAILED(rv))
+    return;
 
   PRBool drawFrame = PR_FALSE;
-  if (NS_SUCCEEDED(rv) && ctx) {
-    if (isPreview)
-      rv = mController->DrawPreview(ctx, &drawFrame);
-    else
-      rv = mController->DrawThumbnail(ctx, width, height, &drawFrame);
-
-  }
+  if (isPreview)
+    rv = mController->DrawPreview(gCtx, &drawFrame);
+  else
+    rv = mController->DrawThumbnail(gCtx, width, height, &drawFrame);
 
   if (NS_FAILED(rv))
     return;
@@ -377,6 +417,8 @@ TaskbarPreview::DrawBitmap(PRUint32 width, PRUint32 height, PRBool isPreview) {
     nsUXThemeData::dwmSetIconicLivePreviewBitmapPtr(PreviewWindow(), hBitmap, &pptClient, flags);
   else
     nsUXThemeData::dwmSetIconicThumbnailPtr(PreviewWindow(), hBitmap, flags);
+
+  ResetRenderingContext();
 }
 
 /* static */
