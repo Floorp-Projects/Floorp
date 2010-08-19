@@ -320,15 +320,9 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
       baseWindow->GetMainWidget(getter_AddRefs(parentWidget));
   }
 
-#if defined(XP_MACOSX) || defined(XP_BEOS)
-  static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
-  aView->CreateWidgetForPopup(kCPopupCID, &widgetData, parentWidget,
+  aView->CreateWidgetForPopup(&widgetData, parentWidget,
                               PR_TRUE, PR_TRUE, eContentTypeUI);
-#else
-  static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  aView->CreateWidgetForPopup(kCChildCID, &widgetData, parentWidget,
-                              PR_TRUE, PR_TRUE, eContentTypeInherit);
-#endif
+
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
   widget->SetWindowShadowStyle(GetShadowStyle());
