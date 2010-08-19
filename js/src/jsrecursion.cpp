@@ -257,10 +257,10 @@ TraceRecorder::upRecursion()
      * moved on this one.
      */
     fi->spdist = DownFrameSP(cx) - cx->fp->down->slots();
-    JS_ASSERT(cx->fp->argc == cx->fp->down->argc);
-    fi->set_argc(uint16(cx->fp->argc), false);
+    JS_ASSERT(cx->fp->numActualArgs() == cx->fp->down->numActualArgs());
+    fi->set_argc(uint16(cx->fp->numActualArgs()), false);
     fi->callerHeight = downPostSlots;
-    fi->callerArgc = cx->fp->down->argc;
+    fi->callerArgc = cx->fp->down->numActualArgs();
 
     if (anchor && anchor->exitType == RECURSIVE_MISMATCH_EXIT) {
         /*
@@ -390,7 +390,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 {
     /* Missing - no go */
-    if (cx->fp->argc != cx->fp->getArgumentCount())
+    if (cx->fp->numActualArgs() != cx->fp->numFormalArgs())
         RETURN_STOP_A("argc != nargs");
 
     LIns* argv_ins;
@@ -450,10 +450,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         /* fp->down->argc should be == argc. */
         guard(true,
               lir->ins2(LIR_eqi,
-                        addName(lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc),
+                        addName(lir->insLoad(LIR_ldi, fp_ins, JSStackFrame::offsetNumActualArgs(),
                                              ACCSET_OTHER),
                                 "argc"),
-                        INS_CONST(cx->fp->argc)),
+                        INS_CONST(cx->fp->numActualArgs())),
               MISMATCH_EXIT);
 
         /* Pop the interpreter frame. */
@@ -591,7 +591,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     /* this */
     slurpSlot(argv_ins, -1 * ptrdiff_t(sizeof(Value)), &fp->argv[-1], &info);
     /* args[0..n] */
-    for (unsigned i = 0; i < JS_MAX(fp->argc, fp->getArgumentCount()); i++)
+    for (unsigned i = 0; i < JS_MAX(fp->numActualArgs(), fp->numFormalArgs()); i++)
         slurpSlot(argv_ins, i * sizeof(Value), &fp->argv[i], &info);
     /* argsobj */
     slurpFrameObjPtrSlot(fp_ins, JSStackFrame::offsetArgsObj(), fp->addressArgsObj(), &info);
@@ -614,7 +614,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
         limit--;
     else
-        limit -= fp->getArgumentCount() + 2;
+        limit -= fp->numFormalArgs() + 2;
     for (size_t i = 0; i < limit; i++)
         slurpSlot(stack_ins, i * sizeof(Value), &stack[i], &info);
 
@@ -681,7 +681,8 @@ TraceRecorder::downRecursion()
 
     /* Adjust the stack by the budget the down-frame needs. */
     int slots = NativeStackSlots(cx, 1) - NativeStackSlots(cx, 0);
-    JS_ASSERT(unsigned(slots) == NativeStackSlots(cx, 1) - fp->argc - 2 - fp->getFixedCount() - 2);
+    JS_ASSERT(unsigned(slots) ==
+              NativeStackSlots(cx, 1) - fp->numActualArgs() - 2 - fp->getFixedCount() - 2);
 
     /* Guard that there is enough stack space. */
     JS_ASSERT(tree->maxNativeStackSlots >= tree->nativeStackBase / sizeof(double));

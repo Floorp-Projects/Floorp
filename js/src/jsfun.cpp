@@ -137,7 +137,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
         JSObject *argsobj = fp->maybeArgsObj();
-        if (arg < fp->argc) {
+        if (arg < fp->numActualArgs()) {
             if (argsobj) {
                 if (argsobj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
                     return argsobj->getProperty(cx, id, vp);
@@ -163,7 +163,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
         JSObject *argsobj = fp->maybeArgsObj();
         if (argsobj && argsobj->isArgsLengthOverridden())
             return argsobj->getProperty(cx, id, vp);
-        vp->setInt32(fp->argc);
+        vp->setInt32(fp->numActualArgs());
     }
     return true;
 }
@@ -226,7 +226,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
 
     /* Compute the arguments object's parent slot from fp's scope chain. */
     JSObject *global = fp->getScopeChain()->getGlobal();
-    JSObject *argsobj = NewArguments(cx, global, fp->argc, &fp->argv[-2].toObject());
+    JSObject *argsobj = NewArguments(cx, global, fp->numActualArgs(), &fp->argv[-2].toObject());
     if (!argsobj)
         return argsobj;
 
@@ -240,8 +240,9 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      * up-to-date parameter values.
      */
     if (argsobj->isStrictArguments()) {
-        JS_ASSERT_IF(fp->argc > 0, argsobj->dslots[-1].toPrivateUint32() >= fp->argc);
-        memcpy(argsobj->dslots, fp->argv, fp->argc * sizeof(Value));
+        JS_ASSERT_IF(fp->numActualArgs() > 0,
+                     argsobj->dslots[-1].toPrivateUint32() >= fp->numActualArgs());
+        memcpy(argsobj->dslots, fp->argv, fp->numActualArgs() * sizeof(Value));
     } else {
         argsobj->setPrivate(fp);
     }

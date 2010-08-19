@@ -6398,7 +6398,8 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
                 fputc('\n', stderr);
             }
         }
-        fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
+        fprintf(stderr, "  argv:  %p (argc: %u)\n",
+                (void *) fp->argv, (unsigned) fp->numActualArgs());
         MaybeDumpObject("callobj", fp->maybeCallObj());
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
         MaybeDumpValue("this", fp->getThisValue());

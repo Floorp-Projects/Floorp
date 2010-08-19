@@ -1092,7 +1092,7 @@ Tracker::set(const void* v, LIns* i)
 static inline jsuint
 argSlots(JSStackFrame* fp)
 {
-    return JS_MAX(fp->argc, fp->getArgumentCount());
+    return JS_MAX(fp->numActualArgs(), fp->numFormalArgs());
 }
 
 static inline bool
@@ -1835,7 +1835,7 @@ VisitFrameSlots(Visitor &visitor, JSContext *cx, unsigned depth,
     if (!visitor.visitStackSlots(base, size_t(sp - base), fp))
         return false;
     if (up) {
-        int missing = up->getArgumentCount() - up->argc;
+        int missing = up->numFormalArgs() - up->numActualArgs();
         if (missing > 0) {
             visitor.setStackSlotKind("missing");
             if (!visitor.visitStackSlots(sp, size_t(missing), fp))
@@ -2008,7 +2008,7 @@ NativeStackSlots(JSContext *cx, unsigned callDepth)
 #endif
             return slots;
         }
-        int missing = fp->getArgumentCount() - fp->argc;
+        int missing = fp->numFormalArgs() - fp->numActualArgs();
         if (missing > 0)
             slots += missing;
     }
@@ -3374,10 +3374,12 @@ struct VarClosureTraits
     // See documentation on ArgClosureTraits for what these functions
     // should be doing.
     // See also UpvarVarTraits.
-    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return 4 + fp->argc + slot; }
+    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) {
+        return 4 + fp->numActualArgs() + slot;
+    }
 
     static inline LIns* adj_slot_lir(LirWriter* lir, LIns* fp_ins, unsigned slot) {
-        LIns *argc_ins = lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc), ACCSET_OTHER);
+        LIns *argc_ins = lir->insLoad(LIR_ldi, fp_ins, JSStackFrame::offsetNumActualArgs(), ACCSET_OTHER);
         return lir->ins2(LIR_addi, lir->insImmI(4 + slot), argc_ins);
     }
 
@@ -3535,14 +3537,14 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
                 : "<anonymous>";
     }
     if (!strcmp(prefix, "argv")) {
-        if (index < fp->getArgumentCount()) {
+        if (index < fp->numFormalArgs()) {
             JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
             JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
         } else {
             JS_snprintf(name, sizeof name, "$%s.<arg%d>", funName, index);
         }
     } else if (!strcmp(prefix, "vars")) {
-        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->getArgumentCount() + index]);
+        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->numFormalArgs() + index]);
         JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
@@ -5706,7 +5708,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newfp->setArgsObj(NULL);
     newfp->setScript(newscript);
     newfp->setFunction(fun);
-    newfp->argc = argc;
+    newfp->setNumActualArgs(argc);
     newfp->argv = argv;
 #ifdef DEBUG
     // Initialize argv[-1] to a known-bogus value so we'll catch it if
@@ -5754,7 +5756,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
      * some of the complexity?
      */
     return (fi.spdist - newfp->down->getFixedCount()) +
-           ((fun->nargs > newfp->argc) ? fun->nargs - newfp->argc : 0) +
+          ((fun->nargs > newfp->numActualArgs()) ? fun->nargs - newfp->numActualArgs() : 0) +
            newscript->nfixed + SPECIAL_FRAME_SLOTS;
 }
 
@@ -5781,7 +5783,7 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     fp->setArgsObj(NULL);
     fp->setScript(NULL);
     fp->setThisValue(state.nativeVp[1]);
-    fp->argc = state.nativeVpLen - 2;
+    fp->setNumActualArgs(state.nativeVpLen - 2);
     fp->argv = state.nativeVp + 2;
     fp->setFunction(GET_FUNCTION_PRIVATE(cx, fp->callee()));
     fp->clearReturnValue();
@@ -5973,7 +5975,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         }
         if (exit->recursive_pc != cx->regs->pc)
             return false;
-        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, cx->fp->argc);
+        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, cx->fp->numActualArgs());
         if (!from)
             return false;
         /* use stale TI for RecordTree - since from might not have one anymore. */
@@ -6100,8 +6102,8 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
-                                               exitedFrom, outer, cx->fp->argc, Record_Branch,
-                                               hits < maxHits);
+                                               exitedFrom, outer, cx->fp->numActualArgs(),
+                                               Record_Branch, hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
             tvso->r = R_FAIL_EXTEND_START;
@@ -6149,7 +6151,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     JS_ASSERT(r->fragment && !r->fragment->lastIns);
     TreeFragment* root = r->fragment->root;
     TreeFragment* first = LookupOrAddLoop(tm, cx->regs->pc, root->globalObj,
-                                        root->globalShape, cx->fp->argc);
+                                          root->globalShape, cx->fp->numActualArgs());
 
     /*
      * Make sure the shape of the global object still matches (this might flush
@@ -6177,7 +6179,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         TreeFragment* outerFragment = root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
-        JS_ASSERT(cx->fp->argc == first->argc);
+        JS_ASSERT(cx->fp->numActualArgs() == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
         return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch));
@@ -7189,7 +7191,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     }
 
     jsbytecode* pc = cx->regs->pc;
-    uint32 argc = cx->fp->argc;
+    uint32 argc = cx->fp->numActualArgs();
 
     TreeFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
@@ -8047,7 +8049,7 @@ DeepBail(JSContext *cx)
 JS_REQUIRES_STACK Value&
 TraceRecorder::argval(unsigned n) const
 {
-    JS_ASSERT(n < cx->fp->getArgumentCount());
+    JS_ASSERT(n < cx->fp->numFormalArgs());
     return cx->fp->argv[n];
 }
 
@@ -8232,7 +8234,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
         if (sprop->getterOp() == js_GetCallArg) {
-            JS_ASSERT(slot < cfp->getArgumentCount());
+            JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->argv[slot];
             upvar_slot = slot;
             nr.v = *vp;
@@ -8240,7 +8242,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
                    sprop->getterOp() == js_GetCallVarChecked) {
             JS_ASSERT(slot < cfp->getSlotCount());
             vp = &cfp->slots()[slot];
-            upvar_slot = cx->fp->getArgumentCount() + slot;
+            upvar_slot = cx->fp->numFormalArgs() + slot;
             nr.v = *vp;
         } else {
             RETURN_STOP("dynamic property of Call object");
@@ -10292,7 +10294,9 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
 JS_REQUIRES_STACK void
 TraceRecorder::putActivationObjects()
 {
-    bool have_args = cx->fp->hasArgsObj() && !cx->fp->getArgsObj()->isStrictArguments() && cx->fp->argc > 0;
+    bool have_args = cx->fp->hasArgsObj() &&
+        !cx->fp->getArgsObj()->isStrictArguments() &&
+        cx->fp->numActualArgs() > 0;
     bool have_call = cx->fp->hasFunction() &&
         JSFUN_HEAVYWEIGHT_TEST(cx->fp->getFunction()->flags) &&
         cx->fp->getFunction()->countArgsAndVars();
@@ -10300,7 +10304,7 @@ TraceRecorder::putActivationObjects()
     if (!have_args && !have_call)
         return;
 
-    int nargs = have_args ? argSlots(cx->fp) : cx->fp->getArgumentCount();
+    int nargs = have_args ? argSlots(cx->fp) : cx->fp->numFormalArgs();
 
     LIns* args_ins;
     if (nargs) {
@@ -10334,7 +10338,7 @@ TraceRecorder::putActivationObjects()
 
         LIns* scopeChain_ins = getFrameObjPtr(cx->fp->addressScopeChain());
         LIns* args[] = { slots_ins, INS_CONST(nslots), args_ins,
-                         INS_CONST(cx->fp->getArgumentCount()), scopeChain_ins, cx_ins };
+                         INS_CONST(cx->fp->numFormalArgs()), scopeChain_ins, cx_ins };
         lir->insCall(&js_PutCallObjectOnTrace_ci, args);
     }
 }
@@ -10348,9 +10352,9 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if (down->maybeScript() != fp->maybeScript())
         return false;
-    if (down->argc != fp->argc)
+    if (down->numActualArgs() != fp->numActualArgs())
         return false;
-    if (fp->argc != fp->getArgumentCount())
+    if (fp->numActualArgs() != fp->numFormalArgs())
         return false;
     if (fp->hasIMacroPC() || down->hasIMacroPC())
         return false;
@@ -10395,8 +10399,8 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     // This doesn't do layout arithmetic, but it must initialize in the tracker all the
     // slots defined as imported by VisitFrameSlots.
 
-    Value* vp = &fp->argv[fp->argc];
-    Value* vpstop = vp + ptrdiff_t(fp->getArgumentCount()) - ptrdiff_t(fp->argc);
+    Value* vp = &fp->argv[fp->numActualArgs()];
+    Value* vpstop = vp + ptrdiff_t(fp->numFormalArgs()) - ptrdiff_t(fp->numActualArgs());
     for (; vp < vpstop; ++vp) {
         nativeFrameTracker.set(vp, NULL);
         set(vp, void_ins);
@@ -10462,7 +10466,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     }
 
     TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), cx->regs->pc, tree->globalObj,
-                                     tree->globalShape, fp->argc);
+                                     tree->globalShape, fp->numActualArgs());
     if (!first)
         return ARECORD_CONTINUE;
     TreeFragment* f = findNestedCompatiblePeer(first);
@@ -10482,7 +10486,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
                 JSContext* _cx = cx;
                 SlotList* globalSlots = tree->globalSlots;
                 AbortRecording(cx, "trying to compile inner recursive tree");
-                JS_ASSERT(_cx->fp->argc == first->argc);
+                JS_ASSERT(_cx->fp->numActualArgs() == first->argc);
                 RecordTree(_cx, first, NULL, 0, globalSlots, Record_EnterFrame);
                 break;
             }
@@ -10651,7 +10655,7 @@ LIns*
 TraceRecorder::newArguments(LIns* callee_ins, bool strict)
 {
     LIns* global_ins = INS_CONSTOBJ(globalObj);
-    LIns* argc_ins = INS_CONST(cx->fp->argc);
+    LIns* argc_ins = INS_CONST(cx->fp->numActualArgs());
 
     LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
     LIns* call_ins = lir->insCall(&js_Arguments_ci, args);
@@ -10659,7 +10663,7 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
 
     if (strict) {
         JSStackFrame* fp = cx->fp;
-        uintN argc = fp->argc;
+        uintN argc = fp->numActualArgs();
         LIns* argsSlots_ins = NULL;
         for (uintN i = 0; i < argc; i++)
             stobj_set_dslot(call_ins, i, argsSlots_ins, fp->argv[i], get(&fp->argv[i]));
@@ -12683,7 +12687,7 @@ TraceRecorder::record_JSOP_GETELEM()
             uintN int_idx = idx.toInt32();
             Value* vp = &afp->argv[int_idx];
             if (idx_ins->isImmD()) {
-                if (int_idx < 0 || int_idx >= afp->argc)
+                if (int_idx < 0 || int_idx >= afp->numActualArgs())
                     RETURN_STOP_A("cannot trace arguments with out of range index");
                 v_ins = get(vp);
             } else {
@@ -12691,7 +12695,7 @@ TraceRecorder::record_JSOP_GETELEM()
                 // the native stack area. The guard on js_ArgumentClass above ensures the up-to-date
                 // value has been written back to the native stack area.
                 idx_ins = makeNumberInt32(idx_ins);
-                if (int_idx < 0 || int_idx >= afp->argc)
+                if (int_idx < 0 || int_idx >= afp->numActualArgs())
                     RETURN_STOP_A("cannot trace arguments with out of range index");
 
                 VMSideExit *exit = snapshot(MISMATCH_EXIT);
@@ -12700,7 +12704,7 @@ TraceRecorder::record_JSOP_GETELEM()
                               "guard(upvar index >= 0)"),
                        exit);
                 guard(true,
-                      addName(lir->ins2(LIR_lti, idx_ins, INS_CONST(afp->argc)),
+                      addName(lir->ins2(LIR_lti, idx_ins, INS_CONST(afp->numActualArgs())),
                               "guard(upvar index in range)"),
                       exit);
 
@@ -12740,7 +12744,7 @@ TraceRecorder::record_JSOP_GETELEM()
                       BRANCH_EXIT);
 
                 // Read the value out of the native stack area.
-                guard(true, lir->ins2(LIR_ltui, idx_ins, INS_CONST(afp->argc)),
+                guard(true, lir->ins2(LIR_ltui, idx_ins, INS_CONST(afp->numActualArgs())),
                       snapshot(BRANCH_EXIT));
                 size_t stackOffset = nativespOffset(&afp->argv[0]);
                 LIns* args_addr_ins = lir->ins2(LIR_addp, lirbuf->sp, INS_CONSTWORD(stackOffset));
@@ -13172,7 +13176,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
     if (!fp->hasFunction() || (fp->flags & JSFRAME_EVAL)) {
         ci = &GetUpvarStackOnTrace_ci;
         slot = cookieSlot;
-    } else if (cookieSlot < fp->getArgumentCount()) {
+    } else if (cookieSlot < fp->numFormalArgs()) {
         ci = &GetUpvarArgOnTrace_ci;
         slot = cookieSlot;
     } else if (cookieSlot == UpvarCookie::CALLEE_SLOT) {
@@ -13180,7 +13184,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
         slot = -2;
     } else {
         ci = &GetUpvarVarOnTrace_ci;
-        slot = cookieSlot - fp->getArgumentCount();
+        slot = cookieSlot - fp->numFormalArgs();
     }
 
     LIns* outp = lir->insAlloc(sizeof(double));
@@ -13410,7 +13414,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     fi->spdist = cx->regs->sp - fp->slots();
     fi->set_argc(uint16(argc), constructing);
     fi->callerHeight = stackSlots - (2 + argc);
-    fi->callerArgc = fp->argc;
+    fi->callerArgc = fp->numActualArgs();
 
     if (callDepth >= tree->maxCallDepth)
         tree->maxCallDepth = callDepth + 1;
@@ -13533,7 +13537,7 @@ TraceRecorder::record_JSOP_APPLY()
             JSStackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
                 RETURN_STOP_A("can't reach arguments object's frame");
-            length = afp->argc;
+            length = afp->numActualArgs();
         } else {
             RETURN_STOP_A("arguments parameter of apply is not a dense array or argments object");
         }
@@ -15242,7 +15246,7 @@ TraceRecorder::record_JSOP_ARGSUB()
     JSStackFrame* const fp = cx->fp;
     if (!(fp->getFunction()->flags & JSFUN_HEAVYWEIGHT)) {
         uintN slot = GET_ARGNO(cx->regs->pc);
-        if (slot >= fp->argc)
+        if (slot >= fp->numActualArgs())
             RETURN_STOP_A("can't trace out-of-range arguments");
         stack(0, get(&cx->fp->argv[slot]));
         return ARECORD_CONTINUE;
@@ -15282,7 +15286,7 @@ TraceRecorder::record_JSOP_ARGCNT()
         LIns *label = lir->ins0(LIR_label);
         br->setTarget(label);
     }
-    stack(0, lir->insImmD(cx->fp->argc));
+    stack(0, lir->insImmD(cx->fp->numActualArgs()));
     return ARECORD_CONTINUE;
 }
 
