@@ -1529,9 +1529,3 @@ listitem.style-section {
 panel[dimmed="true"] {
   opacity: 0.5;
 }
-
-/* Tab view context menu */
-
-#context_tabViewMenuPopup > menuitem.group {
-  -moz-padding-start: 40px;
-}

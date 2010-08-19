@@ -2117,9 +2117,3 @@ panel[dimmed="true"] {
 #sync-status-button.statusbarpanel-iconic {
   padding: 0 5px;
 }
-
-/* Tab view context menu */
-
-#context_tabViewMenuPopup > menuitem.group {
-  -moz-padding-start: 40px;
-}

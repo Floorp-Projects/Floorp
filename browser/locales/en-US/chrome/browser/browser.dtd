@@ -27,8 +27,6 @@
 <!ENTITY  moveToGroup.label                  "Move to Group">
 <!ENTITY  moveToGroup.accesskey              "M">
 <!ENTITY  moveToNewGroup.label               "New Group">
-<!ENTITY  moveToNewGroup.accesskey           "N">
-<!ENTITY  namedGroups.label                  "Named Groups">
 <!ENTITY  bookmarkThisTab.label              "Bookmark This Tab">
 <!ENTITY  bookmarkThisTab.accesskey          "B">
 <!ENTITY  bookmarkAllTabs.label              "Bookmark All Tabs…">
