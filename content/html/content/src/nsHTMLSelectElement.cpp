@@ -1452,6 +1452,12 @@ nsHTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
 }
 
+PRInt32
+nsHTMLSelectElement::IntrinsicState() const
+{
+  return NS_EVENT_STATE_OPTIONAL | nsGenericHTMLFormElement::IntrinsicState();
+}
+
 // nsIFormControl
 
 NS_IMETHODIMP

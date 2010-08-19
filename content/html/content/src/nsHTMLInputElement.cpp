@@ -508,7 +508,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        NS_EVENT_STATE_LOADING |
                                        NS_EVENT_STATE_INDETERMINATE |
                                        NS_EVENT_STATE_MOZ_READONLY |
-                                       NS_EVENT_STATE_MOZ_READWRITE);
+                                       NS_EVENT_STATE_MOZ_READWRITE |
+                                       NS_EVENT_STATE_REQUIRED |
+                                       NS_EVENT_STATE_OPTIONAL);
       }
     }
 
@@ -2738,6 +2740,12 @@ nsHTMLInputElement::IntrinsicState() const
     }
   } else if (mType == NS_FORM_INPUT_IMAGE) {
     state |= nsImageLoadingContent::ImageState();
+  }
+
+  if (DoesRequiredApply() && HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    state |= NS_EVENT_STATE_REQUIRED;
+  } else {
+    state |= NS_EVENT_STATE_OPTIONAL;
   }
 
   return state;

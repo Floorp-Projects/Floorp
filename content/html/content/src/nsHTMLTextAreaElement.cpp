@@ -130,6 +130,8 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
+  virtual PRInt32 IntrinsicState() const;
+
   // nsITextControlElemet
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
   NS_IMETHOD_(PRBool) IsSingleLineTextControl() const;
@@ -954,7 +956,19 @@ nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
   return PR_FALSE;
 }
 
+PRInt32
+nsHTMLTextAreaElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
 
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    state |= NS_EVENT_STATE_REQUIRED;
+  } else {
+    state |= NS_EVENT_STATE_OPTIONAL;
+  }
+
+  return state;
+}
 
 nsresult
 nsHTMLTextAreaElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
