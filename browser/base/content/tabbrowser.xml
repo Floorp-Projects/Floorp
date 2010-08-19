@@ -2744,11 +2744,13 @@
             return;
 
           if (this.mTabstrip.smoothScroll) {
-            let selected = this.selectedItem.getBoundingClientRect();
+            let selected = !this.selectedItem.pinned &&
+                           this.selectedItem.getBoundingClientRect();
 
             // Can we make both the new tab and the selected tab completely visible?
-            if (Math.max(tab.right - selected.left, selected.right - tab.left) <=
-                scrollRect.width) {
+            if (!selected ||
+                Math.max(tab.right - selected.left, selected.right - tab.left) <=
+                  scrollRect.width) {
               this.mTabstrip.ensureElementIsVisible(aTab);
               return;
             }
