@@ -610,6 +610,11 @@ public:
     return sPrefBranch;
   }
 
+  // Get a permission-manager setting for the given uri and type.
+  // If the pref doesn't exist or if it isn't ALLOW_ACTION, PR_FALSE is
+  // returned, otherwise PR_TRUE is returned.
+  static PRBool IsSitePermAllow(nsIURI* aURI, const char* aType);
+
   static nsILineBreaker* LineBreaker()
   {
     return sLineBreaker;
