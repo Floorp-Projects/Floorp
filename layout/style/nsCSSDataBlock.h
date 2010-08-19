@@ -82,30 +82,19 @@ public:
     /**
      * Return the location at which the *value* for the property is
      * stored, or null if the block does not contain a value for the
-     * property.  This is either an |nsCSSValue*|, |nsCSSRect*|, or an
-     * |nsCSSValueList**|, etc.
+     * property.
      *
      * Inefficient (by design).
      *
      * Must not be called for shorthands.
      */
-    const void* StorageFor(nsCSSProperty aProperty) const;
+    const nsCSSValue* ValueFor(nsCSSProperty aProperty) const;
 
     /**
      * As above, but provides mutable access to a value slot.
      */
-    void* SlotForValue(nsCSSProperty aProperty) {
-      return const_cast<void*>(StorageFor(aProperty));
-    }
-
-    /**
-     * A set of slightly more typesafe helpers for the above.  All
-     * return null if the value is not present.
-     */
-    const nsCSSValue* ValueStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      return static_cast<const nsCSSValue*>(StorageFor(aProperty));
+    nsCSSValue* SlotForValue(nsCSSProperty aProperty) {
+      return const_cast<nsCSSValue*>(ValueFor(aProperty));
     }
 
     /**
@@ -120,16 +109,12 @@ public:
 
     /**
      * Does a fast move of aSource to aDest.  The previous value in
-     * aDest is cleanly destroyed, and aSource is cleared.  *aChanged
-     * is set true if, before the copy, the value at aSource compares
-     * unequal to the value at aDest.
-     *
-     * This can only be used for non-shorthand properties.  The caller
-     * must make sure that the source and destination locations point
-     * to the right kind of objects for the property id.
+     * aDest is cleanly destroyed, and aSource is cleared.  Returns
+     * true if, before the copy, the value at aSource compared unequal
+     * to the value at aDest; false otherwise.
      */
-    static void MoveValue(void *aSource, void *aDest, nsCSSProperty aPropID,
-                          PRBool* aChanged);
+    static PRBool MoveValue(nsCSSValue* aSource, nsCSSValue* aDest);
+
 
 private:
     PRInt32 mStyleBits; // the structs for which we have data, according to
@@ -228,18 +213,16 @@ public:
      * existing !important property regardless of its own importance
      * if |aOverrideImportant| is true.
      *
-     * Sets |*aChanged| to true if something changed, leaves it
-     * unmodified otherwise.  Calls |ValueAppended| on |aDeclaration|
-     * if the property was not previously set, or in any case if
-     * |aMustCallValueAppended| is true.
+     * Returns true if something changed, false otherwise.  Calls
+     * |ValueAppended| on |aDeclaration| if the property was not
+     * previously set, or in any case if |aMustCallValueAppended| is true.
      */
-    void TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                           nsCSSProperty aPropID,
-                           PRBool aIsImportant,
-                           PRBool aOverrideImportant,
-                           PRBool aMustCallValueAppended,
-                           mozilla::css::Declaration* aDeclaration,
-                           PRBool* aChanged);
+    PRBool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                             nsCSSProperty aPropID,
+                             PRBool aIsImportant,
+                             PRBool aOverrideImportant,
+                             PRBool aMustCallValueAppended,
+                             mozilla::css::Declaration* aDeclaration);
 
     void AssertInitialState() {
 #ifdef DEBUG
@@ -262,13 +245,12 @@ private:
     /**
      * Worker for TransferFromBlock; cannot be used with shorthands.
      */
-    void DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                             nsCSSProperty aPropID,
-                             PRBool aIsImportant,
-                             PRBool aOverrideImportant,
-                             PRBool aMustCallValueAppended,
-                             mozilla::css::Declaration* aDeclaration,
-                             PRBool* aChanged);
+    PRBool DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                               nsCSSProperty aPropID,
+                               PRBool aIsImportant,
+                               PRBool aOverrideImportant,
+                               PRBool aMustCallValueAppended,
+                               mozilla::css::Declaration* aDeclaration);
 
 #ifdef DEBUG
     void DoAssertInitialState();
@@ -293,12 +275,12 @@ private:
 public:
     /*
      * Return the storage location within |this| of the value of the
-     * property (i.e., either an |nsCSSValue*|, |nsCSSRect*|, or
-     * |nsCSSValueList**| (etc.).
+     * property |aProperty|.
      */
-    void* PropertyAt(nsCSSProperty aProperty) {
+    nsCSSValue* PropertyAt(nsCSSProperty aProperty) {
         size_t offset = nsCSSExpandedDataBlock::kOffsetTable[aProperty];
-        return reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
+        return reinterpret_cast<nsCSSValue*>(reinterpret_cast<char*>(this) +
+                                             offset);
     }
 
     void SetPropertyBit(nsCSSProperty aProperty) {

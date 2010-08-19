@@ -164,7 +164,7 @@ public:
    * May only be called when not expanded, and the caller must call
    * EnsureMutable first.
    */
-  void* SlotForValue(nsCSSProperty aProperty, PRBool aIsImportant) {
+  nsCSSValue* SlotForValue(nsCSSProperty aProperty, PRBool aIsImportant) {
     AssertMutable();
     NS_ABORT_IF_FALSE(mData, "called while expanded");
 
@@ -177,11 +177,11 @@ public:
       return nsnull;
     }
 
-    void *slot = block->SlotForValue(aProperty);
+    nsCSSValue *slot = block->SlotForValue(aProperty);
 #ifdef DEBUG
     {
       nsCSSCompressedDataBlock *other = aIsImportant ? mData : mImportantData;
-      NS_ABORT_IF_FALSE(!slot || !other || !other->StorageFor(aProperty),
+      NS_ABORT_IF_FALSE(!slot || !other || !other->ValueFor(aProperty),
                         "Property both important and not?");
     }
 #endif
@@ -190,7 +190,7 @@ public:
 
   PRBool HasNonImportantValueFor(nsCSSProperty aProperty) const {
     NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
-    return !!mData->StorageFor(aProperty);
+    return !!mData->ValueFor(aProperty);
   }
 
   /**

@@ -53,6 +53,7 @@
 class nsIContent;
 class nsPresContext;
 class nsStyleContext;
+class nsCSSValue;
 struct nsCSSValueList;
 struct nsCSSValuePair;
 struct nsCSSValuePairList;
@@ -178,14 +179,10 @@ public:
   /**
    * Creates a specified value for the given computed value.
    *
-   * The first form fills in one of the nsCSSType types into the void*;
-   * for some types this means that the void* is pointing to memory
-   * owned by the nsStyleAnimation::Value.  (For all complex types, the
-   * nsStyleAnimation::Value owns the necessary objects so that the
-   * caller does not need to do anything to free them.  However, this
-   * means that callers using the void* variant must keep
-   * |aComputedValue| alive longer than the structure into which they've
-   * filled the value.)
+   * The first overload fills in an nsCSSValue object; the second
+   * produces a string.  The nsCSSValue result may depend on objects
+   * owned by the |aComputedValue| object, so users of that variant
+   * must keep |aComputedValue| alive longer than |aSpecifiedValue|.
    *
    * @param aProperty      The property whose value we're uncomputing.
    * @param aPresContext   The presentation context for the document in
@@ -197,7 +194,7 @@ public:
   static PRBool UncomputeValue(nsCSSProperty aProperty,
                                nsPresContext* aPresContext,
                                const Value& aComputedValue,
-                               void* aSpecifiedValue);
+                               nsCSSValue& aSpecifiedValue);
   static PRBool UncomputeValue(nsCSSProperty aProperty,
                                nsPresContext* aPresContext,
                                const Value& aComputedValue,
