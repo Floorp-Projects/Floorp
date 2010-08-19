@@ -42,9 +42,7 @@
 
 #include "nsCSSDataBlock.h"
 #include "mozilla/css/Declaration.h"
-#include "nsCSSProps.h"
 #include "nsRuleData.h"
-#include "nsRuleNode.h"
 #include "nsStyleSet.h"
 #include "nsStyleContext.h"
 
@@ -408,23 +406,14 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
     ComputeSizeResult size = ComputeSize();
 
     result_normal = new(size.normal) nsCSSCompressedDataBlock();
-    if (!result_normal) {
-        *aNormalBlock = nsnull;
-        *aImportantBlock = nsnull;
-        return;
-    }
     cursor_normal = result_normal->Block();
 
     if (size.important != 0) {
         result_important = new(size.important) nsCSSCompressedDataBlock();
-        if (!result_important) {
-            *aNormalBlock = nsnull;
-            *aImportantBlock = nsnull;
-            return;
-        }
         cursor_important = result_important->Block();
     } else {
         result_important = nsnull;
+        cursor_important = nsnull;
     }
 
     /*
@@ -463,6 +452,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
     result_normal->mBlockEnd = cursor_normal;
     NS_ASSERTION(result_normal->DataSize() == ptrdiff_t(size.normal),
                  "size miscalculation");
+
     if (result_important) {
         result_important->mBlockEnd = cursor_important;
         NS_ASSERTION(result_important->DataSize() == ptrdiff_t(size.important),

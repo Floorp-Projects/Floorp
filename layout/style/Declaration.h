@@ -50,16 +50,12 @@
 #error "This file should only be included within the layout library"
 #endif
 
-#include "nsISupports.h"
-#include "nsColor.h"
-#include <stdio.h>
-#include "nsString.h"
-#include "nsCoord.h"
-#include "nsCSSValue.h"
-#include "nsCSSProps.h"
-#include "nsTArray.h"
 #include "nsCSSDataBlock.h"
-#include "nsCSSStruct.h"
+#include "nsCSSProperty.h"
+#include "nsCSSProps.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include <stdio.h>
 
 namespace mozilla {
 namespace css {

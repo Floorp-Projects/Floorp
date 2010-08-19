@@ -183,9 +183,12 @@ public:
                 nsCSSCompressedDataBlock *aImportantBlock);
 
     /**
-     * Allocate a new compressed block and transfer all of the state
-     * from this expanded block to the new compressed block, clearing
-     * the state of this expanded block.
+     * Allocate new compressed blocks and transfer all of the state
+     * from this expanded block to the new blocks, clearing this
+     * expanded block.  A normal block will always be allocated, but
+     * an important block will only be allocated if there are
+     * !important properties in the expanded block; otherwise
+     * |*aImportantBlock| will be set to null.
      */
     void Compress(nsCSSCompressedDataBlock **aNormalBlock,
                   nsCSSCompressedDataBlock **aImportantBlock);
