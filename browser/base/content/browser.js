@@ -3582,6 +3582,9 @@ function updateEditUIVisibility()
   let editMenuPopupState = document.getElementById("menu_EditPopup").state;
   let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
   let placesContextMenuPopupState = document.getElementById("placesContext").state;
+#ifdef MENUBAR_CAN_AUTOHIDE
+  let appMenuPopupState = document.getElementById("appmenu-popup").state;
+#endif
 
   // The UI is visible if the Edit menu is opening or open, if the context menu
   // is open, or if the toolbar has been customized to include the Cut, Copy,
@@ -3592,6 +3595,10 @@ function updateEditUIVisibility()
                    contextMenuPopupState == "open" ||
                    placesContextMenuPopupState == "showing" ||
                    placesContextMenuPopupState == "open" ||
+#ifdef MENUBAR_CAN_AUTOHIDE
+                   appMenuPopupState == "showing" ||
+                   appMenuPopupState == "open" ||
+#endif
                    document.getElementById("cut-button") ||
                    document.getElementById("copy-button") ||
                    document.getElementById("paste-button") ? true : false;
@@ -4686,7 +4693,7 @@ nsBrowserAccess.prototype = {
   }
 }
 
-function onViewToolbarsPopupShowing(aEvent) {
+function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   var popup = aEvent.target;
   if (popup != aEvent.currentTarget)
     return;
@@ -4700,7 +4707,7 @@ function onViewToolbarsPopupShowing(aEvent) {
       popup.removeChild(deadItem);
   }
 
-  var firstMenuItem = popup.firstChild;
+  var firstMenuItem = aInsertPoint || popup.firstChild;
 
   for (i = 0; i < gNavToolbox.childNodes.length; ++i) {
     var toolbar = gNavToolbox.childNodes[i];
@@ -7462,6 +7469,10 @@ let gPrivateBrowsingUI = {
       // Disable the menu item in auto-start mode
       document.getElementById("privateBrowsingItem")
               .setAttribute("disabled", "true");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_privateBrowsing")
+              .setAttribute("disabled", "true");
+#endif
       document.getElementById("Tools:PrivateBrowsing")
               .setAttribute("disabled", "true");
     }
@@ -7529,6 +7540,10 @@ let gPrivateBrowsingUI = {
     // Enable the menu item in after exiting the auto-start mode
     document.getElementById("privateBrowsingItem")
             .removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_privateBrowsing")
+            .removeAttribute("disabled");
+#endif
     document.getElementById("Tools:PrivateBrowsing")
             .removeAttribute("disabled");
 
@@ -7547,6 +7562,11 @@ let gPrivateBrowsingUI = {
     let pbMenuItem = document.getElementById("privateBrowsingItem");
     pbMenuItem.setAttribute("label", pbMenuItem.getAttribute(aMode + "label"));
     pbMenuItem.setAttribute("accesskey", pbMenuItem.getAttribute(aMode + "accesskey"));
+#ifdef MENUBAR_CAN_AUTOHIDE
+    let appmenupbMenuItem = document.getElementById("appmenu_privateBrowsing");
+    appmenupbMenuItem.setAttribute("label", appmenupbMenuItem.getAttribute(aMode + "label"));
+    appmenupbMenuItem.setAttribute("accesskey", appmenupbMenuItem.getAttribute(aMode + "accesskey"));
+#endif
   },
 
   toggleMode: function PBUI_toggleMode() {
