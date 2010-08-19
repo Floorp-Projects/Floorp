@@ -396,6 +396,10 @@ protected:
   PRBool            mWidgetIsTopLevel;
 
   virtual ~nsIView() {}
+
+private:
+  nsView* Impl();
+  const nsView* Impl() const;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIView, NS_IVIEW_IID)
