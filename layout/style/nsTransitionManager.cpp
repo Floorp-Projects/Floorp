@@ -241,12 +241,12 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
     if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
                              nsCSSProps::kSIDTable[cv.mProperty]))
     {
-      void *prop = aRuleData->StorageFor(cv.mProperty);
+      nsCSSValue *prop = aRuleData->ValueFor(cv.mProperty);
 #ifdef DEBUG
       PRBool ok =
 #endif
         nsStyleAnimation::UncomputeValue(cv.mProperty, aRuleData->mPresContext,
-                                         cv.mValue, prop);
+                                         cv.mValue, *prop);
       NS_ABORT_IF_FALSE(ok, "could not store computed value");
     }
   }

@@ -129,17 +129,12 @@ PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
 
   nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
                                       ? mImportantData : mData;
-  const void *storage = data->StorageFor(aProperty);
-  if (!storage) {
+  const nsCSSValue *val = data->ValueFor(aProperty);
+  if (!val) {
     return PR_FALSE;
   }
 
-  switch (nsCSSProps::kTypeTable[aProperty]) {
-    case eCSSType_Value:
-      static_cast<const nsCSSValue*>(storage)->
-        AppendToString(aProperty, aResult);
-      break;
-  }
+  val->AppendToString(aProperty, aResult);
   return PR_TRUE;
 }
 
@@ -184,27 +179,20 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       continue;
     }
     ++totalCount;
-    const void *storage = mData->StorageFor(*p);
-    NS_ASSERTION(!storage || !mImportantData || !mImportantData->StorageFor(*p),
+    const nsCSSValue *val = mData->ValueFor(*p);
+    NS_ASSERTION(!val || !mImportantData || !mImportantData->ValueFor(*p),
                  "can't be in both blocks");
-    if (!storage && mImportantData) {
+    if (!val && mImportantData) {
       ++importantCount;
-      storage = mImportantData->StorageFor(*p);
+      val = mImportantData->ValueFor(*p);
     }
-    if (!storage) {
+    if (!val) {
       // Case (1) above: some subproperties not specified.
       return;
     }
-    nsCSSUnit unit;
-    switch (nsCSSProps::kTypeTable[*p]) {
-      case eCSSType_Value: {
-        const nsCSSValue *val = static_cast<const nsCSSValue*>(storage);
-        unit = val->GetUnit();
-      } break;
-    }
-    if (unit == eCSSUnit_Inherit) {
+    if (val->GetUnit() == eCSSUnit_Inherit) {
       ++inheritCount;
-    } else if (unit == eCSSUnit_Initial) {
+    } else if (val->GetUnit() == eCSSUnit_Initial) {
       ++initialCount;
     }
   }
@@ -236,11 +224,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     case eCSSProperty_border_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ASSERTION(nsCSSProps::kTypeTable[subprops[0]] == eCSSType_Value &&
-                   nsCSSProps::kTypeTable[subprops[1]] == eCSSType_Value &&
-                   nsCSSProps::kTypeTable[subprops[2]] == eCSSType_Value &&
-                   nsCSSProps::kTypeTable[subprops[3]] == eCSSType_Value,
-                   "type mismatch");
       NS_ASSERTION(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
                      kNotFound, "first subprop must be top");
       NS_ASSERTION(nsCSSProps::GetStringValue(subprops[1]).Find("-right") !=
@@ -249,10 +232,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                      kNotFound, "third subprop must be bottom");
       NS_ASSERTION(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
                      kNotFound, "fourth subprop must be left");
-      const nsCSSValue &topValue = *data->ValueStorageFor(subprops[0]);
-      const nsCSSValue &rightValue = *data->ValueStorageFor(subprops[1]);
-      const nsCSSValue &bottomValue = *data->ValueStorageFor(subprops[2]);
-      const nsCSSValue &leftValue = *data->ValueStorageFor(subprops[3]);
+      const nsCSSValue &topValue = *data->ValueFor(subprops[0]);
+      const nsCSSValue &rightValue = *data->ValueFor(subprops[1]);
+      const nsCSSValue &bottomValue = *data->ValueFor(subprops[2]);
+      const nsCSSValue &leftValue = *data->ValueFor(subprops[3]);
 
       NS_ASSERTION(topValue.GetUnit() != eCSSUnit_Null, "null top");
       topValue.AppendToString(subprops[0], aValue);
@@ -279,10 +262,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       const nsCSSValue* vals[4] = {
-        data->ValueStorageFor(subprops[0]),
-        data->ValueStorageFor(subprops[1]),
-        data->ValueStorageFor(subprops[2]),
-        data->ValueStorageFor(subprops[3])
+        data->ValueFor(subprops[0]),
+        data->ValueFor(subprops[1]),
+        data->ValueFor(subprops[2]),
+        data->ValueFor(subprops[3])
       };
 
       // For compatibility, only write a slash and the y-values
@@ -325,10 +308,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
            subprops < subprops_end; ++subprops) {
         // Check only the first four subprops in each table, since the
         // others are extras for dimensional box properties.
-        const nsCSSValue *firstSide = data->ValueStorageFor((*subprops)[0]);
+        const nsCSSValue *firstSide = data->ValueFor((*subprops)[0]);
         for (PRInt32 side = 1; side < 4; ++side) {
           const nsCSSValue *otherSide =
-            data->ValueStorageFor((*subprops)[side]);
+            data->ValueFor((*subprops)[side]);
           if (*firstSide != *otherSide)
             match = PR_FALSE;
         }
@@ -350,16 +333,12 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     case eCSSProperty_outline: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ASSERTION(nsCSSProps::kTypeTable[subprops[0]] == eCSSType_Value &&
-                   nsCSSProps::kTypeTable[subprops[1]] == eCSSType_Value &&
-                   nsCSSProps::kTypeTable[subprops[2]] == eCSSType_Value,
-                   "type mismatch");
       NS_ASSERTION(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
                                   NS_LITERAL_CSTRING("-color")) ||
                    StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
                                   NS_LITERAL_CSTRING("-color-value")),
                    "third subprop must be the color property");
-      const nsCSSValue *colorValue = data->ValueStorageFor(subprops[2]);
+      const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
       PRBool isMozUseTextColor =
         colorValue->GetUnit() == eCSSUnit_Enumerated &&
         colorValue->GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR;
@@ -410,25 +389,25 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       // background-origin that are different and not the default
       // values.  (We omit them if they're both default.)
       const nsCSSValueList *image =
-        data->ValueStorageFor(eCSSProperty_background_image)->
+        data->ValueFor(eCSSProperty_background_image)->
         GetListValue();
       const nsCSSValueList *repeat =
-        data->ValueStorageFor(eCSSProperty_background_repeat)->
+        data->ValueFor(eCSSProperty_background_repeat)->
         GetListValue();
       const nsCSSValueList *attachment =
-        data->ValueStorageFor(eCSSProperty_background_attachment)->
+        data->ValueFor(eCSSProperty_background_attachment)->
         GetListValue();
       const nsCSSValuePairList *position =
-        data->ValueStorageFor(eCSSProperty_background_position)->
+        data->ValueFor(eCSSProperty_background_position)->
         GetPairListValue();
       const nsCSSValueList *clip =
-        data->ValueStorageFor(eCSSProperty_background_clip)->
+        data->ValueFor(eCSSProperty_background_clip)->
         GetListValue();
       const nsCSSValueList *origin =
-        data->ValueStorageFor(eCSSProperty_background_origin)->
+        data->ValueFor(eCSSProperty_background_origin)->
         GetListValue();
       const nsCSSValuePairList *size =
-        data->ValueStorageFor(eCSSProperty_background_size)->
+        data->ValueFor(eCSSProperty_background_size)->
         GetPairListValue();
       for (;;) {
         if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
@@ -515,27 +494,27 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       // systemFont might not be present; the others are guaranteed to be
       // based on the shorthand check at the beginning of the function
       const nsCSSValue *systemFont =
-        data->ValueStorageFor(eCSSProperty__x_system_font);
+        data->ValueFor(eCSSProperty__x_system_font);
       const nsCSSValue &style =
-        *data->ValueStorageFor(eCSSProperty_font_style);
+        *data->ValueFor(eCSSProperty_font_style);
       const nsCSSValue &variant =
-        *data->ValueStorageFor(eCSSProperty_font_variant);
+        *data->ValueFor(eCSSProperty_font_variant);
       const nsCSSValue &weight =
-        *data->ValueStorageFor(eCSSProperty_font_weight);
+        *data->ValueFor(eCSSProperty_font_weight);
       const nsCSSValue &size =
-        *data->ValueStorageFor(eCSSProperty_font_size);
+        *data->ValueFor(eCSSProperty_font_size);
       const nsCSSValue &lh =
-        *data->ValueStorageFor(eCSSProperty_line_height);
+        *data->ValueFor(eCSSProperty_line_height);
       const nsCSSValue &family =
-        *data->ValueStorageFor(eCSSProperty_font_family);
+        *data->ValueFor(eCSSProperty_font_family);
       const nsCSSValue &stretch =
-        *data->ValueStorageFor(eCSSProperty_font_stretch);
+        *data->ValueFor(eCSSProperty_font_stretch);
       const nsCSSValue &sizeAdjust =
-        *data->ValueStorageFor(eCSSProperty_font_size_adjust);
+        *data->ValueFor(eCSSProperty_font_size_adjust);
       const nsCSSValue &featureSettings =
-        *data->ValueStorageFor(eCSSProperty_font_feature_settings);
+        *data->ValueFor(eCSSProperty_font_feature_settings);
       const nsCSSValue &languageOverride =
-        *data->ValueStorageFor(eCSSProperty_font_language_override);
+        *data->ValueFor(eCSSProperty_font_language_override);
 
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
@@ -601,9 +580,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       break;
     case eCSSProperty_overflow: {
       const nsCSSValue &xValue =
-        *data->ValueStorageFor(eCSSProperty_overflow_x);
+        *data->ValueFor(eCSSProperty_overflow_x);
       const nsCSSValue &yValue =
-        *data->ValueStorageFor(eCSSProperty_overflow_y);
+        *data->ValueFor(eCSSProperty_overflow_y);
       if (xValue == yValue)
         xValue.AppendToString(eCSSProperty_overflow_x, aValue);
       break;
@@ -618,13 +597,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     }
     case eCSSProperty_transition: {
       const nsCSSValue &transProp =
-        *data->ValueStorageFor(eCSSProperty_transition_property);
+        *data->ValueFor(eCSSProperty_transition_property);
       const nsCSSValue &transDuration =
-        *data->ValueStorageFor(eCSSProperty_transition_duration);
+        *data->ValueFor(eCSSProperty_transition_duration);
       const nsCSSValue &transTiming =
-        *data->ValueStorageFor(eCSSProperty_transition_timing_function);
+        *data->ValueFor(eCSSProperty_transition_timing_function);
       const nsCSSValue &transDelay =
-        *data->ValueStorageFor(eCSSProperty_transition_delay);
+        *data->ValueFor(eCSSProperty_transition_delay);
 
       NS_ABORT_IF_FALSE(transDuration.GetUnit() == eCSSUnit_List ||
                         transDuration.GetUnit() == eCSSUnit_ListDep,
@@ -696,11 +675,11 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 
     case eCSSProperty_marker: {
       const nsCSSValue &endValue =
-        *data->ValueStorageFor(eCSSProperty_marker_end);
+        *data->ValueFor(eCSSProperty_marker_end);
       const nsCSSValue &midValue =
-        *data->ValueStorageFor(eCSSProperty_marker_mid);
+        *data->ValueFor(eCSSProperty_marker_mid);
       const nsCSSValue &startValue =
-        *data->ValueStorageFor(eCSSProperty_marker_start);
+        *data->ValueFor(eCSSProperty_marker_start);
       if (endValue == midValue && midValue == startValue)
         AppendValueToString(eCSSProperty_marker_end, aValue);
       break;
@@ -724,8 +703,7 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
   if (!mImportantData)
     return PR_FALSE;
 
-  // Calling StorageFor is inefficient, but we can assume '!important'
-  // is rare.
+  // Calling ValueFor is inefficient, but we can assume '!important' is rare.
 
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
@@ -733,14 +711,14 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
         // The system_font subproperty doesn't count.
         continue;
       }
-      if (!mImportantData->StorageFor(*p)) {
+      if (!mImportantData->ValueFor(*p)) {
         return PR_FALSE;
       }
     }
     return PR_TRUE;
   }
 
-  return mImportantData->StorageFor(aProperty) != nsnull;
+  return mImportantData->ValueFor(aProperty) != nsnull;
 }
 
 /* static */ void
@@ -782,8 +760,8 @@ Declaration::ToString(nsAString& aString) const
 
   nsCSSCompressedDataBlock *systemFontData =
     GetValueIsImportant(eCSSProperty__x_system_font) ? mImportantData : mData;
-  const nsCSSValue *systemFont = 
-    systemFontData->ValueStorageFor(eCSSProperty__x_system_font);
+  const nsCSSValue *systemFont =
+    systemFontData->ValueFor(eCSSProperty__x_system_font);
   const PRBool haveSystemFont = systemFont &&
                                 systemFont->GetUnit() != eCSSUnit_None &&
                                 systemFont->GetUnit() != eCSSUnit_Null;
@@ -850,10 +828,8 @@ Declaration::ToString(nsAString& aString) const
         //   (2) its value is the hidden system font value and it matches
         //       the hidden system font subproperty in importance, and
         //       we output the system font subproperty.
-        NS_ASSERTION(nsCSSProps::kTypeTable[property] == eCSSType_Value,
-                     "not a value typed subproperty");
         const nsCSSValue *val =
-          systemFontData->ValueStorageFor(property);
+          systemFontData->ValueFor(property);
         if (property == eCSSProperty__x_system_font ||
             (haveSystemFont && val && val->GetUnit() == eCSSUnit_System_Font)) {
           doneProperty = PR_TRUE;

@@ -1124,15 +1124,15 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     // same importance level, then we can just copy our parsed value
     // directly into the declaration without going through the whole
     // expand/compress thing.
-    void* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
+    nsCSSValue* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
     if (valueSlot) {
-      nsCSSCompressedDataBlock::MoveValue(mTempData.PropertyAt(aPropID),
-                                          valueSlot, aPropID, aChanged);
+      *aChanged = nsCSSCompressedDataBlock::
+        MoveValue(mTempData.PropertyAt(aPropID), valueSlot);
       mTempData.ClearPropertyBit(aPropID);
     } else {
       aDeclaration->ExpandTo(&mData);
-      mData.TransferFromBlock(mTempData, aPropID, aIsImportant, PR_TRUE,
-                              PR_FALSE, aDeclaration, aChanged);
+      *aChanged = mData.TransferFromBlock(mTempData, aPropID, aIsImportant,
+                                          PR_TRUE, PR_FALSE, aDeclaration);
       aDeclaration->CompressFrom(&mData);
     }
     CLEAR_ERROR();
@@ -4031,9 +4031,10 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     return PR_FALSE;
   }
 
-  mData.TransferFromBlock(mTempData, propID, status == ePriority_Important,
-                          PR_FALSE, aMustCallValueAppended,
-                          aDeclaration, aChanged);
+  *aChanged |= mData.TransferFromBlock(mTempData, propID,
+                                       status == ePriority_Important,
+                                       PR_FALSE, aMustCallValueAppended,
+                                       aDeclaration);
   return PR_TRUE;
 }
 
@@ -4997,9 +4998,6 @@ CSSParserImpl::AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue)
 {
   NS_ASSERTION(0 <= aPropID && aPropID < eCSSProperty_COUNT_no_shorthands,
                "property out of range");
-  NS_ASSERTION(nsCSSProps::kTypeTable[aPropID] == eCSSType_Value,
-               nsPrintfCString(64, "type error (property=\'%s\')",
-                             nsCSSProps::GetStringValue(aPropID).get()).get());
   nsCSSValue& storage =
       *static_cast<nsCSSValue*>(mTempData.PropertyAt(aPropID));
   storage = aValue;

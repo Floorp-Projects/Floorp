@@ -1365,10 +1365,8 @@ nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 
 struct PropertyCheckData {
   size_t offset;
-  // These duplicate the same data in nsCSSProps::kTypeTable and
-  // kFlagsTable, except that we have some extra entries for
-  // CSS_PROP_INCLUDE_NOT_CSS.
-  nsCSSType type;
+  // These duplicate the data in nsCSSProps::kFlagsTable, except that
+  // we have some extra entries for CSS_PROP_INCLUDE_NOT_CSS.
   PRUint32 flags;
 };
 
@@ -1494,8 +1492,8 @@ CheckTextCallback(const nsRuleDataStruct& aData,
 // structs but not nsCSS*
 #define CSS_PROP_INCLUDE_NOT_CSS
 
-#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_, stylestructoffset_, animtype_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, flags_ },
+#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, kwtable_, stylestructoffset_, animtype_) \
+  { offsetof(nsRuleData##datastruct_, member_), flags_ },
 
 static const PropertyCheckData FontCheckProperties[] = {
 #define CSS_PROP_FONT CHECK_DATA_FOR_PROPERTY
@@ -1735,20 +1733,12 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   for (const PropertyCheckData *prop = structData->props,
                            *prop_end = prop + structData->nprops;
        prop != prop_end;
-       ++prop)
-    switch (prop->type) {
+       ++prop) {
 
-      case eCSSType_Value:
-        ++total;
-        ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
-                        specified, inherited);
-        break;
-
-      default:
-        NS_NOTREACHED("unknown type");
-        break;
-
-    }
+    ++total;
+    ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
+                    specified, inherited);
+  }
 
 #if 0
   printf("CheckSpecifiedProperties: SID=%d total=%d spec=%d inh=%d.\n",
@@ -2063,18 +2053,8 @@ UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
                            *prop_end = prop + structData->nprops;
        prop != prop_end;
        ++prop) {
-    if ((prop->flags & aFlags) == aFlags)
-      // Don't unset the property.
-      continue;
-
-    switch (prop->type) {
-      case eCSSType_Value:
-        ValueAtOffset(aRuleDataStruct, prop->offset).Reset();
-        break;
-      default:
-        NS_NOTREACHED("unknown type");
-        break;
-    }
+    if ((prop->flags & aFlags) != aFlags)
+      ValueAtOffset(aRuleDataStruct, prop->offset).Reset();
   }
 }
 

@@ -51,8 +51,8 @@
 enum nsCSSProperty {
   eCSSProperty_UNKNOWN = -1,
 
-  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,   \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
+  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,     \
+                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
     eCSSProperty_##id_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
@@ -77,12 +77,6 @@ enum nsCSSProperty {
 
   // Extra dummy values for nsCSSParser internal use.
   eCSSPropertyExtra_x_none_value
-};
-
-// The types of values that can be in the nsCSS*/nsRuleData* structs.
-// See nsCSSPropList.h for uses.
-enum nsCSSType {
-  eCSSType_Value
 };
 
 // The "descriptors" that can appear in a @font-face rule.
