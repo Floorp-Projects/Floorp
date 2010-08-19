@@ -1194,7 +1194,7 @@ CSS_PROP_DISPLAY(
     0,
     Display,
     mClip,
-    eCSSType_Rect,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleDisplay, mClip),
     eStyleAnimType_Custom)
@@ -1549,7 +1549,7 @@ CSS_PROP_LIST(
     0,
     List,
     mImageRegion,
-    eCSSType_Rect,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleList, mImageRegion),
     eStyleAnimType_Custom)

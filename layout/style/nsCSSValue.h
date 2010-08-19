@@ -100,7 +100,6 @@ enum nsCSSUnit {
                                   //       only in temporary values
   eCSSUnit_DummyInherit = 9,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
-  eCSSUnit_RectIsAuto   = 10,     // (n/a) 'auto' for an entire rect()
 
   eCSSUnit_String       = 11,     // (PRUnichar*) a string value
   eCSSUnit_Ident        = 12,     // (PRUnichar*) a string value
@@ -144,6 +143,7 @@ enum nsCSSUnit {
   eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
+  eCSSUnit_Rect         = 51,     // (nsCSSRect*) rectangle (four values)
 
   eCSSUnit_Integer      = 70,     // (int) simple value
   eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
@@ -189,6 +189,8 @@ enum nsCSSUnit {
 struct nsCSSValueGradient;
 struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
+struct nsCSSRect;
+struct nsCSSRect_heap;
 
 class nsCSSValue {
 public:
@@ -205,7 +207,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_RectIsAuto, "not a valueless unit");
+    NS_ASSERTION(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
@@ -348,6 +350,9 @@ public:
   inline nsCSSValuePair& GetPairValue(); // body below
   inline const nsCSSValuePair& GetPairValue() const; // body below
 
+  inline nsCSSRect& GetRectValue(); // body below
+  inline const nsCSSRect& GetRectValue() const; // body below
+
   URL* GetURLStructValue() const
   {
     // Not allowing this for Image values, because if the caller takes
@@ -402,6 +407,11 @@ public:
   void SetSystemFontValue();
   void SetDummyValue();
   void SetDummyInheritValue();
+
+  // These are a little different - they allocate storage for you and
+  // return a handle.
+  nsCSSRect& SetRectValue();
+
   void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
 
   // Initializes as a function value with the specified function id.
@@ -485,6 +495,7 @@ protected:
     Image*     mImage;
     nsCSSValueGradient* mGradient;
     nsCSSValuePair_heap* mPair;
+    nsCSSRect_heap* mRect;
   }         mValue;
 };
 
@@ -660,6 +671,29 @@ struct nsCSSRect {
   typedef nsCSSValue nsCSSRect::*side_type;
   static const side_type sides[4];
 };
+
+// nsCSSRect_heap differs from nsCSSRect only in being
+// refcounted.  It should not be necessary to use this class directly;
+// it's an implementation detail of nsCSSValue.
+struct nsCSSRect_heap : public nsCSSRect {
+  NS_INLINE_DECL_REFCOUNTING(nsCSSRect_heap)
+};
+
+// This has to be here so that the relationship between nsCSSRect
+// and nsCSSRect_heap is visible.
+inline nsCSSRect&
+nsCSSValue::GetRectValue()
+{
+  NS_ASSERTION(mUnit == eCSSUnit_Rect, "not a pair value");
+  return *mValue.mRect;
+}
+
+inline const nsCSSRect&
+nsCSSValue::GetRectValue() const
+{
+  NS_ASSERTION(mUnit == eCSSUnit_Rect, "not a pair value");
+  return *mValue.mRect;
+}
 
 struct nsCSSValuePair {
   nsCSSValuePair()

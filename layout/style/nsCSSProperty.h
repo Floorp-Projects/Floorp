@@ -83,7 +83,6 @@ enum nsCSSProperty {
 // See nsCSSPropList.h for uses.
 enum nsCSSType {
   eCSSType_Value,
-  eCSSType_Rect,
   eCSSType_ValueList,
   eCSSType_ValuePairList
 };
