@@ -391,6 +391,9 @@ endif
 	@rm -rf $(DEPTH)/installer-stage $(DIST)/xpt
 	@echo "Staging installer files..."
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/core
+ifdef MOZ_OMNIJAR
+	@(cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR))
+endif
 	@cp -av $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
 ifdef MOZ_OPTIONAL_PKG_LIST
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
@@ -398,9 +401,6 @@ ifdef MOZ_OPTIONAL_PKG_LIST
 	  "$(call core_abspath,$(DEPTH)/installer-stage/optional)", \
 	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
 	  $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
-endif
-ifdef MOZ_OMNIJAR
-	@(cd $(DEPTH)/installer-stage/core && $(PACK_OMNIJAR))
 endif
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
