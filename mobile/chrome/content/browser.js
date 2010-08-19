@@ -127,47 +127,7 @@ function debug() {
                                       Math.round(container.getBoundingClientRect().top) + endl);
 
     dump(endl);
-
-    let mouseModule = ih._modules[0];
-    dump('ih grabber  : ' + ih._grabber           + endl);
-    dump('ih grabdepth: ' + ih._grabDepth         + endl);
-    dump('ih listening: ' + !ih._ignoreEvents     + endl);
-    dump('ih suppress : ' + ih._suppressNextClick + endl);
-    dump('mouseModule : ' + mouseModule           + endl);
-
-    dump(endl);
-
-    dump('tilecache capacity: ' + bv._tileManager._tileCache.getCapacity() + endl);
-    dump('tilecache size    : ' + bv._tileManager._tileCache.size          + endl);
-    dump('tilecache iBound  : ' + bv._tileManager._tileCache.iBound        + endl);
-    dump('tilecache jBound  : ' + bv._tileManager._tileCache.jBound        + endl);
-
-    dump('-----------------------------------------------------\n');
   }
-}
-
-function debugTile(i, j) {
-  let bv = Browser._browserView;
-  let tc = bv._tileManager._tileCache;
-  let t  = tc.getTile(i, j);
-
-  dump('------ DEBUGGING TILE (' + i + ',' + j + ') --------\n');
-
-  dump('in bounds: ' + tc.inBounds(i, j) + endl);
-  dump('occupied : ' + !!tc.lookup(i, j) + endl);
-  if (t)
-  {
-  dump('toString : ' + t.toString(true) + endl);
-  dump('free     : ' + t.free + endl);
-  dump('dirtyRect: ' + t._dirtyTileCanvasRect + endl);
-
-  let len = tc._tilePool.length;
-  for (let k = 0; k < len; ++k)
-    if (tc._tilePool[k] === t)
-      dump('found in tilePool at index ' + k + endl);
-  }
-
-  dump('------------------------------------\n');
 }
 
 function onDebugKeyPress(ev) {
@@ -205,82 +165,13 @@ function onDebugKeyPress(ev) {
   const y = 89;
   const z = 90;  // set zoom level to 1
 
-  if (window.tileMapMode) {
-    function putChar(ev, col, row) {
-      let tile = tc.getTile(col, row);
-      switch (ev.charCode) {
-      case h: // held tiles
-        dump(tile ? (tile.free ? '*' : 'h') : ' ');
-        break;
-      case d: // dirty tiles
-        dump(tile ? (tile.isDirty() ? 'd' : '*') : ' ');
-        break;
-      case o: // occupied tileholders
-        dump(tc.lookup(col, row) ? 'o' : ' ');
-        break;
-      }
-    }
-
-    let tc = Browser._browserView._tileManager._tileCache;
-    let col, row;
-
-    dump(endl);
-
-    dump('  ');
-    for (col = 0; col < tc.iBound; ++col)
-      dump(col % 10);
-
-    dump(endl);
-
-    for (row = 0; row < tc.jBound; ++row) {
-
-      dump((row % 10) + ' ');
-
-      for (col = 0; col < tc.iBound; ++col) {
-        putChar(ev, col, row);
-      }
-
-      dump(endl);
-    }
-    dump(endl + endl);
-
-    for (let ii = 0; ii < tc._tilePool.length; ++ii) {
-      let tile = tc._tilePool[ii];
-      putChar(ev, tile.i, tile.j);
-    }
-
-    dump(endl + endl);
-
-    window.tileMapMode = false;
-    return;
-  }
-
   switch (ev.charCode) {
   case f:
     MemoryObserver.observe();
     dump("Forced a GC\n");
     break;
-  case r:
-    //bv.setVisibleRect(Browser.getVisibleRect());
-
   case d:
     debug();
-
-    break;
-  case l:
-    bv._tileManager.restartLazyCrawl(bv._tileManager._criticalRect);
-
-    break;
-  case b:
-    window.tileMapMode = true;
-    break;
-  case u:
-    let ijstrs = window.prompt('row,col plz').split(' ');
-    for each (let ijstr in ijstrs) {
-      let [i, j] = ijstr.split(',').map(function (x) { return parseInt(x); });
-      debugTile(i, j);
-    }
-
     break;
   case a:
     let cr = bv._tileManager._criticalRect;
@@ -301,22 +192,6 @@ function onDebugKeyPress(ev) {
   case i:
     window.infoMode = !window.infoMode;
     break;
-  case m:
-    Util.dumpLn("renderMode:", bv._renderMode);
-    Util.dumpLn("batchOps:",bv._batchOps.length);
-    bv.resumeRendering();
-    break;
-  case p:
-    let tc = bv._tileManager._tileCache;
-    dump('************* TILE POOL ****************\n');
-    for (let ii = 0, len = tc._tilePool.length; ii < len; ++ii) {
-      if (window.infoMode)
-        debugTile(tc._tilePool[ii].i, tc._tilePool[ii].j);
-      else
-        dump(tc._tilePool[ii].i + ',' + tc._tilePool[ii].j + '\n');
-    }
-    dump('****************************************\n');
-    break;
 #ifndef MOZ_PLATFORM_MAEMO
   case q:
     if (Util.isPortrait())
@@ -332,8 +207,6 @@ function onDebugKeyPress(ev) {
     break;
   }
 }
-window.infoMode = false;
-window.tileMapMode = false;
 
 var ih = null;
 
@@ -1151,9 +1024,6 @@ var Browser = {
     // The order of operations below is important for artifacting and for performance. Important
     // side effects of functions are noted below.
 
-    // Hardware scrolling happens immediately when scrollTo is called.  Hide to prevent artifacts.
-    bv.beginOffscreenOperation(rect);
-
     // Critical rect changes when controls are hidden. Must hide before tilemanager viewport.
     this.hideSidebars();
     this.hideTitlebar();
@@ -1161,8 +1031,6 @@ var Browser = {
     bv.setZoomLevel(zoomLevel);
 
     this.contentScrollboxScroller.scrollTo(scrollX, scrollY);
-
-    bv.commitOffscreenOperation();
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
