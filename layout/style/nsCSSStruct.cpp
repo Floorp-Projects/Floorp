@@ -64,8 +64,6 @@ nsCSSColor::nsCSSColor(void)
   : mBackImage(nsnull)
   , mBackRepeat(nsnull)
   , mBackAttachment(nsnull)
-  , mBackPosition(nsnull)
-  , mBackSize(nsnull)
   , mBackClip(nsnull)
   , mBackOrigin(nsnull)
 {
@@ -79,8 +77,6 @@ nsCSSColor::~nsCSSColor(void)
   delete mBackImage;
   delete mBackRepeat;
   delete mBackAttachment;
-  delete mBackPosition;
-  delete mBackSize;
   delete mBackClip;
   delete mBackOrigin;
 }
@@ -266,10 +262,7 @@ nsCSSPage::~nsCSSPage(void)
 // --- nsCSSContent -----------------
 
 nsCSSContent::nsCSSContent(void)
-  : mContent(nsnull),
-    mCounterIncrement(nsnull),
-    mCounterReset(nsnull),
-    mQuotes(nsnull)
+  : mContent(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSContent);
 }
@@ -278,9 +271,6 @@ nsCSSContent::~nsCSSContent(void)
 {
   MOZ_COUNT_DTOR(nsCSSContent);
   delete mContent;
-  delete mCounterIncrement;
-  delete mCounterReset;
-  delete mQuotes;
 }
 
 // --- nsCSSUserInterface -----------------

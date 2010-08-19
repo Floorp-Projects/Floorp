@@ -142,10 +142,6 @@ PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
       (*static_cast<nsCSSValueList*const*>(storage))->
         AppendToString(aProperty, aResult);
       break;
-    case eCSSType_ValuePairList:
-      (*static_cast<nsCSSValuePairList*const*>(storage))->
-        AppendToString(aProperty, aResult);
-      break;
   }
   return PR_TRUE;
 }
@@ -213,12 +209,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
             *static_cast<nsCSSValueList*const*>(storage);
         NS_ABORT_IF_FALSE(item, "null not allowed in compressed block");
         unit = item->mValue.GetUnit();
-      } break;
-      case eCSSType_ValuePairList: {
-        const nsCSSValuePairList* item =
-            *static_cast<nsCSSValuePairList*const*>(storage);
-        NS_ABORT_IF_FALSE(item, "null not allowed in compressed block");
-        unit = item->mXValue.GetUnit();
       } break;
     }
     if (unit == eCSSUnit_Inherit) {
@@ -435,13 +425,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValueList *attachment =
         * data->ValueListStorageFor(eCSSProperty_background_attachment);
       const nsCSSValuePairList *position =
-        * data->ValuePairListStorageFor(eCSSProperty_background_position);
+        data->ValueStorageFor(eCSSProperty_background_position)->
+        GetPairListValue();
       const nsCSSValueList *clip =
         * data->ValueListStorageFor(eCSSProperty_background_clip);
       const nsCSSValueList *origin =
         * data->ValueListStorageFor(eCSSProperty_background_origin);
       const nsCSSValuePairList *size =
-        * data->ValuePairListStorageFor(eCSSProperty_background_size);
+        data->ValueStorageFor(eCSSProperty_background_size)->
+        GetPairListValue();
       for (;;) {
         if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
             size->mYValue.GetUnit() != eCSSUnit_Auto) {

@@ -144,6 +144,9 @@ enum nsCSSUnit {
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_Rect         = 51,     // (nsCSSRect*) rectangle (four values)
+  eCSSUnit_PairList     = 54,     // (nsCSSValuePairList*) list of value pairs
+  eCSSUnit_PairListDep  = 55,     // (nsCSSValuePairList*) same as PairList
+                                  //   but does not own the list
 
   eCSSUnit_Integer      = 70,     // (int) simple value
   eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
@@ -191,6 +194,8 @@ struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
 struct nsCSSRect;
 struct nsCSSRect_heap;
+struct nsCSSValuePairList;
+struct nsCSSValuePairList_heap;
 
 class nsCSSValue {
 public:
@@ -347,11 +352,15 @@ public:
     return mValue.mGradient;
   }
 
-  inline nsCSSValuePair& GetPairValue(); // body below
-  inline const nsCSSValuePair& GetPairValue() const; // body below
+  // bodies of these are below
+  inline nsCSSValuePair& GetPairValue();
+  inline const nsCSSValuePair& GetPairValue() const;
 
-  inline nsCSSRect& GetRectValue(); // body below
-  inline const nsCSSRect& GetRectValue() const; // body below
+  inline nsCSSRect& GetRectValue();
+  inline const nsCSSRect& GetRectValue() const;
+
+  inline nsCSSValuePairList* GetPairListValue();
+  inline const nsCSSValuePairList* GetPairListValue() const;
 
   URL* GetURLStructValue() const
   {
@@ -398,6 +407,7 @@ public:
   void SetGradientValue(nsCSSValueGradient* aGradient);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
+  void SetDependentPairListValue(nsCSSValuePairList* aList);
   void SetAutoValue();
   void SetInheritValue();
   void SetInitialValue();
@@ -411,6 +421,7 @@ public:
   // These are a little different - they allocate storage for you and
   // return a handle.
   nsCSSRect& SetRectValue();
+  nsCSSValuePairList* SetPairListValue();
 
   void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
 
@@ -496,6 +507,8 @@ protected:
     nsCSSValueGradient* mGradient;
     nsCSSValuePair_heap* mPair;
     nsCSSRect_heap* mRect;
+    nsCSSValuePairList_heap* mPairList;
+    nsCSSValuePairList* mPairListDependent;
   }         mValue;
 };
 
@@ -802,6 +815,37 @@ private:
     MOZ_COUNT_CTOR(nsCSSValuePairList);
   }
 };
+
+// nsCSSValuePairList_heap differs from nsCSSValuePairList only in being
+// refcounted.  It should not be necessary to use this class directly;
+// it's an implementation detail of nsCSSValue.
+struct nsCSSValuePairList_heap : public nsCSSValuePairList {
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValuePairList_heap)
+};
+
+// This has to be here so that the relationship between nsCSSValuePairList
+// and nsCSSValuePairList_heap is visible.
+inline nsCSSValuePairList*
+nsCSSValue::GetPairListValue()
+{
+  if (mUnit == eCSSUnit_PairList)
+    return mValue.mPairList;
+  else {
+    NS_ABORT_IF_FALSE (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
+    return mValue.mPairListDependent;
+  }
+}
+
+inline const nsCSSValuePairList*
+nsCSSValue::GetPairListValue() const
+{
+  if (mUnit == eCSSUnit_PairList)
+    return mValue.mPairList;
+  else {
+    NS_ABORT_IF_FALSE (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
+    return mValue.mPairListDependent;
+  }
+}
 
 struct nsCSSValueGradientStop {
 public:
