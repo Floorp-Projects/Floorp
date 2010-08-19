@@ -118,6 +118,7 @@ FLOW_FAILURE_TESTCASES = \
 MUST_OVERRIDE_PASS_TESTCASES = \
   OverrideOK1.cpp \
   OverrideOK2.cpp \
+  OverrideOK3-NamespaceTypedef.cpp \
   $(NULL)
 
 MUST_OVERRIDE_FAILURE_TESTCASES = \
@@ -129,6 +130,7 @@ MUST_OVERRIDE_FAILURE_TESTCASES = \
 
 OVERRIDE_PASS_TESTCASES = \
   override-pass.cpp \
+  override-namespace-typedef.cpp \
   $(NULL)
 
 OVERRIDE_FAILURE_TESTCASES = \
