@@ -339,6 +339,12 @@ public:
 
     virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
 
+    /**
+     * Returns a 1x1 surface that can be used to create graphics contexts
+     * for measuring text etc as if they will be rendered to the screen
+     */
+    gfxASurface* ScreenReferenceSurface() { return mScreenReferenceSurface; }
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -356,8 +362,8 @@ protected:
 private:
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 
+    nsRefPtr<gfxASurface> mScreenReferenceSurface;
     nsTArray<PRUint32> mCJKPrefLangs;
-
     nsCOMPtr<nsIObserver> overrideObserver;
 };
 
