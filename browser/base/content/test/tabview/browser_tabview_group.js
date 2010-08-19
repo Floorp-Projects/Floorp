@@ -95,19 +95,19 @@ function testGroupItemWithTabItem(contentWindow) {
     let tabItem = groupItem.getChild(groupItem.getChildren().length - 1);
     ok(tabItem, "Tab item exists");
 
-    let tabRemoved = false;
+    let tabItemClosed = false;
     tabItem.addSubscriber(tabItem, "close", function() {
       tabItem.removeSubscriber(tabItem, "close");
-
-      ok(tabRemoved, "Tab is removed");
-      // tabItem would get destroyed after the close event is sent so we have a 0 delay here.
-      is(groupItem.getChildren().length, --tabItemCount,
-        "The number of children in new tab group is decreased by 1");
-      finish();
+      tabItemClosed = true;
     });
     tabItem.addSubscriber(tabItem, "tabRemoved", function() {
       tabItem.removeSubscriber(tabItem, "tabRemoved");
-      tabRemoved = true;
+
+      ok(tabItemClosed, "The tab item is closed");
+      is(groupItem.getChildren().length, --tabItemCount,
+        "The number of children in new tab group is decreased by 1");
+
+      finish();
     });
 
     // remove the tab item.  The code detects mousedown and mouseup so we stimulate here

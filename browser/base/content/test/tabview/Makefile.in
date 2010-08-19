@@ -48,8 +48,8 @@ $(warning All TabView tests are disabled for now while we iterate on the UI)
 _BROWSER_FILES = \
                  browser_tabview_launch.js \
                  browser_tabview_dragdrop.js \
+                 browser_tabview_group.js \
                  $(NULL)
-#                 browser_tabview_group.js \
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
