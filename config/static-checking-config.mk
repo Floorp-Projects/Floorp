@@ -13,6 +13,7 @@ TREEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/outparams.js \
   $(topsrcdir)/xpcom/analysis/stack.js \
   $(topsrcdir)/xpcom/analysis/flow.js \
+  $(topsrcdir)/xpcom/analysis/static-init.js \
   $(topsrcdir)/js/src/jsstack.js \
   $(topsrcdir)/layout/generic/frame-verify.js \
   $(NULL)
