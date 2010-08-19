@@ -61,10 +61,9 @@ enum nsViewVisibility {
   nsViewVisibility_kShow = 1
 };
 
-// IID for the nsIView interface
 #define NS_IVIEW_IID    \
-  { 0xfb9900df, 0x5956, 0x4175, \
-    { 0x83, 0xba, 0x05, 0x74, 0x31, 0x96, 0x61, 0xee } }
+  { 0x01258624, 0xca90, 0x47a4, \
+    { 0xb1, 0xfd, 0x52, 0x11, 0x26, 0xe6, 0xc8, 0xdc } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -276,29 +275,50 @@ public:
   virtual nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
 
   /**
-   * Create a widget to associate with this view.
+   * Create a widget to associate with this view.  This variant of
+   * CreateWidget*() will look around in the view hierarchy for an
+   * appropriate parent widget for the view.
+   *
    * @param aWindowIID IID for Widget type that this view
-   *        should have associated with it. if nsull, then no
-   *        width will be created for this view
+   *        should have associated with it.
    * @param aWidgetInitData data used to initialize this view's widget before
    *        its create is called.
-   * @param aNative native window that will be used as parent of
-   *        aWindowIID. if nsnull, then parent will be derived from
-   *        parent view and it's ancestors
-   * @param aWindowType is either content, UI or inherit from parent window.
+   * @param aContentType is either content, UI or inherit from parent window.
    *        This is used to expose what type of window this is to 
    *        assistive technology like screen readers.
-   * @param aParentWidget alternative parent to aNative used for popups. Must
-   *        be null for non-popups.
    * @return error status
    */
   nsresult CreateWidget(const nsIID &aWindowIID,
                         nsWidgetInitData *aWidgetInitData = nsnull,
-                        nsNativeWidget aNative = nsnull,
                         PRBool aEnableDragDrop = PR_TRUE,
                         PRBool aResetVisibility = PR_TRUE,
-                        nsContentType aWindowType = eContentTypeInherit,
-                        nsIWidget* aParentWidget = nsnull);
+                        nsContentType aContentType = eContentTypeInherit);
+
+  /**
+   * Create a widget for this view with an explicit parent widget.
+   * |aParentWidget| must be nonnull.  The other params are the same
+   * as for |CreateWidget()|.
+   */
+  nsresult CreateWidgetForParent(const nsIID &aWindowIID,
+                                 nsIWidget* aParentWidget,
+                                 nsWidgetInitData *aWidgetInitData = nsnull,
+                                 PRBool aEnableDragDrop = PR_TRUE,
+                                 PRBool aResetVisibility = PR_TRUE,
+                                 nsContentType aContentType = eContentTypeInherit);
+
+  /**
+   * Create a popup widget for this view.  Pass |aParentWidget| to
+   * explicitly set the popup's parent.  If it's not passed, the view
+   * hierarchy will be searched for an appropriate parent widget.  The
+   * other params are the same as for |CreateWidget()|, except that
+   * |aWidgetInitData| must be nonnull.
+   */
+  nsresult CreateWidgetForPopup(const nsIID &aWindowIID,
+                                nsWidgetInitData *aWidgetInitData,
+                                nsIWidget* aParentWidget = nsnull,
+                                PRBool aEnableDragDrop = PR_TRUE,
+                                PRBool aResetVisibility = PR_TRUE,
+                                nsContentType aContentType = eContentTypeInherit);
 
   /**
    * Attach/detach a top level widget from this view. When attached, the view
