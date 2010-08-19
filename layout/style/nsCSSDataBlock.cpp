@@ -247,8 +247,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     cursor += CDBValueStorage_advance;
                 } break;
 
-                case eCSSType_ValueList:
-                case eCSSType_ValuePairList: {
+                case eCSSType_ValueList: {
                     void** target = static_cast<void**>(prop);
                     if (!*target) {
                         if (ShouldStartImageLoads(aRuleData, iProp)) {
@@ -278,8 +277,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     cursor += CDBValueStorage_advance;
                 } break;
 
-                case eCSSType_ValueList:
-                case eCSSType_ValuePairList: {
+                case eCSSType_ValueList: {
                     cursor += CDBPointerStorage_advance;
                 } break;
             }
@@ -313,8 +311,7 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
                 case eCSSType_Value: {
                     return ValueAtCursor(cursor);
                 }
-                case eCSSType_ValueList:
-                case eCSSType_ValuePairList: {
+                case eCSSType_ValueList: {
                     return &PointerAtCursor(const_cast<char*>(cursor));
                 }
             }
@@ -324,8 +321,7 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
                 cursor += CDBValueStorage_advance;
             } break;
 
-            case eCSSType_ValueList:
-            case eCSSType_ValuePairList: {
+            case eCSSType_ValueList: {
                 cursor += CDBPointerStorage_advance;
             } break;
         }
@@ -363,22 +359,8 @@ nsCSSCompressedDataBlock::Clone() const
                 result_cursor +=  CDBValueStorage_advance;
             } break;
 
-            case eCSSType_ValueList:
-            case eCSSType_ValuePairList: {
-                void *copy;
-                NS_ASSERTION(PointerAtCursor(cursor), "oops");
-                switch (nsCSSProps::kTypeTable[iProp]) {
-                    default:
-                        NS_NOTREACHED("unreachable");
-                        // fall through to keep gcc's uninitialized
-                        // variable warning quiet
-                    case eCSSType_ValueList:
-                        copy = ValueListAtCursor(cursor)->Clone();
-                        break;
-                    case eCSSType_ValuePairList:
-                        copy = ValuePairListAtCursor(cursor)->Clone();
-                        break;
-                }
+            case eCSSType_ValueList: {
+                void *copy = ValueListAtCursor(cursor)->Clone();
                 if (!copy) {
                     // so the destructor knows where to stop clearing
                     result->mBlockEnd = result_cursor;
@@ -422,13 +404,6 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
                 delete val;
                 cursor += CDBPointerStorage_advance;
             } break;
-
-            case eCSSType_ValuePairList: {
-                nsCSSValuePairList* val = ValuePairListAtCursor(cursor);
-                NS_ASSERTION(val, "oops");
-                delete val;
-                cursor += CDBPointerStorage_advance;
-            } break;
         }
     }
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
@@ -461,18 +436,6 @@ nsCSSCompressedDataBlock::MoveValue(void *aSource, void *aDest,
     case eCSSType_ValueList: {
       nsCSSValueList **source = static_cast<nsCSSValueList**>(aSource);
       nsCSSValueList **dest = static_cast<nsCSSValueList**>(aDest);
-      if (**source != **dest)
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
-    } break;
-
-    case eCSSType_ValuePairList: {
-      nsCSSValuePairList **source =
-        static_cast<nsCSSValuePairList**>(aSource);
-      nsCSSValuePairList **dest =
-        static_cast<nsCSSValuePairList**>(aDest);
       if (**source != **dest)
         *aChanged = PR_TRUE;
       delete *dest;
@@ -538,8 +501,7 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
                 cursor += CDBValueStorage_advance;
             } break;
 
-            case eCSSType_ValueList:
-            case eCSSType_ValuePairList: {
+            case eCSSType_ValueList: {
                 void* val = PointerAtCursor(cursor);
                 void** dest = static_cast<void**>(prop);
                 NS_ASSERTION(val, "oops");
@@ -596,8 +558,7 @@ nsCSSExpandedDataBlock::ComputeSize()
                     increment = CDBValueStorage_advance;
                 } break;
 
-                case eCSSType_ValueList:
-                case eCSSType_ValuePairList: {
+                case eCSSType_ValueList: {
 #ifdef DEBUG
                     void* val = *static_cast<void**>(prop);
                     NS_ASSERTION(val, "Null pointer while computing size");
@@ -676,8 +637,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                     cursor += CDBValueStorage_advance;
                 } break;
 
-                case eCSSType_ValueList:
-                case eCSSType_ValuePairList: {
+                case eCSSType_ValueList: {
                     void*& val = *static_cast<void**>(prop);
                     NS_ASSERTION(val, "Null pointer while compressing");
                     CDBPointerStorage *storage =
@@ -756,15 +716,6 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 
         case eCSSType_ValueList: {
             nsCSSValueList*& val = *static_cast<nsCSSValueList**>(prop);
-            if (val) {
-                delete val;
-                val = nsnull;
-            }
-        } break;
-
-        case eCSSType_ValuePairList: {
-            nsCSSValuePairList*& val =
-              *static_cast<nsCSSValuePairList**>(prop);
             if (val) {
                 delete val;
                 val = nsnull;
@@ -858,12 +809,6 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
 
             case eCSSType_ValueList: {
                 nsCSSValueList* val = *static_cast<nsCSSValueList**>(prop);
-                NS_ASSERTION(val == nsnull, "not initial state");
-            } break;
-
-            case eCSSType_ValuePairList: {
-                nsCSSValuePairList* val =
-                  *static_cast<nsCSSValuePairList**>(prop);
                 NS_ASSERTION(val == nsnull, "not initial state");
             } break;
         }

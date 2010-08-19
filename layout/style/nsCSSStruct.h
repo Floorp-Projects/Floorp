@@ -169,8 +169,8 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValueList* mBackImage;
   nsCSSValueList* mBackRepeat;
   nsCSSValueList* mBackAttachment;
-  nsCSSValuePairList* mBackPosition;
-  nsCSSValuePairList* mBackSize;
+  nsCSSValue      mBackPosition;
+  nsCSSValue      mBackSize;
   nsCSSValueList* mBackClip;
   nsCSSValueList* mBackOrigin;
   nsCSSValue      mBackInlinePolicy;
@@ -420,10 +420,10 @@ struct nsCSSContent : public nsCSSStruct  {
   ~nsCSSContent(void);
 
   nsCSSValueList*     mContent;
-  nsCSSValuePairList* mCounterIncrement;
-  nsCSSValuePairList* mCounterReset;
+  nsCSSValue          mCounterIncrement;
+  nsCSSValue          mCounterReset;
   nsCSSValue          mMarkerOffset;
-  nsCSSValuePairList* mQuotes;
+  nsCSSValue          mQuotes;
 private:
   nsCSSContent(const nsCSSContent& aOther); // NOT IMPLEMENTED
 };

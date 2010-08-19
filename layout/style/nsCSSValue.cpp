@@ -166,6 +166,13 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mRect = aCopy.mValue.mRect;
     mValue.mRect->AddRef();
   }
+  else if (eCSSUnit_PairList == mUnit) {
+    mValue.mPairList = aCopy.mValue.mPairList;
+    mValue.mPairList->AddRef();
+  }
+  else if (eCSSUnit_PairListDep == mUnit) {
+    mValue.mPairListDependent = aCopy.mValue.mPairListDependent;
+  }
   else {
     NS_NOTREACHED("unknown unit");
   }
@@ -182,6 +189,10 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
 
 PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
+  NS_ABORT_IF_FALSE(mUnit != eCSSUnit_PairListDep &&
+                    aOther.mUnit != eCSSUnit_PairListDep,
+                    "don't use operator== with dependent lists");
+
   if (mUnit == aOther.mUnit) {
     if (mUnit <= eCSSUnit_DummyInherit) {
       return PR_TRUE;
@@ -213,6 +224,9 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Rect == mUnit) {
       return *mValue.mRect == *aOther.mValue.mRect;
+    }
+    else if (eCSSUnit_PairList == mUnit) {
+      return *mValue.mPairList == *aOther.mValue.mPairList;
     }
     else {
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -285,6 +299,8 @@ void nsCSSValue::DoReset()
     mValue.mPair->Release();
   } else if (eCSSUnit_Rect == mUnit) {
     mValue.mRect->Release();
+  } else if (eCSSUnit_PairList == mUnit) {
+    mValue.mPairList->Release();
   }
   mUnit = eCSSUnit_Null;
 }
@@ -415,6 +431,22 @@ nsCSSRect& nsCSSValue::SetRectValue()
   mValue.mRect = new nsCSSRect_heap;
   mValue.mRect->AddRef();
   return *mValue.mRect;
+}
+
+nsCSSValuePairList* nsCSSValue::SetPairListValue()
+{
+  Reset();
+  mUnit = eCSSUnit_PairList;
+  mValue.mPairList = new nsCSSValuePairList_heap;
+  mValue.mPairList->AddRef();
+  return mValue.mPairList;
+}
+
+void nsCSSValue::SetDependentPairListValue(nsCSSValuePairList* aList)
+{
+  Reset();
+  mUnit = eCSSUnit_PairListDep;
+  mValue.mPairListDependent = aList;
 }
 
 void nsCSSValue::SetAutoValue()
@@ -892,6 +924,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     GetPairValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_Rect == unit) {
     GetRectValue().AppendToString(aProperty, aResult);
+  } else if (eCSSUnit_PairList == unit || eCSSUnit_PairListDep == unit) {
+    GetPairListValue()->AppendToString(aProperty, aResult);
   }
 
   switch (unit) {
@@ -939,6 +973,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Gradient:     break;
     case eCSSUnit_Pair:         break;
     case eCSSUnit_Rect:         break;
+    case eCSSUnit_PairList:     break;
+    case eCSSUnit_PairListDep:  break;
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;

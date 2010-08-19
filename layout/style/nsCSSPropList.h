@@ -518,7 +518,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackPosition,
-    eCSSType_ValuePairList,
+    eCSSType_Value,
     kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
@@ -542,7 +542,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackSize,
-    eCSSType_ValuePairList,
+    eCSSType_Value,
     kBackgroundSizeKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
@@ -1299,7 +1299,7 @@ CSS_PROP_CONTENT(
     0,
     Content,
     mCounterIncrement,
-    eCSSType_ValuePairList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // XXX bug 137285
@@ -1310,7 +1310,7 @@ CSS_PROP_CONTENT(
     0,
     Content,
     mCounterReset,
-    eCSSType_ValuePairList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // XXX bug 137285
@@ -2203,7 +2203,7 @@ CSS_PROP_QUOTES(
     0,
     Content,
     mQuotes,
-    eCSSType_ValuePairList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
