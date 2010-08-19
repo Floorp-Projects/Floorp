@@ -485,7 +485,7 @@ function test() {
 
   /**
    * Test 8: Test if closing can be denied on Mac
-   *         Futhermore prepares the testNotificationCount test (Test 7)
+   *         Futhermore prepares the testNotificationCount test (Test 6)
    * @note: Mac only
    */
   function testMacNotifications(nextFn, iteration) {
