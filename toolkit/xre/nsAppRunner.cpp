@@ -470,6 +470,8 @@ static void RemoveArg(char **argv)
 static ArgResult
 CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull, PRBool aRemArg = PR_TRUE)
 {
+  NS_ABORT_IF_FALSE(gArgv, "gArgv must be initialized before CheckArg()");
+
   char **curarg = gArgv + 1; // skip argv[0]
   ArgResult ar = ARG_NONE;
 
