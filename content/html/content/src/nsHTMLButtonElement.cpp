@@ -208,6 +208,7 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Autofocus, autofocus)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormAction, formaction)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormTarget, formtarget)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, TabIndex, tabindex, 0)
@@ -341,7 +342,7 @@ nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
       // tell the form that we are about to enter a click handler.
       // that means that if there are scripted submissions, the
       // latest one will be deferred until after the exit point of the handler.
-      mForm->OnSubmitClickBegin();
+      mForm->OnSubmitClickBegin(this);
     }
   }
 
