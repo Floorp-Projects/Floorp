@@ -190,6 +190,12 @@ public:
                   nsCSSCompressedDataBlock **aImportantBlock);
 
     /**
+     * Copy a value into this expanded block.  This does NOT destroy
+     * the source value object.  |aProperty| cannot be a shorthand.
+     */
+    void AddLonghandProperty(nsCSSProperty aProperty, const nsCSSValue& aValue);
+
+    /**
      * Clear the state of this expanded block.
      */
     void Clear();
