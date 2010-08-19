@@ -1143,8 +1143,12 @@ namespace nanojit
         // Nb: the types of these bitfields are all 32-bit integers to ensure
         // they are fully packed on Windows, sigh.  Also, 'loadQual' is
         // unsigned to ensure the values 0, 1, and 2 all fit in 2 bits.
-        int32_t     disp:16;
-        int32_t     miniAccSetVal:8;
+        //
+        // Nb: explicit signed keyword for bitfield types is required,
+        // some compilers may treat them as unsigned without it.
+        // See Bugzilla 584219 comment #18
+        signed int  disp:16;
+        signed int  miniAccSetVal:8;
         uint32_t    loadQual:2;
 
         LIns*       oprnd_1;
