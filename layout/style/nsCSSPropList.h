@@ -445,7 +445,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackAttachment,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kBackgroundAttachmentKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -457,7 +457,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackClip,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kBackgroundOriginKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -483,7 +483,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_START_IMAGE_LOADS,
     Color,
     mBackImage,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -506,7 +506,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackOrigin,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kBackgroundOriginKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -530,7 +530,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Color,
     mBackRepeat,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kBackgroundRepeatKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -587,7 +587,7 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mBottom,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -760,7 +760,7 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mLeft,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -909,7 +909,7 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mRight,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -1099,7 +1099,7 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBorderColors.mTop,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -1150,7 +1150,7 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Margin,
     mBoxShadow,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kBoxShadowTypeKTable,
     offsetof(nsStyleBorder, mBoxShadow),
     eStyleAnimType_Shadow)
@@ -1288,7 +1288,7 @@ CSS_PROP_CONTENT(
     CSS_PROPERTY_START_IMAGE_LOADS,
     Content,
     mContent,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kContentKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -1346,7 +1346,7 @@ CSS_PROP_USERINTERFACE(
         CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0,
     UserInterface,
     mCursor,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kCursorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2354,7 +2354,7 @@ CSS_PROP_TEXT(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     Text,
     mTextShadow,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     offsetof(nsStyleText, mTextShadow),
     eStyleAnimType_Shadow)
@@ -2376,7 +2376,7 @@ CSS_PROP_DISPLAY(
     0,
     Display,
     mTransform,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kDisplayKTable,
     offsetof(nsStyleDisplay, mSpecifiedTransform),
     eStyleAnimType_Custom)
@@ -2414,7 +2414,7 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionDelay,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2425,7 +2425,7 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionDuration,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2436,7 +2436,7 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionProperty,
-    eCSSType_ValueList /* list of CSS properties that have transitions ? */,
+    eCSSType_Value /* list of CSS properties that have transitions ? */,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2447,7 +2447,7 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     Display,
     mTransitionTimingFunction,
-    eCSSType_ValueList,
+    eCSSType_Value,
     kTransitionTimingFunctionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2983,7 +2983,7 @@ CSS_PROP_SVG(
     CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     SVG,
     mStrokeDasharray,
-    eCSSType_ValueList,
+    eCSSType_Value,
     nsnull,
     CSS_PROP_NO_OFFSET, /* property stored in 2 separate members */
     eStyleAnimType_Custom)

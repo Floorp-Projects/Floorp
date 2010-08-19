@@ -166,6 +166,13 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mRect = aCopy.mValue.mRect;
     mValue.mRect->AddRef();
   }
+  else if (eCSSUnit_List == mUnit) {
+    mValue.mList = aCopy.mValue.mList;
+    mValue.mList->AddRef();
+  }
+  else if (eCSSUnit_ListDep == mUnit) {
+    mValue.mListDependent = aCopy.mValue.mListDependent;
+  }
   else if (eCSSUnit_PairList == mUnit) {
     mValue.mPairList = aCopy.mValue.mPairList;
     mValue.mPairList->AddRef();
@@ -189,7 +196,9 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
 
 PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
-  NS_ABORT_IF_FALSE(mUnit != eCSSUnit_PairListDep &&
+  NS_ABORT_IF_FALSE(mUnit != eCSSUnit_ListDep &&
+                    aOther.mUnit != eCSSUnit_ListDep &&
+                    mUnit != eCSSUnit_PairListDep &&
                     aOther.mUnit != eCSSUnit_PairListDep,
                     "don't use operator== with dependent lists");
 
@@ -224,6 +233,9 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Rect == mUnit) {
       return *mValue.mRect == *aOther.mValue.mRect;
+    }
+    else if (eCSSUnit_List == mUnit) {
+      return *mValue.mList == *aOther.mValue.mList;
     }
     else if (eCSSUnit_PairList == mUnit) {
       return *mValue.mPairList == *aOther.mValue.mPairList;
@@ -299,6 +311,8 @@ void nsCSSValue::DoReset()
     mValue.mPair->Release();
   } else if (eCSSUnit_Rect == mUnit) {
     mValue.mRect->Release();
+  } else if (eCSSUnit_List == mUnit) {
+    mValue.mList->Release();
   } else if (eCSSUnit_PairList == mUnit) {
     mValue.mPairList->Release();
   }
@@ -433,6 +447,24 @@ nsCSSRect& nsCSSValue::SetRectValue()
   return *mValue.mRect;
 }
 
+nsCSSValueList* nsCSSValue::SetListValue()
+{
+  Reset();
+  mUnit = eCSSUnit_List;
+  mValue.mList = new nsCSSValueList_heap;
+  mValue.mList->AddRef();
+  return mValue.mList;
+}
+
+void nsCSSValue::SetDependentListValue(nsCSSValueList* aList)
+{
+  Reset();
+  if (aList) {
+    mUnit = eCSSUnit_ListDep;
+    mValue.mListDependent = aList;
+  }
+}
+
 nsCSSValuePairList* nsCSSValue::SetPairListValue()
 {
   Reset();
@@ -445,8 +477,10 @@ nsCSSValuePairList* nsCSSValue::SetPairListValue()
 void nsCSSValue::SetDependentPairListValue(nsCSSValuePairList* aList)
 {
   Reset();
-  mUnit = eCSSUnit_PairListDep;
-  mValue.mPairListDependent = aList;
+  if (aList) {
+    mUnit = eCSSUnit_PairListDep;
+    mValue.mPairListDependent = aList;
+  }
 }
 
 void nsCSSValue::SetAutoValue()
@@ -924,6 +958,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     GetPairValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_Rect == unit) {
     GetRectValue().AppendToString(aProperty, aResult);
+  } else if (eCSSUnit_List == unit || eCSSUnit_ListDep == unit) {
+    GetListValue()->AppendToString(aProperty, aResult);
   } else if (eCSSUnit_PairList == unit || eCSSUnit_PairListDep == unit) {
     GetPairListValue()->AppendToString(aProperty, aResult);
   }
@@ -973,6 +1009,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Gradient:     break;
     case eCSSUnit_Pair:         break;
     case eCSSUnit_Rect:         break;
+    case eCSSUnit_List:         break;
+    case eCSSUnit_ListDep:      break;
     case eCSSUnit_PairList:     break;
     case eCSSUnit_PairListDep:  break;
 
