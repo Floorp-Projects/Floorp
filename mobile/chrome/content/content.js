@@ -452,13 +452,13 @@ Content.prototype = {
     switch (aMessage.name) {
       case "Browser:Blur":
         docShell.isOffScreenBrowser = false;
-        docShell.isActive = true;
+        docShell.isActive = false;
         this._selected = false;
         break;
 
       case "Browser:Focus":
         docShell.isOffScreenBrowser = true;
-        docShell.isActive = false;
+        docShell.isActive = true;
         this._selected = true;
         break;
 
