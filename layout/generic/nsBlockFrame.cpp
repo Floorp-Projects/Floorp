@@ -564,7 +564,7 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     const nsFrameList* list = GetOverflowOutOfFlows();
     return list ? *list : nsFrameList::EmptyList();
   }
-  else if (aListName == nsGkAtoms::floatContinuationsList) {
+  else if (aListName == nsGkAtoms::pushedFloatsList) {
     const nsFrameList* list = GetPushedFloats();
     return list ? *list : nsFrameList::EmptyList();
   }
@@ -601,7 +601,7 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
     return nsGkAtoms::absoluteList;
   case NS_BLOCK_FRAME_PUSHED_FLOATS_LIST_INDEX:
-    return nsGkAtoms::floatContinuationsList;
+    return nsGkAtoms::pushedFloatsList;
   default:
     return nsnull;
   }
