@@ -4003,9 +4003,17 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
   if (0 != pushCount) {
     NS_ABORT_IF_FALSE(aLine->GetChildCount() > pushCount, "bad push");
     NS_ABORT_IF_FALSE(nsnull != aFrame, "whoops");
-    NS_ASSERTION(nsFrameList(aFrame, nsLayoutUtils::GetLastSibling(aFrame))
-                   .GetLength() >= pushCount,
-                 "Not enough frames to push");
+#ifdef DEBUG
+    {
+      nsIFrame *f = aFrame;
+      PRInt32 count = pushCount;
+      while (f && count > 0) {
+        f = f->GetNextSibling();
+        --count;
+      }
+      NS_ASSERTION(count == 0, "Not enough frames to push");
+    }
+#endif
 
     // Put frames being split out into their own line
     nsLineBox* newLine = aState.NewLineBox(aFrame, pushCount, PR_FALSE);
