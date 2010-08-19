@@ -769,6 +769,8 @@ nsresult
 nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 {
   nsresult rv;
+  nsIContent* originatingElement = aFormSubmission->GetOriginatingElement();
+
   //
   // Get the action and target
   //
@@ -807,8 +809,18 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
     mIsSubmitting = PR_FALSE;
   }
 
+  // The target is the originating element formtarget attribute if the element
+  // is a submit control and has such an attribute.
+  // Otherwise, the target is the form owner's target attribute,
+  // if it has such an attribute.
+  // Finally, if one of the child nodes of the head element is a base element
+  // with a target attribute, then the value of the target attribute of the
+  // first such base element; or, if there is no such element, the empty string.
   nsAutoString target;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, target)) {
+  if (!(originatingElement && originatingElement->GetAttr(kNameSpaceID_None,
+                                                          nsGkAtoms::formtarget,
+                                                          target)) &&
+      !GetAttr(kNameSpaceID_None, nsGkAtoms::target, target)) {
     GetBaseTarget(target);
   }
 

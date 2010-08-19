@@ -7,15 +7,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566046
   <title>Test for Bug 566046</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <base>
   <base target='frame2'>
+  <base target=''>
 </head>
-<body onload="runTests();">
+<body onload="setTimeout(runTests);">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566046">Mozilla Bug 566046</a>
 <p id="display"></p>
+<style>
+  iframe { width: 130px; height: 100px;}
+</style>
 <iframe name='frame1' id='frame1'></iframe>
 <iframe name='frame2' id='frame2'></iframe>
-<div id="content" style="display: none">
+<iframe name='frame3' id='frame3'></iframe>
+<iframe name='frame4' id='frame4'></iframe>
+<iframe name='frame5' id='frame5'></iframe>
+<iframe name='frame5bis' id='frame5bis'></iframe>
+<iframe name='frame6' id='frame6'></iframe>
+<iframe name='frame7' id='frame7'></iframe>
+<iframe name='frame8' id='frame8'></iframe>
+<iframe name='frame9' id='frame9'></iframe>
+<div id="content">
   <form target='frame1' action="data:text/html," method="GET">
     <input name='foo' value='foo'>
   </form>
@@ -24,7 +38,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566046
   </form>
   <form target="">
   </form>
-  <form target="tulip">
+
+  <!-- submit controls with formtarget that are validated with a CLICK -->
+  <form target="tulip" action="data:text/html," method="GET">
+    <input name='tulip' value='tulip'>
+    <input type='submit' id='is' formtarget='frame3'>
+  </form>
+  <form action="data:text/html," method="GET">
+    <input name='foobar' value='foobar'>
+    <input type='image' id='ii' formtarget='frame4'>
+  </form>
+  <form action="data:text/html," method="GET">
+    <input name='tulip2' value='tulip2'>
+    <button type='submit' id='bs' formtarget='frame5'>submit</button>
+  </form>
+  <form action="data:text/html," method="GET">
+    <input name='tulip3' value='tulip3'>
+    <button type='submit' id='bsbis' formtarget='frame5bis'>submit</button>
+  </form>
+
+  <!-- submit controls with formtarget that are validated with ENTER -->
+  <form target="tulip" action="data:text/html," method="GET">
+    <input name='footulip' value='footulip'>
+    <input type='submit' id='is2' formtarget='frame6'>
+  </form>
+  <form action="data:text/html," method="GET">
+    <input name='tulipfoobar' value='tulipfoobar'>
+    <input type='image' id='ii2' formtarget='frame7'>
+  </form>
+  <form action="data:text/html," method="GET">
+    <input name='tulipbar' value='tulipbar'>
+    <button type='submit' id='bs2' formtarget='frame8'>submit</button>
+  </form>
+
+  <!-- check that a which is not a submit control do not use @formtarget -->
+  <form target='frame9' action="data:text/html," method="GET">
+    <input id='enter' name='input' value='enter' formtarget='frame6'>
   </form>
 </div>
 <pre id="test">
@@ -37,6 +86,14 @@ SimpleTest.waitForExplicitFinish();
 var gTestResults = {
   frame1: "data:text/html,?foo=foo",
   frame2: "data:text/html,?bar=bar",
+  frame3: "data:text/html,?tulip=tulip",
+  frame4: "data:text/html,?foobar=foobar&x=0&y=0",
+  frame5: "data:text/html,?tulip2=tulip2",
+  frame5bis: "data:text/html,?tulip3=tulip3",
+  frame6: "data:text/html,?footulip=footulip",
+  frame7: "data:text/html,?tulipfoobar=tulipfoobar&x=0&y=0",
+  frame8: "data:text/html,?tulipbar=tulipbar",
+  frame9: "data:text/html,?input=enter",
 };
 
 var gPendingLoad = 0; // Has to be set after depending on the frames number.
@@ -53,7 +110,16 @@ function runTests()
   // We add a load event for the frames which will be called when the forms
   // will be submitted.
   var frames = [ document.getElementById('frame1'),
-                 document.getElementById('frame2') ];
+                 document.getElementById('frame2'),
+                 document.getElementById('frame3'),
+                 document.getElementById('frame4'),
+                 document.getElementById('frame5'),
+                 document.getElementById('frame5bis'),
+                 document.getElementById('frame6'),
+                 document.getElementById('frame7'),
+                 document.getElementById('frame8'),
+                 document.getElementById('frame9'),
+               ];
   gPendingLoad = frames.length;
 
   for (var i=0; i<frames.length; i++) {
@@ -63,6 +129,63 @@ function runTests()
   // Submitting only the forms with a valid target.
   document.forms[0].submit();
   document.forms[1].submit();
+
+  /**
+   * We are going to focus each element before interacting with either for
+   * simulating the ENTER key (synthesizeKey) or a click (synthesizeMouse) or
+   * using .click(). This because it may be needed (ENTER) and because we want
+   * to have the element visible in the iframe.
+   *
+   * Focusing the first element (id='is') is launching the tests.
+   */
+  document.getElementById('is').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeMouse(document.getElementById('is'), 5, 5, {});
+    document.getElementById('ii').focus();
+  }, false);
+
+  document.getElementById('ii').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeMouse(document.getElementById('ii'), 5, 5, {});
+    document.getElementById('bs').focus();
+  }, false);
+
+  document.getElementById('bs').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeMouse(document.getElementById('bs'), 5, 5, {});
+    document.getElementById('bsbis').focus();
+  }, false);
+
+  document.getElementById('bsbis').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    document.getElementById('bsbis').click();
+    document.getElementById('is2').focus();
+  }, false);
+
+  document.getElementById('is2').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+    document.getElementById('ii2').focus();
+  }, false);
+
+  document.getElementById('ii2').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+    document.getElementById('bs2').focus();
+  }, false);
+
+  document.getElementById('bs2').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+    document.getElementById('enter').focus();
+  }, false);
+
+  document.getElementById('enter').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+  }, false);
+
+  document.getElementById('is').focus();
 }
 
 function frameLoaded(aFrame) {
