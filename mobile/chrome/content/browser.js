@@ -253,6 +253,7 @@ var Browser = {
           getBrowser().contentWindow.scrollBy(x, y);
         }
         else {
+//          getBrowser().style.MozTransform = "translateY(100px)";
         }
       },
 
