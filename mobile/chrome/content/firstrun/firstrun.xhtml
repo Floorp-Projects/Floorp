@@ -57,22 +57,6 @@
   <title>&firstrun.title;</title>
   <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
   <link rel="stylesheet" href="chrome://browser/skin/firstRun.css" type="text/css"/>
-
-  <script><![CDATA[
-    var Ci = Components.interfaces, Cc = Components.classes;
-    function reloadIfDone(aImg) {
-      if (!(aImg instanceof Ci.nsIImageLoadingContent))
-         return;
-
-      var request = aImg.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-      var imgIContainer = request.image;
-
-      if (imgIContainer.currentFrameIndex == imgIContainer.numFrames - 1) {
-        imgIContainer.resetAnimation();
-        imgIContainer.startAnimation();
-      }
-    }
-  ]]></script>
 </head>
 
 <body id="firstrun" class="">
@@ -87,36 +71,57 @@
     </div>
   
     <div id="content">
-      <h2>&firstrun.recommended;</h2>
-    
+      <h2></h2>
       <ul id="recommended">
-        <li id="weave"><a href="https://addons.mozilla.org/mobile/addon/10868"><b>&firstrun.weave.title;</b> <span>&firstrun.weave.description;</span></a></li>
-        <li id="starter"><a href="https://addons.mozilla.org/firefox/collection/mobilestarterkit"><b>&firstrun.starter.title;</b> <span>&firstrun.starter.description;</span></a></li>
-        <li id="tour"><a href="#demo" id="show-demo"><b>&firstrun.tour.title;</b> <span>&firstrun.tour.description;</span></a></li>
+        <li id="sync"><a href="javascript:loadSync();"><b>&firstrun.sync.title;</b> <span>&firstrun.sync.description;</span></a></li>
+        <li id="starter"><a href="javascript:loadAddons();"><b>&firstrun.starter.title;</b> <span>&firstrun.starter.description;</span></a></li>
+        <li id="tour"><a href="about:home"><b>&firstrun.tour.title;</b> <span>&firstrun.tour.description;</span></a></li>
       </ul>
 
-      <p id="features"><a href="http://mozilla.com/m/features">&firstrun.features;</a></p>
+      <p id="features"><a href="https://www.mozilla.com/en-US/mobile/2.0a1/releasenotes/">&firstrun.features;</a></p>
 
-      <p id="demo" style="display: none">
-        <img id="animation" src="" onclick="reloadIfDone(this);"/>
-      </p>
-    
-      <script>
-        var preload = new Image();
-        preload.src = "chrome://browser/content/firstrun/animation.gif";
-    
-        document.getElementById("show-demo").addEventListener("click", function() {
-          document.getElementById("demo").style.display = "block";
-          document.getElementById("animation").setAttribute("src", preload.src);
-          document.getElementById("demo").scrollIntoView();
-        }, false);
-      </script>
+      <script type="application/javascript;version=1.8"><![CDATA[
+        let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
+        let gChromeWin = null;
+        
+        function getChromeWin() {
+          if (!gChromeWin) {
+            gChromeWin = window
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
+                    .QueryInterface(Ci.nsIDOMChromeWindow);
+          }
+          return gChromeWin;
+        }
+
+        function loadSync() {
+          let win = getChromeWin();
+          win.BrowserUI.showPanel("prefs-container");
+
+          let prefsBox = win.document.getElementById("prefs-list");
+          let syncArea = win.document.getElementById("prefs-sync");
+          if (prefsBox && syncArea)
+            prefsBox.ensureElementIsVisible(syncArea);
+        }
+
+        function loadAddons() {
+          let win = getChromeWin();
+          win.BrowserUI.showPanel("addons-container");
+        }
+      ]]></script>
     </div>
   
     <div id="footer">
+      
       <ul class="nav">
+        <!--
         <li><a href="http://mozilla.com/m/faq">&firstrun.faq;</a></li>
         <li><a href="http://mozilla.com/m/privacy">&firstrun.privacy;</a></li>
+        -->
       </ul>
   
       <div id="follow">
