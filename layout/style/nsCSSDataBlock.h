@@ -141,12 +141,15 @@ private:
 };
 
 class nsCSSExpandedDataBlock {
+    friend class nsCSSCompressedDataBlock;
+
 public:
     nsCSSExpandedDataBlock();
     ~nsCSSExpandedDataBlock();
-    /*
-     * When setting properties in an |nsCSSExpandedDataBlock|, callers
-     * must make the appropriate |AddPropertyBit| call.
+
+private:
+    /* Property storage may not be accessed directly; use AddLonghandProperty
+     * and friends.
      */
 
     nsCSSFont mFont;
@@ -166,6 +169,7 @@ public:
     nsCSSSVG mSVG;
     nsCSSColumn mColumn;
 
+public:
     /**
      * Transfer all of the state from a pair of compressed data blocks
      * to this expanded block.  This expanded block must be clear
@@ -277,7 +281,6 @@ private:
      */
     nsCSSPropertySet mPropertiesImportant;
 
-public:
     /*
      * Return the storage location within |this| of the value of the
      * property |aProperty|.
