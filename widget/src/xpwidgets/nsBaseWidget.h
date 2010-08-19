@@ -39,6 +39,7 @@
 
 #include "nsRect.h"
 #include "nsIWidget.h"
+#include "nsWidgetsCID.h"
 #include "nsIToolkit.h"
 #include "nsIAppShell.h"
 #include "nsILocalFile.h"
@@ -151,6 +152,14 @@ public:
   NS_IMETHOD              OnIMESelectionChange(void) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
+  virtual already_AddRefed<nsIWidget>
+  CreateChild(const nsIntRect  &aRect,
+              EVENT_CALLBACK   aHandleEventFunction,
+              nsIDeviceContext *aContext,
+              nsIAppShell      *aAppShell = nsnull,
+              nsIToolkit       *aToolkit = nsnull,
+              nsWidgetInitData *aInitData = nsnull,
+              PRBool           aForceUseIWidgetParent = PR_FALSE);
   NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsIDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
@@ -224,6 +233,14 @@ protected:
   // Stores the clip rectangles in aRects into mClipRects. Returns true
   // if the new rectangles are different from the old rectangles.
   PRBool StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
+
+  virtual already_AddRefed<nsIWidget>
+  AllocateChildPopupWidget()
+  {
+    static NS_DEFINE_IID(kCPopUpCID, NS_CHILD_CID);
+    nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
+    return widget.forget();
+  }
 
 protected: 
   void*             mClientData;
