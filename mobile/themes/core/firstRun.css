@@ -82,6 +82,10 @@ img {
  -moz-border-radius-bottomleft: 4px;
 }
 
+#head p {
+  font-size: xx-large;
+}
+
 #footer {
   border-top: 2px solid #e7e7e7;
   padding: 10px;
@@ -188,7 +192,7 @@ img {
   padding: 0 10px;
 }
 
-#firstrun ul#recommended li#weave b {
+#firstrun ul#recommended li#sync b {
   background-position: 50% 0;
 }
 

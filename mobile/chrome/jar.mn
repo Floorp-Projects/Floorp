@@ -3,7 +3,6 @@
 chrome.jar:
 % content browser %content/
   content/firstrun/firstrun.xhtml      (content/firstrun/firstrun.xhtml)
-  content/firstrun/animation.gif       (content/firstrun/animation.gif)
   content/firstrun/mozilla.png         (content/firstrun/mozilla.png)
   content/firstrun/features.png        (content/firstrun/features.png)
   content/firstrun/twitter.png         (content/firstrun/twitter.png)
