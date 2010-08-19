@@ -51,6 +51,10 @@ let Cu = Components.utils;
 function AnimatedZoom(aBrowserView) {
   this.bv = aBrowserView;
 
+  this.snapshot = AnimatedZoom.createCanvas();
+  if (this.snapshot.pending_render)
+    return;
+
   // Render a snapshot of the viewport contents around the visible rect
   let [w, h] = this.bv.getViewportDimensions();
   let viewportRect = new Rect(0, 0, w, h);
@@ -61,8 +65,6 @@ function AnimatedZoom(aBrowserView) {
 
   // sanitize the snapshot rectangle to fit inside viewport
   this.snapshotRect.translateInside(viewportRect).restrictTo(viewportRect).expandToIntegers();
-
-  this.snapshot = AnimatedZoom.createCanvas();
   this.snapshotRect.width = Math.min(this.snapshotRect.width, this.snapshot.width);
   this.snapshotRect.height = Math.min(this.snapshotRect.height, this.snapshot.height);
 
@@ -74,6 +76,7 @@ function AnimatedZoom(aBrowserView) {
   if (remote) {
     this.canvasReady = false;
     this.snapshot.addEventListener("MozAsyncCanvasRender", this, false);
+    this.snapshot.pending_render = true;
   } else {
     this.canvasReady = true;
     this.startAnimation();
@@ -82,8 +85,11 @@ function AnimatedZoom(aBrowserView) {
 
 AnimatedZoom.prototype.handleEvent = function(aEvent) {
   if (aEvent.type == "MozAsyncCanvasRender") {
-    this.snapshot.removeEventListener("MozAsyncCanvasRender", this, false);
-    if (aEvent.originalTarget == this.snapshot) {
+    let snapshot = aEvent.originalTarget;
+    snapshot.pending_render = false;
+    snapshot.removeEventListener("MozAsyncCanvasRender", this, false);
+
+    if (this.snapshot == snapshot) {
       this.canvasReady = true;
       this.startAnimation();
     }
@@ -149,6 +155,9 @@ AnimatedZoom.prototype.startAnimation = function()
 /** Updates the zoom to new rect. */
 AnimatedZoom.prototype.updateTo = function(nextRect) {
   this.zoomRect = nextRect;
+
+  if (this.snapshot.pending_render)
+    return;
 
   // prepare to draw to the zoom canvas
   let canvasRect = new Rect(0, 0, Elements.viewBuffer.width, Elements.viewBuffer.height);
