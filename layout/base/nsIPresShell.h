@@ -139,8 +139,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe82aae32, 0x2d68, 0x452a, \
-    { 0x88, 0x95, 0x86, 0xc6, 0x07, 0xe1, 0xec, 0x91 } }
+  { 0xe63a350c, 0x4e04, 0x4056, \
+    { 0x8d, 0xa0, 0x51, 0xcc, 0x55, 0x68, 0x68, 0x42 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -479,11 +479,11 @@ public:
   virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   /**
-   * Given a frame, create a rendering context suitable for use with
-   * the frame.
+   * Get a reference rendering context. This is a context that should not
+   * be rendered to, but is suitable for measuring text and performing
+   * other non-rendering operations.
    */
-  virtual NS_HIDDEN_(nsresult) CreateRenderingContext(nsIFrame *aFrame,
-                                                      nsIRenderingContext** aContext) = 0;
+  virtual already_AddRefed<nsIRenderingContext> GetReferenceRenderingContext() = 0;
 
   /**
    * Informs the pres shell that the document is now at the anchor with
