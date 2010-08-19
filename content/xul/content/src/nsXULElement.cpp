@@ -347,15 +347,24 @@ NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
     NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
 
-    *aResult = nsnull;
+    nsIDocument* doc = aNodeInfo.get()->GetDocument();
+    if (doc && !doc->AllowXULXBL()) {
+        nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    // Create an nsXULElement with the specified namespace and tag.
-    nsXULElement* element = new nsXULElement(aNodeInfo);
-    NS_ENSURE_TRUE(element, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(*aResult = element);
+    NS_ADDREF(*aResult = new nsXULElement(aNodeInfo));
 
     return NS_OK;
+}
+
+void
+NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+{
+    NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
+
+    // Create an nsXULElement with the specified namespace and tag.
+    NS_ADDREF(*aResult = new nsXULElement(aNodeInfo));
 }
 
 //----------------------------------------------------------------------

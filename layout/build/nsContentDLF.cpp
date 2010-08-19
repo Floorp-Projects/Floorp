@@ -48,6 +48,7 @@
 #include "nsIURL.h"
 #include "nsNodeInfo.h"
 #include "nsNodeInfoManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsString.h"
 #include "nsContentCID.h"
 #include "prprf.h"
@@ -155,6 +156,30 @@ nsContentDLF::~nsContentDLF()
 
 NS_IMPL_ISUPPORTS1(nsContentDLF,
                    nsIDocumentLoaderFactory)
+
+PRBool
+MayUseXULXBL(nsIChannel* aChannel)
+{
+  nsIScriptSecurityManager *securityManager =
+    nsContentUtils::GetSecurityManager();
+  if (!securityManager) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  securityManager->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, PR_FALSE);
+
+  if (nsContentUtils::IsSystemPrincipal(principal)) {
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_TRUE(uri, PR_FALSE);
+
+  return nsContentUtils::IsSitePermAllow(uri, "allowXULXBL");
+}
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstance(const char* aCommand,
@@ -278,8 +303,9 @@ nsContentDLF::CreateInstance(const char* aCommand,
   // Try XUL
   typeIndex = 0;
   while (gXULTypes[typeIndex]) {
-    if (0 == PL_strcmp(gXULTypes[typeIndex++], aContentType)) {
-      return CreateXULDocument(aCommand, 
+    if (0 == PL_strcmp(gXULTypes[typeIndex++], aContentType) &&
+        MayUseXULXBL(aChannel)) {
+      return CreateXULDocument(aCommand,
                                aChannel, aLoadGroup,
                                aContentType, aContainer,
                                aExtraInfo, aDocListener, aDocViewer);
