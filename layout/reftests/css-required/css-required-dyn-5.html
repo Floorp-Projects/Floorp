@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: Add the required attribute to an element to make it required. -->
+  <link rel='stylesheet' type='text/css' href='css-required-style-2.css'>
+
+  <script type="text/javascript">
+    function addRequired()
+    {
+      document.getElementById('i').required = true;
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="addRequired(); disableReftestWait();">
+    <input type="text" id="i">
+  </body>
+</html>

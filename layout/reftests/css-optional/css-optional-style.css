@@ -1,0 +1,8 @@
+input, textarea, select, button,
+*:required {
+  visibility: hidden;
+}
+
+*:optional {
+  visibility: visible;
+}
