@@ -434,13 +434,6 @@ public:
   ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows);
 
   /*
-   * Get a pointer to a surface that can be used to create thebes
-   * contexts for various measurement purposes.
-   */
-  static gfxASurface *
-  GetThebesComputationalSurface();
-
-  /*
    * Convert a nsIDOMSVGMatrix to a gfxMatrix.
    */
   static gfxMatrix
@@ -569,8 +562,6 @@ public:
    */
   static PRBool NumberFromString(const nsAString& aString, float* aValue,
                                  PRBool aAllowPercentages = PR_FALSE);
-
-  static void Shutdown();
 
 private:
   /* Computational (nil) surfaces */
