@@ -238,13 +238,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   NS_ASSERTION(aPresContext, "Must have prescontext");
 
   if (aValue.IsFixedLengthUnit()) {
-    return aPresContext->TwipsToAppUnits(aValue.GetLengthTwips());
+    return aValue.GetFixedLength(aPresContext);
   }
-  nsCSSUnit unit = aValue.GetUnit();
-  if (unit == eCSSUnit_Pixel) {
-    return nsPresContext::CSSPixelsToAppUnits(aValue.GetFloatValue());
+  if (aValue.IsPixelLengthUnit()) {
+    return aValue.GetPixelLength();
   }
-  // Common code for all units other than pixels:
+  // Common code for all units other than pixel-based units and fixed-length
+  // units:
   aCanStoreInRuleTree = PR_FALSE;
   const nsStyleFont *styleFont =
     aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
@@ -253,7 +253,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     // prefs into account?
     aFontSize = styleFont->mFont.size;
   }
-  switch (unit) {
+  switch (aValue.GetUnit()) {
     case eCSSUnit_RootEM: {
       nscoord rootFontSize;
 
@@ -955,6 +955,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       }
       break;
     }
+    case eCSSUnit_Element:
+      aResult.SetElementId(aValue.GetStringBufferValue());
+      break;
     case eCSSUnit_None:
       break;
     default:
@@ -1414,7 +1417,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   const nsCSSValue& size = fontData.mSize;
   const nsCSSValue& weight = fontData.mWeight;
   const nsCSSValue& stretch = fontData.mStretch;
-  if ((size.IsRelativeLengthUnit() && size.GetUnit() != eCSSUnit_Pixel) ||
+  if (size.IsRelativeLengthUnit() ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
@@ -2884,7 +2887,7 @@ struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
       size = CalcLengthWith(aValue, mParentSize, mParentFont,
                             nsnull, mPresContext, mAtRoot,
                             PR_TRUE, mCanStoreInRuleTree);
-      if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
+      if (!aValue.IsRelativeLengthUnit()) {
         size = nsStyleFont::ZoomText(mPresContext, size);
       }
     }
@@ -3098,7 +3101,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_List:
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size - nsPresContext::CSSPointsToAppUnits(2), 0);
         break;
     }
 #endif
@@ -3650,8 +3653,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LEH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, canStoreInRuleTree);
-    if (textData.mLineHeight.IsFixedLengthUnit() ||
-        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel) {
+    if (textData.mLineHeight.IsLengthUnit() &&
+        !textData.mLineHeight.IsRelativeLengthUnit()) {
       nscoord lh = nsStyleFont::ZoomText(mPresContext,
                                          text->mLineHeight.GetCoordValue());
       nscoord minimumFontSize =
@@ -3828,7 +3831,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
             nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
             imgIRequest *req = arr->Item(0).GetImageValue();
             if (req) {
-              item->mImage = req;
+              item->SetImage(req);
               if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
                 item->mHaveHotspot = PR_TRUE;
                 item->mHotspotX = arr->Item(1).GetFloatValue(),
@@ -4946,6 +4949,10 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                        bg->mSizeCount, fillCount);
   }
 
+  // Now that the dust has settled, register the images with the document
+  for (PRUint32 i = 0; i < bg->mImageCount; ++i)
+    bg->mLayers[i].TrackImages(aContext->PresContext());
+
   COMPUTE_END_RESET(Background, bg)
 }
 
@@ -5840,6 +5847,14 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
            SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO |
              SETCOORD_CALC_LENGTH_ONLY,
            aContext, mPresContext, canStoreInRuleTree);
+
+  // If we ended up with an image, track it.
+  for (PRUint32 i = 0; i < content->ContentCount(); ++i) {
+    if ((content->ContentAt(i).mType == eStyleContentType_Image) &&
+        content->ContentAt(i).mContent.mImage) {
+      content->ContentAt(i).TrackImage(aContext->PresContext());
+    }
+  }
 
   COMPUTE_END_RESET(Content, content)
 }

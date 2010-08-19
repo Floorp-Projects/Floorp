@@ -565,7 +565,7 @@ public:
   
   static PRInt32 AppUnitsPerCSSPixel() { return nsIDeviceContext::AppUnitsPerCSSPixel(); }
   PRInt32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
-  PRInt32 AppUnitsPerInch() const      { return mDeviceContext->AppUnitsPerInch(); }
+  static PRInt32 AppUnitsPerCSSInch() { return nsIDeviceContext::AppUnitsPerCSSInch(); }
 
   static nscoord CSSPixelsToAppUnits(PRInt32 aPixels)
   { return NSIntPixelsToAppUnits(aPixels,
@@ -619,19 +619,19 @@ public:
                    AppUnitsToGfxUnits(aAppRect.width),
                    AppUnitsToGfxUnits(aAppRect.height)); }
 
-  nscoord TwipsToAppUnits(PRInt32 aTwips) const
-  { return NSCoordSaturatingMultiply(mDeviceContext->AppUnitsPerInch(),
-                                     NS_TWIPS_TO_INCHES(aTwips)); }
+  static nscoord CSSTwipsToAppUnits(float aTwips)
+  { return NSToCoordRoundWithClamp(
+      nsIDeviceContext::AppUnitsPerCSSInch() * NS_TWIPS_TO_INCHES(aTwips)); }
 
   // Margin-specific version, since they often need TwipsToAppUnits
-  nsMargin TwipsToAppUnits(const nsIntMargin &marginInTwips) const
-  { return nsMargin(TwipsToAppUnits(marginInTwips.left), 
-                    TwipsToAppUnits(marginInTwips.top),
-                    TwipsToAppUnits(marginInTwips.right),
-                    TwipsToAppUnits(marginInTwips.bottom)); }
+  static nsMargin CSSTwipsToAppUnits(const nsIntMargin &marginInTwips)
+  { return nsMargin(CSSTwipsToAppUnits(marginInTwips.left), 
+                    CSSTwipsToAppUnits(marginInTwips.top),
+                    CSSTwipsToAppUnits(marginInTwips.right),
+                    CSSTwipsToAppUnits(marginInTwips.bottom)); }
 
-  nscoord PointsToAppUnits(float aPoints) const
-  { return NSToCoordRound(aPoints * mDeviceContext->AppUnitsPerInch() /
+  static nscoord CSSPointsToAppUnits(float aPoints)
+  { return NSToCoordRound(aPoints * nsIDeviceContext::AppUnitsPerCSSInch() /
                           POINTS_PER_INCH_FLOAT); }
 
   nscoord RoundAppUnitsToNearestDevPixels(nscoord aAppUnits) const

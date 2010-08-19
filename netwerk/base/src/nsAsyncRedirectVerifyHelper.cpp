@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *    Honza Bambas <honzab@firemni.cz>
- *    Bjarne Geir Herland <bjarnw@runitsoft.com>
+ *    Bjarne Geir Herland <bjarne@runitsoft.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +36,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
 
 #include "prlog.h"
 #include "nsAsyncRedirectVerifyHelper.h"

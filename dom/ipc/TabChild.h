@@ -144,6 +144,7 @@ protected:
 };
 
 class TabChild : public PBrowserChild,
+                 public nsFrameScriptExecutor,
                  public nsIWebProgressListener2,
                  public nsIWebBrowserChrome2,
                  public nsIEmbeddingSiteWindow2,
@@ -191,6 +192,10 @@ public:
                               const PRInt32&  aCharCode,
                               const PRInt32&  aModifiers,
                               const bool&     aPreventDefault);
+    virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
+    virtual bool RecvTextEvent(const nsTextEvent& event);
+    virtual bool RecvQueryContentEvent(const nsQueryContentEvent& event);
+    virtual bool RecvSelectionEvent(const nsSelectionEvent& event);
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
@@ -219,6 +224,12 @@ public:
                                                      const nsTArray<int>&,
                                                      const nsTArray<nsString>&);
     virtual bool DeallocPContentDialog(PContentDialogChild* aDialog);
+    virtual PExternalHelperAppChild *AllocPExternalHelperApp(
+            const IPC::URI& uri,
+            const nsCString& aMimeContentType,
+            const bool& aForceSave,
+            const PRInt64& aContentLength);
+    virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
     static void ParamsToArrays(nsIDialogParamBlock* aParams,
                                nsTArray<int>& aIntParams,
                                nsTArray<nsString>& aStringParams);
@@ -285,17 +296,15 @@ protected:
     NS_OVERRIDE
     virtual bool RecvDestroy();
 
+    bool DispatchWidgetEvent(nsGUIEvent& event);
+
 private:
     void ActorDestroy(ActorDestroyReason why);
 
     bool InitTabChildGlobal();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> mRootGlobal;
-    JSContext* mCx;
-    nsCOMPtr<nsIChannel> mChannel;
     TabChildGlobal* mTabChildGlobal;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
     PRUint32 mChromeFlags;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);

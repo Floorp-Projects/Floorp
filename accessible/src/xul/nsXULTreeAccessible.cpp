@@ -197,8 +197,8 @@ nsXULTreeAccessible::GetRoleInternal(PRUint32 *aRole)
     cols->GetPrimaryColumn(getter_AddRefs(primaryCol));
 
   *aRole = primaryCol ?
-    nsIAccessibleRole::ROLE_OUTLINE :
-    nsIAccessibleRole::ROLE_LIST;
+    static_cast<PRUint32>(nsIAccessibleRole::ROLE_OUTLINE) :
+    static_cast<PRUint32>(nsIAccessibleRole::ROLE_LIST);
 
   return NS_OK;
 }
@@ -989,8 +989,8 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
     PRBool isContainerOpen;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
     *aState |= isContainerOpen ?
-      nsIAccessibleStates::STATE_EXPANDED:
-      nsIAccessibleStates::STATE_COLLAPSED;
+      static_cast<PRUint32>(nsIAccessibleStates::STATE_EXPANDED) :
+      static_cast<PRUint32>(nsIAccessibleStates::STATE_COLLAPSED);
   }
 
   // selected state
@@ -1178,8 +1178,8 @@ nsXULTreeItemAccessible::GetRoleInternal(PRUint32 *aRole)
   columns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
 
   *aRole = primaryColumn ?
-    nsIAccessibleRole::ROLE_OUTLINEITEM :
-    nsIAccessibleRole::ROLE_LISTITEM;
+    static_cast<PRUint32>(nsIAccessibleRole::ROLE_OUTLINEITEM) :
+    static_cast<PRUint32>(nsIAccessibleRole::ROLE_LISTITEM);
 
   return NS_OK;
 }

@@ -24,7 +24,7 @@
     <menu id="pilot-notification-settings" label="&testpilot.settings.label;">
       <menupopup onpopupshowing="TestPilotMenuUtils.updateSubmenu();">
         <menuitem class="pilot-notify-me-when"
-                  label="&testpilot.settings.notifyMeWhen.label;..."
+                  label="&testpilot.settings.notifyWhen.label;"
                   disabled="true"/>
         <menuitem id="pilot-menu-notify-finished"
                   label="&testpilot.settings.readyToSubmit.label;"
@@ -48,7 +48,7 @@
                     TestPilotMenuUtils.togglePref('alwaysSubmitData');"/>
       </menupopup>
     </menu>
-    <menuitem label="&testpilot.allStudies.label;..."
+    <menuitem label="&testpilot.allYourStudies.label;"
               oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
     <menuitem label="&testpilot.about.label;"
               oncommand="TestPilotWindowUtils.openHomepage();"/>

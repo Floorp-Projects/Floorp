@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=585508
+-->
+<head>
+  <title>Test for Bug 585508</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=585508">Mozilla Bug 585508</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 585508 **/
+
+var enctypeTestData = [
+  // Default value.
+  [ "application/x-www-form-urlencoded" ],
+  // Valid values.
+  [ "application/x-www-form-urlencoded", "multipart/form-data", "text/plain" ],
+  // Invalid values.
+  [ "", " ", "foo", "multipart/foo" ]
+];
+
+var methodTestData = [
+  // Default value.
+  [ "get" ],
+  // Valid values.
+  [ "get", "post" ],
+  // Invalid values.
+  [ "", " ", "foo" ],
+  // TODO values, see bug 583289 and bug 583288.
+  [ "delete", "put" ],
+];
+
+var form = document.createElement('form');
+
+function checkAttribute(form, name, data)
+{
+  is(form.getAttribute(name), undefined,
+     "By default " + name + " content attribute should be undefined");
+  is(form[name], data[0][0],
+     "By default " + name + " IDL attribute should be equal to " +
+     data[0][0]);
+
+  // Valid values.
+  for (i in data[1]) {
+    form.setAttribute(name, data[1][i]);
+    is(form.getAttribute(name), data[1][i],
+       "getAttribute should return the content attribute");
+    is(form[name], data[1][i], "When getting, " + name + " IDL attribute " +
+       "should be equal to the content attribute if the value is known");
+  }
+
+  // Invalid values.
+  for (i in data[2]) {
+    form.setAttribute(name, data[2][i]);
+    is(form.getAttribute(name), data[2][i],
+       "getAttribute should return the content attribute");
+    is(form[name], data[0][0], "When getting, " + name + " IDL attribute " +
+       "should return the default value if the content attribute value isn't known");
+  }
+
+  // TODO values.
+  for (i in data[3]) {
+    form.setAttribute(name, data[3][i]);
+    is(form.getAttribute(name), data[3][i],
+       "getAttribute should return the content attribute");
+    todo_is(form[name], data[3][i], "When getting, " + name + " IDL attribute " +
+       "should be equal to the content attribute if the value is known");
+  }
+}
+
+checkAttribute(form, 'enctype', enctypeTestData);
+checkAttribute(form, 'method', methodTestData);
+
+</script>
+</pre>
+</body>
+</html>

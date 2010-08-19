@@ -137,7 +137,7 @@ __breakpad_fdnlist_64(int fd, breakpad_nlist *list, const char **symbolNames) {
   breakpad_nlist space[BUFSIZ/sizeof (breakpad_nlist)];
 
   const register char *s1, *s2;
-  register int n, m;
+  register register_t n, m;
   int maxlen, nreq;
   off_t sa;             /* symbol address */
   off_t ss;             /* start of strings */
@@ -160,14 +160,14 @@ __breakpad_fdnlist_64(int fd, breakpad_nlist *list, const char **symbolNames) {
       (N_BADMAG(buf) && *((long *)&buf) != MH_MAGIC &&
        NXSwapBigLongToHost(*((long *)&buf)) != FAT_MAGIC) &&
       /* nealsid: The following is the big-endian ppc64 check */
-      (*((uint32_t*)&buf)) != FAT_MAGIC) {
+      (*((long*)&buf)) != FAT_MAGIC) {
     return (-1);
   }
 
   /* Deal with fat file if necessary */
   if (NXSwapBigLongToHost(*((long *)&buf)) == FAT_MAGIC ||
       /* nealsid: The following is the big-endian ppc64 check */
-      *((int*)&buf) == FAT_MAGIC) {
+      *((unsigned int *)&buf) == FAT_MAGIC) {
     struct host_basic_info hbi;
     struct fat_header fh;
     struct fat_arch *fat_archs, *fap;
@@ -191,7 +191,7 @@ __breakpad_fdnlist_64(int fd, breakpad_nlist *list, const char **symbolNames) {
     }
 
     /* Convert fat_narchs to host byte order */
-    fh.nfat_arch = NXSwapBigLongToHost(fh.nfat_arch);
+    fh.nfat_arch = NXSwapBigIntToHost(fh.nfat_arch);
 
     /* Read in the fat archs */
     fat_archs = (struct fat_arch *)malloc(fh.nfat_arch *
@@ -201,7 +201,7 @@ __breakpad_fdnlist_64(int fd, breakpad_nlist *list, const char **symbolNames) {
     }
     if (read(fd, (char *)fat_archs,
              sizeof(struct fat_arch) * fh.nfat_arch) !=
-        sizeof(struct fat_arch) * fh.nfat_arch) {
+        (ssize_t)sizeof(struct fat_arch) * fh.nfat_arch) {
       free(fat_archs);
       return (-1);
     }
@@ -212,15 +212,15 @@ __breakpad_fdnlist_64(int fd, breakpad_nlist *list, const char **symbolNames) {
      */
     for (i = 0; i < fh.nfat_arch; i++) {
       fat_archs[i].cputype =
-        NXSwapBigLongToHost(fat_archs[i].cputype);
+        NXSwapBigIntToHost(fat_archs[i].cputype);
       fat_archs[i].cpusubtype =
-        NXSwapBigLongToHost(fat_archs[i].cpusubtype);
+        NXSwapBigIntToHost(fat_archs[i].cpusubtype);
       fat_archs[i].offset =
-        NXSwapBigLongToHost(fat_archs[i].offset);
+        NXSwapBigIntToHost(fat_archs[i].offset);
       fat_archs[i].size =
-        NXSwapBigLongToHost(fat_archs[i].size);
+        NXSwapBigIntToHost(fat_archs[i].size);
       fat_archs[i].align =
-        NXSwapBigLongToHost(fat_archs[i].align);
+        NXSwapBigIntToHost(fat_archs[i].align);
     }
 
     fap = NULL;
@@ -257,7 +257,7 @@ __breakpad_fdnlist_64(int fd, breakpad_nlist *list, const char **symbolNames) {
       }
     }
 
-    if (*((int *)&buf) == MH_MAGIC_64) {
+    if (*((unsigned int *)&buf) == MH_MAGIC_64) {
       struct mach_header_64 mh;
       struct load_command *load_commands, *lcp;
       struct symtab_command *stp;

@@ -208,6 +208,10 @@
             <menu id="view-menu" label="&viewMenu.label;"
                   accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
+                <menuitem id="menu_tabview"
+                          label="&showTabView2.label;"
+                          accesskey="&showTabView2.accesskey;"
+                          command="Browser:ToggleTabView"/>
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
                       accesskey="&viewToolbarsMenu.accesskey;">
@@ -590,7 +594,11 @@
             <menu id="tools-menu"
                   label="&toolsMenu.label;"
                   accesskey="&toolsMenu.accesskey;">
-              <menupopup id="menu_ToolsPopup">
+              <menupopup id="menu_ToolsPopup"
+#ifdef MOZ_SERVICES_SYNC
+                         onpopupshowing="gSyncUI.updateUI();"
+#endif
+                         >
               <menuitem id="menu_search"
                         label="&search.label;"
                         accesskey="&search.accesskey;"

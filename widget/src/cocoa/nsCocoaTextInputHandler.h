@@ -259,6 +259,10 @@ public:
   static CFArrayRef CreateAllIMEModeList();
   static void DebugPrintAllIMEModes(PRLogModuleInfo* aLogModuleInfo);
 
+  // Don't use ::TSMGetActiveDocument() API directly, the document may not
+  // be what you want.
+  static TSMDocumentID GetCurrentTSMDocumentID();
+
 protected:
   // The owner of this instance.  The result of mOwnerWidget->TextInputHandler
   // returns this instance.  This must not be null after initialized.

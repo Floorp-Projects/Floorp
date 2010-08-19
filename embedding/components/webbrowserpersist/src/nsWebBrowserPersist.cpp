@@ -114,7 +114,11 @@
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGScriptElement.h"
 #endif // MOZ_SVG
-
+#ifdef MOZ_MEDIA
+#include "nsIDOMHTMLSourceElement.h"
+#include "nsIDOMHTMLMediaElement.h"
+#endif // MOZ_MEDIA
+ 
 #include "nsIImageLoadingContent.h"
 
 #include "ftpCore.h"
@@ -2796,6 +2800,21 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
     }
 #endif // MOZ_SVG
 
+#ifdef MOZ_MEDIA
+    nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNode);
+    if (nodeAsMedia)
+    {
+        StoreURIAttribute(aNode, "src");
+        return NS_OK;
+    }
+    nsCOMPtr<nsIDOMHTMLSourceElement> nodeAsSource = do_QueryInterface(aNode);
+    if (nodeAsSource)
+    {
+        StoreURIAttribute(aNode, "src");
+        return NS_OK;
+    }
+#endif // MOZ_MEDIA
+
     nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNode);
     if (nodeAsBody)
     {
@@ -3144,6 +3163,32 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         }
         return rv;
     }
+
+#ifdef MOZ_MEDIA
+    nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNodeIn);
+    if (nodeAsMedia)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMHTMLSourceElement> nodeAsSource = do_QueryInterface(aNodeIn);
+    if (nodeAsSource)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+
+        return rv;
+    }
+#endif // MOZ_MEDIA
 
 #ifdef MOZ_SVG
     nsCOMPtr<nsIDOMSVGImageElement> nodeAsSVGImage = do_QueryInterface(aNodeIn);

@@ -4238,6 +4238,8 @@ nsresult
 nsHttpChannel::WaitForRedirectCallback()
 {
     nsresult rv;
+    LOG(("nsHttpChannel::WaitForRedirectCallback [this=%p]\n", this));
+
     if (mTransactionPump) {
         rv = mTransactionPump->Suspend();
         NS_ENSURE_SUCCESS(rv, rv);

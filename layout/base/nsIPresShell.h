@@ -66,7 +66,6 @@
 #include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
-#include "nsRefreshDriver.h"
 #include "nsChangeHint.h"
 
 class nsIContent;
@@ -102,6 +101,8 @@ struct nsPoint;
 struct nsIntPoint;
 struct nsRect;
 struct nsIntRect;
+class nsRefreshDriver;
+class nsARefreshObserver;
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;
@@ -979,10 +980,7 @@ public:
     return mObservesMutationsForPrint;
   }
 
-  void SetIsActive(PRBool aIsActive)
-  {
-    mIsActive = aIsActive;
-  }
+  virtual nsresult SetIsActive(PRBool aIsActive) = 0;
 
   PRBool IsActive()
   {
@@ -1093,6 +1091,8 @@ public:
   static void ReleaseStatics();
 
 protected:
+  friend class nsRefreshDriver;
+
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1102,7 +1102,7 @@ protected:
   nsIDocument*              mDocument;      // [STRONG]
   nsPresContext*            mPresContext;   // [STRONG]
   nsStyleSet*               mStyleSet;      // [OWNS]
-  nsCSSFrameConstructor*    mFrameConstructor; // [STRONG]
+  nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsFrameSelection*         mSelection;
   nsFrameManagerBase        mFrameManager;  // [OWNS]
@@ -1125,6 +1125,7 @@ protected:
   PRPackedBool              mPaintingSuppressed;  // For all documents we initially lock down painting.
   PRPackedBool              mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
   PRPackedBool              mIsActive;
+  PRPackedBool              mFrozen;
 
 #ifdef ACCESSIBILITY
   /**
@@ -1140,6 +1141,13 @@ protected:
 
   PRPackedBool              mObservesMutationsForPrint;
 
+  PRPackedBool              mReflowScheduled; // If true, we have a reflow
+                                              // scheduled. Guaranteed to be
+                                              // false if mReflowContinueTimer
+                                              // is non-null.
+
+  PRPackedBool              mSuppressInterruptibleReflows;
+
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
 
@@ -1149,6 +1157,8 @@ protected:
   // Live pres shells, for memory and other tracking
   typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;
   static nsTHashtable<PresShellPtrKey> *sLiveShells;
+
+  static nsIContent* gKeyDownTarget;
 };
 
 /**

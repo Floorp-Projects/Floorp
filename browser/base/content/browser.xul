@@ -102,7 +102,7 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
-# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
+# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
 
@@ -126,6 +126,17 @@
       <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
                 accesskey="&unpinTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
+      <menu id="context_tabViewMenu" label="&moveToGroup.label;"
+            accesskey="&moveToGroup.accesskey;">
+        <menupopup id="context_tabViewMenuPopup" 
+                   onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
+          <menuitem label="&moveToNewGroup.label;" 
+                    accesskey="&moveToNewGroup.accesskey;" 
+                    oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
+          <menuitem id="context_namedGroups" label="&namedGroups.label;" 
+                    disabled="true"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <menuitem id="context_bookmarkTab"
                 label="&bookmarkThisTab.label;"
@@ -231,7 +242,6 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top"
            titlebar="normal"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
@@ -255,7 +265,12 @@
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
                        class="toolbarbutton-text"
-                       command="Inspector:Style"/>
+                       oncommand="InspectorUI.toggleStylePanel();'"/>
+        <toolbarbutton id="inspector-dom-toolbutton"
+                       label="&inspectDOMButton.label;"
+                       accesskey="&inspectDOMButton.accesskey;"
+                       class="toolbarbutton-text"
+                       oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
       <tree id="inspector-tree" class="plain"
             seltype="single"
@@ -283,13 +298,12 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top"
            titlebar="normal"
            label="&inspectStylePanelTitle.label;">
         <listbox id="inspector-style-listbox" flex="1"/>
         <hbox align="end">
           <spacer flex="1" />
-          <resizer dir="bottomend" />
+          <resizer dir="bottomend"/>
         </hbox>
     </panel>
 
@@ -519,6 +533,7 @@
                       command="View:PageSource"/>
             <menuseparator/>
             <menuitem id="appmenu_pageInspect"
+                      type="checkbox"
                       label="&inspectMenu.label;"
                       command="Tools:Inspect"/>
             <menuitem id="appmenu_webConsole"
@@ -579,6 +594,9 @@
     </button>
   </hbox>
 #endif
+
+<deck flex="1" id="tab-view-deck">
+<vbox flex="1">
 
   <toolbox id="navigator-toolbox"
            defaultmode="icons" mode="icons"
@@ -893,7 +911,7 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,tabview-button,alltabs-button,tabs-closebutton"
              collapsed="true">
 
       <tabs id="tabbrowser-tabs"
@@ -926,6 +944,12 @@
         <menupopup id="alltabs-popup"
                    position="after_end"/>
       </toolbarbutton>
+
+      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabViewButton2.label;"
+                     command="Browser:ToggleTabView"
+                     tooltiptext="&tabViewButton2.tooltip;"
+                     removable="true"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
@@ -1040,7 +1064,7 @@
                       onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
 #ifdef MOZ_SERVICES_SYNC
       <statusbarpanel id="sync-status-button"
-                      class="statusbarpanel-iconic-text"
+                      class="statusbarpanel-iconic"
                       image="chrome://browser/skin/sync-16.png"
                       label="&syncLogInItem.label;"
                       oncommand="gSyncUI.handleStatusbarButton();"
@@ -1081,4 +1105,11 @@
     </svg:mask>
   </svg:svg>
 #endif
+
+</vbox>
+# <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
+#     Introducing the iframe dynamically, as needed, was found to be better than
+#     starting with an empty iframe here in browser.xul from a Ts standpoint.
+</deck>
+
 </window>

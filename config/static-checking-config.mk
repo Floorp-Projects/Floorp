@@ -13,18 +13,22 @@ TREEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/outparams.js \
   $(topsrcdir)/xpcom/analysis/stack.js \
   $(topsrcdir)/xpcom/analysis/flow.js \
+  $(topsrcdir)/xpcom/analysis/static-init.js \
   $(topsrcdir)/js/src/jsstack.js \
   $(topsrcdir)/layout/generic/frame-verify.js \
   $(NULL)
 
+DEHYDRA_ARG_PREFIX=-fplugin-arg-gcc_treehydra-
+
 DEHYDRA_ARGS = \
-  --topsrcdir=$(topsrcdir) \
-  --objdir=$(DEPTH) \
-  --dehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(DEHYDRA_MODULES))) \
-  --treehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(TREEHYDRA_MODULES))) \
+  $(DEHYDRA_ARG_PREFIX)script=$(DEHYDRA_SCRIPT) \
+  $(DEHYDRA_ARG_PREFIX)topsrcdir=$(topsrcdir) \
+  $(DEHYDRA_ARG_PREFIX)objdir=$(DEPTH) \
+  $(DEHYDRA_ARG_PREFIX)dehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(DEHYDRA_MODULES))) \
+  $(DEHYDRA_ARG_PREFIX)treehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(TREEHYDRA_MODULES))) \
   $(NULL)
 
-DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) -fplugin-arg='$(DEHYDRA_SCRIPT) $(DEHYDRA_ARGS)'
+DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) $(DEHYDRA_ARGS)
 
 ifdef DEHYDRA_PATH
 OS_CXXFLAGS += $(DEHYDRA_FLAGS)

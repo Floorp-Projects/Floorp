@@ -39,8 +39,10 @@
 #define GFX_UTILS_H
 
 #include "gfxTypes.h"
+#include "gfxPattern.h"
+#include "gfxImageSurface.h"
 
-class gfxImageSurface;
+class gfxDrawable;
 
 class THEBES_API gfxUtils {
 public:
@@ -58,6 +60,29 @@ public:
                                         gfxImageSurface *aDestSurface = nsnull);
     static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
                                           gfxImageSurface *aDestSurface = nsnull);
+
+    /**
+     * Draw something drawable while working around limitations like bad support
+     * for EXTEND_PAD, lack of source-clipping, or cairo / pixman bugs with
+     * extreme user-space-to-image-space transforms.
+     *
+     * The input parameters here usually come from the output of our image
+     * snapping algorithm in nsLayoutUtils.cpp.
+     * This method is split from nsLayoutUtils::DrawPixelSnapped to allow for
+     * adjusting the parameters. For example, certain images with transparent
+     * margins only have a drawable subimage. For those images, imgFrame::Draw
+     * will tweak the rects and transforms that it gets from the pixel snapping
+     * algorithm before passing them on to this method.
+     */
+    static void DrawPixelSnapped(gfxContext*      aContext,
+                                 gfxDrawable*     aDrawable,
+                                 const gfxMatrix& aUserSpaceToImageSpace,
+                                 const gfxRect&   aSubimage,
+                                 const gfxRect&   aSourceRect,
+                                 const gfxRect&   aImageRect,
+                                 const gfxRect&   aFill,
+                                 const gfxImageSurface::gfxImageFormat aFormat,
+                                 const gfxPattern::GraphicsFilter& aFilter);
 };
 
 #endif

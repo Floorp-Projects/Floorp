@@ -96,7 +96,7 @@ u_int64_t Label::operator-(const Label &label) const {
 }
 
 u_int64_t Label::Value() const {
-  u_int64_t v;
+  u_int64_t v = 0;
   ALWAYS_EVALUATE_AND_ASSERT(IsKnownConstant(&v));
   return v;
 };

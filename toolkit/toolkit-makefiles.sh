@@ -254,8 +254,9 @@ MAKEFILES_content="
   content/xbl/public/Makefile
   content/xbl/src/Makefile
   content/xbl/builtin/Makefile
-  content/xbl/builtin/gtk2/Makefile
+  content/xbl/builtin/emacs/Makefile
   content/xbl/builtin/mac/Makefile
+  content/xbl/builtin/unix/Makefile
   content/xslt/Makefile
   content/xslt/public/Makefile
   content/xslt/src/Makefile

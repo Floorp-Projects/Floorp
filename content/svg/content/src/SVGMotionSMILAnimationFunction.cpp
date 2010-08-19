@@ -346,7 +346,7 @@ SVGMotionSMILAnimationFunction::
   // Do we have a mpath child? if so, it trumps everything. Otherwise, we look
   // through our list of path-defining attributes, in order of priority.
   nsSVGMpathElement* firstMpathChild =
-    GetFirstMpathChild(&mAnimationElement->Content());
+    GetFirstMpathChild(&mAnimationElement->AsElement());
 
   if (firstMpathChild) {
     RebuildPathAndVerticesFromMpathElem(firstMpathChild);

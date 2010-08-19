@@ -106,6 +106,7 @@ private:
   PRPackedBool                    mSaveLayoutState;
   PRPackedBool                    mExpired;
   PRPackedBool                    mSticky;
+  PRPackedBool                    mDynamicallyCreated;
   nsCString                       mContentType;
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
@@ -117,6 +118,7 @@ private:
   nsExpirationState               mExpirationState;
   nsAutoPtr<nsDocShellEditorData> mEditorData;
   nsString                        mStateData;
+  PRUint64                        mDocShellID;
 };
 
 #endif /* nsSHEntry_h */

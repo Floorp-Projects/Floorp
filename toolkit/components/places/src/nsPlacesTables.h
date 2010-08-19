@@ -179,7 +179,7 @@
 
 #define CREATE_MOZ_OPENPAGES_TEMP NS_LITERAL_CSTRING( \
   "CREATE TEMP TABLE moz_openpages_temp (" \
-    "  place_id INTEGER PRIMARY KEY" \
+    "  url TEXT PRIMARY KEY" \
     ", open_count INTEGER" \
   ")" \
 )

@@ -337,17 +337,6 @@ public:
      */
     static qcms_transform* GetCMSRGBATransform();
 
-    /**
-     * Return display DPI
-     */
-    static PRInt32 GetDPI() {
-        if (sDPI < 0) {
-            gfxPlatform::GetPlatform()->InitDisplayCaps();
-        }
-        NS_ASSERTION(sDPI > 0, "Something is wrong");
-        return sDPI;
-    }
-
     virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
 
 protected:
@@ -359,12 +348,6 @@ protected:
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
                                                
-    /**
-     * Initialize any needed display metrics (such as DPI)
-     */
-    virtual void InitDisplayCaps();
-    static PRInt32 sDPI;
-
     PRBool  mAllowDownloadableFonts;
 
     // whether to use the HarfBuzz layout engine

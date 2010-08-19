@@ -40,6 +40,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = browser/base/content/test
 
+DIRS += tabview
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -134,6 +136,7 @@ _BROWSER_FILES = \
                  browser_bug555224.js \
                  browser_bug555767.js \
                  browser_bug556061.js \
+                 browser_bug561623.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug577121.js \
@@ -145,10 +148,12 @@ _BROWSER_FILES = \
                  browser_drag.js \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
+                 browser_hide_removing.js \
                  browser_inspector_initialization.js \
                  browser_inspector_treeSelection.js \
                  browser_inspector_highlighter.js \
                  browser_inspector_stylePanel.js \
+                 browser_inspector_domPanel.js \
                  browser_inspector_iframeTest.js \
                  browser_inspector_scrolling.js \
                  browser_pageInfo.js \
@@ -167,6 +172,10 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
                  browser_visibleTabs.js \
+                 browser_visibleTabs_contextMenu.js \
+                 browser_visibleTabs_bookmarkAllPages.js \
+                 browser_visibleTabs_bookmarkAllTabs.js \
+                 browser_visibleTabs_tabPreview.js \
                  discovery.html \
                  moz.png \
                  test_bug435035.html \

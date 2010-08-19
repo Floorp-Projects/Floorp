@@ -33,7 +33,6 @@ function process_tree(fndecl) {
 
   let cfg = function_decl_cfg(fndecl);
 
-
   try {
     let trace = TRACE_ESP;
     let a = new FlowCheck(cfg, trace);
@@ -63,27 +62,20 @@ function FlowCheck(cfg, trace) {
   for (let bb in cfg_bb_iterator(cfg)) {
     for (let isn in bb_isn_iterator(bb)) {
       switch (isn.tree_code()) {
-      case CALL_EXPR: {
-        let fn = call_function_decl(isn)
+      case GIMPLE_CALL: {
+        let fn = gimple_call_fndecl(isn)
         if (!fn || decl_name(fn) != FLOW_THROUGH)
           continue;
         this.must_flow_fn = fn
         break
       }
-      case RETURN_EXPR: {
-        let ret_expr = isn.operands()[0]
-        if (track_return_loc && ret_expr) 
-          switch (ret_expr.tree_code()) {
-          case GIMPLE_MODIFY_STMT:
-            this.rval = ret_expr.operands()[1].tree_check(VAR_DECL)
-            break;
-          case RESULT_DECL:
-            this.rval = ret_expr
-            break;
-          default:
-            throw new Error("Unhandled return expression")
-          }
-      }
+      case GIMPLE_RETURN:
+        let ret_expr = return_expr(isn);
+        if (track_return_loc && ret_expr) {
+          TREE_CHECK(ret_expr, VAR_DECL, RESULT_DECL);
+          this.rval = ret_expr;
+        }
+        break;
       }
     }
   }
@@ -109,14 +101,14 @@ function char_star_arg2string(tree) {
 // another function as either an assignment or a call.
 FlowCheck.prototype.flowState = function(isn, state) {
   switch (TREE_CODE(isn)) {
-  case CALL_EXPR: {
-    let fn = call_function_decl(isn)
+  case GIMPLE_CALL: {
+    let fn = gimple_call_fndecl(isn)
     if (fn == this.must_flow_fn)
-      state.assignValue(fn, char_star_arg2string(call_arg(isn, 0)), isn)
+      state.assignValue(fn, char_star_arg2string(gimple_call_arg(isn, 0)), isn)
     break
   }
-  case LABEL_EXPR: {
-    let label = decl_name(isn.operands()[0])
+  case GIMPLE_LABEL: {
+    let label = decl_name(gimple_op(isn, 0))
     for ([value, blame] in state.yieldPreconditions(this.must_flow_fn)) {
       if (label != value) continue
       // reached the goto label we wanted =D
@@ -124,7 +116,7 @@ FlowCheck.prototype.flowState = function(isn, state) {
     }
     break
   }
-  case RETURN_EXPR: {
+  case GIMPLE_RETURN:
     for ([value, blame] in state.yieldPreconditions(this.must_flow_fn)) {
       if (typeof value != 'string') continue
       let loc;
@@ -137,9 +129,8 @@ FlowCheck.prototype.flowState = function(isn, state) {
       return  
     }
     break
-  }
-  case GIMPLE_MODIFY_STMT:
-    if (track_return_loc && isn.operands()[0] == this.rval) {
+  case GIMPLE_ASSIGN:
+    if (track_return_loc && gimple_op(isn, 0) == this.rval) {
       state.assignValue(this.rval, location_of(isn), isn)
       break
     }

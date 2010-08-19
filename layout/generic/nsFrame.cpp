@@ -350,7 +350,7 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= state & (NS_FRAME_SELECTED_CONTENT |
                        NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_IS_SPECIAL |
-                       NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS);
+                       NS_FRAME_MAY_BE_TRANSFORMED);
   }
   if (mParent) {
     nsFrameState state = mParent->GetStateBits();
@@ -362,7 +362,7 @@ nsFrame::Init(nsIContent*      aContent,
   if (GetStyleDisplay()->HasTransform()) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.
-    mState |= NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS;
+    mState |= NS_FRAME_MAY_BE_TRANSFORMED;
   }
   
   DidSetStyleContext(nsnull);
@@ -721,7 +721,7 @@ nsIFrame::GetPaddingRect() const
 PRBool
 nsIFrame::IsTransformed() const
 {
-  return (mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
+  return (mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
     GetStyleDisplay()->HasTransform();
 }
 
@@ -1058,23 +1058,7 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
   if (!aFrame->GetAbsPosClipRect(aDisp, aRect, aFrame->GetSize()))
     return PR_FALSE;
 
-  // A moving frame should not be allowed to clip a non-moving frame.
-  // Abs-pos clipping always clips frames below it in the frame tree, except
-  // for when an abs-pos frame clips a fixed-pos frame. So when fixed-pos
-  // elements are present we do not allow a moving abs-pos frame with
-  // an out-of-flow descendant (which could be a fixed frame) child to clip
-  // anything. It's OK to not clip anything, even the moving children ...
-  // all that could happen is that we get unnecessarily conservative results
-  // for nsLayoutUtils::ComputeRepaintRegionForCopy ... but this is a rare
-  // situation.
-  if (aBuilder->HasMovingFrames() &&
-      aFrame->PresContext()->FrameManager()->GetRootFrame()->
-          GetFirstChild(nsGkAtoms::fixedList) &&
-      aBuilder->IsMovingFrame(aFrame))
-    return PR_FALSE;
-
   *aRect += aBuilder->ToReferenceFrame(aFrame);
-
   return PR_TRUE;
 }
 
@@ -1273,7 +1257,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* If we're being transformed, we need to invert the matrix transform so that we don't 
    * grab points in the wrong coordinate system!
    */
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
     dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
     inTransform = PR_TRUE;
@@ -1398,7 +1382,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* If we're going to apply a transformation, wrap everything in an
    * nsDisplayTransform.
    */
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
     nsDisplayTransform* transform = new (aBuilder) nsDisplayTransform(this, &resultList);
     if (!transform)  
@@ -1511,9 +1495,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects.
-  PRBool isComposited = disp->mOpacity != 1.0f ||
-    ((aChild->mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) && 
-     aChild->GetStyleDisplay()->HasTransform())
+  PRBool isComposited = disp->mOpacity != 1.0f || aChild->IsTransformed()
 #ifdef MOZ_SVG
     || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild)
 #endif
@@ -3895,8 +3877,7 @@ nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
     // Don't need to invalidate any more Thebes layers
     aFlags |= INVALIDATE_NO_THEBES_LAYERS;
   }
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
-      GetStyleDisplay()->HasTransform()) {
+  if (IsTransformed()) {
     nsRect newDamageRect;
     newDamageRect.UnionRect(nsDisplayTransform::TransformRect
                             (aDamageRect, this, nsPoint(-aX, -aY)), aDamageRect);
@@ -3914,6 +3895,7 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
                              nsIFrame* aForChild, PRUint32 aFlags)
 {
 #ifdef MOZ_SVG
+  nsSVGEffects::InvalidateDirectRenderingObservers(this);
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(this)) {
     nsRect r = nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(this,
             aDamageRect + nsPoint(aX, aY));
@@ -4042,7 +4024,7 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 
   nsIView* view = GetView();
   NS_ASSERTION(view, "This can only be called on frames with views");
-  view->GetViewManager()->UpdateView(view, rect, flags);
+  view->GetViewManager()->UpdateViewNoSuppression(view, rect, flags);
 }
 
 void
@@ -4188,8 +4170,7 @@ nsIFrame::GetOverflowRectRelativeToParent() const
 nsRect
 nsIFrame::GetOverflowRectRelativeToSelf() const
 {
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
-      GetStyleDisplay()->HasTransform()) {
+  if (IsTransformed()) {
     nsRect* preTransformBBox = static_cast<nsRect*>
       (Properties().Get(PreTransformBBoxProperty()));
     if (preTransformBBox)
@@ -5887,9 +5868,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       &hasOutlineOrEffects);
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
-  PRBool hasTransform =
-    (mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) && 
-    GetStyleDisplay()->HasTransform();
+  PRBool hasTransform = IsTransformed();
   if (hasTransform) {
     Properties().
       Set(nsIFrame::PreTransformBBoxProperty(), new nsRect(*aOverflowArea));
@@ -6261,10 +6240,10 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
                  *item_end = ui->mCursorArray + ui->mCursorArrayLength;
        item < item_end; ++item) {
     PRUint32 status;
-    nsresult rv = item->mImage->GetImageStatus(&status);
+    nsresult rv = item->GetImage()->GetImageStatus(&status);
     if (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_LOAD_COMPLETE)) {
       // This is the one we want
-      item->mImage->GetImage(getter_AddRefs(aCursor.mContainer));
+      item->GetImage()->GetImage(getter_AddRefs(aCursor.mContainer));
       aCursor.mHaveHotspot = item->mHaveHotspot;
       aCursor.mHotspotX = item->mHotspotX;
       aCursor.mHotspotY = item->mHotspotY;

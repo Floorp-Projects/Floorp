@@ -71,6 +71,12 @@ browser.jar:
   skin/classic/browser/tabbrowser/progress.png         (tabbrowser/progress.png)
   skin/classic/browser/tabbrowser/progress-pulsing.png (tabbrowser/progress-pulsing.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
+  skin/classic/browser/tabview/edit.png               (tabview/edit.png)
+  skin/classic/browser/tabview/new-tab.png            (tabview/new-tab.png)
+  skin/classic/browser/tabview/tabview.css            (tabview/tabview.css)
+  skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
+  skin/classic/browser/tabview/tabview.png            (tabview/tabview.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png

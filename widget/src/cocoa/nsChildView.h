@@ -225,6 +225,8 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 - (void)lockFocus;
 - (void) _surfaceNeedsUpdate:(NSNotification*)notification;
 
+- (BOOL)isPluginView;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
@@ -295,6 +297,7 @@ public:
 
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
+  virtual float           GetDPI();
 
   LayerManager*           GetLayerManager();
 
@@ -313,9 +316,6 @@ public:
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-  virtual void            Scroll(const nsIntPoint& aDelta,
-                                 const nsTArray<nsIntRect>& aDestRects,
-                                 const nsTArray<Configuration>& aConfigurations);
   virtual nsIntPoint      WidgetToScreenOffset();
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
 
@@ -434,6 +434,7 @@ protected:
   PRPackedBool          mDrawing;
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
+  PRPackedBool          mIsDispatchPaint; // Is a paint event being dispatched
 
   NP_CGContext          mPluginCGContext;
 #ifndef NP_NO_QUICKDRAW

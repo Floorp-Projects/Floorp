@@ -1525,17 +1525,18 @@ CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot)
 
 static void
 InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
+                                        nsIFrame* aMovingFrame,
                                         const nsDisplayList& aList)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayList* sublist = item->GetList();
     if (sublist) {
-      InvalidateFixedBackgroundFramesFromList(aBuilder, *sublist);
+      InvalidateFixedBackgroundFramesFromList(aBuilder, aMovingFrame, *sublist);
       continue;
     }
     nsIFrame* f = item->GetUnderlyingFrame();
-    if (f && aBuilder->IsMovingFrame(f) &&
-        item->IsVaryingRelativeToMovingFrame(aBuilder)) {
+    if (f &&
+        item->IsVaryingRelativeToMovingFrame(aBuilder, aMovingFrame)) {
       if (item->IsFixedAndCoveringViewport(aBuilder)) {
         // FrameLayerBuilder takes care of scrolling these
       } else {
@@ -1559,7 +1560,6 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
   // Build the 'after' display list over the whole area of interest.
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
   builder.EnterPresShell(aRootFrame, aUpdateRect);
-  builder.SetMovingFrame(aMovingFrame);
   nsDisplayList list;
   nsresult rv =
     aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
@@ -1568,9 +1568,9 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
     return;
 
   nsRegion visibleRegion(aUpdateRect);
-  list.ComputeVisibility(&builder, &visibleRegion, nsnull);
+  list.ComputeVisibility(&builder, &visibleRegion);
 
-  InvalidateFixedBackgroundFramesFromList(&builder, list);
+  InvalidateFixedBackgroundFramesFromList(&builder, aMovingFrame, list);
   list.DeleteAll();
 }
 

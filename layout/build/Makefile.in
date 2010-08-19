@@ -136,14 +136,14 @@ LOCAL_INCLUDES	+= \
 else ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/cocoa/$(LIB_PREFIX)domsystemcocoa_s.$(LIB_SUFFIX) \
- 	$(NULL)
+	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/cocoa \
 	$(NULL)
 else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/android/$(LIB_PREFIX)domsystemandroid_s.$(LIB_SUFFIX) \
- 	$(NULL)
+	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/android \
 	$(NULL)
@@ -209,14 +209,10 @@ SHARED_LIBRARY_LIBS += \
 		$(NULL)
 endif
 
-ifndef MOZ_NO_INSPECTOR_APIS
 LOCAL_INCLUDES  += \
       -I$(srcdir)/../inspector/src \
       $(NULL)
 SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
-else
-DEFINES += -DMOZ_NO_INSPECTOR_APIS
-endif
 
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
