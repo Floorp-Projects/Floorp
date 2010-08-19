@@ -503,7 +503,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->setArgsObj(NULL);
     fp->setScript(script);
     fp->setFunction(fun);
-    fp->argc = args.argc();
+    fp->setNumActualArgs(args.argc());
     fp->argv = args.argv();
     fp->setAnnotation(NULL);
     fp->setScopeChain(NULL);
@@ -552,7 +552,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     if (hook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData);
 
-    DTrace::enterJSFun(cx, fp, fun, fp->down, fp->argc, fp->argv);
+    DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
 
     /* Call the function, either a native method or an interpreted script. */
     JSBool ok;
@@ -562,7 +562,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
 #endif
 
         JSObject *thisp = fp->getThisValue().toObjectOrNull();
-        ok = callJSNative(cx, native, thisp, fp->argc, fp->argv,
+        ok = callJSNative(cx, native, thisp, fp->numActualArgs(), fp->argv,
                           fp->addressReturnValue());
 
         JS_ASSERT(cx->fp == fp);
@@ -818,7 +818,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->setFunction((script->staticLevel > 0) ? down->maybeFunction() : NULL);
         fp->setThisValue(down->getThisValue());
         fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
-        fp->argc = down->argc;
+        fp->setNumActualArgs(down->numActualArgs());
         fp->argv = down->argv;
         fp->setAnnotation(down->maybeAnnotation());
         fp->setScopeChain(chain);
@@ -839,7 +839,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->setFunction(NULL);
         fp->setThisValue(UndefinedValue());  /* Make GC-safe until initialized below. */
         fp->flags = flags | JSFRAME_COMPUTED_THIS;
-        fp->argc = 0;
+        fp->setNumActualArgs(0);
         fp->argv = NULL;
         fp->setAnnotation(NULL);
 
@@ -1346,13 +1346,13 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
 
     if (!fp->hasFunction() || (fp->flags & JSFRAME_EVAL)) {
         vp = fp->slots() + fp->getFixedCount();
-    } else if (slot < fp->getArgumentCount()) {
+    } else if (slot < fp->numFormalArgs()) {
         vp = fp->argv;
     } else if (slot == UpvarCookie::CALLEE_SLOT) {
         vp = &fp->argv[-2];
         slot = 0;
     } else {
-        slot -= fp->getArgumentCount();
+        slot -= fp->numFormalArgs();
         JS_ASSERT(slot < fp->getSlotCount());
         vp = fp->slots();
     }
@@ -2909,7 +2909,7 @@ BEGIN_CASE(JSOP_FORARG)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
     uintN slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->getArgumentCount());
+    JS_ASSERT(slot < fp->numFormalArgs());
     JS_ASSERT(regs.sp[-1].isObject());
     if (!IteratorNext(cx, &regs.sp[-1].toObject(), &fp->argv[slot]))
         goto error;
@@ -3814,7 +3814,7 @@ BEGIN_CASE(JSOP_ARGINC)
     // If we initialize in the declaration, MSVC complains that the labels skip init.
     uint32 slot;
     slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->getArgumentCount());
+    JS_ASSERT(slot < fp->numFormalArgs());
     METER_SLOT_OP(op, slot);
     vp = fp->argv + slot;
     goto do_int_fast_incop;
@@ -3946,7 +3946,7 @@ BEGIN_CASE(JSOP_GETARGPROP)
 {
     i = ARGNO_LEN;
     uint32 slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->getArgumentCount());
+    JS_ASSERT(slot < fp->numFormalArgs());
     PUSH_COPY(fp->argv[slot]);
     goto do_getprop_body;
 }
@@ -4612,7 +4612,7 @@ BEGIN_CASE(JSOP_APPLY)
             newfp->setArgsObj(NULL);
             newfp->setScript(newscript);
             newfp->setFunction(fun);
-            newfp->argc = argc;
+            newfp->setNumActualArgs(argc);
             newfp->argv = vp + 2;
             newfp->clearReturnValue();
             newfp->setAnnotation(NULL);
@@ -4664,7 +4664,7 @@ BEGIN_CASE(JSOP_APPLY)
             inlineCallCount++;
             JS_RUNTIME_METER(rt, inlineCalls);
 
-            DTrace::enterJSFun(cx, fp, fun, fp->down, fp->argc, fp->argv);
+            DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
 
 #ifdef JS_TRACER
             if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
@@ -5112,7 +5112,7 @@ BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)
 {
     uint32 slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->getArgumentCount());
+    JS_ASSERT(slot < fp->numFormalArgs());
     METER_SLOT_OP(op, slot);
     PUSH_COPY(fp->argv[slot]);
     if (op == JSOP_CALLARG)
@@ -5123,7 +5123,7 @@ END_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_SETARG)
 {
     uint32 slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < fp->getArgumentCount());
+    JS_ASSERT(slot < fp->numFormalArgs());
     METER_SLOT_OP(op, slot);
     fp->argv[slot] = regs.sp[-1];
 }
