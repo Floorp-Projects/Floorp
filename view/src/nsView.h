@@ -117,15 +117,6 @@ public:
   void DropMouseGrabbing();
 
 public:
-  // See nsIView::CreateWidget.
-  nsresult CreateWidget(const nsIID &aWindowIID,
-                        nsWidgetInitData *aWidgetInitData,
-                        nsNativeWidget aNative,
-                        PRBool aEnableDragDrop,
-                        PRBool aResetVisibility,
-                        nsContentType aContentType,
-                        nsIWidget* aParentWidget);
-
   // NOT in nsIView, so only available in view module
   // These are also present in nsIView, but these versions return nsView and nsViewManager
   // instead of nsIView and nsIViewManager.
