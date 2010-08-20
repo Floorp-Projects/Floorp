@@ -278,7 +278,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpSetRoot: {
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
-      layer_manager()->SetRoot(AsShadowLayer(edit.get_OpSetRoot())->AsLayer());
+      mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsLayer();
       break;
     }
     case Edit::TOpInsertAfter: {
@@ -371,6 +371,19 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     reply->AppendElements(&replyv.front(), replyv.size());
   }
 
+  return true;
+}
+
+PLayerParent*
+ShadowLayersParent::AllocPLayer()
+{
+  return new ShadowLayerParent();
+}
+
+bool
+ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
+{
+  delete actor;
   return true;
 }
 
