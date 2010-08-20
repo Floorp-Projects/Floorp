@@ -100,6 +100,10 @@
 #define WTF_COMPILER_WINSCW 1
 #endif
 
+/* COMPILER(SUNPRO) - Sun Studio for Solaris */
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#define WTF_COMPILER_SUNPRO 1
+#endif
 
 
 /* ==== CPU() - the target CPU architecture ==== */
