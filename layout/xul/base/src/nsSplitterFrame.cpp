@@ -664,9 +664,10 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (childIndex == childCount - 1 && GetResizeAfter() != Grow)
     return NS_OK;
 
-  nsCOMPtr<nsIRenderingContext> rc =
-    outerPresContext->PresShell()->GetReferenceRenderingContext();
-  NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIRenderingContext> rc;
+  nsresult rv = outerPresContext->PresShell()->
+                  CreateRenderingContext(mOuter, getter_AddRefs(rc));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsBoxLayoutState state(outerPresContext, rc);
   mCurrentPos = 0;
   mPressed = PR_TRUE;
