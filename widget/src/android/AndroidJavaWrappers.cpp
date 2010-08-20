@@ -448,8 +448,9 @@ nsJNIString::nsJNIString(jstring jstr)
         return;
     }
     const jchar* jCharPtr = JNI()->GetStringChars(jstr, false);
+    int len = JNI()->GetStringLength(jstr);
     nsresult rv;
-    Assign(jCharPtr);
+    Assign(jCharPtr, len);
     JNI()->ReleaseStringChars(jstr, jCharPtr);
 
 }
