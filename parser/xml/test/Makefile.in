@@ -49,6 +49,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = parser/xml/test
 
 include $(DEPTH)/config/autoconf.mk
 
