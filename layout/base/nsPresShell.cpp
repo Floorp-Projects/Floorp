@@ -753,8 +753,7 @@ public:
   virtual NS_HIDDEN_(void) CancelReflowCallback(nsIReflowCallback* aCallback);
 
   virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame);
-  virtual NS_HIDDEN_(nsresult) CreateRenderingContext(nsIFrame *aFrame,
-                                                      nsIRenderingContext** aContext);
+  virtual NS_HIDDEN_(already_AddRefed<nsIRenderingContext>) GetReferenceRenderingContext();
   virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
   virtual NS_HIDDEN_(nsresult) ScrollToAnchor();
 
@@ -3675,51 +3674,22 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   }
 }
 
-nsresult
-PresShell::CreateRenderingContext(nsIFrame *aFrame,
-                                  nsIRenderingContext** aResult)
+already_AddRefed<nsIRenderingContext>
+PresShell::GetReferenceRenderingContext()
 {
   NS_TIME_FUNCTION_MIN(1.0);
 
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIWidget* widget = nsnull;
-  nsPoint offset(0,0);
+  nsIDeviceContext* devCtx = mPresContext->DeviceContext();
+  nsRefPtr<nsIRenderingContext> rc;
   if (mPresContext->IsScreen()) {
-    // Get the widget to create the rendering context for and calculate
-    // the offset from the frame to it.
-    nsPoint viewOffset;
-    nsIView* view = aFrame->GetClosestView(&viewOffset);
-    nsPoint widgetOffset;
-    widget = view->GetNearestWidget(&widgetOffset);
-    offset = viewOffset + widgetOffset;
+    devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
+    if (rc) {
+      rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+    }
   } else {
-    nsIFrame* pageFrame = nsLayoutUtils::GetPageFrame(aFrame);
-    // This might not always come up with a frame, i.e. during reflow;
-    // that's fine, because the translation doesn't matter during reflow.
-    if (pageFrame)
-      offset = aFrame->GetOffsetTo(pageFrame);
+    devCtx->CreateRenderingContext(*getter_AddRefs(rc));
   }
-
-  nsresult rv;
-  nsIRenderingContext* result = nsnull;
-  nsIDeviceContext *deviceContext = mPresContext->DeviceContext();
-  if (widget) {
-    rv = deviceContext->CreateRenderingContext(widget, result);
-  }
-  else {
-    rv = deviceContext->CreateRenderingContext(result);
-  }
-  *aResult = result;
-
-  if (NS_SUCCEEDED(rv)) {
-    result->Translate(offset.x, offset.y);
-  }
-
-  return rv;
+  return rc.forget();
 }
 
 nsresult
@@ -7518,11 +7488,8 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
 
-  nsCOMPtr<nsIRenderingContext> rcx;
-  // Always create the rendering context relative to the root frame during
-  // reflow; otherwise, it crashes on the mac (I'm not quite sure why)
-  nsresult rv = CreateRenderingContext(rootFrame, getter_AddRefs(rcx));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIRenderingContext> rcx = GetReferenceRenderingContext();
+  if (!rcx) {
     NS_NOTREACHED("CreateRenderingContext failure");
     return PR_FALSE;
   }
