@@ -104,6 +104,7 @@ public:
     NS_IMETHOD FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
     NS_IMETHOD FlushFontCache(void);
 
+    NS_IMETHOD SupportsNativeWidgets(PRBool& aSupportsWidgets);
     NS_IMETHOD PrepareNativeWidget(nsIWidget *aWidget, void **aOut);
 
     NS_IMETHOD GetSystemFont(nsSystemFontID aID, nsFont *aFont) const;
