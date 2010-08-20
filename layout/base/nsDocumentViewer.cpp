@@ -2388,9 +2388,7 @@ DocumentViewerImpl::FindContainerView()
 {
   nsIView* containerView = nsnull;
 
-  if (mParentWidget) {
-    containerView = nsIView::GetViewFor(mParentWidget);
-  } else if (mContainer) {
+  if (mContainer) {
     nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
     nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
     if (pwin) {
