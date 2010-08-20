@@ -688,24 +688,26 @@ nsresult nsView::CreateWidget(const nsIID &aWindowIID,
     NS_RELEASE(mWindow);
   }
 
-  PRBool initDataPassedIn = PR_TRUE;
-  nsWidgetInitData initData;
-  if (!aWidgetInitData) {
-    // No initData, we're a child window
-    initDataPassedIn = PR_FALSE;
-    initData.mWindowType = eWindowType_child;
-    initData.clipChildren = PR_TRUE;
-    initData.clipSiblings = PR_TRUE;
-    aWidgetInitData = &initData;
-  }
-  aWidgetInitData->mContentType = aContentType;
-
-  nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
+  nsIntRect trect = CalcWidgetBounds(aWidgetInitData
+                                     ? aWidgetInitData->mWindowType
+                                     : eWindowType_child);
 
   if (NS_OK == LoadWidget(aWindowIID))
   {
     nsCOMPtr<nsIDeviceContext> dx;
     mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+
+    PRBool initDataPassedIn = PR_TRUE;
+    nsWidgetInitData initData;
+    if (!aWidgetInitData) {
+      // No initData, we're a child window
+      // Create initData to pass in params
+      initDataPassedIn = PR_FALSE;
+      initData.clipChildren = PR_TRUE; // Clip child window's children
+      initData.clipSiblings = PR_TRUE; // Clip child window's siblings
+      aWidgetInitData = &initData;
+    }
+    aWidgetInitData->mContentType = aContentType;
 
     if (aNative && aWidgetInitData->mWindowType != eWindowType_popup)
       mWindow->Create(nsnull, aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
