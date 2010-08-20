@@ -290,6 +290,10 @@ public:
 
 protected:
     NS_OVERRIDE
+    virtual PRenderFrameChild* AllocPRenderFrame();
+    NS_OVERRIDE
+    virtual bool DeallocPRenderFrame(PRenderFrameChild* aFrame);
+    NS_OVERRIDE
     virtual bool RecvDestroy();
 
     bool DispatchWidgetEvent(nsGUIEvent& event);
