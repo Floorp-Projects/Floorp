@@ -121,7 +121,6 @@ add_test(function() {
 // Simulates dropping a file onto the manager
 add_test(function() {
   var fileurl = get_addon_file_url("browser_dragdrop1.xpi");
-
   new WindowOpenListener(INSTALL_URI, function(aWindow) {
     test_confirmation(aWindow, [fileurl.spec]);
   }, run_next_test);
@@ -137,7 +136,6 @@ add_test(function() {
 add_test(function() {
   var url1 = TESTROOT + "addons/browser_dragdrop1.xpi";
   var url2 = TESTROOT2 + "addons/browser_dragdrop2.xpi";
-
   new WindowOpenListener(INSTALL_URI, function(aWindow) {
     test_confirmation(aWindow, [url1, url2]);
   }, run_next_test);
