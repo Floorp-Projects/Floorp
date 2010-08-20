@@ -23,7 +23,7 @@
 <script type="application/javascript"
         src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 <script type="application/javascript"
-        src="utils.js"/>
+        src="chrome://mochikit/content/chrome/toolkit/mozapps/update/test/chrome/utils.js"/>
 
 <script type="application/javascript">
 <![CDATA[

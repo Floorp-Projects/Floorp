@@ -22,8 +22,6 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-copyToProfile('animals.sqlite');
-
 var testid ="storage simple listbox";
 var queryType = "storage";
 var isTreeBuilder = false;
@@ -43,7 +41,7 @@ var changes = [];
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
               flex="1" rows="8"
-              datasources="profile:animals.sqlite" ref="." querytype="storage">
+              datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
             SELECT * FROM animals WHERE species_id = 2 ORDER BY name

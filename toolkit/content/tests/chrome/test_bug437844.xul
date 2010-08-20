@@ -16,8 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/chrome-harness.js"></script>
   <script type="application/javascript"
           src="RegisterUnregisterChrome.js"></script>
 
@@ -51,15 +49,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       frame.setAttribute("src", "about:plugins");
       frame.addEventListener("load", function () {
           frame.removeEventListener("load", arguments.callee, false);
+
           is(frame.contentDocument.dir, "rtl", "about:plugins should be RTL in RTL locales");
 
-          let gDirSvc    = Components.classes["@mozilla.org/file/directory_service;1"].
-                                      getService(Components.interfaces.nsIDirectoryService).
-                                      QueryInterface(Components.interfaces.nsIProperties);
-          let tmpd = gDirSvc.get("ProfD", Components.interfaces.nsIFile);
-
           frame = document.createElement("iframe");
-          frame.setAttribute("src", "file://" + tmpd.path); // a file:// URI, bug 348233
+          frame.setAttribute("src", convertChromeURI("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/").spec); // a file:// URI, bug 348233
           frame.addEventListener("load", function () {
               frame.removeEventListener("load", arguments.callee, false);
 

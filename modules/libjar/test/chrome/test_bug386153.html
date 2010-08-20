@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386153
   <title>Test for Bug 386153</title>
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -26,17 +25,15 @@ const Ci = Components.interfaces;
 
 // Opens a zip file from the test directory.
 function openZip(path) {
-
-  var location = window.location.href;
-  location = getRootDirectory(location);
-  var jar = getJar(location);
-  if (jar != null) {
-    var resolved = extractJarToTmp(jar);
-  } else {
-    var resolvedURI = getResolvedURI(window.location.href);
-    var resolved = getChromeDir(resolvedURI);
-  }
-  resolved.append(path);
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  var chromeURI = ios.newURI("chrome://mochikit/content/chrome/modules/libjar/test/chrome/" + path,
+                              null, null);
+  var resolved = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                 getService(Ci.nsIChromeRegistry).
+                 convertChromeURL(chromeURI).
+                 QueryInterface(Ci.nsIFileURL).
+                 file;
 
   var zip = Cc["@mozilla.org/libjar/zip-reader;1"].
             createInstance(Ci.nsIZipReader);
