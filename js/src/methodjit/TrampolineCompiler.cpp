@@ -139,11 +139,7 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     masm.loadPayload(rval, JSReturnReg_Data);
     masm.loadTypeTag(rval, JSReturnReg_Type);
 
-#ifndef JS_CPU_ARM
-    masm.push(Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
-#else
-    masm.move(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), JSC::ARMRegisters::lr);
-#endif
+    masm.restoreReturnAddress();
 
     masm.move(Registers::ReturnReg, JSFrameReg);
 #ifdef DEBUG

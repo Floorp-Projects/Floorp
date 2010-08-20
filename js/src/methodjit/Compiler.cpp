@@ -1562,16 +1562,6 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 }
 
 void
-mjit::Compiler::restoreReturnAddress(Assembler &masm)
-{
-#ifndef JS_CPU_ARM
-    masm.push(Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
-#else
-    masm.move(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), JSC::ARMRegisters::lr);
-#endif
-}
-
-void
 mjit::Compiler::emitReturn()
 {
     /*
@@ -1582,7 +1572,7 @@ mjit::Compiler::emitReturn()
                                         FrameAddress(offsetof(VMFrame, entryFp)),
                                         JSFrameReg);
     stubcc.linkExit(noInlineCalls, Uses(frame.frameDepth()));
-    restoreReturnAddress(stubcc.masm);
+    stubcc.masm.restoreReturnAddress();
     stubcc.masm.ret();
 
     JS_ASSERT_IF(!fun, JSOp(*PC) == JSOP_STOP);
@@ -1643,7 +1633,7 @@ mjit::Compiler::emitReturn()
     Address rval(JSFrameReg, JSStackFrame::offsetReturnValue());
     masm.loadPayload(rval, JSReturnReg_Data);
     masm.loadTypeTag(rval, JSReturnReg_Type);
-    restoreReturnAddress(masm);
+    masm.restoreReturnAddress();
     masm.move(Registers::ReturnReg, JSFrameReg);
 #ifdef DEBUG
     masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
