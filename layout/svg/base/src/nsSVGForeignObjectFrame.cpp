@@ -569,10 +569,10 @@ nsSVGForeignObjectFrame::DoReflow()
 
   // initiate a synchronous reflow here and now:  
   nsSize availableSpace(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  nsCOMPtr<nsIRenderingContext> renderingContext;
   nsIPresShell* presShell = presContext->PresShell();
   NS_ASSERTION(presShell, "null presShell");
-  nsCOMPtr<nsIRenderingContext> renderingContext =
-    presShell->GetReferenceRenderingContext();
+  presShell->CreateRenderingContext(this,getter_AddRefs(renderingContext));
   if (!renderingContext)
     return;
 
