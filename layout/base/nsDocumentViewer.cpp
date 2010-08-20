@@ -503,7 +503,6 @@ protected:
 //------------------------------------------------------------------
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
-static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 static NS_DEFINE_CID(kDeviceContextCID,     NS_DEVICE_CONTEXT_CID);
 
 //------------------------------------------------------------------
@@ -2348,11 +2347,11 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
       rv = view->AttachToTopLevelWidget(mParentWidget);
     }
     else if (!aContainerView && mParentWidget) {
-      rv = view->CreateWidgetForParent(kWidgetCID, mParentWidget, initDataPtr,
+      rv = view->CreateWidgetForParent(mParentWidget, initDataPtr,
                                        PR_TRUE, PR_FALSE);
     }
     else {
-      rv = view->CreateWidget(kWidgetCID, initDataPtr, PR_TRUE, PR_FALSE);
+      rv = view->CreateWidget(initDataPtr, PR_TRUE, PR_FALSE);
     }
     if (NS_FAILED(rv))
       return rv;
