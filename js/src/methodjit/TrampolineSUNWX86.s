@@ -52,11 +52,12 @@ JaegerTrampoline:
 
     /* Build the JIT frame. Push fields in order, */
     /* then align the stack to form esp == VMFrame. */
-    pushl 20(%ebp)
+    movl  12(%ebp), %ebx                       /* fp */
+    pushl %ebx                                 /* entryFp */
+    pushl 20(%ebp)                             /* inlineCallCount */
     pushl 8(%ebp)
-    pushl 12(%ebp)
-    movl  12(%ebp), %ebx
-    subl $0x1c, %esp
+    pushl %ebx
+    subl $0x18, %esp
 
     /* Jump into the JIT'd code. */
     pushl 16(%ebp)
@@ -133,6 +134,6 @@ JaegerFromTracer:
     /* We add the stack by 8 before. */
     addl $0x8, %esp
     /* Restore frame regs. */
-    movl 0x20(%esp), %ebx
+    movl 0x1C(%esp), %ebx
     ret
 .size   JaegerFromTracer, . - JaegerFromTracer

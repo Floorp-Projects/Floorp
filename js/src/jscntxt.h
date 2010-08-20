@@ -235,6 +235,10 @@ namespace mjit {
     {
         void (* forceReturn)();
         JSC::ExecutablePool *forceReturnPool;
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+        void (* forceReturnFast)();
+        JSC::ExecutablePool *forceReturnFastPool;
+#endif
     };
 
     struct ThreadData
