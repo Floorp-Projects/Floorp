@@ -59,6 +59,8 @@ namespace widget {
 
 class PuppetWidget : public nsBaseWidget, public nsSupportsWeakReference
 {
+  typedef nsBaseWidget Base;
+
   // The width and height of the "widget" are clamped to this.
   static const size_t kMaxDimension;
 
@@ -85,6 +87,8 @@ public:
               nsIToolkit       *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull,
               PRBool           aForceUseIWidgetParent = PR_FALSE);
+
+  NS_IMETHOD Destroy();
 
   NS_IMETHOD Show(PRBool aState);
   NS_IMETHOD IsVisible(PRBool& aState)
