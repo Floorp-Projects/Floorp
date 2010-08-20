@@ -458,12 +458,7 @@ function isTest(filename, pattern)
   if (pattern)
     return pattern.test(filename);
 
-  // File name is a URL style path to a test file, make sure that we check for
-  // tests that start with test_.
-  testPattern = /^test_/;
-  pathPieces = filename.split('/');
-  
-  return testPattern.test(pathPieces[pathPieces.length - 1]) &&
+  return filename.indexOf("test_") > -1 &&
          filename.indexOf(".js") == -1 &&
          filename.indexOf(".css") == -1 &&
          !/\^headers\^$/.test(filename);

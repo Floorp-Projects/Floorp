@@ -65,8 +65,7 @@ check if nsIFile can be determined
 
   /** Test for Bug 462172 synthesizeDragStart**/
 var testFile = Components.classes["@mozilla.org/file/directory_service;1"].
-                  getService(Components.interfaces.nsIProperties).
-                  get("CurWorkD", Components.interfaces.nsIFile);
+                  getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
 var regularDtForDrag1 = null;
 
 function doOnDragStart(aEvent)

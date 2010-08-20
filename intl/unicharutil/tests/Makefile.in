@@ -39,7 +39,6 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = intl/unicharutil/tests
 
 include $(DEPTH)/config/autoconf.mk
 

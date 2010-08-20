@@ -39,7 +39,6 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = rdf/tests
 
 MODULE = test_rdf
 

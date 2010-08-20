@@ -20,8 +20,6 @@
 
 <script>
 <![CDATA[
-
-copyToProfile('animals.sqlite');
 SimpleTest.waitForExplicitFinish();
 
 
@@ -81,7 +79,7 @@ var changes = [];
 </script>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root1" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
             SELECT * FROM animals WHERE species_id = ? ORDER BY name
@@ -95,7 +93,7 @@ var changes = [];
 
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root2" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
             SELECT * FROM animals WHERE species_id = ? ORDER BY name
@@ -109,7 +107,7 @@ var changes = [];
 
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root3" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
                 SELECT * FROM animals WHERE species_id = :spec AND name like ? ORDER BY name
@@ -123,7 +121,7 @@ var changes = [];
 </listbox>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root4" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
                 SELECT * FROM animals WHERE species_id = ?3 AND name like ?1 ORDER BY name
@@ -137,7 +135,7 @@ var changes = [];
 </listbox>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root5" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
                 SELECT * FROM animals WHERE species_id = ?3 AND name like :pattern ORDER BY name
@@ -151,7 +149,7 @@ var changes = [];
 </listbox>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root6" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
             SELECT * FROM animals WHERE species_id = ? ORDER BY name

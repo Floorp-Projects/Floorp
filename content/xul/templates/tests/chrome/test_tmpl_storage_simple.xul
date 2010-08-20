@@ -20,7 +20,6 @@
 
 <script>
 <![CDATA[
-copyToProfile('animals.sqlite');
 SimpleTest.waitForExplicitFinish();
 
 var testid ="storage simple";
@@ -41,7 +40,7 @@ var changes = [];
 </script>
 
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
-      datasources="profile:animals.sqlite" querytype="storage" ref=".">
+      datasources="animals.sqlite" querytype="storage" ref=".">
 <template>
     <query>SELECT * FROM animals WHERE species_id = 2 ORDER BY name</query>
     <action>
