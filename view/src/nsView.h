@@ -194,9 +194,6 @@ protected:
   void DoResetWidgetBounds(PRBool aMoveOnly, PRBool aInvalidateChangedSize);
 
   nsRegion*    mDirtyRegion;
-
-private:
-  void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
 };
 
 #endif
