@@ -251,8 +251,6 @@ nsXULDocument::nsXULDocument(void)
     mIsXUL = PR_TRUE;
 
     mDelayFrameLoaderInitialization = PR_TRUE;
-
-    mAllowXULXBL = eTriTrue;
 }
 
 nsXULDocument::~nsXULDocument()

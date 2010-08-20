@@ -119,8 +119,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xbd862a79, 0xc31b, 0x419b, \
-  { 0x92, 0x90, 0xa0, 0x77, 0x08, 0x62, 0xd4, 0xc4 } }
+{ 0x0218352e, 0x9ddf, 0x43b0, \
+  { 0xb6, 0x1d, 0xd3, 0x1a, 0x47, 0x7a, 0xfd, 0x89 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1292,20 +1292,6 @@ public:
   PRBool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
 
   /**
-   * Returns PR_TRUE if this document is allowed to contain XUL element and
-   * use non-builtin XBL bindings.
-   */
-  PRBool AllowXULXBL() {
-    return mAllowXULXBL == eTriTrue ? PR_TRUE :
-           mAllowXULXBL == eTriFalse ? PR_FALSE :
-           InternalAllowXULXBL();
-  }
-
-  void ForceEnableXULXBL() {
-    mAllowXULXBL = eTriTrue;
-  }
-
-  /**
    * PR_TRUE when this document is a static clone of a normal document.
    * For example print preview and printing use static documents.
    */
@@ -1484,9 +1470,6 @@ protected:
   // Never ever call this. Only call GetScriptHandlingObject!
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const = 0;
 
-  // Never ever call this. Only call AllowXULXBL!
-  virtual PRBool InternalAllowXULXBL() = 0;
-
   /**
    * These methods should be called before and after dispatching
    * a mutation event.
@@ -1569,12 +1552,6 @@ protected:
 
   PRPackedBool mIsRegularHTML;
   PRPackedBool mIsXUL;
-
-  enum {
-    eTriUnset = 0,
-    eTriFalse,
-    eTriTrue
-  } mAllowXULXBL;
 
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
