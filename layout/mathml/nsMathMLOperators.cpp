@@ -115,6 +115,8 @@ SetBooleanProperty(OperatorData* aOperatorData,
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
   else if (aName.EqualsLiteral("symmetric"))
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
+  else if (aName.EqualsLiteral("integral"))
+    aOperatorData->mFlags |= NS_MATHML_OPERATOR_INTEGRAL;
 }
 
 static void
