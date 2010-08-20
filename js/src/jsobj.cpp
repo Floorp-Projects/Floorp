@@ -6081,8 +6081,11 @@ JSObject::getCompartment(JSContext *cx)
             return cx->runtime->defaultCompartment;
         }
 
-        // Compile-time Function, Block, and RegExp objects are not parented.
-        if (clasp == &js_FunctionClass || clasp == &js_BlockClass || clasp == &js_RegExpClass) {
+        /* 
+         * Script objects and compile-time Function, Block, RegExp objects
+         * are not parented.
+         */
+        if (clasp == &js_FunctionClass || clasp == &js_BlockClass || clasp == &js_RegExpClass || clasp == &js_ScriptClass) {
             // This is a bogus answer, but it'll do for now.
             return cx->runtime->defaultCompartment;
         }
