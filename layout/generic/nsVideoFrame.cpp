@@ -127,7 +127,11 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                           kNameSpaceID_XUL);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_TrustedNewXULElement(getter_AddRefs(mVideoControls), nodeInfo.forget());
+  nsresult rv = NS_NewElement(getter_AddRefs(mVideoControls),
+                              kNameSpaceID_XUL,
+                              nodeInfo.forget(),
+                              PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!aElements.AppendElement(mVideoControls))
     return NS_ERROR_OUT_OF_MEMORY;
 
