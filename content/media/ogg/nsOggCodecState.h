@@ -43,6 +43,9 @@
 #include <theora/theoradec.h>
 #include <vorbis/codec.h>
 #include <nsDeque.h>
+#include <nsTArray.h>
+#include <nsClassHashtable.h>
+#include "VideoUtils.h"
 
 class OggPageDeallocator : public nsDequeFunctor {
   virtual void* operator() (void* aPage) {
@@ -126,8 +129,6 @@ class nsOggCodecState {
   // into the bitstream.
   PRBool PageInFromBuffer();
 
-public:
-
   // Number of packets read.  
   PRUint64 mPacketCount;
 
@@ -193,6 +194,10 @@ public:
   float mPixelAspectRatio;
 };
 
+// Constructs a 32bit version number out of two 16 bit major,minor
+// version numbers.
+#define SKELETON_VERSION(major, minor) (((major)<<16)|(minor))
+
 class nsSkeletonState : public nsOggCodecState {
 public:
   nsSkeletonState(ogg_page* aBosPage);
@@ -201,6 +206,119 @@ public:
   virtual PRBool DecodeHeader(ogg_packet* aPacket);
   virtual PRInt64 Time(PRInt64 granulepos) { return -1; }
   virtual PRBool Init() { return PR_TRUE; }
+
+
+  // Stores the offset of the page on which a keyframe starts,
+  // and its presentation time.
+  class nsKeyPoint {
+  public:
+    nsKeyPoint()
+      : mOffset(PR_INT64_MAX),
+        mTime(PR_INT64_MAX) {}
+
+    nsKeyPoint(PRInt64 aOffset, PRInt64 aTime)
+      : mOffset(aOffset),
+        mTime(aTime) {}
+
+    // Offset from start of segment/link-in-the-chain in bytes.
+    PRInt64 mOffset;
+
+    // Presentation time in ms.
+    PRInt64 mTime;
+
+    PRBool IsNull() {
+      return mOffset == PR_INT64_MAX &&
+             mTime == PR_INT64_MAX;
+    }
+  };
+
+  // Stores a keyframe's byte-offset, presentation time and the serialno
+  // of the stream it belongs to.
+  class nsSeekTarget {
+  public:
+    nsSeekTarget() : mSerial(0) {}
+    nsKeyPoint mKeyPoint;
+    PRUint32 mSerial;
+    PRBool IsNull() {
+      return mKeyPoint.IsNull() &&
+             mSerial == 0;
+    }
+  };
+
+  // Determines from the seek index the keyframe which you must seek back to
+  // in order to get all keyframes required to render all streams with
+  // serialnos in aTracks, at time aTarget.
+  nsresult IndexedSeekTarget(PRInt64 aTarget,
+                             nsTArray<PRUint32>& aTracks,
+                             nsSeekTarget& aResult);
+
+  PRBool HasIndex() const {
+    return mIndex.Count() > 0;
+  }
+
+  // Returns the duration of the active tracks in the media, if we have
+  // an index. aTracks must be filled with the serialnos of the active tracks.
+  // The duration is calculated as the greatest end time of all active tracks,
+  // minus the smalled start time of all the active tracks.
+  nsresult GetDuration(const nsTArray<PRUint32>& aTracks, PRInt64& aDuration);
+
+private:
+
+  // Decodes an index packet. Returns PR_FALSE on failure.
+  PRBool DecodeIndex(ogg_packet* aPacket);
+
+  // Gets the keypoint you must seek to in order to get the keyframe required
+  // to render the stream at time aTarget on stream with serial aSerialno.
+  nsresult IndexedSeekTargetForTrack(PRUint32 aSerialno,
+                                     PRInt64 aTarget,
+                                     nsKeyPoint& aResult);
+
+  // Version of the decoded skeleton track, as per the SKELETON_VERSION macro.
+  PRUint32 mVersion;
+
+  // Length of the resource in bytes.
+  PRInt64 mLength;
+
+  // Stores the keyframe index and duration information for a particular
+  // stream.
+  class nsKeyFrameIndex {
+  public:
+
+    nsKeyFrameIndex(PRInt64 aStartTime, PRInt64 aEndTime) 
+      : mStartTime(aStartTime),
+        mEndTime(aEndTime)
+    {
+      MOZ_COUNT_CTOR(nsKeyFrameIndex);
+    }
+
+    ~nsKeyFrameIndex() {
+      MOZ_COUNT_DTOR(nsKeyFrameIndex);
+    }
+
+    void Add(PRInt64 aOffset, PRInt64 aTimeMs) {
+      mKeyPoints.AppendElement(nsKeyPoint(aOffset, aTimeMs));
+    }
+
+    const nsKeyPoint& Get(PRUint32 aIndex) const {
+      return mKeyPoints[aIndex];
+    }
+
+    PRUint32 Length() const {
+      return mKeyPoints.Length();
+    }
+
+    // Presentation time of the first sample in this stream in ms.
+    const PRInt64 mStartTime;
+
+    // End time of the last sample in this stream in ms.
+    const PRInt64 mEndTime;
+
+  private:
+    nsTArray<nsKeyPoint> mKeyPoints;
+  };
+
+  // Maps Ogg serialnos to the index-keypoint list.
+  nsClassHashtable<nsUint32HashKey, nsKeyFrameIndex> mIndex;
 };
 
 #endif

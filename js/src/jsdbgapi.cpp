@@ -721,93 +721,15 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             }
 
             /*
-             * Create a pseudo-frame for the setter invocation so that any
-             * stack-walking security code under the setter will correctly
-             * identify the guilty party.  So that the watcher appears to
-             * be active to obj_eval and other such code, point frame.pc
-             * at the JSOP_STOP at the end of the script.
-             *
-             * The pseudo-frame is not created for fast natives as they
-             * are treated as interpreter frame extensions and always
-             * trusted.
+             * Pass the output of the handler to the setter. Security wrappers
+             * prevent any funny business between watchpoints and setters.
              */
-            JSObject *closure = wp->closure;
-            Class *clasp = closure->getClass();
-            JSFunction *fun;
-            JSScript *script;
-            if (clasp == &js_FunctionClass) {
-                fun = GET_FUNCTION_PRIVATE(cx, closure);
-                script = FUN_SCRIPT(fun);
-            } else if (clasp == &js_ScriptClass) {
-                fun = NULL;
-                script = (JSScript *) closure->getPrivate();
-            } else {
-                fun = NULL;
-                script = NULL;
-            }
-
-            uintN vplen = 2;
-            if (fun)
-                vplen += fun->minArgs() + (fun->isInterpreted() ? 0 : fun->u.n.extra);
-            uintN nfixed = script ? script->nfixed : 0;
-
-            /* Destructor pops frame. */
-            JSFrameRegs regs;
-            ExecuteFrameGuard frame;
-
-            if (fun && !fun->isFastNative()) {
-                /*
-                 * Get a pointer to new frame/slots. This memory is not
-                 * "claimed", so the code before pushExecuteFrame must not
-                 * reenter the interpreter.
-                 */
-                JSStackFrame *down = js_GetTopStackFrame(cx);
-                if (!cx->stack().getExecuteFrame(cx, down, vplen, nfixed, frame)) {
-                    DBG_LOCK(rt);
-                    DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
-                    return JS_FALSE;
-                }
-
-                /* Initialize slots/frame. */
-                Value *vp = frame.getvp();
-                MakeValueRangeGCSafe(vp, vplen);
-                vp[0].setObject(*closure);
-                vp[1].setNull();  // satisfy LeaveTree assert
-                JSStackFrame *fp = frame.getFrame();
-                PodZero(fp);
-                MakeValueRangeGCSafe(fp->slots(), nfixed);
-                fp->setScript(script);
-                fp->setFunction(fun);
-                fp->argv = vp + 2;
-                fp->setScopeChain(closure->getParent());
-                fp->setArgsObj(NULL);
-
-                /* Initialize regs. */
-                regs.pc = script ? script->code : NULL;
-                regs.sp = fp->slots() + nfixed;
-
-                /* Officially push |fp|. |frame|'s destructor pops. */
-                cx->stack().pushExecuteFrame(cx, frame, regs, NULL);
-
-                /* Now that fp has been pushed, get the call object. */
-                if (script && fun && fun->isHeavyweight() &&
-                    !js_GetCallObject(cx, fp)) {
-                    DBG_LOCK(rt);
-                    DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
-                    return JS_FALSE;
-                }
-            }
-
             JSBool ok = !wp->setter ||
                         (sprop->hasSetterValue()
                          ? InternalCall(cx, obj,
                                         ObjectValue(*CastAsObject(wp->setter)),
                                         1, vp, vp)
                          : callJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
-
-            /* Evil code can cause us to have an arguments object. */
-            if (frame.getFrame())
-                frame.getFrame()->putActivationObjects(cx);
 
             DBG_LOCK(rt);
             return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;
@@ -874,7 +796,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
 
 JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
-                 JSWatchPointHandler handler, void *closure)
+                 JSWatchPointHandler handler, JSObject *closure)
 {
     JSObject *origobj;
     Value v;
@@ -1028,7 +950,7 @@ out:
 
 JS_PUBLIC_API(JSBool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
-                   JSWatchPointHandler *handlerp, void **closurep)
+                   JSWatchPointHandler *handlerp, JSObject **closurep)
 {
     JSRuntime *rt;
     JSWatchPoint *wp;

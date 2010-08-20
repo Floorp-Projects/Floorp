@@ -82,57 +82,25 @@ public:
     /**
      * Return the location at which the *value* for the property is
      * stored, or null if the block does not contain a value for the
-     * property.  This is either an |nsCSSValue*|, |nsCSSRect*|, or an
-     * |nsCSSValueList**|, etc.
+     * property.
      *
      * Inefficient (by design).
      *
      * Must not be called for shorthands.
      */
-    const void* StorageFor(nsCSSProperty aProperty) const;
+    const nsCSSValue* ValueFor(nsCSSProperty aProperty) const;
 
     /**
-     * As above, but provides mutable access to a value slot.
+     * Attempt to replace the value for |aProperty| stored in this block
+     * with the matching value stored in |aFromBlock|.
+     * This method will fail (returning PR_FALSE) if |aProperty| is not
+     * already in this block.  It will set |aChanged| to true if it
+     * actually made a change to the block, but regardless, if it
+     * returns PR_TRUE, the value in |aFromBlock| was erased.
      */
-    void* SlotForValue(nsCSSProperty aProperty) {
-      return const_cast<void*>(StorageFor(aProperty));
-    }
-
-    /**
-     * A set of slightly more typesafe helpers for the above.  All
-     * return null if the value is not present.
-     */
-    const nsCSSValue* ValueStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
-                        "type mismatch");
-      return static_cast<const nsCSSValue*>(StorageFor(aProperty));
-    }
-    const nsCSSRect* RectStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Rect,
-                        "type mismatch");
-      return static_cast<const nsCSSRect*>(StorageFor(aProperty));
-    }
-    const nsCSSValuePair* ValuePairStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_ValuePair,
-                        "type mismatch");
-      return static_cast<const nsCSSValuePair*>(StorageFor(aProperty));
-    }
-    const nsCSSValueList*const*
-    ValueListStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_ValueList,
-                        "type mismatch");
-      return static_cast<const nsCSSValueList*const*>(StorageFor(aProperty));
-    }
-    const nsCSSValuePairList*const*
-    ValuePairListStorageFor(nsCSSProperty aProperty) const {
-      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
-                          eCSSType_ValuePairList,
-                        "type mismatch");
-      return static_cast<const nsCSSValuePairList*const*>(
-               StorageFor(aProperty));
-    }
+    PRBool TryReplaceValue(nsCSSProperty aProperty,
+                           nsCSSExpandedDataBlock& aFromBlock,
+                           PRBool* aChanged);
 
     /**
      * Clone this block, or return null on out-of-memory.
@@ -143,19 +111,6 @@ public:
      * Create a new nsCSSCompressedDataBlock holding no declarations.
      */
     static nsCSSCompressedDataBlock* CreateEmptyBlock();
-
-    /**
-     * Does a fast move of aSource to aDest.  The previous value in
-     * aDest is cleanly destroyed, and aSource is cleared.  *aChanged
-     * is set true if, before the copy, the value at aSource compares
-     * unequal to the value at aDest.
-     *
-     * This can only be used for non-shorthand properties.  The caller
-     * must make sure that the source and destination locations point
-     * to the right kind of objects for the property id.
-     */
-    static void MoveValue(void *aSource, void *aDest, nsCSSProperty aPropID,
-                          PRBool* aChanged);
 
 private:
     PRInt32 mStyleBits; // the structs for which we have data, according to
@@ -186,12 +141,15 @@ private:
 };
 
 class nsCSSExpandedDataBlock {
+    friend class nsCSSCompressedDataBlock;
+
 public:
     nsCSSExpandedDataBlock();
     ~nsCSSExpandedDataBlock();
-    /*
-     * When setting properties in an |nsCSSExpandedDataBlock|, callers
-     * must make the appropriate |AddPropertyBit| call.
+
+private:
+    /* Property storage may not be accessed directly; use AddLonghandProperty
+     * and friends.
      */
 
     nsCSSFont mFont;
@@ -211,6 +169,7 @@ public:
     nsCSSSVG mSVG;
     nsCSSColumn mColumn;
 
+public:
     /**
      * Transfer all of the state from a pair of compressed data blocks
      * to this expanded block.  This expanded block must be clear
@@ -224,12 +183,21 @@ public:
                 nsCSSCompressedDataBlock *aImportantBlock);
 
     /**
-     * Allocate a new compressed block and transfer all of the state
-     * from this expanded block to the new compressed block, clearing
-     * the state of this expanded block.
+     * Allocate new compressed blocks and transfer all of the state
+     * from this expanded block to the new blocks, clearing this
+     * expanded block.  A normal block will always be allocated, but
+     * an important block will only be allocated if there are
+     * !important properties in the expanded block; otherwise
+     * |*aImportantBlock| will be set to null.
      */
     void Compress(nsCSSCompressedDataBlock **aNormalBlock,
                   nsCSSCompressedDataBlock **aImportantBlock);
+
+    /**
+     * Copy a value into this expanded block.  This does NOT destroy
+     * the source value object.  |aProperty| cannot be a shorthand.
+     */
+    void AddLonghandProperty(nsCSSProperty aProperty, const nsCSSValue& aValue);
 
     /**
      * Clear the state of this expanded block.
@@ -254,18 +222,16 @@ public:
      * existing !important property regardless of its own importance
      * if |aOverrideImportant| is true.
      *
-     * Sets |*aChanged| to true if something changed, leaves it
-     * unmodified otherwise.  Calls |ValueAppended| on |aDeclaration|
-     * if the property was not previously set, or in any case if
-     * |aMustCallValueAppended| is true.
+     * Returns true if something changed, false otherwise.  Calls
+     * |ValueAppended| on |aDeclaration| if the property was not
+     * previously set, or in any case if |aMustCallValueAppended| is true.
      */
-    void TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                           nsCSSProperty aPropID,
-                           PRBool aIsImportant,
-                           PRBool aOverrideImportant,
-                           PRBool aMustCallValueAppended,
-                           mozilla::css::Declaration* aDeclaration,
-                           PRBool* aChanged);
+    PRBool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                             nsCSSProperty aPropID,
+                             PRBool aIsImportant,
+                             PRBool aOverrideImportant,
+                             PRBool aMustCallValueAppended,
+                             mozilla::css::Declaration* aDeclaration);
 
     void AssertInitialState() {
 #ifdef DEBUG
@@ -288,13 +254,12 @@ private:
     /**
      * Worker for TransferFromBlock; cannot be used with shorthands.
      */
-    void DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                             nsCSSProperty aPropID,
-                             PRBool aIsImportant,
-                             PRBool aOverrideImportant,
-                             PRBool aMustCallValueAppended,
-                             mozilla::css::Declaration* aDeclaration,
-                             PRBool* aChanged);
+    PRBool DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                               nsCSSProperty aPropID,
+                               PRBool aIsImportant,
+                               PRBool aOverrideImportant,
+                               PRBool aMustCallValueAppended,
+                               mozilla::css::Declaration* aDeclaration);
 
 #ifdef DEBUG
     void DoAssertInitialState();
@@ -316,15 +281,14 @@ private:
      */
     nsCSSPropertySet mPropertiesImportant;
 
-public:
     /*
      * Return the storage location within |this| of the value of the
-     * property (i.e., either an |nsCSSValue*|, |nsCSSRect*|, or
-     * |nsCSSValueList**| (etc.).
+     * property |aProperty|.
      */
-    void* PropertyAt(nsCSSProperty aProperty) {
+    nsCSSValue* PropertyAt(nsCSSProperty aProperty) {
         size_t offset = nsCSSExpandedDataBlock::kOffsetTable[aProperty];
-        return reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
+        return reinterpret_cast<nsCSSValue*>(reinterpret_cast<char*>(this) +
+                                             offset);
     }
 
     void SetPropertyBit(nsCSSProperty aProperty) {

@@ -7,7 +7,8 @@
 <!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
-
+<!ENTITY installFromFile.label                "Install from file…">
+<!ENTITY installFromFile.accesskey            "I">
 
 <!-- categories / views -->
 <!-- LOCALIZATION NOTE: These should match the header-* entries in extensions.properties -->
