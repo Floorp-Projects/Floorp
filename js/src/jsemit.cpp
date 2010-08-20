@@ -1874,7 +1874,7 @@ static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
     JSContext *cx = cg->parser->context;
-    JSFunction *fun = cg->parser->callerFrame->fun;
+    JSFunction *fun = cg->parser->callerFrame->getFunction();
     uintN upvarLevel = fun->u.i.script->staticLevel;
 
     JSFunctionBox *funbox = cg->funbox;
@@ -2059,8 +2059,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (cg->flags & TCF_IN_FOR_INIT)
                 return JS_TRUE;
 
-            JS_ASSERT(caller->script);
-            if (!caller->fun)
+            JS_ASSERT(caller->hasScript());
+            if (!caller->hasFunction())
                 return JS_TRUE;
 
             /*
@@ -2089,7 +2089,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            JSFunction *fun = cg->parser->callerFrame->fun;
+            JSFunction *fun = cg->parser->callerFrame->getFunction();
             JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
             unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
             if (cg->skipSpansGenerator(skip))
@@ -2159,7 +2159,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSStackFrame *caller = cg->parser->callerFrame;
 #endif
         JS_ASSERT(caller);
-        JS_ASSERT(caller->script);
+        JS_ASSERT(caller->hasScript());
 
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
@@ -2168,7 +2168,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->compileAndGo());
-        JS_ASSERT(caller->fun && cg->parser->callerVarObj == evalcg->scopeChain);
+        JS_ASSERT(caller->hasFunction() && cg->parser->callerVarObj == evalcg->scopeChain);
 
         /*
          * Don't generate upvars on the left side of a for loop. See
@@ -2821,7 +2821,9 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
-                (jsuint)slot < JS_BIT(16)) {
+                jsuint(slot) < JS_BIT(16) &&
+                (!cg->inStrictMode() ||
+                 (!cg->mutatesParameter() && !cg->callsEval()))) {
                 /*
                  * arguments[i]() requires arguments object as "this".
                  * Check that we never generates list for that usage.
@@ -2895,7 +2897,9 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
-                (jsuint)slot < JS_BIT(16)) {
+                jsuint(slot) < JS_BIT(16) &&
+                (!cg->inStrictMode() ||
+                 (!cg->mutatesParameter() && !cg->callsEval()))) {
                 left->pn_offset = right->pn_offset = top;
                 EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
                 return JS_TRUE;
@@ -3545,6 +3549,13 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
          */
         if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
             return false;
+    }
+
+    if (cg->needsEagerArguments()) {
+        CG_SWITCH_TO_PROLOG(cg);
+        if (js_Emit1(cx, cg, JSOP_ARGUMENTS) < 0 || js_Emit1(cx, cg, JSOP_POP) < 0)
+            return false;
+        CG_SWITCH_TO_MAIN(cg);
     }
 
     if (cg->flags & TCF_FUN_UNBRAND_THIS) {
