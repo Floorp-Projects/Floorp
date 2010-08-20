@@ -316,6 +316,10 @@ nsLayoutStatics::Shutdown()
   nsCellMap::Shutdown();
   nsFrame::ShutdownLayerActivityTimer();
 
+#ifdef MOZ_SVG
+  nsSVGUtils::Shutdown();
+#endif
+
   // Release all of our atoms
   nsColorNames::ReleaseTable();
   nsCSSProps::ReleaseTable();
