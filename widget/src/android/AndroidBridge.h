@@ -122,7 +122,7 @@ public:
                            const nsAString& aPackageName = EmptyString(), 
                            const nsAString& aClassName = EmptyString());
 
-    void GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType);
+    void GetMimeTypeFromExtension(const nsACString& aFileExt, nsCString& aMimeType);
 
     void MoveTaskToBack();
 
