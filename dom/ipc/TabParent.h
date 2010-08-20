@@ -249,6 +249,11 @@ protected:
 
     PRBool ShouldDelayDialogs();
 
+    NS_OVERRIDE
+    virtual PRenderFrameParent* AllocPRenderFrame();
+    NS_OVERRIDE
+    virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame);
+
     PRUint32 mSecurityState;
     nsString mSecurityTooltipText;
     nsCOMPtr<nsISupports> mSecurityStatusObject;

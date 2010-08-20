@@ -49,10 +49,7 @@ ShadowLayersChild::Destroy()
 {
   NS_ABORT_IF_FALSE(0 == ManagedPLayerChild().Length(),
                     "layers should have been cleaned up by now");
-  //
-  // FIXME: uncomment this when we have a manager
-  //
-  //PLayersChild::Send__delete__(this);
+  PLayersChild::Send__delete__(this);
   // WARNING: |this| has gone to the great heap in the sky
 }
 

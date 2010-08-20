@@ -39,6 +39,7 @@
 #include "TabChild.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/PContentDialogChild.h"
+#include "mozilla/layout/RenderFrameChild.h"
 
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserSetup.h"
@@ -88,6 +89,7 @@
 #include "nsIView.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::layout;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -403,13 +405,15 @@ TabChild::ArraysToParams(const nsTArray<int>& aIntParams,
   }
 }
 
-
 void
 TabChild::DestroyWindow()
 {
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (baseWindow)
         baseWindow->Destroy();
+
+    if (mWidget)
+        mWidget->Destroy();
 }
 
 void
@@ -1026,6 +1030,19 @@ TabChild::RecvDestroy()
   DestroyWindow();
 
   return Send__delete__(this);
+}
+
+PRenderFrameChild*
+TabChild::AllocPRenderFrame()
+{
+    return new RenderFrameChild();
+}
+
+bool
+TabChild::DeallocPRenderFrame(PRenderFrameChild* aFrame)
+{
+    delete aFrame;
+    return true;
 }
 
 bool
