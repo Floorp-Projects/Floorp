@@ -1069,6 +1069,12 @@ XPC_WN_Helper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if(!(obj = JSVAL_TO_OBJECT(argv[-2])))
         return JS_FALSE;
 
+    XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, JSID_VOID, argc, argv, rval);
+    if(!ccx.IsValid())
+        return JS_FALSE;
+
+    JS_ASSERT(obj == ccx.GetFlattenedJSObject());
+
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
     Call(wrapper, cx, obj, argc, argv, rval, &retval);
@@ -1083,6 +1089,12 @@ XPC_WN_Helper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     // that JS thinks is the 'this' (which it passes as 'obj').
     if(!(obj = JSVAL_TO_OBJECT(argv[-2])))
         return JS_FALSE;
+
+    XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, JSID_VOID, argc, argv, rval);
+    if(!ccx.IsValid())
+        return JS_FALSE;
+
+    JS_ASSERT(obj == ccx.GetFlattenedJSObject());
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
