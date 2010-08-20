@@ -1177,6 +1177,16 @@ public:
   {
     NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
   }
+
+  virtual void Disconnect()
+  {
+    // This is an "emergency Disconnect()", called when the compositing
+    // process has died.  |mShadow| and our Shmem buffers are
+    // automatically managed by IPDL, so we don't need to explicitly
+    // free them here (it's hard to get that right on emergency
+    // shutdown anyway).
+    mShadow = nsnull;
+  }
 };
 
 static ShadowableLayer*
@@ -1211,6 +1221,11 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+
+  virtual void Disconnect()
+  {
+    BasicShadowableLayer::Disconnect();
+  }
 
 private:
   BasicShadowLayerManager* ShadowManager()
@@ -1269,6 +1284,12 @@ public:
   virtual void SetBackBuffer(gfxSharedImageSurface* aBuffer)
   {
     mBackBuffer = aBuffer;
+  }
+
+  virtual void Disconnect()
+  {
+    mBackBuffer = nsnull;
+    BasicShadowableLayer::Disconnect();
   }
 
 private:
@@ -1375,6 +1396,12 @@ public:
     mBackSurface = aBuffer;
   }
 
+  virtual void Disconnect()
+  {
+    mBackSurface = nsnull;
+    BasicShadowableLayer::Disconnect();
+  }
+
 private:
   BasicShadowLayerManager* BasicManager()
   {
@@ -1439,6 +1466,11 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+
+  virtual void Disconnect()
+  {
+    BasicShadowableLayer::Disconnect();
+  }
 };
 
 class BasicShadowableCanvasLayer : public BasicCanvasLayer,
@@ -1475,6 +1507,12 @@ public:
   virtual void SetBackBuffer(gfxSharedImageSurface* aBuffer)
   {
     mBackBuffer = aBuffer;
+  }
+ 
+  virtual void Disconnect()
+  {
+    mBackBuffer = nsnull;
+    BasicShadowableLayer::Disconnect();
   }
 
 private:
@@ -1567,7 +1605,15 @@ public:
   {
     MOZ_COUNT_CTOR(BasicShadowThebesLayer);
   }
-  virtual ~BasicShadowThebesLayer();
+  virtual ~BasicShadowThebesLayer()
+  {
+    // If Disconnect() wasn't called on us, then we assume that the
+    // remote side shut down and IPC is disconnected, so we let IPDL
+    // clean up our front surface Shmem.
+    MOZ_COUNT_DTOR(BasicShadowThebesLayer);
+  }
+
+  virtual void Disconnect();
 
   virtual already_AddRefed<gfxSharedImageSurface>
   Swap(gfxSharedImageSurface* aNewFront,
@@ -1591,7 +1637,8 @@ private:
   ShadowThebesLayerBuffer mFrontBuffer;
 };
 
-BasicShadowThebesLayer::~BasicShadowThebesLayer()
+void
+BasicShadowThebesLayer::Disconnect()
 {
   nsRefPtr<gfxSharedImageSurface> frontBuffer =
     mFrontBuffer.Swap(0, nsIntRect());
@@ -1599,7 +1646,7 @@ BasicShadowThebesLayer::~BasicShadowThebesLayer()
     BasicManager()->ShadowLayerManager::DestroySharedSurface(frontBuffer);
   }
 
-  MOZ_COUNT_DTOR(BasicShadowThebesLayer);
+  ShadowThebesLayer::Disconnect();
 }
 
 void
@@ -1612,6 +1659,10 @@ BasicShadowThebesLayer::Paint(gfxContext* aContext,
                "Can only draw in drawing phase");
   NS_ASSERTION(BasicManager()->IsRetained(),
                "ShadowThebesLayer makes no sense without retained mode");
+
+  if (!mFrontBuffer.GetBuffer()) {
+    return;
+  }
 
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
@@ -1635,11 +1686,10 @@ public:
   }
   virtual ~BasicShadowImageLayer()
   {
-    if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
-    }
     MOZ_COUNT_DTOR(BasicShadowImageLayer);
   }
+
+  virtual void Disconnect();
 
   virtual PRBool Init(gfxSharedImageSurface* front, const nsIntSize& size);
 
@@ -1661,6 +1711,17 @@ protected:
   nsRefPtr<gfxSharedImageSurface> mFrontSurface;
   gfxIntSize mSize;
 };
+
+void
+BasicShadowImageLayer::Disconnect()
+{
+  if (mFrontSurface) {
+    BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+  }
+  mFrontSurface = nsnull;
+
+  ShadowImageLayer::Disconnect();
+}
 
 PRBool
 BasicShadowImageLayer::Init(gfxSharedImageSurface* front,
@@ -1685,6 +1746,10 @@ BasicShadowImageLayer::Paint(gfxContext* aContext,
                              void* aCallbackData,
                              float aOpacity)
 {
+  if (!mFrontSurface) {
+    return;
+  }
+
   nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
   pat->SetFilter(mFilter);
   BasicImageLayer::PaintContext(pat, mSize, aOpacity, aContext);
@@ -1701,11 +1766,10 @@ public:
   }
   virtual ~BasicShadowCanvasLayer()
   {
-    if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
-    }
     MOZ_COUNT_DTOR(BasicShadowCanvasLayer);
   }
+
+  virtual void Disconnect();
 
   virtual void Initialize(const Data& aData);
 
@@ -1729,6 +1793,17 @@ private:
   nsRefPtr<gfxSharedImageSurface> mFrontSurface;
   nsIntRect mBounds;
 };
+
+void
+BasicShadowCanvasLayer::Disconnect()
+{
+  if (mFrontSurface) {
+    BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+  }
+  mFrontSurface = nsnull;
+
+  ShadowCanvasLayer::Disconnect();
+}
 
 void
 BasicShadowCanvasLayer::Initialize(const Data& aData)
@@ -1755,10 +1830,12 @@ BasicShadowCanvasLayer::Paint(gfxContext* aContext,
                               void* aCallbackData,
                               float aOpacity)
 {
-  MOZ_LAYERS_LOG(("[ShadowLayersChild] %s()", __FUNCTION__));
-
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
+
+  if (!mFrontSurface) {
+    return;
+  }
 
   nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
 

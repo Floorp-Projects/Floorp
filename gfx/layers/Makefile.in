@@ -105,10 +105,14 @@ ifdef MOZ_IPC #{
 EXPORTS_NAMESPACES = mozilla/layers
 EXPORTS_mozilla/layers =\
         ShadowLayers.h \
+        ShadowLayersChild.h \
+        ShadowLayersParent.h \
         $(NULL)
 
 CPPSRCS += \
         ShadowLayers.cpp \
+        ShadowLayerChild.cpp \
+        ShadowLayersChild.cpp \
         ShadowLayerParent.cpp \
         ShadowLayersParent.cpp \
         $(NULL)
@@ -135,4 +139,3 @@ LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS
 LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h
 
 GARBAGE += LayerManagerOGLShaders.h
-
