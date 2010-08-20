@@ -52,19 +52,23 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
                                         PRBool* aFound)
 {
-    // XXX Bug 579388 - need to remote this
-    if (!mozilla::AndroidBridge::Bridge())
-        return nsnull;
-
+    nsRefPtr<nsMIMEInfoAndroid> mimeInfo;
     *aFound = PR_FALSE;
-    already_AddRefed<nsIMIMEInfo> mimeInfo = 
-            nsMIMEInfoAndroid::GetMimeInfoForMimeType(aMIMEType);
-    if (!mimeInfo.get())
-            mimeInfo = nsMIMEInfoAndroid::GetMimeInfoForFileExt(aFileExt);
+    if (!aMIMEType.IsEmpty())
+        *aFound = 
+            nsMIMEInfoAndroid::GetMimeInfoForMimeType(aMIMEType, 
+                                                      getter_AddRefs(mimeInfo));
+    if (!*aFound)
+        *aFound =
+            nsMIMEInfoAndroid::GetMimeInfoForFileExt(aFileExt, 
+                                                     getter_AddRefs(mimeInfo));
 
-    *aFound = !!mimeInfo.get();
-    
-    return mimeInfo;
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    if (!*aFound)
+        mimeInfo = new nsMIMEInfoAndroid(aMIMEType);
+
+    return mimeInfo.forget();
 }
 
 nsresult
