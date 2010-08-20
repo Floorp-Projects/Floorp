@@ -1088,10 +1088,20 @@ case "$target" in
         dnl Use the specified value
         export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
         AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
-    elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
+    else
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.
-        export MACOSX_DEPLOYMENT_TARGET=10.5
+        case "${target_cpu}" in
+          ppc*)
+            export MACOSX_DEPLOYMENT_TARGET=10.5
+            ;;
+          i*86)
+            export MACOSX_DEPLOYMENT_TARGET=10.5
+            ;;
+          x86_64)
+            export MACOSX_DEPLOYMENT_TARGET=10.6
+            ;;
+        esac
     fi
     ;;
 esac
