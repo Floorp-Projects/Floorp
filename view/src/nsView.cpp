@@ -660,50 +660,33 @@ static PRInt32 FindNonAutoZIndex(nsView* aView)
 
 nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
                                nsWidgetInitData *aWidgetInitData,
+                               nsNativeWidget aNative,
                                PRBool aEnableDragDrop,
                                PRBool aResetVisibility,
-                               nsContentType aContentType)
+                               nsContentType aContentType,
+                               nsIWidget* aParentWidget)
 {
-  return Impl()->CreateWidget(aWindowIID, aWidgetInitData,
+  return Impl()->CreateWidget(aWindowIID, aWidgetInitData, aNative,
                               aEnableDragDrop, aResetVisibility,
-                              aContentType);
-}
-
-nsresult nsIView::CreateWidgetForParent(const nsIID &aWindowIID,
-                                        nsIWidget* aParentWidget,
-                                        nsWidgetInitData *aWidgetInitData,
-                                        PRBool aEnableDragDrop,
-                                        PRBool aResetVisibility,
-                                        nsContentType aContentType)
-{
-  return Impl()->CreateWidgetForParent(aWindowIID, aParentWidget, 
-                                       aWidgetInitData,
-                                       aEnableDragDrop, aResetVisibility,
-                                       aContentType);
-}
-
-nsresult nsIView::CreateWidgetForPopup(const nsIID &aWindowIID,
-                                       nsWidgetInitData *aWidgetInitData,
-                                       nsIWidget* aParentWidget,
-                                       PRBool aEnableDragDrop,
-                                       PRBool aResetVisibility,
-                                       nsContentType aContentType)
-{
-  return Impl()->CreateWidgetForPopup(aWindowIID, aWidgetInitData,
-                                      aParentWidget,
-                                      aEnableDragDrop, aResetVisibility,
-                                      aContentType);
+                              aContentType, aParentWidget);
 }
 
 nsresult nsView::CreateWidget(const nsIID &aWindowIID,
                               nsWidgetInitData *aWidgetInitData,
+                              nsNativeWidget aNative,
                               PRBool aEnableDragDrop,
                               PRBool aResetVisibility,
-                              nsContentType aContentType)
+                              nsContentType aContentType,
+                              nsIWidget* aParentWidget)
 {
-  NS_ABORT_IF_FALSE(!aWidgetInitData ||
-                    aWidgetInitData->mWindowType != eWindowType_popup,
-                    "Use CreateWidgetForPopup");
+  if (NS_UNLIKELY(mWindow)) {
+    NS_ERROR("We already have a window for this view? BAD");
+    ViewWrapper* wrapper = GetWrapperFor(mWindow);
+    NS_IF_RELEASE(wrapper);
+    mWindow->SetClientData(nsnull);
+    mWindow->Destroy();
+    NS_RELEASE(mWindow);
+  }
 
   nsresult rv = LoadWidget(aWindowIID);
   if (NS_FAILED(rv)) {
@@ -727,91 +710,38 @@ nsresult nsView::CreateWidget(const nsIID &aWindowIID,
   nsCOMPtr<nsIDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
 
-  initData.mListenForResizes = (!initDataPassedIn && GetParent() && 
-                                GetParent()->GetViewManager() != mViewManager);
+  if (aWidgetInitData->mWindowType == eWindowType_popup) {
+    if (aParentWidget) {
+      mWindow->Create(aParentWidget, nsnull, trect,
+                      ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+    }
+    else {
+      // XXX/cjones: having these two separate creation cases seems
+      // ... um ... unnecessary, but it's the way the old code did it.
+      // Please unify them by first finding a suitable parent nsIWidget,
+      // then passing only either the non-null parentWidget or the
+      // native ID to Create().
+      nsIWidget* nearestParent = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                             : nsnull;
+      if (!nearestParent) {
+        // Without a parent, we can't make a popup.  This can happen
+        // when printing
+        return NS_ERROR_FAILURE;
+      }
 
-  nsIWidget* parentWidget =
-    GetParent() ? GetParent()->GetNearestWidget(nsnull) : nsnull;
-
-  mWindow->Create(parentWidget, nsnull,
-                  trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-
-  InitializeWindow(aEnableDragDrop, aResetVisibility);
-
-  return NS_OK;
-}
-
-nsresult nsView::CreateWidgetForParent(const nsIID &aWindowIID,
-                                       nsIWidget* aParentWidget,
-                                       nsWidgetInitData *aWidgetInitData,
-                                       PRBool aEnableDragDrop,
-                                       PRBool aResetVisibility,
-                                       nsContentType aWindowType)
-{
-  NS_ABORT_IF_FALSE(!aWidgetInitData ||
-                    aWidgetInitData->mWindowType != eWindowType_popup,
-                    "Use CreateWidgetForPopup");
-  NS_ABORT_IF_FALSE(aParentWidget, "Parent widget required");
-
-  nsresult rv = LoadWidget(aWindowIID);
-  if (NS_FAILED(rv)) {
-    return rv;
+      mWindow->Create(nsnull, nearestParent->GetNativeData(NS_NATIVE_WIDGET), trect,
+                      ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+    }
   }
-
-  nsIntRect trect = CalcWidgetBounds(
-    aWidgetInitData ? aWidgetInitData->mWindowType : eWindowType_child);
-
-  nsCOMPtr<nsIDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
-
-  mWindow->Create(nsnull, aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
-                  trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-
-  InitializeWindow(aEnableDragDrop, aResetVisibility);
-
-  return NS_OK;
-}
-
-nsresult nsView::CreateWidgetForPopup(const nsIID &aWindowIID,
-                                      nsWidgetInitData *aWidgetInitData,
-                                      nsIWidget* aParentWidget,
-                                      PRBool aEnableDragDrop,
-                                      PRBool aResetVisibility,
-                                      nsContentType aWindowType)
-{
-  NS_ABORT_IF_FALSE(aWidgetInitData, "Widget init data required");
-  NS_ABORT_IF_FALSE(aWidgetInitData->mWindowType == eWindowType_popup,
-                    "Use one of the other CreateWidget methods");
-
-  nsresult rv = LoadWidget(aWindowIID);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
-
-  nsCOMPtr<nsIDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
-
-  // XXX/cjones: having these two separate creation cases seems ... um
-  // ... unnecessary, but it's the way the old code did it.  Please
-  // unify them by first finding a suitable parent nsIWidget, then
-  // passing only either the non-null parentWidget or the native ID to
-  // Create().
-  if (aParentWidget) {
-    mWindow->Create(aParentWidget, nsnull, trect,
-                    ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+  else if (aNative) {
+    mWindow->Create(nsnull, aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
   }
   else {
-    nsIWidget* nearestParent = GetParent() ? GetParent()->GetNearestWidget(nsnull)
-                                           : nsnull;
-    if (!nearestParent) {
-      // Without a parent, we can't make a popup.  This can happen
-      // when printing
-      return NS_ERROR_FAILURE;
-    }
-
-    mWindow->Create(nsnull, nearestParent->GetNativeData(NS_NATIVE_WIDGET), trect,
+    initData.mListenForResizes = (!initDataPassedIn && GetParent() && 
+                                  GetParent()->GetViewManager() != mViewManager);
+    nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                          : nsnull;
+    mWindow->Create(parentWidget, nsnull, trect,
                     ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
   }
 
@@ -821,7 +751,7 @@ nsresult nsView::CreateWidgetForPopup(const nsIID &aWindowIID,
 }
 
 void
-nsView::InitializeWindow(PRBool aEnableDragDrop, PRBool aResetVisibility)
+nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
 {
   NS_ABORT_IF_FALSE(mWindow, "Must have a window to initialize");
 
@@ -911,14 +841,7 @@ void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
 //
 nsresult nsView::LoadWidget(const nsCID &aClassIID)
 {
-  if (NS_UNLIKELY(mWindow)) {
-    NS_ERROR("We already have a window for this view? BAD");
-    ViewWrapper* wrapper = GetWrapperFor(mWindow);
-    NS_IF_RELEASE(wrapper);
-    mWindow->SetClientData(nsnull);
-    mWindow->Destroy();
-    NS_RELEASE(mWindow);
-  }
+  NS_ABORT_IF_FALSE(!mWindow, "Already have a widget?");
 
   nsresult rv = CallCreateInstance(aClassIID, &mWindow);
   if (NS_FAILED(rv)) {

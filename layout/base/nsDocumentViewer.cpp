@@ -2320,13 +2320,9 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool isExternalResource = !!mDocument->GetDisplayDocument();
-
-  // Create a widget if we were given a parent widget or don't have a
-  // container view that we can hook up to without a widget.  Don't
-  // create widgets for external resource documents, since they're not
-  // displayed.
-  if (!isExternalResource && (mParentWidget || !aContainerView)) {
+  // Don't create a widget if we weren't given a parent widget but we
+  // have a container view we can hook up to without a widget
+  if (mParentWidget || !aContainerView) {
     // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
     // otherwise the view will find its own parent widget and "do the right thing" to
     // establish a parent/child widget relationship
@@ -2347,12 +2343,11 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
       // Reuse the top level parent widget.
       rv = view->AttachToTopLevelWidget(mParentWidget);
     }
-    else if (!aContainerView && mParentWidget) {
-      rv = view->CreateWidgetForParent(kWidgetCID, mParentWidget, initDataPtr,
-                                       PR_TRUE, PR_FALSE);
-    }
     else {
-      rv = view->CreateWidget(kWidgetCID, initDataPtr, PR_TRUE, PR_FALSE);
+      nsNativeWidget nw = (aContainerView != nsnull || !mParentWidget) ?
+                 nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+      rv = view->CreateWidget(kWidgetCID, initDataPtr,
+                              nw, PR_TRUE, PR_FALSE);
     }
     if (NS_FAILED(rv))
       return rv;
