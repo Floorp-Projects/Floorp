@@ -671,8 +671,17 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
     if (!js_XDRScript(xdr, scriptp, true, NULL))
         return JS_FALSE;
-    if (xdr->mode == JSXDR_DECODE)
+
+    if (xdr->mode == JSXDR_DECODE) {
         js_CallNewScriptHook(xdr->cx, *scriptp, NULL);
+        if (*scriptp != JSScript::emptyScript() &&
+            !js_NewScriptObject(xdr->cx, *scriptp)) {
+            js_DestroyScript(xdr->cx, *scriptp);
+            *scriptp = NULL;
+            return JS_FALSE;
+        }
+    }
+
     return JS_TRUE;
 }
 
