@@ -79,6 +79,8 @@
                       xbl:inherits="open,enablehistory,parentfocused=focused"/>
 
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
+
+      <children includes="toolbarbutton"/>
     </content>
 
     <implementation implements="nsIAccessibleProvider, nsIAutoCompleteInput, nsIDOMXULMenuListElement">
@@ -1440,7 +1442,7 @@
             this._extraBox.childNodes[1].hidden = false;
             this._extraBox.pack = "start";
             this._titleBox.flex = 0;
-            
+
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
             let params = "";
