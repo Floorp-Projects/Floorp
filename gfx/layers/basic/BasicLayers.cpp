@@ -112,6 +112,13 @@ public:
                      float aOpacity) {}
 
   virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
+
+  /**
+   * Layers will get this call when their layer manager is destroyed, this
+   * indicates they should clear resources they don't really need after their
+   * LayerManager ceases to exist.
+   */
+  virtual void ClearCachedResources() {}
 };
 
 static BasicImplData*
@@ -290,6 +297,8 @@ public:
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
                      float aOpacity);
+
+  virtual void ClearCachedResources() { mBuffer.Clear(); mValidRegion.SetEmpty(); }
   
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize)
@@ -856,6 +865,8 @@ BasicLayerManager::~BasicLayerManager()
 {
   NS_ASSERTION(!InTransaction(), "Died during transaction?");
 
+  ClearCachedResources();
+
   mRoot = nsnull;
 
   MOZ_COUNT_DTOR(BasicLayerManager);
@@ -1075,6 +1086,25 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     }
 
     mTarget->Restore();
+  }
+}
+
+void
+BasicLayerManager::ClearCachedResources()
+{
+  if (mRoot) {
+    ClearLayer(mRoot);
+  }
+
+  mCachedSurface.Expire();
+}
+void
+BasicLayerManager::ClearLayer(Layer* aLayer)
+{
+  ToData(aLayer)->ClearResources();
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    ClearLayer(child);
   }
 }
 
