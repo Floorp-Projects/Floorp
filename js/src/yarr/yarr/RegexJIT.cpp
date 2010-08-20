@@ -1410,7 +1410,7 @@ class RegexGenerator : private MacroAssembler {
         push(X86Registers::edi);
         push(X86Registers::esi);
         // load output into edi (2 = saved ebp + return address).
-    #if WTF_COMPILER_MSVC
+    #if WTF_COMPILER_MSVC || WTF_COMPILER_SUNPRO
         loadPtr(Address(X86Registers::ebp, 2 * sizeof(void*)), input);
         loadPtr(Address(X86Registers::ebp, 3 * sizeof(void*)), index);
         loadPtr(Address(X86Registers::ebp, 4 * sizeof(void*)), length);
