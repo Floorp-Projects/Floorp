@@ -1112,7 +1112,6 @@ namespace nanojit
         a.free = SavedRegs | ScratchRegs;
         if (!_config.i386_sse2)
             a.free &= ~XmmRegs;
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* targ)
@@ -2059,14 +2058,13 @@ namespace nanojit
 
         Register rf = findRegFor(iffalse, allow & ~rmask(rr));
 
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
         if (ins->isop(LIR_cmovd)) {
             NIns* target = _nIns;
             asm_nongp_copy(rr, rf);
             asm_branch(false, condval, target);
-
-            // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
-            Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
-
             if (rr != rt)
                 asm_nongp_copy(rr, rt);
             freeResourcesOf(ins);
@@ -2076,9 +2074,6 @@ namespace nanojit
             }
             return;
         }
-
-        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
-        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
 
         NanoAssert(ins->isop(LIR_cmovi));
 
