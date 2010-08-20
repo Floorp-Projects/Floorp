@@ -710,34 +710,39 @@ nsresult nsView::CreateWidget(const nsIID &aWindowIID,
   nsCOMPtr<nsIDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
 
-  if (aNative && aWidgetInitData->mWindowType != eWindowType_popup) {
-    mWindow->Create(nsnull, aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-  }
-  else {
-    if (!initDataPassedIn && GetParent() && 
-        GetParent()->GetViewManager() != mViewManager)
-      initData.mListenForResizes = PR_TRUE;
+  if (aWidgetInitData->mWindowType == eWindowType_popup) {
     if (aParentWidget) {
-      NS_ASSERTION(aWidgetInitData->mWindowType == eWindowType_popup,
-                   "popup widget type expected");
       mWindow->Create(aParentWidget, nsnull, trect,
                       ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
     }
     else {
-      nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
-                                            : nsnull;
-      if (aWidgetInitData->mWindowType == eWindowType_popup) {
+      // XXX/cjones: having these two separate creation cases seems
+      // ... um ... unnecessary, but it's the way the old code did it.
+      // Please unify them by first finding a suitable parent nsIWidget,
+      // then passing only either the non-null parentWidget or the
+      // native ID to Create().
+      nsIWidget* nearestParent = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                             : nsnull;
+      if (!nearestParent) {
         // Without a parent, we can't make a popup.  This can happen
         // when printing
-        if (!parentWidget)
-          return NS_ERROR_FAILURE;
-        mWindow->Create(nsnull, parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
-                        ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-      } else {
-        mWindow->Create(parentWidget, nsnull, trect,
-                        ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+        return NS_ERROR_FAILURE;
       }
+
+      mWindow->Create(nsnull, nearestParent->GetNativeData(NS_NATIVE_WIDGET), trect,
+                      ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
     }
+  }
+  else if (aNative) {
+    mWindow->Create(nsnull, aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+  }
+  else {
+    initData.mListenForResizes = (!initDataPassedIn && GetParent() && 
+                                  GetParent()->GetViewManager() != mViewManager);
+    nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                          : nsnull;
+    mWindow->Create(parentWidget, nsnull, trect,
+                    ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
   }
 
   if (aEnableDragDrop) {
