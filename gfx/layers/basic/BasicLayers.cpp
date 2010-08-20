@@ -1298,41 +1298,44 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                         LayerManager::DrawThebesLayerCallback aCallback,
                                         void* aCallbackData)
 {
-  NS_ABORT_IF_FALSE(!!mBackBuffer, "should have a back buffer by now");
-
   Base::PaintBuffer(aContext, aRegionToDraw, aRegionToInvalidate,
                     aCallback, aCallbackData);
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
-  tmpCtx->DrawSurface(aContext->OriginalSurface(),
-                      gfxIntSize(mBufferSize.width, mBufferSize.height));
+  if (HasShadow()) {
+    NS_ABORT_IF_FALSE(!!mBackBuffer, "should have a back buffer by now");
 
-  BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
-                                      mBuffer.BufferRect(),
-                                      mBuffer.BufferRotation(),
-                                      mBackBuffer);
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
+    tmpCtx->DrawSurface(aContext->OriginalSurface(),
+                        gfxIntSize(mBufferSize.width, mBufferSize.height));
+
+    BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
+                                        mBuffer.BufferRect(),
+                                        mBuffer.BufferRotation(),
+                                        mBackBuffer);
+  }
 }
 
 already_AddRefed<gfxASurface>
 BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
                                          const nsIntSize& aSize)
 {
-  nsRefPtr<gfxSharedImageSurface> tmpFront;
-  // XXX error handling
-  if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
-                                         gfxASurface::ImageFormatARGB32,
-                                         getter_AddRefs(tmpFront),
-                                         getter_AddRefs(mBackBuffer)))
-    NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
-  mBufferSize = aSize;
+  if (HasShadow()) {
+    nsRefPtr<gfxSharedImageSurface> tmpFront;
+    // XXX error handling
+    if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
+                                           gfxASurface::ImageFormatARGB32,
+                                           getter_AddRefs(tmpFront),
+                                           getter_AddRefs(mBackBuffer)))
+      NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+    mBufferSize = aSize;
 
-  BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
-                                      // only |aSize| really matters
-                                      // here, since Painted() soon
-                                      // follows
-                                      nsIntRect(nsIntPoint(0, 0), aSize),
-                                      tmpFront);
-
+    BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
+                                        // only |aSize| really matters
+                                        // here, since Painted() soon
+                                        // follows
+                                        nsIntRect(nsIntPoint(0, 0), aSize),
+                                        tmpFront);
+  }
   return Base::CreateBuffer(aType, aSize);
 }
 
@@ -1579,8 +1582,6 @@ public:
                      void* aCallbackData,
                      float aOpacity);
 
-  MOZ_LAYER_DECL_NAME("BasicShadowThebesLayer", TYPE_SHADOW)
-
 private:
   BasicShadowLayerManager* BasicManager()
   {
@@ -1650,8 +1651,6 @@ public:
                      void* aCallbackData,
                      float aOpacity);
 
-  MOZ_LAYER_DECL_NAME("BasicShadowImageLayer", TYPE_SHADOW)
-
 protected:
   BasicShadowLayerManager* BasicManager()
   {
@@ -1720,8 +1719,6 @@ public:
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
                      float aOpacity);
-
-  MOZ_LAYER_DECL_NAME("BasicShadowCanvasLayer", TYPE_SHADOW)
 
 private:
   BasicShadowLayerManager* BasicManager()
@@ -1879,11 +1876,6 @@ BasicShadowLayerManager::BasicShadowLayerManager(nsIWidget* aWidget) :
 
 BasicShadowLayerManager::~BasicShadowLayerManager()
 {
-  // FIXME/bug 570294: shadow forwarders don't have __delete__ until
-  // they have manager protocols
-  //
-  //if (HasShadowManager())
-  //  PLayersChild::Send__delete__(mShadow);
   MOZ_COUNT_DTOR(BasicShadowLayerManager);
 }
 
