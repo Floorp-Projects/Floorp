@@ -171,6 +171,121 @@ statusbarpanel#statusbar-display {
   color: -moz-menuhovertext;
 }
 
+/* Style Firefox App Menu popup */
+
+.appmenu-edit-button {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  padding: 2px;
+  background: transparent;
+  -moz-border-radius: 3px;
+}
+
+.appmenu-edit-button[disabled="true"] {
+  opacity: .3;
+}
+
+@media all and (-moz-windows-default-theme) {
+  #appmenu-popup {
+    -moz-appearance: none;
+    background: white;
+    border: 1px solid rgba(0,0,0,.5);
+  }
+  #appmenuPrimaryPane {
+    margin-right: -1px;
+    background-color: rgba(255,255,255,0.5);
+    border-right: 1px solid #c4c4c5;
+    padding-left: 2px;
+  }
+  #appmenuSecondaryPane {
+    -moz-appearance: none;
+    background-color: #f1f5fb;
+    -moz-box-shadow: 1px 0 3px rgb(204,214,234) inset;
+    border: 0;
+    padding-top: 5px;
+    font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+  }
+  .appmenu-edit-button:not([disabled]):hover {
+    border: 1px solid #b8d6fb;
+    -moz-box-shadow: inset 0 0 1px white;
+    background: -moz-linear-gradient(#fafbfd, #ebf3fd);
+    -moz-transition: .2s ease-in;
+  }
+}
+
+#appmenuSecondaryPane-spacer {
+  min-height: 1em;
+}
+
+#appmenu_print,
+#appmenu_print_popup,
+.appmenu-edit-button,
+#appmenu-quit {
+  list-style-image: url("appmenu-icons.png");
+}
+
+#appmenu-cut {
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+#appmenu-copy {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+#appmenu-paste {
+  -moz-image-region: rect(0 48px 16px 32px);
+}
+
+#appmenu_print,
+#appmenu_print_popup {
+  -moz-image-region: rect(0 64px 16px 48px);
+}
+
+#appmenu-quit {
+  -moz-image-region: rect(0 80px 16px 64px);
+}
+
+#appmenu-edit-menuitem {
+  -moz-appearance: none;
+  background: transparent;
+  font-style: italic;
+}
+
+#appmenu_BookmarkItem {
+  list-style-image: url("chrome://browser/skin/places/bookmark.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+#appmenu_BookmarkItem > .menu-iconic-left,
+#appmenu_addons > .menu-iconic-left {
+  -moz-margin-end: -5px;
+  -moz-margin-start: 5px;
+  padding: 0;
+}
+
+#appmenu_privateBrowsing {
+  list-style-image: url("chrome://browser/skin/Privacy-16.png");
+}
+
+#appmenuBookmarkMenu_unsorted-menuitem {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
+}
+
+#appmenu_addons {
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
+}
+
+#appmenu-button #subscribeToPageMenuitem:not([disabled]),
+#appmenu-button #subscribeToPageMenupopup:not([hidden]) {
+  list-style-image: url("chrome://browser/skin/feeds/feed-icons-16.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+#appmenuBookmarkThisPage {
+  list-style-image: url("chrome://browser/skin/places/bookmark.png");
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
 /* XXX: stop-gap until the button can be drawn in the title bar */
 %ifdef WINSTRIPE_AERO
 @media not all and (-moz-windows-compositor) {
@@ -880,7 +995,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 #urlbar > .autocomplete-history-dropmarker:-moz-system-metric(touch-enabled) {
-  min-width: .64cm;
+  min-width: 6.4mozmm;
 }
 
 #urlbar > .autocomplete-history-dropmarker:hover:active,
@@ -1123,7 +1238,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
-  min-height: .73cm;
+  min-height: 7.3mozmm;
 }
 
 .tabbrowser-tabs:not([overflow="true"]) {
@@ -1281,11 +1396,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   #TabsToolbar > toolbarbutton,
   #TabsToolbar > toolbarpaletteitem > toolbarbutton,
   #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
-    min-width: .81cm;
+    min-width: 8.1mozmm;
   }
 
   .tabs-newtab-button {
-    min-width: 1cm;
+    min-width: 10mozmm;
   }
 }
 
@@ -1816,10 +1931,4 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
-}
-
-/* Tab view context menu */
-
-#context_tabViewMenuPopup > menuitem.group {
-  -moz-padding-start: 40px;
 }

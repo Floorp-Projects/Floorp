@@ -55,6 +55,7 @@ _TEST_FILES = \
   browser_bug562890.js \
   browser_bug562899.js \
   browser_bug562992.js \
+  browser_bug567127.js \
   browser_bug567137.js \
   browser_bug572561.js \
   browser_bug577990.js \

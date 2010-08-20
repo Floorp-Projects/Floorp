@@ -126,6 +126,10 @@ endif
 unpack: $(STAGEDIST)
 	@echo done unpacking
 
+# The path to the object dir for the mozilla-central build system,
+# may be overridden if necessary.
+MOZDEPTH ?= $(DEPTH)
+
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:
 # call a hook for apps to put their uninstall helper.exe into the package

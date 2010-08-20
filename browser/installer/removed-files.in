@@ -650,6 +650,9 @@ xpicleanup@BIN_SUFFIX@
   modules/distribution.js
   modules/DownloadLastDir.jsm
   modules/DownloadPaths.jsm
+  #ifdef XP_WIN
+    modules/DownloadTaskbarProgress.jsm
+  #endif
   modules/DownloadUtils.jsm
   modules/FileUtils.jsm
   modules/Geometry.jsm

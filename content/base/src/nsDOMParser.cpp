@@ -335,33 +335,40 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
   NS_ENSURE_ARG(principal || documentURI);
 
   mDocumentURI = documentURI;
+  
   if (!mDocumentURI) {
     principal->GetURI(getter_AddRefs(mDocumentURI));
-    if (!mDocumentURI) {
+    // If we have the system principal, then we'll just use the null principals
+    // uri.
+    if (!mDocumentURI && !nsContentUtils::IsSystemPrincipal(principal)) {
       return NS_ERROR_INVALID_ARG;
     }
   }
 
   mScriptHandlingObject = do_GetWeakReference(aScriptObject);
   mPrincipal = principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
   nsresult rv;
   if (!mPrincipal) {
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
     rv =
       secMan->GetCodebasePrincipal(mDocumentURI, getter_AddRefs(mPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
     mOriginalPrincipal = mPrincipal;
   } else {
-    mOriginalPrincipal = principal;
-    PRBool isSystem;
-    rv = secMan->IsSystemPrincipal(mPrincipal, &isSystem);
-    if (NS_FAILED(rv) || isSystem) {
+    mOriginalPrincipal = mPrincipal;
+    if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
       // Don't give DOMParsers the system principal.  Use a null
       // principal instead.
       mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!mDocumentURI) {
+        rv = mPrincipal->GetURI(getter_AddRefs(mDocumentURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
-  NS_ENSURE_SUCCESS(rv, rv);
   
   mBaseURI = baseURI;
   // Note: if mBaseURI is null, fine.  Leave it like that; that will use the
@@ -507,7 +514,8 @@ nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
 }
 
 NS_IMETHODIMP
-nsDOMParser::Init(nsIPrincipal *principal, nsIURI *documentURI, nsIURI *baseURI)
+nsDOMParser::Init(nsIPrincipal *aPrincipal, nsIURI *aDocumentURI,
+                  nsIURI *aBaseURI)
 {
   AttemptedInitMarker marker(&mAttemptedInit);
 
@@ -515,6 +523,19 @@ nsDOMParser::Init(nsIPrincipal *principal, nsIURI *documentURI, nsIURI *baseURI)
   NS_ENSURE_TRUE(cx, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
-  return Init(principal, documentURI, baseURI,
+
+  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
+
+  if (!principal && !aDocumentURI) {
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
+
+    secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+
+    // We're called from JS; there better be a subject principal, really.
+    NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);
+  }
+
+  return Init(principal, aDocumentURI, aBaseURI,
               scriptContext ? scriptContext->GetGlobalObject() : nsnull);
 }
