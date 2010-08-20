@@ -7913,7 +7913,6 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
 #include "nsILinkHandler.h"
 
 static NS_DEFINE_CID(kViewManagerCID, NS_VIEW_MANAGER_CID);
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
@@ -8283,7 +8282,7 @@ PresShell::VerifyIncrementalReflow()
   NS_ENSURE_TRUE(view, PR_FALSE);
 
   //now create the widget for the view
-  rv = view->CreateWidgetForParent(kWidgetCID, parentWidget, nsnull, PR_TRUE);
+  rv = view->CreateWidgetForParent(parentWidget, nsnull, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   // Setup hierarchical relationship in view manager

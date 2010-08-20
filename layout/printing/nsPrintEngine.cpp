@@ -249,7 +249,6 @@ protected:
 
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
-static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 
 NS_IMPL_ISUPPORTS1(nsPrintEngine, nsIObserver)
 
@@ -1999,10 +1998,10 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     nsIWidget* widget = nsnull;
     if (!frame)
       widget = mParentWidget;
-    rv = widget ? rootView->CreateWidgetForParent(kWidgetCID, widget, nsnull,
+    rv = widget ? rootView->CreateWidgetForParent(widget, nsnull,
                                                   PR_TRUE, PR_TRUE,
                                                   eContentTypeContent)
-                : rootView->CreateWidget(kWidgetCID, nsnull,
+                : rootView->CreateWidget(nsnull,
                                          PR_TRUE, PR_TRUE,
                                          eContentTypeContent);
     NS_ENSURE_SUCCESS(rv, rv);
