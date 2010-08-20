@@ -3261,14 +3261,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
       nsWidgetInitData widgetData;
       widgetData.mWindowType  = eWindowType_popup;
       widgetData.mBorderStyle = eBorderStyle_default;
-
-#if defined(XP_MACOSX) || defined(XP_BEOS) 
-      static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
-      view->CreateWidgetForPopup(kCPopUpCID, &widgetData);
-#else
-      static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-      view->CreateWidgetForPopup(kCChildCID, &widgetData);
-#endif
+      view->CreateWidgetForPopup(&widgetData);
     }
   }
 
