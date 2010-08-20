@@ -394,7 +394,7 @@ nsIntRect nsIView::CalcWidgetBounds(nsWindowType aType)
 
   nsRect viewBounds(mDimBounds);
 
-  nsView* parent = static_cast<nsView*>(GetParent());
+  nsView* parent = GetParent()->Impl();
   if (parent) {
     nsPoint offset;
     nsIWidget* parentWidget = parent->GetNearestWidget(&offset, p2a);
@@ -666,6 +666,19 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
                                nsContentType aContentType,
                                nsIWidget* aParentWidget)
 {
+  return Impl()->CreateWidget(aWindowIID, aWidgetInitData, aNative,
+                              aEnableDragDrop, aResetVisibility,
+                              aContentType, aParentWidget);
+}
+
+nsresult nsView::CreateWidget(const nsIID &aWindowIID,
+                              nsWidgetInitData *aWidgetInitData,
+                              nsNativeWidget aNative,
+                              PRBool aEnableDragDrop,
+                              PRBool aResetVisibility,
+                              nsContentType aContentType,
+                              nsIWidget* aParentWidget)
+{
   if (NS_UNLIKELY(mWindow)) {
     NS_ERROR("We already have a window for this view? BAD");
     ViewWrapper* wrapper = GetWrapperFor(mWindow);
@@ -675,13 +688,11 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
     NS_RELEASE(mWindow);
   }
 
-  nsView* v = static_cast<nsView*>(this);
+  nsIntRect trect = CalcWidgetBounds(aWidgetInitData
+                                     ? aWidgetInitData->mWindowType
+                                     : eWindowType_child);
 
-  nsIntRect trect = v->CalcWidgetBounds(aWidgetInitData
-                                        ? aWidgetInitData->mWindowType
-                                        : eWindowType_child);
-
-  if (NS_OK == v->LoadWidget(aWindowIID))
+  if (NS_OK == LoadWidget(aWindowIID))
   {
     PRBool usewidgets;
     nsCOMPtr<nsIDeviceContext> dx;
@@ -736,7 +747,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
       }
       
       // propagate the z-index to the widget.
-      UpdateNativeWidgetZIndexes(v, FindNonAutoZIndex(v));
+      UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
     } else {
       // We should tell the widget its size even if we don't create a
       // native widget.  (At the moment, this doesn't really matter,
@@ -749,7 +760,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
   //make sure visibility state is accurate
 
   if (aResetVisibility) {
-    v->SetVisibility(GetVisibility());
+    SetVisibility(GetVisibility());
   }
 
   return NS_OK;
@@ -778,8 +789,7 @@ nsresult nsIView::AttachToTopLevelWidget(nsIWidget* aWidget)
   mWindow = aWidget;
   NS_ADDREF(mWindow);
 
-  nsView* v = static_cast<nsView*>(this);
-  ViewWrapper* wrapper = new ViewWrapper(v);
+  ViewWrapper* wrapper = new ViewWrapper(Impl());
   NS_ADDREF(wrapper);
   mWindow->SetAttachedViewPtr(wrapper);
   mWindow->EnableDragDrop(PR_TRUE);
@@ -853,8 +863,7 @@ EVENT_CALLBACK nsIView::AttachWidgetEventHandler(nsIWidget* aWidget)
   NS_ASSERTION(!data, "Already got client data");
 #endif
 
-  nsView* v = static_cast<nsView*>(this);
-  ViewWrapper* wrapper = new ViewWrapper(v);
+  ViewWrapper* wrapper = new ViewWrapper(Impl());
   if (!wrapper)
     return nsnull;
   NS_ADDREF(wrapper); // Will be released in DetachWidgetEventHandler
@@ -908,9 +917,8 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
 
 nsPoint nsIView::GetOffsetTo(const nsIView* aOther) const
 {
-  const nsView* view = static_cast<const nsView*>(this);
-  return view->GetOffsetTo(static_cast<const nsView*>(aOther),
-                           view->GetViewManager()->AppUnitsPerDevPixel());
+  return Impl()->GetOffsetTo(static_cast<const nsView*>(aOther),
+                             Impl()->GetViewManager()->AppUnitsPerDevPixel());
 }
 
 nsPoint nsView::GetOffsetTo(const nsView* aOther) const
@@ -958,10 +966,12 @@ nsPoint nsIView::GetOffsetToWidget(nsIWidget* aWidget) const
 {
   nsPoint pt;
   // Get the view for widget
-  nsView* widgetView = static_cast<nsView*>(GetViewFor(aWidget));
-  if (!widgetView) {
+  nsIView* widgetIView = GetViewFor(aWidget);
+  if (!widgetIView) {
     return pt;
   }
+  nsView* widgetView = widgetIView->Impl();
+
   // Get the offset to the widget view in the widget view's APD
   // We get the offset in the widget view's APD first and then convert to our
   // APD afterwards so that we can include the widget view's ViewToWidgetOffset
@@ -983,9 +993,8 @@ nsPoint nsIView::GetOffsetToWidget(nsIWidget* aWidget) const
 
 nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
 {
-  const nsView* view = static_cast<const nsView*>(this);
-  return view->GetNearestWidget(aOffset,
-                                view->GetViewManager()->AppUnitsPerDevPixel());
+  return Impl()->GetNearestWidget(aOffset,
+                                  Impl()->GetViewManager()->AppUnitsPerDevPixel());
 }
 
 nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset) const
@@ -1054,6 +1063,18 @@ nsIView::SetDeletionObserver(nsWeakView* aDeletionObserver)
     aDeletionObserver->SetPrevious(mDeletionObserver);
   }
   mDeletionObserver = aDeletionObserver;
+}
+
+nsView*
+nsIView::Impl()
+{
+  return static_cast<nsView*>(this);
+}
+
+const nsView*
+nsIView::Impl() const
+{
+  return static_cast<const nsView*>(this);
 }
 
 nsRect
