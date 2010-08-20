@@ -4509,7 +4509,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = Compiler::compileScript(cx, obj, NULL, NULL, tcflags,
                                      NULL, 0, fp, filename, 1);
     if (fp != stdin)
@@ -4527,7 +4527,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *file
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
                                      NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
