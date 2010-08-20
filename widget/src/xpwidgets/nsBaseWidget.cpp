@@ -1347,15 +1347,12 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
   if (!debug_GetCachedBoolPref("nglayout.debug.paint_dumping"))
     return;
   
-  nsIntRect rect = aPaintEvent->region.GetBounds();
   fprintf(aFileOut,
-          "%4d PAINT      widget=%p name=%-12s id=%-8p bounds-rect=%3d,%-3d %3d,%-3d", 
+          "%4d PAINT      widget=%p name=%-12s id=%-8p rect=", 
           _GetPrintCount(),
           (void *) aWidget,
           aWidgetName.get(),
-          (void *) aWindowID,
-          rect.x, rect.y, rect.width, rect.height
-    );
+          (void *) aWindowID);
   
   fprintf(aFileOut,"\n");
 }
