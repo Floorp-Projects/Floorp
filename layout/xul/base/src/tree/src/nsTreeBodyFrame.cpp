@@ -270,8 +270,10 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   nscoord rowWidth;
   nsTreeColumn* col;
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
+  nsCOMPtr<nsIRenderingContext> rc =
+    PresContext()->PresShell()->GetReferenceRenderingContext();
+  if (!rc)
+    return 0;
 
   for (PRInt32 row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
@@ -1173,8 +1175,10 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     // interfere with our computations.
     AdjustForBorderPadding(cellContext, cellRect);
 
-    nsCOMPtr<nsIRenderingContext> rc;
-    presContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
+    nsCOMPtr<nsIRenderingContext> rc =
+      presContext->PresShell()->GetReferenceRenderingContext();
+    if (!rc)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     // Now we'll start making our way across the cell, starting at the edge of 
     // the cell and proceeding until we hit the right edge. |cellX| is the 
@@ -1521,6 +1525,12 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   // Handle right alignment hit testing.
   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 
+  nsPresContext* presContext = PresContext();
+  nsCOMPtr<nsIRenderingContext> rc =
+    presContext->PresShell()->GetReferenceRenderingContext();
+  if (!rc)
+    return nsCSSAnonBoxes::moztreecell;
+
   if (aColumn->IsPrimary()) {
     // If we're the primary column, we have indentation and a twisty.
     PRInt32 level;
@@ -1547,10 +1557,6 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
       if (!isContainerEmpty)
         hasTwisty = PR_TRUE;
     }
-
-    nsPresContext* presContext = PresContext();
-    nsCOMPtr<nsIRenderingContext> rc;
-    presContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
     // Resolve style for the twisty.
     nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
@@ -1622,12 +1628,9 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
 
   AdjustForBorderPadding(textContext, textRect);
 
-  nsCOMPtr<nsIRenderingContext> renderingContext;
-  PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(renderingContext));
+  nsLayoutUtils::SetFontFromStyle(rc, textContext);
 
-  nsLayoutUtils::SetFontFromStyle(renderingContext, textContext);
-
-  AdjustForCellText(cellText, aRowIndex, aColumn, *renderingContext, textRect);
+  AdjustForCellText(cellText, aRowIndex, aColumn, *rc, textRect);
   if (isRTL)
     textRect.x = currX + remainingWidth - textRect.width;
 
@@ -1775,10 +1778,9 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *_retva
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  rv = PresContext()->PresShell()->
-    CreateRenderingContext(this, getter_AddRefs(rc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRenderingContext> rc =
+    PresContext()->PresShell()->GetReferenceRenderingContext();
+  NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
 
   rv = GetCellWidth(aRow, col, rc, desiredSize, currentSize);
   NS_ENSURE_SUCCESS(rv, rv);
