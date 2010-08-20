@@ -408,7 +408,7 @@ struct JSStackFrame
         return fun;
     }
 
-    size_t getArgumentCount() const {
+    size_t numFormalArgs() const {
         return getFunction()->nargs;
     }
 
@@ -450,6 +450,20 @@ struct JSStackFrame
 
     static size_t offsetReturnValue() {
         return offsetof(JSStackFrame, rval);
+    }
+
+    /* Argument count accessors */
+
+    size_t numActualArgs() const {
+        return argc;
+    }
+
+    void setNumActualArgs(size_t n) {
+        argc = n;
+    }
+
+    static size_t offsetNumActualArgs() {
+        return offsetof(JSStackFrame, argc);
     }
 
     /* Other accessors */

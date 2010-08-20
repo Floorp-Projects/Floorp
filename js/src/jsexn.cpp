@@ -299,7 +299,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                 !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
                 break;
             }
-            valueCount += fp->argc;
+            valueCount += fp->numActualArgs();
         }
         ++stackDepth;
     }
@@ -341,9 +341,9 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             elem->funName = fp->getFunction()->atom
                             ? ATOM_TO_STRING(fp->getFunction()->atom)
                             : cx->runtime->emptyString;
-            elem->argc = fp->argc;
-            memcpy(values, fp->argv, fp->argc * sizeof(jsval));
-            values += fp->argc;
+            elem->argc = fp->numActualArgs();
+            memcpy(values, fp->argv, elem->argc * sizeof(jsval));
+            values += elem->argc;
         }
         elem->ulineno = 0;
         elem->filename = NULL;
