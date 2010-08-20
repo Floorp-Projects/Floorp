@@ -256,13 +256,6 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-#appmenu_BookmarkItem > .menu-iconic-left,
-#appmenu_addons > .menu-iconic-left {
-  -moz-margin-end: -5px;
-  -moz-margin-start: 5px;
-  padding: 0;
-}
-
 #appmenu_privateBrowsing {
   list-style-image: url("chrome://browser/skin/Privacy-16.png");
 }
