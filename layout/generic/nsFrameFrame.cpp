@@ -967,7 +967,7 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 
   if (aContentType == eContentTypeContent) {
     // widget needed.
-    nsresult rv = innerView->CreateWidget(kCChildCID, nsnull, nsnull,
+    nsresult rv = innerView->CreateWidget(kCChildCID, nsnull,
                                           PR_TRUE, PR_TRUE, aContentType);
     if (NS_FAILED(rv)) {
       NS_WARNING("Couldn't create widget for frame.");
