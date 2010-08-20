@@ -118,20 +118,23 @@ public:
 
 public:
   // See nsIView::CreateWidget.
-  nsresult CreateWidget(nsWidgetInitData *aWidgetInitData,
+  nsresult CreateWidget(const nsIID &aWindowIID,
+                        nsWidgetInitData *aWidgetInitData,
                         PRBool aEnableDragDrop,
                         PRBool aResetVisibility,
                         nsContentType aContentType);
 
   // See nsIView::CreateWidgetForParent.
-  nsresult CreateWidgetForParent(nsIWidget* aParentWidget,
+  nsresult CreateWidgetForParent(const nsIID &aWindowIID,
+                                 nsIWidget* aParentWidget,
                                  nsWidgetInitData *aWidgetInitData,
                                  PRBool aEnableDragDrop,
                                  PRBool aResetVisibility,
                                  nsContentType aContentType);
 
   // See nsIView::CreateWidgetForPopup.
-  nsresult CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
+  nsresult CreateWidgetForPopup(const nsIID &aWindowIID,
+                                nsWidgetInitData *aWidgetInitData,
                                 nsIWidget* aParentWidget,
                                 PRBool aEnableDragDrop,
                                 PRBool aResetVisibility,
@@ -182,7 +185,7 @@ public:
   nsPoint ConvertFromParentCoords(nsPoint aPt) const;
   void ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly, PRBool aInvalidateChangedSize);
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
-  void AssertNoWindow();
+  nsresult LoadWidget(const nsCID &aClassIID);
 
   void NotifyEffectiveVisibilityChanged(PRBool aEffectivelyVisible);
 

@@ -104,6 +104,8 @@
 
 class AsyncFrameInit;
 
+static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
+
 /******************************************************************************
  * nsSubDocumentFrame
  *****************************************************************************/
@@ -294,7 +296,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
 
   if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK
       && !view->HasWidget()) {
-    view->CreateWidget();
+    view->CreateWidget(kCChildCID);
   }
 
   // Set the primary frame now so that
@@ -965,7 +967,7 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 
   if (aContentType == eContentTypeContent) {
     // widget needed.
-    nsresult rv = innerView->CreateWidget(nsnull,
+    nsresult rv = innerView->CreateWidget(kCChildCID, nsnull,
                                           PR_TRUE, PR_TRUE, aContentType);
     if (NS_FAILED(rv)) {
       NS_WARNING("Couldn't create widget for frame.");

@@ -62,8 +62,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0xba00349c, 0xe58a, 0x436a, \
-    { 0x9f, 0x1f, 0x05, 0xb3, 0xdd, 0x9d, 0x9d, 0x36 } }
+  { 0x01258624, 0xca90, 0x47a4, \
+    { 0xb1, 0xfd, 0x52, 0x11, 0x26, 0xe6, 0xc8, 0xdc } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -279,6 +279,8 @@ public:
    * CreateWidget*() will look around in the view hierarchy for an
    * appropriate parent widget for the view.
    *
+   * @param aWindowIID IID for Widget type that this view
+   *        should have associated with it.
    * @param aWidgetInitData data used to initialize this view's widget before
    *        its create is called.
    * @param aContentType is either content, UI or inherit from parent window.
@@ -286,7 +288,8 @@ public:
    *        assistive technology like screen readers.
    * @return error status
    */
-  nsresult CreateWidget(nsWidgetInitData *aWidgetInitData = nsnull,
+  nsresult CreateWidget(const nsIID &aWindowIID,
+                        nsWidgetInitData *aWidgetInitData = nsnull,
                         PRBool aEnableDragDrop = PR_TRUE,
                         PRBool aResetVisibility = PR_TRUE,
                         nsContentType aContentType = eContentTypeInherit);
@@ -296,7 +299,8 @@ public:
    * |aParentWidget| must be nonnull.  The other params are the same
    * as for |CreateWidget()|.
    */
-  nsresult CreateWidgetForParent(nsIWidget* aParentWidget,
+  nsresult CreateWidgetForParent(const nsIID &aWindowIID,
+                                 nsIWidget* aParentWidget,
                                  nsWidgetInitData *aWidgetInitData = nsnull,
                                  PRBool aEnableDragDrop = PR_TRUE,
                                  PRBool aResetVisibility = PR_TRUE,
@@ -309,7 +313,8 @@ public:
    * other params are the same as for |CreateWidget()|, except that
    * |aWidgetInitData| must be nonnull.
    */
-  nsresult CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
+  nsresult CreateWidgetForPopup(const nsIID &aWindowIID,
+                                nsWidgetInitData *aWidgetInitData,
                                 nsIWidget* aParentWidget = nsnull,
                                 PRBool aEnableDragDrop = PR_TRUE,
                                 PRBool aResetVisibility = PR_TRUE,
