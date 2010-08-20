@@ -322,12 +322,12 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
 
 #if defined(XP_MACOSX) || defined(XP_BEOS)
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
-  aView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
-                      eContentTypeUI, parentWidget);
+  aView->CreateWidgetForPopup(kCPopupCID, &widgetData, parentWidget,
+                              PR_TRUE, PR_TRUE, eContentTypeUI);
 #else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE,
-                      eContentTypeInherit, parentWidget);
+  aView->CreateWidgetForPopup(kCChildCID, &widgetData, parentWidget,
+                              PR_TRUE, PR_TRUE, eContentTypeInherit);
 #endif
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);

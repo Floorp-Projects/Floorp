@@ -120,11 +120,25 @@ public:
   // See nsIView::CreateWidget.
   nsresult CreateWidget(const nsIID &aWindowIID,
                         nsWidgetInitData *aWidgetInitData,
-                        nsNativeWidget aNative,
                         PRBool aEnableDragDrop,
                         PRBool aResetVisibility,
-                        nsContentType aContentType,
-                        nsIWidget* aParentWidget);
+                        nsContentType aContentType);
+
+  // See nsIView::CreateWidgetForParent.
+  nsresult CreateWidgetForParent(const nsIID &aWindowIID,
+                                 nsIWidget* aParentWidget,
+                                 nsWidgetInitData *aWidgetInitData,
+                                 PRBool aEnableDragDrop,
+                                 PRBool aResetVisibility,
+                                 nsContentType aContentType);
+
+  // See nsIView::CreateWidgetForPopup.
+  nsresult CreateWidgetForPopup(const nsIID &aWindowIID,
+                                nsWidgetInitData *aWidgetInitData,
+                                nsIWidget* aParentWidget,
+                                PRBool aEnableDragDrop,
+                                PRBool aResetVisibility,
+                                nsContentType aContentType);
 
   // NOT in nsIView, so only available in view module
   // These are also present in nsIView, but these versions return nsView and nsViewManager
@@ -196,7 +210,7 @@ protected:
   nsRegion*    mDirtyRegion;
 
 private:
-  void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
+  void InitializeWindow(PRBool aEnableDragDrop, PRBool aResetVisibility);
 };
 
 #endif
