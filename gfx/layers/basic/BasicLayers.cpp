@@ -1101,7 +1101,7 @@ BasicLayerManager::ClearCachedResources()
 void
 BasicLayerManager::ClearLayer(Layer* aLayer)
 {
-  ToData(aLayer)->ClearResources();
+  ToData(aLayer)->ClearCachedResources();
   for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     ClearLayer(child);
