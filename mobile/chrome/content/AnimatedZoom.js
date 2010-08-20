@@ -240,6 +240,8 @@ AnimatedZoom.prototype._callback = function() {
 /** Stop animation, zoom to point, and clean up. */
 AnimatedZoom.prototype.finish = function() {
   try {
+    Elements.viewBuffer.style.display = "none";
+
     // resume live rendering
     this.bv.resumeRendering(true);
 
