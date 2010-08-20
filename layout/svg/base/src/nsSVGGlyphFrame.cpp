@@ -439,7 +439,7 @@ nsSVGGlyphFrame::GetCoveredRegion()
 
 static gfxContext *
 MakeTmpCtx() {
-  return new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  return new gfxContext(nsSVGUtils::GetThebesComputationalSurface());
 }
 
 NS_IMETHODIMP

@@ -47,7 +47,6 @@
 #include "nsDebug.h"
 #include "gfxContext.h"
 #include "nsSVGUtils.h"
-#include "gfxPlatform.h"
 
 class nsSVGElement;
 class nsIContent;
@@ -64,7 +63,7 @@ public:
   public:
     PathGenerator(nsSVGElement* aSVGElement)
       : mSVGElement(aSVGElement),
-        mGfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface()),
+        mGfxContext(nsSVGUtils::GetThebesComputationalSurface()),
         mHaveReceivedCommands(PR_FALSE)
     {}
 
