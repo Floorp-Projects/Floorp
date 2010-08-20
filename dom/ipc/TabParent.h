@@ -155,7 +155,11 @@ public:
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
     void LoadURL(nsIURI* aURI);
-    void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
+    // XXX/cjones: it's not clear what we gain by hiding these
+    // message-sending functions under a layer of indirection and
+    // eating the return values
+    void Show(const nsIntSize& size);
+    void Move(const nsIntSize& size);
     void Activate();
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         PRInt32 aButton, PRInt32 aClickCount,

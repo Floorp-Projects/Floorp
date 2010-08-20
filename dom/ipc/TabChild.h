@@ -158,7 +158,6 @@ class TabChild : public PBrowserChild,
 public:
     TabChild(PRUint32 aChromeFlags);
     virtual ~TabChild();
-    bool DestroyWidget();
     nsresult Init();
 
     NS_DECL_ISUPPORTS
@@ -173,12 +172,9 @@ public:
     NS_DECL_NSIWINDOWPROVIDER
     NS_DECL_NSIDIALOGCREATOR
 
-    virtual bool RecvCreateWidget(const MagicWindowHandle& parentWidget);
     virtual bool RecvLoadURL(const nsCString& uri);
-    virtual bool RecvMove(const PRUint32& x,
-                          const PRUint32& y,
-                          const PRUint32& width,
-                          const PRUint32& height);
+    virtual bool RecvShow(const nsIntSize& size);
+    virtual bool RecvMove(const nsIntSize& size);
     virtual bool RecvActivate();
     virtual bool RecvMouseEvent(const nsString& aType,
                                 const float&    aX,
@@ -302,6 +298,7 @@ private:
     void ActorDestroy(ActorDestroyReason why);
 
     bool InitTabChildGlobal();
+    void DestroyWindow();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;
     TabChildGlobal* mTabChildGlobal;

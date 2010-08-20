@@ -44,12 +44,6 @@
  * handling of loads in it, recursion-checking).
  */
 
-#ifdef MOZ_WIDGET_QT
-#include <QtGui/QX11EmbedWidget>
-#include <QGraphicsWidget>
-#include <QGraphicsProxyWidget>
-#endif
-
 #ifdef MOZ_IPC
 #  include "base/basictypes.h"
 #endif
@@ -113,13 +107,6 @@
 #include "nsInProcessTabChildGlobal.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/unused.h"
-
-#ifdef MOZ_WIDGET_GTK2
-#include "mozcontainer.h"
-
-#include <gdk/gdkx.h>
-#include <gtk/gtk.h>
-#endif
 
 #ifdef MOZ_IPC
 #include "ContentParent.h"
@@ -306,7 +293,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
 #ifdef MOZ_IPC
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
-      TryNewProcess();
+      TryRemoteBrowser();
     }
 
     if (!mRemoteBrowser) {
@@ -433,7 +420,7 @@ nsFrameLoader::GetWebProgress(nsIWebProgress **aWebProgress)
 #ifdef MOZ_IPC
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
-      TryNewProcess();
+      TryRemoteBrowser();
     }
     if (!mRemoteBrowser) {
       return NS_ERROR_UNEXPECTED;
@@ -709,7 +696,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
 #ifdef MOZ_IPC
   if (mRemoteFrame) {
-    return ShowRemoteFrame(frame, view);
+    return ShowRemoteFrame(GetSubDocumentSize(frame->GetFrame()));
   }
 #endif
 
@@ -754,12 +741,12 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
 #ifdef MOZ_IPC
 bool
-nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
+nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 {
   NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
 
   if (!mRemoteBrowser) {
-    TryNewProcess();
+    TryRemoteBrowser();
   }
 
   if (!mRemoteBrowser) {
@@ -767,78 +754,9 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
     return false;
   }
 
-  nsIWidget* w = view->GetWidget();
-  if (!w) {
-    NS_ERROR("Our view doesn't have a widget. Totally stuffed!");
-    return false;
-  }
+  mRemoteBrowser->Show(size);
+  mRemoteBrowserShown = PR_TRUE;
 
-  nsIntSize size = GetSubDocumentSize(frame->GetFrame());
-
-#ifdef XP_WIN
-  HWND parentwin =
-    static_cast<HWND>(w->GetNativeData(NS_NATIVE_WINDOW));
-
-  if (!mRemoteBrowser->SendCreateWidget(parentwin))
-    return false;
-#elif defined(MOZ_WIDGET_GTK2)
-  GdkWindow* parent_win =
-    static_cast<GdkWindow*>(w->GetNativeData(NS_NATIVE_WINDOW));
-
-  gpointer user_data = nsnull;
-  gdk_window_get_user_data(parent_win, &user_data);
-
-  MozContainer* parentMozContainer = MOZ_CONTAINER(user_data);
-  GtkContainer* container = GTK_CONTAINER(parentMozContainer);
-
-  // create the socket for the child and add it to our view's widget
-  mRemoteSocket = gtk_socket_new();
-  gtk_widget_set_parent_window(mRemoteSocket, parent_win);
-  gtk_container_add(container, mRemoteSocket);
-  gtk_widget_realize(mRemoteSocket);
-
-  // set the child window's size and position
-  GtkAllocation alloc = { 0, 0, size.width, size.height };
-  gtk_widget_size_allocate(mRemoteSocket, &alloc);
-
-  gtk_widget_show(mRemoteSocket);
-  GdkNativeWindow id = gtk_socket_get_id(GTK_SOCKET(mRemoteSocket));
-  if (!mRemoteBrowser->SendCreateWidget(id))
-    return false;
-
-#elif defined(MOZ_WIDGET_QT)
-  if (getenv("USE_XEMBED_PROXY")) {
-    // Very bad idea to use Xembedding for IPC, but test-ipc.xul still rendering with XEmbed
-    QGraphicsWidget *widget = static_cast<QGraphicsWidget*>(w->GetNativeData(NS_NATIVE_WINDOW));
-    NS_ENSURE_TRUE(widget, false);
-    QGraphicsProxyWidget *proxy = new QGraphicsProxyWidget(widget);
-    NS_ENSURE_TRUE(proxy, false);
-    mRemoteSocket = new QX11EmbedContainer();
-    NS_ENSURE_TRUE(mRemoteSocket, false);
-    proxy->setWidget(mRemoteSocket);
-    mRemoteSocket->show();
-    mRemoteSocket->resize(size.width, size.height);
-    if (!mRemoteBrowser->SendCreateWidget(0))
-      return false;
-  } else {
-    // Don't create any parent/child XEmbed, because we are painting with shared memory
-    if (!mRemoteBrowser->SendCreateWidget(0))
-      return false;
-  }
-#elif defined(ANDROID)
-  // Painting with shared memory
-
-  if (!mRemoteBrowser->SendCreateWidget(0))
-    return false;
-#elif defined(XP_MACOSX)
-#  warning IMPLEMENT ME
-
-#else
-#error TODO for this platform
-#endif
-
-  mRemoteBrowser->Move(0, 0, size.width, size.height);
-  mRemoteWidgetCreated = PR_TRUE;
   nsCOMPtr<nsIChromeFrameMessageManager> dummy;
   GetMessageManager(getter_AddRefs(dummy)); // Initialize message manager.
 
@@ -1567,18 +1485,7 @@ nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
   if (mRemoteFrame) {
     if (mRemoteBrowser) {
       nsIntSize size = GetSubDocumentSize(aIFrame);
-
-#ifdef MOZ_WIDGET_GTK2
-      if (mRemoteSocket) {
-        GtkAllocation alloc = {0, 0, size.width, size.height };
-        gtk_widget_size_allocate(mRemoteSocket, &alloc);
-      }
-#elif defined(MOZ_WIDGET_QT)
-      if (mRemoteSocket)
-        mRemoteSocket->resize(size.width, size.height);
-#endif
-
-      mRemoteBrowser->Move(0, 0, size.width, size.height);
+      mRemoteBrowser->Move(size);
     }
     return NS_OK;
   }
@@ -1633,9 +1540,9 @@ nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 
 #ifdef MOZ_IPC
 bool
-nsFrameLoader::TryNewProcess()
+nsFrameLoader::TryRemoteBrowser()
 {
-  NS_ASSERTION(!mRemoteBrowser, "TryNewProcess called with a process already?");
+  NS_ASSERTION(!mRemoteBrowser, "TryRemoteBrowser called with a remote browser already?");
 
   nsIDocument* doc = mOwnerContent->GetDocument();
   if (!doc) {
@@ -1924,7 +1831,7 @@ nsFrameLoader::EnsureMessageManager()
   if (mMessageManager) {
 #ifdef MOZ_IPC
     if (ShouldUseRemoteProcess()) {
-      mMessageManager->SetCallbackData(mRemoteWidgetCreated ? this : nsnull);
+      mMessageManager->SetCallbackData(mRemoteBrowserShown ? this : nsnull);
     }
 #endif
     return NS_OK;
@@ -1948,7 +1855,7 @@ nsFrameLoader::EnsureMessageManager()
                                                 nsnull,
                                                 SendAsyncMessageToChild,
                                                 LoadScript,
-                                                mRemoteWidgetCreated ? this : nsnull,
+                                                mRemoteBrowserShown ? this : nsnull,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
                                                 cx);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
