@@ -45,6 +45,7 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsFormSubmission.h"
+#include "nsFormSubmissionConstants.h"
 #include "nsIURL.h"
 
 #include "nsIFrame.h"
@@ -209,6 +210,10 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Autofocus, autofocus)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormAction, formaction)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormEnctype, formenctype,
+                                kFormDefaultEnctype->tag)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormMethod, formmethod,
+                                kFormDefaultMethod->tag)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormTarget, formtarget)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, TabIndex, tabindex, 0)
@@ -285,17 +290,26 @@ nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsGkAtoms::type && kNameSpaceID_None == aNamespaceID) {
-    // XXX ARG!! This is major evilness. ParseAttribute
-    // shouldn't set members. Override SetAttr instead
-    PRBool success = aResult.ParseEnumValue(aValue, kButtonTypeTable, PR_FALSE);
-    if (success) {
-      mType = aResult.GetEnumValue();
-    } else {
-      mType = kButtonDefaultType->value;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::type) {
+      // XXX ARG!! This is major evilness. ParseAttribute
+      // shouldn't set members. Override SetAttr instead
+      PRBool success = aResult.ParseEnumValue(aValue, kButtonTypeTable, PR_FALSE);
+      if (success) {
+        mType = aResult.GetEnumValue();
+      } else {
+        mType = kButtonDefaultType->value;
+      }
+
+      return success;
     }
 
-    return success;
+    if (aAttribute == nsGkAtoms::formmethod) {
+      return aResult.ParseEnumValue(aValue, kFormMethodTable, PR_FALSE);
+    }
+    if (aAttribute == nsGkAtoms::formenctype) {
+      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
+    }
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

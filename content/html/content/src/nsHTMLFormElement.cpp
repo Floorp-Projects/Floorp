@@ -65,6 +65,7 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsFormData.h"
+#include "nsFormSubmissionConstants.h"
 
 // radio buttons
 #include "nsIDOMHTMLInputElement.h"
@@ -79,23 +80,6 @@
 #include "nsIHTMLCollection.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
-
-static const nsAttrValue::EnumTable kFormMethodTable[] = {
-  { "get", NS_FORM_METHOD_GET },
-  { "post", NS_FORM_METHOD_POST },
-  { 0 }
-};
-// Default method is 'get'.
-static const nsAttrValue::EnumTable* kFormDefaultMethod = &kFormMethodTable[0];
-
-static const nsAttrValue::EnumTable kFormEnctypeTable[] = {
-  { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
-  { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
-  { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
-  { 0 }
-};
-// Default method is 'application/x-www-form-urlencoded'.
-static const nsAttrValue::EnumTable* kFormDefaultEnctype = &kFormEnctypeTable[1];
 
 // nsHTMLFormElement
 
@@ -704,7 +688,11 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
   //
   // prepare the submission object
   //
-  BuildSubmission(getter_Transfers(submission), aEvent); 
+  nsresult rv = BuildSubmission(getter_Transfers(submission), aEvent);
+  if (NS_FAILED(rv)) {
+    mIsSubmitting = PR_FALSE;
+    return rv;
+  }
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
@@ -741,10 +729,17 @@ nsHTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
 
   // Get the originating frame (failure is non-fatal)
-  nsIContent *originatingElement = nsnull;
+  nsGenericHTMLElement* originatingElement = nsnull;
   if (aEvent) {
     if (NS_FORM_EVENT == aEvent->eventStructType) {
-      originatingElement = ((nsFormEvent *)aEvent)->originator;
+      nsIContent* originator = ((nsFormEvent *)aEvent)->originator;
+      if (originator) {
+        if (!originator->IsHTML()) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        originatingElement =
+          static_cast<nsGenericHTMLElement*>(((nsFormEvent *)aEvent)->originator);
+      }
     }
   }
 
