@@ -92,8 +92,7 @@ WebGLContext::WebGLContext()
     mPixelStoreFlipY = PR_FALSE;
     mPixelStorePremultiplyAlpha = PR_FALSE;
 
-    // eventually true
-    mShaderValidation = PR_FALSE;
+    mShaderValidation = PR_TRUE;
 
     mMapBuffers.Init();
     mMapTextures.Init();

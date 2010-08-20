@@ -41,6 +41,7 @@
 
 interface nsIControllers;
 interface nsIDOMFileList;
+interface nsIDOMValidityState;
 
  /**
   * The nsIDOMHTMLInputElement interface is the interface to a [X]HTML
@@ -50,7 +51,7 @@ interface nsIDOMFileList;
   * http://www.w3.org/TR/DOM-Level-2-HTML/
   */
  
-[scriptable, uuid(2480b6f0-094e-484f-8717-0c204ed23e69)]
+[scriptable, uuid(da7ef8a0-a9a0-11df-94e2-0800200c9a66)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -61,6 +62,8 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute boolean               checked;
            attribute boolean               disabled;
   readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             formAction;
+           attribute DOMString             formTarget;
 
   readonly attribute nsIDOMFileList        files;
 
@@ -71,8 +74,10 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute boolean               multiple;
            attribute DOMString             name;
 
+           attribute DOMString             pattern;
            attribute DOMString             placeholder;
            attribute boolean               readOnly;
+           attribute boolean               required;
 
            attribute DOMString             accessKey;
            attribute DOMString             align;
@@ -83,6 +88,14 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             type;
            attribute DOMString             defaultValue;
            attribute DOMString             value;
+
+  // The following lines are parte of the constraint validation API, see:
+  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
+  readonly attribute boolean             willValidate;
+  readonly attribute nsIDOMValidityState validity;
+  readonly attribute DOMString           validationMessage;
+  boolean checkValidity();
+  void setCustomValidity(in DOMString error);
 
   void select();
            attribute long                  selectionStart;

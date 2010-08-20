@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: input element in url state looks like in text state -->
+  <script type="text/javascript">
+    function setToURL()
+    {
+      document.getElementById('i').type = 'url';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setToURL(); disableReftestWait();">
+    <input type='checkbox' id='i'>
+  </body>
+</html>
