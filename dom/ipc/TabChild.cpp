@@ -87,17 +87,6 @@
 #include "nsIFrame.h"
 #include "nsIView.h"
 
-#ifdef MOZ_WIDGET_QT
-#include <QX11EmbedWidget>
-#include <QGraphicsView>
-#include <QGraphicsWidget>
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-#include <gdk/gdkx.h>
-#include <gtk/gtk.h>
-#endif
-
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
@@ -130,10 +119,6 @@ TabChild::TabChild(PRUint32 aChromeFlags)
 nsresult
 TabChild::Init()
 {
-#ifdef MOZ_WIDGET_GTK2
-  gtk_init(NULL, NULL);
-#endif
-
   nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
   if (!webBrowser) {
     NS_ERROR("Couldn't create a nsWebBrowser?");
@@ -418,72 +403,13 @@ TabChild::ArraysToParams(const nsTArray<int>& aIntParams,
   }
 }
 
-bool
-TabChild::RecvCreateWidget(const MagicWindowHandle& parentWidget)
-{
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
-    if (!baseWindow) {
-        NS_ERROR("mWebNav doesn't QI to nsIBaseWindow");
-        return true;
-    }
 
-#ifdef MOZ_WIDGET_GTK2
-    GtkWidget* win = gtk_plug_new((GdkNativeWindow)parentWidget);
-    gtk_widget_show(win);
-#elif defined(MOZ_WIDGET_QT)
-    QX11EmbedWidget *embedWin = nsnull;
-    if (parentWidget) {
-      embedWin = new QX11EmbedWidget();
-      NS_ENSURE_TRUE(embedWin, false);
-      embedWin->embedInto(parentWidget);
-      embedWin->show();
-    }
-    QGraphicsView *view = new QGraphicsView(new QGraphicsScene(), embedWin);
-    NS_ENSURE_TRUE(view, false);
-    QGraphicsWidget *win = new QGraphicsWidget();
-    NS_ENSURE_TRUE(win, false);
-    view->scene()->addItem(win);
-#elif defined(XP_WIN)
-    HWND win = parentWidget;
-#elif defined(ANDROID)
-    // Fake pointer to make baseWindow->InitWindow work
-    // The android widget code is mostly disabled in the child process
-    // so it won't choke on this
-    void *win = (void *)0x1234;
-#elif defined(XP_MACOSX)
-#  warning IMPLEMENT ME
-#else
-#error You lose!
-#endif
-
-#if !defined(XP_MACOSX)
-    baseWindow->InitWindow(win, 0, 0, 0, 0, 0);
-    baseWindow->Create();
-    baseWindow->SetVisibility(PR_TRUE);
-#endif
-
-    // IPC uses a WebBrowser object for which DNS prefetching is turned off
-    // by default. But here we really want it, so enable it explicitly
-    nsCOMPtr<nsIWebBrowserSetup> webBrowserSetup = do_QueryInterface(baseWindow);
-    if (webBrowserSetup) {
-      webBrowserSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH,
-                                   PR_TRUE);
-    } else {
-        NS_WARNING("baseWindow doesn't QI to nsIWebBrowserSetup, skipping "
-                   "DNS prefetching enable step.");
-    }
-
-    return InitTabChildGlobal();
-}
-
-bool
-TabChild::DestroyWidget()
+void
+TabChild::DestroyWindow()
 {
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (baseWindow)
         baseWindow->Destroy();
-
-    return true;
 }
 
 void
@@ -659,20 +585,47 @@ TabChild::RecvLoadURL(const nsCString& uri)
         NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
     }
 
-    return true;
+    return NS_SUCCEEDED(rv);
 }
 
 bool
-TabChild::RecvMove(const PRUint32& x,
-                   const PRUint32& y,
-                   const PRUint32& width,
-                   const PRUint32& height)
+TabChild::RecvShow(const nsIntSize& size)
 {
-    printf("[TabChild] MOVE to (x,y)=(%ud, %ud), (w,h)= (%ud, %ud)\n",
-           x, y, width, height);
+    printf("[TabChild] SHOW (w,h)= (%d, %d)\n", size.width, size.height);
+
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
+    if (!baseWindow) {
+        NS_ERROR("mWebNav doesn't QI to nsIBaseWindow");
+        return false;
+    }
+
+    // FIXME/cjones: implement using fake widget
+    baseWindow->InitWindow(0, 0, 0, 0, 0, 0);
+    baseWindow->Create();
+    baseWindow->SetVisibility(PR_TRUE);
+
+    // IPC uses a WebBrowser object for which DNS prefetching is turned off
+    // by default. But here we really want it, so enable it explicitly
+    nsCOMPtr<nsIWebBrowserSetup> webBrowserSetup = do_QueryInterface(baseWindow);
+    if (webBrowserSetup) {
+      webBrowserSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH,
+                                   PR_TRUE);
+    } else {
+        NS_WARNING("baseWindow doesn't QI to nsIWebBrowserSetup, skipping "
+                   "DNS prefetching enable step.");
+    }
+
+    return InitTabChildGlobal();
+}
+
+bool
+TabChild::RecvMove(const nsIntSize& size)
+{
+    printf("[TabChild] RESIZE to (w,h)= (%ud, %ud)\n", size.width, size.height);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
-    baseWin->SetPositionAndSize(x, y, width, height, PR_TRUE);
+    baseWin->SetPositionAndSize(0, 0, size.width, size.height,
+                                PR_TRUE);
     return true;
 }
 
@@ -1055,7 +1008,7 @@ TabChild::RecvDestroy()
   );
 
   // XXX what other code in ~TabChild() should we be running here?
-  DestroyWidget();
+  DestroyWindow();
 
   return Send__delete__(this);
 }

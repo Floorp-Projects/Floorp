@@ -203,8 +203,8 @@ ContentChild::Init(MessageLoop* aIOLoop,
 PBrowserChild*
 ContentChild::AllocPBrowser(const PRUint32& aChromeFlags)
 {
-  nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
-  return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
+    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 
 bool
