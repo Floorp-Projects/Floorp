@@ -625,10 +625,10 @@ public:
 
   // Margin-specific version, since they often need TwipsToAppUnits
   static nsMargin CSSTwipsToAppUnits(const nsIntMargin &marginInTwips)
-  { return nsMargin(CSSTwipsToAppUnits(float(marginInTwips.left)), 
-                    CSSTwipsToAppUnits(float(marginInTwips.top)),
-                    CSSTwipsToAppUnits(float(marginInTwips.right)),
-                    CSSTwipsToAppUnits(float(marginInTwips.bottom))); }
+  { return nsMargin(CSSTwipsToAppUnits(marginInTwips.left), 
+                    CSSTwipsToAppUnits(marginInTwips.top),
+                    CSSTwipsToAppUnits(marginInTwips.right),
+                    CSSTwipsToAppUnits(marginInTwips.bottom)); }
 
   static nscoord CSSPointsToAppUnits(float aPoints)
   { return NSToCoordRound(aPoints * nsIDeviceContext::AppUnitsPerCSSInch() /
