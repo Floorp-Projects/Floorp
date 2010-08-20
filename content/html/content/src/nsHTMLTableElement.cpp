@@ -1061,23 +1061,22 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TableBorder)) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
-      // cellspacing 
+      // cellspacing
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellspacing);
       if (value && value->Type() == nsAttrValue::eInteger) {
-        if (aData->mTableData->mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacing.mXValue.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-        if (aData->mTableData->mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacing.mYValue.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacing.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacing.
+            SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       }
-      else if (value && value->Type() == nsAttrValue::ePercent && eCompatibility_NavQuirks == mode) {
+      else if (value && value->Type() == nsAttrValue::ePercent &&
+               eCompatibility_NavQuirks == mode) {
         // in quirks mode, treat a % cellspacing value a pixel value.
-        if (aData->mTableData->mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacing.mXValue.SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
-        if (aData->mTableData->mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacing.mYValue.SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacing.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacing.
+            SetFloatValue(100.0f * value->GetPercentValue(), eCSSUnit_Pixel);
       }
     }
-  } 
+  }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Table)) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {

@@ -80,12 +80,13 @@ enum {
   NS_MATHML_OPERATOR_SEPARATOR          = 1<<8,
   NS_MATHML_OPERATOR_MOVABLELIMITS      = 1<<9,
   NS_MATHML_OPERATOR_SYMMETRIC          = 1<<10,
+  NS_MATHML_OPERATOR_INTEGRAL           = 1<<11,
 
   // Additional bits not stored in the dictionary
-  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE   = 1<<11,
-  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE   = 1<<12,
-  NS_MATHML_OPERATOR_LEFTSPACE_ATTR     = 1<<13,
-  NS_MATHML_OPERATOR_RIGHTSPACE_ATTR    = 1<<14
+  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE   = 1<<12,
+  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE   = 1<<13,
+  NS_MATHML_OPERATOR_LEFTSPACE_ATTR     = 1<<14,
+  NS_MATHML_OPERATOR_RIGHTSPACE_ATTR    = 1<<15
 };
 
 #define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
@@ -148,12 +149,8 @@ public:
   static PRBool
   IsMutableOperator(const nsString& aOperator);
 
-  // Helper functions for stretchy operators. These are used by the
-  // nsMathMLChar class.
-  static PRInt32 CountStretchyOperator();
-  static PRInt32 FindStretchyOperator(PRUnichar aOperator);
-  static nsStretchDirection GetStretchyDirectionAt(PRInt32 aIndex);
-  static void DisableStretchyOperatorAt(PRInt32 aIndex);
+  // Helper function used by the nsMathMLChar class.
+  static nsStretchDirection GetStretchyDirection(const nsString& aOperator);
 
   // Return the variant type of one Unicode Mathematical Alphanumeric Symbol
   // character (which may be represented by a surrogate pair), or return
@@ -168,7 +165,6 @@ public:
   static const nsDependentSubstring
   TransformVariantChar(const PRUnichar& aChar, eMATHVARIANT aVariant);
 };
-
 
 ////////////////////////////////////////////////////////////////////////////
 // Macros that retrieve the bits used to handle operators
@@ -229,6 +225,9 @@ public:
 
 #define NS_MATHML_OPERATOR_IS_SYMMETRIC(_flags) \
   (NS_MATHML_OPERATOR_SYMMETRIC == ((_flags) & NS_MATHML_OPERATOR_SYMMETRIC))
+
+#define NS_MATHML_OPERATOR_IS_INTEGRAL(_flags) \
+  (NS_MATHML_OPERATOR_INTEGRAL == ((_flags) & NS_MATHML_OPERATOR_INTEGRAL))
 
 #define NS_MATHML_OPERATOR_MINSIZE_IS_ABSOLUTE(_flags) \
   (NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE == ((_flags) & NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE))

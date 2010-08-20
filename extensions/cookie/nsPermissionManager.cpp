@@ -630,8 +630,19 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 
   nsCAutoString host;
   nsresult rv = GetHost(aURI, host);
-  // no host doesn't mean an error. just return the default
-  if (NS_FAILED(rv)) return NS_OK;
+  // No host doesn't mean an error. Just return the default. Unless this is
+  // a file uri. In that case use a magic host.
+  if (NS_FAILED(rv)) {
+    PRBool isFile;
+    rv = aURI->SchemeIs("file", &isFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isFile) {
+      host.AssignLiteral("<file>");
+    }
+    else {
+      return NS_OK;
+    }
+  }
   
   PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
   // If type == -1, the type isn't known,
@@ -648,6 +659,8 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 // Get hostentry for given host string and permission type.
 // walk up the domain if needed.
 // return null if nothing found.
+// Also accepts host on the format "<foo>". This will perform an exact match
+// lookup as the string doesn't contain any dots.
 nsHostEntry *
 nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
                                   PRUint32              aType,
