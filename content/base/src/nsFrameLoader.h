@@ -96,12 +96,9 @@ protected:
     mNetworkCreated(aNetworkCreated)
 #ifdef MOZ_IPC
     , mDelayRemoteDialogs(PR_FALSE)
-    , mRemoteWidgetCreated(PR_FALSE)
+    , mRemoteBrowserShown(PR_FALSE)
     , mRemoteFrame(false)
     , mRemoteBrowser(nsnull)
-#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
-    , mRemoteSocket(nsnull)
-#endif
 #endif
   {}
 
@@ -199,12 +196,11 @@ private:
   nsresult ReallyStartLoadingInternal();
 
 #ifdef MOZ_IPC
-  // True means new process started; nothing else to do
-  bool TryNewProcess();
+  // Return true if remote browser created; nothing else to do
+  bool TryRemoteBrowser();
 
-  // Do the hookup necessary to actually show a remote frame once the view and
-  // widget are available.
-  bool ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view);
+  // Tell the remote browser that it's now "virtually visible"
+  bool ShowRemoteFrame(const nsIntSize& size);
 #endif
 
   nsCOMPtr<nsIDocShell> mDocShell;
@@ -229,17 +225,11 @@ private:
 
 #ifdef MOZ_IPC
   PRPackedBool mDelayRemoteDialogs : 1;
-  PRPackedBool mRemoteWidgetCreated : 1;
+  PRPackedBool mRemoteBrowserShown : 1;
   bool mRemoteFrame;
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;
   TabParent* mRemoteBrowser;
-
-#ifdef MOZ_WIDGET_GTK2
-  GtkWidget* mRemoteSocket;
-#elif defined(MOZ_WIDGET_QT)
-  QX11EmbedContainer* mRemoteSocket;
-#endif
 #endif
 
 };

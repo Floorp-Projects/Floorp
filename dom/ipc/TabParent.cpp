@@ -437,9 +437,16 @@ TabParent::LoadURL(nsIURI* aURI)
 }
 
 void
-TabParent::Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height)
+TabParent::Show(const nsIntSize& size)
 {
-    unused << SendMove(x, y, width, height);
+    // sigh
+    unused << SendShow(size);
+}
+
+void
+TabParent::Move(const nsIntSize& size)
+{
+    unused << SendMove(size);
 }
 
 void
