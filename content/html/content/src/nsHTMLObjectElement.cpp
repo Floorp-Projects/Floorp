@@ -104,8 +104,7 @@ public:
   }
 
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission *aFormSubmission,
-                               nsIContent *aSubmitElement);
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission *aFormSubmission);
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
@@ -321,8 +320,7 @@ nsHTMLObjectElement::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission,
-                                       nsIContent *aSubmitElement)
+nsHTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission)
 {
   nsAutoString name;
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {

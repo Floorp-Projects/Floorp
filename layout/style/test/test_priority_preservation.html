@@ -115,6 +115,26 @@ is(s.getPropertyValue("z-index"), "3",
    "z-index still stored");
 is(s.getPropertyPriority("z-index"), "",
    "z-index priority still stored");
+
+s.setProperty("-moz-border-radius", "2em", "");
+is(s.getPropertyValue("-moz-border-radius"), "2em 2em 2em 2em",
+   "-moz-border-radius serialization 1")
+
+s.setProperty("-moz-border-radius-topleft", "3em 4em", "");
+is(s.getPropertyValue("-moz-border-radius"),
+   "3em 2em 2em 2em / 4em 2em 2em 2em",
+   "-moz-border-radius serialization 2");
+
+s.setProperty("-moz-border-radius", "2em / 3em", "");
+is(s.getPropertyValue("-moz-border-radius"),
+   "2em 2em 2em 2em / 3em 3em 3em 3em",
+   "-moz-border-radius serialization 3")
+
+s.setProperty("-moz-border-radius-topleft", "4em", "");
+is(s.getPropertyValue("-moz-border-radius"),
+   "4em 2em 2em 2em / 4em 3em 3em 3em",
+   "-moz-border-radius serialization 3");
+
 </script>
 </pre>
 </body>

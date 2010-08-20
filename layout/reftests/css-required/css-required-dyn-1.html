@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: Change an input element from non-required type
+             to a required type. -->
+  <link rel='stylesheet' type='text/css' href='css-required-style.css'>
+
+  <script type="text/javascript">
+    function changeType()
+    {
+      document.getElementById('i').type = 'text';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="changeType(); disableReftestWait();">
+    <input type="submit" id="i" required>
+  </body>
+</html>
