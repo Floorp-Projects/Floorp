@@ -40,7 +40,6 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = security/manager/ssl/tests
 
 MODULE		= pipnss
 DIRS		= mochitest

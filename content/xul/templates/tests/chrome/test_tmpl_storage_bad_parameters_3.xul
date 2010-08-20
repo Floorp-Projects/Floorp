@@ -35,8 +35,6 @@ Components.classes["@mozilla.org/consoleservice;1"]
           .getService(Components.interfaces.nsIConsoleService)
           .reset();
 
-copyToProfile('animals.sqlite');
-
 expectedConsoleMessages.push("Error parsing template: a query parameter cannot be bound to the SQL query");
 
 var changes = [];
@@ -44,7 +42,7 @@ var changes = [];
 </script>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
-              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
                 SELECT * FROM animals WHERE species_id = :spec ORDER BY name

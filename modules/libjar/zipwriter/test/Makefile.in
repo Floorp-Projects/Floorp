@@ -39,7 +39,6 @@ DEPTH          = ../../../..
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
-relativesrcdir = modules/libjar/zipwriter/test
 
 include $(DEPTH)/config/autoconf.mk
 

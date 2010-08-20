@@ -42,7 +42,6 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = netwerk/test/httpserver
 
 include $(DEPTH)/config/autoconf.mk
 

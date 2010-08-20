@@ -50,25 +50,10 @@ function run_next_test() {
 }
 
 function get_addon_file_url(aFilename) {
-  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                         .getService(Ci.mozIJSSubScriptLoader);
-  loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
-
-  var jar = getJar(CHROMEROOT + "addons/" + aFilename);
-
-  if (jar == null) {
-    var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-             getService(Ci.nsIChromeRegistry);
-    var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
-    return fileurl.QueryInterface(Ci.nsIFileURL);
-  } else {
-    var ios = Cc["@mozilla.org/network/io-service;1"].  
-                getService(Ci.nsIIOService);
-
-    var tmpDir = extractJarToTmp(jar);
-    tmpDir.append(aFilename);
-    return ios.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
-  }
+  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+           getService(Ci.nsIChromeRegistry);
+  var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
+  return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
 function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
