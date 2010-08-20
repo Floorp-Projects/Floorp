@@ -62,7 +62,7 @@ DoWorkRunnable::Run()
   if (loop) {
     bool nestableTasksAllowed = loop->NestableTasksAllowed();
 
-    // MessageLoop::RunTask() disallows nesting, but our Frankenvent
+    // MessageLoop::RunTask() disallows nesting, but our Frankenventloop
     // will always dispatch DoWork() below from what looks to
     // MessageLoop like a nested context.  So we unconditionally allow
     // nesting here.
