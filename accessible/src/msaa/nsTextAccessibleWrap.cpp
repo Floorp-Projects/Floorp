@@ -259,7 +259,8 @@ __try {
     return E_FAIL;
   }
 
-  nsCOMPtr<nsIRenderingContext> rc = presShell->GetReferenceRenderingContext();
+  nsCOMPtr<nsIRenderingContext> rc;
+  presShell->CreateRenderingContext(frame, getter_AddRefs(rc));
   if (!rc) {
     return E_FAIL;
   }
