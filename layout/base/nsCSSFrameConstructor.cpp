@@ -3599,7 +3599,6 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
     SIMPLE_TAG_CREATE(legend, NS_NewLegendFrame),
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
-    SIMPLE_TAG_CREATE(spacer, NS_NewSpacerFrame),
     COMPLEX_TAG_CREATE(button, &nsCSSFrameConstructor::ConstructButtonFrame),
     SIMPLE_TAG_CREATE(canvas, NS_NewHTMLCanvasFrame),
 #if defined(MOZ_MEDIA)
