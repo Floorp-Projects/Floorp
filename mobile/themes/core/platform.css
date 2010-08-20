@@ -387,18 +387,36 @@ radio:first-child {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
 }
 
+radio:first-child:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
+}
+
 radio:not([disabled=true]):first-child:active:hover,
 radio:first-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
+}
+
+radio:not([disabled=true]):first-child:active:hover:-moz-locale-dir(rtl),
+radio:first-child[selected]:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
 }
 
 radio:last-child {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
 }
 
+radio:last-child:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
+}
+
 radio:not([disabled=true]):last-child:active:hover,
 radio:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
+}
+
+radio:not([disabled=true]):last-child:active:hover:-moz-locale-dir(rtl),
+radio:last-child[selected]:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
 }
 
 radio:first-child:last-child {
@@ -419,16 +437,32 @@ radio.checkbox-radio-on {
   -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-64.png") 8 repeat repeat;
 }
 
+radio.checkbox-radio-on:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-rtl-64.png") 8 repeat repeat;
+}
+
 radio.checkbox-radio-on[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleon-active-64.png") 8 repeat repeat;
+}
+
+radio.checkbox-radio-on[selected]:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleon-active-rtl-64.png") 8 repeat repeat;
 }
 
 radio.checkbox-radio-off {
   -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat;
 }
 
+radio.checkbox-radio-off:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-rtl-64.png") 8 repeat repeat;
+}
+
 radio.checkbox-radio-off[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat;
+}
+
+radio.checkbox-radio-off[selected]:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-rtl-64.png") 8 repeat repeat;
 }
 
 radio.checkbox-radio-on:not([selected]) .radio-label-box,
@@ -452,18 +486,36 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
 }
 
+.toggle-dark radio:first-child:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
+}
+
 .toggle-dark:not([disabled=true]) radio:first-child:active:hover,
 .toggle-dark radio:first-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
+}
+
+.toggle-dark:not([disabled=true]) radio:first-child:active:hover:-moz-locale-dir(rtl),
+.toggle-dark radio:first-child[selected]:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
 }
 
 .toggle-dark radio:last-child {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
 }
 
+.toggle-dark radio:last-child:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
+}
+
 .toggle-dark:not([disabled=true]) radio:last-child:active:hover,
 .toggle-dark radio:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
+}
+
+.toggle-dark:not([disabled=true]) radio:last-child:active:hover:-moz-locale-dir(rtl),
+.toggle-dark radio:last-child[selected]:-moz-locale-dir(rtl) {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
 }
 
 .toggle-dark radio:first-child:last-child {
@@ -613,8 +665,16 @@ menulist > dropmarker {
   display: block;
 }
 
+menulist > dropmarker:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/images/dropmarker-rtl-30.png");
+}
+
 menulist[disabled="true"] > dropmarker {
   list-style-image: url("chrome://browser/skin/images/dropmarker-disabled-30.png");
+}
+
+menulist[disabled="true"] > dropmarker:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://browser/skin/images/dropmarker-disabled-rtl-30.png");
 }
 
 /* progressmeter ----------------------------------------------------------- */

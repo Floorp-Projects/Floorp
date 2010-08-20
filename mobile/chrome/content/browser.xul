@@ -43,6 +43,8 @@
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
 <!DOCTYPE window [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -56,6 +58,7 @@
         onunload="Browser.shutdown();"
         onclose="return Browser.closing();"
         windowtype="navigator:browser"
+        chromedir="&locale.dir;"
         title="&brandShortName;"
 #ifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"

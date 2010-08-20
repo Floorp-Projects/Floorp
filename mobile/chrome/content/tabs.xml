@@ -126,10 +126,12 @@
       <method name="_updateWidth">
         <body>
           <![CDATA[
-            let boundingBox = this.firstChild.getBoundingClientRect();
-            let columnsCount = Math.ceil(this.childNodes.length / Math.floor(this.style.height / boundingBox.height));
+            let firstBox = this.firstChild.getBoundingClientRect();
+            let lastBox = this.lastChild.getBoundingClientRect();
+            let columnsCount = Math.ceil(this.childNodes.length / Math.floor(this.style.height / firstBox.height));
             if (this._columnsCount != columnsCount) {
-              this.style.width = (this.lastChild.boxObject.x + boundingBox.width) + "px";
+              let width = Math.max(lastBox.right - firstBox.left, firstBox.right - lastBox.left);
+              this.style.width = width + "px";
               this._columnsCount = columnsCount;
             }
           ]]>

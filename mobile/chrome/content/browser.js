@@ -1011,6 +1011,9 @@ var Browser = {
     let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
     let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
 
+    if (leftbarCBR.left > ritebarCBR.left)
+      [ritebarCBR, leftbarCBR] = [leftbarCBR, ritebarCBR]; // switch in RTL case
+
     let leftbar = new Rect(Math.round(leftbarCBR.left) - dx, 0, Math.round(leftbarCBR.width), 1);
     let ritebar = new Rect(Math.round(ritebarCBR.left) - dx, 0, Math.round(ritebarCBR.width), 1);
     let leftw = leftbar.width;
