@@ -60,7 +60,7 @@
   </html:head>
 
   <popupset id="contextmenus">
-    <popup id="tabListContext">
+    <menupopup id="tabListContext">
       <menuitem label="&tabs.context.openTab.label;"
                 accesskey="&tabs.context.openTab.accesskey;"
                 oncommand="RemoteTabViewer.openSelected()"
@@ -82,7 +82,7 @@
                 accesskey="&tabs.context.refreshList.accesskey;"
                 oncommand="RemoteTabViewer.buildList()"
                 showFor="all"/>
-    </popup>
+    </menupopup>
   </popupset>
   <richlistbox context="tabListContext" id="tabsList" seltype="multiple"
                align="center" flex="1"
