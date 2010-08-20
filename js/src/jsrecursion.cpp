@@ -186,7 +186,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     exit->numStackSlotsBelowCurrentFrame = cx->fp->down->argv ?
         nativeStackOffset(&cx->fp->argv[-2]) / sizeof(double) : 0;
     exit->exitType = UNSTABLE_LOOP_EXIT;
-    exit->block = cx->fp->down->blockChain;
+    exit->block = cx->fp->down->maybeBlockChain();
     exit->pc = downFrame->pc + JSOP_CALL_LENGTH;
     exit->imacpc = NULL;
     exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - tree->nativeStackBase;
@@ -213,7 +213,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::upRecursion()
 {
     JS_ASSERT((JSOp)*cx->fp->down->savedPC == JSOP_CALL);
-    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp->down->script,
+    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp->down->getScript(),
               cx->fp->down->savedPC)].length == JSOP_CALL_LENGTH);
 
     JS_ASSERT(callDepth == 0);
@@ -257,10 +257,10 @@ TraceRecorder::upRecursion()
      * moved on this one.
      */
     fi->spdist = DownFrameSP(cx) - cx->fp->down->slots();
-    JS_ASSERT(cx->fp->argc == cx->fp->down->argc);
-    fi->set_argc(uint16(cx->fp->argc), false);
+    JS_ASSERT(cx->fp->numActualArgs() == cx->fp->down->numActualArgs());
+    fi->set_argc(uint16(cx->fp->numActualArgs()), false);
     fi->callerHeight = downPostSlots;
-    fi->callerArgc = cx->fp->down->argc;
+    fi->callerArgc = cx->fp->down->numActualArgs();
 
     if (anchor && anchor->exitType == RECURSIVE_MISMATCH_EXIT) {
         /*
@@ -390,7 +390,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 {
     /* Missing - no go */
-    if (cx->fp->argc != cx->fp->fun->nargs)
+    if (cx->fp->numActualArgs() != cx->fp->numFormalArgs())
         RETURN_STOP_A("argc != nargs");
 
     LIns* argv_ins;
@@ -432,9 +432,9 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
             guard(true,
                   lir->ins2(LIR_eqp,
                             addName(lir->insLoad(LIR_ldp, fp_ins,
-                                                 offsetof(JSStackFrame, script), ACCSET_OTHER),
+                                                 JSStackFrame::offsetScript(), ACCSET_OTHER),
                                     "script"),
-                            INS_CONSTPTR(cx->fp->down->script)),
+                            INS_CONSTPTR(cx->fp->down->getScript())),
                   RECURSIVE_LOOP_EXIT);
         }
 
@@ -450,10 +450,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         /* fp->down->argc should be == argc. */
         guard(true,
               lir->ins2(LIR_eqi,
-                        addName(lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc),
+                        addName(lir->insLoad(LIR_ldi, fp_ins, JSStackFrame::offsetNumActualArgs(),
                                              ACCSET_OTHER),
                                 "argc"),
-                        INS_CONST(cx->fp->argc)),
+                        INS_CONST(cx->fp->numActualArgs())),
               MISMATCH_EXIT);
 
         /* Pop the interpreter frame. */
@@ -591,19 +591,19 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     /* this */
     slurpSlot(argv_ins, -1 * ptrdiff_t(sizeof(Value)), &fp->argv[-1], &info);
     /* args[0..n] */
-    for (unsigned i = 0; i < JS_MAX(fp->argc, fp->fun->nargs); i++)
+    for (unsigned i = 0; i < JS_MAX(fp->numActualArgs(), fp->numFormalArgs()); i++)
         slurpSlot(argv_ins, i * sizeof(Value), &fp->argv[i], &info);
     /* argsobj */
     slurpFrameObjPtrSlot(fp_ins, JSStackFrame::offsetArgsObj(), fp->addressArgsObj(), &info);
     /* scopeChain */
-    slurpFrameObjPtrSlot(fp_ins, offsetof(JSStackFrame, scopeChain), &fp->scopeChain, &info);
+    slurpFrameObjPtrSlot(fp_ins, JSStackFrame::offsetScopeChain(), fp->addressScopeChain(), &info);
     /* vars */
     LIns* slots_ins = addName(lir->ins2(LIR_addp, fp_ins, INS_CONSTWORD(sizeof(JSStackFrame))),
                               "slots");
-    for (unsigned i = 0; i < fp->script->nfixed; i++)
+    for (unsigned i = 0; i < fp->getFixedCount(); i++)
         slurpSlot(slots_ins, i * sizeof(Value), &fp->slots()[i], &info);
     /* stack vals */
-    unsigned nfixed = fp->script->nfixed;
+    unsigned nfixed = fp->getFixedCount();
     Value* stack = fp->base();
     LIns* stack_ins = addName(lir->ins2(LIR_addp,
                                         slots_ins,
@@ -614,7 +614,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
         limit--;
     else
-        limit -= fp->fun->nargs + 2;
+        limit -= fp->numFormalArgs() + 2;
     for (size_t i = 0; i < limit; i++)
         slurpSlot(stack_ins, i * sizeof(Value), &stack[i], &info);
 
@@ -673,14 +673,16 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::downRecursion()
 {
     JSStackFrame* fp = cx->fp;
-    if ((jsbytecode*)fragment->ip < fp->script->code ||
-        (jsbytecode*)fragment->ip >= fp->script->code + fp->script->length) {
+    JSScript *script = fp->getScript();
+    if ((jsbytecode*)fragment->ip < script->code ||
+        (jsbytecode*)fragment->ip >= script->code + script->length) {
         RETURN_STOP_A("inner recursive call must compile first");
     }
 
     /* Adjust the stack by the budget the down-frame needs. */
     int slots = NativeStackSlots(cx, 1) - NativeStackSlots(cx, 0);
-    JS_ASSERT(unsigned(slots) == NativeStackSlots(cx, 1) - fp->argc - 2 - fp->script->nfixed - 2);
+    JS_ASSERT(unsigned(slots) ==
+              NativeStackSlots(cx, 1) - fp->numActualArgs() - 2 - fp->getFixedCount() - 2);
 
     /* Guard that there is enough stack space. */
     JS_ASSERT(tree->maxNativeStackSlots >= tree->nativeStackBase / sizeof(double));
@@ -722,11 +724,11 @@ TraceRecorder::downRecursion()
      * tree pc.
      */
     VMSideExit* exit;
-    if ((jsbytecode*)fragment->root->ip == fp->script->code)
+    if ((jsbytecode*)fragment->root->ip == script->code)
         exit = snapshot(UNSTABLE_LOOP_EXIT);
     else
         exit = snapshot(RECURSIVE_UNLINKED_EXIT);
-    exit->recursive_pc = fp->script->code;
+    exit->recursive_pc = script->code;
     debug_only_print0(LC_TMTracer, "Compiling down-recursive function call.\n");
     JS_ASSERT(tree->recursion != Recursion_Disallowed);
     tree->recursion = Recursion_Detected;

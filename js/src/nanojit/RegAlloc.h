@@ -120,9 +120,13 @@ namespace nanojit
             return active[r];
         }
 
-        debug_only( uint32_t    countActive(); )
+        // Return a mask containing the active registers.  For each register
+        // in this set, getActive(register) will be a nonzero LIns pointer.
+        RegisterMask activeMask() const {
+            return ~free & managed;
+        }
+
         debug_only( bool        isConsistent(Register r, LIns* v) const; )
-        debug_only( RegisterMask managed; )     // the registers managed by the register allocator
 
         // Some basics:
         //
@@ -171,10 +175,41 @@ namespace nanojit
         //
         LIns*           active[LastReg + 1];    // active[r] = LIns that defines r
         int32_t         usepri[LastReg + 1];    // used priority. lower = more likely to spill.
-        RegisterMask    free;
+        RegisterMask    free;       // Registers currently free.
+        RegisterMask    managed;    // Registers under management (invariant).
         int32_t         priority;
 
         DECLARE_PLATFORM_REGALLOC()
     };
+
+    // Return the lowest numbered Register in mask.
+    inline Register lsReg(RegisterMask mask) {
+        // This is faster than it looks; we rely on the C++ optimizer
+        // to strip the dead branch and inline just one alternative.
+        if (sizeof(RegisterMask) == 4)
+            return (Register) lsbSet32(mask);
+        else
+            return (Register) lsbSet64(mask);
+    }
+
+    // Return the highest numbered Register in mask.
+    inline Register msReg(RegisterMask mask) {
+        // This is faster than it looks; we rely on the C++ optimizer
+        // to strip the dead branch and inline just one alternative.
+        if (sizeof(RegisterMask) == 4)
+            return (Register) msbSet32(mask);
+        else
+            return (Register) msbSet64(mask);
+    }
+
+    // Clear bit r in mask, then return lsReg(mask).
+    inline Register nextLsReg(RegisterMask& mask, Register r) {
+        return lsReg(mask &= ~rmask(r));
+    }
+
+    // Clear bit r in mask, then return msReg(mask).
+    inline Register nextMsReg(RegisterMask& mask, Register r) {
+        return msReg(mask &= ~rmask(r));
+    }
 }
 #endif // __nanojit_RegAlloc__

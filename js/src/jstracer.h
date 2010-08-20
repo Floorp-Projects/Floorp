@@ -1159,7 +1159,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* stringify(const Value& v);
 
-    JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins);
+    JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins, bool strict);
 
     JS_REQUIRES_STACK bool canCallImacro() const;
     JS_REQUIRES_STACK RecordingStatus callImacro(jsbytecode* imacro);

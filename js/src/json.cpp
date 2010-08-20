@@ -240,16 +240,14 @@ public:
         if (gapValue.value().isString()) {
             if (!js_ValueToCharBuffer(cx, gapValue.value(), gap))
                 return false;
-            if (cb.length() > 10)
-                cb.resize(10);
-        }
-
-        if (gapValue.value().isNumber()) {
+            if (gap.length() > 10)
+                gap.resize(10);
+        } else if (gapValue.value().isNumber()) {
             jsdouble d = gapValue.value().isInt32()
                          ? gapValue.value().toInt32()
                          : js_DoubleToInteger(gapValue.value().toDouble());
             d = JS_MIN(10, d);
-            if (d >= 1 && !cb.appendN(' ', uint32(d)))
+            if (d >= 1 && !gap.appendN(' ', uint32(d)))
                 return false;
         }
 
@@ -346,23 +344,23 @@ JO(JSContext *cx, Value *vp, StringifyContext *scx)
     }
 
     JSBool memberWritten = JS_FALSE;
-    AutoIdArray ida(cx, JS_Enumerate(cx, &keySource->toObject()));
-    if (!ida)
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, &keySource->toObject(), JSITER_OWNONLY, props))
         return JS_FALSE;
 
-    for (jsint i = 0, len = ida.length(); i < len; i++) {
+    for (size_t i = 0, len = props.length(); i < len; i++) {
         outputValue.setUndefined();
 
         if (!usingWhitelist) {
-            if (!js_ValueToStringId(cx, IdToValue(ida[i]), &id))
+            if (!js_ValueToStringId(cx, IdToValue(props[i]), &id))
                 return JS_FALSE;
         } else {
             // skip non-index properties
             jsuint index = 0;
-            if (!js_IdIsIndex(ida[i], &index))
+            if (!js_IdIsIndex(props[i], &index))
                 continue;
 
-            if (!scx->replacer->getProperty(cx, ida[i], &whitelistElement))
+            if (!scx->replacer->getProperty(cx, props[i], &whitelistElement))
                 return JS_FALSE;
 
             if (!js_ValueToStringId(cx, whitelistElement, &id))
@@ -409,6 +407,7 @@ JO(JSContext *cx, Value *vp, StringifyContext *scx)
         s->getCharsAndLength(chars, length);
         if (!write_string(cx, scx->cb, chars, length) ||
             !scx->cb.append(':') ||
+            !(scx->gap.empty() || scx->cb.append(' ')) ||
             !Str(cx, id, obj, scx, &outputValue, true)) {
             return JS_FALSE;
         }
@@ -618,12 +617,12 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
                     return false;
             }
         } else {
-            AutoIdArray ida(cx, JS_Enumerate(cx, obj));
-            if (!ida)
+            AutoIdVector props(cx);
+            if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props))
                 return false;
 
-            for (jsint i = 0, len = ida.length(); i < len; i++) {
-                jsid idName = ida[i];
+            for (size_t i = 0, len = props.length(); i < len; i++) {
+                jsid idName = props[i];
                 if (!Walk(cx, idName, obj, reviver, propValue.addr()))
                     return false;
                 if (propValue.value().isUndefined()) {
