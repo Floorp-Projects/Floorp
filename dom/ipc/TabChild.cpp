@@ -599,8 +599,20 @@ TabChild::RecvShow(const nsIntSize& size)
         return false;
     }
 
-    // FIXME/cjones: implement using fake widget
-    baseWindow->InitWindow(0, 0, 0, 0, 0, 0);
+    mWidget = nsIWidget::CreatePuppetWidget();
+    if (!mWidget) {
+        NS_ERROR("couldn't create fake widget");
+        return false;
+    }
+    mWidget->Create(
+        nsnull, 0,              // no parents
+        nsIntRect(nsIntPoint(0, 0), size),
+        nsnull,                 // HandleWidgetEvent
+        nsnull                  // nsIDeviceContext
+        );
+
+    baseWindow->InitWindow(0, mWidget,
+                           0, 0, size.width, size.height);
     baseWindow->Create();
     baseWindow->SetVisibility(PR_TRUE);
 
@@ -622,6 +634,9 @@ bool
 TabChild::RecvMove(const nsIntSize& size)
 {
     printf("[TabChild] RESIZE to (w,h)= (%ud, %ud)\n", size.width, size.height);
+
+    mWidget->Resize(0, 0, size.width, size.height,
+                    PR_TRUE);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(0, 0, size.width, size.height,

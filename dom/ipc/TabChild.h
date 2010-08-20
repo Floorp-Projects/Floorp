@@ -44,12 +44,12 @@
 #endif
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgressListener2.h"
+#include "nsIWidget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
@@ -301,6 +301,7 @@ private:
     void DestroyWindow();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;
+    nsCOMPtr<nsIWidget> mWidget;
     TabChildGlobal* mTabChildGlobal;
     PRUint32 mChromeFlags;
 
