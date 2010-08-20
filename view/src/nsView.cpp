@@ -745,16 +745,6 @@ nsresult nsView::CreateWidget(const nsIID &aWindowIID,
                     ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
   }
 
-  InitializeWindow(aEnableDragDrop, aResetVisibility);
-
-  return NS_OK;
-}
-
-void
-nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
-{
-  NS_ABORT_IF_FALSE(mWindow, "Must have a window to initialize");
-
   if (aEnableDragDrop) {
     mWindow->EnableDragDrop(PR_TRUE);
   }
@@ -767,6 +757,8 @@ nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
   if (aResetVisibility) {
     SetVisibility(GetVisibility());
   }
+
+  return NS_OK;
 }
 
 // Attach to a top level widget and start receiving mirrored events.
