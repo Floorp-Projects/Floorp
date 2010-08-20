@@ -538,7 +538,7 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
     if (mtrailer->mMouseTrailerWindow != mouseWnd) {
 #ifndef WINCE
       // Notify someone that a mouse exit happened.
-      PostMessage(mtrailer->mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
+      PostMessage(mtrailer->mMouseTrailerWindow, WM_MOUSELEAVE, 0, 0);
 #endif
 
       // we are out of this window, destroy timer

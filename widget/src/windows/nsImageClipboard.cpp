@@ -145,7 +145,6 @@ nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
 nsresult
 nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap )
 {
-    nsresult result = NS_OK;
     *outBitmap = nsnull;
 
     nsRefPtr<gfxImageSurface> frame;

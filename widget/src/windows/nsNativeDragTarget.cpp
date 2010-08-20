@@ -61,7 +61,7 @@ static POINTL gDragLastPoint;
  * class nsNativeDragTarget
  */
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
-  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE), mTookOwnRef(PR_FALSE),
+  : m_cRef(0), mCanMove(PR_TRUE), mTookOwnRef(PR_FALSE), mWindow(aWnd),
   mDropTargetHelper(nsnull)
 {
   mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);

@@ -1336,7 +1336,7 @@ NS_METHOD nsWindow::RegisterTouchWindow() {
   mTouchWindow = PR_TRUE;
 #ifndef WINCE
   mGesture.RegisterTouchWindow(mWnd);
-  ::EnumChildWindows(mWnd, nsWindow::RegisterTouchForDescendants, NULL);
+  ::EnumChildWindows(mWnd, nsWindow::RegisterTouchForDescendants, 0);
 #endif
   return NS_OK;
 }
@@ -1345,7 +1345,7 @@ NS_METHOD nsWindow::UnregisterTouchWindow() {
   mTouchWindow = PR_FALSE;
 #ifndef WINCE
   mGesture.UnregisterTouchWindow(mWnd);
-  ::EnumChildWindows(mWnd, nsWindow::UnregisterTouchForDescendants, NULL);
+  ::EnumChildWindows(mWnd, nsWindow::UnregisterTouchForDescendants, 0);
 #endif
   return NS_OK;
 }
@@ -3301,7 +3301,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
 {
   // The default vertical and horizontal scrolling speed is 3, this is defined
   // on the document of SystemParametersInfo in MSDN.
-  const PRInt32 kSystemDefaultScrollingSpeed = 3;
+  const PRUint32 kSystemDefaultScrollingSpeed = 3;
 
   PRInt32 absOriginDelta = PR_ABS(aOriginalDelta);
 
@@ -3657,7 +3657,7 @@ void nsWindow::DispatchPendingEvents()
     // Note: EnumChildWindows enumerates all descendant windows not just
     // it's children.
 #if !defined(WINCE)
-    ::EnumChildWindows(topWnd, nsWindow::DispatchStarvedPaints, NULL);
+    ::EnumChildWindows(topWnd, nsWindow::DispatchStarvedPaints, 0);
 #else
     nsWindowCE::EnumChildWindows(topWnd, nsWindow::DispatchStarvedPaints, NULL);
 #endif
@@ -4367,7 +4367,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
   }
 
-  static UINT vkKeyCached = 0; // caches VK code fon WM_KEYDOWN
   PRBool result = PR_FALSE;    // call the default nsWindow proc
   *aRetValue = 0;
 
@@ -4973,7 +4972,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
           event.acceptActivation = PR_TRUE;
   
-          PRBool result = DispatchWindowEvent(&event);
+          DispatchWindowEvent(&event);
 #ifndef WINCE
           if (event.acceptActivation)
             *aRetValue = MA_ACTIVATE;
@@ -5112,8 +5111,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     {
       nsIClipboard* clipboard;
       nsresult rv = CallGetService(kCClipboardCID, &clipboard);
-      clipboard->EmptyClipboard(nsIClipboard::kGlobalClipboard);
-      NS_RELEASE(clipboard);
+      if(NS_SUCCEEDED(rv)) {
+        clipboard->EmptyClipboard(nsIClipboard::kGlobalClipboard);
+        NS_RELEASE(clipboard);
+      }
     }
     break;
 
@@ -6193,7 +6194,7 @@ PRUint16 nsWindow::GetMouseInputSource()
   LPARAM lParamExtraInfo = ::GetMessageExtraInfo();
   if ((lParamExtraInfo & TABLET_INK_SIGNATURE) == TABLET_INK_CHECK) {
     inputSource = (lParamExtraInfo & TABLET_INK_TOUCH) ?
-                  nsIDOMNSMouseEvent::MOZ_SOURCE_TOUCH : nsIDOMNSMouseEvent::MOZ_SOURCE_PEN;
+                  PRUint16(nsIDOMNSMouseEvent::MOZ_SOURCE_TOUCH) : nsIDOMNSMouseEvent::MOZ_SOURCE_PEN;
   }
   return inputSource;
 }
@@ -7075,7 +7076,7 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
     // But ::GetMessagePos API always returns (0, 0), even if the actual mouse
     // cursor isn't 0,0.  Therefore, we cannot trust the result of
     // ::GetMessagePos API if the sender is the driver.
-    if (!sMayBeUsingLogitechMouse && aLParam == 0 && aLParam != dwPoints &&
+    if (!sMayBeUsingLogitechMouse && aLParam == 0 && (DWORD)aLParam != dwPoints &&
         ::InSendMessage()) {
       sMayBeUsingLogitechMouse = PR_TRUE;
     } else if (sMayBeUsingLogitechMouse && aLParam != 0 && ::InSendMessage()) {
@@ -8165,6 +8166,8 @@ nsWindow* nsWindow::GetTopLevelWindow(PRBool aStopOnDialogOrPopup)
         case eWindowType_dialog:
         case eWindowType_popup:
           return curWindow;
+        default:
+          break;
       }
     }
 
@@ -8278,7 +8281,7 @@ void nsWindow::InitTrackPointHack()
         break;
       // -1 means autodetect
       case -1:
-        for(int i = 0; i < NS_ARRAY_LENGTH(wstrKeys); i++) {
+        for(unsigned i = 0; i < NS_ARRAY_LENGTH(wstrKeys); i++) {
           HKEY hKey;
           lResult = ::RegOpenKeyExW(HKEY_CURRENT_USER, (LPCWSTR)&wstrKeys[i],
                                     0, KEY_READ, &hKey);
