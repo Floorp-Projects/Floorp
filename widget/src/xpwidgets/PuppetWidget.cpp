@@ -140,6 +140,16 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
 }
 
 NS_IMETHODIMP
+PuppetWidget::Destroy()
+{
+  Base::Destroy();
+  mPaintTask.Revoke();
+  mChild = nsnull;
+  mLayerManager = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PuppetWidget::Show(PRBool aState)
 {
   NS_ASSERTION(mEnabled,
