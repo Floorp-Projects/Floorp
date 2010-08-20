@@ -46,11 +46,15 @@
 
 #include "mozilla/unused.h"
 
+#include "mozilla/layout/RenderFrameParent.h"
+
 #include "gfxSharedImageSurface.h"
 
 #include "ImageLayers.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
+
+using mozilla::layout::RenderFrameParent;
 
 namespace mozilla {
 namespace layers {
@@ -371,6 +375,8 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     reply->AppendElements(&replyv.front(), replyv.size());
   }
 
+  Frame()->ShadowLayersUpdated();
+
   return true;
 }
 
@@ -385,6 +391,12 @@ ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
 {
   delete actor;
   return true;
+}
+
+RenderFrameParent*
+ShadowLayersParent::Frame()
+{
+  return static_cast<RenderFrameParent*>(Manager());
 }
 
 } // namespace layers

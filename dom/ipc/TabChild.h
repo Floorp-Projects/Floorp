@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_tabs_TabChild_h
-#define mozilla_tabs_TabChild_h
+#ifndef mozilla_dom_TabChild_h
+#define mozilla_dom_TabChild_h
 
 #ifndef _IMPL_NS_LAYOUT
 #include "mozilla/dom/PBrowserChild.h"
@@ -79,6 +79,10 @@
 struct gfxMatrix;
 
 namespace mozilla {
+namespace layout {
+class RenderFrameChild;
+}
+
 namespace dom {
 
 class TabChild;
@@ -155,6 +159,8 @@ class TabChild : public PBrowserChild,
                  public nsIDialogCreator,
                  public nsITabChild
 {
+    typedef mozilla::layout::RenderFrameChild RenderFrameChild;
+
 public:
     TabChild(PRUint32 aChromeFlags);
     virtual ~TabChild();
@@ -302,10 +308,12 @@ private:
     void ActorDestroy(ActorDestroyReason why);
 
     bool InitTabChildGlobal();
+    bool InitWidget(const nsIntSize& size);
     void DestroyWindow();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;
     nsCOMPtr<nsIWidget> mWidget;
+    RenderFrameChild* mRemoteFrame;
     TabChildGlobal* mTabChildGlobal;
     PRUint32 mChromeFlags;
 
@@ -334,4 +342,4 @@ GetTabChildFrom(nsIPresShell* aPresShell)
 }
 }
 
-#endif // mozilla_tabs_TabChild_h
+#endif // mozilla_dom_TabChild_h
