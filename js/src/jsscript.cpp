@@ -1277,6 +1277,33 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         js_MarkScriptFilename(script->filename);
 }
 
+JSBool
+js_NewScriptObject(JSContext *cx, JSScript *script)
+{
+    AutoScriptRooter root(cx, script);
+
+    JS_ASSERT(!script->u.object);
+    JS_ASSERT(script != JSScript::emptyScript());
+
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
+    if (!obj)
+        return JS_FALSE;
+    obj->setPrivate(script);
+    script->u.object = obj;
+
+    /*
+     * Clear the object's proto, to avoid entraining stuff. Once we no longer use the parent
+     * for security checks, then we can clear the parent, too.
+     */
+    obj->clearProto();
+
+#ifdef CHECK_SCRIPT_OWNER
+    script->owner = NULL;
+#endif
+
+    return JS_TRUE;
+}
+
 typedef struct GSNCacheEntry {
     JSDHashEntryHdr     hdr;
     jsbytecode          *pc;
