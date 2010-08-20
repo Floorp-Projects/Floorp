@@ -77,6 +77,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsISupportsPrimitives.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsConstraintValidation.h"
 
 #include "nsTextEditorState.h"
 
@@ -89,7 +90,8 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIDOMNSHTMLTextAreaElement,
                               public nsITextControlElement,
                               public nsIDOMNSEditableElement,
-                              public nsStubMutationObserver
+                              public nsStubMutationObserver,
+                              public nsConstraintValidation
 {
 public:
   nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -123,10 +125,11 @@ public:
   // nsIFormControl
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_TEXTAREA; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement);
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
+
+  virtual PRInt32 IntrinsicState() const;
 
   // nsITextControlElemet
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
@@ -196,6 +199,14 @@ public:
                                            nsGenericHTMLFormElement)
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // nsConstraintValidation
+  PRBool   IsTooLong();
+  PRBool   IsValueMissing();
+  PRBool   IsBarredFromConstraintValidation();
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                ValidationMessageType aType);
+
 protected:
   using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
 
@@ -242,6 +253,11 @@ protected:
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom *aName,
                                 const nsAString* aValue, PRBool aNotify);
+
+  /**
+   * Get the mutable state of the element.
+   */
+  PRBool IsMutable() const;
 };
 
 
@@ -296,6 +312,9 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTextAreaElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLTextAreaElement)
+
+// nsConstraintValidation
+NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLTextAreaElement)
 
 
 NS_IMETHODIMP
@@ -397,6 +416,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLTextAreaElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
+NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Required, required)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Wrap, wrap)
@@ -837,8 +857,7 @@ nsHTMLTextAreaElement::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                                         nsIContent* aSubmitElement)
+nsHTMLTextAreaElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   nsresult rv = NS_OK;
 
@@ -935,7 +954,19 @@ nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
   return PR_FALSE;
 }
 
+PRInt32
+nsHTMLTextAreaElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
 
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    state |= NS_EVENT_STATE_REQUIRED;
+  } else {
+    state |= NS_EVENT_STATE_OPTIONAL;
+  }
+
+  return state;
+}
 
 nsresult
 nsHTMLTextAreaElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -1030,6 +1061,96 @@ nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
     static_cast<nsHTMLTextAreaElement*>(aDest)->SetValue(value);
   }
   return NS_OK;
+}
+
+PRBool
+nsHTMLTextAreaElement::IsMutable() const
+{
+  return (!HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) &&
+          !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
+}
+
+// nsConstraintValidation
+
+PRBool
+nsHTMLTextAreaElement::IsTooLong()
+{
+  if (!mValueChanged) {
+    return PR_FALSE;
+  }
+
+  PRInt32 maxLength = -1;
+  PRInt32 textLength = -1;
+
+  GetMaxLength(&maxLength);
+  GetTextLength(&textLength);
+
+  return (maxLength >= 0) && (textLength > maxLength);
+}
+
+PRBool
+nsHTMLTextAreaElement::IsValueMissing()
+{
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) || !IsMutable()) {
+    return PR_FALSE;
+  }
+
+  nsAutoString value;
+  nsresult rv = GetValue(value);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return value.IsEmpty();
+}
+
+PRBool
+nsHTMLTextAreaElement::IsBarredFromConstraintValidation()
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+}
+
+nsresult
+nsHTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
+                                            ValidationMessageType aType)
+{
+  nsresult rv = NS_OK;
+
+  switch (aType)
+  {
+    case VALIDATION_MESSAGE_TOO_LONG:
+      {
+        nsXPIDLString message;
+        PRInt32 maxLength = -1;
+        PRInt32 textLength = -1;
+        nsAutoString strMaxLength;
+        nsAutoString strTextLength;
+
+        GetMaxLength(&maxLength);
+        GetTextLength(&textLength);
+
+        strMaxLength.AppendInt(maxLength);
+        strTextLength.AppendInt(textLength);
+
+        const PRUnichar* params[] = { strTextLength.get(), strMaxLength.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "ElementSuffersFromBeingTooLong",
+                                                   params, 2, message);
+        aValidationMessage = message;
+      }
+      break;
+    case VALIDATION_MESSAGE_VALUE_MISSING:
+      {
+        nsXPIDLString message;
+        rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                "TextElementSuffersFromBeingMissing",
+                                                message);
+        aValidationMessage = message;
+      }
+      break;
+    default:
+      rv = nsConstraintValidation::GetValidationMessage(aValidationMessage, aType);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP_(PRBool)

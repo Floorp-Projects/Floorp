@@ -139,32 +139,32 @@ let TabView = {
 
   // ----------
   updateContextMenu: function(tab, popup) {
+    let separator = document.getElementById("context_tabViewNamedGroups");
     let isEmpty = true;
 
-    while(popup.lastChild && popup.lastChild.id != "context_namedGroups")
-      popup.removeChild(popup.lastChild);
+    while (popup.firstChild && popup.firstChild != separator)
+      popup.removeChild(popup.firstChild);
 
     let self = this;
     this._initFrame(function() {
       let activeGroup = tab.tabItem.parent;
       let groupItems = self._window.GroupItems.groupItems;
-  
+
       groupItems.forEach(function(groupItem) { 
         if (groupItem.getTitle().length > 0 && 
             (!activeGroup || activeGroup.id != groupItem.id)) {
           let menuItem = self._createGroupMenuItem(groupItem);
-          popup.appendChild(menuItem);
+          popup.insertBefore(menuItem, separator);
           isEmpty = false;
         }
       });
-      document.getElementById("context_namedGroups").hidden = isEmpty;
+      separator.hidden = isEmpty;
     });
   },
 
   // ----------
   _createGroupMenuItem : function(groupItem) {
     let menuItem = document.createElement("menuitem")
-    menuItem.setAttribute("class", "group");
     menuItem.setAttribute("label", groupItem.getTitle());
     menuItem.setAttribute(
       "oncommand", 

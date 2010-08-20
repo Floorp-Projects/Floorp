@@ -83,6 +83,7 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_toggleBackgroundUpdateCheck"/>
+    <command id="cmd_installFromFile"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -177,6 +178,11 @@
                       label="&updates.viewUpdates.label;"
                       accesskey="&updates.viewUpdates.accesskey;"
                       command="cmd_goToRecentUpdates"/>
+            <menuseparator id="utils-installFromFile-separator"/>
+            <menuitem id="utils-installFromFile"
+                      label="&installFromFile.label;"
+                      accesskey="&installFromFile.accesskey;"
+                      command="cmd_installFromFile"/>
             <menuseparator/>
             <menuitem id="utils-backgroudUpdateCheck"
                       label="&updates.backgroudUpdateCheck.label;"

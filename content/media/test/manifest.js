@@ -203,6 +203,7 @@ var gSeekTests = [
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"320x240.ogv", type:"video/ogg", duration:0.233 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 

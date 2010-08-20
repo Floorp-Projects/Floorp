@@ -1,8 +1,3 @@
-
-*[hidden] {
-  display: none;
-}
-
 html {
   background: -moz-Dialog;
   font: 3mm tahoma,arial,helvetica,sans-serif;
@@ -54,16 +49,8 @@ html {
   padding: 0 1em 1em 2em;
 }
 
-#alwaysUse {
-  padding: 3px;
-}
-
 #feedHeader[firstrun="true"] #feedSubscribeLine {
   padding-left: 3.7em;
-}
-
-#chooseApplicationMenuItem {
-  list-style-image: url("chrome://browser/skin/preferences/application.png");
 }
 
 /* Don't print subscription UI */

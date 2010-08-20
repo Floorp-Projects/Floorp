@@ -51,6 +51,7 @@ import sys
 import threading
 import tempfile
 import zipfile
+import sqlite3
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -289,6 +290,30 @@ class Automation(object):
 
     return locations
 
+  def setupPermissionsDatabase(self, profileDir, permissions):
+    # Open database and create table
+    permDB = sqlite3.connect(os.path.join(profileDir, "permissions.sqlite"))
+    cursor = permDB.cursor();
+    cursor.execute("""CREATE TABLE moz_hosts (
+       id INTEGER PRIMARY KEY,
+       host TEXT,
+       type TEXT,
+       permission INTEGER,
+       expireType INTEGER,
+       expireTime INTEGER)""")
+
+    # Insert desired permissions
+    c = 0
+    for perm in permissions.keys():
+      for host in permissions[perm]:
+        c += 1
+        cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, 1, 0, 0)",
+                       (c, host, perm))
+
+    # Commit and close
+    permDB.commit()
+    cursor.close()
+
   def initializeProfile(self, profileDir, extraPrefs = [], useServerLocations = False):
     " Sets up the standard testing profile."
 
@@ -296,6 +321,11 @@ class Automation(object):
     # Start with a clean slate.
     shutil.rmtree(profileDir, True)
     os.mkdir(profileDir)
+
+    # Set up permissions database
+    locations = self.readLocations()
+    self.setupPermissionsDatabase(profileDir,
+      {'allowXULXBL':map(lambda l: l.host, locations)});
 
     part = """\
 user_pref("browser.dom.window.dump.enabled", true);
@@ -354,8 +384,6 @@ user_pref("capability.principal.codebase.p1.subjectName", "");
 """  % { "origin": "http://" + self.webServer + ":" + str(self.httpPort) }
       prefs.append(part)
     else:
-      locations = self.readLocations()
-
       # Grant God-power to all the privileged servers on which tests run.
       privileged = filter(lambda loc: "privileged" in loc.options, locations)
       for (i, l) in itertools.izip(itertools.count(1), privileged):
