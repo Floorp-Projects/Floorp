@@ -39,8 +39,10 @@
 #include "TabChild.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/PContentDialogChild.h"
+#include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 
+#include "BasicLayers.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsEmbedCID.h"
@@ -89,6 +91,7 @@
 #include "nsIView.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::layers;
 using namespace mozilla::layout;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
@@ -112,7 +115,8 @@ public:
 
 
 TabChild::TabChild(PRUint32 aChromeFlags)
-  : mTabChildGlobal(nsnull)
+  : mRemoteFrame(nsnull)
+  , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
 {
     printf("creating %d!\n", NS_IsMainThread());
@@ -412,8 +416,17 @@ TabChild::DestroyWindow()
     if (baseWindow)
         baseWindow->Destroy();
 
-    if (mWidget)
+    // NB: the order of mWidget->Destroy() and mRemoteFrame->Destroy()
+    // is important: we want to kill off remote layers before their
+    // frames
+    if (mWidget) {
         mWidget->Destroy();
+    }
+
+    if (mRemoteFrame) {
+        mRemoteFrame->Destroy();
+        mRemoteFrame = nsnull;
+    }
 }
 
 void
@@ -603,17 +616,9 @@ TabChild::RecvShow(const nsIntSize& size)
         return false;
     }
 
-    mWidget = nsIWidget::CreatePuppetWidget();
-    if (!mWidget) {
-        NS_ERROR("couldn't create fake widget");
+    if (!InitWidget(size)) {
         return false;
     }
-    mWidget->Create(
-        nsnull, 0,              // no parents
-        nsIntRect(nsIntPoint(0, 0), size),
-        nsnull,                 // HandleWidgetEvent
-        nsnull                  // nsIDeviceContext
-        );
 
     baseWindow->InitWindow(0, mWidget,
                            0, 0, size.width, size.height);
@@ -1125,6 +1130,53 @@ TabChild::InitTabChildGlobal()
   JS_SetGlobalObject(cx, global);
   DidCreateCx();
   return true;
+}
+
+bool
+TabChild::InitWidget(const nsIntSize& size)
+{
+    NS_ABORT_IF_FALSE(!mWidget && !mRemoteFrame, "CreateWidget twice?");
+
+    mWidget = nsIWidget::CreatePuppetWidget();
+    if (!mWidget) {
+        NS_ERROR("couldn't create fake widget");
+        return false;
+    }
+    mWidget->Create(
+        nsnull, 0,              // no parents
+        nsIntRect(nsIntPoint(0, 0), size),
+        nsnull,                 // HandleWidgetEvent
+        nsnull                  // nsIDeviceContext
+        );
+
+    RenderFrameChild* remoteFrame =
+        static_cast<RenderFrameChild*>(SendPRenderFrameConstructor());
+    if (!remoteFrame) {
+      NS_WARNING("failed to construct RenderFrame");
+      return false;
+    }
+
+    NS_ABORT_IF_FALSE(0 == remoteFrame->ManagedPLayersChild().Length(),
+                      "shouldn't have a shadow manager yet");
+    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor();
+    if (!shadowManager) {
+      NS_WARNING("failed to construct LayersChild");
+      // This results in |remoteFrame| being deleted.
+      PRenderFrameChild::Send__delete__(remoteFrame);
+      return false;
+    }
+
+    LayerManager* lm = mWidget->GetLayerManager();
+    NS_ABORT_IF_FALSE(LayerManager::LAYERS_BASIC == lm->GetBackendType(),
+                      "content processes should only be using BasicLayers");
+
+    BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
+    NS_ABORT_IF_FALSE(!bslm->HasShadowManager(),
+                      "PuppetWidget shouldn't have shadow manager yet");
+    bslm->SetShadowManager(shadowManager);
+
+    mRemoteFrame = remoteFrame;
+    return true;
 }
 
 static bool

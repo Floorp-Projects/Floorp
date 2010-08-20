@@ -110,6 +110,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
     parent->SetChild(this);
+    mLayerManager = parent->GetLayerManager();
   }
   else {
     Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
@@ -267,7 +268,7 @@ LayerManager*
 PuppetWidget::GetLayerManager()
 {
   if (!mLayerManager) {
-    mLayerManager = new BasicLayerManager(this);
+    mLayerManager = new BasicShadowLayerManager(this);
   }
   return mLayerManager;
 }
