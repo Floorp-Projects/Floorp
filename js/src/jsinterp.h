@@ -69,6 +69,7 @@ enum JSFrameFlags {
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
     JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
     JSFRAME_DUMMY              = 0x200, /* frame is a dummy frame */
+    JSFRAME_IN_IMACRO          = 0x400, /* frame has imacpc value available */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -86,16 +87,20 @@ struct JSStackFrame
   private:
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
+    JSObject            *scopeChain;    /* current scope chain */
+    JSObject            *blockChain;    /* current static block */
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
+    void                *annotation;    /* used by Java security */
+    void                *hookData;      /* debugger call hook data */
+    JSVersion           callerVersion;  /* dynamic version of calling script */
+    JSScript            *script;        /* script being interpreted */
+    JSFunction          *fun;           /* function being called or null */
+    js::Value           thisv;          /* "this" pointer if in method */
+    js::Value           rval;           /* function return value */
+    uintN               argc;           /* actual argument count */
 
   public:
-    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
-    JSScript            *script;        /* script being interpreted */
-    js::Value           thisv;          /* "this" pointer if in method */
-    JSFunction          *fun;           /* function being called or null */
-    uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
-    void                *annotation;    /* used by Java security */
-    js::Value           rval;           /* function return value */
 
     /* Maintained by StackSpace operations */
     JSStackFrame        *down;          /* previous frame, part of
@@ -105,52 +110,9 @@ struct JSStackFrame
     static jsbytecode *const sInvalidPC;
 #endif
 
-    /*
-     * We can't determine in advance which local variables can live on
-     * the stack and be freed when their dynamic scope ends, and which
-     * will be closed over and need to live in the heap.  So we place
-     * variables on the stack initially, note when they are closed
-     * over, and copy those that are out to the heap when we leave
-     * their dynamic scope.
-     *
-     * The bytecode compiler produces a tree of block objects
-     * accompanying each JSScript representing those lexical blocks in
-     * the script that have let-bound variables associated with them.
-     * These block objects are never modified, and never become part
-     * of any function's scope chain.  Their parent slots point to the
-     * innermost block that encloses them, or are NULL in the
-     * outermost blocks within a function or in eval or global code.
-     *
-     * When we are in the static scope of such a block, blockChain
-     * points to its compiler-allocated block object; otherwise, it is
-     * NULL.
-     *
-     * scopeChain is the current scope chain, including 'call' and
-     * 'block' objects for those function calls and lexical blocks
-     * whose static scope we are currently executing in, and 'with'
-     * objects for with statements; the chain is typically terminated
-     * by a global object.  However, as an optimization, the young end
-     * of the chain omits block objects we have not yet cloned.  To
-     * create a closure, we clone the missing blocks from blockChain
-     * (which is always current), place them at the head of
-     * scopeChain, and use that for the closure's scope chain.  If we
-     * never close over a lexical block, we never place a mutable
-     * clone of it on scopeChain.
-     *
-     * This lazy cloning is implemented in js_GetScopeChain, which is
-     * also used in some other cases --- entering 'with' blocks, for
-     * example.
-     */
-    JSObject        *scopeChain;
-    JSObject        *blockChain;
+    uint32              flags;          /* frame flags -- see below */
 
-    uint32          flags;          /* frame flags -- see below */
-
-    /* Members only needed for inline calls. */
-    void            *hookData;      /* debugger call hook data */
-    JSVersion       callerVersion;  /* dynamic version of calling script */
-
-    void            *padding;
+    void                *padding;
 
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
     jsbytecode *pc(JSContext *cx) const;
@@ -164,7 +126,7 @@ struct JSStackFrame
     }
 
     js::Value *base() const {
-        return slots() + script->nfixed;
+        return slots() + getScript()->nfixed;
     }
 
     /* Call object accessors */
@@ -215,6 +177,264 @@ struct JSStackFrame
 
     static size_t offsetArgsObj() {
         return offsetof(JSStackFrame, argsobj);
+    }
+
+    /*
+     * We can't determine in advance which local variables can live on
+     * the stack and be freed when their dynamic scope ends, and which
+     * will be closed over and need to live in the heap.  So we place
+     * variables on the stack initially, note when they are closed
+     * over, and copy those that are out to the heap when we leave
+     * their dynamic scope.
+     *
+     * The bytecode compiler produces a tree of block objects
+     * accompanying each JSScript representing those lexical blocks in
+     * the script that have let-bound variables associated with them.
+     * These block objects are never modified, and never become part
+     * of any function's scope chain.  Their parent slots point to the
+     * innermost block that encloses them, or are NULL in the
+     * outermost blocks within a function or in eval or global code.
+     *
+     * When we are in the static scope of such a block, blockChain
+     * points to its compiler-allocated block object; otherwise, it is
+     * NULL.
+     *
+     * scopeChain is the current scope chain, including 'call' and
+     * 'block' objects for those function calls and lexical blocks
+     * whose static scope we are currently executing in, and 'with'
+     * objects for with statements; the chain is typically terminated
+     * by a global object.  However, as an optimization, the young end
+     * of the chain omits block objects we have not yet cloned.  To
+     * create a closure, we clone the missing blocks from blockChain
+     * (which is always current), place them at the head of
+     * scopeChain, and use that for the closure's scope chain.  If we
+     * never close over a lexical block, we never place a mutable
+     * clone of it on scopeChain.
+     *
+     * This lazy cloning is implemented in js_GetScopeChain, which is
+     * also used in some other cases --- entering 'with' blocks, for
+     * example.
+     */
+
+    /* Scope chain accessors */
+
+    bool hasScopeChain() const {
+        return scopeChain != NULL;
+    }
+
+    JSObject* getScopeChain() const {
+        JS_ASSERT(hasScopeChain());
+        return scopeChain;
+    }
+
+    JSObject* maybeScopeChain() const {
+        return scopeChain;
+    }
+
+    void setScopeChain(JSObject *obj) {
+        scopeChain = obj;
+    }
+
+    JSObject** addressScopeChain() {
+        return &scopeChain;
+    }
+
+    static size_t offsetScopeChain() {
+        return offsetof(JSStackFrame, scopeChain);
+    }
+
+    /* Block chain accessors */
+
+    bool hasBlockChain() const {
+        return blockChain != NULL;
+    }
+
+    JSObject* getBlockChain() const {
+        JS_ASSERT(hasBlockChain());
+        return blockChain;
+    }
+
+    JSObject* maybeBlockChain() const {
+        return blockChain;
+    }
+
+    void setBlockChain(JSObject *obj) {
+        blockChain = obj;
+    }
+
+    /* IMacroPC accessors. */
+
+    bool hasIMacroPC() const { return flags & JSFRAME_IN_IMACRO; }
+
+    /*
+     * @pre     hasIMacroPC
+     * @return  The PC at which an imacro started executing (guaranteed non-null. The PC of the
+     *          executing imacro must be in regs.pc, so the displaced
+     *          original value is stored here.
+     */
+    jsbytecode *getIMacroPC() const {
+        JS_ASSERT(flags & JSFRAME_IN_IMACRO);
+        return imacpc;
+    }
+
+    /* @return  The imacro pc if hasIMacroPC; otherwise, NULL. */
+    jsbytecode *maybeIMacroPC() const { return hasIMacroPC() ? getIMacroPC() : NULL; }
+
+    void clearIMacroPC() { flags &= ~JSFRAME_IN_IMACRO; }
+
+    void setIMacroPC(jsbytecode *newIMacPC) {
+        JS_ASSERT(newIMacPC);
+        JS_ASSERT(!(flags & JSFRAME_IN_IMACRO));
+        imacpc = newIMacPC;
+        flags |= JSFRAME_IN_IMACRO;
+    }
+
+    /* Annotation accessors */
+
+    bool hasAnnotation() const {
+        return annotation != NULL;
+    }
+
+    void* getAnnotation() const {
+        JS_ASSERT(hasAnnotation());
+        return annotation;
+    }
+
+    void* maybeAnnotation() const {
+        return annotation;
+    }
+
+    void setAnnotation(void *annot) {
+        annotation = annot;
+    }
+
+    /* Debugger hook data accessors */
+
+    bool hasHookData() const {
+        return hookData != NULL;
+    }
+
+    void* getHookData() const {
+        JS_ASSERT(hasHookData());
+        return hookData;
+    }
+
+    void* maybeHookData() const {
+        return hookData;
+    }
+
+    void setHookData(void *data) {
+        hookData = data;
+    }
+
+    /* Version accessors */
+
+    JSVersion getCallerVersion() const {
+        return callerVersion;
+    }
+
+    void setCallerVersion(JSVersion version) {
+        callerVersion = version;
+    }
+
+    /* Script accessors */
+
+    bool hasScript() const {
+        return script != NULL;
+    }
+
+    JSScript* getScript() const {
+        JS_ASSERT(hasScript());
+        return script;
+    }
+
+    JSScript* maybeScript() const {
+        return script;
+    }
+
+    size_t getFixedCount() const {
+        return getScript()->nfixed;
+    }
+
+    size_t getSlotCount() const {
+        return getScript()->nslots;
+    }
+
+    void setScript(JSScript *s) {
+        script = s;
+    }
+
+    static size_t offsetScript() {
+        return offsetof(JSStackFrame, script);
+    }
+
+    /* Function accessors */
+
+    bool hasFunction() const {
+        return fun != NULL;
+    }
+
+    JSFunction* getFunction() const {
+        JS_ASSERT(hasFunction());
+        return fun;
+    }
+
+    JSFunction* maybeFunction() const {
+        return fun;
+    }
+
+    size_t numFormalArgs() const {
+        return getFunction()->nargs;
+    }
+
+    void setFunction(JSFunction *f) {
+        fun = f;
+    }
+
+    /* This-value accessors */
+
+    const js::Value& getThisValue() {
+        return thisv;
+    }
+
+    void setThisValue(const js::Value &v) {
+        thisv = v;
+    }
+
+    /* Return-value accessors */
+
+    const js::Value& getReturnValue() {
+        return rval;
+    }
+
+    void setReturnValue(const js::Value &v) {
+        rval = v;
+    }
+
+    void clearReturnValue() {
+        rval.setUndefined();
+    }
+
+    js::Value* addressReturnValue() {
+        return &rval;
+    }
+
+    static size_t offsetReturnValue() {
+        return offsetof(JSStackFrame, rval);
+    }
+
+    /* Argument count accessors */
+
+    size_t numActualArgs() const {
+        return argc;
+    }
+
+    void setNumActualArgs(size_t n) {
+        argc = n;
+    }
+
+    static size_t offsetNumActualArgs() {
+        return offsetof(JSStackFrame, argc);
     }
 
     /* Other accessors */
@@ -279,6 +499,9 @@ struct JSStackFrame
     }
 
     bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
+
+    /* Contains static assertions for member alignment, don't call. */
+    inline void staticAsserts();
 };
 
 namespace js {
@@ -286,16 +509,20 @@ namespace js {
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
-JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(Value) == 0);
-JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(Value) == 0);
-
 } /* namespace js */
+
+inline void
+JSStackFrame::staticAsserts()
+{
+    JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(js::Value) == 0);
+    JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(js::Value) == 0);
+}
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
 {
-    JS_ASSERT(!fp->fun);
-    return fp->script->nfixed;
+    JS_ASSERT(!fp->hasFunction());
+    return fp->getScript()->nfixed;
 }
 
 /*
@@ -571,7 +798,7 @@ JSStackFrame::getThisObject(JSContext *cx)
         return &thisv.toObject();
     if (!js::ComputeThisFromArgv(cx, argv))
         return NULL;
-    thisv = argv[-1];
+    setThisValue(argv[-1]);
     flags |= JSFRAME_COMPUTED_THIS;
     return &thisv.toObject();
 }

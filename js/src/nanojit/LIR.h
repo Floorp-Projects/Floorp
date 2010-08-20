@@ -289,32 +289,9 @@ namespace nanojit
     struct MiniAccSet { MiniAccSetVal val; };
     static const MiniAccSet MINI_ACCSET_MULTIPLE = { 99 };
 
-#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
-    extern "C" unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
-    # pragma intrinsic(_BitScanReverse)
-
-    // Returns the index of the most significant bit that is set.
-    static int msbSet(uint32_t x) {
-        unsigned long idx;
-        _BitScanReverse(&idx, (unsigned long)(x | 1)); // the '| 1' ensures a 0 result when x==0
-        return idx;
-    }
-#elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-    static int msbSet(uint32_t x) {
-        return 31 - __builtin_clz(x | 1);
-    }
-#else
-    static int msbSet(uint32_t x) {     // slow fallback version
-        for (int i = 31; i >= 0; i--)
-            if ((1 << i) & x) 
-                return i;
-        return 0;
-    }
-#endif
-
     static MiniAccSet compressAccSet(AccSet accSet) {
         if (isSingletonAccSet(accSet)) {
-            MiniAccSet ret = { uint8_t(msbSet(accSet)) };
+            MiniAccSet ret = { uint8_t(msbSet32(accSet)) };
             return ret;
         }
 
@@ -1143,8 +1120,12 @@ namespace nanojit
         // Nb: the types of these bitfields are all 32-bit integers to ensure
         // they are fully packed on Windows, sigh.  Also, 'loadQual' is
         // unsigned to ensure the values 0, 1, and 2 all fit in 2 bits.
-        int32_t     disp:16;
-        int32_t     miniAccSetVal:8;
+        //
+        // Nb: explicit signed keyword for bitfield types is required,
+        // some compilers may treat them as unsigned without it.
+        // See Bugzilla 584219 comment #18
+        signed int  disp:16;
+        signed int  miniAccSetVal:8;
         uint32_t    loadQual:2;
 
         LIns*       oprnd_1;

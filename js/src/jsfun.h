@@ -184,6 +184,8 @@ struct JSFunction : public JSObject
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
     unsigned minArgs()       const { return FUN_MINARGS(this); }
 
+    inline bool inStrictMode() const;
+
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return u.i.nvars;
@@ -278,8 +280,9 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
 #endif
 
 /*
- * NB: the Arguments class is an uninitialized internal class that masquerades
- * (according to Object.prototype.toString.call(argsobj)) as "Object".
+ * NB: the Arguments classes are uninitialized internal classes that masquerade
+ * (according to Object.prototype.toString.call(arguments)) as "Arguments",
+ * while having Object.getPrototypeOf(arguments) === Object.prototype.
  *
  * WARNING (to alert embedders reading this private .h file): arguments objects
  * are *not* thread-safe and should not be used concurrently -- they should be
@@ -291,11 +294,26 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
  * single-threaded objects and GC heaps.
  */
 extern js::Class js_ArgumentsClass;
+namespace js {
+extern Class StrictArgumentsClass;
+}
+
+inline bool
+JSObject::isNormalArguments() const
+{
+    return getClass() == &js_ArgumentsClass;
+}
+
+inline bool
+JSObject::isStrictArguments() const
+{
+    return getClass() == &js::StrictArgumentsClass;
+}
 
 inline bool
 JSObject::isArguments() const
 {
-    return getClass() == &js_ArgumentsClass;
+    return isNormalArguments() || isStrictArguments();
 }
 
 #define JS_ARGUMENT_OBJECT_ON_TRACE ((void *)0xa126)
@@ -349,6 +367,10 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
     (JS_ASSERT((funobj)->isFunction()),                                       \
      (JSFunction *) (funobj)->getPrivate())
 
+extern JSFunction *
+js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
+               uintN flags, JSObject *parent, JSAtom *atom);
+
 namespace js {
 
 /*
@@ -364,6 +386,9 @@ IsInternalFunctionObject(JSObject *funobj)
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }
     
+extern JSString *
+fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
+
 } /* namespace js */
 
 extern JSObject *
@@ -371,10 +396,6 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitArgumentsClass(JSContext *cx, JSObject *obj);
-
-extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom);
 
 extern void
 js_TraceFunction(JSTracer *trc, JSFunction *fun);
@@ -467,6 +488,16 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, js::Value *vp);
 extern JSBool
 js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
 
+/*
+ * Get the arguments object for the given frame.  If the frame is strict mode
+ * code, its current arguments will be copied into the arguments object.
+ *
+ * NB: Callers *must* get the arguments object before any parameters are
+ *     mutated when the frame is strict mode code!  The emitter ensures this
+ *     occurs for strict mode functions containing syntax which might mutate a
+ *     named parameter by synthesizing an arguments access at the start of the
+ *     function.
+ */
 extern JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 
@@ -489,9 +520,8 @@ js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->a
 const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(19) - 1024;
 
 /*
- * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int jsval.
- * Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must fit JSVAL_INT_MAX. To assert that
- * we check first that the shift does not overflow uint32.
+ * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as an Int32
+ * Value.  Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must be less than JSVAL_INT_MAX.
  */
 JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
 JS_STATIC_ASSERT(((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
@@ -555,11 +585,4 @@ js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
 extern JSBool
 js_fun_call(JSContext *cx, uintN argc, js::Value *vp);
 
-
-namespace js {
-
-extern JSString *
-fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
-
-}
 #endif /* jsfun_h___ */
