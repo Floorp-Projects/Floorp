@@ -1141,8 +1141,8 @@ js_NewGenerator(JSContext *cx)
 
     /* Load and compute stack slot counts. */
     JSStackFrame *fp = cx->fp;
-    uintN argc = fp->argc;
-    uintN nargs = JS_MAX(argc, fp->getArgumentCount());
+    uintN argc = fp->numActualArgs();
+    uintN nargs = JS_MAX(argc, fp->numFormalArgs());
     uintN vplen = 2 + nargs;
 
     /* Compute JSGenerator size. */
@@ -1185,7 +1185,7 @@ js_NewGenerator(JSContext *cx)
     newfp->setScript(fp->getScript());
     newfp->setFunction(fp->getFunction());
     newfp->setThisValue(fp->getThisValue());
-    newfp->argc = fp->argc;
+    newfp->setNumActualArgs(fp->numActualArgs());
     newfp->argv = vp + 2;
     newfp->setReturnValue(fp->getReturnValue());
     newfp->setAnnotation(NULL);
