@@ -73,7 +73,7 @@ using namespace js::mjit;
 using namespace JSC;
 
 void JS_FASTCALL
-mjit::stubs::BindName(VMFrame &f)
+stubs::BindName(VMFrame &f)
 {
     PropertyCacheEntry *entry;
 
@@ -96,13 +96,13 @@ mjit::stubs::BindName(VMFrame &f)
 }
 
 JSObject * JS_FASTCALL
-mjit::stubs::BindGlobalName(VMFrame &f)
+stubs::BindGlobalName(VMFrame &f)
 {
     return f.fp->getScopeChain()->getGlobal();
 }
 
 void JS_FASTCALL
-mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
+stubs::SetName(VMFrame &f, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
 
