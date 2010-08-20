@@ -1493,8 +1493,9 @@ GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsIRenderingContext* aRC)
 {
   nsCOMPtr<nsIRenderingContext> tmp = aRC;
   if (!tmp) {
-    tmp = aTextFrame->PresContext()->PresShell()->GetReferenceRenderingContext();
-    if (!tmp)
+    nsresult rv = aTextFrame->PresContext()->PresShell()->
+      CreateRenderingContext(aTextFrame, getter_AddRefs(tmp));
+    if (NS_FAILED(rv))
       return nsnull;
   }
 
