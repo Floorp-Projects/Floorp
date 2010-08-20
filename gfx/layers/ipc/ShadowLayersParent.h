@@ -44,6 +44,11 @@
 #include "mozilla/layers/PLayersParent.h"
 
 namespace mozilla {
+
+namespace layout {
+class RenderFrameParent;
+}
+
 namespace layers {
 
 class Layer;
@@ -51,6 +56,7 @@ class ShadowLayerManager;
 
 class ShadowLayersParent : public PLayersParent
 {
+  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef nsTArray<Edit> EditArray;
   typedef nsTArray<EditReply> EditReplyArray;
 
@@ -70,6 +76,8 @@ protected:
   NS_OVERRIDE virtual bool DeallocPLayer(PLayerParent* actor);
 
 private:
+  RenderFrameParent* Frame();
+
   nsRefPtr<ShadowLayerManager> mLayerManager;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
