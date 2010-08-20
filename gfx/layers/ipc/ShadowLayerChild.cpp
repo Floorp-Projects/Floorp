@@ -38,35 +38,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_ShadowLayersChild_h
-#define mozilla_layers_ShadowLayersChild_h
-
-#include "mozilla/layers/PLayersChild.h"
+#include "ShadowLayerChild.h"
+#include "Layers.h"
+#include "ShadowLayers.h"
 
 namespace mozilla {
 namespace layers {
 
-class ShadowLayersChild : public PLayersChild
+ShadowLayerChild::ShadowLayerChild(ShadowableLayer* aLayer)
+  : mLayer(aLayer)
+{ }
+
+ShadowLayerChild::~ShadowLayerChild()
+{ }
+
+void
+ShadowLayerChild::ActorDestroy(ActorDestroyReason why)
 {
-public:
-  ShadowLayersChild() { }
-  ~ShadowLayersChild() { }
+  NS_ABORT_IF_FALSE(AncestorDeletion != why,
+                    "shadowable layer should have been cleaned up by now");
 
-  /**
-   * Clean this up, finishing with Send__delete__().
-   *
-   * It is expected (checked with an assert) that all shadow layers
-   * created by this have already been destroyed and
-   * Send__delete__()d by the time this method is called.
-   */
-  void Destroy();
+  if (AbnormalShutdown == why) {
+    // This is last-ditch emergency shutdown.  Just have the layer
+    // forget its IPDL resources; IPDL-generated code will clean up
+    // automatically in this case.
+    mLayer->AsLayer()->Disconnect();
+    mLayer = nsnull;
+  }
+}
 
-protected:
-  NS_OVERRIDE virtual PLayerChild* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerChild* actor);
-};
-
-} // namespace layers
-} // namespace mozilla
-
-#endif // ifndef mozilla_layers_ShadowLayersChild_h
+}  // namespace layers
+}  // namespace mozilla
