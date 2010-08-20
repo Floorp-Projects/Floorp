@@ -754,11 +754,18 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
     return false;
   }
 
-  mRemoteBrowser->Show(size);
-  mRemoteBrowserShown = PR_TRUE;
+  // FIXME/cjones: Show()/Hide() is pretty expensive for cross-process
+  // layers; need to figure out what behavior we really want here.
+  // For now, hack.
+  if (!mRemoteBrowserShown) {
+    mRemoteBrowser->Show(size);
+    mRemoteBrowserShown = PR_TRUE;
 
-  nsCOMPtr<nsIChromeFrameMessageManager> dummy;
-  GetMessageManager(getter_AddRefs(dummy)); // Initialize message manager.
+    nsCOMPtr<nsIChromeFrameMessageManager> dummy;
+    GetMessageManager(getter_AddRefs(dummy)); // Initialize message manager.
+  } else {
+    mRemoteBrowser->Move(size);
+  }
 
   return true;
 }
