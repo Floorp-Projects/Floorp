@@ -196,20 +196,20 @@ img {
   background-position: 50% 0;
 }
 
-#firstrun ul#recommended li#starter b {
+#firstrun ul#recommended li#addons b {
   background-position: 50% -150px;
 }
 
-#firstrun ul#recommended li#tour b {
+#firstrun ul#recommended li#home b {
   background-position: 50% -300px;
 }
 
-#firstrun #features {
+#firstrun #relNotes {
   clear: both;
   text-align: center;
 }
 
-#firstrun #features a {
+#firstrun #relNotes a {
   display: inline-block;
   padding: 5px 35px 5px 0;
   background: url("chrome://browser/content/firstrun/nav-arrow.png") right center no-repeat;

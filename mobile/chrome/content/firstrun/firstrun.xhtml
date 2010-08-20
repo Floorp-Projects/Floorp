@@ -64,25 +64,27 @@
     <div id="header">
       <a href="http://mozilla.com/m"><img src="chrome://browser/content/firstrun/mozilla.png" width="64" height="17"/></a>
     </div>
-  
+    
     <div id="head">
       <h1><img src="chrome://branding/content/logoWordmark.png"/></h1>
-      <p>&firstrun.heading;</p>
+      <p>&firstrun.heading2;</p>
     </div>
   
     <div id="content">
       <h2></h2>
       <ul id="recommended">
         <li id="sync"><a href="javascript:loadSync();"><b>&firstrun.sync.title;</b> <span>&firstrun.sync.description;</span></a></li>
-        <li id="starter"><a href="javascript:loadAddons();"><b>&firstrun.starter.title;</b> <span>&firstrun.starter.description;</span></a></li>
-        <li id="tour"><a href="about:home"><b>&firstrun.tour.title;</b> <span>&firstrun.tour.description;</span></a></li>
+        <li id="addons"><a href="javascript:loadAddons();"><b>&firstrun.addons.title;</b> <span>&firstrun.addons.description;</span></a></li>
+        <li id="home"><a href="about:home"><b>&firstrun.home.title;</b> <span>&firstrun.home.description;</span></a></li>
       </ul>
 
-      <p id="features"><a href="https://www.mozilla.com/en-US/mobile/2.0a1/releasenotes/">&firstrun.features;</a></p>
-
+      <p id="relNotes"><a id="releaseNotesURL">&firstrun.relNotes.label;</a></p>
       <script type="application/javascript;version=1.8"><![CDATA[
         let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
         let gChromeWin = null;
+        let links = [
+          {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
+        ];
         
         function getChromeWin() {
           if (!gChromeWin) {
@@ -112,6 +114,23 @@
           let win = getChromeWin();
           win.BrowserUI.showPanel("addons-container");
         }
+
+        function init() {
+          setupLinks();
+        }
+        
+        function setupLinks() {
+          try {
+            let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                                      .getService(Ci.nsIURLFormatter);            
+            links.forEach(function (link) {
+              let url = formatter.formatURLPref(link.pref);
+              let element = document.getElementById(link.id);
+              element.setAttribute("href", url);
+            });
+          } catch (ex) {}
+        }
+        document.addEventListener("DOMContentLoaded", init, false);
       ]]></script>
     </div>
   
