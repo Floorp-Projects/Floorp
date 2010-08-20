@@ -44,6 +44,7 @@ include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PGeolocationRequest;
 include protocol PExternalHelperApp;
+include protocol PRenderFrame;
 
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
@@ -72,6 +73,7 @@ rpc protocol PBrowser
     manages PDocumentRendererNativeID;
     manages PGeolocationRequest;
     manages PExternalHelperApp;
+    manages PRenderFrame;
 
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
@@ -117,6 +119,12 @@ parent:
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
                    PRInt32[] aIntParams, nsString[] aStringParams);
+
+    /**
+     * Create a layout frame (encapsulating a remote layer tree) for
+     * the page that is currently loaded in the <browser>.
+     */
+    async PRenderFrame();
 
     __delete__();
 
