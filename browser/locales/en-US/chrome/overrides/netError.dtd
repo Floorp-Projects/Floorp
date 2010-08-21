@@ -170,12 +170,12 @@ be temporary, and you can try again later.</li>
 <!ENTITY securityOverride.getMeOutOfHereButton "Get me out of here!">
 <!ENTITY securityOverride.exceptionButtonLabel "Add Exception…">
 
-<!-- LOCALIZATION NOTE (securityOverride.warningText) - Do not translate the
-contents of the <xul:button> tags.  The only language content is the label= field,
-which uses strings already defined above. The button is included here (instead of
-netError.xhtml) because it exposes functionality specific to firefox. -->
+<!-- LOCALIZATION NOTE (securityOverride.warningContent) - Do not translate the
+contents of the <button> tags. It uses strings already defined above. The
+button is included here (instead of netError.xhtml) because it exposes
+functionality specific to firefox. -->
 
-<!ENTITY securityOverride.warningText "
+<!ENTITY securityOverride.warningContent "
 <p>You should not add an exception if you are using an internet connection that you do not trust completely or if you are not used to seeing a warning for this server.</p>
 
 <button id='getMeOutOfHereButton'>&securityOverride.getMeOutOfHereButton;</button>
