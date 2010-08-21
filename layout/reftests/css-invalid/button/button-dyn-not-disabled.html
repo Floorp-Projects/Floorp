@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if button is not disabled and invalid, it is candidate for
+             constraint validation and should be affected
+             by :invalid pseudo-class. -->
+  <style>
+    button { background-color: red; }
+    button:invalid { background-color: green; }
+  </style>
+  <script>
+    function onLoadHandler()
+    {
+      var e = document.getElementById('b');
+      e.setCustomValidity('foo');
+      e.removeAttribute('disabled');
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onLoadHandler();">
+    <button id='b' disabled></button>
+  </body>
+</html>

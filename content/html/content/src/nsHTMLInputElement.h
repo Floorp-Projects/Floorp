@@ -171,6 +171,7 @@ public:
   NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
+  NS_IMETHOD_(void) OnValueChanged(PRBool aNotify);
 
   // nsIFileControlElement
   virtual void GetDisplayFileName(nsAString& aFileName);
@@ -180,7 +181,7 @@ public:
   void SetCheckedChangedInternal(PRBool aCheckedChanged);
   PRBool GetCheckedChanged();
   void AddedToRadioGroup(PRBool aNotify = PR_TRUE);
-  void WillRemoveFromRadioGroup();
+  void WillRemoveFromRadioGroup(PRBool aNotify);
   /**
    * Get the radio group container for this button (form or document)
    * @return the radio group container (or null if no form or document)
@@ -215,9 +216,14 @@ public:
   PRBool   IsValueMissing();
   PRBool   HasTypeMismatch();
   PRBool   HasPatternMismatch();
-  PRBool   IsBarredFromConstraintValidation();
+  void     UpdateTooLongValidityState();
+  void     UpdateValueMissingValidityState();
+  void     UpdateTypeMismatchValidityState();
+  void     UpdatePatternMismatchValidityState();
+  void     UpdateAllValidityStates(PRBool aNotify);
+  PRBool   IsBarredFromConstraintValidation() const;
   nsresult GetValidationMessage(nsAString& aValidationMessage,
-                                ValidationMessageType aType);
+                                ValidityStateType aType);
 
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
@@ -373,7 +379,7 @@ protected:
    * Actually set checked and notify the frame of the change.
    * @param aValue the value of checked to set
    */
-  nsresult SetCheckedInternal(PRBool aValue, PRBool aNotify);
+  void SetCheckedInternal(PRBool aValue, PRBool aNotify);
 
   /**
    * Syntax sugar to make it easier to check for checked

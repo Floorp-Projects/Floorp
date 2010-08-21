@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: even if it has a custom error, a fieldset should not be affected by
+             :invalid pseudo-class. -->
+  <style>
+    fieldset { background-color: green; }
+    fieldset:invalid { background-color: red; }
+  </style>
+  <body onload="document.getElementById('f').setCustomValidity('foo'); document.documentElement.className='';">
+    <fieldset id='f'></fieldset>
+  </body>
+</html>

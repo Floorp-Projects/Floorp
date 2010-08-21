@@ -8,6 +8,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345512
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input { background-color: rgb(0,0,0) !important; }
+    input:valid   { background-color: rgb(0,255,0) !important; }
+    input:invalid { background-color: rgb(255,0,0) !important; }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345512">Mozilla Bug 345512</a>
@@ -56,7 +61,7 @@ function checkPatternAttribute(element)
     "pattern content attribute value should be 'bar'");
 }
 
-function completeValidityCheck(element, alwaysValid)
+function completeValidityCheck(element, alwaysValid, isBarred)
 {
   if (element.type == 'file') {
     // Need privileges to set a filename with .value.
@@ -75,7 +80,7 @@ function completeValidityCheck(element, alwaysValid)
     element.value = "foo";
   }
 
-  checkValidPattern(element, true);
+  checkValidPattern(element, true, isBarred);
 
   // Check when pattern does not match.
 
@@ -93,11 +98,11 @@ function completeValidityCheck(element, alwaysValid)
   if (!alwaysValid) {
     checkInvalidPattern(element, true);
   } else {
-    checkValidPattern(element, true);
+    checkValidPattern(element, true, isBarred);
   }
 }
 
-function checkValidPattern(element, completeCheck)
+function checkValidPattern(element, completeCheck, isBarred)
 {
   if (completeCheck) {
     gInvalid = false;
@@ -109,6 +114,11 @@ function checkValidPattern(element, completeCheck)
     ok(!gInvalid, "Invalid event shouldn't have been thrown");
     is(element.validationMessage, '',
        "Validation message should be the empty string");
+    if (element.type != 'radio' && element.type != 'checkbox') {
+      is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+         isBarred ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
+         "The pseudo-class is not correctly applied");
+    }
   } else {
     ok(!element.validity.patternMismatch,
        "Element should not suffer from pattern mismatch");
@@ -131,6 +141,11 @@ function checkInvalidPattern(element, completeCheck)
   } else {
     ok(element.validity.patternMismatch,
        "Element should suffer from pattern mismatch");
+  }
+
+  if (element.type != 'radio' && element.type != 'checkbox') {
+    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+       "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
   }
 }
 
@@ -277,8 +292,8 @@ checkPatternAttribute(input);
 // |validTypes| are the types which accept @pattern
 // and |invalidTypes| are the ones which do not accept it.
 var validTypes = Array('text', 'password', 'search', 'telephone', 'email', 'url');
-var invalidTypes = Array('hidden', 'checkbox', 'radio', 'file', 'submit',
-                         'image', 'reset', 'button');
+var barredTypes = Array('hidden', 'reset', 'button');
+var invalidTypes = Array('checkbox', 'radio', 'file', 'submit', 'image');
 // TODO: 'datetime', 'date', 'month', 'week', 'time', 'datetime-local',
 //       'number', 'range', ande 'color' do not accept the @pattern too but are
 //       not implemented yet.
@@ -287,6 +302,11 @@ for each (type in validTypes) {
   input.type = type;
   completeValidityCheck(input, false);
   checkPatternValidity(input);
+}
+
+for each (type in barredTypes) {
+  input.type = type;
+  completeValidityCheck(input, true, true);
 }
 
 for each (type in invalidTypes) {
