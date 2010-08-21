@@ -1671,9 +1671,16 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return false;
 
         if (vp->isObject()) {
+            JSObject &caller = vp->toObject();
+
             /* Censor the caller if it is from another compartment. */
-            if (vp->toObject().getCompartment(cx) != cx->compartment)
+            if (caller.getCompartment(cx) != cx->compartment) {
                 vp->setNull();
+            } else if (caller.isFunction() && caller.getFunctionPrivate()->inStrictMode()) {
+                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                             JSMSG_CALLER_IS_STRICT);
+                return false;
+            }
         }
         break;
 
