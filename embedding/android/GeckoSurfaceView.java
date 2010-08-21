@@ -243,6 +243,8 @@ class GeckoSurfaceView
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
+
+        inputConnection.reset();
         return inputConnection;
     }
 
