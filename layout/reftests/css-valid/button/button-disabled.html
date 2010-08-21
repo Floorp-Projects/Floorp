@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if button is disabled, it is barred from constraint validation
+             and should not be affected by :valid pseudo-class. -->
+  <style>
+    button { background-color: green; }
+    button:valid { background-color: red; }
+  </style>
+  <body>
+    <button disabled></button>
+  </body>
+</html>

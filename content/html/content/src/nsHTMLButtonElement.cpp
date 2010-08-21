@@ -134,7 +134,7 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   // nsConstraintValidation
-  PRBool IsBarredFromConstraintValidation();
+  PRBool IsBarredFromConstraintValidation() const;
 
 protected:
   virtual PRBool AcceptAutofocus() const
@@ -190,7 +190,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLButtonElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLButtonElement)
 
 // nsConstraintValidation
-NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLButtonElement)
+NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLButtonElement)
 
 // nsIDOMHTMLButtonElement
 
@@ -611,9 +611,19 @@ nsresult
 nsHTMLButtonElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
 {
-  if (!aValue && aNameSpaceID == kNameSpaceID_None &&
-    aName == nsGkAtoms::type) {
-    mType = kButtonDefaultType->value;
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::type) {
+    if (!aValue) {
+      mType = kButtonDefaultType->value;
+    }
+
+    if (aNotify) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        doc->ContentStatesChanged(this, nsnull,
+                                  NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
+      }
+    }
   }
 
   return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
@@ -651,13 +661,33 @@ nsHTMLButtonElement::RestoreState(nsPresState* aState)
 PRInt32
 nsHTMLButtonElement::IntrinsicState() const
 {
-  return NS_EVENT_STATE_OPTIONAL | nsGenericHTMLFormElement::IntrinsicState();
+  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+
+  if (IsCandidateForConstraintValidation(this)) {
+    state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
+  }
+
+  return state | NS_EVENT_STATE_OPTIONAL;
 }
 
 // nsConstraintValidation
 
+NS_IMETHODIMP
+nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
+{
+  nsresult rv = nsConstraintValidation::SetCustomValidity(aError);
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
+                                            NS_EVENT_STATE_VALID);
+  }
+
+  return rv;
+}
+
 PRBool
-nsHTMLButtonElement::IsBarredFromConstraintValidation()
+nsHTMLButtonElement::IsBarredFromConstraintValidation() const
 {
   return (mType == NS_FORM_BUTTON_BUTTON ||
           mType == NS_FORM_BUTTON_RESET);

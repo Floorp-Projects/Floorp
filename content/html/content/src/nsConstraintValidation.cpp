@@ -40,6 +40,14 @@
 #include "nsAString.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLFormElement.h"
+#include "nsDOMValidityState.h"
+
+
+nsConstraintValidation::nsConstraintValidation()
+  : mValidityBitField(0)
+  , mValidity(nsnull)
+{
+}
 
 nsConstraintValidation::~nsConstraintValidation()
 {
@@ -69,22 +77,22 @@ nsConstraintValidation::GetWillValidate(PRBool* aWillValidate,
 }
 
 nsresult
-nsConstraintValidation::GetValidationMessage(nsAString & aValidationMessage,
+nsConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
                                              nsGenericHTMLFormElement* aElement)
 {
   aValidationMessage.Truncate();
 
   if (IsCandidateForConstraintValidation(aElement) && !IsValid()) {
-    if (!mCustomValidity.IsEmpty()) {
+    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
       aValidationMessage.Assign(mCustomValidity);
-    } else if (IsTooLong()) {
-      GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_TOO_LONG);
-    } else if (IsValueMissing()) {
-      GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_VALUE_MISSING);
-    } else if (HasTypeMismatch()) {
-      GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_TYPE_MISMATCH);
-    } else if (HasPatternMismatch()) {
-      GetValidationMessage(aValidationMessage, VALIDATION_MESSAGE_PATTERN_MISMATCH);
+    } else if (GetValidityState(VALIDITY_STATE_TOO_LONG)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_TOO_LONG);
+    } else if (GetValidityState(VALIDITY_STATE_VALUE_MISSING)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_VALUE_MISSING);
+    } else if (GetValidityState(VALIDITY_STATE_TYPE_MISMATCH)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_TYPE_MISMATCH);
+    } else if (GetValidityState(VALIDITY_STATE_PATTERN_MISMATCH)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_PATTERN_MISMATCH);
     } else {
       // TODO: The other messages have not been written
       // because related constraint validation are not implemented yet.
@@ -116,28 +124,15 @@ nsConstraintValidation::CheckValidity(PRBool* aValidity,
 }
 
 nsresult
-nsConstraintValidation::SetCustomValidity(const nsAString & aError)
+nsConstraintValidation::SetCustomValidity(const nsAString& aError)
 {
   mCustomValidity.Assign(aError);
+  SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, !mCustomValidity.IsEmpty());
   return NS_OK;
 }
 
 PRBool
-nsConstraintValidation::HasCustomError() const
-{
-  return !mCustomValidity.IsEmpty();
-}
-
-PRBool
-nsConstraintValidation::IsValid()
-{
-  return !(IsValueMissing() || HasTypeMismatch() || HasPatternMismatch() ||
-           IsTooLong() || HasRangeUnderflow() || HasRangeOverflow() ||
-           HasStepMismatch() || HasCustomError());
-}
-
-PRBool
-nsConstraintValidation::IsCandidateForConstraintValidation(nsGenericHTMLFormElement* aElement)
+nsConstraintValidation::IsCandidateForConstraintValidation(const nsGenericHTMLFormElement* const aElement) const
 {
   /**
    * An element is never candidate for constraint validation if:

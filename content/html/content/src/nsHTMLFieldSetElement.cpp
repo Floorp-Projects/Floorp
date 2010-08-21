@@ -75,7 +75,7 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   // nsConstraintValidation
-  PRBool IsBarredFromConstraintValidation() { return PR_TRUE; };
+  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; };
 };
 
 // construction, destruction
