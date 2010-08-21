@@ -181,6 +181,7 @@ protected:
     
     PRUint32 mIMEEnabled;
     PRBool mIMEComposing;
+    nsString mIMEComposingText;
     nsAutoTArray<nsTextRange, 4> mIMERanges;
 
     static void DumpWindows();
