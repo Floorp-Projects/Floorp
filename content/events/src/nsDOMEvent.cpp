@@ -65,7 +65,7 @@ static const char* const sEventNames[] = {
   "mouseout", "MozMouseHittest", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "popstate", "beforeunload", "unload",
   "hashchange", "readystatechange", "abort", "error",
-  "submit", "reset", "change", "select", "input", "text",
+  "submit", "reset", "change", "select", "input", "invalid", "text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
@@ -1149,6 +1149,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_select];
   case NS_FORM_INPUT:
     return sEventNames[eDOMEvents_input];
+  case NS_FORM_INVALID:
+    return sEventNames[eDOMEvents_invalid];
   case NS_RESIZE_EVENT:
     return sEventNames[eDOMEvents_resize];
   case NS_SCROLL_EVENT:

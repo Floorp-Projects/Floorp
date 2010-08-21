@@ -293,13 +293,13 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     stackDepth = 0;
     valueCount = 0;
     for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
-        if (fp->fun && fp->argv) {
+        if (fp->hasFunction() && fp->argv) {
             Value v = NullValue();
             if (checkAccess &&
                 !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
                 break;
             }
-            valueCount += fp->argc;
+            valueCount += fp->numActualArgs();
         }
         ++stackDepth;
     }
@@ -334,21 +334,21 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
     for (fp = js_GetTopStackFrame(cx); fp != fpstop; fp = fp->down) {
-        if (!fp->fun) {
+        if (!fp->hasFunction()) {
             elem->funName = NULL;
             elem->argc = 0;
         } else {
-            elem->funName = fp->fun->atom
-                            ? ATOM_TO_STRING(fp->fun->atom)
+            elem->funName = fp->getFunction()->atom
+                            ? ATOM_TO_STRING(fp->getFunction()->atom)
                             : cx->runtime->emptyString;
-            elem->argc = fp->argc;
-            memcpy(values, fp->argv, fp->argc * sizeof(jsval));
-            values += fp->argc;
+            elem->argc = fp->numActualArgs();
+            memcpy(values, fp->argv, elem->argc * sizeof(jsval));
+            values += elem->argc;
         }
         elem->ulineno = 0;
         elem->filename = NULL;
-        if (fp->script) {
-            elem->filename = fp->script->filename;
+        if (fp->hasScript()) {
+            elem->filename = fp->getScript()->filename;
             if (fp->pc(cx))
                 elem->ulineno = js_FramePCToLineNumber(cx, fp);
         }
@@ -749,7 +749,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     } else {
         fp = js_GetScriptedCaller(cx, NULL);
         if (fp) {
-            filename = FilenameToString(cx, fp->script->filename);
+            filename = FilenameToString(cx, fp->getScript()->filename);
             if (!filename)
                 return JS_FALSE;
         } else {

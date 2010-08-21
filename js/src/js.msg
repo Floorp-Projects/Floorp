@@ -330,3 +330,8 @@ MSG_DEF(JSMSG_CSP_BLOCKED_FUNCTION,   247, 0, JSEXN_ERR, "call to Function() blo
 MSG_DEF(JSMSG_BAD_GET_SET_FIELD,      248, 1, JSEXN_TYPEERR, "property descriptor's {0} field is neither undefined nor a function")
 MSG_DEF(JSMSG_BAD_PROXY_FIX,          249, 0, JSEXN_TYPEERR, "proxy was fixed while executing the handler")
 MSG_DEF(JSMSG_INVALID_EVAL_SCOPE_ARG, 250, 0, JSEXN_EVALERR, "invalid eval scope argument")
+MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,    251, 3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")
+MSG_DEF(JSMSG_THROW_TYPE_ERROR,       252, 0, JSEXN_TYPEERR, "'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them")
+MSG_DEF(JSMSG_BAD_TOISOSTRING_PROP,   253, 0, JSEXN_TYPEERR, "toISOString property is not callable")
+MSG_DEF(JSMSG_BAD_PARSE_NODE,         254, 0, JSEXN_INTERNALERR, "bad parse node")
+MSG_DEF(JSMSG_NOT_EXPECTED_TYPE,      255, 3, JSEXN_TYPEERR, "{0}: expected {1}, got {2}")

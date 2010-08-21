@@ -607,9 +607,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
       PR_PL(("SeqFr::PrintNextPage -> %p PageNo: %d", pf, mPageNum));
 
       nsCOMPtr<nsIRenderingContext> renderingContext;
-      PresContext()->PresShell()->
-              CreateRenderingContext(mCurrentPageFrame,
-                                     getter_AddRefs(renderingContext));
+      dc->CreateRenderingContext(*getter_AddRefs(renderingContext));
+      NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
       // On linux, need to rotate landscape-mode output on printed surfaces

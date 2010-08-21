@@ -60,7 +60,7 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,     \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
   #name_,
 #include "nsCSSPropList.h"
@@ -112,8 +112,8 @@ void
 nsCSSProps::AddRefTable(void)
 {
   if (0 == gTableRefCount++) {
-    NS_ASSERTION(!gPropertyTable, "pre existing array!");
-    NS_ASSERTION(!gFontDescTable, "pre existing array!");
+    NS_ABORT_IF_FALSE(!gPropertyTable, "pre existing array!");
+    NS_ABORT_IF_FALSE(!gFontDescTable, "pre existing array!");
 
     gPropertyTable = new nsStaticCaseInsensitiveNameTable();
     if (gPropertyTable) {
@@ -124,8 +124,9 @@ nsCSSProps::AddRefTable(void)
         nsCAutoString temp1(kCSSRawProperties[index]);
         nsCAutoString temp2(kCSSRawProperties[index]);
         ToLowerCase(temp1);
-        NS_ASSERTION(temp1.Equals(temp2), "upper case char in prop table");
-        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in prop table");
+        NS_ABORT_IF_FALSE(temp1.Equals(temp2), "upper case char in prop table");
+        NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),
+                          "underscore char in prop table");
       }
     }
 #endif
@@ -141,8 +142,9 @@ nsCSSProps::AddRefTable(void)
         nsCAutoString temp1(kCSSRawFontDescs[index]);
         nsCAutoString temp2(kCSSRawFontDescs[index]);
         ToLowerCase(temp1);
-        NS_ASSERTION(temp1.Equals(temp2), "upper case char in desc table");
-        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in desc table");
+        NS_ABORT_IF_FALSE(temp1.Equals(temp2), "upper case char in desc table");
+        NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),
+                          "underscore char in desc table");
       }
     }
 #endif
@@ -176,9 +178,9 @@ nsCSSProps::BuildShorthandsContainingTable()
     for (const nsCSSProperty* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
-      NS_ASSERTION(0 < *subprops &&
-                   *subprops < eCSSProperty_COUNT_no_shorthands,
-                   "subproperty must be a longhand");
+      NS_ABORT_IF_FALSE(0 < *subprops &&
+                        *subprops < eCSSProperty_COUNT_no_shorthands,
+                        "subproperty must be a longhand");
       ++occurrenceCounts[*subprops];
       ++subpropCountsEntry.count;
     }
@@ -215,7 +217,7 @@ nsCSSProps::BuildShorthandsContainingTable()
         gShorthandsContainingTable[longhand] = lastTerminator;
       }
     }
-    NS_ASSERTION(poolCursor == lastTerminator, "miscalculation");
+    NS_ABORT_IF_FALSE(poolCursor == lastTerminator, "miscalculation");
   }
 
   // Sort with lowest count at the start and highest at the end, and
@@ -272,8 +274,9 @@ nsCSSProps::BuildShorthandsContainingTable()
         if (*shcont == shorthand)
           ++count;
       }
-      NS_ASSERTION(count == 1, "subproperty of shorthand should have shorthand"
-                               " in its ShorthandsContaining() table");
+      NS_ABORT_IF_FALSE(count == 1,
+                        "subproperty of shorthand should have shorthand"
+                        " in its ShorthandsContaining() table");
     }
   }
 
@@ -291,8 +294,9 @@ nsCSSProps::BuildShorthandsContainingTable()
         if (*subprops == longhand)
           ++count;
       }
-      NS_ASSERTION(count == 1, "longhand should be in subproperty table of "
-                               "property in its ShorthandsContaining() table");
+      NS_ABORT_IF_FALSE(count == 1,
+                        "longhand should be in subproperty table of "
+                        "property in its ShorthandsContaining() table");
     }
   }
 #endif
@@ -318,7 +322,7 @@ nsCSSProps::ReleaseTable(void)
 nsCSSProperty
 nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
-  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
 
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
   return res;
@@ -330,7 +334,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   // This is faster than converting and calling
   // LookupProperty(nsACString&).  The table will do its own
   // converting and avoid a PromiseFlatCString() call.
-  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
   return res;
 }
@@ -338,21 +342,21 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
 nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
 {
-  NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
+  NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 }
 
 nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
 {
-  NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
+  NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 }
 
 const nsAFlatCString&
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
-  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
   if (gPropertyTable) {
     return gPropertyTable->GetStringValue(PRInt32(aProperty));
   } else {
@@ -364,7 +368,7 @@ nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 const nsAFlatCString&
 nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID)
 {
-  NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
+  NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   if (gFontDescTable) {
     return gFontDescTable->GetStringValue(PRInt32(aFontDescID));
   } else {
@@ -1480,7 +1484,7 @@ nsCSSProps::ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[])
 
 /* static */ const PRInt32* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,   \
+  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,          \
                    kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
     kwtable_,
   #include "nsCSSPropList.h"
@@ -1490,7 +1494,8 @@ nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
 const nsAFlatCString&
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 {
-  NS_ASSERTION(aProp >= 0 && aProp < eCSSProperty_COUNT, "property out of range");
+  NS_ABORT_IF_FALSE(aProp >= 0 && aProp < eCSSProperty_COUNT,
+                    "property out of range");
 
   const PRInt32* kwtable = nsnull;
   if (aProp < eCSSProperty_COUNT_no_shorthands)
@@ -1520,20 +1525,11 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
   return rv;
 }
 
-// define array of all CSS property types
-const nsCSSType nsCSSProps::kTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, \
-                     kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
-        type_,
-    #include "nsCSSPropList.h"
-    #undef CSS_PROP
-};
-
 const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
     // Note that this uses the special BackendOnly style struct ID
     // (which does need to be valid for storing in the
     // nsCSSCompressedDataBlock::mStyleBits bitfield).
-    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, \
+    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
                      kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
         eStyleStruct_##stylestruct_,
 
@@ -1544,7 +1540,7 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
 
 const nsStyleAnimType
 nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,     \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
   animtype_,
 #include "nsCSSPropList.h"
@@ -1553,7 +1549,7 @@ nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
 
 const ptrdiff_t
 nsCSSProps::kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,     \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
   stylestructoffset_,
 #include "nsCSSPropList.h"
@@ -1561,7 +1557,7 @@ nsCSSProps::kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
 };
 
 const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,     \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
   flags_,
 #include "nsCSSPropList.h"

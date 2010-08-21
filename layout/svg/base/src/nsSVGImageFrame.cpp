@@ -45,6 +45,7 @@
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "gfxPlatform.h"
 
 class nsSVGImageFrame;
 
@@ -327,7 +328,7 @@ nsSVGImageFrame::UpdateCoveredRegion()
 {
   mRect.Empty();
 
-  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  gfxContext context(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   GeneratePath(&context);
   context.IdentityMatrix();
