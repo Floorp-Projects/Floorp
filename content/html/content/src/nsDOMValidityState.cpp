@@ -51,7 +51,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMValidityState)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ValidityState)
 NS_INTERFACE_MAP_END
 
-nsDOMValidityState::nsDOMValidityState(nsConstraintValidation* aConstraintValidation)
+nsDOMValidityState::nsDOMValidityState(nsIConstraintValidation* aConstraintValidation)
   : mConstraintValidation(aConstraintValidation)
 {
 }
@@ -59,56 +59,56 @@ nsDOMValidityState::nsDOMValidityState(nsConstraintValidation* aConstraintValida
 NS_IMETHODIMP
 nsDOMValidityState::GetValueMissing(PRBool* aValueMissing)
 {
-  *aValueMissing = GetValidityState(nsConstraintValidation::VALIDITY_STATE_VALUE_MISSING);
+  *aValueMissing = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetTypeMismatch(PRBool* aTypeMismatch)
 {
-  *aTypeMismatch = GetValidityState(nsConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH);
+  *aTypeMismatch = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetPatternMismatch(PRBool* aPatternMismatch)
 {
-  *aPatternMismatch = GetValidityState(nsConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH);
+  *aPatternMismatch = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetTooLong(PRBool* aTooLong)
 {
-  *aTooLong = GetValidityState(nsConstraintValidation::VALIDITY_STATE_TOO_LONG);
+  *aTooLong = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TOO_LONG);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetRangeUnderflow(PRBool* aRangeUnderflow)
 {
-  *aRangeUnderflow = GetValidityState(nsConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW);
+  *aRangeUnderflow = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetRangeOverflow(PRBool* aRangeOverflow)
 {
-  *aRangeOverflow = GetValidityState(nsConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW);
+  *aRangeOverflow = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetStepMismatch(PRBool* aStepMismatch)
 {
-  *aStepMismatch = GetValidityState(nsConstraintValidation::VALIDITY_STATE_STEP_MISMATCH);
+  *aStepMismatch = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMValidityState::GetCustomError(PRBool* aCustomError)
 {
-  *aCustomError = GetValidityState(nsConstraintValidation::VALIDITY_STATE_CUSTOM_ERROR);
+  *aCustomError = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_CUSTOM_ERROR);
   return NS_OK;
 }
 

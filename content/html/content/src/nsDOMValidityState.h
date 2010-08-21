@@ -39,7 +39,7 @@
 #define nsDOMValidityState_h__
 
 #include "nsIDOMValidityState.h"
-#include "nsConstraintValidation.h"
+#include "nsIConstraintValidation.h"
 
 
 class nsDOMValidityState : public nsIDOMValidityState
@@ -48,13 +48,13 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMVALIDITYSTATE
 
-  friend class nsConstraintValidation;
+  friend class nsIConstraintValidation;
 
 protected:
-  nsDOMValidityState(nsConstraintValidation* aConstraintValidation);
+  nsDOMValidityState(nsIConstraintValidation* aConstraintValidation);
 
   /**
-   * This function should be called by nsConstraintValidation
+   * This function should be called by nsIConstraintValidation
    * to set mConstraintValidation to null to be sure
    * it will not be used when the object is destroyed.
    */
@@ -66,14 +66,14 @@ protected:
   /**
    * Helper function to get a validity state from constraint validation instance.
    */
-  inline PRBool GetValidityState(nsConstraintValidation::ValidityStateType aState) const
+  inline PRBool GetValidityState(nsIConstraintValidation::ValidityStateType aState) const
   {
     return mConstraintValidation &&
            mConstraintValidation->GetValidityState(aState);
   }
 
   // Weak reference to owner which will call Disconnect() when being destroyed.
-  nsConstraintValidation*       mConstraintValidation;
+  nsIConstraintValidation*       mConstraintValidation;
 };
 
 #endif // nsDOMValidityState_h__

@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsConstraintValidation.h"
+#include "nsIConstraintValidation.h"
 
 #include "nsAString.h"
 #include "nsGenericHTMLElement.h"
@@ -43,13 +43,13 @@
 #include "nsDOMValidityState.h"
 
 
-nsConstraintValidation::nsConstraintValidation()
+nsIConstraintValidation::nsIConstraintValidation()
   : mValidityBitField(0)
   , mValidity(nsnull)
 {
 }
 
-nsConstraintValidation::~nsConstraintValidation()
+nsIConstraintValidation::~nsIConstraintValidation()
 {
   if (mValidity) {
     mValidity->Disconnect();
@@ -57,7 +57,7 @@ nsConstraintValidation::~nsConstraintValidation()
 }
 
 nsresult
-nsConstraintValidation::GetValidity(nsIDOMValidityState** aValidity)
+nsIConstraintValidation::GetValidity(nsIDOMValidityState** aValidity)
 {
   if (!mValidity) {
     mValidity = new nsDOMValidityState(this);
@@ -69,7 +69,7 @@ nsConstraintValidation::GetValidity(nsIDOMValidityState** aValidity)
 }
 
 nsresult
-nsConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
+nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
 {
   aValidationMessage.Truncate();
 
@@ -98,7 +98,7 @@ nsConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
 }
 
 nsresult
-nsConstraintValidation::CheckValidity(PRBool* aValidity)
+nsIConstraintValidation::CheckValidity(PRBool* aValidity)
 {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     *aValidity = PR_TRUE;
@@ -116,14 +116,14 @@ nsConstraintValidation::CheckValidity(PRBool* aValidity)
 }
 
 void
-nsConstraintValidation::SetCustomValidity(const nsAString& aError)
+nsIConstraintValidation::SetCustomValidity(const nsAString& aError)
 {
   mCustomValidity.Assign(aError);
   SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, !mCustomValidity.IsEmpty());
 }
 
 PRBool
-nsConstraintValidation::IsCandidateForConstraintValidation() const
+nsIConstraintValidation::IsCandidateForConstraintValidation() const
 {
   /**
    * An element is never candidate for constraint validation if:
@@ -134,7 +134,7 @@ nsConstraintValidation::IsCandidateForConstraintValidation() const
    */
 
   nsCOMPtr<nsIContent> content =
-    do_QueryInterface(const_cast<nsConstraintValidation*>(this));
+    do_QueryInterface(const_cast<nsIConstraintValidation*>(this));
   NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
 
   // For the moment, all elements that are not barred from constraint validation
