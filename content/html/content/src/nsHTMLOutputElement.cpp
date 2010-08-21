@@ -40,13 +40,13 @@
 #include "nsFormSubmission.h"
 #include "nsDOMSettableTokenList.h"
 #include "nsStubMutationObserver.h"
-#include "nsConstraintValidation.h"
+#include "nsIConstraintValidation.h"
 
 
 class nsHTMLOutputElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLOutputElement,
                             public nsStubMutationObserver,
-                            public nsConstraintValidation
+                            public nsIConstraintValidation
 {
 public:
   nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -81,7 +81,7 @@ public:
   // has to be used to update the defaultValue attribute.
   void DescendantsChanged();
 
-  // nsConstraintValidation
+  // nsIConstraintValidation
   PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; }
 
   // nsIMutationObserver
@@ -133,7 +133,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLOutputElement)
   NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLOutputElement,
                                    nsIDOMHTMLOutputElement,
                                    nsIMutationObserver,
-                                   nsConstraintValidation)
+                                   nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLOutputElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOutputElement)
@@ -143,8 +143,8 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLOutputElement)
 
 NS_IMPL_STRING_ATTR(nsHTMLOutputElement, Name, name)
 
-// nsConstraintValidation
-NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLOutputElement)
+// nsIConstraintValidation
+NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLOutputElement)
 
 NS_IMETHODIMP
 nsHTMLOutputElement::Reset()

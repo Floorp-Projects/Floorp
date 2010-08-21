@@ -184,7 +184,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
   NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLSelectElement,
                                    nsIDOMHTMLSelectElement,
                                    nsISelectElement,
-                                   nsConstraintValidation)
+                                   nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
@@ -195,13 +195,13 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLSelectElement)
 
-// nsConstraintValidation
-NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLSelectElement)
+// nsIConstraintValidation
+NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLSelectElement)
 
 NS_IMETHODIMP
 nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
 {
-  nsConstraintValidation::SetCustomValidity(aError);
+  nsIConstraintValidation::SetCustomValidity(aError);
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
