@@ -458,6 +458,12 @@ public class GeckoInputConnection
             imm.updateSelection(GeckoApp.surfaceView, start, end, -1, -1);
     }
 
+    public void reset() {
+        mComposing = false;
+        mComposingText = null;
+        mUpdateRequest = null;
+    }
+
     // Is a composition active?
     boolean mComposing;
     // Composition text when a composition is active
