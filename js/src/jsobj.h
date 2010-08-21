@@ -420,6 +420,10 @@ struct JSObject {
 
     JSObject *getGlobal() const;
 
+    bool isGlobal() const {
+        return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
+    }
+
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
         void *priv = fslots[JSSLOT_PRIVATE].toPrivate();
