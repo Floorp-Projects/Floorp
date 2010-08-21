@@ -3122,7 +3122,7 @@ pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 
 // Discards inactive image frames and re-decodes them on demand from
 // compressed data.
-pref("image.mem.discardable", false);
+pref("image.mem.discardable", true);
 
 // Prevents images from automatically being decoded on load, instead allowing
 // them to be decoded on demand when they are drawn.
