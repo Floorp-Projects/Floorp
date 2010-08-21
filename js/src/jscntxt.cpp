@@ -288,7 +288,7 @@ StackSpace::popSegmentForInvoke(const InvokeArgsGuard &ag)
 JS_REQUIRES_STACK bool
 StackSpace::getExecuteFrame(JSContext *cx, JSStackFrame *down,
                             uintN vplen, uintN nfixed,
-                            ExecuteFrameGuard &fg) const
+                            FrameGuard &fg) const
 {
     Value *start = firstUnused();
     ptrdiff_t nvals = VALUES_PER_STACK_SEGMENT + vplen + VALUES_PER_STACK_FRAME + nfixed;
@@ -303,7 +303,7 @@ StackSpace::getExecuteFrame(JSContext *cx, JSStackFrame *down,
 }
 
 JS_REQUIRES_STACK void
-StackSpace::pushExecuteFrame(JSContext *cx, ExecuteFrameGuard &fg,
+StackSpace::pushExecuteFrame(JSContext *cx, FrameGuard &fg,
                              JSFrameRegs &regs, JSObject *initialVarObj)
 {
     fg.fp->down = fg.down;
@@ -318,7 +318,7 @@ StackSpace::pushExecuteFrame(JSContext *cx, ExecuteFrameGuard &fg,
 }
 
 JS_REQUIRES_STACK void
-StackSpace::popExecuteFrame(JSContext *cx)
+StackSpace::popFrame(JSContext *cx)
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
@@ -327,13 +327,13 @@ StackSpace::popExecuteFrame(JSContext *cx)
 }
 
 JS_REQUIRES_STACK
-ExecuteFrameGuard::~ExecuteFrameGuard()
+FrameGuard::~FrameGuard()
 {
     if (!pushed())
         return;
     JS_ASSERT(cx->activeSegment() == seg);
     JS_ASSERT(cx->maybefp() == fp);
-    cx->stack().popExecuteFrame(cx);
+    cx->stack().popFrame(cx);
 }
 
 JS_REQUIRES_STACK void
@@ -365,6 +365,24 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
     JS_ASSERT(!cx->fp()->hasScript() && FUN_SLOW_NATIVE(cx->fp()->getFunction()));
     cx->popSegmentAndFrame();
     currentSegment = currentSegment->getPreviousInMemory();
+}
+
+JS_REQUIRES_STACK bool
+StackSpace::pushDummyFrame(JSContext *cx, FrameGuard &fg, JSFrameRegs &regs, JSObject *scopeChain)
+{
+    if (!getExecuteFrame(cx, cx->maybefp(), 0, 0, fg))
+        return false;
+
+    JSStackFrame *fp = fg.getFrame();
+    PodZero(fp);
+    fp->setScopeChain(scopeChain);
+    fp->flags = JSFRAME_DUMMY;
+
+    regs.pc = NULL;
+    regs.sp = fp->slots();
+
+    pushExecuteFrame(cx, fg, regs, NULL);
+    return true;
 }
 
 void

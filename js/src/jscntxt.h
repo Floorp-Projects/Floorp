@@ -535,7 +535,7 @@ class InvokeFrameGuard
 };
 
 /* See StackSpace::pushExecuteFrame. */
-class ExecuteFrameGuard
+class FrameGuard
 {
     friend class StackSpace;
     JSContext        *cx;  /* null implies nothing pushed */
@@ -544,8 +544,8 @@ class ExecuteFrameGuard
     JSStackFrame     *fp;
     JSStackFrame     *down;
   public:
-    ExecuteFrameGuard() : cx(NULL), vp(NULL), fp(NULL) {}
-    JS_REQUIRES_STACK ~ExecuteFrameGuard();
+    FrameGuard() : cx(NULL), vp(NULL), fp(NULL) {}
+    JS_REQUIRES_STACK ~FrameGuard();
     bool pushed() const { return cx != NULL; }
     Value *getvp() const { return vp; }
     JSStackFrame *getFrame() const { return fp; }
@@ -561,8 +561,9 @@ class ExecuteFrameGuard
  * than explicitly stored as pointers. To maintain useful invariants, stack
  * space is not given out arbitrarily, but rather allocated/deallocated for
  * specific purposes. The use cases currently supported are: calling a function
- * with arguments (e.g. Invoke), executing a script (e.g. Execute) and inline
- * interpreter calls. See associated member functions below.
+ * with arguments (e.g. Invoke), executing a script (e.g. Execute), inline
+ * interpreter calls, and pushing "dummy" frames for bookkeeping purposes. See
+ * associated member functions below.
  *
  * First, we consider the layout of individual segments. (See the
  * js::StackSegment comment for terminology.) A non-empty segment (i.e., a
@@ -650,8 +651,8 @@ class StackSpace
     JS_REQUIRES_STACK inline void popInvokeArgs(const InvokeArgsGuard &args);
     friend class InvokeFrameGuard;
     JS_REQUIRES_STACK void popInvokeFrame(const InvokeFrameGuard &ag);
-    friend class ExecuteFrameGuard;
-    JS_REQUIRES_STACK void popExecuteFrame(JSContext *cx);
+    friend class FrameGuard;
+    JS_REQUIRES_STACK void popFrame(JSContext *cx);
 
     /* Return a pointer to the first unused slot. */
     JS_REQUIRES_STACK
@@ -709,7 +710,7 @@ class StackSpace
     JS_REQUIRES_STACK void mark(JSTracer *trc);
 
     /*
-     * For all three use cases below:
+     * For all four use cases below:
      *  - The boolean-valued functions call js_ReportOutOfScriptQuota on OOM.
      *  - The "get*Frame" functions do not change any global state, they just
      *    check OOM and return pointers to an uninitialized frame with the
@@ -749,9 +750,9 @@ class StackSpace
     JS_REQUIRES_STACK
     bool getExecuteFrame(JSContext *cx, JSStackFrame *down,
                          uintN vplen, uintN nfixed,
-                         ExecuteFrameGuard &fg) const;
+                         FrameGuard &fg) const;
     JS_REQUIRES_STACK
-    void pushExecuteFrame(JSContext *cx, ExecuteFrameGuard &fg,
+    void pushExecuteFrame(JSContext *cx, FrameGuard &fg,
                           JSFrameRegs &regs, JSObject *initialVarObj);
 
     /*
@@ -781,6 +782,12 @@ class StackSpace
 
     JS_REQUIRES_STACK
     void popSynthesizedSlowNativeFrame(JSContext *cx);
+
+    /*
+     * For pushing a bookkeeping frame.
+     */
+    JS_REQUIRES_STACK
+    bool pushDummyFrame(JSContext *cx, FrameGuard &fg, JSFrameRegs &regs, JSObject *scopeChain);
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);

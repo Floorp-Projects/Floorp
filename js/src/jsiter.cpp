@@ -1229,7 +1229,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
          * Get a pointer to new frame/slots. This memory is not "claimed", so
          * the code before pushExecuteFrame must not reenter the interpreter.
          */
-        ExecuteFrameGuard frame;
+        FrameGuard frame;
         if (!cx->stack().getExecuteFrame(cx, cx->maybefp(), vplen, nfixed, frame)) {
             gen->state = JSGEN_CLOSED;
             return JS_FALSE;
