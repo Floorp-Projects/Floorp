@@ -183,8 +183,9 @@ DOMCI_NODE_DATA(HTMLButtonElement, nsHTMLButtonElement)
 
 // QueryInterface implementation for nsHTMLButtonElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLButtonElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLButtonElement,
-                                   nsIDOMHTMLButtonElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLButtonElement,
+                                   nsIDOMHTMLButtonElement,
+                                   nsConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLButtonElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLButtonElement)
@@ -663,7 +664,7 @@ nsHTMLButtonElement::IntrinsicState() const
 {
   PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
 
-  if (IsCandidateForConstraintValidation(this)) {
+  if (IsCandidateForConstraintValidation()) {
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 
@@ -675,7 +676,7 @@ nsHTMLButtonElement::IntrinsicState() const
 NS_IMETHODIMP
 nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
 {
-  nsresult rv = nsConstraintValidation::SetCustomValidity(aError);
+  nsConstraintValidation::SetCustomValidity(aError);
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
@@ -683,7 +684,7 @@ nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
                                             NS_EVENT_STATE_VALID);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 PRBool

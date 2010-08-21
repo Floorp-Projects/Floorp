@@ -181,9 +181,10 @@ DOMCI_NODE_DATA(HTMLSelectElement, nsHTMLSelectElement)
 
 // QueryInterface implementation for nsHTMLSelectElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLSelectElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLSelectElement,
                                    nsIDOMHTMLSelectElement,
-                                   nsISelectElement)
+                                   nsISelectElement,
+                                   nsConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
@@ -200,7 +201,7 @@ NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLSelectElement)
 NS_IMETHODIMP
 nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
 {
-  nsresult rv = nsConstraintValidation::SetCustomValidity(aError);
+  nsConstraintValidation::SetCustomValidity(aError);
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
@@ -208,7 +209,7 @@ nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
                                             NS_EVENT_STATE_VALID);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1471,7 +1472,7 @@ nsHTMLSelectElement::IntrinsicState() const
 {
   PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
 
-  if (IsCandidateForConstraintValidation(this)) {
+  if (IsCandidateForConstraintValidation()) {
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 

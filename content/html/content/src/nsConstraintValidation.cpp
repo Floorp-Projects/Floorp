@@ -69,20 +69,11 @@ nsConstraintValidation::GetValidity(nsIDOMValidityState** aValidity)
 }
 
 nsresult
-nsConstraintValidation::GetWillValidate(PRBool* aWillValidate,
-                                        nsGenericHTMLFormElement* aElement)
-{
-  *aWillValidate = IsCandidateForConstraintValidation(aElement);
-  return NS_OK;
-}
-
-nsresult
-nsConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
-                                             nsGenericHTMLFormElement* aElement)
+nsConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
 {
   aValidationMessage.Truncate();
 
-  if (IsCandidateForConstraintValidation(aElement) && !IsValid()) {
+  if (IsCandidateForConstraintValidation() && !IsValid()) {
     if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
       aValidationMessage.Assign(mCustomValidity);
     } else if (GetValidityState(VALIDITY_STATE_TOO_LONG)) {
@@ -107,32 +98,32 @@ nsConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
 }
 
 nsresult
-nsConstraintValidation::CheckValidity(PRBool* aValidity,
-                                      nsGenericHTMLFormElement* aElement)
+nsConstraintValidation::CheckValidity(PRBool* aValidity)
 {
-  if (!IsCandidateForConstraintValidation(aElement) || IsValid()) {
+  if (!IsCandidateForConstraintValidation() || IsValid()) {
     *aValidity = PR_TRUE;
     return NS_OK;
   }
 
   *aValidity = PR_FALSE;
 
-  return nsContentUtils::DispatchTrustedEvent(aElement->GetOwnerDoc(),
-                                              static_cast<nsIContent*>(aElement),
+  nsCOMPtr<nsIContent> content = do_QueryInterface(this);
+  NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
+
+  return nsContentUtils::DispatchTrustedEvent(content->GetOwnerDoc(), content,
                                               NS_LITERAL_STRING("invalid"),
                                               PR_FALSE, PR_TRUE);
 }
 
-nsresult
+void
 nsConstraintValidation::SetCustomValidity(const nsAString& aError)
 {
   mCustomValidity.Assign(aError);
   SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, !mCustomValidity.IsEmpty());
-  return NS_OK;
 }
 
 PRBool
-nsConstraintValidation::IsCandidateForConstraintValidation(const nsGenericHTMLFormElement* const aElement) const
+nsConstraintValidation::IsCandidateForConstraintValidation() const
 {
   /**
    * An element is never candidate for constraint validation if:
@@ -142,13 +133,17 @@ nsConstraintValidation::IsCandidateForConstraintValidation(const nsGenericHTMLFo
    * |IsBarredFromConstraintValidation| function.
    */
 
-  // At the moment, every elements which can be candidate for constraint
-  // validation can be disabled. However, using |CanBeDisabled| is future-proof.
-  if (aElement->CanBeDisabled() &&
-      aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    return PR_FALSE;
-  }
+  nsCOMPtr<nsIContent> content =
+    do_QueryInterface(const_cast<nsConstraintValidation*>(this));
+  NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
 
-  return !IsBarredFromConstraintValidation();
+  // For the moment, all elements that are not barred from constraint validation
+  // accept the disabled attribute and elements that are always barred from
+  // constraint validation do not accept it (objects, fieldset, output).
+  // If one of these elements change and become not always barred from
+  // constraint validation or another element appear with constraint validation
+  // support and can't be disabled, this code will have to be changed.
+  return !content->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) &&
+         !IsBarredFromConstraintValidation();
 }
 

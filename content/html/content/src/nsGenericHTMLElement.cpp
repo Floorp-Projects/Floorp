@@ -2727,6 +2727,18 @@ nsGenericHTMLFormElement::IsLabelableControl() const
          type != NS_FORM_OBJECT;
 }
 
+PRBool
+nsGenericHTMLFormElement::IsSubmittableControl() const
+{
+  // TODO: keygen should be in that list, see bug 101019.
+  PRInt32 type = GetType();
+  return type == NS_FORM_OBJECT ||
+         type == NS_FORM_TEXTAREA ||
+         type == NS_FORM_SELECT ||
+         type & NS_FORM_BUTTON_ELEMENT ||
+         type & NS_FORM_INPUT_ELEMENT;
+}
+
 PRInt32
 nsGenericHTMLFormElement::IntrinsicState() const
 {
