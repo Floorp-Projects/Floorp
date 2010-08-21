@@ -276,18 +276,16 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
 SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
-    "movq 0x40(%rbx), %rcx"                 "\n" /* fp->rval type (as value) */
-    "movq $0xFFFF800000000000, %r11"         "\n" /* load type mask (JSVAL_TAG_MASK) */
-    "andq %r11, %rcx"                       "\n" /* extract type */
-
-    "movq 0x40(%rbx), %rdx"                 "\n" /* fp->rval type */
-    "movq $0x00007FFFFFFFFFFF, %r11"        "\n" /* load payload mask (JSVAL_PAYLOAD_MASK) */
-    "andq %r11, %rdx"                       "\n" /* extract payload */
-
+    "movq 0x40(%rbx), %rcx"                 "\n" /* load Value into typeReg */
     "movq 0x60(%rbx), %rax"                 "\n" /* fp->ncode */
+
+    /* Reimplementation of PunboxAssembler::loadValueAsComponents() */
+    "movq $0x00007FFFFFFFFFFF, %rdx"        "\n" /* payloadReg = JSVAL_PAYLOAD_MASK */
+    "andq %rcx, %rdx"                       "\n"
+    "xorq %rdx, %rcx"                       "\n"
+
     "movq 0x38(%rsp), %rbx"                 "\n" /* f.fp */
-    "pushq %rax"                            "\n"
-    "ret"                                   "\n"
+    "jmp *%rax"                             "\n" /* return. */
 );
 
 # elif defined(JS_CPU_X86)
