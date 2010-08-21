@@ -37,7 +37,6 @@
 
 #include "nsMultiMixedConv.h"
 #include "nsMemory.h"
-#include "nsInt64.h"
 #include "plstr.h"
 #include "nsIHttpChannel.h"
 #include "nsIServiceManager.h"
@@ -324,14 +323,14 @@ nsPartChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentLength(PRInt32 *aContentLength)
+nsPartChannel::GetContentLength(PRInt64 *aContentLength)
 {
-    *aContentLength = mContentLength; // XXX truncates 64-bit value
+    *aContentLength = mContentLength;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentLength(PRInt32 aContentLength)
+nsPartChannel::SetContentLength(PRInt64 aContentLength)
 {
     mContentLength = aContentLength;
     return NS_OK;
@@ -797,7 +796,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = mPartChannel->SetContentType(mContentType);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mPartChannel->SetContentLength(mContentLength); // XXX Truncates 64-bit!
+    rv = mPartChannel->SetContentLength(mContentLength);
     if (NS_FAILED(rv)) return rv;
 
     rv = mPartChannel->SetContentDisposition(mContentDisposition);
@@ -939,7 +938,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             if (headerStr.LowerCaseEqualsLiteral("content-type")) {
                 mContentType = headerVal;
             } else if (headerStr.LowerCaseEqualsLiteral("content-length")) {
-                mContentLength = atoi(headerVal.get()); // XXX 64-bit math?
+                PR_sscanf(headerVal.get(), "%lld", &mContentLength);
             } else if (headerStr.LowerCaseEqualsLiteral("content-disposition")) {
                 mContentDisposition = headerVal;
             } else if (headerStr.LowerCaseEqualsLiteral("set-cookie")) {
@@ -980,7 +979,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
                 mIsByteRangeRequest = PR_TRUE;
                 if (mContentLength == LL_MAXUINT)
-                    mContentLength = PRUint64(PRInt64(mByteRangeEnd - mByteRangeStart + nsInt64(1)));
+                    mContentLength = PRUint64(PRInt64(mByteRangeEnd - mByteRangeStart + 1));
             }
         }
         *newLine = tmpChar;
