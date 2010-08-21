@@ -48,6 +48,7 @@
  */
 
 interface nsIDOMDOMSettableTokenList;
+interface nsIDOMValidityState;
 
 [scriptable, uuid(0f7f15a9-ea72-4feb-b2b5-2fcbc9c10ab8)]
 interface nsIDOMHTMLOutputElement : nsIDOMHTMLElement
@@ -60,16 +61,11 @@ interface nsIDOMHTMLOutputElement : nsIDOMHTMLElement
            attribute DOMString                  defaultValue;
            attribute DOMString                  value;
 
-  /**
-   * The next attributes depend on the constraint validation API.
-   * Keeping them commented until the constraint validation API is implemented.
-   * See bug bug 345624.
-   */
-  //readonly attribute boolean willValidate;
-  //readonly attribute ValidityState validity;
-  //readonly attribute DOMString validationMessage;
-  //boolean checkValidity();
-  //void setCustomValidity(in DOMString error);
+  readonly attribute boolean                    willValidate;
+  readonly attribute nsIDOMValidityState        validity;
+  readonly attribute DOMString                  validationMessage;
+  boolean  checkValidity();
+  void     setCustomValidity(in DOMString error);
 
   /**
    * The labels IDL attribute will be added with bug 556743.
