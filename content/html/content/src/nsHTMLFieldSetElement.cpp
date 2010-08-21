@@ -102,8 +102,9 @@ DOMCI_NODE_DATA(HTMLFieldSetElement, nsHTMLFieldSetElement)
 
 // QueryInterface implementation for nsHTMLFieldSetElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFieldSetElement,
-                                   nsIDOMHTMLFieldSetElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLFieldSetElement,
+                                   nsIDOMHTMLFieldSetElement,
+                                   nsConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFieldSetElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)

@@ -130,9 +130,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOutputElement, nsGenericElement)
 DOMCI_NODE_DATA(HTMLOutputElement, nsHTMLOutputElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLOutputElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLOutputElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLOutputElement,
                                    nsIDOMHTMLOutputElement,
-                                   nsIMutationObserver)
+                                   nsIMutationObserver,
+                                   nsConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLOutputElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOutputElement)
