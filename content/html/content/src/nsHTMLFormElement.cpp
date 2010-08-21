@@ -79,7 +79,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIHTMLCollection.h"
 
-#include "nsConstraintValidation.h"
+#include "nsIConstraintValidation.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -1579,7 +1579,7 @@ nsHTMLFormElement::CheckFormValidity() const
       continue;
     }
 
-    nsCOMPtr<nsConstraintValidation> cvElmt =
+    nsCOMPtr<nsIConstraintValidation> cvElmt =
       do_QueryInterface((nsGenericHTMLElement*)sortedControls[i]);
     if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
         !cvElmt->IsValid()) {
