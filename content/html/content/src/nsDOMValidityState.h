@@ -72,6 +72,7 @@ protected:
            mConstraintValidation->GetValidityState(aState);
   }
 
+  // Weak reference to owner which will call Disconnect() when being destroyed.
   nsConstraintValidation*       mConstraintValidation;
 };
 

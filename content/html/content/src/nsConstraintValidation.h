@@ -38,6 +38,7 @@
 #ifndef nsConstraintValidition_h___
 #define nsConstraintValidition_h___
 
+#include "nsISupports.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
@@ -45,20 +46,30 @@ class nsDOMValidityState;
 class nsIDOMValidityState;
 class nsGenericHTMLFormElement;
 
+#define NS_CONSTRAINTVALIDATION_IID \
+{ 0xca3824dc, 0x4f5c, 0x4878, \
+ { 0xa6, 0x8a, 0x95, 0x54, 0x5f, 0xfa, 0x4b, 0xf9 } }
+
 /**
- * This interface is used for form elements implementing the
+ * This class is used for form elements implementing the
  * validity constraint API.
  * See: http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
  *
- * This class has to be inherited by all elements implementing the API.
+ * This class has to be used by all elements implementing the API.
  */
-class nsConstraintValidation
+class nsConstraintValidation : public nsISupports
 {
 public:
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_CONSTRAINTVALIDATION_IID);
 
   friend class nsDOMValidityState;
 
   virtual ~nsConstraintValidation();
+
+  PRBool IsValid() const { return mValidityBitField == 0; }
+
+  PRBool IsCandidateForConstraintValidation() const;
 
 protected:
 
@@ -78,15 +89,9 @@ protected:
   nsConstraintValidation();
 
   nsresult GetValidity(nsIDOMValidityState** aValidity);
-  nsresult GetWillValidate(PRBool* aWillValidate,
-                           nsGenericHTMLFormElement* aElement);
-  nsresult GetValidationMessage(nsAString& aValidationMessage,
-                                nsGenericHTMLFormElement* aElement);
-  nsresult CheckValidity(PRBool* aValidity,
-                         nsGenericHTMLFormElement* aElement);
-  nsresult SetCustomValidity(const nsAString& aError);
-
-  PRBool IsValid() const { return mValidityBitField == 0; }
+  nsresult GetValidationMessage(nsAString& aValidationMessage);
+  nsresult CheckValidity(PRBool* aValidity);
+  void     SetCustomValidity(const nsAString& aError);
 
   bool GetValidityState(ValidityStateType mState) const {
          return mValidityBitField & mState;
@@ -99,8 +104,6 @@ protected:
              mValidityBitField &= ~mState;
            }
          }
-
-  PRBool IsCandidateForConstraintValidation(const nsGenericHTMLFormElement* const aElement) const;
 
   virtual PRBool   IsBarredFromConstraintValidation() const { return PR_FALSE; }
 
@@ -137,19 +140,21 @@ private:
     return nsConstraintValidation::GetValidity(aValidity);                    \
   }                                                                           \
   NS_IMETHOD GetWillValidate(PRBool* aWillValidate) {                         \
-    return nsConstraintValidation::GetWillValidate(aWillValidate, this);      \
+    *aWillValidate = IsCandidateForConstraintValidation();                    \
+    return NS_OK;                                                             \
   }                                                                           \
   NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage) {            \
-    return nsConstraintValidation::GetValidationMessage(aValidationMessage, this); \
+    return nsConstraintValidation::GetValidationMessage(aValidationMessage);  \
   }                                                                           \
   NS_IMETHOD CheckValidity(PRBool* aValidity) {                               \
-    return nsConstraintValidation::CheckValidity(aValidity, this);            \
+    return nsConstraintValidation::CheckValidity(aValidity);                  \
   }
 
 #define NS_FORWARD_NSCONSTRAINTVALIDATION                                     \
   NS_FORWARD_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY                  \
   NS_IMETHOD SetCustomValidity(const nsAString& aError) {                     \
-    return nsConstraintValidation::SetCustomValidity(aError);                 \
+    nsConstraintValidation::SetCustomValidity(aError);                        \
+    return NS_OK;                                                             \
   }
 
 
@@ -159,21 +164,24 @@ private:
     return nsConstraintValidation::GetValidity(aValidity);                    \
   }                                                                           \
   NS_IMETHODIMP _from::GetWillValidate(PRBool* aWillValidate) {               \
-    return nsConstraintValidation::GetWillValidate(aWillValidate, this);      \
+    *aWillValidate = IsCandidateForConstraintValidation();                    \
+    return NS_OK;                                                             \
   }                                                                           \
   NS_IMETHODIMP _from::GetValidationMessage(nsAString& aValidationMessage) {  \
-    return nsConstraintValidation::GetValidationMessage(aValidationMessage, this); \
+    return nsConstraintValidation::GetValidationMessage(aValidationMessage);  \
   }                                                                           \
   NS_IMETHODIMP _from::CheckValidity(PRBool* aValidity) {                     \
-    return nsConstraintValidation::CheckValidity(aValidity, this);            \
+    return nsConstraintValidation::CheckValidity(aValidity);                  \
   }
 
 #define NS_IMPL_NSCONSTRAINTVALIDATION(_from)                                 \
   NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(_from)              \
   NS_IMETHODIMP _from::SetCustomValidity(const nsAString& aError) {           \
-    return nsConstraintValidation::SetCustomValidity(aError);                 \
+    nsConstraintValidation::SetCustomValidity(aError);                        \
+    return NS_OK;                                                             \
   }
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsConstraintValidation, NS_CONSTRAINTVALIDATION_IID)
 
 #endif // nsConstraintValidation_h___
 

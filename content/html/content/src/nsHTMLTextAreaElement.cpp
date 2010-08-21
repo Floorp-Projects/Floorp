@@ -300,12 +300,13 @@ DOMCI_NODE_DATA(HTMLTextAreaElement, nsHTMLTextAreaElement)
 
 // QueryInterface implementation for nsHTMLTextAreaElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTextAreaElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLTextAreaElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLTextAreaElement,
                                    nsIDOMHTMLTextAreaElement,
                                    nsIDOMNSHTMLTextAreaElement,
                                    nsITextControlElement,
                                    nsIDOMNSEditableElement,
-                                   nsIMutationObserver)
+                                   nsIMutationObserver,
+                                   nsConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTextAreaElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTextAreaElement)
@@ -966,7 +967,7 @@ nsHTMLTextAreaElement::IntrinsicState() const
     state |= NS_EVENT_STATE_OPTIONAL;
   }
 
-  if (IsCandidateForConstraintValidation(this)) {
+  if (IsCandidateForConstraintValidation()) {
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 
@@ -1095,7 +1096,7 @@ nsHTMLTextAreaElement::IsMutable() const
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetCustomValidity(const nsAString& aError)
 {
-  nsresult rv = nsConstraintValidation::SetCustomValidity(aError);
+  nsConstraintValidation::SetCustomValidity(aError);
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
@@ -1103,7 +1104,7 @@ nsHTMLTextAreaElement::SetCustomValidity(const nsAString& aError)
                                             NS_EVENT_STATE_VALID);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 PRBool
