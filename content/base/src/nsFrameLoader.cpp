@@ -754,9 +754,9 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
     return false;
   }
 
-  // FIXME/cjones: Show()/Hide() is pretty expensive for cross-process
-  // layers; need to figure out what behavior we really want here.
-  // For now, hack.
+  // FIXME/bug 589337: Show()/Hide() is pretty expensive for
+  // cross-process layers; need to figure out what behavior we really
+  // want here.  For now, hack.
   if (!mRemoteBrowserShown) {
     mRemoteBrowser->Show(size);
     mRemoteBrowserShown = PR_TRUE;
