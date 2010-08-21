@@ -842,6 +842,8 @@ nsTextInputListener::EditAction()
   // Fire input event
   mFrame->FireOnInput();
 
+  mTxtCtrlElement->OnValueChanged(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -1782,6 +1784,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
   // If we've reached the point where the root node has been created, we
   // can assume that it's safe to notify.
   ValueWasChanged(!!mRootNode);
+
+  mTextCtrlElement->OnValueChanged(!!mRootNode);
 }
 
 void

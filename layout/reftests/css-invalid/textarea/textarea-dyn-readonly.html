@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if textarea is readonly, it is barred from constraint validation
+             and should not be affected by :invalid pseudo-class. -->
+  <style>
+    textarea { background-color: green; }
+    textarea:invalid { background-color: red; }
+  </style>
+  <body onload="document.getElementById('t').readOnly='ro'; document.documentElement.className='';">
+    <textarea id='t' required></textarea>
+  </body>
+</html>

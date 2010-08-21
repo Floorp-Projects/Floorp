@@ -8,6 +8,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345624
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input, textarea, fieldset, button, select, keygen { background-color: rgb(0,0,0) !important; }
+    :valid   { background-color: rgb(0,255,0) !important; }
+    :invalid { background-color: rgb(255,0,0) !important; }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345624">Mozilla Bug 345624</a>
@@ -80,6 +85,34 @@ function checkConstraintValidationAPIDefaultValues(element)
   ok(element.checkValidity(), "The element should be valid by default");
 }
 
+function checkDefaultPseudoClass()
+{
+  // TODO: add check for <output>
+  is(window.getComputedStyle(document.getElementById('f'), null)
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     "Nor :valid and :invalid should apply");
+
+  todo_is(window.getComputedStyle(document.getElementById('k'), null)
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     "Nor :valid and :invalid should apply");
+
+  is(window.getComputedStyle(document.getElementById('s'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+
+  is(window.getComputedStyle(document.getElementById('i'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+
+  is(window.getComputedStyle(document.getElementById('t'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+
+  is(window.getComputedStyle(document.getElementById('b'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+}
+
 function checkSpecificWillValidate()
 {
   // fieldset, keygen (TODO) and select elements
@@ -91,31 +124,51 @@ function checkSpecificWillValidate()
   i = document.getElementById('i');
   i.type = "hidden";
   ok(!i.willValidate, "Hidden state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "reset";
   ok(!i.willValidate, "Reset button state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "button";
   ok(!i.willValidate, "Button state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "";
   i.readOnly = 'true';
   ok(!i.willValidate, "Readonly input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.removeAttribute('readOnly');
   ok(i.willValidate, "Default input element should not be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // button element
   b = document.getElementById('b');
   b.type = "reset";
   ok(!b.willValidate, "Reset state button should be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   b.type = "button";
   ok(!b.willValidate, "Button state button should be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   b.type = "";
   ok(b.willValidate, "Default button element should not be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // textarea element
   t = document.getElementById('t');
   t.readOnly = true;
   ok(!t.willValidate, "Readonly textarea should be barred from constraint validation");
+  is(window.getComputedStyle(t, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   t.removeAttribute('readOnly');
   ok(t.willValidate, "Default textarea element should not be barred from constraint validation");
+  is(window.getComputedStyle(t, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // TODO: output  elements are always barred from constraint validation.
   // TODO: PROGRESS
@@ -124,10 +177,14 @@ function checkSpecificWillValidate()
 
 function checkCommonWillValidate(element)
 {
-  // Not checking the default value because it has been check previously
+  // Not checking the default value because it has been checked previously.
 
   element.disabled = true;
   ok(!element.willValidate, "Disabled element should be barred from constraint validation");
+
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+
   element.removeAttribute('disabled');
 
   // TODO: If an element has a datalist element ancestor, it is barred from constraint validation.
@@ -140,10 +197,16 @@ function checkCustomError(element)
   ok(element.validity.customError, "The element should suffer from a custom error");
   ok(!element.validity.valid, "The element should not be valid with a custom error");
 
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(255, 0, 0)", ":invalid pseudo-classs should apply");
+
   element.setCustomValidity("");
   is(element.validationMessage, "", "The element should not have a validation message when reseted");
   ok(!element.validity.customError, "The element should not suffer anymore from a custom error");
   ok(element.validity.valid, "The element should now be valid");
+
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 }
 
 function checkCheckValidity(element)
@@ -205,6 +268,8 @@ checkConstraintValidationAPIDefaultValues(document.getElementById('b'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('s'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('t'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('k'));
+
+checkDefaultPseudoClass();
 
 checkSpecificWillValidate();
 

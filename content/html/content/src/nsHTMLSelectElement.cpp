@@ -195,7 +195,21 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 NS_IMPL_ELEMENT_CLONE(nsHTMLSelectElement)
 
 // nsConstraintValidation
-NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLSelectElement)
+NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLSelectElement)
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
+{
+  nsresult rv = nsConstraintValidation::SetCustomValidity(aError);
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
+                                            NS_EVENT_STATE_VALID);
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
@@ -1455,7 +1469,13 @@ nsHTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 PRInt32
 nsHTMLSelectElement::IntrinsicState() const
 {
-  return NS_EVENT_STATE_OPTIONAL | nsGenericHTMLFormElement::IntrinsicState();
+  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+
+  if (IsCandidateForConstraintValidation(this)) {
+    state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
+  }
+
+  return state | NS_EVENT_STATE_OPTIONAL;
 }
 
 // nsIFormControl

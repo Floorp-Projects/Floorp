@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if input is valid and not barred from constraint validation,
+             it should be affected by :valid pseudo-class. -->
+  <style>
+    input { background-color: red; }
+    input:valid { background-color: green; }
+  </style>
+  <body>
+    <input value='foo' required>
+  </body>
+</html>
+

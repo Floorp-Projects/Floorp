@@ -39,8 +39,8 @@
 #define nsDOMValidityState_h__
 
 #include "nsIDOMValidityState.h"
+#include "nsConstraintValidation.h"
 
-class nsConstraintValidation;
 
 class nsDOMValidityState : public nsIDOMValidityState
 {
@@ -51,14 +51,26 @@ public:
   friend class nsConstraintValidation;
 
 protected:
-  // This function should be called by nsConstraintValidation
-  // to set mConstraintValidation to null to be sure it will not be called.
-  void Disconnect()
+  nsDOMValidityState(nsConstraintValidation* aConstraintValidation);
+
+  /**
+   * This function should be called by nsConstraintValidation
+   * to set mConstraintValidation to null to be sure
+   * it will not be used when the object is destroyed.
+   */
+  inline void Disconnect()
   {
     mConstraintValidation = nsnull;
   }
 
-  nsDOMValidityState(nsConstraintValidation* aConstraintValidation);
+  /**
+   * Helper function to get a validity state from constraint validation instance.
+   */
+  inline PRBool GetValidityState(nsConstraintValidation::ValidityStateType aState) const
+  {
+    return mConstraintValidation &&
+           mConstraintValidation->GetValidityState(aState);
+  }
 
   nsConstraintValidation*       mConstraintValidation;
 };

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if textarea is readonly, it is barred from constraint validation
+             and should not be affected by :valid pseudo-class. -->
+  <style>
+    textarea { background-color: green; }
+    textarea:valid { background-color: red; }
+  </style>
+  <body>
+    <textarea readonly></textarea>
+  </body>
+</html>

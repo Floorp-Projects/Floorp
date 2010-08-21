@@ -38,71 +38,101 @@
 #ifndef nsConstraintValidition_h___
 #define nsConstraintValidition_h___
 
-#include "nsDOMValidityState.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
+class nsDOMValidityState;
+class nsIDOMValidityState;
 class nsGenericHTMLFormElement;
 
 /**
  * This interface is used for form elements implementing the
  * validity constraint API.
  * See: http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
+ *
+ * This class has to be inherited by all elements implementing the API.
  */
 class nsConstraintValidation
 {
 public:
 
+  friend class nsDOMValidityState;
+
   virtual ~nsConstraintValidation();
+
+protected:
+
+  enum ValidityStateType
+  {
+    VALIDITY_STATE_VALUE_MISSING    = 0x01, // 0b00000001
+    VALIDITY_STATE_TYPE_MISMATCH    = 0x02, // 0b00000010
+    VALIDITY_STATE_PATTERN_MISMATCH = 0x04, // 0b00000100
+    VALIDITY_STATE_TOO_LONG         = 0x08, // 0b00001000
+    VALIDITY_STATE_RANGE_UNDERFLOW  = 0x10, // 0b00010000
+    VALIDITY_STATE_RANGE_OVERFLOW   = 0x20, // 0b00100000
+    VALIDITY_STATE_STEP_MISMATCH    = 0x40, // 0b01000000
+    VALIDITY_STATE_CUSTOM_ERROR     = 0x80  // 0b10000000
+  };
+
+  // You can't instantiate an object from that class.
+  nsConstraintValidation();
 
   nsresult GetValidity(nsIDOMValidityState** aValidity);
   nsresult GetWillValidate(PRBool* aWillValidate,
                            nsGenericHTMLFormElement* aElement);
-  nsresult GetValidationMessage(nsAString & aValidationMessage,
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 nsGenericHTMLFormElement* aElement);
   nsresult CheckValidity(PRBool* aValidity,
                          nsGenericHTMLFormElement* aElement);
-  nsresult SetCustomValidity(const nsAString & aError);
+  nsresult SetCustomValidity(const nsAString& aError);
 
-  virtual PRBool   IsValueMissing    () { return PR_FALSE; }
-  virtual PRBool   HasTypeMismatch   () { return PR_FALSE; }
-  virtual PRBool   HasPatternMismatch() { return PR_FALSE; }
-  virtual PRBool   IsTooLong         () { return PR_FALSE; }
-  virtual PRBool   HasRangeUnderflow () { return PR_FALSE; }
-  virtual PRBool   HasRangeOverflow  () { return PR_FALSE; }
-  virtual PRBool   HasStepMismatch   () { return PR_FALSE; }
-          PRBool   HasCustomError    () const;
-          PRBool   IsValid           ();
+  PRBool IsValid() const { return mValidityBitField == 0; }
 
-protected:
+  bool GetValidityState(ValidityStateType mState) const {
+         return mValidityBitField & mState;
+       }
 
-  enum ValidationMessageType
-  {
-    VALIDATION_MESSAGE_VALUE_MISSING,
-    VALIDATION_MESSAGE_TYPE_MISMATCH,
-    VALIDATION_MESSAGE_PATTERN_MISMATCH,
-    VALIDATION_MESSAGE_TOO_LONG,
-    VALIDATION_MESSAGE_RANGE_UNDERFLOW,
-    VALIDATION_MESSAGE_RANGE_OVERFLOW,
-    VALIDATION_MESSAGE_STEP_MISMATCH
-  };
+  void   SetValidityState(ValidityStateType mState, PRBool mValue) {
+           if (mValue) {
+             mValidityBitField |= mState;
+           } else {
+             mValidityBitField &= ~mState;
+           }
+         }
 
-          PRBool   IsCandidateForConstraintValidation(nsGenericHTMLFormElement* aElement);
-  virtual PRBool   IsBarredFromConstraintValidation()       { return PR_FALSE; }
+  PRBool IsCandidateForConstraintValidation(const nsGenericHTMLFormElement* const aElement) const;
+
+  virtual PRBool   IsBarredFromConstraintValidation() const { return PR_FALSE; }
+
   virtual nsresult GetValidationMessage(nsAString& aValidationMessage,
-                                        ValidationMessageType aType) {
+                                        ValidityStateType aType) {
                      return NS_OK;
                    }
 
+private:
+
+  /**
+   * A bitfield representing the current validity state of the element.
+   * Each bit represent an error. All bits to zero means the element is valid.
+   */
+  PRInt8                        mValidityBitField;
+
+  /**
+   * A pointer to the ValidityState object.
+   */
   nsRefPtr<nsDOMValidityState>  mValidity;
+
+  /**
+   * The string representing the custom error.
+   */
   nsString                      mCustomValidity;
 };
 
 /**
- * Use this macro for class inherit from nsConstraintValidation to forward
+ * Use these macro for class inherit from nsConstraintValidation to forward
  * functions to nsConstraintValidation.
  */
-#define NS_FORWARD_NSCONSTRAINTVALIDATION                                     \
+#define NS_FORWARD_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY            \
   NS_IMETHOD GetValidity(nsIDOMValidityState** aValidity) {                   \
     return nsConstraintValidation::GetValidity(aValidity);                    \
   }                                                                           \
@@ -112,16 +142,19 @@ protected:
   NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage) {            \
     return nsConstraintValidation::GetValidationMessage(aValidationMessage, this); \
   }                                                                           \
-  NS_IMETHOD SetCustomValidity(const nsAString& aError) {                     \
-    return nsConstraintValidation::SetCustomValidity(aError);                 \
-  }                                                                           \
   NS_IMETHOD CheckValidity(PRBool* aValidity) {                               \
     return nsConstraintValidation::CheckValidity(aValidity, this);            \
   }
 
+#define NS_FORWARD_NSCONSTRAINTVALIDATION                                     \
+  NS_FORWARD_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY                  \
+  NS_IMETHOD SetCustomValidity(const nsAString& aError) {                     \
+    return nsConstraintValidation::SetCustomValidity(aError);                 \
+  }
 
-/* Use this macro when class declares functions from nsConstraintValidation */
-#define NS_IMPL_NSCONSTRAINTVALIDATION(_from)                                 \
+
+/* Use these macro when class declares functions from nsConstraintValidation */
+#define NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(_from)        \
   NS_IMETHODIMP _from::GetValidity(nsIDOMValidityState** aValidity) {         \
     return nsConstraintValidation::GetValidity(aValidity);                    \
   }                                                                           \
@@ -131,11 +164,14 @@ protected:
   NS_IMETHODIMP _from::GetValidationMessage(nsAString& aValidationMessage) {  \
     return nsConstraintValidation::GetValidationMessage(aValidationMessage, this); \
   }                                                                           \
-  NS_IMETHODIMP _from::SetCustomValidity(const nsAString& aError) {           \
-    return nsConstraintValidation::SetCustomValidity(aError);                 \
-  }                                                                           \
   NS_IMETHODIMP _from::CheckValidity(PRBool* aValidity) {                     \
     return nsConstraintValidation::CheckValidity(aValidity, this);            \
+  }
+
+#define NS_IMPL_NSCONSTRAINTVALIDATION(_from)                                 \
+  NS_IMPL_NSCONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(_from)              \
+  NS_IMETHODIMP _from::SetCustomValidity(const nsAString& aError) {           \
+    return nsConstraintValidation::SetCustomValidity(aError);                 \
   }
 
 

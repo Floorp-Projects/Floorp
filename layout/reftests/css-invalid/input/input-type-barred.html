@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if an input has is candidate for constraint validation then change
+             its type to be barred from constraint validation, it should not be
+             affected by :invalid pseudo-class. -->
+  <style>
+    input { background-color: green; }
+    input:invalid { background-color: red; }
+  </style>
+  <body onload="document.getElementById('i').type='button'; document.documentElement.className='';">
+    <input id='i'>
+  </body>
+</html>
