@@ -196,7 +196,7 @@ namespace nanojit
     typedef HashMap<uint64_t, uint64_t*> ImmDPoolMap;
 #endif
 
-#ifdef VTUNE
+#ifdef VMCFG_VTUNE
     class avmplus::CodegenLIR;
 #endif
 
@@ -271,8 +271,8 @@ namespace nanojit
             #endif // NJ_VERBOSE
 
         public:
-            #ifdef VTUNE
-            avmplus::CodegenLIR *cgen;
+            #ifdef VMCFG_VTUNE
+            void* vtuneHandle;
             #endif
 
             Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
@@ -315,7 +315,11 @@ namespace nanojit
             Register    registerAlloc(LIns* ins, RegisterMask allow, RegisterMask prefer);
             Register    registerAllocTmp(RegisterMask allow);
             void        registerResetAll();
-            void        evictAllActiveRegs();
+            void        evictAllActiveRegs() {
+                // The evicted set will be be intersected with activeSet(),
+                // so use an all-1s mask to avoid an extra load or call.
+                evictSomeActiveRegs(~RegisterMask(0));
+            }
             void        evictSomeActiveRegs(RegisterMask regs);
             void        evictScratchRegsExcept(RegisterMask ignore);
             void        intersectRegisterState(RegAlloc& saved);

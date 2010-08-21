@@ -1,0 +1,300 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345512
+-->
+<head>
+  <title>Test for Bug 345512</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345512">Mozilla Bug 345512</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input id='i' pattern="tulip" oninvalid="invalidEventHandler(event);">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 345512 **/
+
+var gInvalid = false;
+
+function invalidEventHandler(e)
+{
+  is(e.type, "invalid", "Invalid event type should be invalid");
+  gInvalid = true;
+}
+
+function checkPatternAttribute(element)
+{
+  ok('pattern' in element, "Element should have the pattern attribute");
+
+  is(element.pattern, "tulip",
+    "pattern IDL attribute value should be 'tulip'");
+  is(element.getAttribute('pattern'), "tulip",
+    "pattern content attribute value should be 'tulip'");
+
+  element.pattern = "foo";
+  is(element.pattern, "foo",
+    "pattern IDL attribute value should be 'foo'");
+  is(element.getAttribute('pattern'), "foo",
+    "pattern content attribute value should be 'foo'");
+
+  element.removeAttribute('pattern');
+  ok(!element.pattern,
+    "Element pattern attribute shouldn't be specified");
+  is(element.getAttribute('pattern'), null,
+    "Element pattern attribute shouldn't be specified");
+
+  element.setAttribute("pattern", "bar");
+  is(element.pattern, "bar",
+    "pattern IDL attribute value should be 'bar'");
+  is(element.getAttribute('pattern'), "bar",
+    "pattern content attribute value should be 'bar'");
+}
+
+function completeValidityCheck(element, alwaysValid)
+{
+  if (element.type == 'file') {
+    // Need privileges to set a filename with .value.
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  }
+
+  // Check when pattern matches.
+  if (element.type == 'email') {
+    element.pattern = ".*@bar.com";
+    element.value = "foo@bar.com";
+  } else if (element.type == 'url') {
+    element.pattern = "http://.*\\.com$";
+    element.value = "http://mozilla.com";
+  } else {
+    element.pattern = "foo";
+    element.value = "foo";
+  }
+
+  checkValidPattern(element, true);
+
+  // Check when pattern does not match.
+
+  if (element.type == 'email') {
+    element.pattern = ".*@bar.com";
+    element.value = "foo@foo.com";
+  } else if (element.type == 'url') {
+    element.pattern = "http://.*\\.com$";
+    element.value = "http://mozilla.org";
+  } else {
+    element.pattern = "foo";
+    element.value = "bar";
+  }
+
+  if (!alwaysValid) {
+    checkInvalidPattern(element, true);
+  } else {
+    checkValidPattern(element, true);
+  }
+}
+
+function checkValidPattern(element, completeCheck)
+{
+  if (completeCheck) {
+    gInvalid = false;
+
+    ok(!element.validity.patternMismatch,
+       "Element should not suffer from pattern mismatch");
+    ok(element.validity.valid, "Element should be valid");
+    ok(element.checkValidity(), "Element should be valid");
+    ok(!gInvalid, "Invalid event shouldn't have been thrown");
+    is(element.validationMessage, '',
+       "Validation message should be the empty string");
+  } else {
+    ok(!element.validity.patternMismatch,
+       "Element should not suffer from pattern mismatch");
+  }
+}
+
+function checkInvalidPattern(element, completeCheck)
+{
+  if (completeCheck) {
+    gInvalid = false;
+
+    ok(element.validity.patternMismatch,
+       "Element should suffer from pattern mismatch");
+    ok(!element.validity.valid, "Element should not be valid");
+    ok(!element.checkValidity(), "Element should not be valid");
+    ok(gInvalid, "Invalid event should have been thrown");
+    is(element.validationMessage,
+       "The field value is not in the requested format.",
+       "Validation message is not valid");
+  } else {
+    ok(element.validity.patternMismatch,
+       "Element should suffer from pattern mismatch");
+  }
+}
+
+function checkPatternValidity(element)
+{
+  element.pattern = "foo";
+
+  element.value = '';
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkValidPattern(element);
+
+  element.value = "bar";
+  checkInvalidPattern(element);
+
+  element.value = "foobar";
+  checkInvalidPattern(element);
+
+  element.value = "foofoo";
+  checkInvalidPattern(element);
+
+  element.pattern = "foo\"bar";
+  element.value = "foo\"bar";
+  checkValidPattern(element);
+
+  element.value = 'foo"bar';
+  checkValidPattern(element);
+
+  element.pattern = "foo'bar";
+  element.value = "foo\'bar";
+  checkValidPattern(element);
+
+  element.pattern = "foo\\(bar";
+  element.value = "foo(bar";
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkInvalidPattern(element);
+
+  element.pattern = "foo\\)bar";
+  element.value = "foo)bar";
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkInvalidPattern(element);
+
+  // We need '\\\\' because '\\' will produce '\\' and we want to escape the '\'
+  // for the regexp.
+  element.pattern = "foo\\\\bar";
+  element.value = "foo\\bar";
+  checkValidPattern(element);
+
+  // The same way, we want to escape the ' in the pattern.
+  element.pattern = "foo\\'bar";
+  element.value = "foo'bar";
+  checkValidPattern(element);
+
+  // Check for 'i' flag disabled. Should be case sensitive.
+  element.value = "Foo";
+  checkInvalidPattern(element);
+
+  // We can't check for the 'g' flag because we only test, we don't execute.
+  // We can't check for the 'm' flag because .value shouldn't contain line breaks.
+
+  // We should check the pattern attribute do not pollute |RegExp.lastParen|.
+  is(RegExp.lastParen, "", "RegExp.lastParen should be the empty string");
+
+  element.pattern = "(foo)";
+  element.value = "foo";
+  checkValidPattern(element);
+  is(RegExp.lastParen, "", "RegExp.lastParen should be the empty string");
+
+  // That may sound weird but the empty string is a valid pattern value.
+  element.pattern = "";
+  element.value = "";
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkInvalidPattern(element);
+
+  // Checking some complex patterns. As we are using js regexp mechanism, these
+  // tests doesn't aim to test the regexp mechanism.
+  element.pattern = "\\d{2}\\s\\d{2}\\s\\d{4}"
+  element.value = "01 01 2010"
+  checkValidPattern(element);
+
+  element.value = "01/01/2010"
+  checkInvalidPattern(element);
+
+  element.pattern = "[0-9a-zA-Z]([-.\\w]*[0-9a-zA-Z_+])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9}";
+  element.value = "foo@bar.com";
+  checkValidPattern(element);
+
+  element.value = "...@bar.com";
+  checkInvalidPattern(element);
+
+  element.pattern = "^(?:\\w{3,})$";
+  element.value = "foo";
+  checkValidPattern(element);
+
+  element.value = "f";
+  checkInvalidPattern(element);
+
+  // If @title is specified, it should be added in the validation message.
+  if (element.type == 'email') {
+    element.pattern = "foo@bar.com"
+    element.value = "bar@foo.com";
+  } else if (element.type == 'url') {
+    element.pattern = "http://mozilla.com";
+    element.value = "http://mozilla.org";
+  } else {
+    element.pattern = "foo";
+    element.value = "bar";
+  }
+  element.title = "This is an explanation of the regexp.";
+  is(element.validationMessage,
+     "The field value is not in the requested format. " + element.title,
+     "Validation message is not valid");
+  element.title = "";
+  is(element.validationMessage,
+     "The field value is not in the requested format.",
+     "Validation message is not valid");
+
+  element.pattern = "foo";
+  if (element.type == 'email') {
+    element.value = "bar@foo.com";
+  } else if (element.type == 'url') {
+    element.value = "http://mozilla.org";
+  } else {
+    element.value = "bar";
+  }
+  checkInvalidPattern(element);
+
+  element.removeAttribute('pattern');
+  checkValidPattern(element, true);
+}
+
+var input = document.getElementById('i');
+
+// All input types should have the pattern attribute.
+checkPatternAttribute(input);
+
+// |validTypes| are the types which accept @pattern
+// and |invalidTypes| are the ones which do not accept it.
+var validTypes = Array('text', 'password', 'search', 'telephone', 'email', 'url');
+var invalidTypes = Array('hidden', 'checkbox', 'radio', 'file', 'submit',
+                         'image', 'reset', 'button');
+// TODO: 'datetime', 'date', 'month', 'week', 'time', 'datetime-local',
+//       'number', 'range', ande 'color' do not accept the @pattern too but are
+//       not implemented yet.
+
+for each (type in validTypes) {
+  input.type = type;
+  completeValidityCheck(input, false);
+  checkPatternValidity(input);
+}
+
+for each (type in invalidTypes) {
+  input.type = type;
+  completeValidityCheck(input, true);
+}
+
+</script>
+</pre>
+</body>
+</html>

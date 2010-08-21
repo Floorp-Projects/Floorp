@@ -134,9 +134,9 @@ interface nsIDOMParserJS : nsISupports
   /**
    * Just like nsIDOMParser.init, but callable from JS.
    */
-  void init(in nsIPrincipal principal,
-            in nsIURI documentURI,
-            in nsIURI baseURI);
+  void init([optional] in nsIPrincipal principal,
+            [optional] in nsIURI documentURI,
+            [optional] in nsIURI baseURI);
 };
 
 %{ C++

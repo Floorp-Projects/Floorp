@@ -156,6 +156,9 @@ public:
   virtual const char* Name() const { return "Basic"; }
 #endif // MOZ_LAYERS_HAVE_LOG
 
+  // Clear the cached contents of this layer.
+  void ClearCachedResources();
+
 protected:
 #ifdef DEBUG
   enum TransactionPhase {
@@ -170,6 +173,9 @@ private:
                   DrawThebesLayerCallback aCallback,
                   void* aCallbackData,
                   float aOpacity);
+
+  // Clear the contents of a layer
+  void ClearLayer(Layer* aLayer);
 
   already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
                                                           gfxASurface::gfxContentType aContent,

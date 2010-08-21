@@ -1823,7 +1823,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->fp)
-        return cx->fp->scopeChain->getGlobal();
+        return cx->fp->getScopeChain()->getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
@@ -1972,12 +1972,6 @@ JS_RemoveGCThingRoot(JSContext *cx, void **rp)
 {
     CHECK_REQUEST(cx);
     return js_RemoveRoot(cx->runtime, (void *)rp);
-}
-
-JS_PUBLIC_API(void)
-JS_ClearNewbornRoots(JSContext *cx)
-{
-    JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
 #ifdef DEBUG
@@ -4303,7 +4297,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      */
     if (!ComputeThisFromArgv(cx, argv))
         return JS_FALSE;
-    js_GetTopStackFrame(cx)->thisv = argv[-1];
+    js_GetTopStackFrame(cx)->setThisValue(argv[-1]);
     JS_ASSERT(cx->fp->argv == argv);
 
     /* Clear the last parameter in case too few arguments were passed. */
@@ -4398,7 +4392,6 @@ inline static void
 LAST_FRAME_CHECKS(JSContext *cx, bool result)
 {
     if (!JS_IsRunning(cx)) {
-        cx->weakRoots.lastInternalResult = NULL;
         LAST_FRAME_EXCEPTION_CHECK(cx, result);
     }
 }
@@ -4623,18 +4616,18 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
             if (!argAtom) {
                 fun = NULL;
-                goto out;
+                goto out2;
             }
             if (!js_AddLocal(cx, fun, argAtom, JSLOCAL_ARG)) {
                 fun = NULL;
-                goto out;
+                goto out2;
             }
         }
 
         if (!Compiler::compileFunctionBody(cx, fun, principals,
                                            chars, length, filename, lineno)) {
             fun = NULL;
-            goto out;
+            goto out2;
         }
 
         if (obj && funAtom &&
@@ -4653,9 +4646,6 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
         }
 #endif
-
-      out:
-        cx->weakRoots.finalizableNewborns[FINALIZE_FUNCTION] = fun;
     }
 
   out2:
@@ -5448,7 +5438,27 @@ JS_ClearRegExpRoots(JSContext *cx)
     cx->regExpStatics.clear();
 }
 
-/* TODO: compile, execute, get/set other statics... */
+JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+                 size_t *indexp, JSBool test, jsval *rval)
+{
+    CHECK_REQUEST(cx);
+
+    RegExp *re = RegExp::extractFrom(obj);
+    if (!re) {
+      return JS_FALSE;
+    }
+
+    JSString *str = js_NewStringCopyN(cx, chars, length);
+    if (!str) {
+        return JS_FALSE;
+    }
+    AutoValueRooter v(cx, StringValue(str));
+
+    return re->execute(cx, str, indexp, test, Valueify(rval));
+}
+
+/* TODO: compile, get/set other statics... */
 
 /************************************************************************/
 

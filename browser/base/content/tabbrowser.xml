@@ -1202,8 +1202,6 @@
             b._fastFind = this.fastFind;
             b.droppedLinkHandler = handleDroppedLink;
 
-            this.tabContainer.adjustTabstrip();
-
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
             // even if the event listener opens or closes tabs.
@@ -1258,10 +1256,8 @@
       <parameter name="aAll"/>
       <body>
         <![CDATA[
-          var tabsToClose = this.tabs.length;
-
-          if (!aAll)
-            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
+          var tabsToClose = (aAll ? this.tabs.length : this.visibleTabs.length - 1)
+                            - gBrowser._numPinnedTabs;
           if (tabsToClose <= 1)
             return true;
 
@@ -2744,11 +2740,13 @@
             return;
 
           if (this.mTabstrip.smoothScroll) {
-            let selected = this.selectedItem.getBoundingClientRect();
+            let selected = !this.selectedItem.pinned &&
+                           this.selectedItem.getBoundingClientRect();
 
             // Can we make both the new tab and the selected tab completely visible?
-            if (Math.max(tab.right - selected.left, selected.right - tab.left) <=
-                scrollRect.width) {
+            if (!selected ||
+                Math.max(tab.right - selected.left, selected.right - tab.left) <=
+                  scrollRect.width) {
               this.mTabstrip.ensureElementIsVisible(aTab);
               return;
             }
@@ -2848,6 +2846,8 @@
         <body><![CDATA[
           if (tab.parentNode != this)
             return;
+
+          this.adjustTabstrip();
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
