@@ -813,12 +813,13 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *initialVarObj;
     if (down) {
         /* Propagate arg state for eval and the debugger API. */
+        JS_ASSERT_IF(down->hasFunction(), down->hasCallObj());
         fp->setCallObj(down->maybeCallObj());
         fp->setArgsObj(NULL);
         fp->setFunction((script->staticLevel > 0) ? down->maybeFunction() : NULL);
         fp->setThisValue(down->getThisValue());
         fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
-        fp->setNumActualArgs(down->numActualArgs());
+        fp->setNumActualArgs(0);
         fp->argv = down->argv;
         fp->setAnnotation(down->maybeAnnotation());
         fp->setScopeChain(chain);
