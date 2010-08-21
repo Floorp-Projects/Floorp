@@ -456,6 +456,22 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
                                          getter_AddRefs(dir));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#elif defined(ANDROID)
+  char* sdcard = getenv("EXTERNAL_STORAGE");
+  nsresult rv;
+  if (sdcard) {
+    nsCOMPtr<nsILocalFile> ldir; 
+    rv = NS_NewNativeLocalFile(nsDependentCString(sdcard),
+                               PR_TRUE, getter_AddRefs(ldir));
+    NS_ENSURE_SUCCESS(rv, rv);
+    dir = ldir;
+    
+  }
+  else {
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
 #else
   // On all other platforms, we default to the systems temporary directory.
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
