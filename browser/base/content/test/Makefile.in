@@ -146,6 +146,7 @@ _BROWSER_FILES = \
                  browser_ctrlTab.js \
                  browser_discovery.js \
                  browser_drag.js \
+                 browser_duplicateIDs.js \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
                  browser_hide_removing.js \
