@@ -228,6 +228,7 @@ protected:
                                      HWND aParentWnd,
                                      const nsIntRect& aRect,
                                      nsWidgetInitData* aInitData);
+  gfxASurface*          ConfirmThebesSurface();
   HWND                  GetMainWindow();
   static nsWindow*      GetNSWindowPtr(HWND aWnd);
   static PRBool         SetNSWindowPtr(HWND aWnd, nsWindow* aPtr);
@@ -286,6 +287,7 @@ protected:
   PRInt32       mWindowState;       // current nsWindowState_* value
   PRBool        mIsDestroying;      // in destructor
   PRBool        mInSetFocus;        // prevent recursive calls
+  PRBool        mNoPaint;           // true if window is never visible
   HPS           mDragHps;           // retrieved by DrgGetPS() during a drag
   PRUint32      mDragStatus;        // set when object is being dragged over
   HWND          mClipWnd;           // used to clip plugin windows
