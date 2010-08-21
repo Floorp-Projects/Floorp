@@ -521,7 +521,7 @@
           <hbox flex="1"
                 class="split-menuitem">
             <menuitem id="appmenu_print"
-                      class="menuitem-iconic"
+                      class="menuitem-iconic split-menuitem-item"
                       flex="1"
                       label="&printCmd.label;"
                       command="cmd_print"/>
@@ -579,52 +579,53 @@
         </vbox>
         <vbox id="appmenuSecondaryPane">
           <hbox class="split-menuitem">
-            <menuitem id="appmenu_BookmarkItem"
-                      class="menuitem-iconic"
+            <menuitem id="appmenu_bookmarks"
+                      class="menuitem-iconic split-menuitem-item"
                       flex="1"
                       label="&bookmarksMenu.label;"
                       command="Browser:ShowAllBookmarks"/>
-            <menu id="appmenuBookmarkMenu"
+            <menu id="appmenu_bookmarksMenu"
                   class="split-menuitem-menu">
-              <menupopup id="appmenuBookmarkMenu_popup"
+              <menupopup id="appmenu_bookmarksMenupopup"
                          placespopup="true"
                          context="placesContext"
                          openInTabs="children"
                          oncommand="BookmarksEventHandler.onCommand(event);"
                          onclick="BookmarksEventHandler.onClick(event);"
                          onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
-                                         if (!this.parentNode._placesView)new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');
-                                         this.appendChild(document.getElementById('appmenuBookmarkMenu_unsorted_seperator'));
-                                         this.appendChild(document.getElementById('appmenuBookmarkMenu_unsorted-menuitem'));"
+                                         if (!this.parentNode._placesView)
+                                           new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');
+                                         this.appendChild(document.getElementById('appmenu_unsortedBookmarks_seperator'));
+                                         this.appendChild(document.getElementById('appmenu_unsortedBookmarks'));"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
-                <menuseparator id="appmenuBookmarkMenu_unsorted_seperator"/>
-                <menuitem id="appmenuBookmarkMenu_unsorted-menuitem"
+                <menuseparator id="appmenu_unsortedBookmarks_seperator"/>
+                <menuitem id="appmenu_unsortedBookmarks"
                           label="&appMenuUnsorted.label;"
                           oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
                           class="menuitem-iconic"/>
-                <menuitem id="appmenuBookmarkMenu_organize_bookmarks"
+                <menuitem id="appmenu_organizeBookmarks"
                           label="&organizeBookmarks.label;"
                           key="manBookmarkKb"
                           command="Browser:ShowAllBookmarks"
                           context=""/>
                 <menuseparator/>
-                <menuitem id="appmenuBookmarkThisPage"
+                <menuitem id="appmenu_bookmarkThisPage"
                           class="menuitem-iconic"
                           label="&bookmarkThisPageCmd.label;"
                           command="Browser:AddBookmarkAs"
                           key="addBookmarkAsKb"/>
-                <menuitem id="subscribeToPageMenuitem"
+                <menuitem id="appmenu_subscribeToPage"
                           class="menuitem-iconic"
                           label="&subscribeToPageMenuitem.label;"
                           oncommand="return FeedHandler.subscribeToFeed(null, event);"
                           onclick="checkForMiddleClick(this, event);"
                           disabled="true"/>
-                <menu id="subscribeToPageMenupopup"
+                <menu id="appmenu_subscribeToPageMenu"
                       class="menu-iconic"
                       label="&subscribeToPageMenupopup.label;"
                       hidden="true">
-                  <menupopup id="subscribeToPageSubmenuMenupopup"
+                  <menupopup id="appmenu_subscribeToPageMenupopup"
                              onpopupshowing="return FeedHandler.buildFeedList(event.target);"
                              oncommand="return FeedHandler.subscribeToFeed(null, event);"
                              onclick="checkForMiddleClick(this, event);"/>
@@ -634,18 +635,19 @@
             </menu>
           </hbox>
           <hbox class="split-menuitem">
-            <menuitem id="appmenu_HistoryItem"
-                      class="menuitem-iconic"
+            <menuitem id="appmenu_history"
+                      class="menuitem-iconic split-menuitem-item"
                       flex="1"
                       label="&historyMenu.label;"
                       command="Browser:ShowAllHistory"/>
-            <menu id="appmenu_history"
+            <menu id="appmenu_historyMenu"
                   class="split-menuitem-menu">
-              <menupopup id="appmenu_history_popup"
+              <menupopup id="appmenu_historyMenupopup"
                          placespopup="true"
                          oncommand="this.parentNode._placesView._onCommand(event);"
                          onclick="checkForMiddleClick(this, event);"
-                         onpopupshowing="if (!this.parentNode._placesView) new HistoryMenu(event);"
+                         onpopupshowing="if (!this.parentNode._placesView)
+                                           new HistoryMenu(event);"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
                 <menuitem id="appmenu_showAllHistory"
@@ -658,17 +660,19 @@
                           key="key_sanitize"
                           command="Tools:Sanitize"/>
                 <menuseparator class="hide-if-empty-places-result"/>
-                <menu id="historyUndoMenu"
+                <menu id="appmenu_recentlyClosedTabsMenu"
+                      class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
-                  <menupopup id="historyUndoPopup"
-                             onpopupshowing="_placesView.populateUndoSubmenu();"/>
+                  <menupopup id="appmenu_recentlyClosedTabsMenupopup"
+                             onpopupshowing="document.getElementById('appmenu_historyMenu')._placesView.populateUndoSubmenu();"/>
                 </menu>
-                <menu id="historyUndoWindowMenu"
+                <menu id="appmenu_recentlyClosedWindowsMenu"
+                      class="recentlyClosedWindowsMenu"
                       label="&historyUndoWindowMenu.label;"
                       disabled="true">
-                  <menupopup id="historyUndoPopup"
-                             onpopupshowing="_placesView.populateUndoWindowSubmenu();"/>
+                  <menupopup id="appmenu_recentlyClosedWindowsMenupopup"
+                             onpopupshowing="document.getElementById('appmenu_historyMenu')._placesView.populateUndoWindowSubmenu();"/>
                 </menu>
                 <menuseparator/>
               </menupopup>
@@ -691,7 +695,7 @@
               <menu class="split-menuitem-menu"
                     label="&preferencesCmd.label;">
                 <menupopup id="appmenu_customizeMenu"
-                           onpopupshowing="onViewToolbarsPopupShowing(event, (document.getElementById('appmenuToggleStatusbar')));">
+                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleStatusbar'));">
                   <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                             label="&preferencesCmdUnix.label;"
@@ -700,12 +704,12 @@
 #endif
                             oncommand="openPreferences();"/>
                   <menuseparator/>
-                  <menuitem id="appmenuToggleStatusbar"
+                  <menuitem id="appmenu_toggleStatusbar"
                             type="checkbox"
                             command="cmd_toggleTaskbar"
                             observes="toggle_taskbar"/>
                   <menuseparator/>
-                  <menuitem id="appmenuToggleTabs"
+                  <menuitem id="appmenu_toggleTabsOnTop"
                             label="&viewTabsOnTop.label;"
                             type="checkbox"
                             command="cmd_ToggleTabsOnTop"/>
@@ -716,23 +720,23 @@
               </menu>
             </hbox>
             <hbox class="split-menuitem">
-              <menuitem id="appmenu_helpItem"
+              <menuitem id="appmenu_help"
+                        class="split-menuitem-item"
                         flex="1"
                         label="&helpMenu.label;"
                         oncommand="openHelpLink('firefox-help')"/>
-              <menu id="appmenu_about_menu"
-                    class="split-menuitem-menu">
-                <menupopup>
+              <menu class="split-menuitem-menu">
+                <menupopup id="appmenu_helpMenupopup">
                   <menuitem id="appmenu_openHelp"
                             label="&helpMenu.label;"
                             oncommand="openHelpLink('firefox-help')"
                             onclick="checkForMiddleClick(this, event);"/>
-                  <menuitem id="appmenu_help_getting_started"
+                  <menuitem id="appmenu_gettingStarted"
                             label="&appMenuGettingStarted.label;"
-                            oncommand="gBrowser.selectedTab = gBrowser.addTab('http://www.mozilla.com/firefox/central/');"
+                            oncommand="gBrowser.loadOneTab('http://www.mozilla.com/firefox/central/', {inBackground: false});"
                             onclick="checkForMiddleClick(this, event);"/>
                   <menuseparator/>
-                  <menuitem id="appmenu_help_about"
+                  <menuitem id="appmenu_about"
                             label="&aboutProduct.label;"
                             oncommand="openAboutDialog();"/>
                 </menupopup>
