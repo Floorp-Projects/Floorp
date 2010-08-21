@@ -730,10 +730,6 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
-    if (mResponseHead)
-        SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
-                           mResponseHead->ContentLength());
-
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
         gIOService->GetContentSniffers().Count() != 0) {
@@ -2112,16 +2108,16 @@ nsHttpChannel::CheckCache()
         // size of the cached content, then the cached response is partial...
         // either we need to issue a byte range request or we need to refetch
         // the entire document.
-        nsInt64 contentLength = mCachedResponseHead->ContentLength();
-        if (contentLength != nsInt64(-1)) {
+        PRInt64 contentLength = mCachedResponseHead->ContentLength();
+        if (contentLength != -1) {
             PRUint32 size;
             rv = mCacheEntry->GetDataSize(&size);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (nsInt64(size) != contentLength) {
+            if (PRInt64(size) != contentLength) {
                 LOG(("Cached data size does not match the Content-Length header "
-                     "[content-length=%lld size=%u]\n", PRInt64(contentLength), size));
-                if ((nsInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
+                     "[content-length=%lld size=%u]\n", contentLength, size));
+                if ((PRInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
                     // looks like a partial entry.
                     rv = SetupByteRangeRequest(size);
                     NS_ENSURE_SUCCESS(rv, rv);
@@ -3718,7 +3714,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         // of a byte range request, the content length stored in the cached
         // response headers is what we want to use here.
 
-        PRUint64 progressMax(PRUint64(mResponseHead->ContentLength()));
+        PRUint64 progressMax(mResponseHead->ContentLength());
         PRUint64 progress = mLogicalOffset + PRUint64(count);
         NS_ASSERTION(progress <= progressMax, "unexpected progress values");
 
