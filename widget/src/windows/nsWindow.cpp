@@ -2534,7 +2534,8 @@ void nsWindow::UpdateGlass()
   DWMNCRENDERINGPOLICY policy = DWMNCRP_USEWINDOWSTYLE;
   switch (mTransparencyMode) {
   case eTransparencyBorderlessGlass:
-    {
+    // Only adjust if there is some opaque rectangle
+    if (margins.cxLeftWidth >= 0) {
       const PRInt32 kGlassMarginAdjustment = 2;
       margins.cxLeftWidth += kGlassMarginAdjustment;
       margins.cyTopHeight += kGlassMarginAdjustment;
