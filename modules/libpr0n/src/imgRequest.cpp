@@ -1041,16 +1041,13 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     if (imageType == imgIContainer::TYPE_RASTER) {
       /* Use content-length as a size hint for http channels. */
       if (httpChannel) {
-        nsCAutoString contentLength;
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
-                                            contentLength);
+        PRInt64 contentLength;
+        rv = httpChannel->GetContentLength(&contentLength);
         if (NS_SUCCEEDED(rv)) {
-          PRInt32 len = contentLength.ToInteger(&rv);
-
           // Pass anything usable on so that the RasterImage can preallocate
           // its source buffer
-          if (len > 0) {
-            PRUint32 sizeHint = (PRUint32) len;
+          if (contentLength > 0) {
+            PRUint32 sizeHint = (PRUint32) contentLength;
             sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
             RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
             rasterImage->SetSourceSizeHint(sizeHint);
