@@ -2604,6 +2604,11 @@ function BrowserOnClick(event) {
         );
       }
     }
+    else if (/^about:privatebrowsing/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById("startPrivateBrowsing")) {
+        gPrivateBrowsingUI.toggleMode();
+      }
+    }
 }
 
 /**

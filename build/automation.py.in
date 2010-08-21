@@ -294,7 +294,6 @@ class Automation(object):
     # Open database and create table
     permDB = sqlite3.connect(os.path.join(profileDir, "permissions.sqlite"))
     cursor = permDB.cursor();
-    // SQL copied from nsPermissionManager.cpp
     cursor.execute("""CREATE TABLE moz_hosts (
        id INTEGER PRIMARY KEY,
        host TEXT,
