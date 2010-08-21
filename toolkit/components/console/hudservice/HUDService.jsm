@@ -1852,11 +1852,6 @@ HeadsUpDisplay.prototype = {
 
     this.outputNode = this.HUDBox.querySelectorAll(".hud-output-node")[0];
 
-    this.contextMenu = this.HUDBox.querySelector("#" + this.hudId +
-        "-output-contextmenu");
-    this.copyOutputMenuItem = this.HUDBox.
-      querySelector("menuitem[command=cmd_copy]");
-
     this.chromeWindow = HUDService.
       getChromeWindowFromContentWindow(this.contentWindow);
     this.chromeDocument = this.HUDBox.ownerDocument;
@@ -1951,23 +1946,7 @@ HeadsUpDisplay.prototype = {
 
     this.setFilterTextBoxEvents();
 
-    this.consoleClearButton = this.makeXULNode("button");
-    this.consoleClearButton.setAttribute("class", "hud-console-clear");
-    this.consoleClearButton.setAttribute("label", this.getStr("btnClear"));
-    this.consoleClearButton.setAttribute("buttonType", "clear");
-    this.consoleClearButton.setAttribute("hudId", this.hudId);
-    var command = "HUDConsoleUI.command(this)";
-    this.consoleClearButton.setAttribute("oncommand", command);
-
-    this.copyOutputMenuItem = this.makeXULNode("menuitem");
-    this.copyOutputMenuItem.setAttribute("label", this.getStr("copyCmd.label"));
-    this.copyOutputMenuItem.setAttribute("accesskey", this.getStr("copyCmd.accesskey"));
-    this.copyOutputMenuItem.setAttribute("key", "key_copy");
-    this.copyOutputMenuItem.setAttribute("command", "cmd_copy");
-
-    this.contextMenu = this.makeXULNode("menupopup");
-    this.contextMenu.setAttribute("id", this.hudId + "-output-contextmenu");
-    this.contextMenu.appendChild(this.copyOutputMenuItem);
+    this.createConsoleMenu(this.consoleWrap);
 
     this.filterPrefs = HUDService.getDefaultFilterPrefs(this.hudId);
 
@@ -1977,10 +1956,6 @@ HeadsUpDisplay.prototype = {
     consoleWrap.appendChild(consoleFilterToolbar);
 
     consoleWrap.appendChild(this.outputNode);
-
-    // We want the context menu inside the console wrapper, but outside the
-    // outputNode.
-    outerWrap.appendChild(this.contextMenu);
 
     outerWrap.appendChild(consoleWrap);
 
@@ -2052,8 +2027,6 @@ HeadsUpDisplay.prototype = {
     toolbar.setAttribute("class", "hud-console-filter-toolbar");
     toolbar.setAttribute("mode", "text");
 
-    toolbar.appendChild(this.consoleClearButton);
-
     let pageCategoryTitle = this.getStr("categoryPage");
     this.addButtonCategory(toolbar, pageCategoryTitle, pageButtons);
 
@@ -2067,6 +2040,39 @@ HeadsUpDisplay.prototype = {
     toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
     return toolbar;
+  },
+
+  /**
+   * Creates the context menu on the console, which contains the "clear
+   * console" functionality.
+   *
+   * @param nsIDOMNode aOutputNode
+   *        The console output DOM node.
+   * @returns void
+   */
+  createConsoleMenu: function HUD_createConsoleMenu(aConsoleWrapper) {
+    let menuPopup = this.makeXULNode("menupopup");
+    let id = this.hudId + "-output-contextmenu";
+    menuPopup.setAttribute("id", id);
+
+    let copyItem = this.makeXULNode("menuitem");
+    copyItem.setAttribute("label", this.getStr("copyCmd.label"));
+    copyItem.setAttribute("accesskey", this.getStr("copyCmd.accesskey"));
+    copyItem.setAttribute("key", "key_copy");
+    copyItem.setAttribute("command", "cmd_copy");
+    menuPopup.appendChild(copyItem);
+
+    menuPopup.appendChild(this.makeXULNode("menuseparator"));
+
+    let clearItem = this.makeXULNode("menuitem");
+    clearItem.setAttribute("label", this.getStr("itemClear"));
+    clearItem.setAttribute("hudId", this.hudId);
+    clearItem.setAttribute("buttonType", "clear");
+    clearItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
+    menuPopup.appendChild(clearItem);
+
+    aConsoleWrapper.appendChild(menuPopup);
+    aConsoleWrapper.setAttribute("context", id);
   },
 
   makeButton: function HUD_makeButton(aName, aPrefKey, aType)

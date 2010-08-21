@@ -527,14 +527,16 @@ nsWindow::Create(nsIWidget *aParent,
                  nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)
 {
-  if (aInitData)
-    mUnicodeWidget = aInitData->mUnicode;
+  nsWidgetInitData defaultInitData;
+  if (!aInitData)
+    aInitData = &defaultInitData;
 
-  nsIWidget *baseParent = aInitData &&
-                         (aInitData->mWindowType == eWindowType_dialog ||
+  mUnicodeWidget = aInitData->mUnicode;
+
+  nsIWidget *baseParent = aInitData->mWindowType == eWindowType_dialog ||
                           aInitData->mWindowType == eWindowType_toplevel ||
-                          aInitData->mWindowType == eWindowType_invisible) ?
-                         nsnull : aParent;
+                          aInitData->mWindowType == eWindowType_invisible ?
+                          nsnull : aParent;
 
   mIsTopWidgetWindow = (nsnull == baseParent);
   mBounds.width = aRect.width;
@@ -552,11 +554,8 @@ nsWindow::Create(nsIWidget *aParent,
     mParent = aNativeParent ? GetNSWindowPtr((HWND)aNativeParent) : nsnull;
   }
 
-  if (nsnull != aInitData) {
-    mPopupType = aInitData->mPopupHint;
-  }
-
-  mContentType = aInitData ? aInitData->mContentType : eContentTypeInherit;
+  mPopupType = aInitData->mPopupHint;
+  mContentType = aInitData->mContentType;
 
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
@@ -571,7 +570,7 @@ nsWindow::Create(nsIWidget *aParent,
   } else if (mWindowType == eWindowType_invisible) {
     // Make sure CreateWindowEx succeeds at creating a toplevel window
     style &= ~0x40000000; // WS_CHILDWINDOW
-  } else if (nsnull != aInitData) {
+  } else {
     // See if the caller wants to explictly set clip children and clip siblings
     if (aInitData->clipChildren) {
       style |= WS_CLIPCHILDREN;
@@ -584,7 +583,7 @@ nsWindow::Create(nsIWidget *aParent,
   }
 
   mWnd = ::CreateWindowExW(extendedStyle,
-                           aInitData && aInitData->mDropShadow ?
+                           aInitData->mDropShadow ?
                            WindowPopupClass() : WindowClass(),
                            L"",
                            style,
@@ -679,9 +678,9 @@ NS_METHOD nsWindow::Destroy()
   }
   mLayerManager = nsnull;
 
-  /* We should clear our D2D window surface now and not wait for the GC to
+  /* We should clear our cached resources now and not wait for the GC to
    * delete the nsWindow. */
-  mD2DWindowSurface = nsnull;
+  ClearCachedResources();
 
   // The DestroyWindow function destroys the specified window. The function sends WM_DESTROY
   // and WM_NCDESTROY messages to the window to deactivate it and remove the keyboard focus
@@ -1167,11 +1166,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
   // SetWindowPos would get the correct answer.
   mIsVisible = bState;
 
-#ifdef CAIRO_HAS_D2D_SURFACE
   if (!mIsVisible && wasVisible) {
-      ClearD2DSurface();
+      ClearCachedResources();
   }
-#endif
 
   if (mWnd) {
     if (bState) {
@@ -2537,7 +2534,8 @@ void nsWindow::UpdateGlass()
   DWMNCRENDERINGPOLICY policy = DWMNCRP_USEWINDOWSTYLE;
   switch (mTransparencyMode) {
   case eTransparencyBorderlessGlass:
-    {
+    // Only adjust if there is some opaque rectangle
+    if (margins.cxLeftWidth >= 0) {
       const PRInt32 kGlassMarginAdjustment = 2;
       margins.cxLeftWidth += kGlassMarginAdjustment;
       margins.cyTopHeight += kGlassMarginAdjustment;
@@ -7936,30 +7934,28 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 }
 #endif // WinCE
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-BOOL CALLBACK nsWindow::ClearD2DSurfaceCallback(HWND aWnd, LPARAM aMsg)
+BOOL CALLBACK nsWindow::ClearResourcesCallback(HWND aWnd, LPARAM aMsg)
 {
     nsWindow *window = nsWindow::GetNSWindowPtr(aWnd);
     if (window) {
-        window->ClearD2DSurface();
+        window->ClearCachedResources();
     }  
     return TRUE;
 }
 
 void
-nsWindow::ClearD2DSurface()
+nsWindow::ClearCachedResources()
 {
+#ifdef CAIRO_HAS_D2D_SURFACE
     mD2DWindowSurface = nsnull;
-    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-        gfxWindowsPlatform::RENDER_DIRECT2D) {
-        // The layer manager holds onto a bunch of buffers created with create
-        // similar surface. This can consume quite a bit of VMEM for each tab,
-        // if a window is hidden we clear the layer manager to conserve VRAM.
-        mLayerManager = nsnull;
-    }
-    ::EnumChildWindows(mWnd, nsWindow::ClearD2DSurfaceCallback, NULL);
-}
 #endif
+    if (mLayerManager &&
+        mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
+      static_cast<BasicLayerManager*>(mLayerManager.get())->
+        ClearCachedResources();
+    }
+    ::EnumChildWindows(mWnd, nsWindow::ClearResourcesCallback, NULL);
+}
 
 static PRBool IsDifferentThreadWindow(HWND aWnd)
 {

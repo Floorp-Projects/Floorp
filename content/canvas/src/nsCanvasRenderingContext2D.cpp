@@ -2327,8 +2327,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     // We know the declaration is not !important, so we can use
     // GetNormalBlock().
     const nsCSSValue *fsaVal =
-      declaration->GetNormalBlock()->
-        ValueStorageFor(eCSSProperty_font_size_adjust);
+      declaration->GetNormalBlock()->ValueFor(eCSSProperty_font_size_adjust);
     if (!fsaVal || (fsaVal->GetUnit() != eCSSUnit_None &&
                     fsaVal->GetUnit() != eCSSUnit_System_Font)) {
         // We got an all-property value or a syntax error.  The spec says

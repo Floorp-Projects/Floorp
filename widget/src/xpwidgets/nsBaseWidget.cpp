@@ -246,6 +246,46 @@ NS_IMETHODIMP nsBaseWidget::SetClientData(void* aClientData)
   return NS_OK;
 }
 
+already_AddRefed<nsIWidget>
+nsBaseWidget::CreateChild(const nsIntRect  &aRect,
+                          EVENT_CALLBACK   aHandleEventFunction,
+                          nsIDeviceContext *aContext,
+                          nsIAppShell      *aAppShell,
+                          nsIToolkit       *aToolkit,
+                          nsWidgetInitData *aInitData,
+                          PRBool           aForceUseIWidgetParent)
+{
+  nsIWidget* parent = this;
+  nsNativeWidget nativeParent = nsnull;
+
+  if (!aForceUseIWidgetParent) {
+    // Use only either parent or nativeParent, not both, to match
+    // existing code.  Eventually Create() should be divested of its
+    // nativeWidget parameter.
+    nativeParent = parent ? parent->GetNativeData(NS_NATIVE_WIDGET) : nsnull;
+    parent = nativeParent ? nsnull : parent;
+    NS_ABORT_IF_FALSE(!parent || !nativeParent, "messed up logic");
+  }
+
+  nsCOMPtr<nsIWidget> widget;
+  if (aInitData && aInitData->mWindowType == eWindowType_popup) {
+    widget = AllocateChildPopupWidget();
+  } else {
+    static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+    widget = do_CreateInstance(kCChildCID);
+  }
+
+  if (widget &&
+      NS_SUCCEEDED(widget->Create(parent, nativeParent, aRect,
+                                  aHandleEventFunction,
+                                  aContext, aAppShell, aToolkit,
+                                  aInitData))) {
+    return widget.forget();
+  }
+
+  return nsnull;
+}
+
 // Attach a view to our widget which we'll send events to. 
 NS_IMETHODIMP
 nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
@@ -1347,12 +1387,15 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
   if (!debug_GetCachedBoolPref("nglayout.debug.paint_dumping"))
     return;
   
+  nsIntRect rect = aPaintEvent->region.GetBounds();
   fprintf(aFileOut,
-          "%4d PAINT      widget=%p name=%-12s id=%-8p rect=", 
+          "%4d PAINT      widget=%p name=%-12s id=%-8p bounds-rect=%3d,%-3d %3d,%-3d", 
           _GetPrintCount(),
           (void *) aWidget,
           aWidgetName.get(),
-          (void *) aWindowID);
+          (void *) aWindowID,
+          rect.x, rect.y, rect.width, rect.height
+    );
   
   fprintf(aFileOut,"\n");
 }

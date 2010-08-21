@@ -414,6 +414,14 @@ protected:
   void              TearDownView();
   nsCocoaWindow*    GetXULWindowWidget();
 
+  virtual already_AddRefed<nsIWidget>
+  AllocateChildPopupWidget()
+  {
+    static NS_DEFINE_IID(kCPopUpCID, NS_POPUP_CID);
+    nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
+    return widget.forget();
+  }
+
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]

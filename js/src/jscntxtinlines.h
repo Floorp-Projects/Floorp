@@ -313,6 +313,7 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->fp == up && up->down == down);
     JS_ASSERT(up->savedPC == JSStackFrame::sInvalidPC);
+    JS_ASSERT(!up->hasIMacroPC());
 
     JSFrameRegs *regs = cx->regs;
     regs->pc = down->savedPC;
@@ -339,13 +340,13 @@ inline Value *
 FrameRegsIter::contiguousDownFrameSP(JSStackFrame *up)
 {
     JS_ASSERT(up->argv);
-    Value *sp = up->argv + up->argc;
+    Value *sp = up->argv + up->numActualArgs();
 #ifdef DEBUG
     JS_ASSERT(sp <= up->argEnd());
-    JS_ASSERT(sp >= (up->down->script ? up->down->base() : up->down->slots()));
-    if (up->fun) {
-        uint16 nargs = up->fun->nargs;
-        uintN argc = up->argc;
+    JS_ASSERT(sp >= (up->down->hasScript() ? up->down->base() : up->down->slots()));
+    if (up->hasFunction()) {
+        uint16 nargs = up->getFunction()->nargs;
+        uintN argc = up->numActualArgs();
         uintN missing = argc < nargs ? nargs - argc : 0;
         JS_ASSERT(sp == up->argEnd() - missing);
     } else {

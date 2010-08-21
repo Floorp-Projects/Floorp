@@ -478,11 +478,12 @@ nsMathMLmoFrame::ProcessOperatorData()
   // special: accent and movablelimits are handled above,
   // don't process them here
 
-  if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
-    GetAttribute(mContent, mPresentationData.mstyle,
-                 nsGkAtoms::stretchy_, value);
-    if (value.EqualsLiteral("false"))
-      mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsGkAtoms::stretchy_, value);
+  if (value.EqualsLiteral("false")) {
+    mFlags &= ~NS_MATHML_OPERATOR_STRETCHY;
+  } else if (value.EqualsLiteral("true")) {
+    mFlags |= NS_MATHML_OPERATOR_STRETCHY;
   }
   if (NS_MATHML_OPERATOR_IS_FENCE(mFlags)) {
     GetAttribute(mContent, mPresentationData.mstyle,
@@ -490,11 +491,12 @@ nsMathMLmoFrame::ProcessOperatorData()
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_FENCE;
   }
-  if (NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
-    GetAttribute(mContent, mPresentationData.mstyle,
-                 nsGkAtoms::largeop_, value);
-    if (value.EqualsLiteral("false"))
-      mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsGkAtoms::largeop_, value);
+  if (value.EqualsLiteral("false")) {
+    mFlags &= ~NS_MATHML_OPERATOR_LARGEOP;
+  } else if (value.EqualsLiteral("true")) {
+    mFlags |= NS_MATHML_OPERATOR_LARGEOP;
   }
   if (NS_MATHML_OPERATOR_IS_SEPARATOR(mFlags)) {
     GetAttribute(mContent, mPresentationData.mstyle,
@@ -596,6 +598,9 @@ GetStretchHint(nsOperatorFlags aFlags, nsPresentationData aPresentationData,
     if (NS_MATHML_IS_DISPLAYSTYLE(aPresentationData.flags) &&
         NS_MATHML_OPERATOR_IS_LARGEOP(aFlags)) {
       stretchHint = NS_STRETCH_LARGEOP; // (largeopOnly, not mask!)
+      if (NS_MATHML_OPERATOR_IS_INTEGRAL(aFlags)) {
+        stretchHint |= NS_STRETCH_INTEGRAL;
+      }
       if (NS_MATHML_OPERATOR_IS_STRETCHY(aFlags)) {
         stretchHint |= NS_STRETCH_NEARER | NS_STRETCH_LARGER;
       }

@@ -112,6 +112,8 @@ CPPSRCS		= \
 		nsHTMLTextAreaElement.cpp \
 		nsHTMLTimeRanges.cpp \
 		nsHTMLTitleElement.cpp \
+		nsDOMValidityState.cpp \
+		nsConstraintValidation.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA
