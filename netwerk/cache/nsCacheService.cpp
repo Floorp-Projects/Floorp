@@ -614,44 +614,6 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     return capacity;
 }
 
-
-/******************************************************************************
- * nsProcessRequestEvent
- *****************************************************************************/
-
-class nsProcessRequestEvent : public nsRunnable {
-public:
-    nsProcessRequestEvent(nsCacheRequest *aRequest)
-    {
-        mRequest = aRequest;
-    }
-
-    NS_IMETHOD Run()
-    {
-        nsresult rv;
-
-        NS_ASSERTION(mRequest->mListener,
-                     "Sync OpenCacheEntry() posted to background thread!");
-
-        nsCacheServiceAutoLock lock;
-        rv = nsCacheService::gService->ProcessRequest(mRequest,
-                                                      PR_FALSE,
-                                                      nsnull);
-
-        // Don't delete the request if it was queued
-        if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION)
-            delete mRequest;
-
-        return NS_OK;
-    }
-
-protected:
-    virtual ~nsProcessRequestEvent() {}
-
-private:
-    nsCacheRequest *mRequest;
-};
-
 /******************************************************************************
  * nsCacheService
  *****************************************************************************/
@@ -719,13 +681,8 @@ nsCacheService::Init()
 
     CACHE_LOG_INIT();
 
-    nsresult rv = NS_NewThread(getter_AddRefs(mCacheIOThread));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Can't create cache IO thread");
-    }
-
     // initialize hashtable for active cache entries
-    rv = mActiveEntries.Init();
+    nsresult rv = mActiveEntries.Init();
     if (NS_FAILED(rv)) return rv;
     
     // create profile/preference observer
@@ -746,9 +703,6 @@ nsCacheService::Init()
 void
 nsCacheService::Shutdown()
 {
-    nsCOMPtr<nsIThread> cacheIOThread;
-
-    {
     nsCacheServiceAutoLock lock;
     NS_ASSERTION(mInitialized, 
                  "can't shutdown nsCacheService unless it has been initialized.");
@@ -780,13 +734,7 @@ nsCacheService::Shutdown()
 #if defined(NECKO_DISK_CACHE) && defined(PR_LOGGING)
         LogCacheStatistics();
 #endif
-
-        mCacheIOThread.swap(cacheIOThread);
     }
-    } // lock
-
-    if (cacheIOThread)
-        cacheIOThread->Shutdown();
 }
 
 
@@ -997,17 +945,6 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
 {
     return  EvictEntriesForClient(nsnull, storagePolicy);
-}
-
-NS_IMETHODIMP nsCacheService::GetCacheIOTarget(nsIEventTarget * *aCacheIOTarget)
-{
-    nsCacheServiceAutoLock lock;
-
-    if (!mCacheIOThread)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    NS_ADDREF(*aCacheIOTarget = mCacheIOThread);
-    return NS_OK;
 }
 
 /**
@@ -1298,28 +1235,11 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
     CACHE_LOG_DEBUG(("Created request %p\n", request));
 
-    // Process the request on the background thread if we are on the main thread
-    // and the the request is asynchronous
-    if (NS_IsMainThread() && listener && gService->mCacheIOThread) {
-        nsCOMPtr<nsIRunnable> ev =
-            new nsProcessRequestEvent(request);
-        if (ev) {
-            rv = gService->mCacheIOThread->Dispatch(ev, NS_DISPATCH_NORMAL);
-        } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+    rv = gService->ProcessRequest(request, PR_TRUE, result);
 
-        // delete request if we didn't post the event
-        if (NS_FAILED(rv))
-            delete request;
-    }
-    else {
-        rv = gService->ProcessRequest(request, PR_TRUE, result);
-
-        // delete requests that have completed
-        if (!(listener && (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)))
-            delete request;
-    }
+    // delete requests that have completed
+    if (!(listener && (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)))
+        delete request;
 
     return rv;
 }
@@ -1859,7 +1779,7 @@ nsCacheService::ReleaseObject_Locked(nsISupports * obj,
     NS_ASSERTION(gService->mLockedThread == PR_GetCurrentThread(), "oops");
 
     PRBool isCur;
-    if (!target || (NS_SUCCEEDED(target->IsOnCurrentThread(&isCur)) && isCur)) {
+    if (!target || NS_SUCCEEDED(target->IsOnCurrentThread(&isCur)) && isCur) {
         gService->mDoomedObjects.AppendElement(obj);
     } else {
         NS_ProxyRelease(target, obj);
