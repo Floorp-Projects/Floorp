@@ -54,7 +54,6 @@
 #include "nsArrayUtils.h"
 #include "nsIArray.h"
 #include "nsIVariant.h"
-#include "nsThreadUtils.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
@@ -172,7 +171,7 @@ DCacheHash(const char * key)
  * nsOfflineCacheEvictionFunction
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
 
 // helper function for directly exposing the same data file binding
 // path algorithm used in nsOfflineCacheBinding::Create
@@ -770,36 +769,10 @@ nsApplicationCache::GetUsage(PRUint32 *usage)
 }
 
 /******************************************************************************
- * nsCloseDBEvent
- *****************************************************************************/
-
-class nsCloseDBEvent : public nsRunnable {
-public:
-  nsCloseDBEvent(mozIStorageConnection *aDB)
-  {
-    mDB = aDB;
-  }
-
-  NS_IMETHOD Run()
-  {
-    mDB->Close();
-    return NS_OK;
-  }
-
-protected:
-  virtual ~nsCloseDBEvent() {}
-
-private:
-  nsCOMPtr<mozIStorageConnection> mDB;
-};
-
-
-
-/******************************************************************************
  * nsOfflineCacheDevice
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsOfflineCacheDevice, nsIApplicationCacheService)
+NS_IMPL_ISUPPORTS1(nsOfflineCacheDevice, nsIApplicationCacheService)
 
 nsOfflineCacheDevice::nsOfflineCacheDevice()
   : mDB(nsnull)
@@ -1012,8 +985,6 @@ nsOfflineCacheDevice::Init()
 
   rv = ss->OpenDatabase(indexFile, getter_AddRefs(mDB));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mInitThread = do_GetCurrentThread();
 
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF;"));
 
@@ -1230,7 +1201,6 @@ nsOfflineCacheDevice::Shutdown()
   if (mCaches.IsInitialized())
     mCaches.EnumerateRead(ShutdownApplicationCache, this);
 
-  {
   EvictionObserver evictionObserver(mDB, mEvictionFunction);
 
   // Delete all rows whose clientID is not an active clientID.
@@ -1257,50 +1227,8 @@ nsOfflineCacheDevice::Shutdown()
   if (NS_FAILED(rv))
     NS_WARNING("Failed to clean up namespaces.");
 
+  mDB = 0;
   mEvictionFunction = 0;
-
-  mStatement_CacheSize = nsnull;
-  mStatement_ApplicationCacheSize = nsnull;
-  mStatement_EntryCount = nsnull;
-  mStatement_UpdateEntry = nsnull;
-  mStatement_UpdateEntrySize = nsnull;
-  mStatement_UpdateEntryFlags = nsnull;
-  mStatement_DeleteEntry = nsnull;
-  mStatement_FindEntry = nsnull;
-  mStatement_BindEntry = nsnull;
-  mStatement_ClearDomain = nsnull;
-  mStatement_MarkEntry = nsnull;
-  mStatement_UnmarkEntry = nsnull;
-  mStatement_GetTypes = nsnull;
-  mStatement_FindNamespaceEntry = nsnull;
-  mStatement_InsertNamespaceEntry = nsnull;
-  mStatement_CleanupUnmarked = nsnull;
-  mStatement_GatherEntries = nsnull;
-  mStatement_ActivateClient = nsnull;
-  mStatement_DeactivateGroup = nsnull;
-  mStatement_FindClient = nsnull;
-  mStatement_FindClientByNamespace = nsnull;
-  mStatement_EnumerateGroups = nsnull;
-  }
-
-  // Close Database on the correct thread
-  PRBool isOnCurrentThread = PR_TRUE;
-  if (mInitThread)
-    mInitThread->IsOnCurrentThread(&isOnCurrentThread);
-
-  if (!isOnCurrentThread) {
-    nsCOMPtr<nsIRunnable> ev = new nsCloseDBEvent(mDB);
-
-    if (ev) {
-      mInitThread->Dispatch(ev, NS_DISPATCH_NORMAL);
-    }
-  }
-  else {
-    mDB->Close();
-  }
-
-  mDB = nsnull;
-  mInitThread = nsnull;
 
   return NS_OK;
 }

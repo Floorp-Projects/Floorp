@@ -275,8 +275,6 @@ private:
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
   nsClassHashtable<nsCStringHashKey, nsCString> mActiveCachesByGroup;
   nsCStringHashSet mActiveCaches;
-
-  nsCOMPtr<nsIThread> mInitThread;
 };
 
 #endif // nsOfflineCacheDevice_h__
