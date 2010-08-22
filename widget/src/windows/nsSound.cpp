@@ -56,13 +56,13 @@
 class nsSoundPlayer: public nsRunnable {
 public:
   nsSoundPlayer(nsISound *aSound, const wchar_t* aSoundName) :
-    mSound(aSound), mSoundName(aSoundName)
+    mSoundName(aSoundName), mSound(aSound)
   {
     Init();
   }
 
   nsSoundPlayer(nsISound *aSound, const nsAString& aSoundName) :
-    mSound(aSound), mSoundName(aSoundName)
+    mSoundName(aSoundName), mSound(aSound)
   {
     Init();
   }
