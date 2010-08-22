@@ -270,12 +270,12 @@ enum {
   WP_SMALLFRAMERIGHTSIZINGTEMPLATE = 35,
   WP_FRAMEBOTTOMSIZINGTEMPLATE = 36,
   WP_SMALLFRAMEBOTTOMSIZINGTEMPLATE = 37,
-  WP_FRAME = 38,
+  WP_FRAME = 38
 };
 
 enum FRAMESTATES {
   FS_ACTIVE = 1,
-  FS_INACTIVE = 2,
+  FS_INACTIVE = 2
 };
 
 enum {
@@ -283,7 +283,7 @@ enum {
   BS_HOT = 2,
   BS_PUSHED = 3,
   BS_DISABLED = 4,
-  BS_INACTIVE = 5, /* undocumented, inactive caption button */
+  BS_INACTIVE = 5 /* undocumented, inactive caption button */
 };
 
 }}} // mozilla::widget::themeconst

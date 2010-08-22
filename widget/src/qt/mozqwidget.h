@@ -8,6 +8,8 @@
 #ifdef MOZ_ENABLE_MEEGOTOUCH
 #include <QtGui/QGraphicsSceneResizeEvent>
 #include <MSceneWindow>
+#include <QTimer>
+#include <mstatusbar.h>
 #endif
 
 #include "nsIWidget.h"
@@ -186,26 +188,66 @@ private:
 #ifdef MOZ_ENABLE_MEEGOTOUCH
 class MozMSceneWindow : public MSceneWindow
 {
+    Q_OBJECT
 public:
     MozMSceneWindow(MozQWidget* aTopLevel)
      : MSceneWindow(aTopLevel->parentItem())
      , mTopLevelWidget(aTopLevel)
+     , mStatusBar(nsnull)
     {
         mTopLevelWidget->setParentItem(this);
+        mTopLevelWidget->installEventFilter(this);
+        mStatusBar = new MStatusBar();
+        mStatusBar->appear();
+        connect(mStatusBar, SIGNAL(appeared()), this, SLOT(CheckTopLevelSize()));
+        connect(mStatusBar, SIGNAL(disappeared()), this, SLOT(CheckTopLevelSize()));
     }
 
 protected:
     virtual void resizeEvent(QGraphicsSceneResizeEvent* aEvent) {
-        if (mTopLevelWidget) {
-            // transfer new size to graphics widget
-            mTopLevelWidget->setGeometry(0.0, 0.0,
-                static_cast<qreal>(aEvent->newSize().width()),
-                static_cast<qreal>(aEvent->newSize().height()));
-        }
+        mCurrentSize = aEvent->newSize();
         MSceneWindow::resizeEvent(aEvent);
+        CheckTopLevelSize();
     }
+
+    virtual bool eventFilter(QObject* watched, QEvent* e)
+    {
+        if (e->type() == QEvent::GraphicsSceneResize ||
+            e->type() == QEvent::GraphicsSceneMove) {
+
+            //Do this in next event loop, or we are in recursion!
+            QTimer::singleShot(0, this, SLOT(CheckTopLevelSize()));
+        }
+
+        //false == let event processing continue
+        return false;
+    }
+
+private slots:
+    void CheckTopLevelSize() {
+        if (mTopLevelWidget) {
+            qreal xpos = 0;
+            qreal ypos = 0;
+            qreal width = mCurrentSize.width();
+            qreal height = mCurrentSize.height();
+
+            //If statusbar is visible, move toplevel widget down
+            if (mStatusBar->isVisible()) {
+                ypos = mStatusBar->size().height();
+                height -= ypos;
+            }
+
+            // transfer new size to graphics widget if changed
+            QRectF r = mTopLevelWidget->geometry();
+            if (r != QRectF(xpos, ypos, width, height))
+                mTopLevelWidget->setGeometry(xpos, ypos, width, height);
+        }
+    }
+
 private:
     MozQWidget* mTopLevelWidget;
+    MStatusBar* mStatusBar;
+    QSizeF mCurrentSize;
 };
 
 /**
