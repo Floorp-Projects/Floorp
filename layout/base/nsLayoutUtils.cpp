@@ -1219,13 +1219,13 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           PRUint32 aFlags)
 {
-#ifdef DEBUG
   if (aFlags & PAINT_WIDGET_LAYERS) {
     nsIView* view = aFrame->GetView();
-    NS_ASSERTION(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame,
-      "PAINT_WIDGET_LAYERS should only be used on a display root that has a widget");
+    if (!(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame)) {
+      aFlags &= ~PAINT_WIDGET_LAYERS;
+      NS_ASSERTION(aRenderingContext, "need a rendering context");
+    }
   }
-#endif
 
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
