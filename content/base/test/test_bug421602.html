@@ -38,7 +38,7 @@ function loadTestImage() {
   var img1 = new Image();
   img1.onload = function() { img1loaded = true; }
   img1.onerror = function() {
-    is(img2errored, false, "Image 3 should not error before image 2");
+    is(img2errored, false, "Image 2 should not error before image 1");
     img1errored = true;
   }
   img1.src = window.location.href + "?image1=true";
