@@ -50,11 +50,15 @@
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
 
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 
-namespace mozilla {
-namespace imagelib {
+using namespace mozilla::imagelib;
+
+NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 
 #define ICONCOUNTOFFSET 4
 #define DIRENTRYOFFSET 6
@@ -84,6 +88,50 @@ nsICODecoder::nsICODecoder()
 
 nsICODecoder::~nsICODecoder()
 {
+}
+
+NS_IMETHODIMP nsICODecoder::Init(imgIContainer *aImage,
+                                 imgIDecoderObserver *aObserver,
+                                 PRUint32 aFlags)
+{
+  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                    "wrong type of imgIContainer for decoding into");
+
+  // Grab parameters
+  mImage = static_cast<RasterImage*>(aImage);
+  mObserver = aObserver;
+  mFlags = aFlags;
+
+  // Fire OnStartDecode at init time to support bug 512435
+  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+    mObserver->OnStartDecode(nsnull);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsICODecoder::Close(PRUint32 aFlags)
+{
+  nsresult rv = NS_OK;
+
+  // Send notifications if appropriate
+  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
+    // Tell the image that it's data has been updated 
+    nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
+    rv = mImage->FrameUpdated(0, r);
+
+
+    if (mObserver) {
+      mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
+      mObserver->OnStopFrame(nsnull, 0);
+    }
+    mImage->DecodingComplete();
+    if (mObserver) {
+      mObserver->OnStopContainer(nsnull, 0);
+      mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+    }
+  }
+
   mPos = 0;
 
   delete[] mColors;
@@ -99,49 +147,17 @@ nsICODecoder::~nsICODecoder()
     mRow = nsnull;
   }
   mDecodingAndMask = PR_FALSE;
-}
-
-nsresult
-nsICODecoder::InitInternal()
-{
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-
-  return NS_OK;
-}
-
-nsresult
-nsICODecoder::FinishInternal()
-{
-  nsresult rv = NS_OK;
-
-  // We should never make multiple frames
-  NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple ICO frames?");
-
-  // Send notifications if appropriate
-  if (!IsSizeDecode() && !mError && (GetFrameCount() == 1)) {
-    // Tell the image that it's data has been updated 
-    nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
-    rv = mImage->FrameUpdated(0, r);
-
-
-    if (mObserver) {
-      mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
-    }
-    PostFrameStop();
-    mImage->DecodingComplete();
-    if (mObserver) {
-      mObserver->OnStopContainer(nsnull, 0);
-      mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
-    }
-  }
 
   return rv;
 }
 
-nsresult
-nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
+NS_IMETHODIMP nsICODecoder::Flush()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsICODecoder::Write(const char* aBuffer, PRUint32 aCount)
 {
   // No forgiveness
   if (mError)
@@ -235,8 +251,13 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
   if (mPos == mImageOffset + BITMAPINFOSIZE) {
 
     ProcessInfoHeader();
-    PostSize(mDirEntry.mWidth, mDirEntry.mHeight);
-    if (IsSizeDecode())
+    rv = mImage->SetSize(mDirEntry.mWidth, mDirEntry.mHeight);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (mObserver) {
+      rv = mObserver->OnStartContainer(nsnull, mImage);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
       return NS_OK;
 
     if (mBIH.bpp <= 8) {
@@ -290,8 +311,10 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                              gfxASurface::ImageFormatARGB32, (PRUint8**)&mImageData, &imageLength);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Tell the superclass we're starting a frame
-    PostFrameStart();
+    if (mObserver) {
+      mObserver->OnStartFrame(nsnull, 0);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   if (mColors && (mPos >= mImageOffset + BITMAPINFOSIZE) && 
@@ -532,6 +555,3 @@ void nsICODecoder::ProcessInfoHeader() {
   mBIH.colors = LITTLE_TO_NATIVE32(mBIH.colors);
   mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
-
-} // namespace imagelib
-} // namespace mozilla

@@ -43,14 +43,27 @@
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
 #include "nspr.h"
+#include "nsIComponentManager.h"
 #include "nsRect.h"
+#include "nsComponentManagerUtils.h"
 
+#include "nsIInterfaceRequestorUtils.h"
 #include "ImageErrors.h"
 
-namespace mozilla {
-namespace imagelib {
+using namespace mozilla::imagelib;
+
+NS_IMPL_THREADSAFE_ADDREF(nsIconDecoder)
+NS_IMPL_THREADSAFE_RELEASE(nsIconDecoder)
+
+NS_INTERFACE_MAP_BEGIN(nsIconDecoder)
+   NS_INTERFACE_MAP_ENTRY(imgIDecoder)
+NS_INTERFACE_MAP_END_THREADSAFE
+
 
 nsIconDecoder::nsIconDecoder() :
+  mImage(nsnull),
+  mObserver(nsnull),
+  mFlags(imgIDecoder::DECODER_FLAG_NONE),
   mWidth(-1),
   mHeight(-1),
   mPixBytesRead(0),
@@ -66,29 +79,48 @@ nsIconDecoder::~nsIconDecoder()
 { }
 
 
-nsresult
-nsIconDecoder::InitInternal()
+/** imgIDecoder methods **/
+
+NS_IMETHODIMP nsIconDecoder::Init(imgIContainer *aImage,
+                                  imgIDecoderObserver *aObserver,
+                                  PRUint32 aFlags)
 {
+
+  // Grab parameters
+  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                    "wrong type of imgIContainer for decoding into");
+
+  mImage = static_cast<RasterImage*>(aImage);
+  mObserver = aObserver;
+  mFlags = aFlags;
+
   // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
+  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
     mObserver->OnStartDecode(nsnull);
 
   return NS_OK;
 }
 
-nsresult
-nsIconDecoder::FinishInternal()
+NS_IMETHODIMP nsIconDecoder::Close(PRUint32 aFlags)
 {
   // If we haven't notified of completion yet for a full/success decode, we
   // didn't finish. Notify in error mode
-  if (!IsSizeDecode() && !mNotifiedDone)
+  if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
+      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
+  mImage = nsnull;
   return NS_OK;
 }
 
-nsresult
-nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
+NS_IMETHODIMP nsIconDecoder::Flush()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIconDecoder::Write(const char *aBuffer, PRUint32 aCount)
 {
   nsresult rv;
 
@@ -119,11 +151,13 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         // Grab the Height
         mHeight = (PRUint8)*aBuffer;
 
-        // Post our size to the superclass
-        PostSize(mWidth, mHeight);
+        // Set up the container and signal
+        mImage->SetSize(mWidth, mHeight);
+        if (mObserver)
+          mObserver->OnStartContainer(nsnull, mImage);
 
-        // If We're doing a size decode, we're done
-        if (IsSizeDecode()) {
+        // If We're doing a header-only decode, we're done
+        if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
           mState = iconStateFinished;
           break;
         }
@@ -136,9 +170,8 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           mState = iconStateError;
           return rv;
         }
-
-        // Tell the superclass we're starting a frame
-        PostFrameStart();
+        if (mObserver)
+         mObserver->OnStartFrame(nsnull, 0);
 
         // Book Keeping
         aBuffer++;
@@ -198,7 +231,8 @@ nsIconDecoder::NotifyDone(PRBool aSuccess)
   NS_ABORT_IF_FALSE(!mNotifiedDone, "Calling NotifyDone twice");
 
   // Notify
-  PostFrameStop();
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, 0);
   if (aSuccess)
     mImage->DecodingComplete();
   if (mObserver) {
@@ -211,5 +245,3 @@ nsIconDecoder::NotifyDone(PRBool aSuccess)
   mNotifiedDone = PR_TRUE;
 }
 
-} // namespace imagelib
-} // namespace mozilla

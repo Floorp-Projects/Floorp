@@ -35,31 +35,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
+MODULE		= imgjpeg
+LIBRARY_NAME	= imgjpeg_s
+FORCE_STATIC_LIB = 1
+MODULE_NAME	= nsJPEGDecoderModule
+LIBXUL_LIBRARY  = 1
 
-DIRS		= public src 
 
-ifdef MOZ_IMG_DECODERS
-DIRS		+= decoders
-endif
+CPPSRCS		= nsJPEGDecoder.cpp
 
-ifdef MOZ_IMG_ENCODERS
-DIRS		+= encoders
-endif
+CSRCS		= iccjpeg.c
 
-ifdef ENABLE_TESTS
-DIRS  += test
-endif
-
-DIRS		+= build
+# nsJPEGDecoder.cpp includes RasterImage.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
 include $(topsrcdir)/config/rules.mk
-
 

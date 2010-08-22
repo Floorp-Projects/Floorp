@@ -46,13 +46,15 @@
 #include "nsBMPDecoder.h"
 
 #include "nsIInputStream.h"
+#include "nsIComponentManager.h"
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "prlog.h"
 
-namespace mozilla {
-namespace imagelib {
+using namespace mozilla::imagelib;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
@@ -61,6 +63,8 @@ PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 // Convert from row (1..height) to absolute line (0..height-1)
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
+
+NS_IMPL_ISUPPORTS1(nsBMPDecoder, imgIDecoder)
 
 nsBMPDecoder::nsBMPDecoder()
 {
@@ -81,33 +85,46 @@ nsBMPDecoder::~nsBMPDecoder()
       free(mRow);
 }
 
-nsresult
-nsBMPDecoder::InitInternal()
+NS_IMETHODIMP nsBMPDecoder::Init(imgIContainer *aImage,
+                                 imgIDecoderObserver *aObserver,
+                                 PRUint32 aFlags)
 {
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", mImage.get()));
+    NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                      "wrong type of imgIContainer for decoding into");
+
+    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", aImage));
+
+    mImage = static_cast<RasterImage*>(aImage);
+    mObserver = aObserver;
+    mFlags = aFlags;
 
     // Fire OnStartDecode at init time to support bug 512435
-    if (!IsSizeDecode() && mObserver)
+    if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
         mObserver->OnStartDecode(nsnull);
 
     return NS_OK;
 }
 
-nsresult
-nsBMPDecoder::FinishInternal()
+NS_IMETHODIMP nsBMPDecoder::Close(PRUint32 aFlags)
 {
-    // We should never make multiple frames
-    NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple BMP frames?");
+    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Close()\n"));
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() && !mError && (GetFrameCount() == 1)) {
-        PostFrameStop();
+    if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+        !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
+        if (mObserver)
+            mObserver->OnStopFrame(nsnull, 0);
         mImage->DecodingComplete();
         if (mObserver) {
             mObserver->OnStopContainer(nsnull, mImage);
             mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
         }
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsBMPDecoder::Flush()
+{
     return NS_OK;
 }
 
@@ -151,8 +168,8 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
     return NS_OK;
 }
 
-nsresult
-nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
+NS_IMETHODIMP
+nsBMPDecoder::Write(const char* aBuffer, PRUint32 aCount)
 {
     // No forgiveness
     if (mError)
@@ -211,12 +228,17 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
         PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
 
-        // Post our size to the superclass
-        PostSize(mBIH.width, real_height);
+        // Set the size and notify
+        rv = mImage->SetSize(mBIH.width, real_height);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (mObserver) {
+            rv = mObserver->OnStartContainer(nsnull, mImage);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
 
-        // We have the size. If we're doing a size decode, we got what
+        // We have the size. If we're doing a header-only decode, we got what
         // we came for.
-        if (IsSizeDecode())
+        if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
             return NS_OK;
 
         // We're doing a real decode.
@@ -279,8 +301,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             memset(mImageData, 0, imageLength);
         }
 
-        // Tell the superclass we're starting a frame
-        PostFrameStart();
+        if (mObserver) {
+            mObserver->OnStartFrame(nsnull, 0);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
     }
     PRUint8 bpc; // bytes per color
     bpc = (mBFH.bihsize == OS2_BIH_LENGTH) ? 3 : 4; // OS/2 Bitmaps have no padding byte
@@ -649,6 +673,3 @@ void nsBMPDecoder::ProcessInfoHeader()
     mBIH.colors = LITTLE_TO_NATIVE32(mBIH.colors);
     mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
-
-} // namespace imagelib
-} // namespace mozilla
