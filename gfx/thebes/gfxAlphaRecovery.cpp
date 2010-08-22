@@ -205,7 +205,7 @@ gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
     unsigned char* blackData = blackSurf->Data();
     unsigned char* whiteData = whiteSurf->Data();
 
-    if (NS_PTR_TO_UINT32(blackData) & 0xf != NS_PTR_TO_UINT32(whiteData) & 0xf ||
+    if ((NS_PTR_TO_UINT32(blackData) & 0xf) != (NS_PTR_TO_UINT32(whiteData) & 0xf) ||
         (blackSurf->Stride() - whiteSurf->Stride()) & 0xf) {
         // Cannot keep these in alignment.
         return PR_FALSE;
@@ -230,9 +230,9 @@ gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
         // at a time loop.
         for (; j < size.width - 8; j += 8) {
             __m128i black1 = _mm_load_si128((__m128i*)blackData);
-	    __m128i white1 = _mm_load_si128((__m128i*)whiteData);
+            __m128i white1 = _mm_load_si128((__m128i*)whiteData);
             __m128i black2 = _mm_load_si128((__m128i*)(blackData + 16));
-	    __m128i white2 = _mm_load_si128((__m128i*)(whiteData + 16));
+            __m128i white2 = _mm_load_si128((__m128i*)(whiteData + 16));
 
             // Execute the same instructions as described in RecoverPixel, only
             // using an SSE2 packed saturated subtract.
@@ -260,7 +260,7 @@ gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
         }
         for (; j < size.width - 4; j += 4) {
             __m128i black = _mm_load_si128((__m128i*)blackData);
-	    __m128i white = _mm_load_si128((__m128i*)whiteData);
+            __m128i white = _mm_load_si128((__m128i*)whiteData);
 
             white = _mm_subs_epu8(white, black);
             white = _mm_subs_epu8(greenMask, white);
