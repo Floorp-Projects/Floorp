@@ -4216,6 +4216,7 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
  *
  **************************************************************/
 
+#ifdef _MSC_VER
 static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
 {
 #ifdef MOZ_CRASHREPORTER
@@ -4226,18 +4227,23 @@ static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
 #endif
   return EXCEPTION_EXECUTE_HANDLER;
 }
+#endif
 
 // The WndProc procedure for all nsWindows in this toolkit. This merely catches
 // exceptions and passes the real work to WindowProcInternal. See bug 587406
 // and http://msdn.microsoft.com/en-us/library/ms633573%28VS.85%29.aspx
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+#ifdef _MSC_VER
   __try {
     return WindowProcInternal(hWnd, msg, wParam, lParam);
   }
   __except(ReportException(GetExceptionInformation())) {
     ::TerminateProcess(::GetCurrentProcess(), 253);
   }
+#else
+  return WindowProcInternal(hWnd, msg, wParam, lParam);
+#endif
 }
 
 LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
