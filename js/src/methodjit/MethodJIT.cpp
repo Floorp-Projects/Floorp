@@ -172,6 +172,9 @@ JS_STATIC_ASSERT(sizeof(VMFrame) % 16 == 0);
 JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
 JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
 
+JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
+JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
+
 asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampoline) "\n"
@@ -185,6 +188,10 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "pushq %r14"                         "\n"
     "pushq %r15"                         "\n"
     "pushq %rbx"                         "\n"
+
+    /* Load mask registers. */
+    "movq $0xFFFF800000000000, %r13"     "\n"
+    "movq $0x00007FFFFFFFFFFF, %r14"     "\n"
 
     /* Build the JIT frame.
      * rdi = cx
@@ -260,9 +267,6 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
 JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
 
-JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
-JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
-
 asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(SafePointTrampoline)   "\n"
@@ -280,7 +284,7 @@ SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
     "movq 0x60(%rbx), %rax"                 "\n" /* fp->ncode */
 
     /* Reimplementation of PunboxAssembler::loadValueAsComponents() */
-    "movq $0x00007FFFFFFFFFFF, %rdx"        "\n" /* payloadReg = JSVAL_PAYLOAD_MASK */
+    "movq %r14, %rdx"                       "\n" /* payloadReg = payloadMaskReg */
     "andq %rcx, %rdx"                       "\n"
     "xorq %rdx, %rcx"                       "\n"
 
