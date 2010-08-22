@@ -387,7 +387,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * we parent all wrappers to the global object in their home compartment.
      * This loses us some transparency, and is generally very cheesy.
      */
-    JSObject *global = cx->fp ? cx->fp->getScopeChain()->getGlobal() : cx->globalObject;
+    JSObject *global =
+        cx->hasfp() ? cx->fp()->getScopeChain()->getGlobal() : cx->globalObject;
     wrapper->setParent(global);
     return true;
 }

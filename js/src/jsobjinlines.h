@@ -547,7 +547,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
     JS_ASSERT(proto->isNative());
     JS_ASSERT(parent);
 
-    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->maybefp(), clasp);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
@@ -599,13 +599,13 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->fp) {
+    if (!cx->hasfp()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)
             return NULL;
     } else {
-        global = cx->fp->getScopeChain()->getGlobal();
+        global = cx->fp()->getScopeChain()->getGlobal();
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 
@@ -682,7 +682,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
      }
 
 
-    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->maybefp(), clasp);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before

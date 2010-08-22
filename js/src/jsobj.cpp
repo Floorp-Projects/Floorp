@@ -2693,10 +2693,10 @@ Detecting(JSContext *cx, jsbytecode *pc)
     JSOp op;
     JSAtom *atom;
 
-    script = cx->fp->getScript();
+    script = cx->fp()->getScript();
     endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
-        JS_ASSERT_IF(!cx->fp->hasIMacroPC(), script->code <= pc && pc < endpc);
+        JS_ASSERT_IF(!cx->fp()->hasIMacroPC(), script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
         op = js_GetOpcode(cx, script, pc);
@@ -2776,7 +2776,8 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
         flags |= JSRESOLVE_ASSIGNING;
     } else if (cs->length >= 0) {
         pc += cs->length;
-        if (pc < cx->fp->getScript()->code + cx->fp->getScript()->length && Detecting(cx, pc))
+        JSScript *script = cx->fp()->getScript();
+        if (pc < script->code + script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
     if (format & JOF_DECLARING)
@@ -2893,7 +2894,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     if (!obj)
         return NULL;
     obj->init(&js_WithClass, proto, parent,
-              PrivateValue(js_FloatingFrameIfGenerator(cx, cx->fp)));
+              PrivateValue(js_FloatingFrameIfGenerator(cx, cx->fp())));
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
     obj->map = cx->runtime->emptyWithScope->hold();
 
@@ -2952,10 +2953,10 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     /* Blocks have one fixed slot available for the first local.*/
     JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
 
-    JSStackFrame *const fp = cx->fp;
+    JSStackFrame *const fp = cx->fp();
     JSObject *obj = fp->getScopeChain();
     JS_ASSERT(obj->getClass() == &js_BlockClass);
-    JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp));
+    JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
 
     /*
@@ -3730,12 +3731,12 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
     JSScopeProperty *sprop;
 
     /*
-     * Find the global object. Use cx->fp directly to avoid falling off
+     * Find the global object. Use cx->fp() directly to avoid falling off
      * trace; all JIT-elided stack frames have the same global object as
-     * cx->fp.
+     * cx->fp().
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (!start && (fp = cx->fp) != NULL)
+    if (!start && (fp = cx->maybefp()) != NULL)
         start = fp->maybeScopeChain();
 
     if (start) {
@@ -4776,7 +4777,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
             op = (JSOp) *pc;
             if (op == JSOP_TRAP) {
                 JS_ASSERT_NOT_ON_TRACE(cx);
-                op = JS_GetTrapOpcode(cx, cx->fp->getScript(), pc);
+                op = JS_GetTrapOpcode(cx, cx->fp()->getScript(), pc);
             }
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
@@ -5263,7 +5264,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
                 JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
                 if (fun != funobj) {
-                    for (JSStackFrame *fp = cx->fp; fp; fp = fp->down) {
+                    for (JSStackFrame *fp = cx->maybefp(); fp; fp = fp->down) {
                         if (fp->callee() == fun &&
                             fp->getThisValue().isObject() &&
                             &fp->getThisValue().toObject() == obj) {
@@ -5560,8 +5561,8 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
 
     if (protoKey != JSProto_Null) {
         if (!scope) {
-            if (cx->fp)
-                scope = cx->fp->maybeScopeChain();
+            if (cx->hasfp())
+                scope = cx->fp()->maybeScopeChain();
             if (!scope) {
                 scope = cx->globalObject;
                 if (!scope) {
@@ -6351,7 +6352,7 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (!start)
-        start = cx->fp;
+        start = cx->maybefp();
     FrameRegsIter i(cx);
     while (!i.done() && i.fp() != start)
         ++i;
