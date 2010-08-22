@@ -175,6 +175,10 @@ DiscardTracker::ReloadTimeout()
   // read the timeout pref
   PRInt32 discardTimeout;
   nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!branch) {
+    NS_WARNING("nsIPrefBranch2 is not available!");
+    return;
+  }
   rv = branch->GetIntPref(DISCARD_TIMEOUT_PREF, &discardTimeout);
 
   // If we got something bogus, return
