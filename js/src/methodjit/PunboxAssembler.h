@@ -113,11 +113,11 @@ class Assembler : public BaseAssembler
     }
 
     void convertValueToType(RegisterID val) {
-        andPtr(Imm64(JSVAL_TAG_MASK), val);
+        andPtr(Registers::TypeMaskReg, val);
     }
 
     void convertValueToPayload(RegisterID val) {
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), val);
+        andPtr(Registers::PayloadMaskReg, val);
     }
 
     /* Returns a label after the one Value load. */
@@ -125,7 +125,7 @@ class Assembler : public BaseAssembler
         loadValue(address, type);
         Label l = label();
 
-        move(Imm64(JSVAL_PAYLOAD_MASK), payload);
+        move(Registers::PayloadMaskReg, payload);
         andPtr(type, payload);
         xorPtr(payload, type);
 
