@@ -483,7 +483,15 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         new (aBuilder) nsDisplayZoom(subdocRootFrame, &childItems,
                                      subdocAPD, parentAPD);
       childItems.AppendToTop(zoomItem);
+    } else if (!nsContentUtils::IsChildOfSameType(presShell->GetDocument())) {
+      // We always want top level content documents to be in their own layer.
+      // If we need a zoom item then we are good because it creates a layer. If
+      // not then create our own layer.
+      nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
+        subdocRootFrame ? subdocRootFrame : this, &childItems);
+      childItems.AppendToTop(layerItem);
     }
+
     // Clip children to the child root frame's rectangle
     rv = aLists.Content()->AppendNewToTop(
         new (aBuilder) nsDisplayClip(this, this, &childItems,
