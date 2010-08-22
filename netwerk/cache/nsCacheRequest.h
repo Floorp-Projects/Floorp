@@ -54,7 +54,6 @@ class nsCacheRequest : public PRCList
 private:
     friend class nsCacheService;
     friend class nsCacheEntry;
-    friend class nsProcessRequestEvent;
 
     nsCacheRequest( nsCString *           key, 
                     nsICacheListener *    listener,
