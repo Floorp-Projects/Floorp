@@ -240,12 +240,6 @@ ifeq ($(OS_ARCH),SunOS)
 EXTRA_DSO_LDOPTS += -lelf -ldemangle
 endif
 
-ifeq ($(OS_ARCH),AIX)
-ifdef HAVE_64BIT_OS
-EXTRA_DSO_LDOPTS += -bbigtoc
-endif
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi psapi)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))

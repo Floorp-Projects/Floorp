@@ -47,7 +47,7 @@
  * we need to undefine the version from 'windows.h'. */
 #undef INT32
 
-#include "Decoder.h"
+#include "imgIDecoder.h"
 
 #include "nsAutoPtr.h"
 
@@ -62,8 +62,13 @@ extern "C" {
 
 #include <setjmp.h>
 
-namespace mozilla {
-namespace imagelib {
+#define NS_JPEGDECODER_CID \
+{ /* 5871a422-1dd2-11b2-ab3f-e2e56be5da9c */         \
+     0x5871a422,                                     \
+     0x1dd2,                                         \
+     0x11b2,                                         \
+    {0xab, 0x3f, 0xe2, 0xe5, 0x6b, 0xe5, 0xda, 0x9c} \
+}
 
 typedef struct {
     struct jpeg_error_mgr pub;  /* "public" fields for IJG library*/
@@ -81,17 +86,20 @@ typedef enum {
     JPEG_ERROR    
 } jstate;
 
+namespace mozilla {
+namespace imagelib {
 class RasterImage;
+} // namespace imagelib
+} // namespace mozilla
 
-class nsJPEGDecoder : public Decoder
+class nsJPEGDecoder : public imgIDecoder
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGIDECODER
+
   nsJPEGDecoder();
   virtual ~nsJPEGDecoder();
-
-  virtual nsresult InitInternal();
-  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual nsresult FinishInternal();
 
   void NotifyDone(PRBool aSuccess);
 
@@ -99,6 +107,10 @@ protected:
   nsresult OutputScanlines(PRBool* suspend);
 
 public:
+  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
+  nsCOMPtr<imgIDecoderObserver> mObserver;
+
+  PRUint32 mFlags;
   PRUint8 *mImageData;
 
   struct jpeg_decompress_struct mInfo;
@@ -125,8 +137,5 @@ public:
   PRPackedBool mReading;
   PRPackedBool mNotifiedDone;
 };
-
-} // namespace imagelib
-} // namespace mozilla
 
 #endif // nsJPEGDecoder_h__

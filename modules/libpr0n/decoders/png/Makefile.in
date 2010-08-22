@@ -35,31 +35,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
+MODULE		= imgpng
+LIBRARY_NAME	= imgpng_s
+FORCE_STATIC_LIB = 1
+MODULE_NAME	= nsPNGDecoderModule
+LIBXUL_LIBRARY = 1
 
-DIRS		= public src 
+EXTRA_DSO_LIBS	= gkgfx
 
-ifdef MOZ_IMG_DECODERS
-DIRS		+= decoders
+CPPSRCS		= nsPNGDecoder.cpp
+
+ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
+DEFINES		+= -DMOZ_PNG_WRITE
 endif
 
-ifdef MOZ_IMG_ENCODERS
-DIRS		+= encoders
+ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
+DEFINES		+= -DMOZ_PNG_READ
 endif
 
-ifdef ENABLE_TESTS
-DIRS  += test
-endif
-
-DIRS		+= build
+# nsPNGDecoder.cpp includes RasterImage.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
 include $(topsrcdir)/config/rules.mk
-
-

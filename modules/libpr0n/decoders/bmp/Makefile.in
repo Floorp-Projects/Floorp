@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Christian Biesinger <cbiesinger@web.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,31 +36,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
+MODULE		= imgbmp
+LIBRARY_NAME	= imgbmp_s
+FORCE_STATIC_LIB = 1
+MODULE_NAME	= nsBMPModule
+LIBXUL_LIBRARY  = 1
 
-DIRS		= public src 
 
-ifdef MOZ_IMG_DECODERS
-DIRS		+= decoders
-endif
+CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp nsIconDecoder.cpp
 
-ifdef MOZ_IMG_ENCODERS
-DIRS		+= encoders
-endif
-
-ifdef ENABLE_TESTS
-DIRS  += test
-endif
-
-DIRS		+= build
+# ns[BMP,ICO,Icon]Decoder.cpp all include RasterImage.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
 include $(topsrcdir)/config/rules.mk
-
-
