@@ -199,9 +199,12 @@ CPPSRCS += \
 	$(NULL)
 endif
 
-ifneq (,$(filter x86 x86_64,$(CPU_ARCH)))
+ifeq (86,$(findstring 86,$(OS_TEST)))
 ifdef __GNUC__
 gfxAlphaRecovery.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS += -msse2
+endif
+ifdef SOLARIS_SUNPRO_CXX
+gfxAlphaRecovery.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 
