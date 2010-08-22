@@ -1822,8 +1822,8 @@ JS_GetGlobalForScopeChain(JSContext *cx)
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    if (cx->fp)
-        return cx->fp->getScopeChain()->getGlobal();
+    if (cx->hasfp())
+        return cx->fp()->getScopeChain()->getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
@@ -4090,8 +4090,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
-        if (cx->fp)
-            parent = js_GetScopeChain(cx, cx->fp);
+        if (cx->hasfp())
+            parent = js_GetScopeChain(cx, cx->fp());
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);
@@ -4298,7 +4298,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
     if (!ComputeThisFromArgv(cx, argv))
         return JS_FALSE;
     js_GetTopStackFrame(cx)->setThisValue(argv[-1]);
-    JS_ASSERT(cx->fp->argv == argv);
+    JS_ASSERT(cx->fp()->argv == argv);
 
     /* Clear the last parameter in case too few arguments were passed. */
     argv[--argc].setUndefined();
@@ -4942,9 +4942,9 @@ JS_IsRunning(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(JS_TRACE_MONITOR(cx).tracecx == cx, cx->fp);
+    JS_ASSERT_IF(JS_TRACE_MONITOR(cx).tracecx == cx, cx->hasfp());
 #endif
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
         fp = fp->down;
     return fp != NULL;
@@ -4972,7 +4972,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(!cx->fp);
+    JS_ASSERT(!cx->hasfp());
     if (!fp)
         return;
     cx->restoreSegment();
