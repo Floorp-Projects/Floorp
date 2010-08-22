@@ -84,7 +84,7 @@ nsScreenManagerWin :: CreateNewScreenObject ( void* inScreen )
   
   // look through our screen list, hoping to find it. If it's not there,
   // add it and return the new one.
-  for ( int i = 0; i < mScreenList.Length(); ++i ) {
+  for ( unsigned i = 0; i < mScreenList.Length(); ++i ) {
     ScreenListItem& curr = mScreenList[i];
     if ( inScreen == curr.mMon ) {
       NS_IF_ADDREF(retScreen = curr.mScreen.get());
