@@ -110,10 +110,12 @@ StackSegment::contains(const JSStackFrame *fp) const
     JSStackFrame *start;
     JSStackFrame *stop;
     if (isActive()) {
-        start = cx->fp;
+        JS_ASSERT(cx->hasfp());
+        start = cx->fp();
         stop = cx->activeSegment()->initialFrame->down;
     } else {
-        start = suspendedFrame;
+        JS_ASSERT(suspendedRegs && suspendedRegs->fp);
+        start = suspendedRegs->fp;
         stop = initialFrame->down;
     }
     for (JSStackFrame *f = start; f != stop; f = f->down) {
@@ -313,7 +315,9 @@ StackSpace::pushExecuteFrame(JSContext *cx, ExecuteFrameGuard &fg,
     StackSegment *seg = fg.seg;
     seg->setPreviousInMemory(currentSegment);
     currentSegment = seg;
-    cx->pushSegmentAndFrame(seg, fg.fp, regs);
+
+    regs.fp = fg.fp;
+    cx->pushSegmentAndFrame(seg, regs);
     seg->setInitialVarObj(initialVarObj);
     fg.cx = cx;
 }
@@ -333,7 +337,7 @@ ExecuteFrameGuard::~ExecuteFrameGuard()
     if (!pushed())
         return;
     JS_ASSERT(cx->activeSegment() == seg);
-    JS_ASSERT(cx->fp == fp);
+    JS_ASSERT(cx->maybefp() == fp);
     cx->stack().popExecuteFrame(cx);
 }
 
@@ -347,14 +351,13 @@ StackSpace::getSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *&seg, JSS
 }
 
 JS_REQUIRES_STACK void
-StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSStackFrame *fp,
-                                           JSFrameRegs &regs)
+StackSpace::pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSFrameRegs &regs)
 {
-    JS_ASSERT(!fp->hasScript() && FUN_SLOW_NATIVE(fp->getFunction()));
-    fp->down = cx->fp;
+    JS_ASSERT(!regs.fp->hasScript() && FUN_SLOW_NATIVE(regs.fp->getFunction()));
+    regs.fp->down = cx->maybefp();
     seg->setPreviousInMemory(currentSegment);
     currentSegment = seg;
-    cx->pushSegmentAndFrame(seg, fp, regs);
+    cx->pushSegmentAndFrame(seg, regs);
     seg->setInitialVarObj(NULL);
 }
 
@@ -363,8 +366,8 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
-    JS_ASSERT(currentSegment->getInitialFrame() == cx->fp);
-    JS_ASSERT(!cx->fp->hasScript() && FUN_SLOW_NATIVE(cx->fp->getFunction()));
+    JS_ASSERT(currentSegment->getInitialFrame() == cx->fp());
+    JS_ASSERT(!cx->fp()->hasScript() && FUN_SLOW_NATIVE(cx->fp()->getFunction()));
     cx->popSegmentAndFrame();
     currentSegment = currentSegment->getPreviousInMemory();
 }
@@ -1934,7 +1937,7 @@ js_GetCurrentBytecodePC(JSContext* cx)
         pc = cx->regs ? cx->regs->pc : NULL;
         if (!pc)
             return NULL;
-        imacpc = cx->fp->maybeIMacroPC();
+        imacpc = cx->fp()->maybeIMacroPC();
     }
 
     /*
@@ -1952,7 +1955,7 @@ js_CurrentPCIsInImacro(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (JS_ON_TRACE(cx))
         return cx->bailExit->imacpc != NULL;
-    return cx->fp->hasIMacroPC();
+    return cx->fp()->hasIMacroPC();
 #else
     return false;
 #endif
@@ -1997,54 +2000,48 @@ DSTOffsetCache::DSTOffsetCache()
 JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
     compartment(rt->defaultCompartment),
-    fp(NULL),
     regs(NULL),
     regExpStatics(this),
     busyArrays(this)
 {}
 
 void
-JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSStackFrame *newfp,
-                               JSFrameRegs &newregs)
+JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)
 {
     if (hasActiveSegment()) {
-        JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
-        fp->savedPC = regs->pc;
-        currentSegment->suspend(fp, regs);
+        JS_ASSERT(regs->fp->savedPC == JSStackFrame::sInvalidPC);
+        regs->fp->savedPC = regs->pc;
+        currentSegment->suspend(regs);
     }
     newseg->setPreviousInContext(currentSegment);
     currentSegment = newseg;
 #ifdef DEBUG
-    newfp->savedPC = JSStackFrame::sInvalidPC;
+    newregs.fp->savedPC = JSStackFrame::sInvalidPC;
 #endif
-    setCurrentFrame(newfp);
     setCurrentRegs(&newregs);
-    newseg->joinContext(this, newfp);
+    newseg->joinContext(this, newregs.fp);
 }
 
 void
 JSContext::popSegmentAndFrame()
 {
     JS_ASSERT(currentSegment->maybeContext() == this);
-    JS_ASSERT(currentSegment->getInitialFrame() == fp);
-    JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
+    JS_ASSERT(currentSegment->getInitialFrame() == regs->fp);
+    JS_ASSERT(regs->fp->savedPC == JSStackFrame::sInvalidPC);
     currentSegment->leaveContext();
     currentSegment = currentSegment->getPreviousInContext();
     if (currentSegment) {
         if (currentSegment->isSaved()) {
-            setCurrentFrame(NULL);
             setCurrentRegs(NULL);
         } else {
-            setCurrentFrame(currentSegment->getSuspendedFrame());
             setCurrentRegs(currentSegment->getSuspendedRegs());
             currentSegment->resume();
 #ifdef DEBUG
-            fp->savedPC = JSStackFrame::sInvalidPC;
+            regs->fp->savedPC = JSStackFrame::sInvalidPC;
 #endif
         }
     } else {
-        JS_ASSERT(fp->down == NULL);
-        setCurrentFrame(NULL);
+        JS_ASSERT(regs->fp->down == NULL);
         setCurrentRegs(NULL);
     }
 }
@@ -2053,10 +2050,9 @@ void
 JSContext::saveActiveSegment()
 {
     JS_ASSERT(hasActiveSegment());
-    currentSegment->save(fp, regs);
-    JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
-    fp->savedPC = regs->pc;
-    setCurrentFrame(NULL);
+    currentSegment->save(regs);
+    JS_ASSERT(regs->fp->savedPC == JSStackFrame::sInvalidPC);
+    regs->fp->savedPC = regs->pc;
     setCurrentRegs(NULL);
 }
 
@@ -2064,11 +2060,10 @@ void
 JSContext::restoreSegment()
 {
     js::StackSegment *ccs = currentSegment;
-    setCurrentFrame(ccs->getSuspendedFrame());
     setCurrentRegs(ccs->getSuspendedRegs());
     ccs->restore();
 #ifdef DEBUG
-    fp->savedPC = JSStackFrame::sInvalidPC;
+    regs->fp->savedPC = JSStackFrame::sInvalidPC;
 #endif
 }
 
@@ -2099,10 +2094,11 @@ JSContext::containingSegment(const JSStackFrame *target)
     if (!seg)
         return NULL;
 
-    /* The active segments's top frame is cx->fp. */
-    if (fp) {
+    /* The active segments's top frame is cx->regs->fp. */
+    if (regs) {
+        JS_ASSERT(regs->fp);
         JS_ASSERT(activeSegment() == seg);
-        JSStackFrame *f = fp;
+        JSStackFrame *f = regs->fp;
         JSStackFrame *stop = seg->getInitialFrame()->down;
         for (; f != stop; f = f->down) {
             if (f == target)

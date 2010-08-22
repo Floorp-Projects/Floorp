@@ -62,7 +62,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     JS_ASSERT(!cx->runtime->gcRunning);
 
     /* FIXME bug 489098: consider enabling the property cache for eval. */
-    if (js_IsPropertyCacheDisabled(cx) || (cx->fp->flags & JSFRAME_EVAL)) {
+    if (js_IsPropertyCacheDisabled(cx) || (cx->fp()->flags & JSFRAME_EVAL)) {
         PCMETER(disfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -128,7 +128,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * opcode format flags.
      */
     pc = cx->regs->pc;
-    op = js_GetOpcode(cx, cx->fp->getScript(), pc);
+    op = js_GetOpcode(cx, cx->fp()->getScript(), pc);
     cs = &js_CodeSpec[op];
     kshape = 0;
 
@@ -322,7 +322,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(cx->fp->getScript(), pc, pcoff, atom);
+    GET_ATOM_FROM_BYTECODE(cx->fp()->getScript(), pc, pcoff, atom);
     return atom;
 }
 
@@ -333,12 +333,13 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     JSObject *obj, *pobj, *tmp;
     uint32 vcap;
 
-    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(
-        uintN((cx->fp->hasIMacroPC() ? cx->fp->getIMacroPC() : pc) - cx->fp->getScript()->code)
-        < cx->fp->getScript()->length);
+    JSStackFrame *fp = cx->fp();
 
-    JSOp op = js_GetOpcode(cx, cx->fp->getScript(), pc);
+    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
+    JS_ASSERT(uintN((fp->hasIMacroPC() ? fp->getIMacroPC() : pc) - fp->getScript()->code)
+              < fp->getScript()->length);
+
+    JSOp op = js_GetOpcode(cx, fp->getScript(), pc);
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
