@@ -46,10 +46,12 @@
 #include "nsMemory.h"
 #include "nsRect.h"
 
+#include "nsIComponentManager.h"
 #include "nsIInputStream.h"
 
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "gfxColor.h"
 #include "nsColor.h"
@@ -59,9 +61,20 @@
 
 #include "gfxPlatform.h"
 
-namespace mozilla {
-namespace imagelib {
+using namespace mozilla::imagelib;
 
+static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
+static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
+                                png_uint_32 row_num, int pass);
+#ifdef PNG_APNG_SUPPORTED
+static void PNGAPI frame_info_callback(png_structp png_ptr,
+                                       png_uint_32 frame_num);
+#endif
+static void PNGAPI end_callback(png_structp png_ptr, png_infop info_ptr);
+static void PNGAPI error_callback(png_structp png_ptr,
+                                  png_const_charp error_msg);
+static void PNGAPI warning_callback(png_structp png_ptr,
+                                    png_const_charp warning_msg);
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
 static PRLogModuleInfo *gPNGDecoderAccountingLog =
@@ -71,7 +84,7 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 /* limit image dimensions (bug #251381) */
 #define MOZ_PNG_MAX_DIMENSION 1000000L
 
-// For size decodes
+// For header-only decodes
 #define WIDTH_OFFSET 16
 #define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
@@ -80,6 +93,9 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 // do manual validation without libpng.
 static const PRUint8 pngSignatureBytes[] =
                { 137, 80, 78, 71, 13, 10, 26, 10 };
+
+
+NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
 nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
@@ -93,8 +109,6 @@ nsPNGDecoder::nsPNGDecoder() :
 
 nsPNGDecoder::~nsPNGDecoder()
 {
-  if (mPNG)
-    png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
   if (mCMSLine)
     nsMemory::Free(mCMSLine);
   if (interlacebuf)
@@ -131,8 +145,11 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
     SetAnimFrameInfo();
 #endif
 
-  // Tell the superclass we're starting a frame
-  PostFrameStart();
+  PRUint32 numFrames = 0;
+  mImage->GetNumFrames(&numFrames);
+
+  if (mObserver)
+    mObserver->OnStartFrame(nsnull, numFrames - 1);
 
   PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
@@ -170,7 +187,8 @@ void nsPNGDecoder::SetAnimFrameInfo()
               (static_cast<PRFloat64>(delay_num) * 1000 / delay_den);
   }
 
-  PRUint32 numFrames = mImage->GetNumFrames();
+  PRUint32 numFrames = 0;
+  mImage->GetNumFrames(&numFrames);
 
   mImage->SetFrameTimeout(numFrames - 1, timeout);
 
@@ -196,7 +214,7 @@ void nsPNGDecoder::EndImageFrame()
 {
   PRUint32 numFrames = 1;
 #ifdef PNG_APNG_SUPPORTED
-  numFrames = mImage->GetNumFrames();
+  mImage->GetNumFrames(&numFrames);
 
   // We can't use mPNG->num_frames_read as it may be one ahead.
   if (numFrames > 1) {
@@ -208,7 +226,8 @@ void nsPNGDecoder::EndImageFrame()
       mError = PR_TRUE;
       // allow the call out to the observers.
     }
-    PRUint32 curFrame = mImage->GetCurrentFrameIndex();
+    PRUint32 curFrame;
+    mImage->GetCurrentFrameIndex(&curFrame);
     if (mObserver)
       mObserver->OnDataAvailable(nsnull, curFrame == numFrames - 1,
                                  &mFrameRect);
@@ -216,13 +235,20 @@ void nsPNGDecoder::EndImageFrame()
 #endif
 
   mImage->EndFrameDecode(numFrames - 1);
-  PostFrameStop();
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, numFrames - 1);
 }
 
-nsresult
-nsPNGDecoder::InitInternal()
-{
 
+/** imgIDecoder methods **/
+
+/* void init (in imgIContainer aImage,
+              imgIDecoderObserver aObserver,
+              unsigned long aFlags); */
+NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
+                                 imgIDecoderObserver *aObserver,
+                                 PRUint32 aFlags)
+{
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   static png_byte color_chunks[]=
        { 99,  72,  82,  77, '\0',   /* cHRM */
@@ -241,13 +267,19 @@ nsPNGDecoder::InitInternal()
         116,  73,  77,  69, '\0',   /* tIME */
         122,  84,  88, 116, '\0'};  /* zTXt */
 #endif
+  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                    "wrong type of imgIContainer for decoding into");
+
+  mImage = static_cast<RasterImage*>(aImage);
+  mObserver = aObserver;
+  mFlags = aFlags;
 
   // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
+  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
     mObserver->OnStartDecode(nsnull);
 
-  // For size decodes, we only need a small buffer
-  if (IsSizeDecode()) {
+  // For header-only decodes, we only need a small buffer
+  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
     mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);
     if (!mHeaderBuf)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -260,8 +292,8 @@ nsPNGDecoder::InitInternal()
   /* Always decode to 24 bit pixdepth */
 
   mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                NULL, nsPNGDecoder::error_callback,
-                                nsPNGDecoder::warning_callback);
+                                NULL, error_callback,
+                                warning_callback);
   if (!mPNG)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -287,30 +319,40 @@ nsPNGDecoder::InitInternal()
 
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */
   png_set_progressive_read_fn(mPNG, static_cast<png_voidp>(this),
-                              nsPNGDecoder::info_callback,
-                              nsPNGDecoder::row_callback,
-                              nsPNGDecoder::end_callback);
+                              info_callback, row_callback, end_callback);
 
 
   return NS_OK;
 }
 
-nsresult
-nsPNGDecoder::FinishInternal()
+/* void close (); */
+NS_IMETHODIMP nsPNGDecoder::Close(PRUint32 aFlags)
 {
+  if (mPNG)
+    png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
 
   // If we're a full/success decode but haven't sent stop notifications yet,
   // we didn't get all the data we needed. Send error notifications.
-  if (!IsSizeDecode() && !mNotifiedDone)
+  if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
+      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
+  mImage = nsnull;
   return NS_OK;
 }
 
-nsresult
-nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
+/* void flush (); */
+NS_IMETHODIMP nsPNGDecoder::Flush()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPNGDecoder::Write(const char *aBuffer, PRUint32 aCount)
 {
   // We use gotos, so we need to declare variables here
+  nsresult rv;
   PRUint32 width = 0;
   PRUint32 height = 0;
 
@@ -319,7 +361,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     goto error;
 
   // If we only want width/height, we don't need to go through libpng
-  if (IsSizeDecode()) {
+  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) {
 
     // Are we done?
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS)
@@ -346,8 +388,14 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION))
         goto error;
 
-      // Post our size to the superclass
-      PostSize(width, height);
+      // Set the size
+      rv = mImage->SetSize(width, height);
+      if (NS_FAILED(rv))
+        goto error;
+
+      // Notify the observer that the container is up
+      if (mObserver)
+        mObserver->OnStartContainer(nsnull, mImage);
     }
   }
 
@@ -516,7 +564,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 }
 
 void
-nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
+info_callback(png_structp png_ptr, png_infop info_ptr)
 {
 /*  int number_passes;   NOT USED  */
   png_uint_32 width, height;
@@ -528,6 +576,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   nsPNGDecoder *decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
+  nsresult rv;
 
   /* always decode to 24-bit RGB or 32-bit RGBA  */
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
@@ -537,8 +586,14 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION)
     longjmp(png_jmpbuf(decoder->mPNG), 1);
 
-  // Post our size to the superclass
-  decoder->PostSize(width, height);
+  // Set the size and notify that the container is set up
+  rv = decoder->mImage->SetSize(width, height);
+
+  if (NS_FAILED(rv))
+    longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_UNEXPECTED
+
+  if (decoder->mObserver)
+    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
 
   if (color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_expand(png_ptr);
@@ -648,7 +703,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
-    png_set_progressive_frame_fn(png_ptr, nsPNGDecoder::frame_info_callback, NULL);
+    png_set_progressive_frame_fn(png_ptr, frame_info_callback, NULL);
 
   if (png_get_first_frame_is_hidden(png_ptr, info_ptr)) {
     decoder->mFrameIsHidden = PR_TRUE;
@@ -689,8 +744,8 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 }
 
 void
-nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
-                           png_uint_32 row_num, int pass)
+row_callback(png_structp png_ptr, png_bytep new_row,
+             png_uint_32 row_num, int pass)
 {
   /* libpng comments:
    *
@@ -726,7 +781,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
   if (decoder->mFrameIsHidden)
     return;
 
-  if (row_num >= (png_uint_32) decoder->mFrameRect.height)
+  if (row_num >= decoder->mFrameRect.height)
     return;
 
   if (new_row) {
@@ -806,7 +861,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     if (!rowHasNoAlpha)
       decoder->mFrameHasNoAlpha = PR_FALSE;
 
-    PRUint32 numFrames = decoder->mImage->GetNumFrames();
+    PRUint32 numFrames = 0;
+    decoder->mImage->GetNumFrames(&numFrames);
     if (numFrames <= 1) {
       // Only do incremental image display for the first frame
       nsIntRect r(0, row_num, width, 1);
@@ -814,7 +870,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         decoder->mError = PR_TRUE;  /* bail */
         return;
       }
-      PRUint32 curFrame = decoder->mImage->GetCurrentFrameIndex();
+      PRUint32 curFrame;
+      decoder->mImage->GetCurrentFrameIndex(&curFrame);
       if (decoder->mObserver)
         decoder->mObserver->OnDataAvailable(nsnull,
                                             curFrame == numFrames - 1, &r);
@@ -824,7 +881,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
 
 // got the header of a new frame that's coming
 void
-nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
+frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 {
 #ifdef PNG_APNG_SUPPORTED
   png_uint_32 x_offset, y_offset;
@@ -849,7 +906,7 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 }
 
 void
-nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
+end_callback(png_structp png_ptr, png_infop info_ptr)
 {
   /* libpng comments:
    *
@@ -882,7 +939,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 
 
 void
-nsPNGDecoder::error_callback(png_structp png_ptr, png_const_charp error_msg)
+error_callback(png_structp png_ptr, png_const_charp error_msg)
 {
   PR_LOG(gPNGLog, PR_LOG_ERROR, ("libpng error: %s\n", error_msg));
   longjmp(png_jmpbuf(png_ptr), 1);
@@ -890,10 +947,8 @@ nsPNGDecoder::error_callback(png_structp png_ptr, png_const_charp error_msg)
 
 
 void
-nsPNGDecoder::warning_callback(png_structp png_ptr, png_const_charp warning_msg)
+warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
 
-} // namespace imagelib
-} // namespace mozilla

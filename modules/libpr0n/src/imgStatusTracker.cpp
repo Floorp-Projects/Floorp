@@ -223,8 +223,12 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     proxy->OnStartDecode();
 
   // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
-  if (mImage->GetNumFrames() > 0) {
-    PRUint32 frame = mImage->GetCurrentFrameIndex();
+  PRUint32 nframes = 0;
+  mImage->GetNumFrames(&nframes);
+
+  if (nframes > 0) {
+    PRUint32 frame;
+    mImage->GetCurrentFrameIndex(&frame);
     proxy->OnStartFrame(frame);
 
     // OnDataAvailable

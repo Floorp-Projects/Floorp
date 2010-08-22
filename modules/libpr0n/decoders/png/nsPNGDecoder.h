@@ -41,8 +41,9 @@
 #ifndef nsPNGDecoder_h__
 #define nsPNGDecoder_h__
 
-#include "Decoder.h"
+#include "imgIDecoder.h"
 
+#include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxASurface.h"
 
@@ -52,19 +53,28 @@
 
 #include "qcms.h"
 
+#define NS_PNGDECODER_CID \
+{ /* 36fa00c2-1dd2-11b2-be07-d16eeb4c50ed */         \
+     0x36fa00c2,                                     \
+     0x1dd2,                                         \
+     0x11b2,                                         \
+    {0xbe, 0x07, 0xd1, 0x6e, 0xeb, 0x4c, 0x50, 0xed} \
+}
+
 namespace mozilla {
 namespace imagelib {
 class RasterImage;
+} // namespace imagelib
+} // namespace mozilla
 
-class nsPNGDecoder : public Decoder
+class nsPNGDecoder : public imgIDecoder
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGIDECODER
+
   nsPNGDecoder();
   virtual ~nsPNGDecoder();
-
-  virtual nsresult InitInternal();
-  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual nsresult FinishInternal();
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    PRInt32 width, PRInt32 height,
@@ -75,6 +85,10 @@ public:
   void NotifyDone(PRBool aSuccess);
 
 public:
+  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
+  nsCOMPtr<imgIDecoderObserver> mObserver;
+  PRUint32 mFlags;
+
   png_structp mPNG;
   png_infop mInfo;
   nsIntRect mFrameRect;
@@ -86,7 +100,7 @@ public:
 
   gfxASurface::gfxImageFormat format;
 
-  // For size decodes
+  // For header-only decodes
   PRUint8 *mHeaderBuf;
   PRUint32 mHeaderBytesRead;
 
@@ -95,27 +109,6 @@ public:
   PRPackedBool mFrameHasNoAlpha;
   PRPackedBool mFrameIsHidden;
   PRPackedBool mNotifiedDone;
-
-  /*
-   * libpng callbacks
-   *
-   * We put these in the class so that they can access protected members.
-   */
-  static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
-  static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
-                                  png_uint_32 row_num, int pass);
-#ifdef PNG_APNG_SUPPORTED
-  static void PNGAPI frame_info_callback(png_structp png_ptr,
-                                         png_uint_32 frame_num);
-#endif
-  static void PNGAPI end_callback(png_structp png_ptr, png_infop info_ptr);
-  static void PNGAPI error_callback(png_structp png_ptr,
-                                    png_const_charp error_msg);
-  static void PNGAPI warning_callback(png_structp png_ptr,
-                                      png_const_charp warning_msg);
 };
-
-} // namespace imagelib
-} // namespace mozilla
 
 #endif // nsPNGDecoder_h__

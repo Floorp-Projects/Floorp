@@ -43,16 +43,20 @@
 
 #include "imgIContainerObserver.h"
 
+#include "nsIComponentManager.h"
 #include "nsIInputStream.h"
 
 #include "nspr.h"
 #include "nsCRT.h"
 #include "ImageLogging.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "gfxColor.h"
 
 #include "jerror.h"
 
 #include "gfxPlatform.h"
+
+using namespace mozilla::imagelib;
 
 extern "C" {
 #include "iccjpeg.h"
@@ -71,10 +75,7 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
                  JSAMPARRAY output_buf, int num_rows);
 }
 
-static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
-
-namespace mozilla {
-namespace imagelib {
+NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
@@ -90,6 +91,8 @@ METHODDEF(boolean) fill_input_buffer (j_decompress_ptr jd);
 METHODDEF(void) skip_input_data (j_decompress_ptr jd, long num_bytes);
 METHODDEF(void) term_source (j_decompress_ptr jd);
 METHODDEF(void) my_error_exit (j_common_ptr cinfo);
+
+static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
 
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
@@ -123,10 +126,6 @@ nsJPEGDecoder::nsJPEGDecoder()
 
 nsJPEGDecoder::~nsJPEGDecoder()
 {
-  // Step 8: Release JPEG decompression object
-  mInfo.src = nsnull;
-  jpeg_destroy_decompress(&mInfo);
-
   PR_FREEIF(mBackBuffer);
   if (mTransform)
     qcms_transform_release(mTransform);
@@ -139,11 +138,25 @@ nsJPEGDecoder::~nsJPEGDecoder()
 }
 
 
-nsresult
-nsJPEGDecoder::InitInternal()
+/** imgIDecoder methods **/
+
+/* void init (in imgIContainer aImage, 
+              in imgIDecoderObserver aObserver,
+              in unsigned long aFlags); */
+NS_IMETHODIMP nsJPEGDecoder::Init(imgIContainer *aImage, 
+                                  imgIDecoderObserver *aObserver,
+                                  PRUint32 aFlags)
 {
+  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
+                    "wrong type of imgIContainer for decoding into");
+
+  /* Grab the parameters. */
+  mImage = static_cast<RasterImage*>(aImage);
+  mObserver = aObserver;
+  mFlags = aFlags;
+
   /* Fire OnStartDecode at init time to support bug 512435 */
-  if (!IsSizeDecode() && mObserver)
+  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
     mObserver->OnStartDecode(nsnull);
 
   /* We set up the normal JPEG error routines, then override error_exit. */
@@ -179,19 +192,17 @@ nsJPEGDecoder::InitInternal()
   return NS_OK;
 }
 
-nsresult
-nsJPEGDecoder::FinishInternal()
+
+/* void close (); */
+NS_IMETHODIMP nsJPEGDecoder::Close(PRUint32 aFlags)
 {
-  /* If we're not in any sort of error case, flush the decoder.
-   *
-   * XXXbholley - It seems wrong that this should be necessary, but at the
-   * moment I'm just folding the contents of Flush() into Close() so that
-   * we can get rid of it.
-   */
-  if ((mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) &&
-      (mState != JPEG_ERROR) &&
-      !IsSizeDecode())
-    this->Write(nsnull, 0);
+  PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+         ("[this=%p] nsJPEGDecoder::Close\n", this));
+
+  /* Step 8: Release JPEG decompression object */
+  mInfo.src = nsnull;
+
+  jpeg_destroy_decompress(&mInfo);
 
   /* If we already know we're in an error state, don't
      bother flagging another one here. */
@@ -200,15 +211,28 @@ nsJPEGDecoder::FinishInternal()
 
   /* If we're doing a full decode and haven't notified of completion yet,
    * we must not have got everything we wanted. Send error notifications. */
-  if (!IsSizeDecode() && !mNotifiedDone)
+  if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
+      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
   /* Otherwise, no problems. */
   return NS_OK;
 }
 
-nsresult
-nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
+/* void flush (); */
+NS_IMETHODIMP nsJPEGDecoder::Flush()
+{
+  LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::Flush");
+
+  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER && mState != JPEG_ERROR)
+    return this->Write(nsnull, 0);
+
+  return NS_OK;
+}
+
+//******************************************************************************
+nsresult nsJPEGDecoder::Write(const char *aBuffer, PRUint32 aCount)
 {
   mSegment = (const JOCTET *)aBuffer;
   mSegmentLen = aCount;
@@ -249,11 +273,13 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       return NS_OK; /* I/O suspension */
     }
 
-    // Post our size to the superclass
-    PostSize(mInfo.image_width, mInfo.image_height);
+    /* Set Width and height, and notify that the container is ready to go. */
+    mImage->SetSize(mInfo.image_width, mInfo.image_height);
+    if (mObserver)
+      mObserver->OnStartContainer(nsnull, mImage);
 
-    /* If we're doing a size decode, we're done. */
-    if (IsSizeDecode())
+    /* If we're doing a header-only decode, we're done. */
+    if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
       return NS_OK;
 
     /* We're doing a full decode. */
@@ -395,9 +421,8 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
            ("        JPEGDecoderAccounting: nsJPEGDecoder::Write -- created image frame with %ux%u pixels",
             mInfo.image_width, mInfo.image_height));
 
-    // Tell the superclass we're starting a frame
-    PostFrameStart();
-
+    if (mObserver)
+      mObserver->OnStartFrame(nsnull, 0);
     mState = JPEG_START_DECOMPRESS;
   }
 
@@ -568,7 +593,8 @@ nsJPEGDecoder::NotifyDone(PRBool aSuccess)
   NS_ABORT_IF_FALSE(!mNotifiedDone, "calling NotifyDone twice!");
 
   // Notify
-  PostFrameStop();
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, 0);
   if (aSuccess)
     mImage->DecodingComplete();
   if (mObserver) {
@@ -901,9 +927,6 @@ term_source (j_decompress_ptr jd)
   // Notify
   decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
 }
-
-} // namespace imagelib
-} // namespace mozilla
 
 
 /**************** YCbCr -> Cairo's RGB24/ARGB32 conversion: most common case **************/

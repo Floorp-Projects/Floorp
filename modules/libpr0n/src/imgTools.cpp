@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "ImageErrors.h"
 #include "imgIContainer.h"
+#include "imgIDecoder.h"
 #include "imgIEncoder.h"
 #include "imgIDecoderObserver.h"
 #include "imgIContainerObserver.h"
