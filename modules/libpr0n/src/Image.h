@@ -49,7 +49,6 @@ class Image : public imgIContainer
 {
 public:
   imgStatusTracker& GetStatusTracker() { return *mStatusTracker; }
-  PRBool IsInitialized() const { return mInitialized; }
 
   /**
    * Flags for Image initialization.
