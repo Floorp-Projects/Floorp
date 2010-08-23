@@ -907,7 +907,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.trace("Fetching global metadata record");
-    let meta = Records.import(this.metaURL);
+    let meta = Records.get(this.metaURL);
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
@@ -1376,6 +1376,13 @@ WeaveSvc.prototype = {
       PubKeys.clearCache();
       PrivKeys.clearCache();
       this.keysModified = info.obj.keys;
+    }
+
+    // If the modified time of the meta record ever changes, clear the cache.
+    if (info.obj.meta != this.metaModified) {
+      this._log.debug("Clearing cached meta record.");
+      Records.del(this.metaURL);
+      this.metaModified = info.obj.meta;
     }
 
     if (!(this._remoteSetup()))
