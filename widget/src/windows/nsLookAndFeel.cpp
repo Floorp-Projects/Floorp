@@ -533,7 +533,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             LPWSTR curTheme = wcsrchr(themeFileName, L'\\');
             curTheme = curTheme ? curTheme + 1 : themeFileName;
 
-            for (int i = 0; i < NS_ARRAY_LENGTH(defThemes); ++i) {
+            for (unsigned i = 0; i < NS_ARRAY_LENGTH(defThemes); ++i) {
               if (!lstrcmpiW(curTheme, defThemes[i])) {
                 aMetric = 1;
               }
@@ -729,6 +729,8 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
     case eMetricSize_TextArea:
       aSize.width  = kTextAreaWidths[aFontID][aFontSize-1];
       aSize.height = kTextAreaHeights[aFontID][aFontSize-1];
+      break;
+    default:
       break;
   } //switch
 

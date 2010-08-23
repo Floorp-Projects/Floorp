@@ -74,8 +74,12 @@ private:
     gfxQuartzNativeDrawing(const gfxQuartzNativeDrawing&);
     const gfxQuartzNativeDrawing& operator=(const gfxQuartzNativeDrawing&);
 
+    // Final destination context
     nsRefPtr<gfxContext> mContext;
-    gfxRect mNativeRect; // not yet used, will be needed for offscreen buffers
+    // context that draws to mQuartzSurface; can be different from mContext
+    // if mContext is not drawing to Quartz
+    nsRefPtr<gfxContext> mSurfaceContext;
+    gfxRect mNativeRect;
 
     // saved state
     nsRefPtr<gfxQuartzSurface> mQuartzSurface;

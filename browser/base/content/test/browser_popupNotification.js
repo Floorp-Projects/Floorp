@@ -418,6 +418,47 @@ var tests = [
       gBrowser.selectedTab = this.oldSelectedTab;
     }
   },
+  // Test that nested icon nodes correctly activate popups
+  { // Test #14
+    run: function() {
+      // Add a temporary box as the anchor with a button
+      this.box = document.createElement("box");
+      PopupNotifications.iconBox.appendChild(this.box);
+
+      let button = document.createElement("button");
+      button.setAttribute("label", "Please click me!");
+      this.box.appendChild(button);
+
+      // The notification should open up on the box
+      this.notifyObj = new basicNotification();
+      this.notifyObj.anchorID = this.box.id = "nested-box";
+      this.notifyObj.options = {dismissed: true};
+      this.notification = showNotification(this.notifyObj);
+
+      EventUtils.synthesizeMouse(button, 1, 1, {});
+    },
+    onShown: function(popup) {
+      checkPopup(popup, this.notifyObj);
+      dismissNotification(popup);
+    },
+    onHidden: function(popup) {
+      this.notification.remove();
+      this.box.parentNode.removeChild(this.box);
+    }
+  },
+  // Test that popupnotifications without popups have anchor icons shown
+  { // Test #15
+    run: function() {
+      let notifyObj = new basicNotification();
+      notifyObj.anchorID = "geo-notification-icon";
+      notifyObj.options = {neverShow: true};
+      showNotification(notifyObj);
+    },
+    updateNotShowing: function() {
+      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+            "geo anchor should be visible");
+    }
+  },
 ];
 
 function showNotification(notifyObj) {

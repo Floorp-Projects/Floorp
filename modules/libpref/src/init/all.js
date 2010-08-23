@@ -1215,6 +1215,23 @@ pref("layout.css.devPixelsPerPx", "1.0");
 // 3 = left
 pref("layout.scrollbar.side", 0);
 
+// pref to control browser frame rate, in Hz. A value <= 0 means choose
+// automatically based on knowledge of the platform (or 60Hz if no platform-
+// specific information is available).
+pref("layout.frame_rate", -1);
+
+// pref to control precision of the frame rate timer. When true,
+// we use a "precise" timer, which means each notification fires
+// Nms after the start of the last notification. That means if the
+// processing of the notification is slow, the timer can fire immediately
+// after we've just finished processing the last notification, which might
+// lead to starvation problems.
+// When false, we use a "slack" timer which fires Nms after the *end*
+// of the last notification. This can give less tight frame rates
+// but provides more time for other operations when the browser is
+// heavily loaded.
+pref("layout.frame_rate.precise", false);
+
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
@@ -3122,7 +3139,7 @@ pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 
 // Discards inactive image frames and re-decodes them on demand from
 // compressed data.
-pref("image.mem.discardable", false);
+pref("image.mem.discardable", true);
 
 // Prevents images from automatically being decoded on load, instead allowing
 // them to be decoded on demand when they are drawn.

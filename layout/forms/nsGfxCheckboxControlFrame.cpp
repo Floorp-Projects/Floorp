@@ -153,7 +153,7 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK; // No need to paint the checkmark. The theme will do it.
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-    nsDisplayGeneric(this,
+    nsDisplayGeneric(aBuilder, this,
                      IsIndeterminate()
                      ? PaintIndeterminateMark : PaintCheckMark,
                      "CheckedCheckbox",

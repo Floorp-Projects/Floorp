@@ -41,7 +41,6 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
 #include "nsIChannelEventSink.h"

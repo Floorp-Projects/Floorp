@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -34,7 +35,6 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE bindings [
   <!ENTITY % feedDTD
     SYSTEM "chrome://browser/locale/feeds/subscribe.dtd">
