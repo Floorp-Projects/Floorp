@@ -2075,10 +2075,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
         /* GETPROP_INLINE_TYPE_GUARD is used to patch the jmp, not cmp. */
         JS_ASSERT(masm.differenceBetween(pic.fastPathStart, masm.label()) == GETPROP_INLINE_TYPE_GUARD);
 
-        pic.typeCheck = stubcc.masm.label();
-        stubcc.linkExit(j, Uses(1));
-        stubcc.leave();
-        typeCheck = stubcc.masm.jump();
+        pic.typeCheck = stubcc.linkExit(j, Uses(1));
         pic.hasTypeCheck = true;
     } else {
         pic.fastPathStart = masm.label();
@@ -2105,12 +2102,9 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
                                     inlineShapeLabel);
     DBGLABEL(dbgInlineShapeJump);
 
-    pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j, Uses(1));
+    pic.slowPathStart = stubcc.linkExit(j, Uses(1));
 
     stubcc.leave();
-    if (pic.hasTypeCheck)
-        typeCheck.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
     pic.callReturn = stubcc.call(ic::GetProp);
 
@@ -2299,11 +2293,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     Jump typeCheck = masm.testObject(Assembler::NotEqual, pic.typeReg);
     DBGLABEL(dbgInlineTypeGuard);
 
-    stubcc.linkExit(typeCheck, Uses(1));
-    stubcc.leave();
-    Jump typeCheckDone = stubcc.masm.jump();
-
-    pic.typeCheck = stubcc.masm.label();
+    pic.typeCheck = stubcc.linkExit(typeCheck, Uses(1));
     pic.hasTypeCheck = true;
     pic.objReg = objReg;
     pic.shapeReg = shapeReg;
@@ -2335,12 +2325,10 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
                            inlineShapeLabel);
     DBGLABEL(dbgInlineShapeJump);
 
-    pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j, Uses(1));
+    pic.slowPathStart = stubcc.linkExit(j, Uses(1));
 
     /* Slow path. */
     stubcc.leave();
-    typeCheckDone.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
     pic.callReturn = stubcc.call(ic::CallProp);
 
