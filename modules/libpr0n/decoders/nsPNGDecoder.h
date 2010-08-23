@@ -86,7 +86,7 @@ public:
 
   gfxASurface::gfxImageFormat format;
 
-  // For header-only decodes
+  // For size decodes
   PRUint8 *mHeaderBuf;
   PRUint32 mHeaderBytesRead;
 

@@ -70,6 +70,7 @@ NS_IMETHODIMP Decoder::Flush()
 
 Decoder::Decoder()
   : mInitialized(false)
+  , mSizeDecode(false)
 {
 }
 
@@ -83,8 +84,7 @@ Decoder::~Decoder()
  */
 
 nsresult
-Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver,
-              PRUint32 aFlags)
+Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
 {
   // We should always have an image
   NS_ABORT_IF_FALSE(aImage, "Can't initialize decoder without an image!");
@@ -92,7 +92,6 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver,
   // Save our paremeters
   mImage = aImage;
   mObserver = aObserver;
-  mFlags = aFlags;
 
   // Implementation-specific initialization
   nsresult rv = InitInternal();
