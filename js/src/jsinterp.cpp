@@ -465,7 +465,7 @@ RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain
         return mjit::JaegerShot(cx);
 #endif
 
-    return Interpret(cx, cx->fp);
+    return Interpret(cx, cx->fp());
 }
 
 static JS_REQUIRES_STACK bool

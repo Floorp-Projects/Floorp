@@ -1631,8 +1631,7 @@ mjit::Compiler::emitReturn()
      */
     masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, down)), Registers::ReturnReg);
     masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ArgReg1);
-    masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, fp)));
-    masm.storePtr(Registers::ReturnReg, Address(Registers::ArgReg1, offsetof(JSContext, fp)));
+    masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, regs.fp)));
 
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
@@ -1891,7 +1890,7 @@ mjit::Compiler::addCallSite(uint32 id, bool stub)
 void
 mjit::Compiler::restoreFrameRegs(Assembler &masm)
 {
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, fp)), JSFrameReg);
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
 }
 
 bool

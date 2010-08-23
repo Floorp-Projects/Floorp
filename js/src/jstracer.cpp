@@ -14669,7 +14669,7 @@ TraceRecorder::record_JSOP_FORGLOBAL()
     LIns* v_ins;
     CHECK_STATUS_A(unboxNextValue(v_ins));
 
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16125,7 +16125,7 @@ TraceRecorder::record_JSOP_SHARPINIT()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETGLOBAL()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16136,7 +16136,7 @@ TraceRecorder::record_JSOP_GETGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_SETGLOBAL()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16147,7 +16147,7 @@ TraceRecorder::record_JSOP_SETGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLGLOBAL()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16160,7 +16160,7 @@ TraceRecorder::record_JSOP_CALLGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GLOBALDEC()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16170,7 +16170,7 @@ TraceRecorder::record_JSOP_GLOBALDEC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DECGLOBAL()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16180,7 +16180,7 @@ TraceRecorder::record_JSOP_DECGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INCGLOBAL()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16190,7 +16190,7 @@ TraceRecorder::record_JSOP_INCGLOBAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GLOBALINC()
 {
-    uint32 slot = cx->fp->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    uint32 slot = cx->fp()->getScript()->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
     if (!lazilyImportGlobalSlot(slot))
          RETURN_STOP_A("lazy import of global slot failed");
 
@@ -16406,13 +16406,13 @@ class AutoRetBlacklist
 JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
 {
-    JSStackFrame* fp = cx->fp;
+    JSStackFrame* fp = cx->fp();
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     jsbytecode* pc = cx->regs->pc;
 
     JS_ASSERT(!TRACE_RECORDER(cx));
 
-    JSObject* globalObj = cx->fp->getScopeChain()->getGlobal();
+    JSObject* globalObj = cx->fp()->getScopeChain()->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
@@ -16423,13 +16423,13 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
         return TPA_Nothing;
     }
 
-    uint32 argc = cx->fp->argc;
+    uint32 argc = cx->fp()->argc;
     TreeFragment* tree = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
     debug_only_printf(LC_TMTracer,
                       "Looking for compat peer %d@%d, from %p (ip: %p)\n",
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp), (void*)tree, tree->ip);
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()), (void*)tree, tree->ip);
 
     if (tree->code() || tree->peer) {
         uintN count;

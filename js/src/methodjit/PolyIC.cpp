@@ -137,7 +137,7 @@ class PICStubCompiler
     {
         JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                    type, event, op, script->filename,
-                   js_FramePCToLineNumber(f.cx, f.fp));
+                   js_FramePCToLineNumber(f.cx, f.fp()));
     }
 };
 
@@ -682,7 +682,7 @@ class GetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.hasTypeCheck());
         JS_ASSERT(pic.kind == ic::PICInfo::CALL);
 
-        if (!f.fp->getScript()->compileAndGo)
+        if (!f.fp()->getScript()->compileAndGo)
             return disable("String.prototype without compile-and-go");
 
         JSObject *holder;
@@ -717,7 +717,7 @@ class GetPropCompiler : public PICStubCompiler
          * correctly in ic::CallProp. Should we just move the store higher
          * up in the fast path, or put this offset in PICInfo?
          */
-        uint32 thisvOffset = uint32(f.regs.sp - f.fp->slots()) - 1;
+        uint32 thisvOffset = uint32(f.regs.sp - f.fp()->slots()) - 1;
         Address thisv(JSFrameReg, sizeof(JSStackFrame) + thisvOffset * sizeof(Value));
         masm.storeTypeTag(ImmType(JSVAL_TYPE_STRING), thisv);
         masm.storePayload(pic.objReg, thisv);
@@ -1317,7 +1317,7 @@ class GetElemCompiler : public PICStubCompiler
         char *chars = js_DeflateString(f.cx, id->chars(), id->length());
         JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
                    type, cs.executableAddress(), id, chars, holder->shape(), script->filename,
-                   js_FramePCToLineNumber(f.cx, f.fp));
+                   js_FramePCToLineNumber(f.cx, f.fp()));
         f.cx->free(chars);
 #endif
 
@@ -1814,7 +1814,7 @@ class BindNameCompiler : public PICStubCompiler
 void JS_FASTCALL
 ic::GetProp(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     PICInfo &pic = script->pics[index];
 
     JSAtom *atom = pic.atom;
@@ -1872,7 +1872,7 @@ ic::GetProp(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::GetElem(VMFrame &f, uint32 picIndex)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     PICInfo &pic = script->pics[picIndex];
 
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
@@ -1902,7 +1902,7 @@ ic::GetElem(VMFrame &f, uint32 picIndex)
 static void JS_FASTCALL
 SetPropDumb(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
     JSAtom *atom = pic.atom;
@@ -1919,7 +1919,7 @@ SetPropDumb(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetPropSlow(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
 
@@ -1934,7 +1934,7 @@ ic::SetProp(VMFrame &f, uint32 index)
     if (!obj)
         THROW();
 
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
     JS_ASSERT(pic.kind == ic::PICInfo::SET);
@@ -1978,7 +1978,7 @@ ic::SetProp(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 CallPropSlow(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     stubs::CallProp(f, pic.atom);
 }
@@ -1989,7 +1989,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *origAtom = pic.atom;
 
@@ -2126,11 +2126,11 @@ SlowName(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::Name(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
-    ScopeNameCompiler cc(f, script, f.fp->getScopeChain(), pic, atom, SlowName);
+    ScopeNameCompiler cc(f, script, f.fp()->getScopeChain(), pic, atom, SlowName);
 
     if (!cc.update()) {
         cc.disable("error");
@@ -2146,7 +2146,7 @@ ic::Name(VMFrame &f, uint32 index)
         if (!cc.prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
             cc.disable("property not found");
-            JSOp op2 = js_GetOpcode(f.cx, f.fp->getScript(), f.regs.pc + JSOP_NAME_LENGTH);
+            JSOp op2 = js_GetOpcode(f.cx, f.fp()->getScript(), f.regs.pc + JSOP_NAME_LENGTH);
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp[0].setUndefined();
                 return;
@@ -2175,11 +2175,11 @@ SlowBindName(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::BindName(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
-    BindNameCompiler cc(f, script, f.fp->getScopeChain(), pic, atom, SlowBindName);
+    BindNameCompiler cc(f, script, f.fp()->getScopeChain(), pic, atom, SlowBindName);
 
     JSObject *obj = cc.update();
     if (!obj) {

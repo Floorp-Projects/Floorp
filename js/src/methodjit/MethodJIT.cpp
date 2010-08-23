@@ -568,7 +568,7 @@ SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x1C);
 
 extern "C" {
 
@@ -756,7 +756,7 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
     JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit, safePoint);
 
-    JS_ASSERT(checkFp == cx->fp);
+    JS_ASSERT(checkFp == cx->fp());
 
 #ifdef JS_METHODJIT_SPEW
     prof.stop();
@@ -769,7 +769,7 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
 JSBool
 mjit::JaegerShot(JSContext *cx)
 {
-    JSScript *script = cx->fp->getScript();
+    JSScript *script = cx->fp()->getScript();
 
     JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
 
@@ -782,7 +782,7 @@ mjit::JaegerShot(JSContext *cx)
 
     void *code = script->nmap[-1];
 
-    return EnterMethodJIT(cx, cx->fp, code, NULL);
+    return EnterMethodJIT(cx, cx->fp(), code, NULL);
 }
 
 JSBool
@@ -794,7 +794,7 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
 
     void *code = JS_FUNC_TO_DATA_PTR(void *, SafePointTrampoline);
 
-    return EnterMethodJIT(cx, cx->fp, code, safePoint);
+    return EnterMethodJIT(cx, cx->fp(), code, safePoint);
 }
 
 template <typename T>

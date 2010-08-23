@@ -66,9 +66,9 @@ PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp->getScopeChain()->getGlobal();
-    ic::MICInfo &mic = f.fp->getScript()->mics[index];
-    JSAtom *atom = f.fp->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSObject *obj = f.fp()->getScopeChain()->getGlobal();
+    ic::MICInfo &mic = f.fp()->getScript()->mics[index];
+    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(mic.kind == ic::MICInfo::GET);
@@ -119,7 +119,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetGlobalNameSlow(VMFrame &f, uint32 index)
 {
-    JSAtom *atom = f.fp->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
     stubs::SetGlobalName(f, atom);
 }
 
@@ -134,9 +134,9 @@ PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp->getScopeChain()->getGlobal();
-    ic::MICInfo &mic = f.fp->getScript()->mics[index];
-    JSAtom *atom = f.fp->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSObject *obj = f.fp()->getScopeChain()->getGlobal();
+    ic::MICInfo &mic = f.fp()->getScript()->mics[index];
+    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(mic.kind == ic::MICInfo::SET);
