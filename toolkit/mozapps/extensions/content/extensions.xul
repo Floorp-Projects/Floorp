@@ -46,10 +46,14 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="addons-page" title="&addons.windowTitle;"
+      xmlns:xhtml="http://www.w3.org/1999/xhtml"
+      id="addons-page" title="&addons.windowTitle;" disablechrome="true"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
+
+  <xhtml:link rel="shortcut icon"
+              href="chrome://mozapps/skin/extensions/extensionGeneric-16.png"/>
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>
@@ -101,12 +105,60 @@
     <command id="cmd_cancelUninstallItem"/>
   </commandset>
 
+  <!-- main header -->
+  <hbox id="header" align="center">
+    <label id="header-name"/>
+    <button id="header-link"/>
+    <spacer flex="1"/>
+    <hbox id="updates-container" align="center">
+      <image class="spinner"/>
+      <label id="updates-noneFound" hidden="true"
+             value="&updates.noneFound.label;"/>
+      <button id="updates-manualUpdatesFound" class="button-link"
+              hidden="true" label="&updates.manualUpdatesFound.label;"
+              command="cmd_goToAvailableUpdates"/>
+      <label id="updates-progress" hidden="true"
+             value="&updates.updating.label;"/>
+      <label id="updates-installed" hidden="true"
+             value="&updates.installed.label;"/>
+      <label id="updates-downloaded" hidden="true"
+             value="&updates.downloaded.label;"/>
+      <button id="updates-restart" class="button-link" hidden="true"
+              label="&updates.restart.label;"
+              command="cmd_restartApp"/>
+    </hbox>
+    <button id="header-utils-btn" type="menu">
+      <menupopup id="utils-menu">
+        <menuitem id="utils-updateNow"
+                  label="&updates.updateAddonsNow.label;"
+                  accesskey="&updates.updateAddonsNow.accesskey;"
+                  command="cmd_findAllUpdates"/>
+        <menuitem id="utils-viewUpdates"
+                  label="&updates.viewUpdates.label;"
+                  accesskey="&updates.viewUpdates.accesskey;"
+                  command="cmd_goToRecentUpdates"/>
+        <menuseparator id="utils-installFromFile-separator"/>
+        <menuitem id="utils-installFromFile"
+                  label="&installFromFile.label;"
+                  accesskey="&installFromFile.accesskey;"
+                  command="cmd_installFromFile"/>
+        <menuseparator/>
+        <menuitem id="utils-backgroudUpdateCheck"
+                  label="&updates.backgroudUpdateCheck.label;"
+                  accesskey="&updates.backgroudUpdateCheck.accesskey;"
+                  type="checkbox" autocheck="false"
+                  command="cmd_toggleBackgroundUpdateCheck"/>
+      </menupopup>
+    </button>
+    <textbox id="header-search" type="search" searchbutton="true"
+             placeholder="&search.placeholder;"/>
+    <image id="header-searching"/>
+  </hbox>
+
   <hbox flex="1">
-    <!-- left pane -->
-    <vbox id="left-pane">
 
       <!-- category list -->
-      <richlistbox id="categories" flex="1" persist="last-selected">
+      <richlistbox id="categories" persist="last-selected">
         <richlistitem id="category-search" value="addons://search/"
                       class="category"
                       name="&view.search.label;" disabled="true"/>
@@ -138,63 +190,6 @@
                       class="category"
                       name="&view.recentUpdates.label;" disabled="true"/>
       </richlistbox>
-
-    </vbox>
-
-    <splitter class="pane-splitter" collapse="none"/>
-
-    <!-- right pane -->
-    <vbox id="view-container" flex="4">
-
-      <!-- main header -->
-      <hbox id="header">
-        <label id="header-name"/>
-        <button id="header-link"/>
-        <spacer flex="1"/>
-        <hbox id="updates-container">
-          <image class="spinner"/>
-          <label id="updates-noneFound" hidden="true"
-                 value="&updates.noneFound.label;"/>
-          <button id="updates-manualUpdatesFound" class="button-link"
-                  hidden="true" label="&updates.manualUpdatesFound.label;"
-                  command="cmd_goToAvailableUpdates"/>
-          <label id="updates-progress" hidden="true"
-                 value="&updates.updating.label;"/>
-          <label id="updates-installed" hidden="true"
-                 value="&updates.installed.label;"/>
-          <label id="updates-downloaded" hidden="true"
-                 value="&updates.downloaded.label;"/>
-          <button id="updates-restart" class="button-link" hidden="true"
-                  label="&updates.restart.label;"
-                  command="cmd_restartApp"/>
-        </hbox>
-        <button id="header-utils-btn" type="menu">
-          <menupopup id="utils-menu">
-            <menuitem id="utils-updateNow"
-                      label="&updates.updateAddonsNow.label;"
-                      accesskey="&updates.updateAddonsNow.accesskey;"
-                      command="cmd_findAllUpdates"/>
-            <menuitem id="utils-viewUpdates"
-                      label="&updates.viewUpdates.label;"
-                      accesskey="&updates.viewUpdates.accesskey;"
-                      command="cmd_goToRecentUpdates"/>
-            <menuseparator id="utils-installFromFile-separator"/>
-            <menuitem id="utils-installFromFile"
-                      label="&installFromFile.label;"
-                      accesskey="&installFromFile.accesskey;"
-                      command="cmd_installFromFile"/>
-            <menuseparator/>
-            <menuitem id="utils-backgroudUpdateCheck"
-                      label="&updates.backgroudUpdateCheck.label;"
-                      accesskey="&updates.backgroudUpdateCheck.accesskey;"
-                      type="checkbox" autocheck="false"
-                      command="cmd_toggleBackgroundUpdateCheck"/>
-          </menupopup>
-        </button>
-        <textbox id="header-search" type="search" searchbutton="true"
-                 placeholder="&search.placeholder;"/>
-        <image id="header-searching"/>
-      </hbox>
 
       <!-- view port -->
       <deck id="view-port" flex="1">
@@ -385,7 +380,7 @@
         </hbox>
 
       </deck>
-    </vbox>
+
   </hbox>
 
 </page>
