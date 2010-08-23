@@ -68,12 +68,10 @@ public:
    *
    * @param aContainer The image container to decode to.
    * @param aObserver The observer for decode notification events.
-   * @param aFlags Flags for the decoder
    *
    * Notifications Sent: TODO
    */
-  nsresult Init(RasterImage* aImage, imgIDecoderObserver* aObserver,
-                PRUint32 aFlags);
+  nsresult Init(RasterImage* aImage, imgIDecoderObserver* aObserver);
 
   /**
    * Writes data to the decoder.
@@ -109,6 +107,20 @@ public:
   // XXX - This is uncommented in a later patch when we stop inheriting imgIDecoder
   // NS_INLINE_DECL_REFCOUNTING(Decoder)
 
+  /*
+   * State.
+   */
+
+  // If we're doing a "size decode", we more or less pass through the image
+  // data, stopping only to scoop out the image dimensions. A size decode
+  // must be enabled by SetSizeDecode() _before_calling Init().
+  bool IsSizeDecode() { return mSizeDecode; };
+  void SetSizeDecode(bool aSizeDecode)
+  {
+    NS_ABORT_IF_FALSE(!mInitialized, "Can't set size decode after Init()!");
+    mSizeDecode = aSizeDecode;
+  }
+
 protected:
 
   /*
@@ -127,9 +139,9 @@ protected:
    */
   nsRefPtr<RasterImage> mImage;
   nsCOMPtr<imgIDecoderObserver> mObserver;
-  PRUint32 mFlags;
 
   bool mInitialized;
+  bool mSizeDecode;
 };
 
 } // namespace imagelib

@@ -132,7 +132,7 @@ nsresult
 nsGIFDecoder2::InitInternal()
 {
   // Fire OnStartDecode at init time to support bug 512435
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+  if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
 
   // Start with the version (GIF89a|GIF87a)
@@ -146,7 +146,7 @@ nsresult
 nsGIFDecoder2::ShutdownInternal(PRUint32 aFlags)
 {
   // Send notifications if appropriate
-  if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+  if (!IsSizeDecode() &&
       !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
     if (mCurrentFrame == mGIFStruct.images_decoded)
       EndImageFrame();
@@ -260,8 +260,8 @@ void nsGIFDecoder2::BeginGIF()
   if (mObserver)
     mObserver->OnStartContainer(nsnull, mImage);
 
-  // If we're doing a header-only decode, we have what we came for
-  if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+  // If we're doing a size decode, we have what we came for
+  if (IsSizeDecode())
     return;
 }
 
@@ -1020,8 +1020,8 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
         // Create the image container with the right size.
         BeginGIF();
 
-        // If we were doing header-only, we're done
-        if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+        // If we were doing a size decode, we're done
+        if (IsSizeDecode())
           return NS_OK;
       }
 
