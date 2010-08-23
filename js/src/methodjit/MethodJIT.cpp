@@ -170,7 +170,7 @@ JS_STATIC_ASSERT(sizeof(VMFrame) % 16 == 0);
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
 
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
@@ -265,7 +265,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 );
 
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
 
 asm volatile (
 ".text\n"
@@ -302,7 +302,7 @@ SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x1C);
 
 asm volatile (
 ".text\n"
@@ -376,7 +376,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 );
 
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x3C);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x1C);
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x1C);
 
 asm volatile (
 ".text\n"
@@ -410,7 +410,7 @@ JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) ==          (4*19));
 JS_STATIC_ASSERT(offsetof(VMFrame, entryFp) ==          (4*10));
 JS_STATIC_ASSERT(offsetof(VMFrame, stackLimit) ==       (4*9));
 JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) ==               (4*7));
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) ==          (4*7));
 JS_STATIC_ASSERT(offsetof(VMFrame, oldRegs) ==          (4*4));
 JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 60);
@@ -676,7 +676,7 @@ extern "C" {
  *    *** DANGER ***
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
+JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
