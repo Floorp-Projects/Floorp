@@ -48,6 +48,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+%include ../../browserShared.inc
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
