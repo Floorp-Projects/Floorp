@@ -15,3 +15,4 @@ patch -p3 <yv24.patch
 patch -p3 <row_c_fix.patch
 patch -p3 <bug572034_mac_64bit.patch
 patch -p3 <bug577645_movntq.patch
+patch -p3 <add_scale.patch
