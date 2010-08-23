@@ -185,6 +185,7 @@ struct JSStackFrame
 
     JSObject* getArgsObj() const {
         JS_ASSERT(hasArgsObj());
+        JS_ASSERT(!isEvalFrame());
         return argsobj;
     }
 
@@ -409,6 +410,7 @@ struct JSStackFrame
     }
 
     size_t numFormalArgs() const {
+        JS_ASSERT(!isEvalFrame());
         return getFunction()->nargs;
     }
 
@@ -455,6 +457,7 @@ struct JSStackFrame
     /* Argument count accessors */
 
     size_t numActualArgs() const {
+        JS_ASSERT(!isEvalFrame());
         return argc;
     }
 
@@ -528,6 +531,7 @@ struct JSStackFrame
     }
 
     bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
+    bool isEvalFrame() const { return !!(flags & JSFRAME_EVAL); }
 
   private:
     JSObject *computeThisObject(JSContext *cx);
