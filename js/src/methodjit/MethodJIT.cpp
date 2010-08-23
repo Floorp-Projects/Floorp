@@ -675,8 +675,11 @@ extern "C" {
  * If these assertions break, update the constants below.
  *    *** DANGER ***
  */
-JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x48);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x30);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x38);
+JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
+JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
+JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 
 // Windows x64 uses assembler version since compiler doesn't support
 // inline assembler
