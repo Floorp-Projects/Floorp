@@ -1227,7 +1227,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
 
-    shadowContext = blurringArea.Init(shadowRect, blurRadius, twipsPerPixel, renderContext,
+    shadowContext = blurringArea.Init(shadowRect, 0, blurRadius, twipsPerPixel, renderContext,
                                       aDirtyRect, &skipGfxRect);
     if (!shadowContext)
       continue;
@@ -1398,7 +1398,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
 
-    shadowContext = blurringArea.Init(shadowPaintRect, blurRadius, twipsPerPixel, renderContext,
+    shadowContext = blurringArea.Init(shadowPaintRect, 0, blurRadius, twipsPerPixel, renderContext,
                                       aDirtyRect, &skipGfxRect);
     if (!shadowContext)
       continue;
@@ -3827,16 +3827,19 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
 }
 
 #define MAX_BLUR_RADIUS 300
+#define MAX_SPREAD_RADIUS 50
 
 // -----
 // nsContextBoxBlur
 // -----
 gfxContext*
-nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
+nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
+                       nscoord aBlurRadius,
                        PRInt32 aAppUnitsPerDevPixel,
                        gfxContext* aDestinationCtx,
                        const nsRect& aDirtyRect,
-                       const gfxRect* aSkipRect)
+                       const gfxRect* aSkipRect,
+                       PRUint32 aFlags)
 {
   if (aRect.IsEmpty()) {
     mContext = nsnull;
@@ -3845,10 +3848,12 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
 
   PRInt32 blurRadius = static_cast<PRInt32>(aBlurRadius / aAppUnitsPerDevPixel);
   blurRadius = PR_MIN(blurRadius, MAX_BLUR_RADIUS);
+  PRInt32 spreadRadius = static_cast<PRInt32>(aSpreadRadius / aAppUnitsPerDevPixel);
+  spreadRadius = PR_MIN(spreadRadius, MAX_BLUR_RADIUS);
   mDestinationCtx = aDestinationCtx;
 
   // If not blurring, draw directly onto the destination device
-  if (blurRadius <= 0) {
+  if (blurRadius <= 0 && spreadRadius <= 0 && !(aFlags & FORCE_MASK)) {
     mContext = aDestinationCtx;
     return mContext;
   }
@@ -3860,7 +3865,8 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
   dirtyRect.RoundOut();
 
   // Create the temporary surface for blurring
-  mContext = blur.Init(rect, gfxIntSize(blurRadius, blurRadius),
+  mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
+                       gfxIntSize(blurRadius, blurRadius),
                        &dirtyRect, aSkipRect);
   return mContext;
 }

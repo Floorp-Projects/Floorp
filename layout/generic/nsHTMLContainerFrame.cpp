@@ -293,7 +293,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
 
     // Create our shadow surface, then paint the text decorations onto it
     nsContextBoxBlur contextBoxBlur;
-    gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, shadow->mRadius,
+    gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, 0, shadow->mRadius,
                                                 presContext->AppUnitsPerDevPixel(),
                                                 thebesCtx, mVisibleRect, nsnull);
     if (!shadowCtx) {
