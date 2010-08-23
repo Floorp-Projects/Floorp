@@ -2216,6 +2216,10 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
     if (!imageRequest)
       return NS_ERROR_FAILURE;
 
+    // We don't want discarding/decode-on-draw for xul images
+    imageRequest->RequestDecode();
+    imageRequest->LockImage();
+
     // In a case it was already cached.
     imageRequest->GetImage(aResult);
     nsTreeImageCacheEntry cacheEntry(imageRequest, imgDecoderObserver);
