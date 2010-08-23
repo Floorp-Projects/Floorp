@@ -58,6 +58,13 @@
 #include "nsTime.h"
 #include "ImageLogging.h"
 
+#include "nsPNGDecoder.h"
+#include "nsGIFDecoder2.h"
+#include "nsJPEGDecoder.h"
+#include "nsBMPDecoder.h"
+#include "nsICODecoder.h"
+#include "nsIconDecoder.h"
+
 #include "gfxContext.h"
 
 using namespace mozilla::imagelib;
@@ -2107,11 +2114,33 @@ RasterImage::InitDecoder(PRUint32 dFlags)
   // Since we're not decoded, we should not have a discard timer active
   NS_ABORT_IF_FALSE(!DiscardingActive(), "Discard Timer active in InitDecoder()!");
 
-  // Find and instantiate the decoder
-  nsCAutoString decoderCID(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;3?type=") +
-                                              mSourceDataMimeType);
-  mDecoder = do_CreateInstance(decoderCID.get());
-  CONTAINER_ENSURE_TRUE(mDecoder, NS_IMAGELIB_ERROR_NO_DECODER);
+  // Figure out which decoder we want
+  eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
+  CONTAINER_ENSURE_TRUE(type != eDecoderType_unknown, NS_IMAGELIB_ERROR_NO_DECODER);
+
+  // Instantiate the appropriate decoder
+  switch (type) {
+    case eDecoderType_png:
+      mDecoder = new nsPNGDecoder();
+      break;
+    case eDecoderType_gif:
+      mDecoder = new nsGIFDecoder2();
+      break;
+    case eDecoderType_jpeg:
+      mDecoder = new nsJPEGDecoder();
+      break;
+    case eDecoderType_bmp:
+      mDecoder = new nsBMPDecoder();
+      break;
+    case eDecoderType_ico:
+      mDecoder = new nsICODecoder();
+      break;
+    case eDecoderType_icon:
+      mDecoder = new nsIconDecoder();
+      break;
+    default:
+      NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
+  }
 
   // Store the flags for this decoder
   mDecoderFlags = dFlags;
