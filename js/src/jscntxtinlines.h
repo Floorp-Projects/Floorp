@@ -384,8 +384,10 @@ JS_REQUIRES_STACK inline
 FrameRegsIter::FrameRegsIter(JSContext *cx)
 {
     curseg = cx->getCurrentSegment();
-    if (JS_UNLIKELY(!curseg || !curseg->isActive()))
+    if (JS_UNLIKELY(!curseg || !curseg->isActive())) {
         initSlow();
+        return;
+    }
     JS_ASSERT(cx->fp);
     curfp = cx->fp;
     cursp = cx->regs->sp;

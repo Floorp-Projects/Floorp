@@ -111,7 +111,7 @@ class BaseAssembler : public JSC::MacroAssembler
     Vector<CallPatch, 64, SystemAllocPolicy> callPatches;
 
   public:
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
     // If there is no fast call, we need to add esp by 8 after the call.
     // This callLabel is to record the Label exactly after the call.
     Label callLabel;
@@ -267,11 +267,18 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
 #if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
         push(Registers::ArgReg1);
         push(Registers::ArgReg0);
+#elif defined(_WIN64)
+        subPtr(JSC::MacroAssembler::Imm32(32),
+               JSC::MacroAssembler::stackPointerRegister);
 #endif
         Call cl = call(pfun);
 #if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
         callLabel = label();
         addPtr(JSC::MacroAssembler::Imm32(8),
+               JSC::MacroAssembler::stackPointerRegister);
+#elif defined(_WIN64)
+        callLabel = label();
+        addPtr(JSC::MacroAssembler::Imm32(32),
                JSC::MacroAssembler::stackPointerRegister);
 #endif
         return cl;
@@ -293,17 +300,7 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
     }
 
     Call call(void *fun) {
-#if defined(_MSC_VER) && defined(_M_X64)
-        subPtr(JSC::MacroAssembler::Imm32(32),
-               JSC::MacroAssembler::stackPointerRegister);
-#endif
-
         Call cl = JSC::MacroAssembler::call();
-
-#if defined(_MSC_VER) && defined(_M_X64)
-        addPtr(JSC::MacroAssembler::Imm32(32),
-               JSC::MacroAssembler::stackPointerRegister);
-#endif
 
         callPatches.append(CallPatch(differenceBetween(startLabel, cl), fun));
         return cl;

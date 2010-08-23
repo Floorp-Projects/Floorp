@@ -1115,12 +1115,21 @@ private:
         int flags_edx = 0;
         int flags_ecx = 0;
 #if WTF_COMPILER_MSVC
+#if WTF_CPU_X86_64
+        extern void __cpuid(int a[4], int b);
+        int cpuinfo[4];
+
+        __cpuid(cpuinfo, 1);
+        flags_ecx = cpuinfo[2];
+        flags_edx = cpuinfo[3];
+#else
         _asm {
             mov eax, 1 // cpuid function 1 gives us the standard feature set
             cpuid;
             mov flags_ecx, ecx;
             mov flags_edx, edx;
         }
+#endif
 #elif WTF_COMPILER_GCC
         asm (
              "movl $0x1, %%eax;"

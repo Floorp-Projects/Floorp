@@ -91,7 +91,7 @@ struct VMFrame
 # endif
 #elif defined(JS_CPU_X64)
     void *savedRBX;
-# ifdef _MSC_VER
+# ifdef _WIN64
     void *savedRSI;
     void *savedRDI;
 # endif
@@ -102,7 +102,7 @@ struct VMFrame
     void *savedRBP;
     void *savedRIP;
 
-# ifdef _MSC_VER
+# ifdef _WIN64
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(this) - 5;
     }

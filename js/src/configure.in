@@ -2058,6 +2058,9 @@ ia64*-hpux*)
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
+        if test "$AS_BIN"; then
+          AS="$(basename "$AS_BIN")"
+        fi
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
@@ -2067,6 +2070,7 @@ ia64*-hpux*)
         UNZIP=unzip
         DOXYGEN=:
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
+        ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
