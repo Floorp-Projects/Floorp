@@ -63,6 +63,15 @@
 
 using namespace mozilla;
 
+template<typename T>
+bool is_power_of_two(T x)
+{
+    if (x <= 0)
+        return false;
+    else
+        return (x & (x-1)) == 0;
+}
+
 static PRBool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
 
 /* Helper macros for when we're just wrapping a gl method, so that
@@ -571,6 +580,9 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
+
+    if (!activeBoundTextureForTarget(target))
+        return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
 
     MakeContextCurrent();
 
@@ -1137,6 +1149,13 @@ WebGLContext::GenerateMipmap(WebGLenum target)
 {
     if (!ValidateTextureTargetEnum(target, "generateMipmap"))
         return NS_OK;
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+
+    if (!(is_power_of_two(tex->width()) ||
+          is_power_of_two(tex->height()))) {
+        return ErrorInvalidOperation("generateMipmap: texture width and height must be powers of two");
+    }
 
     MakeContextCurrent();
     gl->fGenerateMipmap(target);
@@ -3070,19 +3089,19 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
 {
     switch (target) {
         case LOCAL_GL_TEXTURE_2D:
+            break;
         case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
         case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
         case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+            if (width != height)
+                return ErrorInvalidValue("texImage2D: with cube map targets, width and height must be equal");
             break;
         default:
             return ErrorInvalidEnumInfo("texImage2D: target", target);
     }
-
-    if (level < 0)
-        return ErrorInvalidValue("TexImage2D: level must be >= 0");
 
     switch (internalformat) {
         case LOCAL_GL_RGB:
@@ -3092,11 +3111,30 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
-            return ErrorInvalidEnumInfo("TexImage2D: internal format", internalformat);
+            return ErrorInvalidEnumInfo("texImage2D: internal format", internalformat);
     }
 
+    if (format != internalformat)
+        return ErrorInvalidOperation("texImage2D: format does not match internalformat");
+
+    WebGLsizei maxTextureSize = target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
+
+    if (level < 0)
+        return ErrorInvalidValue("texImage2D: level must be >= 0");
+
+    if ((1 << level) > maxTextureSize)
+        return ErrorInvalidValue("texImage2D: 2^level exceeds maximum texture size");
+
     if (width < 0 || height < 0)
-        return ErrorInvalidValue("TexImage2D: width and height must be >= 0");
+        return ErrorInvalidValue("texImage2D: width and height must be >= 0");
+
+    if (width > maxTextureSize || height > maxTextureSize)
+        return ErrorInvalidValue("texImage2D: width or height exceeds maximum texture size");
+
+    if (level >= 1) {
+        if (!(is_power_of_two(width) && is_power_of_two(height)))
+            return ErrorInvalidValue("texImage2D: with level > 0, width and height must be powers of two");
+    }
 
     if (border != 0)
         return ErrorInvalidValue("TexImage2D: border must be 0");
@@ -3111,10 +3149,15 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         return ErrorInvalidOperation("texImage2D: integer overflow computing the needed buffer size");
 
     PRUint32 bytesNeeded = checked_bytesNeeded.value();
-    
+
     if (byteLength && byteLength < bytesNeeded)
         return ErrorInvalidOperation("TexImage2D: not enough data for operation (need %d, have %d)",
                                  bytesNeeded, byteLength);
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+
+    if (!tex)
+        return ErrorInvalidOperation("texImage2D: no texture is bound to this target");
 
     MakeContextCurrent();
 
@@ -3133,8 +3176,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         free(tempZeroData);
     }
 
-    if (mBound2DTextures[mActiveTexture])
-        mBound2DTextures[mActiveTexture]->setDimensions(width, height);
+    tex->setDimensions(width, height);
 
     return NS_OK;
 }
@@ -3208,11 +3250,24 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
             return ErrorInvalidEnumInfo("texSubImage2D: target", target);
     }
 
+    WebGLsizei maxTextureSize = target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
+
     if (level < 0)
-        return ErrorInvalidValue("TexSubImage2D: level must be >= 0");
+        return ErrorInvalidValue("texSubImage2D: level must be >= 0");
+
+    if ((1 << level) > maxTextureSize)
+        return ErrorInvalidValue("texSubImage2D: 2^level exceeds maximum texture size");
 
     if (width < 0 || height < 0)
-        return ErrorInvalidValue("TexSubImage2D: width and height must be > 0!");
+        return ErrorInvalidValue("texSubImage2D: width and height must be >= 0");
+
+    if (width > maxTextureSize || height > maxTextureSize)
+        return ErrorInvalidValue("texSubImage2D: width or height exceeds maximum texture size");
+
+    if (level >= 1) {
+        if (!(is_power_of_two(width) && is_power_of_two(height)))
+            return ErrorInvalidValue("texSubImage2D: with level > 0, width and height must be powers of two");
+    }
 
     PRUint32 texelSize = 0;
     if (!ValidateTexFormatAndType(format, type, &texelSize, "texSubImage2D"))
@@ -3229,7 +3284,15 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     PRUint32 bytesNeeded = checked_bytesNeeded.value();
  
     if (byteLength < bytesNeeded)
-        return ErrorInvalidValue("TexSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
+        return ErrorInvalidValue("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+
+    if (!tex)
+        return ErrorInvalidOperation("texSubImage2D: no texture is bound to this target");
+
+    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, tex->width(), tex->height()))
+        return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
 
     MakeContextCurrent();
 

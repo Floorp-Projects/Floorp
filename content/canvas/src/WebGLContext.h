@@ -306,6 +306,11 @@ public:
         return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
 
+    WebGLTexture *activeBoundTextureForTarget(WebGLenum target) {
+        return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
+                                             : mBoundCubeMapTextures[mActiveTexture];
+    }
+
     already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
                                                  LayerManager *aManager);
     void MarkContextClean() { }
@@ -334,15 +339,15 @@ protected:
     PRBool mShaderValidation;
 
     // some GL constants
-    PRUint32 mGLMaxVertexAttribs;
-    PRUint32 mGLMaxTextureUnits;
-    PRUint32 mGLMaxTextureSize;
-    PRUint32 mGLMaxCubeMapTextureSize;
-    PRUint32 mGLMaxTextureImageUnits;
-    PRUint32 mGLMaxVertexTextureImageUnits;
-    PRUint32 mGLMaxVaryingVectors;
-    PRUint32 mGLMaxFragmentUniformVectors;
-    PRUint32 mGLMaxVertexUniformVectors;
+    PRInt32 mGLMaxVertexAttribs;
+    PRInt32 mGLMaxTextureUnits;
+    PRInt32 mGLMaxTextureSize;
+    PRInt32 mGLMaxCubeMapTextureSize;
+    PRInt32 mGLMaxTextureImageUnits;
+    PRInt32 mGLMaxVertexTextureImageUnits;
+    PRInt32 mGLMaxVaryingVectors;
+    PRInt32 mGLMaxFragmentUniformVectors;
+    PRInt32 mGLMaxVertexUniformVectors;
 
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
