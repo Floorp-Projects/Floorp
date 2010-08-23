@@ -302,6 +302,7 @@ imgStatusTracker::RecordCancel()
 void
 imgStatusTracker::RecordLoaded()
 {
+  NS_ABORT_IF_FALSE(mImage, "RecordLoaded called before we have an Image");
   mState |= stateRequestStarted | stateHasSize | stateRequestStopped;
   mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE | imgIRequest::STATUS_LOAD_COMPLETE;
   mHadLastPart = PR_TRUE;
@@ -310,6 +311,7 @@ imgStatusTracker::RecordLoaded()
 void
 imgStatusTracker::RecordDecoded()
 {
+  NS_ABORT_IF_FALSE(mImage, "RecordDecoded called before we have an Image");
   mState |= stateDecodeStarted | stateDecodeStopped | stateFrameStopped;
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE | imgIRequest::STATUS_DECODE_COMPLETE;
 }
@@ -318,6 +320,7 @@ imgStatusTracker::RecordDecoded()
 void
 imgStatusTracker::RecordStartDecode()
 {
+  NS_ABORT_IF_FALSE(mImage, "RecordStartDecode without an Image");
   mState |= stateDecodeStarted;
 }
 
@@ -331,6 +334,10 @@ imgStatusTracker::SendStartDecode(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordStartContainer(imgIContainer* aContainer)
 {
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordStartContainer called before we have an Image");
+  NS_ABORT_IF_FALSE(mImage == aContainer,
+                    "RecordStartContainer called with wrong Image");
   mState |= stateHasSize;
   mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
 }
@@ -345,6 +352,7 @@ imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy, imgIContainer* aCo
 void
 imgStatusTracker::RecordStartFrame(PRUint32 aFrame)
 {
+  NS_ABORT_IF_FALSE(mImage, "RecordStartFrame called before we have an Image");
   // no bookkeeping necessary here - this is implied by imgIContainer's number
   // of frames
 }
@@ -359,6 +367,8 @@ imgStatusTracker::SendStartFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
 void
 imgStatusTracker::RecordDataAvailable(PRBool aCurrentFrame, const nsIntRect* aRect)
 {
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordDataAvailable called before we have an Image");
   // no bookkeeping necessary here - this is implied by imgIContainer's
   // number of frames and frame rect
 }
@@ -375,6 +385,7 @@ imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy, PRBool aCurrentFram
 void
 imgStatusTracker::RecordStopFrame(PRUint32 aFrame)
 {
+  NS_ABORT_IF_FALSE(mImage, "RecordStopFrame called before we have an Image");
   mState |= stateFrameStopped;
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE;
 }
@@ -389,6 +400,8 @@ imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
 void
 imgStatusTracker::RecordStopContainer(imgIContainer* aContainer)
 {
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordStopContainer called before we have an Image");
   // No-op: see imgRequest::OnStopDecode for more information
 }
 
@@ -401,6 +414,8 @@ imgStatusTracker::SendStopContainer(imgRequestProxy* aProxy, imgIContainer* aCon
 void
 imgStatusTracker::RecordStopDecode(nsresult aStatus, const PRUnichar* statusArg)
 {
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordStopDecode called before we have an Image");
   mState |= stateDecodeStopped;
 
   if (NS_SUCCEEDED(aStatus))
@@ -424,6 +439,8 @@ imgStatusTracker::SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus,
 void
 imgStatusTracker::RecordDiscard()
 {
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordDiscard called before we have an Image");
   // Clear the state bits we no longer deserve.
   PRUint32 stateBitsToClear = stateDecodeStarted | stateDecodeStopped;
   mState &= ~stateBitsToClear;
@@ -446,6 +463,8 @@ void
 imgStatusTracker::RecordFrameChanged(imgIContainer* aContainer,
                                      const nsIntRect* aDirtyRect)
 {
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordFrameChanged called before we have an Image");
   // no bookkeeping necessary here - this is only for in-frame updates, which we
   // don't fire while we're recording
 }
