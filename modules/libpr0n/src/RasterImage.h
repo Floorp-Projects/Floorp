@@ -166,9 +166,9 @@ public:
                 const char* aMimeType,
                 PRUint32 aFlags);
   nsresult GetCurrentFrameRect(nsIntRect& aRect);
-  nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx);
-  nsresult GetNumFrames(PRUint32* aNumFrames);
-  nsresult GetDataSize(PRUint32* aDataSize);
+  PRUint32 GetCurrentFrameIndex();
+  PRUint32 GetNumFrames();
+  PRUint32 GetDataSize();
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
