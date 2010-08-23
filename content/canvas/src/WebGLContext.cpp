@@ -99,6 +99,9 @@ WebGLContext::WebGLContext()
     mMapShaders.Init();
     mMapFramebuffers.Init();
     mMapRenderbuffers.Init();
+
+    mBlackTexturesAreInitialized = PR_FALSE;
+    mFakeBlackStatus = DoNotNeedFakeBlack;
 }
 
 WebGLContext::~WebGLContext()
@@ -197,6 +200,12 @@ WebGLContext::DestroyResourcesAndContext()
 
     mMapRenderbuffers.EnumerateRead(DeleteRenderbufferFunction, gl);
     mMapRenderbuffers.Clear();
+
+    if (mBlackTexturesAreInitialized) {
+        gl->fDeleteTextures(1, &mBlackTexture2D);
+        gl->fDeleteTextures(1, &mBlackTextureCubeMap);
+        mBlackTexturesAreInitialized = PR_FALSE;
+    }
 
     // We just got rid of everything, so the context had better
     // have been going away.
