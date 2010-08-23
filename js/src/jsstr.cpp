@@ -3479,8 +3479,13 @@ js_ValueToCharBuffer(JSContext *cx, const Value &arg, JSCharBuffer &cb)
     Value v = arg;
     if (v.isObject() && !DefaultValue(cx, &v.toObject(), JSTYPE_STRING, &v))
         return JS_FALSE;
-    if (v.isString())
-        return js_StringValueToCharBuffer(cx, v, cb);
+
+    if (v.isString()) {
+        const jschar *chars;
+        size_t length;
+        v.toString()->getCharsAndLength(chars, length);
+        return cb.append(chars, length);
+    }
     if (v.isNumber())
         return js_NumberValueToCharBuffer(cx, v, cb);
     if (v.isBoolean())
