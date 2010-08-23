@@ -48,6 +48,7 @@
 }
 
 .addon[status="installed"] {
+  -moz-box-orient: vertical;
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");
 }
 
@@ -55,7 +56,7 @@
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-installing");
 }
 
-.addon[status="uninstalled"] {
+.addon[pending="uninstall"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-uninstalled");
 }
 
@@ -79,23 +80,19 @@
   visibility: hidden;
 }
 
-.addon[active="true"] .disabled-postfix {
-  display: none;
-}
-
-.addon[incompatible="false"] .incompatible-warning {
-  display: none;
-}
-
 #search-list[local="false"]  > .addon[remote="false"],
 #search-list[remote="false"] > .addon[remote="true"] {
   visibility: collapse;
 }
 
-.addon:not([upgrade="true"]) .update-postfix {
-  display: none;
-}
-
+.addon:not([notification="warning"]) .warning,
+.addon:not([notification="error"]) .error,
+.addon:not([notification="info"]) .info,
+.addon:not([pending]) .pending,
+.addon:not([upgrade="true"]) .update-postfix,
+.addon[active="true"] .disabled-postfix,
+.addon[pending="install"] .update-postfix,
+.addon[pending="install"] .disabled-postfix,
 #detail-view[loading] > .detail-view-container {
   display: none;
 }
