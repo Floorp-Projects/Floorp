@@ -570,7 +570,7 @@ class GetPropCompiler : public PICStubCompiler
 
         if (pic.hasTypeCheck()) {
             repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD),
-                             pic.slowPathStart);
+                             pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
         }
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
