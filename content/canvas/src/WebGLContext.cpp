@@ -52,7 +52,6 @@
 #include "gfxUtils.h"
 
 #include "CanvasUtils.h"
-#include "NativeJSContext.h"
 
 #include "GLContextProvider.h"
 
@@ -652,6 +651,18 @@ NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLActiveInfo)
+NS_IMPL_RELEASE(WebGLActiveInfo)
+
+DOMCI_DATA(WebGLActiveInfo, WebGLActiveInfo)
+
+NS_INTERFACE_MAP_BEGIN(WebGLActiveInfo)
+  NS_INTERFACE_MAP_ENTRY(WebGLActiveInfo)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLActiveInfo)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLActiveInfo)
+NS_INTERFACE_MAP_END
+
 #define NAME_NOT_SUPPORTED(base) \
 NS_IMETHODIMP base::GetName(WebGLuint *aName) \
 { return NS_ERROR_NOT_IMPLEMENTED; } \
@@ -673,4 +684,25 @@ NS_IMETHODIMP WebGLUniformLocation::GetLocation(WebGLint *aLocation)
 NS_IMETHODIMP WebGLUniformLocation::SetLocation(WebGLint aLocation)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute WebGLint size; */
+NS_IMETHODIMP WebGLActiveInfo::GetSize(WebGLint *aSize)
+{
+    *aSize = mSize;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLenum type; */
+NS_IMETHODIMP WebGLActiveInfo::GetType(WebGLenum *aType)
+{
+    *aType = mType;
+    return NS_OK;
+}
+
+/* readonly attribute DOMString name; */
+NS_IMETHODIMP WebGLActiveInfo::GetName(nsAString & aName)
+{
+    aName = mName;
+    return NS_OK;
 }
