@@ -62,7 +62,7 @@ TrampolineCompiler::compile()
 #endif
 
     COMPILE(trampolines->forceReturn, trampolines->forceReturnPool, generateForceReturn);
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
     COMPILE(trampolines->forceReturnFast, trampolines->forceReturnFastPool, generateForceReturnFast);
 #endif
 
@@ -73,7 +73,7 @@ void
 TrampolineCompiler::release(Trampolines *tramps)
 {
     RELEASE(tramps->forceReturn, tramps->forceReturnPool);
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
     RELEASE(tramps->forceReturnFast, tramps->forceReturnFastPool);
 #endif
 }
@@ -151,13 +151,17 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     return true;
 }
 
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
 bool
 TrampolineCompiler::generateForceReturnFast(Assembler &masm)
 {
+#ifdef _WIN64
+    masm.addPtr(Imm32(32), Registers::StackPointer);
+#else
     // In case of no fast call, when we change the return address,
     // we need to make sure add esp by 8.
     masm.addPtr(Imm32(8), Registers::StackPointer);
+#endif
     return generateForceReturn(masm);
 }
 #endif
