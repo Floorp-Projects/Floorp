@@ -1208,6 +1208,20 @@ JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
     return compartment->data;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_WrapObject(JSContext *cx, JSObject **objp)
+{
+    CHECK_REQUEST(cx);
+    return cx->compartment->wrap(cx, objp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_WrapValue(JSContext *cx, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    return cx->compartment->wrap(cx, Valueify(vp));
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx)
 {
