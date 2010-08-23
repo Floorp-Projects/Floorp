@@ -91,7 +91,7 @@ InlineReturn(VMFrame &f, JSBool ok);
 static jsbytecode *
 FindExceptionHandler(JSContext *cx)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     JSScript *script = fp->getScript();
 
 top:
@@ -169,15 +169,15 @@ top:
 static inline void
 FixVMFrame(VMFrame &f, JSStackFrame *fp)
 {
-    JS_ASSERT(f.fp == fp->down);
-    f.fp = fp;
+    JS_ASSERT(f.fp() == fp->down);
+    f.fp() = fp;
 }
 
 static inline bool
 CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp;
+    JSStackFrame *fp = f.fp();
     Value *vp = f.regs.sp - (argc + 2);
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
@@ -261,7 +261,7 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
         return false;
 
     JSContext *cx = f.cx;
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     JSScript *script = fp->getScript();
     f.regs.pc = script->code;
     f.regs.sp = fp->base();
@@ -280,7 +280,7 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
         }
     }
 
-    bool ok = !!Interpret(cx, cx->fp);
+    bool ok = !!Interpret(cx, cx->fp());
     InlineReturn(f, JS_TRUE);
 
     *pret = NULL;
@@ -291,10 +291,10 @@ static bool
 InlineReturn(VMFrame &f, JSBool ok)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
 
-    JS_ASSERT(f.fp == cx->fp);
-    JS_ASSERT(f.fp != f.entryFp);
+    JS_ASSERT(f.fp() == cx->fp());
+    JS_ASSERT(f.fp() != f.entryFp);
 
     JS_ASSERT(!fp->hasBlockChain());
     JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
@@ -327,7 +327,7 @@ InlineReturn(VMFrame &f, JSBool ok)
     Value *newsp = fp->argv - 1;
 
     cx->stack().popInlineFrame(cx, fp, fp->down);
-    f.fp = cx->fp;
+    f.fp() = cx->fp();
 
     cx->regs->sp = newsp;
     cx->regs->sp[-1] = fp->getReturnValue();
@@ -358,7 +358,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
 
 #ifdef JS_MONOIC
-    ic::MICInfo &mic = f.fp->getScript()->mics[argc];
+    ic::MICInfo &mic = f.fp()->getScript()->mics[argc];
     argc = mic.argc;
 #endif
 
@@ -386,7 +386,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
         if (fun->isFastNative()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp->getScript(), mic, fun, false);
+            ic::CallFastNative(cx, f.fp()->getScript(), mic, fun, false);
 #endif
 #endif
 
@@ -409,7 +409,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
     JSContext *cx = f.cx;
 
 #ifdef JS_MONOIC
-    ic::MICInfo &mic = f.fp->getScript()->mics[argc];
+    ic::MICInfo &mic = f.fp()->getScript()->mics[argc];
     argc = mic.argc;
 #endif
 
@@ -441,7 +441,7 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
         if (fun->isFastConstructor()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp->getScript(), mic, fun, true);
+            ic::CallFastNative(cx, f.fp()->getScript(), mic, fun, true);
 #endif
 #endif
 
@@ -466,7 +466,7 @@ static inline bool
 CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp;
+    JSStackFrame *fp = f.fp();
     Value *vp = f.regs.sp - (argc + 2);
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
@@ -525,7 +525,6 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
 #endif
     newfp->down = fp;
     fp->savedPC = f.regs.pc;
-    cx->setCurrentFrame(newfp);
     FixVMFrame(f, newfp);
 
     return true;
@@ -540,7 +539,7 @@ stubs::Call(VMFrame &f, uint32 argc)
     if (!CreateLightFrame(f, 0, argc))
         THROWV(NULL);
 
-    return f.fp->getScript()->ncode;
+    return f.fp()->getScript()->ncode;
 }
 
 /*
@@ -557,29 +556,29 @@ stubs::New(VMFrame &f, uint32 argc)
     if (!CreateLightFrame(f, JSFRAME_CONSTRUCTING, argc))
         THROWV(NULL);
 
-    return f.fp->getScript()->ncode;
+    return f.fp()->getScript()->ncode;
 }
 
 void JS_FASTCALL
 stubs::PutCallObject(VMFrame &f)
 {
-    JS_ASSERT(f.fp->hasCallObj());
-    js_PutCallObject(f.cx, f.fp);
-    JS_ASSERT(!f.fp->hasArgsObj());
+    JS_ASSERT(f.fp()->hasCallObj());
+    js_PutCallObject(f.cx, f.fp());
+    JS_ASSERT(!f.fp()->hasArgsObj());
 }
 
 void JS_FASTCALL
 stubs::PutArgsObject(VMFrame &f)
 {
-    js_PutArgsObject(f.cx, f.fp);
+    js_PutArgsObject(f.cx, f.fp());
 }
 
 void JS_FASTCALL
 stubs::CopyThisv(VMFrame &f)
 {
-    JS_ASSERT(f.fp->flags & JSFRAME_CONSTRUCTING);
-    if (f.fp->getReturnValue().isPrimitive())
-        f.fp->setReturnValue(f.fp->getThisValue());
+    JS_ASSERT(f.fp()->flags & JSFRAME_CONSTRUCTING);
+    if (f.fp()->getReturnValue().isPrimitive())
+        f.fp()->setReturnValue(f.fp()->getThisValue());
 }
 
 extern "C" void *
@@ -594,7 +593,7 @@ js_InternalThrow(VMFrame &f)
     JSThrowHook handler = f.cx->debugHooks->throwHook;
     if (handler) {
         Value rval;
-        switch (handler(cx, cx->fp->getScript(), cx->regs->pc, Jsvalify(&rval),
+        switch (handler(cx, cx->fp()->getScript(), cx->regs->pc, Jsvalify(&rval),
                         cx->debugHooks->throwHookData)) {
           case JSTRAP_ERROR:
             cx->throwing = JS_FALSE;
@@ -602,7 +601,7 @@ js_InternalThrow(VMFrame &f)
 
           case JSTRAP_RETURN:
             cx->throwing = JS_FALSE;
-            cx->fp->setReturnValue(rval);
+            cx->fp()->setReturnValue(rval);
             return JS_FUNC_TO_DATA_PTR(void *,
                    JS_METHODJIT_DATA(cx).trampolines.forceReturn);
 
@@ -625,7 +624,7 @@ js_InternalThrow(VMFrame &f)
         // called into through js_Interpret). In this case, we still unwind,
         // but we shouldn't return from a JS function, because we're not in a
         // JS function.
-        bool lastFrame = (f.entryFp == f.fp);
+        bool lastFrame = (f.entryFp == f.fp());
         js_UnwindScope(cx, 0, cx->throwing);
         if (lastFrame)
             break;
@@ -642,14 +641,14 @@ js_InternalThrow(VMFrame &f)
         return NULL;
     }
 
-    return cx->fp->getScript()->pcToNative(pc);
+    return cx->fp()->getScript()->pcToNative(pc);
 }
 
 void JS_FASTCALL
 stubs::GetCallObject(VMFrame &f)
 {
-    JS_ASSERT(f.fp->getFunction()->isHeavyweight());
-    if (!js_GetCallObject(f.cx, f.fp))
+    JS_ASSERT(f.fp()->getFunction()->isHeavyweight());
+    if (!js_GetCallObject(f.cx, f.fp()))
         THROW();
 }
 
@@ -674,7 +673,7 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
     /* Remove the bottom frame. */
     bool ok = false;
     for (;;) {
-        JSStackFrame *fp = cx->fp;
+        JSStackFrame *fp = cx->fp();
 
         /* Look for an imacro with hard-coded exception handlers. */
         if (fp->hasIMacroPC() && cx->throwing) {
@@ -705,14 +704,14 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
     /* Update the VMFrame before leaving. */
     JS_ASSERT(&f.regs == cx->regs);
 
-    JS_ASSERT_IF(!ok, cx->fp == stopFp);
+    JS_ASSERT_IF(!ok, cx->fp() == stopFp);
     return ok;
 }
 
 static inline bool
 AtSafePoint(JSContext *cx)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     if (fp->hasIMacroPC())
         return false;
 
@@ -728,7 +727,7 @@ static inline JSBool
 PartialInterpret(VMFrame &f)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
 
     JS_ASSERT(fp->hasIMacroPC() || !fp->getScript()->nmap ||
               !fp->getScript()->nmap[cx->regs->pc - fp->getScript()->code]);
@@ -738,7 +737,7 @@ PartialInterpret(VMFrame &f)
     ok = Interpret(cx, fp);
     fp->flags &= ~JSFRAME_BAILING;
 
-    f.fp = cx->fp;
+    f.fp() = cx->fp();
 
     return ok;
 }
@@ -760,8 +759,8 @@ static bool
 RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 {
     JSContext *cx = f.cx;
-    while (cx->fp != entryFrame) {
-        JSStackFrame *fp = cx->fp;
+    while (cx->fp() != entryFrame) {
+        JSStackFrame *fp = cx->fp();
         fp->flags &= ~JSFRAME_RECORDING;
 
         if (AtSafePoint(cx)) {
@@ -784,9 +783,9 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                  * Partial interpret could have dropped us anywhere. Deduce the
                  * edge case: at a RETURN, needing to pop a frame.
                  */
-                if (!cx->fp->hasIMacroPC() && FrameIsFinished(cx)) {
+                if (!cx->fp()->hasIMacroPC() && FrameIsFinished(cx)) {
                     JSOp op = JSOp(*cx->regs->pc);
-                    if (op == JSOP_RETURN && !(cx->fp->flags & JSFRAME_BAILED_AT_RETURN))
+                    if (op == JSOP_RETURN && !(cx->fp()->flags & JSFRAME_BAILED_AT_RETURN))
                         fp->setReturnValue(f.regs.sp[-1]);
                     InlineReturn(f, JS_TRUE);
                     AdvanceReturnPC(cx);
@@ -837,7 +836,7 @@ RunTracer(VMFrame &f)
 #endif
 {
     JSContext *cx = f.cx;
-    JSStackFrame *entryFrame = f.fp;
+    JSStackFrame *entryFrame = f.fp();
     TracePointAction tpa;
 
     /* :TODO: nuke PIC? */
@@ -857,8 +856,8 @@ RunTracer(VMFrame &f)
     if ((tpa == TPA_RanStuff || tpa == TPA_Recorded) && cx->throwing)
         tpa = TPA_Error;
 
-	/* Sync up the VMFrame's view of cx->fp. */
-	f.fp = cx->fp;
+	/* Sync up the VMFrame's view of cx->fp(). */
+	f.fp() = cx->fp();
 
     switch (tpa) {
       case TPA_Nothing:
@@ -867,7 +866,7 @@ RunTracer(VMFrame &f)
       case TPA_Error:
         if (!SwallowErrors(f, entryFrame))
             THROWV(NULL);
-        JS_ASSERT(!cx->fp->hasIMacroPC());
+        JS_ASSERT(!cx->fp()->hasIMacroPC());
         break;
 
       case TPA_RanStuff:
@@ -928,7 +927,7 @@ RunTracer(VMFrame &f)
             entryFrame->setReturnValue(f.regs.sp[-1]);
 
         /* Don't pop the frame if it's maybe owned by an Invoke. */
-        if (f.fp != f.entryFp) {
+        if (f.fp() != f.entryFp) {
             if (!InlineReturn(f, JS_TRUE))
                 THROWV(NULL);
         }
@@ -953,7 +952,7 @@ RunTracer(VMFrame &f)
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp->getScript();
+    JSScript *script = f.fp()->getScript();
     ic::MICInfo &mic = script->mics[index];
 
     JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
