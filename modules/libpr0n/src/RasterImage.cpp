@@ -2501,9 +2501,14 @@ RasterImage::DecodeSomeData(PRUint32 aMaxBytes)
 
 // There are various indicators that tell us we're finished with the decode
 // task at hand and can shut down the decoder.
+//
+// This method may not be called if there is no decoder.
 PRBool
 RasterImage::IsDecodeFinished()
 {
+  // Precondition
+  NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
+
   // Assume it's not finished
   PRBool decodeFinished = PR_FALSE;
 
@@ -2643,7 +2648,7 @@ imgDecodeWorker::Run()
   // If Conditions 1 & 2 are still true, then the only reason we bailed was
   // because we hit the deadline. Repost ourselves to the end of the event
   // queue.
-  if (!image->IsDecodeFinished() && haveMoreData)
+  if (image->mDecoder && !image->IsDecodeFinished() && haveMoreData)
     return this->Dispatch();
 
   // Otherwise, return success
