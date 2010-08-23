@@ -1004,6 +1004,13 @@ var XPIProvider = {
 
   /**
    * Starts the XPI provider initializes the install locations and prefs.
+   *
+   * @param  aAppChanged
+   *         A tri-state value. Undefined means the current profile was created
+   *         for this session, true means the profile already existed but was
+   *         last used with an application with a different version number,
+   *         false means that the profile was last used by this version of the
+   *         application.
    */
   startup: function XPI_startup(aAppChanged) {
     LOG("startup");
@@ -1123,7 +1130,8 @@ var XPIProvider = {
         this.showMismatchWindow();
       }
       else if (this.startupChanges.appDisabled.length > 0) {
-        // Remember the list of add-ons that were disabled this startup
+        // Remember the list of add-ons that were disabled this startup so
+        // the application can notify the user however it wants to
         Services.prefs.setCharPref(PREF_EM_DISABLED_ADDONS_LIST,
                                    this.startupChanges.appDisabled.join(","));
       }
@@ -1859,15 +1867,18 @@ var XPIProvider = {
    * application was launched.
    *
    * @param  aAppChanged
-   *         true if the application has changed version number since the last
-   *         launch
+   *         A tri-state value. Undefined means the current profile was created
+   *         for this session, true means the profile already existed but was
+   *         last used with an application with a different version number,
+   *         false means that the profile was last used by this version of the
+   *         application.
    * @return true if a change requiring a restart was detected
    */
   checkForChanges: function XPI_checkForChanges(aAppChanged) {
     LOG("checkForChanges");
 
-    // Import the website installation permisisons if the applicatio has changed
-    if (aAppChanged)
+    // Import the website installation permissions if the application has changed
+    if (aAppChanged !== false)
       this.importPermissions();
 
     // First install any new add-ons into the locations, we'll detect these when
