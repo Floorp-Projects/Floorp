@@ -119,7 +119,13 @@ nsresult
 Decoder::Shutdown(PRUint32 aFlags)
 {
   // Implementation-specific shutdown
-  return ShutdownInternal(aFlags);
+  nsresult rv = ShutdownInternal(aFlags);
+
+  // Get rid of our strong references
+  mImage = nsnull;
+  mObserver = nsnull;
+
+  return rv;
 }
 
 /*

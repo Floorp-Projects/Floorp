@@ -84,6 +84,9 @@ mailing address.
 #include "gfxPlatform.h"
 #include "qcms.h"
 
+namespace mozilla {
+namespace imagelib {
+
 /*
  * GETN(n, s) requests at least 'n' bytes available from 'q', at start of state 's'
  *
@@ -101,13 +104,8 @@ mailing address.
 
 /* Get a 16-bit value stored in little-endian format */
 #define GETINT16(p)   ((p)[1]<<8|(p)[0])
-
-
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
-// This is an adaptor between GIF2 and imgIDecoder
-
-NS_IMPL_ISUPPORTS1(nsGIFDecoder2, imgIDecoder)
 
 nsGIFDecoder2::nsGIFDecoder2()
   : mCurrentRow(-1)
@@ -130,26 +128,9 @@ nsGIFDecoder2::~nsGIFDecoder2()
 {
 }
 
-//******************************************************************************
-/** imgIDecoder methods **/
-//******************************************************************************
-
-//******************************************************************************
-/* void init (in imgIContainer aImage,
-              in imgIDecoderObserver aObsever,
-              in unsigned long aFlags); */
-NS_IMETHODIMP nsGIFDecoder2::Init(imgIContainer *aImage,
-                                  imgIDecoderObserver *aObserver,
-                                  PRUint32 aFlags)
+nsresult
+nsGIFDecoder2::InitInternal()
 {
-  NS_ABORT_IF_FALSE(aImage->GetType() == imgIContainer::TYPE_RASTER,
-                    "wrong type of imgIContainer for decoding into");
-
-  // Store parameters
-  mImage = static_cast<mozilla::imagelib::RasterImage*>(aImage);
-  mObserver = aObserver;
-  mFlags = aFlags;
-
   // Fire OnStartDecode at init time to support bug 512435
   if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
     mObserver->OnStartDecode(nsnull);
@@ -161,14 +142,8 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIContainer *aImage,
   return NS_OK;
 }
 
-
-//******************************************************************************
-/** nsIOutputStream methods **/
-//******************************************************************************
-
-//******************************************************************************
-/* void close (); */
-NS_IMETHODIMP nsGIFDecoder2::Close(PRUint32 aFlags)
+nsresult
+nsGIFDecoder2::ShutdownInternal(PRUint32 aFlags)
 {
   // Send notifications if appropriate
   if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
@@ -180,16 +155,7 @@ NS_IMETHODIMP nsGIFDecoder2::Close(PRUint32 aFlags)
 
   PR_FREEIF(mGIFStruct.local_colormap);
 
-  mImage = nsnull;
-
   return NS_OK;
-}
-
-//******************************************************************************
-/* void flush (); */
-NS_IMETHODIMP nsGIFDecoder2::Flush()
-{
-    return NS_OK;
 }
 
 // Push any new rows according to mCurrentPass/mLastFlushedPass and
@@ -237,10 +203,8 @@ nsGIFDecoder2::FlushImageData()
   return rv;
 }
 
-//******************************************************************************
-/* void write (in string aBuffer, in PRUint32 aCount); */
-NS_IMETHODIMP
-nsGIFDecoder2::Write(const char *aBuffer, PRUint32 aCount)
+nsresult
+nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   // Don't forgive previously flagged errors
   if (mError)
@@ -1227,3 +1191,6 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
 
   return NS_OK;
 }
+
+} // namespace imagelib
+} // namespace mozilla

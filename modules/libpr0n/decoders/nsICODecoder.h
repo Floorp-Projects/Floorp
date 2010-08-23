@@ -42,16 +42,14 @@
 #define _nsICODecoder_h
 
 #include "nsAutoPtr.h"
-#include "imgIDecoder.h"
-#include "imgIContainer.h"
+#include "Decoder.h"
 #include "imgIDecoderObserver.h"
 #include "nsBMPDecoder.h"
 
 namespace mozilla {
 namespace imagelib {
+
 class RasterImage;
-} // namespace imagelib
-} // namespace mozilla
 
 struct IconDirEntry
 {
@@ -71,14 +69,16 @@ struct IconDirEntry
   PRUint32  mImageOffset;
 };
 
-class nsICODecoder : public imgIDecoder
+class nsICODecoder : public Decoder
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODER
 
   nsICODecoder();
   virtual ~nsICODecoder();
+
+  virtual nsresult InitInternal();
+  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual nsresult ShutdownInternal(PRUint32 aFlags);
 
 private:
   // Private helper methods
@@ -89,11 +89,6 @@ private:
 
   PRUint32 CalcAlphaRowSize();
 
-private:
-  nsRefPtr<mozilla::imagelib::RasterImage> mImage;
-  nsCOMPtr<imgIDecoderObserver> mObserver;
-  PRUint32 mFlags;
-  
   PRUint32 mPos;
   PRUint16 mNumIcons;
   PRUint16 mCurrIcon;
@@ -120,5 +115,7 @@ private:
   PRPackedBool mError;
 };
 
+} // namespace imagelib
+} // namespace mozilla
 
 #endif
