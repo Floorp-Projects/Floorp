@@ -256,10 +256,8 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       return NS_OK; /* I/O suspension */
     }
 
-    /* Set Width and height, and notify that the container is ready to go. */
-    mImage->SetSize(mInfo.image_width, mInfo.image_height);
-    if (mObserver)
-      mObserver->OnStartContainer(nsnull, mImage);
+    // Post our size to the superclass
+    PostSize(mInfo.image_width, mInfo.image_height);
 
     /* If we're doing a size decode, we're done. */
     if (IsSizeDecode())

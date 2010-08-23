@@ -133,6 +133,15 @@ protected:
   virtual nsresult ShutdownInternal(PRUint32 aFlags);
 
   /*
+   * Progress notifications.
+   */
+
+  // Called by decoders when they determine the size of the image. Informs
+  // the image of its size and sends notifications.
+  void PostSize(PRInt32 aWidth, PRInt32 aHeight);
+
+
+  /*
    * Member variables.
    *
    * XXX - Some of these become private later in the patch stack.
