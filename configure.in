@@ -3471,6 +3471,14 @@ else
     fi
 
     dnl ========================================================
+    dnl = Check for Xss
+    dnl ========================================================
+    AC_CHECK_HEADER(X11/extensions/scrnsaver.h,
+        AC_CHECK_LIB(Xss, XScreenSaverQueryInfo,
+            [XSS_LIBS="-lXss $XEXT_LIBS $XLIBS"
+             AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
+
+    dnl ========================================================
     dnl = Check for XIE
     dnl ========================================================
     AC_CHECK_LIB(XIE, XieFloGeometry, [MOZ_XIE_LIBS="-lXIE"],,
@@ -3534,6 +3542,7 @@ AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
 AC_SUBST(XEXT_LIBS)
 AC_SUBST(XT_LIBS)
+AC_SUBST(XSS_LIBS)
 
 AC_MSG_CHECKING(for ARM SIMD support in compiler)
 AC_TRY_COMPILE([],
