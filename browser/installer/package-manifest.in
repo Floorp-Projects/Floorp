@@ -412,7 +412,6 @@
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
-@BINPATH@/@PREF_DIR@/reporter.js
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
 @BINPATH@/chrome/icons/default/default16.png
