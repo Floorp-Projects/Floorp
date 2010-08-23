@@ -159,6 +159,7 @@ class Automation(object):
   def __init__(self):
     self.log = _log
     self.lastTestSeen = "automation.py"
+    self.haveDumpedScreen = False
 
   def setServerInfo(self, 
                     webServer = _DEFAULT_WEB_SERVER, 
@@ -294,6 +295,7 @@ class Automation(object):
     # Open database and create table
     permDB = sqlite3.connect(os.path.join(profileDir, "permissions.sqlite"))
     cursor = permDB.cursor();
+    # SQL copied from nsPermissionManager.cpp
     cursor.execute("""CREATE TABLE moz_hosts (
        id INTEGER PRIMARY KEY,
        host TEXT,
@@ -654,8 +656,34 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     def killPid(self, pid):
       os.kill(pid, signal.SIGKILL)
 
+  if UNIXISH:
+    def dumpScreen(self, utilityPath):
+      self.haveDumpedScreen = True;
+
+      screentopng = os.path.join(utilityPath, "screentopng")
+      try:
+        dumper = self.Process([screentopng], bufsize=-1,
+                              stdout=subprocess.PIPE, close_fds=True)
+      except OSError, err:
+        self.log.info("Failed to start %s for screenshot: %s",
+                      screentopng, err.strerror)
+        return
+
+      image = dumper.stdout.read()
+      status = dumper.wait()
+      if status != 0:
+        self.log.info("screentopng exited with code %d", status)
+        return
+
+      import base64
+      encoded = base64.b64encode(image)
+      self.log.info("SCREENSHOT: data:image/png;base64,%s", encoded)
+
   def killAndGetStack(self, proc, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
+    if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen:
+      self.dumpScreen(utilityPath)
+
     if self.CRASHREPORTER and not debuggerInfo:
       if self.UNIXISH:
         # ABRT will get picked up by Breakpad's signal handler
@@ -709,6 +737,9 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if stackFixerFunction:
           line = stackFixerFunction(line)
         self.log.info(line.rstrip())
+        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out." in line:
+          self.dumpScreen(utilityPath)
+
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
           # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().

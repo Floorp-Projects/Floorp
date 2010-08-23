@@ -1604,6 +1604,14 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     val.AppendToString(eCSSProperty_font_stretch, aResult);
     return NS_OK;
 
+  case eCSSFontDesc_FontFeatureSettings:
+    val.AppendToString(eCSSProperty_font_feature_settings, aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_FontLanguageOverride:
+    val.AppendToString(eCSSProperty_font_language_override, aResult);
+    return NS_OK;
+
   case eCSSFontDesc_Src:
     AppendSerializedFontSrc(val, aResult);
     return NS_OK;

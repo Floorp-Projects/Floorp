@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if input isn't valid nor barred from constraint validation,
+             it should be affected by :invalid pseudo-class. -->
+  <style>
+    input { background-color: red; }
+    input:invalid { background-color: green; }
+  </style>
+  <body>
+    <input type='email' value='foo'>
+  </body>
+</html>
+

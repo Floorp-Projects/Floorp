@@ -482,9 +482,7 @@ void imgRequest::SetIsInCache(PRBool incache)
 void imgRequest::UpdateCacheEntrySize()
 {
   if (mCacheEntry) {
-    PRUint32 imageSize = 0;
-    mImage->GetDataSize(&imageSize);
-    mCacheEntry->SetDataSize(imageSize);
+    mCacheEntry->SetDataSize(mImage->GetDataSize());
 
 #ifdef DEBUG_joe
     nsCAutoString url;
@@ -962,7 +960,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
     /* now we have mimetype, so we can infer the image type that we want */
     imageType = mContentType.EqualsLiteral(SVG_MIMETYPE) ?
-      imgIContainer::TYPE_VECTOR : imgIContainer::TYPE_RASTER;
+      (PRUint16) imgIContainer::TYPE_VECTOR : (PRUint16) imgIContainer::TYPE_RASTER;
 
     /* set our mimetype as a property */
     nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));

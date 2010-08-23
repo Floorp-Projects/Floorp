@@ -747,10 +747,6 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext) = 0;
 
-  // returns GetStyleBorder()->mBoxShadow unless this frame is using
-  // -moz-appearance and is not chrome
-  nsCSSShadowArray* GetEffectiveBoxShadows();
-
   /**
    * @return PR_FALSE if this frame definitely has no borders at all
    */                 

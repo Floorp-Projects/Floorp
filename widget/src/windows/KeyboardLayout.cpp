@@ -394,7 +394,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
       if (vki < 0) {
         continue;
       }
-      NS_ASSERTION(vki < NS_ARRAY_LENGTH(mVirtualKeys), "invalid index");
+      NS_ASSERTION(PRUint32(vki) < NS_ARRAY_LENGTH(mVirtualKeys), "invalid index");
       PRUnichar uniChars[5];
       PRInt32 ret =
         ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)uniChars,

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if select has no custom error and is not barred from constraint
+             validation, it should be affected by :valid pseudo-class. -->
+  <style>
+    select { background-color: red; }
+    select:valid { background-color: green; }
+  </style>
+  <body>
+    <select></select>
+  </body>
+</html>

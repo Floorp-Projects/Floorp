@@ -254,7 +254,7 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  nsIRenderingContext* aCtx)
 {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
   if (NS_GET_A(mExtraBackgroundColor) > 0) {
@@ -276,8 +276,8 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
  */
 class nsDisplayCanvasFocus : public nsDisplayItem {
 public:
-  nsDisplayCanvasFocus(nsCanvasFrame *aFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayCanvasFocus(nsDisplayListBuilder* aBuilder, nsCanvasFrame *aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayCanvasFocus);
   }
@@ -289,14 +289,14 @@ public:
   {
     // This is an overestimate, but that's not a problem.
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
+    return frame->CanvasArea() + ToReferenceFrame();
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    frame->PaintFocus(*aCtx, ToReferenceFrame());
   }
 
   NS_DISPLAY_DECL_NAME("CanvasFocus", TYPE_CANVAS_FOCUS)
@@ -325,7 +325,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // calling DisplayBorderBackgroundOutline.
   if (IsVisibleForPainting(aBuilder)) { 
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-           nsDisplayCanvasBackground(this));
+           nsDisplayCanvasBackground(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -362,7 +362,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
   
   return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayCanvasFocus(this));
+      nsDisplayCanvasFocus(aBuilder, this));
 }
 
 void

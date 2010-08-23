@@ -72,10 +72,10 @@ nsWinGesture::CloseTouchInputHandlePtr nsWinGesture::closeTouchInputHandle = nsn
 static PRBool gEnableSingleFingerPanEvents = PR_FALSE;
 
 nsWinGesture::nsWinGesture() :
+  mPanActive(PR_FALSE),
   mFeedbackActive(PR_FALSE),
   mXAxisFeedback(PR_FALSE),
   mYAxisFeedback(PR_FALSE),
-  mPanActive(PR_FALSE),
   mPanInertiaActive(PR_FALSE)
 {
   (void)InitLibrary();

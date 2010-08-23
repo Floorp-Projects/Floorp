@@ -47,5 +47,52 @@ Image::Image() :
 {
 }
 
+// Translates a mimetype into a concrete decoder
+Image::eDecoderType
+Image::GetDecoderType(const char *aMimeType)
+{
+  // By default we don't know
+  eDecoderType rv = eDecoderType_unknown;
+
+  // PNG
+  if (!strcmp(aMimeType, "image/png"))
+    rv = eDecoderType_png;
+  else if (!strcmp(aMimeType, "image/x-png"))
+    rv = eDecoderType_png;
+
+  // GIF
+  else if (!strcmp(aMimeType, "image/gif"))
+    rv = eDecoderType_gif;
+
+
+  // JPEG
+  else if (!strcmp(aMimeType, "image/jpeg"))
+    rv = eDecoderType_jpeg;
+  else if (!strcmp(aMimeType, "image/pjpeg"))
+    rv = eDecoderType_jpeg;
+  else if (!strcmp(aMimeType, "image/jpg"))
+    rv = eDecoderType_jpeg;
+
+  // BMP
+  else if (!strcmp(aMimeType, "image/bmp"))
+    rv = eDecoderType_bmp;
+  else if (!strcmp(aMimeType, "image/x-ms-bmp"))
+    rv = eDecoderType_bmp;
+
+
+  // ICO
+  else if (!strcmp(aMimeType, "image/x-icon"))
+    rv = eDecoderType_ico;
+  else if (!strcmp(aMimeType, "image/vnd.microsoft.icon"))
+    rv = eDecoderType_ico;
+
+  // Icon
+  else if (!strcmp(aMimeType, "image/icon"))
+    rv = eDecoderType_icon;
+
+  return rv;
+}
+
+
 } // namespace imagelib
 } // namespace mozilla

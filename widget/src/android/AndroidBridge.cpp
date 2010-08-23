@@ -343,7 +343,7 @@ AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMi
 }
 
 void
-AndroidBridge::GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType) {
+AndroidBridge::GetMimeTypeFromExtension(const nsACString& aFileExt, nsCString& aMimeType) {
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
     jstring jstrExt = mJNIEnv->NewString(wFileExt.get(), wFileExt.Length());
