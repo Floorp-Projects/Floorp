@@ -53,14 +53,6 @@
 
 #include "qcms.h"
 
-#define NS_PNGDECODER_CID \
-{ /* 36fa00c2-1dd2-11b2-be07-d16eeb4c50ed */         \
-     0x36fa00c2,                                     \
-     0x1dd2,                                         \
-     0x11b2,                                         \
-    {0xbe, 0x07, 0xd1, 0x6e, 0xeb, 0x4c, 0x50, 0xed} \
-}
-
 namespace mozilla {
 namespace imagelib {
 class RasterImage;

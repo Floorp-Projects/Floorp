@@ -62,14 +62,6 @@ extern "C" {
 
 #include <setjmp.h>
 
-#define NS_JPEGDECODER_CID \
-{ /* 5871a422-1dd2-11b2-ab3f-e2e56be5da9c */         \
-     0x5871a422,                                     \
-     0x1dd2,                                         \
-     0x11b2,                                         \
-    {0xab, 0x3f, 0xe2, 0xe5, 0x6b, 0xe5, 0xda, 0x9c} \
-}
-
 typedef struct {
     struct jpeg_error_mgr pub;  /* "public" fields for IJG library*/
     jmp_buf setjmp_buffer;      /* For handling catastropic errors */
