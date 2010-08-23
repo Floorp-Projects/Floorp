@@ -56,9 +56,7 @@ ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
 DEFINES		+= -DMOZ_PNG_WRITE
 endif
 
-ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
 DEFINES		+= -DMOZ_PNG_READ
-endif
 
 # nsPNGDecoder.cpp includes RasterImage.h
 LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
