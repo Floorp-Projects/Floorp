@@ -121,6 +121,10 @@ public:
     mSizeDecode = aSizeDecode;
   }
 
+  // The number of frames we have, including anything in-progress. Thus, this
+  // is only 0 if we haven't begun any frames.
+  PRUint32 GetFrameCount() { return mFrameCount; }
+
 protected:
 
   /*
@@ -140,6 +144,11 @@ protected:
   // the image of its size and sends notifications.
   void PostSize(PRInt32 aWidth, PRInt32 aHeight);
 
+  // Called by decoders when they begin/end a frame. Informs the image, sends
+  // notifications, and does internal book-keeping.
+  void PostFrameStart();
+  void PostFrameStop();
+
 
   /*
    * Member variables.
@@ -149,8 +158,11 @@ protected:
   nsRefPtr<RasterImage> mImage;
   nsCOMPtr<imgIDecoderObserver> mObserver;
 
+  PRUint32 mFrameCount; // Number of frames, including anything in-progress
+
   bool mInitialized;
   bool mSizeDecode;
+  bool mInFrame;
 };
 
 } // namespace imagelib

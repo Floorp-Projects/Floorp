@@ -69,8 +69,10 @@ NS_IMETHODIMP Decoder::Flush()
 }
 
 Decoder::Decoder()
-  : mInitialized(false)
+  : mFrameCount(0)
+  , mInitialized(false)
   , mSizeDecode(false)
+  , mInFrame(false)
 {
 }
 
@@ -124,6 +126,7 @@ Decoder::Shutdown(PRUint32 aFlags)
   mImage = nsnull;
   mObserver = nsnull;
 
+  NS_ABORT_IF_FALSE(!mInFrame, "Shutting down mid-frame!");
   return rv;
 }
 
@@ -153,6 +156,41 @@ Decoder::PostSize(PRInt32 aWidth, PRInt32 aHeight)
   // Notify the observer
   if (mObserver)
     mObserver->OnStartContainer(nsnull, mImage);
+}
+
+void
+Decoder::PostFrameStart()
+{
+  // We shouldn't already be mid-frame
+  NS_ABORT_IF_FALSE(!mInFrame, "Starting new frame but not done with old one!");
+
+  // Update our state to reflect the new frame
+  mFrameCount++;
+  mInFrame = true;
+
+  // Decoder implementations should only call this method if they successfully
+  // appended the frame to the image. So mFrameCount should always match that
+  // reported by the Image.
+  NS_ABORT_IF_FALSE(mFrameCount == mImage->GetNumFrames(),
+                    "Decoder frame count doesn't match image's!");
+
+  // Fire notification
+  if (mObserver)
+    mObserver->OnStartFrame(nsnull, mFrameCount - 1); // frame # is zero-indexed
+}
+
+void
+Decoder::PostFrameStop()
+{
+  // We should be mid-frame
+  NS_ABORT_IF_FALSE(mInFrame, "Stopping frame when we didn't start one!");
+
+  // Update our state
+  mInFrame = false;
+
+  // Fire notification
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, mFrameCount - 1); // frame # is zero-indexed
 }
 
 } // namespace imagelib
