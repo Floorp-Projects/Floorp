@@ -62,15 +62,6 @@
 
 using namespace mozilla;
 
-template<typename T>
-bool is_power_of_two(T x)
-{
-    if (x <= 0)
-        return false;
-    else
-        return (x & (x-1)) == 0;
-}
-
 static PRBool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
 
 /* Helper macros for when we're just wrapping a gl method, so that
@@ -272,7 +263,7 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
 {
     WebGLuint texturename;
     WebGLTexture *tex;
-    PRBool isNull;
+    PRBool isNull; // allow null object
     if (!GetConcreteObjectAndGLName("bindTexture", tobj, &tex, &texturename, &isNull))
         return NS_OK;
 
@@ -286,7 +277,10 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
 
     MakeContextCurrent();
 
-    gl->fBindTexture(target, texturename);
+    if (tex)
+        tex->Bind(target);
+    else
+        gl->fBindTexture(target, 0 /* == texturename */);
 
     return NS_OK;
 }
@@ -573,15 +567,20 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
             return ErrorInvalidEnumInfo("CopyTexImage2D: internal format", internalformat);
     }
 
-    if (border != 0) {
-        return ErrorInvalidValue("CopyTexImage2D: border != 0");
-    }
+    if (border != 0)
+        return ErrorInvalidValue("copyTexImage2D: border must be 0");
+
+    if (level < 0)
+        return ErrorInvalidValue("copyTexImage2D: level may not be negative");
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
 
-    if (!activeBoundTextureForTarget(target))
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
         return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
+
+    tex->SetImageInfo(target, level, width, height);
 
     MakeContextCurrent();
 
@@ -856,6 +855,94 @@ WebGLContext::DisableVertexAttribArray(WebGLuint index)
     return NS_OK;
 }
 
+PRBool
+WebGLContext::NeedFakeBlack()
+{
+    // handle this case first, it's the generic case
+    if (mFakeBlackStatus == DoNotNeedFakeBlack)
+        return PR_FALSE;
+
+    if (mFakeBlackStatus == DontKnowIfNeedFakeBlack) {
+        for (PRInt32 i = 0; i < mGLMaxTextureImageUnits; ++i) {
+            if ((mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) ||
+                (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()))
+            {
+                mFakeBlackStatus = DoNeedFakeBlack;
+                break;
+            }
+        }
+
+        // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
+        // that means that we do NOT need it.
+        if (mFakeBlackStatus == DontKnowIfNeedFakeBlack)
+            mFakeBlackStatus = DoNotNeedFakeBlack;
+    }
+
+    return mFakeBlackStatus == DoNeedFakeBlack;
+}
+
+void
+WebGLContext::BindFakeBlackTextures()
+{
+    // this is the generic case: try to return early
+    if (!NeedFakeBlack())
+        return;
+
+    if (!mBlackTexturesAreInitialized) {
+        const PRUint8 black[] = {0, 0, 0, 255};
+
+        gl->fGenTextures(1, &mBlackTexture2D);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTexture2D);
+        gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1,
+                        0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &black);
+
+        gl->fGenTextures(1, &mBlackTextureCubeMap);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTextureCubeMap);
+        for (WebGLuint i = 0; i < 6; ++i) {
+            gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, LOCAL_GL_RGBA, 1, 1,
+                            0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &black);
+        }
+
+        // return the texture bindings to the 0 texture to prevent the user from modifying our black textures
+        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, 0);
+
+        mBlackTexturesAreInitialized = PR_TRUE;
+    }
+
+    for (PRInt32 i = 0; i < mGLMaxTextureImageUnits; ++i) {
+        if (mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) {
+            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+            gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTexture2D);
+        }
+        if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()) {
+            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTextureCubeMap);
+        }
+    }
+}
+
+void
+WebGLContext::UnbindFakeBlackTextures()
+{
+    // this is the generic case: try to return early
+    if (!NeedFakeBlack())
+        return;
+
+    for (PRInt32 i = 0; i < mGLMaxTextureImageUnits; ++i) {
+        if (mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) {
+            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+            gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBound2DTextures[i]->GLName());
+        }
+        if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()) {
+            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBoundCubeMapTextures[i]->GLName());
+        }
+    }
+
+    gl->fActiveTexture(LOCAL_GL_TEXTURE0 + mActiveTexture);
+}
+
 NS_IMETHODIMP
 WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 {
@@ -884,7 +971,9 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 
     MakeContextCurrent();
 
+    BindFakeBlackTextures();
     gl->fDrawArrays(mode, first, count);
+    UnbindFakeBlackTextures();
 
     Invalidate();
 
@@ -955,7 +1044,9 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
 
     MakeContextCurrent();
 
+    BindFakeBlackTextures();
     gl->fDrawElements(mode, count, type, (GLvoid*) (byteOffset));
+    UnbindFakeBlackTextures();
 
     Invalidate();
 
@@ -1144,10 +1235,14 @@ WebGLContext::GenerateMipmap(WebGLenum target)
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
 
-    if (!(is_power_of_two(tex->width()) ||
-          is_power_of_two(tex->height()))) {
-        return ErrorInvalidOperation("generateMipmap: texture width and height must be powers of two");
+    if (!tex)
+        return ErrorInvalidOperation("generateMipmap: no texture is bound to this target");
+
+    if (!tex->IsGenerateMipmapAllowed()) {
+        return ErrorInvalidOperation("generateMipmap: texture does not satisfy requirements for generateMipmap");
     }
+
+    tex->SetGeneratedMipmap();
 
     MakeContextCurrent();
     gl->fGenerateMipmap(target);
@@ -1791,6 +1886,10 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
     if (!ValidateTextureTargetEnum(target, "texParameter: target"))
         return NS_OK;
 
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
+        return ErrorInvalidOperation("texParameter: no texture is bound to this target");
+
     PRBool pnameAndParamAreIncompatible = PR_FALSE;
 
     switch (pname) {
@@ -1802,6 +1901,7 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
                 case LOCAL_GL_LINEAR_MIPMAP_NEAREST:
                 case LOCAL_GL_NEAREST_MIPMAP_LINEAR:
                 case LOCAL_GL_LINEAR_MIPMAP_LINEAR:
+                    tex->SetMinFilter(intParam);
                     break;
                 default:
                     pnameAndParamAreIncompatible = PR_TRUE;
@@ -1811,17 +1911,29 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
             switch (intParam) {
                 case LOCAL_GL_NEAREST:
                 case LOCAL_GL_LINEAR:
+                    tex->SetMagFilter(intParam);
                     break;
                 default:
                     pnameAndParamAreIncompatible = PR_TRUE;
             }
             break;
         case LOCAL_GL_TEXTURE_WRAP_S:
+            switch (intParam) {
+                case LOCAL_GL_CLAMP_TO_EDGE:
+                case LOCAL_GL_MIRRORED_REPEAT:
+                case LOCAL_GL_REPEAT:
+                    tex->SetWrapS(intParam);
+                    break;
+                default:
+                    pnameAndParamAreIncompatible = PR_TRUE;
+            }
+            break;
         case LOCAL_GL_TEXTURE_WRAP_T:
             switch (intParam) {
                 case LOCAL_GL_CLAMP_TO_EDGE:
                 case LOCAL_GL_MIRRORED_REPEAT:
                 case LOCAL_GL_REPEAT:
+                    tex->SetWrapT(intParam);
                     break;
                 default:
                     pnameAndParamAreIncompatible = PR_TRUE;
@@ -1839,9 +1951,6 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
             return ErrorInvalidValue("texParameterf: pname %x and floating-point param %e are mutually incompatible",
                                     pname, floatParam);
     }
-
-    if (!activeBoundTextureForTarget(target))
-        return ErrorInvalidOperation("texParameter: no texture is bound to this target");
 
     MakeContextCurrent();
     if (intParamPtr)
@@ -3078,7 +3187,8 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         return ErrorInvalidValue("texImage2D: width or height exceeds maximum texture size");
 
     if (level >= 1) {
-        if (!(is_power_of_two(width) && is_power_of_two(height)))
+        if (!(is_pot_assuming_nonnegative(width) &&
+              is_pot_assuming_nonnegative(height)))
             return ErrorInvalidValue("texImage2D: with level > 0, width and height must be powers of two");
     }
 
@@ -3104,6 +3214,8 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
 
     if (!tex)
         return ErrorInvalidOperation("texImage2D: no texture is bound to this target");
+
+    tex->SetImageInfo(target, level, width, height, format, type);
 
     MakeContextCurrent();
 
@@ -3211,7 +3323,8 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
         return ErrorInvalidValue("texSubImage2D: width or height exceeds maximum texture size");
 
     if (level >= 1) {
-        if (!(is_power_of_two(width) && is_power_of_two(height)))
+        if (!(is_pot_assuming_nonnegative(width) &&
+              is_pot_assuming_nonnegative(height)))
             return ErrorInvalidValue("texSubImage2D: with level > 0, width and height must be powers of two");
     }
 

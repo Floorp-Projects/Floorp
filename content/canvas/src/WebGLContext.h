@@ -81,6 +81,13 @@ class WebGLUniformLocation;
 class WebGLZeroingObject;
 class WebGLContextBoundObject;
 
+enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
+
+inline PRBool is_pot_assuming_nonnegative(WebGLsizei x)
+{
+    return (x & (x-1)) == 0;
+}
+
 class WebGLObjectBaseRefPtr
 {
 protected:
@@ -318,6 +325,16 @@ public:
     // a number that increments every time we have an event that causes
     // all context resources to be lost.
     PRUint32 Generation() { return mGeneration.value(); }
+
+    void SetDontKnowIfNeedFakeBlack() {
+        mFakeBlackStatus = DontKnowIfNeedFakeBlack;
+    }
+
+    PRBool NeedFakeBlack();
+
+    void BindFakeBlackTextures();
+    void UnbindFakeBlackTextures();
+
 protected:
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
     nsHTMLCanvasElement *HTMLCanvasElement() {
@@ -453,10 +470,17 @@ protected:
     // WebGL-specific PixelStore parameters
     PRBool mPixelStoreFlipY, mPixelStorePremultiplyAlpha;
 
+    FakeBlackStatus mFakeBlackStatus;
+
+    WebGLuint mBlackTexture2D, mBlackTextureCubeMap;
+    PRBool mBlackTexturesAreInitialized;
+
 public:
     // console logging helpers
     static void LogMessage (const char *fmt, ...);
     static void LogMessage(const char *fmt, va_list ap);
+
+    friend class WebGLTexture;
 };
 
 // this class is a mixin for the named type wrappers, and is used
@@ -652,8 +676,17 @@ public:
 
     WebGLTexture(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(PR_FALSE)
-    { }
+        mDeleted(PR_FALSE), mName(name),
+        mTarget(0),
+        mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR),
+        mMagFilter(LOCAL_GL_LINEAR),
+        mWrapS(LOCAL_GL_REPEAT),
+        mWrapT(LOCAL_GL_REPEAT),
+        mFacesCount(0),
+        mMaxLevelWithCustomImages(0),
+        mHaveGeneratedMipmap(PR_FALSE),
+        mFakeBlackStatus(DontKnowIfNeedFakeBlack)
+    {}
 
     void Delete() {
         if (mDeleted)
@@ -667,9 +700,323 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLTEXTURE
+
 protected:
-    WebGLuint mName;
     PRBool mDeleted;
+    WebGLuint mName;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/////// everything below that point is only used for the texture completeness/npot business
+/////// (sections 3.7.10 and 3.8.2 in GL ES 2.0.24 spec)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    struct ImageInfo {
+        ImageInfo() : mWidth(0), mHeight(0), mFormat(0), mType(0), mIsDefined(PR_FALSE) {}
+        PRBool operator==(const ImageInfo& a) const {
+            return mWidth == a.mWidth && mHeight == a.mHeight &&
+                   mFormat == a.mFormat && mType == a.mType;
+        }
+        PRBool operator!=(const ImageInfo& a) const {
+            return !(*this == a);
+        }
+        PRBool IsSquare() const {
+            return mWidth == mHeight;
+        }
+        PRBool IsPositive() const {
+            return mWidth > 0 && mHeight > 0;
+        }
+        PRBool IsPowerOfTwo() const {
+            return is_pot_assuming_nonnegative(mWidth) &&
+                   is_pot_assuming_nonnegative(mHeight); // negative sizes should never happen (caught in texImage2D...)
+        }
+        WebGLsizei mWidth, mHeight;
+        WebGLenum mFormat, mType;
+        PRBool mIsDefined;
+    };
+
+    ImageInfo& ImageInfoAt(size_t level, size_t face) {
+#ifdef DEBUG
+        if (face >= mFacesCount)
+            NS_ERROR("wrong face index, must be 0 for TEXTURE_2D and at most 5 for cube maps");
+#endif
+        // no need to check level as a wrong value would be caught by ElementAt().
+        return mImageInfos.ElementAt(level * mFacesCount + face);
+    }
+
+    const ImageInfo& ImageInfoAt(size_t level, size_t face) const {
+        return const_cast<WebGLTexture*>(this)->ImageInfoAt(level, face);
+    }
+
+    WebGLenum mTarget;
+    WebGLenum mMinFilter, mMagFilter, mWrapS, mWrapT;
+
+    size_t mFacesCount, mMaxLevelWithCustomImages;
+    nsTArray<ImageInfo> mImageInfos;
+
+    PRBool mHaveGeneratedMipmap;
+    FakeBlackStatus mFakeBlackStatus;
+
+    void EnsureMaxLevelWithCustomImagesAtLeast(size_t aMaxLevelWithCustomImages) {
+        mMaxLevelWithCustomImages = PR_MAX(mMaxLevelWithCustomImages, aMaxLevelWithCustomImages);
+        mImageInfos.EnsureLengthAtLeast((mMaxLevelWithCustomImages + 1) * mFacesCount);
+    }
+
+    PRBool DoesMinFilterRequireMipmap() const {
+        return !(mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_LINEAR);
+    }
+
+    PRBool AreBothWrapModesClampToEdge() const {
+        return mWrapS == LOCAL_GL_CLAMP_TO_EDGE && mWrapT == LOCAL_GL_CLAMP_TO_EDGE;
+    }
+
+    PRBool DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(size_t face) const {
+        if (mHaveGeneratedMipmap)
+            return PR_TRUE;
+
+        ImageInfo expected = ImageInfoAt(0, face);
+
+        // checks if custom level>0 images are all defined up to the highest level defined
+        // and have the expected dimensions
+        for (size_t level = 0; level <= mMaxLevelWithCustomImages; ++level) {
+            const ImageInfo& actual = ImageInfoAt(level, face);
+            if (actual != expected)
+                return PR_FALSE;
+            expected.mWidth = PR_MAX(1, expected.mWidth >> 1);
+            expected.mHeight = PR_MAX(1, expected.mHeight >> 1);
+
+            // if the current level has size 1x1, we can stop here: the spec doesn't seem to forbid the existence
+            // of extra useless levels.
+            if (actual.mWidth == 1 && actual.mHeight == 1)
+                return PR_TRUE;
+        }
+
+        // if we're here, we've exhausted all levels without finding a 1x1 image
+        return PR_FALSE;
+    }
+
+public:
+
+    void SetDontKnowIfNeedFakeBlack() {
+        mFakeBlackStatus = DontKnowIfNeedFakeBlack;
+        mContext->SetDontKnowIfNeedFakeBlack();
+    }
+
+    void Bind(WebGLenum aTarget) {
+        // this function should only be called by bindTexture().
+        // it assumes that the GL context is already current.
+
+        PRBool firstTimeThisTextureIsBound = mTarget == 0;
+
+        if (!firstTimeThisTextureIsBound && aTarget != mTarget) {
+            mContext->ErrorInvalidOperation("bindTexture: this texture has already been bound to a different target");
+            // very important to return here before modifying texture state! This was the place when I lost a whole day figuring
+            // very strange 'invalid write' crashes.
+            return;
+        }
+
+        mTarget = aTarget;
+
+        mContext->gl->fBindTexture(mTarget, mName);
+
+        if (firstTimeThisTextureIsBound) {
+            mFacesCount = (mTarget == LOCAL_GL_TEXTURE_2D) ? 1 : 6;
+            EnsureMaxLevelWithCustomImagesAtLeast(0);
+            SetDontKnowIfNeedFakeBlack();
+
+            // thanks to the WebKit people for finding this out: GL_TEXTURE_WRAP_R is not
+            // present in GLES 2, but is present in GL and it seems as if for cube maps
+            // we need to set it to GL_CLAMP_TO_EDGE to get the expected GLES behavior.
+            if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP && !mContext->gl->IsGLES2())
+                mContext->gl->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_WRAP_R, LOCAL_GL_CLAMP_TO_EDGE);
+        }
+    }
+
+    void SetImageInfo(WebGLenum aTarget, WebGLint aLevel,
+                      WebGLsizei aWidth, WebGLsizei aHeight,
+                      WebGLenum aFormat = 0, WebGLenum aType = 0) {
+        size_t face = 0;
+        if (aTarget == LOCAL_GL_TEXTURE_2D) {
+            if (mTarget != LOCAL_GL_TEXTURE_2D) return;
+        } else {
+            if (mTarget == LOCAL_GL_TEXTURE_2D) return;
+            face = aTarget - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        }
+
+        EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
+
+        ImageInfo& imageInfo = ImageInfoAt(aLevel, face);
+        imageInfo.mWidth  = aWidth;
+        imageInfo.mHeight = aHeight;
+        if (aFormat)
+            imageInfo.mFormat = aFormat;
+        if (aType)
+            imageInfo.mType = aType;
+        imageInfo.mIsDefined = PR_TRUE;
+
+        if (aLevel > 0)
+            SetCustomMipmap();
+
+        SetDontKnowIfNeedFakeBlack();
+    }
+
+    void SetMinFilter(WebGLenum aMinFilter) {
+        mMinFilter = aMinFilter;
+        SetDontKnowIfNeedFakeBlack();
+    }
+    void SetMagFilter(WebGLenum aMagFilter) {
+        mMagFilter = aMagFilter;
+        SetDontKnowIfNeedFakeBlack();
+    }
+    void SetWrapS(WebGLenum aWrapS) {
+        mWrapS = aWrapS;
+        SetDontKnowIfNeedFakeBlack();
+    }
+    void SetWrapT(WebGLenum aWrapT) {
+        mWrapT = aWrapT;
+        SetDontKnowIfNeedFakeBlack();
+    }
+
+    void SetGeneratedMipmap() {
+        if (!mHaveGeneratedMipmap) {
+            mHaveGeneratedMipmap = PR_TRUE;
+            SetDontKnowIfNeedFakeBlack();
+        }
+    }
+
+    void SetCustomMipmap() {
+        if (mHaveGeneratedMipmap) {
+            // if we were in GeneratedMipmap mode and are now switching to CustomMipmap mode,
+            // we need to compute now all the mipmap image info.
+
+            // since we were in GeneratedMipmap mode, we know that the level 0 images all have the same info,
+            // and are power-of-two.
+            ImageInfo imageInfo = ImageInfoAt(0, 0);
+            NS_ASSERTION(imageInfo.IsPowerOfTwo(), "this texture is NPOT, so how could GenerateMipmap() ever accept it?");
+
+            WebGLsizei size = PR_MAX(imageInfo.mWidth, imageInfo.mHeight);
+
+            // so, the size is a power of two, let's find its log in base 2.
+            size_t maxLevel = 0;
+            for (WebGLsizei n = size; n > 1; n >>= 1)
+                ++maxLevel;
+
+            EnsureMaxLevelWithCustomImagesAtLeast(maxLevel);
+
+            for (size_t level = 1; level <= maxLevel; ++level) {
+                // again, since the sizes are powers of two, no need for any max(1,x) computation
+                imageInfo.mWidth >>= 1;
+                imageInfo.mHeight >>= 1;
+                for(size_t face = 0; face < mFacesCount; ++face)
+                    ImageInfoAt(level, face) = imageInfo;
+            }
+        }
+        mHaveGeneratedMipmap = PR_FALSE;
+    }
+
+    PRBool IsGenerateMipmapAllowed() const {
+        const ImageInfo &first = ImageInfoAt(0, 0);
+        if (!first.IsPowerOfTwo())
+            return PR_FALSE;
+        for (size_t face = 0; face < mFacesCount; ++face) {
+            if (ImageInfoAt(0, face) != first)
+                return PR_FALSE;
+        }
+        return PR_TRUE;
+    }
+
+    PRBool IsMipmapTexture2DComplete() const {
+        if (mTarget != LOCAL_GL_TEXTURE_2D)
+            return PR_FALSE;
+        if (!mImageInfos[0].IsPositive())
+            return PR_FALSE;
+        if (mHaveGeneratedMipmap)
+            return PR_TRUE;
+        return DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(0);
+    }
+
+    PRBool IsCubeComplete() const {
+        if (mTarget != LOCAL_GL_TEXTURE_CUBE_MAP)
+            return PR_FALSE;
+        const ImageInfo &first = ImageInfoAt(0, 0);
+        if (!first.IsPositive() || !first.IsSquare())
+            return PR_FALSE;
+        for (size_t face = 0; face < mFacesCount; ++face) {
+            if (ImageInfoAt(0, face) != first)
+                return PR_FALSE;
+        }
+        return PR_TRUE;
+    }
+
+    PRBool IsMipmapCubeComplete() const {
+        if (!IsCubeComplete()) // in particular, this checks that this is a cube map
+            return PR_FALSE;
+        for (size_t face = 0; face < mFacesCount; ++face) {
+            if (!DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(face))
+                return PR_FALSE;
+        }
+        return PR_TRUE;
+    }
+
+    PRBool NeedFakeBlack() {
+        // handle this case first, it's the generic case
+        if (mFakeBlackStatus == DoNotNeedFakeBlack)
+            return PR_FALSE;
+
+        if (mFakeBlackStatus == DontKnowIfNeedFakeBlack) {
+            // Determine if the texture needs to be faked as a black texture.
+            // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
+
+            if (mTarget == LOCAL_GL_TEXTURE_2D)
+            {
+                if (DoesMinFilterRequireMipmap())
+                {
+                    if (!IsMipmapTexture2DComplete() ||
+                        !mImageInfos[0].IsPowerOfTwo())
+                    {
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    }
+                }
+                else // no mipmap required
+                {
+                    if (!mImageInfos[0].IsPositive() ||
+                        (!AreBothWrapModesClampToEdge() && !mImageInfos[0].IsPowerOfTwo()))
+                    {
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    }
+                }
+            }
+            else if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP)
+            {
+                PRBool areAllLevel0ImagesPOT = PR_TRUE;
+                for (size_t face = 0; face < mFacesCount; ++face)
+                    areAllLevel0ImagesPOT &= ImageInfoAt(0, face).IsPowerOfTwo();
+
+                if (DoesMinFilterRequireMipmap())
+                {
+                    if (!IsMipmapCubeComplete() ||
+                        !areAllLevel0ImagesPOT)
+                    {
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    }
+                }
+                else // no mipmap required
+                {
+                    if (!IsCubeComplete() ||
+                        (!AreBothWrapModesClampToEdge() && !areAllLevel0ImagesPOT))
+                    {
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    }
+                }
+            }
+
+            // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
+            // that means that we do NOT need it.
+            if (mFakeBlackStatus == DontKnowIfNeedFakeBlack)
+                mFakeBlackStatus = DoNotNeedFakeBlack;
+        }
+
+        return mFakeBlackStatus == DoNeedFakeBlack;
+    }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLTexture, WEBGLTEXTURE_PRIVATE_IID)
