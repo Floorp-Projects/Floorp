@@ -59,6 +59,7 @@
 #include "nsWeakReference.h"
 #include "ImageErrors.h"
 #include "imgIRequest.h"
+#include "imgStatusTracker.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
 class imgCacheValidator;
@@ -195,6 +196,8 @@ private:
   // The URI we are keyed on in the cache.
   nsCOMPtr<nsIURI> mKeyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  // Status-tracker -- transferred to mImage, when it gets instantiated
+  nsAutoPtr<imgStatusTracker> mStatusTracker;
   nsRefPtr<mozilla::imagelib::Image> mImage;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;

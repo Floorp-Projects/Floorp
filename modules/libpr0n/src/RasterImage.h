@@ -156,7 +156,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
 
-  RasterImage();
+  RasterImage(imgStatusTracker* aStatusTracker = nsnull);
   virtual ~RasterImage();
 
   // C++-only version of imgIContainer::GetType, for convenience

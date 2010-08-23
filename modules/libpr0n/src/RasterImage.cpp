@@ -149,7 +149,8 @@ NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
                    nsISupportsWeakReference)
 
 //******************************************************************************
-RasterImage::RasterImage() :
+RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
+  Image(aStatusTracker), // invoke superclass's constructor
   mSize(0,0),
   mAnim(nsnull),
   mAnimationMode(kNormalAnimMode),
@@ -342,8 +343,8 @@ RasterImage::ExtractFrame(PRUint32 aWhichFrame,
 
   img->mFrames.AppendElement(subframe.forget());
 
-  img->mStatusTracker.RecordLoaded();
-  img->mStatusTracker.RecordDecoded();
+  img->mStatusTracker->RecordLoaded();
+  img->mStatusTracker->RecordDecoded();
 
   *_retval = img.forget().get();
 
