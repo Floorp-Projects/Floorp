@@ -823,8 +823,14 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
-  if (mIsThemed)
-    return mFrame->GetOverflowRect() + ToReferenceFrame();
+  if (mIsThemed) {
+    nsRect r(nsPoint(0,0), mFrame->GetSize());
+    nsPresContext* presContext = mFrame->PresContext();
+    presContext->GetTheme()->
+        GetWidgetOverflow(presContext->DeviceContext(), mFrame,
+                          mFrame->GetStyleDisplay()->mAppearance, &r);
+    return r + ToReferenceFrame();
+  }
 
   return nsRect(ToReferenceFrame(), mFrame->GetSize());
 }
