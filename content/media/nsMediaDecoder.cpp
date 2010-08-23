@@ -50,11 +50,16 @@
 #include "nsAutoLock.h"
 #include "nsIRenderingContext.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 #include "nsPresContext.h"
 #include "nsDOMError.h"
 #include "nsDisplayList.h"
 #ifdef MOZ_SVG
 #include "nsSVGEffects.h"
+#endif
+
+#if defined(XP_MACOSX)
+#include "gfxQuartzImageSurface.h"
 #endif
 
 // Number of milliseconds between progress events as defined by spec
