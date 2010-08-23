@@ -4057,6 +4057,8 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
       this.loadManifest(function() {
         XPIDatabase.getVisibleAddonForID(self.addon.id, function(aAddon) {
           self.existingAddon = aAddon;
+          self.addon.updateDate = Date.now();
+          self.addon.installDate = aAddon ? aAddon.installDate : self.addon.updateDate;
 
           if (!self.addon.isCompatible) {
             // TODO Should we send some event here?
@@ -4666,6 +4668,8 @@ AddonInstall.prototype = {
     let self = this;
     XPIDatabase.getVisibleAddonForID(this.addon.id, function(aAddon) {
       self.existingAddon = aAddon;
+      self.addon.updateDate = Date.now();
+      self.addon.installDate = aAddon ? aAddon.installDate : self.addon.updateDate;
       self.state = AddonManager.STATE_DOWNLOADED;
       if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
                                                    self.listeners,
