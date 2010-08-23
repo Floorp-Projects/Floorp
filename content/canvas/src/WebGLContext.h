@@ -382,6 +382,8 @@ protected:
                                 void *pixels, PRUint32 byteLength);
     nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
                              WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength);
+    nsresult TexParameter_base(WebGLenum target, WebGLenum pname,
+                               WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 
     nsresult DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
                                       gfxImageSurface **imageOut,
