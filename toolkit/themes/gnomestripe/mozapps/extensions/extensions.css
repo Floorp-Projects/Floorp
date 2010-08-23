@@ -35,18 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-.pane-splitter {
-  -moz-appearance: none;
-  border: none;
-  -moz-border-start: 1px solid #A8A8A8;
-  background-color: transparent;
-  background-image: none;
-  min-width: 1px;
+#addons-page {
+  margin: 20px 20px;
 }
 
-.view-pane {
-  background-color: #FFF;
+#view-port {
+  background-color: -moz-field;
+  color: -moz-fieldtext;
+  border: 1px solid black;
+  -moz-border-radius: 5px;
 }
 
 
@@ -55,16 +52,31 @@
 #categories {
   -moz-appearance: none;
   border: none;
-  margin: 0px;
+  -moz-margin-end: -1px;
+  background-color: transparent;
+  position: relative;
 }
 
 .category {
-  border: none;
   -moz-appearance: none;
+  border-width: 1px;
+  -moz-border-end-width: 0;
+  border-style: solid;
+  border-color: transparent;
   padding: 10px 4px;
   -moz-box-align: center;
   overflow: hidden;
   min-height: 0px;
+}
+
+.category:-moz-locale-dir(ltr) {
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-bottomleft: 5px;
+}
+
+.category:-moz-locale-dir(rtl) {
+  -moz-border-radius-topright: 5px;
+  -moz-border-radius-bottomright: 5px;
 }
 
 .category[disabled] {
@@ -81,8 +93,9 @@
 }
 
 .category[selected] {
-  background-image: -moz-linear-gradient(#8AA7CA, #446490);
-  color: #FFF;
+  background-color: -moz-field;
+  color: -moz-fieldtext;
+  border-color: black;
 }
 
 .category-name {
@@ -141,11 +154,8 @@
 /*** header ***/
 
 #header {
-  background: -moz-linear-gradient(top, #EEE, #AAA);
-  padding: 8px;
-  margin: 0px;
-  -moz-box-align: center;
-  height: 4.5em;
+  margin-bottom: 20px;
+  height: 2em;
 }
 
 #header-name, #header-link {
@@ -204,7 +214,6 @@
 }
 
 .view-header {
-  background: -moz-linear-gradient(top, #FFF, #E8E8E8 50%, #FFF);
   padding: 4px;
   margin: 0px;
   border-bottom: 1px solid #A8A8A8;
@@ -263,6 +272,7 @@
   -moz-appearance: none;
   margin: 0px;
   border: none;
+  background-color: transparent;
 }
 
 .addon {
@@ -679,30 +689,6 @@
 
 
 /*** buttons ***/
-
-.addon-control {
-  -moz-appearance: none;
-  padding: 0px 5px;
-  border: 1px solid #A2A6AD;
-  -moz-border-radius: 100%;
-  background-image: -moz-linear-gradient(#F9F9F9, #DFDFDF);
-}
-
-.addon-control:hover {
-  border-color: #75797F;
-}
-
-.addon-control.enable:hover {
-  -moz-box-shadow: #00FF00 0px 0px 6px -1px;
-}
-
-.addon-control.disable:hover {
-  -moz-box-shadow: #FFD800 0px 0px 6px -1px;
-}
-
-.addon-control.remove:hover {
-  -moz-box-shadow: #FF0000 0px 0px 6px -1px;
-}
 
 .addon-control[disabled="true"] {
   display: none;
