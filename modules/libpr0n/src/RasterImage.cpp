@@ -2175,29 +2175,12 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   // Ensure that the decoder is initialized
   NS_ABORT_IF_FALSE(mDecoder, "Calling ShutdownDecoder() with no active decoder!");
 
-  nsresult rv;
-
-  // If we're "done" _and_ it's a full decode, flush
-  if ((aIntent == eShutdownIntent_Done) &&
-      !(mDecoderFlags && imgIDecoder::DECODER_FLAG_HEADERONLY)) {
-    mInDecoder = PR_TRUE;
-    rv = mDecoder->Flush();
-    mInDecoder = PR_FALSE;
-
-    // The error case here is a bit tricky. We flag an error, which takes us
-    // back into this function, and then we return.
-    if (NS_FAILED(rv)) {
-      DoError();
-      return rv;
-    }
-  }
-
   // Close the decoder with the appropriate flags
   mInDecoder = PR_TRUE;
   PRUint32 closeFlags = (aIntent == eShutdownIntent_Error)
                           ? (PRUint32) imgIDecoder::CLOSE_FLAG_DONTNOTIFY
                           : 0;
-  rv = mDecoder->Close(closeFlags);
+  nsresult rv = mDecoder->Close(closeFlags);
   mInDecoder = PR_FALSE;
 
   // null out the decoder, _then_ check for errors on the close (otherwise the

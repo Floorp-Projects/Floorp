@@ -197,6 +197,18 @@ NS_IMETHODIMP nsJPEGDecoder::Close(PRUint32 aFlags)
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
          ("[this=%p] nsJPEGDecoder::Close\n", this));
 
+  /* If we're not in any sort of error case, flush the decoder.
+   *
+   * XXXbholley - It seems wrong that this should be necessary, but at the
+   * moment I'm just folding the contents of Flush() into Close() so that
+   * we can get rid of it.
+   */
+  if ((mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) &&
+      (mState != JPEG_ERROR) &&
+      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !(aFlags & CLOSE_FLAG_DONTNOTIFY))
+    this->Write(nsnull, 0);
+
   /* Step 8: Release JPEG decompression object */
   mInfo.src = nsnull;
 
@@ -221,11 +233,6 @@ NS_IMETHODIMP nsJPEGDecoder::Close(PRUint32 aFlags)
 /* void flush (); */
 NS_IMETHODIMP nsJPEGDecoder::Flush()
 {
-  LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::Flush");
-
-  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER && mState != JPEG_ERROR)
-    return this->Write(nsnull, 0);
-
   return NS_OK;
 }
 
