@@ -75,6 +75,14 @@ imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
     // called.
 {}
 
+void
+imgStatusTracker::SetImage(Image* aImage)
+{
+  NS_ABORT_IF_FALSE(aImage, "Setting null image");
+  NS_ABORT_IF_FALSE(!mImage, "Setting image when we already have one");
+  mImage = aImage;
+}
+
 PRBool
 imgStatusTracker::IsLoading() const
 {
