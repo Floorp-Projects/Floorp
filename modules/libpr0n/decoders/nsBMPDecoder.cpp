@@ -87,7 +87,7 @@ nsBMPDecoder::InitInternal()
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", mImage.get()));
 
     // Fire OnStartDecode at init time to support bug 512435
-    if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) && mObserver)
+    if (!IsSizeDecode() && mObserver)
         mObserver->OnStartDecode(nsnull);
 
     return NS_OK;
@@ -99,7 +99,7 @@ nsBMPDecoder::ShutdownInternal(PRUint32 aFlags)
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Close()\n"));
 
     // Send notifications if appropriate
-    if (!(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+    if (!IsSizeDecode() &&
         !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY)) {
         if (mObserver)
             mObserver->OnStopFrame(nsnull, 0);
@@ -220,9 +220,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             NS_ENSURE_SUCCESS(rv, rv);
         }
 
-        // We have the size. If we're doing a header-only decode, we got what
+        // We have the size. If we're doing a size decode, we got what
         // we came for.
-        if (mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)
+        if (IsSizeDecode())
             return NS_OK;
 
         // We're doing a real decode.

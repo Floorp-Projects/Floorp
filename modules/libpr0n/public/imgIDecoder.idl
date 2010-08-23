@@ -55,20 +55,6 @@ interface imgIDecoderObserver;
 interface imgIDecoder : nsISupports
 {
   /**
-   * Bits that can be passed to the decoder to affect decoding.
-   * @name decodeflags
-   *
-   * Meanings:
-   *
-   * DECODER_FLAG_NONE: No flags
-   *
-   * DECODER_FLAG_HEADERONLY: Read basic data from the image in order to 
-   * set up the image container,  but don't read any actual image data.
-   */
-  const long DECODER_FLAG_NONE       = 0x0;
-  const long DECODER_FLAG_HEADERONLY = 0x1;
-
-  /**
    * Initialize an image decoder.
    * @param aContainer The image container to decode to.
    * @param aObserver The observer for decode notification events.
