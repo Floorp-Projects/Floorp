@@ -248,7 +248,7 @@
         handleEvent: function scrollAnim_handleEvent(event) {
           const timePassed = event.timeStamp - this.startTime;
           const pos = timePassed >= this.duration ? 1 :
-                      1 - Math.pow(1 - timePassed / this.duration, 2);
+                      1 - Math.pow(1 - timePassed / this.duration, 4);
 
           this.scrollbox.scrollPosition = this.startPos + (this.distance * pos);
 
