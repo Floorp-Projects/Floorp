@@ -482,9 +482,7 @@ void imgRequest::SetIsInCache(PRBool incache)
 void imgRequest::UpdateCacheEntrySize()
 {
   if (mCacheEntry) {
-    PRUint32 imageSize = 0;
-    mImage->GetDataSize(&imageSize);
-    mCacheEntry->SetDataSize(imageSize);
+    mCacheEntry->SetDataSize(mImage->GetDataSize());
 
 #ifdef DEBUG_joe
     nsCAutoString url;

@@ -212,8 +212,7 @@ nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
   // Offset to the frame position
   // Only notify observer(s) for first frame
   if (!mGIFStruct.images_decoded && mObserver) {
-    PRUint32 imgCurFrame;
-    mImageContainer->GetCurrentFrameIndex(&imgCurFrame);
+    PRUint32 imgCurFrame = mImageContainer->GetCurrentFrameIndex();
     mObserver->OnDataAvailable(nsnull, imgCurFrame == PRUint32(mGIFStruct.images_decoded), &r);
   }
   return NS_OK;
@@ -268,15 +267,11 @@ nsGIFDecoder2::Write(const char *aBuffer, PRUint32 aCount)
   // pretend that we're decoded. Otherwise, we set mError.
   if (NS_FAILED(rv)) {
 
-    // Determine if we want to salvage the situation
-    PRUint32 numFrames = 0;
-    if (mImageContainer)
-      mImageContainer->GetNumFrames(&numFrames);
-
-    // If we're salvaging, send off notifications
+    // Determine if we want to salvage the situation.
+    // If we're salvaging, send off notifications.
     // Note that we need to make sure that we have 2 frames, since that tells us
     // that the first frame is complete (the second could be in any state).
-    if (numFrames > 1) {
+    if (mImageContainer && mImageContainer->GetNumFrames() > 1) {
       EndGIF(/* aSuccess = */ PR_TRUE);
     }
 
@@ -340,8 +335,7 @@ nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
     if (mGIFStruct.y_offset > 0) {
       PRInt32 imgWidth;
       mImageContainer->GetWidth(&imgWidth);
-      PRUint32 imgCurFrame;
-      mImageContainer->GetCurrentFrameIndex(&imgCurFrame);
+      PRUint32 imgCurFrame = mImageContainer->GetCurrentFrameIndex();
       nsIntRect r(0, 0, imgWidth, mGIFStruct.y_offset);
       if (mObserver)
         mObserver->OnDataAvailable(nsnull,
@@ -400,8 +394,7 @@ void nsGIFDecoder2::EndImageFrame()
     // This will clear the remaining bits of the placeholder. (Bug 37589)
     const PRUint32 realFrameHeight = mGIFStruct.height + mGIFStruct.y_offset;
     if (realFrameHeight < mGIFStruct.screen_height) {
-      PRUint32 imgCurFrame;
-      mImageContainer->GetCurrentFrameIndex(&imgCurFrame);
+      PRUint32 imgCurFrame = mImageContainer->GetCurrentFrameIndex();
       nsIntRect r(0, realFrameHeight,
                   mGIFStruct.screen_width,
                   mGIFStruct.screen_height - realFrameHeight);
