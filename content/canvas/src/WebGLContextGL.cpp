@@ -1792,133 +1792,92 @@ WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
     return NS_OK;
 }
 
-/* XXX fix */
-/* void texParameter (); */
+// here we have to support all pnames with both int and float params.
+// See this discussion:
+//  https://www.khronos.org/webgl/public-mailing-list/archives/1008/msg00014.html
+nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
+                                         WebGLint *intParamPtr, WebGLfloat *floatParamPtr)
+{
+    NS_ENSURE_TRUE(intParamPtr || floatParamPtr, NS_ERROR_FAILURE);
+
+    WebGLint intParam   = intParamPtr   ? *intParamPtr   : WebGLint(*floatParamPtr);
+    WebGLint floatParam = floatParamPtr ? *floatParamPtr : WebGLfloat(*intParamPtr);
+
+    if (!ValidateTextureTargetEnum(target, "texParameter: target"))
+        return NS_OK;
+
+    PRBool pnameAndParamAreIncompatible = PR_FALSE;
+
+    switch (pname) {
+        case LOCAL_GL_TEXTURE_MIN_FILTER:
+            switch (intParam) {
+                case LOCAL_GL_NEAREST:
+                case LOCAL_GL_LINEAR:
+                case LOCAL_GL_NEAREST_MIPMAP_NEAREST:
+                case LOCAL_GL_LINEAR_MIPMAP_NEAREST:
+                case LOCAL_GL_NEAREST_MIPMAP_LINEAR:
+                case LOCAL_GL_LINEAR_MIPMAP_LINEAR:
+                    break;
+                default:
+                    pnameAndParamAreIncompatible = PR_TRUE;
+            }
+            break;
+        case LOCAL_GL_TEXTURE_MAG_FILTER:
+            switch (intParam) {
+                case LOCAL_GL_NEAREST:
+                case LOCAL_GL_LINEAR:
+                    break;
+                default:
+                    pnameAndParamAreIncompatible = PR_TRUE;
+            }
+            break;
+        case LOCAL_GL_TEXTURE_WRAP_S:
+        case LOCAL_GL_TEXTURE_WRAP_T:
+            switch (intParam) {
+                case LOCAL_GL_CLAMP_TO_EDGE:
+                case LOCAL_GL_MIRRORED_REPEAT:
+                case LOCAL_GL_REPEAT:
+                    break;
+                default:
+                    pnameAndParamAreIncompatible = PR_TRUE;
+            }
+            break;
+        default:
+            return ErrorInvalidEnumInfo("texParameter: pname", pname);
+    }
+
+    if (pnameAndParamAreIncompatible) {
+        if (intParamPtr)
+            return ErrorInvalidEnum("texParameteri: pname %x and param %x (decimal %d) are mutually incompatible",
+                                    pname, intParam, intParam);
+        else
+            return ErrorInvalidValue("texParameterf: pname %x and floating-point param %e are mutually incompatible",
+                                    pname, floatParam);
+    }
+
+    if (!activeBoundTextureForTarget(target))
+        return ErrorInvalidOperation("texParameter: no texture is bound to this target");
+
+    MakeContextCurrent();
+    if (intParamPtr)
+        gl->fTexParameteri(target, pname, intParam);
+    else
+        gl->fTexParameterf(target, pname, floatParam);
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 WebGLContext::TexParameterf(WebGLenum target, WebGLenum pname, WebGLfloat param)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    if (js.argc != 3)
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    MakeContextCurrent();
-
-    gl->fTexParameterf (target, pname, param);
-
-    return NS_OK;
+    return TexParameter_base(target, pname, nsnull, &param);
 }
+
 NS_IMETHODIMP
 WebGLContext::TexParameteri(WebGLenum target, WebGLenum pname, WebGLint param)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    if (js.argc != 3)
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    MakeContextCurrent();
-
-    gl->fTexParameteri (target, pname, param);
-
-    return NS_OK;
+    return TexParameter_base(target, pname, &param, nsnull);
 }
-
-#if 0
-NS_IMETHODIMP
-WebGLContext::TexParameter()
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    if (js.argc != 3)
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    jsuint targetVal;
-    jsuint pnameVal;
-    if (!::JS_ValueToECMAUint32(js.ctx, js.argv[0], &targetVal) ||
-        !::JS_ValueToECMAUint32(js.ctx, js.argv[1], &pnameVal))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    if (targetVal != LOCAL_GL_TEXTURE_2D &&
-        targetVal != LOCAL_GL_TEXTURE_CUBE_MAP)
-    {
-        return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    MakeContextCurrent();
-    switch (pnameVal) {
-        case LOCAL_GL_TEXTURE_MIN_FILTER: {
-            jsuint ival;
-            if (!::JS_ValueToECMAUint32(js.ctx, js.argv[2], &ival) ||
-                (ival != LOCAL_GL_NEAREST &&
-                 ival != LOCAL_GL_LINEAR &&
-                 ival != LOCAL_GL_NEAREST_MIPMAP_NEAREST &&
-                 ival != LOCAL_GL_LINEAR_MIPMAP_NEAREST &&
-                 ival != LOCAL_GL_NEAREST_MIPMAP_LINEAR &&
-                 ival != LOCAL_GL_LINEAR_MIPMAP_LINEAR))
-                return NS_ERROR_DOM_SYNTAX_ERR;
-            gl->fTexParameteri (targetVal, pnameVal, ival);
-        }
-            break;
-        case LOCAL_GL_TEXTURE_MAG_FILTER: {
-            jsuint ival;
-            if (!::JS_ValueToECMAUint32(js.ctx, js.argv[2], &ival) ||
-                (ival != LOCAL_GL_NEAREST &&
-                 ival != LOCAL_GL_LINEAR))
-                return NS_ERROR_DOM_SYNTAX_ERR;
-            gl->fTexParameteri (targetVal, pnameVal, ival);
-        }
-            break;
-        case LOCAL_GL_TEXTURE_WRAP_S:
-        case LOCAL_GL_TEXTURE_WRAP_T: {
-            jsuint ival;
-            if (!::JS_ValueToECMAUint32(js.ctx, js.argv[2], &ival) ||
-                (ival != LOCAL_GL_CLAMP &&
-                 ival != LOCAL_GL_CLAMP_TO_EDGE &&
-                 ival != LOCAL_GL_REPEAT))
-                return NS_ERROR_DOM_SYNTAX_ERR;
-            gl->fTexParameteri (targetVal, pnameVal, ival);
-        }
-            break;
-        case LOCAL_GL_GENERATE_MIPMAP: {
-            jsuint ival;
-            if (js.argv[2] == JSVAL_TRUE)
-                ival = 1;
-            else if (js.argv[2] == JSVAL_FALSE)
-                ival = 0;
-            else if (!::JS_ValueToECMAUint32(js.ctx, js.argv[2], &ival) ||
-                     (ival != 0 && ival != 1))
-                return NS_ERROR_DOM_SYNTAX_ERR;
-            gl->fTexParameteri (targetVal, pnameVal, ival);
-        }
-            break;
-        case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT: {
-#if 0
-            if (GLEW_EXT_texture_filter_anisotropic) {
-                jsdouble dval;
-                if (!::JS_ValueToNumber(js.ctx, js.argv[2], &dval))
-                    return NS_ERROR_DOM_SYNTAX_ERR;
-                gl->fTexParameterf (targetVal, pnameVal, (float) dval);
-            } else {
-                return NS_ERROR_NOT_IMPLEMENTED;
-            }
-#else
-            return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-        }
-            break;
-        default:
-            return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
