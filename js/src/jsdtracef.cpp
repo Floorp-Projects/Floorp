@@ -217,8 +217,8 @@ DTrace::ObjectCreationScope::handleCreationEnd()
 void
 DTrace::ObjectCreationScope::handleCreationImpl(JSObject *obj)
 {
-    JAVASCRIPT_OBJECT_CREATE(jsdtrace_filename(cx->fp), (char *)clasp->name, (uintptr_t)obj,
-                             jsdtrace_frame_linenumber(cx, cx->fp));
+    JAVASCRIPT_OBJECT_CREATE(jsdtrace_filename(fp), (char *)clasp->name, (uintptr_t)obj,
+                             jsdtrace_frame_linenumber(cx, fp));
 }
 
 void
