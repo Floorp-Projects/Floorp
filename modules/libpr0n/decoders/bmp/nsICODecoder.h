@@ -47,10 +47,6 @@
 #include "imgIDecoderObserver.h"
 #include "nsBMPDecoder.h"
 
-// {CB3EDE1A-0FA5-4e27-AAFE-0F7801E5A1F1}
-#define NS_ICODECODER_CID \
-{ 0xcb3ede1a, 0xfa5, 0x4e27, { 0xaa, 0xfe, 0xf, 0x78, 0x1, 0xe5, 0xa1, 0xf1 } }
-
 namespace mozilla {
 namespace imagelib {
 class RasterImage;

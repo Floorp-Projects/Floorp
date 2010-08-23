@@ -50,9 +50,6 @@
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
 
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 

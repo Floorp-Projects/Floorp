@@ -43,11 +43,8 @@
 #include "RasterImage.h"
 #include "imgIContainerObserver.h"
 #include "nspr.h"
-#include "nsIComponentManager.h"
 #include "nsRect.h"
-#include "nsComponentManagerUtils.h"
 
-#include "nsIInterfaceRequestorUtils.h"
 #include "ImageErrors.h"
 
 using namespace mozilla::imagelib;
