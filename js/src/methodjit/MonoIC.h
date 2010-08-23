@@ -108,7 +108,6 @@ struct MICInfo {
             bool touched : 1;
             bool typeConst : 1;
             bool dataConst : 1;
-            bool dataWrite : 1;
         } name;
         /* Used by CALL. */
         bool generated;

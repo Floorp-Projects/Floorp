@@ -179,8 +179,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
         dataOffset = MICInfo::SET_DATA_CONST_TYPE_OFFSET;
     else
         dataOffset = MICInfo::SET_DATA_TYPE_OFFSET;
-    if (mic.u.name.dataWrite)
-        stores.repatch(mic.load.dataLabel32AtOffset(dataOffset), slot);
+    stores.repatch(mic.load.dataLabel32AtOffset(dataOffset), slot);
 #elif defined JS_CPU_ARM
     // mic.load actually points to the LDR instruction which fetches the offset, but 'repatch'
     // knows how to dereference it to find the integer value.
