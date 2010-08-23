@@ -5217,7 +5217,7 @@ cairo-cocoa)
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
     MOZ_WIDGET_TOOLKIT=android
-    MOZ_WEBGL=
+    MOZ_WEBGL=1
     ;;
 
 esac

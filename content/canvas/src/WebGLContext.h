@@ -938,6 +938,42 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLUniformLocation, WEBGLUNIFORMLOCATION_PRIVATE_IID)
 
+#define WEBGLACTIVEINFO_PRIVATE_IID \
+    {0x90def5ec, 0xc672, 0x4ac3, {0xb8, 0x97, 0x04, 0xa2, 0x6d, 0xda, 0x66, 0xd7}}
+class WebGLActiveInfo :
+    public nsIWebGLActiveInfo
+{
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLACTIVEINFO_PRIVATE_IID)
+
+    WebGLActiveInfo(WebGLint size, WebGLenum type, const char *nameptr, PRUint32 namelength) :
+        mDeleted(PR_FALSE),
+        mSize(size),
+        mType(type)
+    {
+        mName.AssignASCII(nameptr, namelength);
+    }
+
+    void Delete() {
+        if (mDeleted)
+            return;
+        mDeleted = PR_TRUE;
+    }
+
+    PRBool Deleted() { return mDeleted; }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLACTIVEINFO
+protected:
+    PRBool mDeleted;
+    WebGLint mSize;
+    WebGLenum mType;
+    nsString mName;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
+
+
 /**
  ** Template implementations
  **/

@@ -52,7 +52,6 @@
 #include "nsLayoutUtils.h"
 
 #include "CanvasUtils.h"
-#include "NativeJSContext.h"
 
 #include "jstypedarray.h"
 
@@ -1111,10 +1110,6 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
     if (!GetGLName<WebGLProgram>("getActiveAttrib: program", pobj, &progname))
         return NS_OK;
 
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
     MakeContextCurrent();
 
     GLint len = 0;
@@ -1134,12 +1129,9 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
         return NS_OK;
     }
 
-    JSObjectHelper retobj(&js);
-    retobj.DefineProperty("size", attrsize);
-    retobj.DefineProperty("type", attrtype);
-    retobj.DefineProperty("name", name, len);
+    WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(attrsize, attrtype, name.get(), len);
 
-    js.SetRetVal(retobj);
+    NS_ADDREF(*retval = retActiveInfo);
 
     return NS_OK;
 }
@@ -1168,10 +1160,6 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>("getActiveUniform: program", pobj, &progname))
         return NS_OK;
-
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
 
     MakeContextCurrent();
 
@@ -1212,12 +1200,9 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
         name[len++] = ']';
     }
 
-    JSObjectHelper retobj(&js);
-    retobj.DefineProperty("size", attrsize);
-    retobj.DefineProperty("type", attrtype);
-    retobj.DefineProperty("name", name, len);
+    WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(attrsize, attrtype, name.get(), len);
 
-    js.SetRetVal(retobj.Object());
+    NS_ADDREF(*retval = retActiveInfo);
 
     return NS_OK;
 }
@@ -2048,11 +2033,10 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
 }
 
 NS_IMETHODIMP
-WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
+WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **retval)
 {
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
 
@@ -2065,7 +2049,7 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
         {
             PRInt32 i = 0;
             gl->fGetVertexAttribiv(index, pname, (GLint*) &i);
-            js.SetRetVal(i);
+            wrval->SetAsInt32(i);
         }
             break;
 
@@ -2073,7 +2057,8 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
         {
             GLfloat fv[4] = { 0 };
             gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, fv);
-            js.SetRetVal(fv, 4);
+            wrval->SetAsArray(nsIDataType::VTYPE_FLOAT, nsnull,
+                              4, static_cast<void*>(fv));
         }
             break;
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
@@ -2081,7 +2066,7 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
         {
             PRInt32 i = 0;
             gl->fGetVertexAttribiv(index, pname, (GLint*) &i);
-            js.SetBoolRetVal(PRBool(i));
+            wrval->SetAsBool(PRBool(i));
         }
             break;
 
@@ -2090,6 +2075,8 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
         default:
             return ErrorInvalidEnumInfo("getVertexAttrib: parameter", pname);
     }
+
+    *retval = wrval.forget().get();
 
     return NS_OK;
 }
