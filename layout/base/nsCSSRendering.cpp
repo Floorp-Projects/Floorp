@@ -1176,31 +1176,61 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  nsCSSShadowArray* shadows = aForFrame->GetStyleBorder()->mBoxShadow;
+  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
+  nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
   if (!shadows)
     return;
-  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
-  PRIntn sidesToSkip = aForFrame->GetSkipSides();
-
-  // Get any border radius, since box-shadow must also have rounded corners if the frame does
-  nscoord twipsRadii[8];
-  PRBool hasBorderRadius = GetBorderRadiusTwips(styleBorder->mBorderRadius,
-                                                aFrameArea.width, twipsRadii);
   nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 
+  PRBool hasBorderRadius;
+  PRBool nativeTheme; // mutually exclusive with hasBorderRadius
   gfxCornerSizes borderRadii;
-  ComputePixelRadii(twipsRadii, aFrameArea, sidesToSkip,
-                    twipsPerPixel, &borderRadii);
 
-  gfxRect frameGfxRect = RectToGfxRect(aFrameArea, twipsPerPixel);
+  // Get any border radius, since box-shadow must also have rounded corners if the frame does
+  const nsStyleDisplay* styleDisplay = aForFrame->GetStyleDisplay();
+  nsITheme::Transparency transparency;
+  if (aForFrame->IsThemed(styleDisplay, &transparency)) {
+    // We don't respect border-radius for native-themed widgets
+    hasBorderRadius = PR_FALSE;
+    // For opaque (rectangular) theme widgets we can take the generic
+    // border-box path with border-radius disabled.
+    nativeTheme = transparency != nsITheme::eOpaque;
+  } else {
+    nativeTheme = PR_FALSE;
+    nscoord twipsRadii[8];
+    hasBorderRadius =
+      GetBorderRadiusTwips(styleBorder->mBorderRadius,
+                           aFrameArea.width, twipsRadii);
+    if (hasBorderRadius) {
+      PRIntn sidesToSkip = aForFrame->GetSkipSides();
+      ComputePixelRadii(twipsRadii, aFrameArea, sidesToSkip, twipsPerPixel,
+                        &borderRadii);
+    }
+  }
+
+  nsRect frameRect =
+    nativeTheme ? aForFrame->GetOverflowRectRelativeToSelf() + aFrameArea.TopLeft() : aFrameArea;
+  gfxRect frameGfxRect = RectToGfxRect(frameRect, twipsPerPixel);
   frameGfxRect.Round();
 
   // We don't show anything that intersects with the frame we're blurring on. So tell the
   // blurrer not to do unnecessary work there.
   gfxRect skipGfxRect = frameGfxRect;
-  if (hasBorderRadius) {
-    skipGfxRect.Inset(PR_MAX(borderRadii[C_TL].height, borderRadii[C_TR].height), 0,
-                      PR_MAX(borderRadii[C_BL].height, borderRadii[C_BR].height), 0);
+  PRBool useSkipGfxRect = PR_TRUE;
+  if (nativeTheme) {
+    // Optimize non-leaf native-themed frames by skipping computing pixels
+    // in the padding-box. We assume the padding-box is going to be painted
+    // opaquely for non-leaf frames.
+    // XXX this may not be a safe assumption; we should make this go away
+    // by optimizing box-shadow drawing more for the cases where we don't have a skip-rect.
+    useSkipGfxRect = !aForFrame->IsLeaf();
+    nsRect paddingRect =
+      aForFrame->GetPaddingRect() - aForFrame->GetPosition() + aFrameArea.TopLeft();
+    skipGfxRect = RectToGfxRect(paddingRect, twipsPerPixel);
+  } else if (hasBorderRadius) {
+    skipGfxRect.Inset(
+        PR_MAX(borderRadii[C_TL].height, borderRadii[C_TR].height), 0,
+        PR_MAX(borderRadii[C_BL].height, borderRadii[C_BR].height), 0);
   }
 
   for (PRUint32 i = shadows->Length(); i > 0; --i) {
@@ -1208,9 +1238,15 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     if (shadowItem->mInset)
       continue;
 
-    nsRect shadowRect = aFrameArea;
+    nsRect shadowRect = frameRect;
     shadowRect.MoveBy(shadowItem->mXOffset, shadowItem->mYOffset);
-    shadowRect.Inflate(shadowItem->mSpread, shadowItem->mSpread);
+    nscoord pixelSpreadRadius;
+    if (nativeTheme) {
+      pixelSpreadRadius = shadowItem->mSpread;
+    } else {
+      shadowRect.Inflate(shadowItem->mSpread, shadowItem->mSpread);
+      pixelSpreadRadius = 0;
+    }
 
     // shadowRect won't include the blur, so make an extra rect here that includes the blur
     // for use in the even-odd rule below.
@@ -1227,8 +1263,15 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
 
-    shadowContext = blurringArea.Init(shadowRect, 0, blurRadius, twipsPerPixel, renderContext,
-                                      aDirtyRect, &skipGfxRect);
+    // When getting the widget shape from the native theme, we're going
+    // to draw the widget into the shadow surface to create a mask.
+    // We need to ensure that there actually *is* a shadow surface
+    // and that we're not going to draw directly into renderContext.
+    shadowContext = 
+      blurringArea.Init(shadowRect, pixelSpreadRadius,
+                        blurRadius, twipsPerPixel, renderContext, aDirtyRect,
+                        useSkipGfxRect ? &skipGfxRect : nsnull,
+                        nativeTheme ? nsContextBoxBlur::FORCE_MASK : 0);
     if (!shadowContext)
       continue;
 
@@ -1242,55 +1285,72 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     renderContext->Save();
     renderContext->SetColor(gfxRGBA(shadowColor));
 
-    // Clip out the area of the actual frame so the shadow is not shown within
-    // the frame
-    renderContext->NewPath();
-    renderContext->Rectangle(shadowGfxRectPlusBlur);
-    if (hasBorderRadius)
-      renderContext->RoundedRectangle(frameGfxRect, borderRadii);
-    else
-      renderContext->Rectangle(frameGfxRect);
-    renderContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-    renderContext->Clip();
-
     // Draw the shape of the frame so it can be blurred. Recall how nsContextBoxBlur
     // doesn't make any temporary surfaces if blur is 0 and it just returns the original
     // surface? If we have no blur, we're painting this fill on the actual content surface
     // (renderContext == shadowContext) which is why we set up the color and clip
     // before doing this.
-    shadowContext->NewPath();
-    if (hasBorderRadius) {
-      gfxCornerSizes clipRectRadii;
-      gfxFloat spreadDistance = -shadowItem->mSpread / twipsPerPixel;
-      gfxFloat borderSizes[4] = {0, 0, 0, 0};
+    if (nativeTheme) {
+      // We don't clip the border-box from the shadow, nor any other box.
+      // We assume that the native theme is going to paint over the shadow.
 
-      // We only give the spread radius to corners with a radius on them, otherwise we'll
-      // give a rounded shadow corner to a frame corner with 0 border radius, should
-      // the author use non-uniform border radii sizes (-moz-border-radius-topleft etc)
-      // (bug 514670)
-      if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
-        borderSizes[NS_SIDE_LEFT] = spreadDistance;
-      }
-
-      if (borderRadii[C_TL].height > 0 || borderRadii[C_TR].height > 0) {
-        borderSizes[NS_SIDE_TOP] = spreadDistance;
-      }
-
-      if (borderRadii[C_TR].width > 0 || borderRadii[C_BR].width > 0) {
-        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
-      }
-
-      if (borderRadii[C_BL].height > 0 || borderRadii[C_BR].height > 0) {
-        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
-      }
-
-      nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
-                                             &clipRectRadii);
-      shadowContext->RoundedRectangle(shadowGfxRect, clipRectRadii);
+      // Draw the widget shape
+      gfxContextMatrixAutoSaveRestore save(shadowContext);
+      nsIDeviceContext* devCtx = aPresContext->DeviceContext();
+      nsCOMPtr<nsIRenderingContext> wrapperCtx;
+      devCtx->CreateRenderingContextInstance(*getter_AddRefs(wrapperCtx));
+      wrapperCtx->Init(devCtx, shadowContext);
+      wrapperCtx->Translate(shadowItem->mXOffset, shadowItem->mYOffset);
+      aPresContext->GetTheme()->DrawWidgetBackground(wrapperCtx, aForFrame,
+          styleDisplay->mAppearance, aFrameArea, frameRect);
     } else {
-      shadowContext->Rectangle(shadowGfxRect);
+      // Clip out the area of the actual frame so the shadow is not shown within
+      // the frame
+      renderContext->NewPath();
+      renderContext->Rectangle(shadowGfxRectPlusBlur);
+      if (hasBorderRadius) {
+        renderContext->RoundedRectangle(frameGfxRect, borderRadii);
+      } else {
+        renderContext->Rectangle(frameGfxRect);
+      }
+
+      renderContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+      renderContext->Clip();
+
+      shadowContext->NewPath();
+      if (hasBorderRadius) {
+        gfxCornerSizes clipRectRadii;
+        gfxFloat spreadDistance = -shadowItem->mSpread / twipsPerPixel;
+        gfxFloat borderSizes[4] = { 0, 0, 0, 0 };
+
+        // We only give the spread radius to corners with a radius on them, otherwise we'll
+        // give a rounded shadow corner to a frame corner with 0 border radius, should
+        // the author use non-uniform border radii sizes (-moz-border-radius-topleft etc)
+        // (bug 514670)
+        if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
+          borderSizes[NS_SIDE_LEFT] = spreadDistance;
+        }
+
+        if (borderRadii[C_TL].height > 0 || borderRadii[C_TR].height > 0) {
+          borderSizes[NS_SIDE_TOP] = spreadDistance;
+        }
+
+        if (borderRadii[C_TR].width > 0 || borderRadii[C_BR].width > 0) {
+          borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+        }
+
+        if (borderRadii[C_BL].height > 0 || borderRadii[C_BR].height > 0) {
+          borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+        }
+
+        nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
+            &clipRectRadii);
+        shadowContext->RoundedRectangle(shadowGfxRect, clipRectRadii);
+      } else {
+        shadowContext->Rectangle(shadowGfxRect);
+      }
+      shadowContext->Fill();
     }
-    shadowContext->Fill();
 
     blurringArea.DoPaint();
     renderContext->Restore();
@@ -1304,10 +1364,18 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  nsCSSShadowArray* shadows = aForFrame->GetStyleBorder()->mBoxShadow;
+  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
+  nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
   if (!shadows)
     return;
-  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
+  if (aForFrame->IsThemed() && aForFrame->GetContent() &&
+      !nsContentUtils::IsChromeDoc(aForFrame->GetContent()->GetCurrentDoc())) {
+    // There's no way of getting hold of a shape corresponding to a
+    // "padding-box" for native-themed widgets, so just don't draw
+    // inner box-shadows for them. But we allow chrome to paint inner
+    // box shadows since chrome can be aware of the platform theme.
+    return;
+  }
 
   // Get any border radius, since box-shadow must also have rounded corners if the frame does
   nscoord twipsRadii[8];
