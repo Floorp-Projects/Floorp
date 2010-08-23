@@ -114,7 +114,6 @@ class THEBES_API ImageContainer {
   THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
 
 public:
-  ImageContainer() {}
   virtual ~ImageContainer() {}
 
   /**
@@ -179,13 +178,6 @@ public:
    * or null.  TRUE is returned on success.
    */
   virtual PRBool SetLayerManager(LayerManager *aManager) = 0;
-
-  /**
-   * Sets a size that the image is expected to be rendered at.
-   * This is a hint for image backends to optimize scaling.
-   * Default implementation in this class is to ignore the hint.
-   */
-  virtual void SetScaleHint(const gfxIntSize& /* aScaleHint */) { }
 
 protected:
   LayerManager* mManager;
