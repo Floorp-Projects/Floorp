@@ -167,8 +167,6 @@ public:
                 const char* aMimeType,
                 PRUint32 aFlags);
   void     GetCurrentFrameRect(nsIntRect& aRect);
-  PRUint32 GetCurrentFrameIndex();
-  PRUint32 GetNumFrames();
   PRUint32 GetDataSize();
 
   // Raster-specific methods
@@ -176,6 +174,13 @@ public:
                                       const char* aFromRawSegment,
                                       PRUint32 aToOffset, PRUint32 aCount,
                                       PRUint32* aWriteCount);
+
+  /* The index of the current frame that would be drawn if the image was to be
+   * drawn now. */
+  PRUint32 GetCurrentFrameIndex();
+
+  /* The total number of frames in this image. */
+  PRUint32 GetNumFrames();
 
   PRUint32 GetDecodedDataSize();
   PRUint32 GetSourceDataSize();
