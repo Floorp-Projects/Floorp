@@ -90,17 +90,6 @@ public:
   virtual void GetCurrentFrameRect(nsIntRect& aRect) = 0;
 
   /**
-   * The index of the current frame that would be drawn if the image was to be
-   * drawn now.
-   */
-  virtual PRUint32 GetCurrentFrameIndex() = 0;
-
-  /**
-   * The total number of frames in this image.
-   */
-  virtual PRUint32 GetNumFrames() = 0;
-
-  /**
    * The size, in bytes, occupied by the significant data portions of the image.
    * This includes both compressed source data and decoded frames.
    */

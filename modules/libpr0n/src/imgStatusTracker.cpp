@@ -44,6 +44,7 @@
 #include "imgRequestProxy.h"
 #include "Image.h"
 #include "ImageLogging.h"
+#include "RasterImage.h"
 
 using namespace mozilla::imagelib;
 
@@ -222,9 +223,14 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   if (mState & stateDecodeStarted)
     proxy->OnStartDecode();
 
+  PRInt16 imageType = mImage->GetType();
   // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
-  if (mImage->GetNumFrames() > 0) {
-    PRUint32 frame = mImage->GetCurrentFrameIndex();
+  if (imageType == imgIContainer::TYPE_VECTOR ||
+      static_cast<RasterImage*>(mImage)->GetNumFrames() > 0) {
+
+    PRUint32 frame = (imageType == imgIContainer::TYPE_VECTOR) ?
+      0 : static_cast<RasterImage*>(mImage)->GetCurrentFrameIndex();
+
     proxy->OnStartFrame(frame);
 
     // OnDataAvailable
