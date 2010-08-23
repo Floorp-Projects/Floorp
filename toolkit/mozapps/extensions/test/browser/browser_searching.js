@@ -171,7 +171,7 @@ function get_actual_results() {
     if (style.display == "none" || style.visibility != "visible")
       continue;
 
-    if (item.mInstall) {
+    if (item.mInstall || item.isPending("install")) {
       var sourceURI = item.mInstall.sourceURI.spec;
       if (sourceURI == REMOTE_INSTALL_URL) {
         results.push({name: REMOTE_TO_INSTALL, item: item});
@@ -185,14 +185,16 @@ function get_actual_results() {
         continue;
       }
     }
-
-    if (item.mAddon) {
+    else if (item.mAddon) {
       var result = item.mAddon.id.match(/^(.+)@tests\.mozilla\.org$/);
       if (result != null) {
         is(item.mAddon.name.indexOf("PASS"), 0, "Addon name should start with PASS");
         results.push({name: result[1], item: item});
         continue;
       }
+    }
+    else {
+      ok(false, "Found an item in the list that was neither installing or installed");
     }
   }
 
@@ -224,12 +226,6 @@ function get_expected_results(aSortBy, aLocalExpected, aRemoteExpected) {
       expectedOrder = [ "install1", "remote1",  "addon2" , "remote2",
                         "remote3" , "addon1" , "install2", "remote4" ];
       unknownOrder = [];
-      break;
-    case "size":
-      expectedOrder = [ "addon2" , "remote2", "remote4", "addon1",
-                        "remote1", "remote3" ];
-      // Size data not available for installs
-      unknownOrder = [ "install1", "install2" ];
       break;
     case "dateUpdated":
       expectedOrder = [ "addon1", "addon2" ];
@@ -472,8 +468,8 @@ add_test(function() {
   var sorters = gManagerWindow.document.getElementById("search-sorters");
   var originalHandler = sorters.handler;
 
-  var sorterNames = ["name", "size", "dateUpdated"];
-  var buttonIds = ["btn-name", "btn-size", "btn-date"];
+  var sorterNames = ["name", "dateUpdated"];
+  var buttonIds = ["btn-name", "btn-date"];
   var currentIndex = 0;
   var currentReversed = false;
 
