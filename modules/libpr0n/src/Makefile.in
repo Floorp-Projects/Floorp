@@ -62,6 +62,11 @@ CPPSRCS		= \
                         imgStatusTracker.cpp \
 			$(NULL)
 
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/decoders/bmp
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/decoders/gif
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/decoders/jpeg
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/decoders/png
+
 include $(topsrcdir)/config/rules.mk
 
 # Because imgFrame.cpp includes "cairo.h"
