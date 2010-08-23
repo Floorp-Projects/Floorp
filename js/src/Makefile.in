@@ -320,7 +320,7 @@ CPPSRCS += 	MethodJIT.cpp \
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
-ifeq ($(OS_ARCH),WINNT)
+ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
 endif
 ifdef SOLARIS_SUNPRO_CXX
