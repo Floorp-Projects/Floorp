@@ -204,10 +204,11 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
 
+  mStatusTracker = new imgStatusTracker(nsnull);
+
   // XXXdholbert For SVG support, this mImage-construction will need to happen
   // later -- *after* we know image mimetype.
-  nsCOMPtr<imgIContainer> comImg = do_CreateInstance("@mozilla.org/image/rasterimage;1");
-  mImage = static_cast<Image*>(comImg.get());
+  mImage = new RasterImage(mStatusTracker.forget());
 
   mURI = aURI;
   mKeyURI = aKeyURI;
