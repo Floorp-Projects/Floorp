@@ -1095,7 +1095,13 @@ Tracker::set(const void* v, LIns* i)
 static inline jsuint
 argSlots(JSStackFrame* fp)
 {
-    return JS_MAX(fp->numActualArgs(), fp->numFormalArgs());
+    return fp->isEvalFrame() ? 0 : JS_MAX(fp->numActualArgs(), fp->numFormalArgs());
+}
+
+static inline jsuint
+numEntryFrameArgs(JSStackFrame* fp)
+{
+    return fp->isEvalFrame() ? 0 : fp->numActualArgs();
 }
 
 static inline bool
@@ -6104,7 +6110,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
-                                               exitedFrom, outer, cx->fp->numActualArgs(),
+                                               exitedFrom, outer, numEntryFrameArgs(cx->fp),
                                                Record_Branch, hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
@@ -6153,7 +6159,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     JS_ASSERT(r->fragment && !r->fragment->lastIns);
     TreeFragment* root = r->fragment->root;
     TreeFragment* first = LookupOrAddLoop(tm, cx->regs->pc, root->globalObj,
-                                          root->globalShape, cx->fp->numActualArgs());
+                                          root->globalShape, numEntryFrameArgs(cx->fp));
 
     /*
      * Make sure the shape of the global object still matches (this might flush
@@ -6181,7 +6187,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         TreeFragment* outerFragment = root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
-        JS_ASSERT(cx->fp->numActualArgs() == first->argc);
+        JS_ASSERT(numEntryFrameArgs(cx->fp) == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
         return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch));
@@ -7205,7 +7211,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     }
 
     jsbytecode* pc = cx->regs->pc;
-    uint32 argc = cx->fp->numActualArgs();
+    uint32 argc = numEntryFrameArgs(cx->fp);
 
     TreeFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
@@ -8247,19 +8253,16 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     uintN slot = uint16(sprop->shortid);
 
     vp = NULL;
-    uintN upvar_slot = SPROP_INVALID_SLOT;
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
         if (sprop->getterOp() == js_GetCallArg) {
             JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->argv[slot];
-            upvar_slot = slot;
             nr.v = *vp;
         } else if (sprop->getterOp() == js_GetCallVar ||
                    sprop->getterOp() == js_GetCallVarChecked) {
             JS_ASSERT(slot < cfp->getSlotCount());
             vp = &cfp->slots()[slot];
-            upvar_slot = cx->fp->numFormalArgs() + slot;
             nr.v = *vp;
         } else {
             RETURN_STOP("dynamic property of Call object");

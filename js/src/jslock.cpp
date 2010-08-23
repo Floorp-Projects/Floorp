@@ -102,7 +102,7 @@ JS_END_EXTERN_C
 static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 {
-    return _InterlockedCompareExchange64(w, nv, ov) == ov;
+    return _InterlockedCompareExchange64((long long *volatile)w, nv, ov) == ov;
 }
 
 #elif defined(XP_MACOSX) || defined(DARWIN)

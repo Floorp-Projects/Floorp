@@ -4414,6 +4414,10 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *prin
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
                                                chars, length, NULL, filename, lineno);
+    if (script && !js_NewScriptObject(cx, script)) {
+        js_DestroyScript(cx, script);
+        script = NULL;
+    }
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4509,11 +4513,15 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = Compiler::compileScript(cx, obj, NULL, NULL, tcflags,
                                      NULL, 0, fp, filename, 1);
     if (fp != stdin)
         fclose(fp);
+    if (script && !js_NewScriptObject(cx, script)) {
+        js_DestroyScript(cx, script);
+        script = NULL;
+    }
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4527,9 +4535,13 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *file
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
-    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
                                      NULL, 0, file, filename, 1);
+    if (script && !js_NewScriptObject(cx, script)) {
+        js_DestroyScript(cx, script);
+        script = NULL;
+    }
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4543,34 +4555,29 @@ JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename, FILE *f
 JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
-    JSObject *obj;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, script);
     if (!script)
         return NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
 
-    JS_ASSERT(!script->u.object);
-
-    {
-        AutoScriptRooter root(cx, script);
-
-        obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
-        if (obj) {
-            obj->setPrivate(script);
-            script->u.object = obj;
-#ifdef CHECK_SCRIPT_OWNER
-            script->owner = NULL;
-#endif
-        }
-    }
-
-    return obj;
+    /*
+     * This function should only ever be applied to JSScripts that had
+     * script objects allocated for them when they were created, as
+     * described in the comment for JSScript::u.object.
+     */
+    JS_ASSERT(script->u.object);
+    return script->u.object;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetScriptObject(JSScript *script)
 {
+    /*
+     * This function should only ever be applied to JSScripts that had
+     * script objects allocated for them when they were created, as
+     * described in the comment for JSScript::u.object.
+     */
+    JS_ASSERT(script->u.object);
     return script->u.object;
 }
 
@@ -4578,8 +4585,17 @@ JS_PUBLIC_API(void)
 JS_DestroyScript(JSContext *cx, JSScript *script)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, script);
-    js_DestroyScript(cx, script);
+
+    /*
+     * Originally, JSScript lifetimes were managed explicitly, and this function
+     * was used to free a JSScript. Now, this function does nothing, and the
+     * garbage collector manages JSScripts; you must root the JSScript's script
+     * object (obtained via JS_GetScriptObject) to keep it alive.
+     *
+     * However, since the script objects have taken over this responsibility, it
+     * follows that every script passed here must have a script object.
+     */
+    JS_ASSERT(script->u.object);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4741,6 +4757,8 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, script);
+    /* This should receive only scripts handed out via the JSAPI. */
+    JS_ASSERT(script == JSScript::emptyScript() || script->u.object);
     ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
@@ -4768,7 +4786,7 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     }
     ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
-    JS_DestroyScript(cx, script);
+    js_DestroyScript(cx, script);
     return ok;
 }
 
