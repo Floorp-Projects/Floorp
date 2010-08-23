@@ -163,10 +163,10 @@ public:
   virtual PRUint16 GetType() { return imgIContainer::TYPE_RASTER; }
 
   // Methods inherited from Image
-  nsresult Init(imgIDecoderObserver *aObserver,
+  nsresult Init(imgIDecoderObserver* aObserver,
                 const char* aMimeType,
                 PRUint32 aFlags);
-  nsresult GetCurrentFrameRect(nsIntRect& aRect);
+  void     GetCurrentFrameRect(nsIntRect& aRect);
   PRUint32 GetCurrentFrameIndex();
   PRUint32 GetNumFrames();
   PRUint32 GetDataSize();

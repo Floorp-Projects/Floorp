@@ -467,30 +467,24 @@ RasterImage::GetCurrentFrameIsOpaque(PRBool *aIsOpaque)
   return NS_OK;
 }
 
-nsresult
-RasterImage::GetCurrentFrameRect(nsIntRect &aRect)
+void
+RasterImage::GetCurrentFrameRect(nsIntRect& aRect)
 {
-  if (mError)
-    return NS_ERROR_FAILURE;
-
   // Get the current frame
-  imgFrame *curframe = GetCurrentImgFrame();
+  imgFrame* curframe = GetCurrentImgFrame();
 
   // If we have the frame, use that rectangle
-  if (curframe)
+  if (curframe) {
     aRect = curframe->GetRect();
-
-  // If the frame doesn't exist, we pass the empty rectangle. It's not clear
-  // whether this is appropriate in general, but at the moment the only
-  // consumer of this method is imgRequest (when it wants to figure out dirty
-  // rectangles to send out batched observer updates). This should probably be
-  // revisited when we fix bug 503973.
-  else {
+  } else {
+    // If the frame doesn't exist, we pass the empty rectangle. It's not clear
+    // whether this is appropriate in general, but at the moment the only
+    // consumer of this method is imgStatusTracker (when it wants to figure out
+    // dirty rectangles to send out batched observer updates). This should
+    // probably be revisited when we fix bug 503973.
     aRect.MoveTo(0, 0);
     aRect.SizeTo(0, 0);
   }
-
-  return NS_OK;
 }
 
 PRUint32
