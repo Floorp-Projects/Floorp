@@ -135,12 +135,10 @@ class PICStubCompiler
   protected:
     void spew(const char *event, const char *op)
     {
-#ifdef JS_METHODJIT_SPEW
         JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                    type, event, op, script->filename,
                    js_FramePCToLineNumber(f.cx, f.fp()));
     }
-#endif
 };
 
 class PICRepatchBuffer : public JSC::RepatchBuffer
