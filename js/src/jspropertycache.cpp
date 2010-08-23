@@ -345,18 +345,19 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
         JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
 #ifdef DEBUG_notme
+        JSScript *script = cx->fp()->getScript();
         fprintf(stderr,
                 "id miss for %s from %s:%u"
                 " (pc %u, kpc %u, kshape %u, shape %u)\n",
                 js_AtomToPrintableString(cx, atom),
-                cx->fp->script->filename,
-                js_PCToLineNumber(cx, cx->fp->script, pc),
-                pc - cx->fp->script->code,
-                entry->kpc - cx->fp->script->code,
+                script->filename,
+                js_PCToLineNumber(cx, script, pc),
+                pc - script->code,
+                entry->kpc - script->code,
                 entry->kshape,
                 obj->shape());
-                js_Disassemble1(cx, cx->fp->script, pc,
-                                pc - cx->fp->script->code,
+                js_Disassemble1(cx, script, pc,
+                                pc - script->code,
                                 JS_FALSE, stderr);
 #endif
 
