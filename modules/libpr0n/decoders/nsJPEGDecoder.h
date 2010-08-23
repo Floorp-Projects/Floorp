@@ -91,7 +91,7 @@ public:
 
   virtual nsresult InitInternal();
   virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual nsresult ShutdownInternal(PRUint32 aFlags);
+  virtual nsresult FinishInternal();
 
   void NotifyDone(PRBool aSuccess);
 

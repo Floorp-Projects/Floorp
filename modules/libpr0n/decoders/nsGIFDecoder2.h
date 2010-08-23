@@ -63,7 +63,7 @@ public:
 
   virtual nsresult InitInternal();
   virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual nsresult ShutdownInternal(PRUint32 aFlags);
+  virtual nsresult FinishInternal();
 
 private:
   /* These functions will be called when the decoder has a decoded row,
