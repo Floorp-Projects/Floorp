@@ -77,13 +77,11 @@ nsIconDecoder::InitInternal()
 }
 
 nsresult
-nsIconDecoder::ShutdownInternal(PRUint32 aFlags)
+nsIconDecoder::FinishInternal()
 {
   // If we haven't notified of completion yet for a full/success decode, we
   // didn't finish. Notify in error mode
-  if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      !IsSizeDecode() &&
-      !mNotifiedDone)
+  if (!IsSizeDecode() && !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 
   return NS_OK;

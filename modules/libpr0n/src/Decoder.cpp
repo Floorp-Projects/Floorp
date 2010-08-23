@@ -60,7 +60,8 @@ Decoder::Init(imgIContainer *aImage,
 NS_IMETHODIMP
 Decoder::Close(PRUint32 aFlags)
 {
-  return Shutdown(aFlags);
+  NS_ABORT_IF_FALSE(0, "Not reached!");
+  return NS_OK;
 }
 
 NS_IMETHODIMP Decoder::Flush()
@@ -78,6 +79,7 @@ Decoder::Decoder()
 
 Decoder::~Decoder()
 {
+  NS_WARN_IF_FALSE(!mInFrame, "Shutting down decoder mid-frame!");
   mInitialized = false;
 }
 
@@ -90,6 +92,9 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
 {
   // We should always have an image
   NS_ABORT_IF_FALSE(aImage, "Can't initialize decoder without an image!");
+
+  // No re-initializing
+  NS_ABORT_IF_FALSE(mImage == nsnull, "Can't re-initialize a decoder!");
 
   // Save our paremeters
   mImage = aImage;
@@ -116,20 +121,6 @@ Decoder::Finish()
   return FinishInternal();
 }
 
-nsresult
-Decoder::Shutdown(PRUint32 aFlags)
-{
-  // Implementation-specific shutdown
-  nsresult rv = ShutdownInternal(aFlags);
-
-  // Get rid of our strong references
-  mImage = nsnull;
-  mObserver = nsnull;
-
-  NS_ABORT_IF_FALSE(!mInFrame, "Shutting down mid-frame!");
-  return rv;
-}
-
 /*
  * Hook stubs. Override these as necessary in decoder implementations.
  */
@@ -137,7 +128,6 @@ Decoder::Shutdown(PRUint32 aFlags)
 nsresult Decoder::InitInternal() {return NS_OK; }
 nsresult Decoder::WriteInternal(const char* aBuffer, PRUint32 aCount) {return NS_OK; }
 nsresult Decoder::FinishInternal() {return NS_OK; }
-nsresult Decoder::ShutdownInternal(PRUint32 aFlags) {return NS_OK; }
 
 /*
  * Progress Notifications
