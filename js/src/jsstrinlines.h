@@ -80,14 +80,4 @@ JSRopeBuilder::JSRopeBuilder(JSContext *cx) {
     mStr = cx->runtime->emptyString;
 }
 
-inline JSBool
-js_StringValueToCharBuffer(JSContext *cx, const js::Value &arg, JSCharBuffer &cb)
-{
-    JS_ASSERT(arg.isString());
-    const jschar *chars;
-    size_t length;
-    arg.toString()->getCharsAndLength(chars, length);
-    return cb.append(chars, length);
-}
-
 #endif /* jsstrinlines_h___ */
