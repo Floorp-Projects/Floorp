@@ -110,7 +110,6 @@ CPPSRCS		= \
 		nsHTMLTableRowElement.cpp \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
-		nsHTMLTimeRanges.cpp \
 		nsHTMLTitleElement.cpp \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
@@ -122,6 +121,7 @@ CPPSRCS		+= \
 		nsHTMLMediaElement.cpp \
 		nsHTMLMediaError.cpp \
 		nsHTMLSourceElement.cpp \
+		nsHTMLTimeRanges.cpp \
 		nsHTMLVideoElement.cpp \
 		$(NULL)
 endif
