@@ -699,7 +699,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   nsIWebGLUniformLocation getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
-  void getVertexAttrib(in WebGLuint index, in WebGLenum pname);
+  nsIVariant getVertexAttrib(in WebGLuint index, in WebGLenum pname);
 
   // TBD
   // void glGetVertexAttribPointerv(WebGLuint index, WebGLenum pname, void** pointer);
