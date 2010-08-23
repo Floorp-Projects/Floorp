@@ -776,7 +776,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
   if (decoder->mFrameIsHidden)
     return;
 
-  if (row_num >= decoder->mFrameRect.height)
+  if (row_num >= (png_uint_32) decoder->mFrameRect.height)
     return;
 
   if (new_row) {
