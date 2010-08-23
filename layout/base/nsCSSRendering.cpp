@@ -1176,7 +1176,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  nsCSSShadowArray* shadows = aForFrame->GetEffectiveBoxShadows();
+  nsCSSShadowArray* shadows = aForFrame->GetStyleBorder()->mBoxShadow;
   if (!shadows)
     return;
   const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
@@ -1304,7 +1304,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  nsCSSShadowArray* shadows = aForFrame->GetEffectiveBoxShadows();
+  nsCSSShadowArray* shadows = aForFrame->GetStyleBorder()->mBoxShadow;
   if (!shadows)
     return;
   const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
