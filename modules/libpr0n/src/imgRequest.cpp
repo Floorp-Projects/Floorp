@@ -960,7 +960,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
     /* now we have mimetype, so we can infer the image type that we want */
     imageType = mContentType.EqualsLiteral(SVG_MIMETYPE) ?
-      imgIContainer::TYPE_VECTOR : imgIContainer::TYPE_RASTER;
+      (PRUint16) imgIContainer::TYPE_VECTOR : (PRUint16) imgIContainer::TYPE_RASTER;
 
     /* set our mimetype as a property */
     nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
