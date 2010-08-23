@@ -917,106 +917,13 @@ function testDuplicateError() {
           "found test-duplicate-error.html");
 
         text = null;
-        testOutputCopy();
+        testWebConsoleClose();
       });
     }
   };
 
   Services.console.registerListener(consoleObserver);
   content.location = TEST_DUPLICATE_ERROR_URI;
-}
-
-function testOutputCopy()
-{
-  // See bugs 574036, 586386 and 587617.
-
-  var HUD = HUDService.getDisplayByURISpec(content.location.href);
-  var filterBox = HUD.querySelector(".hud-filter-box");
-  var outputNode = HUD.querySelector(".hud-output-node");
-  var selection = getSelection();
-  var jstermInput = HUD.querySelector(".jsterm-input-node");
-  var console = content.wrappedJSObject.console;
-  var contentSelection = content.getSelection();
-  var menu_copy = document.getElementById("menu_copy");
-  var menu_popup = document.getElementById("menu_EditPopup");
-  var selectedNode = null;
-  filterBox.value = "";
-  HUDService.updateFilterText(filterBox);
-
-  var make_selection = function () {
-    ok(menu_copy.disabled, "menu_copy is disabled");
-
-    console.log("Hello world!");
-
-    var range = document.createRange();
-    selectedNode = outputNode.querySelector(".hud-group > label:last-child");
-    range.selectNode(selectedNode);
-    selection.addRange(range);
-    selectedNode.focus();
-
-    menu_popup.addEventListener("popuphidden", function (aEvent) {
-      if (aEvent.target != menu_popup) {
-        return;
-      }
-      aEvent.target.removeEventListener("popuphidden", arguments.callee, false);
-
-      menu_popup.addEventListener("popupshown", menu_copy_enabled, false);
-      menu_popup.openPopup(null, "overlap", 0, 0, false, false);
-    }, false);
-
-    menu_popup.hidePopup();
-  };
-
-  var menu_copy_enabled = function (aEvent) {
-    if (aEvent.target != menu_popup) {
-      return;
-    }
-    aEvent.target.removeEventListener(aEvent.type, arguments.callee, false);
-
-    ok(!menu_popup.disabled, "menu_copy is enabled");
-
-    menu_popup.hidePopup();
-
-    waitForClipboard(selectedNode.textContent, clipboard_setup,
-      clipboard_copy_done, clipboard_copy_done);
-  };
-
-  var clipboard_setup = function () {
-    goDoCommand("cmd_copy");
-  };
-
-  var clipboard_copy_done = function () {
-    selection.removeAllRanges();
-    testWebConsoleClose();
-  };
-
-  // Check if we first need to clear any existing selections.
-  if (selection.rangeCount > 0 || contentSelection.rangeCount > 0 ||
-    jstermInput.selectionStart != jstermInput.selectionEnd) {
-    if (jstermInput.selectionStart != jstermInput.selectionEnd) {
-      jstermInput.selectionStart = jstermInput.selectionEnd = 0;
-    }
-
-    if (selection.rangeCount > 0) {
-      selection.removeAllRanges();
-    }
-
-    if (contentSelection.rangeCount > 0) {
-      contentSelection.removeAllRanges();
-    }
-
-    menu_popup.addEventListener("popupshown", function (aEvent) {
-      if (aEvent.target == menu_popup) {
-        aEvent.target.removeEventListener(aEvent.type, arguments.callee, false);
-        make_selection();
-      }
-    }, false);
-    menu_popup.openPopup(null, "overlap", 0, 0, false, false);
-  }
-  else {
-    // Nothing is selected.
-    make_selection();
-  }
 }
 
 /**
