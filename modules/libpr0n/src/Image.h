@@ -85,10 +85,9 @@ public:
 
   /**
    * The rectangle defining the location and size of the currently displayed
-   * frame.  Should be an attribute, but can't be because of reference/pointer
-   * conflicts with native types in xpidl.
+   * frame.
    */
-  virtual nsresult GetCurrentFrameRect(nsIntRect& aRect) = 0;
+  virtual void GetCurrentFrameRect(nsIntRect& aRect) = 0;
 
   /**
    * The index of the current frame that would be drawn if the image was to be
