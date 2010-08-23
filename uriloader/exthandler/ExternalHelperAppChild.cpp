@@ -39,6 +39,7 @@
 #include "ExternalHelperAppChild.h"
 #include "nsIInputStream.h"
 #include "nsIRequest.h"
+#include "nsIResumableChannel.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -90,7 +91,11 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
   // FIXME: Eventually we should implement this:
   // mHandler->OnStartRequest(request, ctx);
-  SendOnStartRequest();
+  nsCString entityID;
+  nsCOMPtr<nsIResumableChannel> resumable(do_QueryInterface(request));
+  if (resumable)
+    resumable->GetEntityID(entityID);
+  SendOnStartRequest(entityID);
   return NS_OK;
 }
 
