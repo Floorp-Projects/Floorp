@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if input is disabled and invalid, it is barred from constraint
+             validation and should not be affected by :invalid pseudo-class. -->
+  <style>
+    input { background-color: green; }
+    input:invalid { background-color: red; }
+  </style>
+  <script>
+    function onLoadHandler()
+    {
+      var e = document.getElementById('i');
+      e.setCustomValidity('foo');
+      e.disabled = 'true';
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onLoadHandler();">
+    <input id='i'>
+  </body>
+</html>

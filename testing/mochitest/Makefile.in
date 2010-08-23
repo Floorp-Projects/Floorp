@@ -116,12 +116,6 @@ libs:: $(_MOD_PYWEBSOCKET_FILES)
 libs:: $(_HANDSHAKE_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket/mod_pywebsocket/handshake
 
-runtests.py: runtests.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(DEFINES) $(ACDEFINES) $^ > $@
-
-GARBAGE += runtests.py
-
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
 
@@ -149,6 +143,10 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 TEST_HARNESS_BINS += fix-linux-stack.pl
+endif
+
+ifeq (gtk2_1,$(MOZ_WIDGET_TOOLKIT)_$(MOZ_X11))
+TEST_HARNESS_BINS += screentopng
 endif
 
 # Components / typelibs that don't get packaged with

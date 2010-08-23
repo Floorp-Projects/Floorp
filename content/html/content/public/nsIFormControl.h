@@ -101,8 +101,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0xc2f7723a, 0x106a, 0x47ef, \
- { 0xa9, 0xff, 0x4b, 0x4f, 0x73, 0x47, 0xe7, 0xa6 } }
+{ 0x218eb090, 0x32eb, 0x4e2a, \
+ { 0x96, 0x42, 0xcd, 0xcd, 0x33, 0xae, 0xdb, 0x95 } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -207,6 +207,12 @@ public:
    * @return Whether this is a labelable form control.
    */
   virtual PRBool IsLabelableControl() const = 0;
+
+  /**
+   * Returns true if this is a submittable form control.
+   * @return Whether this is a submittable form control.
+   */
+  virtual PRBool IsSubmittableControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

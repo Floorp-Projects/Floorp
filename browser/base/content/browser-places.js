@@ -576,13 +576,13 @@ HistoryMenu.prototype = {
 
   toggleRecentlyClosedTabs: function HM_toggleRecentlyClosedTabs() {
     // enable/disable the Recently Closed Tabs sub menu
-    var undoPopup = document.getElementById("historyUndoPopup");
+    var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedTabsMenu")[0];
 
     // no restorable tabs, so disable menu
     if (this._ss.getClosedTabCount(window) == 0)
-      undoPopup.parentNode.setAttribute("disabled", true);
+      undoMenu.setAttribute("disabled", true);
     else
-      undoPopup.parentNode.removeAttribute("disabled");
+      undoMenu.removeAttribute("disabled");
   },
 
   /**
@@ -603,7 +603,8 @@ HistoryMenu.prototype = {
    * Populate when the history menu is opened
    */
   populateUndoSubmenu: function PHM_populateUndoSubmenu() {
-    var undoPopup = document.getElementById("historyUndoPopup");
+    var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedTabsMenu")[0];
+    var undoPopup = undoMenu.firstChild;
 
     // remove existing menu items
     while (undoPopup.hasChildNodes())
@@ -611,12 +612,12 @@ HistoryMenu.prototype = {
 
     // no restorable tabs, so make sure menu is disabled, and return
     if (this._ss.getClosedTabCount(window) == 0) {
-      undoPopup.parentNode.setAttribute("disabled", true);
+      undoMenu.setAttribute("disabled", true);
       return;
     }
 
     // enable menu
-    undoPopup.parentNode.removeAttribute("disabled");
+    undoMenu.removeAttribute("disabled");
 
     // populate menu
     var undoItems = eval("(" + this._ss.getClosedTabData(window) + ")");
@@ -661,20 +662,21 @@ HistoryMenu.prototype = {
 
   toggleRecentlyClosedWindows: function PHM_toggleRecentlyClosedWindows() {
     // enable/disable the Recently Closed Windows sub menu
-    let undoPopup = document.getElementById("historyUndoWindowPopup");
+    var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedWindowsMenu")[0];
 
     // no restorable windows, so disable menu
     if (this._ss.getClosedWindowCount() == 0)
-      undoPopup.parentNode.setAttribute("disabled", true);
+      undoMenu.setAttribute("disabled", true);
     else
-      undoPopup.parentNode.removeAttribute("disabled");
+      undoMenu.removeAttribute("disabled");
   },
 
   /**
    * Populate when the history menu is opened
    */
   populateUndoWindowSubmenu: function PHM_populateUndoWindowSubmenu() {
-    let undoPopup = document.getElementById("historyUndoWindowPopup");
+    let undoMenu = this._rootElt.getElementsByClassName("recentlyClosedWindowsMenu")[0];
+    let undoPopup = undoMenu.firstChild;
     let menuLabelString = gNavigatorBundle.getString("menuUndoCloseWindowLabel");
     let menuLabelStringSingleTab =
       gNavigatorBundle.getString("menuUndoCloseWindowSingleTabLabel");
@@ -685,12 +687,12 @@ HistoryMenu.prototype = {
 
     // no restorable windows, so make sure menu is disabled, and return
     if (this._ss.getClosedWindowCount() == 0) {
-      undoPopup.parentNode.setAttribute("disabled", true);
+      undoMenu.setAttribute("disabled", true);
       return;
     }
 
     // enable menu
-    undoPopup.parentNode.removeAttribute("disabled");
+    undoMenu.removeAttribute("disabled");
 
     // populate menu
     let undoItems = JSON.parse(this._ss.getClosedWindowData());

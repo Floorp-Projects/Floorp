@@ -261,8 +261,8 @@ private:
 
 class nsDisplayPlugin : public nsDisplayItem {
 public:
-  nsDisplayPlugin(nsIFrame* aFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayPlugin(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayPlugin);
   }

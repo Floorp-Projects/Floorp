@@ -142,11 +142,12 @@ run_for_side_effects := \
 
 include $(TOPSRCDIR)/.mozconfig.mk
 
+ifndef MOZ_OBJDIR
+  MOZ_OBJDIR = obj-$(CONFIG_GUESS)
+endif
+
 ifdef MOZ_BUILD_PROJECTS
 
-ifndef MOZ_OBJDIR
-  $(error When MOZ_BUILD_PROJECTS is set, you must set MOZ_OBJDIR)
-endif
 ifdef MOZ_CURRENT_PROJECT
   OBJDIR = $(MOZ_OBJDIR)/$(MOZ_CURRENT_PROJECT)
   MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
@@ -158,13 +159,8 @@ endif
 
 else # MOZ_BUILD_PROJECTS
 
-ifdef MOZ_OBJDIR
-  OBJDIR = $(MOZ_OBJDIR)
-  MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
-else
-  OBJDIR := $(TOPSRCDIR)
-  MOZ_MAKE := $(MAKE) $(MOZ_MAKE_FLAGS)
-endif
+OBJDIR = $(MOZ_OBJDIR)
+MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 
 endif # MOZ_BUILD_PROJECTS
 
