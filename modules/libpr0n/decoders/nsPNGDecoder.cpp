@@ -61,18 +61,6 @@
 
 using namespace mozilla::imagelib;
 
-static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
-static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
-                                png_uint_32 row_num, int pass);
-#ifdef PNG_APNG_SUPPORTED
-static void PNGAPI frame_info_callback(png_structp png_ptr,
-                                       png_uint_32 frame_num);
-#endif
-static void PNGAPI end_callback(png_structp png_ptr, png_infop info_ptr);
-static void PNGAPI error_callback(png_structp png_ptr,
-                                  png_const_charp error_msg);
-static void PNGAPI warning_callback(png_structp png_ptr,
-                                    png_const_charp warning_msg);
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
 static PRLogModuleInfo *gPNGDecoderAccountingLog =
@@ -285,8 +273,8 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
   /* Always decode to 24 bit pixdepth */
 
   mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                NULL, error_callback,
-                                warning_callback);
+                                NULL, nsPNGDecoder::error_callback,
+                                nsPNGDecoder::warning_callback);
   if (!mPNG)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -312,7 +300,9 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
 
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */
   png_set_progressive_read_fn(mPNG, static_cast<png_voidp>(this),
-                              info_callback, row_callback, end_callback);
+                              nsPNGDecoder::info_callback,
+                              nsPNGDecoder::row_callback,
+                              nsPNGDecoder::end_callback);
 
 
   return NS_OK;
@@ -557,7 +547,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 }
 
 void
-info_callback(png_structp png_ptr, png_infop info_ptr)
+nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 {
 /*  int number_passes;   NOT USED  */
   png_uint_32 width, height;
@@ -696,7 +686,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
-    png_set_progressive_frame_fn(png_ptr, frame_info_callback, NULL);
+    png_set_progressive_frame_fn(png_ptr, nsPNGDecoder::frame_info_callback, NULL);
 
   if (png_get_first_frame_is_hidden(png_ptr, info_ptr)) {
     decoder->mFrameIsHidden = PR_TRUE;
@@ -737,8 +727,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 }
 
 void
-row_callback(png_structp png_ptr, png_bytep new_row,
-             png_uint_32 row_num, int pass)
+nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
+                           png_uint_32 row_num, int pass)
 {
   /* libpng comments:
    *
@@ -872,7 +862,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
 
 // got the header of a new frame that's coming
 void
-frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
+nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 {
 #ifdef PNG_APNG_SUPPORTED
   png_uint_32 x_offset, y_offset;
@@ -897,7 +887,7 @@ frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 }
 
 void
-end_callback(png_structp png_ptr, png_infop info_ptr)
+nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 {
   /* libpng comments:
    *
@@ -930,7 +920,7 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
 
 
 void
-error_callback(png_structp png_ptr, png_const_charp error_msg)
+nsPNGDecoder::error_callback(png_structp png_ptr, png_const_charp error_msg)
 {
   PR_LOG(gPNGLog, PR_LOG_ERROR, ("libpng error: %s\n", error_msg));
   longjmp(png_jmpbuf(png_ptr), 1);
@@ -938,7 +928,7 @@ error_callback(png_structp png_ptr, png_const_charp error_msg)
 
 
 void
-warning_callback(png_structp png_ptr, png_const_charp warning_msg)
+nsPNGDecoder::warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
