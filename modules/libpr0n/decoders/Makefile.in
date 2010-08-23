@@ -42,7 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
+DECODERS = png gif jpeg bmp
+
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = icon/gtk icon
 endif
@@ -61,9 +62,8 @@ endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS = icon/mac icon
 endif
-endif # icon
 
-DIRS += $(filter-out icon,$(MOZ_IMG_DECODERS))
+DIRS += $(DECODERS)
 
 include $(topsrcdir)/config/rules.mk
 
