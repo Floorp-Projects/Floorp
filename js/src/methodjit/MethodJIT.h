@@ -68,7 +68,6 @@ struct VMFrame
     VMFrame      *previous;
     JSFrameRegs  *oldRegs;
     JSFrameRegs  regs;
-    JSStackFrame *fp;
     JSContext    *cx;
     Value        *stackLimit;
     JSStackFrame *entryFp;
@@ -132,9 +131,11 @@ struct VMFrame
 
     JSRuntime *runtime() { return cx->runtime; }
 
+    JSStackFrame *&fp() { return regs.fp; }
+
     bool slowEnsureSpace(uint32 nslots);
 
-    inline bool ensureSpace(uint32 nmissing, uint32 nslots) {
+    bool ensureSpace(uint32 nmissing, uint32 nslots) {
         /* Fast check - if it's below the limit, it's safe to just get a frame. */
         if (JS_LIKELY(regs.sp + VALUES_PER_STACK_FRAME + nmissing + nslots < stackLimit))
             return true;
