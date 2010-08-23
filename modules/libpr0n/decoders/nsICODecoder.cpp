@@ -234,12 +234,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
   if (mPos == mImageOffset + BITMAPINFOSIZE) {
 
     ProcessInfoHeader();
-    rv = mImage->SetSize(mDirEntry.mWidth, mDirEntry.mHeight);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (mObserver) {
-      rv = mObserver->OnStartContainer(nsnull, mImage);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    PostSize(mDirEntry.mWidth, mDirEntry.mHeight);
     if (IsSizeDecode())
       return NS_OK;
 
