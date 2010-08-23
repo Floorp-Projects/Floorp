@@ -178,7 +178,7 @@ var AddonManagerInternal = {
     this.installListeners = [];
     this.addonListeners = [];
 
-    let appChanged = true;
+    let appChanged = undefined;
 
     try {
       appChanged = Services.appinfo.version !=
@@ -186,7 +186,7 @@ var AddonManagerInternal = {
     }
     catch (e) { }
 
-    if (appChanged) {
+    if (appChanged !== false) {
       LOG("Application has been upgraded");
       Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
                                  Services.appinfo.version);
