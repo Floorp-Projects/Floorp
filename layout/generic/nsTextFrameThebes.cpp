@@ -4548,7 +4548,7 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                     shadowGfxRect.Width(), shadowGfxRect.Height());
 
   nsContextBoxBlur contextBoxBlur;
-  gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
+  gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
                                                   PresContext()->AppUnitsPerDevPixel(),
                                                   aCtx, aDirtyRect, nsnull);
   if (!shadowContext)
