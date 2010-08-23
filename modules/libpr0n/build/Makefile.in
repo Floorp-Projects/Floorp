@@ -93,8 +93,6 @@ GARBAGE += _img_list nsImgBuildDefines.h
 
 export::
 	{ \
-	$(foreach d,$(filter-out icon,$(DECODERS)), \
-		echo "#define IMG_BUILD_DECODER_${d}" ; ) \
 	$(foreach d,$(MOZ_IMG_ENCODERS), \
 		echo "#define IMG_BUILD_ENCODER_${d}" ; ) \
 	} > nsImgBuildDefines.tmp
