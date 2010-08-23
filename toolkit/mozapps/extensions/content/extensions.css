@@ -35,6 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace xhtml "http://www.w3.org/1999/xhtml";
+
+/* HTML link elements do weird things to the layout if they are not hidden */
+xhtml|link {
+  display: none;
+}
+
 #categories {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#categories-list");
 }
