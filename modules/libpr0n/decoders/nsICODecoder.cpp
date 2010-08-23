@@ -84,46 +84,6 @@ nsICODecoder::nsICODecoder()
 
 nsICODecoder::~nsICODecoder()
 {
-}
-
-nsresult
-nsICODecoder::InitInternal()
-{
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-
-  return NS_OK;
-}
-
-nsresult
-nsICODecoder::ShutdownInternal(PRUint32 aFlags)
-{
-  nsresult rv = NS_OK;
-
-  // We should never make multiple frames
-  NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple ICO frames?");
-
-  // Send notifications if appropriate
-  if (!IsSizeDecode() &&
-      !mError && !(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      (GetFrameCount() == 1)) {
-    // Tell the image that it's data has been updated 
-    nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
-    rv = mImage->FrameUpdated(0, r);
-
-
-    if (mObserver) {
-      mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
-    }
-    PostFrameStop();
-    mImage->DecodingComplete();
-    if (mObserver) {
-      mObserver->OnStopContainer(nsnull, 0);
-      mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
-    }
-  }
-
   mPos = 0;
 
   delete[] mColors;
@@ -139,6 +99,43 @@ nsICODecoder::ShutdownInternal(PRUint32 aFlags)
     mRow = nsnull;
   }
   mDecodingAndMask = PR_FALSE;
+}
+
+nsresult
+nsICODecoder::InitInternal()
+{
+  // Fire OnStartDecode at init time to support bug 512435
+  if (!IsSizeDecode() && mObserver)
+    mObserver->OnStartDecode(nsnull);
+
+  return NS_OK;
+}
+
+nsresult
+nsICODecoder::FinishInternal()
+{
+  nsresult rv = NS_OK;
+
+  // We should never make multiple frames
+  NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple ICO frames?");
+
+  // Send notifications if appropriate
+  if (!IsSizeDecode() && !mError && (GetFrameCount() == 1)) {
+    // Tell the image that it's data has been updated 
+    nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
+    rv = mImage->FrameUpdated(0, r);
+
+
+    if (mObserver) {
+      mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
+    }
+    PostFrameStop();
+    mImage->DecodingComplete();
+    if (mObserver) {
+      mObserver->OnStopContainer(nsnull, 0);
+      mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+    }
+  }
 
   return rv;
 }
