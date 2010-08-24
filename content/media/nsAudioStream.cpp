@@ -76,7 +76,8 @@ nsAudioStream::nsAudioStream() :
   mRate(0),
   mChannels(0),
   mFormat(FORMAT_S16_LE),
-  mPaused(PR_FALSE)
+  mPaused(PR_FALSE),
+  mInError(PR_FALSE)
 {
 }
 
@@ -97,6 +98,7 @@ void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aForm
                            aRate,
                            aNumChannels) != SA_SUCCESS) {
     mAudioHandle = nsnull;
+    mInError = PR_TRUE;
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_create_pcm error"));
     return;
   }
@@ -104,9 +106,11 @@ void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aForm
   if (sa_stream_open(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
     sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
     mAudioHandle = nsnull;
+    mInError = PR_TRUE;
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_open error"));
     return;
   }
+  mInError = PR_FALSE;
 }
 
 void nsAudioStream::Shutdown()
@@ -116,6 +120,7 @@ void nsAudioStream::Shutdown()
 
   sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
   mAudioHandle = nsnull;
+  mInError = PR_TRUE;
 }
 
 void nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
@@ -124,11 +129,11 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
                     "Buffer size must be divisible by channel count");
   NS_ASSERTION(!mPaused, "Don't write audio when paused, you'll block");
 
+  if (mInError)
+    return;
+
   PRUint32 offset = mBufferOverflow.Length();
   PRUint32 count = aCount + offset;
-
-  if (!mAudioHandle)
-    return;
 
   nsAutoArrayPtr<short> s_data(new short[count]);
 
@@ -193,7 +198,7 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
                         count * sizeof(short)) != SA_SUCCESS)
     {
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
-      Shutdown();
+      mInError = PR_TRUE;
     }
   }
 }
@@ -202,7 +207,7 @@ PRUint32 nsAudioStream::Available()
 {
   // If the audio backend failed to open, lie and say we'll accept some
   // data.
-  if (!mAudioHandle)
+  if (mInError)
     return FAKE_BUFFER_SIZE;
 
   size_t s = 0; 
@@ -218,7 +223,7 @@ void nsAudioStream::SetVolume(float aVolume)
 #if defined(SA_PER_STREAM_VOLUME)
   if (sa_stream_set_volume_abs(static_cast<sa_stream_t*>(mAudioHandle), aVolume) != SA_SUCCESS) {
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_set_volume_abs error"));
-    Shutdown();
+    mInError = PR_TRUE;
   }
 #else
   mVolume = aVolume;
@@ -227,7 +232,7 @@ void nsAudioStream::SetVolume(float aVolume)
 
 void nsAudioStream::Drain()
 {
-  if (!mAudioHandle)
+  if (mInError)
     return;
 
   // Write any remaining unwritten sound data in the overflow buffer
@@ -235,19 +240,21 @@ void nsAudioStream::Drain()
     if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
                         mBufferOverflow.Elements(),
                         mBufferOverflow.Length() * sizeof(short)) != SA_SUCCESS)
+      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
+      mInError = PR_TRUE;
       return;
   }
 
   int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
   if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
-    Shutdown();
+    mInError = PR_TRUE;
   }
 }
 
 void nsAudioStream::Pause()
 {
-  if (!mAudioHandle)
+  if (mInError)
     return;
   mPaused = PR_TRUE;
   sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
@@ -255,7 +262,7 @@ void nsAudioStream::Pause()
 
 void nsAudioStream::Resume()
 {
-  if (!mAudioHandle)
+  if (mInError)
     return;
   mPaused = PR_FALSE;
   sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
@@ -263,7 +270,7 @@ void nsAudioStream::Resume()
 
 PRInt64 nsAudioStream::GetPosition()
 {
-  if (!mAudioHandle)
+  if (mInError)
     return -1;
 
   sa_position_t positionType = SA_POSITION_WRITE_SOFTWARE;
