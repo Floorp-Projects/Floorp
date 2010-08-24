@@ -335,7 +335,7 @@ struct PICInfo {
     void reset() {
         hit = false;
         inlinePathPatched = false;
-        if (kind == GET || kind == CALL) {
+        if (kind == GET || kind == CALL || kind == GETELEM) {
             u.get.secondShapeGuard = 0;
             u.get.objNeedsRemat = false;
         }
