@@ -745,6 +745,9 @@ nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
     nsCOMPtr<nsIAccessibleTableCell> tableCellAcc =
       do_QueryInterface(cell);
 
+    // GetCellAt should always return an nsIAccessibleTableCell (XXX Bug 587529)
+    NS_ENSURE_STATE(tableCellAcc);
+
     PRInt32 origIdx = 1;
     if (moveToLeft)
       rv = tableCellAcc->GetColumnIndex(&origIdx);
