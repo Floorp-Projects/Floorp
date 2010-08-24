@@ -455,13 +455,28 @@
 
 /*** search view ***/
 
-.search-filter {
-  padding: 20px;
-  -moz-box-align: center;
-  background-color: #FFF;
+#search-filter {
+  padding: 5px 20px;
   font-size: 120%;
 }
 
+#search-filter-label {
+  font-weight: bold;
+  color: grey;
+}
+
+.search-filter-radio {
+  padding: 0px 6px;
+  margin: 0px 3px;
+}
+
+.search-filter-radio .radio-spacer-box {
+  display: none;
+}
+
+.search-filter-radio .radio-icon {
+  display: none;
+}
 
 /*** detail view ***/
 
