@@ -57,7 +57,9 @@ chrome.jar:
   content/prompt/prompt.js             (content/prompt/prompt.js)
   content/share.xul                    (content/share.xul)
   content/AnimatedZoom.js              (content/AnimatedZoom.js)
+#ifdef MOZ_SERVICES_SYNC
   content/sync.js                      (content/sync.js)
+#endif
   content/LoginManagerChild.js         (content/LoginManagerChild.js)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul

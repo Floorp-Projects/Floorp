@@ -425,8 +425,10 @@ var BrowserUI = {
           .ensureContentProcess();
 #endif
 
+#ifdef MOZ_SERVICES_SYNC
       // Init the sync system
       WeaveGlue.init();
+#endif
     });
 
     FormHelperUI.init();
@@ -2255,9 +2257,11 @@ XPCOMUtils.defineLazyGetter(this, "HistoryList", function() {
   return new AwesomePanel("history-items", "cmd_history");
 });
 
+#ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyGetter(this, "RemoteTabsList", function() {
   return new AwesomePanel("remotetabs-items", "cmd_remoteTabs");
 });
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "AllPagesList", function() {
   return new AwesomePanel("popup_autocomplete", "cmd_openLocation");

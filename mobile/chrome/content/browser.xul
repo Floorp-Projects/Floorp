@@ -87,7 +87,9 @@
   <script type="application/javascript" src="chrome://browser/content/TileManager.js"/>
   <script type="application/javascript" src="chrome://browser/content/BrowserView.js"/>
   <script type="application/javascript" src="chrome://browser/content/AnimatedZoom.js"/>
+#ifdef MOZ_SERVICES_SYNC
   <script type="application/javascript" src="chrome://browser/content/sync.js"/>
+#endif
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
@@ -115,7 +117,9 @@
     <!-- tabs -->
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+#ifdef MOZ_SERVICES_SYNC
     <command id="cmd_remoteTabs" oncommand="CommandUpdater.doCommand(this.id);" disabled="true"/>
+#endif
     <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- bookmarking -->
@@ -448,6 +452,7 @@
                   <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
                 </setting>
               </settings>
+#ifdef MOZ_SERVICES_SYNC
               <settings id="prefs-sync" label="&sync.title;">
                 <setting id="sync-user" type="string" title="&sync.username;" />
                 <setting id="sync-pass" type="string" inputtype="password" title="&sync.password;" />
@@ -463,6 +468,7 @@
                   <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();" />
                 </setting>
               </settings>
+#endif
             </richlistbox>
           </notificationbox>
         </vbox>
@@ -497,7 +503,9 @@
         <toolbarbutton type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all show-text" checked="true"/>
         <toolbarbutton type="radio" group="awesome-header" label="&bookmarksHeader.label;" command="cmd_bookmarks" class="choice-bookmarks show-text"/>
         <toolbarbutton type="radio" group="awesome-header" label="&historyHeader.label;" command="cmd_history" class="choice-history show-text"/>
+#ifdef MOZ_SERVICES_SYNC
         <toolbarbutton type="radio" group="awesome-header" label="&desktopHeader.label;" command="cmd_remoteTabs" class="choice-remotetabs show-text"/>
+#endif
       </hbox>
 
       <!-- titlebar autocomplete results -->
