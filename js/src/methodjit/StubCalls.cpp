@@ -482,18 +482,11 @@ stubs::GetElem(VMFrame &f)
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
-    const Value *copyFrom;
-
-    JSObject *obj;
-    jsid id;
-    int i;
-
-    if (lval.isString() && rval.isInt32()) {
-        JSString *str = lval.toString();
-        i = rval.toInt32();
-
+    Value &lref = regs.sp[-2];
+    Value &rref = regs.sp[-1];
+    if (lref.isString() && rref.isInt32()) {
+        JSString *str = lref.toString();
+        int32_t i = rref.toInt32();
         if ((size_t)i < str->length()) {
             str = JSString::getUnitString(cx, str, (size_t)i);
             if (!str)
@@ -503,27 +496,29 @@ stubs::GetElem(VMFrame &f)
         }
     }
 
-    obj = ValueToObject(cx, &lval);
+    JSObject *obj = ValueToObject(cx, &lref);
     if (!obj)
         THROW();
 
-    if (rval.isInt32()) {
+    const Value *copyFrom;
+    Value rval;
+    jsid id;
+    if (rref.isInt32()) {
+        int32_t i = rref.toInt32();
         if (obj->isDenseArray()) {
-            jsuint idx = jsuint(rval.toInt32());
+            jsuint idx = jsuint(i);
             
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
                 copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
-                /* Otherwise, fall to getProperty(). */
+
+                /* Reload retval from the stack in the rare hole case. */
+                copyFrom = &regs.sp[-1];
             }
-        } else if (obj->isArguments()
-#if 0 /* def JS_TRACER */
-                   && !GetArgsPrivateNative(obj)
-#endif
-                  ) {
-            uint32 arg = uint32(rval.toInt32());
+        } else if (obj->isArguments()) {
+            uint32 arg = uint32(i);
 
             if (arg < obj->getArgsInitialLength()) {
                 JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
@@ -538,10 +533,14 @@ stubs::GetElem(VMFrame &f)
                 /* Otherwise, fall to getProperty(). */
             }
         }
-        id = INT_TO_JSID(rval.toInt32());
+        if (JS_LIKELY(INT_FITS_IN_JSID(i)))
+            id = INT_TO_JSID(i);
+        else
+            goto intern_big_int;
 
     } else {
-        if (!js_InternNonIntElementId(cx, obj, rval, &id))
+      intern_big_int:
+        if (!js_InternNonIntElementId(cx, obj, rref, &id))
             THROW();
     }
 
