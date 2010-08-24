@@ -588,6 +588,12 @@ MouseModule.prototype = {
     } else {
       // now we're done, says our secret 3rd argument
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
+
+      if (dragData.isPan()) {
+        let event = document.createEvent("Events");
+        event.initEvent("PanFinished", true, false);
+        this._browserViewContainer.dispatchEvent(event);
+      }
     }
   },
 
