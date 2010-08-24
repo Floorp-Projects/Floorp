@@ -1350,6 +1350,10 @@ pageaction:hover:active > vbox > .pageaction-desc {
   min-height: 70px;
 }
 
+#content-navigator > #select-container > spacer {
+  display: none;
+}
+
 #select-buttons {
   padding: 4px 8px; /* row size & core spacing */
 }
