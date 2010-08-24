@@ -77,7 +77,7 @@ struct JSONParser
 {
     JSONParser(JSContext *cx)
      : hexChar(), numHex(), statep(), stateStack(), rootVal(), objectStack(),
-       objectKey(cx), buffer(cx)
+       objectKey(cx), buffer(cx), suppressErrors(false)
     {}
 
     /* Used while handling \uNNNN in strings */
@@ -90,6 +90,7 @@ struct JSONParser
     JSObject *objectStack;
     js::Vector<jschar, 8> objectKey;
     js::Vector<jschar, 8> buffer;
+    bool suppressErrors;
 };
 
 #ifdef _MSC_VER
@@ -655,6 +656,14 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
     return true;
 }
 
+static JSBool
+JSONParseError(JSContext *cx, JSONParser *jp)
+{
+    if (!jp->suppressErrors)
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
+    return JS_FALSE;
+}
+
 static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
@@ -673,7 +682,7 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
 }
 
 JSONParser *
-js_BeginJSONParse(JSContext *cx, Value *rootVal)
+js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= true*/)
 {
     if (!cx)
         return NULL;
@@ -693,6 +702,7 @@ js_BeginJSONParse(JSContext *cx, Value *rootVal)
     jp->statep = jp->stateStack;
     *jp->statep = JSON_PARSE_STATE_INIT;
     jp->rootVal = rootVal;
+    jp->suppressErrors = suppressErrors;
 
     return jp;
 
@@ -734,10 +744,8 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, const Value &reviver)
     if (!early_ok)
         return false;
 
-    if (!ok) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return false;
-    }
+    if (!ok)
+        return !!JSONParseError(cx, jp);
 
     if (reviver.isObject() && reviver.toObject().isCallable())
         ok = Revive(cx, reviver, vp);
@@ -750,15 +758,13 @@ PushState(JSContext *cx, JSONParser *jp, JSONParserState state)
 {
     if (*jp->statep == JSON_PARSE_STATE_FINISHED) {
         // extra input
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
+        return JSONParseError(cx, jp);
     }
 
     jp->statep++;
     if ((uint32)(jp->statep - jp->stateStack) >= JS_ARRAY_LENGTH(jp->stateStack)) {
         // too deep
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
+        return JSONParseError(cx, jp);
     }
 
     *jp->statep = state;
@@ -772,8 +778,7 @@ PopState(JSContext *cx, JSONParser *jp)
     jp->statep--;
     if (jp->statep < jp->stateStack) {
         jp->statep = jp->stateStack;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
+        return JSONParseError(cx, jp);
     }
 
     if (*jp->statep == JSON_PARSE_STATE_INIT)
@@ -811,10 +816,8 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
     jsuint len;
     if (!js_GetLengthProperty(cx, jp->objectStack, &len))
         return JS_FALSE;
-    if (len >= JSON_MAX_DEPTH) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
-    }
+    if (len >= JSON_MAX_DEPTH)
+        return JSONParseError(cx, jp);
 
     AutoObjectRooter tvr(cx, obj);
     Value v = ObjectOrNullValue(obj);
@@ -917,8 +920,7 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
         return JS_FALSE;
     if (ep != buf + len) {
         // bad number input
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
+        return JSONParseError(cx, jp);
     }
 
     return PushPrimitive(cx, jp, DoubleValue(val));
@@ -941,8 +943,7 @@ HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
     TokenKind tt = js_CheckKeyword(buf, len);
     if (tt != TOK_PRIMARY) {
         // bad keyword
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
+        return JSONParseError(cx, jp);
     }
 
     if (buf[0] == 'n') {
@@ -952,8 +953,7 @@ HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
     } else if (buf[0] == 'f') {
         keyword.setBoolean(false);
     } else {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE;
+        return JSONParseError(cx, jp);
     }
 
     return PushPrimitive(cx, jp, keyword);
@@ -1006,10 +1006,8 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 if (!PopState(cx, jp))
                     return JS_FALSE;
 
-                if (*jp->statep != JSON_PARSE_STATE_ARRAY) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                    return JS_FALSE;
-                }
+                if (*jp->statep != JSON_PARSE_STATE_ARRAY)
+                    return JSONParseError(cx, jp);
 
                 if (!CloseArray(cx, jp) || !PopState(cx, jp))
                     return JS_FALSE;
@@ -1019,8 +1017,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
             if (c == '}') {
                 // we should only find these in OBJECT_KEY state
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
 
             if (c == '"') {
@@ -1053,8 +1050,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 if (!OpenArray(cx, jp) || !PushState(cx, jp, JSON_PARSE_STATE_VALUE))
                     return JS_FALSE;
             } else if (!JS_ISXMLSPACE(c)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
             break;
 
@@ -1066,12 +1062,11 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 if (!PushState(cx, jp, JSON_PARSE_STATE_OBJECT_PAIR))
                     return JS_FALSE;
             } else if (c == ']' || !JS_ISXMLSPACE(c)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
             break;
 
-          case JSON_PARSE_STATE_ARRAY :
+          case JSON_PARSE_STATE_ARRAY:
             if (c == ']') {
                 if (!CloseArray(cx, jp) || !PopState(cx, jp))
                     return JS_FALSE;
@@ -1079,12 +1074,11 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 if (!PushState(cx, jp, JSON_PARSE_STATE_VALUE))
                     return JS_FALSE;
             } else if (!JS_ISXMLSPACE(c)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
             break;
 
-          case JSON_PARSE_STATE_OBJECT_PAIR :
+          case JSON_PARSE_STATE_OBJECT_PAIR:
             if (c == '"') {
                 // we want to be waiting for a : when the string has been read
                 *jp->statep = JSON_PARSE_STATE_OBJECT_IN_PAIR;
@@ -1095,8 +1089,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 if (!CloseObject(cx, jp) || !PopState(cx, jp) || !PopState(cx, jp))
                     return JS_FALSE;
             } else if (c == ']' || !JS_ISXMLSPACE(c)) {
-              JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-              return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
             break;
 
@@ -1104,8 +1097,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
             if (c == ':') {
                 *jp->statep = JSON_PARSE_STATE_VALUE;
             } else if (!JS_ISXMLSPACE(c)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
             break;
 
@@ -1126,8 +1118,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
             } else if (c < 31) {
                 // The JSON lexical grammer does not allow a JSONStringCharacter to be
                 // any of the Unicode characters U+0000 thru U+001F (control characters).
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             } else {
                 if (!jp->buffer.append(c))
                     return JS_FALSE;
@@ -1152,8 +1143,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     *jp->statep = JSON_PARSE_STATE_STRING_HEX;
                     continue;
                 } else {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                    return JS_FALSE;
+                    return JSONParseError(cx, jp);
                 }
             }
 
@@ -1170,8 +1160,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
             } else if (('A' <= c) && (c <= 'F')) {
                 jp->hexChar = (jp->hexChar << 4) | (c - 'A' + 0x0a);
             } else {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
 
             if (++(jp->numHex) == 4) {
@@ -1215,8 +1204,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
           case JSON_PARSE_STATE_FINISHED:
             if (!JS_ISXMLSPACE(c)) {
                 // extra input
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-                return JS_FALSE;
+                return JSONParseError(cx, jp);
             }
             break;
 
