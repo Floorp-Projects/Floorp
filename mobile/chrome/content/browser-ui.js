@@ -2150,8 +2150,8 @@ var SharingUI = {
       button.className = "prompt-button";
       button.setAttribute("label", handler.name);
       button.addEventListener("command", function() {
-        handler.callback(aURL, aTitle);
         SharingUI.hide();
+        handler.callback(aURL, aTitle);
       }, false);
       bbox.appendChild(button);
     });
