@@ -50,7 +50,6 @@ MODULE_NAME	= nsImageLib2Module
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-
 CPPSRCS = \
 		nsImageModule.cpp \
 		$(NULL)
@@ -58,16 +57,13 @@ CPPSRCS = \
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../src \
-		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-			-I$(srcdir)/../decoders/${d}) \
 		$(foreach d,$(MOZ_IMG_ENCODERS), \
 			-I$(srcdir)/../encoders/${d}) \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
-		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-			../decoders/${d}/$(LIB_PREFIX)img${d}_s.$(LIB_SUFFIX))\
+		../decoders/$(LIB_PREFIX)imgdecoders_s.$(LIB_SUFFIX) \
 		$(foreach d,$(MOZ_IMG_ENCODERS), \
 			../encoders/${d}/$(LIB_PREFIX)img${d}e_s.$(LIB_SUFFIX))\
 		$(NULL)
@@ -92,8 +88,6 @@ GARBAGE += _img_list nsImgBuildDefines.h
 
 export::
 	{ \
-	$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-		echo "#define IMG_BUILD_DECODER_${d}" ; ) \
 	$(foreach d,$(MOZ_IMG_ENCODERS), \
 		echo "#define IMG_BUILD_ENCODER_${d}" ; ) \
 	} > nsImgBuildDefines.tmp

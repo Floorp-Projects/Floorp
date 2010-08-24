@@ -2604,11 +2604,6 @@ function BrowserOnClick(event) {
         );
       }
     }
-    else if (/^about:privatebrowsing/.test(errorDoc.documentURI)) {
-      if (ot == errorDoc.getElementById("startPrivateBrowsing")) {
-        gPrivateBrowsingUI.toggleMode();
-      }
-    }
 }
 
 /**
@@ -6643,16 +6638,22 @@ var FeedHandler = {
     }
   },
 
+  get _feedMenuitem() {
+    delete this._feedMenuitem;
+    return this._feedMenuitem = document.getElementById("singleFeedMenuitemState");
+  },
+
+  get _feedMenupopup() {
+    delete this._feedMenupopup;
+    return this._feedMenupopup = document.getElementById("multipleFeedsMenuState");
+  },
+
   /**
    * Update the browser UI to show whether or not feeds are available when
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
     var feedButton = document.getElementById("feed-button");
-    if (!this._feedMenuitem)
-      this._feedMenuitem = document.getElementById("subscribeToPageMenuitem");
-    if (!this._feedMenupopup)
-      this._feedMenupopup = document.getElementById("subscribeToPageMenupopup");
 
     var feeds = gBrowser.selectedBrowser.feeds;
     if (!feeds || feeds.length == 0) {

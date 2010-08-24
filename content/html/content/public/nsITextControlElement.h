@@ -194,6 +194,11 @@ public:
    */
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify) = 0;
 
+  /**
+   * Callback called whenever the value is changed.
+   */
+  NS_IMETHOD_(void) OnValueChanged(PRBool aNotify) = 0;
+
   static const PRInt32 DEFAULT_COLS = 20;
   static const PRInt32 DEFAULT_ROWS = 1;
   static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;

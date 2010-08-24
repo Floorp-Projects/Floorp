@@ -143,6 +143,7 @@ namespace mozilla {
 namespace imagelib {
 
 class imgDecodeWorker;
+class Decoder;
 
 class RasterImage : public mozilla::imagelib::Image,
                     public nsITimerCallback,
@@ -166,9 +167,9 @@ public:
                 const char* aMimeType,
                 PRUint32 aFlags);
   nsresult GetCurrentFrameRect(nsIntRect& aRect);
-  nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx);
-  nsresult GetNumFrames(PRUint32* aNumFrames);
-  nsresult GetDataSize(PRUint32* aDataSize);
+  PRUint32 GetCurrentFrameIndex();
+  PRUint32 GetNumFrames();
+  PRUint32 GetDataSize();
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
@@ -458,10 +459,9 @@ private: // data
   friend class DiscardTracker;
 
   // Decoder and friends
-  nsCOMPtr<imgIDecoder>          mDecoder;
+  nsRefPtr<Decoder>              mDecoder;
   nsRefPtr<imgDecodeWorker>      mWorker;
   PRUint32                       mBytesDecoded;
-  PRUint32                       mDecoderFlags;
 
   // Boolean flags (clustered together to conserve space):
   PRPackedBool               mHasSize:1;       // Has SetSize() been called?
@@ -483,7 +483,7 @@ private: // data
   // Decoding
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
-  nsresult InitDecoder(PRUint32 dFlags);
+  nsresult InitDecoder(bool aDoSizeDecode);
   nsresult WriteToDecoder(const char *aBuffer, PRUint32 aCount);
   nsresult DecodeSomeData(PRUint32 aMaxBytes);
   PRBool   IsDecodeFinished();
