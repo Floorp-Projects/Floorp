@@ -38,35 +38,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_ShadowLayersChild_h
-#define mozilla_layers_ShadowLayersChild_h
-
-#include "mozilla/layers/PLayersChild.h"
+#include "ShadowLayerChild.h"
+#include "ShadowLayersChild.h"
 
 namespace mozilla {
 namespace layers {
 
-class ShadowLayersChild : public PLayersChild
+void
+ShadowLayersChild::Destroy()
 {
-public:
-  ShadowLayersChild() { }
-  ~ShadowLayersChild() { }
+  NS_ABORT_IF_FALSE(0 == ManagedPLayerChild().Length(),
+                    "layers should have been cleaned up by now");
+  PLayersChild::Send__delete__(this);
+  // WARNING: |this| has gone to the great heap in the sky
+}
 
-  /**
-   * Clean this up, finishing with Send__delete__().
-   *
-   * It is expected (checked with an assert) that all shadow layers
-   * created by this have already been destroyed and
-   * Send__delete__()d by the time this method is called.
-   */
-  void Destroy();
+PLayerChild*
+ShadowLayersChild::AllocPLayer()
+{
+  // we always use the "power-user" ctor
+  NS_RUNTIMEABORT("not reached");
+  return NULL;
+}
 
-protected:
-  NS_OVERRIDE virtual PLayerChild* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerChild* actor);
-};
+bool
+ShadowLayersChild::DeallocPLayer(PLayerChild* actor)
+{
+  delete actor;
+  return true;
+}
 
-} // namespace layers
-} // namespace mozilla
-
-#endif // ifndef mozilla_layers_ShadowLayersChild_h
+}  // namespace layers
+}  // namespace mozilla

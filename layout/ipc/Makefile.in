@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # The Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2009
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -41,31 +41,22 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = dom
-LIBRARY_NAME = domipc_s
+MODULE = layout
+LIBRARY_NAME = gkipc_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
-EXPORTS = TabMessageUtils.h
+EXPORTS_NAMESPACES = mozilla/layout
 
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-  ContentChild.h \
-  ContentParent.h \
-  ContentProcess.h \
-  TabParent.h \
-  TabChild.h \
+EXPORTS_mozilla/layout = \
+  RenderFrameChild.h \
+  RenderFrameParent.h \
   $(NULL)
 
 CPPSRCS = \
-  ContentProcess.cpp \
-  ContentParent.cpp \
-  ContentChild.cpp \
-  TabParent.cpp \
-  TabChild.cpp \
-  TabMessageUtils.cpp \
+  RenderFrameChild.cpp \
+  RenderFrameParent.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -73,15 +64,8 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
-		-I$(srcdir)/../../content/base/src \
-		-I$(srcdir)/../../content/events/src \
-		-I$(srcdir)/../../toolkit/components/places/src \
-		-I$(srcdir)/../src/geolocation \
-		-I$(topsrcdir)/chrome/src \
-		-I$(topsrcdir)/uriloader/exthandler \
-		-I$(srcdir)/../../netwerk/base/src \
+		-I$(topsrcdir)/content/base/src \
+		-I$(topsrcdir)/layout/base \
+		-I$(topsrcdir)/layout/generic \
+		-I$(topsrcdir)/layout/xul/base/src \
 		$(NULL)
-
-DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
-
-CXXFLAGS += $(TK_CFLAGS)

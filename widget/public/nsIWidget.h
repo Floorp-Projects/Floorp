@@ -52,6 +52,7 @@
 #include "nsNativeWidget.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
+#include "nsXULAppAPI.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -1237,7 +1238,30 @@ class nsIWidget : public nsISupports {
                                               PRBool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
 
-    
+#ifdef MOZ_IPC
+    /**
+     * Return true if this process shouldn't use platform widgets, and
+     * so should use PuppetWidgets instead.  If this returns true, the
+     * result of creating and using a platform widget is undefined,
+     * and likely to end in crashes or other buggy behavior.
+     */
+    static bool
+    UsePuppetWidgets()
+    { return XRE_GetProcessType() == GeckoProcessType_Content; }
+
+    /**
+     * Allocate and return a "puppet widget" that doesn't directly
+     * correlate to a platform widget; platform events and data must
+     * be fed to it.  Currently used in content processes.  NULL is
+     * returned if puppet widgets aren't supported in this build
+     * config, on this platform, or for this process type.
+     *
+     * This function is called "Create" to match CreateInstance().
+     * The returned widget must still be nsIWidget::Create()d.
+     */
+    static already_AddRefed<nsIWidget>
+    CreatePuppetWidget();
+#endif
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

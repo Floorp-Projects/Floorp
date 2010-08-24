@@ -38,35 +38,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_ShadowLayersChild_h
-#define mozilla_layers_ShadowLayersChild_h
+#include "RenderFrameChild.h"
+#include "mozilla/layers/ShadowLayersChild.h"
 
-#include "mozilla/layers/PLayersChild.h"
+using mozilla::layers::PLayersChild;
+using mozilla::layers::ShadowLayersChild;
 
 namespace mozilla {
-namespace layers {
+namespace layout {
 
-class ShadowLayersChild : public PLayersChild
+void
+RenderFrameChild::Destroy()
 {
-public:
-  ShadowLayersChild() { }
-  ~ShadowLayersChild() { }
+  size_t numChildren = ManagedPLayersChild().Length();
+  NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
+                    "render frame must only have 0 or 1 layer forwarder");
 
-  /**
-   * Clean this up, finishing with Send__delete__().
-   *
-   * It is expected (checked with an assert) that all shadow layers
-   * created by this have already been destroyed and
-   * Send__delete__()d by the time this method is called.
-   */
-  void Destroy();
+  if (numChildren) {
+    ShadowLayersChild* layers =
+      static_cast<ShadowLayersChild*>(ManagedPLayersChild()[0]);
+    layers->Destroy();
+    // |layers| was just deleted, take care
+  }
 
-protected:
-  NS_OVERRIDE virtual PLayerChild* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerChild* actor);
-};
+  Send__delete__(this);
+  // WARNING: |this| is dead, hands off
+}
 
-} // namespace layers
-} // namespace mozilla
+PLayersChild*
+RenderFrameChild::AllocPLayers()
+{
+  return new ShadowLayersChild();
+}
 
-#endif // ifndef mozilla_layers_ShadowLayersChild_h
+bool
+RenderFrameChild::DeallocPLayers(PLayersChild* aLayers)
+{
+  delete aLayers;
+  return true;
+}
+
+}  // namespace layout
+}  // namespace mozilla

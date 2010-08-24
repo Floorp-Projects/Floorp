@@ -42,6 +42,11 @@
  * as <frame>, <iframe>, and some <object>s
  */
 
+#ifdef MOZ_IPC
+#include "mozilla/layout/RenderFrameParent.h"
+using mozilla::layout::RenderFrameParent;
+#endif
+
 #include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
 #include "nsGenericHTMLElement.h"
@@ -374,7 +379,20 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+#ifdef MOZ_IPC
+  nsFrameLoader* frameLoader = FrameLoader();
+  if (frameLoader) {
+    RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
+    if (rfp) {
+      // We're the subdoc for <browser remote="true"> and it has
+      // painted content.  Display its shadow layer tree.
+      return aLists.Content()
+        ->AppendNewToTop(new (aBuilder) nsDisplayRemote(this, rfp));
+    }
+  }
+#endif
+
   if (!mInnerView)
     return NS_OK;
   nsIView* subdocView = mInnerView->GetFirstChild();
@@ -971,15 +989,6 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   mInnerView = innerView;
   viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
-  if (aContentType == eContentTypeContent) {
-    // widget needed.
-    nsresult rv = innerView->CreateWidget(nsnull,
-                                          PR_TRUE, PR_TRUE, aContentType);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Couldn't create widget for frame.");
-      mInnerView = nsnull;
-    }
-  }
   return mInnerView;
 }
 
