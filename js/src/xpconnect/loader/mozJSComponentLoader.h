@@ -57,12 +57,6 @@
 #ifndef XPCONNECT_STANDALONE
 #include "nsIPrincipal.h"
 #endif
-#ifdef MOZ_ENABLE_LIBXUL
-#include "mozilla/scache/StartupCache.h"
-
-using namespace mozilla::scache;
-#endif
-
 #include "xpcIJSGetFactory.h"
 
 /* 6bd13476-1dd2-11b2-bbef-f0ccb5fa64b6 (thanks, mozbot) */
@@ -133,16 +127,23 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                                char **location,
                                jsval *exception);
 
-#ifdef MOZ_ENABLE_LIBXUL
-    nsresult ReadScript(StartupCache *cache, nsIURI *uri, 
-                        JSContext *cx, JSScript **script);
-    nsresult WriteScript(StartupCache *cache, JSScript *script,
-                         nsIFile *component, nsIURI *uri, JSContext *cx);
-#endif
+    nsresult StartFastLoad(nsIFastLoadService *flSvc);
+    nsresult ReadScript(nsIFastLoadService *flSvc, const char *nativePath,
+                        nsIURI *uri, JSContext *cx, JSScript **script);
+    nsresult WriteScript(nsIFastLoadService *flSvc, JSScript *script,
+                         nsIFile *component, const char *nativePath,
+                         nsIURI *uri, JSContext *cx);
+    static void CloseFastLoad(nsITimer *timer, void *closure);
+    void CloseFastLoad();
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIThreadJSContextStack> mContextStack;
+    nsCOMPtr<nsIFile> mFastLoadFile;
+    nsRefPtr<nsXPCFastLoadIO> mFastLoadIO;
+    nsCOMPtr<nsIObjectInputStream> mFastLoadInput;
+    nsCOMPtr<nsIObjectOutputStream> mFastLoadOutput;
+    nsCOMPtr<nsITimer> mFastLoadTimer;
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 #endif
