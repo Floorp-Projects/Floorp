@@ -1,0 +1,12 @@
+<html>
+<head>
+	<title>Testcase for bug 582649</title>
+</head>
+<body>
+<script>
+var foo = [];
+foo[0] = foo;
+document.body.setUserData("foo", foo, null);
+</script>
+</body>
+</html>
