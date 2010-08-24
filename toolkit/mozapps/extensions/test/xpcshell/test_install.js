@@ -556,7 +556,11 @@ function run_test_10() {
 }
 
 function check_test_10(install) {
-  prepare_test({}, [
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onOperationCancelled"
+    ]
+  }, [
     "onInstallCancelled"
   ]);
 
@@ -798,6 +802,83 @@ function check_test_12() {
     a7.uninstall();
 
     restartManager();
+
+    run_test_13();
+  });
+}
+
+
+// Tests that cancelling an upgrade leaves the original add-on's pendingOperations
+// correct
+function run_test_13() {
+  installAllFiles([do_get_addon("test_install2_1")], function() {
+    restartManager();
+
+    prepare_test({ }, [
+      "onNewInstall"
+    ]);
+
+    let url = "http://localhost:4444/addons/test_install2_2.xpi";
+    AddonManager.getInstallForURL(url, function(install) {
+      ensure_test_completed();
+
+      do_check_neq(install, null);
+      do_check_eq(install.version, "3.0");
+      do_check_eq(install.name, "Test 3");
+      do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+
+      AddonManager.getAllInstalls(function(activeInstalls) {
+        do_check_eq(activeInstalls.length, 1);
+        do_check_eq(activeInstalls[0], install);
+        do_check_eq(install.existingAddon, null);
+
+        prepare_test({
+          "addon2@tests.mozilla.org": [
+            "onInstalling"
+          ]
+        }, [
+          "onDownloadStarted",
+          "onDownloadEnded",
+          "onInstallStarted",
+          "onInstallEnded",
+        ], check_test_13);
+        install.install();
+      });
+    }, "application/x-xpinstall", null, "Test 3", null, "3.0");
+  });
+}
+
+function check_test_13(install) {
+  ensure_test_completed();
+
+  do_check_eq(install.version, "3.0");
+  do_check_eq(install.name, "Real Test 3");
+  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
+  do_check_neq(install.existingAddon, null);
+  do_check_eq(install.existingAddon.id, "addon2@tests.mozilla.org");
+  do_check_eq(install.addon.install, install);
+
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
+    do_check_neq(olda2, null);
+    do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
+    do_check_eq(olda2.pendingUpgrade, install.addon);
+
+    do_check_true(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+
+    prepare_test({
+      "addon2@tests.mozilla.org": [
+        "onOperationCancelled"
+      ]
+    }, [
+      "onInstallCancelled",
+    ]);
+
+    install.cancel();
+
+    do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+
+    do_check_false(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
+    do_check_eq(olda2.pendingUpgrade, null);
 
     end_test();
   });

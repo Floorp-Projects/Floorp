@@ -791,13 +791,6 @@ nsThebesDeviceContext::CreateRenderingContextInstance(nsIRenderingContext *&aCon
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::SupportsNativeWidgets(PRBool &aSupportsWidgets)
-{
-    aSupportsWidgets = PR_TRUE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesDeviceContext::ClearCachedSystemFonts()
 {
     //clear our cache of stored system fonts

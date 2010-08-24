@@ -84,6 +84,7 @@ _BROWSER_FILES = head.js \
                  browser_relative.js \
                  browser_cancel.js \
                  browser_multipackage.js \
+                 browser_trigger_redirect.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
@@ -101,6 +102,7 @@ _BROWSER_FILES = head.js \
                  installtrigger.html \
                  startsoftwareupdate.html \
                  installchrome.html \
+                 triggerredirect.html \
                  authRedirect.sjs \
                  cookieRedirect.sjs \
                  bug540558.html \

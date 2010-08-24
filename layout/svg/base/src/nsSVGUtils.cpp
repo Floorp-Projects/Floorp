@@ -1204,28 +1204,6 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
   return surfaceSize;
 }
 
-gfxASurface *
-nsSVGUtils::GetThebesComputationalSurface()
-{
-  if (!gThebesComputationalSurface) {
-    nsRefPtr<gfxImageSurface> surface =
-      new gfxImageSurface(gfxIntSize(1, 1), gfxASurface::ImageFormatARGB32);
-    NS_ASSERTION(surface && !surface->CairoStatus(),
-                 "Could not create offscreen surface");
-    gThebesComputationalSurface = surface;
-    // we want to keep this surface around
-    NS_IF_ADDREF(gThebesComputationalSurface);
-  }
-
-  return gThebesComputationalSurface;
-}
-
-void
-nsSVGUtils::Shutdown()
-{
-  NS_IF_RELEASE(gThebesComputationalSurface);
-}
-
 gfxMatrix
 nsSVGUtils::ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix)
 {
@@ -1250,7 +1228,7 @@ nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
   if (aMatrix.IsSingular()) {
     return PR_FALSE;
   }
-  gfxContext ctx(GetThebesComputationalSurface());
+  gfxContext ctx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
   ctx.SetMatrix(aMatrix);
   ctx.NewPath();
   ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));

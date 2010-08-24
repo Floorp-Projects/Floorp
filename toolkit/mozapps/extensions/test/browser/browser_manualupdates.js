@@ -84,7 +84,7 @@ add_test(function() {
     is(gManagerWindow.gViewController.currentViewId, "addons://updates/available", "Available Updates view should be the current view");
     run_next_test();
   }, true);
-  EventUtils.synthesizeMouse(gAvailableCategory, 0, 0, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(gAvailableCategory, 2, 2, { }, gManagerWindow);
 });
 
 

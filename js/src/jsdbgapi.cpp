@@ -2341,7 +2341,7 @@ jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 JS_FRIEND_API(void)
 js::StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
 
     char *script_file = jstv_Filename(fp);
     JSHashNumber hash = JS_HashString(script_file);
