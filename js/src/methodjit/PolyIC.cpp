@@ -1901,8 +1901,8 @@ ic::GetElem(VMFrame &f, uint32 picIndex)
     f.regs.sp[-2] = v;
 }
 
-static void JS_FASTCALL
-SetPropDumb(VMFrame &f, uint32 index)
+void JS_FASTCALL
+ic::SetPropDumb(VMFrame &f, uint32 index)
 {
     JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];

@@ -353,6 +353,7 @@ void JS_FASTCALL SetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL CallProp(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
 void JS_FASTCALL BindName(VMFrame &f, uint32 index);
+void JS_FASTCALL SetPropDumb(VMFrame &f, uint32 index);
 
 } /* namespace ic */
 } /* namespace mjit */
