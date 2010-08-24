@@ -55,6 +55,10 @@ void nsQAppInstance::AddRef(void) {
       QApplication::setGraphicsSystem(QString(graphicsSystem));
 #if (MOZ_PLATFORM_MAEMO == 6)
     QApplication::setStyle(QLatin1String("windows"));
+    if (!gArgc) {
+      gArgv[gArgc] = strdup("nsQAppInstance");
+      gArgc++;
+    }
 #endif
     sQAppInstance = new QApplication(gArgc, gArgv);
   }
