@@ -163,7 +163,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
                   aRect.x * 4;
       sourceStride = sourceSurface->Stride();
     } else if (mSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-      sourceSurface = static_cast<gfxImageSurface*>(sourceSurface.get());
+      sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
       if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32 &&
           sourceSurface->Format() != gfxASurface::ImageFormatRGB24)
       {
@@ -179,7 +179,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
       nsRefPtr<gfxContext> ctx = new gfxContext(sourceSurface);
       ctx->Translate(gfxPoint(-aRect.x, -aRect.y));
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx->SetSource(sourceSurface);
+      ctx->SetSource(mSurface);
       ctx->Paint();
       startBits = sourceSurface->Data();
       sourceStride = sourceSurface->Stride();
