@@ -112,7 +112,7 @@ public:
         NS_IF_ADDREF(*result = mJarReader);
     }
 
-    PRInt32 GetContentLength()
+    PRInt64 GetContentLength()
     {
         return mContentLength;
     }
@@ -127,7 +127,7 @@ private:
     nsCString                   mJarDirSpec;
     nsCOMPtr<nsIInputStream>    mJarStream;
     nsCString                   mJarEntry;
-    PRInt32                     mContentLength;
+    PRInt64                     mContentLength;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
@@ -173,8 +173,11 @@ nsJARInputThunk::EnsureJarStream()
     }
 
     // ask the JarStream for the content length
-    rv = mJarStream->Available((PRUint32 *) &mContentLength);
+    // XXX want a 64-bit value from nsIInputStream::Available()
+    PRUint32 contentLength;
+    rv = mJarStream->Available(&contentLength);
     if (NS_FAILED(rv)) return rv;
+    mContentLength = contentLength;
 
     return NS_OK;
 }
@@ -629,7 +632,7 @@ nsJARChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetContentLength(PRInt32 *result)
+nsJARChannel::GetContentLength(PRInt64 *result)
 {
     // if content length is unknown, query mJarInput...
     if (mContentLength < 0 && mJarInput)
@@ -640,7 +643,7 @@ nsJARChannel::GetContentLength(PRInt32 *result)
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetContentLength(PRInt32 aContentLength)
+nsJARChannel::SetContentLength(PRInt64 aContentLength)
 {
     // XXX does this really make any sense at all?
     mContentLength = aContentLength;
@@ -902,14 +905,14 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
     nsresult rv;
 
+    // XXX want 64-bit values in OnDataAvailable
     rv = mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
 
     // simply report progress here instead of hooking ourselves up as a
     // nsITransportEventSink implementation.
-    // XXX do the 64-bit stuff for real
     if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
         mProgressSink->OnProgress(this, nsnull, PRUint64(offset + count),
-                                  PRUint64(mContentLength));
+                                  mContentLength);
 
     return rv; // let the pump cancel on failure
 }

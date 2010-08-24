@@ -56,7 +56,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(c63a055a-a676-4e71-bf3c-6cfa11082018)]
+[scriptable, uuid(e0bb5c49-c54e-4efb-8f0d-6a7edd926fab)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -151,13 +151,11 @@ interface nsIChannel : nsIRequest
 
     /**
      * The length of the data associated with the channel if available.  A value
-     * of -1 indicates that the content length is unknown.
-     *
-     * Callers should prefer getting the "content-length" property
-     * as 64-bit value by QIing the channel to nsIPropertyBag2,
-     * if that interface is exposed by the channel.
+     * of -1 indicates that the content length is unknown. Note that this
+     * is a 64-bit value and obsoletes the "content-length" property used on
+     * some channels.
      */
-    attribute long contentLength;
+    attribute PRInt64 contentLength;
 
     /**
      * Synchronously open the channel.

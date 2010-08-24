@@ -290,14 +290,14 @@ STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags)
   SystemTimeToFileTime((const SYSTEMTIME*)&st, (LPFILETIME)&statstg->mtime);
   statstg->ctime = statstg->atime = statstg->mtime;
 
-  PRInt32 nLength = 0;
+  PRInt64 nLength = 0;
   if (mChannel)
     mChannel->GetContentLength(&nLength);
 
   if (nLength < 0) 
     nLength = 0;
 
-  statstg->cbSize.LowPart = (DWORD)nLength;
+  statstg->cbSize.QuadPart = nLength;
   statstg->grfMode = STGM_READ;
   statstg->grfLocksSupported = LOCK_ONLYONCE;
   statstg->clsid = CLSID_NULL;
