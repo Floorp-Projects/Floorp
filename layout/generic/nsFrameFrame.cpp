@@ -388,7 +388,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // We're the subdoc for <browser remote="true"> and it has
       // painted content.  Display its shadow layer tree.
       return aLists.Content()
-        ->AppendNewToTop(new (aBuilder) nsDisplayRemote(this, rfp));
+        ->AppendNewToTop(new (aBuilder) nsDisplayRemote(aBuilder, this, rfp));
     }
   }
 #endif
