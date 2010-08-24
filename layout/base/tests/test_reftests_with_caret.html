@@ -45,15 +45,29 @@ function remotePageLoaded() {
   setTimeout(function(){doSnapShot(iframe);}, 0)
 };
 
+const MAX_ITERATIONS = 10;
+
 function createIframe(url,next) {
   var iframe = document.createElement("iframe");
   iframe.src = url;
   iframe.remotePageLoaded = remotePageLoaded;
   var me = this;
-  iframe.addEventListener("load", function() {
-      iframe.remotePageLoaded();
-      if (next) setTimeout(function(){createIframe(next,null);}, 0)
-    }, false);
+  var currentIteration = 0;
+  function iframeLoadCompleted() {
+    var docEl = iframe.contentDocument.documentElement;
+    if (docEl.className.indexOf("reftest-wait") >= 0) {
+      if (currentIteration++ > MAX_ITERATIONS) {
+        ok(false, "iframe load for " + url + " timed out");
+        SimpleTest.finish();
+      } else {
+        setTimeout(iframeLoadCompleted, 10);
+      }
+      return;
+    }
+    iframe.remotePageLoaded();
+    if (next) setTimeout(function(){createIframe(next,null);}, 0)
+  }
+  iframe.addEventListener("load", iframeLoadCompleted, false);
   window.document.body.appendChild(iframe);
 };
 
@@ -76,7 +90,8 @@ var tests = [
     [ 'bug106855-2.html' , 'bug106855-1-ref.html' ] ,
     [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
     [ 'bug512295-1.html' , 'bug512295-1-ref.html' ] ,
-    [ 'bug512295-2.html' , 'bug512295-2-ref.html' ]
+    [ 'bug512295-2.html' , 'bug512295-2-ref.html' ] ,
+    [ 'bug585922.html'   , 'bug585922-ref.html'   ]
 ];
 var testIndex = 0;
 
