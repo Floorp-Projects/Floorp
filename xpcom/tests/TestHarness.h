@@ -55,7 +55,6 @@
 #include "nsIDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIProperties.h"
-#include "nsXULAppAPI.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -342,8 +341,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
 
       // Otherwise, the test harness provides some directories automatically.
       if (0 == strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
-          0 == strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR) ||
-          0 == strcmp(aProperty, NS_APP_PROFILE_LOCAL_DIR_STARTUP)) {
+          0 == strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
         nsCOMPtr<nsIFile> profD = GetProfileDirectory();
         NS_ENSURE_TRUE(profD, NS_ERROR_FAILURE);
 
