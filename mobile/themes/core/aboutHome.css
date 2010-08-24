@@ -143,6 +143,15 @@ html {
   background: url("images/arrowright-16.png") 99% center no-repeat;
 }
 
+#remoteTabs[disabled=true] {
+  pointer-events: none;
+  color: #aaa;
+}
+
+#remoteTabs[disabled=true] > div > .favicon {
+  opacity: 0.5;
+}
+
 .section-row {
   color: black;
   background: transparent -moz-linear-gradient(top, rgba(235,235,235,0.2) 0%, rgba(235,235,235,1) 90%);

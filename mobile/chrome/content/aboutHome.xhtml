@@ -58,7 +58,7 @@
   <link rel="stylesheet" href="chrome://browser/skin/aboutHome.css" type="text/css"/>
 </head>
 
-<body dir="&locale.dir;" onload="init();">
+<body dir="&locale.dir;" onload="init();" onunload="uninit();">
   <div id="wrapper">
     <div id="header"><div id="logo"><img src="chrome://branding/content/logo.png"/></div>&aboutHome.header;</div>
 
@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button">
+    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button" disabled="true">
       <div>
         <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
         <div>&aboutHome.remoteTabs;</div>
@@ -117,6 +117,10 @@
       initTabs();
       initWeave();
       initAddons();
+    }
+
+    function uninit() {
+      uninitWeave();
     }
 
     function _readFile(aFile) {
@@ -212,11 +216,11 @@
           outer.className = "openall";
           outer.textContent = document.getElementById("text-openalltabs").textContent;
           outer.setAttribute("role", "button");
-  
+
           outer.addEventListener("click", function() {
             openTabs(allPageURLs);
           }, false);
-  
+
           list.appendChild(outer);
         }
       } else {
@@ -226,8 +230,27 @@
     }
 
     function initWeave() {
-      if (!("WeaveGlue" in getChromeWin()))
+      let chromeWin = getChromeWin();
+      if ("WeaveGlue" in chromeWin) {
+        chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:login:finish", false);
+        chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:logout:finish", false);
+      }
+      else {
         document.getElementById("remoteTabs").style.display = "none";
+      }
+    }
+
+    function uninitWeave() {
+      let chromeWin = getChromeWin();
+      if ("WeaveGlue" in chromeWin) {
+        chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:login:finish");
+        chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:logout:finish");
+      }
+    }
+
+    function updateWeaveButton() {
+      let isDisabled = !getChromeWin().Weave.Service.isLoggedIn;
+      document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
     }
 
     function openRemoteTabs() {
