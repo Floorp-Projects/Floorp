@@ -539,6 +539,12 @@
       <spacer flex="1000"/>
     </vbox>
 
+    <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+      <vbox id="menulist-popup" class="dialog-dark"> 
+        <richlistbox id="menulist-commands" onselect="MenuListHelperUI.selectByIndex(this.selectedIndex)"/>
+      </vbox>
+    </hbox>
+
     <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">

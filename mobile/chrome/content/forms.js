@@ -68,6 +68,8 @@ function FormAssistant() {
 };
 
 FormAssistant.prototype = {
+  _selectWrapper: null,
+
   get currentElement() {
     return this._elements[this._currentIndex];
   },
@@ -133,10 +135,10 @@ FormAssistant.prototype = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
-    if (!this._enabled || !this.currentElement)
+    let currentElement = this.currentElement;
+    if ((!this._enabled && !getWrapperForElement(currentElement)) || !currentElement)
       return;
 
-    let currentElement = this.currentElement;
     let json = aMessage.json;
     switch (aMessage.name) {
       case "FormAssist:Previous":
@@ -148,14 +150,15 @@ FormAssistant.prototype = {
         break;
 
       case "FormAssist:ChoiceSelect": {
-        let wrapper = getWrapperForElement(currentElement);
-        wrapper.select(json.index, json.selected, json.clearAll);
+        this._selectWrapper = getWrapperForElement(currentElement);
+        this._selectWrapper.select(json.index, json.selected, json.clearAll);
         break;
       }
 
       case "FormAssist:ChoiceChange": {
-        let wrapper = getWrapperForElement(currentElement);
-        wrapper.fireOnChange();
+        // ChoiceChange happened once we have move to an other element so we 
+        // should remenber the used wrapper
+        this._selectWrapper.fireOnChange();
         break;
       }
 

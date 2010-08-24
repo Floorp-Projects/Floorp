@@ -252,6 +252,7 @@ let DOMEvents =  {
     addEventListener("DOMTitleChanged", this, false);
     addEventListener("DOMLinkAdded", this, false);
     addEventListener("DOMWillOpenModalDialog", this, false);
+    addEventListener("DOMModalDialogClosed", this, true);
     addEventListener("DOMWindowClose", this, false);
     addEventListener("DOMPopupBlocked", this, false);
     addEventListener("pageshow", this, false);
@@ -321,6 +322,7 @@ let DOMEvents =  {
         break;
 
       case "DOMWillOpenModalDialog":
+      case "DOMModalDialogClosed":
       case "DOMWindowClose":
         let retvals = sendSyncMessage(aEvent.type, { });
         for (rv in retvals) {
@@ -389,11 +391,18 @@ PromptRemoter.prototype = {
       window.dispatchEvent(event);
     }
 
+    function informClosedFrontTab() {
+      let event = window.document.createEvent("Events");
+      event.initEvent("DOMModalDialogClosed", true, false);
+      window.dispatchEvent(event);
+    }
+
     window.wrappedJSObject.alert = function(aMessage) {
       bringTabToFront();
-      sendAsyncMessage("Prompt:Alert", {
+      sendSyncMessage("Prompt:Alert", {
         message: aMessage
       });
+      informClosedFrontTab();
     }
 
     window.wrappedJSObject.confirm = function(aMessage) {
@@ -401,6 +410,7 @@ PromptRemoter.prototype = {
       return sendSyncMessage("Prompt:Confirm", {
         message: aMessage
       });
+      informClosedFrontTab();
     }
 
     window.wrappedJSObject.prompt = function(aText, aValue) {
@@ -409,6 +419,7 @@ PromptRemoter.prototype = {
         text: aText,
         value: aValue
       });
+      informClosedFrontTab();
     }
   },
 };
