@@ -11,10 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Firefox.
+# The Original Code is Mozilla Content App.
 #
 # The Initial Developer of the Original Code is
-# The Mozilla Foundation <http://www.mozilla.org/>.
+#   The Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -34,54 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
-MODULE = dom
-LIBRARY_NAME = domipc_s
-LIBXUL_LIBRARY = 1
-FORCE_STATIC_LIB = 1
-EXPORT_LIBRARY = 1
-
-EXPORTS = TabMessageUtils.h
-
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-  ContentChild.h \
-  ContentParent.h \
-  ContentProcess.h \
-  TabParent.h \
-  TabChild.h \
+IPDLSRCS = \
+  PRenderFrame.ipdl \
   $(NULL)
-
-CPPSRCS = \
-  ContentProcess.cpp \
-  ContentParent.cpp \
-  ContentChild.cpp \
-  TabParent.cpp \
-  TabChild.cpp \
-  TabMessageUtils.cpp \
-  $(NULL)
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES += \
-		-I$(srcdir)/../../content/base/src \
-		-I$(srcdir)/../../content/events/src \
-		-I$(srcdir)/../../toolkit/components/places/src \
-		-I$(srcdir)/../src/geolocation \
-		-I$(topsrcdir)/chrome/src \
-		-I$(topsrcdir)/uriloader/exthandler \
-		-I$(srcdir)/../../netwerk/base/src \
-		$(NULL)
-
-DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
-
-CXXFLAGS += $(TK_CFLAGS)

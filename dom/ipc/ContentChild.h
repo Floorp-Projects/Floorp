@@ -108,6 +108,15 @@ private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
 
+    NS_OVERRIDE
+    virtual void ProcessingError(Result what);
+
+    /**
+     * Exit *now*.  Do not shut down XPCOM, do not pass Go, do not run
+     * static destructors, do not collect $200.
+     */
+    NS_NORETURN void QuickExit();
+
     nsTArray<nsAutoPtr<PrefObserver> > mPrefObservers;
     bool mDead;
 

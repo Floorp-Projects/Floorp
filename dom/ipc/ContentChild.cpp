@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_GTK2
+#include <gtk/gtk.h>
+#endif
+
 #include "ContentChild.h"
 #include "TabChild.h"
 
@@ -192,6 +196,11 @@ ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessHandle aParentHandle,
                    IPC::Channel* aChannel)
 {
+#ifdef MOZ_WIDGET_GTK2
+    // sigh
+    gtk_init(NULL, NULL);
+#endif
+
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
   
     Open(aChannel, aParentHandle, aIOLoop);
@@ -203,8 +212,8 @@ ContentChild::Init(MessageLoop* aIOLoop,
 PBrowserChild*
 ContentChild::AllocPBrowser(const PRUint32& aChromeFlags)
 {
-  nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
-  return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
+    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 
 bool
@@ -274,8 +283,17 @@ ContentChild::RecvSetOffline(const PRBool& offline)
 void
 ContentChild::ActorDestroy(ActorDestroyReason why)
 {
-    if (AbnormalShutdown == why)
-        NS_WARNING("shutting down because of crash!");
+    if (AbnormalShutdown == why) {
+        NS_WARNING("shutting down early because of crash!");
+        QuickExit();
+    }
+
+#ifndef DEBUG
+    // In release builds, there's no point in the content process
+    // going through the full XPCOM shutdown path, because it doesn't
+    // keep persistent state.
+    QuickExit();
+#endif
 
     // We might be holding the last ref to some of the observers in
     // mPrefObserverArray.  Some of them try to unregister themselves
@@ -287,6 +305,33 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     mPrefObservers.Clear();
 
     XRE_ShutdownChildProcess();
+}
+
+void
+ContentChild::ProcessingError(Result what)
+{
+    switch (what) {
+    case MsgDropped:
+        QuickExit();
+
+    case MsgNotKnown:
+    case MsgNotAllowed:
+    case MsgPayloadError:
+    case MsgProcessingError:
+    case MsgRouteError:
+    case MsgValueError:
+        NS_RUNTIMEABORT("aborting because of fatal error");
+
+    default:
+        NS_RUNTIMEABORT("not reached");
+    }
+}
+
+void
+ContentChild::QuickExit()
+{
+    NS_WARNING("content process _exit()ing");
+    _exit(0);
 }
 
 nsresult

@@ -784,7 +784,11 @@ LayerManager* nsBaseWidget::GetLayerManager()
       }
     }
     if (!mLayerManager) {
+#if !defined(MOZ_IPC)
       mLayerManager = new BasicLayerManager(this);
+#else
+      mLayerManager = new BasicShadowLayerManager(this);
+#endif
     }
   }
   return mLayerManager;
