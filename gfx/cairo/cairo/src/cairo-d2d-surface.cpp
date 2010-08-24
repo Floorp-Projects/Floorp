@@ -717,7 +717,7 @@ static ID3D10Texture2D*
 _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface) 
 {
     if (!surface->bufferTexture) {
-	IDXGISurface *surf;
+	RefPtr<IDXGISurface> surf;
 	DXGI_SURFACE_DESC surfDesc;
 	surface->surface->QueryInterface(&surf);
 	surf->GetDesc(&surfDesc);
