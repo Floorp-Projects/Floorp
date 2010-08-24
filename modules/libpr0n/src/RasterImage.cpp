@@ -930,16 +930,15 @@ RasterImage::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
 nsresult
 RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
 {
-  NS_ASSERTION(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
-    return NS_ERROR_INVALID_ARG;
+  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
 
   imgFrame *frame = GetImgFrame(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   frame->ImageUpdated(aUpdatedRect);
 
+  // XXXbholley - this should turn into a void method as soon the decoders
+  // stop using it
   return NS_OK;
 }
 
