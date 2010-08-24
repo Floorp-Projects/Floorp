@@ -110,12 +110,12 @@
     <command id="cmd_forceReload" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_stop" label="&stop.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_openLocation" label="&openLocation.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_openLocation" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_remoteTabs" oncommand="WeaveGlue.openRemoteTabs();"/>
+    <command id="cmd_remoteTabs" oncommand="CommandUpdater.doCommand(this.id);" disabled="true"/>
     <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- bookmarking -->
@@ -127,6 +127,8 @@
     <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_panel" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_bookmarks" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_history" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- screen/display -->
@@ -208,7 +210,6 @@
           <vbox id="tabs" onselect="BrowserUI.selectTab(this);" onclosetab="BrowserUI.closeTab(this)" flex="1"/>
           <hbox id="tabs-controls">
             <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
-            <toolbarbutton id="remotetabs-button" class="button-image" disabled="true" command="cmd_remoteTabs"/>
           </hbox>
         </vbox>
       </vbox>
@@ -242,6 +243,7 @@
                              completeselectedindex="true"
                              minresultsforpopup="0"
                              oncontextmenu="event.preventDefault();"
+                             onsearchbegin="BrowserUI.updateAwesomeHeader(this.controller.searchString != '');"
                              emptytext="&urlbar.emptytext;"
                              flex="1"
                              ontextentered="BrowserUI.goToURI();"
@@ -353,7 +355,7 @@
       <vbox>
         <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" class="button-dark" oncommand="BookmarkHelper.edit();"/>
         <spacer/>
-        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" class="button-dark" oncommand="BookmarkPopup.hide(); removeBookmarksForURI(getBrowser().currentURI);"/>
+        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" class="button-dark" oncommand="BookmarkPopup.hide(); BookmarkHelper.removeBookmarksForURI(getBrowser().currentURI);"/>
       </vbox>
     </vbox>
 
@@ -489,27 +491,32 @@
       </deck>
     </box>
 
-    <!-- titlebar autocomplete results -->
-    <vbox id="popup_autocomplete" class="panel-dark" hidden="true">
-      <arrowscrollbox id="autocomplete_navbuttons"
-                      style="-moz-user-focus: ignore;"
-                      align="center"
-                      flex="1"
-                      orient="horizontal">
-        <image class="tool-search"/>
-        <radiogroup id="search-buttons" class="toggle-dark" style="-moz-user-focus: ignore;"
-                    onclick="BrowserUI.doButtonSearch(event.target);">
-        </radiogroup>
-      </arrowscrollbox>
-    </vbox>
-
-    <!-- bookmark window -->
-    <vbox id="bookmarklist-container" class="panel-dark" hidden="true">
-      <hbox id="bookmarklist-header">
-        <description flex="1">&bookmarksHeader.label;</description>
-        <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" command="cmd_close"/>
+    <vbox id="awesome-panels" hidden="true">
+      <!-- Awesome header row -->
+      <hbox id="awesome-header">
+        <toolbarbutton type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all show-text" checked="true"/>
+        <toolbarbutton type="radio" group="awesome-header" label="&bookmarksHeader.label;" command="cmd_bookmarks" class="choice-bookmarks show-text"/>
+        <toolbarbutton type="radio" group="awesome-header" label="&historyHeader.label;" command="cmd_history" class="choice-history show-text"/>
+        <toolbarbutton type="radio" group="awesome-header" label="&desktopHeader.label;" command="cmd_remoteTabs" class="choice-remotetabs show-text"/>
       </hbox>
-      <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();" autoedit="true"/>
+
+      <!-- titlebar autocomplete results -->
+      <vbox id="popup_autocomplete" class="panel-dark" flex="1" onshow="BrowserUI._edit.showHistoryPopup();" hidden="true">
+        <arrowscrollbox id="autocomplete_navbuttons"
+                        style="-moz-user-focus: ignore;"
+                        align="center"
+                        flex="1"
+                        orient="horizontal">
+          <image class="tool-search"/>
+          <radiogroup id="search-buttons" class="toggle-dark" style="-moz-user-focus: ignore;"
+                      onclick="BrowserUI.doButtonSearch(event.target);">
+          </radiogroup>
+        </arrowscrollbox>
+      </vbox>
+
+      <placelist id="bookmarks-items" type="bookmarks" onopen="BookmarkList.openLink(event);" onhide="BrowserUI.updateStar();" flex="1" hidden="true"/>
+      <historylist id="history-items" onopen="HistoryList.openLink(event);" flex="1" hidden="true"/>
+      <remotetabslist id="remotetabs-items" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
     </vbox>
 
     <!-- options dialog for select form field -->

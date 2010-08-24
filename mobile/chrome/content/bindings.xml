@@ -34,10 +34,7 @@
     <handlers>
       <handler event="keypress" keycode="VK_RETURN" phase="capturing">
         <![CDATA[
-          if (this.popup.allBookmarksItemSelected) {
-            this.popup.closePopup();
-            CommandUpdater.doCommand("cmd_bookmarks");
-          }
+          setTimeout(function() { BrowserUI.activePanel = null }, 0);
         ]]>
       </handler>
       <handler event="text" phase="bubbling"
@@ -58,43 +55,38 @@
   </binding>
 
   <binding id="popup_autocomplete">
-    <content>
-      <xul:vbox class="autocomplete-box" flex="1">
-        <!-- 24 child items, to match browser.urlbar.maxRichResults -->
-        <xul:scrollbox orient="vertical"
-                       class="autocomplete-items"
-                       anonid="autocomplete-items"
-                       flex="1000">
-          <xul:autocompleteresult anonid="allbookmarks"
-                                  value="&allBookmarks.label;"
-                                  class="allbookmarks"/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-          <xul:autocompleteresult/>
-        </xul:scrollbox>
-        <children/>
-      </xul:vbox>
+    <content orient="vbox" class="autocomplete-box" flex="1">
+      <!-- 24 child items, to match browser.urlbar.maxRichResults -->
+      <xul:scrollbox orient="vertical"
+                     class="autocomplete-items"
+                     anonid="autocomplete-items"
+                     flex="1000">
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+        <xul:autocompleteresult/>
+      </xul:scrollbox>
+      <children/>
     </content>
 
     <implementation implements="nsIAutoCompletePopup">
@@ -119,8 +111,7 @@
 
       <field name="_selectedIndex">-1</field>
       <field name="_selectedItem"/>
-      <property name="selectedIndex"
-                onget="return this._allBookmarksItem._hidden ? this._selectedIndex : this._selectedIndex - 1;">
+      <property name="selectedIndex" onget="return this._selectedIndex;">
         <setter><![CDATA[
           // Ignore invalid indices
           if (val < -1 ||
@@ -154,15 +145,9 @@
           if (this._popupOpen)
             return;
 
-          BrowserUI.pushDialog(this);
-
           this._selectedItem = null;
           this._input = aInput;
           this._input.select();
-
-          if (this.hidden)
-            this.hidden = false;
-          this.collapsed = false;
           this._popupOpen = true;
 
           this.invalidate();
@@ -180,16 +165,11 @@
 
           this.selectedIndex = -1;
           this.input.controller.stopSearch();
-
-          this.collapsed = true;
           this._popupOpen = false;
 
           let event = document.createEvent("Events");
           event.initEvent("popuphidden", true, false);
           this.dispatchEvent(event);
-
-          BrowserUI.showToolbar(false);
-          BrowserUI.popDialog();
         ]]></body>
       </method>
 
@@ -220,12 +200,6 @@
           let controller = this.input.controller;
           let searchString = controller.searchString;
           let items = this._items;
-
-          // Remove the allBookmarksItem if present, before populating the list.
-          if (!this._allBookmarksItem._hidden) {
-            items.removeChild(this._allBookmarksItem);
-            this._allBookmarksItem._hidden = true;
-          }
 
           // Need to iterate over all our existing entries at a minimum, to make
           // sure they're either updated or cleared out. We might also have to
@@ -275,10 +249,6 @@
 
           // Show the "no results" or "all bookmarks" entries as needed
           this._updateNoResultsItem(matchCount);
-          if (searchString == "") {
-            items.insertBefore(this._allBookmarksItem, items.firstChild);
-            this._allBookmarksItem._hidden = false;
-          }
 
           // Make sure the list is scrolled to the top
           this.scrollToTop();
@@ -291,8 +261,7 @@
           let noResultsItem = this._items.childNodes.item(1);
           if (isResults) {
             noResultsItem.className = "";
-          }
-          else {
+          } else {
             noResultsItem.className = "noresults";
             noResultsItem.setAttribute("value", "]]>&noResults.label;<![CDATA[");
             noResultsItem.removeAttribute("favorite");
@@ -302,11 +271,6 @@
           }
         ]]></body>
       </method>
-
-      <field name="_allBookmarksItem">document.getAnonymousElementByAttribute(this, "anonid", "allbookmarks");</field>
-
-      <property name="allBookmarksItemSelected" readonly="true"
-                onget="return this._selectedItem == this._allBookmarksItem;"/>
 
       <method name="selectBy">
         <parameter name="aReverse"/>
@@ -339,8 +303,7 @@
       <property name="_matchCount"
                 readonly="true">
         <getter><![CDATA[
-          let matchCount = this.input.controller.matchCount;
-          return matchCount + (this._allBookmarksItem._hidden ? 0 : 1);
+          return this.input.controller.matchCount;
         ]]></getter>
       </property>
 
@@ -360,15 +323,10 @@
       <handler event="click" button="0">
         <![CDATA[
           let target = event.originalTarget;
-          if (target == this._allBookmarksItem) {
-            this._selectedIndex = 0;
-            this.close();
-            CommandUpdater.doCommand("cmd_bookmarks");
-          }
-          else if (target.localName == "autocompleteresult" && !target._empty) {
-            let offset = this._allBookmarksItem._hidden ? 0 : 1;
-            this._selectedIndex = target._index + offset;
+          if (target.localName == "autocompleteresult" && !target._empty) {
+            this._selectedIndex = target._index;
             this.input.controller.handleEnter(true);
+            BrowserUI.activePanel = null;
           }
         ]]>
       </handler>
@@ -688,7 +646,7 @@
       <handler event="click" button="0">
         <![CDATA[
           if (this.control)
-            this.control.openFolder(this.previousSibling.itemId);
+            this.control.open(this.previousSibling.itemId);
         ]]>
       </handler>
     </handlers>
@@ -870,7 +828,7 @@
         </body>
       </method>
 
-      <method name="openFolder">
+      <method name="open">
         <parameter name="aRootFolder"/>
         <body>
           <![CDATA[
@@ -904,13 +862,13 @@
             } while (folderId != PlacesUtils.bookmarks.placesRoot)
 
             let children = this._children;
-            while (children.firstChild)
-              children.removeChild(children.firstChild);
+            while (children.lastChild)
+              children.removeChild(children.lastChild);
 
             children.scrollBoxObject.scrollTo(0, 0);
 
             let items = (aRootFolder == this._desktopFolderId) ? this._desktopChildren.concat()
-                                                                   : this._getChildren(aRootFolder);
+                                                               : this._getChildren(aRootFolder);
 
             if (aRootFolder == this.mobileRoot && !this.isDesktopFolderEmpty())
               items.unshift(this._desktopFolder);
@@ -961,9 +919,8 @@
               return;
 
             if (aItem.type == "folder") {
-              this.openFolder(aItem.itemId);
-            }
-            else {
+              this.open(aItem.itemId);
+            } else {
               // Force the item to be active
               this._activeItem = aItem;
 
@@ -972,9 +929,213 @@
               let event = document.createEvent("Events");
               event.initEvent("BookmarkOpen", true, false);
               this.dispatchEvent(event);
+
               let func = new Function("event", this.getAttribute("onopen"));
-              func.call(this, event);
+              func.call(this, aEvent);
             }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="history-list">
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+        let func = new Function("event", this.getAttribute("onopen"));
+        func.call(this, event);
+        ]]>
+      </handler>
+    </handlers>
+    <content orient="vertical" flex="1">
+      <xul:richlistbox anonid="child-items" class="history-list-children" flex="1" batch="25"/>
+    </content>
+    <implementation>
+      <method name="open">
+        <body><![CDATA[
+          let children = this._children;
+          while (children.lastChild)
+            children.removeChild(children.lastChild);
+
+          let items = this._getHistory();
+          children.setItems(items.map(this.createItem));
+        ]]></body>
+      </method>
+
+      <field name="_children">
+        document.getAnonymousElementByAttribute(this, "anonid", "child-items");
+      </field>
+
+      <field name="scrollBoxObject">this._children.scrollBoxObject</field>
+
+      <method name="_getHistory">
+        <body><![CDATA[
+          let items = [];
+          let historyService = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+          let query = historyService.getNewQuery();
+
+          let options = historyService.getNewQueryOptions();
+          options.excludeQueries = true;
+          options.queryType = options.QUERY_TYPE_HISTORY;
+          options.maxResults = Services.prefs.getIntPref("browser.display.history.maxresults");
+          options.resultType = options.RESULTS_AS_URI;
+          options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+
+          let result = historyService.executeQuery(query, options);
+          let rootNode = result.root;
+          rootNode.containerOpen = true;
+          let childCount = rootNode.childCount;
+
+          // Get the rows title
+          let titleToday = PlacesUtils.getString("finduri-AgeInDays-is-0");
+          let titleYesterday = PlacesUtils.getString("finduri-AgeInDays-is-1");
+          let titleLastWeek = PlacesUtils.getFormattedString("finduri-AgeInDays-last-is", [7]);
+          let titleOlder = PlacesUtils.getFormattedString("finduri-AgeInDays-isgreater", [7]);
+
+          let lastTitle = null;
+          let msPerDay = 86400000;
+          let msPerWeek = msPerDay * 7;
+          let today = new Date(Date.now() - (Date.now() % msPerDay));
+          for (let i = 0; i < childCount; i++) {
+            let node = rootNode.getChild(i);
+            let time = new Date(node.time / 1000); // node.time is microseconds
+
+            // Insert a row title if needed
+            let msDelta = today - time;
+            if (msDelta < 0 && lastTitle == null) {
+              lastTitle = titleToday;
+              items.push({ title: lastTitle });
+            } else if (msDelta > 0 && msDelta < msPerDay && lastTitle != titleYesterday) {
+                lastTitle = titleYesterday;
+                items.push({ title: lastTitle });
+            } else if (msDelta > msPerDay && msDelta < msPerWeek && lastTitle != titleLastWeek) {
+              lastTitle = titleLastWeek;
+              items.push({ title: lastTitle });
+            } else if (msDelta > msPerWeek && lastTitle != titleOlder) {
+              lastTitle = titleOlder;
+              items.push({ title: lastTitle });
+            }
+
+            items.push(node);
+          }
+
+          rootNode.containerOpen = false;
+          return items;
+        ]]></body>
+      </method>
+
+      <method name="createItem">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+            let child = document.createElementNS(XULNS, "autocompleteresult");
+            child.setAttribute("value", aItem.title || aItem.uri);
+            if (!aItem.uri) {
+              child.setAttribute("class", "history-item-title");
+            } else {
+              child.setAttribute("class", "history-item");
+              child.setAttribute("url", aItem.uri);
+              child.setAttribute("src", aItem.icon);
+            }
+
+            return child;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="remotetabs-list">
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+        let func = new Function("event", this.getAttribute("onopen"));
+        func.call(this, event);
+        ]]>
+      </handler>
+    </handlers>
+    <content orient="vertical" flex="1">
+      <xul:richlistbox anonid="child-items" class="remotetabs-list-children" flex="1" batch="25"/>
+    </content>
+    <implementation>
+      <method name="open">
+        <body><![CDATA[
+          let children = this._children;
+          while (children.lastChild)
+            children.removeChild(children.lastChild);
+
+          let items = this._getRemoteTabs();
+          children.setItems(items.map(this.createItem));
+        ]]></body>
+      </method>
+
+      <field name="_children">
+        document.getAnonymousElementByAttribute(this, "anonid", "child-items");
+      </field>
+
+      <field name="scrollBoxObject">this._children.scrollBoxObject</field>
+
+      <method name="_getRemoteTabs">
+        <body><![CDATA[
+          // Don't do anything if the tabs engine isn't ready
+          let engine = Weave.Engines.get("tabs");
+          if (!engine)
+            return [];
+
+          // Don't bother refetching tabs if we already did so recently
+          let lastFetch = Weave.Svc.Prefs.get("lastTabFetch", 0);
+          let now = Math.floor(Date.now() / 1000);
+          if (now - lastFetch >= 30) {
+            // Force a sync only for the tabs engine
+            engine.lastModified = null;
+            engine.sync();
+            Weave.Svc.Prefs.set("lastTabFetch", now);
+          };
+
+          // Generate the list of tabs
+          let tabs = [];
+          for (let [guid, client] in Iterator(engine.getAllClients())) {
+            tabs.push({ name: client.clientName });
+
+            client.tabs.forEach(function({title, urlHistory, icon}) {
+              let pageUrl = urlHistory[0];
+
+              // Skip tabs that are already open
+              if (engine.locallyOpenTabMatchesURL(pageUrl))
+                return;
+
+              tabs.push({
+                title: title ? pageUrl : title,
+                uri: pageUrl,
+                icon: Weave.Utils.getIcon(icon, "chrome://browser/skin/images/tab.png")
+              });
+            });
+          };
+
+          return tabs;
+        ]]></body>
+      </method>
+
+      <method name="createItem">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+            let child = document.createElementNS(XULNS, "autocompleteresult");
+            child.setAttribute("value", aItem.title || aItem.name);
+            if (aItem.name) {
+              child.setAttribute("class", "remotetabs-item-title");
+            } else {
+              child.setAttribute("class", "remotetabs-item");
+              child.setAttribute("url", aItem.uri);
+              child.setAttribute("src", aItem.icon);
+            }
+
+            return child;
           ]]>
         </body>
       </method>

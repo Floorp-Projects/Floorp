@@ -217,16 +217,41 @@ var BrowserUI = {
     }
   },
 
+  updateAwesomeHeader: function updateAwesomeHeader(aVisible) {
+    document.getElementById('awesome-header').hidden = aVisible;
+  },
+
   _closeOrQuit: function _closeOrQuit() {
     // Close active dialog, if we have one. If not then close the application.
-    let dialog = this.activeDialog;
-    if (dialog) {
-      dialog.close();
+    if (this.activePanel) {
+      this.activePanel = null;
+    } else if (this.activeDialog) {
+      this.activeDialog.close();
     } else {
       // Check to see if we should really close the window
       if (Browser.closing())
         window.close();
     }
+  },
+
+  _activePanel: null,
+  get activePanel() {
+    return this._activePanel;
+  },
+
+  set activePanel(aPanel) {
+    let container = document.getElementById("awesome-panels");
+    if (aPanel) {
+      container.hidden = false;
+      aPanel.open();
+    } else {
+      container.hidden = true;
+      BrowserUI.showToolbar(false);
+    }
+
+    if (this._activePanel)
+      this._activePanel.close();
+    this._activePanel = aPanel;
   },
 
   get activeDialog() {
@@ -333,8 +358,8 @@ var BrowserUI = {
     // tabs
     document.getElementById("tabs").resize();
 
-    // awesomebar
-    let popup = document.getElementById("popup_autocomplete");
+    // awesomebar and related panels
+    let popup = document.getElementById("awesome-panels");
     popup.top = this.toolbarH;
     popup.height = windowH - this.toolbarH;
     popup.width = windowW;
@@ -512,7 +537,7 @@ var BrowserUI = {
     BrowserSearch.updateSearchButtons();
 
     this._hidePopup();
-    this._edit.showHistoryPopup();
+    this.activePanel = AllPagesList;
   },
 
   closeAutoComplete: function closeAutoComplete(aResetInput) {
@@ -538,6 +563,7 @@ var BrowserUI = {
 
     // Give the new page lots of room
     Browser.hideSidebars();
+    this.activePanel = null;
     this.closeAutoComplete(false);
 
     // Make sure we're online before attempting to load
@@ -811,6 +837,8 @@ var BrowserUI = {
       case "cmd_openLocation":
       case "cmd_star":
       case "cmd_bookmarks":
+      case "cmd_history":
+      case "cmd_remoteTabs":
       case "cmd_quit":
       case "cmd_close":
       case "cmd_menu":
@@ -839,7 +867,7 @@ var BrowserUI = {
   },
 
   doCommand : function(cmd) {
-    var browser = getBrowser();
+    let browser = getBrowser();
     switch (cmd) {
       case "cmd_back":
         browser.goBack();
@@ -892,7 +920,13 @@ var BrowserUI = {
         break;
       }
       case "cmd_bookmarks":
-        BookmarkList.show();
+        this.activePanel = BookmarkList;
+        break;
+      case "cmd_history":
+        this.activePanel = HistoryList;
+        break;
+      case "cmd_remoteTabs":
+        this.activePanel = RemoteTabsList;
         break;
       case "cmd_quit":
         goQuitApplication();
@@ -1249,6 +1283,49 @@ var NewTabPopup = {
   }
 };
 
+var AwesomePanel = function(aElementId, aCommandId) {
+  let items = document.getElementById(aElementId);
+  let command = document.getElementById(aCommandId);
+
+  this.open = function aw_open() {
+    BrowserUI.pushDialog(this);
+    command.setAttribute("checked", "true");
+    items.hidden = false;
+
+    if (items.hasAttribute("onshow")) {
+      let func = new Function("panel", items.getAttribute("onshow"));
+      func.call(items);
+    }
+
+    if (items.open)
+      items.open();
+  },
+
+  this.close = function aw_close() {
+    if (items.hasAttribute("onhide")) {
+      let func = new Function("panel", items.getAttribute("onhide"));
+      func.call(items);
+    }
+
+    if (items.close)
+      items.close();
+
+    items.blur();
+    items.hidden = true;
+    command.removeAttribute("checked", "true");
+    BrowserUI.popDialog();
+  },
+
+  this.openLink = function aw_openLink(aEvent) {
+    let item = aEvent.originalTarget;
+    let uri = item.getAttribute("url") || item.getAttribute("uri");
+    if (uri != "") {
+      BrowserUI.activePanel = null;
+      BrowserUI.goToURI(uri);
+    }
+  }
+};
+
 var BookmarkPopup = {
   get box() {
     let self = this;
@@ -1356,49 +1433,17 @@ var BookmarkHelper = {
     this._panel.hidden = true;
     BrowserUI.popPopup();
   },
-};
 
-var BookmarkList = {
-  _panel: null,
-  _bookmarks: null,
+  removeBookmarksForURI: function BH_removeBookmarksForURI(aURI) {
+    //XXX blargle xpconnect! might not matter, but a method on
+    // nsINavBookmarksService that takes an array of items to
+    // delete would be faster. better yet, a method that takes a URI!
+    let itemIds = PlacesUtils.getBookmarksForURI(aURI);
+    itemIds.forEach(PlacesUtils.bookmarks.removeItem);
 
-  get mobileRoot() {
-    let items = PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {});
-    if (!items.length)
-      throw "Couldn't find mobile bookmarks root!";
-
-    delete this.mobileRoot;
-    return this.mobileRoot = items[0];
-  },
-
-  show: function() {
-    this._panel = document.getElementById("bookmarklist-container");
-    this._panel.width = window.innerWidth;
-    this._panel.height = window.innerHeight;
-    this._panel.hidden = false;
-    BrowserUI.pushDialog(this);
-
-    this._bookmarks = document.getElementById("bookmark-items");
-    this._bookmarks.openFolder();
-  },
-
-  close: function() {
     BrowserUI.updateStar();
-
-    this._bookmarks.blur();
-    this._panel.hidden = true;
-    BrowserUI.popDialog();
-  },
-
-  openBookmark: function() {
-    let item = this._bookmarks.activeItem;
-    if (item.spec) {
-      this.close();
-      BrowserUI.goToURI(item.spec);
-    }
   }
 };
-
 
 var FindHelperUI = {
   type: "find",
@@ -1769,7 +1814,6 @@ var FormHelperUI = {
     return [deltaX, deltaY];
   }
 };
-
 
 /**
  * SelectHelperUI: Provides an interface for making a choice in a list.
@@ -2201,12 +2245,29 @@ var SharingUI = {
 };
 
 
-function removeBookmarksForURI(aURI) {
-  //XXX blargle xpconnect! might not matter, but a method on
-  // nsINavBookmarksService that takes an array of items to
-  // delete would be faster. better yet, a method that takes a URI!
-  let itemIds = PlacesUtils.getBookmarksForURI(aURI);
-  itemIds.forEach(PlacesUtils.bookmarks.removeItem);
+XPCOMUtils.defineLazyGetter(this, "HistoryList", function() {
+  return new AwesomePanel("history-items", "cmd_history");
+});
 
-  BrowserUI.updateStar();
-}
+XPCOMUtils.defineLazyGetter(this, "RemoteTabsList", function() {
+  return new AwesomePanel("remotetabs-items", "cmd_remoteTabs");
+});
+
+XPCOMUtils.defineLazyGetter(this, "AllPagesList", function() {
+  return new AwesomePanel("popup_autocomplete", "cmd_openLocation");
+});
+
+XPCOMUtils.defineLazyGetter(this, "BookmarkList", function() {
+  let list = new AwesomePanel("bookmarks-items", "cmd_bookmarks");
+  list.__defineGetter__("mobileRoot", function() {
+    let items = PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {});
+    if (!items.length)
+      throw "Couldn't find mobile bookmarks root!";
+
+    delete this.mobileRoot;
+    return this.mobileRoot = items[0];
+  });
+
+  return list;
+});
+

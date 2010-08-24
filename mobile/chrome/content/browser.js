@@ -1892,6 +1892,7 @@ IdentityHandler.prototype = {
 
   show: function ih_show() {
     // dismiss any dialog which hide the identity popup
+    BrowserUI.activePanel = null;
     while (BrowserUI.activeDialog)
       BrowserUI.activeDialog.close();
 

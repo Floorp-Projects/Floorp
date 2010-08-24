@@ -47,10 +47,6 @@ let WeaveGlue = {
     Weave.Service.keyGenEnabled = false;
   },
 
-  openRemoteTabs: function openRemoteTabs() {
-    BrowserUI.newOrSelectTab("about:sync-tabs", null);
-  },
-
   connect: function connect() {
     if (this._settings.user.value != Weave.Service.username)
       Weave.Service.startOver();
@@ -103,7 +99,7 @@ let WeaveGlue = {
 
   _updateOptions: function _updateOptions() {
     let loggedIn = Weave.Service.isLoggedIn;
-    document.getElementById("remotetabs-button").disabled = !loggedIn;
+    document.getElementById("cmd_remoteTabs").setAttribute("disabled", !loggedIn);
 
     // Make sure we're online when connecting/syncing
     Util.forceOnline();
