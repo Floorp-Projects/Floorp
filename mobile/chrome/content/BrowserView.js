@@ -44,8 +44,6 @@ let Ci = Components.interfaces;
 const kBrowserFormZoomLevelMin = 1.0;
 const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
-const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
-const kBrowserViewPrefetchBeginIdleWaitLoading = 10;    // seconds
 
 /**
  * A BrowserView maintains state of the viewport (browser, zoom level,
@@ -156,28 +154,6 @@ BrowserView.Util = {
     return new BrowserView.BrowserViewportState(new Rect(0, 0, 800, 800), 0, 0, 1);
   },
 
-  getViewportStateFromBrowser: function getViewportStateFromBrowser(browser) {
-    return browser.__BrowserView__vps;
-  },
-
-  getNewBatchOperationState: function getNewBatchOperationState() {
-    return {
-      viewportSizeChanged: false,
-      dirtyAll: false
-    };
-  },
-
-  initContainer: function initContainer(container, visibleRect) {
-    container.style.width = visibleRect.width  + 'px';
-    container.style.height = visibleRect.height + 'px';
-    container.style.overflow = '-moz-hidden-unscrollable';
-  },
-
-  resizeContainerToViewport: function resizeContainerToViewport(container, viewportRect) {
-    container.style.width = viewportRect.width  + 'px';
-    container.style.height = viewportRect.height + 'px';
-  },
-
   ensureMozScrolledAreaEvent: function ensureMozScrolledAreaEvent(aBrowser, aWidth, aHeight) {
     let message = {};
     message.target = aBrowser;
@@ -195,40 +171,14 @@ BrowserView.prototype = {
   //
 
   init: function init(container, visibleRectFactory) {
-    this._batchOps = [];
     this._container = container;
     this._browser = null;
     this._browserViewportState = null;
-    this._renderMode = 0;
-    this._offscreenDepth = 0;
-
-    let cacheSize = Services.prefs.getIntPref("tile.cache.size");
-
-    this._tileManager = new TileManager(this._appendTile, this._removeTile, this, cacheSize, container);
     this._visibleRectFactory = visibleRectFactory;
-
-    this._idleServiceObserver = new BrowserView.IdleServiceObserver(this);
-    this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
-    this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
-    this._idleServiceWait = kBrowserViewPrefetchBeginIdleWait;
-
-    let self = this;
     messageManager.addMessageListener("Browser:MozScrolledAreaChanged", this);
-    messageManager.addMessageListener("Browser:MozAfterPaint", this);
-    messageManager.addMessageListener("Browser:PageScroll", this);
   },
 
   uninit: function uninit() {
-    this.setBrowser(null, null);
-    this._idleService.removeIdleObserver(this._idleServiceObserver, this._idleServiceWait);
-  },
-
-  /** When aggressive, spend more time rendering tiles. */
-  setAggressive: function setAggressive(aggro) {
-    let wait = aggro ? kBrowserViewPrefetchBeginIdleWait : kBrowserViewPrefetchBeginIdleWaitLoading;
-    this._idleService.removeIdleObserver(this._idleServiceObserver, this._idleServiceWait);
-    this._idleService.addIdleObserver(this._idleServiceObserver, wait);
-    this._idleServiceWait = wait;
   },
 
   getVisibleRect: function getVisibleRect() {
@@ -253,6 +203,8 @@ BrowserView.prototype = {
   },
 
   setZoomLevel: function setZoomLevel(zoomLevel) {
+    return;
+
     let bvs = this._browserViewportState;
     if (!bvs)
       return;
@@ -264,7 +216,7 @@ BrowserView.prototype = {
       bvs.zoomLevel = newZoomLevel; // side-effect: now scale factor in transformations is newZoomLevel
       bvs.viewportRect.right  = this.browserToViewport(browserW);
       bvs.viewportRect.bottom = this.browserToViewport(browserH);
-      this._viewportChanged(true, true);
+      this._viewportChanged();
 
       if (this._browser) {
         let event = document.createEvent("Events");
@@ -300,118 +252,6 @@ BrowserView.prototype = {
     return rounded || 1.0;
   },
 
-  beginOffscreenOperation: function beginOffscreenOperation(rect) {
-    if (this._offscreenDepth == 0) {
-      let vis = this.getVisibleRect();
-      rect = rect || vis;
-      let zoomRatio = vis.width / rect.width;
-      let viewBuffer = Elements.viewBuffer;
-      viewBuffer.width = vis.width;
-      viewBuffer.height = vis.height;
-
-      this._tileManager.renderRectToCanvas(rect, viewBuffer, zoomRatio, zoomRatio, false);
-      viewBuffer.style.display = "block";
-      window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).processUpdates();
-      this.pauseRendering();
-    }
-    this._offscreenDepth++;
-  },
-
-  commitOffscreenOperation: function commitOffscreenOperation() {
-    this._offscreenDepth--;
-    if (this._offscreenDepth == 0) {
-      this.resumeRendering();
-      Elements.viewBuffer.style.display = "none";
-    }
-  },
-
-  beginBatchOperation: function beginBatchOperation() {
-    this._batchOps.push(BrowserView.Util.getNewBatchOperationState());
-    this.pauseRendering();
-  },
-
-  commitBatchOperation: function commitBatchOperation() {
-    let bops = this._batchOps;
-    if (bops.length == 0)
-      return;
-
-    let opState = bops.pop();
-
-    // XXX If stack is not empty, this just assigns opState variables to the next one
-    // on top. Why then have a stack of these booleans?
-    this._viewportChanged(opState.viewportSizeChanged, opState.dirtyAll);
-    this.resumeRendering();
-  },
-
-  discardBatchOperation: function discardBatchOperation() {
-    let bops = this._batchOps;
-    bops.pop();
-    this.resumeRendering();
-  },
-
-  discardAllBatchOperations: function discardAllBatchOperations() {
-    let bops = this._batchOps;
-    while (bops.length > 0)
-      this.discardBatchOperation();
-  },
-
-  /**
-   * Calls to this function need to be one-to-one with calls to
-   * resumeRendering()
-   */
-  pauseRendering: function pauseRendering() {
-    this._renderMode++;
-    if (this._renderMode == 1 && this._browser) {
-      let event = document.createEvent("Events");
-      event.initEvent("RenderStateChanged", true, false);
-      event.isRendering = false;
-      this._browser.dispatchEvent(event);
-    }
-  },
-
-  /**
-   * Calls to this function need to be one-to-one with calls to
-   * pauseRendering()
-   */
-  resumeRendering: function resumeRendering(renderNow) {
-    if (this._renderMode > 0)
-      this._renderMode--;
-
-    if (renderNow || this._renderMode == 0)
-      this.renderNow();
-
-    if (this._renderMode == 0 && this._browser) {
-      let event = document.createEvent("Events");
-      event.initEvent("RenderStateChanged", true, false);
-      event.isRendering = true;
-      this._browser.dispatchEvent(event);
-    }
-  },
-
-  /**
-   * Called while rendering is paused to allow update of critical area
-   */
-  renderNow: function renderNow() {
-    this._tileManager.criticalRectPaint();
-  },
-
-  isRendering: function isRendering() {
-    return (this._renderMode == 0);
-  },
-
-  onAfterVisibleMove: function onAfterVisibleMove() {
-    let vs = this._browserViewportState;
-    let vr = this.getVisibleRect();
-
-    vs.visibleX = vr.left;
-    vs.visibleY = vr.top;
-
-    let cr = BrowserView.Util.visibleRectToCriticalRect(vr, vs);
-
-    this._tileManager.criticalMove(cr, this.isRendering());
-  },
-
   /**
    * Swap out the current browser and browser viewport state with a new pair.
    */
@@ -425,6 +265,7 @@ BrowserView.prototype = {
 
     if (oldBrowser) {
       oldBrowser.setAttribute("type", "content");
+      oldBrowser.setAttribute("style", "display: none;");
       oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
     }
 
@@ -433,14 +274,8 @@ BrowserView.prototype = {
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
+      browser.setAttribute("style", "display: block;");
       browser.messageManager.sendAsyncMessage("Browser:Focus", {});
-
-      this.beginBatchOperation();
-
-      if (browserChanged)
-        this._viewportChanged(true, true);
-
-      this.commitBatchOperation();
     }
   },
 
@@ -450,56 +285,10 @@ BrowserView.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     switch (aMessage.name) {
-      case "Browser:MozAfterPaint":
-        this.updateDirtyTiles(aMessage);
-        break;
-      case "Browser:PageScroll":
-        this.updatePageScroll(aMessage);
-        break;
       case "Browser:MozScrolledAreaChanged":
         this.updateScrolledArea(aMessage);
         break;
     }
-  },
-
-  updateDirtyTiles: function updateDirtyTiles(aMessage) {
-    let browser = aMessage.target;
-    if (browser != this._browser)
-      return;
-    
-    let rects = aMessage.json.rects;
-
-    let tm = this._tileManager;
-    let vs = this._browserViewportState;
-
-    let dirtyRects = [];
-    // loop backwards to avoid xpconnect penalty for .length
-    for (let i = rects.length - 1; i >= 0; --i) {
-      let r = Rect.fromRect(rects[i]);
-      r = this.browserToViewportRect(r);
-      r.expandToIntegers();
-
-      r.restrictTo(vs.viewportRect);
-      if (!r.isEmpty())
-        dirtyRects.push(r);
-    }
-
-    tm.dirtyRects(dirtyRects, this.isRendering(), true);
-  },
-
-  /** If browser scrolls, pan content to new scroll area. */
-  updatePageScroll: function updatePageScroll(aMessage) {
-    if (aMessage.target != this._browser || this._ignorePageScroll)
-      return;
-
-    // XXX shouldn't really make calls to Browser
-    let json = aMessage.json;
-    Browser.scrollContentToBrowser(json.scrollX, json.scrollY);
-  },
-
-  _ignorePageScroll: false,
-  ignorePageScroll: function ignorePageScroll(aIgnoreScroll) {
-    this._ignorePageScroll = aIgnoreScroll;
   },
 
   updateScrolledArea: function updateScrolledArea(aMessage) {
@@ -519,16 +308,8 @@ BrowserView.prototype = {
     viewport.bottom = bvs.zoomLevel * json.height;
 
     if (browser == this._browser) {
-      // Page has now loaded enough to allow zooming.
-      let sizeChanged = oldRight != viewport.right || oldBottom != viewport.bottom;
-      this._viewportChanged(sizeChanged, false);
+      this._viewportChanged();
       this.updateDefaultZoom();
-      if (vis.right > viewport.right || vis.bottom > viewport.bottom) {
-        // Content has shrunk outside of the visible rectangle.
-        // XXX for some reason scroller doesn't know it is outside its bounds
-        Browser.contentScrollboxScroller.scrollBy(0, 0);
-        this.onAfterVisibleMove();
-      }
     }
   },
 
@@ -602,45 +383,6 @@ BrowserView.prototype = {
     return bvs.metaData.allowZoom;
   },
 
-  //
-  // MozAfterPaint events do not guarantee to inform us of all
-  // invalidated paints (See
-  // https://developer.mozilla.org/en/Gecko-Specific_DOM_Events#Important_notes
-  // for details on what the event *does* guarantee).  This is only an
-  // issue when the same current <browser> is used to navigate to a
-  // new page.  Unless a zoom was issued during the page transition
-  // (e.g. a call to setZoomLevel() or something of that nature), we
-  // aren't guaranteed that we've actually invalidated the entire
-  // page.  We don't want to leave bits of the previous page in the
-  // view of the new one, so this method exists as a way for Browser
-  // to inform us that the page is changing, and that we really ought
-  // to invalidate everything.  Ideally, we wouldn't have to rely on
-  // this being called, and we would get proper invalidates for the
-  // whole page no matter what is or is not visible.
-  //
-  // Note that calling this function isn't necessary in almost all
-  // cases, but should be done for correctness.  Most of the time, one
-  // of the following two conditions is satisfied.  Either
-  //
-  //   (1) Pages have different widths so the Browser calls a
-  //       updateDefaultZoom() which forces a dirtyAll, or
-  //   (2) MozAfterPaint does indeed inform us of dirtyRects covering
-  //       the entire page (everything that could possibly become
-  //       visible).
-  /**
-   * Invalidates the entire page by throwing away any cached graphical
-   * portions of the view and refusing to allow a updateDefaultZoom() until
-   * the next explicit update of the viewport dimensions.
-   *
-   * This method should be called when the <browser> last set by
-   * setBrowser() is about to navigate to a new page.
-   */
-  invalidateEntireView: function invalidateEntireView() {
-    if (this._browserViewportState) {
-      this._viewportChanged(false, true);
-    }
-  },
-
   /**
    * Render a rectangle within the browser viewport to the destination canvas
    * under the given scale.
@@ -652,6 +394,8 @@ BrowserView.prototype = {
    * This defaults to the visible rect rooted at the x,y of the critical rect.
    */
   renderToCanvas: function renderToCanvas(destCanvas, destWidth, destHeight, srcRect) {
+    return;
+
     let bvs = this._browserViewportState;
     if (!bvs) {
       throw "Browser viewport state null in call to renderToCanvas (probably no browser set on BrowserView).";
@@ -668,7 +412,6 @@ BrowserView.prototype = {
     let scaley = (destHeight / srcRect.height) || 1;
 
     srcRect.restrictTo(bvs.viewportRect);
-    this._tileManager.renderRectToCanvas(srcRect, destCanvas, scalex, scaley);
   },
 
   viewportToBrowser: function viewportToBrowser(x) {
@@ -702,88 +445,10 @@ BrowserView.prototype = {
     ctx.scale(f, f);
   },
 
-  forceContainerResize: function forceContainerResize() {
-    let bvs = this._browserViewportState;
-    if (bvs)
-      BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
+  _viewportChanged: function() {
+    getBrowser().style.MozTransformOrigin = "left top";
+    Browser.contentScrollboxScroller.updateTransition();
   },
-
-  /**
-   * Force any pending viewport changes to occur.  Batch operations will still be on the
-   * stack so commitBatchOperation is still necessary afterwards.
-   */
-  forceViewportChange: function forceViewportChange() {
-    let bops = this._batchOps;
-    if (bops.length > 0) {
-      let opState = bops[bops.length - 1];
-      this._applyViewportChanges(opState.viewportSizeChanged, opState.dirtyAll);
-      opState.viewportSizeChanged = false;
-      opState.dirtyAll = false;
-    }
-  },
-
-  // -----------------------------------------------------------
-  // Private instance methods
-  //
-
-  _viewportChanged: function _viewportChanged(viewportSizeChanged, dirtyAll) {
-    let bops = this._batchOps;
-    if (bops.length > 0) {
-      let opState = bops[bops.length - 1];
-
-      if (viewportSizeChanged)
-        opState.viewportSizeChanged = viewportSizeChanged;
-      if (dirtyAll)
-        opState.dirtyAll = dirtyAll;
-
-      return;
-    }
-
-    this._applyViewportChanges(viewportSizeChanged, dirtyAll);
-  },
-
-  _applyViewportChanges: function _applyViewportChanges(viewportSizeChanged, dirtyAll) {
-    let bvs = this._browserViewportState;
-    if (bvs) {
-      BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
-
-      let vr = this.getVisibleRect();
-      this._tileManager.viewportChangeHandler(bvs.viewportRect,
-                                              BrowserView.Util.visibleRectToCriticalRect(vr, bvs),
-                                              viewportSizeChanged,
-                                              dirtyAll);
-
-      let rects = vr.subtract(bvs.viewportRect);
-      this._tileManager.clearRects(rects);
-    }
-  },
-
-  _appendTile: function _appendTile(tile) {
-    let canvas = tile.getContentImage();
-
-    //canvas.style.position = "absolute";
-    //canvas.style.left = tile.x + "px";
-    //canvas.style.top  = tile.y + "px";
-
-    // XXX The above causes a trace abort, and this function is called back in the tight
-    // render-heavy loop in TileManager, so even though what we do below isn't so proper
-    // and takes longer on the Platform/C++ emd, it's better than causing a trace abort
-    // in our tight loop.
-    //
-    // But this also overwrites some style already set on the canvas in Tile constructor.
-    // Hack fail...
-    //
-    canvas.setAttribute("style", "display: none; position: absolute; left: " + tile.boundRect.left + "px; " + "top: " + tile.boundRect.top + "px;");
-
-    this._container.appendChild(canvas);
-  },
-
-  _removeTile: function _removeTile(tile) {
-    let canvas = tile.getContentImage();
-
-    this._container.removeChild(canvas);
-  }
-
 };
 
 
@@ -821,41 +486,4 @@ BrowserView.BrowserViewportState.prototype = {
     return "[BrowserViewportState] {\n" + props.join(",\n") + "\n}";
   }
 
-};
-
-
-/**
- * nsIObserver that implements a callback for the nsIIdleService, which starts
- * and stops the BrowserView's TileManager's prefetch crawl according to user
- * idleness.
- */
-BrowserView.IdleServiceObserver = function IdleServiceObserver(browserView) {
-  this._browserView = browserView;
-  this._idle = false;
-  this._paused = false;
-};
-
-BrowserView.IdleServiceObserver.prototype = {
-  /** No matter what idle is, make sure prefetching is not active. */
-  pause: function pause() {
-    this._paused = true;
-    this._updateTileManager();
-  },
-
-  /** Prefetch tiles in idle mode. */
-  resume: function resume() {
-    this._paused = false;
-    this._updateTileManager();
-  },
-
-  /** Idle event handler. */
-  observe: function observe(aSubject, aTopic, aUserIdleTime) {
-    this._idle = (aTopic == "idle") ? true : false;
-    this._updateTileManager();
-  },
-
-  _updateTileManager: function _updateTileManager() {
-    let bv = this._browserView;
-    bv._tileManager.setPrefetch(this._idle && !this._paused);
-  }
 };

@@ -1499,7 +1499,6 @@ var FindHelperUI = {
 
   show: function findHelperShow() {
     BrowserUI.pushPopup(this, this._container);
-    Browser._browserView.ignorePageScroll(true);
     this._container.show(this);
     this.search("");
     this._textbox.focus();
@@ -1507,7 +1506,6 @@ var FindHelperUI = {
 
   hide: function findHelperHide() {
     BrowserUI.popPopup();
-    Browser._browserView.ignorePageScroll(false);
     this._textbox.value = "";
     this._container.hide(this);
   },
@@ -1680,8 +1678,6 @@ var FormHelperUI = {
     if (aVal == this._open)
       return;
 
-    let bv = Browser._browserView;
-    bv.ignorePageScroll(aVal);
     this._container.hidden = !aVal;
 
     if (aVal) {
@@ -1788,7 +1784,6 @@ var FormHelperUI = {
       let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
       if (deltaX != 0 || deltaY != 0) {
         Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
-        bv.onAfterVisibleMove();
       }
 
       Browser.animatedZoomTo(zoomRect);

@@ -49,6 +49,7 @@ let Cu = Components.utils;
  * @param aZoomRect Optional. Zoom rectangle to be configured
  */
 function AnimatedZoom(aBrowserView) {
+  return;
   this.bv = aBrowserView;
 
   this.snapshot = AnimatedZoom.createCanvas();
@@ -107,6 +108,9 @@ AnimatedZoom.createCanvas = function(aRemote) {
 };
 
 AnimatedZoom.prototype.setupCanvas = function() {
+{
+  return;
+
   // stop live rendering during zooming
   this.bv.pauseRendering();
 
@@ -234,6 +238,7 @@ AnimatedZoom.prototype._callback = function() {
 
 /** Stop animation, zoom to point, and clean up. */
 AnimatedZoom.prototype.finish = function() {
+  return;
   try {
     Elements.viewBuffer.style.display = "none";
 
