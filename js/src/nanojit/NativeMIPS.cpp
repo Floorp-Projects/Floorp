@@ -1172,16 +1172,16 @@ namespace nanojit
                 SUBU(rr, ra, rb);
                 break;
             case LIR_lshi:
+                // SLLV uses the low-order 5 bits of rb for the shift amount so no masking required
                 SLLV(rr, ra, rb);
-                ANDI(rb, rb, 31);
                 break;
             case LIR_rshi:
+                // SRAV uses the low-order 5 bits of rb for the shift amount so no masking required
                 SRAV(rr, ra, rb);
-                ANDI(rb, rb, 31);
                 break;
             case LIR_rshui:
+                // SRLV uses the low-order 5 bits of rb for the shift amount so no masking required
                 SRLV(rr, ra, rb);
-                ANDI(rb, rb, 31);
                 break;
             case LIR_mulxovi:
             case LIR_muljovi:
