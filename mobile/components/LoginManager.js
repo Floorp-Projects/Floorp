@@ -172,9 +172,10 @@ LoginManager.prototype = {
             case "PasswordMgr:GetPasswords":
                 // If there are no logins for this site, bail out now.
                 if (!this.countLogins(message.json.formOrigin, "", null))
-                    return {};
+                    return { foundLogins: {} };
+
                 var foundLogins = {};
-                
+
                 if (!this.uiBusy) {
                     for (var i = 0; i < message.json.actionOrigins.length; i++) {
                         var actionOrigin = message.json.actionOrigins[i];
