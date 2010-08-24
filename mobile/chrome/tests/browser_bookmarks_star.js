@@ -17,7 +17,7 @@ function test() {
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
   // We call "finish()" when the tests are finished
   waitForExplicitFinish();
-  
+
   // Start the tests
   runNextTest();
 }
@@ -47,40 +47,43 @@ function runNextTest() {
 // Case: Test appearance and behavior of the bookmark popup
 gTests.push({
   desc: "Test appearance and behavior of the bookmark popup",
-  _currenttab: null,
-  
+  _currentTab: null,
+
   run: function() {
-    this._currenttab = Browser.addTab(testURL_02, true);
-    function handleEvent() {
-      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
-      gCurrentTest.onPageLoad();
-    };
-    this._currenttab.browser.addEventListener("load", handleEvent , true);
+    this._currentTab = Browser.addTab(testURL_02, true);
+
+    messageManager.addMessageListener("pageshow",
+    function(aMessage) {
+      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        messageManager.removeMessageListener(aMessage.name, arguments.callee);
+        gCurrentTest.onPageLoad();
+      }
+    });
   },
-  
+
   onPageLoad: function() {
-    var starbutton = document.getElementById("tool-star");
+    let starbutton = document.getElementById("tool-star");
     starbutton.click();
-    
+
     waitFor(gCurrentTest.onPopupReady1, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
-  
+
   onPopupReady1: function() {
     // Popup should auto-hide after 2 seconds on the initial bookmark with star
     setTimeout(gCurrentTest.onPopupGone, 3000);
   },
-  
+
   onPopupGone: function() {
     // Make sure it's hidden again
     is(document.getElementById("bookmark-popup").hidden, true, "Bookmark popup should be auto-hidden");
-    
+
     // Let's make it appear again and continue the test
-    var starbutton = document.getElementById("tool-star");
+    let starbutton = document.getElementById("tool-star");
     starbutton.click();
-    
+
     waitFor(gCurrentTest.onPopupReady2, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
-  
+
   onPopupReady2: function() {
     // Let's make it disappear again by clicking the star again
     var starbutton = document.getElementById("tool-star");
@@ -88,7 +91,7 @@ gTests.push({
     
     waitFor(gCurrentTest.onPopupGone2, function() { return document.getElementById("bookmark-popup").hidden == true; });
   },
-  
+
   onPopupGone2: function() {
     // Make sure it's hidden again
     is(document.getElementById("bookmark-popup").hidden, true, "Bookmark popup should be hidden by clicking star");
@@ -107,53 +110,56 @@ gTests.push({
     
     waitFor(gCurrentTest.onPopupGone3, function() { return document.getElementById("bookmark-popup").hidden == true; });
   },
-  
+
   onPopupGone3: function() {
     // Make sure it's hidden again
     is(document.getElementById("bookmark-popup").hidden, true, "Bookmark popup should be hidden by clicking in content");
     
-    BrowserUI.closeTab(this._currenttab);
+    BrowserUI.closeTab(this._currentTab);
     
     runNextTest();
-  }  
+  }
 });
 
 //------------------------------------------------------------------------------
 // Case: Test adding tags via star icon
 gTests.push({
   desc: "Test adding tags via star icon",
-  _currenttab: null,
-  
+  _currentTab: null,
+
   run: function() {
-    this._currenttab = Browser.addTab(testURL_02, true);
-    function handleEvent() {
-      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
-      gCurrentTest.onPageLoad();
-    };
-    this._currenttab.browser.addEventListener("load", handleEvent , true);
+    this._currentTab = Browser.addTab(testURL_02, true);
+
+    messageManager.addMessageListener("pageshow",
+    function(aMessage) {
+      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        messageManager.removeMessageListener(aMessage.name, arguments.callee);
+        gCurrentTest.onPageLoad();
+      }
+    });
   },
-  
+
   onPageLoad: function() {
     var starbutton = document.getElementById("tool-star");
     starbutton.click();
 
     waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
-  
+
   onPopupReady: function() {
     var editbutton = document.getElementById("bookmark-popup-edit");
     editbutton.click();
-    
+
     waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
   },
-  
+
   onEditorReady: function() {
     var bookmarkitem = document.getElementById("bookmark-item");
     bookmarkitem.tags = "tagone, tag two, tag-three, tag4";
-    
+
     var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
-    
+
     waitFor(gCurrentTest.onEditorDone, function() { return document.getElementById("bookmark-container").hidden == true; });
   },
 
@@ -161,41 +167,44 @@ gTests.push({
     var tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 4, "All tags are added.");
     
-    BrowserUI.closeTab(this._currenttab);
+    BrowserUI.closeTab(this._currentTab);
     
     runNextTest();
-  }  
+  }
 });
 
 //------------------------------------------------------------------------------
 // Case: Test editing uri via star icon
 gTests.push({
   desc: "Test editing uri via star icon",
-  _currenttab: null,
-  
+  _currentTab: null,
+
   run: function() {
-    this._currenttab = Browser.addTab(testURL_02, true);
-    function handleEvent() {
-      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
-      gCurrentTest.onPageLoad();
-    };
-    this._currenttab.browser.addEventListener("load", handleEvent, true);
+    this._currentTab = Browser.addTab(testURL_02, true);
+
+    messageManager.addMessageListener("pageshow",
+    function(aMessage) {
+      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        messageManager.removeMessageListener(aMessage.name, arguments.callee);
+        gCurrentTest.onPageLoad();
+      }
+    });
   },
-  
+
   onPageLoad: function() {
     var starbutton = document.getElementById("tool-star");
-    starbutton.click();    
-    
+    starbutton.click();
+
     waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
-  
+
   onPopupReady: function() {
     var editbutton = document.getElementById("bookmark-popup-edit");
     editbutton.click();
     
     waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
   },
-  
+
   onEditorReady: function() {
     var bookmarkitem = document.getElementById("bookmark-item");    
     EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
@@ -213,34 +222,36 @@ gTests.push({
     isnot(PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01)), -1, testURL_01 + " is now bookmarked");
     is(PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02)), -1, testURL_02 + " is no longer bookmarked");
     
-    BrowserUI.closeTab(this._currenttab);
+    BrowserUI.closeTab(this._currentTab);
     
     runNextTest();
-  }  
+  }
 });
 
 //------------------------------------------------------------------------------
 // Case: Test removing existing bookmark via popup
 gTests.push({
   desc: "Test removing existing bookmark via popup",
-  _currenttab: null,
-  
+  _currentTab: null,
   run: function() {
-    this._currenttab = Browser.addTab(testURL_01, true);
-    function handleEvent() {
-      gCurrentTest._currenttab.browser.removeEventListener("load", handleEvent, true);
-      gCurrentTest.onPageLoad();
-    };
-    this._currenttab.browser.addEventListener("load", handleEvent, true);
+    this._currentTab = Browser.addTab(testURL_01, true);
+
+    messageManager.addMessageListener("pageshow",
+    function(aMessage) {
+      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        messageManager.removeMessageListener(aMessage.name, arguments.callee);
+        gCurrentTest.onPageLoad();
+      }
+    });
   },
-  
+
   onPageLoad: function() {
     var starbutton = document.getElementById("tool-star");
-    starbutton.click();    
-    
+    starbutton.click();
+
     waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
-  
+
   onPopupReady: function() {
     var removebutton = document.getElementById("bookmark-popup-remove");
     removebutton.click();
@@ -248,7 +259,7 @@ gTests.push({
     var bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
     ok(bookmark == -1, testURL_01 + " should no longer in bookmark");
 
-    BrowserUI.closeTab(this._currenttab);
+    BrowserUI.closeTab(this._currentTab);
 
     runNextTest();
   }

@@ -47,27 +47,26 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
   head.js \
   remote_head.js \
-  browser_mainui.js \
-  browser_tabs.js \
+  remote_forms.js \
+  browser_blank_01.html \
+  browser_blank_02.html \
   browser_bookmarks.js \
   browser_bookmarks_star.js \
   browser_bookmarks_tags.js \
-  browser_select.js \
-  browser_rect.js \
+  browser_click_content.html \
   browser_click_content.js \
+  browser_contacts.js \
+  browser_forms.html \
   browser_forms.js \
-  remote_forms.js \
-  browser_viewport.js \
+  browser_mainui.js \
   browser_navigation.js \
   browser_preferences_basic.js \
   browser_preferences_text.js \
-  browser_sessionstore.js \
-  browser_contacts.js \
-  browser_blank_01.html \
-  browser_blank_02.html \
+  browser_rect.js \
   browser_select.html \
-  browser_click_content.html \
-  browser_forms.html \
+  browser_select.js \
+  browser_sessionstore.js \
+  browser_tabs.js \
   browser_viewport_00.html \
   browser_viewport_01.html \
   browser_viewport_02.html \
@@ -78,6 +77,7 @@ _BROWSER_FILES = \
   browser_viewport_07.html \
   browser_viewport_08.html \
   browser_viewport_09.html \
+  browser_viewport.js \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)

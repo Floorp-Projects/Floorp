@@ -1,8 +1,13 @@
 function test() {
+  waitForExplicitFinish();
+
   ok(Rect, "Rect class exists");
-  for (var fname in tests) {
-    tests[fname]();
+
+  for (let test in tests) {
+    tests[test]();
   }
+
+  finish();
 }
 
 let tests = {

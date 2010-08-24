@@ -871,8 +871,8 @@ var BrowserUI = {
         break;
       case "cmd_star":
       {
-        var bookmarkURI = browser.currentURI;
-        var bookmarkTitle = browser.contentTitle || bookmarkURI.spec;
+        let bookmarkURI = browser.currentURI;
+        let bookmarkTitle = browser.contentTitle || bookmarkURI.spec;
 
         let autoClose = false;
 
@@ -1251,6 +1251,12 @@ var NewTabPopup = {
 
 var BookmarkPopup = {
   get box() {
+    let self = this;
+    // Hide the popup if there is any new page loading
+    messageManager.addMessageListener("pagehide", function(aMessage) {
+      self.hide();
+    });
+
     delete this.box;
     return this.box = document.getElementById("bookmark-popup");
   },

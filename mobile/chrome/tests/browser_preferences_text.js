@@ -18,8 +18,7 @@ var expected = {
   "clearDataButton": {"value": "Clear private data", "element_id": "prefs-clear-data", "label": "Clear", "tagName": "button"}
 };
 
-function getPreferencesElements()
-{
+function getPreferencesElements() {
    var prefElements = {};
    prefElements.panelOpen = document.getElementById("tool-panel-open");
    prefElements.panelClose = document.getElementById("tool-panel-close");
@@ -55,7 +54,7 @@ function runNextTest() {
   }
   else {
     // Cleanup. All tests are completed at this point
-      finish();
+    finish();
   }
 }
 
@@ -164,7 +163,7 @@ gTests.push({
     is(clearDataButton.label, clearData.label, "Label for Clear Private Data button");
     is(clearDataButton.tagName, clearData.tagName, "Check for Clear Private Data button type");
 
-    // 3. Verify content & privacy and security reasons are gray and of same hieght
+    // 3. Verify content & privacy and security reasons are gray and of same height
     // Check for height
     let aboutRegionHeight = getHeight(aboutRegion);
     let imageRegionHeight = getHeight(imageRegion);

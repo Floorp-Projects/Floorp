@@ -79,15 +79,17 @@ gTests.push({
 // Case: Test clicking on a bookmark loads the web page
 gTests.push({
   desc: "Test clicking on a bookmark loads the web page",
-  _currenttab: null,
+  _currentTab: null,
 
   run: function() {
     this._currentTab = Browser.addTab(testURL_01, true);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow", function(aMessage) {
-      messageManager.removeMessageListener(aMessage.name, arguments.callee);
-      gCurrentTest.onPageReady();
+      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        messageManager.removeMessageListener(aMessage.name, arguments.callee);
+        gCurrentTest.onPageReady();
+      }
     });
   },
 

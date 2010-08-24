@@ -6,38 +6,43 @@ let new_tab = null;
 function test() {
   // This test is async
   waitForExplicitFinish();
-  
+
   // Add new tab to hold the <select> page
   new_tab = Browser.addTab(testURL, true);
-  ok(new_tab, "Tab Opened");	
+  ok(new_tab, "Tab Opened");
 
-  // Wait for the tab to load, then do the test
-  new_tab.browser.addEventListener("load", onPageLoaded, true);
+  // Need to wait until the page is loaded
+  messageManager.addMessageListener("pageshow",
+  function(aMessage) {
+    if (new_tab.browser.currentURI.spec != "about:blank") {
+      messageManager.removeMessageListener(aMessage.name, arguments.callee);
+      onPageReady();
+    }
+  });
 }
 
-function onPageLoaded() {
+function onPageReady() {
   let combo = new_tab.browser.contentDocument.getElementById("combobox");
   isnot(combo, null, "Get the select from web content");
 
-  // XXX Sending a synthesized event to the combo is not working
-  //EventUtils.synthesizeMouse(combo, combo.clientWidth / 2, combo.clientHeight / 2, {}, combo.ownerDocument.defaultView);
-  // XXX SelectHelper.show is now triggered by a message from content
-  finish();
-  //SelectHelper.show(combo);
-  
-  //waitFor(onUIReady, function() { return document.getElementById("select-container").hidden == false; });
+  // Sending a synthesized event to the combo is not working
+  let container = document.getElementById("tile-container");
+  let rect = Browser.browserViewToClientRect(Rect.fromRect(combo.getBoundingClientRect()));
+  container.customClicker.singleClick(rect.left + 1, rect.top + 1);
+
+  waitFor(onUIReady, function() { return document.getElementById("select-container").hidden == false; });
 }
-  
-function onUIReady() {    
+
+function onUIReady() {
   let selectui = document.getElementById("select-container");
   is(selectui.hidden, false, "Select UI should be open");
-  
+
   let doneButton = document.getElementById("select-buttons-done");
   doneButton.click();
 
   // Close our tab when finished
   Browser.closeTab(new_tab);
-  
+
   // We must finialize the tests
   finish();
 }
