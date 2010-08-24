@@ -54,14 +54,12 @@ JaegerTrampoline:
     /* then align the stack to form esp == VMFrame. */
     movl  12(%ebp), %ebx                       /* fp */
     pushl %ebx                                 /* entryFp */
-    pushl 20(%ebp)                             /* inlineCallCount */
-    pushl 8(%ebp)
-    pushl %ebx
-    subl $0x18, %esp
+    pushl 20(%ebp)                             /* stackLimit */
+    pushl 8(%ebp)                              /* cx */
+    pushl %ebx                                 /* fp */
+    subl $0x1C, %esp
 
     /* Jump into the JIT'd code. */
-    pushl 16(%ebp)
-
     /* No fastcall for sunstudio. */
     pushl %esp
     call SetVMFrameRegs
@@ -69,19 +67,15 @@ JaegerTrampoline:
     pushl %esp
     call PushActiveVMFrame
     popl  %edx
-    popl  %edx
-
-    call  *%edx
-    leal -4(%esp), %ecx
-    push %ecx
+    call  *16(%ebp)
+    pushl %esp
     call PopActiveVMFrame
     popl %ecx
-    leal -4(%esp), %ecx
-    push %ecx
+    pushl %esp
     call UnsetVMFrameRegs
     popl %ecx
 
-    addl $0x28, %esp
+    addl $0x2C, %esp
     popl %ebx
     popl %edi
     popl %esi
@@ -124,16 +118,29 @@ throwpoline_exit:
     ret
 .size   JaegerThrowpoline, . - JaegerThrowpoline
 
-.global JaegerFromTracer
-.type   JaegerFromTracer, @function
-JaegerFromTracer:
-    movl 0x24(%ebx), %edx
-    movl 0x28(%ebx), %ecx
-    movl 0x38(%ebx), %eax
+.global InjectJaegerReturn
+.type   InjectJaegerReturn, @function
+InjectJaegerReturn:
+    movl 0x24(%ebx), %edx                        /* fp->rval data */
+    movl 0x28(%ebx), %ecx                        /* fp->rval type */
+    movl 0x38(%ebx), %eax                        /* fp->ncode */
     /* For Sun Studio there is no fast call. */
     /* We add the stack by 8 before. */
     addl $0x8, %esp
     /* Restore frame regs. */
-    movl 0x1C(%esp), %ebx
+    movl 0x1C(%esp), %ebx                        /* f.fp */
+    pushl %eax
     ret
-.size   JaegerFromTracer, . - JaegerFromTracer
+.size   InjectJaegerReturn, . - InjectJaegerReturn
+	
+/*
+ * Take the fifth parameter from JaegerShot() and jump to it. This makes it so
+ * we can jump into arbitrary JIT code, which won't have the frame-fixup prologue.
+ */
+.global SafePointTrampoline
+.type   SafePointTrampoline, @function
+SafePointTrampoline:
+    popl %eax
+    movl %eax, 0x38(%ebx)
+    jmp  *24(%ebp)
+.size   SafePointTrampoline, . - SafePointTrampoline
