@@ -38,11 +38,11 @@
 #ifndef nsHtml5TreeOperation_h__
 #define nsHtml5TreeOperation_h__
 
-#include "nsIContent.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
 #include "nsXPCOMStrings.h"
 
+class nsIContent;
 class nsHtml5TreeOpExecutor;
 class nsHtml5StateSnapshot;
 
