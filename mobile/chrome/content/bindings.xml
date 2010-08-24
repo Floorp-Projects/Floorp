@@ -234,8 +234,11 @@
             let title = controller.getCommentAt(i);
             let tags = '';
 
-            if (title && type == "tag")
-              [, title, tags] = title.match(/^(.+) \u2013 (.+)$/);
+            if (type == "tag") {
+              try {
+                [, title, tags] = title.match(/^(.+) \u2013 (.+)$/);
+              } catch (e) {}
+            }
             item.setAttribute("tags", tags);
 
             let url = controller.getValueAt(i);
