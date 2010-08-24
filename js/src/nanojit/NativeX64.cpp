@@ -1844,7 +1844,7 @@ namespace nanojit
         endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_spill(Register rr, int d, bool /*pop*/, bool quad) {
+    void Assembler::asm_spill(Register rr, int d, bool quad) {
         NanoAssert(d);
         if (!IsFpReg(rr)) {
             if (quad)
