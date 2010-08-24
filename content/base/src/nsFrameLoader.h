@@ -65,6 +65,10 @@ namespace dom {
 class PBrowserParent;
 class TabParent;
 }
+
+namespace layout {
+class RenderFrameParent;
+}
 }
 
 #ifdef MOZ_WIDGET_GTK2
@@ -81,6 +85,7 @@ class nsFrameLoader : public nsIFrameLoader
 #ifdef MOZ_IPC
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::TabParent TabParent;
+  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
 #endif
 
 protected:
@@ -96,12 +101,10 @@ protected:
     mNetworkCreated(aNetworkCreated)
 #ifdef MOZ_IPC
     , mDelayRemoteDialogs(PR_FALSE)
-    , mRemoteWidgetCreated(PR_FALSE)
+    , mRemoteBrowserShown(PR_FALSE)
     , mRemoteFrame(false)
+    , mCurrentRemoteFrame(nsnull)
     , mRemoteBrowser(nsnull)
-#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
-    , mRemoteSocket(nsnull)
-#endif
 #endif
   {}
 
@@ -171,6 +174,35 @@ public:
 
 #ifdef MOZ_IPC
   PBrowserParent* GetRemoteBrowser();
+
+  /**
+   * The "current" render frame is the one on which the most recent
+   * remote layer-tree transaction was executed.  If no content has
+   * been drawn yet, or the remote browser doesn't have any drawn
+   * content for whatever reason, return NULL.  The returned render
+   * frame has an associated shadow layer tree.
+   *
+   * Note that the returned render frame might not be a frame
+   * constructed for this->GetURL().  This can happen, e.g., if the
+   * <browser> was just navigated to a new URL, but hasn't painted the
+   * new page yet.  A render frame for the previous page may be
+   * returned.  (In-process <browser> behaves similarly, and this
+   * behavior seems desirable.)
+   */
+  RenderFrameParent* GetCurrentRemoteFrame() const
+  {
+    return mCurrentRemoteFrame;
+  }
+
+  /**
+   * |aFrame| can be null.  If non-null, it must be the remote frame
+   * on which the most recent layer transaction completed for this's
+   * <browser>.
+   */
+  void SetCurrentRemoteFrame(RenderFrameParent* aFrame)
+  {
+    mCurrentRemoteFrame = aFrame;
+  }
 #endif
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
@@ -199,12 +231,11 @@ private:
   nsresult ReallyStartLoadingInternal();
 
 #ifdef MOZ_IPC
-  // True means new process started; nothing else to do
-  bool TryNewProcess();
+  // Return true if remote browser created; nothing else to do
+  bool TryRemoteBrowser();
 
-  // Do the hookup necessary to actually show a remote frame once the view and
-  // widget are available.
-  bool ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view);
+  // Tell the remote browser that it's now "virtually visible"
+  bool ShowRemoteFrame(const nsIntSize& size);
 #endif
 
   nsCOMPtr<nsIDocShell> mDocShell;
@@ -229,17 +260,12 @@ private:
 
 #ifdef MOZ_IPC
   PRPackedBool mDelayRemoteDialogs : 1;
-  PRPackedBool mRemoteWidgetCreated : 1;
+  PRPackedBool mRemoteBrowserShown : 1;
   bool mRemoteFrame;
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;
+  RenderFrameParent* mCurrentRemoteFrame;
   TabParent* mRemoteBrowser;
-
-#ifdef MOZ_WIDGET_GTK2
-  GtkWidget* mRemoteSocket;
-#elif defined(MOZ_WIDGET_QT)
-  QX11EmbedContainer* mRemoteSocket;
-#endif
 #endif
 
 };

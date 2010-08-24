@@ -63,6 +63,7 @@ IPDLDIRS =  \
   ipc/testshell  \
   js/ipc  \
   js/jetpack \
+  layout/ipc \
   netwerk/ipc  \
   netwerk/protocol/http  \
   netwerk/cookie  \

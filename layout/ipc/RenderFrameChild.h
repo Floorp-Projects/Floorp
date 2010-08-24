@@ -38,35 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_ShadowLayersChild_h
-#define mozilla_layers_ShadowLayersChild_h
+#ifndef mozilla_dom_RenderFrameChild_h
+#define mozilla_dom_RenderFrameChild_h
 
-#include "mozilla/layers/PLayersChild.h"
+#include "mozilla/layout/PRenderFrameChild.h"
 
 namespace mozilla {
-namespace layers {
+namespace layout {
 
-class ShadowLayersChild : public PLayersChild
+class RenderFrameChild : public PRenderFrameChild
 {
 public:
-  ShadowLayersChild() { }
-  ~ShadowLayersChild() { }
+  RenderFrameChild() {}
+  virtual ~RenderFrameChild() {}
 
-  /**
-   * Clean this up, finishing with Send__delete__().
-   *
-   * It is expected (checked with an assert) that all shadow layers
-   * created by this have already been destroyed and
-   * Send__delete__()d by the time this method is called.
-   */
   void Destroy();
 
 protected:
-  NS_OVERRIDE virtual PLayerChild* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerChild* actor);
+  NS_OVERRIDE
+  virtual PLayersChild* AllocPLayers();
+  NS_OVERRIDE
+  virtual bool DeallocPLayers(PLayersChild* aLayers);
 };
 
-} // namespace layers
+} // namespace layout
 } // namespace mozilla
 
-#endif // ifndef mozilla_layers_ShadowLayersChild_h
+#endif  // mozilla_dom_RenderFrameChild_h

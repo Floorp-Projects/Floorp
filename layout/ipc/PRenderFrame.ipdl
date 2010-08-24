@@ -38,35 +38,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_ShadowLayersChild_h
-#define mozilla_layers_ShadowLayersChild_h
-
-#include "mozilla/layers/PLayersChild.h"
+include protocol PBrowser;
+include protocol PLayers;
 
 namespace mozilla {
-namespace layers {
+namespace layout {
 
-class ShadowLayersChild : public PLayersChild
+/**
+ * PRenderFrame (in the layout sense of "frame") represents one web
+ * "page".  It's used to graft content processes' layer trees into
+ * chrome's rendering path.  The lifetime of a PRenderFrame is tied to
+ * its PresShell in the child process.
+ *
+ * The child process conceptually "owns" a PRenderFrame, because it
+ * only makes sense wrt documents loaded by the child.
+ */
+sync protocol PRenderFrame
 {
-public:
-  ShadowLayersChild() { }
-  ~ShadowLayersChild() { }
+    manager PBrowser;
+    manages PLayers;
 
-  /**
-   * Clean this up, finishing with Send__delete__().
-   *
-   * It is expected (checked with an assert) that all shadow layers
-   * created by this have already been destroyed and
-   * Send__delete__()d by the time this method is called.
-   */
-  void Destroy();
+parent:
+    async PLayers();
+    async __delete__();
 
-protected:
-  NS_OVERRIDE virtual PLayerChild* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerChild* actor);
+state EMPTY:
+    recv PLayers goto HAVE_CONTENT;
+state HAVE_CONTENT:
+    recv __delete__;
 };
 
-} // namespace layers
+} // namespace layout
 } // namespace mozilla
-
-#endif // ifndef mozilla_layers_ShadowLayersChild_h
