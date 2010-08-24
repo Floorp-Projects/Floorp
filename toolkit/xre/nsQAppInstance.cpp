@@ -53,6 +53,9 @@ void nsQAppInstance::AddRef(void) {
     const char *graphicsSystem = PR_GetEnv("MOZ_QT_GRAPHICSSYSTEM");
     if (graphicsSystem)
       QApplication::setGraphicsSystem(QString(graphicsSystem));
+#if (MOZ_PLATFORM_MAEMO == 6)
+    QApplication::setStyle(QLatin1String("windows"));
+#endif
     sQAppInstance = new QApplication(gArgc, gArgv);
   }
   sQAppRefCount++;
