@@ -46,6 +46,7 @@ browser.jar:
   skin/classic/browser/Search.png
   skin/classic/browser/Search-addengines.png
   skin/classic/browser/section_collapsed.png
+  skin/classic/browser/section_collapsed-rtl.png
   skin/classic/browser/section_expanded.png
   skin/classic/browser/Secure-Glyph-White.png
   skin/classic/browser/Secure-statusbar.png
