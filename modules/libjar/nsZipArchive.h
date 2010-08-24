@@ -196,8 +196,6 @@ public:
    */
   PRUint8* GetData(nsZipItem* aItem);
 
-  PRBool CheckCRC(nsZipItem* aItem, PRUint8* aData);
-
 private:
   //--- private members ---
 
