@@ -141,6 +141,11 @@ let Util = {
     return (aURL.indexOf("about:") == 0 && aURL != "about:blank") || aURL.indexOf("chrome:") == 0;
   },
 
+  isShareableScheme: function isShareableScheme(aProtocol) {
+    let dontShare = /^(chrome|about|file|javascript|resource)$/;
+    return (aProtocol && !dontShare.test(aProtocol));
+  },
+
   clamp: function(num, min, max) {
     return Math.max(min, Math.min(max, num));
   },

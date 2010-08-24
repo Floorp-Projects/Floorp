@@ -1013,6 +1013,7 @@ var PageActions = {
     this.register("pageaction-reset", this.updatePagePermissions, this);
     this.register("pageaction-password", this.updateForgetPassword, this);
     this.register("pageaction-saveas", this.updatePageSaveAs, this);
+    this.register("pageaction-share", this.updateShare, this);
     this.register("pageaction-search", BrowserSearch.updatePageSearchEngines, BrowserSearch);
   },
 
@@ -1168,6 +1169,10 @@ var PageActions = {
     // Check for local XUL content
     let contentDocument = Browser.selectedBrowser.contentDocument;
     return !(contentDocument && contentDocument instanceof XULDocument);
+  },
+
+  updateShare: function updateShare(aNode) {
+    return Util.isShareableScheme(Browser.selectedBrowser.currentURI.scheme);
   },
 
   hideItem: function hideItem(aNode) {
