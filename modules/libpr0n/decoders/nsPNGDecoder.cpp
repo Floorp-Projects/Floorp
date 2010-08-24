@@ -204,14 +204,7 @@ void nsPNGDecoder::EndImageFrame()
     if (mFrameHasNoAlpha)
       mImage->SetFrameHasNoAlpha(numFrames - 1);
 
-    if (NS_FAILED(mImage->FrameUpdated(numFrames - 1, mFrameRect))) {
-      mError = PR_TRUE;
-      // allow the call out to the observers.
-    }
-    PRUint32 curFrame = mImage->GetCurrentFrameIndex();
-    if (mObserver)
-      mObserver->OnDataAvailable(nsnull, curFrame == numFrames - 1,
-                                 &mFrameRect);
+    PostInvalidation(mFrameRect);
   }
 #endif
 
@@ -809,15 +802,9 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     PRUint32 numFrames = decoder->mImage->GetNumFrames();
     if (numFrames <= 1) {
       // Only do incremental image display for the first frame
+      // XXXbholley - this check should be handled in the superclass
       nsIntRect r(0, row_num, width, 1);
-      if (NS_FAILED(decoder->mImage->FrameUpdated(numFrames - 1, r))) {
-        decoder->mError = PR_TRUE;  /* bail */
-        return;
-      }
-      PRUint32 curFrame = decoder->mImage->GetCurrentFrameIndex();
-      if (decoder->mObserver)
-        decoder->mObserver->OnDataAvailable(nsnull,
-                                            curFrame == numFrames - 1, &r);
+      decoder->PostInvalidation(r);
     }
   }
 }
