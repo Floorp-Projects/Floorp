@@ -139,7 +139,7 @@ void nsMenuGroupOwnerX::NodeWillBeDestroyed(const nsINode * aNode)
 
 
 void nsMenuGroupOwnerX::AttributeWillChange(nsIDocument* aDocument,
-                                            nsIContent* aContent,
+                                            dom::Element* aContent,
                                             PRInt32 aNameSpaceID,
                                             nsIAtom* aAttribute,
                                             PRInt32 aModType)

@@ -898,7 +898,8 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsDocAccessible)
 
 void
 nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
-                                     nsIContent* aContent, PRInt32 aNameSpaceID,
+                                     dom::Element* aElement,
+                                     PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, PRInt32 aModType)
 {
   // XXX TODO: bugs 381599 467143 472142 472143
