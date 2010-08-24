@@ -202,29 +202,30 @@
 
         <!-- search view -->
         <vbox id="search-view" flex="1" class="view-pane">
+          <hbox id="search-filter" align="center">
+            <label id="search-filter-label" value="&search.filter2.label;"/>
+            <radiogroup id="search-filter-radiogroup" orient="horizontal"
+                        align="center" persist="value" value="local">
+              <radio id="search-filter-local" class="search-filter-radio"
+                     label="&search.filter2.installed.label;" value="local"
+                     tooltiptext="&search.filter2.installed.tooltip;"/>
+              <radio id="search-filter-remote" class="search-filter-radio"
+                     label="&search.filter2.available.label;" value="remote"
+                     tooltiptext="&search.filter2.available.tooltip;"/>
+            </radiogroup>
+          </hbox>
           <hbox class="view-header" pack="end">
             <hbox id="search-sorters" class="sort-controls" sortby="name"
                   ascending="true"/>
           </hbox>
           <richlistbox id="search-list" class="list" flex="1">
-            <vbox>
-              <hbox class="search-filter">
-                <label value="&search.filter.label;"/>
-                <checkbox id="search-filter-local"
-                          persist="checked" checked="true"
-                          label="&search.filter.installed.label;"/>
-                <checkbox id="search-filter-remote"
-                          persist="checked" checked="true"
-                          label="&search.filter.available.label;"/>
-              </hbox>
-              <vbox id="search-list-empty" class="empty-list-notice"
-                    flex="1" hidden="true">
-                <spacer flex="1"/>
-                <label value="&listEmpty.search.label;"/>
-                <button label="&listEmpty.button.label;" class="addon-control"
-                        command="cmd_goToDiscoverPane"/>
-                <spacer flex="3"/>
-              </vbox>
+            <vbox id="search-list-empty" class="empty-list-notice"
+                  flex="1" hidden="true">
+              <spacer flex="1"/>
+              <label value="&listEmpty.search.label;"/>
+              <button label="&listEmpty.button.label;" class="addon-control"
+                      command="cmd_goToDiscoverPane"/>
+              <spacer flex="3"/>
             </vbox>
           </richlistbox>
         </vbox>
