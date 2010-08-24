@@ -848,6 +848,18 @@ ContextHandler.registerType("link-saveable", function(aState, aElement) {
   return (protocol && protocol != "mailto" && protocol != "javascript" && protocol != "news" && protocol != "snews");
 });
 
+ContextHandler.registerType("link-shareable", function(aState, aElement) {
+  return Util.isShareableScheme(aState.linkProtocol);
+});
+
+ContextHandler.registerType("image-shareable", function(aState, aElement) {
+  if (!aState.mediaURL)
+    return false;
+
+  let protocol = ContextHandler._getProtocol(ContextHandler._getURI(aState.mediaURL));
+  return Util.isShareableScheme(protocol);
+});
+
 ContextHandler.registerType("image-loaded", function(aState, aElement) {
   if (aState.types.indexOf("image") != -1) {
     let request = aElement.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
