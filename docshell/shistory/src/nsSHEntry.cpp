@@ -815,7 +815,7 @@ nsSHEntry::CharacterDataChanged(nsIDocument* aDocument,
 
 void
 nsSHEntry::AttributeWillChange(nsIDocument* aDocument,
-                               nsIContent* aContent,
+                               dom::Element* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType)

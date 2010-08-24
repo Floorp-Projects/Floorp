@@ -180,7 +180,7 @@ public:
    *       the stack.
    */
   virtual void AttributeWillChange(nsIDocument* aDocument,
-                                   nsIContent*  aContent,
+                                   mozilla::dom::Element* aElement,
                                    PRInt32      aNameSpaceID,
                                    nsIAtom*     aAttribute,
                                    PRInt32      aModType) = 0;
@@ -334,7 +334,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE                      \
     virtual void AttributeWillChange(nsIDocument* aDocument,                 \
-                                     nsIContent* aContent,                   \
+                                     mozilla::dom::Element* aElement,        \
                                      PRInt32 aNameSpaceID,                   \
                                      nsIAtom* aAttribute,                    \
                                      PRInt32 aModType);
@@ -403,7 +403,7 @@ _class::CharacterDataChanged(nsIDocument* aDocument,                      \
 }                                                                         \
 void                                                                      \
 _class::AttributeWillChange(nsIDocument* aDocument,                       \
-                            nsIContent* aContent,                         \
+                            mozilla::dom::Element* aElement,              \
                             PRInt32 aNameSpaceID,                         \
                             nsIAtom* aAttribute,                          \
                             PRInt32 aModType)                             \
