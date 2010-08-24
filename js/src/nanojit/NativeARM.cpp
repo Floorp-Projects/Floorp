@@ -2758,13 +2758,14 @@ Assembler::asm_cmov(LIns* ins)
 
     Register rf = findRegFor(iffalse, allow & ~rmask(rr));
 
-    // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
-    Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
-
     if (ins->isop(LIR_cmovd)) {
         NIns* target = _nIns;
         asm_nongp_copy(rr, rf);
         asm_branch(false, condval, target);
+
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
         if (rr != rt)
             asm_nongp_copy(rr, rt);
         freeResourcesOf(ins);
@@ -2774,6 +2775,9 @@ Assembler::asm_cmov(LIns* ins)
         }
         return;
     }
+
+    // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+    Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
 
     // WARNING: We cannot generate any code that affects the condition
     // codes between the MRcc generation here and the asm_cmp() call
