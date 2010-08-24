@@ -79,7 +79,6 @@ function AnimatedZoom(aBrowserView) {
     this.snapshot.pending_render = true;
   } else {
     this.canvasReady = true;
-    this.startAnimation();
   }
 }
 
@@ -108,8 +107,7 @@ AnimatedZoom.createCanvas = function(aRemote) {
   return this._canvas;
 };
 
-AnimatedZoom.prototype.startAnimation = function()
-{
+AnimatedZoom.prototype.startAnimation = function() {
   // stop live rendering during zooming
   this.bv.pauseRendering();
 
@@ -130,12 +128,12 @@ AnimatedZoom.prototype.startAnimation = function()
 
   // disable smoothing and use the fastest composition operation
   ctx.mozImageSmoothingEnabled = false;
-  ctx.globalCompositeOperation = 'copy';
+  ctx.globalCompositeOperation = "copy";
 
   // set background fill pattern
   let backgroundImage = new Image();
   backgroundImage.src = "chrome://browser/content/checkerboard.png";
-  ctx.fillStyle = ctx.createPattern(backgroundImage, 'repeat');
+  ctx.fillStyle = ctx.createPattern(backgroundImage, "repeat");
 
   if (this.zoomTo) {
     this.updateTo(this.zoomFrom);
@@ -255,6 +253,7 @@ AnimatedZoom.prototype.finish = function() {
       this.timer = null;
     }
     this.snapshot = null;
+    this.zoomTo = null;
   }
 };
 
