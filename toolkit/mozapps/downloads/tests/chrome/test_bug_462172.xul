@@ -62,7 +62,7 @@ close window
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"
-          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
+          src="utils.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">

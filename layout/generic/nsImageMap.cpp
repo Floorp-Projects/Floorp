@@ -48,7 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsTextFragment.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -67,6 +67,8 @@
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+
+namespace dom = mozilla::dom;
 
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -918,23 +920,23 @@ nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
 }
 
 void
-nsImageMap::AttributeChanged(nsIDocument* aDocument,
-                             nsIContent*  aContent,
-                             PRInt32      aNameSpaceID,
-                             nsIAtom*     aAttribute,
-                             PRInt32      aModType)
+nsImageMap::AttributeChanged(nsIDocument*  aDocument,
+                             dom::Element* aElement,
+                             PRInt32       aNameSpaceID,
+                             nsIAtom*      aAttribute,
+                             PRInt32       aModType)
 {
   // If the parent of the changing content node is our map then update
   // the map.  But only do this if the node is an HTML <area> or <a>
   // and the attribute that's changing is "shape" or "coords" -- those
   // are the only cases we care about.
-  if ((aContent->NodeInfo()->Equals(nsGkAtoms::area) ||
-       aContent->NodeInfo()->Equals(nsGkAtoms::a)) &&
-      aContent->IsHTML() &&
+  if ((aElement->NodeInfo()->Equals(nsGkAtoms::area) ||
+       aElement->NodeInfo()->Equals(nsGkAtoms::a)) &&
+      aElement->IsHTML() &&
       aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::shape ||
        aAttribute == nsGkAtoms::coords)) {
-    MaybeUpdateAreas(aContent->GetParent());
+    MaybeUpdateAreas(aElement->GetParent());
   }
 }
 

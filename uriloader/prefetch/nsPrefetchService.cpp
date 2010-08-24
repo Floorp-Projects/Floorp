@@ -816,7 +816,11 @@ NS_IMETHODIMP
 nsPrefetchNode::GetTotalSize(PRInt32 *aTotalSize)
 {
     if (mChannel) {
-        return mChannel->GetContentLength(aTotalSize);
+        PRInt64 length;
+        mChannel->GetContentLength(&length);
+
+        *aTotalSize = PRInt32(length);
+        return NS_OK;
     }
 
     *aTotalSize = -1;
@@ -826,7 +830,7 @@ nsPrefetchNode::GetTotalSize(PRInt32 *aTotalSize)
 NS_IMETHODIMP
 nsPrefetchNode::GetLoadedSize(PRInt32 *aLoadedSize)
 {
-    *aLoadedSize = mBytesRead;
+    *aLoadedSize = PRInt32(mBytesRead);
     return NS_OK;
 }
 

@@ -119,7 +119,7 @@ nsDOMCSSAttributeDeclaration::DocToUpdate()
   if (!mIsSMILOverride)
 #endif
   {
-    nsNodeUtils::AttributeWillChange(mContent, kNameSpaceID_None,
+    nsNodeUtils::AttributeWillChange(mContent->AsElement(), kNameSpaceID_None,
                                      nsGkAtoms::style,
                                      nsIDOMMutationEvent::MODIFICATION);
   }

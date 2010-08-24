@@ -184,6 +184,7 @@
           this.moveTabTo(aTab, this._numPinnedTabs);
           aTab.setAttribute("pinned", "true");
           this.tabContainer._positionPinnedTabs();
+          this.tabContainer.adjustTabstrip();
         ]]></body>
       </method>
 
@@ -198,6 +199,7 @@
           aTab.removeAttribute("pinned");
           aTab.style.MozMarginStart = "";
           this.tabContainer._positionPinnedTabs();
+          this.tabContainer.adjustTabstrip();
         ]]></body>
       </method>
 

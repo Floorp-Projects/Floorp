@@ -105,6 +105,9 @@ aboutSessionRestore.prototype = {
     var elem = null;
 
     switch(spec.type) {
+      case "button_newSession":
+        elem = new elementslib.ID(this._controller.tabs.activeTab, "errorCancel");
+        break;
       case "button_restoreSession":
         elem = new elementslib.ID(this._controller.tabs.activeTab, "errorTryAgain");
         break;
