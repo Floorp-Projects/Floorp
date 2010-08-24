@@ -1299,9 +1299,8 @@ Assembler::asm_restore(LIns* i, Register r)
 }
 
 void
-Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
+Assembler::asm_spill(Register rr, int d, bool quad)
 {
-    (void) pop;
     (void) quad;
     NanoAssert(d);
     // The following registers should never be spilled:
@@ -1570,7 +1569,7 @@ Assembler::asm_immd(LIns* ins)
 
     if (_config.arm_vfp && deprecated_isKnownReg(rr)) {
         if (d)
-            asm_spill(rr, d, false, true);
+            asm_spill(rr, d, true);
 
         underrunProtect(4*4);
         asm_immd_nochk(rr, ins->immDlo(), ins->immDhi());
