@@ -5,7 +5,7 @@ var gCurrentTest = null;
 var expected = {
   "aboutButton": {"label": "Go to Page", "tagName": "button", "value": "About Fennec", "element_id": "prefs-about-button"},
   "homepage": {"element_id": "prefs-homepage", "value": "Start page", "label": "Fennec Start",
-                    "home_page": "prefs-homepage-default", "home_page_label": "Fennec Start", 
+                    "home_page": "prefs-homepage-default", "home_page_label": "Fennec Start",
                     "blank_page": "prefs-homepage-none", "blank_page_label": "Blank Page",
                     "current_page": "prefs-homepage-currentpage", "current_page_label": "Use Current Page"},
   "doneButton": {"label": "Done", "tagName": "button"},
@@ -19,14 +19,14 @@ var expected = {
 };
 
 function getPreferencesElements() {
-   var prefElements = {};
+   let prefElements = {};
    prefElements.panelOpen = document.getElementById("tool-panel-open");
    prefElements.panelClose = document.getElementById("tool-panel-close");
    prefElements.panelContainer = document.getElementById("panel-container");
    prefElements.homeButton = document.getElementById("prefs-homepage-options");
    prefElements.doneButton = document.getElementById("select-buttons-done");
    prefElements.homePageControl = document.getElementById("prefs-homepage");
-   prefElements.selectContainer = document.getElementById("select-container");
+   prefElements.selectContainer = document.getElementById("menulist-container");
    return prefElements;
 }
 
@@ -96,7 +96,7 @@ gTests.push({
     prefs.homeButton.click();
 
     is(prefs.selectContainer.hidden, false, "Homepage select dialog must be visible");
-    is(document.getElementById(homepage.home_page).label, 
+    is(document.getElementById(homepage.home_page).label,
        homepage.home_page_label, " First option is Fennec Start");
     is(document.getElementById(homepage.blank_page).label,
       homepage.blank_page_label, " Second option is Blank page");
