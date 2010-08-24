@@ -1,0 +1,15 @@
+textarea:-moz-placeholder,
+textarea.ref {
+  color: black;
+  background-color: green;
+}
+
+textarea:-moz-placeholder.complex,
+textarea.complex-ref {
+  color: green;
+  background-color: #c7c7c7;
+  font-style: italic;
+  border: 2px solid green;
+  height: 300px;
+  width: 300px;
+}
