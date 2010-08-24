@@ -691,6 +691,15 @@ nsresult nsIView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                       aContentType);
 }
 
+struct DefaultWidgetInitData : public nsWidgetInitData {
+  DefaultWidgetInitData() : nsWidgetInitData()
+  {
+    mWindowType = eWindowType_child;
+    clipChildren = PR_TRUE;
+    clipSiblings = PR_TRUE;
+  }
+};
+
 nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
                               PRBool aEnableDragDrop,
                               PRBool aResetVisibility,
@@ -701,25 +710,19 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
                     aWidgetInitData->mWindowType != eWindowType_popup,
                     "Use CreateWidgetForPopup");
 
-  PRBool initDataPassedIn = PR_TRUE;
-  nsWidgetInitData initData;
-  if (!aWidgetInitData) {
-    // No initData, we're a child window
-    initDataPassedIn = PR_FALSE;
-    initData.mWindowType = eWindowType_child;
-    initData.clipChildren = PR_TRUE;
-    initData.clipSiblings = PR_TRUE;
-    aWidgetInitData = &initData;
-  }
+  DefaultWidgetInitData defaultInitData;
+  PRBool initDataPassedIn = !!aWidgetInitData;
+  aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
   aWidgetInitData->mContentType = aContentType;
+  defaultInitData.mListenForResizes =
+    (!initDataPassedIn && GetParent() &&
+     GetParent()->GetViewManager() != mViewManager);
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   nsCOMPtr<nsIDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
 
-  initData.mListenForResizes = (!initDataPassedIn && GetParent() && 
-                                GetParent()->GetViewManager() != mViewManager);
   nsIWidget* parentWidget =
     GetParent() ? GetParent()->GetNearestWidget(nsnull) : nsnull;
   if (!parentWidget) {
@@ -745,7 +748,7 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
                                        nsWidgetInitData *aWidgetInitData,
                                        PRBool aEnableDragDrop,
                                        PRBool aResetVisibility,
-                                       nsContentType aWindowType)
+                                       nsContentType aContentType)
 {
   AssertNoWindow();
   NS_ABORT_IF_FALSE(!aWidgetInitData ||
@@ -753,8 +756,11 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
                     "Use CreateWidgetForPopup");
   NS_ABORT_IF_FALSE(aParentWidget, "Parent widget required");
 
-  nsIntRect trect = CalcWidgetBounds(
-    aWidgetInitData ? aWidgetInitData->mWindowType : eWindowType_child);
+  DefaultWidgetInitData defaultInitData;
+  aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
+  aWidgetInitData->mContentType = aContentType;
+
+  nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   nsCOMPtr<nsIDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));

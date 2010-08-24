@@ -97,9 +97,11 @@
 <!ENTITY sort.rating.label                    "Rating">
 <!ENTITY sort.rating.tooltip                  "Sort by average rating">
 
-<!ENTITY search.filter.label                  "Show:">
-<!ENTITY search.filter.installed.label        "Your installed add-ons">
-<!ENTITY search.filter.available.label        "Available add-ons">
+<!ENTITY search.filter2.label                 "Search:">
+<!ENTITY search.filter2.installed.label       "My Add-ons">
+<!ENTITY search.filter2.installed.tooltip     "Show installed add-ons">
+<!ENTITY search.filter2.available.label       "Available Add-ons">
+<!ENTITY search.filter2.available.tooltip     "Show add-ons available to install">
 
 <!ENTITY addon.homepage                       "Homepage">
 <!ENTITY addon.details.label                  "More">

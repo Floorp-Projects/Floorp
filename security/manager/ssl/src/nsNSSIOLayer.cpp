@@ -66,6 +66,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsRecentBadCerts.h"
 #include "nsISSLCertErrorDialog.h"
+#include "nsIStrictTransportSecurityService.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -3485,32 +3486,59 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 
   remaining_display_errors = collected_errors;
 
-  nsCOMPtr<nsICertOverrideService> overrideService = 
-    do_GetService(NS_CERTOVERRIDE_CONTRACTID);
-  // it is fine to continue without the nsICertOverrideService
+  // Enforce Strict-Transport-Security for hosts that are "STS" hosts:
+  // connections must be dropped when there are any certificate errors
+  // (STS Spec section 7.3).
 
-  PRUint32 overrideBits = 0; 
+  nsCOMPtr<nsIStrictTransportSecurityService> stss
+    = do_GetService(NS_STSSERVICE_CONTRACTID);
+  nsCOMPtr<nsIStrictTransportSecurityService> proxied_stss;
 
-  if (overrideService)
-  {
-    PRBool haveOverride;
-    PRBool isTemporaryOverride; // we don't care
-  
-    nsrv = overrideService->HasMatchingOverride(hostString, port,
-                                                ix509, 
-                                                &overrideBits,
-                                                &isTemporaryOverride, 
-                                                &haveOverride);
-    if (NS_SUCCEEDED(nsrv) && haveOverride) 
+  nsrv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                              NS_GET_IID(nsIStrictTransportSecurityService),
+                              stss, NS_PROXY_SYNC,
+                              getter_AddRefs(proxied_stss));
+  NS_ENSURE_SUCCESS(nsrv, SECFailure);
+
+  // now grab the host name to pass to the STS Service
+  nsXPIDLCString hostName;
+  nsrv = infoObject->GetHostName(getter_Copies(hostName));
+  NS_ENSURE_SUCCESS(nsrv, SECFailure);
+
+  PRBool strictTransportSecurityEnabled;
+  nsrv = proxied_stss->IsStsHost(hostName, &strictTransportSecurityEnabled);
+  NS_ENSURE_SUCCESS(nsrv, SECFailure);
+
+  if (!strictTransportSecurityEnabled) {
+    nsCOMPtr<nsICertOverrideService> overrideService =
+      do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+    // it is fine to continue without the nsICertOverrideService
+
+    PRUint32 overrideBits = 0;
+
+    if (overrideService)
     {
-      // remove the errors that are already overriden
-      remaining_display_errors -= overrideBits;
-    }
-  }
+      PRBool haveOverride;
+      PRBool isTemporaryOverride; // we don't care
 
-  if (!remaining_display_errors) {
-    // all errors are covered by override rules, so let's accept the cert
-    return SECSuccess;
+      nsrv = overrideService->HasMatchingOverride(hostString, port,
+                                                  ix509,
+                                                  &overrideBits,
+                                                  &isTemporaryOverride, 
+                                                  &haveOverride);
+      if (NS_SUCCEEDED(nsrv) && haveOverride) 
+      {
+        // remove the errors that are already overriden
+        remaining_display_errors -= overrideBits;
+      }
+    }
+
+    if (!remaining_display_errors) {
+      // all errors are covered by override rules, so let's accept the cert
+      return SECSuccess;
+    }
+  } else {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Strict-Transport-Security is violated: untrusted transport layer\n"));
   }
 
   // Ok, this is a full stop.

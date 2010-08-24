@@ -62,6 +62,7 @@
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
+#include "prnetdb.h"
 #include "nsEscape.h"
 #include "nsInt64.h"
 #include "nsStreamUtils.h"
@@ -83,7 +84,6 @@ class AutoRedirectVetoNotifier
 public:
     AutoRedirectVetoNotifier(nsHttpChannel* channel) : mChannel(channel) {}
     ~AutoRedirectVetoNotifier() {ReportRedirectResult(false);}
-    void DontReport() {mChannel = nsnull;}
     void RedirectSucceeded() {ReportRedirectResult(true);}
 
 private:
@@ -96,6 +96,8 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 {
     if (!mChannel)
         return;
+
+    mChannel->mRedirectChannel = nsnull;
 
     nsCOMPtr<nsIRedirectResultListener> vetoHook;
     NS_QueryNotificationCallbacks(mChannel, 
@@ -193,6 +195,29 @@ nsHttpChannel::Connect(PRBool firstTime)
     nsresult rv;
 
     LOG(("nsHttpChannel::Connect [this=%p]\n", this));
+
+    // Even if we're in private browsing mode, we still enforce existing STS
+    // data (it is read-only).
+    // if the connection is not using SSL and either the exact host matches or
+    // a superdomain wants to force HTTPS, do it.
+    PRBool usingSSL = PR_FALSE;
+    rv = mURI->SchemeIs("https", &usingSSL);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!usingSSL) {
+        // enforce Strict-Transport-Security
+        nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+        NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
+
+        PRBool isStsHost = PR_FALSE;
+        rv = stss->IsStsURI(mURI, &isStsHost);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (isStsHost) {
+            LOG(("nsHttpChannel::Connect() STS permissions found\n"));
+            return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
+        }
+    }
 
     // ensure that we are using a valid hostname
     if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Host())))
@@ -738,10 +763,6 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
-    if (mResponseHead)
-        SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
-                           mResponseHead->ContentLength());
-
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
         gIOService->GetContentSniffers().Count() != 0) {
@@ -888,6 +909,94 @@ nsHttpChannel::ShouldSSLProxyResponseContinue(PRUint32 httpStatus)
     return PR_FALSE;
 }
 
+/**
+ * Decide whether or not to remember Strict-Transport-Security, and whether
+ * or not to enforce channel integrity.
+ *
+ * @return NS_ERROR_FAILURE if there's security information missing even though
+ *             it's an HTTPS connection.
+ */
+nsresult
+nsHttpChannel::ProcessSTSHeader()
+{
+    nsresult rv;
+
+    // We need to check private browsing mode here since some permissions are
+    // allowed to be tweaked when private browsing mode is enabled, but STS is
+    // not allowed to operate at all in PBM.
+    if (gHttpHandler->InPrivateBrowsingMode())
+        return NS_OK;
+
+    PRBool isHttps = PR_FALSE;
+    rv = mURI->SchemeIs("https", &isHttps);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If this channel is not loading securely, STS doesn't do anything.
+    // The upgrade to HTTPS takes place earlier in the channel load process.
+    if (!isHttps)
+        return NS_OK;
+
+    nsCAutoString asciiHost;
+    rv = mURI->GetAsciiHost(asciiHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If the channel is not a hostname, but rather an IP, STS doesn't do
+    // anything.
+    PRNetAddr hostAddr;
+    if (PR_SUCCESS == PR_StringToNetAddr(asciiHost.get(), &hostAddr))
+        return NS_OK;
+
+    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+    NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
+
+    // Check the trustworthiness of the channel (are there any cert errors?)
+    // If there are certificate errors, we still load the data, we just ignore
+    // any STS headers that are present.
+    NS_ENSURE_TRUE(mSecurityInfo, NS_ERROR_FAILURE);
+    PRBool tlsIsBroken = PR_FALSE;
+    rv = stss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If this was already an STS host, the connection should have been aborted
+    // by the bad cert handler in the case of cert errors.  If it didn't abort the connection,
+    // there's probably something funny going on.
+    // If this wasn't an STS host, errors are allowed, but no more STS processing
+    // will happen during the session.
+    PRBool wasAlreadySTSHost;
+    rv = stss->IsStsURI(mURI, &wasAlreadySTSHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(!(wasAlreadySTSHost && tlsIsBroken),
+                 "connection should have been aborted by nss-bad-cert-handler");
+
+    // Any STS header is ignored if the channel is not trusted due to
+    // certificate errors (STS Spec 7.1) -- there is nothing else to do, and
+    // the load may progress.
+    if (tlsIsBroken) {
+        LOG(("STS: Transport layer is not trustworthy, ignoring "
+             "STS headers and continuing load\n"));
+        return NS_OK;
+    }
+
+    // If there's a STS header, process it (STS Spec 7.1).  At this point in
+    // processing, the channel is trusted, so the header should not be ignored.
+    const nsHttpAtom atom = nsHttp::ResolveAtom("Strict-Transport-Security");
+    nsCAutoString stsHeader;
+    rv = mResponseHead->GetHeader(atom, stsHeader);
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+        LOG(("STS: No STS header, continuing load.\n"));
+        return NS_OK;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stss->ProcessStsHeader(mURI, stsHeader.get());
+    if (NS_FAILED(rv)) {
+        LOG(("STS: Failed to parse STS header, continuing load.\n"));
+        return NS_OK;
+    }
+
+    return NS_OK;
+}
+
 nsresult
 nsHttpChannel::ProcessResponse()
 {
@@ -900,6 +1009,10 @@ nsHttpChannel::ProcessResponse()
     if (mTransaction->SSLConnectFailed() &&
         !ShouldSSLProxyResponseContinue(httpStatus))
         return ProcessFailedSSLConnect(httpStatus);
+
+    // If STS data is present, process it here.
+    rv = ProcessSTSHeader();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
@@ -1237,6 +1350,143 @@ nsHttpChannel::ContinueHandleAsyncReplaceWithProxy(nsresult status)
     return NS_OK;
 }
 
+void
+nsHttpChannel::HandleAsyncRedirectChannelToHttps()
+{
+    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume to do async redirect to https [this=%p]\n", this));
+        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncRedirectChannelToHttps;
+        return;
+    }
+
+    nsresult rv = AsyncRedirectChannelToHttps();
+    if (NS_FAILED(rv))
+        ContinueAsyncRedirectChannelToHttps(rv);
+}
+
+nsresult
+nsHttpChannel::AsyncRedirectChannelToHttps()
+{
+    nsresult rv = NS_OK;
+    LOG(("nsHttpChannel::HandleAsyncRedirectChannelToHttps() [STS]\n"));
+
+    nsCOMPtr<nsIChannel> newChannel;
+    nsCOMPtr<nsIURI> upgradedURI;
+
+    rv = mURI->Clone(getter_AddRefs(upgradedURI));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    upgradedURI->SetScheme(NS_LITERAL_CSTRING("https"));
+
+    PRInt32 oldPort = -1;
+    rv = mURI->GetPort(&oldPort);
+    if (NS_FAILED(rv)) return rv;
+
+    // Keep any nonstandard ports so only the scheme is changed.
+    // For example:
+    //  http://foo.com:80 -> https://foo.com:443
+    //  http://foo.com:81 -> https://foo.com:81
+
+    if (oldPort == 80 || oldPort == -1)
+        upgradedURI->SetPort(-1);
+    else
+        upgradedURI->SetPort(oldPort);
+
+    nsCOMPtr<nsIIOService> ioService;
+    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ioService->NewChannelFromURI(upgradedURI, getter_AddRefs(newChannel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetupReplacementChannel(upgradedURI, newChannel, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Inform consumers about this fake redirect
+    mRedirectChannel = newChannel;
+    PRUint32 flags = nsIChannelEventSink::REDIRECT_PERMANENT;
+
+    PushRedirectAsyncFunc(
+        &nsHttpChannel::ContinueAsyncRedirectChannelToHttps);
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, flags);
+
+    if (NS_SUCCEEDED(rv))
+        rv = WaitForRedirectCallback();
+
+    if (NS_FAILED(rv)) {
+        AutoRedirectVetoNotifier notifier(this);
+        PopRedirectAsyncFunc(
+            &nsHttpChannel::ContinueAsyncRedirectChannelToHttps);
+    }
+
+    return rv;
+}
+
+nsresult
+nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
+{
+    AutoRedirectVetoNotifier notifier(this);
+
+    if (NS_FAILED(rv)) {
+        // Fill the failure status here, the update to https had been vetoed
+        // but from the security reasons we have to discard the whole channel
+        // load.
+        mStatus = rv;
+    }
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    if (NS_FAILED(rv)) {
+        // We have to manually notify the listener because there is not any pump
+        // that would call our OnStart/StopRequest after resume from waiting for
+        // the redirect callback.
+        DoNotifyListener();
+        return rv;
+    }
+
+    // Make sure to do this _after_ calling OnChannelRedirect
+    mRedirectChannel->SetOriginalURI(mOriginalURI);
+
+    // And now, notify observers the deprecated way
+    nsCOMPtr<nsIHttpEventSink> httpEventSink;
+    GetCallback(httpEventSink);
+    if (httpEventSink) {
+        // NOTE: nsIHttpEventSink is only used for compatibility with pre-1.8
+        // versions.
+        rv = httpEventSink->OnRedirect(this, mRedirectChannel);
+        if (NS_FAILED(rv)) {
+            mStatus = rv;
+            DoNotifyListener();
+            return rv;
+        }
+    }
+
+    // open new channel
+    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
+    if (NS_FAILED(rv)) {
+        mStatus = rv;
+        DoNotifyListener();
+        return rv;
+    }
+
+    mStatus = NS_BINDING_REDIRECTED;
+
+    notifier.RedirectSucceeded();
+
+    // disconnect from the old listeners...
+    mListener = nsnull;
+    mListenerContext = nsnull;
+
+    // ...and the old callbacks
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
+
+    return rv;
+}
+
 nsresult
 nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
 {
@@ -1265,7 +1515,6 @@ nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
     if (NS_FAILED(rv)) {
         AutoRedirectVetoNotifier notifier(this);
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueDoReplaceWithProxy);
-        mRedirectChannel = nsnull;
     }
 
     return rv;
@@ -1286,7 +1535,6 @@ nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv)
 
     // open new channel
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    mRedirectChannel = nsnull;
     if (NS_FAILED(rv))
         return rv;
 
@@ -1633,7 +1881,6 @@ nsHttpChannel::ProcessFallback(PRBool *waitingForRedirectCallback)
     if (NS_FAILED(rv)) {
         AutoRedirectVetoNotifier notifier(this);
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessFallback);
-        mRedirectChannel = nsnull;
         return rv;
     }
 
@@ -1657,7 +1904,6 @@ nsHttpChannel::ContinueProcessFallback(nsresult rv)
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    mRedirectChannel = nsnull;
     if (NS_FAILED(rv))
         return rv;
 
@@ -2213,16 +2459,16 @@ nsHttpChannel::CheckCache()
         // size of the cached content, then the cached response is partial...
         // either we need to issue a byte range request or we need to refetch
         // the entire document.
-        nsInt64 contentLength = mCachedResponseHead->ContentLength();
-        if (contentLength != nsInt64(-1)) {
+        PRInt64 contentLength = mCachedResponseHead->ContentLength();
+        if (contentLength != -1) {
             PRUint32 size;
             rv = mCacheEntry->GetDataSize(&size);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (nsInt64(size) != contentLength) {
+            if (PRInt64(size) != contentLength) {
                 LOG(("Cached data size does not match the Content-Length header "
-                     "[content-length=%lld size=%u]\n", PRInt64(contentLength), size));
-                if ((nsInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
+                     "[content-length=%lld size=%u]\n", contentLength, size));
+                if ((PRInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
                     // looks like a partial entry.
                     rv = SetupByteRangeRequest(size);
                     NS_ENSURE_SUCCESS(rv, rv);
@@ -3071,7 +3317,6 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
     if (NS_FAILED(rv)) {
         AutoRedirectVetoNotifier notifier(this);
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirection);
-        mRedirectChannel = nsnull;
     }
 
     return rv;
@@ -3106,7 +3351,6 @@ nsHttpChannel::ContinueProcessRedirection(nsresult rv)
 
     // begin loading the new channel
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    mRedirectChannel = nsnull;
 
     if (NS_FAILED(rv))
         return rv;
@@ -3825,7 +4069,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         // of a byte range request, the content length stored in the cached
         // response headers is what we want to use here.
 
-        PRUint64 progressMax(PRUint64(mResponseHead->ContentLength()));
+        PRUint64 progressMax(mResponseHead->ContentLength());
         PRUint64 progress = mLogicalOffset + PRUint64(count);
         NS_ASSERTION(progress <= progressMax, "unexpected progress values");
 

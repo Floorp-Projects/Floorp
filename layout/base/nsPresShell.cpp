@@ -4928,12 +4928,12 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
 
 void
 PresShell::AttributeWillChange(nsIDocument* aDocument,
-                               nsIContent*  aContent,
+                               Element*     aElement,
                                PRInt32      aNameSpaceID,
                                nsIAtom*     aAttribute,
                                PRInt32      aModType)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeWillChange");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   // XXXwaterson it might be more elegant to wait until after the
@@ -4941,7 +4941,7 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeWillChange(aContent, aNameSpaceID,
+    mFrameConstructor->AttributeWillChange(aElement, aNameSpaceID,
                                            aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
@@ -4949,7 +4949,7 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
 
 void
 PresShell::AttributeChanged(nsIDocument* aDocument,
-                            nsIContent*  aContent,
+                            Element*     aElement,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType)
@@ -4962,7 +4962,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeChanged(aContent, aNameSpaceID,
+    mFrameConstructor->AttributeChanged(aElement, aNameSpaceID,
                                         aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
