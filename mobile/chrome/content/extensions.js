@@ -513,7 +513,7 @@ var ExtensionsView = {
       listitem.setAttribute("description", addon.description);
       listitem.setAttribute("homepageURL", addon.homepageURL);
       listitem.install = addon.install;
-      listitem.setAttribute("sourceURL", addon.install.sourceURL);
+      listitem.setAttribute("sourceURL", addon.install.sourceURI.spec);
       if (!aIsRecommended)
         listitem.setAttribute("rating", addon.rating);
       let item = this._list.appendChild(listitem);
@@ -699,7 +699,7 @@ AddonInstallListener.prototype = {
     if (!ExtensionsView.visible)
       return;
 
-    let element = ExtensionsView.getElementForAddon(aInstall.sourceURL);
+    let element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
     if (!element)
       return;
 
@@ -721,7 +721,7 @@ AddonInstallListener.prototype = {
     this._showAlert(false);
 
     if (ExtensionsView.visible) {
-      let element = ExtensionsView.getElementForAddon(aInstall.sourceURL);
+      let element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
       if (!element)
         return;
   
@@ -751,7 +751,7 @@ AddonInstallListener.prototype = {
   },
 
   onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {
-    var element = ExtensionsView.getElementForAddon(aInstall.sourceURL);
+    var element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
     if (!element)
       return;
 
