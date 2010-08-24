@@ -301,8 +301,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CXXFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -7113,6 +7113,16 @@ if test -n "$MOZ_THUMB2"; then
     *)
       AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
     ;;
+  esac
+else
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+       CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
+      fi
+      ;;
   esac
 fi
 
