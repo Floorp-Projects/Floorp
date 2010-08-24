@@ -573,7 +573,7 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.strict.debug",     true);
 #endif
 pref("javascript.options.relimit",          true);
-pref("javascript.options.tracejit.content",  false);
+pref("javascript.options.tracejit.content",  true);
 pref("javascript.options.tracejit.chrome",   true);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  false);
