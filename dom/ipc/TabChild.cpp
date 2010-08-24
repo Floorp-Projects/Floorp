@@ -1011,6 +1011,9 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 bool
 TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
+  if (!mCx && !InitTabChildGlobal())
+    return false;
+
   LoadFrameScriptInternal(aURL);
   return true;
 }
@@ -1071,6 +1074,9 @@ TabChild::RecvDestroy()
 bool
 TabChild::InitTabChildGlobal()
 {
+  if (mCx && mTabChildGlobal)
+    return true;
+
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   NS_ENSURE_TRUE(window, false);
   nsCOMPtr<nsIDOMEventTarget> chromeHandler =
