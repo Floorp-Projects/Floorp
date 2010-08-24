@@ -37,12 +37,6 @@ var ADDON_PROPERTIES = ["id", "type", "version", "creator", "developers",
                         "totalDownloads", "weeklyDownloads", "dailyUsers",
                         "sourceURI", "repositoryStatus", "size", "updateDate"];
 
-// Properties of an individual screenshot that should be checked
-var SCREENSHOT_PROPERTIES = ["url", "thumbnailURL", "caption"]
-
-// Properties of an individual creator or developer that should be checked
-var AUTHOR_PROPERTIES = ["name", "url"];
-
 // Results of getAddonsByIDs
 var GET_RESULTS = [{
   id:                     "test1@tests.mozilla.org",
@@ -87,8 +81,6 @@ var GET_RESULTS = [{
 }, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
   version:                "1.4",
-  developers:             [],
-  screenshots:            [],
   repositoryStatus:       9999
 }];
 
@@ -101,8 +93,6 @@ var SEARCH_RESULTS = [{
                             name: "Test Creator 1",
                             url:  BASE_URL + "/creator1.html"
                           },
-  developers:             [],
-  screenshots:            [],
   repositoryStatus:       4,
   sourceURI:              BASE_URL + "/test1.xpi"
 }, {
@@ -190,8 +180,6 @@ var SEARCH_RESULTS = [{
                             name: "Test Creator - Last Passing",
                             url:  BASE_URL + "/creatorLastPassing.html"
                           },
-  developers:             [],
-  screenshots:            [],
   averageRating:          5,
   repositoryStatus:       4,
   sourceURI:              BASE_URL + "/addons/test_AddonRepository_3.xpi"
@@ -240,81 +228,27 @@ var SEARCH_TEST = {
                     "/odd%3Dsearch%3Awith%26weird%22characters"
 };
 
-// Check that objects are equal for specified properties
-function check_object(aActual, aExpected, aProperties) {
-  aProperties.forEach(function(aProperty) {
-    // Check that all undefined expected properties are null on actual add-on
-    if (!aExpected.hasOwnProperty(aProperty)) {
-      do_check_eq(aActual[aProperty], null);
-      return;
-    }
-
-    var actualValue = aActual[aProperty];
-    var expectedValue = aExpected[aProperty];
-
-    switch (aProperty) {
-      case "creator":
-        do_check_eq(actualValue.toString(), expectedValue.name);
-        check_object(actualValue, expectedValue, AUTHOR_PROPERTIES);
-        break;
-
-      case "developers":
-        do_check_eq(actualValue.length, expectedValue.length);
-        for (var i = 0; i < actualValue.length; i++) {
-          do_check_eq(actualValue[i].toString(), expectedValue[i].name);
-          check_object(actualValue[i], expectedValue[i], AUTHOR_PROPERTIES);
-        }
-        break;
-
-      case "screenshots":
-        do_check_eq(actualValue.length, expectedValue.length);
-        for (var i = 0; i < actualValue.length; i++) {
-          do_check_eq(actualValue[i].toString(), expectedValue[i].url);
-          check_object(actualValue[i], expectedValue[i], SCREENSHOT_PROPERTIES);
-        }
-        break;
-
-      case "sourceURI":
-        do_check_eq(actualValue.spec, expectedValue);
-        break;
-
-      case "updateDate":
-        do_check_eq(actualValue.getTime(), expectedValue.getTime());
-        break;
-
-      default:
-        if (actualValue !== expectedValue)
-          do_throw("Failed for " + aProperty +
-                   " (" + actualValue + " === " + expectedValue + ")");
-    }
-  });
-}
-
 // Test that actual results and expected results are equal
 function check_results(aActualAddons, aExpectedAddons, aAddonCount, aInstallNull) {
   do_check_false(AddonRepository.isSearching);
 
   do_check_eq(aActualAddons.length, aAddonCount);
-  do_check_eq(aActualAddons.length, aExpectedAddons.length);
+  do_check_addons(aActualAddons, aExpectedAddons, ADDON_PROPERTIES);
 
-  for (var i = 0; i < aAddonCount; i++) {
-    var actualAddon = aActualAddons[i];
-    var expectedAddon = aExpectedAddons[i];
-
+  // Additional tests
+  aActualAddons.forEach(function(aActualAddon) {
     // Separately check name so better messages are outputted when failure
-    if (actualAddon.name == "FAIL")
-      do_throw(actualAddon.id + " - " + actualAddon.description);
-    if (actualAddon.name != "PASS")
-      do_throw(actualAddon.id + " - " + "invalid add-on name " + actualAddon.name);
+    if (aActualAddon.name == "FAIL")
+      do_throw(aActualAddon.id + " - " + aActualAddon.description);
+    if (aActualAddon.name != "PASS")
+      do_throw(aActualAddon.id + " - " + "invalid add-on name " + aActualAddon.name);
 
-    do_check_eq(actualAddon.install == null, !!aInstallNull);
+    do_check_eq(aActualAddon.install == null, !!aInstallNull);
 
     // Check that sourceURI property consistent within actual addon
     if (!aInstallNull)
-      do_check_eq(actualAddon.install.sourceURI.spec, actualAddon.sourceURI.spec);
-
-    check_object(actualAddon, expectedAddon, ADDON_PROPERTIES);
-  }
+      do_check_eq(aActualAddon.install.sourceURI.spec, aActualAddon.sourceURI.spec);
+  });
 }
 
 // Complete a search, also testing cancelSearch() and isSearching
