@@ -328,7 +328,7 @@ nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // This is EVIL, we shouldn't be messing with event delivery just to get
     // thumb mouse drag events to arrive at the slider!
     return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayEventReceiver(this));
+        nsDisplayEventReceiver(aBuilder, this));
   }
   
   return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);

@@ -87,8 +87,9 @@ ExternalHelperAppParent::Init(TabParent *parent,
 }
 
 bool
-ExternalHelperAppParent::RecvOnStartRequest()
+ExternalHelperAppParent::RecvOnStartRequest(const nsCString& entityID)
 {
+  mEntityID = entityID;
   mPending = PR_TRUE;
   mStatus = mListener->OnStartRequest(this, nsnull);
   return true;
@@ -305,6 +306,23 @@ NS_IMETHODIMP
 ExternalHelperAppParent::SetContentLength(PRInt64 aContentLength)
 {
   mContentLength = aContentLength;
+  return NS_OK;
+}
+
+//
+// nsIResumableChannel implementation
+//
+
+NS_IMETHODIMP
+ExternalHelperAppParent::ResumeAt(PRUint64 startPos, const nsACString& entityID)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ExternalHelperAppParent::GetEntityID(nsACString& aEntityID)
+{
+  aEntityID = mEntityID;
   return NS_OK;
 }
 

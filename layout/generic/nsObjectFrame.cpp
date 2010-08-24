@@ -1172,8 +1172,8 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 nsRect
 nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetContentRect() +
-    aBuilder->ToReferenceFrame(mFrame->GetParent());
+  return mFrame->GetContentRect() - mFrame->GetPosition() +
+    ToReferenceFrame();
 }
 
 void
@@ -1205,7 +1205,7 @@ nsDisplayPlugin::GetWidgetConfiguration(nsDisplayListBuilder* aBuilder,
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   nsPoint pluginOrigin = mFrame->GetUsedBorderAndPadding().TopLeft() +
-    aBuilder->ToReferenceFrame(mFrame);
+    ToReferenceFrame();
   f->ComputeWidgetGeometry(mVisibleRegion, pluginOrigin, aConfigurations);
 }
 
@@ -1344,11 +1344,11 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // determine if we are printing
   if (type == nsPresContext::eContext_Print)
     return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin",
+        nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                          nsDisplayItem::TYPE_PRINT_PLUGIN));
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayPlugin(this));
+      nsDisplayPlugin(aBuilder, this));
 }
 
 void

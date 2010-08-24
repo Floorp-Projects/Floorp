@@ -1,0 +1,23 @@
+== input-valid.html input-ref.html
+== input-customerror.html input-ref.html
+== input-disabled.html input-ref.html
+== input-dyn-disabled.html input-ref.html
+== input-dyn-not-disabled.html input-ref.html
+== input-readonly.html input-ref.html
+== input-dyn-readonly.html input-ref.html
+== input-dyn-not-readonly.html input-ref.html
+== input-maxlength-valid.html input-ref.html
+== input-maxlength-invalid.html input-withtext-ref.html
+== input-required-valid.html input-withtext-ref.html
+== input-required-invalid.html input-ref.html
+== input-button.html input-button-ref.html
+== input-reset.html input-button-ref.html
+== input-email-invalid.html input-withtext-ref.html
+== input-email-valid.html input-email-ref.html
+== input-url-invalid.html input-withtext-ref.html
+== input-url-valid.html input-url-ref.html
+== input-pattern-valid.html input-withtext-ref.html
+== input-pattern-invalid.html input-withtext-ref.html
+== input-type-barred.html input-button-ref.html
+== input-type-invalid.html input-ref.html
+# input type='hidden' shouldn't show

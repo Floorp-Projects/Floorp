@@ -1264,7 +1264,8 @@ nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
 
 class nsDisplayXULDebug : public nsDisplayItem {
 public:
-  nsDisplayXULDebug(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayXULDebug(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULDebug);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1277,7 +1278,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
     nsPoint rectCenter(aRect.x + aRect.width / 2, aRect.y + aRect.height / 2);
     static_cast<nsBoxFrame*>(mFrame)->
-      DisplayDebugInfoFor(this, rectCenter - aBuilder->ToReferenceFrame(mFrame));
+      DisplayDebugInfoFor(this, rectCenter - ToReferenceFrame());
     aOutFrames->AppendElement(this);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder
@@ -1290,7 +1291,7 @@ nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
                          nsIRenderingContext* aCtx)
 {
   static_cast<nsBoxFrame*>(mFrame)->
-    PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    PaintXULDebugOverlay(*aCtx, ToReferenceFrame());
 }
 
 static void
@@ -1313,10 +1314,11 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // REVIEW: From GetFrameForPoint
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, PaintXULDebugBackground, "XULDebugBackground"));
+        nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
+                         "XULDebugBackground"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULDebug(this));
+        nsDisplayXULDebug(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
@@ -2140,12 +2142,14 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
 // reasonable thing to do.
 class nsDisplayXULEventRedirector : public nsDisplayWrapList {
 public:
-  nsDisplayXULEventRedirector(nsIFrame* aFrame, nsDisplayItem* aItem,
+  nsDisplayXULEventRedirector(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame, nsDisplayItem* aItem,
                               nsIFrame* aTargetFrame)
-    : nsDisplayWrapList(aFrame, aItem), mTargetFrame(aTargetFrame) {}
-  nsDisplayXULEventRedirector(nsIFrame* aFrame, nsDisplayList* aList,
+    : nsDisplayWrapList(aBuilder, aFrame, aItem), mTargetFrame(aTargetFrame) {}
+  nsDisplayXULEventRedirector(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame, nsDisplayList* aList,
                               nsIFrame* aTargetFrame)
-    : nsDisplayWrapList(aFrame, aList), mTargetFrame(aTargetFrame) {}
+    : nsDisplayWrapList(aBuilder, aFrame, aList), mTargetFrame(aTargetFrame) {}
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   NS_DISPLAY_DECL_NAME("XULEventRedirector", TYPE_XUL_EVENT_REDIRECTOR)
@@ -2197,12 +2201,12 @@ public:
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     return new (aBuilder)
-        nsDisplayXULEventRedirector(aFrame, aList, mTargetFrame);
+        nsDisplayXULEventRedirector(aBuilder, aFrame, aList, mTargetFrame);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
     return new (aBuilder)
-        nsDisplayXULEventRedirector(aItem->GetUnderlyingFrame(), aItem,
+        nsDisplayXULEventRedirector(aBuilder, aItem->GetUnderlyingFrame(), aItem,
                                     mTargetFrame);
   }
 private:

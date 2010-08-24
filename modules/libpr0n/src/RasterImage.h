@@ -143,6 +143,7 @@ namespace mozilla {
 namespace imagelib {
 
 class imgDecodeWorker;
+class Decoder;
 
 class RasterImage : public mozilla::imagelib::Image,
                     public nsITimerCallback,
@@ -155,26 +156,31 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
 
-  RasterImage();
+  RasterImage(imgStatusTracker* aStatusTracker = nsnull);
   virtual ~RasterImage();
 
   // C++-only version of imgIContainer::GetType, for convenience
   virtual PRUint16 GetType() { return imgIContainer::TYPE_RASTER; }
 
   // Methods inherited from Image
-  nsresult Init(imgIDecoderObserver *aObserver,
+  nsresult Init(imgIDecoderObserver* aObserver,
                 const char* aMimeType,
                 PRUint32 aFlags);
-  nsresult GetCurrentFrameRect(nsIntRect& aRect);
-  nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx);
-  nsresult GetNumFrames(PRUint32* aNumFrames);
-  nsresult GetDataSize(PRUint32* aDataSize);
+  void     GetCurrentFrameRect(nsIntRect& aRect);
+  PRUint32 GetDataSize();
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
                                       const char* aFromRawSegment,
                                       PRUint32 aToOffset, PRUint32 aCount,
                                       PRUint32* aWriteCount);
+
+  /* The index of the current frame that would be drawn if the image was to be
+   * drawn now. */
+  PRUint32 GetCurrentFrameIndex();
+
+  /* The total number of frames in this image. */
+  PRUint32 GetNumFrames();
 
   PRUint32 GetDecodedDataSize();
   PRUint32 GetSourceDataSize();
@@ -458,10 +464,9 @@ private: // data
   friend class DiscardTracker;
 
   // Decoder and friends
-  nsCOMPtr<imgIDecoder>          mDecoder;
+  nsRefPtr<Decoder>              mDecoder;
   nsRefPtr<imgDecodeWorker>      mWorker;
   PRUint32                       mBytesDecoded;
-  PRUint32                       mDecoderFlags;
 
   // Boolean flags (clustered together to conserve space):
   PRPackedBool               mHasSize:1;       // Has SetSize() been called?
@@ -483,7 +488,7 @@ private: // data
   // Decoding
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
-  nsresult InitDecoder(PRUint32 dFlags);
+  nsresult InitDecoder(bool aDoSizeDecode);
   nsresult WriteToDecoder(const char *aBuffer, PRUint32 aCount);
   nsresult DecodeSomeData(PRUint32 aMaxBytes);
   PRBool   IsDecodeFinished();

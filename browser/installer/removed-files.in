@@ -74,6 +74,7 @@ components/xptitemp.dat
 defaults/pref/all.js
 defaults/pref/bug259708.js
 defaults/pref/bug307259.js
+defaults/pref/reporter.js
 defaults/pref/security-prefs.js
 defaults/pref/winpref.js
 defaults/pref/xpinstall.js
@@ -629,7 +630,6 @@ xpicleanup@BIN_SUFFIX@
   defaults/pref/firefox-branding.js
   defaults/pref/firefox.js
   defaults/pref/firefox-l10n.js
-  defaults/pref/reporter.js
   defaults/pref/services-sync.js
   defaults/profile/bookmarks.html
   defaults/profile/chrome/userChrome-example.css
