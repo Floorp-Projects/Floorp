@@ -679,5 +679,5 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver);
+NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 
