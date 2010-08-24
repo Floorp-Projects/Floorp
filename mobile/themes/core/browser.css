@@ -1187,6 +1187,18 @@ pageaction:hover:active > vbox > .pageaction-desc {
   }
 }
 
+#alerts-container {
+  -moz-transform: translatex(100%);
+  -moz-transition-property: -moz-transform;
+  -moz-transition-duration: 0.5s;
+  margin-bottom: 20px;
+  -moz-margin-end: 20px;
+}
+
+#alerts-container.showing {
+  -moz-transform: translatex(0);
+}
+
 #alerts-text {
   font-size: 18px !important;
   white-space: pre-wrap;

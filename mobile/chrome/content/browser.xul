@@ -553,7 +553,7 @@
     </hbox>
 
     <!-- alerts for content -->
-    <hbox id="alerts-container" hidden="true" align="start" class="dialog-dark" top="0" left="0"
+    <hbox id="alerts-container" hidden="true" align="start" class="dialog-dark" bottom="0" right="0"
           onclick="AlertsHelper.click(event);">
       <image id="alerts-image"/>
       <vbox flex="1">
