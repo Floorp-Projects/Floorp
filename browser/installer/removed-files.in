@@ -672,6 +672,7 @@ xpicleanup@BIN_SUFFIX@
   modules/PluginProvider.jsm
   modules/PluralForm.jsm
   modules/PopupNotifications.jsm
+  modules/PropertyPanel.jsm
   modules/Services.jsm
   modules/services-sync/auth.js
   modules/services-sync/base_records/collection.js
@@ -736,6 +737,9 @@ xpicleanup@BIN_SUFFIX@
   res/fonts/mathfontSTIXNonUnicode.properties
   res/fonts/mathfontSTIXSize1.properties
   res/fonts/mathfontSTIXSizeOneSym.properties
+  #ifdef XP_WIN
+    res/fonts/mathfontSymbol.properties
+  #endif
   res/fonts/mathfontUnicode.properties
   res/grabber.gif
   res/html/folder.png
