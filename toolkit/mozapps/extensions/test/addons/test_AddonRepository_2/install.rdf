@@ -5,7 +5,9 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>test_AddonRepository_2@tests.mozilla.org</em:id>
-    <em:version>1.0</em:version>
+    <em:type>4</em:type>
+    <em:internalName>test2/1.0</em:internalName>
+    <em:version>1.2</em:version>
 
     <em:targetApplication>
       <Description>
@@ -16,7 +18,6 @@
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Addon Repository Name</em:name>
-    <em:description>Addon Repository Description</em:description>
+    <em:name>XPI Add-on 2</em:name>
   </Description>
 </RDF>

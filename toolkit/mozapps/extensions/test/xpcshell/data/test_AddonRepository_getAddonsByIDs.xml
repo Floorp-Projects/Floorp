@@ -54,7 +54,7 @@
     <total_downloads>2222</total_downloads>
     <weekly_downloads>3333</weekly_downloads>
     <daily_users>4444</daily_users>
-    <last_updated epoch="1265108645">2010-01-02T03:04:05Z</last_updated>
+    <last_updated epoch="1265033045">2010-02-01T14:04:05Z</last_updated>
     <install size="5555">http://localhost:4444/addons/test_AddonRepository_2.xpi</install>
   </addon>
 

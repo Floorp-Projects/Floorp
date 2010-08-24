@@ -5,7 +5,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>test_AddonRepository_1@tests.mozilla.org</em:id>
-    <em:version>1.0</em:version>
+    <em:version>1.1</em:version>
 
     <em:targetApplication>
       <Description>
@@ -16,7 +16,18 @@
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Addon Repository Name</em:name>
-    <em:description>Addon Repository Description</em:description>
+    <em:name>XPI Add-on 1</em:name>
+    <em:description>XPI Add-on 1 - Description</em:description>
+    <em:creator>XPI Add-on 1 - Creator</em:creator>
+    <em:developer>XPI Add-on 1 - First Developer</em:developer>
+    <em:developer>XPI Add-on 1 - Second Developer</em:developer>
+    <em:translator>XPI Add-on 1 - First Translator</em:translator>
+    <em:translator>XPI Add-on 1 - Second Translator</em:translator>
+    <em:contributor>XPI Add-on 1 - First Contributor</em:contributor>
+    <em:contributor>XPI Add-on 1 - Second Contributor</em:contributor>
+    <em:homepageURL>http://localhost:4444/xpi/1/homepage.html</em:homepageURL>
+    <em:optionsURL>http://localhost:4444/xpi/1/options.html</em:optionsURL>
+    <em:aboutURL>http://localhost:4444/xpi/1/about.html</em:aboutURL>
+    <em:iconURL>http://localhost:4444/xpi/1/icon.png</em:iconURL>
   </Description>
 </RDF>
