@@ -185,7 +185,8 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
 class nsDisplayBullet : public nsDisplayItem {
 public:
-  nsDisplayBullet(nsBulletFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBullet);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -207,7 +208,7 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
                             nsIRenderingContext* aCtx)
 {
   static_cast<nsBulletFrame*>(mFrame)->
-    PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame), mVisibleRect);
+    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect);
 }
 
 NS_IMETHODIMP
@@ -220,7 +221,8 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame");
   
-  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayBullet(this));
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayBullet(aBuilder, this));
 }
 
 void

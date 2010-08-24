@@ -78,9 +78,9 @@ add_test(function() {
     isnot(expected.length, 0, "Should be expecting more items");
     is(itemId, expected.shift(), "Should get expected item based on recenty of update");
     if (itemId == "addon1@tests.mozilla.org")
-      is_element_visible(gManagerWindow, item._relNotesToggle, true, "Release notes toggle should be visible for addon with release notes");
+      is_element_visible(item._relNotesToggle, "Release notes toggle should be visible for addon with release notes");
     else
-      is_element_visible(gManagerWindow, item._relNotesToggle, false, "Release notes toggle should be hidden for addon with no release notes");
+      is_element_hidden(item._relNotesToggle, "Release notes toggle should be hidden for addon with no release notes");
   }
   run_next_test();
 });
