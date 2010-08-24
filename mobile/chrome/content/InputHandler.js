@@ -233,10 +233,6 @@ InputHandler.prototype = {
     if (this._ignoreEvents)
       return;
 
-    /* ignore all events that belong to other windows or documents (e.g. content events) */
-    if (aEvent.view != window)
-      return;
-
     if (this._suppressNextClick && aEvent.type == "click") {
       this._suppressNextClick = false;
       aEvent.stopPropagation();
@@ -350,6 +346,16 @@ MouseModule.prototype = {
     if (aEvent.button !== 0 && aEvent.type != "contextmenu")
       return;
 
+    try {
+      if (aEvent.view != window) {
+        // XXX we'd really like to do this to stop dragging code, but at least in
+        // non-e10s this is a problem.  Since we catch the simulated mouseup and
+        // mousedown events, we eat up the ones we just generated.
+        // evt.stopPropagation();
+        // evt.preventDefault();
+      }
+    } catch (e) {};
+
     switch (aEvent.type) {
       case "mousedown":
         this._onMouseDown(aEvent);
@@ -426,29 +432,38 @@ MouseModule.prototype = {
 
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
+    let target = (aEvent.view == window) ? aEvent.target : getBrowser();
     let [targetScrollbox, targetScrollInterface]
-      = this.getScrollboxFromElement(aEvent.target);
+      = this.getScrollboxFromElement(target);
+    let targetDragger = targetScrollbox ? targetScrollbox.customDragger : null;
+    if (!targetDragger && targetScrollInterface)
+      targetDragger = this._defaultDragger;
 
     // stop kinetic panning if targetScrollbox has changed
-    let oldInterface = this._targetScrollInterface;
-    if (this._kinetic.isActive() && targetScrollInterface != oldInterface)
+    let oldDragger = this._dragger;
+    if (this._kinetic.isActive() && targetDragger != oldDragger)
       this._kinetic.end();
 
-    let targetClicker = this.getClickerFromElement(aEvent.target);
+    // If the target is not part of the chrome UI, assume it comes from the current browser element.
+    let targetClicker = this.getClickerFromElement(target);
 
     this._targetScrollInterface = targetScrollInterface;
-    this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
-                                            : null;
+    this._dragger = targetDragger;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
     if (this._clicker)
       this._clicker.mouseDown(aEvent.clientX, aEvent.clientY);
 
-    if (targetScrollInterface && this._dragger.isDraggable(targetScrollbox, targetScrollInterface))
+    let draggable = this._dragger ? this._dragger.isDraggable(targetScrollbox, targetScrollInterface) : {};
+    if (this._dragger && (draggable.xDraggable || draggable.yDraggable))
       this._doDragStart(aEvent);
+    else
+      this._dragger = null;
 
     if (this._targetIsContent(aEvent)) {
       this._recordEvent(aEvent);
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
     }
     else {
       if (this._clickTimeout) {
@@ -457,12 +472,9 @@ MouseModule.prototype = {
         this._cleanClickBuffer();
       }
 
-      if (targetScrollInterface) {
+      if (this._dragger) {
         // do not allow axis locking if panning is only possible in one direction
-        let cX = {}, cY = {};
-        targetScrollInterface.getScrolledSize(cX, cY);
-        let rect = targetScrollbox.getBoundingClientRect();
-        dragData.locked = ((cX.value > rect.width) != (cY.value > rect.height));
+        dragData.locked = !draggable.xDraggable || !draggable.yDraggable;
       }
     }
   },
@@ -486,6 +498,8 @@ MouseModule.prototype = {
     }
 
     if (this._targetIsContent(aEvent)) {
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
       // User possibly clicked on something in content
       this._recordEvent(aEvent);
       let commitToClicker = this._clicker && dragData.isClick() && (this._downUpEvents.length > 1);
@@ -547,16 +561,7 @@ MouseModule.prototype = {
    * Check if the event concern the browser content
    */
   _targetIsContent: function _targetIsContent(aEvent) {
-    let target = aEvent.target;
-    while (target) {
-      if (target === window)
-        return false;
-      if (target === this._browserViewContainer)
-        return true;
-
-      target = target.parentNode;
-    }
-    return false;
+    return aEvent.view !== window || aEvent.target.tagName == "browser";
   },
 
   /**
@@ -710,7 +715,7 @@ MouseModule.prototype = {
       let sX = {}, sY = {};
       scroller.getScrolledSize(sX, sY);
       let rect = target.getBoundingClientRect();
-      return sX.value > rect.width || sY.value > rect.height;
+      return { xDraggable: sX.value > rect.width, yDraggable: sY.value > rect.height };
     },
 
     dragStart: function dragStart(cx, cy, target, scroller) {},
@@ -775,6 +780,9 @@ MouseModule.prototype = {
             scrollbox._cachedSBO = qinterface = qi;
             break;
           }
+        } else if (elem.customDragger) {
+          scrollbox = elem;
+          break;
         }
       } catch (e) { /* we aren't here to deal with your exceptions, we'll just keep
                        traversing until we find something more well-behaved, as we
@@ -1293,7 +1301,7 @@ GestureModule.prototype = {
     this._owner.grab(this);
 
     // hide element highlight
-    document.getElementById("tile-container").customClicker.panBegin();
+    //document.getElementById("tile-container").customClicker.panBegin();
 
     // create the AnimatedZoom object for fast arbitrary zooming
     this._pinchZoom = new AnimatedZoom(bv);

@@ -35,11 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* browser area -------------------------------------------------- */
-#tile-container {
-  background-image: url("chrome://browser/content/checkerboard.png");
-}
-
 /* main toolbar (URL bar) -------------------------------------------------- */
 #toolbar-main {
   -moz-appearance: none;

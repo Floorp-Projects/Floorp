@@ -70,106 +70,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
 
 const endl = '\n';
 
-function debug() {
-  let bv = Browser._browserView;
-  let tc = bv._tileManager._tileCache;
-  let scrollbox = document.getElementById("content-scrollbox")
-                .boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-
-  let x = {};
-  let y = {};
-  let w = {};
-  let h = {};
-  scrollbox.getPosition(x, y);
-  scrollbox.getScrolledSize(w, h);
-  let container = document.getElementById("tile-container");
-  let [x, y] = [x.value, y.value];
-  let [w, h] = [w.value, h.value];
-  if (bv) {
-    dump('----------------------DEBUG!-------------------------\n');
-    dump(bv._browserViewportState.toString() + endl);
-
-    dump(endl);
-
-    dump('location from Browser: ' + Browser.selectedBrowser.currentURI.spec + endl);
-    dump('location from BV     : ' + bv.getBrowser().currentURI.spec + endl);
-
-    dump(endl + endl);
-
-    let cr = bv._tileManager._criticalRect;
-    dump('criticalRect from BV: ' + (cr ? cr.toString() : null) + endl);
-    dump('visibleRect from BV : ' + bv.getVisibleRect().toString() + endl);
-    dump('visibleRect from foo: ' + Browser.getVisibleRect().toString() + endl);
-
-    dump('bv batchops depth:    ' + bv._batchOps.length + endl);
-    dump('renderpause depth:    ' + bv._renderMode + endl);
-
-    dump(endl);
-
-    dump('window.innerWidth : ' + window.innerWidth  + endl);
-    dump('window.innerHeight: ' + window.innerHeight + endl);
-
-    dump(endl);
-
-    dump('container width,height from BV: ' + bv._container.style.width + ', '
-                                            + bv._container.style.height + endl);
-    dump('container width,height via DOM: ' + container.style.width + ', '
-                                            + container.style.height + endl);
-
-    dump(endl);
-
-    dump('scrollbox position    : ' + x + ', ' + y + endl);
-    dump('scrollbox scrolledsize: ' + w + ', ' + h + endl);
-
-
-    let sb = document.getElementById("content-scrollbox");
-    dump('container location:     ' + Math.round(container.getBoundingClientRect().left) + " " +
-                                      Math.round(container.getBoundingClientRect().top) + endl);
-
-    dump(endl);
-
-    let mouseModule = ih._modules[0];
-    dump('ih grabber  : ' + ih._grabber           + endl);
-    dump('ih grabdepth: ' + ih._grabDepth         + endl);
-    dump('ih listening: ' + !ih._ignoreEvents     + endl);
-    dump('ih suppress : ' + ih._suppressNextClick + endl);
-    dump('mouseModule : ' + mouseModule           + endl);
-
-    dump(endl);
-
-    dump('tilecache capacity: ' + bv._tileManager._tileCache.getCapacity() + endl);
-    dump('tilecache size    : ' + bv._tileManager._tileCache.size          + endl);
-    dump('tilecache iBound  : ' + bv._tileManager._tileCache.iBound        + endl);
-    dump('tilecache jBound  : ' + bv._tileManager._tileCache.jBound        + endl);
-
-    dump('-----------------------------------------------------\n');
-  }
-}
-
-function debugTile(i, j) {
-  let bv = Browser._browserView;
-  let tc = bv._tileManager._tileCache;
-  let t  = tc.getTile(i, j);
-
-  dump('------ DEBUGGING TILE (' + i + ',' + j + ') --------\n');
-
-  dump('in bounds: ' + tc.inBounds(i, j) + endl);
-  dump('occupied : ' + !!tc.lookup(i, j) + endl);
-  if (t)
-  {
-  dump('toString : ' + t.toString(true) + endl);
-  dump('free     : ' + t.free + endl);
-  dump('dirtyRect: ' + t._dirtyTileCanvasRect + endl);
-
-  let len = tc._tilePool.length;
-  for (let k = 0; k < len; ++k)
-    if (tc._tilePool[k] === t)
-      dump('found in tilePool at index ' + k + endl);
-  }
-
-  dump('------------------------------------\n');
-}
-
 function onDebugKeyPress(ev) {
   let bv = Browser._browserView;
 
@@ -178,8 +78,8 @@ function onDebugKeyPress(ev) {
 
   // use capitals so we require SHIFT here too
 
-  const a = 65;   // debug all critical tiles
-  const b = 66;   // dump an ASCII graphic of the tile map
+  const a = 65;
+  const b = 66;
   const c = 67;
   const d = 68;  // debug dump
   const e = 69;
@@ -193,130 +93,25 @@ function onDebugKeyPress(ev) {
   const m = 77;  // fix mouseout
   const n = 78;
   const o = 79;
-  const p = 80;  // debug tiles in pool order
+  const p = 80;
   const q = 81;  // toggle orientation
   const r = 82;  // reset visible rect
   const s = 83;
   const t = 84;
-  const u = 85;  // debug given list of tiles separated by space
+  const u = 85;
   const v = 86;
   const w = 87;
   const x = 88;
   const y = 89;
   const z = 90;  // set zoom level to 1
 
-  if (window.tileMapMode) {
-    function putChar(ev, col, row) {
-      let tile = tc.getTile(col, row);
-      switch (ev.charCode) {
-      case h: // held tiles
-        dump(tile ? (tile.free ? '*' : 'h') : ' ');
-        break;
-      case d: // dirty tiles
-        dump(tile ? (tile.isDirty() ? 'd' : '*') : ' ');
-        break;
-      case o: // occupied tileholders
-        dump(tc.lookup(col, row) ? 'o' : ' ');
-        break;
-      }
-    }
-
-    let tc = Browser._browserView._tileManager._tileCache;
-    let col, row;
-
-    dump(endl);
-
-    dump('  ');
-    for (col = 0; col < tc.iBound; ++col)
-      dump(col % 10);
-
-    dump(endl);
-
-    for (row = 0; row < tc.jBound; ++row) {
-
-      dump((row % 10) + ' ');
-
-      for (col = 0; col < tc.iBound; ++col) {
-        putChar(ev, col, row);
-      }
-
-      dump(endl);
-    }
-    dump(endl + endl);
-
-    for (let ii = 0; ii < tc._tilePool.length; ++ii) {
-      let tile = tc._tilePool[ii];
-      putChar(ev, tile.i, tile.j);
-    }
-
-    dump(endl + endl);
-
-    window.tileMapMode = false;
-    return;
-  }
-
   switch (ev.charCode) {
   case f:
     MemoryObserver.observe();
     dump("Forced a GC\n");
     break;
-  case r:
-    bv.onAfterVisibleMove();
-    //bv.setVisibleRect(Browser.getVisibleRect());
-
-  case d:
-    debug();
-
-    break;
-  case l:
-    bv._tileManager.restartLazyCrawl(bv._tileManager._criticalRect);
-
-    break;
-  case b:
-    window.tileMapMode = true;
-    break;
-  case u:
-    let ijstrs = window.prompt('row,col plz').split(' ');
-    for each (let ijstr in ijstrs) {
-      let [i, j] = ijstr.split(',').map(function (x) { return parseInt(x); });
-      debugTile(i, j);
-    }
-
-    break;
-  case a:
-    let cr = bv._tileManager._criticalRect;
-    dump('>>>>>> critical rect is ' + (cr ? cr.toString() : cr) + '\n');
-    if (cr) {
-      let starti = cr.left  >> kTileExponentWidth;
-      let endi   = cr.right >> kTileExponentWidth;
-
-      let startj = cr.top    >> kTileExponentHeight;
-      let endj   = cr.bottom >> kTileExponentHeight;
-
-      for (var jj = startj; jj <= endj; ++jj)
-        for (var ii = starti; ii <= endi; ++ii)
-          debugTile(ii, jj);
-    }
-
-    break;
   case i:
     window.infoMode = !window.infoMode;
-    break;
-  case m:
-    Util.dumpLn("renderMode:", bv._renderMode);
-    Util.dumpLn("batchOps:",bv._batchOps.length);
-    bv.resumeRendering();
-    break;
-  case p:
-    let tc = bv._tileManager._tileCache;
-    dump('************* TILE POOL ****************\n');
-    for (let ii = 0, len = tc._tilePool.length; ii < len; ++ii) {
-      if (window.infoMode)
-        debugTile(tc._tilePool[ii].i, tc._tilePool[ii].j);
-      else
-        dump(tc._tilePool[ii].i + ',' + tc._tilePool[ii].j + '\n');
-    }
-    dump('****************************************\n');
     break;
 #ifndef MOZ_PLATFORM_MAEMO
   case q:
@@ -333,8 +128,6 @@ function onDebugKeyPress(ev) {
     break;
   }
 }
-window.infoMode = false;
-window.tileMapMode = false;
 
 var ih = null;
 
@@ -343,8 +136,6 @@ var Browser = {
   _selectedTab : null,
   windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils),
-  contentScrollbox: null,
-  contentScrollboxScroller: null,
   controlsScrollbox: null,
   controlsScrollboxScroller: null,
   pageScrollbox: null,
@@ -367,23 +158,100 @@ var Browser = {
     if (needOverride == "new profile")
       this.initNewProfile();
 
-    let container = document.getElementById("tile-container");
+    let container = document.getElementById("browsers");
     let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect);
 
-    /* handles dispatching clicks on tiles into clicks in content or zooms */
+    /* handles dispatching clicks on browser into clicks in content or zooms */
     container.customClicker = new ContentCustomClicker(bv);
     container.customKeySender = new ContentCustomKeySender(bv);
+    container.customDragger = new Browser.MainDragger(bv);
 
-    /* scrolling box that contains tiles */
-    let contentScrollbox = this.contentScrollbox = document.getElementById("content-scrollbox");
-    this.contentScrollboxScroller = contentScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    contentScrollbox.customDragger = new Browser.MainDragger(bv);
+    // Warning, total hack ahead. All of the real-browser related scrolling code
+    // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
+    // to redo all the dragging code.
+    this.contentScrollbox = container;
+    this.contentScrollboxScroller = {
+      position: new Point(0, 0),
+      pendingTranslation: new Point(0, 0),
+      afterTranslation: new Point(0, 0),
+      flushing: false,
+
+      updateTransition: function() {
+        let tx = -(this.pendingTranslation.x + this.afterTranslation.x);
+        let ty = -(this.pendingTranslation.y + this.afterTranslation.y);
+        getBrowser().style.MozTransform = "translate(" + tx + "px)" + " translateY(" + ty + "px) scale(" + Browser._browserView.getZoomLevel() + ")";
+      },
+
+      flush: function() {
+        getBrowser().messageManager.sendAsyncMessage("MozScrollBy", this.pendingTranslation);
+        this.flushing = true;
+      },
+
+      receiveMessage: function(message) {
+        this.flushing = false;
+        this.pendingTranslation.set(this.afterTranslation);
+        this.afterTranslation.set(0, 0);
+        this.position.set(message.json.x, message.json.y);
+        this.updateTransition();
+        if (!this.pendingTranslation.isZero())
+          this.flush();
+      },
+
+      scrollBy: function(x, y) {
+        let finalPos = this.position.clone().add(this.pendingTranslation).add(this.afterTranslation);
+        let [width, height] = Browser._browserView.getViewportDimensions();
+        let browserWidth = window.innerWidth;
+        let browserHeight = window.innerHeight;
+        x = Math.max(0, Math.min(width - browserWidth, finalPos.x + x)) - finalPos.x;
+        y = Math.max(0, Math.min(height - browserHeight, finalPos.y + y)) - finalPos.y;
+
+        if (x == 0 && y == 0)
+          return;
+
+        if (getBrowser().contentWindow) {
+          getBrowser().contentWindow.scrollBy(x, y);
+        }
+        else {
+          if (!this.flushing)
+            this.pendingTranslation.add(x, y);
+          else
+            this.afterTranslation.add(x, y);
+
+          this.updateTransition();
+        }
+      },
+
+      scrollTo: function(x, y) {
+        if (getBrowser().contentWindow) {
+          getBrowser().contentWindow.scrollTo(x, y);
+        }
+        else {
+          let finalPos = this.position.clone().add(this.pendingTranslation).add(this.afterTranslation);
+          this.scrollBy(x - finalPos.x, y - finalPos.y);
+        }
+      },
+
+      getPosition: function(scrollX, scrollY) {
+        if (getBrowser().contentWindow) {
+          let cwu = Util.getWindowUtils(getBrowser().contentWindow);
+          cwu.getScrollXY(false, scrollX, scrollY);
+        }
+        else {
+          let finalPos = this.position.clone().add(this.pendingTranslation).add(this.afterTranslation);
+          let [width, height] = Browser._browserView.getViewportDimensions();
+          scrollX.value = Math.max(0, Math.min(width - window.innerWidth, finalPos.x));
+          scrollY.value = Math.max(0, Math.min(height - window.innerHeight, finalPos.y));
+        }
+      }
+    };
+
+    messageManager.addMessageListener("MozScrolled", this.contentScrollboxScroller);
 
     /* horizontally scrolling box that holds the sidebars as well as the contentScrollbox */
     let controlsScrollbox = this.controlsScrollbox = document.getElementById("controls-scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     controlsScrollbox.customDragger = {
-      isDraggable: function isDraggable(target, content) { return false; },
+      isDraggable: function isDraggable(target, content) { return {}; },
       dragStart: function dragStart(cx, cy, target, scroller) {},
       dragStop: function dragStop(dx, dy, scroller) { return false; },
       dragMove: function dragMove(dx, dy, scroller) { return false; }
@@ -393,9 +261,6 @@ var Browser = {
     let pageScrollbox = this.pageScrollbox = document.getElementById("page-scrollbox");
     this.pageScrollboxScroller = pageScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     pageScrollbox.customDragger = controlsScrollbox.customDragger;
-
-    // during startup a lot of viewportHandler calls happen due to content and window resizes
-    bv.beginBatchOperation();
 
     let stylesheet = document.styleSheets[0];
     for each (let style in ["viewport-width", "viewport-height", "window-width", "window-height", "toolbar-height"]) {
@@ -414,15 +279,13 @@ var Browser = {
       if (maximize && w > screen.width)
         return;
 
-      bv.beginBatchOperation();
-
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
       let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
       let scaledScreenH = (window.screen.width * (h / w));
       let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
 
-      Browser.styles["viewport-width"].width = (w / dpiScale) + "px";
-      Browser.styles["viewport-height"].height = (h / dpiScale) + "px";
+      Browser.styles["viewport-width"].width = (w /* XXX / dpiScale */) + "px";
+      Browser.styles["viewport-height"].height = (h /* XXX / dpiScale */) + "px";
       Browser.styles["window-width"].width = w + "px";
       Browser.styles["window-height"].height = h + "px";
       Browser.styles["toolbar-height"].height = toolbarHeight + "px";
@@ -443,19 +306,13 @@ var Browser = {
       if (bv.isDefaultZoom())
         // XXX this should really only happen on browser startup, not every resize
         Browser.hideSidebars();
-      bv.onAfterVisibleMove();
 
       for (let i = Browser.tabs.length - 1; i >= 0; i--)
         Browser.tabs[i].updateViewportSize();
 
-      bv.commitBatchOperation();
-
       let curEl = document.activeElement;
       if (curEl && curEl.scrollIntoView)
         curEl.scrollIntoView(false);
-
-      // Preload the zoom snapshot canvas, because it's slow on Android (bug 586353)
-      AnimatedZoom.createCanvas().MozGetIPCContext("2d");
     }
     window.addEventListener("resize", resizeHandler, false);
 
@@ -470,7 +327,6 @@ var Browser = {
     function notificationHandler() {
       // Let the view know that the layout might have changed
       Browser.forceChromeReflow();
-      bv.onAfterVisibleMove();
     }
     let notifications = document.getElementById("notifications");
     notifications.addEventListener("AlertActive", notificationHandler, false);
@@ -548,8 +404,6 @@ var Browser = {
       button.hidden = false;
     }
 
-    bv.commitBatchOperation();
-
     // If some add-ons were disabled during during an application update, alert user
     if (Services.prefs.prefHasUserValue("extensions.disabledAddons")) {
       let addons = Services.prefs.getCharPref("extensions.disabledAddons").split(",");
@@ -588,7 +442,7 @@ var Browser = {
       let shouldPrompt = Services.prefs.getBoolPref("browser.tabs.warnOnClose");
       if (shouldPrompt) {
         let prompt = Services.prompt;
-  
+
         // Default to true: if it were false, we wouldn't get this far
         let warnOnClose = { value: true };
 
@@ -632,7 +486,7 @@ var Browser = {
     Services.obs.notifyObservers(closingCanceled, "browser-lastwindow-close-requested", null);
     if (closingCanceled.data)
       return false;
-  
+
     Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
     return true;
   },
@@ -670,41 +524,19 @@ var Browser = {
   scrollContentToTop: function scrollContentToTop() {
     this.contentScrollboxScroller.scrollTo(0, 0);
     this.pageScrollboxScroller.scrollTo(0, 0);
-    this._browserView.onAfterVisibleMove();
-  },
-
-  /** Let current browser's scrollbox know about where content has been panned. */
-  scrollBrowserToContent: function scrollBrowserToContent() {
-    let browser = this.selectedBrowser;
-    if (browser) {
-      let scroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
-      browser.messageManager.sendAsyncMessage("Content:ScrollTo", { x: scroll.x, y: scroll.y });
-    }
-  },
-
-  /** Update viewport to location of browser's scrollbars. */
-  scrollContentToBrowser: function scrollContentToBrowser(aScrollX, aScrollY) {
-    if (aScrollY != 0)
-      Browser.hideTitlebar();
-
-    let zoomLevel = this._browserView.getZoomLevel();
-    Browser.contentScrollboxScroller.scrollTo(aScrollX*zoomLevel, aScrollY*zoomLevel);
-    this._browserView.onAfterVisibleMove();
   },
 
   hideSidebars: function scrollSidebarsOffscreen() {
-    let container = this.contentScrollbox;
+    let container = document.getElementById("browsers");
     let rect = container.getBoundingClientRect();
     this.controlsScrollboxScroller.scrollBy(Math.round(rect.left), 0);
-    this._browserView.onAfterVisibleMove();
   },
 
   hideTitlebar: function hideTitlebar() {
-    let container = this.contentScrollbox;
+    let container = document.getElementById("browsers");
     let rect = container.getBoundingClientRect();
     this.pageScrollboxScroller.scrollBy(0, Math.round(rect.top));
     this.tryUnfloatToolbar();
-    this._browserView.onAfterVisibleMove();
   },
 
   /**
@@ -836,7 +668,6 @@ var Browser = {
       return;
 
     if (this._selectedTab) {
-      this._selectedTab.contentScrollOffset = this.getScrollboxPosition(this.contentScrollboxScroller);
       this._selectedTab.pageScrollOffset = this.getScrollboxPosition(this.pageScrollboxScroller);
 
       // Make sure we leave the toolbar in an unlocked state
@@ -852,10 +683,7 @@ var Browser = {
     if (this._selectedTab.isLoading())
       BrowserUI.lockToolbar();
 
-    bv.beginBatchOperation();
-
     bv.setBrowser(tab.browser, tab.browserViewportState);
-    bv.forceContainerResize();
     bv.updateDefaultZoom();
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
@@ -873,19 +701,10 @@ var Browser = {
 
     tab.lastSelected = Date.now();
 
-    // XXX incorrect behavior if page was scrolled by tab in the background.
-    if (tab.contentScrollOffset) {
-      let { x: scrollX, y: scrollY } = tab.contentScrollOffset;
-      Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
-    }
     if (tab.pageScrollOffset) {
       let { x: pageScrollX, y: pageScrollY } = tab.pageScrollOffset;
       Browser.pageScrollboxScroller.scrollTo(pageScrollX, pageScrollY);
     }
-
-    bv.setAggressive(!tab._loading);
-
-    bv.commitBatchOperation();
   },
 
   supportsCommand: function(cmd) {
@@ -1170,34 +989,12 @@ var Browser = {
     let scrollX = rect.left * zoomRatio;
     let scrollY = rect.top * zoomRatio;
 
-    // The order of operations below is important for artifacting and for performance. Important
-    // side effects of functions are noted below.
-
-    // Hardware scrolling happens immediately when scrollTo is called.  Hide to prevent artifacts.
-    bv.beginOffscreenOperation(rect);
-
-    // We must scroll to the correct area before TileManager is informed of the change
-    // so that only one render is done. Ensures setZoomLevel puts it off.
-    bv.beginBatchOperation();
-
-    // Critical rect changes when controls are hidden. Must hide before tilemanager viewport.
     this.hideSidebars();
     this.hideTitlebar();
 
     bv.setZoomLevel(zoomLevel);
 
-    // Ensure container is big enough for scroll values.
-    bv.forceContainerResize();
-    this.forceChromeReflow();
     this.contentScrollboxScroller.scrollTo(scrollX, scrollY);
-    bv.onAfterVisibleMove();
-
-    // Inform tile manager, which happens to render new tiles too. Must call in case a batch
-    // operation was in progress before zoom.
-    bv.forceViewportChange();
-
-    bv.commitBatchOperation();
-    bv.commitOffscreenOperation();
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
@@ -1231,7 +1028,7 @@ var Browser = {
    * Transform x and y from client coordinates to BrowserView coordinates.
    */
   clientToBrowserView: function clientToBrowserView(x, y) {
-    let container = document.getElementById("tile-container");
+    let container = document.getElementById("browsers");
     let containerBCR = container.getBoundingClientRect();
 
     let x0 = Math.round(containerBCR.left);
@@ -1243,7 +1040,7 @@ var Browser = {
   },
 
   browserViewToClient: function browserViewToClient(x, y) {
-    let container = document.getElementById("tile-container");
+    let container = document.getElementById("browsers");
     let containerBCR = container.getBoundingClientRect();
 
     let x0 = Math.round(-containerBCR.left);
@@ -1255,7 +1052,7 @@ var Browser = {
   },
 
   browserViewToClientRect: function browserViewToClientRect(rect) {
-    let container = document.getElementById("tile-container");
+    let container = document.getElementById("browsers");
     let containerBCR = container.getBoundingClientRect();
     return rect.clone().translate(Math.round(containerBCR.left), Math.round(containerBCR.top));
   },
@@ -1270,11 +1067,11 @@ var Browser = {
 
   /**
    * Return the visible rect in coordinates with origin at the (left, top) of
-   * the tile container, i.e. BrowserView coordinates.
+   * the browser container, i.e. BrowserView coordinates.
    */
   getVisibleRect: function getVisibleRect() {
     let stack = document.getElementById("tile-stack");
-    let container = document.getElementById("tile-container");
+    let container = document.getElementById("browsers");
     let containerBCR = container.getBoundingClientRect();
 
     let x = Math.round(-containerBCR.left);
@@ -1343,11 +1140,11 @@ Browser.MainDragger = function MainDragger(browserView) {
 };
 
 Browser.MainDragger.prototype = {
-  isDraggable: function isDraggable(target, scroller) { return true; },
+  isDraggable: function isDraggable(target, scroller) {
+    return { xDraggable: true, yDraggable: true };
+  },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
-    this._nextRender = Date.now() + 500;
-    this._dragMoved = false;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1355,9 +1152,7 @@ Browser.MainDragger.prototype = {
     this.dragMove(Browser.snapSidebars(), 0, scroller);
 
     Browser.tryUnfloatToolbar();
-
-    if (this._dragMoved)
-      this.bv.resumeRendering();
+    Browser.contentScrollboxScroller.flush();
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
@@ -1365,7 +1160,6 @@ Browser.MainDragger.prototype = {
 
     if (!this._dragMoved) {
       this._dragMoved = true;
-      this.bv.pauseRendering();
     }
 
     // First calculate any panning to take sidebars out of view
@@ -1380,13 +1174,6 @@ Browser.MainDragger.prototype = {
     Browser.tryFloatToolbar(doffset.x, 0);
     this._panScroller(Browser.controlsScrollboxScroller, doffset);
     this._panScroller(Browser.pageScrollboxScroller, doffset);
-
-    this.bv.onAfterVisibleMove();
-
-    if (Date.now() >= this._nextRender) {
-      this.bv.renderNow();
-      this._nextRender = Date.now() + 500;
-    }
 
     return !doffset.equals(dx, dy);
   },
@@ -1601,9 +1388,11 @@ ContentCustomClicker.prototype = {
     // Ensure that the content process has gets an activate event
     let browser = this._browserView.getBrowser();
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+    browser.focus();
     try {
       fl.activateRemoteFrame();
-    } catch (e) {}
+    } catch (e) {
+    }
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
 
@@ -1630,12 +1419,12 @@ ContentCustomClicker.prototype = {
 
     this._dispatchMouseEvent("Browser:MouseCancel");
 
-    const kDoubleClickRadius = 32;
+/*    const kDoubleClickRadius = 32;
 
     let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
     let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
     if (isClickInRadius)
-      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
+      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1); */
   },
 
   toString: function toString() {
@@ -2394,25 +2183,9 @@ ProgressController.prototype = {
   },
 
   _documentStop: function _documentStop() {
-    if (this._tab == Browser.selectedTab) {
-      // XXX Sometimes MozScrolledAreaChanged has not occurred, so the scroll pane will not
-      // be resized yet. We are assuming this event is on the queue, so scroll the pane
-      // "soon."
-      Util.executeSoon(function() {
-        let scroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
-        if (scroll.isZero())
-          Browser.scrollContentToBrowser(0, 0);
-      });
-    }
-    else {
-      // XXX: We don't know the current scroll position of the content, so assume
-      // it's at the top. This will be fixed by Layers
-      this._tab.contentScrollOffset = new Point(0, 0);
-
       // Make sure the URLbar is in view. If this were the selected tab,
       // onLocationChange would scroll to top.
       this._tab.pageScrollOffset = new Point(0, 0);
-    }
   }
 };
 
@@ -2588,8 +2361,8 @@ Tab.prototype = {
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
 
-      browser.style.width = viewportW + "px";
-      browser.style.height = viewportH + "px";
+      browser.style.width = screenW /* XXX viewportW */ + "px";
+      browser.style.height = screenH /* XXX viewportH */ + "px";
     }
 
     // Local XUL documents are not firing MozScrolledAreaChanged
@@ -2605,27 +2378,11 @@ Tab.prototype = {
     if (this._loading) throw "Already Loading!";
 
     this._loading = true;
-
-    let bv = Browser._browserView;
-
-    if (this == Browser.selectedTab) {
-      bv.setAggressive(false);
-      // Sync up browser so previous and forward scroll positions are set. This is a good time to do
-      // this because the resulting invalidation is irrelevant.
-      bv.ignorePageScroll(true);
-      Browser.scrollBrowserToContent();
-    }
   },
 
   endLoading: function endLoading() {
     if (!this._loading) throw "Not Loading!";
     this._loading = false;
-
-    if (this == Browser.selectedTab) {
-      let bv = Browser._browserView;
-      bv.ignorePageScroll(false);
-      bv.setAggressive(true);
-    }
   },
 
   isLoading: function isLoading() {
@@ -2654,13 +2411,12 @@ Tab.prototype = {
     let browser = this._browser = document.createElement("browser");
     this._chromeTab.linkedBrowser = browser;
 
-    browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden;");
     browser.setAttribute("type", "content");
 
     let useRemote = Services.prefs.getBoolPref("browser.tabs.remote");
     let useLocal = Util.isLocalScheme(aURI);
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
-    
+
     // Append the browser to the document, which should start the page load
     document.getElementById("browsers").appendChild(browser);
 
@@ -2716,38 +2472,3 @@ Tab.prototype = {
     return "[Tab " + (this._browser ? this._browser.currentURI.spec : "(no browser)") + "]";
   }
 };
-
-// Helper used to hide IPC / non-IPC differences for rendering to a canvas
-function rendererFactory(aBrowser, aCanvas) {
-  let wrapper = {};
-
-  if (aBrowser.contentWindow) {
-    let ctx = aCanvas.getContext("2d");
-    let draw = function(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
-      ctx.drawWindow(browser.contentWindow, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
-      let e = document.createEvent("HTMLEvents");
-      e.initEvent("MozAsyncCanvasRender", true, true);
-      aCanvas.dispatchEvent(e);
-    };
-    wrapper.checkBrowser = function(browser) {
-      return browser.contentWindow;
-    };
-    wrapper.drawContent = function(callback) {
-      callback(ctx, draw);
-    };
-  }
-  else {
-    let ctx = aCanvas.MozGetIPCContext("2d");
-    let draw = function(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
-      ctx.asyncDrawXULElement(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
-    };
-    wrapper.checkBrowser = function(browser) {
-      return !browser.contentWindow;
-    };
-    wrapper.drawContent = function(callback) {
-      callback(ctx, draw);
-    };
-  }
-
-  return wrapper;
-}
