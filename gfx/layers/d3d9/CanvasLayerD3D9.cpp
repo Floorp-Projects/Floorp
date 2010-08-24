@@ -242,11 +242,13 @@ CanvasLayerD3D9::RenderLayer()
 
   if (!mGLBufferIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
   }
   device()->SetTexture(0, mTexture);
   device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
   if (!mGLBufferIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
   }
 }
 
