@@ -34,6 +34,8 @@ Components.classes["@mozilla.org/consoleservice;1"]
           .getService(Components.interfaces.nsIConsoleService)
           .reset();
 
+copyToProfile('animals.sqlite');
+
 expectedConsoleMessages.push("Error parsing template: syntax error in the SQL query");
 
 
@@ -43,7 +45,7 @@ var changes = [];
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
               flex="1" rows="8"
-              datasources="animals.sqlite" ref="." querytype="storage">
+              datasources="profile:animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
             SELECT * FROM animalssssssss WHERE species_id = 2 ORDER BY 

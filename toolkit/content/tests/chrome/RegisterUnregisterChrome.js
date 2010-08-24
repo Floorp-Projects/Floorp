@@ -37,6 +37,16 @@ function convertChromeURI(chromeURI)
 
 function chromeURIToFile(chromeURI)
 {
+  var jar = getJar(chromeURI);
+  if (jar) {
+    var tmpDir = extractJarToTmp(jar);
+    let parts = chromeURI.split('/');
+    if (parts[parts.length - 1] != '') {
+      tmpDir.append(parts[parts.length - 1]);
+    }
+    return tmpDir;
+  }
+
   return convertChromeURI(chromeURI).
     QueryInterface(Ci.nsIFileURL).file;
 }  
