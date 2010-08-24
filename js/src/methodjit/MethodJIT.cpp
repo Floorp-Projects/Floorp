@@ -469,9 +469,9 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ entryFp   ]
      *  [ stkLimit  ]
      *  [ cx        ]
-     *  [ fp        ]
-     *  [ regs.sp   ]
+     *  [ regs.fp   ]
      *  [ regs.pc   ]
+     *  [ regs.sp   ]
      *  [ oldRegs   ]
      *  [ previous  ]
      *  [ args.ptr3 ]
@@ -485,7 +485,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
 "   push    {r1}"                               "\n"    /* entryFp */
 "   push    {r3}"                               "\n"    /* stackLimit */
 "   push    {r0}"                               "\n"    /* cx */
-"   push    {r1}"                               "\n"    /* fp */
+"   push    {r1}"                               "\n"    /* regs.fp */
     /* Remaining fields are set elsewhere, but we need to leave space for them. */
 "   sub     sp, sp, #(4*7)"                     "\n"
 
