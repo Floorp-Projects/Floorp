@@ -22,6 +22,8 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
+copyToProfile('animals.sqlite');
+
 var testid ="storage sort string asc";
 var queryType = "storage";
 var isTreeBuilder = false;
@@ -57,7 +59,7 @@ var changes = [];
         <column flex="1"/>
         <column flex="3"/>
     </columns>
-    <rows id="root" datasources="animals.sqlite" querytype="storage" ref="."
+    <rows id="root" datasources="profile:animals.sqlite" querytype="storage" ref="."
          sort="?name" sortDirection="ascending">
         <template>
             <query>SELECT id, name FROM animals</query>
