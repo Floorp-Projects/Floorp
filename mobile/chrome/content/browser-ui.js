@@ -49,11 +49,6 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   return PlacesUtils;
 });
 
-XPCOMUtils.defineLazyGetter(this, "Contacts", function() {
-  Cu.import("resource:///modules/contacts.jsm");
-  return Contacts;
-});
-
 const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
 
@@ -412,8 +407,6 @@ var BrowserUI = {
     FormHelperUI.init();
     FindHelperUI.init();
     PageActions.init();
-
-    Contacts.init();
   },
 
   uninit: function() {

@@ -85,6 +85,8 @@ let Contacts = {
   }
 };
 
+#ifndef ANDROID
+#ifndef XP_MACOSX
 #ifdef XP_UNIX
 Cu.import("resource:///modules/linuxTypes.jsm");
 
@@ -151,4 +153,7 @@ EBookProvider.prototype = {
 };
 
 Contacts.addProvider(new EBookProvider);
+# XP_UNIX
+#endif
+#endif
 #endif
