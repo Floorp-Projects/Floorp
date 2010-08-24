@@ -918,10 +918,8 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
     double val;
     if (!js_strtod(cx, buf, buf + len, &ep, &val))
         return JS_FALSE;
-    if (ep != buf + len) {
-        // bad number input
+    if (ep != buf + len)
         return JSONParseError(cx, jp);
-    }
 
     return PushPrimitive(cx, jp, DoubleValue(val));
 }
