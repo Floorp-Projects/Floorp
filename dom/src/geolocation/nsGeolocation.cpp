@@ -455,6 +455,10 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
 void
 nsGeolocationRequest::Shutdown()
 {
+  if (mTimeoutTimer) {
+    mTimeoutTimer->Cancel();
+    mTimeoutTimer = nsnull;
+  }
   mCleared = PR_TRUE;
   mCallback = nsnull;
   mErrorCallback = nsnull;
