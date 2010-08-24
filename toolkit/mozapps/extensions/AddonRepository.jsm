@@ -41,12 +41,14 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 var EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
+const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
@@ -57,6 +59,32 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
+
+const KEY_PROFILEDIR = "ProfD";
+const FILE_DATABASE  = "addons.sqlite";
+const DB_SCHEMA      = 1;
+
+["LOG", "WARN", "ERROR"].forEach(function(aName) {
+  this.__defineGetter__(aName, function() {
+    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+
+    LogManager.getLogger("addons.repository", this);
+    return this[aName];
+  });
+}, this);
+
+
+// Add-on properties parsed out of AMO results
+// Note: the 'install' property is added for results from
+// retrieveRecommendedAddons and searchAddons
+const PROP_SINGLE = ["id", "type", "name", "version", "creator", "description",
+                     "fullDescription", "developerComments", "eula", "iconURL",
+                     "homepageURL", "supportURL", "contributionURL",
+                     "contributionAmount", "averageRating", "reviewCount",
+                     "reviewURL", "totalDownloads", "weeklyDownloads",
+                     "dailyUsers", "sourceURI", "repositoryStatus", "size",
+                     "updateDate"];
+const PROP_MULTI = ["developers", "screenshots"]
 
 // A map between XML keys to AddonSearchResult keys for string values
 // that require no extra parsing from XML
@@ -83,8 +111,6 @@ const INTEGER_KEY_MAP = {
 
 function AddonSearchResult(aId) {
   this.id = aId;
-  this.screenshots = [];
-  this.developers = [];
 }
 
 AddonSearchResult.prototype = {
@@ -313,60 +339,6 @@ AddonSearchResult.prototype = {
   }
 }
 
-function AddonAuthor(aName, aURL) {
-  this.name = aName;
-  this.url = aURL;
-}
-
-AddonAuthor.prototype = {
-  /**
-   * The name of the author
-   */
-  name: null,
-
-  /**
-   * The URL of the author's profile page
-   */
-  url: null,
-
-  /**
-   * Returns the author's name, defaulting to the empty string
-   */
-  toString: function() {
-    return this.name || "";
-  }
-}
-
-function AddonScreenshot(aURL, aThumbnailURL, aCaption) {
-  this.url = aURL;
-  this.thumbnailURL = aThumbnailURL;
-  this.caption = aCaption;
-}
-
-AddonScreenshot.prototype = {
-  /**
-   * The URL to the full version of the screenshot
-   */
-  url: null,
-
-  /**
-   * The URL to the thumbnail version of the screenshot
-   */
-  thumbnailURL: null,
-
-  /**
-   * The caption of the screenshot
-   */
-  caption: null,
-
-  /**
-   * Returns the screenshot URL, defaulting to the empty string
-   */
-  toString: function() {
-    return this.url || "";
-  }
-}
-
 /**
  * The add-on repository is a source of add-ons that can be installed. It can
  * be searched in three ways. The first takes a list of IDs and returns a
@@ -379,6 +351,32 @@ AddonScreenshot.prototype = {
  * installed.
  */
 var AddonRepository = {
+  /**
+   * Whether caching is currently enabled
+   */
+  get cacheEnabled() {
+    // Act as though caching is disabled if there was an unrecoverable error
+    // openning the database.
+    if (!AddonDatabase.databaseOk)
+      return false;
+
+    let preference = PREF_GETADDONS_CACHE_ENABLED;
+    let enabled = false;
+    try {
+      enabled = Services.prefs.getBoolPref(preference);
+    } catch(e) {
+      WARN("cacheEnabled: Couldn't get pref: " + preference);
+    }
+
+    return enabled;
+  },
+
+  // A cache of the add-ons stored in the database
+  _addons: null,
+
+  // An array of callbacks pending the retrieval of add-ons from AddonDatabase
+  _pendingCallbacks: null,
+
   // Whether a search is currently in progress
   _searching: false,
 
@@ -406,6 +404,155 @@ var AddonRepository = {
 
   // Maximum number of results to return
   _maxResults: null,
+  
+  /**
+   * Initialize AddonRepository.
+   */
+  initialize: function() {
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+  },
+
+  /**
+   * Observe xpcom-shutdown notification, so we can shutdown cleanly.
+   */
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic == "xpcom-shutdown") {
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+      this.shutdown();
+    }
+  },
+
+  /**
+   * Shut down AddonRepository
+   */
+  shutdown: function() {
+    this.cancelSearch();
+
+    this._addons = null;
+    this._pendingCallbacks = null;
+    AddonDatabase.shutdown(function() {
+      Services.obs.notifyObservers(null, "addon-repository-shutdown", null);
+    });
+  },
+
+  /**
+   * Asynchronously get a cached add-on by id. The add-on (or null if the
+   * add-on is not found) is passed to the specified callback. If caching is
+   * disabled, null is passed to the specified callback.
+   *
+   * @param  aId
+   *         The id of the add-on to get
+   * @param  aCallback
+   *         The callback to pass the result back to
+   */
+  getCachedAddonByID: function(aId, aCallback) {
+    if (!aId || !this.cacheEnabled) {
+      aCallback(null);
+      return;
+    }
+
+    let self = this;
+    function getAddon(aAddons) {
+      aCallback((aId in aAddons) ? aAddons[aId] : null);
+    }
+
+    if (this._addons == null) {
+      if (this._pendingCallbacks == null) {
+        // Data has not been retrieved from the database, so retrieve it
+        this._pendingCallbacks = [];
+        this._pendingCallbacks.push(getAddon);
+        AddonDatabase.retrieveStoredData(function(aAddons) {
+          let pendingCallbacks = self._pendingCallbacks;
+
+          // Check if cache was shutdown or deleted before callback was called
+          if (pendingCallbacks == null)
+            return;
+
+          // Callbacks may want to trigger a other caching operations that may
+          // affect _addons and _pendingCallbacks, so set to final values early
+          self._pendingCallbacks = null;
+          self._addons = aAddons;
+
+          pendingCallbacks.forEach(function(aCallback) aCallback(aAddons));
+        });
+
+        return;
+      }
+
+      // Data is being retrieved from the database, so wait
+      this._pendingCallbacks.push(getAddon);
+      return;
+    }
+
+    // Data has been retrieved, so immediately return result
+    getAddon(this._addons);
+  },
+
+  /**
+   * Asynchronously repopulate cache so it only contains the add-ons
+   * corresponding to the specified ids. If caching is disabled,
+   * the cache is completely removed.
+   *
+   * @param  aIds
+   *         The array of add-on ids to repopulate the cache with
+   * @param  aCallback
+   *         The optional callback to call once complete
+   */
+  repopulateCache: function(aIds, aCallback) {
+    let self = this;
+
+    // Completely remove cache if caching is not enabled
+    if (!this.cacheEnabled) {
+      this._addons = null;
+      this._pendingCallbacks = null;
+      AddonDatabase.delete(aCallback);
+      return;
+    }
+
+    this.getAddonsByIDs(aIds, {
+      searchSucceeded: function(aAddons) {
+        self._addons = {};
+        aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+        AddonDatabase.repopulate(aAddons, aCallback);
+      },
+      searchFailed: function() {
+        WARN("Search failed when repopulating cache");
+        if (aCallback)
+          aCallback();
+      }
+    });
+  },
+
+  /**
+   * Asynchronously add add-ons to the cache corresponding to the specified
+   * ids. If caching is disabled, the cache is unchanged and the callback is
+   * immediatly called if it is defined.
+   *
+   * @param  aIds
+   *         The array of add-on ids to add to the cache
+   * @param  aCallback
+   *         The optional callback to call once complete
+   */
+  cacheAddons: function(aIds, aCallback) {
+    if (!this.cacheEnabled) {
+      if (aCallback)
+        aCallback();
+      return;
+    }
+
+    let self = this;
+    this.getAddonsByIDs(aIds, {
+      searchSucceeded: function(aAddons) {
+        aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+        AddonDatabase.insertAddons(aAddons, aCallback);
+      },
+      searchFailed: function() {
+        WARN("Search failed when adding add-ons to cache");
+        if (aCallback)
+          aCallback();
+      }
+    });
+  },
 
   /**
    * The homepage for visiting this repository. If the corresponding preference
@@ -471,9 +618,10 @@ var AddonRepository = {
    *         The callback to pass results to
    */
   getAddonsByIDs: function(aIDs, aCallback) {
+    let ids = aIDs.slice(0);
     let url = this._formatURLPref(PREF_GETADDONS_BYIDS, {
       API_VERSION : API_VERSION,
-      IDS : aIDs.map(encodeURIComponent).join(',')
+      IDS : ids.map(encodeURIComponent).join(',')
     });
 
     let self = this;
@@ -487,20 +635,20 @@ var AddonRepository = {
           continue;
 
         // Ignore add-on if it wasn't actually requested
-        let idIndex = aIDs.indexOf(result.addon.id);
+        let idIndex = ids.indexOf(result.addon.id);
         if (idIndex == -1)
           continue;
 
         results.push(result);
         // Ignore this add-on from now on
-        aIDs.splice(idIndex, 1);
+        ids.splice(idIndex, 1);
       }
 
       // aTotalResults irrelevant
       self._reportSuccess(results, -1);
     }
 
-    this._beginSearch(url, aIDs.length, aCallback, handleResults);
+    this._beginSearch(url, ids.length, aCallback, handleResults);
   },
 
   /**
@@ -660,7 +808,7 @@ var AddonRepository = {
               addon.type = "theme";
               break;
             default:
-              Cu.reportError("Unknown type id when parsing addon: " + id);
+              WARN("Unknown type id when parsing addon: " + id);
           }
           break;
         case "authors":
@@ -671,11 +819,15 @@ var AddonRepository = {
             if (name == null || link == null)
               return;
 
-            let author = new AddonAuthor(name, link);
+            let author = new AddonManagerPrivate.AddonAuthor(name, link);
             if (addon.creator == null)
               addon.creator = author;
-            else
+            else {
+              if (addon.developers == null)
+                addon.developers = [];
+
               addon.developers.push(author);
+            }
           });
           break;
         case "previews":
@@ -687,7 +839,10 @@ var AddonRepository = {
 
             let thumbnail = self._getDescendantTextContent(aPreviewNode, "thumbnail");
             let caption = self._getDescendantTextContent(aPreviewNode, "caption");
-            let screenshot = new AddonScreenshot(full, thumbnail, caption);
+            let screenshot = new AddonManagerPrivate.AddonScreenshot(full, thumbnail, caption);
+
+            if (addon.screenshots == null)
+              addon.screenshots = [];
 
             if (aPreviewNode.getAttribute("primary") == 1)
               addon.screenshots.unshift(screenshot);
@@ -912,7 +1067,7 @@ var AddonRepository = {
     try {
       url = Services.prefs.getCharPref(aPreference);
     } catch(e) {
-      Cu.reportError("_formatURLPref: Couldn't get pref: " + aPreference);
+      WARN("_formatURLPref: Couldn't get pref: " + aPreference);
       return null;
     }
 
@@ -922,5 +1077,644 @@ var AddonRepository = {
 
     return Services.urlFormatter.formatURL(url);
   }
-}
+};
+AddonRepository.initialize();
 
+var AddonDatabase = {
+  // true if the database connection has been opened
+  initialized: false,
+  // false if there was an unrecoverable error openning the database
+  databaseOk: true,
+  // A cache of statements that are used and need to be finalized on shutdown
+  statementCache: {},
+
+  // The statements used by the database
+  statements: {
+    getAllAddons: "SELECT internal_id, id, type, name, version, " +
+                  "creator, creatorURL, description, fullDescription, " +
+                  "developerComments, eula, iconURL, homepageURL, supportURL, " +
+                  "contributionURL, contributionAmount, averageRating, " +
+                  "reviewCount, reviewURL, totalDownloads, weeklyDownloads, " +
+                  "dailyUsers, sourceURI, repositoryStatus, size, updateDate " +
+                  "FROM addon",
+
+    getAllDevelopers: "SELECT addon_internal_id, name, url FROM developer " +
+                      "ORDER BY addon_internal_id, num",
+
+    getAllScreenshots: "SELECT addon_internal_id, url, thumbnailURL, caption " +
+                       "FROM screenshot ORDER BY addon_internal_id, num",
+
+    insertAddon: "INSERT INTO addon VALUES (NULL, :id, :type, :name, :version, " +
+                 ":creator, :creatorURL, :description, :fullDescription, " +
+                 ":developerComments, :eula, :iconURL, :homepageURL, :supportURL, " +
+                 ":contributionURL, :contributionAmount, :averageRating, " +
+                 ":reviewCount, :reviewURL, :totalDownloads, :weeklyDownloads, " +
+                 ":dailyUsers, :sourceURI, :repositoryStatus, :size, :updateDate)",
+
+    insertDeveloper:  "INSERT INTO developer VALUES (:addon_internal_id, " +
+                      ":num, :name, :url)",
+
+    insertScreenshot: "INSERT INTO screenshot VALUES (:addon_internal_id, " +
+                      ":num, :url, :thumbnailURL, :caption)",
+
+    emptyAddon:       "DELETE FROM addon"
+  },
+
+  /**
+   * A helper function to log an SQL error.
+   *
+   * @param  aError
+   *         The storage error code associated with the error
+   * @param  aErrorString
+   *         An error message
+   */
+  logSQLError: function AD_logSQLError(aError, aErrorString) {
+    ERROR("SQL error " + aError + ": " + aErrorString);
+  },
+
+  /**
+   * A helper function to log any errors that occur during async statements.
+   *
+   * @param  aError
+   *         A mozIStorageError to log
+   */
+  asyncErrorLogger: function AD_asyncErrorLogger(aError) {
+    ERROR("Async SQL error " + aError.result + ": " + aError.message);
+  },
+
+  /**
+   * Synchronously opens a new connection to the database file.
+   *
+   * @param  aSecondAttempt
+   *         Whether this is a second attempt to open the database
+   * @return the mozIStorageConnection for the database
+   */
+  openConnection: function AD_openConnection(aSecondAttempt) {
+    this.initialized = true;
+    delete this.connection;
+
+    let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
+    let dbMissing = !dbfile.exists();
+
+    try {
+      this.connection = Services.storage.openUnsharedDatabase(dbfile);
+    } catch (e) {
+      this.initialized = false;
+      ERROR("Failed to open database: " + e);
+      if (aSecondAttempt || dbMissing) {
+        this.databaseOk = false;
+        throw e;
+      }
+
+      LOG("Deleting database, and attempting openConnection again");
+      dbfile.remove(false);
+      return this.openConnection(true);
+    }
+
+    this.connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+    if (dbMissing || this.connection.schemaVersion == 0)
+      this._createSchema();
+
+    return this.connection;
+  },
+
+  /**
+   * A lazy getter for the database connection.
+   */
+  get connection() {
+    return this.openConnection();
+  },
+
+  /**
+   * Asynchronously shuts down the database connection and releases all
+   * cached objects
+   *
+   * @param  aCallback
+   *         An optional callback to call once complete
+   */
+  shutdown: function AD_shutdown(aCallback) {
+    this.databaseOk = true;
+    if (!this.initialized) {
+      if (aCallback)
+        aCallback();
+      return;
+    }
+
+    this.initialized = false;
+
+    for each (let stmt in this.statementCache)
+      stmt.finalize();
+    this.statementCache = {};
+
+    if (this.connection.transactionInProgress) {
+      ERROR("Outstanding transaction, rolling back.");
+      this.connection.rollbackTransaction();
+    }
+
+    let connection = this.connection;
+    delete this.connection;
+
+    // Re-create the connection smart getter to allow the database to be
+    // re-loaded during testing.
+    this.__defineGetter__("connection", function() {
+      return this.openConnection();
+    });
+
+    connection.asyncClose(aCallback);
+  },
+
+  /**
+   * Asynchronously deletes the database, shutting down the connection
+   * first if initialized
+   *
+   * @param  aCallback
+   *         An optional callback to call once complete
+   */
+  delete: function AD_delete(aCallback) {
+    this.shutdown(function() {
+      let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
+      if (dbfile.exists())
+        dbfile.remove(false);
+
+      if (aCallback)
+        aCallback();
+    });
+  },
+
+  /**
+   * Gets a cached statement or creates a new statement if it doesn't already
+   * exist.
+   *
+   * @param  aKey
+   *         A unique key to reference the statement
+   * @return a mozIStorageStatement for the SQL corresponding to the unique key
+   */
+  getStatement: function AD_getStatement(aKey) {
+    if (aKey in this.statementCache)
+      return this.statementCache[aKey];
+
+    let sql = this.statements[aKey];
+    try {
+      return this.statementCache[aKey] = this.connection.createStatement(sql);
+    } catch (e) {
+      ERROR("Error creating statement " + aKey + " (" + aSql + ")");
+      throw e;
+    }
+  },
+
+  /**
+   * Asynchronously retrieve all add-ons from the database, and pass it
+   * to the specified callback
+   *
+   * @param  aCallback
+   *         The callback to pass the add-ons back to
+   */
+  retrieveStoredData: function AD_retrieveStoredData(aCallback) {
+    let self = this;
+    let addons = {};
+
+    // Retrieve all data from the addon table
+    function getAllAddons() {
+      self.getStatement("getAllAddons").executeAsync({
+        handleResult: function(aResults) {
+          let row = null;
+          while (row = aResults.getNextRow()) {
+            let internal_id = row.getResultByName("internal_id");
+            addons[internal_id] = self._makeAddonFromAsyncRow(row);
+          }
+        },
+
+        handleError: self.asyncErrorLogger,
+
+        handleCompletion: function(aReason) {
+          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+            ERROR("Error retrieving add-ons from database. Returning empty results");
+            aCallback({});
+            return;
+          }
+
+          getAllDevelopers();
+        }
+      });
+    }
+
+    // Retrieve all data from the developer table
+    function getAllDevelopers() {
+      self.getStatement("getAllDevelopers").executeAsync({
+        handleResult: function(aResults) {
+          let row = null;
+          while (row = aResults.getNextRow()) {
+            let addon_internal_id = row.getResultByName("addon_internal_id");
+            if (!(addon_internal_id in addons)) {
+              WARN("Found a developer not linked to an add-on in database");
+              continue;
+            }
+
+            let addon = addons[addon_internal_id];
+            if (!addon.developers)
+              addon.developers = [];
+
+            addon.developers.push(self._makeDeveloperFromAsyncRow(row));
+          }
+        },
+
+        handleError: self.asyncErrorLogger,
+
+        handleCompletion: function(aReason) {
+          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+            ERROR("Error retrieving developers from database. Returning empty results");
+            aCallback({});
+            return;
+          }
+
+          getAllScreenshots();
+        }
+      });
+    }
+
+    // Retrieve all data from the screenshot table
+    function getAllScreenshots() {
+      self.getStatement("getAllScreenshots").executeAsync({
+        handleResult: function(aResults) {
+          let row = null;
+          while (row = aResults.getNextRow()) {
+            let addon_internal_id = row.getResultByName("addon_internal_id");
+            if (!(addon_internal_id in addons)) {
+              WARN("Found a screenshot not linked to an add-on in database");
+              continue;
+            }
+
+            let addon = addons[addon_internal_id];
+            if (!addon.screenshots)
+              addon.screenshots = [];
+            addon.screenshots.push(self._makeScreenshotFromAsyncRow(row));
+          }
+        },
+
+        handleError: self.asyncErrorLogger,
+
+        handleCompletion: function(aReason) {
+          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+            ERROR("Error retrieving screenshots from database. Returning empty results");
+            aCallback({});
+            return;
+          }
+
+          let returnedAddons = {};
+          for each (addon in addons)
+            returnedAddons[addon.id] = addon;
+          aCallback(returnedAddons);
+        }
+      });
+    }
+
+    // Begin asynchronous process
+    getAllAddons();
+  },
+
+  /**
+   * Asynchronously repopulates the database so it only contains the
+   * specified add-ons
+   *
+   * @param  aAddons
+   *         The array of add-ons to repopulate the database with
+   * @param  aCallback
+   *         An optional callback to call once complete
+   */
+  repopulate: function AD_repopulate(aAddons, aCallback) {
+    let self = this;
+
+    // Completely empty the database
+    let stmts = [this.getStatement("emptyAddon")];
+
+    this.connection.executeAsync(stmts, stmts.length, {
+      handleResult: function() {},
+      handleError: self.asyncErrorLogger,
+
+      handleCompletion: function(aReason) {
+        if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED)
+          ERROR("Error emptying database. Attempting to continue repopulating database");
+
+        // Insert the specified add-ons
+        self.insertAddons(aAddons, aCallback);
+      }
+    });
+  },
+
+  /**
+   * Asynchronously inserts an array of add-ons into the database
+   *
+   * @param  aAddons
+   *         The array of add-ons to insert
+   * @param  aCallback
+   *         An optional callback to call once complete
+   */
+  insertAddons: function AD_insertAddons(aAddons, aCallback) {
+    let self = this;
+    let currentAddon = -1;
+
+    // Chain insertions
+    function insertNextAddon() {
+      if (++currentAddon == aAddons.length) {
+        if (aCallback)
+          aCallback();
+        return;
+      }
+
+      self._insertAddon(aAddons[currentAddon], insertNextAddon);
+    }
+
+    insertNextAddon();
+  },
+
+  /**
+   * Inserts an individual add-on into the database. If the add-on already
+   * exists in the database (by id), then the specified add-on will not be
+   * inserted.
+   *
+   * @param  aAddon
+   *         The add-on to insert into the database
+   * @param  aCallback
+   *         The callback to call once complete
+   */
+  _insertAddon: function AD__insertAddon(aAddon, aCallback) {
+    let self = this;
+    let internal_id = null;
+    this.connection.beginTransaction();
+
+    // Simultaneously insert the developers and screenshots of the add-on
+    function insertDevelopersAndScreenshots() {
+      let stmts = [];
+
+      // Initialize statement and parameters for inserting an array
+      function initializeArrayInsert(aStatementKey, aArray, aAddParams) {
+        if (!aArray || aArray.length == 0)
+          return;
+
+        let stmt = self.getStatement(aStatementKey);
+        let params = stmt.newBindingParamsArray();
+        aArray.forEach(function(aElement, aIndex) {
+          aAddParams(params, internal_id, aElement, aIndex);
+        });
+
+        stmt.bindParameters(params);
+        stmts.push(stmt);
+      }
+
+      // Initialize statements to insert developers and screenshots
+      initializeArrayInsert("insertDeveloper", aAddon.developers,
+                            self._addDeveloperParams);
+      initializeArrayInsert("insertScreenshot", aAddon.screenshots,
+                            self._addScreenshotParams);
+
+      // Immediately call callback if nothing to insert
+      if (stmts.length == 0) {
+        self.connection.commitTransaction();
+        aCallback();
+        return;
+      }
+
+      self.connection.executeAsync(stmts, stmts.length, {
+        handleResult: function() {},
+        handleError: self.asyncErrorLogger,
+        handleCompletion: function(aReason) {
+          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+            ERROR("Error inserting developers and screenshots into database. Attempting to continue");
+            self.connection.rollbackTransaction();
+          }
+          else {
+            self.connection.commitTransaction();
+          }
+
+          aCallback();
+        }
+      });
+    }
+
+    // Insert add-on into database
+    this._makeAddonStatement(aAddon).executeAsync({
+      handleResult: function() {},
+      handleError: self.asyncErrorLogger,
+
+      handleCompletion: function(aReason) {
+        if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          ERROR("Error inserting add-ons into database. Attempting to continue.");
+          self.connection.rollbackTransaction();
+          aCallback();
+          return;
+        }
+
+        internal_id = self.connection.lastInsertRowID;
+        insertDevelopersAndScreenshots();
+      }
+    });
+  },
+
+  /**
+   * Make an asynchronous statement that will insert the specified add-on
+   *
+   * @param  aAddon
+   *         The add-on to make the statement for
+   * @return The asynchronous mozIStorageStatement
+   */
+  _makeAddonStatement: function AD__makeAddonStatement(aAddon) {
+    let stmt = this.getStatement("insertAddon");
+    let params = stmt.params;
+
+    PROP_SINGLE.forEach(function(aProperty) {
+      switch (aProperty) {
+        case "sourceURI":
+          params.sourceURI = aAddon.sourceURI ? aAddon.sourceURI.spec : null;
+          break;
+        case "creator":
+          params.creator =  aAddon.creator ? aAddon.creator.name : null;
+          params.creatorURL =  aAddon.creator ? aAddon.creator.url : null;
+          break;
+        case "updateDate":
+          params.updateDate = aAddon.updateDate ? aAddon.updateDate.getTime() : null;
+          break;
+        default:
+          params[aProperty] = aAddon[aProperty];
+      }
+    });
+
+    return stmt;
+  },
+
+  /**
+   * Add developer parameters to the specified mozIStorageBindingParamsArray
+   *
+   * @param  aParams
+   *         The mozIStorageBindingParamsArray to add the parameters to
+   * @param  aInternalID
+   *         The internal_id of the add-on that this developer is for
+   * @param  aDeveloper
+   *         The developer to make the parameters from
+   * @param  aIndex
+   *         The index of this developer
+   * @return The asynchronous mozIStorageStatement
+   */
+  _addDeveloperParams: function AD__addDeveloperParams(aParams, aInternalID,
+                                                       aDeveloper, aIndex) {
+    let bp = aParams.newBindingParams();
+    bp.bindByName("addon_internal_id", aInternalID);
+    bp.bindByName("num", aIndex);
+    bp.bindByName("name", aDeveloper.name);
+    bp.bindByName("url", aDeveloper.url);
+    aParams.addParams(bp);
+  },
+
+  /**
+   * Add screenshot parameters to the specified mozIStorageBindingParamsArray
+   *
+   * @param  aParams
+   *         The mozIStorageBindingParamsArray to add the parameters to
+   * @param  aInternalID
+   *         The internal_id of the add-on that this screenshot is for
+   * @param  aScreenshot
+   *         The screenshot to make the parameters from
+   * @param  aIndex
+   *         The index of this screenshot
+   */
+  _addScreenshotParams: function AD__addScreenshotParams(aParams, aInternalID,
+                                                         aScreenshot, aIndex) {
+    let bp = aParams.newBindingParams();
+    bp.bindByName("addon_internal_id", aInternalID);
+    bp.bindByName("num", aIndex);
+    bp.bindByName("url", aScreenshot.url);
+    bp.bindByName("thumbnailURL", aScreenshot.thumbnailURL);
+    bp.bindByName("caption", aScreenshot.caption);
+    aParams.addParams(bp);
+  },
+
+  /**
+   * Make add-on from an asynchronous row
+   * Note: This add-on will be lacking both developers and screenshots
+   *
+   * @param  aRow
+   *         The asynchronous row to use
+   * @return The created add-on
+   */
+  _makeAddonFromAsyncRow: function AD__makeAddonFromAsyncRow(aRow) {
+    let addon = {};
+
+    PROP_SINGLE.forEach(function(aProperty) {
+      let value = aRow.getResultByName(aProperty);
+
+      switch (aProperty) {
+        case "sourceURI":
+          addon.sourceURI = value ? NetUtil.newURI(value) : null;
+          break;
+        case "creator":
+          let creatorURL = aRow.getResultByName("creatorURL");
+          if (value || creatorURL)
+            addon.creator = new AddonManagerPrivate.AddonAuthor(value, creatorURL);
+          else
+            addon.creator = null;
+          break;
+        case "updateDate":
+          addon.updateDate = value ? new Date(value) : null;
+          break;
+        default:
+          addon[aProperty] = value;
+      }
+    });
+
+    return addon;
+  },
+
+  /**
+   * Make a developer from an asynchronous row
+   *
+   * @param  aRow
+   *         The asynchronous row to use
+   * @return The created developer
+   */
+  _makeDeveloperFromAsyncRow: function AD__makeDeveloperFromAsyncRow(aRow) {
+    let name = aRow.getResultByName("name");
+    let url = aRow.getResultByName("url")
+    return new AddonManagerPrivate.AddonAuthor(name, url);
+  },
+
+  /**
+   * Make a screenshot from an asynchronous row
+   *
+   * @param  aRow
+   *         The asynchronous row to use
+   * @return The created screenshot
+   */
+  _makeScreenshotFromAsyncRow: function AD__makeScreenshotFromAsyncRow(aRow) {
+    let url = aRow.getResultByName("url");
+    let thumbnailURL = aRow.getResultByName("thumbnailURL");
+    let caption =aRow.getResultByName("caption");
+    return new AddonManagerPrivate.AddonScreenshot(url, thumbnailURL, caption);
+  },
+
+  /**
+   * Synchronously creates the schema in the database.
+   */
+  _createSchema: function AD__createSchema() {
+    LOG("Creating database schema");
+    this.connection.beginTransaction();
+
+    // Any errors in here should rollback
+    try {
+      this.connection.createTable("addon",
+                                  "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                  "id TEXT UNIQUE, " +
+                                  "type TEXT, " +
+                                  "name TEXT, " +
+                                  "version TEXT, " +
+                                  "creator TEXT, " +
+                                  "creatorURL TEXT, " +
+                                  "description TEXT, " +
+                                  "fullDescription TEXT, " +
+                                  "developerComments TEXT, " +
+                                  "eula TEXT, " +
+                                  "iconURL TEXT, " +
+                                  "homepageURL TEXT, " +
+                                  "supportURL TEXT, " +
+                                  "contributionURL TEXT, " +
+                                  "contributionAmount TEXT, " +
+                                  "averageRating INTEGER, " +
+                                  "reviewCount INTEGER, " +
+                                  "reviewURL TEXT, " +
+                                  "totalDownloads INTEGER, " +
+                                  "weeklyDownloads INTEGER, " +
+                                  "dailyUsers INTEGER, " +
+                                  "sourceURI TEXT, " +
+                                  "repositoryStatus INTEGER, " +
+                                  "size INTEGER, " +
+                                  "updateDate INTEGER");
+
+      this.connection.createTable("developer",
+                                  "addon_internal_id INTEGER, " +
+                                  "num INTEGER, " +
+                                  "name TEXT, " +
+                                  "url TEXT, " +
+                                  "PRIMARY KEY (addon_internal_id, num)");
+
+      this.connection.createTable("screenshot",
+                                  "addon_internal_id INTEGER, " +
+                                  "num INTEGER, " +
+                                  "url TEXT, " +
+                                  "thumbnailURL TEXT, " +
+                                  "caption TEXT, " +
+                                  "PRIMARY KEY (addon_internal_id, num)");
+
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
+        "ON addon BEGIN " +
+        "DELETE FROM developer WHERE addon_internal_id=old.internal_id; " +
+        "DELETE FROM screenshot WHERE addon_internal_id=old.internal_id; " +
+        "END");
+
+      this.connection.schemaVersion = DB_SCHEMA;
+      this.connection.commitTransaction();
+    } catch (e) {
+      ERROR("Failed to create database schema");
+      this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
+      this.connection.rollbackTransaction();
+      throw e;
+    }
+  }
+};

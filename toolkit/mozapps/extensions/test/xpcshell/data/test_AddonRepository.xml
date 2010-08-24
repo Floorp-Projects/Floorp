@@ -188,7 +188,7 @@
     <total_downloads>   2222   </total_downloads>
     <weekly_downloads>   3333   </weekly_downloads>
     <daily_users>   4444   </daily_users>
-    <last_updated epoch="   1265108645   ">   2010-01-02T03:04:05Z   </last_updated>
+    <last_updated epoch="   1265033045   ">   2010-02-01T14:04:05Z   </last_updated>
     <!-- Test that an incompatible install is ignored -->
     <install size="   9999   " os="   UNKNOWN   ">   http://localhost:4444/fail3.xpi   </install>
     <!-- Test that OS matching is case-insensitive -->
