@@ -3431,6 +3431,10 @@ cairo_d2d_surface_create(cairo_device_t *device,
                          int width,
                          int height)
 {
+    if (width == 0 || height == 0) {
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_SIZE));
+    }
+
     cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     new (newSurf) cairo_d2d_surface_t();
