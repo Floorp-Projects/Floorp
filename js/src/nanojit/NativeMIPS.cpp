@@ -630,7 +630,7 @@ namespace nanojit
 
         if (cpu_has_fpu && deprecated_isKnownReg(rr)) {
             if (d)
-                asm_spill(rr, d, false, true);
+                asm_spill(rr, d, true);
             asm_li_d(rr, ins->immDhi(), ins->immDlo());
         }
         else {
@@ -1649,9 +1649,8 @@ namespace nanojit
     }
 
     void
-    Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
+    Assembler::asm_spill(Register rr, int d, bool quad)
     {
-        USE(pop);
         USE(quad);
         NanoAssert(d);
         if (IsFpReg(rr)) {
@@ -1662,7 +1661,7 @@ namespace nanojit
             NanoAssert(!quad);
             asm_ldst(OP_SW, rr, d, FP);
         }
-        TAG("asm_spill(rr=%d, d=%d, pop=%d, quad=%d)", rr, d, pop, quad);
+        TAG("asm_spill(rr=%d, d=%d, quad=%d)", rr, d, quad);
     }
 
     void
