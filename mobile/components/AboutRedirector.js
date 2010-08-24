@@ -67,10 +67,6 @@ let modules = {
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
     privileged: true
-  },
-  "sync-tabs": {
-    uri: "chrome://browser/content/aboutTabs.xhtml",
-    privileged: true
   }
 }
 
@@ -145,12 +141,6 @@ AboutHome.prototype = {
   classID: Components.ID("{b071364f-ab68-4669-a9db-33fca168271a}")
 }
 
-function AboutSyncTabs() {}
-AboutSyncTabs.prototype = {
-  __proto__: AboutGeneric.prototype,
-  classID: Components.ID("{d503134a-f6f3-4824-bc3c-09c123177944}")
-}
-
 const components = [AboutFirstrun, AboutFennec, AboutRights,
-                    AboutCertError, AboutFirefox, AboutHome, AboutSyncTabs];
+                    AboutCertError, AboutFirefox, AboutHome];
 const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

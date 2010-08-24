@@ -95,6 +95,9 @@ pref("network.http.max-persistent-connections-per-proxy", 4);
 pref("network.autodial-helper.enabled", true);
 #endif
 
+/* history max results display */
+pref("browser.display.history.maxresults", 100);
+
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);
 pref("browser.sessionhistory.max_entries", 50);

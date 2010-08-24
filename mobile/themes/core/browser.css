@@ -739,6 +739,8 @@ placeitem {
 
 autocompleteresult:active,
 placelist placeitem:active:not([selected="true"]),
+historylist placeitem:active:not([selected="true"]):not([class="history-item-title"]),
+historylist placeitem:active:not([selected="true"]):not([class="remotetabs-item-title"]),
 .autocompleteresult-selected {
   background-color: #8db8d8;
 }
@@ -800,7 +802,29 @@ placeitem[src=""] .bookmark-item-label > image {
   -moz-margin-end: 24px;
 }
 
-/* special "no results" and "all bookmarks" items */
+/* special "no results", "awesome header row" and "title rows" items */
+autocompleteresult[class="history-item-title"],
+autocompleteresult[class="remotetabs-item-title"] {
+  -moz-box-pack: center;
+  background-color: #E9E9E9;
+  min-height: 0px;
+}
+
+autocompleteresult[class="history-item-title"] .bookmark-item-url,
+autocompleteresult[class="remotetabs-item-title"] .bookmark-item-url {
+  display: none;
+}
+
+autocompleteresult[class="history-item-title"] .bookmark-item-label,
+autocompleteresult[class="remotetabs-item-title"] .bookmark-item-label {
+  font-size: 24px !important;
+}
+
+autocompleteresult[class="history-item-title"] image,
+autocompleteresult[class="remotetabs-item-title"] image {
+  display: none;
+}
+
 autocompleteresult.noresults {
   font-style: italic;
   border-bottom: none;
@@ -815,36 +839,117 @@ autocompleteresult.noresults > .autocomplete-item-label {
   color: grey;
 }
 
-autocompleteresult.allbookmarks {
-  -moz-box-pack: center;
-  background: #E9E9E9 url("images/arrowright-16.png") no-repeat 98% 50%;
+#awesome-header {
+  min-height: 70px; /* row size */
 }
 
-autocompleteresult.allbookmarks:-moz-locale-dir(rtl) {
-  background: #E9E9E9 url("images/arrowleft-16.png") no-repeat 2% 50%;
+#awesome-header > toolbarbutton {
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+  -moz-appearance: none;
+  color: white;
+  font-weight: bold;
+  border: 1px solid #36373b;
+  border-left-width: 0;
+  background-color: #797979;
+  -moz-box-flex: 1;
 }
 
-autocompleteresult.allbookmarks:active,
-autocompleteresult.allbookmarks.autocompleteresult-selected {
-  background-color: #8db8d8;
+@media (max-width: 499px) {
+  #awesome-header > toolbarbutton {
+    -moz-box-orient: vertical;
+  }
+
+  #awesome-header > toolbarbutton .toolbarbutton-text {
+    font-size: 18px !important;
+  }
 }
 
-autocompleteresult.allbookmarks > .autocomplete-item-label {
-  font-size: 24px !important;
+#awesome-header > toolbarbutton:last-child {
+  border-right-width: 0;
 }
 
-autocompleteresult.allbookmarks > .autocomplete-item-label > image {
-  width: 44px;
-  height: 30px;
-  margin-top: 0;
-  margin-bottom: 0;
-  -moz-margin-end: 12px;
-  -moz-margin-start: 0;
-  list-style-image: url(images/bookmarks-30.png);
+#awesome-header > toolbarbutton:hover,
+#awesome-header > toolbarbutton:hover,
+#awesome-header > toolbarbutton:hover:active,
+#awesome-header > toolbarbutton[checked="true"] {
+  border-color: #36373b !important;
+  color: white !important;
+  background: -moz-radial-gradient(#757575, #636363, #666769) !important;
 }
 
-autocompleteresult.allbookmarks > .autocomplete-item-url {
-  display: none;
+#awesome-header > toolbarbutton[checked="true"],
+#awesome-header > toolbarbutton[disabled="true"] {
+  pointer-events: none;
+}
+
+#awesome-header > toolbarbutton[disabled="true"] .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+#awesome-header > toolbarbutton[disabled="true"] .toolbarbutton-text {
+  color: #aaa;
+}
+
+#awesome-header > toolbarbutton .toolbarbutton-icon {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+#awesome-header > toolbarbutton .toolbarbutton-text {
+  text-align: left;
+}
+
+#awesome-header > toolbarbutton.choice-bookmarks {
+  list-style-image: url(chrome://browser/skin/images/bookmarks-48.png);
+}
+
+#awesome-header > toolbarbutton.choice-history {
+  list-style-image: url(chrome://browser/skin/images/history-48.png);
+}
+
+#awesome-header > toolbarbutton.choice-remotetabs {
+  list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
+}
+#awesome-header > toolbarbutton:hover:active,
+#awesome-header > toolbarbutton[checked="true"] {
+  border-color: #36373b !important;
+  color: white !important;
+  background: -moz-radial-gradient(#757575, #636363, #666769) !important;
+}
+
+#awesome-header > toolbarbutton[checked="true"],
+#awesome-header > toolbarbutton[disabled="true"] {
+  pointer-events: none;
+}
+
+#awesome-header > toolbarbutton[disabled="true"] .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+#awesome-header > toolbarbutton[disabled="true"] .toolbarbutton-text {
+  color: #aaa;
+}
+
+#awesome-header > toolbarbutton .toolbarbutton-icon {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+#awesome-header > toolbarbutton .toolbarbutton-text {
+  text-align: left;
+}
+
+#awesome-header > toolbarbutton.choice-bookmarks {
+  list-style-image: url(chrome://browser/skin/images/bookmarks-48.png);
+}
+
+#awesome-header > toolbarbutton.choice-history {
+  list-style-image: url(chrome://browser/skin/images/history-48.png);
+}
+
+#awesome-header > toolbarbutton.choice-remotetabs {
+  list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */

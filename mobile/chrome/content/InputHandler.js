@@ -1227,7 +1227,6 @@ function GestureModule(owner, browserViewContainer) {
 }
 
 GestureModule.prototype = {
-
   /**
    * Dispatch events based on the type of mouse gesture event. For now, make
    * sure to stop propagation of every gesture event so that web content cannot
@@ -1350,3 +1349,4 @@ GestureModule.prototype = {
     }
   }
 };
+
