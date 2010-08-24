@@ -2171,9 +2171,10 @@ function importDialog(aParent, aSrc, aArguments) {
 
   var dialog  = null;
 
-  // we need to insert before select-container if we want it to show correctly
-  let selectContainer = document.getElementById("select-container");
-  let parentNode = selectContainer.parentNode;
+  // we need to insert before menulist-container if we want it to show correctly
+  // for prompt.select for instance
+  let menulistContainer = document.getElementById("menulist-container");
+  let parentNode = menulistContainer.parentNode;
 
   // emit DOMWillOpenModalDialog event
   let event = document.createEvent("Events");
@@ -2185,7 +2186,7 @@ function importDialog(aParent, aSrc, aArguments) {
   let back = document.createElement("box");
   back.setAttribute("class", "modal-block");
   dialog = back.appendChild(document.importNode(doc, true));
-  parentNode.insertBefore(back, selectContainer);
+  parentNode.insertBefore(back, menulistContainer);
 
   dialog.arguments = aArguments;
   dialog.parent = aParent;

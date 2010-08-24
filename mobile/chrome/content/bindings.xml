@@ -1307,27 +1307,7 @@
             return;
 
           this.focus();
-
-          let choices = [];
-          let children = this.menupopup.children;
-          for (let i = 0; i < children.length; i++) {
-            let child = children[i];
-            choices.push({ text: child.label, selected: child.selected, optionIndex: i });
-          }
-
-          let self = this;
-          let wrapper = {
-            multiple: false,
-            choices: choices,
-            changeCallback: function() {
-              let evt = document.createEvent("XULCommandEvent");
-              evt.initCommandEvent("command", true, true, window, 0, false, false, false, false, null);
-              self.dispatchEvent(evt);
-            },
-            selectCallback: function(aIndex) { self.selectedIndex = aIndex; }
-          };
-
-          SelectHelperUI.show(wrapper);
+          MenuListHelperUI.show(this);
         ]]>
       </handler>
     </handlers>

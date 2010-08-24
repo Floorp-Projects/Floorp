@@ -1576,6 +1576,10 @@ var FormHelperUI = {
     // Listen for events where form assistant should be closed
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
     document.getElementById("browsers").addEventListener("URLChanged", this, true);
+
+    // Listen for modal dialog to show/hide the UI
+    messageManager.addMessageListener("DOMWillOpenModalDialog", this);
+    messageManager.addMessageListener("DOMModalDialogClosed", this);
   },
 
   show: function formHelperShow(aElement, aHasPrevious, aHasNext) {
@@ -1621,12 +1625,8 @@ var FormHelperUI = {
         // want to show a UI for <select /> element but not managed by
         // FormHelperUI
         let enabled = Services.prefs.getBoolPref("formhelper.enabled");
-        if (enabled) {
-          this.show(json.current, json.hasPrevious, json.hasNext);
-        }
-        else {
-          SelectHelperUI.show(json.current.list);
-        }
+        enabled ? this.show(json.current, json.hasPrevious, json.hasNext)
+                : SelectHelperUI.show(json.current.choices);
         break;
 
       case "FormAssist:Hide":
@@ -1640,6 +1640,20 @@ var FormHelperUI = {
 
       case "FormAssist:Update":
         this._zoom(null, Rect.fromRect(json.caretRect));
+        break;
+
+      case "DOMWillOpenModalDialog":
+        if (this._open && aMessage.target == Browser.selectedBrowser) {
+          this._container.style.display = "none";
+          this._container._spacer.hidden = true;
+        }
+        break;
+
+      case "DOMModalDialogClosed":
+        if (this._open && aMessage.target == Browser.selectedBrowser) {
+          this._container.style.display = "-moz-box";
+          this._container._spacer.hidden = false;
+        }
         break;
     }
   },
@@ -2022,8 +2036,7 @@ var SelectHelperUI = {
     if (isIdentical)
       return;
 
-    this._list.changeCallback ? this._list.changeCallback()
-                              : Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceChange", { });
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceChange", { });
   },
 
   handleEvent: function(aEvent) {
@@ -2041,7 +2054,6 @@ var SelectHelperUI = {
             // Select the new one and update the control
             item.selected = true;
           }
-
           this.onSelect(item.optionIndex, item.selected, !this._list.multiple);
         }
         break;
@@ -2049,11 +2061,6 @@ var SelectHelperUI = {
   },
 
   onSelect: function(aIndex, aSelected, aClearAll) {
-    if (this._list.selectCallback) {
-      this._list.selectCallback(aIndex);
-      return;
-    }
-
     let json = {
       index: aIndex,
       selected: aSelected,
@@ -2062,6 +2069,63 @@ var SelectHelperUI = {
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceSelect", json);
   }
 };
+
+var MenuListHelperUI = {
+  get _container() {
+    delete this._container;
+    return this._container = document.getElementById("menulist-container");
+  },
+
+  get _popup() {
+    delete this._popup;
+    return this._popup = document.getElementById("menulist-popup");
+  },
+
+  _currentList: null,
+  show: function mn_show(aMenulist) {
+    this._currentList = aMenulist;
+
+    let container = this._container;
+    let listbox = this._popup.firstChild;
+    while (listbox.firstChild)
+      listbox.removeChild(listbox.firstChild);
+
+    let children = this._currentList.menupopup.children;
+    for (let i = 0; i < children.length; i++) {
+      let child = children[i];
+      let item = document.createElement("richlistitem");
+      if (child.selected)
+        item.setAttribute("selected", child.selected);
+      item.setAttribute("class", "menulist-command");
+
+      let label = document.createElement("label");
+      label.setAttribute("value", child.label);
+      item.appendChild(label);
+
+      listbox.appendChild(item);
+    }
+
+    container.hidden = false;
+    BrowserUI.pushPopup(this, [this._popup]);
+  },
+
+  hide: function mn_hide() {
+    this._currentList = null;
+    this._container.hidden = true;
+    BrowserUI.popPopup();
+  },
+
+  selectByIndex: function mn_selectByIndex(aIndex) {
+    this._currentList.selectedIndex = aIndex;
+
+    // Dispatch a xul command event to the attached menulist
+    let evt = document.createEvent("XULCommandEvent");
+    evt.initCommandEvent("command", true, true, window, 0, false, false, false, false, null);
+    this._currentList.dispatchEvent(evt);
+
+    this.hide();
+  }
+}
 
 var ContextHelper = {
   popupState: null,

@@ -1507,6 +1507,47 @@ pageaction:hover:active > vbox > .pageaction-desc {
   list-style-image: url("chrome://browser/skin/images/check-30.png");
 }
 
+/* menulist popup ---------------------------------------------------------- */
+#menulist-popup {
+  border: none;
+  padding: 1px;
+  -moz-border-radius: 8px;
+}
+
+#menulist-commands {
+  border: 1px solid rgb(207,207,207);
+  -moz-border-radius: 8px;
+}
+
+.menulist-command {
+  -moz-box-align: center;
+  background-color: rgb(245,245,245);
+  min-width: 200px; /* keep the command from being too narrow */
+}
+
+.menulist-command:first-child {
+  background: -moz-linear-gradient(top, rgb(255,255,255), rgb(245,245,245));
+  -moz-border-radius: 8px 8px 0 0;
+}
+
+.menulist-command:last-child {
+  background: -moz-linear-gradient(top, rgb(245,245,245), rgb(215,215,215));
+  -moz-border-radius: 0 0 8px 8px;
+}
+
+.menulist-command:first-child:last-child {
+  -moz-border-radius: 8px;
+}
+
+.menulist-command:hover:active {
+  background: #8db8d8;
+}
+
+.menulist-command[selected="true"] {
+  pointer-events: none;
+  background: #8db8d8;
+}
+
 /* context popup ----------------------------------------------------------- */
 #context-popup {
   /* Remove some dialog-dark styles */
@@ -1544,3 +1585,4 @@ pageaction:hover:active > vbox > .pageaction-desc {
 .context-command:hover:active {
   background: #8db8d8;
 }
+
