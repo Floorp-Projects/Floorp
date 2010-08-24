@@ -263,10 +263,10 @@ public:
                            PRInt32     aNameSpaceID,
                            nsIAtom*    aAttribute,
                            PRInt32     aModType);
-  void AttributeChanged(nsIContent* aContent,
-                        PRInt32     aNameSpaceID,
-                        nsIAtom*    aAttribute,
-                        PRInt32     aModType);
+  void AttributeChanged(Element* aElement,
+                        PRInt32  aNameSpaceID,
+                        nsIAtom* aAttribute,
+                        PRInt32  aModType);
 
   void BeginUpdate();
   void EndUpdate();
