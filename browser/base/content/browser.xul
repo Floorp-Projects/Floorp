@@ -1115,6 +1115,9 @@
 
     <toolbarpalette id="BrowserToolbarPalette">
 
+# Update primaryToolbarButtons in browser/themes/browserShared.inc when adding
+# or removing default items with the toolbarbutton-1 class.
+
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>

@@ -48,6 +48,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+%include ../../browserShared.inc
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -481,22 +483,23 @@ menuitem:not([type]) {
 }
 
 /* Primary toolbar buttons */
-.toolbarbutton-1 {
+.toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon {
-  -moz-margin-end: 0px;
+  -moz-margin-end: 0;
 }
 
-toolbar[mode="full"] .toolbarbutton-1,
-toolbar[mode="full"] .toolbarbutton-menubutton-button {
+toolbar[mode="full"] .toolbarbutton-1:not([type="menu-button"]),
+toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
-.toolbarbutton-1, .toolbarbutton-menubutton-button {
+.toolbarbutton-1:not([type="menu-button"]),
+.toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 5px;
 }
 
@@ -629,7 +632,7 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 }
 
 /* 16px primary toolbar buttons */
-toolbar[iconsize="small"] .toolbarbutton-1 {
+toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");

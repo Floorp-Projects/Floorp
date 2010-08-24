@@ -240,7 +240,7 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
                 responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
       // We weren't seeking and got a valid response status,
       // set the length of the content.
-      PRInt32 cl = -1;
+      PRInt64 cl = -1;
       hc->GetContentLength(&cl);
       if (cl >= 0) {
         mCacheStream.NotifyDataLength(cl);
