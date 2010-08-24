@@ -3383,13 +3383,13 @@ cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
     }
     /** Get the backbuffer surface from the swap chain */
     hr = newSurf->dxgiChain->GetBuffer(0,
-	                               IID_PPV_ARGS(&newSurf->backBuf));
+	                               IID_PPV_ARGS(&newSurf->surface));
 
     if (FAILED(hr)) {
 	goto FAIL_HWND;
     }
 
-    newSurf->backBuf->QueryInterface(&newSurf->surface);
+    newSurf->surface->QueryInterface(&newSurf->backBuf);
 
     size.width = sizePixels.width * dpiX;
     size.height = sizePixels.height * dpiY;
