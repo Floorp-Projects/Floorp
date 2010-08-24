@@ -2201,6 +2201,17 @@ var AlertsHelper = {
   _listener: null,
   _cookie: "",
   _clickable: false,
+  _container: null,
+  get container() {
+    if (!this._container) {
+      this._container = document.getElementById("alerts-container");
+      let self = this;
+      this._container.addEventListener("transitionend", function() {
+        self.alertTransitionOver();
+      }, true);
+    }
+    return this._container;
+  },
 
   showAlertNotification: function ah_show(aImageURL, aTitle, aText, aTextClickable, aCookie, aListener) {
     this._clickable = aTextClickable || false;
@@ -2210,28 +2221,33 @@ var AlertsHelper = {
     document.getElementById("alerts-image").setAttribute("src", aImageURL);
     document.getElementById("alerts-title").value = aTitle;
     document.getElementById("alerts-text").textContent = aText;
-
-    let container = document.getElementById("alerts-container");
+    
+    let container = this.container;
     container.hidden = false;
-
-    let rect = container.getBoundingClientRect();
-    container.top = window.innerHeight - (rect.height + 20);
-    container.left = window.innerWidth - (rect.width + 20);
+    container.height = container.getBoundingClientRect().height;
+    container.classList.add("showing");
 
     let timeout = Services.prefs.getIntPref("alerts.totalOpenTime");
     let self = this;
+    if (this._timeoutID)
+      clearTimeout(this._timeoutID);
     this._timeoutID = setTimeout(function() { self._timeoutAlert(); }, timeout);
   },
-
+    
   _timeoutAlert: function ah__timeoutAlert() {
     this._timeoutID = -1;
-    let container = document.getElementById("alerts-container");
-    container.hidden = true;
-
+    
+    this.container.classList.remove("showing");
     if (this._listener)
       this._listener.observe(null, "alertfinished", this._cookie);
-
-    // TODO: add slide to UI
+  },
+  
+  alertTransitionOver: function ah_alertTransitionOver() {
+    let container = this.container;
+    if (!container.classList.contains("showing")) {
+      container.height = 0;
+      container.hidden = true;
+    }
   },
 
   click: function ah_click(aEvent) {
