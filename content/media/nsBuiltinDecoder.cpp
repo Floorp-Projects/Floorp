@@ -329,6 +329,7 @@ void nsBuiltinDecoder::MetadataLoaded()
 
   // Only inform the element of FirstFrameLoaded if not doing a load() in order
   // to fulfill a seek, otherwise we'll get multiple loadedfirstframe events.
+  MonitorAutoEnter mon(mMonitor);
   PRBool resourceIsLoaded = !mResourceLoaded && mStream &&
     mStream->IsDataCachedToEndOfStream(mDecoderPosition);
   if (mElement && notifyElement) {
@@ -339,7 +340,6 @@ void nsBuiltinDecoder::MetadataLoaded()
   // before reaching here, so only change the
   // state if we're still set to the original
   // loading state.
-  MonitorAutoEnter mon(mMonitor);
   if (mPlayState == PLAY_STATE_LOADING) {
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);

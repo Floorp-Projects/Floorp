@@ -237,7 +237,7 @@ Tester.prototype = {
             setTimeout(arguments.callee, TIMEOUT_SECONDS * 1000);
           return;
         }
-        self.currentTest.addResult(new testResult(false, "Timed out", "", false));
+        self.currentTest.addResult(new testResult(false, "Test timed out", "", false));
         self.currentTest.timedOut = true;
         self.currentTest.scope.__waitTimer = null;
         self.nextTest();

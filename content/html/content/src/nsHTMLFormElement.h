@@ -330,6 +330,17 @@ protected:
    */
   nsresult GetActionURL(nsIURI** aActionURL, nsIContent* aOriginatingElement);
 
+  /**
+   * Check the form validity following this algorithm:
+   * http://www.whatwg.org/specs/web-apps/current-work/#statically-validate-the-constraints
+   *
+   * TODO: add a [out] parameter to have the list of unhandled invalid controls
+   *       but not needed until we have a UI to test it.
+   *
+   * @return Whether the form is currently valid.
+   */
+  PRBool CheckFormValidity() const;
+
 public:
   /**
    * Flush a possible pending submission. If there was a scripted submission

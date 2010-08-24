@@ -37,46 +37,52 @@ var methodTestData = [
   [ "delete", "put" ],
 ];
 
-var form = document.createElement('form');
-
-function checkAttribute(form, name, data)
+function checkAttribute(form, attrName, idlName, data)
 {
-  is(form.getAttribute(name), undefined,
-     "By default " + name + " content attribute should be undefined");
-  is(form[name], data[0][0],
-     "By default " + name + " IDL attribute should be equal to " +
+  is(form.getAttribute(attrName), null,
+     "By default " + attrName + " content attribute should be null");
+  is(form[idlName], data[0][0],
+     "By default " + idlName + " IDL attribute should be equal to " +
      data[0][0]);
 
   // Valid values.
   for (i in data[1]) {
-    form.setAttribute(name, data[1][i]);
-    is(form.getAttribute(name), data[1][i],
+    form.setAttribute(attrName, data[1][i]);
+    is(form.getAttribute(attrName), data[1][i],
        "getAttribute should return the content attribute");
-    is(form[name], data[1][i], "When getting, " + name + " IDL attribute " +
+    is(form[idlName], data[1][i], "When getting, " + idlName + " IDL attribute " +
        "should be equal to the content attribute if the value is known");
   }
 
   // Invalid values.
   for (i in data[2]) {
-    form.setAttribute(name, data[2][i]);
-    is(form.getAttribute(name), data[2][i],
+    form.setAttribute(attrName, data[2][i]);
+    is(form.getAttribute(attrName), data[2][i],
        "getAttribute should return the content attribute");
-    is(form[name], data[0][0], "When getting, " + name + " IDL attribute " +
+    is(form[idlName], data[0][0], "When getting, " + idlName + " IDL attribute " +
        "should return the default value if the content attribute value isn't known");
   }
 
   // TODO values.
   for (i in data[3]) {
-    form.setAttribute(name, data[3][i]);
-    is(form.getAttribute(name), data[3][i],
+    form.setAttribute(attrName, data[3][i]);
+    is(form.getAttribute(attrName), data[3][i],
        "getAttribute should return the content attribute");
-    todo_is(form[name], data[3][i], "When getting, " + name + " IDL attribute " +
+    todo_is(form[idlName], data[3][i], "When getting, " + idlName + " IDL attribute " +
        "should be equal to the content attribute if the value is known");
   }
 }
 
-checkAttribute(form, 'enctype', enctypeTestData);
-checkAttribute(form, 'method', methodTestData);
+var form = document.createElement('form');
+var input = document.createElement('input');
+var button = document.createElement('button');
+
+checkAttribute(form, 'enctype', 'enctype', enctypeTestData);
+checkAttribute(form, 'method', 'method', methodTestData);
+checkAttribute(input, 'formenctype', 'formEnctype', enctypeTestData);
+checkAttribute(input, 'formmethod', 'formMethod', methodTestData);
+checkAttribute(button, 'formenctype', 'formEnctype', enctypeTestData);
+checkAttribute(button, 'formmethod', 'formMethod', methodTestData);
 
 </script>
 </pre>

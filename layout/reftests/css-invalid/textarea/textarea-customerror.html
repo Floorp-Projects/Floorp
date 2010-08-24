@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if textarea has a custom error, it should be affected by :invalid
+             pseudo-class. -->
+  <style>
+    textarea { background-color: red; }
+    textarea:invalid { background-color: green; }
+  </style>
+  <body onload="document.getElementById('t').setCustomValidity('foo'); document.documentElement.className='';">
+    <textarea id='t'></textarea>
+  </body>
+</html>
