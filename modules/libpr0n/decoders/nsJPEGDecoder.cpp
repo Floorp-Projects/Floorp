@@ -674,9 +674,7 @@ nsJPEGDecoder::OutputScanlines(PRBool* suspend)
 
   if (top != mInfo.output_scanline) {
       nsIntRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
-      rv = mImage->FrameUpdated(0, r);
-      if (mObserver)
-        mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
+      PostInvalidation(r);
   }
 
   return rv;
