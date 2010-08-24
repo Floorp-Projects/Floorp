@@ -477,8 +477,9 @@ public:
    *        a connected subtree with the node, the current form will be
    *        returned.  This is needed to handle cases when HTML elements have a
    *        current form that they're not descendants of.
+   * @note This method should not be called if the element has a form attribute.
    */
-  nsHTMLFormElement* FindForm(nsHTMLFormElement* aCurrentForm = nsnull);
+  nsHTMLFormElement* FindAncestorForm(nsHTMLFormElement* aCurrentForm = nsnull);
 
   virtual void RecompileScriptEventListeners();
 
@@ -865,6 +866,37 @@ protected:
   void UpdateEditableFormControlState();
 
   PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
+
+  /**
+   * This method will update the form owner, using @form or looking to a parent.
+   *
+   * @param aBindToTree Whether the element is being attached to the tree.
+   * @param aFormIdElement The element associated with the id in @form. If
+   * aBindToTree is false, aFormIdElement *must* contain the element associated
+   * with the id in @form. Otherwise, it *must* be null.
+   */
+  void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement);
+
+  /**
+   * Add a form id observer which will observe when the element with the id in
+   * @form will change.
+   *
+   * @return The element associated with the current id in @form (may be null).
+   */
+  Element* AddFormIdObserver();
+
+  /**
+   * Remove the form id observer.
+   */
+  void RemoveFormIdObserver();
+
+  /**
+   * This method is a a callback for IDTargetObserver (from nsIDocument).
+   * It will be called each time the element associated with the id in @form
+   * changes.
+   */
+  static PRBool FormIdUpdated(Element* aOldElement, Element* aNewElement,
+                              void* aData);
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
