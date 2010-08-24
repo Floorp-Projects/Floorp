@@ -955,17 +955,75 @@ namespace nanojit
                 switch (op) {
                 case LIR_addxovi:
                 case LIR_addjovi:
-                    SLT(AT, rr, ra);
+                    // add with overflow result into $at
+                    // overflow is indicated by ((sign(rr)^sign(ra)) & (sign(rr)^sign(rhsc))
+
+                    // [move $t,$ra]            if (rr==ra)
+                    // addiu $rr,$ra,rhsc
+                    // [xor  $at,$rr,$ra]       if (rr!=ra)
+                    // [xor  $at,$rr,$t]        if (rr==ra)
+                    // [not  $t,$rr]            if (rhsc < 0)
+                    // [and  $at,$at,$t]        if (rhsc < 0)
+                    // [and  $at,$at,$rr]       if (rhsc >= 0)
+                    // srl   $at,$at,31
+
+                    t = registerAllocTmp(allow);
+                    SRL(AT, AT, 31);
+                    if (rhsc < 0) {
+                        AND(AT, AT, t);
+                        NOT(t, rr);
+                    }
+                    else
+                        AND(AT, AT, rr);
+                    if (rr == ra)
+                        XOR(AT, rr, t);
+                    else
+                        XOR(AT, rr, ra);
                     ADDIU(rr, ra, rhsc);
+                    if (rr == ra)
+                        MOVE(t, ra);
                     goto done;
                 case LIR_addi:
                     ADDIU(rr, ra, rhsc);
                     goto done;
                 case LIR_subxovi:
                 case LIR_subjovi:
+                    // subtract with overflow result into $at
+                    // overflow is indicated by (sign(ra)^sign(rhsc)) & (sign(rr)^sign(ra))
+
+                    // [move $t,$ra]            if (rr==ra)
+                    // addiu $rr,$ra,-rhsc
+                    // [xor  $at,$rr,$ra]       if (rr!=ra)
+                    // [xor  $at,$rr,$t]        if (rr==ra)
+                    // [and  $at,$at,$ra]       if (rhsc >= 0 && rr!=ra)
+                    // [and  $at,$at,$t]        if (rhsc >= 0 && rr==ra)
+                    // [not  $t,$ra]            if (rhsc < 0 && rr!=ra)
+                    // [not  $t,$t]             if (rhsc < 0 && rr==ra)
+                    // [and  $at,$at,$t]        if (rhsc < 0)
+                    // srl   $at,$at,31
                     if (isS16(-rhsc)) {
-                        SLT(AT, ra, rr);
+                        t = registerAllocTmp(allow);
+                        SRL(AT,AT,31);
+                        if (rhsc < 0) {
+                            AND(AT, AT, t);
+                            if (rr == ra)
+                                NOT(t, t);
+                            else
+                                NOT(t, ra);
+                        }
+                        else {
+                            if (rr == ra)
+                                AND(AT, AT, t);
+                            else
+                                AND(AT, AT, ra);
+                        }
+                        if (rr == ra)
+                            XOR(AT, rr, t);
+                        else
+                            XOR(AT, rr, ra);
                         ADDIU(rr, ra, -rhsc);
+                        if (rr == ra)
+                            MOVE(t, ra);
                         goto done;
                     }
                     break;
@@ -1025,11 +1083,44 @@ namespace nanojit
         NanoAssert(deprecated_isKnownReg(rb));
         allow &= ~rmask(rb);
 
+        // The register allocator will have set up one of these 4 cases
+        // rr==ra && ra==rb              r0 = r0 op r0
+        // rr==ra && ra!=rb              r0 = r0 op r1
+        // rr!=ra && ra==rb              r0 = r1 op r1
+        // rr!=ra && ra!=rb && rr!=rb    r0 = r1 op r2
+        NanoAssert(ra == rb || rr != rb);
+
         switch (op) {
             case LIR_addxovi:
             case LIR_addjovi:
-                SLT(AT, rr, ra);
+                // add with overflow result into $at
+                // overflow is indicated by (sign(rr)^sign(ra)) & (sign(rr)^sign(rb))
+
+                // [move $t,$ra]        if (rr==ra)
+                // addu  $rr,$ra,$rb
+                // ; Generate sign($rr)^sign($ra)
+                // [xor  $at,$rr,$t]    sign($at)=sign($rr)^sign($t) if (rr==ra)
+                // [xor  $at,$rr,$ra]   sign($at)=sign($rr)^sign($ra) if (rr!=ra)
+                // ; Generate sign($rr)^sign($rb) if $ra!=$rb
+                // [xor  $t,$rr,$rb]    if (ra!=rb)
+                // [and  $at,$t]        if (ra!=rb)
+                // srl   $at,31
+
+                t = ZERO;
+                if (rr == ra || ra != rb)
+                    t = registerAllocTmp(allow);
+                SRL(AT, AT, 31);
+                if (ra != rb) {
+                    AND(AT, AT, t);
+                    XOR(t, rr, rb);
+                }
+                if (rr == ra)
+                    XOR(AT, rr, t);
+                else
+                    XOR(AT, rr, ra);
                 ADDU(rr, ra, rb);
+                if (rr == ra)
+                    MOVE(t, ra);
                 break;
             case LIR_addi:
                 ADDU(rr, ra, rb);
@@ -1045,8 +1136,37 @@ namespace nanojit
                 break;
             case LIR_subxovi:
             case LIR_subjovi:
-                SLT(AT,ra,rr);
-                SUBU(rr, ra, rb);
+                // subtract with overflow result into $at
+                // overflow is indicated by (sign(ra)^sign(rb)) & (sign(rr)^sign(ra))
+
+                // [move $t,$ra]        if (rr==ra)
+                // ; Generate sign($at)=sign($ra)^sign($rb)
+                // xor   $at,$ra,$rb
+                // subu  $rr,$ra,$rb
+                // ; Generate sign($t)=sign($rr)^sign($ra)
+                // [xor  $t,$rr,$ra]    if (rr!=ra)
+                // [xor  $t,$rr,$t]     if (rr==ra)
+                // and   $at,$at,$t
+                // srl   $at,$at,31
+                
+                if (ra == rb) {
+                    // special case for (ra == rb) which can't overflow
+                    MOVE(AT, ZERO);
+                    SUBU(rr, ra, rb);
+                }
+                else {
+                    t = registerAllocTmp(allow);
+                    SRL(AT, AT, 31);
+                    AND(AT, AT, t);
+                    if (rr == ra)
+                        XOR(t, rr, t);
+                    else
+                        XOR(t, rr, ra);
+                    SUBU(rr, ra, rb);
+                    XOR(AT, ra, rb);
+                    if (rr == ra)
+                        MOVE(t, ra);
+                }
                 break;
             case LIR_subi:
                 SUBU(rr, ra, rb);
