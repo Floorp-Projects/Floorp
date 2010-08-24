@@ -102,8 +102,9 @@ class nsDisplayRemote : public nsDisplayItem
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
 
 public:
-  nsDisplayRemote(nsIFrame* aFrame, RenderFrameParent* aRemoteFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                  RenderFrameParent* aRemoteFrame)
+    : nsDisplayItem(aBuilder, aFrame)
     , mRemoteFrame(aRemoteFrame)
   {}
 
