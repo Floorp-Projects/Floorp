@@ -496,7 +496,7 @@ nsresult HeapDump(UINT msg, WPARAM wParam, LPARAM lParam)
 void DDError(const char *msg, HRESULT hr)
 {
   /*XXX make nicer */
-  fprintf(stderr, "direct draw error %s: 0x%08x\n", msg, hr);
+  fprintf(stderr, "direct draw error %s: 0x%08lx\n", msg, hr);
 }
 #endif
 

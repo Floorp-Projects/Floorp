@@ -67,7 +67,6 @@ CSRCS		= \
 		$(NULL)
 
 # These files enable support for reading PNGs
-ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
 CSRCS		+= \
 		pngpread.c \
 		pngread.c \
@@ -77,7 +76,6 @@ CSRCS		+= \
 		$(NULL)
 
 DEFINES		+= -DMOZ_PNG_READ
-endif
 
 # These files enable support for writing PNGs
 ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))

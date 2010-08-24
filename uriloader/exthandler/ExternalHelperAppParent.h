@@ -39,6 +39,7 @@
 #include "mozilla/dom/PExternalHelperAppParent.h"
 #include "nsIChannel.h"
 #include "nsICancelable.h"
+#include "nsIResumableChannel.h"
 #include "nsHashPropertyBag.h"
 
 namespace IPC {
@@ -53,13 +54,15 @@ class TabParent;
 class ExternalHelperAppParent : public PExternalHelperAppParent
                               , public nsHashPropertyBag
                               , public nsIChannel
+                              , public nsIResumableChannel
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
+    NS_DECL_NSIRESUMABLECHANNEL
 
-    bool RecvOnStartRequest();
+    bool RecvOnStartRequest(const nsCString& entityID);
     bool RecvOnDataAvailable(const nsCString& data, const PRUint32& offset, const PRUint32& count);
     bool RecvOnStopRequest(const nsresult& code);
     
@@ -76,6 +79,7 @@ private:
   nsLoadFlags mLoadFlags;
   nsresult mStatus;
   PRInt64 mContentLength;
+  nsCString mEntityID;
 };
 
 } // namespace dom

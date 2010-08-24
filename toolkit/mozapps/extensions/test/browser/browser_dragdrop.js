@@ -111,7 +111,7 @@ add_test(function() {
     test_confirmation(aWindow, [url]);
   }, run_next_test);
 
-  var viewContainer = gManagerWindow.document.getElementById("view-container");
+  var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
                [[{type: "text/x-moz-url", data: url}]],
                "copy", gManagerWindow);
@@ -126,7 +126,7 @@ add_test(function() {
     test_confirmation(aWindow, [fileurl.spec]);
   }, run_next_test);
 
-  var viewContainer = gManagerWindow.document.getElementById("view-container");
+  var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
                [[{type: "application/x-moz-file", data: fileurl.file}]],
                "copy", gManagerWindow);
@@ -142,7 +142,7 @@ add_test(function() {
     test_confirmation(aWindow, [url1, url2]);
   }, run_next_test);
 
-  var viewContainer = gManagerWindow.document.getElementById("view-container");
+  var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
                [[{type: "text/x-moz-url", data: url1}],
                 [{type: "text/x-moz-url", data: url2}]],
@@ -159,7 +159,7 @@ add_test(function() {
     test_confirmation(aWindow, [fileurl1.spec, fileurl2.spec]);
   }, run_next_test);
 
-  var viewContainer = gManagerWindow.document.getElementById("view-container");
+  var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
                [[{type: "application/x-moz-file", data: fileurl1.file}],
                 [{type: "application/x-moz-file", data: fileurl2.file}]],
@@ -176,7 +176,7 @@ add_test(function() {
     test_confirmation(aWindow, [url, fileurl.spec]);
   }, run_next_test);
 
-  var viewContainer = gManagerWindow.document.getElementById("view-container");
+  var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
                [[{type: "text/x-moz-url", data: url}],
                 [{type: "application/x-moz-file", data: fileurl.file}]],

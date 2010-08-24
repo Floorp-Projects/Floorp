@@ -297,7 +297,7 @@ DOMCI_NODE_DATA(HTMLInputElement, nsHTMLInputElement)
 
 // QueryInterface implementation for nsHTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE8(nsHTMLInputElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE9(nsHTMLInputElement,
                                    nsIDOMHTMLInputElement,
                                    nsITextControlElement,
                                    nsIFileControlElement,
@@ -305,13 +305,14 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
                                    imgIDecoderObserver,
                                    nsIImageLoadingContent,
                                    imgIContainerObserver,
-                                   nsIDOMNSEditableElement)
+                                   nsIDOMNSEditableElement,
+                                   nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLInputElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLInputElement)
 
-// nsConstraintValidation
-NS_IMPL_NSCONSTRAINTVALIDATION(nsHTMLInputElement)
+// nsIConstraintValidation
+NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLInputElement)
 
 // nsIDOMNode
 
@@ -387,7 +388,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
          (aName == nsGkAtoms::type && !mForm)) &&
         mType == NS_FORM_INPUT_RADIO &&
         (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
-      WillRemoveFromRadioGroup();
+      WillRemoveFromRadioGroup(aNotify);
     } else if (aNotify && aName == nsGkAtoms::src &&
                mType == NS_FORM_INPUT_IMAGE) {
       if (aValue) {
@@ -410,6 +411,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue,
                                  PRBool aNotify)
 {
+  // States changes that have to be passed to ContentStatesChanged().
+  PRInt32 states = 0;
+
   if (aNameSpaceID == kNameSpaceID_None) {
     //
     // When name or type changes, radio should be added to radio group.
@@ -449,13 +453,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (aName == nsGkAtoms::type) {
-      // Changing type means notifying on state changes.  Just start a batch
-      // now.
-      nsIDocument* document = GetCurrentDoc();
-      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
-
-      UpdateEditableState();
-
       if (!aValue) {
         // We're now a text input.  Note that we have to handle this manually,
         // since removing an attribute (which is what happened, since aValue is
@@ -492,41 +489,53 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         }
       }
 
-      if (aNotify && document) {
-        // Changing type affects the applicability of some states.  Just notify
-        // on them all now, just in case.  Note that we can't rely on the
-        // notifications LoadImage or CancelImageRequests might have sent,
-        // because those didn't include all the possibly-changed states in the
-        // mask.  We have to do this here because we just updated mType, so the
-        // code in nsGenericElement::SetAttrAndNotify didn't see the new
-        // states.
-        document->ContentStatesChanged(this, nsnull,
-                                       NS_EVENT_STATE_CHECKED |
-                                       NS_EVENT_STATE_DEFAULT |
-                                       NS_EVENT_STATE_BROKEN |
-                                       NS_EVENT_STATE_USERDISABLED |
-                                       NS_EVENT_STATE_SUPPRESSED |
-                                       NS_EVENT_STATE_LOADING |
-                                       NS_EVENT_STATE_INDETERMINATE |
-                                       NS_EVENT_STATE_MOZ_READONLY |
-                                       NS_EVENT_STATE_MOZ_READWRITE |
-                                       NS_EVENT_STATE_REQUIRED |
-                                       NS_EVENT_STATE_OPTIONAL);
-      }
+      // Changing type affects the applicability of some states.  Just notify
+      // on them all now, just in case.  Note that we can't rely on the
+      // notifications LoadImage or CancelImageRequests might have sent, because
+      // those didn't include all the possibly-changed states in the mask. We
+      // have to do this here because we just updated mType, so the code in
+      // nsGenericElement::SetAttrAndNotify didn't see the new states.
+      states |= NS_EVENT_STATE_CHECKED |
+                NS_EVENT_STATE_DEFAULT |
+                NS_EVENT_STATE_BROKEN |
+                NS_EVENT_STATE_USERDISABLED |
+                NS_EVENT_STATE_SUPPRESSED |
+                NS_EVENT_STATE_LOADING |
+                NS_EVENT_STATE_MOZ_READONLY |
+                NS_EVENT_STATE_MOZ_READWRITE |
+                NS_EVENT_STATE_REQUIRED |
+                NS_EVENT_STATE_OPTIONAL |
+                NS_EVENT_STATE_VALID |
+                NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_INDETERMINATE;
     }
 
-    // If readonly is changed for single line text controls, we need to handle
-    // :read-only / :read-write
-    if (aNotify && aName == nsGkAtoms::readonly &&
-        IsSingleLineTextControl(PR_FALSE)) {
-      UpdateEditableState();
+    if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
+        aName == nsGkAtoms::readonly) {
+      UpdateValueMissingValidityState();
+      states |= NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL |
+                NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+    } else if (aName == nsGkAtoms::maxlength) {
+      UpdateTooLongValidityState();
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+    } else if (aName == nsGkAtoms::pattern) {
+      UpdatePatternMismatchValidityState();
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+    }
 
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        document->ContentStatesChanged(this, nsnull,
-                                       NS_EVENT_STATE_MOZ_READONLY |
-                                       NS_EVENT_STATE_MOZ_READWRITE);
+    if (aNotify) {
+      nsIDocument* doc = GetCurrentDoc();
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+
+      if (aName == nsGkAtoms::type) {
+        UpdateEditableState();
+      } else if (IsSingleLineTextControl(PR_FALSE) && aName == nsGkAtoms::readonly) {
+        UpdateEditableState();
+        states |= NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_MOZ_READWRITE;
+      }
+
+      if (doc && states) {
+        doc->ContentStatesChanged(this, nsnull, states);
       }
     }
   }
@@ -892,8 +901,9 @@ nsHTMLInputElement::SetFileNames(const nsTArray<nsString>& aFileNames)
   }
 
   UpdateFileList();
-  
+
   SetValueChanged(PR_TRUE);
+  UpdateAllValidityStates(PR_TRUE);
 }
 
 void
@@ -1086,7 +1096,6 @@ nsHTMLInputElement::DoSetChecked(PRBool aChecked, PRBool aNotify,
     if (aChecked) {
       rv = RadioSetChecked(aNotify);
     } else {
-      rv = SetCheckedInternal(PR_FALSE, aNotify);
       nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
       if (container) {
         nsAutoString name;
@@ -1094,9 +1103,13 @@ nsHTMLInputElement::DoSetChecked(PRBool aChecked, PRBool aNotify,
           container->SetCurrentRadioButton(name, nsnull);
         }
       }
+      // SetCheckedInternal is going to ask all radios to update their
+      // validity state. We have to be sure the radio group container knows
+      // the currently selected radio.
+      SetCheckedInternal(PR_FALSE, aNotify);
     }
   } else {
-    rv = SetCheckedInternal(aChecked, aNotify);
+    SetCheckedInternal(aChecked, aNotify);
   }
 
   return rv;
@@ -1118,25 +1131,24 @@ nsHTMLInputElement::RadioSetChecked(PRBool aNotify)
   if (currentlySelected) {
     // Pass PR_TRUE for the aNotify parameter since the currently selected
     // button is already in the document.
-    rv = static_cast<nsHTMLInputElement*>
-                    (static_cast<nsIDOMHTMLInputElement*>(currentlySelected))->SetCheckedInternal(PR_FALSE, PR_TRUE);
-  }
-
-  //
-  // Actually select this one
-  //
-  if (NS_SUCCEEDED(rv)) {
-    rv = SetCheckedInternal(PR_TRUE, aNotify);
+    static_cast<nsHTMLInputElement*>
+               (static_cast<nsIDOMHTMLInputElement*>(currentlySelected))->SetCheckedInternal(PR_FALSE, PR_TRUE);
   }
 
   //
   // Let the group know that we are now the One True Radio Button
   //
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   nsAutoString name;
   if (container && GetNameIfExists(name)) {
     rv = container->SetCurrentRadioButton(name, this);
+  }
+
+  // SetCheckedInternal is going to ask all radios to update their
+  // validity state. We have to be sure the radio group container knows
+  // the currently selected radio.
+  if (NS_SUCCEEDED(rv)) {
+    SetCheckedInternal(PR_TRUE, aNotify);
   }
 
   return rv;
@@ -1211,7 +1223,7 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-nsresult
+void
 nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
 {
   //
@@ -1239,7 +1251,16 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
     }
   }
 
-  return NS_OK;
+  if (mType == NS_FORM_INPUT_CHECKBOX) {
+    UpdateAllValidityStates(aNotify);
+  }
+
+  if (mType == NS_FORM_INPUT_RADIO) {
+    // OnValueChanged is going to be called for all radios in the radio group.
+    nsCOMPtr<nsIRadioVisitor> visitor =
+      NS_GetRadioUpdateValueMissingVisitor(aNotify);
+    VisitGroup(visitor, aNotify);
+  }
 }
 
 
@@ -2022,6 +2043,10 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     AddedToRadioGroup();
   }
 
+  // An element can't suffer from value missing if it is not in a document.
+  // We have to check if we suffer from that as we are now in a document.
+  UpdateValueMissingValidityState();
+
   return rv;
 }
 
@@ -2034,10 +2059,14 @@ nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   // of the case where we're removing from the document and we don't
   // have a form
   if (!mForm && mType == NS_FORM_INPUT_RADIO) {
-    WillRemoveFromRadioGroup();
+    WillRemoveFromRadioGroup(PR_FALSE);
   }
 
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
+
+  // GetCurrentDoc is returning nsnull so we can update the value
+  // missing validity state to reflect we are no longer into a doc.
+  UpdateValueMissingValidityState();
 }
 
 void
@@ -2068,6 +2097,9 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
     // SetValueInternal is going to sanitize the value.
     SetValueInternal(value, PR_FALSE, PR_FALSE);
   }
+
+  // Do not notify, it will be done after if needed.
+  UpdateAllValidityStates(PR_FALSE);
 }
 
 void
@@ -2760,6 +2792,10 @@ nsHTMLInputElement::IntrinsicState() const
     state |= NS_EVENT_STATE_OPTIONAL;
   }
 
+  if (IsCandidateForConstraintValidation()) {
+    state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
+  }
+
   return state;
 }
 
@@ -2875,7 +2911,7 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
 }
 
 void
-nsHTMLInputElement::WillRemoveFromRadioGroup()
+nsHTMLInputElement::WillRemoveFromRadioGroup(PRBool aNotify)
 {
   //
   // If the input element is not in a form and
@@ -2904,6 +2940,12 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
     if (container) {
       container->SetCurrentRadioButton(name, nsnull);
     }
+
+    // Removing a checked radio from the group can change the validity state.
+    // Let's ask other radio to update their value missing validity state.
+    nsCOMPtr<nsIRadioVisitor> visitor =
+      NS_GetRadioUpdateValueMissingVisitor(aNotify);
+    VisitGroup(visitor, PR_FALSE);
   }
   
   //
@@ -3136,7 +3178,21 @@ nsHTMLInputElement::DoesPatternApply() const
   return IsSingleLineTextControl(PR_FALSE);
 }
 
-// nsConstraintValidation
+// nsIConstraintValidation
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetCustomValidity(const nsAString& aError)
+{
+  nsIConstraintValidation::SetCustomValidity(aError);
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
+                                            NS_EVENT_STATE_VALID);
+  }
+
+  return NS_OK;
+}
 
 PRBool
 nsHTMLInputElement::IsTooLong()
@@ -3151,7 +3207,7 @@ nsHTMLInputElement::IsTooLong()
   GetMaxLength(&maxLength);
   GetTextLength(&textLength);
 
-  return (maxLength >= 0) && (textLength > maxLength);
+  return maxLength >= 0 && textLength > maxLength;
 }
 
 PRBool
@@ -3168,52 +3224,49 @@ nsHTMLInputElement::IsValueMissing()
     }
 
     nsAutoString value;
-    nsresult rv = GetValue(value);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
 
     return value.IsEmpty();
   }
 
-  if (mType == NS_FORM_INPUT_CHECKBOX) {
-    return !GetChecked();
+  switch (mType)
+  {
+    case NS_FORM_INPUT_CHECKBOX:
+      return !GetChecked();
+    case NS_FORM_INPUT_RADIO:
+      {
+        nsCOMPtr<nsIDOMHTMLInputElement> selected = GetSelectedRadioButton();
+        return !selected;
+      }
+    case NS_FORM_INPUT_FILE:
+      {
+        nsCOMArray<nsIFile> files;
+        GetFileArray(files);
+        return !files.Count();
+      }
+    default:
+      return PR_FALSE;
   }
-
-  if (mType == NS_FORM_INPUT_RADIO) {
-    nsCOMPtr<nsIDOMHTMLInputElement> selected = GetSelectedRadioButton();
-    return !selected;
-  }
-
-  if (mType == NS_FORM_INPUT_FILE) {
-    nsCOMArray<nsIFile> files;
-    GetFileArray(files);
-    return !files.Count();
-  }
-
-  return PR_FALSE;
 }
 
 PRBool
 nsHTMLInputElement::HasTypeMismatch()
 {
+  if (mType != NS_FORM_INPUT_EMAIL && mType != NS_FORM_INPUT_URL) {
+    return PR_FALSE;
+  }
+
+  nsAutoString value;
+  NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
+
+  if (value.IsEmpty()) {
+    return PR_FALSE;
+  }
+
   if (mType == NS_FORM_INPUT_EMAIL) {
-    nsAutoString value;
-    NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
-
-    if (value.IsEmpty()) {
-      return PR_FALSE;
-    }
-
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
-           !IsValidEmailAddressList(value) :
-           !IsValidEmailAddress(value);
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)
+             ? !IsValidEmailAddressList(value) : !IsValidEmailAddress(value);
   } else if (mType == NS_FORM_INPUT_URL) {
-    nsAutoString value;
-    NS_ENSURE_SUCCESS(GetValue(value), PR_FALSE);
-
-    if (value.IsEmpty()) {
-      return PR_FALSE;
-    }
-
     /**
      * TODO:
      * The URL is not checked as the HTML5 specifications want it to be because
@@ -3239,8 +3292,8 @@ PRBool
 nsHTMLInputElement::HasPatternMismatch()
 {
   nsAutoString pattern;
-  if (!DoesPatternApply() || !GetAttr(kNameSpaceID_None, nsGkAtoms::pattern,
-                                      pattern)) {
+  if (!DoesPatternApply() ||
+      !GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern)) {
     return PR_FALSE;
   }
 
@@ -3259,8 +3312,49 @@ nsHTMLInputElement::HasPatternMismatch()
   return !IsPatternMatching(value, pattern, doc);
 }
 
+void
+nsHTMLInputElement::UpdateTooLongValidityState()
+{
+  SetValidityState(VALIDITY_STATE_TOO_LONG, IsTooLong());
+}
+
+void
+nsHTMLInputElement::UpdateValueMissingValidityState()
+{
+  SetValidityState(VALIDITY_STATE_VALUE_MISSING, IsValueMissing());
+}
+
+void
+nsHTMLInputElement::UpdateTypeMismatchValidityState()
+{
+    SetValidityState(VALIDITY_STATE_TYPE_MISMATCH, HasTypeMismatch());
+}
+
+void
+nsHTMLInputElement::UpdatePatternMismatchValidityState()
+{
+  SetValidityState(VALIDITY_STATE_PATTERN_MISMATCH, HasPatternMismatch());
+}
+
+void
+nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
+{
+  UpdateTooLongValidityState();
+  UpdateValueMissingValidityState();
+  UpdateTypeMismatchValidityState();
+  UpdatePatternMismatchValidityState();
+
+  if (aNotify) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      doc->ContentStatesChanged(this, nsnull,
+                                NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
+    }
+  }
+}
+
 PRBool
-nsHTMLInputElement::IsBarredFromConstraintValidation()
+nsHTMLInputElement::IsBarredFromConstraintValidation() const
 {
   return mType == NS_FORM_INPUT_HIDDEN ||
          mType == NS_FORM_INPUT_BUTTON ||
@@ -3270,13 +3364,13 @@ nsHTMLInputElement::IsBarredFromConstraintValidation()
 
 nsresult
 nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
-                                         ValidationMessageType aType)
+                                         ValidityStateType aType)
 {
   nsresult rv = NS_OK;
 
   switch (aType)
   {
-    case VALIDATION_MESSAGE_TOO_LONG:
+    case VALIDITY_STATE_TOO_LONG:
     {
       nsXPIDLString message;
       PRInt32 maxLength = -1;
@@ -3297,7 +3391,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       aValidationMessage = message;
       break;
     }
-    case VALIDATION_MESSAGE_VALUE_MISSING:
+    case VALIDITY_STATE_VALUE_MISSING:
     {
       nsXPIDLString message;
       nsCAutoString key;
@@ -3320,7 +3414,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       aValidationMessage = message;
       break;
     }
-    case VALIDATION_MESSAGE_TYPE_MISMATCH:
+    case VALIDITY_STATE_TYPE_MISMATCH:
     {
       nsXPIDLString message;
       nsCAutoString key;
@@ -3336,7 +3430,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       aValidationMessage = message;
       break;
     }
-    case VALIDATION_MESSAGE_PATTERN_MISMATCH:
+    case VALIDITY_STATE_PATTERN_MISMATCH:
     {
       nsXPIDLString message;
       nsAutoString title;
@@ -3355,7 +3449,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       break;
     }
     default:
-      rv = nsConstraintValidation::GetValidationMessage(aValidationMessage, aType);
+      rv = nsIConstraintValidation::GetValidationMessage(aValidationMessage, aType);
   }
 
   return rv;
@@ -3557,6 +3651,38 @@ protected:
   nsIFormControl* mExcludeElement;
 };
 
+class nsRadioUpdateValueMissingVisitor : public nsRadioVisitor {
+public:
+  nsRadioUpdateValueMissingVisitor(PRBool aNotify)
+    : nsRadioVisitor()
+    , mNotify(aNotify)
+    { }
+
+  virtual ~nsRadioUpdateValueMissingVisitor() { };
+
+  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
+  {
+    /**
+     * The simplest way to update the value missing validity state is to do a
+     * global update of the validity state by simulationg a value change.
+     * OnValueChanged() is declared into nsITextControlElement. That may sound
+     * to be a weird way to update the validity states for radio controls but
+     * they are also implementing nsITextControlElement interface.
+     *
+     * When OnValueChanged() is called on a radio control, it will check if any
+     * radio in the group is checked. If none, the required radio will be
+     * suffering from being missing.
+     */
+    nsCOMPtr<nsITextControlElement> textCtl(do_QueryInterface(aRadio));
+    NS_ASSERTION(textCtl, "Visit() passed a null or non-radio pointer");
+    textCtl->OnValueChanged(mNotify);
+    return NS_OK;
+  }
+
+protected:
+  PRBool mNotify;
+};
+
 nsresult
 NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
                                     nsIRadioVisitor** aVisitor)
@@ -3625,6 +3751,22 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
   NS_ADDREF(*aVisitor);
 
   return NS_OK;
+}
+
+/*
+ * This method is a factory: it lets callers to create an instance of
+ * nsRadioUpdateValueMissing without the class declaration and definition.
+ *
+ * TODO:
+ * Do we really need factories for radio visitors? Or at least, we should move
+ * that somewhere else because it feels like it's here only because the radio
+ * visitor classes are defined after most of nsHTMLInputElement code.
+ * See bug 586298
+ */
+nsIRadioVisitor*
+NS_GetRadioUpdateValueMissingVisitor(PRBool aNotify)
+{
+  return new nsRadioUpdateValueMissingVisitor(aNotify);
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -3725,3 +3867,10 @@ nsHTMLInputElement::InitializeKeyboardEventListeners()
     state->InitializeKeyboardEventListeners();
   }
 }
+
+NS_IMETHODIMP_(void)
+nsHTMLInputElement::OnValueChanged(PRBool aNotify)
+{
+  UpdateAllValidityStates(aNotify);
+}
+

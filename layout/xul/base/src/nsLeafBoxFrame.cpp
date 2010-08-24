@@ -167,7 +167,7 @@ nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayEventReceiver(this));
+      nsDisplayEventReceiver(aBuilder, this));
 }
 
 /* virtual */ nscoord

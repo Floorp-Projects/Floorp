@@ -48,8 +48,7 @@ namespace imagelib {
 class Image : public imgIContainer
 {
 public:
-  imgStatusTracker& GetStatusTracker() { return mStatusTracker; }
-  PRBool IsInitialized() const { return mInitialized; }
+  imgStatusTracker& GetStatusTracker() { return *mStatusTracker; }
 
   /**
    * Flags for Image initialization.
@@ -85,34 +84,34 @@ public:
 
   /**
    * The rectangle defining the location and size of the currently displayed
-   * frame.  Should be an attribute, but can't be because of reference/pointer
-   * conflicts with native types in xpidl.
+   * frame.
    */
-  virtual nsresult GetCurrentFrameRect(nsIntRect& aRect) = 0;
-
-  /**
-   * The index of the current frame that would be drawn if the image was to be
-   * drawn now.
-   */
-  virtual nsresult GetCurrentFrameIndex(PRUint32* aCurrentFrameIdx) = 0;
-
-  /**
-   * The total number of frames in this image.
-   */
-  virtual nsresult GetNumFrames(PRUint32* aNumFrames) = 0;
+  virtual void GetCurrentFrameRect(nsIntRect& aRect) = 0;
 
   /**
    * The size, in bytes, occupied by the significant data portions of the image.
    * This includes both compressed source data and decoded frames.
    */
-  virtual nsresult GetDataSize(PRUint32* aDataSize) = 0;
+  virtual PRUint32 GetDataSize() = 0;
+
+  // Mimetype translation
+  enum eDecoderType {
+    eDecoderType_png     = 0,
+    eDecoderType_gif     = 1,
+    eDecoderType_jpeg    = 2,
+    eDecoderType_bmp     = 3,
+    eDecoderType_ico     = 4,
+    eDecoderType_icon    = 5,
+    eDecoderType_unknown = 6
+  };
+  static eDecoderType GetDecoderType(const char *aMimeType);
 
 protected:
-  Image();
+  Image(imgStatusTracker* aStatusTracker);
 
   // Member data shared by all implementations of this abstract class
-  imgStatusTracker   mStatusTracker;
-  PRPackedBool       mInitialized;   // Have we been initalized?
+  nsAutoPtr<imgStatusTracker> mStatusTracker;
+  PRPackedBool                mInitialized;   // Have we been initalized?
 };
 
 } // namespace imagelib

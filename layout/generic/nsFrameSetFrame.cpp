@@ -810,11 +810,8 @@ nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (mDragger && aBuilder->IsForEventDelivery()) {
-    // REVIEW: GetFrameForPoint would always target ourselves if mDragger set
-    nsDisplayItem* item = new (aBuilder) nsDisplayEventReceiver(this);
-    if (!item)
-      return NS_ERROR_OUT_OF_MEMORY;
-    aLists.Content()->AppendToTop(item);
+    rv = aLists.Content()->AppendNewToTop(
+        new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
   }
   return rv;
 }
@@ -1620,8 +1617,9 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*          aPresContext,
 
 class nsDisplayFramesetBorder : public nsDisplayItem {
 public:
-  nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame)
-    : nsDisplayItem(aFrame) {
+  nsDisplayFramesetBorder(nsDisplayListBuilder* aBuilder,
+                          nsHTMLFramesetBorderFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFramesetBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1645,7 +1643,7 @@ void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                     nsIRenderingContext* aCtx)
 {
   static_cast<nsHTMLFramesetBorderFrame*>(mFrame)->
-    PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+    PaintBorder(*aCtx, ToReferenceFrame());
 }
 
 NS_IMETHODIMP
@@ -1653,11 +1651,8 @@ nsHTMLFramesetBorderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                             const nsRect&           aDirtyRect,
                                             const nsDisplayListSet& aLists)
 {
-  nsDisplayItem* item = new (aBuilder) nsDisplayFramesetBorder(this);
-  if (!item)
-    return NS_ERROR_OUT_OF_MEMORY;
-  aLists.Content()->AppendToTop(item);
-  return NS_OK;
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayFramesetBorder(aBuilder, this));
 }
 
 void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingContext,
@@ -1829,7 +1824,9 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*          aPresContext,
 
 class nsDisplayFramesetBlank : public nsDisplayItem {
 public:
-  nsDisplayFramesetBlank(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayFramesetBlank(nsDisplayListBuilder* aBuilder,
+                         nsIFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFramesetBlank);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1841,6 +1838,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FramesetBlank", TYPE_FRAMESET_BLANK)
 };
+
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
                                    nsIRenderingContext* aCtx)
 {
@@ -1864,9 +1862,6 @@ nsHTMLFramesetBlankFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
 {
-  nsDisplayItem* item = new (aBuilder) nsDisplayFramesetBlank(this);
-  if (!item)
-    return NS_ERROR_OUT_OF_MEMORY;
-  aLists.Content()->AppendToTop(item);
-  return NS_OK;
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayFramesetBlank(aBuilder, this));
 }

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if input is of button type, it is barred from constraint validation
+             and should not be affected by :valid pseudo-class. -->
+  <style>
+    input { background-color: green; }
+    input:valid { background-color: red; }
+  </style>
+  <body>
+    <input type='button'>
+  </body>
+</html>

@@ -145,6 +145,10 @@ ifeq ($(OS_ARCH),Linux)
 TEST_HARNESS_BINS += fix-linux-stack.pl
 endif
 
+ifeq (gtk2_1,$(MOZ_WIDGET_TOOLKIT)_$(MOZ_X11))
+TEST_HARNESS_BINS += screentopng
+endif
+
 # Components / typelibs that don't get packaged with
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \

@@ -79,6 +79,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIHTMLCollection.h"
 
+#include "nsIConstraintValidation.h"
+
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 // nsHTMLFormElement
@@ -405,6 +407,13 @@ nsHTMLFormElement::Reset()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLFormElement::CheckValidity(PRBool* retVal)
+{
+  *retVal = CheckFormValidity();
+  return NS_OK;
+}
+
 PRBool
 nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsIAtom* aAttribute,
@@ -678,6 +687,16 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
     // XXX Should this return an error?
     return NS_OK;
   }
+
+#ifdef DEBUG
+  if (!CheckFormValidity()) {
+    printf("= The form is not valid!\n");
+#if 0
+    // TODO: uncomment this code whith a patch introducing a UI.
+    return NS_OK;
+#endif // 0
+  }
+#endif // DEBUG
 
   // Mark us as submitting so that we don't try to submit again
   mIsSubmitting = PR_TRUE;
@@ -1186,7 +1205,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aChild);
-    radio->WillRemoveFromRadioGroup();
+    radio->WillRemoveFromRadioGroup(aNotify);
   }
 
   // Determine whether to remove the child from the elements list
@@ -1535,6 +1554,49 @@ nsHTMLFormElement::ForgetCurrentSubmission()
     webProgress->RemoveProgressListener(this);
   }
   mWebProgress = nsnull;
+}
+
+PRBool
+nsHTMLFormElement::CheckFormValidity() const
+{
+  PRBool ret = PR_TRUE;
+
+  nsTArray<nsGenericHTMLFormElement*> sortedControls;
+  if (NS_FAILED(mControls->GetSortedControls(sortedControls))) {
+    return PR_FALSE;
+  }
+
+  PRUint32 len = sortedControls.Length();
+
+  // Hold a reference to the elements so they can't be deleted while calling
+  // the invalid events.
+  for (PRUint32 i = 0; i < len; ++i) {
+    static_cast<nsGenericHTMLElement*>(sortedControls[i])->AddRef();
+  }
+
+  for (PRUint32 i = 0; i < len; ++i) {
+    if (!sortedControls[i]->IsSubmittableControl()) {
+      continue;
+    }
+
+    nsCOMPtr<nsIConstraintValidation> cvElmt =
+      do_QueryInterface((nsGenericHTMLElement*)sortedControls[i]);
+    if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
+        !cvElmt->IsValid()) {
+      ret = PR_FALSE;
+      nsContentUtils::DispatchTrustedEvent(sortedControls[i]->GetOwnerDoc(),
+                                           static_cast<nsIContent*>(sortedControls[i]),
+                                           NS_LITERAL_STRING("invalid"),
+                                           PR_FALSE, PR_TRUE);
+    }
+  }
+
+  // Release the references.
+  for (PRUint32 i = 0; i < len; ++i) {
+    static_cast<nsGenericHTMLElement*>(sortedControls[i])->Release();
+  }
+
+  return ret;
 }
 
 // nsIWebProgressListener
