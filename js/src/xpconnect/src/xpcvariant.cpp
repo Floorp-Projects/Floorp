@@ -298,6 +298,8 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
 
 JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 {
+    JS_CHECK_RECURSION(ccx.GetJSContext(), return JS_FALSE);
+
     if(JSVAL_IS_INT(mJSVal))
         return NS_SUCCEEDED(nsVariant::SetFromInt32(&mData, 
                                                     JSVAL_TO_INT(mJSVal)));
