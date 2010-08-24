@@ -202,7 +202,7 @@ def removeStubMember(memberId, member):
 
 def addStubMember(memberId, member, traceable):
     mayTrace = False
-    if member.kind == 'method' and not member.implicit_jscontext:
+    if member.kind == 'method' and not member.implicit_jscontext and not isVariantType(member.realtype):
         # This code MUST match writeTraceableQuickStub
         haveCallee = memberNeedsCallee(member)
         # Traceable natives support up to MAX_TRACEABLE_NATIVE_ARGS
@@ -1062,28 +1062,31 @@ defaultReturnTraceType = ("JSObject *", "OBJECT_OR_NULL", "nsnull")
 defaultParamTraceType = ("js::ValueArgType ", "VALUE")
 
 def getTraceParamType(type):
-    assert type is not '[jsval]'
     type = getBuiltinOrNativeTypeName(type)
+    assert type is not '[jsval]'
     return traceParamTypeMap.get(type, defaultParamTraceType)[0]
 
 def getTraceReturnType(type):
-    assert type is not '[jsval]'
+    assert not isVariantType(type)
     type = getBuiltinOrNativeTypeName(type)
+    assert type is not '[jsval]'
     return traceReturnTypeMap.get(type, defaultReturnTraceType)[0]
 
 def getTraceInfoParamType(type):
-    assert type is not '[jsval]'
     type = getBuiltinOrNativeTypeName(type)
+    assert type is not '[jsval]'
     return traceParamTypeMap.get(type, defaultParamTraceType)[1]
 
 def getTraceInfoReturnType(type):
-    assert type is not '[jsval]'
+    assert not isVariantType(type)
     type = getBuiltinOrNativeTypeName(type)
+    assert type is not '[jsval]'
     return traceReturnTypeMap.get(type, defaultReturnTraceType)[1]
 
 def getTraceInfoDefaultReturn(type):
-    assert type is not '[jsval]'
+    assert not isVariantType(type)
     type = getBuiltinOrNativeTypeName(type)
+    assert type is not '[jsval]'
     return traceReturnTypeMap.get(type, defaultReturnTraceType)[2]
 
 def getFailureString(retval, indent):
