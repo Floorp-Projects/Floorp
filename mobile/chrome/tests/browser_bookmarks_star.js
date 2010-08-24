@@ -34,7 +34,7 @@ function runNextTest() {
   else {
     // Cleanup. All tests are completed at this point
     try {
-      PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.mobileRoot);
+      PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.panel.mobileRoot);
     }
     finally {
       // We must finialize the tests
@@ -192,27 +192,27 @@ gTests.push({
   },
 
   onPageLoad: function() {
-    var starbutton = document.getElementById("tool-star");
+    let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
     waitFor(gCurrentTest.onPopupReady, function() { return document.getElementById("bookmark-popup").hidden == false; });
   },
 
   onPopupReady: function() {
-    var editbutton = document.getElementById("bookmark-popup-edit");
+    let editbutton = document.getElementById("bookmark-popup-edit");
     editbutton.click();
     
     waitFor(gCurrentTest.onEditorReady, function() { return document.getElementById("bookmark-item").isEditing == true; });
   },
 
   onEditorReady: function() {
-    var bookmarkitem = document.getElementById("bookmark-item");    
+    let bookmarkitem = document.getElementById("bookmark-item");    
     EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
 
-    var uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
+    let uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
     uritextbox.value = testURL_01;
 
-    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    let donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
     
     waitFor(gCurrentTest.onEditorDone, function() { return document.getElementById("bookmark-container").hidden == true; });

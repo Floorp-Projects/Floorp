@@ -218,7 +218,7 @@ var BrowserUI = {
   },
 
   updateAwesomeHeader: function updateAwesomeHeader(aVisible) {
-    document.getElementById('awesome-header').hidden = aVisible;
+    document.getElementById("awesome-header").hidden = aVisible;
   },
 
   _closeOrQuit: function _closeOrQuit() {
@@ -249,7 +249,7 @@ var BrowserUI = {
       BrowserUI.showToolbar(false);
     }
 
-    if (this._activePanel)
+    if (this._activePanel && this._activePanel != aPanel)
       this._activePanel.close();
     this._activePanel = aPanel;
   },
@@ -671,6 +671,11 @@ var BrowserUI = {
   handleEscape: function (aEvent) {
     aEvent.stopPropagation();
 
+    if (BrowserUI.activePanel) {
+      BrowserUI.activePanel = null;
+      return;
+    }
+
     // Check open dialogs
     let dialog = this.activeDialog;
     if (dialog) {
@@ -893,6 +898,7 @@ var BrowserUI = {
         break;
       case "cmd_go":
         this.goToURI();
+        this.activePanel = null;
         break;
       case "cmd_openLocation":
         this.showToolbar(true);
@@ -900,15 +906,14 @@ var BrowserUI = {
       case "cmd_star":
       {
         let bookmarkURI = browser.currentURI;
-        let bookmarkTitle = browser.contentTitle || bookmarkURI.spec;
-
         let autoClose = false;
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
-          let bmsvc = PlacesUtils.bookmarks;
-          let bookmarkId = bmsvc.insertBookmark(BookmarkList.mobileRoot, bookmarkURI,
-                                                bmsvc.DEFAULT_INDEX,
-                                                bookmarkTitle);
+          let bookmarkTitle = browser.contentTitle || bookmarkURI.spec;
+          let bookmarkService = PlacesUtils.bookmarks;
+          let bookmarkId = bookmarkService.insertBookmark(BookmarkList.panel.mobileRoot, bookmarkURI,
+                                                          bookmarkService.DEFAULT_INDEX,
+                                                          bookmarkTitle);
           this.updateStar();
 
           // autoclose the bookmark popup
@@ -1284,34 +1289,35 @@ var NewTabPopup = {
 };
 
 var AwesomePanel = function(aElementId, aCommandId) {
-  let items = document.getElementById(aElementId);
   let command = document.getElementById(aCommandId);
+
+  this.panel = document.getElementById(aElementId),
 
   this.open = function aw_open() {
     BrowserUI.pushDialog(this);
     command.setAttribute("checked", "true");
-    items.hidden = false;
+    this.panel.hidden = false;
 
-    if (items.hasAttribute("onshow")) {
-      let func = new Function("panel", items.getAttribute("onshow"));
-      func.call(items);
+    if (this.panel.hasAttribute("onshow")) {
+      let func = new Function("panel", this.panel.getAttribute("onshow"));
+      func.call(this.panel);
     }
 
-    if (items.open)
-      items.open();
+    if (this.panel.open)
+      this.panel.open();
   },
 
   this.close = function aw_close() {
-    if (items.hasAttribute("onhide")) {
-      let func = new Function("panel", items.getAttribute("onhide"));
-      func.call(items);
+    if (this.panel.hasAttribute("onhide")) {
+      let func = new Function("panel", this.panel.getAttribute("onhide"));
+      func.call(this.panel);
     }
 
-    if (items.close)
-      items.close();
+    if (this.panel.close)
+      this.panel.close();
 
-    items.blur();
-    items.hidden = true;
+    this.panel.blur();
+    this.panel.hidden = true;
     command.removeAttribute("checked", "true");
     BrowserUI.popDialog();
   },
@@ -2258,16 +2264,6 @@ XPCOMUtils.defineLazyGetter(this, "AllPagesList", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkList", function() {
-  let list = new AwesomePanel("bookmarks-items", "cmd_bookmarks");
-  list.__defineGetter__("mobileRoot", function() {
-    let items = PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {});
-    if (!items.length)
-      throw "Couldn't find mobile bookmarks root!";
-
-    delete this.mobileRoot;
-    return this.mobileRoot = items[0];
-  });
-
-  return list;
+  return new AwesomePanel("bookmarks-items", "cmd_bookmarks");
 });
 
