@@ -34,7 +34,7 @@ function runNextTest() {
   else {
     // Cleanup. All tests are completed at this point
     try {
-      PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.mobileRoot);
+      PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.panel.mobileRoot);
     }
     finally {
       // We must finialize the tests
@@ -95,9 +95,9 @@ gTests.push({
 
   onPageReady: function() {
     // Open the bookmark list
-    BookmarkList.show();
+    BrowserUI.doCommand("cmd_bookmarks");
 
-    waitFor(gCurrentTest.onBookmarksReady, function() { return document.getElementById("bookmarklist-container").hidden == false; });
+    waitFor(gCurrentTest.onBookmarksReady, function() { return BrowserUI.activePanel == BookmarkList });
   },
 
   onBookmarksReady: function() {
@@ -111,8 +111,7 @@ gTests.push({
       runNextTest();
     });
 
-    var bookmarkitems = document.getElementById("bookmark-items");
-    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_01);
+    let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
     isnot(bookmarkitem, null, "Found the bookmark");
     is(bookmarkitem.getAttribute("uri"), testURL_01, "Bookmark has the right URL via attribute");
     is(bookmarkitem.spec, testURL_01, "Bookmark has the right URL via property");
@@ -128,32 +127,31 @@ gTests.push({
 
   run: function() {
     // Open the bookmark list
-    BookmarkList.show();
+    BrowserUI.doCommand("cmd_bookmarks");
 
     // Go into edit mode
-    let bookmark = document.getElementById("bookmark-items").items[0];
+    let bookmark = BookmarkList.panel.items[0];
     bookmark.startEditing();
 
     waitFor(gCurrentTest.onBookmarksReady, function() { return bookmark.isEditing == true; });
   },
 
   onBookmarksReady: function() {
-    var bookmarkitems = document.getElementById("bookmark-items");
-    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_01);
+    let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
     EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
 
-    var uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
+    let uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
     uritextbox.value = testURL_02;
 
-    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    let donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
 
-    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
+    let bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
     is(bookmark, -1, testURL_01 + " should no longer in bookmark");
     bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
     isnot(bookmark, -1, testURL_02 + " is in bookmark");
 
-    BookmarkList.close();
+    BrowserUI.activePanel = null;
 
     runNextTest();
   }
@@ -166,34 +164,33 @@ gTests.push({
 
   run: function() {
     // Open the bookmark list
-    BookmarkList.show();
+    BrowserUI.doCommand("cmd_bookmarks");
 
     // Go into edit mode
-    let bookmark = document.getElementById("bookmark-items").items[0];
+    let bookmark = BookmarkList.panel.items[0];
     bookmark.startEditing();
 
     waitFor(gCurrentTest.onBookmarksReady, function() { return bookmark.isEditing == true; });
   },
 
   onBookmarksReady: function() {
-    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
+    let bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
     is(PlacesUtils.bookmarks.getItemTitle(bookmark), "Browser Blank Page 01", "Title remains the same.");
 
-    var bookmarkitems = document.getElementById("bookmark-items");
-    var bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
+    let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_02);
     EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
 
-    var titletextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "name");
-    var newtitle = "Changed Title";
+    let titletextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "name");
+    let newtitle = "Changed Title";
     titletextbox.value = newtitle;
 
-    var donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
+    let donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
 
     isnot(PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02)), -1, testURL_02 + " is still in bookmark.");
     is(PlacesUtils.bookmarks.getItemTitle(bookmark), newtitle, "Title is changed.");
 
-    BookmarkList.close();
+    BrowserUI.activePanel = null;
 
     runNextTest();
   }
@@ -207,26 +204,25 @@ gTests.push({
 
   run: function() {
     // Open the bookmark list
-    BookmarkList.show();
+    BrowserUI.doCommand("cmd_bookmarks");
 
     // Go into edit mode
-    let bookmark = document.getElementById("bookmark-items").items[0];
+    let bookmark = BookmarkList.panel.items[0];
     bookmark.startEditing();
 
     waitFor(gCurrentTest.onBookmarksReady, function() { return bookmark.isEditing == true; });
   },
 
   onBookmarksReady: function() {
-    var bookmarkitems = document.getElementById("bookmark-items");
-    let bookmark = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
+    let bookmark = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_02);
     bookmark.remove();
 
-    var bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
+    let bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
     ok(bookmark == -1, testURL_02 + " should no longer in bookmark");
     bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
     ok(bookmark == -1, testURL_01 + " should no longer in bookmark");
 
-    BookmarkList.close();
+    BrowserUI.activePanel = null;
 
     runNextTest();
   }
@@ -247,15 +243,16 @@ gTests.push({
                                                    testURL_02);
 
     // Open the bookmark list
-    BookmarkList.show();
+    BrowserUI.doCommand("cmd_bookmarks");
 
     // Go into edit mode
-    let bookmark = document.getElementById("bookmark-items").items[0];
+    let bookmarksPanel = BookmarkList.panel;
+    let bookmark = bookmarksPanel.items[0];
     bookmark.startEditing();
 
     // Is the "desktop" folder showing?
-    var first = BookmarkList._bookmarks._children.firstChild;
-    is(first.itemId, BookmarkList._bookmarks._desktopFolderId, "Desktop folder is showing");
+    let first = bookmarksPanel._children.firstChild;
+    is(first.itemId, bookmarksPanel._desktopFolderId, "Desktop folder is showing");
 
     // Is the "desktop" folder in edit mode?
     is(first.isEditing, false, "Desktop folder is not in edit mode");
@@ -265,16 +262,15 @@ gTests.push({
 
     // A tap on the "desktop" folder _should_ open the folder, not put it into edit mode.
     // So we need to get the first item again.
-    first = BookmarkList._bookmarks._children.firstChild;
+    first = bookmarksPanel._children.firstChild;
 
     // It should not be the "desktop" folder
-    isnot(first.itemId, BookmarkList._bookmarks._desktopFolderId, "Desktop folder is not showing after mouse click");
+    isnot(first.itemId, bookmarksPanel._desktopFolderId, "Desktop folder is not showing after mouse click");
 
     // But it should be one of the other readonly bookmark roots
-    isnot(BookmarkList._bookmarks._readOnlyFolders.indexOf(parseInt(first.itemId)), -1, "Desktop subfolder is showing after mouse click");
+    isnot(bookmarksPanel._readOnlyFolders.indexOf(parseInt(first.itemId)), -1, "Desktop subfolder is showing after mouse click");
 
-    BookmarkList.close();
-
+    BrowserUI.activePanel = null;
     PlacesUtils.bookmarks.removeItem(gCurrentTest.bmId);
 
     runNextTest();

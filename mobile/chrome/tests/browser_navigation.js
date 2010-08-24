@@ -7,11 +7,10 @@ var gCurrentTest = null;
 
 function pageLoaded(url) {
   return function() {
-    let tab = gCurrentTest._tab;
+    let tab = gCurrentTest._currentTab;
     return !tab.isLoading() && tab.browser.currentURI.spec == url;
   }
 }
-  
 
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
@@ -19,7 +18,7 @@ function test() {
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
   // We call "finish()" when the tests are finished
   waitForExplicitFinish();
-  
+
   // Start the tests
   runNextTest();
 }
@@ -49,10 +48,10 @@ function runNextTest() {
 // Case: Loading a page into the URLBar with VK_RETURN
 gTests.push({
   desc: "Loading a page into the URLBar with VK_RETURN",
-  _tab: null,
+  _currentTab: null,
 
   run: function() {
-    this._tab = Browser.addTab(testURL_01, true);
+    this._currentTab = Browser.addTab(testURL_01, true);
 
     // Wait for the tab to load, then do the test
     waitFor(gCurrentTest.onPageReady, pageLoaded(testURL_01));
@@ -65,11 +64,11 @@ gTests.push({
 
     // Test back button state
     let back = document.getElementById("tool-back");
-    is(back.disabled, !gCurrentTest._tab.browser.canGoBack, "Back button check");
+    is(back.disabled, !gCurrentTest._currentTab.browser.canGoBack, "Back button check");
 
     // Test forward button state
     let forward = document.getElementById("tool-forward");
-    is(forward.disabled, !gCurrentTest._tab.browser.canGoForward, "Forward button check");
+    is(forward.disabled, !gCurrentTest._currentTab.browser.canGoForward, "Forward button check");
 
     // Focus the url edit
     let urlbarEdit = document.getElementById("urlbar-edit");
@@ -78,7 +77,7 @@ gTests.push({
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);
   },
-  
+
   onFocusReady: function() {
     window.removeEventListener("popupshown", gCurrentTest.onFocusReady, false);
     // Test mode
@@ -87,11 +86,11 @@ gTests.push({
 
     // Test back button state
     let back = document.getElementById("tool-back");
-    is(back.disabled, !gCurrentTest._tab.browser.canGoBack, "Back button check");
+    is(back.disabled, !gCurrentTest._currentTab.browser.canGoBack, "Back button check");
 
     // Test forward button state
     let forward = document.getElementById("tool-forward");
-    is(forward.disabled, !gCurrentTest._tab.browser.canGoForward, "Forward button check");
+    is(forward.disabled, !gCurrentTest._currentTab.browser.canGoForward, "Forward button check");
 
     // Check button states (url edit is focused)
     let go = document.getElementById("tool-go");
@@ -131,11 +130,11 @@ gTests.push({
     let reloadStyle = window.getComputedStyle(reload, null);
     is(reloadStyle.visibility, "visible", "RELOAD is visible");
 
-    let uri = gCurrentTest._tab.browser.currentURI.spec;
+    let uri = gCurrentTest._currentTab.browser.currentURI.spec;
     is(uri, testURL_02, "URL Matches newly created Tab");
 
     // Go back in session
-    gCurrentTest._tab.browser.goBack();
+    gCurrentTest._currentTab.browser.goBack();
 
     // Wait for the tab to load, then do the test
     waitFor(gCurrentTest.onPageBack, pageLoaded(testURL_01));
@@ -144,31 +143,31 @@ gTests.push({
   onPageBack: function() {
     // Test back button state
     let back = document.getElementById("tool-back");
-    is(back.disabled, !gCurrentTest._tab.browser.canGoBack, "Back button check");
+    is(back.disabled, !gCurrentTest._currentTab.browser.canGoBack, "Back button check");
 
     // Test forward button state
     let forward = document.getElementById("tool-forward");
-    is(forward.disabled, !gCurrentTest._tab.browser.canGoForward, "Forward button check");
+    is(forward.disabled, !gCurrentTest._currentTab.browser.canGoForward, "Forward button check");
 
-    Browser.closeTab(gCurrentTest._tab);
-    
+    Browser.closeTab(gCurrentTest._currentTab);
+
     runNextTest();
-  }  
+  }
 });
 
 //------------------------------------------------------------------------------
 // Case: Loading a page into the URLBar with GO button
 gTests.push({
   desc: "Loading a page into the URLBar with GO button",
-  _tab: null,
+  _currentTab: null,
 
   run: function() {
-    this._tab = Browser.addTab(testURL_01, true);
+    this._currentTab = Browser.addTab(testURL_01, true);
 
     // Wait for the tab to load, then do the test
     waitFor(gCurrentTest.onPageReady, pageLoaded(testURL_01));
   },
-  
+
   onPageReady: function() {
     let urlIcons = document.getElementById("urlbar-icons");
     is(urlIcons.getAttribute("mode"), "view", "URL Mode is set to 'view'");
@@ -180,7 +179,7 @@ gTests.push({
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);
   },
-  
+
   onFocusReady: function() {
     window.removeEventListener("popupshown", gCurrentTest.onFocusReady, false);
     let urlIcons = document.getElementById("urlbar-icons");
@@ -223,10 +222,10 @@ gTests.push({
     let reloadStyle = window.getComputedStyle(reload, null);
     is(reloadStyle.visibility, "visible", "RELOAD is visible");
 
-    let uri = gCurrentTest._tab.browser.currentURI.spec;
+    let uri = gCurrentTest._currentTab.browser.currentURI.spec;
     is(uri, testURL_02, "URL Matches newly created Tab");
 
-    Browser.closeTab(gCurrentTest._tab);
+    Browser.closeTab(gCurrentTest._currentTab);
 
     runNextTest();
   }
