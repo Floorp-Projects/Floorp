@@ -2612,8 +2612,21 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         pic.typeCheck = stubcc.masm.label();
         stubcc.linkExit(j, Uses(2));
         stubcc.leave();
-        stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
-        stubcc.call(stubs::SetName);
+
+        /*
+         * This gets called from PROPINC/PROPDEC which aren't compatible with
+         * the normal SETNAME property cache logic.
+         */
+        JSOp op = JSOp(*PC);
+        if (op == JSOP_SETNAME || op == JSOP_SETPROP || op == JSOP_SETGNAME || op ==
+            JSOP_SETMETHOD) {
+            stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubcc.call(stubs::SetName);
+        } else {
+            stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+            stubcc.call(ic::SetPropDumb);
+        }
+
         typeCheck = stubcc.masm.jump();
         pic.hasTypeCheck = true;
     } else {
