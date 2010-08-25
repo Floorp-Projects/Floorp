@@ -2248,15 +2248,6 @@ nsLayoutUtils::ComputeHeightDependentValue(
   return 0;
 }
 
-inline PRBool
-IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
-{
-  nsStyleUnit unit = aCoord.GetUnit();
-  return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_None ||  // only for 'max-height'
-         (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
-}
-
 #define MULDIV(a,b,c) (nscoord(PRInt64(a) * PRInt64(b) / PRInt64(c)))
 
 /* static */ nsSize
