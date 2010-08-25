@@ -36,7 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Weave'];
+// 'Weave' continues to be exported for backwards compatibility.
+const EXPORTED_SYMBOLS = ["Service", "Weave"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -58,34 +59,15 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/ext/Sync.js");
+Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/main.js");
 
-// for export
-let Weave = {};
-Cu.import("resource://services-sync/auth.js", Weave);
-Cu.import("resource://services-sync/constants.js", Weave);
-Cu.import("resource://services-sync/base_records/keys.js", Weave);
-Cu.import("resource://services-sync/engines.js", Weave);
-Cu.import("resource://services-sync/engines/bookmarks.js", Weave);
-Cu.import("resource://services-sync/engines/clients.js", Weave);
-Cu.import("resource://services-sync/engines/forms.js", Weave);
-Cu.import("resource://services-sync/engines/history.js", Weave);
-Cu.import("resource://services-sync/engines/prefs.js", Weave);
-Cu.import("resource://services-sync/engines/passwords.js", Weave);
-Cu.import("resource://services-sync/engines/tabs.js", Weave);
-Cu.import("resource://services-sync/ext/Preferences.js");
-Cu.import("resource://services-sync/identity.js", Weave);
-Cu.import("resource://services-sync/notifications.js", Weave);
-Cu.import("resource://services-sync/resource.js", Weave);
-Cu.import("resource://services-sync/status.js", Weave);
-Cu.import("resource://services-sync/stores.js", Weave);
-Cu.import("resource://services-sync/util.js", Weave);
-
-Utils.lazy(Weave, 'Service', WeaveSvc);
+Utils.lazy(this, 'Service', WeaveSvc);
 
 /*
  * Service singleton
@@ -875,7 +857,7 @@ WeaveSvc.prototype = {
 
     let url = this.userAPI + username;
     let res = new Resource(url);
-    res.authenticator = new Weave.NoOpAuthenticator();
+    res.authenticator = new NoOpAuthenticator();
 
     // Hint to server to allow scripted user creation or otherwise
     // ignore captcha.
@@ -1764,4 +1746,4 @@ WeaveSvc.prototype = {
 };
 
 // Load Weave on the first time this file is loaded
-Weave.Service.onStartup();
+Service.onStartup();
