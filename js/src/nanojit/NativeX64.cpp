@@ -1119,13 +1119,14 @@ namespace nanojit
 
         Register rf = findRegFor(iffalse, allow & ~rmask(rr));
 
-        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
-        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
-
         if (ins->isop(LIR_cmovd)) {
             NIns* target = _nIns;
             asm_nongp_copy(rr, rf);
             asm_branch(false, cond, target);
+
+            // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+            Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
             if (rr != rt)
                 asm_nongp_copy(rr, rt);
             freeResourcesOf(ins);
@@ -1135,6 +1136,9 @@ namespace nanojit
             }
             return;
         }
+
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
 
         // WARNING: We cannot generate any code that affects the condition
         // codes between the MRcc generation here and the asm_cmp() call
@@ -1181,12 +1185,21 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
-        if (target && !isTargetWithinS32(target)) {
-            setError(ConditionalBranchTooFar);
-            NanoAssert(0);
-        }
         NanoAssert(cond->isCmp());
         LOpcode condop = cond->opcode();
+
+        if (target && !isTargetWithinS32(target)) {
+            // conditional jumps beyond 32bit range, so invert the branch/compare
+            // and emit an unconditional jump to the target
+            //         j(inverted) B1
+            //         jmp target
+            //     B1:
+            NIns* shortTarget = _nIns;
+            JMP(target);
+            target = shortTarget;
+
+            onFalse = !onFalse;
+        }
         if (isCmpDOpcode(condop))
             return asm_branchd(onFalse, cond, target);
 
@@ -1844,7 +1857,7 @@ namespace nanojit
         endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_spill(Register rr, int d, bool /*pop*/, bool quad) {
+    void Assembler::asm_spill(Register rr, int d, bool quad) {
         NanoAssert(d);
         if (!IsFpReg(rr)) {
             if (quad)

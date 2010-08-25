@@ -2823,7 +2823,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
      * Flat closures can be partial, they may need to search enclosing scope
      * objects via JSOP_NAME, etc.
      */
-    JSObject *scopeChain = js_GetScopeChain(cx, cx->fp);
+    JSObject *scopeChain = js_GetScopeChain(cx, cx->fp());
     if (!scopeChain)
         return NULL;
 
@@ -2844,11 +2844,11 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 JSObject *
 js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun)
 {
-    JS_ASSERT(cx->fp->getFunction()->flags & JSFUN_HEAVYWEIGHT);
-    JS_ASSERT(!cx->fp->getFunction()->optimizedClosure());
+    JS_ASSERT(cx->fp()->getFunction()->flags & JSFUN_HEAVYWEIGHT);
+    JS_ASSERT(!cx->fp()->getFunction()->optimizedClosure());
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
 
-    return WrapEscapingClosure(cx, cx->fp, fun);
+    return WrapEscapingClosure(cx, cx->fp(), fun);
 }
 
 JSFunction *
