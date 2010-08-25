@@ -563,6 +563,12 @@
           <richlistitem class="context-command" id="context-share-image" type="image-shareable" onclick="ContextCommands.shareMedia();">
             <label value="&contextShareImage.label;"/>
           </richlistitem>
+          <richlistitem class="context-command" id="context-save-video" type="video" onclick="ContextCommands.saveImage();">
+            <label value="&contextSaveVideo.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-share-video" type="video-shareable" onclick="ContextCommands.shareMedia();">
+            <label value="&contextShareVideo.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-editbookmark" type="edit-bookmark" onclick="ContextCommands.editBookmark();">
             <label value="&contextEditBookmark.label;"/>
           </richlistitem>

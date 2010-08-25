@@ -786,8 +786,10 @@ var ContextHandler = {
       // See if the user clicked on an image.
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
         state.types.push("image");
-        state.mediaURL = popupNode.currentURI.spec;
-        state.label = state.mediaURL;
+        state.label = state.mediaURL = popupNode.currentURI.spec;
+      } else if (popupNode instanceof Ci.nsIDOMHTMLVideoElement) {
+        state.types.push("video");
+        state.label = state.mediaURL = popupNode.src;
       }
     }
 
@@ -852,12 +854,14 @@ ContextHandler.registerType("link-shareable", function(aState, aElement) {
   return Util.isShareableScheme(aState.linkProtocol);
 });
 
-ContextHandler.registerType("image-shareable", function(aState, aElement) {
-  if (!aState.mediaURL)
-    return false;
+["image", "video"].forEach(function(aType) {
+  ContextHandler.registerType(aType+"-shareable", function(aState, aElement) {
+    if (aState.types.indexOf(aType) == -1)
+      return false;
 
-  let protocol = ContextHandler._getProtocol(ContextHandler._getURI(aState.mediaURL));
-  return Util.isShareableScheme(protocol);
+    let protocol = ContextHandler._getProtocol(ContextHandler._getURI(aState.mediaURL));
+    return Util.isShareableScheme(protocol);
+  });
 });
 
 ContextHandler.registerType("image-loaded", function(aState, aElement) {
