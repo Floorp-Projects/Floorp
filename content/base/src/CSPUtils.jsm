@@ -185,6 +185,8 @@ CSPRep.fromString = function(aStr, self) {
   directive:
   for each(var dir in dirs) {
     dir = dir.trim();
+    if (dir.length < 1) continue;
+
     var dirname = dir.split(/\s+/)[0];
     var dirvalue = dir.substring(dirname.length).trim();
 
