@@ -90,6 +90,8 @@
 <!ENTITY contextSaveImage.label       "Save Image">
 <!ENTITY contextShareLink.label       "Share Link">
 <!ENTITY contextShareImage.label      "Share Image">
+<!ENTITY contextSaveVideo.label       "Save Video">
+<!ENTITY contextShareVideo.label      "Share Video">
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">
 
