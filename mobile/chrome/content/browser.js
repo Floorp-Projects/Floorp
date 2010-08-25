@@ -1698,6 +1698,9 @@ function IdentityHandler() {
     encryption_label: Elements.browserBundle.getString("identity.unencrypted2")
   };
 
+  // Close the popup when reloading the page
+  document.getElementById("browsers").addEventListener("URLChanged", this, true);
+
   this._cacheElements();
 }
 
@@ -1927,15 +1930,20 @@ IdentityHandler.prototype = {
   /**
    * Click handler for the identity-box element in primary chrome.
    */
-  handleIdentityButtonEvent: function(event) {
-    event.stopPropagation();
+  handleIdentityButtonEvent: function(aEvent) {
+    aEvent.stopPropagation();
 
-    if ((event.type == "click" && event.button != 0) ||
-        (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
-         event.keyCode != KeyEvent.DOM_VK_RETURN))
+    if ((aEvent.type == "click" && aEvent.button != 0) ||
+        (aEvent.type == "keypress" && aEvent.charCode != KeyEvent.DOM_VK_SPACE &&
+         aEvent.keyCode != KeyEvent.DOM_VK_RETURN))
       return; // Left click, space or enter only
 
     this.toggle();
+    },
+
+  handleEvent: function(aEvent) {
+    if (aEvent.type == "URLChanged" && !this._identityPopup.hidden)
+      this.hide();
   }
 };
 
