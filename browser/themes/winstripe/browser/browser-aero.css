@@ -59,6 +59,11 @@
     background-color: -moz-dialog;
   }
 
+  #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
+    background-color: rgba(255,255,255,.5);
+    -moz-border-radius: 4px;
+  }
+
   #urlbar,
   .searchbar-textbox {
     background-color: rgba(255,255,255,.725);
