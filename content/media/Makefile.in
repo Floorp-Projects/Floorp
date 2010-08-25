@@ -53,6 +53,7 @@ EXPORTS = \
   nsBuiltinDecoderStateMachine.h \
   nsBuiltinDecoderReader.h \
   VideoUtils.h \
+  nsAudioAvailableEventManager.h \
   $(NULL)
 
 CPPSRCS = \
@@ -63,6 +64,7 @@ CPPSRCS = \
   nsBuiltinDecoderStateMachine.cpp \
   nsBuiltinDecoderReader.cpp \
   VideoUtils.cpp \
+  nsAudioAvailableEventManager.cpp \
   $(NULL)
 
 ifdef MOZ_SYDNEYAUDIO

@@ -88,7 +88,7 @@ static const char* const sEventNames[] = {
   "loadstart", "progress", "suspend", "emptied", "stalled", "play", "pause",
   "loadedmetadata", "loadeddata", "waiting", "playing", "canplay",
   "canplaythrough", "seeking", "seeked", "timeupdate", "ended", "ratechange",
-  "durationchange", "volumechange",
+  "durationchange", "volumechange", "MozAudioAvailable",
 #endif // MOZ_MEDIA
   "MozAfterPaint",
   "MozBeforePaint",
@@ -1302,6 +1302,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_durationchange];
   case NS_VOLUMECHANGE:
     return sEventNames[eDOMEvents_volumechange];
+  case NS_MOZAUDIOAVAILABLE:
+    return sEventNames[eDOMEvents_mozaudioavailable];
 #endif
   case NS_AFTERPAINT:
     return sEventNames[eDOMEvents_afterpaint];

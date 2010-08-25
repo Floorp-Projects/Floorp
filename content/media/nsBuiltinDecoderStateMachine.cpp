@@ -102,6 +102,31 @@ static const PRUint32 LOW_VIDEO_FRAMES = 1;
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_MS = 40;
 
+class nsAudioMetadataEventRunner : public nsRunnable
+{
+private:
+  nsCOMPtr<nsBuiltinDecoder> mDecoder;
+public:
+  nsAudioMetadataEventRunner(nsBuiltinDecoder* aDecoder, PRUint32 aChannels,
+                             PRUint32 aRate, PRUint32 aFrameBufferLength) :
+    mDecoder(aDecoder),
+    mChannels(aChannels),
+    mRate(aRate),
+    mFrameBufferLength(aFrameBufferLength)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    mDecoder->MetadataLoaded(mChannels, mRate, mFrameBufferLength);
+    return NS_OK;
+  }
+
+  const PRUint32 mChannels;
+  const PRUint32 mRate;
+  const PRUint32 mFrameBufferLength;
+};
+
 nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder,
                                                            nsBuiltinDecoderReader* aReader) :
   mDecoder(aDecoder),
@@ -124,7 +149,8 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mAudioCompleted(PR_FALSE),
   mBufferExhausted(PR_FALSE),
   mGotDurationFromHeader(PR_FALSE),
-  mStopDecodeThreads(PR_TRUE)
+  mStopDecodeThreads(PR_TRUE),
+  mEventManager(aDecoder)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderStateMachine);
 }
@@ -408,9 +434,10 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       // hardware so that the next sound chunk begins playback at the correct
       // time.
       missingSamples = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX), missingSamples);
-      audioDuration += PlaySilence(static_cast<PRUint32>(missingSamples), channels);
+      audioDuration += PlaySilence(static_cast<PRUint32>(missingSamples),
+                                   channels, sampleTime);
     } else {
-      audioDuration += PlayFromAudioQueue();
+      audioDuration += PlayFromAudioQueue(sampleTime, channels);
     }
     {
       MonitorAutoEnter mon(mDecoder->GetMonitor());
@@ -450,6 +477,8 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     MonitorAutoEnter audioMon(mAudioMonitor);
     if (mAudioStream) {
       mAudioStream->Drain();
+      // Fire one last event for any extra samples that didn't fill a framebuffer.
+      mEventManager.Drain(mAudioEndTime);
     }
     LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder));
   }
@@ -464,7 +493,10 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   LOG(PR_LOG_DEBUG, ("Audio stream finished playing, audio thread exit"));
 }
 
-PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples, PRUint32 aChannels)
+PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
+                                                   PRUint32 aChannels,
+                                                   PRUint64 aSampleOffset)
+
 {
   MonitorAutoEnter audioMon(mAudioMonitor);
   if (mAudioStream->IsPaused()) {
@@ -478,10 +510,14 @@ PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples, PRUint32 a
   nsAutoArrayPtr<float> buf(new float[numFloats]);
   memset(buf.get(), 0, sizeof(float) * numFloats);
   mAudioStream->Write(buf, numFloats, PR_TRUE);
+  // Dispatch events to the DOM for the audio just written.
+  mEventManager.QueueWrittenAudioData(buf.get(), numFloats,
+                                      (aSampleOffset + samples) * aChannels);
   return samples;
 }
 
-PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue()
+PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset,
+                                                          PRUint32 aChannels)
 {
   nsAutoPtr<SoundData> sound(mReader->mAudioQueue.PopFront());
   {
@@ -502,15 +538,21 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue()
     // monitor and acquired the audio monitor. Rather than acquire both
     // monitors, the audio stream also maintains whether its paused or not.
     // This prevents us from doing a blocking write while holding the audio
-    // monitor while paused; we would block, and the state machine won't be 
+    // monitor while paused; we would block, and the state machine won't be
     // able to acquire the audio monitor in order to resume or destroy the
     // audio stream.
     if (!mAudioStream->IsPaused()) {
       mAudioStream->Write(sound->mAudioData,
                           sound->AudioDataLength(),
                           PR_TRUE);
+
       offset = sound->mOffset;
       samples = sound->mSamples;
+
+      // Dispatch events to the DOM for the audio just written.
+      mEventManager.QueueWrittenAudioData(sound->mAudioData.get(),
+                                          sound->AudioDataLength(),
+                                          (aSampleOffset + samples) * aChannels);
     } else {
       mReader->mAudioQueue.PushFront(sound);
       sound.forget();
@@ -552,6 +594,7 @@ void nsBuiltinDecoderStateMachine::StopPlayback(eStopMode aMode)
       } else if (aMode == AUDIO_SHUTDOWN) {
         mAudioStream->Shutdown();
         mAudioStream = nsnull;
+        mEventManager.Clear();
       }
     }
   }
@@ -608,6 +651,9 @@ void nsBuiltinDecoderStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
       NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::PlaybackPositionChanged);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
+
+  // Notify DOM of any queued up audioavailable events
+  mEventManager.DispatchPendingEvents(mCurrentFrameTime + mStartTime);
 }
 
 void nsBuiltinDecoderStateMachine::ClearPositionChangeFlag()
@@ -851,11 +897,20 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
 
-        // Inform the element that we've loaded the metadata and the
-        // first frame.
+        // Inform the element that we've loaded the metadata and the first frame,
+        // setting the default framebuffer size for audioavailable events.  Also,
+        // if there is audio, let the MozAudioAvailable event manager know about
+        // the metadata.
+        const nsVideoInfo& info = mReader->GetInfo();
+        PRUint32 frameBufferLength = info.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
         nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-          NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::MetadataLoaded);
+          new nsAudioMetadataEventRunner(mDecoder, info.mAudioChannels,
+                                         info.mAudioRate, frameBufferLength);
         NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
+        if (HasAudio()) {
+          mEventManager.Init(info.mAudioChannels, info.mAudioRate);
+          mDecoder->RequestFrameBufferLength(frameBufferLength);
+        }
 
         if (mState == DECODER_STATE_DECODING_METADATA) {
           LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to DECODING", mDecoder));

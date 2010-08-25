@@ -50,6 +50,8 @@
 #include "nsIObserver.h"
 #include "ImageLayers.h"
 
+#include "nsAudioStream.h"
+
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
 
@@ -127,7 +129,7 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  void MetadataLoaded();
+  void MetadataLoaded(PRUint32 aChannels, PRUint32 aRate);
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
@@ -186,6 +188,9 @@ public:
   nsresult DispatchProgressEvent(const nsAString& aName);
   nsresult DispatchAsyncSimpleEvent(const nsAString& aName);
   nsresult DispatchAsyncProgressEvent(const nsAString& aName);
+  nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,
+                                       PRUint32 aFrameBufferLength,
+                                       PRUint64 aTime);
 
   // Called by the decoder when some data has been downloaded or
   // buffering/seeking has ended. aNextFrameAvailable is true when
@@ -284,6 +289,18 @@ public:
    * whether it's appropriate to fire an error event.
    */
   void NotifyLoadError();
+
+  /**
+   * Called when data has been written to the underlying audio stream.
+   */
+  void NotifyAudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength,
+                            PRUint64 aTime);
+
+  /**
+   * Called in order to check whether some node (this window, its document,
+   * or content in that document) has a MozAudioAvailable event listener.
+   */
+  PRBool MayHaveAudioAvailableEventListener();
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
@@ -527,6 +544,12 @@ protected:
   // Current audio volume
   float mVolume;
 
+  // Current number of audio channels.
+  PRUint32 mChannels;
+
+  // Current audio sample rate.
+  PRUint32 mRate;
+
   // If we're loading a preload:none media, we'll record the URI we're
   // attempting to load in mPreloadURI, and delay loading the resource until
   // the user initiates a load by either playing the resource, or explicitly
@@ -543,6 +566,13 @@ protected:
   nsIntSize mMediaSize;
 
   nsRefPtr<gfxASurface> mPrintSurface;
+
+  // An audio stream for writing audio directly from JS.
+  nsAutoPtr<nsAudioStream> mAudioStream;
+
+  // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
+  // a media and element same-origin check.
+  PRBool mAllowAudioData;
 
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
@@ -636,6 +666,9 @@ protected:
   // load when the user initiates either playback or an explicit load is
   // stored in mPreloadURI.
   PRPackedBool mLoadIsSuspended;
+
+  // PR_TRUE if a same-origin check has been done for the media element and resource.
+  PRPackedBool mMediaSecurityVerified;
 };
 
 #endif

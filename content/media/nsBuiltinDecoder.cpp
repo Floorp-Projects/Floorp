@@ -303,11 +303,32 @@ already_AddRefed<nsIPrincipal> nsBuiltinDecoder::GetCurrentPrincipal()
   return mStream ? mStream->GetCurrentPrincipal() : nsnull;
 }
 
-void nsBuiltinDecoder::MetadataLoaded()
+void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
+                                      PRUint32 aFrameBufferLength,
+                                      PRUint64 aTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  if (mShuttingDown)
+  if (mShuttingDown) {
     return;
+  }
+
+  if (!mElement->MayHaveAudioAvailableEventListener()) {
+    return;
+  }
+
+  mElement->NotifyAudioAvailable(aFrameBuffer, aFrameBufferLength, aTime);
+}
+
+void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
+                                      PRUint32 aRate,
+                                      PRUint32 aFrameBufferLength)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  if (mShuttingDown) {
+    return;
+  }
+
+  mFrameBufferLength = aFrameBufferLength;
 
   // Only inform the element of MetadataLoaded if not doing a load() in order
   // to fulfill a seek, otherwise we'll get multiple metadataloaded events.
@@ -325,7 +346,7 @@ void nsBuiltinDecoder::MetadataLoaded()
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mElement->MetadataLoaded();
+    mElement->MetadataLoaded(aChannels, aRate);
   }
 
   if (!mResourceLoaded) {

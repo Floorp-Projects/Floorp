@@ -511,6 +511,11 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
           if (elm->MayHavePaintEventListener()) {
             window->SetHasPaintEventListeners();
           }
+#ifdef MOZ_MEDIA
+          if (elm->MayHaveAudioAvailableEventListener()) {
+            window->SetHasAudioAvailableEventListeners();
+          }
+#endif
         }
       }
     }

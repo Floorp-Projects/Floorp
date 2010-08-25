@@ -68,7 +68,7 @@ class nsAudioStream
   // Initialize the audio stream. aNumChannels is the number of audio channels 
   // (1 for mono, 2 for stereo, etc) and aRate is the frequency of the sound 
   // samples (22050, 44100, etc).
-  void Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
+  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
 
   // Closes the stream. All future use of the stream is an error.
   void Shutdown();
@@ -79,7 +79,7 @@ class nsAudioStream
   // When aBlocking is PR_TRUE, we'll block until the write has completed,
   // otherwise we'll buffer any data we can't write immediately, and write
   // it in a later call.
-  void Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
+  nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
 
   // Return the number of sound samples that can be written to the audio device
   // without blocking.
@@ -101,6 +101,10 @@ class nsAudioStream
   // Return the position in milliseconds of the sample being played by the
   // audio hardware.
   PRInt64 GetPosition();
+
+  // Return the position, measured in samples played since the start, by
+  // the audio hardware.
+  PRInt64 GetSampleOffset();
 
   // Returns PR_TRUE when the audio stream is paused.
   PRBool IsPaused() { return mPaused; }
