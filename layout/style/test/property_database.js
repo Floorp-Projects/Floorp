@@ -1755,6 +1755,7 @@ var gCSSProperties = {
 		domProp: "maxHeight",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
 		invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
@@ -1763,6 +1764,7 @@ var gCSSProperties = {
 		domProp: "maxWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "auto" ]
@@ -1771,6 +1773,7 @@ var gCSSProperties = {
 		domProp: "minHeight",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
 		invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
@@ -1779,6 +1782,7 @@ var gCSSProperties = {
 		domProp: "minWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "auto", "none" ]
