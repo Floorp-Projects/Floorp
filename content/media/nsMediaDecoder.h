@@ -53,6 +53,16 @@ class nsMediaStream;
 class nsIStreamListener;
 class nsTimeRanges;
 
+// The size to use for audio data frames in MozAudioAvailable events.
+// This value is per channel, and is chosen to give ~43 fps of events,
+// for example, 44100 with 2 channels, 2*1024 = 2048.
+#define FRAMEBUFFER_LENGTH_PER_CHANNEL 1024
+
+// The total size of the framebuffer used for MozAudioAvailable events
+// has to be within the following range.
+#define FRAMEBUFFER_LENGTH_MIN 512
+#define FRAMEBUFFER_LENGTH_MAX 16384
+
 // Shuts down a thread asynchronously.
 class ShutdownThreadEvent : public nsRunnable 
 {
@@ -233,6 +243,14 @@ public:
   // if it's available.
   nsHTMLMediaElement* GetMediaElement();
 
+  // Returns the current size of the framebuffer used in
+  // MozAudioAvailable events.
+  PRUint32 GetFrameBufferLength() { return mFrameBufferLength; };
+
+  // Sets the length of the framebuffer used in MozAudioAvailable events.
+  // The new size must be between 512 and 16384.
+  nsresult RequestFrameBufferLength(PRUint32 aLength);
+
   // Moves any existing channel loads into the background, so that they don't
   // block the load event. This is called when we stop delaying the load
   // event. Any new loads initiated (for example to seek) will also be in the
@@ -311,6 +329,9 @@ protected:
 
   // Pixel aspect ratio (ratio of the pixel width to pixel height)
   float mPixelAspectRatio;
+
+  // The framebuffer size to use for audioavailable events.
+  PRUint32 mFrameBufferLength;
 
   // PR_TRUE when our media stream has been pinned. We pin the stream
   // while seeking.

@@ -57,6 +57,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
+#include "jscntxt.h"
+#include "jstypedarray.h"
 #include "nsJSUtils.h"
 
 #include "nsIRenderingContext.h"
@@ -144,6 +146,99 @@ nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
   // We have been specified with a src URL. Begin a load.
   QueueSelectResourceTask();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAudioElement::MozSetup(PRUint32 aChannels, PRUint32 aRate)
+{
+  // If there is already a src provided, don't setup another stream
+  if (mDecoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // MozWriteAudio divides by mChannels, so validate now.
+  if (0 == aChannels) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+  }
+
+  mAudioStream = new nsAudioStream();
+  nsresult rv = mAudioStream->Init(aChannels, aRate,
+                                   nsAudioStream::FORMAT_FLOAT32);
+  if (NS_FAILED(rv)) {
+    mAudioStream->Shutdown();
+    mAudioStream = nsnull;
+    return rv;
+  }
+
+  MetadataLoaded(aChannels, aRate);
+  mAudioStream->SetVolume(mVolume);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAudioElement::MozWriteAudio(const jsval &aData, JSContext *aCx, PRUint32 *aRetVal)
+{
+  if (!mAudioStream) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(aData)) {
+    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+  }
+
+  JSObject *darray = JSVAL_TO_OBJECT(aData);
+  js::AutoValueRooter tsrc_tvr(aCx);
+  js::TypedArray *tsrc = NULL;
+
+  // Allow either Float32Array or plain JS Array
+  if (darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_FLOAT32])
+  {
+    tsrc = js::TypedArray::fromJSObject(darray);
+  } else if (JS_IsArrayObject(aCx, darray)) {
+    JSObject *nobj = js_CreateTypedArrayWithArray(aCx, js::TypedArray::TYPE_FLOAT32, darray);
+    if (!nobj) {
+      return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
+    *tsrc_tvr.jsval_addr() = OBJECT_TO_JSVAL(nobj);
+    tsrc = js::TypedArray::fromJSObject(nobj);
+  } else {
+    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+  }
+
+  PRUint32 dataLength = tsrc->length;
+
+  // Make sure that we are going to write the correct amount of data based
+  // on number of channels.
+  if (dataLength % mChannels != 0) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // Don't write more than can be written without blocking.
+  PRUint32 writeLen = NS_MIN(mAudioStream->Available(), dataLength);
+
+  nsresult rv = mAudioStream->Write(tsrc->data, writeLen, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Return the actual amount written.
+  *aRetVal = writeLen;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLAudioElement::MozCurrentSampleOffset(PRUint64 *aRetVal)
+{
+  if (!mAudioStream) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  *aRetVal = mAudioStream->GetSampleOffset();
   return NS_OK;
 }
 
