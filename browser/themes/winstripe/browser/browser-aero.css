@@ -16,18 +16,14 @@
 }
 
 @media all and (-moz-windows-compositor) {
+  /* these should be hidden w/glass enabled. windows draws it's own buttons. */
+  #titlebar-buttonbox {
+    display: none;
+  }
+
   #main-window:not(:-moz-lwtheme) {
     -moz-appearance: -moz-win-borderless-glass;
     background: transparent;
-  }
-
-  /* the new titlebar requires this, or content will be clipped at the top of the screen. */
-  #main-window[sizemode="maximized"][chromemargin^="0,"] {
-    margin-top: 8px;
-  }
-
-  #main-window[sizemode="normal"][chromemargin^="0,"] {
-    margin-top: 2px;
   }
 
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
