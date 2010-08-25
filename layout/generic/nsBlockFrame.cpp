@@ -2751,6 +2751,23 @@ IsPaddingZero(nsStyleUnit aUnit, const nsStyleCoord &aCoord)
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
+static inline PRBool
+IsNonAutoNonZeroHeight(const nsStyleCoord& aCoord)
+{
+  if (aCoord.GetUnit() == eStyleUnit_Auto)
+    return PR_FALSE;
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    // If we evaluate the length/percent/calc at a percentage basis of
+    // both nscoord_MAX and 0, and it's zero both ways, then it's a zero
+    // length, percent, or combination thereof.  Test > 0 so we clamp
+    // negative calc() results to 0.
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) > 0 ||
+           nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) > 0;
+  }
+  NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit for height or min-height");
+  return PR_TRUE;
+}
+
 /* virtual */ PRBool
 nsBlockFrame::IsSelfEmpty()
 {
@@ -2762,33 +2779,9 @@ nsBlockFrame::IsSelfEmpty()
 
   const nsStylePosition* position = GetStylePosition();
 
-  switch (position->mMinHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      if (position->mMinHeight.GetCoordValue() != 0)
-        return PR_FALSE;
-      break;
-    case eStyleUnit_Percent:
-      if (position->mMinHeight.GetPercentValue() != 0.0f)
-        return PR_FALSE;
-      break;
-    default:
-      return PR_FALSE;
-  }
-
-  switch (position->mHeight.GetUnit()) {
-    case eStyleUnit_Auto:
-      break;
-    case eStyleUnit_Coord:
-      if (position->mHeight.GetCoordValue() != 0)
-        return PR_FALSE;
-      break;
-    case eStyleUnit_Percent:
-      if (position->mHeight.GetPercentValue() != 0.0f)
-        return PR_FALSE;
-      break;
-    default:
-      return PR_FALSE;
-  }
+  if (IsNonAutoNonZeroHeight(position->mMinHeight) ||
+      IsNonAutoNonZeroHeight(position->mHeight))
+    return PR_FALSE;
 
   const nsStyleBorder* border = GetStyleBorder();
   const nsStylePadding* padding = GetStylePadding();

@@ -1,3 +1,7 @@
+== height-block-1.html height-block-1-ref.html
+== height-table-1.html height-table-1-ref.html
+== max-height-block-1.html max-height-block-1-ref.html
+== min-height-block-1.html height-block-1-ref.html
 == width-block-1.html width-block-1-ref.html
 == width-block-intrinsic-1.html width-block-intrinsic-1-ref.html
 == width-table-auto-1.html width-table-auto-1-ref.html

@@ -687,15 +687,26 @@ nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &a
         if (!width.CalcHasPercent()) {
             // pass 0 for percentage basis since we know there are no %s
             aSize.width = nsRuleNode::ComputeComputedCalc(width, 0);
+            if (aSize.width < 0)
+                aSize.width = 0;
             aWidthSet = PR_TRUE;
         }
     }
 
-    if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
-        aSize.height = position->mHeight.GetCoordValue();     
+    const nsStyleCoord &height = position->mHeight;
+    if (height.GetUnit() == eStyleUnit_Coord) {
+        aSize.height = height.GetCoordValue();
         aHeightSet = PR_TRUE;
+    } else if (height.IsCalcUnit()) {
+        if (!height.CalcHasPercent()) {
+            // pass 0 for percentage basis since we know there are no %s
+            aSize.height = nsRuleNode::ComputeComputedCalc(height, 0);
+            if (aSize.height < 0)
+                aSize.height = 0;
+            aHeightSet = PR_TRUE;
+        }
     }
-    
+
     nsIContent* content = aBox->GetContent();
     // ignore 'height' and 'width' attributes if the actual element is not XUL
     // For example, we might be magic XUL frames whose primary content is an HTML
@@ -780,18 +791,23 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
     // GetPrefSize/GetMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.
 
-    if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
-        nscoord min = position->mMinHeight.GetCoordValue();
-        if (min && (!aHeightSet || (min > aSize.height && canOverride))) {
+    const nsStyleCoord &minHeight = position->mMinHeight;
+    if ((minHeight.GetUnit() == eStyleUnit_Coord &&
+         minHeight.GetCoordValue() != 0) ||
+        (minHeight.IsCalcUnit() && !minHeight.CalcHasPercent())) {
+        nscoord min = nsRuleNode::ComputeCoordPercentCalc(minHeight, 0);
+        if (!aHeightSet || (min > aSize.height && canOverride)) {
            aSize.height = min;
            aHeightSet = PR_TRUE;
         }
-    } else if (position->mMinHeight.GetUnit() == eStyleUnit_Percent) {
+    } else if (minHeight.GetUnit() == eStyleUnit_Percent) {
         NS_ASSERTION(position->mMinHeight.GetPercentValue() == 0.0f,
           "Non-zero percentage values not currently supported");
         aSize.height = 0;
-        aHeightSet = PR_TRUE;
+        aHeightSet = PR_TRUE; // FIXME: should we really do this for
+                              // nonzero values?
     }
+    // calc() with percentage is treated like '0' (unset)
 
     nsIContent* content = aBox->GetContent();
     if (content) {
@@ -847,10 +863,12 @@ nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &aH
         aWidthSet = PR_TRUE;
     }
 
-    if (position->mMaxHeight.GetUnit() == eStyleUnit_Coord) {
-        aSize.height = position->mMaxHeight.GetCoordValue();
+    const nsStyleCoord &maxHeight = position->mMaxHeight;
+    if (maxHeight.ConvertsToLength()) {
+        aSize.height = nsRuleNode::ComputeCoordPercentCalc(maxHeight, 0);
         aHeightSet = PR_TRUE;
     }
+    // percentages and calc() with percentages are treated like 'none'
 
     nsIContent* content = aBox->GetContent();
     if (content) {
