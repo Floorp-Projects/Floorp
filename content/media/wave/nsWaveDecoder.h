@@ -258,6 +258,10 @@ private:
   // Notifies the element that decoding has failed.
   void DecodeError();
 
+  // Ensures that state machine thread is running, starting a new one
+  // if necessary.
+  nsresult StartStateMachineThread();
+
   // Volume that the audio backend will be initialized with.
   float mInitialVolume;
 
