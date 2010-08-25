@@ -406,9 +406,9 @@ var BrowserUI = {
 
     // Push the panel initialization out of the startup path
     // (Using a message because we have no good way to delay-init [Bug 535366])
-    messageManager.addMessageListener("pageshow", function() {
+    messageManager.addMessageListener("DOMContentLoaded", function() {
       // We only want to delay one time
-      messageManager.removeMessageListener("pageshow", arguments.callee, true);
+      messageManager.removeMessageListener("DOMContentLoaded", arguments.callee, true);
 
       // We unhide the panelUI so the XBL and settings can initialize
       Elements.panelUI.hidden = false;
