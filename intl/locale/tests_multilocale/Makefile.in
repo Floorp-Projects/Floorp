@@ -39,6 +39,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = intl/locale/tests_multilocale
 
 include $(DEPTH)/config/autoconf.mk
 
