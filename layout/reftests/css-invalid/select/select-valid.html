@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if select has no custom error and is not barred from constraint
              validation, it should not be affected by :invalid pseudo-class. -->
-  <style>
-    select { background-color: green; }
-    select:invalid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <select></select>
+    <select class='notinvalid'></select>
   </body>
 </html>

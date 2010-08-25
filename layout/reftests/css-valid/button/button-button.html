@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if button is of the button type, it is barred from constraint
              validation and should not be affected by :valid pseudo-class. -->
-  <style>
-    button { background-color: green; }
-    button:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <button type='button'></button>
+    <button class='notvalid' type='button'></button>
   </body>
 </html>

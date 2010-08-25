@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if select has a custom error, it should not be affected by :valid
              pseudo-class. -->
-  <style>
-    select { background-color: green; }
-    select:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('s').setCustomValidity('foo'); document.documentElement.className='';">
-    <select id='s'></select>
+    <select class='notvalid' id='s'></select>
   </body>
 </html>
