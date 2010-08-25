@@ -290,7 +290,7 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
         }
         JS_ASSERT(script->ncode);
         if (script->ncode != JS_UNJITTABLE_METHOD) {
-            *pret = script->nmap[-1];
+            *pret = script->jit->invoke;
             return true;
         }
     }
