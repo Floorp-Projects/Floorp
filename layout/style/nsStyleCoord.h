@@ -321,11 +321,7 @@ inline nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
 inline nsStyleCoord::nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
-#if PR_BYTES_PER_INT == PR_BYTES_PER_FLOAT
-  mValue.mInt = aValue.mInt;
-#else
   memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
-#endif
 }
 
 inline PRBool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
