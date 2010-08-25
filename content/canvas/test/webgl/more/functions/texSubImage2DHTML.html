@@ -46,12 +46,16 @@ Tests.startUnit = function () {
 Tests.setup = function(gl) {
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
+    var texCubeMap = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texCubeMap);
     return [gl]
 }
 
-Tests.teardown = function(gl, tex) {
+Tests.teardown = function(gl, tex, texCubeMap) {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.deleteTexture(tex);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+    gl.deleteTexture(texCubeMap);
 }
 
 Tests.testTexImage2D = function(gl) {
@@ -114,7 +118,6 @@ Tests.endUnit = function(gl) {
 
 </script>
 <script id="identity-flip-vert" type="x-shader/x-vertex">
-#version 120
 attribute vec3 Vertex;
 attribute vec2 Tex;
 
@@ -126,7 +129,6 @@ void main()
 }
 </script>
 <script id="identity-hflip-vert" type="x-shader/x-vertex">
-#version 120
 attribute vec3 Vertex;
 attribute vec2 Tex;
 
@@ -138,8 +140,9 @@ void main()
 }
 </script>
 <script id="identity-frag" type="x-shader/x-fragment">
-#version 120
-
+#ifdef GL_ES
+precision highp float;
+#endif
 uniform sampler2D Texture;
 
 varying vec4 texCoord0;

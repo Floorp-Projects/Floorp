@@ -193,16 +193,26 @@ function start() {
       ++this.totalTimeouts;
       if (this.isExpectedToFullyPass()) {
         ok(false, this.errormsg('Unexpected timeout in this test page'));
+        window.dump('WebGL test error: test page timeout: ' + this.url +
+                    ' (using ' + GLImplementationName() + ')\n');
       }
     } else if (this.totalSuccessful != this.totalTests) {
       var css = 'testpagefail';
+      if (this.isExpectedToFullyPass()) {
+        window.dump('WebGL test error: test page failure: ' + this.url +
+                    ' (using ' + GLImplementationName() + ')\n');
+      }
       // failures have already been reported for the sub-tests
     } else {
       var css = 'testpagesuccess';
-      testsSuccesses.push(this.url);
+      if (forceOSMesaInThisTestRun()) {
+        testsSuccessesWithOSMesa.push(this.url);
+      }
       if (this.isExpectedToFullyPass()) {
         ok(true, this.errormsg('Successful test page'));
       }
+      window.dump('WebGL test page successful: ' + this.url +
+                    ' (using ' + GLImplementationName() + ')\n');
     }
     this.elem.setAttribute('class', css);
     this.totalsElem.textContent = msg;
@@ -363,10 +373,12 @@ function start() {
   function runTestSuite() {
     if (timesTestSuiteAlreadyRun == 2) {
       for(var i = 0; i < testsExpectedToFail.length; ++i) {
-        if(occurencesCount(testsSuccesses, testsExpectedToFail[i]) == 2) {
-          ok(false, 'The following test page is successful with both default GL and OSMesa, ' +
+        if(occurencesCount(testsSuccessesWithOSMesa, testsExpectedToFail[i]) == 1) {
+          ok(false, 'The following test page is successful with OSMesa, ' +
                     'remove it from the list of failing pages: ' +
                     testsExpectedToFail[i]);
+          window.dump('WebGL test error: page must be removed from failing_tests.txt: ' +
+                      testsExpectedToFail[i] + '\n');
         }
       }
       restoreOldPrefs();
@@ -396,7 +408,7 @@ function start() {
   expectedtofailElem.appendChild(expectedtofailTextNode);
 
   var testsExpectedToFail = loadTextFileSynchronous('failing_tests.txt').split('\n');
-  var testsSuccesses = [];
+  var testsSuccessesWithOSMesa = [];
 
   runTestSuite();
 }

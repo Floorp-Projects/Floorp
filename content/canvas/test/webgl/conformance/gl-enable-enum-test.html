@@ -99,7 +99,7 @@ if (!gl) {
   for (var ii = 0; ii < invalidEnums.length; ++ii) {
     var name = invalidEnums[ii];
     gl.enable(desktopGL[name]);
-    assertMsg(gl.getError() == gl.INVALID_ENUM,
+    glErrorShouldBe(gl, gl.INVALID_ENUM,
               "gl.enable must set INVALID_ENUM when passed GL_" + name );
   }
 
@@ -118,7 +118,7 @@ if (!gl) {
   for (var ii = 0; ii < validEnums.length; ++ii) {
     var name = validEnums[ii];
     gl.enable(gl[name]);
-    assertMsg(gl.getError() == gl.NO_ERROR,
+    glErrorShouldBe(gl, gl.NO_ERROR,
               "gl.enable must succeed when passed gl." + name );
   }
 
