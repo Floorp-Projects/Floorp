@@ -745,11 +745,15 @@ FrameState::eviscerate(FrameEntry *fe)
     fe->setCopyOf(NULL);
 }
 
-inline void
+inline bool
 FrameState::addEscaping(uint32 local)
 {
-    if (!eval)
+    if (!eval) {
+        uint32 already = escaping[local];
         escaping[local] = 1;
+        return !already;
+    }
+    return false;
 }
 
 inline StateRemat
