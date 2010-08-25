@@ -377,22 +377,22 @@ InspectorTreeView.prototype = {
   /**
    * Get the index of the selected row.
    *
-   * @returns number
+   * @returns number -1 if there is no row selected.
    */
   get selectionIndex()
   {
-    return this.selection.currentIndex;
+    return this.selection ? this.selection.currentIndex : -1;
   },
 
   /**
    * Get the corresponding node for the currently-selected row in the tree.
    *
-   * @returns DOMNode
+   * @returns DOMNode|null
    */
   get selectedNode()
   {
     let rowIndex = this.selectionIndex;
-    return this.view.getNodeFromRowIndex(rowIndex);
+    return rowIndex > -1 ? this.view.getNodeFromRowIndex(rowIndex) : null;
   },
 
   /**
@@ -505,7 +505,7 @@ var InspectorUI = {
   toggleInspectorUI: function IUI_toggleInspectorUI(aEvent)
   {
     if (this.isPanelOpen) {
-      this.closeInspectorUI();
+      this.closeInspectorUI(true);
     } else {
       this.openInspectorUI();
     }
@@ -654,13 +654,14 @@ var InspectorUI = {
 
   /**
    * Open inspector UI. tree, style and DOM panels if enabled. Add listeners for
-   * document scrolling, resize and tabContainer.TabSelect.
+   * document scrolling, resize, tabContainer.TabSelect and others.
    */
   openInspectorUI: function IUI_openInspectorUI()
   {
     // initialization
     this.browser = gBrowser.selectedBrowser;
     this.win = this.browser.contentWindow;
+    this.winID = this.getWindowID(this.win);
 
     // DOM panel initialization and loading (via PropertyPanel.jsm)
     let domPanelTitle = this.strings.GetStringFromName("dom.domPanelTitle");
@@ -687,11 +688,30 @@ var InspectorUI = {
 
     // setup highlighter and start inspecting
     this.initializeHighlighter();
-    this.startInspecting();
+
+    if (!InspectorStore.hasID(this.winID) ||
+      InspectorStore.getValue(this.winID, "inspecting")) {
+      this.startInspecting();
+    }
+
     this.win.document.addEventListener("scroll", this, false);
     this.win.addEventListener("resize", this, false);
-    gBrowser.tabContainer.addEventListener("TabSelect", this, false);
     this.inspectCmd.setAttribute("checked", true);
+
+    if (InspectorStore.isEmpty()) {
+      gBrowser.tabContainer.addEventListener("TabSelect", this, false);
+    }
+
+    if (InspectorStore.hasID(this.winID)) {
+      let selectedNode = InspectorStore.getValue(this.winID, "selectedNode");
+      if (selectedNode) {
+        this.inspectNode(selectedNode);
+      }
+    } else {
+      InspectorStore.addStore(this.winID);
+      InspectorStore.setValue(this.winID, "selectedNode", null);
+      this.win.addEventListener("pagehide", this, true);
+    }
   },
 
   /**
@@ -704,14 +724,30 @@ var InspectorUI = {
 
   /**
    * Close inspector UI and associated panels. Unhighlight and stop inspecting.
-   * Remove event listeners for document scrolling, resize and
-   * tabContainer.TabSelect.
+   * Remove event listeners for document scrolling, resize,
+   * tabContainer.TabSelect and others.
+   *
+   * @param boolean aClearStore tells if you want the store associated to the
+   * current tab/window to be cleared or not.
    */
-  closeInspectorUI: function IUI_closeInspectorUI()
+  closeInspectorUI: function IUI_closeInspectorUI(aClearStore)
   {
+    if (aClearStore) {
+      InspectorStore.deleteStore(this.winID);
+      this.win.removeEventListener("pagehide", this, true);
+    } else {
+      // Update the store before closing.
+      InspectorStore.setValue(this.winID, "selectedNode",
+        this.treeView.selectedNode);
+      InspectorStore.setValue(this.winID, "inspecting", this.inspecting);
+    }
+
+    if (InspectorStore.isEmpty()) {
+      gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+    }
+
     this.win.document.removeEventListener("scroll", this, false);
     this.win.removeEventListener("resize", this, false);
-    gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
     this.stopInspecting();
     if (this.highlighter && this.highlighter.isHighlighting) {
       this.highlighter.unhighlight();
@@ -731,6 +767,7 @@ var InspectorUI = {
     }
     this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
+    this.winID = null;
   },
 
   /**
@@ -911,9 +948,41 @@ var InspectorUI = {
    */
   handleEvent: function IUI_handleEvent(event)
   {
+    let winID = null;
+    let win = null;
+
     switch (event.type) {
       case "TabSelect":
-        this.closeInspectorUI();
+        winID = this.getWindowID(gBrowser.selectedBrowser.contentWindow);
+        if (this.isPanelOpen && winID != this.winID) {
+          this.closeInspectorUI(false);
+        }
+
+        if (winID && InspectorStore.hasID(winID)) {
+          this.openInspectorUI();
+        }
+
+        if (InspectorStore.isEmpty()) {
+          gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+        }
+        break;
+      case "pagehide":
+        win = event.originalTarget.defaultView;
+        // Skip iframes/frames.
+        if (!win || win.frameElement || win.top != win) {
+          break;
+        }
+
+        win.removeEventListener(event.type, this, true);
+
+        winID = this.getWindowID(win);
+        if (winID && winID != this.winID) {
+          InspectorStore.deleteStore(winID);
+        }
+
+        if (InspectorStore.isEmpty()) {
+          gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+        }
         break;
       case "keypress":
         switch (event.keyCode) {
@@ -1032,6 +1101,28 @@ var InspectorUI = {
   //// Utility functions
 
   /**
+   * Retrieve the unique ID of a window object.
+   *
+   * @param nsIDOMWindow aWindow
+   * @returns integer ID
+   */
+  getWindowID: function IUI_getWindowID(aWindow)
+  {
+    if (!aWindow) {
+      return null;
+    }
+
+    let util = {};
+
+    try {
+      util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+        getInterface(Ci.nsIDOMWindowUtils);
+    } catch (ex) { }
+
+    return util.currentInnerWindowID;
+  },
+
+  /**
    * debug logging facility
    * @param msg
    *        text message to send to the log
@@ -1041,6 +1132,129 @@ var InspectorUI = {
     Services.console.logStringMessage(msg);
   },
 }
+
+/**
+ * The Inspector store is used for storing data specific to each tab window.
+ */
+var InspectorStore = {
+  store: {},
+  length: 0,
+
+  /**
+   * Check if there is any data recorded for any tab/window.
+   *
+   * @returns boolean True if there are no stores for any window/tab, or false
+   * otherwise.
+   */
+  isEmpty: function IS_isEmpty()
+  {
+    return this.length == 0 ? true : false;
+  },
+
+  /**
+   * Add a new store.
+   *
+   * @param string aID The Store ID you want created.
+   * @returns boolean True if the store was added successfully, or false
+   * otherwise.
+   */
+  addStore: function IS_addStore(aID)
+  {
+    let result = false;
+
+    if (!(aID in this.store)) {
+      this.store[aID] = {};
+      this.length++;
+      result = true;
+    }
+
+    return result;
+  },
+
+  /**
+   * Delete a store by ID.
+   *
+   * @param string aID The store ID you want deleted.
+   * @returns boolean True if the store was removed successfully, or false
+   * otherwise.
+   */
+  deleteStore: function IS_deleteStore(aID)
+  {
+    let result = false;
+
+    if (aID in this.store) {
+      delete this.store[aID];
+      this.length--;
+      result = true;
+    }
+
+    return result;
+  },
+
+  /**
+   * Check store existence.
+   *
+   * @param string aID The store ID you want to check.
+   * @returns boolean True if the store ID is registered, or false otherwise.
+   */
+  hasID: function IS_hasID(aID)
+  {
+    return (aID in this.store);
+  },
+
+  /**
+   * Retrieve a value from a store for a given key.
+   *
+   * @param string aID The store ID you want to read the value from.
+   * @param string aKey The key name of the value you want.
+   * @returns mixed the value associated to your store and key.
+   */
+  getValue: function IS_getValue(aID, aKey)
+  {
+    return aID in this.store ? this.store[aID][aKey] : null;
+  },
+
+  /**
+   * Set a value for a given key and store.
+   *
+   * @param string aID The store ID where you want to store the value into.
+   * @param string aKey The key name for which you want to save the value.
+   * @param mixed aValue The value you want stored.
+   * @returns boolean True if the value was stored successfully, or false
+   * otherwise.
+   */
+  setValue: function IS_setValue(aID, aKey, aValue)
+  {
+    let result = false;
+
+    if (aID in this.store) {
+      this.store[aID][aKey] = aValue;
+      result = true;
+    }
+
+    return result;
+  },
+
+  /**
+   * Delete a value for a given key and store.
+   *
+   * @param string aID The store ID where you want to store the value into.
+   * @param string aKey The key name for which you want to save the value.
+   * @returns boolean True if the value was removed successfully, or false
+   * otherwise.
+   */
+  deleteValue: function IS_deleteValue(aID, aKey)
+  {
+    let result = false;
+
+    if (aID in this.store && aKey in this.store[aID]) {
+      delete this.store[aID][aKey];
+      result = true;
+    }
+
+    return result;
+  }
+};
 
 /////////////////////////////////////////////////////////////////////////
 //// Initializors

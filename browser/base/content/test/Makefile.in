@@ -158,6 +158,8 @@ _BROWSER_FILES = \
                  browser_inspector_domPanel.js \
                  browser_inspector_iframeTest.js \
                  browser_inspector_scrolling.js \
+                 browser_inspector_store.js \
+                 browser_inspector_tab_switch.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
