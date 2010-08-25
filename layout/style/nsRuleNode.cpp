@@ -535,8 +535,8 @@ struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,
   {
     nscoord result;
     if (aValue.GetUnit() == eStyleUnit_Percent) {
-      result = NSCoordSaturatingMultiply(mPercentageBasis,
-                                         aValue.GetPercentValue());
+      result =
+        NSToCoordFloorClamped(mPercentageBasis * aValue.GetPercentValue());
     } else {
       result = aValue.GetCoordValue();
     }
