@@ -138,6 +138,11 @@ public:
     return IsCalcUnit();
   }
 
+  PRBool HasPercent() const {
+    return mUnit == eStyleUnit_Percent ||
+           (IsCalcUnit() && CalcHasPercent());
+  }
+
   nscoord     GetCoordValue() const;
   PRInt32     GetIntValue() const;
   float       GetPercentValue() const;
