@@ -5,9 +5,7 @@
 == placeholder-empty-string.html placeholder-empty-string-ref.html
 == placeholder-complex.html placeholder-complex-ref.html
 == placeholder-add.html placeholder-simple-ref.html
-# On tinderbox, this test doesn't pass on Linux machines, see bug 590418.
-# Even if it pass on my GNU/Linux system, it doesn't seem random on tinderbox.
-fails-if(gtk2Widget) == placeholder-removal.html data:text/html,<input>
+== placeholder-removal.html input-ref.html
 == placeholder-value-set.html placeholder-value-ref.html
 == placeholder-value-unset.html placeholder-simple-ref.html
 == placeholder-value-reset.html placeholder-simple-ref.html

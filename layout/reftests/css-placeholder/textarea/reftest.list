@@ -5,7 +5,7 @@
 == placeholder-empty-string.html placeholder-empty-string-ref.html
 == placeholder-complex.html placeholder-complex-ref.html
 == placeholder-add.html placeholder-simple-ref.html
-== placeholder-removal.html data:text/html,<textarea></textarea>
+== placeholder-removal.html textarea-ref.html
 == placeholder-value-set.html placeholder-value-ref.html
 == placeholder-value-unset.html placeholder-simple-ref.html
 == placeholder-value-reset.html placeholder-simple-ref.html
