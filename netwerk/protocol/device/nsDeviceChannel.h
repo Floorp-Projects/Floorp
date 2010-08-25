@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Camera.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brad Lassey <blassey@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,22 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NECKO_CONFIG_H_
-#define _NECKO_CONFIG_H_
+#ifndef nsDeviceChannel_h_
+#define nsDeviceChannel_h_
 
-#undef NECKO_DISK_CACHE
+#include "nsBaseChannel.h"
 
-#undef NECKO_COOKIES
+class nsDeviceChannel : public nsBaseChannel
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
 
-#undef NECKO_WIFI
+  nsDeviceChannel();
+  ~nsDeviceChannel();
 
-#undef NECKO_PROTOCOL_about
-#undef NECKO_PROTOCOL_data
-#undef NECKO_PROTOCOL_device
-#undef NECKO_PROTOCOL_file
-#undef NECKO_PROTOCOL_ftp
-#undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_res
-#undef NECKO_PROTOCOL_viewsource
-
+  nsresult Init(nsIURI* uri);
+  nsresult OpenContentStream(PRBool aAsync,
+                             nsIInputStream **aStream,
+                             nsIChannel **aChannel);
+};
 #endif
