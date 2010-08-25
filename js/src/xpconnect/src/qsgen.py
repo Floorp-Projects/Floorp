@@ -696,13 +696,25 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
             return
         else:
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
+                    "    if (cache) {\n"
+                    "      JSObject* wrapper = cache->GetWrapper();\n"
+                    "      if (wrapper &&\n"
+                    # FIXME: Bug 585786, this check should go away
+                    "          IS_SLIM_WRAPPER_OBJECT(wrapper) &&\n"
+                    # FIXME: Bug 585787 this should compare compartments
+                    "          xpc_GetGlobalForObject(wrapper) ==\n"
+                    "            xpc_GetGlobalForObject(obj)) {\n"
+                    "        *%s = OBJECT_TO_JSVAL(wrapper);\n"
+                    "        return JS_TRUE;\n"
+                    "      }\n"
+                    "    }\n"
                     "    qsObjectHelper helper(ToSupports(result));\n"
                     "    helper.SetNode(result);\n"
                     "    helper.SetCanonical(ToCanonicalSupports(result));\n"
                     "    // After this point do not use 'result'!\n"
                     "    return xpc_qsXPCOMObjectToJsval(lccx, "
                     "&helper, cache, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
-                    % (type.name, type.name, jsvalPtr))
+                    % (jsvalPtr, type.name, type.name, jsvalPtr))
             return
 
     warn("Unable to convert result of type %s" % type.name)
@@ -1223,6 +1235,18 @@ def writeTraceableResultConv(f, type):
                     "&vp.array[0]);\n")
         else:
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
+                    "    if (cache) {\n"
+                    "      JSObject* wrapper = cache->GetWrapper();\n"
+                    "      if (wrapper &&\n"
+                    # FIXME: Bug 585786, this check should go away
+                    "          IS_SLIM_WRAPPER_OBJECT(wrapper) &&\n"
+                    # FIXME: Bug 585787 this should compare compartments
+                    "          xpc_GetGlobalForObject(wrapper) ==\n"
+                    "            xpc_GetGlobalForObject(obj)) {\n"
+                    "        vp.array[0] = OBJECT_TO_JSVAL(wrapper);\n"
+                    "        return wrapper;\n"
+                    "      }\n"
+                    "    }\n"
                     "    qsObjectHelper helper(ToSupports(result));\n"
                     "    helper.SetNode(result);\n"
                     "    helper.SetCanonical(ToCanonicalSupports(result));\n"
