@@ -37,8 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMHTMLElement.idl"
-#include "nsIDOMHTMLMediaError.idl"
-#include "nsIDOMHTMLTimeRanges.idl"
+#include "nsIDOMMediaError.idl"
+#include "nsIDOMTimeRanges.idl"
 
 /**
  * The nsIDOMHTMLMediaElement interface is an interface to be implemented by the HTML
@@ -61,7 +61,7 @@
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
-  readonly attribute nsIDOMHTMLMediaError error;
+  readonly attribute nsIDOMMediaError error;
 
   // network state
            attribute DOMString src;
@@ -73,7 +73,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short NETWORK_NO_SOURCE = 4;
   readonly attribute unsigned short networkState;
            attribute DOMString preload;  
-  readonly attribute nsIDOMHTMLTimeRanges buffered;
+  readonly attribute nsIDOMTimeRanges buffered;
   void load();
   DOMString canPlayType(in DOMString type);
 

@@ -36,28 +36,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMHTMLTimeRanges.h"
-#include "nsISupports.h"
-#include "nsTArray.h"
+#include "nsTimeRanges.h"
+#include "nsDOMError.h"
+#include "nsContentUtils.h"
 
-// Implements media TimeRanges:
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
-class nsHTMLTimeRanges : public nsIDOMHTMLTimeRanges {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMHTMLTIMERANGES
+NS_IMPL_ADDREF(nsTimeRanges)
+NS_IMPL_RELEASE(nsTimeRanges)
 
-  void Add(float aStart, float aEnd);
+DOMCI_DATA(TimeRanges, nsTimeRanges)
 
-private:
+NS_INTERFACE_MAP_BEGIN(nsTimeRanges)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMTimeRanges)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TimeRanges)
+NS_INTERFACE_MAP_END
 
-  struct TimeRange {
-    TimeRange(float aStart, float aEnd)
-      : mStart(aStart),
-        mEnd(aEnd) {}
-    float mStart;
-    float mEnd;
-  };
+NS_IMETHODIMP
+nsTimeRanges::GetLength(PRUint32* aLength) {
+  *aLength = mRanges.Length();
+  return NS_OK;
+}
 
-  nsAutoTArray<TimeRange,4> mRanges;
-};
+NS_IMETHODIMP
+nsTimeRanges::Start(PRUint32 aIndex, float* aTime) {
+  if (aIndex >= mRanges.Length())
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  *aTime = mRanges[aIndex].mStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTimeRanges::End(PRUint32 aIndex, float* aTime) {
+  if (aIndex >= mRanges.Length())
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  *aTime = mRanges[aIndex].mEnd;
+  return NS_OK;
+}
+
+void
+nsTimeRanges::Add(float aStart, float aEnd) {
+  mRanges.AppendElement(TimeRange(aStart,aEnd));
+}
