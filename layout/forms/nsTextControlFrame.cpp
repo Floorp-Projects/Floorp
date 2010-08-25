@@ -299,7 +299,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     // been reflowed yet, so we can't get its used padding, but it shouldn't be
     // using percentage padding anyway.
     nsMargin childPadding;
-    if (GetFirstChild(nsnull)->GetStylePadding()->GetPadding(childPadding)) {
+    nsIFrame* firstChild = GetFirstChild(nsnull);
+    if (firstChild && firstChild->GetStylePadding()->GetPadding(childPadding)) {
       aIntrinsicSize.width += childPadding.LeftRight();
     } else {
       NS_ERROR("Percentage padding on value div?");
@@ -328,12 +329,14 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
-    nsMargin scrollbarSizes =
+    if (scrollableFrame) {
+      nsMargin scrollbarSizes =
       scrollableFrame->GetDesiredScrollbarSizes(PresContext(), aRenderingContext);
 
-    aIntrinsicSize.width  += scrollbarSizes.LeftRight();
-    
-    aIntrinsicSize.height += scrollbarSizes.TopBottom();;
+      aIntrinsicSize.width  += scrollbarSizes.LeftRight();
+
+      aIntrinsicSize.height += scrollbarSizes.TopBottom();;
+    }
   }
 
   return NS_OK;
