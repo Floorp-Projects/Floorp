@@ -620,6 +620,16 @@ input[type="file"] > input[type="text"] {
   text-align: inherit;
 }
 
+/**
+ * Set default style for invalid elements.
+ * <output> is the only element which may not follow this rule (but color: red).
+ * However it is barred from constraint validation per the specifications so, at
+ * least for now, it will not be affected by :invalid.
+ */
+:invalid {
+  -moz-box-shadow: 0 0 2px 1px red;
+}
+
 @media print {
   input, textarea, select, button {
     -moz-user-input: none !important;

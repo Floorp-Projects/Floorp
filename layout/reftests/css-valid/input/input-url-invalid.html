@@ -2,12 +2,9 @@
 <html>
   <!-- Test: if input isn't valid nor barred from constraint validation,
              it should not be affected by :valid pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <input type='url' value='foo'>
+    <input class='notvalid' type='url' value='foo'>
   </body>
 </html>
 

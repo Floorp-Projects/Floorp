@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if button is disabled, it is barred from constraint validation
              and should not be affected by :valid pseudo-class. -->
-  <style>
-    button { background-color: green; }
-    button:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <button disabled></button>
+    <button class='notvalid' disabled></button>
   </body>
 </html>
