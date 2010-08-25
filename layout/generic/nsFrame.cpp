@@ -3096,15 +3096,6 @@ nsFrame::GetIntrinsicRatio()
   return nsSize(0, 0);
 }
 
-inline PRBool
-IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
-{
-  nsStyleUnit unit = aCoord.GetUnit();
-  return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_None ||  // only for 'max-height'
-         (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
-}
-
 /* virtual */ nsSize
 nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                      nsSize aCBSize, nscoord aAvailableWidth,
@@ -3153,14 +3144,14 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
   // Compute height
 
-  if (!IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
+  if (!nsLayoutUtils::IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
     result.height =
       nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mHeight) -
       boxSizingAdjust.height;
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
-    if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
+    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
       nscoord maxHeight =
         nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mMaxHeight) -
         boxSizingAdjust.height;
@@ -3168,7 +3159,7 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
         result.height = maxHeight;
     }
 
-    if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
+    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
       nscoord minHeight =
         nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mMinHeight) -
         boxSizingAdjust.height;
