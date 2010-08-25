@@ -143,6 +143,11 @@ public:
            (IsCalcUnit() && CalcHasPercent());
   }
 
+  PRBool ConvertsToLength() const {
+    return mUnit == eStyleUnit_Coord ||
+           (IsCalcUnit() && !CalcHasPercent());
+  }
+
   nscoord     GetCoordValue() const;
   PRInt32     GetIntValue() const;
   float       GetPercentValue() const;

@@ -480,10 +480,8 @@ DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
   // XXX it would be nice to know if the size of aEmbeddingFrame's containing
   // block depends on aEmbeddingFrame, then we'd know if we can return false
   // for eStyleUnit_Percent too.
-  return (width.GetUnit() != eStyleUnit_Coord &&
-          (!width.IsCalcUnit() || width.CalcHasPercent())) ||
-         (height.GetUnit() != eStyleUnit_Coord &&
-          (!height.IsCalcUnit() || height.CalcHasPercent()));
+  return !width.ConvertsToLength() ||
+         !height.ConvertsToLength();
 }
 
 NS_IMETHODIMP
