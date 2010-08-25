@@ -302,11 +302,11 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   // keeps the window from showing up on the desktop or the taskbar.
   // Note the parent (browser) window is usually still hidden, we
   // don't want to display it, so we can't query it directly.
-  HWND hWnd = CreateWindowEx(WS_EX_NOACTIVATE|WS_EX_LAYERED,
-                             kClassNameTemp, L"",
-                             WS_OVERLAPPEDWINDOW,
-                             0, 0, 0, 0, aWnd, NULL,
-                             nsToolkit::mDllInstance, NULL);
+  HWND hWnd = CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_LAYERED,
+                              kClassNameTemp, L"",
+                              WS_OVERLAPPEDWINDOW,
+                              0, 0, 0, 0, aWnd, NULL,
+                              nsToolkit::mDllInstance, NULL);
   NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
 
   ShowWindow(hWnd, SW_SHOW);
