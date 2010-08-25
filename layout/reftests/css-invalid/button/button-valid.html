@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if button has no custom error and is not barred from constraint
              validation, it should be affected by :invalid pseudo-class. -->
-  <style>
-    button { background-color: green; }
-    button:invalid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <button></button>
+    <button class='notinvalid'</button>
   </body>
 </html>

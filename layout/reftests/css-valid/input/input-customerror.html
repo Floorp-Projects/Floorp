@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if input has a custom error, it should not be affected by :valid
              pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('t').setCustomValidity('foo'); document.documentElement.className='';">
-    <input id='t'>
+    <input class='notvalid' id='t'>
   </body>
 </html>

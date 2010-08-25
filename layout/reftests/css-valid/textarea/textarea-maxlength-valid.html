@@ -2,12 +2,9 @@
 <html>
   <!-- Test: if textarea is valid and is not barred from constraint validation,
              it should be affected by :valid pseudo-class. -->
-  <style>
-    textarea { background-color: red; }
-    textarea:valid { background-color: green; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <textarea maxlength="2"></textarea>
+    <textarea class='valid' maxlength="2"></textarea>
   </body>
 </html>
 

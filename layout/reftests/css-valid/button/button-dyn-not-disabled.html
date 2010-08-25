@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if button is not disabled, it is candidate for constraint validation
              and should be affected by :valid pseudo-class. -->
-  <style>
-    button { background-color: red; }
-    button:valid { background-color: green; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('b').removeAttribute('disabled'); document.documentElement.className='';">
-    <button id='b' disabled></button>
+    <button class='valid' id='b' disabled></button>
   </body>
 </html>

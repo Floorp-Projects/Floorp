@@ -3,10 +3,7 @@
   <!-- Test: if select is not disabled and invalid, it is candidate for
              constraint validation and should be affected
              by :invalid pseudo-class. -->
-  <style>
-    select { background-color: red; }
-    select:invalid { background-color: green; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
     function onLoadHandler()
     {
@@ -17,6 +14,6 @@
     }
   </script>
   <body onload="onLoadHandler();">
-    <select id='s' disabled></select>
+    <select class='invalid' id='s' disabled></select>
   </body>
 </html>

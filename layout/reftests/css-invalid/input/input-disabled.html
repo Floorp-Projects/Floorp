@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if input is disabled, it is barred from constraint validation
              and should not be affected by :invalid pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:invalid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <input disabled>
+    <input class='notinvalid' disabled>
   </body>
 </html>

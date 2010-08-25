@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if input is readonly, it is barred from constraint validation
              and should not be affected by :valid pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <input readonly>
+    <input class='notvalid' readonly>
   </body>
 </html>
