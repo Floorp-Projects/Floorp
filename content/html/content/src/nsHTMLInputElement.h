@@ -453,6 +453,11 @@ protected:
   void SanitizeValue(nsAString& aValue);
 
   /**
+   * Returns whether the placeholder attribute applies for the current type.
+   */
+  bool PlaceholderApplies() const { return IsSingleLineTextControlInternal(PR_FALSE, mType); }
+
+  /**
    * Set the current default value to the value of the input element.
    */
   nsresult SetDefaultValueAsValue();

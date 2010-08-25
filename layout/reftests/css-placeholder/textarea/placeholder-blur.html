@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      document.getElementById('t').focus();
+    }
+    function focusHandler()
+    {
+      document.getElementById('t').blur();
+    }
+    function blurHandler()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='loadHandler();'>
+    <textarea id='t' placeholder='foo' onfocus='focusHandler();' onblur='blurHandler();'></textarea>
+  </body>
+</html>
