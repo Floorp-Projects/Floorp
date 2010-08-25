@@ -5834,13 +5834,13 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseNonNegativeVariant(aValue, VARIANT_HLPO | VARIANT_CALC,
                                    nsnull);
   case eCSSProperty_max_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKLPO,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKLPO | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
   case eCSSProperty_min_height:
     return ParseNonNegativeVariant(aValue, VARIANT_HLP | VARIANT_CALC,
                                    nsnull);
   case eCSSProperty_min_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKLP,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKLP | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
   case eCSSProperty_opacity:
     return ParseVariant(aValue, VARIANT_HN, nsnull);

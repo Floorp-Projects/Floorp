@@ -1782,7 +1782,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "display": "block" },
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto" ]
 	},
 	"min-height": {
@@ -1807,7 +1814,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "display": "block" },
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {

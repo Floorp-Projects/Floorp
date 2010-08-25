@@ -190,6 +190,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         if (p < prefPercent)
             prefPercent = p;
     }
+    // treat calc() on max-width just like 'none'.
 
     nsStyleCoord minWidth(stylePos->mMinWidth);
     if (minWidth.GetUnit() == eStyleUnit_Enumerated) {
@@ -215,6 +216,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         if (p > prefPercent)
             prefPercent = p;
     }
+    // treat calc() on min-width just like '0'.
 
     // XXX Should col frame have border/padding considered?
     if (aIsCell) {
