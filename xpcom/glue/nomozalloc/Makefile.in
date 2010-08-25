@@ -19,7 +19,7 @@
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s):
+# Contributor(s): LastPass.com
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,26 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(srcdir)/objs.mk
+include $(srcdir)/../objs.mk
 
-EXTRA_DEPS += $(srcdir)/objs.mk
-
-DIRS            = standalone nomozalloc
+EXTRA_DEPS += $(srcdir)/../objs.mk
 
 MODULE		= xpcom
-LIBRARY_NAME	= xpcomglue_s
+LIBRARY_NAME	= xpcomglue_s_nomozalloc
 SUPPRESS_FAKELIB = 1
 DIST_INSTALL	= 1
 
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/../build \
+		-I$(srcdir)/../../build \
 		$(NULL)
 
 CSRCS		= \
@@ -68,75 +66,8 @@ CPPSRCS		= \
 		GenericModule.cpp \
 		$(NULL)
 
-# TODO nsAutoLock.h should die soon
-SDK_HEADERS = \
-		nsArrayEnumerator.h \
-		nsArrayUtils.h \
-		nsAutoLock.h \
-		nsBaseHashtable.h \
-		nsCOMArray.h \
-		nsCOMPtr.h \
-		nsCRTGlue.h \
-		nsCategoryCache.h \
-		nsClassHashtable.h \
-		nsComponentManagerUtils.h \
-		nsCycleCollectionParticipant.h \
-		nsDataHashtable.h \
-		nsDebug.h \
-		nsDeque.h \
-		nsEnumeratorUtils.h \
-		nsHashKeys.h \
-		nsIClassInfoImpl.h \
-		nsID.h \
-		nsIInterfaceRequestorUtils.h \
-		nsINIParser.h \
-		nsISupportsImpl.h \
-		nsISupportsUtils.h \
-		nsIWeakReferenceUtils.h \
-		nsInterfaceHashtable.h \
-		nsMemory.h \
-		nsQuickSort.h \
-		nsRefPtrHashtable.h \
-		nsServiceManagerUtils.h \
-		nsStringAPI.h \
-		nsStringGlue.h \
-		nsTArray.h \
-		nsTHashtable.h \
-		nsTObserverArray.h \
-		nsTPtrArray.h \
-		nsTWeakRef.h \
-		nsTextFormatter.h \
-		nsTraceRefcnt.h \
-		nsVersionComparator.h \
-		nsVoidArray.h \
-		nsWeakReference.h \
-		pldhash.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS = \
-		nsThreadUtils.h \
-		nsTPriorityQueue.h \
-		nsProxyRelease.h \
-		nsXPTCUtils.h \
-		$(NULL)
-
-EXPORTS_mozilla = \
-  AutoRestore.h \
-  BlockingResourceBase.h \
-  CondVar.h \
-  DeadlockDetector.h \
-  GenericFactory.h \
-  Monitor.h \
-  Mutex.h \
-  SSE.h \
-  unused.h \
-  FileUtils.h \
-  $(NULL)
-
 SDK_LIBRARY     =                        \
-		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+		$(LIB_PREFIX)xpcomglue_s_nomozalloc.$(LIB_SUFFIX) \
 		$(NULL)
 
 
@@ -151,6 +82,9 @@ FORCE_USE_PIC	= 1
 # for this library on Windows.
 USE_STATIC_LIBS = 1
 
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+STL_FLAGS       =
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef _MSC_VER
@@ -160,6 +94,11 @@ OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
 
+export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp $(topsrcdir)/xpcom/glue/GenericModule.cpp $(topsrcdir)/xpcom/glue/DeadlockDetector.h $(topsrcdir)/xpcom/glue/SSE.h
+	$(INSTALL) $^ .
+
 ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif
+
+DEFINES += -DMOZ_NO_MOZALLOC
