@@ -127,6 +127,7 @@ function InputHandler(browserViewContainer) {
   window.addEventListener("mousemove", this, true);
   window.addEventListener("click", this, true);
   window.addEventListener("contextmenu", this, false);
+  window.addEventListener("MozSwipeGesture", this, true);
   window.addEventListener("MozMagnifyGestureStart", this, true);
   window.addEventListener("MozMagnifyGestureUpdate", this, true);
   window.addEventListener("MozMagnifyGesture", this, true);
@@ -1238,6 +1239,24 @@ GestureModule.prototype = {
     try {
       let consume = false;
       switch (aEvent.type) {
+        case "MozSwipeGesture":
+          let gesture = Ci.nsIDOMSimpleGestureEvent;
+          switch (aEvent.direction) {
+            case gesture.DIRECTION_UP:
+              Browser.scrollContentToTop();
+              break;
+            case gesture.DIRECTION_DOWN:
+              Browser.scrollContentToBottom();
+              break;
+            case gesture.DIRECTION_LEFT:
+              CommandUpdater.doCommand("cmd_back");
+              break;
+            case gesture.DIRECTION_RIGHT:
+              CommandUpdater.doCommand("cmd_forward");
+              break;
+          }
+          break;
+
         case "MozMagnifyGestureStart":
           consume = true;
           this._pinchStart(aEvent);
