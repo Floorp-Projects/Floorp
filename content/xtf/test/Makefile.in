@@ -49,6 +49,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = content/xtf/test
 
 include $(DEPTH)/config/autoconf.mk
 

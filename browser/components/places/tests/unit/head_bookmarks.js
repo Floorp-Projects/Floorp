@@ -45,7 +45,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
-let (commonFile = do_get_file("../../test_places/head_common.js", false)) {
+let (commonFile = do_get_file("../../../../../toolkit/components/places/tests/head_common.js", false)) {
   let uri = Services.io.newFileURI(commonFile);
   Services.scriptloader.loadSubScript(uri.spec, this);
 }
