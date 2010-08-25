@@ -41,7 +41,6 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = storage/test
 
 include $(DEPTH)/config/autoconf.mk
 
