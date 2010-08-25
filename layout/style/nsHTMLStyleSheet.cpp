@@ -316,6 +316,13 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 
   // Handle the content style rules.
   if (element->IsAttributeMapped(aData->mAttribute)) {
+    // cellpadding on tables is special and requires reresolving all
+    // the cells in the table
+    if (aData->mAttribute == nsGkAtoms::cellpadding &&
+        element->IsHTML() &&
+        aData->mContentTag == nsGkAtoms::table) {
+      return eRestyle_Subtree;
+    }
     return eRestyle_Self;
   }
 
