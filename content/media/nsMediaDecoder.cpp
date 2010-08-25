@@ -76,6 +76,7 @@ nsMediaDecoder::nsMediaDecoder() :
   mDataTime(),
   mVideoUpdateLock(nsnull),
   mPixelAspectRatio(1.0),
+  mFrameBufferLength(0),
   mPinnedForSeek(PR_FALSE),
   mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE)
@@ -110,6 +111,17 @@ nsHTMLMediaElement* nsMediaDecoder::GetMediaElement()
 {
   return mElement;
 }
+
+nsresult nsMediaDecoder::RequestFrameBufferLength(PRUint32 aLength)
+{
+  if (aLength < FRAMEBUFFER_LENGTH_MIN || aLength > FRAMEBUFFER_LENGTH_MAX) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  mFrameBufferLength = aLength;
+  return NS_OK;
+}
+
 
 static PRInt32 ConditionDimension(float aValue, PRInt32 aDefault)
 {

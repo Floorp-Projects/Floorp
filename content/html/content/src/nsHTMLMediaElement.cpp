@@ -89,6 +89,9 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMNotifyAudioAvailableEvent.h"
+
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif
@@ -115,6 +118,8 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
+
+#define MS_PER_SECOND 1000
 
 using namespace mozilla::layers;
 
@@ -192,10 +197,12 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run()
+  {
     // Silently cancel if our load has been cancelled.
     if (IsCancelled())
       return NS_OK;
+
     return mProgress ?
       mElement->DispatchProgressEvent(mName) :
       mElement->DispatchSimpleEvent(mName);
@@ -637,6 +644,40 @@ void nsHTMLMediaElement::NotifyLoadError()
   }
 }
 
+void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
+                                              PRUint32 aFrameBufferLength,
+                                              PRUint64 aTime)
+{
+  // Do same-origin check on element and media before allowing MozAudioAvailable events.
+  if (!mMediaSecurityVerified) {
+    nsCOMPtr<nsIPrincipal> principal = GetCurrentPrincipal();
+    nsresult rv = NodePrincipal()->Subsumes(principal, &mAllowAudioData);
+    if (NS_FAILED(rv)) {
+      mAllowAudioData = PR_FALSE;
+    }
+  }
+
+  DispatchAudioAvailableEvent(aFrameBuffer, aFrameBufferLength, aTime);
+}
+
+PRBool nsHTMLMediaElement::MayHaveAudioAvailableEventListener()
+{
+  // Determine if the current element is focused, if it is not focused
+  // then we should not try to blur.  Note: we allow for the case of
+  // |var a = new Audio()| with no parent document.
+  nsIDocument *document = GetDocument();
+  if (!document) {
+    return PR_TRUE;
+  }
+
+  nsPIDOMWindow *window = document->GetInnerWindow();
+  if (!window) {
+    return PR_TRUE;
+  }
+
+  return window->HasAudioAvailableEventListeners();
+}
+
 void nsHTMLMediaElement::LoadFromSourceChildren()
 {
   NS_ASSERTION(mDelayingLoadEvent,
@@ -780,6 +821,13 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   NS_ASSERTION(mDelayingLoadEvent,
                "Should delay load event (if in document) during load");
   nsresult rv;
+
+  // If a previous call to mozSetup() was made, kill that media stream
+  // in order to use this new src instead.
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+    mAudioStream = nsnull;
+  }
 
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
@@ -1053,12 +1101,59 @@ NS_IMETHODIMP nsHTMLMediaElement::SetVolume(float aVolume)
 
   mVolume = aVolume;
 
-  if (mDecoder && !mMuted)
+  if (mDecoder && !mMuted) {
     mDecoder->SetVolume(mVolume);
+  } else if (mAudioStream && !mMuted) {
+    mAudioStream->SetVolume(mVolume);
+  }
 
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("volumechange"));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::GetMozChannels(PRUint32 *aMozChannels)
+{
+  if (!mDecoder && !mAudioStream) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  *aMozChannels = mChannels;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::GetMozSampleRate(PRUint32 *aMozSampleRate)
+{
+  if (!mDecoder && !mAudioStream) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  *aMozSampleRate = mRate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::GetMozFrameBufferLength(PRUint32 *aMozFrameBufferLength)
+{
+  // The framebuffer (via MozAudioAvailable events) is only available
+  // when reading vs. writing audio directly.
+  if (!mDecoder) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  *aMozFrameBufferLength = mDecoder->GetFrameBufferLength();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::SetMozFrameBufferLength(PRUint32 aMozFrameBufferLength)
+{
+  if (!mDecoder)
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  return mDecoder->RequestFrameBufferLength(aMozFrameBufferLength);
 }
 
 /* attribute boolean muted; */
@@ -1078,6 +1173,8 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
 
   if (mDecoder) {
     mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
+  } else if (mAudioStream) {
+    mAudioStream->SetVolume(mMuted ? 0.0 : mVolume);
   }
 
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("volumechange"));
@@ -1093,7 +1190,10 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
+    mChannels(0),
+    mRate(0),
     mMediaSize(-1,-1),
+    mAllowAudioData(PR_FALSE),
     mBegun(PR_FALSE),
     mLoadedFirstFrame(PR_FALSE),
     mAutoplaying(PR_TRUE),
@@ -1115,7 +1215,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mHasSelfReference(PR_FALSE),
     mShuttingDown(PR_FALSE),
     mPreloadAction(PRELOAD_UNDEFINED),
-    mLoadIsSuspended(PR_FALSE)
+    mLoadIsSuspended(PR_FALSE),
+    mMediaSecurityVerified(PR_FALSE)
 {
 #ifdef PR_LOGGING
   if (!gMediaElementLog) {
@@ -1143,6 +1244,10 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nsnull;
+  }
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+    mAudioStream = nsnull;
   }
 }
 
@@ -1708,6 +1813,9 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
 {
   mDecoder = aDecoder;
 
+  // Force a same-origin check before allowing events for this media resource.
+  mMediaSecurityVerified = PR_FALSE;
+
   // The new stream has not been suspended by us.
   mPausedForInactiveDocument = PR_FALSE;
   // But we may want to suspend it now.
@@ -1763,8 +1871,10 @@ nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIU
   return NS_OK;
 }
 
-void nsHTMLMediaElement::MetadataLoaded()
+void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
 {
+  mChannels = aChannels;
+  mRate = aRate;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
@@ -2015,6 +2125,29 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
 
   mImageContainer = manager->CreateImageContainer();
   return mImageContainer;
+}
+
+nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
+                                                         PRUint32 aFrameBufferLength,
+                                                         PRUint64 aTime)
+{
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(GetOwnerDoc()));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(static_cast<nsIContent*>(this)));
+  NS_ENSURE_TRUE(docEvent && target, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = docEvent->CreateEvent(NS_LITERAL_STRING("MozAudioAvailableEvent"),
+                                      getter_AddRefs(event));
+  nsCOMPtr<nsIDOMNotifyAudioAvailableEvent> audioavailableEvent(do_QueryInterface(event));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = audioavailableEvent->InitAudioAvailableEvent(NS_LITERAL_STRING("MozAudioAvailable"),
+                                                    PR_TRUE, PR_TRUE, aFrameBuffer, aFrameBufferLength,
+                                                    (float)aTime / MS_PER_SECOND, mAllowAudioData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool dummy;
+  return target->DispatchEvent(event, &dummy);
 }
 
 nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)
