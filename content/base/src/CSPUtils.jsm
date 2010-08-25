@@ -53,23 +53,67 @@ var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
 var gETLDService = Components.classes["@mozilla.org/network/effective-tld-service;1"]
                    .getService(Components.interfaces.nsIEffectiveTLDService);
 
+var gPrefObserver = {
+  get debugEnabled () {
+    if (!this._branch)
+      this._initialize();
+    return this._debugEnabled;
+  },
+
+  _initialize: function() {
+    var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefService);
+    this._branch = prefSvc.getBranch("security.csp.");
+    this._branch.QueryInterface(Components.interfaces.nsIPrefBranch2);
+    this._branch.addObserver("", this, false);
+    this._debugEnabled = this._branch.getBoolPref("debug");
+  },
+
+  unregister: function() {
+    if(!this._branch) return;
+    this._branch.removeObserver("", this);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if(aTopic != "nsPref:changed") return;
+    if(aData === "debug")
+      this._debugEnabled = this._branch.getBoolPref("debug");
+  },
+
+};
+
 
 function CSPWarning(aMsg) {
-  // customize this to redirect output.
-  aMsg = 'CSP WARN:  ' + aMsg + "\n";
-  dump(aMsg);
+  var textMessage = 'CSP WARN:  ' + aMsg + "\n";
+  dump(textMessage);
+
+  var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
+                    .createInstance(Components.interfaces.nsIScriptError);
+  consoleMsg.init('CSP: ' + aMsg, null, null, 0, 0,
+                  Components.interfaces.nsIScriptError.warningFlag,
+                  "Content Security Policy");
   Components.classes["@mozilla.org/consoleservice;1"]
                     .getService(Components.interfaces.nsIConsoleService)
-                    .logStringMessage(aMsg);
+                    .logMessage(consoleMsg);
 }
+
 function CSPError(aMsg) {
-  aMsg = 'CSP ERROR: ' + aMsg + "\n";
-  dump(aMsg);
+  var textMessage = 'CSP ERROR:  ' + aMsg + "\n";
+  dump(textMessage);
+
+  var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
+                    .createInstance(Components.interfaces.nsIScriptError);
+  consoleMsg.init('CSP: ' + aMsg, null, null, 0, 0,
+                  Components.interfaces.nsIScriptError.errorFlag,
+                  "Content Security Policy");
   Components.classes["@mozilla.org/consoleservice;1"]
                     .getService(Components.interfaces.nsIConsoleService)
-                    .logStringMessage(aMsg);
+                    .logMessage(consoleMsg);
 }
+
 function CSPdebug(aMsg) {
+  if (!gPrefObserver.debugEnabled) return;
+
   aMsg = 'CSP debug: ' + aMsg + "\n";
   dump(aMsg);
   Components.classes["@mozilla.org/consoleservice;1"]
