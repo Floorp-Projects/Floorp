@@ -1086,9 +1086,9 @@ struct nsStylePosition {
   static PRBool ForceCompare() { return PR_TRUE; }
 
   nsStyleSides  mOffset;                // [reset] coord, percent, auto
-  nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, auto
-  nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum
-  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, enum, none
+  nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
+  nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum, calc
+  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, enum, calc, none
   nsStyleCoord  mHeight;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
