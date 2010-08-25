@@ -38,7 +38,6 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = toolkit/components/urlformatter/tests
 
 include $(DEPTH)/config/autoconf.mk
 
