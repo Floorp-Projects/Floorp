@@ -1243,10 +1243,10 @@ GestureModule.prototype = {
           let gesture = Ci.nsIDOMSimpleGestureEvent;
           switch (aEvent.direction) {
             case gesture.DIRECTION_UP:
-              Browser.scrollContentToTop();
+              Browser.scrollContentToBottom();
               break;
             case gesture.DIRECTION_DOWN:
-              Browser.scrollContentToBottom();
+              Browser.scrollContentToTop();
               break;
             case gesture.DIRECTION_LEFT:
               CommandUpdater.doCommand("cmd_back");
