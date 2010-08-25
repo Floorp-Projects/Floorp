@@ -68,6 +68,7 @@
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "nsCSSRendering.h"
+#include "jstl.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -753,39 +754,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     mLineBox->DisableResizeReflowOptimization();
   }
 
-  // Compute the available size for the frame. This available width
-  // includes room for the side margins.
-  // For now, set the available height to unconstrained always.
-  nsSize availSize(mBlockReflowState->ComputedWidth(), NS_UNCONSTRAINEDSIZE);
-
-  // Setup reflow state for reflowing the frame
-  nsHTMLReflowState reflowState(mPresContext, *psd->mReflowState,
-                                aFrame, availSize);
-  reflowState.mLineLayout = this;
-  reflowState.mFlags.mIsTopOfPage = GetFlag(LL_ISTOPOFPAGE);
   mTextJustificationNumSpaces = 0;
   mTextJustificationNumLetters = 0;
-
-  // Inline-ish and text-ish things don't compute their width;
-  // everything else does.  We need to give them an available width that
-  // reflects the space left on the line.
-  NS_WARN_IF_FALSE(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
-                   "calculation");
-  if (reflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE)
-    reflowState.availableWidth = psd->mRightEdge - psd->mX;
 
   // Stash copies of some of the computed state away for later
   // (vertical alignment, for example)
   pfd->mFrame = aFrame;
-  pfd->mMargin = reflowState.mComputedMargin;
-  pfd->mBorderPadding = reflowState.mComputedBorderPadding;
-  pfd->SetFlag(PFD_RELATIVEPOS,
-               (reflowState.mStyleDisplay->mPosition == NS_STYLE_POSITION_RELATIVE));
-  if (pfd->GetFlag(PFD_RELATIVEPOS)) {
-    pfd->mOffsets = reflowState.mComputedOffsets;
-  }
 
   // NOTE: While the x coordinate remains relative to the parent span,
   // the y coordinate is fixed at the top edge for the line. During
@@ -805,10 +779,53 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the state out. We need to know how to treat the current frame
   // when breaking.
   PRBool notSafeToBreak = LineIsEmpty() && !GetFlag(LL_IMPACTEDBYFLOATS);
+
+  // Figure out whether we're talking about a textframe here
+  nsIAtom* frameType = aFrame->GetType();
+  PRBool isText = frameType == nsGkAtoms::textFrame;
   
-  // Apply start margins (as appropriate) to the frame computing the
-  // new starting x,y coordinates for the frame.
-  ApplyStartMargin(pfd, reflowState);
+  // Compute the available size for the frame. This available width
+  // includes room for the side margins.
+  // For now, set the available height to unconstrained always.
+  nsSize availSize(mBlockReflowState->ComputedWidth(), NS_UNCONSTRAINEDSIZE);
+
+  // Inline-ish and text-ish things don't compute their width;
+  // everything else does.  We need to give them an available width that
+  // reflects the space left on the line.
+  NS_WARN_IF_FALSE(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width; this should only result from "
+                   "very large sizes, not attempts at intrinsic width "
+                   "calculation");
+  nscoord availableSpaceOnLine = psd->mRightEdge - psd->mX;
+
+  // Setup reflow state for reflowing the frame
+  js::LazilyConstructed<nsHTMLReflowState> reflowStateHolder;
+  if (!isText) {
+    reflowStateHolder.construct(mPresContext, *psd->mReflowState,
+                                aFrame, availSize);
+    nsHTMLReflowState& reflowState = reflowStateHolder.ref();
+    reflowState.mLineLayout = this;
+    reflowState.mFlags.mIsTopOfPage = GetFlag(LL_ISTOPOFPAGE);
+    if (reflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE)
+      reflowState.availableWidth = availableSpaceOnLine;
+    pfd->mMargin = reflowState.mComputedMargin;
+    pfd->mBorderPadding = reflowState.mComputedBorderPadding;
+    pfd->SetFlag(PFD_RELATIVEPOS,
+                 (reflowState.mStyleDisplay->mPosition == NS_STYLE_POSITION_RELATIVE));
+    if (pfd->GetFlag(PFD_RELATIVEPOS)) {
+      pfd->mOffsets = reflowState.mComputedOffsets;
+    }
+
+    // Apply start margins (as appropriate) to the frame computing the
+    // new starting x,y coordinates for the frame.
+    ApplyStartMargin(pfd, reflowState);
+  } else {
+    pfd->mMargin.SizeTo(0, 0, 0, 0);
+    pfd->mBorderPadding.SizeTo(0, 0, 0, 0);
+    pfd->mOffsets.SizeTo(0, 0, 0, 0);
+    // Text reflow doesn't look at the dirty bits on the frame being reflowed,
+    // so no need to propagate NS_FRAME_IS_DIRTY from the parent.
+  }
 
   // Let frame know that are reflowing it. Note that we don't bother
   // positioning the frame yet, because we're probably going to end up
@@ -825,17 +842,23 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord ty = pfd->mBounds.y;
   mFloatManager->Translate(tx, ty);
 
-  nsIAtom* frameType = aFrame->GetType();
   PRInt32 savedOptionalBreakOffset;
   gfxBreakPriority savedOptionalBreakPriority;
   nsIContent* savedOptionalBreakContent =
     GetLastOptionalBreakPosition(&savedOptionalBreakOffset,
                                  &savedOptionalBreakPriority);
 
-  rv = aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
-  if (NS_FAILED(rv)) {
-    NS_WARNING( "Reflow of frame failed in nsLineLayout" );
-    return rv;
+  if (!isText) {
+    rv = aFrame->Reflow(mPresContext, metrics, reflowStateHolder.ref(),
+                        aReflowStatus);
+    if (NS_FAILED(rv)) {
+      NS_WARNING( "Reflow of frame failed in nsLineLayout" );
+      return rv;
+    }
+  } else {
+    static_cast<nsTextFrame*>(aFrame)->
+      ReflowText(*this, availableSpaceOnLine, psd->mReflowState->rendContext,
+                 psd->mReflowState->mFlags.mBlinks, metrics, aReflowStatus);
   }
   
   pfd->mJustificationNumSpaces = mTextJustificationNumSpaces;
@@ -876,7 +899,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                     "FirstLetterStyle set on line with floating first letter");
       }
     }
-    else if (nsGkAtoms::textFrame == frameType) {
+    else if (isText) {
       // Note non-empty text-frames for inline frame compatibility hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
       nsTextFrame* textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
@@ -946,7 +969,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   aFrame->SetSize(nsSize(metrics.width, metrics.height));
 
   // Tell the frame that we're done reflowing it
-  aFrame->DidReflow(mPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
+  aFrame->DidReflow(mPresContext,
+                    isText ? nsnull : reflowStateHolder.addr(),
+                    NS_FRAME_REFLOW_FINISHED);
 
   if (aMetrics) {
     *aMetrics = metrics;
@@ -981,7 +1006,18 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // See if we can place the frame. If we can't fit it, then we
     // return now.
     PRBool optionalBreakAfterFits;
-    if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, continuingTextRun,
+    NS_ASSERTION(isText ||
+                 reflowStateHolder.ref().mStyleDisplay->mFloats ==
+                   NS_STYLE_FLOAT_NONE,
+                 "How'd we get a floated inline frame? "
+                 "The frame ctor should've dealt with this.");
+    // Direction is inherited, so using the psd direction is fine.
+    // Get it off the reflow state instead of the frame to save style
+    // data computation (especially for the text).
+    PRUint8 direction =
+      isText ? psd->mReflowState->mStyleVisibility->mDirection :
+               reflowStateHolder.ref().mStyleVisibility->mDirection;
+    if (CanPlaceFrame(pfd, direction, notSafeToBreak, continuingTextRun,
                       savedOptionalBreakContent != nsnull, metrics,
                       aReflowStatus, &optionalBreakAfterFits)) {
       if (!isEmpty) {
@@ -1106,7 +1142,7 @@ nsLineLayout::GetCurrentFrameXDistanceFromBlock()
  */
 PRBool
 nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
-                            const nsHTMLReflowState& aReflowState,
+                            PRUint8 aFrameDirection,
                             PRBool aNotSafeToBreak,
                             PRBool aFrameCanContinueTextRun,
                             PRBool aCanRollBackBeforeFrame,
@@ -1119,12 +1155,8 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   *aOptionalBreakAfterFits = PR_TRUE;
   // Compute right margin to use
   if (0 != pfd->mBounds.width) {
-    NS_ASSERTION(aReflowState.mStyleDisplay->mFloats == NS_STYLE_FLOAT_NONE,
-                 "How'd we get a floated inline frame? "
-                 "The frame ctor should've dealt with this.");
-
     // XXXwaterson this is probably not exactly right; e.g., embeddings, etc.
-    PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
+    PRBool ltr = (NS_STYLE_DIRECTION_LTR == aFrameDirection);
 
     /*
      * We want to only apply the end margin if we're the last continuation and
@@ -1161,7 +1193,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     return PR_TRUE;
   }
 
-  PRBool ltr = NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection;
+  PRBool ltr = NS_STYLE_DIRECTION_LTR == aFrameDirection;
   nscoord endMargin = ltr ? pfd->mMargin.right : pfd->mMargin.left;
 
 #ifdef NOISY_CAN_PLACE_FRAME
