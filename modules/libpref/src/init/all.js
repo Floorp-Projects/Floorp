@@ -3153,7 +3153,8 @@ pref("image.mem.min_discard_timeout_ms", 10000);
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
 pref("webgl.shader_validator", true);
-pref("webgl.software_render", false);
+pref("webgl.force_osmesa", false);
+pref("webgl.mochitest_native_gl", false);
 pref("webgl.osmesalib", "");
 
 #ifdef XP_WIN
