@@ -823,6 +823,10 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     }
 
     cx->free(script->jit);
+    // The recompiler may call ReleaseScriptCode, in which case it
+    // will get called again when the script is destroyed, so we
+    // must protect against calling ReleaseScriptCode twice.
+    script->jit = NULL;
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
