@@ -56,17 +56,7 @@
 #include "jsversion.h"
 #include "jsobj.h"
 #include "jsfun.h"
-
-#if !defined JS_DUMP_CONSERVATIVE_GC_ROOTS && defined DEBUG
-# define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
-#endif
-
-#if defined JS_GCMETER
-const bool JS_WANT_GC_METER_PRINT = true;
-#elif defined DEBUG
-# define JS_GCMETER 1
-const bool JS_WANT_GC_METER_PRINT = false;
-#endif
+#include "jsgcstats.h"
 
 #define JSTRACE_XML         2
 
@@ -86,6 +76,9 @@ js_GetExternalStringGCType(JSString *str);
 
 extern JS_FRIEND_API(uint32)
 js_GetGCThingTraceKind(void *thing);
+
+extern size_t
+ThingsPerArena(size_t thingSize);
 
 /*
  * The sole purpose of the function is to preserve public API compatibility
@@ -440,33 +433,6 @@ struct ConservativeGCThreadData {
     bool isEnabled() const { return enableCount > 0; }
 };
 
-/*
- * The conservative GC test for a word shows that it is either a valid GC
- * thing or is not for one of the following reasons.
- */
-enum ConservativeGCTest {
-    CGCT_VALID,
-    CGCT_LOWBITSET, /* excluded because one of the low bits was set */
-    CGCT_NOTARENA,  /* not within arena range in a chunk */
-    CGCT_NOTCHUNK,  /* not within a valid chunk */
-    CGCT_FREEARENA, /* within arena containing only free things */
-    CGCT_WRONGTAG,  /* tagged pointer but wrong type */
-    CGCT_NOTLIVE,   /* gcthing is not allocated */
-    CGCT_END
-};
-
-struct ConservativeGCStats {
-    uint32  counter[CGCT_END];  /* ConservativeGCTest classification
-                                   counters */
-
-    void add(const ConservativeGCStats &another) {
-        for (size_t i = 0; i != JS_ARRAY_LENGTH(counter); ++i)
-            counter[i] += another.counter[i];
-    }
-
-    void dump(FILE *fp);
-};
-
 struct GCMarker : public JSTracer {
   private:
     /* The color is only applied to objects, functions and xml. */
@@ -521,50 +487,6 @@ struct GCMarker : public JSTracer {
 
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
-
-#ifdef JS_GCMETER
-
-struct JSGCArenaStats {
-    uint32  alloc;          /* allocation attempts */
-    uint32  localalloc;     /* allocations from local lists */
-    uint32  retry;          /* allocation retries after running the GC */
-    uint32  fail;           /* allocation failures */
-    uint32  nthings;        /* live GC things */
-    uint32  maxthings;      /* maximum of live GC cells */
-    double  totalthings;    /* live GC things the GC scanned so far */
-    uint32  narenas;        /* number of arena in list before the GC */
-    uint32  newarenas;      /* new arenas allocated before the last GC */
-    uint32  livearenas;     /* number of live arenas after the last GC */
-    uint32  maxarenas;      /* maximum of allocated arenas */
-    uint32  totalarenas;    /* total number of arenas with live things that
-                               GC scanned so far */
-};
-
-struct JSGCStats {
-    uint32  lock;       /* valid lock calls */
-    uint32  unlock;     /* valid unlock calls */
-    uint32  unmarked;   /* number of times marking of GC thing's children were
-                           delayed due to a low C stack */
-#ifdef DEBUG
-    uint32  maxunmarked;/* maximum number of things with children to mark
-                           later */
-#endif
-    uint32  poke;           /* number of potentially useful GC calls */
-    uint32  afree;          /* thing arenas freed so far */
-    uint32  nallarenas;     /* number of all allocated arenas */
-    uint32  maxnallarenas;  /* maximum number of all allocated arenas */
-    uint32  nchunks;        /* number of allocated chunks */
-    uint32  maxnchunks;     /* maximum number of allocated chunks */
-
-    JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
-
-    js::ConservativeGCStats conservative;
-};
-
-extern JS_FRIEND_API(void)
-js_DumpGCStats(JSRuntime *rt, FILE *fp);
-
-#endif /* JS_GCMETER */
 
 /*
  * This function is defined in jsdbgapi.cpp but is declared here to avoid

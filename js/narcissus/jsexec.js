@@ -85,7 +85,7 @@ Narcissus.interpreter = (function() {
             x2.callee = x.callee;
             x2.scope = x.scope;
             try {
-                x2.execute(parser.parse(new parser.VanillaBuilder, s));
+                x2.execute(parser.parse(new parser.DefaultBuilder, s));
                 return x2.result;
             } catch (e if e instanceof SyntaxError || isStackOverflow(e)) {
                 /*
@@ -119,7 +119,7 @@ Narcissus.interpreter = (function() {
 
             // NB: Use the STATEMENT_FORM constant since we don't want to push this
             // function onto the fake compilation context.
-            var x = { builder: new parser.VanillaBuilder };
+            var x = { builder: new parser.DefaultBuilder };
             var f = parser.FunctionDefinition(t, x, false, parser.STATEMENT_FORM);
             var s = {object: global, parent: null};
             return newFunction(f,{scope:s});
@@ -1023,7 +1023,7 @@ Narcissus.interpreter = (function() {
             return s;
 
         var x = new ExecutionContext(GLOBAL_CODE);
-        x.execute(parser.parse(new parser.VanillaBuilder, s, f, l));
+        x.execute(parser.parse(new parser.DefaultBuilder, s, f, l));
         return x.result;
     }
 
@@ -1059,7 +1059,7 @@ Narcissus.interpreter = (function() {
             }
         }
 
-        var b = new parser.VanillaBuilder;
+        var b = new parser.DefaultBuilder;
         var x = new ExecutionContext(GLOBAL_CODE);
 
         ExecutionContext.current = x;

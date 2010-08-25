@@ -678,17 +678,15 @@ class JSRopeLeafIterator {
 };
 
 class JSRopeBuilder {
-  private:
-    JSString *mStr;
+    JSContext   * const cx;
+    JSString    *mStr;
 
   public:
     JSRopeBuilder(JSContext *cx);
 
-    inline bool append(JSContext *cx, JSString *str) {
+    inline bool append(JSString *str) {
         mStr = js_ConcatStrings(cx, mStr, str);
-        if (!mStr)
-            return false;
-        return true;
+        return !!mStr;
     }
 
     inline JSString *getStr() {

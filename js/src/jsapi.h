@@ -941,6 +941,12 @@ JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data);
 extern JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
 
+extern JS_PUBLIC_API(JSBool)
+JS_RewrapObject(JSContext *cx, JSObject **objp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RewrapValue(JSContext *cx, jsval *p);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
