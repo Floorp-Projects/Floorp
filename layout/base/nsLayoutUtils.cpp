@@ -2229,8 +2229,7 @@ nsLayoutUtils::ComputeHeightDependentValue(
   // XXXldb Many callers pass a non-'auto' containing block height when
   // according to CSS2.1 they should be passing 'auto'.
   NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight ||
-                  (aCoord.GetUnit() != eStyleUnit_Percent &&
-                   !(aCoord.IsCalcUnit() && aCoord.CalcHasPercent())),
+                  !aCoord.HasPercent(),
                   "unexpected containing block height");
 
   if (aCoord.IsCoordPercentCalcUnit()) {
