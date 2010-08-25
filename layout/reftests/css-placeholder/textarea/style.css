@@ -1,11 +1,13 @@
 textarea:-moz-placeholder,
 textarea.ref {
+  :-moz-appearance: none;
   color: black;
   background-color: green;
 }
 
 textarea:-moz-placeholder.complex,
 textarea.complex-ref {
+  :-moz-appearance: none;
   color: green;
   background-color: #c7c7c7;
   font-style: italic;
