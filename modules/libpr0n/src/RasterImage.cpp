@@ -2646,9 +2646,14 @@ imgDecodeWorker::Run()
   }
 
   // Flush invalidations _after_ we've written everything we're going to.
-  image->mInDecoder = PR_TRUE;
-  image->mDecoder->FlushInvalidations();
-  image->mInDecoder = PR_FALSE;
+  // Furthermore, if this is a redecode, we don't want to do progressive
+  // display at all. In that case, let Decoder::PostFrameStop() do the
+  // flush once the whole frame is ready.
+  if (!image->mHasBeenDecoded) {
+    image->mInDecoder = PR_TRUE;
+    image->mDecoder->FlushInvalidations();
+    image->mInDecoder = PR_FALSE;
+  }
 
   // If the decode finished, shutdown the decoder
   if (image->IsDecodeFinished()) {
