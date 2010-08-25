@@ -263,10 +263,10 @@
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
                        class="toolbarbutton-text"
-                       oncommand="InspectorUI.toggleStylePanel();'"/>
+                       oncommand="InspectorUI.toggleStylePanel();"/>
         <toolbarbutton id="inspector-dom-toolbutton"
-                       label="&inspectDOMButton.label;"
-                       accesskey="&inspectDOMButton.accesskey;"
+                       label="&inspectObjectButton.label;"
+                       accesskey="&inspectObjectButton.accesskey;"
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
