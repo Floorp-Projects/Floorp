@@ -284,46 +284,53 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     format.depth = 16;
     format.minDepth = 1;
 
-    
-#ifdef XP_WIN
-    // On Windows, we may have a choice of backends, including straight
-    // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
-    // We don't differentiate the latter two yet, but we allow for
-    // a env var to try EGL first, instead of last.
-    bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
+    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
 
-    // if we want EGL, try it first
-    if (!gl && preferEGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
-        }
-    }
+    PRBool forceOSMesa;
+    prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
 
-    // if it failed, then try the default provider, whatever that is
-    if (!gl) {
-        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
-        }
-    }
+    if (!forceOSMesa) {
+    #ifdef XP_WIN
+        // On Windows, we may have a choice of backends, including straight
+        // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
+        // We don't differentiate the latter two yet, but we allow for
+        // a env var to try EGL first, instead of last.
+        bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
 
-    // if that failed, and we weren't already preferring EGL, try it now.
-    if (!gl && !preferEGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
+        // if we want EGL, try it first
+        if (!gl && preferEGL) {
+            gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
         }
-    }
-#else
-    // other platforms just use whatever the default is
-    if (!gl) {
-        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
+
+        // if it failed, then try the default provider, whatever that is
+        if (!gl) {
+            gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
         }
+
+        // if that failed, and we weren't already preferring EGL, try it now.
+        if (!gl && !preferEGL) {
+            gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
+        }
+    #else
+        // other platforms just use whatever the default is
+        if (!gl) {
+            gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
+        }
+    #endif
     }
-#endif
 
     // last chance, try OSMesa
     if (!gl) {
@@ -340,7 +347,17 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
     if (!gl) {
-        LogMessage("WebGL: Can't get a usable OpenGL context.");
+        if (forceOSMesa) {
+            LogMessage("WebGL: You set the webgl.force_osmesa preference to true, but OSMesa can't be found. "
+                       "Either install OSMesa and let webgl.osmesalib point to it, "
+                       "or set webgl.force_osmesa back to false.");
+        } else {
+            #ifdef XP_WIN
+                LogMessage("WebGL: Can't get a usable OpenGL context (also tried Direct3D via ANGLE)");
+            #else
+                LogMessage("WebGL: Can't get a usable OpenGL context");
+            #endif
+        }
         return NS_ERROR_FAILURE;
     }
 
