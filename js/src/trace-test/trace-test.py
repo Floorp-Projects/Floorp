@@ -299,7 +299,7 @@ if __name__ == '__main__':
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='j,m,mj',
+    op.add_option('--jitflags', dest='jitflags', default='j',
                   help='Example: --jitflags=j,mj to run each test with -j and -m -j')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
