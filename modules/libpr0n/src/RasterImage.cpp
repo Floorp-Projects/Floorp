@@ -1243,6 +1243,13 @@ RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
   if (!StoringSourceData()) {
     rv = WriteToDecoder(aBuffer, aCount);
     CONTAINER_ENSURE_SUCCESS(rv);
+
+    // We're not storing source data, so this data is probably coming straight
+    // from the network. In this case, we want to display data as soon as we
+    // get it, so we want to flush invalidations after every write.
+    mInDecoder = PR_TRUE;
+    mDecoder->FlushInvalidations();
+    mInDecoder = PR_FALSE;
   }
 
   // Otherwise, we're storing data in the source buffer
@@ -2376,6 +2383,14 @@ RasterImage::SyncDecode()
                       mSourceData.Length() - mBytesDecoded);
   CONTAINER_ENSURE_SUCCESS(rv);
 
+  // When we're doing a sync decode, we want to get as much information from the
+  // image as possible. We've send the decoder all of our data, so now's a good
+  // time  to flush any invalidations (in case we don't have all the data and what
+  // we got left us mid-frame).
+  mInDecoder = PR_TRUE;
+  mDecoder->FlushInvalidations();
+  mInDecoder = PR_FALSE;
+
   // If we finished the decode, shutdown the decoder
   if (IsDecodeFinished()) {
     rv = ShutdownDecoder(eShutdownIntent_Done);
@@ -2629,6 +2644,11 @@ imgDecodeWorker::Run()
     haveMoreData =
       image->mSourceData.Length() > image->mBytesDecoded;
   }
+
+  // Flush invalidations _after_ we've written everything we're going to.
+  image->mInDecoder = PR_TRUE;
+  image->mDecoder->FlushInvalidations();
+  image->mInDecoder = PR_FALSE;
 
   // If the decode finished, shutdown the decoder
   if (image->IsDecodeFinished()) {
