@@ -673,6 +673,18 @@ var Browser = {
     this._browserView.onAfterVisibleMove();
   },
 
+  // cmd_scrollBottom does not work in Fennec (Bug 590535).
+  scrollContentToBottom: function scrollContentToTop() {
+    let x = {}, y = {};
+    this.contentScrollboxScroller.getScrolledSize(x, y);
+    this.contentScrollboxScroller.scrollTo(0, y.value);
+
+    this.pageScrollboxScroller.getScrolledSize(x, y);
+    this.pageScrollboxScroller.scrollTo(0, y.value);
+
+    this._browserView.onAfterVisibleMove();
+  },
+
   /** Let current browser's scrollbox know about where content has been panned. */
   scrollBrowserToContent: function scrollBrowserToContent() {
     let browser = this.selectedBrowser;
