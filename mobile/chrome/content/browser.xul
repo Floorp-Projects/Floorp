@@ -540,8 +540,8 @@
     </vbox>
 
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
-      <vbox id="menulist-popup" class="dialog-dark"> 
-        <richlistbox id="menulist-commands" onselect="MenuListHelperUI.selectByIndex(this.selectedIndex)"/>
+      <vbox id="menulist-popup" class="dialog-dark">
+        <richlistbox id="menulist-commands" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </hbox>
 

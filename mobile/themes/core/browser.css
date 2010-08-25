@@ -1543,9 +1543,9 @@ pageaction:hover:active > vbox > .pageaction-desc {
   background: #8db8d8;
 }
 
-.menulist-command[selected="true"] {
-  pointer-events: none;
+.menulist-command.selected {
   background: #8db8d8;
+  pointer-events: none;
 }
 
 /* context popup ----------------------------------------------------------- */
