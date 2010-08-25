@@ -87,6 +87,8 @@
 
 #define DISCARD_PREF "image.mem.discardable"
 #define DECODEONDRAW_PREF "image.mem.decodeondraw"
+#define BYTESATATIME_PREF "image.mem.decode_bytes_at_a_time"
+#define MAXMS_PREF "image.mem.max_ms_before_yield"
 #define SVG_MIMETYPE "image/svg+xml"
 
 using namespace mozilla::imagelib;
@@ -117,6 +119,15 @@ ReloadPrefs(nsIPrefBranch *aBranch)
   rv = aBranch->GetBoolPref(DECODEONDRAW_PREF, &decodeondraw);
   if (NS_SUCCEEDED(rv))
     gDecodeOnDraw = decodeondraw;
+
+  // Progressive decoding knobs
+  PRInt32 bytesAtATime, maxMS;
+  rv = aBranch->GetIntPref(BYTESATATIME_PREF, &bytesAtATime);
+  if (NS_SUCCEEDED(rv))
+    RasterImage::SetDecodeBytesAtATime(bytesAtATime);
+  rv = aBranch->GetIntPref(MAXMS_PREF, &maxMS);
+  if (NS_SUCCEEDED(rv))
+    RasterImage::SetMaxMSBeforeYield(maxMS);
 
   // Discard timeout
   mozilla::imagelib::DiscardTracker::ReloadTimeout();

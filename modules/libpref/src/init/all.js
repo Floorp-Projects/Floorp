@@ -3154,6 +3154,12 @@ pref("image.mem.decodeondraw", false);
 // value and twice this value.
 pref("image.mem.min_discard_timeout_ms", 10000);
 
+// Chunk size for calls to the image decoders
+pref("image.mem.decode_bytes_at_a_time", 200000);
+
+// The longest time we can spend in an iteration of an async decode
+pref("image.mem.max_ms_before_yield", 400);
+
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
 pref("webgl.shader_validator", true);
