@@ -5639,7 +5639,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_top:
   case eCSSProperty_left:
   case eCSSProperty_right:
-    return ParseVariant(aValue, VARIANT_AHLP, nsnull);
+    return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
   case eCSSProperty_box_align:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBoxAlignKTable);

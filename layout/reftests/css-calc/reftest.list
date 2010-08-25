@@ -6,6 +6,14 @@
 == min-height-block-1.html height-block-1-ref.html
 == min-width-block-1.html width-block-1-ref.html
 == min-width-block-intrinsic-1.html min-width-block-intrinsic-1-ref.html
+== offsets-absolute-bottom-1.html offsets-absolute-top-1-ref.html
+== offsets-absolute-left-1.html offsets-relative-left-1-ref.html
+== offsets-absolute-right-1.html offsets-relative-left-1-ref.html
+== offsets-absolute-top-1.html offsets-absolute-top-1-ref.html
+== offsets-relative-bottom-1.html offsets-relative-top-1-ref.html
+== offsets-relative-left-1.html offsets-relative-left-1-ref.html
+== offsets-relative-right-1.html offsets-relative-left-1-ref.html
+== offsets-relative-top-1.html offsets-relative-top-1-ref.html
 == width-block-1.html width-block-1-ref.html
 == width-block-intrinsic-1.html width-block-intrinsic-1-ref.html
 == width-table-auto-1.html width-table-auto-1-ref.html
