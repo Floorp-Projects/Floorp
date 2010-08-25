@@ -1341,7 +1341,14 @@ var gCSSProperties = {
 		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"caption-side": {
@@ -1610,7 +1617,14 @@ var gCSSProperties = {
 		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"letter-spacing": {
@@ -2085,7 +2099,14 @@ var gCSSProperties = {
 		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"size": {
@@ -2227,7 +2248,14 @@ var gCSSProperties = {
 		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"-moz-transition": {
