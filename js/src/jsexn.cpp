@@ -293,7 +293,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     stackDepth = 0;
     valueCount = 0;
     for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
-        if (fp->hasFunction() && fp->argv) {
+        if (fp->hasFunction() && fp->argv && !fp->isEvalFrame()) {
             Value v = NullValue();
             if (checkAccess &&
                 !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
@@ -334,7 +334,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
     for (fp = js_GetTopStackFrame(cx); fp != fpstop; fp = fp->down) {
-        if (!fp->hasFunction()) {
+        if (!fp->hasFunction() || fp->isEvalFrame()) {
             elem->funName = NULL;
             elem->argc = 0;
         } else {

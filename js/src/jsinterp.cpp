@@ -490,7 +490,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     InvokeFrameGuard frame;
     if (!cx->stack().getInvokeFrame(cx, args, nmissing, nfixed, frame))
         return false;
-    JSStackFrame *fp = frame.getFrame();
+    JSStackFrame *fp = frame.getRegs().fp;
 
     /* Initialize missing missing arguments and new local variables. */
     Value *missing = args.argv() + args.argc();
@@ -565,7 +565,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         ok = callJSNative(cx, native, thisp, fp->numActualArgs(), fp->argv,
                           fp->addressReturnValue());
 
-        JS_ASSERT(cx->fp == fp);
+        JS_ASSERT(cx->fp() == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
         if (ok && !alreadyThrowing)
@@ -605,7 +605,7 @@ DoConstruct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 static JSBool
 DoSlowCall(JSContext *cx, uintN argc, Value *vp)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     JSObject *obj = fp->getThisObject(cx);
     if (!obj)
         return false;
@@ -780,7 +780,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
      * in before execution and copied out after.
      */
     JSFrameRegs regs;
-    ExecuteFrameGuard frame;
+    FrameGuard frame;
     if (!cx->stack().getExecuteFrame(cx, down, 0, script->nslots, frame))
         return false;
     JSStackFrame *fp = frame.getFrame();
@@ -813,24 +813,25 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *initialVarObj;
     if (down) {
         /* Propagate arg state for eval and the debugger API. */
+        JS_ASSERT_IF(down->hasFunction(), down->hasCallObj());
         fp->setCallObj(down->maybeCallObj());
         fp->setArgsObj(NULL);
         fp->setFunction((script->staticLevel > 0) ? down->maybeFunction() : NULL);
         fp->setThisValue(down->getThisValue());
         fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
-        fp->setNumActualArgs(down->numActualArgs());
+        fp->setNumActualArgs(0);
         fp->argv = down->argv;
         fp->setAnnotation(down->maybeAnnotation());
         fp->setScopeChain(chain);
 
         /*
          * We want to call |down->varobj()|, but this requires knowing the
-         * CallStackSegment of |down|. If |down == cx->fp|, the callstack is
+         * CallStackSegment of |down|. If |down == cx->fp()|, the callstack is
          * simply the context's active callstack, so we can use
-         * |down->varobj(cx)|.  When |down != cx->fp|, we need to do a slow
+         * |down->varobj(cx)|.  When |down != cx->fp()|, we need to do a slow
          * linear search. Luckily, this only happens with EvaluateInFrame.
          */
-        initialVarObj = (down == cx->fp)
+        initialVarObj = (down == cx->maybefp())
                         ? down->varobj(cx)
                         : down->varobj(cx->containingSegment(down));
     } else {
@@ -1214,7 +1215,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
 JS_STATIC_INTERPRET JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     Value *sp = cx->regs->sp;
     JS_ASSERT(stackIndex < 0);
     JS_ASSERT(fp->base() <= sp + stackIndex);
@@ -1251,11 +1252,11 @@ js_LeaveWith(JSContext *cx)
 {
     JSObject *withobj;
 
-    withobj = cx->fp->getScopeChain();
+    withobj = cx->fp()->getScopeChain();
     JS_ASSERT(withobj->getClass() == &js_WithClass);
-    JS_ASSERT(withobj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp));
+    JS_ASSERT(withobj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
-    cx->fp->setScopeChain(withobj->getParent());
+    cx->fp()->setScopeChain(withobj->getParent());
     withobj->setPrivate(NULL);
 }
 
@@ -1266,7 +1267,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
 
     clasp = obj->getClass();
     if ((clasp == &js_WithClass || clasp == &js_BlockClass) &&
-        obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp) &&
+        obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()) &&
         OBJ_BLOCK_DEPTH(cx, obj) >= stackDepth) {
         return clasp;
     }
@@ -1284,9 +1285,9 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
     Class *clasp;
 
     JS_ASSERT(stackDepth >= 0);
-    JS_ASSERT(cx->fp->base() + stackDepth <= cx->regs->sp);
+    JS_ASSERT(cx->fp()->base() + stackDepth <= cx->regs->sp);
 
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     for (obj = fp->maybeBlockChain(); obj; obj = obj->getParent()) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
@@ -1374,7 +1375,7 @@ js_TraceOpcode(JSContext *cx)
 
     tracefp = (FILE *) cx->tracefp;
     JS_ASSERT(tracefp);
-    fp = cx->fp;
+    fp = cx->fp();
     regs = cx->regs;
 
     /*
@@ -2178,7 +2179,7 @@ Interpret(JSContext *cx)
     JSRuntime *const rt = cx->runtime;
 
     /* Set registerized frame pointer and derived script pointer. */
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     JSScript *script = fp->getScript();
     JS_ASSERT(!script->isEmpty());
     JS_ASSERT(script->length > 1);
@@ -2239,7 +2240,7 @@ Interpret(JSContext *cx)
 
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
-        fp = cx->fp;                                                          \
+        fp = cx->fp();                                                        \
         script = fp->getScript();                                             \
         atoms = FrameAtomBase(cx, fp);                                        \
         currentVersion = (JSVersion) script->version;                         \
@@ -2658,7 +2659,7 @@ BEGIN_CASE(JSOP_STOP)
         regs.sp[-1] = fp->getReturnValue();
 
         /* Sync interpreter registers. */
-        fp = cx->fp;
+        fp = cx->fp();
         script = fp->getScript();
         atoms = FrameAtomBase(cx, fp);
 
@@ -4639,11 +4640,12 @@ BEGIN_CASE(JSOP_APPLY)
             stack.pushInlineFrame(cx, fp, regs.pc, newfp);
 
             /* Initializer regs after pushInlineFrame snapshots pc. */
+            regs.fp = newfp;
             regs.pc = newscript->code;
             regs.sp = newsp;
 
             /* Import into locals. */
-            JS_ASSERT(newfp == cx->fp);
+            JS_ASSERT(newfp == cx->fp());
             fp = newfp;
             script = newscript;
             atoms = script->atomMap.vector;
