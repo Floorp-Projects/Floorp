@@ -290,6 +290,10 @@ public:
     kDisposeRestorePrevious // Restore the previous (composited) frame
   };
 
+  // Progressive decoding knobs
+  static void SetDecodeBytesAtATime(PRUint32 aBytesAtATime);
+  static void SetMaxMSBeforeYield(PRUint32 aMaxMS);
+
 private:
   struct Anim
   {

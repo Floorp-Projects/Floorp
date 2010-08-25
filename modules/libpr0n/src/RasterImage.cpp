@@ -76,6 +76,22 @@ static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("Compre
 #define gCompressedImageAccountingLog
 #endif
 
+// Tweakable progressive decoding parameters
+static PRUint32 gDecodeBytesAtATime = 200000;
+static PRUint32 gMaxMSBeforeYield = 400;
+
+void
+RasterImage::SetDecodeBytesAtATime(PRUint32 aBytesAtATime)
+{
+  gDecodeBytesAtATime = aBytesAtATime;
+}
+void
+RasterImage::SetMaxMSBeforeYield(PRUint32 aMaxMS)
+{
+  gMaxMSBeforeYield = aMaxMS;
+}
+
+
 /* We define our own error checking macros here for 2 reasons:
  *
  * 1) Most of the failures we encounter here will (hopefully) be
@@ -2557,10 +2573,6 @@ RasterImage::DoError()
   LOG_CONTAINER_ERROR;
 }
 
-// Tweakable progressive decoding parameters
-#define DECODE_BYTES_AT_A_TIME 4096
-#define MAX_USEC_BEFORE_YIELD (1000 * 5)
-
 // Decodes some data, then re-posts itself to the end of the event queue if
 // there's more processing to be done
 NS_IMETHODIMP
@@ -2598,11 +2610,11 @@ imgDecodeWorker::Run()
   // synchronous. Write all the data in that case, otherwise write a
   // chunk
   PRUint32 maxBytes = image->mDecoder->IsSizeDecode()
-    ? image->mSourceData.Length() : DECODE_BYTES_AT_A_TIME;
+    ? image->mSourceData.Length() : gDecodeBytesAtATime;
 
   // Loop control
   PRBool haveMoreData = PR_TRUE;
-  nsTime deadline(PR_Now() + MAX_USEC_BEFORE_YIELD);
+  nsTime deadline(PR_Now() + 1000 * gMaxMSBeforeYield);
 
   // We keep decoding chunks until one of three possible events occur:
   // 1) We don't have any data left to decode
