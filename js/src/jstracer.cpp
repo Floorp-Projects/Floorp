@@ -1099,7 +1099,7 @@ argSlots(JSStackFrame* fp)
 }
 
 static inline jsuint
-numEntryFrameArgs(JSStackFrame* fp)
+numActualArgs(JSStackFrame* fp)
 {
     return fp->isEvalFrame() ? 0 : fp->numActualArgs();
 }
@@ -5985,7 +5985,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         }
         if (exit->recursive_pc != cx->regs->pc)
             return false;
-        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, cx->fp()->numActualArgs());
+        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, numActualArgs(cx->fp()));
         if (!from)
             return false;
         /* use stale TI for RecordTree - since from might not have one anymore. */
@@ -6112,7 +6112,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
-                                               exitedFrom, outer, numEntryFrameArgs(cx->fp()),
+                                               exitedFrom, outer, numActualArgs(cx->fp()),
                                                Record_Branch, hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
@@ -6161,7 +6161,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     JS_ASSERT(r->fragment && !r->fragment->lastIns);
     TreeFragment* root = r->fragment->root;
     TreeFragment* first = LookupOrAddLoop(tm, cx->regs->pc, root->globalObj,
-                                          root->globalShape, numEntryFrameArgs(cx->fp()));
+                                          root->globalShape, numActualArgs(cx->fp()));
 
     /*
      * Make sure the shape of the global object still matches (this might flush
@@ -6189,7 +6189,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         TreeFragment* outerFragment = root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
-        JS_ASSERT(numEntryFrameArgs(cx->fp()) == first->argc);
+        JS_ASSERT(numActualArgs(cx->fp()) == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
         return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch));
@@ -7213,7 +7213,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     }
 
     jsbytecode* pc = cx->regs->pc;
-    uint32 argc = numEntryFrameArgs(cx->fp());
+    uint32 argc = numActualArgs(cx->fp());
 
     TreeFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
@@ -10366,6 +10366,8 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if (down->maybeScript() != fp->maybeScript())
         return false;
+    if (down->isEvalFrame())
+        return false;
     if (down->numActualArgs() != fp->numActualArgs())
         return false;
     if (fp->numActualArgs() != fp->numFormalArgs())
@@ -13436,7 +13438,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     fi->spdist = cx->regs->sp - fp->slots();
     fi->set_argc(uint16(argc), constructing);
     fi->callerHeight = stackSlots - (2 + argc);
-    fi->callerArgc = fp->numActualArgs();
+    fi->callerArgc = numActualArgs(fp);
 
     if (callDepth >= tree->maxCallDepth)
         tree->maxCallDepth = callDepth + 1;

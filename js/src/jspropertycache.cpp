@@ -61,8 +61,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);
 
-    /* FIXME bug 489098: consider enabling the property cache for eval. */
-    if (js_IsPropertyCacheDisabled(cx) || (cx->fp()->flags & JSFRAME_EVAL)) {
+    if (js_IsPropertyCacheDisabled(cx)) {
         PCMETER(disfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
