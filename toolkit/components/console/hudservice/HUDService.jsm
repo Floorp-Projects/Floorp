@@ -85,7 +85,7 @@ function LogFactory(aMessagePrefix)
 
 let log = LogFactory("*** HUDService:");
 
-const HUD_STYLESHEET_URI = "chrome://global/skin/headsUpDisplay.css";
+const HUD_STYLESHEET_URI = "chrome://global/skin/webConsole.css";
 const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
 
 XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
