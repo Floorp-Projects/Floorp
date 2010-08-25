@@ -547,6 +547,7 @@ var InspectorUI = {
     if (this.isDOMPanelOpen) {
       this.domPanel.hidePopup();
     } else {
+      this.clearDOMPanel();
       this.openDOMPanel();
       if (this.treeView.selectedNode) {
         this.updateDOMPanel(this.treeView.selectedNode);
@@ -628,6 +629,7 @@ var InspectorUI = {
   openDOMPanel: function IUI_openDOMPanel()
   {
     if (!this.isDOMPanelOpen) {
+      this.domPanel.hidden = false;
       // open at middle right of browser panel, offset by 20px from middle.
       this.domPanel.openPopup(this.browser, "end_before", 0,
         this.win.outerHeight / 2 - 20, false, false);
@@ -664,9 +666,11 @@ var InspectorUI = {
     this.winID = this.getWindowID(this.win);
 
     // DOM panel initialization and loading (via PropertyPanel.jsm)
-    let domPanelTitle = this.strings.GetStringFromName("dom.domPanelTitle");
+    let objectPanelTitle = this.strings.
+      GetStringFromName("object.objectPanelTitle");
     let parent = document.getElementById("inspector-style-panel").parentNode;
-    this.propertyPanel = new (this.PropertyPanel)(parent, document, domPanelTitle, {});
+    this.propertyPanel = new (this.PropertyPanel)(parent, document,
+      objectPanelTitle, {});
 
     // additional DOM panel setup needed for unittest identification and use
     this.domPanel = this.propertyPanel.panel;
