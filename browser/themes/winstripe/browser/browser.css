@@ -333,7 +333,7 @@ statusbarpanel#statusbar-display {
 
 @media all and (-moz-windows-classic) {
   #titlebar-close {
-    -moz-margin-start: 2px !important;
+    -moz-margin-start: 2px;
   }
 }
 
