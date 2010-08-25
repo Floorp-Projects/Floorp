@@ -70,10 +70,7 @@ const kBrowserViewZoomLevelPrecision = 10000;
  *     device remains tilted.
  * - Critical (the implicit one): The critical rectangle is the (possibly null)
  *     intersection of the visible and viewport rectangles.  That is, it is that
- *     region of the viewport which is visible to the user.  We care about this
- *     because it tells us which region must be rendered as soon as it is dirtied.
- *     The critical rectangle is mostly state that we do not keep in BrowserView
- *     but that our TileManager maintains.
+ *     region of the viewport which is visible to the user.
  *
  * Example rectangle state configurations:
  *
@@ -125,12 +122,6 @@ const kBrowserViewZoomLevelPrecision = 10000;
  * A = viewport ; at (0, 0)
  * B = visible  ; at (x, y) where x < 0, y > 0
  * C = critical ; at (0, y)
- *
- *
- * Maintaining per-browser state is a little bit of a hack involving attaching
- * an object as the obfuscated dynamic JS property of the browser object, that
- * hopefully no one but us will touch.  See BrowserView.Util.getViewportStateFromBrowser()
- * for the property name.
  */
 function BrowserView(container, visibleRectFactory) {
   Util.bindAll(this);
@@ -485,5 +476,4 @@ BrowserView.BrowserViewportState.prototype = {
 
     return "[BrowserViewportState] {\n" + props.join(",\n") + "\n}";
   }
-
 };
