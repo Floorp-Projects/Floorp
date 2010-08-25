@@ -507,8 +507,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                 NS_EVENT_STATE_OPTIONAL |
                 NS_EVENT_STATE_VALID |
                 NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_INDETERMINATE |
-                NS_EVENT_STATE_MOZ_PLACEHOLDER;
+                NS_EVENT_STATE_INDETERMINATE;
     }
 
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
@@ -986,15 +985,6 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
       SetValueChanged(PR_TRUE);
     }
     mInputData.mState->SetValue(value, aUserInput);
-
-    if (PlaceholderApplies() &&
-        HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
-      }
-    }
 
     return NS_OK;
   }
@@ -1655,19 +1645,6 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   if (!aVisitor.mPresContext) {
     return NS_OK;
-  }
-
-  if (PlaceholderApplies() &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      // TODO: checking if the value is empty could be a good idea but we do not
-      // have a simple way to do that, see bug 585100
-      (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
-       aVisitor.mEvent->message == NS_BLUR_CONTENT)) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
-    }
   }
 
   // ignore the activate event fired by the "Browse..." button
@@ -2819,23 +2796,6 @@ nsHTMLInputElement::IntrinsicState() const
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 
-  if (PlaceholderApplies() && HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
-    // TODO: we really need a GetValue(...) const method, see bug 585097
-    nsTextEditorState* edState = GetEditorState();
-    nsAutoString value;
-
-    if (edState) {
-      edState->GetValue(value, PR_TRUE);
-    } else {
-      GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-    }
-
-    if (value.IsEmpty()) {
-      state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
-  }
-
   return state;
 }
 
@@ -3912,17 +3872,5 @@ NS_IMETHODIMP_(void)
 nsHTMLInputElement::OnValueChanged(PRBool aNotify)
 {
   UpdateAllValidityStates(aNotify);
-
-  // :-moz-placeholder pseudo-class may change when the value changes.
-  // However, we don't want to waste cycles if the state doesn't apply.
-  if (aNotify && PlaceholderApplies()
-      && HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)
-      && !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
-    }
-  }
 }
 

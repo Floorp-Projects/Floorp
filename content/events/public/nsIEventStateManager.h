@@ -217,7 +217,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 // content has focus and should show a ring
 #define NS_EVENT_STATE_FOCUSRING     (1 << 29)
 
-// Content shows its placeholder
-#define NS_EVENT_STATE_MOZ_PLACEHOLDER (1 << 30)
-
 #endif // nsIEventStateManager_h__
