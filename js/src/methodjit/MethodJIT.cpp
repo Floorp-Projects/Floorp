@@ -820,8 +820,9 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
             Destroy(script->pics[i].execPools);
         }
 #endif
-        cx->free(script->jit);
     }
+
+    cx->free(script->jit);
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS

@@ -185,8 +185,6 @@ struct JITScript {
     uint32          nPICs;           /* number of PolyICs */
 #endif
     void            *invoke;         /* invoke address */
-    uint32          *escaping;       /* list of escaping slots */
-    uint32          nescaping;       /* number of escaping slots */
 };
 
 /* Execute a method that has been JIT compiled. */

@@ -80,10 +80,6 @@
 # include "jsxdrapi.h"
 #endif
 
-#ifdef JS_METHODJIT
-#include "methodjit/MethodJIT.h"
-#endif
-
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jsfuninlines.h"
@@ -1118,24 +1114,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (n != 0) {
         JS_ASSERT(callobj->numSlots() >= JS_INITIAL_NSLOTS + n);
         n += JS_INITIAL_NSLOTS;
-
-        JSScript *script = fun->u.i.script;
-        uint32 nargs = fun->nargs;
-        uint32 nvars = fun->u.i.nvars;
-
-#ifdef JS_METHODJIT
-        memcpy(callobj->dslots, fp->argv, nargs * sizeof(Value));
-        if (!script->jit || script->usesEval) {
-            memcpy(callobj->dslots + nargs, fp->slots(), nvars * sizeof(Value));
-        } else if (script->jit) {
-            for (uint32 i = 0; i < script->jit->nescaping; i++) {
-                uint32 e = script->jit->escaping[i];
-                callobj->dslots[nargs + e] = fp->slots()[e];
-            }
-        }
-#else
-        CopyValuesToCallObject(callobj, nargs, fp->argv, nvars, fp->slots());
-#endif
+        CopyValuesToCallObject(callobj, fun->nargs, fp->argv, fun->u.i.nvars, fp->slots());
     }
 
     /* Clear private pointers to fp, which is about to go away (js_Invoke). */
