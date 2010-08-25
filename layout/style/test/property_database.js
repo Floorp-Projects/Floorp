@@ -1581,7 +1581,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
-		/* XXX these have prerequisites */
+		/* computed value tests for height test more with display:block */
+		prerequisites: { "display": "block" },
 		other_values: [ "15px", "3em", "15%" ],
 		invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
