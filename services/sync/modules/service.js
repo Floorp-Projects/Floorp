@@ -267,11 +267,14 @@ WeaveSvc.prototype = {
       this._log.info("Weave Sync disabled");
 
     // Create Weave identities (for logging in, and for encryption)
-    ID.set('WeaveID', new Identity(PWDMGR_PASSWORD_REALM, this.username));
-    Auth.defaultAuthenticator = new BasicAuthenticator(ID.get('WeaveID'));
+    let id = ID.get("WeaveID");
+    if (!id)
+      id = ID.set("WeaveID", new Identity(PWDMGR_PASSWORD_REALM, this.username));
+    Auth.defaultAuthenticator = new BasicAuthenticator(id);
 
-    ID.set('WeaveCryptoID',
-           new Identity(PWDMGR_PASSPHRASE_REALM, this.username));
+    if (!ID.get("WeaveCryptoID"))
+      ID.set("WeaveCryptoID",
+             new Identity(PWDMGR_PASSPHRASE_REALM, this.username));
 
     this._updateCachedURLs();
 
@@ -293,25 +296,9 @@ WeaveSvc.prototype = {
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {
-    if (!this.enabled) {
-      Status.service = STATUS_DISABLED;
-    }
-    else if (!this.username) {
-      this._log.debug("checkSetup: no username set");
-      Status.login = LOGIN_FAILED_NO_USERNAME;
-    }
-    else if (!Utils.mpLocked() && !this.password) {
-      this._log.debug("checkSetup: no password set");
-      Status.login = LOGIN_FAILED_NO_PASSWORD;
-    }
-    else if (!Utils.mpLocked() && !this.passphrase) {
-      this._log.debug("checkSetup: no passphrase set");
-      Status.login = LOGIN_FAILED_NO_PASSPHRASE;
-    }
-    else
-      Status.service = STATUS_OK;
-
-    return Status.service;
+    if (!this.enabled)
+      return Status.service = STATUS_DISABLED;
+    return Status.checkSetup();
   },
 
   _migratePrefs: function _migratePrefs() {
