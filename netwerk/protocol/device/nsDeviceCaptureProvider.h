@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,13 +15,15 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ *   Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Brad Lassey <blassey@mozilla.com>
+ *   Kyle Huey <me@kylehuey.com>
  *
- * Alternatively, the contents of this file may be used under the terms of
+ * Alternatively, the contents of this file may be used under the terms or
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
@@ -34,22 +37,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NECKO_CONFIG_H_
-#define _NECKO_CONFIG_H_
+#ifndef nsDeviceCaptureProvider_h_
+#define nsDeviceCaptureProvider_h_
 
-#undef NECKO_DISK_CACHE
+#include "nsIInputStream.h"
 
-#undef NECKO_COOKIES
+struct nsCaptureParams {
+  PRPackedBool captureAudio;
+  PRPackedBool captureVideo;
+  PRUint32 frameRate;
+  PRUint32 frameLimit;
+  PRUint32 timeLimit;
+  PRUint32 width;
+  PRUint32 height;
+  PRUint32 bpp;
+};
 
-#undef NECKO_WIFI
-
-#undef NECKO_PROTOCOL_about
-#undef NECKO_PROTOCOL_data
-#undef NECKO_PROTOCOL_device
-#undef NECKO_PROTOCOL_file
-#undef NECKO_PROTOCOL_ftp
-#undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_res
-#undef NECKO_PROTOCOL_viewsource
+class nsDeviceCaptureProvider : public nsISupports
+{
+public:
+  virtual nsresult Init(nsACString& aContentType,
+                        nsCaptureParams* aParams,
+                        nsIInputStream** aStream) = 0;
+};
 
 #endif

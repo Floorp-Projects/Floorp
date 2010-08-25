@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Camera.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Nino D'Aversa <ninodaversa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,22 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NECKO_CONFIG_H_
-#define _NECKO_CONFIG_H_
+#ifndef nsDeviceProtocolHandler_h_
+#define nsDeviceProtocolHandler_h_
 
-#undef NECKO_DISK_CACHE
+#include "nsIProtocolHandler.h"
+#include "nsString.h"
 
-#undef NECKO_COOKIES
+// {6b0ffe9e-d114-486b-aeb7-da62e7273ed5}
+#define NS_DEVICEPROTOCOLHANDLER_CID                      \
+{ 0x60ffe9e, 0xd114, 0x486b,                              \
+    {0xae, 0xb7, 0xda, 0x62, 0xe7, 0x27, 0x3e, 0xd5} }
 
-#undef NECKO_WIFI
+class nsDeviceProtocolHandler : public nsIProtocolHandler {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROTOCOLHANDLER
 
-#undef NECKO_PROTOCOL_about
-#undef NECKO_PROTOCOL_data
-#undef NECKO_PROTOCOL_device
-#undef NECKO_PROTOCOL_file
-#undef NECKO_PROTOCOL_ftp
-#undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_res
-#undef NECKO_PROTOCOL_viewsource
+  nsDeviceProtocolHandler() {}
+  ~nsDeviceProtocolHandler() {}
+
+  nsresult Init();
+};
 
 #endif
