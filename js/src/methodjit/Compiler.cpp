@@ -82,7 +82,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
 #endif
     callSites(ContextAllocPolicy(cx)), 
     doubleList(ContextAllocPolicy(cx)),
-    escapingList(ContextAllocPolicy(cx)),
     stubcc(cx, *this, frame, script)
 #if defined JS_TRACER
     ,addTraceHints(cx->jitEnabled)
@@ -252,7 +251,6 @@ mjit::Compiler::finishThisUp()
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
     size_t totalBytes = sizeof(JITScript) +
-                        sizeof(uint32) * escapingList.length() +
                         sizeof(void *) * script->length +
 #if defined JS_MONOIC
                         sizeof(ic::MICInfo) * mics.length() +
@@ -276,16 +274,6 @@ mjit::Compiler::finishThisUp()
     script->jit->outOfLineLength = stubcc.size();
     script->jit->nCallSites = callSites.length();
     script->jit->invoke = result;
-
-    script->jit->nescaping = escapingList.length();
-    if (escapingList.length()) {
-        script->jit->escaping = (uint32 *)cursor;
-        cursor += sizeof(uint32) * escapingList.length();
-        for (uint32 i = 0; i < escapingList.length(); i++)
-            script->jit->escaping[i] = escapingList[i];
-    } else {
-        script->jit->escaping = NULL;
-    }
 
     /* Build the pc -> ncode mapping. */
     void **nmap = (void **)cursor;
@@ -1466,13 +1454,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GLOBALINC)
 
           BEGIN_CASE(JSOP_DEFUPVAR)
-          {
-            uint32 slot = GET_SLOTNO(PC);
-            if (frame.addEscaping(slot) && slot < script->nfixed) {
-                if (!escapingList.append(slot))
-                    return Compile_Error;
-            }
-          }
+            frame.addEscaping(GET_SLOTNO(PC));
           END_CASE(JSOP_DEFUPVAR)
 
           default:
