@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,12 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   John Gaunt (jgaunt@netscape.com)
+#   Alexander Surkov <surkov.alexander@gmail.com> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,45 +44,11 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = accessibility
-LIBRARY_NAME = accessibility_base_s
+LIBRARY_NAME = accessibility_xpcom_s
 LIBXUL_LIBRARY = 1
 
-
 CPPSRCS = \
-  AccCollector.cpp \
-  AccEvent.cpp \
-  AccGroupInfo.cpp \
-  AccIterator.cpp \
-  filters.cpp \
-  nsAccDocManager.cpp \
-  nsAccessNode.cpp \
-  nsARIAGridAccessible.cpp \
-  nsARIAMap.cpp \
-  nsDocAccessible.cpp \
-  nsOuterDocAccessible.cpp \
-  nsAccessibilityAtoms.cpp \
-  nsCoreUtils.cpp \
-  nsAccUtils.cpp \
-  nsRelUtils.cpp \
-  nsAccessibilityService.cpp \
-  nsAccessible.cpp \
-  nsAccessibleRelation.cpp \
-  nsAccTreeWalker.cpp \
-  nsBaseWidgetAccessible.cpp \
-  nsEventShell.cpp \
-  nsFormControlAccessible.cpp \
-  nsRootAccessible.cpp \
-  nsApplicationAccessible.cpp \
-  nsCaretAccessible.cpp \
-  nsTextAccessible.cpp \
-  nsTextEquivUtils.cpp \
-  nsTextAttrs.cpp \
-  $(NULL)
-
-EXPORTS = \
-  a11yGeneric.h \
-  nsAccessible.h \
-  nsAccessNode.h \
+  nsAccEvent.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -89,21 +56,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xul \
-  -I$(srcdir)/../../../layout/generic \
-  -I$(srcdir)/../../../layout/xul/base/src \
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../base \
   $(NULL)
-
-ifndef DISABLE_XFORMS_HOOKS
-LOCAL_INCLUDES += -I$(srcdir)/../xforms
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../atk \
-  $(NULL)
-endif

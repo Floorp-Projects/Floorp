@@ -403,10 +403,10 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
         if (menuBarAccessible) {
           mCurrentARIAMenubar = menuBarAccessible->GetNode();
           if (mCurrentARIAMenubar) {
-            nsRefPtr<nsAccEvent> menuStartEvent =
-              new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                             menuBarAccessible, PR_FALSE, aIsFromUserInput,
-                             nsAccEvent::eAllowDupes);
+            nsRefPtr<AccEvent> menuStartEvent =
+              new AccEvent(nsIAccessibleEvent::EVENT_MENU_START,
+                           menuBarAccessible, PR_FALSE, aIsFromUserInput,
+                           AccEvent::eAllowDupes);
             if (menuStartEvent) {
               FireDelayedAccessibleEvent(menuStartEvent);
             }
@@ -416,9 +416,9 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
     }
   }
   else if (mCurrentARIAMenubar) {
-    nsRefPtr<nsAccEvent> menuEndEvent =
-      new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar,
-                     PR_FALSE, aIsFromUserInput, nsAccEvent::eAllowDupes);
+    nsRefPtr<AccEvent> menuEndEvent =
+      new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar,
+                   PR_FALSE, aIsFromUserInput, AccEvent::eAllowDupes);
     if (menuEndEvent) {
       FireDelayedAccessibleEvent(menuEndEvent);
     }
@@ -446,7 +446,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
   // Coalesce focus events from the same document, because DOM focus event might
   // be fired for the document node and then for the focused DOM element.
   FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                             finalFocusNode, nsAccEvent::eCoalesceFromSameDocument,
+                             finalFocusNode, AccEvent::eCoalesceFromSameDocument,
                              aIsAsynch, aIsFromUserInput);
 
   return PR_TRUE;
@@ -549,9 +549,9 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
                         nsIAccessibleStates::STATE_SELECTED)) != 0;
 
-    nsRefPtr<nsAccEvent> accEvent =
-      new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
-                                PR_FALSE, isEnabled);
+    nsRefPtr<AccEvent> accEvent =
+      new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
+                              PR_FALSE, isEnabled);
     nsEventShell::FireEvent(accEvent);
 
     if (isEnabled)
@@ -565,10 +565,9 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
     PRBool isEnabled = !!(state & nsIAccessibleStates::STATE_CHECKED);
 
-    nsRefPtr<nsAccEvent> accEvent =
-      new nsAccStateChangeEvent(accessible,
-                                nsIAccessibleStates::STATE_CHECKED,
-                                PR_FALSE, isEnabled);
+    nsRefPtr<AccEvent> accEvent =
+      new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
+                              PR_FALSE, isEnabled);
 
     nsEventShell::FireEvent(accEvent);
     return NS_OK;
@@ -600,9 +599,9 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     PRUint32 state = nsAccUtils::State(accessible); // collapsed/expanded changed
     PRBool isEnabled = (state & nsIAccessibleStates::STATE_EXPANDED) != 0;
 
-    nsRefPtr<nsAccEvent> accEvent =
-      new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_EXPANDED,
-                                PR_FALSE, isEnabled);
+    nsRefPtr<AccEvent> accEvent =
+      new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_EXPANDED,
+                              PR_FALSE, isEnabled);
     nsEventShell::FireEvent(accEvent);
     return NS_OK;
   }
@@ -753,7 +752,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
     FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                               targetNode, nsAccEvent::eRemoveDupes);
+                               targetNode, AccEvent::eRemoveDupes);
   }
 #ifdef DEBUG
   else if (eventType.EqualsLiteral("mouseover")) {
@@ -887,10 +886,10 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
     PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
     if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
         comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-      nsRefPtr<nsAccEvent> event =
-        new nsAccStateChangeEvent(comboboxAcc,
-                                  nsIAccessibleStates::STATE_EXPANDED,
-                                  PR_FALSE, PR_TRUE);
+      nsRefPtr<AccEvent> event =
+        new AccStateChangeEvent(comboboxAcc,
+                                nsIAccessibleStates::STATE_EXPANDED,
+                                PR_FALSE, PR_TRUE);
       NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
       nsEventShell::FireEvent(event);
@@ -929,10 +928,10 @@ nsRootAccessible::HandlePopupHidingEvent(nsINode *aNode,
   PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
   if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
       comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(comboboxAcc,
-                                nsIAccessibleStates::STATE_EXPANDED,
-                                PR_FALSE, PR_FALSE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(comboboxAcc,
+                              nsIAccessibleStates::STATE_EXPANDED,
+                              PR_FALSE, PR_FALSE);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
     nsEventShell::FireEvent(event);

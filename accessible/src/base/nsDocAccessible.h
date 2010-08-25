@@ -117,7 +117,7 @@ public:
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
 
 #ifdef DEBUG_ACCDOCMGR
-  virtual nsresult HandleAccEvent(nsAccEvent *aAccEvent);
+  virtual nsresult HandleAccEvent(AccEvent* aAccEvent);
 #endif
 
   // nsIAccessibleText
@@ -151,7 +151,7 @@ public:
    *                      code synchronous with a DOM event
    */
   nsresult FireDelayedAccessibleEvent(PRUint32 aEventType, nsINode *aNode,
-                                      nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
+                                      AccEvent::EEventRule aAllowDupes = AccEvent::eRemoveDupes,
                                       PRBool aIsAsynch = PR_FALSE,
                                       EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
@@ -160,7 +160,7 @@ public:
    *
    * @param aEvent  [in] the event to fire
    */
-  nsresult FireDelayedAccessibleEvent(nsAccEvent *aEvent);
+  nsresult FireDelayedAccessibleEvent(AccEvent* aEvent);
 
   /**
    * Find the accessible object in the accessibility cache that corresponds to
@@ -207,7 +207,7 @@ public:
    * Process the event when the queue of pending events is untwisted. Fire
    * accessible events as result of the processing.
    */
-  void ProcessPendingEvent(nsAccEvent* aEvent);
+  void ProcessPendingEvent(AccEvent* aEvent);
 
 protected:
 
@@ -276,7 +276,7 @@ protected:
    * @param  aIsAsync              [in] whether casual change is async
    * @param  aIsFromUserInput      [in] the event is known to be from user input
    */
-  already_AddRefed<nsAccEvent>
+  already_AddRefed<AccEvent>
     CreateTextChangeEventForNode(nsAccessible *aContainerAccessible,
                                  nsIContent *aChangeNode,
                                  nsAccessible *aAccessible,
