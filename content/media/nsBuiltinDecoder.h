@@ -534,6 +534,10 @@ public:
   // Notifies the element that decoding has failed.
   void DecodeError();
 
+  // Ensures the state machine thread is running, starting a new one
+  // if necessary.
+  nsresult StartStateMachineThread();
+
   /******
    * The following members should be accessed with the decoder lock held.
    ******/

@@ -205,9 +205,6 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
     mStream = aStream;
   }
 
-  nsresult rv = NS_NewThread(getter_AddRefs(mStateMachineThread));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mDecoderStateMachine = CreateStateMachine();
   if (!mDecoderStateMachine) {
     return NS_ERROR_FAILURE;
@@ -224,6 +221,18 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
 
   ChangeState(PLAY_STATE_LOADING);
 
+  return StartStateMachineThread();
+}
+
+nsresult nsBuiltinDecoder::StartStateMachineThread()
+{
+  NS_ASSERTION(mDecoderStateMachine,
+               "Must have state machine to start state machine thread");
+  if (mStateMachineThread) {
+    return NS_OK;
+  }
+  nsresult rv = NS_NewThread(getter_AddRefs(mStateMachineThread));
+  NS_ENSURE_SUCCESS(rv, rv);
   return mStateMachineThread->Dispatch(mDecoderStateMachine, NS_DISPATCH_NORMAL);
 }
 
@@ -231,6 +240,8 @@ nsresult nsBuiltinDecoder::Play()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mMonitor);
+  nsresult res = StartStateMachineThread();
+  NS_ENSURE_SUCCESS(res,res);
   if (mPlayState == PLAY_STATE_SEEKING) {
     mNextState = PLAY_STATE_PLAYING;
     return NS_OK;
@@ -239,7 +250,6 @@ nsresult nsBuiltinDecoder::Play()
     return Seek(0);
 
   ChangeState(PLAY_STATE_PLAYING);
-
   return NS_OK;
 }
 
@@ -267,7 +277,7 @@ nsresult nsBuiltinDecoder::Seek(float aTime)
     ChangeState(PLAY_STATE_SEEKING);
   }
 
-  return NS_OK;
+  return StartStateMachineThread();
 }
 
 nsresult nsBuiltinDecoder::PlaybackRateChanged()
