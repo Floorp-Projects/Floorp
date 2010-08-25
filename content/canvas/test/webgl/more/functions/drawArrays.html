@@ -39,7 +39,7 @@ var texcoords = [0.0,0.0,  1.0,0.0,  0.0,1.0];
 
 Tests.startUnit = function () {
   var canvas = document.getElementById('gl');
-  var gl = canvas.getContext(GL_CONTEXT_ID);
+  var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
   var prog = new Shader(gl, 'vert', 'frag');
   prog.use();
   var sh = prog.shader.program;
@@ -63,55 +63,6 @@ Tests.teardown = function(gl, prog, v,n,t) {
 Tests.endUnit = function(gl, prog, v,n,t) {
   prog.destroy();
 }
-
-/* VertexAttribPointer drawing with data arrays is not in WebGL (?)
-
-Tests.testDrawArraysWithData = function(gl, prog, v,n,t) {
-  gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, verts);
-  assert(0 == checkError(gl, "vertexAttribPointer"));
-  gl.enableVertexAttribArray(v);
-  assert(0 == checkError(gl, "enableVertexAttribArray"));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 0);});
-  assert(0 == checkError(gl, "drawArrays 1"));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assert(0 == checkError(gl, "drawArrays 2"));
-}
-
-Tests.testDrawArraysMulti = function(gl, prog, v,n,t) {
-  gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, verts);
-  assert(0 == checkError(gl, "vertexAttribPointer v"));
-  gl.vertexAttribPointer(t, 2, gl.FLOAT, false, 0, texcoords);
-  assert(0 == checkError(gl, "vertexAttribPointer t"));
-  gl.vertexAttribPointer(n, 3, gl.FLOAT, false, 0, normals);
-  assert(0 == checkError(gl, "vertexAttribPointer n"));
-  gl.enableVertexAttribArray(v);
-  gl.enableVertexAttribArray(n);
-  gl.enableVertexAttribArray(t);
-  assert(0 == checkError(gl, "enableVertexAttribArray"));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 0);});
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assert(0 == checkError(gl, "drawArrays 1"));
-  gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, verts.concat(verts));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 0);});
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assert(0 == checkError(gl, "drawArrays 2"));
-  gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, verts);
-  gl.vertexAttribPointer(n, 3, gl.FLOAT, false, 0, normals.concat(normals));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assert(0 == checkError(gl, "drawArrays 3"));
-  gl.vertexAttribPointer(n, 3, gl.FLOAT, false, 0, normals);
-  gl.vertexAttribPointer(t, 2, gl.FLOAT, false, 0, texcoords.concat(texcoords));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assert(0 == checkError(gl, "drawArrays 4"));
-  gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, verts.concat(verts));
-  gl.vertexAttribPointer(n, 3, gl.FLOAT, false, 0, normals.concat(normals));
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 1, 0);});
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 1, 1);});
-  assertOk(function(){gl.drawArrays(gl.TRIANGLES, 1, 2);});
-  assert(0 == checkError(gl, "drawArrays 5"));
-}
-*/
 
 Tests.testDrawArraysVBO = function(gl, prog, v,n,t) {
   var vbo = new VBO(gl, {size:3, data:Quad.vertices});
@@ -155,8 +106,6 @@ Tests.testDrawArraysVBOMulti = function(gl, prog, v,n,t) {
 
 </script>
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
-
   attribute vec3 Vertex;
   attribute vec3 Normal;
   attribute vec2 Tex;
@@ -169,8 +118,9 @@ Tests.testDrawArraysVBOMulti = function(gl, prog, v,n,t) {
   }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
-
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec4 texCoord0;
   void main()
   {

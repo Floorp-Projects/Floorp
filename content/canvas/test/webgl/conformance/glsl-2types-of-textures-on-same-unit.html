@@ -30,6 +30,9 @@ void main()
 </script>
 
 <script id="fshader" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision highp float;
+#endif
 uniform sampler2D tex2d;
 uniform samplerCube texCube;
 varying vec2 texCoord;
@@ -121,7 +124,7 @@ function init()
     var x = ii % 2;
     var y = Math.floor(ii / 2);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    assertMsg(gl.getError() == gl.INVALID_OPERATION,
+    glErrorShouldBe(gl, gl.INVALID_OPERATION,
               "drawing with 2 different targets on the same texture unit should generate INVALID_VALUE");
   }
 }

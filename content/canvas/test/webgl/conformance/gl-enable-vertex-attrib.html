@@ -42,10 +42,10 @@ gl.enableVertexAttribArray(0);
 gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
 gl.enableVertexAttribArray(3);
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 
 gl.drawArrays(gl.TRIANGLES, 0, 3);
-shouldBe("gl.getError()", "gl.INVALID_OPERATION");
+glErrorShouldBe(gl, gl.INVALID_OPERATION);
 
 successfullyParsed = true;
 </script>

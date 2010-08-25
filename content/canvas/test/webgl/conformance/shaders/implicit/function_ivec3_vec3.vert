@@ -1,3 +1,4 @@
+// implicit cast of ivec3 to vec3 in function argument should fail
 vec3 foo(vec3 f) {
   return f;
 }

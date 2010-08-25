@@ -39,7 +39,7 @@ var texcoords = [0.0,0.0,  1.0,0.0,  0.0,1.0];
 
 Tests.startUnit = function () {
   var canvas = document.getElementById('gl');
-  var gl = canvas.getContext(GL_CONTEXT_ID);
+  var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
   var prog = new Shader(gl, 'vert', 'frag');
   prog.use();
   var sh = prog.shader.program;
@@ -113,8 +113,6 @@ Tests.testVertexAttribVBO = function(gl, prog, v,n,t) {
 
 </script>
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
-
   attribute vec3 Vertex;
   attribute vec3 Normal;
   attribute vec2 Tex;
@@ -127,8 +125,9 @@ Tests.testVertexAttribVBO = function(gl, prog, v,n,t) {
   }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
-
+  #ifdef GL_ES
+  precision highp float;
+  #endif
   varying vec4 texCoord0;
   void main()
   {
