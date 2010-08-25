@@ -1609,6 +1609,7 @@ struct JSRuntime {
 
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
+    JSGCArenaStats      gcArenaStats[FINALIZE_LIMIT];
 #endif
 
 #ifdef DEBUG
