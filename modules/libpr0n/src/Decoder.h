@@ -87,7 +87,12 @@ public:
   nsresult Finish();
 
   /**
-   * Tells the decoder to flush any pending invalidations.
+   * Tells the decoder to flush any pending invalidations. This informs the image
+   * frame of its decoded region, and sends the appropriate OnDataAvailable call
+   * to consumers.
+   *
+   * This can be called any time when we're midway through decoding a frame,
+   * and must be called after finishing a frame (before starting a new one).
    */
   void FlushInvalidations();
 

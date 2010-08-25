@@ -174,6 +174,9 @@ Decoder::PostFrameStop()
   // Update our state
   mInFrame = false;
 
+  // Flush any invalidations before we finish the frame
+  FlushInvalidations();
+
   // Fire notification
   if (mObserver)
     mObserver->OnStopFrame(nsnull, mFrameCount - 1); // frame # is zero-indexed
@@ -187,9 +190,6 @@ Decoder::PostInvalidation(nsIntRect& aRect)
 
   // Account for the new region
   mInvalidRect.UnionRect(mInvalidRect, aRect);
-
-  // For now, just flush invalidations immediately. We'll stop doing this soon.
-  FlushInvalidations();
 }
 
 } // namespace imagelib
