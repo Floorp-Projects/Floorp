@@ -1089,9 +1089,9 @@ struct nsStylePosition {
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, auto
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum
   nsStyleCoord  mMaxWidth;              // [reset] coord, percent, enum, none
-  nsStyleCoord  mHeight;                // [reset] coord, percent, auto
-  nsStyleCoord  mMinHeight;             // [reset] coord, percent
-  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, none
+  nsStyleCoord  mHeight;                // [reset] coord, percent, calc, auto
+  nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
+  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
   nsStyleCoord  mZIndex;                // [reset] integer, auto
 
@@ -1113,7 +1113,7 @@ private:
   static PRBool HeightCoordDependsOnContainer(const nsStyleCoord &aCoord)
   {
     return aCoord.GetUnit() == eStyleUnit_Auto || // CSS 2.1, 10.6.4, item (5)
-           aCoord.GetUnit() == eStyleUnit_Percent;
+           aCoord.HasPercent();
   }
 };
 
