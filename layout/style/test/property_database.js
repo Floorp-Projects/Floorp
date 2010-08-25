@@ -1337,7 +1337,8 @@ var gCSSProperties = {
 		domProp: "bottom",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
 		other_values: [ "32px", "-3em", "12%" ],
@@ -1598,7 +1599,8 @@ var gCSSProperties = {
 		domProp: "left",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
 		other_values: [ "32px", "-3em", "12%" ],
@@ -2044,7 +2046,8 @@ var gCSSProperties = {
 		domProp: "right",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
 		other_values: [ "32px", "-3em", "12%" ],
@@ -2185,7 +2188,8 @@ var gCSSProperties = {
 		domProp: "top",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
 		other_values: [ "32px", "-3em", "12%" ],
