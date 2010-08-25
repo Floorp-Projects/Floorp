@@ -777,6 +777,19 @@ public:
                    const nsStyleCoord&  aCoord);
 
   /*
+   * Likewise, but for 'height', 'min-height', or 'max-height'.
+   */
+  static nscoord ComputeHeightValue(nscoord aContainingBlockHeight,
+                                    const nsStyleCoord& aCoord)
+  {
+    nscoord result =
+      ComputeHeightDependentValue(aContainingBlockHeight, aCoord);
+    if (result < 0)
+      result = 0; // clamp calc()
+    return result;
+  }
+
+  /*
    * Calculate the used values for 'width' and 'height' for a replaced element.
    *
    *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths

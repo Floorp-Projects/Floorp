@@ -1584,7 +1584,14 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* computed value tests for height test more with display:block */
 		prerequisites: { "display": "block" },
-		other_values: [ "15px", "3em", "15%" ],
+		other_values: [ "15px", "3em", "15%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"ime-mode": {
@@ -1759,7 +1766,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "display": "block" },
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0" ],
+		other_values: [ "30px", "50%", "0",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"max-width": {
@@ -1777,7 +1791,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "display": "block" },
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%" ],
+		other_values: [ "30px", "50%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"min-width": {

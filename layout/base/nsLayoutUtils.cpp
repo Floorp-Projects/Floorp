@@ -1773,6 +1773,8 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
   return result;
 }
 
+// Use only for widths/heights (or their min/max), since it clamps
+// negative calc() results to 0.
 static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
 {
   if (aStyle.IsCalcUnit()) {
@@ -1781,6 +1783,8 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
     }
     // If it has no percents, we can pass 0 for the percentage basis.
     aResult = nsRuleNode::ComputeComputedCalc(aStyle, 0);
+    if (aResult < 0)
+      aResult = 0;
     return PR_TRUE;
   }
 
@@ -1788,6 +1792,7 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
     return PR_FALSE;
 
   aResult = aStyle.GetCoordValue();
+  NS_ASSERTION(aResult >= 0, "negative widths not allowed");
   return PR_TRUE;
 }
 
@@ -1813,7 +1818,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
   if (!GetAbsoluteCoord(pos->mHeight, h) &&
       !GetPercentHeight(pos->mHeight, f, h)) {
     NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto ||
-                 pos->mHeight.GetUnit() == eStyleUnit_Percent,
+                 pos->mHeight.HasPercent(),
                  "unknown height unit");
     nsIAtom* fType = f->GetType();
     if (fType != nsGkAtoms::viewportFrame && fType != nsGkAtoms::canvasFrame &&
@@ -1844,7 +1849,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
       h = maxh;
   } else {
     NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_None ||
-                 pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+                 pos->mMaxHeight.HasPercent(),
                  "unknown max-height unit");
   }
 
@@ -1854,7 +1859,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     if (minh > h)
       h = minh;
   } else {
-    NS_ASSERTION(pos->mMinHeight.GetUnit() == eStyleUnit_Percent,
+    NS_ASSERTION(pos->mMinHeight.HasPercent(),
                  "unknown min-height unit");
   }
 
@@ -2248,8 +2253,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
   nsStyleUnit unit = aCoord.GetUnit();
   return unit == eStyleUnit_Auto ||  // only for 'height'
          unit == eStyleUnit_None ||  // only for 'max-height'
-         (unit == eStyleUnit_Percent &&
-          aCBHeight == NS_AUTOHEIGHT);
+         (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
 }
 
 #define MULDIV(a,b,c) (nscoord(PRInt64(a) * PRInt64(b) / PRInt64(c)))
@@ -2309,7 +2313,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
   if (!isAutoHeight) {
     height = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, stylePos->mHeight) -
+      ComputeHeightValue(aCBSize.height, stylePos->mHeight) -
       boxSizingAdjust.height;
     if (height < 0)
       height = 0;
@@ -2317,7 +2321,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
   if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
     maxHeight = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, stylePos->mMaxHeight) -
+      ComputeHeightValue(aCBSize.height, stylePos->mMaxHeight) -
       boxSizingAdjust.height;
     if (maxHeight < 0)
       maxHeight = 0;
@@ -2327,7 +2331,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
   if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
     minHeight = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, stylePos->mMinHeight) -
+      ComputeHeightValue(aCBSize.height, stylePos->mMinHeight) -
       boxSizingAdjust.height;
     if (minHeight < 0)
       minHeight = 0;
