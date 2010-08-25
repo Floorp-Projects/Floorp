@@ -751,9 +751,9 @@
   </hbox>
   <spacer id="titlebar-spacer" flex="1"/>
   <hbox id="titlebar-buttonbox">
-    <toolbarbutton id="titlebar-min" onclick="window.minimize();"/>
-    <toolbarbutton id="titlebar-max" onclick="onTitlebarMaxClick();"/>
-    <toolbarbutton id="titlebar-close" onclick="window.close();"/>
+    <toolbarbutton id="titlebar-min" oncommand="window.minimize();"/>
+    <toolbarbutton id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+    <toolbarbutton id="titlebar-close" oncommand="window.close();"/>
   </hbox>
   </hbox>
   </vbox>
