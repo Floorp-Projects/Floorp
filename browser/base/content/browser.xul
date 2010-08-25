@@ -449,7 +449,9 @@
   </popupset>
 
 #ifdef MENUBAR_CAN_AUTOHIDE
-<hbox id="appmenu-button-container">
+  <vbox id="titlebar">
+  <hbox id="titlebar-content">
+  <hbox id="appmenu-button-container" align="start">
   <button id="appmenu-button"
           type="menu"
           label="&brandShortName;"
@@ -746,7 +748,15 @@
       </hbox>
     </menupopup>
   </button>
-</hbox>
+  </hbox>
+  <spacer id="titlebar-spacer" flex="1"/>
+  <hbox id="titlebar-buttonbox">
+    <toolbarbutton id="titlebar-min" onclick="window.minimize();"/>
+    <toolbarbutton id="titlebar-max" onclick="onTitlebarMaxClick();"/>
+    <toolbarbutton id="titlebar-close" onclick="window.close();"/>
+  </hbox>
+  </hbox>
+  </vbox>
 #endif
 
 <deck flex="1" id="tab-view-deck">

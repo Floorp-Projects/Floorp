@@ -275,16 +275,53 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   if (sTitlebarInfoPopulated || !aWnd)
     return;
 
+  // Compositor enabled, we won't use these.
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  if (nsUXThemeData::CheckForCompositor()) {
+    sTitlebarInfoPopulated = PR_TRUE;
+    return;
+  }
+#endif
+
+  // Query a temporary, visible window with command buttons to get
+  // the right metrics. 
+  WNDCLASSW wc;
+  wc.style         = 0;
+  wc.lpfnWndProc   = ::DefWindowProcW;
+  wc.cbClsExtra    = 0;
+  wc.cbWndExtra    = 0;
+  wc.hInstance     = nsToolkit::mDllInstance;
+  wc.hIcon         = NULL;
+  wc.hCursor       = NULL;
+  wc.hbrBackground = NULL;
+  wc.lpszMenuName  = NULL;
+  wc.lpszClassName = kClassNameTemp;
+  ::RegisterClassW(&wc);
+
+  // Create a transparent, descendent of the window passed in. This
+  // keeps the window from showing up on the desktop or the taskbar.
+  // Note the parent (browser) window is usually still hidden, we
+  // don't want to display it, so we can't query it directly.
+  HWND hWnd = CreateWindowEx(WS_EX_NOACTIVATE|WS_EX_LAYERED,
+                             kClassNameTemp, L"",
+                             WS_OVERLAPPEDWINDOW,
+                             0, 0, 0, 0, aWnd, NULL,
+                             nsToolkit::mDllInstance, NULL);
+  NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
+
+  ShowWindow(hWnd, SW_SHOW);
   TITLEBARINFOEX info = {0};
   info.cbSize = sizeof(TITLEBARINFOEX);
-  SendMessage(aWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
+  SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
+  DestroyWindow(hWnd);
 
   // Only set if we have valid data for all three buttons we use.
   if ((info.rgrect[2].right - info.rgrect[2].left) == 0 ||
       (info.rgrect[3].right - info.rgrect[3].left) == 0 ||
-      (info.rgrect[5].right - info.rgrect[5].left) == 0)
+      (info.rgrect[5].right - info.rgrect[5].left) == 0) {
+    NS_WARNING("WM_GETTITLEBARINFOEX query failed to find usable metrics.");
     return;
-
+  }
   // minimize
   sCommandButtons[0].cx = info.rgrect[2].right - info.rgrect[2].left;
   sCommandButtons[0].cy = info.rgrect[2].bottom - info.rgrect[2].top;

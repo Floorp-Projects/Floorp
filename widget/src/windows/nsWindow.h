@@ -507,8 +507,6 @@ protected:
   nsIntMargin           mNonClientMargins;
   // Indicates custom frames are enabled
   PRPackedBool          mCustomNonClient;
-  // Disable non client margins on non-comsitor desktops
-  PRPackedBool          mCompositorFlag;
   // Cached copy of L&F's resize border  
   PRInt32               mHorResizeMargin;
   PRInt32               mVertResizeMargin;
