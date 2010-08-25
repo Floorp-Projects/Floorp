@@ -1085,7 +1085,7 @@ struct nsStylePosition {
 #endif
   static PRBool ForceCompare() { return PR_TRUE; }
 
-  nsStyleSides  mOffset;                // [reset] coord, percent, auto
+  nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum, calc
   nsStyleCoord  mMaxWidth;              // [reset] coord, percent, enum, calc, none
@@ -1101,12 +1101,24 @@ struct nsStylePosition {
     { return WidthCoordDependsOnContainer(mMinWidth); }
   PRBool MaxWidthDependsOnContainer() const
     { return WidthCoordDependsOnContainer(mMaxWidth); }
+
+  // Note that these functions count 'auto' as depending on the
+  // container since that's the case for absolutely positioned elements.
+  // However, some callers do not care about this case and should check
+  // for it, since it is the most common case.
+  // FIXME: We should probably change the assumption to be the other way
+  // around.
   PRBool HeightDependsOnContainer() const
     { return HeightCoordDependsOnContainer(mHeight); }
   PRBool MinHeightDependsOnContainer() const
     { return HeightCoordDependsOnContainer(mMinHeight); }
   PRBool MaxHeightDependsOnContainer() const
     { return HeightCoordDependsOnContainer(mMaxHeight); }
+
+  PRBool OffsetHasPercent(mozilla::css::Side aSide) const
+  {
+    return mOffset.Get(aSide).HasPercent();
+  }
 
 private:
   static PRBool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord);

@@ -688,8 +688,8 @@ IsPercentageAware(const nsIFrame* aFrame)
        pos->mWidth.GetUnit() != eStyleUnit_Auto) ||
       pos->MaxWidthDependsOnContainer() ||
       pos->MinWidthDependsOnContainer() ||
-      eStyleUnit_Percent == pos->mOffset.GetRightUnit() ||
-      eStyleUnit_Percent == pos->mOffset.GetLeftUnit()) {
+      pos->OffsetHasPercent(NS_SIDE_RIGHT) ||
+      pos->OffsetHasPercent(NS_SIDE_LEFT)) {
     return PR_TRUE;
   }
 
