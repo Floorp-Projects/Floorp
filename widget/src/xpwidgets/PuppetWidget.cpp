@@ -128,7 +128,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
                           nsWidgetInitData *aInitData,
                           PRBool           aForceUseIWidgetParent)
 {
-  NS_ABORT_IF_FALSE(!aInitData || aInitData->mWindowType == eWindowType_popup,
+  NS_ABORT_IF_FALSE(!aInitData || aInitData->mWindowType != eWindowType_popup,
                     "FIXME TODO figure out these should be supported");
 
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget();
