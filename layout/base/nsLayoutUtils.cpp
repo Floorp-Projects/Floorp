@@ -2147,12 +2147,8 @@ nsLayoutUtils::ComputeWidthDependentValue(
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
 
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  }
-  if (eStyleUnit_Percent == aCoord.GetUnit()) {
-    return NSToCoordFloorClamped(aContainingBlockWidth *
-                                 aCoord.GetPercentValue());
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockWidth);
   }
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
@@ -2225,25 +2221,22 @@ nsLayoutUtils::ComputeHeightDependentValue(
                  nscoord              aContainingBlockHeight,
                  const nsStyleCoord&  aCoord)
 {
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  }
-  if (eStyleUnit_Percent == aCoord.GetUnit()) {
-    // XXXldb Some callers explicitly check aContainingBlockHeight
-    // against NS_AUTOHEIGHT *and* unit against eStyleUnit_Percent
-    // before calling this function, so this assertion probably needs to
-    // be inside the percentage case.  However, it would be much more
-    // likely to catch problems if it were at the start of the function.
-    // XXXldb Many callers pass a non-'auto' containing block height when
-    // according to CSS2.1 they should be passing 'auto'.
-    NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight,
-                    "unexpected 'containing block height'");
+  // XXXldb Some callers explicitly check aContainingBlockHeight
+  // against NS_AUTOHEIGHT *and* unit against eStyleUnit_Percent or
+  // calc()s containing percents before calling this function.
+  // However, it would be much more likely to catch problems without
+  // the unit conditions.
+  // XXXldb Many callers pass a non-'auto' containing block height when
+  // according to CSS2.1 they should be passing 'auto'.
+  NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight ||
+                  (aCoord.GetUnit() != eStyleUnit_Percent &&
+                   !(aCoord.IsCalcUnit() && aCoord.CalcHasPercent())),
+                  "unexpected containing block height");
 
-    if (NS_AUTOHEIGHT != aContainingBlockHeight) {
-      return NSToCoordFloorClamped(aContainingBlockHeight *
-                                   aCoord.GetPercentValue());
-    }
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockHeight);
   }
+
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
                "unexpected height value");
