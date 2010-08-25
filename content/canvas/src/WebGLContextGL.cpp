@@ -507,6 +507,8 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::T
 NS_IMETHODIMP
 WebGLContext::CheckFramebufferStatus(WebGLenum target, WebGLenum *retval)
 {
+    *retval = 0;
+
     MakeContextCurrent();
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("CheckFramebufferStatus: target must be FRAMEBUFFER");
@@ -626,6 +628,8 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
 NS_IMETHODIMP
 WebGLContext::CreateProgram(nsIWebGLProgram **retval)
 {
+    *retval = nsnull;
+
     MakeContextCurrent();
 
     WebGLuint name = gl->fCreateProgram();
@@ -640,6 +644,8 @@ WebGLContext::CreateProgram(nsIWebGLProgram **retval)
 NS_IMETHODIMP
 WebGLContext::CreateShader(WebGLenum type, nsIWebGLShader **retval)
 {
+    *retval = nsnull;
+
     if (type != LOCAL_GL_VERTEX_SHADER &&
         type != LOCAL_GL_FRAGMENT_SHADER)
     {
@@ -1197,6 +1203,8 @@ WebGLContext::FrontFace(WebGLenum mode)
 NS_IMETHODIMP
 WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
+    *retval = nsnull;
+
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>("getActiveAttrib: program", pobj, &progname))
         return NS_OK;
@@ -1205,10 +1213,8 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
 
     GLint len = 0;
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &len);
-    if (len == 0) {
-        *retval = nsnull;
+    if (len == 0)
         return NS_OK;
-    }
 
     nsAutoArrayPtr<char> name(new char[len]);
     PRInt32 attrsize = 0;
@@ -1221,7 +1227,6 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
     }
 
     WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(attrsize, attrtype, name.get(), len);
-
     NS_ADDREF(*retval = retActiveInfo);
 
     return NS_OK;
@@ -1252,6 +1257,8 @@ WebGLContext::GenerateMipmap(WebGLenum target)
 NS_IMETHODIMP
 WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
+    *retval = nsnull;
+
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>("getActiveUniform: program", pobj, &progname))
         return NS_OK;
@@ -1260,10 +1267,8 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
 
     GLint len = 0;
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &len);
-    if (len == 0) {
+    if (len == 0)
         *retval = nsnull;
-        return NS_OK;
-    }
 
     nsAutoArrayPtr<char> name(new char[len + 3]); // +3 because we might have to append "[0]", see below
 
@@ -1305,6 +1310,8 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
 NS_IMETHODIMP
 WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     WebGLProgram *prog;
     if (!GetConcreteObject("getAttachedShaders", pobj, &prog))
         return NS_OK;
@@ -1339,6 +1346,8 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
                                 const nsAString& name,
                                 PRInt32 *retval)
 {
+    *retval = 0;
+
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
         return NS_OK;
@@ -1351,6 +1360,8 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
 NS_IMETHODIMP
 WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
@@ -1599,6 +1610,8 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
 NS_IMETHODIMP
 WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
@@ -1631,6 +1644,8 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname, nsIVariant *
 NS_IMETHODIMP
 WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum attachment, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
@@ -1711,6 +1726,8 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
 NS_IMETHODIMP
 WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
@@ -1748,6 +1765,8 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
 NS_IMETHODIMP
 WebGLContext::CreateBuffer(nsIWebGLBuffer **retval)
 {
+    *retval = nsnull;
+
     MakeContextCurrent();
 
     WebGLuint name;
@@ -1763,6 +1782,8 @@ WebGLContext::CreateBuffer(nsIWebGLBuffer **retval)
 NS_IMETHODIMP
 WebGLContext::CreateTexture(nsIWebGLTexture **retval)
 {
+    *retval = nsnull;
+
     MakeContextCurrent();
 
     WebGLuint name;
@@ -1799,6 +1820,8 @@ WebGLContext::GetError(WebGLenum *_retval)
 NS_IMETHODIMP
 WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     WebGLuint progname;
     if (!GetGLName<WebGLProgram>("getProgramParameter: program", pobj, &progname))
         return NS_OK;
@@ -1976,6 +1999,8 @@ WebGLContext::TexParameteri(WebGLenum target, WebGLenum pname, WebGLint param)
 NS_IMETHODIMP
 WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
@@ -2009,6 +2034,8 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 NS_IMETHODIMP
 WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     WebGLuint progname;
     WebGLProgram *prog;
     if (!GetConcreteObjectAndGLName("getUniform: program", pobj, &prog, &progname))
@@ -2085,7 +2112,7 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
         return NS_ERROR_FAILURE;
 
     if (baseType == LOCAL_GL_FLOAT) {
-        GLfloat fv[16];
+        GLfloat fv[16] = { GLfloat(0) };
         gl->fGetUniformfv(progname, location->Location(), fv);
         if (unitSize == 1) {
             wrval->SetAsFloat(fv[0]);
@@ -2094,7 +2121,7 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
                               unitSize, static_cast<void*>(fv));
         }
     } else if (baseType == LOCAL_GL_INT) {
-        GLint iv[16];
+        GLint iv[16] = { 0 };
         gl->fGetUniformiv(progname, location->Location(), iv);
         if (unitSize == 1) {
             wrval->SetAsInt32(iv[0]);
@@ -2103,12 +2130,12 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
                               unitSize, static_cast<void*>(iv));
         }
     } else if (baseType == LOCAL_GL_BOOL) {
-        GLint iv[16];
+        GLint iv[16] = { 0 };
         gl->fGetUniformiv(progname, location->Location(), iv);
         if (unitSize == 1) {
             wrval->SetAsBool(PRBool(iv[0]));
         } else {
-            PRUint8 uv[16];
+            PRUint8 uv[16] = { 0 };
             for (int k = 0; k < unitSize; k++)
                 uv[k] = PRUint8(iv[k]);
             wrval->SetAsArray(nsIDataType::VTYPE_UINT8, nsnull,
@@ -2126,6 +2153,8 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
 NS_IMETHODIMP
 WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, nsIWebGLUniformLocation **retval)
 {
+    *retval = nsnull;
+
     WebGLuint progname;
     WebGLProgram *prog;
     if (!GetConcreteObjectAndGLName("getUniformLocation: program", pobj, &prog, &progname))
@@ -2144,6 +2173,8 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
 NS_IMETHODIMP
 WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
@@ -2260,10 +2291,10 @@ WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsEnabled(WebGLenum cap, WebGLboolean *retval)
 {
-    if (!ValidateCapabilityEnum(cap, "isEnabled")) {
-        *retval = 0; // as per the OpenGL ES spec
+    *retval = 0;
+
+    if (!ValidateCapabilityEnum(cap, "isEnabled"))
         return NS_OK;
-    }
 
     MakeContextCurrent();
     *retval = gl->fIsEnabled(cap);
@@ -2866,6 +2897,8 @@ WebGLContext::ValidateProgram(nsIWebGLProgram *pobj)
 NS_IMETHODIMP
 WebGLContext::CreateFramebuffer(nsIWebGLFramebuffer **retval)
 {
+    *retval = 0;
+
     MakeContextCurrent();
 
     GLuint name;
@@ -2881,6 +2914,8 @@ WebGLContext::CreateFramebuffer(nsIWebGLFramebuffer **retval)
 NS_IMETHODIMP
 WebGLContext::CreateRenderbuffer(nsIWebGLRenderbuffer **retval)
 {
+    *retval = 0;
+
     MakeContextCurrent();
 
     GLuint name;
@@ -2970,6 +3005,8 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 NS_IMETHODIMP
 WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVariant **retval)
 {
+    *retval = nsnull;
+
     WebGLShader *shader;
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("getShaderParameter: shader", sobj, &shader, &shadername))
