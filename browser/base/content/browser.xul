@@ -489,7 +489,7 @@
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"/>
-          <menuseparator class="menu-seperator"/>
+          <menuseparator/>
           <hbox class="split-menuitem">
             <menuitem id="appmenu-edit-menuitem"
                       label="&editMenu.label;"
