@@ -205,7 +205,7 @@ ic::NativeCallCompiler::finish(JSScript *script, uint8 *start, uint8 *fallthroug
     Jump fallJump = masm.jump();
     addLink(fallJump, fallthrough);
 
-    uint8 *result = (uint8 *)script->execPool->alloc(masm.size());
+    uint8 *result = (uint8 *)script->jit->execPool->alloc(masm.size());
     JSC::ExecutableAllocator::makeWritable(result, masm.size());
     masm.executableCopy(result);
 
@@ -324,7 +324,7 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
     /* MICs are purged during GC to handle changing shapes. */
     JS_ASSERT(cx->runtime->gcRegenShapes);
 
-    uint32 nmics = script->numMICs();
+    uint32 nmics = script->jit->nMICs;
     for (uint32 i = 0; i < nmics; i++) {
         ic::MICInfo &mic = script->mics[i];
         switch (mic.kind) {

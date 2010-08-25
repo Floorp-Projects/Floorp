@@ -491,12 +491,14 @@ JSCompartment::purge(JSContext *cx)
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
+        if (script->jit) {
 # if defined JS_POLYIC
-        mjit::ic::PurgePICs(cx, script);
+            mjit::ic::PurgePICs(cx, script);
 # endif
 # if defined JS_MONOIC
-        mjit::ic::PurgeMICs(cx, script);
+            mjit::ic::PurgeMICs(cx, script);
 # endif
+        }
     }
 #endif
 }

@@ -780,9 +780,7 @@ mjit::JaegerShot(JSContext *cx)
 
     JS_ASSERT(cx->regs->pc == script->code);
 
-    void *code = script->nmap[-1];
-
-    return EnterMethodJIT(cx, cx->fp(), code, NULL);
+    return EnterMethodJIT(cx, cx->fp(), script->jit->invoke, NULL);
 }
 
 JSBool
@@ -806,44 +804,25 @@ static inline void Destroy(T &t)
 void
 mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
-    if (script->execPool) {
+    if (script->jit) {
 #if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
-        memset(script->nmap[-1], 0xcc, script->inlineLength + script->outOfLineLength);
+        memset(script->jit->invoke, 0xcc, script->jit->inlineLength +
+               script->jit->outOfLineLength);
 #endif
-        script->execPool->release();
-        script->execPool = NULL;
+        script->jit->execPool->release();
+        script->jit->execPool = NULL;
         // Releasing the execPool takes care of releasing the code.
         script->ncode = NULL;
-        script->inlineLength = 0;
-        script->outOfLineLength = 0;
 
 #if defined JS_POLYIC
-        if (script->pics) {
-            uint32 npics = script->numPICs();
-            for (uint32 i = 0; i < npics; i++) {
-                script->pics[i].releasePools();
-                Destroy(script->pics[i].execPools);
-            }
-            cx->free((uint8*)script->pics - sizeof(uint32));
-            script->pics = NULL;
+        for (uint32 i = 0; i < script->jit->nPICs; i++) {
+            script->pics[i].releasePools();
+            Destroy(script->pics[i].execPools);
         }
 #endif
     }
 
-    if (script->nmap) {
-        cx->free(script->nmap - 1);
-        script->nmap = NULL;
-    }
-    if (script->callSites) {
-        cx->free(script->callSites - 1);
-        script->callSites = NULL;
-    }
-#if defined JS_MONOIC
-    if (script->mics) {
-        cx->free((uint8*)script->mics - sizeof(uint32));
-        script->mics = NULL;
-    }
-#endif
+    cx->free(script->jit);
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS

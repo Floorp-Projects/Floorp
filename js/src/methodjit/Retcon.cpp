@@ -75,11 +75,11 @@ AutoScriptRetrapper::untrap(jsbytecode *pc)
 Recompiler::PatchableAddress
 Recompiler::findPatch(void **location)
 { 
-    for (uint32 i = 0; i < script->callSites[-1].nCallSites; i++) {
-        if (script->callSites[i].c.codeOffset + (uint8*)script->nmap[-1] == *location) {
+    for (uint32 i = 0; i < script->jit->nCallSites; i++) {
+        if (script->jit->callSites[i].codeOffset + (uint8*)script->jit->invoke == *location) {
             PatchableAddress result;
             result.location = location;
-            result.callSite = script->callSites[i];
+            result.callSite = script->jit->callSites[i];
             return result;
         }
     }
