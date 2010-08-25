@@ -40,21 +40,39 @@ Tests.startUnit = function () {
 }
 
 Tests.testReadPixels = function(gl) {
-  assertFail(function(){gl.readPixels(0,0,-1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,1,-1, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(-1,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,-1,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,16,17, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,17,16, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,-1,16, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,16,-1, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(15,16,0,1, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(16,15,1,0, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(17,15,0,0, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(16,15,0,0, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,0,0, gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,1,1, gl.FLOAT, gl.UNSIGNED_BYTE);});
-  assertFail(function(){gl.readPixels(0,0,1,1, gl.ALPHA, gl.FLOAT);});
+  // we can't know if this is going to fail because of negative width
+  // or because the buffer size doesn't match the dimensions.
+  assertSomeGLError(gl, "negative width",
+      function(){gl.readPixels(0,0,-1,1, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(4));});
+  assertSomeGLError(gl,  "negative height",
+      function(){gl.readPixels(0,0,1,-1, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(4));});
+  assertOk("negative x",
+      function(){gl.readPixels(-1,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(4));});
+  assertOk("negative y",
+      function(){gl.readPixels(0,-1,1,1, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(4));});
+  assertOk("height > backbuffer height",
+      function(){gl.readPixels(0,0,16,17, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(16*17*4));});
+  assertOk("width > backbuffer width",
+      function(){gl.readPixels(0,0,17,16, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(17*16*4));});
+  assertOk("width, height = 0",
+      function(){gl.readPixels(0,0,0,0, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(0));});
+  // we can't know if this is going to fail because of negative width
+  // or because the buffer size doesn't match the dimensions.
+  assertSomeGLError(gl, "bad format",
+      function(){gl.readPixels(0,0,1,1, gl.FLOAT, gl.UNSIGNED_BYTE,
+          new Uint8Array(4*4));});
+  // we can't know if this is going to fail because of negative width
+  // or because the buffer size doesn't match the dimensions.
+  assertSomeGLError(gl, "bad type",
+      function(){gl.readPixels(0,0,1,1, gl.ALPHA, gl.FLOAT,
+          new Uint8Array(1*4));});
 }
 
 Tests.testReadPixelsSOPIMG = function(gl) {
@@ -65,7 +83,9 @@ Tests.testReadPixelsSOPIMG = function(gl) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
     gl.bindTexture(gl.TEXTURE_2D, null);
     // SOP failure
-    assertFail(function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+    assertThrowNoGLError(gl, "throw because img is from another domain",
+      function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(4));});
     gl.deleteTexture(tex);
 }
 Tests.testReadPixelsSOPCanvas = function(gl) {
@@ -73,13 +93,16 @@ Tests.testReadPixelsSOPCanvas = function(gl) {
     while (!img.complete) {}
     var c = document.getElementById("c");
     c.getContext("2d").drawImage(img, 0, 0);
-    assertFail(function(){c.getContext("2d").getImageData(0,0,1,1);});
+    assertFail("canvas throws because not origin clean",
+      function(){c.getContext("2d").getImageData(0,0,1,1);});
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
     gl.bindTexture(gl.TEXTURE_2D, null);
     // SOP failure
-    assertFail(function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+    assertThrowNoGLError(gl, "throw because canvas is not origin clean",
+      function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE,
+          new Uint8Array(4));});
     gl.deleteTexture(tex);
 }
 
@@ -90,5 +113,5 @@ Tests.endUnit = function(gl) {
 </head><body>
 <canvas id="gl" width="16" height="16"></canvas>
 <canvas id="c" width="128" height="128"></canvas>
-<img id="i" src="http://mashable.com/wp-content/uploads/2008/08/thunderbird-logo-64x64.png">
+<img id="i" src="http://www.opengl.org/img/opengl_logo.jpg">
 </body></html>

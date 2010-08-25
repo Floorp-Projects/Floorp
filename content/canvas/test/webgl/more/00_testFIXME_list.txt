@@ -25,7 +25,6 @@ functions/drawElementsBadArgs.html
 functions/getImageData.html
 functions/getImageDataBadArgs.html
 functions/isTests.html
-functions/linkProgramBadArgs.html
 functions/readPixels.html
 functions/readPixelsBadArgs.html
 functions/texImage2D.html

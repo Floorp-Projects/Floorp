@@ -70,7 +70,7 @@ arr.forEach(function(e){
 
 </script>
 <script id="okvert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -83,7 +83,7 @@ arr.forEach(function(e){
   }
 </script>
 <script id="crvert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -96,7 +96,7 @@ arr.forEach(function(e){
   }
 </script>
 <script id="cwvert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -110,7 +110,7 @@ arr.forEach(function(e){
   }
 </script>
 <script id="vrvert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -124,7 +124,7 @@ arr.forEach(function(e){
   }
 </script>
 <script id="vwvert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -139,7 +139,7 @@ arr.forEach(function(e){
   }
 </script>
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -152,8 +152,11 @@ arr.forEach(function(e){
 </script>
 
 <script id="okfrag" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
 
   void main()
@@ -163,8 +166,11 @@ arr.forEach(function(e){
   }
 </script>
 <script id="crfrag" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
 
   void main()
@@ -174,8 +180,11 @@ arr.forEach(function(e){
   }
 </script>
 <script id="cwfrag" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
 
   void main()
@@ -187,8 +196,11 @@ arr.forEach(function(e){
   }
 </script>
 <script id="vrfrag" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
 
   void main()
@@ -200,8 +212,11 @@ arr.forEach(function(e){
   }
 </script>
 <script id="vwfrag" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
 
   void main()
@@ -214,8 +229,11 @@ arr.forEach(function(e){
   }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
 
   void main()
