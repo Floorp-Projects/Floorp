@@ -235,16 +235,16 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
       loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {
 
     // Fire reload event.
-    nsRefPtr<nsAccEvent> reloadEvent =
-      new nsAccEvent(nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD, docAcc);
+    nsRefPtr<AccEvent> reloadEvent =
+      new AccEvent(nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD, docAcc);
     nsEventShell::FireEvent(reloadEvent);
   }
 
   // Fire state busy change event. Use delayed event since we don't care
   // actually if event isn't delivered when the document goes away like a shot.
-  nsRefPtr<nsAccEvent> stateEvent =
-    new nsAccStateChangeEvent(document, nsIAccessibleStates::STATE_BUSY,
-                              PR_FALSE, PR_TRUE);
+  nsRefPtr<AccEvent> stateEvent =
+    new AccStateChangeEvent(document, nsIAccessibleStates::STATE_BUSY,
+                            PR_FALSE, PR_TRUE);
   docAcc->FireDelayedAccessibleEvent(stateEvent);
 
   return NS_OK;
@@ -378,14 +378,14 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
 
   // Fire complete/load stopped if the load event type is given.
   if (aLoadEventType) {
-    nsRefPtr<nsAccEvent> loadEvent = new nsAccEvent(aLoadEventType, aDocument);
+    nsRefPtr<AccEvent> loadEvent = new AccEvent(aLoadEventType, aDocument);
     docAcc->FireDelayedAccessibleEvent(loadEvent);
   }
 
   // Fire busy state change event.
-  nsRefPtr<nsAccEvent> stateEvent =
-    new nsAccStateChangeEvent(aDocument, nsIAccessibleStates::STATE_BUSY,
-                              PR_FALSE, PR_FALSE);
+  nsRefPtr<AccEvent> stateEvent =
+    new AccStateChangeEvent(aDocument, nsIAccessibleStates::STATE_BUSY,
+                            PR_FALSE, PR_FALSE);
   docAcc->FireDelayedAccessibleEvent(stateEvent);
 }
 

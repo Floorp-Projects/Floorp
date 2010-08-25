@@ -521,8 +521,8 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
     nsAccessible *accessible = mAccessibleCache.GetWeak(key);
 
     if (accessible) {
-      nsRefPtr<nsAccEvent> event =
-        new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, accessible, PR_FALSE);
+      nsRefPtr<AccEvent> event =
+        new AccEvent(nsIAccessibleEvent::EVENT_HIDE, accessible, PR_FALSE);
       nsEventShell::FireEvent(event);
 
       accessible->Shutdown();
@@ -622,8 +622,8 @@ nsXULTreeAccessible::TreeViewChanged()
   // Fire only notification destroy/create events on accessible tree to lie to
   // AT because it should be expensive to fire destroy events for each tree item
   // in cache.
-  nsRefPtr<nsAccEvent> eventDestroy =
-    new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, this, PR_FALSE);
+  nsRefPtr<AccEvent> eventDestroy =
+    new AccEvent(nsIAccessibleEvent::EVENT_HIDE, this, PR_FALSE);
   if (!eventDestroy)
     return;
 
@@ -633,8 +633,8 @@ nsXULTreeAccessible::TreeViewChanged()
 
   mTree->GetView(getter_AddRefs(mTreeView));
 
-  nsRefPtr<nsAccEvent> eventCreate =
-    new nsAccEvent(nsIAccessibleEvent::EVENT_SHOW, this, PR_FALSE);
+  nsRefPtr<AccEvent> eventCreate =
+    new AccEvent(nsIAccessibleEvent::EVENT_SHOW, this, PR_FALSE);
   if (!eventCreate)
     return;
 
