@@ -431,7 +431,7 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
     stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
     {
         if (regs.lhsNeedsRemat) {
-            Address address = masm.payloadOf(frame.addressOf(lhs));
+            Address address = masm.payloadOf(frame.addressForDataRemat(lhs));
             stubcc.masm.convertInt32ToDouble(address, FPRegisters::First);
         } else if (!lhs->isConstant()) {
             stubcc.masm.convertInt32ToDouble(regs.lhsData.reg(), FPRegisters::First);
@@ -621,12 +621,12 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
                 /* Restore original value. */
                 if (regs.resultHasRhs) {
                     if (regs.rhsNeedsRemat)
-                        stubcc.masm.loadPayload(frame.addressOf(rhs), regs.result);
+                        stubcc.masm.loadPayload(frame.addressForDataRemat(rhs), regs.result);
                     else
                         stubcc.masm.move(regs.rhsData.reg(), regs.result);
                 } else {
                     if (regs.lhsNeedsRemat)
-                        stubcc.masm.loadPayload(frame.addressOf(lhs), regs.result);
+                        stubcc.masm.loadPayload(frame.addressForDataRemat(lhs), regs.result);
                     else
                         stubcc.masm.move(regs.lhsData.reg(), regs.result);
                 }
@@ -661,7 +661,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
     {
         if (regs.lhsNeedsRemat) {
-            Address address = masm.payloadOf(frame.addressOf(lhs));
+            Address address = masm.payloadOf(frame.addressForDataRemat(lhs));
             stubcc.masm.convertInt32ToDouble(address, fpLeft);
         } else if (!lhs->isConstant()) {
             stubcc.masm.convertInt32ToDouble(regs.lhsData.reg(), fpLeft);
@@ -670,7 +670,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
         }
 
         if (regs.rhsNeedsRemat) {
-            Address address = masm.payloadOf(frame.addressOf(rhs));
+            Address address = masm.payloadOf(frame.addressForDataRemat(rhs));
             stubcc.masm.convertInt32ToDouble(address, fpRight);
         } else if (!rhs->isConstant()) {
             stubcc.masm.convertInt32ToDouble(regs.rhsData.reg(), fpRight);

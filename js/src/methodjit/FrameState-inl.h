@@ -542,6 +542,15 @@ FrameState::addressOf(const FrameEntry *fe) const
     return Address(JSFrameReg, sizeof(JSStackFrame) + sizeof(Value) * index);
 }
 
+inline JSC::MacroAssembler::Address
+FrameState::addressForDataRemat(const FrameEntry *fe) const
+{
+    if (fe->isCopy() && !fe->data.synced())
+        fe = fe->copyOf();
+    JS_ASSERT(fe->data.synced());
+    return addressOf(fe);
+}
+
 inline JSC::MacroAssembler::Jump
 FrameState::testNull(Assembler::Condition cond, FrameEntry *fe)
 {
