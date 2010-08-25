@@ -2866,6 +2866,15 @@
           this.mTabstrip._updateScrollButtonsDisabledState();
         ]]></body>
       </method>
+      
+      <method name="_canAdvanceToTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          return this.tabbrowser._removingTabs.indexOf(aTab) == -1;
+        ]]>
+        </body>
+      </method>
 
       <!-- Deprecated stuff, implemented for backwards compatibility. -->
       <property name="mTabstripClosebutton" readonly="true"
