@@ -81,6 +81,10 @@ pref("browser.cache.offline.capacity", 5120); // kilobytes
 pref("offline-apps.quota.max", 2048); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
 
+/* protocol warning prefs */
+pref("network.protocol-handler.warn-external.tel", false);
+pref("network.protocol-handler.warn-external.mailto", false);
+
 /* http prefs */
 pref("network.http.pipelining", true);
 pref("network.http.pipelining.ssl", true);
