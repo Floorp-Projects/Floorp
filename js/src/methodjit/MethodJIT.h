@@ -172,6 +172,21 @@ typedef void (JS_FASTCALL *VoidStubPC)(VMFrame &, jsbytecode *);
 
 namespace mjit {
 
+struct JITScript {
+    JSC::ExecutablePool *execPool;   /* pool that contains |ncode|; script owns the pool */
+    uint32          inlineLength;    /* length of inline JIT'd code */
+    uint32          outOfLineLength; /* length of out of line JIT'd code */
+    js::mjit::CallSite *callSites;
+    uint32          nCallSites;
+#ifdef JS_MONOIC
+    uint32          nMICs;           /* number of MonoICs */
+#endif
+#ifdef JS_POLYIC
+    uint32          nPICs;           /* number of PolyICs */
+#endif
+    void            *invoke;         /* invoke address */
+};
+
 /* Execute a method that has been JIT compiled. */
 JSBool JaegerShot(JSContext *cx);
 
@@ -207,14 +222,11 @@ CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeCh
 void
 PurgeShapeDependencies(JSContext *cx);
 
-union CallSite
+struct CallSite
 {
-    struct {
-        uint32 codeOffset;
-        uint32 pcOffset;
-        uint32 id;
-    }          c;
-    uint32     nCallSites;
+    uint32 codeOffset;
+    uint32 pcOffset;
+    uint32 id;
 };
 
 } /* namespace mjit */

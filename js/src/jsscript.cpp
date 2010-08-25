@@ -1555,3 +1555,14 @@ js_GetScriptLineExtent(JSScript *script)
     }
     return 1 + lineno - script->lineno;
 }
+
+#ifdef JS_METHODJIT
+bool
+JSScript::isValidJitCode(void *jcode)
+{
+    return (char*)jcode >= (char*)jit->invoke &&
+           (char*)jcode < (char*)jit->invoke +
+           jit->inlineLength + jit->outOfLineLength;
+}
+#endif
+

@@ -247,15 +247,38 @@ mjit::Compiler::finishThisUp()
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
 
-    /* Build the pc -> ncode mapping. */
-    void **nmap = (void **)cx->calloc(sizeof(void *) * (script->length + 1));
-    if (!nmap) {
+    JSC::LinkBuffer fullCode(result, totalSize);
+    JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
+
+    size_t totalBytes = sizeof(JITScript) +
+                        sizeof(void *) * script->length +
+#if defined JS_MONOIC
+                        sizeof(ic::MICInfo) * mics.length() +
+#endif
+#if defined JS_POLYIC
+                        sizeof(ic::PICInfo) * pics.length() +
+#endif
+                        sizeof(CallSite) * callSites.length();
+
+    uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
+    if (!cursor) {
         execPool->release();
         return Compile_Error;
     }
 
-    *nmap++ = result;
+    script->jit = (JITScript *)cursor;
+    cursor += sizeof(JITScript);
+
+    script->jit->execPool = execPool;
+    script->jit->inlineLength = masm.size();
+    script->jit->outOfLineLength = stubcc.size();
+    script->jit->nCallSites = callSites.length();
+    script->jit->invoke = result;
+
+    /* Build the pc -> ncode mapping. */
+    void **nmap = (void **)cursor;
     script->nmap = nmap;
+    cursor += sizeof(void *) * script->length;
 
     for (size_t i = 0; i < script->length; i++) {
         Label L = jumpMap[i];
@@ -266,23 +289,14 @@ mjit::Compiler::finishThisUp()
     }
 
 #if defined JS_MONOIC
+    script->jit->nMICs = mics.length();
     if (mics.length()) {
-        uint8 *cursor = (uint8 *)cx->calloc(sizeof(ic::MICInfo) * mics.length() + sizeof(uint32));
-        if (!cursor) {
-            execPool->release();
-            return Compile_Error;
-        }
-        *(uint32*)cursor = mics.length();
-        cursor += sizeof(uint32);
         script->mics = (ic::MICInfo *)cursor;
+        cursor += sizeof(ic::MICInfo) * mics.length();
     } else {
         script->mics = NULL;
     }
-#endif
 
-    JSC::LinkBuffer fullCode(result, totalSize);
-    JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
-#if defined JS_MONOIC
     for (size_t i = 0; i < mics.length(); i++) {
         script->mics[i].kind = mics[i].kind;
         script->mics[i].entry = fullCode.locationOf(mics[i].entry);
@@ -327,15 +341,10 @@ mjit::Compiler::finishThisUp()
 #endif /* JS_MONOIC */
 
 #if defined JS_POLYIC
+    script->jit->nPICs = pics.length();
     if (pics.length()) {
-        uint8 *cursor = (uint8 *)cx->calloc(sizeof(ic::PICInfo) * pics.length() + sizeof(uint32));
-        if (!cursor) {
-            execPool->release();
-            return Compile_Error;
-        }
-        *(uint32*)cursor = pics.length();
-        cursor += sizeof(uint32);
         script->pics = (ic::PICInfo *)cursor;
+        cursor += sizeof(ic::PICInfo) * pics.length();
     } else {
         script->pics = NULL;
     }
@@ -368,6 +377,7 @@ mjit::Compiler::finishThisUp()
             }
         }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
+        script->pics[i].reset();
     }
 #endif /* JS_POLYIC */
 
@@ -394,27 +404,26 @@ mjit::Compiler::finishThisUp()
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
     script->ncode = (uint8 *)(result + masm.distanceOf(invokeLabel));
-    script->inlineLength = masm.size();
-    script->outOfLineLength = stubcc.size();
-    script->execPool = execPool;
 
     /* Build the table of call sites. */
-    CallSite *callSiteList = (CallSite *)cx->calloc(sizeof(CallSite) * (callSites.length() + 1));
-    if (!callSiteList) {
-        execPool->release();
-        return Compile_Error;
+    if (callSites.length()) {
+        CallSite *callSiteList = (CallSite *)cursor;
+        cursor += sizeof(CallSite) * callSites.length();
+
+        for (size_t i = 0; i < callSites.length(); i++) {
+            if (callSites[i].stub)
+                callSiteList[i].codeOffset = masm.size() + stubcc.masm.distanceOf(callSites[i].location);
+            else
+                callSiteList[i].codeOffset = masm.distanceOf(callSites[i].location);
+            callSiteList[i].pcOffset = callSites[i].pc - script->code;
+            callSiteList[i].id = callSites[i].id;
+        }
+        script->jit->callSites = callSiteList;
+    } else {
+        script->jit->callSites = NULL;
     }
 
-    (callSiteList++)->nCallSites = callSites.length();
-    for (size_t i = 0; i < callSites.length(); i++) {
-        if (callSites[i].stub)
-            callSiteList[i].c.codeOffset = masm.size() + stubcc.masm.distanceOf(callSites[i].location);
-        else
-            callSiteList[i].c.codeOffset = masm.distanceOf(callSites[i].location);
-        callSiteList[i].c.pcOffset = callSites[i].pc - script->code;
-        callSiteList[i].c.id = callSites[i].id;
-    }
-    script->callSites = callSiteList;
+    JS_ASSERT(size_t(cursor - (uint8*)script->jit) == totalBytes);
 
 #ifdef JS_METHODJIT
     script->debugMode = cx->compartment->debugMode;
@@ -1508,16 +1517,16 @@ mjit::Compiler::knownJump(jsbytecode *pc)
 void *
 mjit::Compiler::findCallSite(const CallSite &callSite)
 {
-    JS_ASSERT(callSite.c.pcOffset < script->length);
+    JS_ASSERT(callSite.pcOffset < script->length);
 
     for (uint32 i = 0; i < callSites.length(); i++) {
-        if (callSites[i].pc == script->code + callSite.c.pcOffset &&
-            callSites[i].id == callSite.c.id) {
+        if (callSites[i].pc == script->code + callSite.pcOffset &&
+            callSites[i].id == callSite.id) {
             if (callSites[i].stub) {
-                return (uint8*)script->nmap[-1] + masm.size() +
+                return (uint8*)script->jit->invoke + masm.size() +
                        stubcc.masm.distanceOf(callSites[i].location);
             }
-            return (uint8*)script->nmap[-1] +
+            return (uint8*)script->jit->invoke +
                 stubcc.masm.distanceOf(callSites[i].location);
         }
     }

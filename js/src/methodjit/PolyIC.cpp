@@ -2195,7 +2195,7 @@ ic::BindName(VMFrame &f, uint32 index)
 void
 ic::PurgePICs(JSContext *cx, JSScript *script)
 {
-    uint32 npics = script->numPICs();
+    uint32 npics = script->jit->nPICs;
     for (uint32 i = 0; i < npics; i++) {
         ic::PICInfo &pic = script->pics[i];
         switch (pic.kind) {
