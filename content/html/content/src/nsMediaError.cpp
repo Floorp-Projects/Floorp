@@ -15,12 +15,12 @@
  *
  * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Chris Pearce <chris@pearce.org.nz>
+ *  Chris Double <chris.double@double.co.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,45 +35,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "nsHTMLTimeRanges.h"
-#include "nsDOMError.h"
+#include "nsMediaError.h"
 #include "nsContentUtils.h"
 
-NS_IMPL_ADDREF(nsHTMLTimeRanges)
-NS_IMPL_RELEASE(nsHTMLTimeRanges)
+NS_IMPL_ADDREF(nsMediaError)
+NS_IMPL_RELEASE(nsMediaError)
 
-DOMCI_DATA(HTMLTimeRanges, nsHTMLTimeRanges)
+DOMCI_DATA(MediaError, nsMediaError)
 
-NS_INTERFACE_MAP_BEGIN(nsHTMLTimeRanges)
+NS_INTERFACE_MAP_BEGIN(nsMediaError)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTimeRanges)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLTimeRanges)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMediaError)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaError)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-nsHTMLTimeRanges::GetLength(PRUint32* aLength) {
-  *aLength = mRanges.Length();
-  return NS_OK;
+nsMediaError::nsMediaError(PRUint16 aCode) :
+  mCode(aCode)
+{
 }
 
-NS_IMETHODIMP
-nsHTMLTimeRanges::Start(PRUint32 aIndex, float* aTime) {
-  if (aIndex >= mRanges.Length())
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  *aTime = mRanges[aIndex].mStart;
-  return NS_OK;
-}
+NS_IMETHODIMP nsMediaError::GetCode(PRUint16* aCode)
+{
+  if (aCode)
+    *aCode = mCode;
 
-NS_IMETHODIMP
-nsHTMLTimeRanges::End(PRUint32 aIndex, float* aTime) {
-  if (aIndex >= mRanges.Length())
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  *aTime = mRanges[aIndex].mEnd;
   return NS_OK;
-}
-
-void
-nsHTMLTimeRanges::Add(float aStart, float aEnd) {
-  mRanges.AppendElement(TimeRange(aStart,aEnd));
 }

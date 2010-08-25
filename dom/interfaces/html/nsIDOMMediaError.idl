@@ -37,17 +37,23 @@
  * ***** END LICENSE BLOCK ***** */
 #include "domstubs.idl"
 
-[scriptable, uuid(5C9995A1-9FCE-44E8-AA7F-DE52FF4C3F46)]
-interface nsIDOMHTMLTimeRanges : nsISupports
+[scriptable, uuid(7bd8c29f-8a76-453f-9373-79f820f2dc01)]
+interface nsIDOMMediaError : nsISupports
 {
-  /* The number of ranges represented by the time range object */
-  readonly attribute unsigned long length;
+  /* The download of the media resource was aborted by
+     the user agent at the user's requet */
+  const unsigned short MEDIA_ERR_ABORTED = 1;
 
-  /* The position of the start of the index'd range, in seconds measured
-     from the start of the timeline that this object represents */
-  float start(in unsigned long index);
+  /* A network error of some description caused the 
+     user agent to stop downloading the media resource */
+  const unsigned short MEDIA_ERR_NETWORK = 2;
 
-  /* The position of the end of the index'd range, in seconds measured
-     from the start of the timeline that this object represents */
-  float end(in unsigned long index);
+  /* An error of some description occurred while decoding 
+     the media resource */
+  const unsigned short MEDIA_ERR_DECODE  = 3;
+
+  /* No suitable media resource could be found */
+  const unsigned short MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
+
+  readonly attribute unsigned short code;
 };

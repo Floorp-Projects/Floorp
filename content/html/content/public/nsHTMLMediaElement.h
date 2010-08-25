@@ -489,7 +489,7 @@ protected:
   nsCOMPtr<nsIChannel> mChannel;
 
   // Error attribute
-  nsCOMPtr<nsIDOMHTMLMediaError> mError;
+  nsCOMPtr<nsIDOMMediaError> mError;
 
   // The current media load ID. This is incremented every time we start a
   // new load. Async events note the ID when they're first sent, and only fire

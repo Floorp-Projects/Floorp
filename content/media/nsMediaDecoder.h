@@ -51,7 +51,7 @@
 class nsHTMLMediaElement;
 class nsMediaStream;
 class nsIStreamListener;
-class nsHTMLTimeRanges;
+class nsTimeRanges;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of GetImageContainer, SetVideoData and GetStatistics,
@@ -239,7 +239,7 @@ public:
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
-  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered) = 0;
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
 
   // Returns PR_TRUE if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.

@@ -35,29 +35,21 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsHTMLMediaError.h"
-#include "nsContentUtils.h"
+#include "nsIDOMMediaError.h"
+#include "nsISupports.h"
 
-NS_IMPL_ADDREF(nsHTMLMediaError)
-NS_IMPL_RELEASE(nsHTMLMediaError)
-
-DOMCI_DATA(HTMLMediaError, nsHTMLMediaError)
-
-NS_INTERFACE_MAP_BEGIN(nsHTMLMediaError)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMediaError)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLMediaError)
-NS_INTERFACE_MAP_END
-
-nsHTMLMediaError::nsHTMLMediaError(PRUint16 aCode) :
-  mCode(aCode)
+class nsMediaError : public nsIDOMMediaError
 {
-}
+public:
+  nsMediaError(PRUint16 aCode);
 
-NS_IMETHODIMP nsHTMLMediaError::GetCode(PRUint16* aCode)
-{
-  if (aCode)
-    *aCode = mCode;
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-  return NS_OK;
-}
+  // nsIDOMMediaError
+  NS_DECL_NSIDOMMEDIAERROR
+
+private:
+  // Error code
+  PRUint16 mCode;
+};
