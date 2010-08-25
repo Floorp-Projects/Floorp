@@ -611,8 +611,8 @@ nsDocAccessible::Init()
 
   // Fire reorder event to notify new accessible document has been created and
   // attached to the tree.
-  nsRefPtr<nsAccEvent> reorderEvent =
-    new nsAccReorderEvent(mParent, PR_FALSE, PR_TRUE, mDocument);
+  nsRefPtr<AccEvent> reorderEvent =
+    new AccReorderEvent(mParent, PR_FALSE, PR_TRUE, mDocument);
   if (!reorderEvent)
     return PR_FALSE;
 
@@ -878,11 +878,11 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
   if (!nsCRT::strcmp(aTopic,"obs_documentCreated")) {    
     // State editable will now be set, readonly is now clear
     // Normally we only fire delayed events created from the node, not an
-    // accessible object. See the nsAccStateChangeEvent constructor for details
+    // accessible object. See the AccStateChangeEvent constructor for details
     // about this exceptional case.
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(this, nsIAccessibleStates::EXT_STATE_EDITABLE,
-                                PR_TRUE, PR_TRUE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(this, nsIAccessibleStates::EXT_STATE_EDITABLE,
+                              PR_TRUE, PR_TRUE);
     FireDelayedAccessibleEvent(event);
   }
 
@@ -972,17 +972,17 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     // Note. We use the attribute instead of the disabled state bit because
     // ARIA's aria-disabled does not affect the disabled state bit.
 
-    nsRefPtr<nsAccEvent> enabledChangeEvent =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::EXT_STATE_ENABLED,
-                                PR_TRUE);
+    nsRefPtr<AccEvent> enabledChangeEvent =
+      new AccStateChangeEvent(aContent,
+                              nsIAccessibleStates::EXT_STATE_ENABLED,
+                              PR_TRUE);
 
     FireDelayedAccessibleEvent(enabledChangeEvent);
 
-    nsRefPtr<nsAccEvent> sensitiveChangeEvent =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::EXT_STATE_SENSITIVE,
-                                PR_TRUE);
+    nsRefPtr<AccEvent> sensitiveChangeEvent =
+      new AccStateChangeEvent(aContent,
+                              nsIAccessibleStates::EXT_STATE_SENSITIVE,
+                              PR_TRUE);
 
     FireDelayedAccessibleEvent(sensitiveChangeEvent);
     return;
@@ -1033,7 +1033,7 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
       // seem right but we had started using it for something else
       FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                                  multiSelect->GetNode(),
-                                 nsAccEvent::eAllowDupes);
+                                 AccEvent::eAllowDupes);
 
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
@@ -1050,10 +1050,10 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   if (aAttribute == nsAccessibilityAtoms::contenteditable) {
-    nsRefPtr<nsAccEvent> editableChangeEvent =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::EXT_STATE_EDITABLE,
-                                PR_TRUE);
+    nsRefPtr<AccEvent> editableChangeEvent =
+      new AccStateChangeEvent(aContent,
+                              nsIAccessibleStates::EXT_STATE_EDITABLE,
+                              PR_TRUE);
     FireDelayedAccessibleEvent(editableChangeEvent);
     return;
   }
@@ -1067,19 +1067,17 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   // there is an ARIA role present or not.
 
   if (aAttribute == nsAccessibilityAtoms::aria_required) {
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::STATE_REQUIRED,
-                                PR_FALSE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent, nsIAccessibleStates::STATE_REQUIRED,
+                              PR_FALSE);
     FireDelayedAccessibleEvent(event);
     return;
   }
 
   if (aAttribute == nsAccessibilityAtoms::aria_invalid) {
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::STATE_INVALID,
-                                PR_FALSE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent, nsIAccessibleStates::STATE_INVALID,
+                              PR_FALSE);
     FireDelayedAccessibleEvent(event);
     return;
   }
@@ -1107,10 +1105,9 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
 
   // We treat aria-expanded as a global ARIA state for historical reasons
   if (aAttribute == nsAccessibilityAtoms::aria_expanded) {
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::STATE_EXPANDED,
-                                PR_FALSE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent, nsIAccessibleStates::STATE_EXPANDED,
+                              PR_FALSE);
     FireDelayedAccessibleEvent(event);
     return;
   }
@@ -1129,8 +1126,8 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::aria_checked) ?
                             nsIAccessibleStates::STATE_CHECKED : 
                             nsIAccessibleStates::STATE_PRESSED;
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(aContent, kState, PR_FALSE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent, kState, PR_FALSE);
     FireDelayedAccessibleEvent(event);
     if (aContent == gLastFocusedNode) {
       // State changes for MIXED state currently only supported for focused item, because
@@ -1143,10 +1140,9 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
         PRBool isMixed  =
           (nsAccUtils::State(accessible) & nsIAccessibleStates::STATE_MIXED) != 0;
         if (wasMixed != isMixed) {
-          nsRefPtr<nsAccEvent> event =
-            new nsAccStateChangeEvent(aContent,
-                                      nsIAccessibleStates::STATE_MIXED,
-                                      PR_FALSE, isMixed);
+          nsRefPtr<AccEvent> event =
+            new AccStateChangeEvent(aContent, nsIAccessibleStates::STATE_MIXED,
+                                    PR_FALSE, isMixed);
           FireDelayedAccessibleEvent(event);
         }
       }
@@ -1155,10 +1151,9 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   }
 
   if (aAttribute == nsAccessibilityAtoms::aria_readonly) {
-    nsRefPtr<nsAccEvent> event =
-      new nsAccStateChangeEvent(aContent,
-                                nsIAccessibleStates::STATE_READONLY,
-                                PR_FALSE);
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent, nsIAccessibleStates::STATE_READONLY,
+                              PR_FALSE);
     FireDelayedAccessibleEvent(event);
     return;
   }
@@ -1277,7 +1272,7 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 
 #ifdef DEBUG_ACCDOCMGR
 nsresult
-nsDocAccessible::HandleAccEvent(nsAccEvent *aAccEvent)
+nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
 {
   NS_LOG_ACCDOCLOAD_HANDLEEVENT(aAccEvent)
 
@@ -1300,9 +1295,9 @@ nsDocAccessible::FireValueChangeForTextFields(nsAccessible *aAccessible)
     return;
 
   // Dependent value change event for text changes in textfields
-  nsRefPtr<nsAccEvent> valueChangeEvent =
-    new nsAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
-                   PR_FALSE, eAutoDetect, nsAccEvent::eRemoveDupes);
+  nsRefPtr<AccEvent> valueChangeEvent =
+    new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
+                 PR_FALSE, eAutoDetect, AccEvent::eRemoveDupes);
   FireDelayedAccessibleEvent(valueChangeEvent);
 }
 
@@ -1355,17 +1350,17 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
     return;
 
   // Normally we only fire delayed events created from the node, not an
-  // accessible object. See the nsAccTextChangeEvent constructor for details
+  // accessible object. See the AccTextChangeEvent constructor for details
   // about this exceptional case.
-  nsRefPtr<nsAccEvent> event =
-    new nsAccTextChangeEvent(textAccessible, offset + textOffset, text,
-                             aIsInserted, PR_FALSE);
+  nsRefPtr<AccEvent> event =
+    new AccTextChangeEvent(textAccessible, offset + textOffset, text,
+                           aIsInserted, PR_FALSE);
   FireDelayedAccessibleEvent(event);
 
   FireValueChangeForTextFields(textAccessible);
 }
 
-already_AddRefed<nsAccEvent>
+already_AddRefed<AccEvent>
 nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible,
                                               nsIContent *aChangeNode,
                                               nsAccessible *aChangeChild,
@@ -1432,9 +1427,9 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
   if (text.IsEmpty())
     return nsnull;
 
-  nsAccEvent *event =
-    new nsAccTextChangeEvent(aContainerAccessible, offset, text,
-                             aIsInserting, aIsAsynch, aIsFromUserInput);
+  AccEvent* event = new AccTextChangeEvent(aContainerAccessible, offset, text,
+                                           aIsInserting, aIsAsynch,
+                                           aIsFromUserInput);
   NS_IF_ADDREF(event);
 
   return event;
@@ -1443,12 +1438,12 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
 // nsDocAccessible public member
 nsresult
 nsDocAccessible::FireDelayedAccessibleEvent(PRUint32 aEventType, nsINode *aNode,
-                                            nsAccEvent::EEventRule aAllowDupes,
+                                            AccEvent::EEventRule aAllowDupes,
                                             PRBool aIsAsynch,
                                             EIsFromUserInput aIsFromUserInput)
 {
-  nsRefPtr<nsAccEvent> event =
-    new nsAccEvent(aEventType, aNode, aIsAsynch, aIsFromUserInput, aAllowDupes);
+  nsRefPtr<AccEvent> event =
+    new AccEvent(aEventType, aNode, aIsAsynch, aIsFromUserInput, aAllowDupes);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return FireDelayedAccessibleEvent(event);
@@ -1456,7 +1451,7 @@ nsDocAccessible::FireDelayedAccessibleEvent(PRUint32 aEventType, nsINode *aNode,
 
 // nsDocAccessible public member
 nsresult
-nsDocAccessible::FireDelayedAccessibleEvent(nsAccEvent *aEvent)
+nsDocAccessible::FireDelayedAccessibleEvent(AccEvent* aEvent)
 {
   NS_ENSURE_ARG(aEvent);
   NS_LOG_ACCDOCLOAD_FIREEVENT(aEvent)
@@ -1468,7 +1463,7 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsAccEvent *aEvent)
 }
 
 void
-nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
+nsDocAccessible::ProcessPendingEvent(AccEvent* aEvent)
 {  
   nsAccessible *accessible = aEvent->GetAccessible();
   nsINode *node = aEvent->GetNode();
@@ -1535,7 +1530,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
     // the offset, length and text for the text change.
     if (node && node != mDocument) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-      nsRefPtr<nsAccEvent> textChangeEvent =
+      nsRefPtr<AccEvent> textChangeEvent =
         CreateTextChangeEventForNode(containerAccessible, content, accessible,
                                      PR_TRUE, PR_TRUE, isFromUserInput);
       if (textChangeEvent) {
@@ -1569,8 +1564,8 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
           GetAccService()->GetAccessible(gLastFocusedNode);
         nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, focusedAcc);
 #endif
-        nsRefPtr<nsAccEvent> caretMoveEvent =
-          new nsAccCaretMoveEvent(accessible, caretOffset);
+        nsRefPtr<AccEvent> caretMoveEvent =
+          new AccCaretMoveEvent(accessible, caretOffset);
         if (!caretMoveEvent)
           return;
 
@@ -1588,7 +1583,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
       // Fire reorder event if it's unconditional (see InvalidateCacheSubtree
       // method) or if changed node (that is the reason of this reorder event)
       // is accessible or has accessible children.
-      nsAccReorderEvent *reorderEvent = downcast_accEvent(aEvent);
+      AccReorderEvent* reorderEvent = downcast_accEvent(aEvent);
       if (reorderEvent->IsUnconditionalEvent() ||
           reorderEvent->HasAccessibleInReasonSubtree()) {
         nsEventShell::FireEvent(aEvent);
@@ -1857,7 +1852,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // nsIAccessibleStates::STATE_INVISIBLE for the event's accessible object.
 
     FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SHOW, childNode,
-                               nsAccEvent::eCoalesceFromSameSubtree,
+                               AccEvent::eCoalesceFromSameSubtree,
                                isAsynch);
 
     // Check to see change occurred in an ARIA menu, and fire
@@ -1865,7 +1860,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
     if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                                 childNode, nsAccEvent::eRemoveDupes,
+                                 childNode, AccEvent::eRemoveDupes,
                                  isAsynch);
     }
 
@@ -1874,7 +1869,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     while (PR_TRUE) {
       if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
         FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_ALERT, ancestor,
-                                   nsAccEvent::eRemoveDupes, isAsynch);
+                                   AccEvent::eRemoveDupes, isAsynch);
         break;
       }
       ancestor = ancestor->GetParent();
@@ -1902,10 +1897,9 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   PRBool isUnconditionalEvent = childAccessible ||
     aChild && nsAccUtils::HasAccessibleChildren(childNode);
 
-  nsRefPtr<nsAccEvent> reorderEvent =
-    new nsAccReorderEvent(containerAccessible, isAsynch,
-                          isUnconditionalEvent,
-                          aChild ? aChild : nsnull);
+  nsRefPtr<AccEvent> reorderEvent =
+    new AccReorderEvent(containerAccessible, isAsynch, isUnconditionalEvent,
+                        aChild ? aChild : nsnull);
   NS_ENSURE_TRUE(reorderEvent,);
 
   FireDelayedAccessibleEvent(reorderEvent);
@@ -1935,7 +1929,7 @@ nsDocAccessible::FireShowHideEvents(nsINode *aNode,
   if (accessible) {
     // Found an accessible, so fire the show/hide on it and don't look further
     // into this subtree.
-    nsRefPtr<nsAccEvent> event;
+    nsRefPtr<AccEvent> event;
     if (aDelayedOrNormal == eDelayedEvent &&
         aEventType == nsIAccessibleEvent::EVENT_HIDE) {
       // Use AccHideEvent for delayed hide events to coalesce text change events
@@ -1944,9 +1938,9 @@ nsDocAccessible::FireShowHideEvents(nsINode *aNode,
                                aIsAsyncChange, aIsFromUserInput);
 
     } else {
-      event = new nsAccEvent(aEventType, accessible, aIsAsyncChange,
-                             aIsFromUserInput,
-                             nsAccEvent::eCoalesceFromSameSubtree);
+      event = new AccEvent(aEventType, accessible, aIsAsyncChange,
+                           aIsFromUserInput,
+                           AccEvent::eCoalesceFromSameSubtree);
     }
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 

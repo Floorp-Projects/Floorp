@@ -1238,9 +1238,9 @@ nsXULTreeGridCellAccessible::CellInvalidated()
     mTreeView->GetCellValue(mRow, mColumn, textEquiv);
     if (mCachedTextEquiv != textEquiv) {
       PRBool isEnabled = textEquiv.EqualsLiteral("true");
-      nsRefPtr<nsAccEvent> accEvent =
-        new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_CHECKED,
-                                  PR_FALSE, isEnabled);
+      nsRefPtr<AccEvent> accEvent =
+        new AccStateChangeEvent(this, nsIAccessibleStates::STATE_CHECKED,
+                                PR_FALSE, isEnabled);
       nsEventShell::FireEvent(accEvent);
 
       mCachedTextEquiv = textEquiv;
