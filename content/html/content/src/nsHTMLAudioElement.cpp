@@ -65,7 +65,6 @@
 #include "nsEventDispatcher.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMProgressEvent.h"
-#include "nsHTMLMediaError.h"
 
 nsGenericHTMLElement*
 NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,

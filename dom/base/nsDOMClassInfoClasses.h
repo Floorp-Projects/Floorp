@@ -431,9 +431,9 @@ DOMCI_CLASS(CSSFontFaceStyleDecl)
 // WhatWG Video Element
 DOMCI_CLASS(HTMLVideoElement)
 DOMCI_CLASS(HTMLSourceElement)
-DOMCI_CLASS(HTMLMediaError)
+DOMCI_CLASS(MediaError)
 DOMCI_CLASS(HTMLAudioElement)
-DOMCI_CLASS(HTMLTimeRanges)
+DOMCI_CLASS(TimeRanges)
 #endif
 
 DOMCI_CLASS(ProgressEvent)

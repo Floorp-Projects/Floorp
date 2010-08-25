@@ -15,12 +15,12 @@
  *
  * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is the Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Chris Double <chris.double@double.co.nz>
+ *  Chris Pearce <chris@pearce.org.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,21 +35,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLMediaError.h"
+
+#include "nsIDOMTimeRanges.h"
 #include "nsISupports.h"
+#include "nsTArray.h"
 
-class nsHTMLMediaError : public nsIDOMHTMLMediaError
-{
+// Implements media TimeRanges:
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
+class nsTimeRanges : public nsIDOMTimeRanges {
 public:
-  nsHTMLMediaError(PRUint16 aCode);
-
-  // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMTIMERANGES
 
-  // nsIDOMHTMLMediaError
-  NS_DECL_NSIDOMHTMLMEDIAERROR
+  void Add(float aStart, float aEnd);
 
 private:
-  // Error code
-  PRUint16 mCode;
+
+  struct TimeRange {
+    TimeRange(float aStart, float aEnd)
+      : mStart(aStart),
+        mEnd(aEnd) {}
+    float mStart;
+    float mEnd;
+  };
+
+  nsAutoTArray<TimeRange,4> mRanges;
 };

@@ -49,7 +49,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsWaveDecoder.h"
-#include "nsHTMLTimeRanges.h"
+#include "nsTimeRanges.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -170,7 +170,7 @@ public:
   // main thread.
   float GetTimeForPositionChange();
 
-  nsresult GetBuffered(nsHTMLTimeRanges* aBuffered);
+  nsresult GetBuffered(nsTimeRanges* aBuffered);
 
 private:
   // Returns PR_TRUE if we're in shutdown state. Threadsafe.
@@ -1181,7 +1181,7 @@ nsWaveStateMachine::FirePositionChanged(PRBool aCoalesce)
 }
 
 nsresult
-nsWaveStateMachine::GetBuffered(nsHTMLTimeRanges* aBuffered)
+nsWaveStateMachine::GetBuffered(nsTimeRanges* aBuffered)
 {
   PRInt64 startOffset = mStream->GetNextCachedData(mWavePCMOffset);
   while (startOffset >= 0) {
@@ -1675,7 +1675,7 @@ nsWaveDecoder::MoveLoadsToBackground()
 }
 
 nsresult
-nsWaveDecoder::GetBuffered(nsHTMLTimeRanges* aBuffered)
+nsWaveDecoder::GetBuffered(nsTimeRanges* aBuffered)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   return mPlaybackStateMachine->GetBuffered(aBuffered);
