@@ -2483,7 +2483,14 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aParent || HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
+  // If @form is set, the element *has* to be in a document, otherwise it
+  // wouldn't be possible to find an element with the corresponding id.
+  // If @form isn't set, the element *has* to have a parent, otherwise it
+  // wouldn't be possible to find a form ancestor.
+  // We should not call UpdateFormOwner if none of these coniditions are
+  // fulfilled.
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ? !!GetCurrentDoc()
+                                                  : !!aParent) {
     UpdateFormOwner(true, nsnull);
   }
 
@@ -2899,7 +2906,8 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 
         NS_ASSERTION(GetCurrentDoc(), "The element should be in a document "
                                       "when UpdateFormOwner is called!");
-        NS_ASSERTION(element == GetCurrentDoc()->GetElementById(formId),
+        NS_ASSERTION(!GetCurrentDoc() ||
+                     element == GetCurrentDoc()->GetElementById(formId),
                      "element should be equals to the current element "
                      "associated with the id in @form!");
 
