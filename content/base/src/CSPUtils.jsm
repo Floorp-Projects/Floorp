@@ -130,6 +130,12 @@ CSPRep.fromString = function(aStr, self) {
   var aCSPR = new CSPRep();
   aCSPR._originalText = aStr;
 
+  var selfUri = null;
+  if (self instanceof Components.interfaces.nsIURI)
+    selfUri = self.clone();
+  else if (self)
+    selfUri = gIoService.newURI(self, null, null);
+
   var dirs = aStr.split(";");
 
   directive:
@@ -170,7 +176,6 @@ CSPRep.fromString = function(aStr, self) {
       // might be space-separated list of URIs
       var uriStrings = dirvalue.split(/\s+/);
       var okUriStrings = [];
-      var selfUri = self ? gIoService.newURI(self.toString(),null,null) : null;
 
       // Verify that each report URI is in the same etld + 1
       // if "self" is defined, and just that it's valid otherwise.
@@ -217,15 +222,14 @@ CSPRep.fromString = function(aStr, self) {
 
       var uri = '';
       try {
-        uri = gIoService.newURI(dirvalue, null, null);
+        uri = gIoService.newURI(dirvalue, null, selfUri);
       } catch(e) {
         CSPError("could not parse URI in policy URI: " + dirvalue);
         return CSPRep.fromString("allow 'none'");
       }
-      
+
       // Verify that policy URI comes from the same origin
-      if (self) {
-        var selfUri = gIoService.newURI(self.toString(), null, null);
+      if (selfUri) {
         if (selfUri.host !== uri.host){
           CSPError("can't fetch policy uri from non-matching hostname: " + uri.host);
           return CSPRep.fromString("allow 'none'");
@@ -249,14 +253,14 @@ CSPRep.fromString = function(aStr, self) {
       // synchronous -- otherwise we need to architect a callback into the
       // xpcom component so that whomever creates the policy object gets
       // notified when it's loaded and ready to go.
-      req.open("GET", dirvalue, false);
+      req.open("GET", uri.asciiSpec, false);
 
       // make request anonymous
       // This prevents sending cookies with the request, in case the policy URI
       // is injected, it can't be abused for CSRF.
       req.channel.loadFlags |= Components.interfaces.nsIChannel.LOAD_ANONYMOUS;
 
-      req.send(null);  
+      req.send(null);
       if (req.status == 200) {
         aCSPR = CSPRep.fromString(req.responseText, self);
         // remember where we got the policy
