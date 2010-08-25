@@ -722,7 +722,8 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
     if (!fireFocus) {
       nsCOMPtr<nsINode> realFocusedNode = GetCurrentFocus();
-      nsIContent* realFocusedContent = realFocusedNode->AsElement();
+      nsIContent* realFocusedContent =
+        realFocusedNode->IsElement() ? realFocusedNode->AsElement() : nsnull;
       nsIContent* containerContent = targetContent;
       while (containerContent) {
         nsCOMPtr<nsIDOMXULPopupElement> popup = do_QueryInterface(containerContent);
