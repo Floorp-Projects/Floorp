@@ -190,7 +190,6 @@ class Compiler
 #endif
     js::Vector<InternalCallSite, 64> callSites;
     js::Vector<DoublePatch, 16> doubleList;
-    js::Vector<uint32, 16> escapingList;
     StubCompiler stubcc;
     Label invokeLabel;
     bool addTraceHints;

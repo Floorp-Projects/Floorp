@@ -655,11 +655,7 @@ class FrameState
      */
     void shift(int32 n);
 
-    /*
-     * Notifies the frame of a slot that can escape. Returns whether or not
-     * the slot was added.
-     */
-    inline bool addEscaping(uint32 local);
+    inline void addEscaping(uint32 local);
 
     inline void setInTryBlock(bool inTryBlock) {
         this->inTryBlock = inTryBlock;
