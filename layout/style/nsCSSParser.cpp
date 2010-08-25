@@ -2083,8 +2083,10 @@ CSSParserImpl::ParseNameSpaceRule(RuleAppendFunc aAppendFunc, void* aData)
       return PR_TRUE;
     }
   }
+  else {
+    UngetToken();
+  }
   REPORT_UNEXPECTED_TOKEN(PEAtNSUnexpected);
-  UngetToken();
 
   return PR_FALSE;
 }
