@@ -164,13 +164,9 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
-input:-moz-placeholder,
-textarea:-moz-placeholder {
-  color: GrayText;
-}
-
 input > .placeholder,
 textarea > .placeholder {
+  color: GrayText;
   overflow: hidden;
   pointer-events: none;
   resize: none;
