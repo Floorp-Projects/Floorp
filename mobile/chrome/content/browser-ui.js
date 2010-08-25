@@ -563,6 +563,9 @@ var BrowserUI = {
     // We don't want the button to look pressed for now
     button.parentNode.selectedItem = null;
 
+    // save the current value of the urlbar
+    let searchValue = this._edit.value;
+
     // Give the new page lots of room
     Browser.hideSidebars();
     this.activePanel = null;
@@ -571,7 +574,7 @@ var BrowserUI = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    let submission = button.engine.getSubmission(this._edit.value, null);
+    let submission = button.engine.getSubmission(searchValue, null);
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
   },
 
