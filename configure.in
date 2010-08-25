@@ -4964,7 +4964,6 @@ MOZ_INSTALLER=1
 MOZ_IPC=1
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
-MOZ_JSLOADER=1
 MOZ_MATHML=1
 MOZ_MORK=
 MOZ_MORKREADER=1
@@ -5010,7 +5009,6 @@ MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
-MOZ_VIEW_SOURCE=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
@@ -5860,13 +5858,6 @@ IBMBIDI=1
 AC_DEFINE(IBMBIDI)
 
 dnl ========================================================
-dnl view source support on by default
-dnl ========================================================
-if test "$MOZ_VIEW_SOURCE"; then
-    AC_DEFINE(MOZ_VIEW_SOURCE)
-fi
-
-dnl ========================================================
 dnl accessibility support on by default on all platforms 
 dnl except OS X.
 dnl ========================================================
@@ -5889,13 +5880,6 @@ case "$target" in
     fi
     ;;
 esac
-fi
-
-dnl ========================================================
-dnl xpcom js loader support on by default
-dnl ========================================================
-if test "$MOZ_JSLOADER"; then
-    AC_DEFINE(MOZ_JSLOADER)
 fi
 
 dnl ========================================================
@@ -9005,7 +8989,6 @@ AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_PROFILING)
-AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
@@ -9035,7 +9018,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
-AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)

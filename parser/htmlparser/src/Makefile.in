@@ -74,13 +74,8 @@ CPPSRCS = \
 		nsScanner.cpp       \
 		nsToken.cpp         \
 		nsParserMsgUtils.cpp\
-		$(NULL)
-
-ifdef MOZ_VIEW_SOURCE
-CPPSRCS += \
 		nsViewSourceHTML.cpp   \
 		$(NULL)
-endif
 
 ifdef MOZ_DEBUG
 CPPSRCS += \
