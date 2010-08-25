@@ -630,6 +630,7 @@ class FrameState
 #endif
 
     Address addressOf(const FrameEntry *fe) const;
+    Address addressForDataRemat(const FrameEntry *fe) const;
 
     inline StateRemat dataRematInfo(const FrameEntry *fe) const;
 
