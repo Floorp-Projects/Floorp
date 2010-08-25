@@ -2094,9 +2094,9 @@ var MenuListHelperUI = {
     for (let i = 0; i < children.length; i++) {
       let child = children[i];
       let item = document.createElement("richlistitem");
-      if (child.selected)
-        item.setAttribute("selected", child.selected);
-      item.setAttribute("class", "menulist-command");
+      // Add selected as a class name instead of an attribute to not being overidden
+      // by the richlistbox behavior (it sets the "current" and "selected" attribute
+      item.setAttribute("class", "menulist-command" + (child.selected ? " selected" : ""));
 
       let label = document.createElement("label");
       label.setAttribute("value", child.label);
