@@ -40,7 +40,6 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = toolkit/components/contentprefs/tests
 
 include $(DEPTH)/config/autoconf.mk
 
