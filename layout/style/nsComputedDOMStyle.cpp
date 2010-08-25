@@ -3911,8 +3911,11 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
     default:
       if (aCoord.IsCalcUnit()) {
         nscoord percentageBase;
-        if (aPercentageBaseGetter &&
-            (this->*aPercentageBaseGetter)(percentageBase)) {
+        if (!aCoord.CalcHasPercent()) {
+          nscoord val = nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
+          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
+        } else if (aPercentageBaseGetter &&
+                   (this->*aPercentageBaseGetter)(percentageBase)) {
           nscoord val =
             nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
           aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
