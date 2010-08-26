@@ -496,6 +496,7 @@ toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-border-start-style: none;
+  -moz-appearance: none !important; /* overriding #TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker */
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(ltr),
@@ -588,7 +589,11 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   -moz-appearance: toolbarbutton;
+%ifdef WINSTRIPE_AERO
+  margin: -1px 0;
+%else
   margin: 0;
+%endif
   padding: 0 3px;
   border: none !important;
   color: inherit !important;
@@ -596,6 +601,14 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   text-shadow: inherit !important;
   -moz-box-shadow: none !important;
 }
+
+%ifdef WINSTRIPE_AERO
+/* resetting the margin from the above rule */
+.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  margin: 0 !important;
+}
+%endif
 
 #TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
@@ -1440,7 +1453,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-image-region: rect(0, 15px, 17px, 0);
+%ifdef WINSTRIPE_AERO
+  margin: -1px 0;
+%else
   margin: 0;
+%endif
   padding-top: 0;
   padding-bottom: 0;
 }
