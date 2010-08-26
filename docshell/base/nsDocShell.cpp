@@ -10919,16 +10919,18 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP
 nsDocShell::GetAssociatedWindow(nsIDOMWindow** aWindow)
 {
-    return CallGetInterface(this, aWindow);
+    CallGetInterface(this, aWindow);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
 {
-    nsresult rv;
-    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this), &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return win->GetTop(aWindow);
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    if (win) {
+        win->GetTop(aWindow);
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
