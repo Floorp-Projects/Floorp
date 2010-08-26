@@ -131,6 +131,7 @@
     <command id="cmd_quit" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_opensearch" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_panel" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_bookmarks" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_history" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -234,8 +235,9 @@
                     <box id="identity-box"
                          onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                          onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                      <box id="urlbar-image-box" mousethrough="always">
+                      <box id="urlbar-image-box" mousethrough="always" observes="bcast_urlbarState">
                         <image id="urlbar-throbber"/>
+                        <image id="urlbar-magnifier" hidden="true"/>
                         <image id="urlbar-favicon" hidden="true"/>
                       </box>
                     </box>
@@ -511,19 +513,7 @@
       </hbox>
 
       <!-- titlebar autocomplete results -->
-      <vbox id="popup_autocomplete" class="panel-dark" flex="1" onshow="BrowserUI._edit.showHistoryPopup();" hidden="true">
-        <arrowscrollbox id="autocomplete_navbuttons"
-                        style="-moz-user-focus: ignore;"
-                        align="center"
-                        flex="1"
-                        orient="horizontal">
-          <image class="tool-search"/>
-          <radiogroup id="search-buttons" class="toggle-dark" style="-moz-user-focus: ignore;"
-                      onclick="BrowserUI.doButtonSearch(event.target);">
-          </radiogroup>
-        </arrowscrollbox>
-      </vbox>
-
+      <vbox id="popup_autocomplete" class="panel-dark" flex="1" onshow="BrowserUI._edit.showHistoryPopup();" hidden="true"/>
       <placelist id="bookmarks-items" type="bookmarks" onopen="BookmarkList.openLink(event);" onhide="BrowserUI.updateStar();" flex="1" hidden="true"/>
       <historylist id="history-items" onopen="HistoryList.openLink(event);" flex="1" hidden="true"/>
       <remotetabslist id="remotetabs-items" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
@@ -543,7 +533,8 @@
 
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="menulist-popup" class="dialog-dark">
-        <richlistbox id="menulist-commands" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
+        <label id="menulist-title" crop="center" flex="1"/>
+        <richlistbox id="menulist-commands" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);"/>
       </vbox>
     </hbox>
 

@@ -1538,7 +1538,17 @@ const BrowserSearch = {
   get engines() {
     if (this._engines)
       return this._engines;
-    return this._engines = Services.search.getVisibleEngines({ });
+
+    let engines = Services.search.getVisibleEngines({ }).map(
+      function(item, index, array) {
+        return { 
+          label: item.name,
+          default: (item == Services.search.defaultEngine),
+          image: item.iconURI ? item.iconURI.spec : null
+        }
+    });
+
+    return this._engines = engines;
   },
 
   updatePageSearchEngines: function updatePageSearchEngines(aNode) {
@@ -1567,29 +1577,6 @@ const BrowserSearch = {
     return !BrowserSearch.engines.some(function(item) {
       return aEngine.title == item.name;
     });
-  },
-
-  updateSearchButtons: function updateSearchButtons() {
-    let container = document.getElementById("search-buttons");
-    if (this._engines && container.hasChildNodes())
-      return;
-
-    // Clean the previous search engines button
-    while (container.hasChildNodes())
-      container.removeChild(container.lastChild);
-
-    let engines = this.engines;
-    for (let e = 0; e < engines.length; e++) {
-      let button = document.createElement("radio");
-      let engine = engines[e];
-      button.id = engine.name;
-      button.setAttribute("label", engine.name);
-      button.className = "searchengine";
-      if (engine.iconURI)
-        button.setAttribute("src", engine.iconURI.spec);
-      container.appendChild(button);
-      button.engine = engine;
-    }
   }
 };
 
@@ -1945,13 +1932,20 @@ IdentityHandler.prototype = {
   handleIdentityButtonEvent: function(aEvent) {
     aEvent.stopPropagation();
 
+    // When the urlbar is active the identity button is used to show the
+    // list of search engines
+    if (Elements.urlbarState.getAttribute("mode") == "edit") {
+      CommandUpdater.doCommand("cmd_opensearch");
+      return;
+    }
+
     if ((aEvent.type == "click" && aEvent.button != 0) ||
         (aEvent.type == "keypress" && aEvent.charCode != KeyEvent.DOM_VK_SPACE &&
          aEvent.keyCode != KeyEvent.DOM_VK_RETURN))
       return; // Left click, space or enter only
 
     this.toggle();
-    },
+  },
 
   handleEvent: function(aEvent) {
     if (aEvent.type == "URLChanged" && !this._identityPopup.hidden)

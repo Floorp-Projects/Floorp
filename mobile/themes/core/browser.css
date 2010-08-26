@@ -224,8 +224,21 @@ toolbarbutton.urlbar-cap-button {
   background: url("images/rightcapSSL-active-64.png");
 }
 
+#urlbar-image-box[mode=edit] > #urlbar-favicon,
+#urlbar-image-box[mode=edit] > #urlbar-throbber {
+  display: none;
+}
+
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+#urlbar-magnifier {
+  list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
+}
+
+#urlbar-image-box[mode=edit] > #urlbar-magnifier {
+  display: block !important;
 }
 
 #urlbar-favicon {
@@ -1513,15 +1526,34 @@ pageaction:hover:active > vbox > .pageaction-desc {
   -moz-border-radius: 8px;
 }
 
+#menulist-popup > #menulist-title {
+  padding: 12px 4px 4px 4px;
+  font-size: 18px;
+}
+
+#menulist-popup > #menulist-title[value=""] {
+  display: none;
+}
+
 #menulist-commands {
   border: 1px solid rgb(207,207,207);
   -moz-border-radius: 8px;
+}
+
+#menulist-popup > label:not([value=""]) + #menulist-commands {
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-topright: 0px;
 }
 
 .menulist-command {
   -moz-box-align: center;
   background-color: rgb(245,245,245);
   min-width: 200px; /* keep the command from being too narrow */
+}
+
+.menulist-command > image {
+  width: 32px;
+  height: 32px;
 }
 
 .menulist-command:first-child {
@@ -1545,6 +1577,18 @@ pageaction:hover:active > vbox > .pageaction-desc {
 .menulist-command.selected {
   background: #8db8d8;
   pointer-events: none;
+}
+
+.menulist-command.selected > image {
+  width: 30px;
+  height: 30px;
+  list-style-image: url("chrome://browser/skin/images/check-30.png");
+  margin-right: 2px;
+  margin-top: 2px;
+}
+
+.menulist-command:not(.selected) > image[src=""] {
+  visibility: hidden;
 }
 
 /* context popup ----------------------------------------------------------- */

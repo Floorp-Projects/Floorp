@@ -544,8 +544,6 @@ var BrowserUI = {
     if (this.isAutoCompleteOpen())
       return;
 
-    BrowserSearch.updateSearchButtons();
-
     this._hidePopup();
     this.activePanel = AllPagesList;
   },
@@ -564,13 +562,7 @@ var BrowserUI = {
     return this._edit.popup.popupOpen;
   },
 
-  doButtonSearch: function(button) {
-    if (!("engine" in button) || !button.engine)
-      return;
-
-    // We don't want the button to look pressed for now
-    button.parentNode.selectedItem = null;
-
+  doOpenSearch: function doOpenSearch(aName) {
     // save the current value of the urlbar
     let searchValue = this._edit.value;
 
@@ -582,7 +574,8 @@ var BrowserUI = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    let submission = button.engine.getSubmission(searchValue, null);
+    let engine = Services.search.getEngineByName(aName);
+    let submission = engine.getSubmission(searchValue, null);
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
   },
 
@@ -862,6 +855,7 @@ var BrowserUI = {
       case "cmd_go":
       case "cmd_openLocation":
       case "cmd_star":
+      case "cmd_opensearch":
       case "cmd_bookmarks":
       case "cmd_history":
       case "cmd_remoteTabs":
@@ -945,6 +939,18 @@ var BrowserUI = {
         BookmarkPopup.toggle(autoClose);
         break;
       }
+      case "cmd_opensearch":
+        this._edit.blur();
+
+        MenuListHelperUI.show({
+          title: "TTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSTTTTTTTTTTTT" || Elements.browserBundle.getString("opensearch.searchWith"),
+          menupopup: { children: BrowserSearch.engines },
+          set selectedIndex(aIndex) {
+            let name = this.menupopup.children[aIndex].label;
+            BrowserUI.doOpenSearch(name);
+          }
+        });
+        break;
       case "cmd_bookmarks":
         this.activePanel = BookmarkList;
         break;
@@ -2100,12 +2106,18 @@ var MenuListHelperUI = {
     return this._popup = document.getElementById("menulist-popup");
   },
 
+  get _title() {
+    delete this._title;
+    return this._title = document.getElementById("menulist-title");
+  },
+
   _currentList: null,
   show: function mn_show(aMenulist) {
     this._currentList = aMenulist;
+    this._title.value = aMenulist.title || "";
 
     let container = this._container;
-    let listbox = this._popup.firstChild;
+    let listbox = this._popup.lastChild;
     while (listbox.firstChild)
       listbox.removeChild(listbox.firstChild);
 
@@ -2117,6 +2129,10 @@ var MenuListHelperUI = {
       // by the richlistbox behavior (it sets the "current" and "selected" attribute
       item.setAttribute("class", "menulist-command" + (child.selected ? " selected" : ""));
 
+      let image = document.createElement("image");
+      image.setAttribute("src", child.image || "");
+      item.appendChild(image);
+
       let label = document.createElement("label");
       label.setAttribute("value", child.label);
       item.appendChild(label);
@@ -2124,13 +2140,16 @@ var MenuListHelperUI = {
       listbox.appendChild(item);
     }
 
+    window.addEventListener("resize", this, true);
     container.hidden = false;
+    this.sizeToContent();
     BrowserUI.pushPopup(this, [this._popup]);
   },
 
   hide: function mn_hide() {
     this._currentList = null;
     this._container.hidden = true;
+    window.removeEventListener("resize", this, true);
     BrowserUI.popPopup();
   },
 
@@ -2138,11 +2157,37 @@ var MenuListHelperUI = {
     this._currentList.selectedIndex = aIndex;
 
     // Dispatch a xul command event to the attached menulist
-    let evt = document.createEvent("XULCommandEvent");
-    evt.initCommandEvent("command", true, true, window, 0, false, false, false, false, null);
-    this._currentList.dispatchEvent(evt);
+    if (this._currentList.dispatchEvent) {
+      let evt = document.createEvent("XULCommandEvent");
+      evt.initCommandEvent("command", true, true, window, 0, false, false, false, false, null);
+      this._currentList.dispatchEvent(evt);
+    }
 
     this.hide();
+  },
+
+  sizeToContent: function sizeToContent() {
+    // Make sure the container is at least sized to the content
+    let popup = this._popup;
+    let preferredHeight = 0;
+    for (let i=0; i<popup.childElementCount; i++) {
+      preferredHeight += popup.children[i].getBoundingClientRect().height;
+    }
+
+    // Ensure to reset the assigned width/height to have the default's one set
+    // by the content
+    popup.width = popup.height = "";
+
+    let rect = popup.getBoundingClientRect();
+    let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
+    let width = Math.min(rect.width, 0.75 * window.innerWidth);
+
+    popup.height = height;
+    popup.width = width;
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    this.sizeToContent();
   }
 }
 
