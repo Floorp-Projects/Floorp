@@ -37,6 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const nsISupports            = Components.interfaces.nsISupports;
 
@@ -65,6 +66,7 @@ const nsICategoryManager     = Components.interfaces.nsICategoryManager;
 const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
 const nsICommandLineValidator = Components.interfaces.nsICommandLineValidator;
+const nsIXULAppInfo          = Components.interfaces.nsIXULAppInfo;
 
 const NS_BINDING_ABORTED = Components.results.NS_BINDING_ABORTED;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
@@ -116,12 +118,15 @@ function resolveURIInternal(aCmdLine, aArgument) {
 const OVERRIDE_NONE        = 0;
 const OVERRIDE_NEW_PROFILE = 1;
 const OVERRIDE_NEW_MSTONE  = 2;
+const OVERRIDE_NEW_BUILD_ID = 3;
 /**
  * Determines whether a home page override is needed.
  * Returns:
  *  OVERRIDE_NEW_PROFILE if this is the first run with a new profile.
  *  OVERRIDE_NEW_MSTONE if this is the first run with a build with a different
  *                      Gecko milestone (i.e. right after an upgrade).
+ *  OVERRIDE_NEW_BUILD_ID if this is the first run with a new build ID of the
+ *                        same Gecko milestone (i.e. after a nightly upgrade).
  *  OVERRIDE_NONE otherwise.
  */
 function needHomepageOverride(prefb) {
@@ -136,6 +141,14 @@ function needHomepageOverride(prefb) {
   var mstone = Components.classes["@mozilla.org/network/protocol;1?name=http"]
                          .getService(nsIHttpProtocolHandler).misc;
 
+  var savedBuildID = null;
+  try {
+    savedBuildID = prefb.getCharPref("browser.startup.homepage_override.buildID");
+  } catch (e) {}
+
+  var buildID =  Components.classes["@mozilla.org/xre/app-info;1"]
+                           .getService(nsIXULAppInfo).platformBuildID;
+
   if (mstone != savedmstone) {
     // Bug 462254. Previous releases had a default pref to suppress the EULA
     // agreement if the platform's installer had already shown one. Now with
@@ -145,7 +158,13 @@ function needHomepageOverride(prefb) {
       prefb.setBoolPref("browser.rights.3.shown", true);
     
     prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
+    prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
     return (savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE);
+  }
+
+  if (buildID != savedBuildID) {
+    prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
+    return OVERRIDE_NEW_BUILD_ID;
   }
 
   return OVERRIDE_NONE;
@@ -562,24 +581,31 @@ nsBrowserContentHandler.prototype = {
     var overridePage = "";
     var haveUpdateSession = false;
     try {
-      switch (needHomepageOverride(prefb)) {
-        case OVERRIDE_NEW_PROFILE:
-          // New profile
-          overridePage = formatter.formatURLPref("startup.homepage_welcome_url");
-          break;
-        case OVERRIDE_NEW_MSTONE:
-          // Existing profile, new build
-          copyPrefOverride();
+      let override = needHomepageOverride(prefb);
+      Components.utils.reportError("OVERRIDE: " + override);
+      if (override != OVERRIDE_NONE) {
+        // Setup the default search engine to about:home page.
+        AboutHomeUtils.loadDefaultSearchEngine();
 
-          // Check whether we have a session to restore. If we do, we assume
-          // that this is an "update" session.
-          var ss = Components.classes["@mozilla.org/browser/sessionstartup;1"]
-                             .getService(Components.interfaces.nsISessionStartup);
-          haveUpdateSession = ss.doRestore();
-          overridePage = formatter.formatURLPref("startup.homepage_override_url");
-          if (prefb.prefHasUserValue("app.update.postupdate"))
-            overridePage = getPostUpdateOverridePage(overridePage);
-          break;
+        switch (override) {
+          case OVERRIDE_NEW_PROFILE:
+            // New profile.
+            overridePage = formatter.formatURLPref("startup.homepage_welcome_url");
+            break;
+          case OVERRIDE_NEW_MSTONE:
+            // Existing profile, new milestone build.
+            copyPrefOverride();
+
+            // Check whether we have a session to restore. If we do, we assume
+            // that this is an "update" session.
+            var ss = Components.classes["@mozilla.org/browser/sessionstartup;1"]
+                               .getService(Components.interfaces.nsISessionStartup);
+            haveUpdateSession = ss.doRestore();
+            overridePage = formatter.formatURLPref("startup.homepage_override_url");
+            if (prefb.prefHasUserValue("app.update.postupdate"))
+              overridePage = getPostUpdateOverridePage(overridePage);
+            break;
+        }
       }
     } catch (ex) {}
 
@@ -854,6 +880,32 @@ nsDefaultCommandLineHandler.prototype = {
   },
 
   helpInfo : "",
+};
+
+let AboutHomeUtils = {
+  get _storage() {
+    let aboutHomeURI = Services.io.newURI("moz-safe-about:home", null, null);
+    let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
+                    getService(Components.interfaces.nsIScriptSecurityManager).
+                    getCodebasePrincipal(aboutHomeURI);
+    let dsm = Components.classes["@mozilla.org/dom/storagemanager;1"].
+              getService(Components.interfaces.nsIDOMStorageManager);
+    return dsm.getLocalStorageForPrincipal(principal, "");
+  },
+
+  loadDefaultSearchEngine: function AHU_loadDefaultSearchEngine()
+  {
+    // TODO: should use originalDefaultEngine once available, see bug 587691.
+    let defaultEngine = Services.search.defaultEngine;
+    let submission = defaultEngine.getSubmission("_searchTerms_");
+    if (submission.postData)
+      throw new Error("Home page does not support POST search engines.");
+    let engine = {
+      name: defaultEngine.name
+    , searchUrl: submission.uri.spec
+    }
+    this._storage.setItem("search-engine", JSON.stringify(engine));
+  }
 };
 
 var components = [nsBrowserContentHandler, nsDefaultCommandLineHandler];
