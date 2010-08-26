@@ -3070,15 +3070,16 @@ const DOMLinkHandler = {
               break;
 
             // Verify that the load of this icon is legal.
-            // error pages can load their favicon, to be on the safe side,
-            // only allow chrome:// favicons
-            const aboutNeterr = /^about:neterror\?/;
-            const aboutBlocked = /^about:blocked\?/;
-            const aboutCert = /^about:certerror\?/;
-            if (!(aboutNeterr.test(targetDoc.documentURI) ||
-                  aboutBlocked.test(targetDoc.documentURI) ||
-                  aboutCert.test(targetDoc.documentURI)) ||
-                !uri.schemeIs("chrome")) {
+            // Some error or special pages can load their favicon.
+            // To be on the safe side, only allow chrome:// favicons.
+            var isAllowedPage = [
+              /^about:neterror\?/,
+              /^about:blocked\?/,
+              /^about:certerror\?/,
+              /^about:home$/,
+            ].some(function (re) re.test(targetDoc.documentURI));
+
+            if (!isAllowedPage || !uri.schemeIs("chrome")) {
               var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                         getService(Ci.nsIScriptSecurityManager);
               try {
