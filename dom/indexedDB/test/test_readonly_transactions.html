@@ -60,7 +60,7 @@
 
       request = db.transaction([osName], READ_WRITE)
                   .objectStore(osName)
-                  .addOrModify({}, key1);
+                  .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -68,7 +68,7 @@
       }
       yield;
 
-      request = db.objectStore(osName, READ_WRITE).addOrModify({}, key2);
+      request = db.objectStore(osName, READ_WRITE).put({}, key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -78,7 +78,7 @@
 
       request = db.transaction([osName], READ_WRITE)
                   .objectStore(osName)
-                  .modify({}, key1);
+                  .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -86,7 +86,7 @@
       }
       yield;
 
-      request = db.objectStore(osName, READ_WRITE).modify({}, key1);
+      request = db.objectStore(osName, READ_WRITE).put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -129,7 +129,7 @@
       }
 
       try {
-        request = db.transaction([osName]).objectStore(osName).addOrModify({});
+        request = db.transaction([osName]).objectStore(osName).put({});
         ok(false, "Adding or modifying a readonly transaction should fail!");
       }
       catch (e) {
@@ -137,7 +137,7 @@
       }
 
       try {
-        request = db.objectStore(osName).addOrModify({});
+        request = db.objectStore(osName).put({});
         ok(false, "Adding or modifying a readonly transaction should fail!");
       }
       catch (e) {
@@ -145,7 +145,7 @@
       }
 
       try {
-        request = db.transaction([osName]).objectStore(osName).modify({}, key1);
+        request = db.transaction([osName]).objectStore(osName).put({}, key1);
         ok(false, "Modifying a readonly transaction should fail!");
       }
       catch (e) {
@@ -153,7 +153,7 @@
       }
 
       try {
-        request = db.objectStore(osName).modify({}, key1);
+        request = db.objectStore(osName).put({}, key1);
         ok(false, "Modifying a readonly transaction should fail!");
       }
       catch (e) {
