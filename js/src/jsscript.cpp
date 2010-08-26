@@ -1320,6 +1320,11 @@ js_TraceScript(JSTracer *trc, JSScript *script)
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
+
+#ifdef JS_METHODJIT
+    if (script->jit)
+        mjit::TraceScriptCache(trc, script);
+#endif
 }
 
 JSBool
