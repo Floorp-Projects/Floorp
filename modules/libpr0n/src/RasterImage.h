@@ -293,6 +293,7 @@ public:
   // Progressive decoding knobs
   static void SetDecodeBytesAtATime(PRUint32 aBytesAtATime);
   static void SetMaxMSBeforeYield(PRUint32 aMaxMS);
+  static void SetMaxBytesForSyncDecode(PRUint32 aMaxBytes);
 
 private:
   struct Anim
