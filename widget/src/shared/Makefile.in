@@ -53,7 +53,7 @@ DEFINES += \
 
 ifdef MOZ_X11
 PARALLEL_DIRS  = x11
-endif //MOZ_X11
+endif
 
 CPPSRCS		= \
 		WidgetUtils.cpp \
