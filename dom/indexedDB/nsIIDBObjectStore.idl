@@ -89,6 +89,10 @@ interface nsIIDBObjectStore : nsISupports
   nsIIDBRequest
   remove(in nsIVariant key);
 
+  // Success fires IDBTransactionEvent, result == null
+  nsIIDBRequest
+  clear();
+
   // Success fires IDBTransactionEvent, result == IDBCursor or
   // IDBCursorPreloadedRequest if preload == true. result == null if no match.
   [optional_argc]
