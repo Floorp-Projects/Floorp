@@ -139,6 +139,12 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
+    // The property cache doesn't like inc ops, so we use a simpler
+    // stub for that case.
+    VoidStubAtom stub = js_CodeSpec[*f.regs.pc].format & (JOF_INC | JOF_DEC)
+                      ? stubs::SetGlobalNameDumb
+                      : stubs::SetGlobalName;
+
     JS_ASSERT(mic.kind == ic::MICInfo::SET);
 
     JS_LOCK_OBJ(f.cx, obj);
@@ -152,7 +158,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
         JS_UNLOCK_SCOPE(f.cx, scope);
         if (sprop)
             PatchSetFallback(f, mic);
-        stubs::SetGlobalName(f, atom);
+        stub(f, atom);
         return;
     }
     uint32 shape = obj->shape();
@@ -188,8 +194,8 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     stores.repatch(mic.load.dataLabel32AtOffset(mic.patchValueOffset), slot);
 #endif
 
-    /* Do load anyway... this time. */
-    stubs::SetGlobalName(f, atom);
+    // Actually implement the op the slow way.
+    stub(f, atom);
 }
 
 #ifdef JS_CPU_X86
