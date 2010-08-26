@@ -2210,7 +2210,7 @@ Narcissus.parser = (function() {
 
           case LEFT_BRACKET:
             n = bArrayInit.build(t);
-            while ((tt = t.peek()) !== RIGHT_BRACKET) {
+            while ((tt = t.peek(true)) !== RIGHT_BRACKET) {
                 if (tt === COMMA) {
                     t.get();
                     bArrayInit.addElement(n, null);
