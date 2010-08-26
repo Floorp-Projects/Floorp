@@ -48,6 +48,7 @@ _BROWSER_FILES = \
   head.js \
   remote_head.js \
   remote_forms.js \
+  browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_bookmarks.js \
