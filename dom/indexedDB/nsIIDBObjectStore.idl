@@ -82,14 +82,8 @@ interface nsIIDBObjectStore : nsISupports
   // Success fires IDBTransactionEvent, result == key
   [implicit_jscontext, optional_argc]
   nsIIDBRequest
-  modify(in jsval value,
-         [optional /* undefined */] in jsval key);
-
-  // Success fires IDBTransactionEvent, result == key
-  [implicit_jscontext, optional_argc]
-  nsIIDBRequest
-  addOrModify(in jsval value,
-              [optional /* undefined */] in jsval key);
+  put(in jsval value,
+      [optional /* undefined */] in jsval key);
 
   // Success fires IDBTransactionEvent, result == null
   nsIIDBRequest
