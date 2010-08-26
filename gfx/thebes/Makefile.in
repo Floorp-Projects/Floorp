@@ -265,7 +265,7 @@ CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-_OS_LIBS = usp10 msimg32
+_OS_LIBS = usp10 msimg32 ole32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
