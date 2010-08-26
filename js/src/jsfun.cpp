@@ -2575,7 +2575,7 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Step 2. */
-    if (!target->isCallable()) {
+    if (!target->wrappedObject(cx)->isCallable()) {
         if (JSString *str = js_ValueToString(cx, vp[1])) {
             if (const char *bytes = js_GetStringBytes(cx, str)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
