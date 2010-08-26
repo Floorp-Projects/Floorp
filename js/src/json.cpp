@@ -682,7 +682,7 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
 }
 
 JSONParser *
-js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= true*/)
+js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= false*/)
 {
     if (!cx)
         return NULL;

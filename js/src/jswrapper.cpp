@@ -770,9 +770,6 @@ JSCrossCompartmentWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, Va
         if (!call.destination->wrap(cx, &argv[n]))
             return false;
     }
-    Value *fakevp = call.getvp();
-    fakevp[0] = vp[0];
-    fakevp[1] = vp[1];
     if (!JSWrapper::call(cx, wrapper, argc, vp))
         return false;
 
@@ -792,8 +789,6 @@ JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN arg
         if (!call.destination->wrap(cx, &argv[n]))
             return false;
     }
-    Value *vp = call.getvp();
-    vp[0] = ObjectValue(*call.target);
     if (!JSWrapper::construct(cx, wrapper, argc, argv, rval))
         return false;
 

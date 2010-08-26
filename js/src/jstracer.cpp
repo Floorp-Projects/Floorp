@@ -11536,8 +11536,6 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             vp[1].setObject(*globalObj);
         }
         this_ins = newobj_ins;
-    } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
-        RETURN_STOP("bound method test");
     } else {
         this_ins = get(&vp[1]);
 
