@@ -140,13 +140,12 @@ var BrowserUI = {
   },
 
   _updateToolbar: function _updateToolbar() {
-    let icons = document.getElementById("urlbar-icons");
-    let mode = icons.getAttribute("mode");
+    let mode = Elements.urlbarState.getAttribute("mode");
     if (Browser.selectedTab.isLoading() && mode != "loading") {
-      icons.setAttribute("mode", "loading");
+      Elements.urlbarState.setAttribute("mode", "loading");
     }
     else if (mode != "view") {
-      icons.setAttribute("mode", "view");
+      Elements.urlbarState.setAttribute("mode", "view");
     }
   },
 
@@ -196,21 +195,27 @@ var BrowserUI = {
   },
 
   _editURI: function _editURI(aEdit) {
-    var icons = document.getElementById("urlbar-icons");
-    if (aEdit && icons.getAttribute("mode") != "edit") {
-      icons.setAttribute("mode", "edit");
-      this._edit.defaultValue = this._edit.value;
+    if (aEdit) {
+      let isOpened = this._edit.hasAttribute("open");
+      if (!isOpened) {
+        Elements.urlbarState.setAttribute("mode", "edit");
+        this._edit.defaultValue = this._edit.value;
+      }
 
+      // Replace the web page title by the url of the page
       let urlString = this.getDisplayURI(Browser.selectedBrowser);
       if (Util.isURLEmpty(urlString))
         urlString = "";
       this._edit.value = urlString;
 
-      // This is a workaround for bug 488420, needed to cycle focus for the
-      // IME state to be set properly. Testing shows we only really need to
-      // do this the first time.
-      this._edit.blur();
-      gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      if (!this._edit.readOnly) {
+        // This is a workaround needed to cycle focus for the IME state
+        // to be set properly (bug 488420)
+        this._edit.blur();
+        gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      }
+
+      this._edit.readOnly = !isOpened;
     }
     else if (!aEdit) {
       this._updateToolbar();
@@ -378,6 +383,10 @@ var BrowserUI = {
     this._edit.addEventListener("click", this, false);
     this._edit.addEventListener("mousedown", this, false);
 
+    let awesomePopup = document.getElementById("popup_autocomplete");
+    awesomePopup.addEventListener("popupshown", this, false);
+    awesomePopup.addEventListener("popuphidden", this, false);
+
     document.getElementById("toolbar-main").ignoreDrag = true;
 
     let tabs = document.getElementById("tabs");
@@ -442,12 +451,11 @@ var BrowserUI = {
   },
 
   update: function(aState) {
-    let icons = document.getElementById("urlbar-icons");
     let browser = Browser.selectedBrowser;
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
-        if (icons.getAttribute("mode") != "edit")
+        if (Elements.urlbarState.getAttribute("mode") != "edit")
           this._updateToolbar();
 
         this._updateIcon(browser.mIconURL);
@@ -455,7 +463,7 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        if (icons.getAttribute("mode") != "edit")
+        if (Elements.urlbarState.getAttribute("mode") != "edit")
           this._updateToolbar();
 
         browser.mIconURL = "";
@@ -773,6 +781,14 @@ var BrowserUI = {
       // Favicon events
       case "error":
         this._favicon.src = "";
+        break;
+      // Awesome popup event
+      case "popupshown":
+        this._edit.setAttribute("open", "true");
+        break;
+      case "popuphidden":
+        this._edit.removeAttribute("open");
+        this._edit.readOnly = true;
         break;
     }
   },

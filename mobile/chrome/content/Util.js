@@ -300,6 +300,7 @@ let Elements = {};
 [
   ["browserBundle",      "bundle_browser"],
   ["contentShowing",     "bcast_contentShowing"],
+  ["urlbarState",        "bcast_urlbarState"],
   ["stack",              "stack"],
   ["panelUI",            "panel-container"],
   ["viewBuffer",         "view-buffer"],

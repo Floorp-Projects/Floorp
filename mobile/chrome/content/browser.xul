@@ -98,6 +98,7 @@
 
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing"/>
+    <broadcaster id="bcast_urlbarState" mode="view"/>
   </broadcasterset>
 
   <observerset id="observerset">
@@ -251,8 +252,9 @@
                              emptytext="&urlbar.emptytext;"
                              flex="1"
                              ontextentered="BrowserUI.goToURI();"
+                             readonly="true"
                              clickSelectsAll="true"/>
-                    <hbox id="urlbar-icons" mode="view">
+                    <hbox id="urlbar-icons" observes="bcast_urlbarState">
                       <toolbarbutton id="tool-reload" class="urlbar-cap-button"
                                      oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
                       <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
