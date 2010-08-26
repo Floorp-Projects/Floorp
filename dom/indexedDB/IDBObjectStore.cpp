@@ -839,7 +839,8 @@ IDBObjectStore::Get(nsIVariant* aKey,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetHelper> helper =
@@ -889,7 +890,8 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetAllHelper> helper =
@@ -935,7 +937,8 @@ IDBObjectStore::Add(const jsval &aValue,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
@@ -980,7 +983,8 @@ IDBObjectStore::Modify(const jsval &aValue,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
@@ -1025,7 +1029,8 @@ IDBObjectStore::AddOrModify(const jsval &aValue,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<AddHelper> helper =
@@ -1062,7 +1067,8 @@ IDBObjectStore::Remove(nsIVariant* aKey,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveHelper> helper =
@@ -1127,7 +1133,8 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<OpenCursorHelper> helper =
@@ -1178,7 +1185,8 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateIndexHelper> helper =
@@ -1257,7 +1265,9 @@ IDBObjectStore::RemoveIndex(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateWriteRequest();
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveIndexHelper> helper =
     new RemoveIndexHelper(mTransaction, request, aName, this);
