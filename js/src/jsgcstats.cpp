@@ -299,7 +299,7 @@ void
 GCTimer::finish(bool lastGC) {
     end = rdtsc();
 
-    if (startMark > 0 && JS_WANT_GC_TIMER_PRINT) {
+    if (startMark > 0) {
         if (JS_WANT_GC_SUITE_PRINT) {
             fprintf(stderr, "%f %f %f\n",
                     (double)(end - enter) / 1e6,
