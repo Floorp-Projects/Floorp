@@ -437,8 +437,6 @@ BrowserView.prototype = {
   },
 
   _viewportChanged: function() {
-    getBrowser().style.MozTransformOrigin = "left top";
-    Browser.contentScrollboxScroller.updateTransition();
   },
 };
 

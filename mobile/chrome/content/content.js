@@ -380,8 +380,8 @@ function Content() {
   addEventListener("MozScrolledAreaChanged", this._coalescer, false);
   addEventListener("MozApplicationManifest", this._coalescer, false);
 
-  addMessageListener("MozScrollBy", function(message) {
-    content.scrollBy(message.json.x, message.json.y);
+  addMessageListener("MozScrollTo", function(message) {
+    content.scrollTo(message.json.x, message.json.y);
     let scroll = Util.getScrollOffset(content);
     sendAsyncMessage("MozScrolled", scroll);
   }, false);
