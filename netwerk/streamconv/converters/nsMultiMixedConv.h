@@ -77,6 +77,11 @@ public:
                                PRUint32 aOffset, PRUint32 aLen);
   nsresult SendOnStopRequest(nsISupports* aContext, nsresult aStatus);
 
+  void SetContentDisposition(const nsACString& aDisposition)
+  {
+    mContentDisposition = aDisposition;
+  }
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
