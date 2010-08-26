@@ -1002,10 +1002,10 @@ nsPlacesAutoComplete.prototype = {
 
     // If actions are enabled and the page is open, add only the switch-to-tab
     // result.  Otherwise, add the normal result.
-    let [url, style] = this._enableActions && openPageCount > 0 ?
-                       ["moz-action:switchtab," + escapedEntryURL, "action"] :
-                       [escapedEntryURL, style];
-    this._addToResults(entryId, url, title, entryFavicon, style);
+    let [url, action] = this._enableActions && openPageCount > 0 ?
+                        ["moz-action:switchtab," + escapedEntryURL, "action "] :
+                        [escapedEntryURL, ""];
+    this._addToResults(entryId, url, title, entryFavicon, action + style);
     return true;
   },
 

@@ -139,7 +139,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 
 /* For results that are actions, their description text is shown instead of
    the URL - this needs to follow the locale's direction, unlike URLs. */
-richlistitem[type="action"]:-moz-locale-dir(rtl) > .ac-url-box {
+richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   direction: rtl;
 }
 
