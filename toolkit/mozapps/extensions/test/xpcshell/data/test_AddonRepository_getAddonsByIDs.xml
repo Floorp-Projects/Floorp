@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<searchresults total_results="1111">
+  <!-- Passes even though XPI URL matches an installing AddonInstall.
+       Tests optional attributes. -->
+  <addon>
+    <name>PASS</name>
+    <type id="1">Extension</type>
+    <guid>test1@tests.mozilla.org</guid>
+    <version>1.1</version>
+    <authors>
+      <author>
+        <name>Test Creator 1</name>
+        <link>http://localhost:4444/creator1.html</link>
+      </author>
+      <author>
+        <name>Test Developer 1</name>
+        <link>http://localhost:4444/developer1.html</link>
+      </author>
+    </authors>
+    <summary>Test Summary 1</summary>
+    <description>Test Description 1</description>
+    <eula>Test EULA 1</eula>
+    <developer_comments>Test Developer Comments 1</developer_comments>
+    <icon>http://localhost:4444/icon1.png</icon>
+    <status id="4">Public</status>
+    <compatible_applications>
+      <application>
+        <appID>xpcshell@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <previews>
+      <preview primary="1">
+        <full type="image/png">http://localhost:4444/full1-1.png</full>
+        <thumbnail type="image/png">http://localhost:4444/thumbnail1-1.png</thumbnail>
+        <caption>Caption 1 - 1</caption>
+      </preview>
+      <preview primary="0">
+        <full type="image/png">http://localhost:4444/full2-1.png</full>
+        <thumbnail type="image/png">http://localhost:4444/thumbnail2-1.png</thumbnail>
+        <caption>Caption 2 - 1</caption>
+      </preview>
+    </previews>
+    <rating>4</rating>
+    <learnmore>http://localhost:4444/learnmore1.html</learnmore>
+    <support>http://localhost:4444/support1.html</support>
+    <contribution_data>
+      <link>http://localhost:4444/contribution1.html</link>
+      <suggested_amount currency="USD">$11.11</suggested_amount>
+      <meet_developers>http://localhost:4444/meetDevelopers1.html</meet_developers>
+    </contribution_data>
+    <reviews num="1111">http://localhost:4444/review1.html</reviews>
+    <total_downloads>2222</total_downloads>
+    <weekly_downloads>3333</weekly_downloads>
+    <daily_users>4444</daily_users>
+    <last_updated epoch="1265108645">2010-01-02T03:04:05Z</last_updated>
+    <install size="5555">http://localhost:4444/addons/test_AddonRepository_2.xpi</install>
+  </addon>
+
+  <!-- Fails because guid matches previously successful result -->
+  <addon>
+    <name>FAIL</name>
+    <type id="1">Extension</type>
+    <guid>test1@tests.mozilla.org</guid>
+    <version>1.2</version>
+    <authors><author><name>Test Creator 2</name></author></authors>
+    <status id="4">Public</status>
+    <summary>Add-on with a guid that matches a previously successful result should be ignored.</summary>
+    <compatible_applications>
+      <application>
+        <appID>xpcshell@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <install>http://localhost:4444/test2.xpi</install>
+  </addon>
+
+  <!-- Fails because guid was not requested -->
+  <addon>
+    <name>FAIL</name>
+    <type id="1">Extension</type>
+    <guid>notRequested@tests.mozilla.org</guid>
+    <version>1.3</version>
+    <authors><author><name>Test Creator 3</name></author></authors>
+    <status id="4">Public</status>
+    <summary>Add-on with a guid that wasn't requested should be ignored.</summary>
+    <compatible_applications>
+      <application>
+        <appID>xpcshell@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <install>http://localhost:4444/test3.xpi</install>
+  </addon>
+
+  <!-- Passes even though guid matches already installed add-on,
+       type is unknown, no defined author elements, status is not Public,
+       no compatible applications matched, no installs compatible with OS
+   -->
+  <addon>
+    <name>PASS</name>
+    <type id="9999">Unknown</type>
+    <guid>test_AddonRepository_1@tests.mozilla.org</guid>
+    <version>1.4</version>
+    <status id="9999">Unknown</status>
+    <compatible_applications>
+      <application>
+        <appID>unknown@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <install os="UNKNOWN1">http://localhost:4444/test4.xpi</install>
+    <install os="UNKNOWN2">http://localhost:4444/test4.xpi</install>
+  </addon>
+</searchresults>
+
