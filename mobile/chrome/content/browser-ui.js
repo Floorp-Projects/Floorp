@@ -943,7 +943,7 @@ var BrowserUI = {
         this._edit.blur();
 
         MenuListHelperUI.show({
-          title: "TTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSTTTTTTTTTTTT" || Elements.browserBundle.getString("opensearch.searchWith"),
+          title: Elements.browserBundle.getString("opensearch.searchWith"),
           menupopup: { children: BrowserSearch.engines },
           set selectedIndex(aIndex) {
             let name = this.menupopup.children[aIndex].label;
