@@ -82,6 +82,7 @@ void JS_FASTCALL BindName(VMFrame &f);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetElem(VMFrame &f);
