@@ -171,53 +171,26 @@ var Browser = {
     // to redo all the dragging code.
     this.contentScrollbox = container;
     this.contentScrollboxScroller = {
-      position: new Point(0, 0),
-      pendingTranslation: new Point(0, 0),
-      afterTranslation: new Point(0, 0),
-      flushing: false,
-
-      updateTransition: function() {
-        let tx = -(this.pendingTranslation.x + this.afterTranslation.x);
-        let ty = -(this.pendingTranslation.y + this.afterTranslation.y);
-        getBrowser().style.MozTransform = "translate(" + tx + "px)" + " translateY(" + ty + "px) scale(" + Browser._browserView.getZoomLevel() + ")";
-      },
-
       flush: function() {
-        getBrowser().messageManager.sendAsyncMessage("MozScrollBy", this.pendingTranslation);
-        this.flushing = true;
+        if (!getBrowser().contentWindow) {
+          let frameLoader = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+          getBrowser().messageManager.sendAsyncMessage("MozScrollTo", {
+            x: frameLoader.viewportScrollX,
+            y: frameLoader.viewportScrollY
+          });
+        }
       },
 
       receiveMessage: function(message) {
-        this.flushing = false;
-        this.pendingTranslation.set(this.afterTranslation);
-        this.afterTranslation.set(0, 0);
-        this.position.set(message.json.x, message.json.y);
-        this.updateTransition();
-        if (!this.pendingTranslation.isZero())
-          this.flush();
       },
 
       scrollBy: function(x, y) {
-        let finalPos = this.position.clone().add(this.pendingTranslation).add(this.afterTranslation);
-        let [width, height] = Browser._browserView.getViewportDimensions();
-        let browserWidth = window.innerWidth;
-        let browserHeight = window.innerHeight;
-        x = Math.max(0, Math.min(width - browserWidth, finalPos.x + x)) - finalPos.x;
-        y = Math.max(0, Math.min(height - browserHeight, finalPos.y + y)) - finalPos.y;
-
-        if (x == 0 && y == 0)
-          return;
-
         if (getBrowser().contentWindow) {
           getBrowser().contentWindow.scrollBy(x, y);
         }
         else {
-          if (!this.flushing)
-            this.pendingTranslation.add(x, y);
-          else
-            this.afterTranslation.add(x, y);
-
-          this.updateTransition();
+          let frameLoader = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+          frameLoader.scrollViewportBy(x, y);
         }
       },
 
@@ -226,8 +199,8 @@ var Browser = {
           getBrowser().contentWindow.scrollTo(x, y);
         }
         else {
-          let finalPos = this.position.clone().add(this.pendingTranslation).add(this.afterTranslation);
-          this.scrollBy(x - finalPos.x, y - finalPos.y);
+          let frameLoader = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+          frameLoader.scrollViewportTo(x, y);
         }
       },
 
@@ -237,10 +210,9 @@ var Browser = {
           cwu.getScrollXY(false, scrollX, scrollY);
         }
         else {
-          let finalPos = this.position.clone().add(this.pendingTranslation).add(this.afterTranslation);
-          let [width, height] = Browser._browserView.getViewportDimensions();
-          scrollX.value = Math.max(0, Math.min(width - window.innerWidth, finalPos.x));
-          scrollY.value = Math.max(0, Math.min(height - window.innerHeight, finalPos.y));
+          let frameLoader = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+          scrollX.value = frameLoader.viewportScrollX;
+          scrollY.value = frameLoader.viewportScrollY;
         }
       }
     };
