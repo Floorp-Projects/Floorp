@@ -190,6 +190,16 @@ var Browser = {
         }
         else {
           let frameLoader = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+
+          let [contentWidth, contentHeight] = Browser._browserView.getViewportDimensions();
+          let browserWidth = window.innerWidth;
+          let browserHeight = window.innerHeight;
+
+          x = Math.max(0, Math.min(contentWidth - browserWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX;
+          y = Math.max(0, Math.min(contentHeight - browserHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY;
+
+          if (x == 0 && y == 0)
+            return;
           frameLoader.scrollViewportBy(x, y);
         }
       },
@@ -200,6 +210,14 @@ var Browser = {
         }
         else {
           let frameLoader = getBrowser().QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+
+          let [contentWidth, contentHeight] = Browser._browserView.getViewportDimensions();
+          let browserWidth = window.innerWidth;
+          let browserHeight = window.innerHeight;
+
+          x = Math.max(0, Math.min(contentWidth - browserWidth, x));
+          y = Math.max(0, Math.min(contentHeight - browserHeight, y));
+
           frameLoader.scrollViewportTo(x, y);
         }
       },
