@@ -982,13 +982,13 @@ box[type="documenttab"] {
   line-height: 0;
 }
 
-box[type="documenttab"] .documenttab-canvas {
+.documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
   border: 8px solid #36373b;
   background-color: white;
 }
 
-box[type="documenttab"][selected="true"] .documenttab-canvas {
+.documenttab-canvas[selected="true"] {
   border: 8px solid;
   -moz-border-radius: 3px;
   -moz-border-top-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
@@ -997,17 +997,17 @@ box[type="documenttab"][selected="true"] .documenttab-canvas {
   -moz-border-left-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
 }
 
-box[type="documenttab"] .documenttab-close {
+.documenttab-close {
   width: 40px;
   height: 40px;
   list-style-image: url("chrome://browser/skin/images/close-default-40.png");
 }
 
-box[type="documenttab"] hbox:hover:active .documenttab-close {
+hbox:hover:active > .documenttab-close {
   list-style-image: url("chrome://browser/skin/images/close-active-40.png");
 }
 
-box[type="documenttab"]:only-child .documenttab-close {
+box[type="documenttab"]:only-child > stack > hbox > .documenttab-close {
   display: none;
 }
 
