@@ -496,7 +496,6 @@ toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-border-start-style: none;
-  -moz-appearance: none !important; /* overriding #TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker */
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(ltr),
