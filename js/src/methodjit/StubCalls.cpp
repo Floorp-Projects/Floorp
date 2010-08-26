@@ -308,6 +308,23 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
 }
 
 void JS_FASTCALL
+stubs::SetGlobalNameDumb(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+
+    Value rval = f.regs.sp[-1];
+    Value &lref = f.regs.sp[-2];
+    JSObject *obj = ValueToObject(cx, &lref);
+    if (!obj)
+        THROW();
+    jsid id = ATOM_TO_JSID(atom);
+    if (!obj->setProperty(cx, id, &rval))
+        THROW();
+
+    f.regs.sp[-2] = f.regs.sp[-1];
+}
+
+void JS_FASTCALL
 stubs::SetGlobalName(VMFrame &f, JSAtom *atom)
 {
     SetName(f, atom);

@@ -767,6 +767,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_INCGNAME)
             jsop_gnameinc(op, stubs::IncGlobalName, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_INCGNAME)
 
           BEGIN_CASE(JSOP_INCPROP)
@@ -785,6 +786,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DECGNAME)
             jsop_gnameinc(op, stubs::DecGlobalName, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_DECGNAME)
 
           BEGIN_CASE(JSOP_DECPROP)
@@ -803,6 +805,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GNAMEINC)
             jsop_gnameinc(op, stubs::GlobalNameInc, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_GNAMEINC)
 
           BEGIN_CASE(JSOP_PROPINC)
@@ -821,6 +824,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GNAMEDEC)
             jsop_gnameinc(op, stubs::GlobalNameDec, fullAtomIndex(PC));
+            break;
           END_CASE(JSOP_GNAMEDEC)
 
           BEGIN_CASE(JSOP_PROPDEC)
@@ -2947,10 +2951,88 @@ void
 mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
+#if defined JS_MONOIC
+    jsbytecode *next = &PC[JSOP_GNAMEINC_LENGTH];
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
+    int amt = (op == JSOP_GNAMEINC || op == JSOP_INCGNAME) ? -1 : 1;
+
+    if (pop || (op == JSOP_INCGNAME || op == JSOP_DECGNAME)) {
+        /* These cases are easy, the original value is not observed. */
+
+        jsop_getgname(index);
+        // V
+
+        frame.push(Int32Value(amt));
+        // V 1
+
+        /* Use sub since it calls ValueToNumber instead of string concat. */
+        jsop_binary(JSOP_SUB, stubs::Sub);
+        // N+1
+
+        jsop_bindgname();
+        // V+1 OBJ
+
+        frame.dup2();
+        // V+1 OBJ V+1 OBJ
+
+        frame.shift(-3);
+        // OBJ OBJ V+1
+
+        frame.shift(-1);
+        // OBJ V+1
+
+        jsop_setgname(index);
+        // V+1
+
+        if (pop)
+            frame.pop();
+    } else {
+        /* The pre-value is observed, making this more tricky. */
+
+        jsop_getgname(index);
+        // V
+
+        jsop_pos();
+        // N
+
+        frame.dup();
+        // N N
+
+        frame.push(Int32Value(-amt));
+        // N N 1
+
+        jsop_binary(JSOP_ADD, stubs::Add);
+        // N N+1
+
+        jsop_bindgname();
+        // N N+1 OBJ
+
+        frame.dup2();
+        // N N+1 OBJ N+1 OBJ
+
+        frame.shift(-3);
+        // N OBJ OBJ N+1
+
+        frame.shift(-1);
+        // N OBJ N+1
+
+        jsop_setgname(index);
+        // N N+1
+
+        frame.pop();
+        // N
+    }
+
+    if (pop)
+        PC += JSOP_POP_LENGTH;
+#else
     prepareStubCall(Uses(0));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     stubCall(stub);
     frame.pushSynced();
+#endif
+
+    PC += JSOP_GNAMEINC_LENGTH;
 }
 
 void

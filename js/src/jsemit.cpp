@@ -198,6 +198,10 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
           case JSOP_NAMEDEC:
           case JSOP_INCNAME:
           case JSOP_DECNAME:
+          case JSOP_GNAMEINC:
+          case JSOP_GNAMEDEC:
+          case JSOP_INCGNAME:
+          case JSOP_DECGNAME:
             depth += 2;
             break;
           default:
