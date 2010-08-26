@@ -79,6 +79,7 @@ static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("Compre
 // Tweakable progressive decoding parameters
 static PRUint32 gDecodeBytesAtATime = 200000;
 static PRUint32 gMaxMSBeforeYield = 400;
+static PRUint32 gMaxBytesForSyncDecode = 150000;
 
 void
 RasterImage::SetDecodeBytesAtATime(PRUint32 aBytesAtATime)
@@ -90,7 +91,11 @@ RasterImage::SetMaxMSBeforeYield(PRUint32 aMaxMS)
 {
   gMaxMSBeforeYield = aMaxMS;
 }
-
+void
+RasterImage::SetMaxBytesForSyncDecode(PRUint32 aMaxBytes)
+{
+  gMaxBytesForSyncDecode = aMaxBytes;
+}
 
 /* We define our own error checking macros here for 2 reasons:
  *
@@ -2338,6 +2343,10 @@ RasterImage::RequestDecode()
   // If we've read all the data we have, we're done
   if (mBytesDecoded == mSourceData.Length())
     return NS_OK;
+
+  // If it's a smallish image, it's not worth it to do things async
+  if (!mDecoded && !mInDecoder && mHasSourceData && (mSourceData.Length() < gMaxBytesForSyncDecode))
+    return SyncDecode();
 
   // If we get this far, dispatch the worker. We do this instead of starting
   // any immediate decoding to guarantee that all our decode notifications are
