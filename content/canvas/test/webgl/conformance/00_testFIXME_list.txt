@@ -72,7 +72,7 @@ texture-formats-test.html
 texture-npot.html
 texture-transparent-pixels-initialized.html
 triangle.html
-uniform-location.html
+#uniform-location.html
 uniform-samplers-test.html
 uninitialized-test.html
 viewport-unchanged-upon-resize.html
