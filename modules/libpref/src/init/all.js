@@ -3160,6 +3160,9 @@ pref("image.mem.decode_bytes_at_a_time", 200000);
 // The longest time we can spend in an iteration of an async decode
 pref("image.mem.max_ms_before_yield", 400);
 
+// The maximum source data size for which we auto sync decode
+pref("image.mem.max_bytes_for_sync_decode", 150000);
+
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
 pref("webgl.shader_validator", true);
