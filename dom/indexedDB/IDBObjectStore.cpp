@@ -146,6 +146,25 @@ public:
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 };
 
+class ClearHelper : public AsyncConnectionHelper
+{
+public:
+  ClearHelper(IDBTransaction* aTransaction,
+              IDBRequest* aRequest,
+              PRInt64 aObjectStoreID,
+              bool aAutoIncrement)
+  : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
+    mAutoIncrement(aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+
+protected:
+  // In-params.
+  const PRInt64 mOSID;
+  const bool mAutoIncrement;
+};
+
 class OpenCursorHelper : public AsyncConnectionHelper
 {
 public:
@@ -920,7 +939,16 @@ IDBObjectStore::Add(const jsval &aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
+  jsval keyval;
+  if (aOptionalArgCount >= 1) {
+    keyval = aKey;
+    if (mAutoIncrement && JSVAL_IS_NULL(keyval)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+  }
+  else {
+    keyval = JSVAL_VOID;
+  }
 
   nsString jsonValue;
   Key key;
@@ -1026,6 +1054,32 @@ IDBObjectStore::Remove(nsIVariant* aKey,
   nsRefPtr<RemoveHelper> helper =
     new RemoveHelper(mTransaction, request, mId, key, !!mAutoIncrement);
   rv = helper->DispatchToTransactionPool();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBObjectStore::Clear(nsIIDBRequest** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mMode != nsIIDBTransaction::READ_WRITE) {
+    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  }
+
+  nsRefPtr<IDBRequest> request =
+    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<ClearHelper> helper =
+    new ClearHelper(mTransaction, request, mId, !!mAutoIncrement);
+  nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -1604,6 +1658,36 @@ RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
   else {
     NS_NOTREACHED("Unknown key type!");
   }
+  return OK;
+}
+
+PRUint16
+ClearHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_PRECONDITION(aConnection, "Passed a null connection!");
+
+  nsCString table;
+  if (mAutoIncrement) {
+    table.AssignLiteral("ai_object_data");
+  }
+  else {
+    table.AssignLiteral("object_data");
+  }
+
+  nsCString query = NS_LITERAL_CSTRING("DELETE FROM ") + table +
+                    NS_LITERAL_CSTRING(" WHERE object_store_id = :osid");
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
   return OK;
 }
 

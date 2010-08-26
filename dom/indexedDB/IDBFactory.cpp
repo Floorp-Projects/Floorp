@@ -61,7 +61,7 @@
 #include "IDBKeyRange.h"
 #include "LazyIdleThread.h"
 
-#define DB_SCHEMA_VERSION 2
+#define DB_SCHEMA_VERSION 3
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -165,10 +165,9 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `ai_object_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE ai_object_data ("
-      "id INTEGER, "
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
       "object_store_id INTEGER NOT NULL, "
       "data TEXT NOT NULL, "
-      "PRIMARY KEY (id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
     ");"
