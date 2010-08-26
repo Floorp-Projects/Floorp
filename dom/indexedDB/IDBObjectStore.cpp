@@ -76,12 +76,11 @@ public:
             const nsAString& aValue,
             const Key& aKey,
             bool aAutoIncrement,
-            bool aCreate,
             bool aOverwrite,
             nsTArray<IndexUpdateInfo>& aIndexUpdateInfo)
   : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
     mKeyPath(aKeyPath), mValue(aValue), mKey(aKey),
-    mAutoIncrement(aAutoIncrement), mCreate(aCreate), mOverwrite(aOverwrite)
+    mAutoIncrement(aAutoIncrement), mOverwrite(aOverwrite)
   {
     mIndexUpdateInfo.SwapElements(aIndexUpdateInfo);
   }
@@ -101,7 +100,6 @@ private:
   nsString mValue;
   Key mKey;
   const bool mAutoIncrement;
-  const bool mCreate;
   const bool mOverwrite;
   nsTArray<IndexUpdateInfo> mIndexUpdateInfo;
 };
@@ -943,7 +941,7 @@ IDBObjectStore::Add(const jsval &aValue,
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, true, false, updateInfo);
+                  !!mAutoIncrement, false, updateInfo);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -952,11 +950,11 @@ IDBObjectStore::Add(const jsval &aValue,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Modify(const jsval &aValue,
-                       const jsval &aKey,
-                       JSContext* aCx,
-                       PRUint8 aOptionalArgCount,
-                       nsIIDBRequest** _retval)
+IDBObjectStore::Put(const jsval &aValue,
+                    const jsval &aKey,
+                    JSContext* aCx,
+                    PRUint8 aOptionalArgCount,
+                    nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -989,53 +987,7 @@ IDBObjectStore::Modify(const jsval &aValue,
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, false, true, updateInfo);
-  rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBObjectStore::AddOrModify(const jsval &aValue,
-                            const jsval &aKey,
-                            JSContext* aCx,
-                            PRUint8 aOptionalArgCount,
-                            nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (mMode != nsIIDBTransaction::READ_WRITE) {
-    return NS_ERROR_OBJECT_IS_IMMUTABLE;
-  }
-
-  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
-
-  nsString jsonValue;
-  Key key;
-  nsTArray<IndexUpdateInfo> updateInfo;
-
-  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (key.IsUnset() || key.IsNull()) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
-
-  nsRefPtr<AddHelper> helper =
-    new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
-                  !!mAutoIncrement, true, true, updateInfo);
+                  !!mAutoIncrement, true, updateInfo);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1351,7 +1303,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   // Now we add it to the database (or update, depending on our variables).
-  stmt = mTransaction->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
+  stmt = mTransaction->AddStatement(true, mayOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -1381,7 +1333,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   rv = stmt->Execute();
   if (NS_FAILED(rv)) {
-    if (mCreate && mayOverwrite && rv == NS_ERROR_STORAGE_CONSTRAINT) {
+    if (mayOverwrite && rv == NS_ERROR_STORAGE_CONSTRAINT) {
       scoper.Abandon();
 
       stmt = mTransaction->AddStatement(false, true, mAutoIncrement);
@@ -1419,7 +1371,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   // If we are supposed to generate a key, get the new id.
-  if (mAutoIncrement && mCreate && !mOverwrite) {
+  if (mAutoIncrement && !mOverwrite) {
 #ifdef DEBUG
     PRInt64 oldKey = unsetKey ? 0 : mKey.IntValue();
 #endif
