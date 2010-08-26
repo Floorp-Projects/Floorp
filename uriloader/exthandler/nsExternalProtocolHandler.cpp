@@ -247,6 +247,12 @@ NS_IMETHODIMP nsExtProtocolChannel::SetContentCharset(const nsACString &aContent
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::GetContentDisposition(nsACString &aContentDisposition)
+{
+  aContentDisposition.Truncate();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::GetContentLength(PRInt64 * aContentLength)
 {
   *aContentLength = -1;
