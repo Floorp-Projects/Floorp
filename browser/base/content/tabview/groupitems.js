@@ -723,19 +723,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: setNewTabButtonBounds
-  // Used for positioning the "new tab" button in the "new tabs" groupItem.
-  setNewTabButtonBounds: function(box, immediately) {
-    if (!immediately)
-      this.$ntb.animate(box.css(), {
-        duration: 320,
-        easing: "tabviewBounce"
-      });
-    else
-      this.$ntb.css(box.css());
-  },
-
-  // ----------
   // Function: hideExpandControl
   // Hide the control which expands a stacked groupItem into a quick-look view.
   hideExpandControl: function() {
