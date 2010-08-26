@@ -69,6 +69,7 @@ ExternalHelperAppParent::ExternalHelperAppParent(
 void
 ExternalHelperAppParent::Init(TabParent *parent,
                               const nsCString& aMimeContentType,
+                              const nsCString& aContentDisposition,
                               const PRBool& aForceSave)
 {
   nsHashPropertyBag::Init();
@@ -82,6 +83,7 @@ ExternalHelperAppParent::Init(TabParent *parent,
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
   NS_ASSERTION(helperAppService, "No Helper App Service!");
 
+  mContentDisposition = aContentDisposition;
   helperAppService->DoContent(aMimeContentType, this, ir,
                               aForceSave, getter_AddRefs(mListener));
 }
@@ -298,7 +300,7 @@ ExternalHelperAppParent::SetContentCharset(const nsACString& aContentCharset)
 NS_IMETHODIMP
 ExternalHelperAppParent::GetContentDisposition(nsACString& aContentDisposition)
 {
-  aContentDisposition.Truncate();
+  aContentDisposition = mContentDisposition;
   return NS_OK;
 }
 
