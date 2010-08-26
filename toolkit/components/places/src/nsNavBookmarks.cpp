@@ -2497,7 +2497,7 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   PRInt64 placeId;
-  nsresult rv = history->GetUrlIdFor(aURI, &placeId, PR_TRUE);
+  nsresult rv = history->GetUrlIdFor(aURI, &placeId, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!placeId) {
     // This URI is unknown, just return null.
