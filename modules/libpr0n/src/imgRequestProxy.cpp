@@ -67,8 +67,7 @@ imgRequestProxy::imgRequestProxy() :
   mPrincipal(nsnull),
   mListener(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
-  mLocksHeld(0),
-  mDeferredLocks(0),
+  mLockCount(0),
   mCanceled(PR_FALSE),
   mIsInLoadGroup(PR_FALSE),
   mListenerIsStrongRef(PR_FALSE),
@@ -86,8 +85,8 @@ imgRequestProxy::~imgRequestProxy()
   NS_PRECONDITION(!mListener, "Someone forgot to properly cancel this request!");
 
   // Unlock the image the proper number of times if we're holding locks on it.
-  // Note that UnlockImage() decrements mLocksHeld each time it's called.
-  while (mLocksHeld || mDeferredLocks)
+  // Note that UnlockImage() decrements mLockCount each time it's called.
+  while (mLockCount)
     UnlockImage();
 
   // Explicitly set mListener to null to ensure that the RemoveProxy
@@ -145,9 +144,9 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   NS_PRECONDITION(mOwner, "Cannot ChangeOwner on a proxy without an owner!");
 
   // If we're holding locks, unlock the old image.
-  // Note that UnlockImage decrements mLocksHeld each time it's called.
-  PRUint32 oldLockCount = mImage ? mLocksHeld : mDeferredLocks;
-  while (mLocksHeld || mDeferredLocks)
+  // Note that UnlockImage decrements mLockCount each time it's called.
+  PRUint32 oldLockCount = mLockCount;
+  while (mLockCount)
     UnlockImage();
 
   // Even if we are cancelled, we MUST change our image, because the image
@@ -317,41 +316,22 @@ imgRequestProxy::RequestDecode()
 NS_IMETHODIMP
 imgRequestProxy::LockImage()
 {
-  NS_ABORT_IF_FALSE(mImage || mLocksHeld == 0,
-                    "have locks without an image to have locked");
-  NS_ABORT_IF_FALSE(!mImage || mDeferredLocks == 0,
-                    "have deferred locks that should have been converted "
-                    "into actual locks, since we have an image");
-  if (!mImage) {
-    // mOwner hasn't instantiated its image yet.
-    mDeferredLocks++;
-    return NS_OK;
-  }
-
-  mLocksHeld++;
-  return mImage->LockImage();
+  mLockCount++;
+  if (mImage)
+    return mImage->LockImage();
+  return NS_OK;
 }
 
 /* void unlockImage (); */
 NS_IMETHODIMP
 imgRequestProxy::UnlockImage()
 {
-  NS_ABORT_IF_FALSE((mDeferredLocks > 0 && !mImage) ||
-                    (mLocksHeld > 0 && mImage),
-                    "calling unlock but no locks!");
-  NS_ABORT_IF_FALSE(mImage || mLocksHeld == 0,
-                    "have locks without an image to have locked");
-  NS_ABORT_IF_FALSE(!mImage || mDeferredLocks == 0,
-                    "have deferred locks that should have been converted "
-                    "into actual locks, since we have an image");
+  NS_ABORT_IF_FALSE(mLockCount > 0, "calling unlock but no locks!");
 
-  if (!mImage) {
-    mDeferredLocks--;
-    return NS_OK;
-  }
-
-  mLocksHeld--;
-  return mImage->UnlockImage();
+  mLockCount--;
+  if (mImage)
+    return mImage->UnlockImage();
+  return NS_OK;
 }
 
 /* void suspend (); */
@@ -800,13 +780,9 @@ imgRequestProxy::SetImage(Image* aImage)
 
   mImage = aImage;
 
-  // Convert deferred locks into real locks.
-  NS_ABORT_IF_FALSE(!mLocksHeld, "Can't be holding locks without any image");
-  for (PRUint32 i = 0; i < mDeferredLocks; i++) {
+  // Apply any locks we have
+  for (PRUint32 i = 0; i < mLockCount; ++i)
     mImage->LockImage();
-  }
-  mLocksHeld = mDeferredLocks;
-  mDeferredLocks = 0;
 }
 
 imgStatusTracker&

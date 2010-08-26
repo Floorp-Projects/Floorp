@@ -219,8 +219,7 @@ private:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
-  PRUint32    mLocksHeld;
-  PRUint32    mDeferredLocks;
+  PRUint32    mLockCount;
   PRPackedBool mCanceled;
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;
