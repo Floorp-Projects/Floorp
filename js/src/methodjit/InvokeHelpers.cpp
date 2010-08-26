@@ -237,7 +237,6 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
     newfp->setBlockChain(NULL);
-    JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->setThisValue(vp[1]);
     JS_ASSERT(!fp->hasIMacroPC());
 
@@ -525,7 +524,6 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->setScopeChain(funobj->getParent());
     newfp->flags = flags;
     newfp->setBlockChain(NULL);
-    JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
     newfp->setThisValue(vp[1]);
     newfp->setHookData(NULL);
     JS_ASSERT(!fp->hasIMacroPC());

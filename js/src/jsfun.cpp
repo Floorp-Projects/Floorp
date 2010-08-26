@@ -1728,9 +1728,14 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isFunction());
 
     jsval v;
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    if (!JS_LookupPropertyById(cx, obj, id, &v))
-        return false;
+    jsid id;
+
+    if (!obj->getFunctionPrivate()->isBound()) {
+        id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+        if (!JS_LookupPropertyById(cx, obj, id, &v))
+            return false;
+    }
+
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     if (!JS_LookupPropertyById(cx, obj, id, &v))
         return false;
@@ -1759,7 +1764,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (!JSID_IS_ATOM(id))
         return JS_TRUE;
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction *fun = obj->getFunctionPrivate();
 
     /*
      * No need to reflect fun.prototype in 'fun.prototype = ... '. Assert that
@@ -1784,6 +1789,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
          * to find a prototype for that will recur back here _ad perniciem_.
          */
         if (fun->atom == CLASS_ATOM(cx, Object))
+            return JS_TRUE;
+
+        /* ES5 15.3.4.5: bound functions don't have a prototype property. */
+        if (fun->isBound())
             return JS_TRUE;
 
         /*
@@ -1852,7 +1861,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             PropertyOp getter, setter;
             uintN attrs = JSPROP_PERMANENT;
-            if (fun->inStrictMode()) {
+            if (fun->inStrictMode() || fun->isBound()) {
                 JSObject *throwTypeError = obj->getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);
@@ -2077,6 +2086,12 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 static JSBool
 fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
+    while (obj->isFunction()) {
+        if (!obj->getFunctionPrivate()->isBound())
+            break;
+        obj = obj->getBoundFunctionTarget();
+    }
+
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     Value pval;
     if (!obj->getProperty(cx, id, &pval))
@@ -2425,6 +2440,200 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+namespace {
+Native
+FastNativeToNative(FastNative fn)
+{
+    return reinterpret_cast<Native>(fn);
+}
+
+JSBool
+CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
+}
+
+inline bool
+JSFunction::isBound() const
+{
+    return isFastNative() && u.n.native == FastNativeToNative(CallOrConstructBoundFunction);
+}
+
+inline bool
+JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
+                            const Value *args, uintN argslen)
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(getFunctionPrivate()->isBound());
+
+    fslots[JSSLOT_BOUND_FUNCTION_THIS] = thisArg;
+    fslots[JSSLOT_BOUND_FUNCTION_ARGS_COUNT].setPrivateUint32(argslen);
+    if (argslen != 0) {
+        if (!js_EnsureReservedSlots(cx, this, argslen))
+            return false;
+
+        JS_ASSERT(dslots);
+        JS_ASSERT(dslots[-1].toPrivateUint32() >= argslen);
+        memcpy(&dslots[0], args, argslen * sizeof(Value));
+    }
+    return true;
+}
+
+inline JSObject *
+JSObject::getBoundFunctionTarget() const
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(getFunctionPrivate()->isBound());
+
+    /* Bound functions abuse |parent| to store their target function. */
+    return getParent();
+}
+
+inline const js::Value &
+JSObject::getBoundFunctionThis() const
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(getFunctionPrivate()->isBound());
+
+    return fslots[JSSLOT_BOUND_FUNCTION_THIS];
+}
+
+inline const js::Value *
+JSObject::getBoundFunctionArguments(uintN &argslen) const
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(getFunctionPrivate()->isBound());
+
+    argslen = fslots[JSSLOT_BOUND_FUNCTION_ARGS_COUNT].toPrivateUint32();
+    JS_ASSERT_IF(argslen > 0, dslots);
+    JS_ASSERT_IF(argslen > 0, dslots[-1].toPrivateUint32() >= argslen);
+    return &dslots[0];
+}
+
+namespace {
+
+/* ES5 15.3.4.5.1 and 15.3.4.5.2. */
+JSBool
+CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj = &vp[0].toObject();
+    JS_ASSERT(obj->isFunction());
+    JS_ASSERT(obj->getFunctionPrivate()->isBound());
+
+    LeaveTrace(cx);
+
+    bool constructing = vp[1].isMagic(JS_FAST_CONSTRUCTOR);
+
+    /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
+    uintN argslen;
+    const Value *boundArgs = obj->getBoundFunctionArguments(argslen);
+
+    if (argc + argslen > JS_ARGS_LENGTH_MAX) {
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    /* 15.3.4.5.1 step 3, 15.3.4.5.2 step 1. */
+    JSObject *target = obj->getBoundFunctionTarget();
+
+    /* 15.3.4.5.1 step 2. */
+    const Value &boundThis = obj->getBoundFunctionThis();
+
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc + argslen, args))
+        return false;
+
+    /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
+    memcpy(args.argv(), boundArgs, argslen * sizeof(Value));
+    memcpy(args.argv() + argslen, vp + 2, argc * sizeof(Value));
+
+    /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
+    args.callee().setObject(*target);
+
+    if (!constructing) {
+        /*
+         * FIXME Pass boundThis directly without boxing!  This will go away
+         *       very shortly when this-boxing only occurs for non-strict
+         *       functions, callee-side, in bug 514570.
+         */
+        JSObject *boundThisObj;
+        if (boundThis.isObjectOrNull()) {
+            boundThisObj = boundThis.toObjectOrNull();
+        } else {
+            if (!js_ValueToObjectOrNull(cx, boundThis, &boundThisObj))
+                return false;
+        }
+
+        args.thisv() = ObjectOrNullValue(boundThisObj);
+    }
+
+    if (constructing ? !InvokeConstructor(cx, args) : !Invoke(cx, args, 0))
+        return false;
+
+    *vp = args.rval();
+    return true;
+}
+
+/* ES5 15.3.4.5. */
+JSBool
+fun_bind(JSContext *cx, uintN argc, Value *vp)
+{
+    /* Step 1. */
+    JSObject *target = ComputeThisFromVp(cx, vp);
+    if (!target)
+        return false;
+
+    /* Step 2. */
+    if (!target->wrappedObject(cx)->isCallable()) {
+        if (JSString *str = js_ValueToString(cx, vp[1])) {
+            if (const char *bytes = js_GetStringBytes(cx, str)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_INCOMPATIBLE_PROTO,
+                                     js_Function_str, "bind", bytes);
+            }
+        }
+        return false;
+    }
+
+    /* Step 3. */
+    Value *args = NULL;
+    uintN argslen = 0;
+    if (argc > 1) {
+        args = vp + 3;
+        argslen = argc - 1;
+    }
+
+    /* Steps 15-16. */
+    uintN length = 0;
+    if (target->isFunction()) {
+        uintN nargs = target->getFunctionPrivate()->nargs;
+        if (nargs > argslen)
+            length = nargs - argslen;
+    }
+
+    /* Step 4-6, 10-11. */
+    JSAtom *name = target->isFunction() ? target->getFunctionPrivate()->atom : NULL;
+
+    /* NB: Bound functions abuse |parent| to store their target. */
+    JSObject *funobj =
+        js_NewFunction(cx, NULL, FastNativeToNative(CallOrConstructBoundFunction), length,
+                       JSFUN_FAST_NATIVE | JSFUN_FAST_NATIVE_CTOR, target, name);
+    if (!funobj)
+        return false;
+
+    /* Steps 7-9. */
+    Value thisArg = argc >= 1 ? vp[2] : UndefinedValue();
+    if (!funobj->initBoundFunction(cx, thisArg, args, argslen))
+        return false;
+
+    /* Steps 17, 19-21 are handled by fun_resolve. */
+    /* Step 18 is the default for new functions. */
+
+    /* Step 22. */
+    vp->setObject(*funobj);
+    return true;
+}
+
+}
+
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
@@ -2432,6 +2641,7 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN(js_apply_str,      js_fun_apply,   2,0),
     JS_FN(js_call_str,       js_fun_call,    1,0),
+    JS_FN("bind",            fun_bind,       1,0),
     JS_FS_END
 };
 
