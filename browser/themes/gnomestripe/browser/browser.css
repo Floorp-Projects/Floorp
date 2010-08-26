@@ -1080,7 +1080,7 @@ toolbar[iconsize="small"] #fullscreen-button {
   color: -moz-nativehyperlinktext;
 }
 
-richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
 }
 
