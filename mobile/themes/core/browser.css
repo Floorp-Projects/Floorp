@@ -869,8 +869,6 @@ autocompleteresult.noresults > .autocomplete-item-label {
   border-right-width: 0;
 }
 
-#awesome-header > toolbarbutton:hover,
-#awesome-header > toolbarbutton:hover,
 #awesome-header > toolbarbutton:hover:active,
 #awesome-header > toolbarbutton[checked="true"] {
   border-color: #36373b !important;
