@@ -108,7 +108,6 @@ AnimatedZoom.createCanvas = function(aRemote) {
 };
 
 AnimatedZoom.prototype.setupCanvas = function() {
-{
   return;
 
   // stop live rendering during zooming
