@@ -582,7 +582,6 @@ nsBrowserContentHandler.prototype = {
     var haveUpdateSession = false;
     try {
       let override = needHomepageOverride(prefb);
-      Components.utils.reportError("OVERRIDE: " + override);
       if (override != OVERRIDE_NONE) {
         // Setup the default search engine to about:home page.
         AboutHomeUtils.loadDefaultSearchEngine();
