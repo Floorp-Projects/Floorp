@@ -751,7 +751,19 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
     JSStackFrame *checkFp = fp;
 #endif
 
-    Value *stackLimit = cx->stack().makeStackLimit(reinterpret_cast<Value*>(fp));
+    Value *fpAsVp = reinterpret_cast<Value*>(fp);
+    StackSpace &stack = cx->stack();
+    Value *stackLimit = stack.makeStackLimit(fpAsVp);
+
+    /*
+     * We ensure that there is always enough space to speculatively create a
+     * stack frame. By passing nslots = 0, we ensure only sizeof(JSStackFrame).
+     */
+    if (fpAsVp + VALUES_PER_STACK_FRAME >= stackLimit &&
+        !stack.ensureSpace(cx, fpAsVp, cx->regs->sp, stackLimit, 0)) {
+        js_ReportOutOfScriptQuota(cx);
+        return false;
+    }
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
     JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit, safePoint);
@@ -811,6 +823,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 #endif
         script->jit->execPool->release();
         script->jit->execPool = NULL;
+
         // Releasing the execPool takes care of releasing the code.
         script->ncode = NULL;
 
@@ -829,6 +842,27 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     script->jit = NULL;
 }
 
+void
+mjit::TraceScriptCache(JSTracer *trc, JSScript *script)
+{
+#ifdef JS_MONOIC
+    uint32 numCallICs = script->jit->nCallICs;
+    for (uint32 i = 0; i < numCallICs; i++) {
+        ic::CallICInfo &ic = script->callICs[i];
+        if (ic.fastGuardedObject) {
+            JS_SET_TRACING_NAME(trc, "callIC fun");
+            Mark(trc, ic.fastGuardedObject, JSTRACE_OBJECT);
+        }
+        if (ic.fastGuardedNative) {
+            JS_SET_TRACING_NAME(trc, "callIC native");
+            Mark(trc, ic.fastGuardedNative, JSTRACE_OBJECT);
+        }
+        if (ic.isConstantThis)
+            MarkValue(trc, ic.constantThis, "callIC this");
+    }
+#endif
+}
+
 #ifdef JS_METHODJIT_PROFILE_STUBS
 void JS_FASTCALL
 mjit::ProfileStubCall(VMFrame &f)
@@ -842,6 +876,6 @@ bool
 VMFrame::slowEnsureSpace(uint32 nslots)
 {
     return cx->stack().ensureSpace(cx, reinterpret_cast<Value*>(entryFp), regs.sp,
-                                   stackLimit, nslots);
+                                   stackLimit, nslots + VALUES_PER_STACK_FRAME);
 }
 
