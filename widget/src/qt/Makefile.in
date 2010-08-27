@@ -126,4 +126,4 @@ LOCAL_INCLUDES	+= \
 		   $(NULL)
 ifdef MOZ_X11
 INCLUDES   	+= -I$(srcdir)/../shared/x11
-endif //MOZ_X11
+endif
