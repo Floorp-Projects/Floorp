@@ -26,6 +26,7 @@
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
+ *   Jim Mathies (jmathies@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,21 +104,7 @@ statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
 }
 
-/* App menu button */
-
-%ifndef WINSTRIPE_AERO
-#appmenu-button-container {
-  background: ActiveCaption;
-}
-
-#appmenu-button-container:-moz-window-inactive {
-  background: InactiveCaption;
-}
-%endif
-
-#appmenu-button-container {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
-}
+/* ::::: app menu button ::::: */
 
 #appmenu-button {
   -moz-appearance: none;
@@ -280,24 +267,75 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0 16px 16px 0);
 }
 
-/* XXX: stop-gap until the button can be drawn in the title bar */
-%ifdef WINSTRIPE_AERO
-@media not all and (-moz-windows-compositor) {
-%endif
-  #main-window[tabsontop="true"] > #appmenu-button-container > #appmenu-button {
-    position: relative !important;
-    margin-bottom: -1.6em !important;
-  }
-  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] {
-    position: relative !important;
-    background-color: -moz-dialog !important;
-  }
-  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar:not([inFullscreen]) {
-    -moz-padding-start: 10em !important;
-  }
-%ifdef WINSTRIPE_AERO
+/* ::::: titlebar ::::: */
+
+#titlebar {
+  -moz-appearance: -moz-window-titlebar;
+  /* we only need to the middle section, hide the edges of the
+  theme background beyond the window frame. */
+  margin-left: -15px;
+  margin-right: -15px;
 }
+
+#main-window[sizemode="maximized"] > #titlebar {
+  -moz-appearance: -moz-window-titlebar-maximized;
+}
+
+#titlebar-content {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+/* aesthetic - push the fx button off the top window border */
+@media not all and (-moz-windows-classic) {
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+%ifndef WINSTRIPE_AERO
+    margin-top: 1px;
+%else
+    margin-top: 2px;
 %endif
+  }
+}
+
+#titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box;
+  -moz-box-align: start;
+}
+
+#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box-maximized;
+}
+
+/* titlebar command buttons */
+
+#titlebar-min {
+  -moz-appearance: -moz-window-button-minimize;
+}
+
+#titlebar-max {
+  -moz-appearance: -moz-window-button-maximize;
+}
+
+#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox > #titlebar-max {
+  -moz-appearance: -moz-window-button-restore;
+}
+
+#titlebar-close {
+  -moz-appearance: -moz-window-button-close;
+}
+
+@media not all and (-moz-windows-classic) {
+  #titlebar-min,
+  #titlebar-max {
+    -moz-margin-end: 2px;
+  }
+}
+
+@media all and (-moz-windows-classic) {
+  #titlebar-close {
+    -moz-margin-start: 2px;
+  }
+}
 
 /* ::::: bookmark buttons ::::: */
 
@@ -550,7 +588,11 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   -moz-appearance: toolbarbutton;
+%ifdef WINSTRIPE_AERO
+  margin: -1px 0;
+%else
   margin: 0;
+%endif
   padding: 0 3px;
   border: none !important;
   color: inherit !important;
@@ -558,6 +600,14 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   text-shadow: inherit !important;
   -moz-box-shadow: none !important;
 }
+
+%ifdef WINSTRIPE_AERO
+/* resetting the margin from the above rule */
+.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  margin: 0 !important;
+}
+%endif
 
 #TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
@@ -1085,7 +1135,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 %endif
 
-richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
 }
 
@@ -1402,7 +1452,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-image-region: rect(0, 15px, 17px, 0);
+%ifdef WINSTRIPE_AERO
+  margin: -1px 0;
+%else
   margin: 0;
+%endif
   padding-top: 0;
   padding-bottom: 0;
 }

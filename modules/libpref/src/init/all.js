@@ -997,6 +997,7 @@ pref("security.xpconnect.plugin.unrestricted", true);
 pref("security.dialog_enable_delay", 2000);
 
 pref("security.csp.enable", true);
+pref("security.csp.debug", false);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
@@ -3153,7 +3154,8 @@ pref("image.mem.min_discard_timeout_ms", 10000);
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
 pref("webgl.shader_validator", true);
-pref("webgl.software_render", false);
+pref("webgl.force_osmesa", false);
+pref("webgl.mochitest_native_gl", false);
 pref("webgl.osmesalib", "");
 
 #ifdef XP_WIN

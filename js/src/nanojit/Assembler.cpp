@@ -351,14 +351,21 @@ namespace nanojit
     void Assembler::resourceConsistencyCheck()
     {
         NanoAssert(!error());
-
 #ifdef NANOJIT_IA32
+        // Within the expansion of a single LIR instruction, we may use the x87
+        // stack for unmanaged temporaries.  Otherwise, we do not use the x87 stack
+        // as such, but use the top element alone as a single allocatable FP register.
+        // Compensation code must be inserted to keep the stack balanced and avoid
+        // overflow, and the mechanisms for this are rather fragile and IA32-specific.
+        // The predicate below should hold between any pair of instructions within
+        // a basic block, at labels, and just after a conditional branch.  Currently,
+        // we enforce this condition between all pairs of instructions, but this is
+        // overly restrictive, and would fail if we did not generate unreachable x87
+        // stack pops following unconditional branches.
         NanoAssert((_allocator.active[FST0] && _fpuStkDepth == -1) ||
-            (!_allocator.active[FST0] && _fpuStkDepth == 0));
+                   (!_allocator.active[FST0] && _fpuStkDepth == 0));
 #endif
-
         _activation.checkForResourceConsistency(_allocator);
-
         registerConsistencyCheck();
     }
 
@@ -633,46 +640,52 @@ namespace nanojit
     //
     Register Assembler::prepareResultReg(LIns *ins, RegisterMask allow)
     {
-        // At this point, we know the result of 'ins' result has a use later
-        // in the code.  (Exception: if 'ins' is a call to an impure function
-        // the return value may not be used, but 'ins' will still be present
-        // because it has side-effects.)  It may have had to be evicted, in
-        // which case the restore will have already been generated, so we now
-        // generate the spill (unless the restore was actually a
-        // rematerialize, in which case it's not necessary).
+        // At this point, we know the result of 'ins' is used later in the
+        // code, unless it is a call to an impure function that must be
+        // included for effect even though its result is ignored.  It may have
+        // had to be evicted, in which case the restore will have already been
+        // generated, so we now generate the spill.  QUERY: Is there any attempt
+        // to elide the spill if we know that all restores can be rematerialized?
 #ifdef NANOJIT_IA32
-        // If 'allow' includes FST0 we have to pop if 'ins' isn't in FST0 in
-        // the post-regstate.  This could be because 'ins' is unused, 'ins' is
-        // in a spill slot, or 'ins' is in an XMM register.
-        const bool pop = (allow & rmask(FST0)) &&
-                         (!ins->isInReg() || ins->getReg() != FST0);
-#else
-        const bool pop = false;
-#endif
+        const bool notInFST0 = (!ins->isInReg() || ins->getReg() != FST0);
         Register r = findRegFor(ins, allow);
-        asm_maybe_spill(ins, pop);
-#ifdef NANOJIT_IA32
-        if (!ins->isInAr() && pop && r == FST0) {
-            // This can only happen with a LIR_calld to an impure function
-            // whose return value was ignored (ie. if ins->isInReg() was false
-            // prior to the findRegFor() call).
-            FSTP(FST0);     // pop the fpu result since it isn't used
+        // If the result register is FST0, but FST0 is not in the post-regstate,
+        // then we must pop the x87 stack.  This may occur because the result is
+        // unused, or because it has been stored to a spill slot or an XMM register.
+        const bool needPop = notInFST0 && (r == FST0);
+        const bool didSpill = asm_maybe_spill(ins, needPop);
+        if (!didSpill && needPop) {
+            // If the instruction is spilled, then the pop will have already
+            // been performed by the store to the stack slot.  Otherwise, we
+            // must pop now.  This may occur when the result of a LIR_calld
+            // to an impure (side-effecting) function is not used.
+            FSTP(FST0);
         }
+#else
+        Register r = findRegFor(ins, allow);
+        asm_maybe_spill(ins, false);
 #endif
         return r;
     }
 
-    void Assembler::asm_maybe_spill(LIns* ins, bool pop)
+    bool Assembler::asm_maybe_spill(LIns* ins, bool pop)
     {
-        int d = ins->isInAr() ? arDisp(ins) : 0;
-        Register r = ins->getReg();
         if (ins->isInAr()) {
+            int d = arDisp(ins);
+            Register r = ins->getReg();
             verbose_only( RefBuf b;
                           if (_logc->lcbits & LC_Native) {
                              setOutputForEOL("  <= spill %s",
                              _thisfrag->lirbuf->printer->formatRef(&b, ins)); } )
-            asm_spill(r, d, pop, ins->isQorD());
+#ifdef NANOJIT_IA32
+            asm_spill(r, d, pop);
+#else
+            (void)pop;
+            asm_spill(r, d, ins->isQorD());
+#endif
+            return true;
         }
+        return false;
     }
 
     // XXX: This function is error-prone and should be phased out; see bug 513615.
@@ -2358,9 +2371,9 @@ namespace nanojit
                 }
 
                 #ifdef NANOJIT_IA32
-                if (savedins && (rmask(r) & x87Regs)) {
+                if (savedins && r == FST0) {
                     verbose_only( shouldMention=true; )
-                    FSTP(r);
+                    FSTP(FST0);
                 }
                 #endif
             }
@@ -2414,12 +2427,13 @@ namespace nanojit
                 }
 
                 #ifdef NANOJIT_IA32
-                if (rmask(r) & x87Regs) {
+                if (r == FST0) {
                     if (savedins) {
-                        FSTP(r);
+                        // Discard top of x87 stack.
+                        FSTP(FST0);
                     }
                     else if (curins) {
-                        // saved state did not have fpu reg allocated,
+                        // Saved state did not have fpu reg allocated,
                         // so we must evict here to keep x87 stack balanced.
                         evict(curins);
                     }

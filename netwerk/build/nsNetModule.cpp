@@ -255,6 +255,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsResURL)
 #endif
 
+#ifdef NECKO_PROTOCOL_device
+#include "nsDeviceProtocolHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceProtocolHandler)
+#endif
+
 #ifdef NECKO_PROTOCOL_viewsource
 #include "nsViewSourceHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
@@ -706,6 +711,9 @@ NS_DEFINE_NAMED_CID(NS_WIFI_MONITOR_COMPONENT_CID);
 #ifdef NECKO_PROTOCOL_data
 NS_DEFINE_NAMED_CID(NS_DATAPROTOCOLHANDLER_CID);
 #endif
+#ifdef NECKO_PROTOCOL_device
+NS_DEFINE_NAMED_CID(NS_DEVICEPROTOCOLHANDLER_CID);
+#endif
 #ifdef NECKO_PROTOCOL_viewsource
 NS_DEFINE_NAMED_CID(NS_VIEWSOURCEHANDLER_CID);
 #endif
@@ -820,6 +828,9 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_PROTOCOL_data
     { &kNS_DATAPROTOCOLHANDLER_CID, false, NULL, nsDataHandler::Create },
+#endif
+#ifdef NECKO_PROTOCOL_device
+    { &kNS_DEVICEPROTOCOLHANDLER_CID, false, NULL, nsDeviceProtocolHandlerConstructor},
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
     { &kNS_VIEWSOURCEHANDLER_CID, false, NULL, nsViewSourceHandlerConstructor },
@@ -942,6 +953,9 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #endif
 #ifdef NECKO_PROTOCOL_data
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", &kNS_DATAPROTOCOLHANDLER_CID },
+#endif
+#ifdef NECKO_PROTOCOL_device
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-device", &kNS_DEVICEPROTOCOLHANDLER_CID },
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source", &kNS_VIEWSOURCEHANDLER_CID },

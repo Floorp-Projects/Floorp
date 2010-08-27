@@ -205,6 +205,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #ifdef MOZ_SERVICES_SYNC
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "sync-tabs", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #endif
+    { NS_ABOUT_MODULE_CONTRACTID_PREFIX "home", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #ifndef WINCE
     { NS_PROFILEMIGRATOR_CONTRACTID, &kNS_FIREFOX_PROFILEMIGRATOR_CID },
 #if defined(XP_WIN) && !defined(__MINGW32__)

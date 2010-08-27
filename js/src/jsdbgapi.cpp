@@ -1466,43 +1466,15 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
 /************************************************************************/
 
-static bool
-SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObject *scopeobj)
-{
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, scopeobj);
-    JS_ASSERT(fun->minArgs() == 0 && !fun->isInterpreted() && fun->u.n.extra == 0);
-
-    const uintN vplen = 2;
-    const uintN nfixed = 0;
-    if (!cx->stack().getExecuteFrame(cx, js_GetTopStackFrame(cx), vplen, nfixed, frame))
-        return false;
-
-    Value *vp = frame.getvp();
-    PodZero(vp, vplen);
-    vp[0].setObject(*scopeobj);
-    vp[1].setNull();  // satisfy LeaveTree assert
-
-    JSStackFrame *fp = frame.getFrame();
-    PodZero(fp);
-    fp->setFunction(fun);
-    fp->argv = vp + 2;
-    fp->setScopeChain(scopeobj->getGlobal());
-
-    regs.pc = NULL;
-    regs.sp = fp->slots();
-
-    cx->stack().pushExecuteFrame(cx, frame, regs, NULL);
-    return true;
-}
-
 JS_FRIEND_API(JSBool)
 js_GetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
                                 jsval *vp)
 {
-    ExecuteFrameGuard frame;
-    JSFrameRegs regs;
+    JS_ASSERT(scopeobj->isGlobal());
 
-    if (!SetupFakeFrame(cx, frame, regs, scopeobj))
+    JSFrameRegs regs;
+    FrameGuard frame;
+    if (!cx->stack().pushDummyFrame(cx, frame, regs, scopeobj))
         return false;
 
     bool ok = JS_GetPropertyById(cx, obj, id, vp);
@@ -1514,10 +1486,11 @@ JS_FRIEND_API(JSBool)
 js_SetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
                                 jsval *vp)
 {
-    ExecuteFrameGuard frame;
-    JSFrameRegs regs;
+    JS_ASSERT(scopeobj->isGlobal());
 
-    if (!SetupFakeFrame(cx, frame, regs, scopeobj))
+    JSFrameRegs regs;
+    FrameGuard frame;
+    if (!cx->stack().pushDummyFrame(cx, frame, regs, scopeobj))
         return false;
 
     bool ok = JS_SetPropertyById(cx, obj, id, vp);
@@ -1529,10 +1502,11 @@ JS_FRIEND_API(JSBool)
 js_CallFunctionValueWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsval funval,
                                   uintN argc, jsval *argv, jsval *rval)
 {
-    ExecuteFrameGuard frame;
-    JSFrameRegs regs;
+    JS_ASSERT(scopeobj->isGlobal());
 
-    if (!SetupFakeFrame(cx, frame, regs, scopeobj))
+    JSFrameRegs regs;
+    FrameGuard frame;
+    if (!cx->stack().pushDummyFrame(cx, frame, regs, scopeobj))
         return false;
 
     bool ok = JS_CallFunctionValue(cx, obj, funval, argc, argv, rval);
@@ -2241,7 +2215,7 @@ jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 JS_FRIEND_API(void)
 js::StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
 
     char *script_file = jstv_Filename(fp);
     JSHashNumber hash = JS_HashString(script_file);

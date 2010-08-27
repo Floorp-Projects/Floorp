@@ -431,6 +431,24 @@ public:
   }
 
   /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a MozAudioAvailable event listener.
+   */
+  PRBool HasAudioAvailableEventListeners()
+  {
+    return mMayHaveAudioAvailableEventListener;
+  }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a MozAudioAvailable event listener.
+   */
+  void SetHasAudioAvailableEventListeners()
+  {
+    mMayHaveAudioAvailableEventListener = PR_TRUE;
+  }
+
+  /**
    * Initialize window.java and window.Packages.
    */
   virtual void InitJavaProperties() = 0;
@@ -569,6 +587,7 @@ protected:
   PRPackedBool           mIsInnerWindow;
   PRPackedBool           mMayHavePaintEventListener;
   PRPackedBool           mMayHaveTouchEventListener;
+  PRPackedBool           mMayHaveAudioAvailableEventListener;
 
   // This variable is used on both inner and outer windows (and they
   // should match).

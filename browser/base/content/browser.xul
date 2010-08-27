@@ -263,10 +263,10 @@
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
                        class="toolbarbutton-text"
-                       oncommand="InspectorUI.toggleStylePanel();'"/>
+                       oncommand="InspectorUI.toggleStylePanel();"/>
         <toolbarbutton id="inspector-dom-toolbutton"
-                       label="&inspectDOMButton.label;"
-                       accesskey="&inspectDOMButton.accesskey;"
+                       label="&inspectObjectButton.label;"
+                       accesskey="&inspectObjectButton.accesskey;"
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
@@ -449,7 +449,9 @@
   </popupset>
 
 #ifdef MENUBAR_CAN_AUTOHIDE
-<hbox id="appmenu-button-container">
+  <vbox id="titlebar">
+  <hbox id="titlebar-content">
+  <hbox id="appmenu-button-container" align="start">
   <button id="appmenu-button"
           type="menu"
           label="&brandShortName;"
@@ -487,7 +489,7 @@
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"/>
-          <menuseparator class="menu-seperator"/>
+          <menuseparator/>
           <hbox class="split-menuitem">
             <menuitem id="appmenu-edit-menuitem"
                       label="&editMenu.label;"
@@ -746,7 +748,15 @@
       </hbox>
     </menupopup>
   </button>
-</hbox>
+  </hbox>
+  <spacer id="titlebar-spacer" flex="1"/>
+  <hbox id="titlebar-buttonbox">
+    <toolbarbutton id="titlebar-min" oncommand="window.minimize();"/>
+    <toolbarbutton id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+    <toolbarbutton id="titlebar-close" oncommand="window.close();"/>
+  </hbox>
+  </hbox>
+  </vbox>
 #endif
 
 <deck flex="1" id="tab-view-deck">
@@ -1065,7 +1075,7 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,tabview-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
              collapsed="true">
 
       <tabs id="tabbrowser-tabs"

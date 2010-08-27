@@ -1094,7 +1094,7 @@ js_NewGenerator(JSContext *cx)
         return NULL;
 
     /* Load and compute stack slot counts. */
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     uintN argc = fp->numActualArgs();
     uintN nargs = JS_MAX(argc, fp->numFormalArgs());
     uintN vplen = 2 + nargs;
@@ -1229,8 +1229,8 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
          * Get a pointer to new frame/slots. This memory is not "claimed", so
          * the code before pushExecuteFrame must not reenter the interpreter.
          */
-        ExecuteFrameGuard frame;
-        if (!cx->stack().getExecuteFrame(cx, cx->fp, vplen, nfixed, frame)) {
+        FrameGuard frame;
+        if (!cx->stack().getExecuteFrame(cx, cx->maybefp(), vplen, nfixed, frame)) {
             gen->state = JSGEN_CLOSED;
             return JS_FALSE;
         }

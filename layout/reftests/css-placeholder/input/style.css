@@ -1,0 +1,17 @@
+input:-moz-placeholder,
+input.ref {
+  -moz-appearance: none;
+  color: black;
+  background-color: green;
+}
+
+input:-moz-placeholder.complex,
+input.complex-ref {
+  -moz-appearance: none;
+  color: green;
+  background-color: #c7c7c7;
+  font-style: italic;
+  border: 2px solid green;
+  height: 200px;
+  width: 200px;
+}

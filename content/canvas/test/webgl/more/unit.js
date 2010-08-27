@@ -266,7 +266,7 @@ function assertOk(name, f) {
 function assert(name, v) {
   if (v == null) { v = name; name = null; }
   if (!v) {
-    testFailed("assert", name, v)
+    testFailed("assert", name, v);
     return false;
   } else {
     return true;
@@ -276,7 +276,7 @@ function assert(name, v) {
 function assertProperty(name, v, p) {
   if (p == null) { p = v; v = name; name = p; }
   if (v[p] == null) {
-    testFailed("assertProperty", name)
+    testFailed("assertProperty", name);
     return false;
   } else {
     return true;
@@ -294,11 +294,34 @@ function compare(a,b) {
 function assertEquals(name, v, p) {
   if (p == null) { p = v; v = name; name = null; }
   if (!compare(v, p)) {
-    testFailed("assertEquals", name, v, p)
+    testFailed("assertEquals", name, v, p);
     return false;
   } else {
     return true;
   }
+}
+
+function assertArrayEquals(name, v, p) {
+  if (p == null) { p = v; v = name; name = null; }
+  if (!v) {
+    testFailed("assertArrayEquals: first array undefined", name, v, p);
+    return false;
+  }
+  if (!p) {
+    testFailed("assertArrayEquals: second array undefined", name, v, p);
+    return false;
+  }
+  if (v.length != p.length) {
+    testFailed("assertArrayEquals", name, v, p);
+    return false;
+  }
+  for (var ii = 0; ii < v.length; ++ii) {
+    if (v[ii] != p[ii]) {
+      testFailed("assertArrayEquals", name, v, p);
+      return false;
+    }
+  }
+  return true;
 }
 
 function assertNotEquals(name, v, p) {
