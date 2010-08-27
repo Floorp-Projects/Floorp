@@ -41,6 +41,10 @@
 
 let Ci = Components.interfaces;
 
+const kBrowserFormZoomLevelMin = 1.0;
+const kBrowserFormZoomLevelMax = 2.0;
+const kBrowserViewZoomLevelPrecision = 10000;
+
 function BrowserView(container, visibleRectFactory) {
   Util.bindAll(this);
   this.init(container, visibleRectFactory);
@@ -74,40 +78,11 @@ BrowserView.prototype = {
   init: function init(container, visibleRectFactory) {
     this._container = container;
     this._browser = null;
-    this._browserViewportState = null;
     this._visibleRectFactory = visibleRectFactory;
     messageManager.addMessageListener("Browser:MozScrolledAreaChanged", this);
   },
 
   uninit: function uninit() {
-  },
-
-  getVisibleRect: function getVisibleRect() {
-    return this._visibleRectFactory();
-  },
-
-  getCriticalRect: function getCriticalRect() {
-    let bvs = this._browserViewportState;
-    let vr = this.getVisibleRect();
-    return BrowserView.Util.visibleRectToCriticalRect(vr, bvs);
-  },
-
-  clampZoomLevel: function clampZoomLevel(zl) {
-    let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
-
-    let bvs = this._browserViewportState;
-    if (bvs) {
-      let md = bvs.metaData;
-      if (md && md.minZoom)
-        bounded = Math.max(bounded, md.minZoom);
-      if (md && md.maxZoom)
-        bounded = Math.min(bounded, md.maxZoom);
-
-      bounded = Math.max(bounded, this.getPageZoomLevel());
-    }
-
-    let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
-    return rounded || 1.0;
   },
 
   /**
@@ -124,7 +99,6 @@ BrowserView.prototype = {
     }
 
     this._browser = browser;
-    this._browserViewportState = browserViewportState;
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
