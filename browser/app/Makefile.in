@@ -92,6 +92,12 @@ endif
 
 CPPSRCS = nsBrowserApp.cpp
 
+LIBS += \
+  $(call EXPAND_LIBNAME_PATH,browsercomps,../components/build) \
+  $(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
+  $(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
+  $(NULL)
+
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
 ifdef BUILD_STATIC_LIBS

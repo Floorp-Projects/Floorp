@@ -334,10 +334,8 @@
 @BINPATH@/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.manifest
 @BINPATH@/components/nsURLFormatter.js
-#ifndef XP_OS2
+#ifdef LIBXUL_SDK
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
-#else
-@BINPATH@/components/brwsrcmp@DLL_SUFFIX@
 #endif
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
