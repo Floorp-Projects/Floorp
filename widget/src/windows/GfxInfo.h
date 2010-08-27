@@ -56,6 +56,7 @@ public:
 private:
 
   void Init();
+  void AddCrashReportAnnotations();
   nsString mDeviceString;
   nsString mDeviceID;
   nsString mDriverVersion;
