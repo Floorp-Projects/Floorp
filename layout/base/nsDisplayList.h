@@ -587,6 +587,8 @@ public:
    * nsDisplayList::ComputeVisibility will already have set mVisibleRect on
    * this item to the intersection of *aVisibleRegion (unioned with
    * *aVisibleRegionBeforeMove, if that's non-null) and this item's bounds.
+   * We rely on that, so this should only be called by
+   * nsDisplayList::ComputeVisibility or nsDisplayItem::RecomputeVisiblity.
    * 
    * @return PR_TRUE if the item is visible, PR_FALSE if no part of the item
    * is visible
@@ -842,17 +844,34 @@ public:
    * This is also a good place to put ComputeVisibility-related logic
    * that must be applied to every display item. In particular, this
    * sets mVisibleRect on each display item.
-   * This also sets mIsOpaque to whether aVisibleRegion is empty on return.
+   * This sets mIsOpaque if the entire visible area of this list has
+   * been removed from aVisibleRegion when we return.
    * This does not remove any items from the list, so we can recompute
    * visiblity with different regions later (see
    * FrameLayerBuilder::DrawThebesLayer).
    * 
    * @param aVisibleRegion the area that is visible, relative to the
-   * reference frame; on return, this contains the area visible under the list
+   * reference frame; on return, this contains the area visible under the list.
+   * I.e., opaque contents of this list are subtracted from aVisibleRegion.
+   * @param aListVisibleBounds must be equal to the bounds of the intersection
+   * of aVisibleRegion and GetBounds() for this list.
    * @return true if any item in the list is visible
    */
-  PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                           nsRegion* aVisibleRegion);
+  PRBool ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
+                                     nsRegion* aVisibleRegion,
+                                     const nsRect& aListVisibleBounds);
+
+  /**
+   * As ComputeVisibility, but computes visibility for a sublist.
+   * aListVisibleBounds is a rectangle that's the bounds of the
+   * intersection of thisitem's GetBounds with aVisibleRegion.
+   *
+   * @param aVisibleRegion the area that is visible; on entry this must
+   * not extend outside the overflow area of the reference frame.
+   */
+  PRBool ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
+                                  nsRegion* aVisibleRegion);
+
   /**
    * Returns true if the visible region output from ComputeVisiblity was
    * empty, i.e. everything visible in this list is opaque.

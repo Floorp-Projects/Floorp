@@ -1377,7 +1377,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  list.ComputeVisibility(&builder, &visibleRegion);
+  list.ComputeVisibilityForRoot(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpPaintList) {
