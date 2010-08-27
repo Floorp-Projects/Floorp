@@ -451,6 +451,7 @@ var BrowserUI = {
   uninit: function() {
     ExtensionsView.uninit();
     ConsoleView.uninit();
+    FormHelperUI.uninit();
   },
 
   update: function(aState) {
@@ -1590,6 +1591,10 @@ var FormHelperUI = {
     close: "cmd_formClose"
   },
 
+  //for resize/rotate case
+  _currentCaretRect: null,
+  _currentElementRect: null,
+
   init: function formHelperInit() {
     this._container = document.getElementById("content-navigator");
     this._autofillContainer = document.getElementById("form-helper-autofill");
@@ -1600,6 +1605,7 @@ var FormHelperUI = {
     messageManager.addMessageListener("FormAssist:Show", this);
     messageManager.addMessageListener("FormAssist:Hide", this);
     messageManager.addMessageListener("FormAssist:Update", this);
+    messageManager.addMessageListener("FormAssist:Resize", this);
     messageManager.addMessageListener("FormAssist:AutoComplete", this);
 
     // Listen for events where form assistant should be closed
@@ -1609,6 +1615,12 @@ var FormHelperUI = {
     // Listen for modal dialog to show/hide the UI
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMModalDialogClosed", this);
+
+    Services.obs.addObserver(this, "softkb-change", false);
+  },
+
+  uninit: function formHelperUninit() {
+    Services.obs.removeObserver(this, "softkb-change");
   },
 
   show: function formHelperShow(aElement, aHasPrevious, aHasNext) {
@@ -1630,12 +1642,21 @@ var FormHelperUI = {
     }
     this._updateContainer(lastElement, this._currentElement);
 
-    this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
+    //hide all sidebars, this will adjust the visible rect.
+    Browser.hideSidebars();
+
+    //save the element Rect and reuse it to avoid jumps in cases the element moves slighty on the website.
+    this._currentElementRect = Rect.fromRect(aElement.rect);
+    this._zoom(this._currentElementRect, Rect.fromRect(aElement.caretRect));
   },
 
   hide: function formHelperHide() {
     if (!this._open)
       return;
+
+    // reset current Element and Caret Rect
+    this._currentElementRect = null;
+    this._currentCaretRect = null;
 
     this._updateContainerForSelect(this._currentElement, null);
     this._open = false;
@@ -1667,8 +1688,19 @@ var FormHelperUI = {
         this._container.contentHasChanged();
         break;
 
-      case "FormAssist:Update":
-        this._zoom(null, Rect.fromRect(json.caretRect));
+      case "FormAssist:Resize":
+        // First hide all tool/sidebars they take to much space, this will adjust the visible rect.
+        Browser.hideSidebars();
+        this._zoom(this._currentElementRect, this._currentCaretRect);
+        this._container.contentHasChanged();
+        break;
+
+       case "FormAssist:Update":
+        // Using currentElementRect here is maybe not 100% perfect since
+        // elements might change there position while typing
+        // out of screen movement is covered by simply following the caret
+        // as long as we see what we type, let the element move
+        this._zoom(this._currentElementRect, Rect.fromRect(json.caretRect));
         break;
 
       case "DOMWillOpenModalDialog":
@@ -1685,6 +1717,16 @@ var FormHelperUI = {
         }
         break;
     }
+  },
+  
+  observe: function formHelperObserve(aSubject, aTopic, aData) {
+    let rect = Rect.fromRect(JSON.parse(aData));
+    rect.height = rect.bottom - rect.top;
+    rect.width  = rect.right - rect.left;
+
+    Browser._browserView._visibleScreenArea = rect;
+    BrowserUI.sizeControls(rect.width, rect.height);
+    this._zoom(this._currentElementRect, this._currentCaretRect);
   },
 
   goToPrevious: function formHelperGoToPrevious() {
@@ -1712,6 +1754,7 @@ var FormHelperUI = {
     let bv = Browser._browserView;
     bv.ignorePageScroll(aVal);
     this._container.hidden = !aVal;
+    this._container.contentHasChanged();
 
     if (aVal) {
       this._zoomStart();
@@ -1796,31 +1839,106 @@ var FormHelperUI = {
   /** Zoom and move viewport so that element is legible and touchable. */
   _zoom: function _formHelperZoom(aElementRect, aCaretRect) {
     let bv = Browser._browserView;
-    let zoomRect = bv.getVisibleRect();
 
-    // Zoom to a specified Rect
-    if (aElementRect && bv.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {
-      // Zoom to an element by keeping the caret into view
-      let zoomLevel = Browser._getZoomLevelForRect(aElementRect);
-      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+    if (aElementRect && aCaretRect && this._open) {
+      this._currentCaretRect = aCaretRect;
 
-      zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
-      Browser.animatedZoomTo(zoomRect);
-    }
+      // might not always be set, if not - use the windowsize
+      let visibleScreenArea = !bv._visibleScreenArea.isEmpty() ? bv._visibleScreenArea : new Rect(0, 0, window.innerWidth, window.innerHeight);
 
-    // Move the view to show the caret if needed
-    if (aCaretRect) {
-      let caretRect = bv.browserToViewportRect(aCaretRect);
-      if (zoomRect.contains(caretRect))
-        return;
+      // respect the helper container in setting the correct viewAreaHeight
+      let viewAreaHeight = visibleScreenArea.height - this._container.getBoundingClientRect().height;
+      let viewAreaWidth = visibleScreenArea.width;
+      let caretLines = Services.prefs.getIntPref("formhelper.caretLines.portrait");
+      let harmonizeValue = Services.prefs.getIntPref("formhelper.harmonizeValue");
 
-      let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
-      if (deltaX != 0 || deltaY != 0) {
-        Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
-        bv.onAfterVisibleMove();
+      if (!Util.isPortrait())
+        caretLines = Services.prefs.getIntPref("formhelper.caretLines.landscape");
+
+      // hide titlebar if the remaining space would be smaller than the height of the titlebar itself
+      // if there is enough space left than adjust the height. Since this adjust the the visible rects
+      // there is no need to adjust the y later
+      let toolbar = document.getElementById("toolbar-main");
+      if (viewAreaHeight - toolbar.boxObject.height <= toolbar.boxObject.height * 2)
+        Browser.hideTitlebar();
+      else
+        viewAreaHeight -= toolbar.boxObject.height;
+
+      // To ensure the correct calculation when the sidebars are visible - get the sidebar size and
+      // use them as margin
+      let [leftvis, rightvis, leftW, rightW] = Browser.computeSidebarVisibility(0, 0);
+      let marginLeft = leftvis ? leftW : 0;
+      let marginRight = rightvis ? rightW : 0;
+
+      // The height and Y of the caret might change during writing - even in cases the
+      // fontsize keeps the same. To avoid unneeded zooming and scrolling
+      let harmonizedCaretHeight = 0;
+      let harmonizedCaretY = 0;
+
+      // Start calculation here, the order is important
+      // All calculations are done in non_zoomed_coordinates => 1:1 to "screen-pixels"
+
+      // for buttons and non input field elements a caretRect with the height of 0 gets reported
+      // cover this case.
+      if (!aCaretRect.isEmpty()) {
+        // the height and y position may vary from letter to letter
+        // adjust position and zooming only if a bigger step was done.
+        harmonizedCaretHeight = aCaretRect.height - aCaretRect.height % harmonizeValue;
+        harmonizedCaretY = aCaretRect.y - aCaretRect.y % harmonizeValue;
+      } else {
+        harmonizedCaretHeight = 30; // fallback height
+
+        // use the element as position
+        harmonizedCaretY = aElementRect.y;
+        aCaretRect.x = aElementRect.x;
       }
 
-      Browser.animatedZoomTo(zoomRect);
+      let zoomLevel = bv.getZoomLevel();
+      let enableZoom = bv.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom");
+      if (enableZoom) {
+        zoomLevel = (viewAreaHeight / caretLines) / harmonizedCaretHeight;
+        zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+      }
+      viewAreaWidth /= zoomLevel;
+
+      const margin = Services.prefs.getIntPref("formhelper.margin");
+
+      // if the viewAreaWidth is smaller than the neutralized position + margins.
+      // [YES] use the x position of the element minus margins as x position for our visible rect.
+      // [NO] use the x position of the caret minus margins as the x position for our visible rect.
+      let x = (marginLeft + marginRight + margin + aCaretRect.x - aElementRect.x) < viewAreaWidth
+               ? aElementRect.x - margin - marginLeft
+               : aCaretRect.x - viewAreaWidth + margin + marginRight;
+      // use the adjustet Caret Y minus a margin four our visible rect
+      let y = harmonizedCaretY - margin;
+
+      // from here on play with zoomed values
+      // if we want to have it animated, build up zoom rect and animate.
+      if (enableZoom && bv.getZoomLevel() != zoomLevel) {
+        let vis = bv.getVisibleRect();
+        x = bv.browserToViewport(x);
+        y = bv.browserToViewport(y);
+
+        //dont use browser functions they are bogus for this case
+        let zoomRatio = zoomLevel / bv.getZoomLevel();
+        let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
+        let zoomRect = new Rect(x, y, newVisW, newVisH);
+
+        Browser.animatedZoomTo(zoomRect);
+      }
+      else { // no zooming at all
+        let vis = bv.getVisibleRect();
+        // get our x and y in viewport "zoomed" coordinates
+        x = bv.browserToViewport(x);
+        y = bv.browserToViewport(y);
+
+        Browser.contentScrollboxScroller.scrollBy(x-vis.x, y-vis.y);
+
+        // workaround for tilemanager bug, after scrolling one screen height, text gets not painted on typing
+        bv.invalidateEntireView();
+
+        bv.onAfterVisibleMove();
+      }
     }
   },
 

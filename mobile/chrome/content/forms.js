@@ -65,6 +65,9 @@ function FormAssistant() {
   addMessageListener("FormAssist:AutoComplete", this);
 
   addEventListener("keyup", this, false);
+
+  // change on rotation/resize
+  addEventListener("resize", this, false);
 };
 
 FormAssistant.prototype = {
@@ -186,51 +189,54 @@ FormAssistant.prototype = {
     if (!this._enabled || !this.currentElement)
       return;
 
-    let currentElement = this.currentElement;
-    switch (aEvent.keyCode) {
-      case aEvent.DOM_VK_DOWN:
-        if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
-          if (this._hasKeyListener(currentElement))
-            return;
-        }
-        else if (currentElement instanceof HTMLTextAreaElement) {
-          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-          let isEnd = (currentElement.textLength == currentElement.selectionEnd);
-          if (!isEnd || existSelection)
-            return;
-        }
+    // change zoom on resize/rotation
+    if (aEvent.type == "resize") {
+      sendAsyncMessage("FormAssist:Resize");
+    } else {
+      let currentElement = this.currentElement;
+      switch (aEvent.keyCode) {
+        case aEvent.DOM_VK_DOWN:
+          if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
+            if (this._hasKeyListener(currentElement))
+              return;
+          }
+          else if (currentElement instanceof HTMLTextAreaElement) {
+            let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+            let isEnd = (currentElement.textLength == currentElement.selectionEnd);
+            if (!isEnd || existSelection)
+              return;
+          }
 
-        this.currentIndex++;
-        break;
+          this.currentIndex++;
+          break;
 
-      case aEvent.DOM_VK_UP:
-        if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
-          if (this._hasKeyListener(currentElement))
-            return;
-        }
-        else if (currentElement instanceof HTMLTextAreaElement) {
-          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-          let isStart = (currentElement.selectionEnd == 0);
-          if (!isStart || existSelection)
-            return;
-        }
+        case aEvent.DOM_VK_UP:
+          if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
+            if (this._hasKeyListener(currentElement))
+              return;
+          }
+          else if (currentElement instanceof HTMLTextAreaElement) {
+            let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+            let isStart = (currentElement.selectionEnd == 0);
+            if (!isStart || existSelection)
+              return;
+          }
 
-        this.currentIndex--;
-        break;
+          this.currentIndex--;
+          break;
 
-      case aEvent.DOM_VK_RETURN:
-        break;
+        case aEvent.DOM_VK_RETURN:
+          break;
 
-      default:
-        if (this._isAutocomplete(aEvent.target)) {
-          sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
-        }
-        break;
-    }
+        default:
+          if (this._isAutocomplete(aEvent.target))
+            sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
+          break;
+      }
 
-    let caretRect = this._getCaretRect();
-    if (!caretRect.isEmpty()) {
-      sendAsyncMessage("FormAssist:Update", { caretRect: caretRect });
+      let caretRect = this._getCaretRect();
+      if (!caretRect.isEmpty())
+        sendAsyncMessage("FormAssist:Update", { caretRect: caretRect });
     }
   },
 

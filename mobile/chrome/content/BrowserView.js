@@ -201,6 +201,7 @@ BrowserView.prototype = {
     this._browserViewportState = null;
     this._renderMode = 0;
     this._offscreenDepth = 0;
+    this._visibleScreenArea = new Rect(0, 0, 0, 0);
 
     let cacheSize = Services.prefs.getIntPref("tile.cache.size");
 
