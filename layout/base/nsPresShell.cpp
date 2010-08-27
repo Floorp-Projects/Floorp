@@ -8993,6 +8993,11 @@ nsresult
 PresShell::SetIsActive(PRBool aIsActive)
 {
   mIsActive = aIsActive;
+  nsPresContext* presContext = GetPresContext();
+  if (presContext &&
+      presContext->RefreshDriver()->PresContext() == presContext) {
+    presContext->RefreshDriver()->SetThrottled(!mIsActive);
+  }
   return UpdateImageLockingState();
 }
 
