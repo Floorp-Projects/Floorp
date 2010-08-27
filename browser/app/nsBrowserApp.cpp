@@ -106,8 +106,6 @@ public:
   ~ScopedLogging() { NS_LogTerm(); }
 };
 
-extern const mozilla::Module kBrowserModule;
-
 int main(int argc, char* argv[])
 {
   ScopedLogging log;
@@ -156,8 +154,6 @@ int main(int argc, char* argv[])
     Output("Couldn't read application.ini");
     return 255;
   }
-
-  XRE_AddStaticComponent(&kBrowserModule);
 
   int result = XRE_main(argc, argv, appData);
   XRE_FreeAppData(appData);
