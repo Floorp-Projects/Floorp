@@ -80,6 +80,9 @@ CPPSRCS		:= xptcinvoke_x86_64_unix.cpp xptcstubs_x86_64_darwin.cpp
 else
 DEFINES		+= -DKEEP_STACK_16_BYTE_ALIGNED
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+# If we compile xptcinvoke_unixish_x86.cpp with -fomit-frame-pointer
+# we end up crashing on startup, presumably because of the %esp munging we do when KEEP_STACK_16_BYTE_ALIGNED.  So let's not use that flag here.
+MODULE_OPTIMIZE_FLAGS=-03
 endif
 endif
 endif
