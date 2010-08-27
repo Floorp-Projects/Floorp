@@ -1369,6 +1369,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   builder.LeavePresShell(aFrame, dirtyRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (builder.GetHadToIgnorePaintSuppression()) {
+    willFlushLayers = PR_TRUE;
+  }
+
 #ifdef DEBUG
   if (gDumpPaintList) {
     fprintf(stderr, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
