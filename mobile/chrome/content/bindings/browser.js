@@ -257,6 +257,7 @@ let DOMEvents =  {
     addEventListener("DOMPopupBlocked", this, false);
     addEventListener("pageshow", this, false);
     addEventListener("pagehide", this, false);
+    addEventListener("MozScrolledAreaChanged", this, false);
   },
 
   handleEvent: function(aEvent) {
@@ -332,6 +333,29 @@ let DOMEvents =  {
           }
         }
         break;
+
+      case "MozScrolledAreaChanged": {
+        let doc = aEvent.originalTarget;
+        let win = doc.defaultView;
+        // XXX need to make some things in Util as its own module!
+        let scrollOffset = Util.getScrollOffset(win);
+        if (win.parent != win) // We are only interested in root scroll pane changes
+          return;
+
+        // Adjust width and height from the incoming event properties so that we
+        // ignore changes to width and height contributed by growth in page
+        // quadrants other than x > 0 && y > 0.
+        let x = aEvent.x + scrollOffset.x;
+        let y = aEvent.y + scrollOffset.y;
+        let width = aEvent.width + (x < 0 ? x : 0);
+        let height = aEvent.height + (y < 0 ? y : 0);
+        sendAsyncMessage("MozScrolledAreaChanged", {
+          width: width,
+          height: height
+        });
+
+        break;
+      }
     }
   }
 };
