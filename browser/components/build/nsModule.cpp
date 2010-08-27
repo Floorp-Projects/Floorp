@@ -237,13 +237,12 @@ static const mozilla::Module::CategoryEntry kBrowserCategories[] = {
     { NULL }
 };
 
-extern const mozilla::Module kBrowserModule = {
+static const mozilla::Module kBrowserModule = {
     mozilla::Module::kVersion,
     kBrowserCIDs,
     kBrowserContracts,
     kBrowserCategories
 };
 
-#ifndef BROWSERCOMPS_LINK_STATICALLY
 NSMODULE_DEFN(nsBrowserCompsModule) = &kBrowserModule;
-#endif
+
