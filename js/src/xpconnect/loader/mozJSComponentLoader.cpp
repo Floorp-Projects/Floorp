@@ -1219,6 +1219,10 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     rv = holder->GetJSObject(&global);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    JSAutoCrossCompartmentCall ac;
+    if (!ac.enter(cx, global))
+        return NS_ERROR_FAILURE;
+
     if (!JS_DefineFunctions(cx, global, gGlobalFun)) {
         return NS_ERROR_FAILURE;
     }
