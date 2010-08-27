@@ -175,6 +175,15 @@ var TestPilotMenuUtils;
         return;
       }
       let firefoxnav = window.document.getElementById("nav-bar");
+      /* This is sometimes called for windows that don't have a navbar - in
+       * that case, do nothing. */
+      if (!firefoxnav) {
+        return;
+      }
+      // TODO if the user has removed the feedback button via customization
+      // interface, we don't want to add it back in.  Use a pref to store whether
+      // this setup was done or not.
+
       let curSet = firefoxnav.currentSet;
 
       if (-1 == curSet.indexOf("feedback-menu-button")) {
