@@ -5230,12 +5230,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   case WM_GESTURENOTIFY:
     {
       if (mWindowType != eWindowType_invisible &&
-          mWindowType != eWindowType_plugin &&
-          mWindowType != eWindowType_toplevel) {
-        // eWindowType_toplevel is the top level main frame window. Gesture support
-        // there prevents the user from interacting with the title bar or nc
-        // areas using a single finger. Java and plugin windows can make their
-        // own calls.
+          mWindowType != eWindowType_plugin) {
+        // A GestureNotify event is dispatched to decide which single-finger panning
+        // direction should be active (including none) and if pan feedback should
+        // be displayed. Java and plugin windows can make their own calls.
         GESTURENOTIFYSTRUCT * gestureinfo = (GESTURENOTIFYSTRUCT*)lParam;
         nsPointWin touchPoint;
         touchPoint = gestureinfo->ptsLocation;
