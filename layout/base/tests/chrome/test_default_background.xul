@@ -18,7 +18,7 @@
     SimpleTest.waitForExplicitFinish();
     // Run the test in a separate window so that the test runs as a chrome
     // window
-    window.open("chrome_content_integration_window.xul", "chrome_content_integration",
+    window.open("default_background_window.xul", "default_background",
                 "chrome,width=200,height=300");
   ]]>
   </script>
