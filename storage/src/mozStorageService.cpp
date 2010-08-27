@@ -357,10 +357,10 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  Connection *msc = new Connection(this);
+  Connection *msc = new Connection(this, SQLITE_OPEN_READWRITE);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = msc->initialize(storageFile, SQLITE_OPEN_READWRITE);
+  rv = msc->initialize(storageFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*_connection = msc);
@@ -379,11 +379,14 @@ Service::OpenDatabase(nsIFile *aDatabaseFile,
   NS_TIME_FUNCTION_FMT("mozIStorageService::OpenDatabase(%s)", leafname.get());
 #endif
 
-  nsRefPtr<Connection> msc = new Connection(this);
+  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
+  // reasons.
+  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
+              SQLITE_OPEN_CREATE;
+  nsRefPtr<Connection> msc = new Connection(this, flags);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE;
-  nsresult rv = msc->initialize(aDatabaseFile, flags);
+  nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*_connection = msc);
@@ -401,11 +404,14 @@ Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
                        leafname.get());
 #endif
 
-  nsRefPtr<Connection> msc = new Connection(this);
+  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
+  // reasons.
+  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_PRIVATECACHE |
+              SQLITE_OPEN_CREATE;
+  nsRefPtr<Connection> msc = new Connection(this, flags);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_PRIVATECACHE;
-  nsresult rv = msc->initialize(aDatabaseFile, flags);
+  nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*_connection = msc);
