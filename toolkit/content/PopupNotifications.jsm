@@ -336,7 +336,10 @@ PopupNotifications.prototype = {
       let doc = this.window.document;
       let popupnotification = doc.createElementNS(XUL_NS, "popupnotification");
       popupnotification.setAttribute("label", n.message);
-      popupnotification.setAttribute("id", n.id);
+      // Append "-notification" to the ID to try to avoid ID conflicts with other stuff
+      // in the document.
+      popupnotification.setAttribute("id", n.id + "-notification");
+      popupnotification.setAttribute("popupid", n.id);
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
