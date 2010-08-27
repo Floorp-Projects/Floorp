@@ -131,6 +131,16 @@ PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
     repatch.relink(mic.stubCall, fptr);
 }
 
+static VoidStubAtom
+GetStubForSetGlobalName(VMFrame &f)
+{
+    // The property cache doesn't like inc ops, so we use a simpler
+    // stub for that case.
+    return js_CodeSpec[*f.regs.pc].format & (JOF_INC | JOF_DEC)
+         ? stubs::SetGlobalNameDumb
+         : stubs::SetGlobalName;
+}
+
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, uint32 index)
 {
@@ -138,12 +148,6 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     ic::MICInfo &mic = f.fp()->getScript()->mics[index];
     JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
-
-    // The property cache doesn't like inc ops, so we use a simpler
-    // stub for that case.
-    VoidStubAtom stub = js_CodeSpec[*f.regs.pc].format & (JOF_INC | JOF_DEC)
-                      ? stubs::SetGlobalNameDumb
-                      : stubs::SetGlobalName;
 
     JS_ASSERT(mic.kind == ic::MICInfo::SET);
 
@@ -158,7 +162,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
         JS_UNLOCK_SCOPE(f.cx, scope);
         if (sprop)
             PatchSetFallback(f, mic);
-        stub(f, atom);
+        GetStubForSetGlobalName(f)(f, atom);
         return;
     }
     uint32 shape = obj->shape();
@@ -195,7 +199,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
 #endif
 
     // Actually implement the op the slow way.
-    stub(f, atom);
+    GetStubForSetGlobalName(f)(f, atom);
 }
 
 #ifdef JS_CPU_X86
