@@ -2789,6 +2789,17 @@ function FillInHTMLTooltip(tipElement)
 #endif // MOZ_SVG
   var direction = tipElement.ownerDocument.dir;
 
+  // If the element is invalid per HTML5 Forms specifications,
+  // show the constraint validation error message instead of @tooltip.
+  if (tipElement instanceof HTMLInputElement ||
+      tipElement instanceof HTMLTextAreaElement ||
+      tipElement instanceof HTMLSelectElement ||
+      tipElement instanceof HTMLButtonElement) {
+    // If the element is barred from constraint validation or valid,
+    // the validation message will be the empty string.
+    titleText = tipElement.validationMessage;
+  }
+
   while (!titleText && !XLinkTitleText && !SVGTitleText && tipElement) {
     if (tipElement.nodeType == Node.ELEMENT_NODE) {
       titleText = tipElement.getAttribute("title");
