@@ -245,6 +245,9 @@ var BrowserUI = {
   },
 
   set activePanel(aPanel) {
+    if (this._activePanel == aPanel)
+      return;
+
     let container = document.getElementById("awesome-panels");
     if (aPanel) {
       container.hidden = false;
@@ -254,7 +257,7 @@ var BrowserUI = {
       BrowserUI.showToolbar(false);
     }
 
-    if (this._activePanel && this._activePanel != aPanel)
+    if (this._activePanel)
       this._activePanel.close();
     this._activePanel = aPanel;
   },
