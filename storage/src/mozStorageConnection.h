@@ -79,8 +79,11 @@ public:
    *        The nsIFile of the location of the database to open, or create if it
    *        does not exist.  Passing in nsnull here creates an in-memory
    *        database.
+   * @param aFlags
+   *        The flags to pass to sqlite3_open_v2.  For compatibility reasons,
+   *        We always pass SQLITE_OPEN_CREATE to sqlite3_open_v2.
    */
-  nsresult initialize(nsIFile *aDatabaseFile);
+  nsresult initialize(nsIFile *aDatabaseFile, int aFlags);
 
   // fetch the native handle
   sqlite3 *GetNativeConnection() { return mDBConn; }
