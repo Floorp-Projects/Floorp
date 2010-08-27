@@ -211,37 +211,20 @@ function getContentClientRects(aElement) {
 
 /** Reponsible for sending messages about viewport size changes and painting. */
 function Coalescer() {
-  this._pendingSizeChange = null;
-  this._timer = new Util.Timeout(this);
 }
 
 Coalescer.prototype = {
   start: function start() {
-    this._emptyPage();
-    this._timer.interval(1000);
   },
 
   stop: function stop() {
-    this._timer.flush();
   },
 
   notify: function notify() {
-    this.flush();
   },
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "MozScrolledAreaChanged": {
-        // XXX if it's possible to get a scroll area change with the same values,
-        // it would be optimal if this didn't send the same message twice.
-        let doc = aEvent.originalTarget;
-        let win = doc.defaultView;
-        let scrollOffset = Util.getScrollOffset(win);
-        if (win.parent != win) // We are only interested in root scroll pane changes
-          return;
-        this.sizeChange(scrollOffset, aEvent.x, aEvent.y, aEvent.width, aEvent.height);
-        break;
-      }
       case "MozApplicationManifest": {
         let doc = aEvent.originalTarget;
         sendAsyncMessage("Browser:MozApplicationManifest", {
@@ -379,12 +362,6 @@ function Content() {
   this._coalescer = new Coalescer();
   addEventListener("MozScrolledAreaChanged", this._coalescer, false);
   addEventListener("MozApplicationManifest", this._coalescer, false);
-
-  addMessageListener("MozScrollTo", function(message) {
-    content.scrollTo(message.json.x, message.json.y);
-    let scroll = Util.getScrollOffset(content);
-    sendAsyncMessage("MozScrolled", scroll);
-  }, false);
 
   this._progressController = new ProgressController(this);
   this._progressController.start();

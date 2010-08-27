@@ -81,21 +81,21 @@ function onDebugKeyPress(ev) {
   const a = 65;
   const b = 66;
   const c = 67;
-  const d = 68;  // debug dump
+  const d = 68;
   const e = 69;
-  const f = 70;  // free memory by clearing a tab.
+  const f = 70;  // force GC
   const g = 71;
   const h = 72;
-  const i = 73;  // toggle info click mode
+  const i = 73;
   const j = 74;
   const k = 75;
-  const l = 76;  // restart lazy crawl
-  const m = 77;  // fix mouseout
+  const l = 76;
+  const m = 77;
   const n = 78;
   const o = 79;
   const p = 80;
   const q = 81;  // toggle orientation
-  const r = 82;  // reset visible rect
+  const r = 82;
   const s = 83;
   const t = 84;
   const u = 85;
@@ -103,15 +103,12 @@ function onDebugKeyPress(ev) {
   const w = 87;
   const x = 88;
   const y = 89;
-  const z = 90;  // set zoom level to 1
+  const z = 90;
 
   switch (ev.charCode) {
   case f:
     MemoryObserver.observe();
     dump("Forced a GC\n");
-    break;
-  case i:
-    window.infoMode = !window.infoMode;
     break;
 #ifndef MOZ_PLATFORM_MAEMO
   case q:
@@ -121,9 +118,6 @@ function onDebugKeyPress(ev) {
       window.top.resizeTo(480,800);
     break;
 #endif
-  case z:
-    bv.setZoomLevel(1.0);
-    break;
   default:
     break;
   }
@@ -206,8 +200,6 @@ var Browser = {
       }
     };
 
-    messageManager.addMessageListener("MozScrolled", this.contentScrollboxScroller);
-
     /* horizontally scrolling box that holds the sidebars as well as the contentScrollbox */
     let controlsScrollbox = this.controlsScrollbox = document.getElementById("controls-scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
@@ -245,8 +237,6 @@ var Browser = {
       let scaledScreenH = (window.screen.width * (h / w));
       let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
 
-      Browser.styles["viewport-width"].width = (w /* XXX / dpiScale */) + "px";
-      Browser.styles["viewport-height"].height = (h /* XXX / dpiScale */) + "px";
       Browser.styles["window-width"].width = w + "px";
       Browser.styles["window-height"].height = h + "px";
       Browser.styles["toolbar-height"].height = toolbarHeight + "px";
@@ -254,19 +244,9 @@ var Browser = {
       // Tell the UI to resize the browser controls
       BrowserUI.sizeControls(w, h);
 
-      // XXX During the launch, the resize of the window arrive after we add
-      // the first tab, so we need to force the viewport state for this case
-      // see bug 558840
-      let bvs = bv._browserViewportState;
-      if (bvs.viewportRect.width == 1 && bvs.viewportRect.height == 1) {
-        bvs.viewportRect.width = window.innerWidth;
-        bvs.viewportRect.height = window.innerHeight;
-      }
-
-      bv.updateDefaultZoom();
-      if (bv.isDefaultZoom())
-        // XXX this should really only happen on browser startup, not every resize
-        Browser.hideSidebars();
+//      bv.updateDefaultZoom();
+      // XXX this should really only happen on browser startup, not every resize
+      Browser.hideSidebars();
 
       for (let i = Browser.tabs.length - 1; i >= 0; i--)
         Browser.tabs[i].updateViewportSize();
@@ -645,7 +625,7 @@ var Browser = {
       BrowserUI.lockToolbar();
 
     bv.setBrowser(tab.browser, tab.browserViewportState);
-    bv.updateDefaultZoom();
+//    bv.updateDefaultZoom();
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
 
@@ -871,6 +851,8 @@ var Browser = {
 
   /** Zoom one step in (negative) or out (positive). */
   zoom: function zoom(aDirection) {
+    return;
+
     let bv = this._browserView;
     if (!bv.allowZoom)
       return;
@@ -938,11 +920,15 @@ var Browser = {
   },
 
   animatedZoomTo: function animatedZoomTo(rect) {
+    return;
+
     let zoom = new AnimatedZoom(this._browserView);
     zoom.animateTo(rect);
   },
 
   setVisibleRect: function setVisibleRect(rect) {
+    return;
+
     let bv = this._browserView;
     let vis = bv.getVisibleRect();
     let zoomRatio = vis.width / rect.width;
@@ -959,6 +945,8 @@ var Browser = {
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
+    return;
+
     let bv = this._browserView;
     if (!bv.allowZoom)
       return null;
@@ -977,6 +965,8 @@ var Browser = {
   },
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
+    return;
+
     let bv = this._browserView;
     if (bv.allowZoom && !bv.isDefaultZoom()) {
       let zoomLevel = bv.getDefaultZoomLevel();
@@ -1023,7 +1013,7 @@ var Browser = {
    * zoom and page position)
    */
   transformClientToBrowser: function transformClientToBrowser(cX, cY) {
-    return this.clientToBrowserView(cX, cY).map(this._browserView.viewportToBrowser);
+    return this.clientToBrowserView(cX, cY);// .map(this._browserView.viewportToBrowser);
   },
 
   /**
@@ -1380,12 +1370,14 @@ ContentCustomClicker.prototype = {
 
     this._dispatchMouseEvent("Browser:MouseCancel");
 
-/*    const kDoubleClickRadius = 32;
+    return;
+
+    const kDoubleClickRadius = 32;
 
     let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
     let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
     if (isClickInRadius)
-      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1); */
+      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
   },
 
   toString: function toString() {
@@ -2239,7 +2231,6 @@ var OfflineApps = {
 function Tab(aURI) {
   this._id = null;
   this._browser = null;
-  this._browserViewportState = null;
   this._state = null;
   this._listener = null;
   this._loading = false;
@@ -2258,10 +2249,6 @@ Tab.prototype = {
     return this._browser;
   },
 
-  get browserViewportState() {
-    return this._browserViewportState;
-  },
-
   get chromeTab() {
     return this._chromeTab;
   },
@@ -2272,23 +2259,7 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    this._browserViewportState.metaData = metaData;
-
-    // Remove any previous styles.
-    browser.className = "";
-    browser.style.removeProperty("width");
-    browser.style.removeProperty("height");
-
-    // Add classes for auto-sizing viewports.
-    if (metaData.autoSize) {
-      if (metaData.defaultZoom == 1.0) {
-        browser.classList.add("window-width");
-        browser.classList.add("window-height");
-      } else {
-        browser.classList.add("viewport-width");
-        browser.classList.add("viewport-height");
-      }
-    }
+    this.metaData = metaData;
     this.updateViewportSize();
   },
 
@@ -2298,7 +2269,7 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    let metaData = this._browserViewportState.metaData || {};
+    let metaData = this.metaData || {};
     if (!metaData.autoSize) {
       let screenW = window.innerWidth;
       let screenH = window.innerHeight;
@@ -2322,17 +2293,30 @@ Tab.prototype = {
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
 
-      browser.style.width = screenW /* XXX viewportW */ + "px";
-      browser.style.height = screenH /* XXX viewportH */ + "px";
+      if (!getBrowser().contentWindow)
+        browser.setCssViewportSize(viewportW, viewportH);
+    }
+    else {
+      let browserBCR = browser.getBoundingClientRect();
+      let w = browserBCR.width;
+      let h = browserBCR.height;
+      if (metaData.defaultZoom != 1.0) {
+        let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
+        w /= dpiScale;
+        h /= dpiScale;
+      }
+
+      if (!getBrowser().contentWindow)
+        browser.setCssViewportSize(w, h);
     }
 
     // Local XUL documents are not firing MozScrolledAreaChanged
-    let contentDocument = browser.contentDocument;
+    /*let contentDocument = browser.contentDocument;
     if (contentDocument && contentDocument instanceof XULDocument) {
       let width = contentDocument.documentElement.scrollWidth;
       let height = contentDocument.documentElement.scrollHeight;
       BrowserView.Util.ensureMozScrolledAreaEvent(browser, width, height);
-    }
+    } */
   },
 
   startLoading: function startLoading() {
@@ -2351,9 +2335,6 @@ Tab.prototype = {
   },
 
   create: function create(aURI) {
-    // Initialize a viewport state for BrowserView
-    this._browserViewportState = BrowserView.Util.createBrowserViewportState();
-
     this._chromeTab = document.getElementById("tabs").addTab();
     this._createBrowser(aURI);
   },
@@ -2370,6 +2351,7 @@ Tab.prototype = {
 
     // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
+    browser.setAttribute("class", "window-width window-height");
     this._chromeTab.linkedBrowser = browser;
 
     browser.setAttribute("type", "content");
@@ -2410,11 +2392,14 @@ Tab.prototype = {
     }
   },
 
-  /* Set up the initial zoom level. While the bvs.defaultZoomLevel of a tab is
-     equal to bvs.zoomLevel this mean that not user action has happended and
-     we can safely alter the zoom on a window resize or on a page load
-  */
+  /**
+   * Set up the initial zoom level. While the bvs.defaultZoomLevel of a tab is
+   * equal to bvs.zoomLevel this mean that not user action has happended and
+   * we can safely alter the zoom on a window resize or on a page load
+   */
   resetZoomLevel: function resetZoomLevel() {
+    return;
+
     let bvs = this._browserViewportState;
     bvs.defaultZoomLevel = bvs.zoomLevel;
   },

@@ -60,6 +60,10 @@ let WebProgressListener = {
       canGoForward: docShell.canGoForward
     };
     sendAsyncMessage("WebProgress:LocationChange", json);
+
+    let scrollOffset = Util.getScrollOffset(content);
+    cwu.setDisplayport(scrollOffset.x - 200, scrollOffset.y - 400,
+                       content.innerWidth + 400, content.innerHeight + 800);
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
@@ -368,6 +372,7 @@ let ContentScroll =  {
     addMessageListener("Content:ScrollBy", this);
     addMessageListener("Content:ZoomLevel", this);
     addMessageListener("Content:FastScrollTo", this);
+    addMessageListener("Content:SetCssViewportSize", this);
   },
 
   receiveMessage: function(aMessage) {
@@ -375,15 +380,21 @@ let ContentScroll =  {
     switch (aMessage.name) {
       case "Content:ScrollTo":
         content.scrollTo(json.x, json.y);
+        let cwu = Util.getWindowUtils(content);
+        let scrollOffset = Util.getScrollOffset(content);
+        cwu.setDisplayport(scrollOffset.x - 200, scrollOffset.y - 400,
+                           content.innerWidth + 400, content.innerHeight + 800);
         break;
+
       case "Content:ScrollBy":
         content.scrollBy(json.dx, json.dy);
         break;
+
       case "Content:ZoomLevel":
         // XXX not working yet
         break;
-      case "Content:FastScrollTo":
-        // XXX not working yet
+
+      case "Content:FastScrollTo": {
         try {
           let cwu = Util.getWindowUtils(content);
           cwu.setDisplayport(json.x - 200, json.y - 400,
@@ -393,6 +404,13 @@ let ContentScroll =  {
         }
         sendAsyncMessage("Content:FastScrollTo:Return");
         break;
+      }
+
+      case "Content:SetCssViewportSize": {
+        let cwu = Util.getWindowUtils(content);
+        cwu.setCSSViewport(json.width, json.height);
+        break;
+      }
     }
   }
 };
