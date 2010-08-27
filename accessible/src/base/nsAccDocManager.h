@@ -386,7 +386,7 @@ private:
   } else if (type == nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD) {              \
       strEventType.AssignLiteral("reload");                                    \
   } else if (type == nsIAccessibleEvent::EVENT_STATE_CHANGE) {                 \
-    nsAccStateChangeEvent *event = downcast_accEvent(aEvent);                  \
+    AccStateChangeEvent* event = downcast_accEvent(aEvent);                    \
     if (event->GetState() == nsIAccessibleStates::STATE_BUSY) {                \
       strEventType.AssignLiteral("busy ");                                     \
       if (event->IsStateEnabled())                                             \

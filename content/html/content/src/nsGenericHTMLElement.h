@@ -874,6 +874,9 @@ protected:
    * @param aFormIdElement The element associated with the id in @form. If
    * aBindToTree is false, aFormIdElement *must* contain the element associated
    * with the id in @form. Otherwise, it *must* be null.
+   *
+   * @note Callers of UpdateFormOwner have to be sure the element is in a
+   * document (GetCurrentDoc() != nsnull).
    */
   void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement);
 

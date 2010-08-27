@@ -335,8 +335,8 @@ JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT,
 JS_REQUIRES_STACK JSBool FASTCALL
 js_PopInterpFrame(JSContext* cx, TracerState* state)
 {
-    JS_ASSERT(cx->fp && cx->fp->down);
-    JSStackFrame* const fp = cx->fp;
+    JS_ASSERT(cx->hasfp() && cx->fp()->down);
+    JSStackFrame* const fp = cx->fp();
 
     /*
      * Mirror frame popping code from inline_return in js_Interpret. There are

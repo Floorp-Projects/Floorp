@@ -184,6 +184,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxPersistentConnectionsPerProxy(4)
     , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
+    , mInPrivateBrowsingMode(PR_FALSE)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
     , mPipeliningOverSSL(PR_FALSE)
@@ -701,6 +702,8 @@ nsHttpHandler::InitUserAgentComponents()
     "Macintosh"
 #elif defined(XP_BEOS)
     "BeOS"
+#elif defined(MOZ_PLATFORM_MAEMO)
+    "Maemo"
 #elif defined(MOZ_X11)
     "X11"
 #else

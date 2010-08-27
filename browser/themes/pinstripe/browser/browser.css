@@ -872,7 +872,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   font-size: 0.95em;
 }
 
-richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
 }
 

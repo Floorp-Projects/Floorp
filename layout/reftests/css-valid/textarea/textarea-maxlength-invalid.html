@@ -2,12 +2,9 @@
 <html class="reftest-wait">
   <!-- Test: if textarea isn't valid nor barred from constraint validation,
              it should not be affected by :valid pseudo-class. -->
-  <style>
-    textarea { background-color: green; }
-    textarea:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('t').value='foo'; document.documentElement.className='';">
-    <textarea maxlength="2" id='t'></textarea>
+    <textarea class='notvalid' maxlength="2" id='t'></textarea>
   </body>
 </html>
 
