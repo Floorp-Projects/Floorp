@@ -370,6 +370,14 @@ nsViewSourceChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetContentDisposition(nsACString &aContentDisposition)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->GetContentDisposition(aContentDisposition);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetContentLength(PRInt64 *aContentLength)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);

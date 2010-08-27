@@ -222,31 +222,6 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
   return rv;
 }
 
-/** Gets the content-disposition header from a channel, using nsIHttpChannel
- * or nsIMultipartChannel if available
- * @param aChannel The channel to extract the disposition header from
- * @param aDisposition Reference to a string where the header is to be stored
- */
-static void ExtractDisposition(nsIChannel* aChannel, nsACString& aDisposition)
-{
-  aDisposition.Truncate();
-  // First see whether this is an http channel
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-  if (httpChannel) 
-  {
-    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), aDisposition);
-  }
-  if (aDisposition.IsEmpty())
-  {
-    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(aChannel));
-    if (multipartChannel)
-    {
-      multipartChannel->GetContentDisposition(aDisposition);
-    }
-  }
-
-}
-
 /** Extracts the filename out of a content-disposition header
  * @param aFilename [out] The filename. Can be empty on error.
  * @param aDisposition Value of a Content-Disposition header
@@ -314,7 +289,7 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
    * permission... otherwise just use our temp file
    */
   nsCAutoString disp;
-  ExtractDisposition(aChannel, disp);
+  aChannel->GetContentDisposition(disp);
   PRBool handleExternally = PR_FALSE;
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
@@ -678,8 +653,12 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
       return NS_ERROR_FAILURE;
 
     PRInt64 contentLength = -1;
-    if (channel)
+    nsCString disp;
+    if (channel) {
       channel->GetContentLength(&contentLength);
+      channel->GetContentDisposition(disp);
+    }
+
 
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
@@ -690,7 +669,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     TabChild *child = static_cast<TabChild*>(tabchild.get());
     mozilla::dom::PExternalHelperAppChild *pc;
     pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
-                                                  nsCString(aMimeContentType),
+                                                  nsCString(aMimeContentType), disp,
                                                   aForceSave, contentLength);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
