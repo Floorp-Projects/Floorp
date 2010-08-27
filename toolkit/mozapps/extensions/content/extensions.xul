@@ -88,6 +88,8 @@
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_toggleBackgroundUpdateCheck"/>
     <command id="cmd_installFromFile"/>
+    <command id="cmd_back"/>
+    <command id="cmd_forward"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -107,8 +109,10 @@
 
   <!-- main header -->
   <hbox id="header" align="center">
-    <label id="header-name"/>
-    <button id="header-link"/>
+    <button id="back-btn" class="nav-button" command="cmd_back"
+            tooltiptext="&cmd.back.tooltip;"/>
+    <button id="forward-btn" class="nav-button" command="cmd_forward"
+            tooltiptext="&cmd.forward.tooltip;"/>
     <spacer flex="1"/>
     <hbox id="updates-container" align="center">
       <image class="spinner"/>

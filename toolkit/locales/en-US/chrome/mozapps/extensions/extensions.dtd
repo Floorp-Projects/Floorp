@@ -10,8 +10,10 @@
 <!ENTITY installFromFile.label                "Install From File…">
 <!ENTITY installFromFile.accesskey            "I">
 
+<!ENTITY cmd.back.tooltip                     "Go back one page">
+<!ENTITY cmd.forward.tooltip                  "Go forward one page">
+
 <!-- categories / views -->
-<!-- LOCALIZATION NOTE: These should match the header-* entries in extensions.properties -->
 <!ENTITY view.search.label                    "Search">
 <!ENTITY view.discover.label                  "Get Add-ons">
 <!ENTITY view.locales.label                   "Languages">
