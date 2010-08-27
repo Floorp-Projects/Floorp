@@ -71,6 +71,8 @@ public:
 
   PRBool IsCandidateForConstraintValidation() const;
 
+  NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage);
+
 protected:
 
   enum ValidityStateType
@@ -89,7 +91,6 @@ protected:
   nsIConstraintValidation();
 
   nsresult GetValidity(nsIDOMValidityState** aValidity);
-  nsresult GetValidationMessage(nsAString& aValidationMessage);
   nsresult CheckValidity(PRBool* aValidity);
   void     SetCustomValidity(const nsAString& aError);
 
