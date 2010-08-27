@@ -96,9 +96,24 @@ function test()
     check(function() (new Int32Array(zerobuf)).length == 0);
     checkThrows(function() new Int32Array(zerobuf, 1));
 
+    var zerobuf2 = new ArrayBuffer();
+    check(function() zerobuf2.byteLength == 0);
+
     checkThrows(function() new ArrayBuffer(-100));
     // this is using js_ValueToECMAUInt32, which is giving 0 for "abc"
     checkThrows(function() new ArrayBuffer("abc"), TODO);
+
+    var zeroarray = new Int32Array(0);
+    check(function() zeroarray.length == 0);
+    check(function() zeroarray.byteLength == 0);
+    check(function() zeroarray.buffer);
+    check(function() zeroarray.buffer.byteLength == 0);
+
+    var zeroarray2 = new Int32Array();
+    check(function() zeroarray2.length == 0);
+    check(function() zeroarray2.byteLength == 0);
+    check(function() zeroarray2.buffer);
+    check(function() zeroarray2.buffer.byteLength == 0);
 
     var a = new Int32Array(20);
     check(function() a);
