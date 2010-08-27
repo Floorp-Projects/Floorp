@@ -1467,7 +1467,7 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 563584-10b.html 563584-10-ref.html
 == 563584-11.html 563584-11-ref.html
 == 564054-1.html 564054-1-ref.html
-== 564991-1.html 564991-1-ref.html
+random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
 == 568441.html 568441-ref.html
@@ -1489,7 +1489,7 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 580160-1.html 580160-1-ref.html
-== 581317-1.html 581317-1-ref.html
+random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
 == 582037-1b.html 582037-1-ref.html
