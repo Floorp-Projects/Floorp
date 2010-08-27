@@ -8104,7 +8104,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         nscoord cx = 0, cy = 0;
         GetCurScrollPos(ScrollOrientation_X, &cx);
         GetCurScrollPos(ScrollOrientation_Y, &cy);
-        printf("Current scroll pos is %d, %d\n", cx, cy);
 
         if (allowScroll) {
             NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType,
