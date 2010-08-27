@@ -353,8 +353,8 @@ function BuildConditionSandbox(aURL) {
                  getService(CI.nsIHttpProtocolHandler);
     sandbox.http = {};
     for each (var prop in [ "userAgent", "appName", "appVersion",
-                            "vendor", "vendorSub", "vendorComment",
-                            "product", "productSub", "productComment",
+                            "vendor", "vendorSub",
+                            "product", "productSub",
                             "platform", "oscpu", "language", "misc" ])
         sandbox.http[prop] = hh[prop];
     // see if we have the test plugin available,

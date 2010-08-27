@@ -303,19 +303,19 @@ private:
     PRUint32                  mSessionStartTime;
 
     // useragent components
-    nsXPIDLCString mAppName;
-    nsXPIDLCString mAppVersion;
+    nsCString      mLegacyAppName;
+    nsCString      mLegacyAppVersion;
     nsCString      mPlatform;
     nsCString      mOscpu;
     nsCString      mLanguage;
     nsCString      mMisc;
     nsXPIDLCString mVendor;
     nsXPIDLCString mVendorSub;
-    nsXPIDLCString mVendorComment;
     nsCString      mProduct;
     nsXPIDLCString mProductSub;
-    nsXPIDLCString mProductComment;
-    nsCString      mExtraUA;
+    nsXPIDLCString mAppName;
+    nsXPIDLCString mAppVersion;
+    nsCString      mCompatFirefox;
 
     nsCString      mUserAgent;
     nsXPIDLCString mUserAgentOverride;
