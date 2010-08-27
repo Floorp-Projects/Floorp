@@ -105,6 +105,15 @@ private:
   PRPackedBool mSleeping;
   
   nsTArray<nsTimerImpl*> mTimers;
+
+#define DELAY_LINE_LENGTH_LOG2  5
+#define DELAY_LINE_LENGTH_MASK  PR_BITMASK(DELAY_LINE_LENGTH_LOG2)
+#define DELAY_LINE_LENGTH       PR_BIT(DELAY_LINE_LENGTH_LOG2)
+
+  PRInt32  mDelayLine[DELAY_LINE_LENGTH]; // milliseconds
+  PRUint32 mDelayLineCounter;
+  PRUint32 mMinTimerPeriod;     // milliseconds
+  TimeDuration mTimeoutAdjustment;
 };
 
 #endif /* TimerThread_h___ */
