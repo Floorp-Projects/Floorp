@@ -65,3 +65,5 @@ script regress-474771-01.js
 script regress-474771-02.js
 script regress-476257.js
 script regress-477048.js
+script regress-589112.js
+script regress-590813.js

@@ -123,16 +123,11 @@ NativeIterator::mark(JSTracer *trc)
         MarkObject(trc, obj, "obj");
 }
 
-/*
- * Shared code to close iterator's state either through an explicit call or
- * when GC detects that the iterator is no longer reachable.
- */
 static void
 iterator_finalize(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &js_IteratorClass);
 
-    /* Avoid double work if the iterator was closed by JSOP_ENDITER. */
     NativeIterator *ni = obj->getNativeIterator();
     if (ni) {
         cx->free(ni);
@@ -511,13 +506,13 @@ NativeIterator::init(JSObject *obj, uintN flags, uint32 slength, uint32 key)
 static inline void
 RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 {
-    JS_ASSERT(!(ni->flags & JSITER_ACTIVE));
-    ni->flags |= JSITER_ACTIVE;
-
     /* Register non-escaping native enumerators (for-in) with the current context. */
     if (ni->flags & JSITER_ENUMERATE) {
         ni->next = cx->enumerators;
         cx->enumerators = iterobj;
+
+        JS_ASSERT(!(ni->flags & JSITER_ACTIVE));
+        ni->flags |= JSITER_ACTIVE;
     }
 }
 
@@ -849,17 +844,19 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
         /* Remove enumerators from the active list, which is a stack. */
         NativeIterator *ni = obj->getNativeIterator();
 
-        JS_ASSERT(ni->flags & JSITER_ACTIVE);
-        ni->flags &= ~JSITER_ACTIVE;
-
         if (ni->flags & JSITER_ENUMERATE) {
             JS_ASSERT(cx->enumerators == obj);
             cx->enumerators = ni->next;
-        }
 
-        /* Reset the enumerator; it may still be in the cached iterators
-         * for this thread, and can be reused. */
-        ni->props_cursor = ni->props_array;
+            JS_ASSERT(ni->flags & JSITER_ACTIVE);
+            ni->flags &= ~JSITER_ACTIVE;
+
+            /*
+             * Reset the enumerator; it may still be in the cached iterators
+             * for this thread, and can be reused.
+             */
+            ni->props_cursor = ni->props_array;
+        }
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass) {
