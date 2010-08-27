@@ -139,6 +139,10 @@ pref("signon.SignonFileName", "signons.txt");
 pref("formhelper.enabled", true);
 pref("formhelper.autozoom", true);
 pref("formhelper.restore", false);
+pref("formhelper.caretLines.portrait", 4);
+pref("formhelper.caretLines.landscape", 1);
+pref("formhelper.harmonizeValue", 10);
+pref("formhelper.margin", 15);
 
 /* find helper */
 pref("findhelper.autozoom", true);

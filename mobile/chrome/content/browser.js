@@ -2157,7 +2157,6 @@ const gSessionHistoryObserver = {
   }
 };
 
-
 var MemoryObserver = {
   observe: function mo_observe() {
     window.QueryInterface(Ci.nsIInterfaceRequestor)
