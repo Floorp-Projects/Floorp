@@ -672,7 +672,7 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
         !frame->AreAncestorViewsVisible())
         return;
 
-    nsCOMPtr<nsIDOMXULElement> elm(do_QueryInterface(content));
+    nsXULElement* elm = FromContent(content);
     if (elm) {
         // Define behavior for each type of XUL element.
         nsIAtom *tag = content->Tag();
@@ -682,7 +682,7 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
             nsCOMPtr<nsIDOMElement> element;
             // for radio buttons, focus the radiogroup instead
             if (tag == nsGkAtoms::radio) {
-              nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(do_QueryInterface(elm));
+              nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(do_QueryInterface(content));
               if (controlItem) {
                 PRBool disabled;
                 controlItem->GetDisabled(&disabled);
@@ -701,7 +701,7 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
           }
         }
         if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist) {
-            ClickWithInputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD);
+          elm->ClickWithInputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD);
         }
     }
     else {
