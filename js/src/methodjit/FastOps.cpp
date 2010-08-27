@@ -1527,10 +1527,24 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             return;
         }
         
-        /* 
-         * NB: An efficient path for comparing against NaN can go here.
-         * In practice, this situation should rarely arise.
-         */
+        /* Assume NaN is in canonical form. */
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+        RegisterID treg = frame.tempRegForType(lhs);
+
+        Assembler::Condition oppositeCond = (op == JSOP_STRICTEQ) ? Assembler::NotEqual : Assembler::Equal;
+
+#if defined JS_CPU_X86 || defined JS_CPU_ARM
+        static const int CanonicalNaNType = 0x7FF80000;
+        masm.setPtr(oppositeCond, treg, Imm32(CanonicalNaNType), result);
+#elif defined JS_CPU_X64
+        static const void *CanonicalNaNType = (void *)0x7FF8000000000000; 
+        masm.move(ImmPtr(CanonicalNaNType), JSC::X86Registers::r11);
+        masm.setPtr(oppositeCond, treg, JSC::X86Registers::r11, result);
+#endif
+
+        frame.popn(2);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+        return;
     }
 
     /* Comparison against undefined or null is super easy. */
