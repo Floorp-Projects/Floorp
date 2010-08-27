@@ -212,6 +212,8 @@ class ExceptionHandler {
   void UninstallHandlers();
   void PreresolveSymbols();
   bool GenerateDump(CrashContext *context);
+  void SendContinueSignalToChild();
+  void WaitForContinueSignal();
 
   void UpdateNextID();
   static void SignalHandler(int sig, siginfo_t* info, void* uc);
@@ -251,6 +253,13 @@ class ExceptionHandler {
 
   // A vector of the old signal handlers.
   std::vector<std::pair<int, struct sigaction *> > old_handlers_;
+
+  // We need to explicitly enable ptrace of parent processes on some
+  // kernels, but we need to know the PID of the cloned process before we
+  // can do this. We create a pipe which we can use to block the
+  // cloned process after creating it, until we have explicitly enabled 
+  // ptrace. This is used to store the file descriptors for the pipe
+  int fdes[2];
 };
 
 }  // namespace google_breakpad
