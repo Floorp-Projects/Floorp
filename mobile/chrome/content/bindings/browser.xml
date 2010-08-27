@@ -385,18 +385,18 @@
 
       <constructor>
         <![CDATA[
-          messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
-          messageManager.addMessageListener("DOMTitleChanged", this);
-          messageManager.addMessageListener("DOMLinkAdded", this);
+          this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
+          this.messageManager.addMessageListener("DOMTitleChanged", this);
+          this.messageManager.addMessageListener("DOMLinkAdded", this);
 
           // Listen for first load for lazy attachment to form fill controller
-          messageManager.addMessageListener("pageshow", this);
-          messageManager.addMessageListener("pagehide", this);
-          messageManager.addMessageListener("DOMPopupBlocked", this);
+          this.messageManager.addMessageListener("pageshow", this);
+          this.messageManager.addMessageListener("pagehide", this);
+          this.messageManager.addMessageListener("DOMPopupBlocked", this);
 
           // Prompt remoting
           ["Alert", "Confirm", "Prompt"].forEach(function(name) {
-            messageManager.addMessageListener("Prompt:" + name, this);
+            this.messageManager.addMessageListener("Prompt:Alert" + name, this);
           }, this);
 
           this._webProgress._init();
