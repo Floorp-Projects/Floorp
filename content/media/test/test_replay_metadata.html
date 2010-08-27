@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467972
 // Test for Bug 467972. Tests that when we play to end, seek to 0, and play again, that we don't
 // send/receive multiple loadeddata and loadedmetadata events.
 
-var videos = [];
+var manager = new MediaTestManager;
 
 function seekStarted(evt) {
   var v = evt.target;
@@ -75,18 +75,16 @@ function playbackEnded(evt) {
     is(v._endCount, 2, "Should have received two ended events for " + v._name);
     ok(v._playingCount > 0, "Should have at least one playing event for " + v._name);
     v._finished = true;
-    if (AllFinished(videos)) {
-      SimpleTest.finish();
-    }
+    v.parentNode.removeChild(v);
+    manager.finished(v.token);
   }  
   return false;
 }
 
-for (var i=0; i<gSmallTests.length; ++i) {
+function startTest(test, token) {
   var v = document.createElement('video');
-  var test = gSmallTests[i];
-  if (!v.canPlayType(test.type))
-    continue;
+  v.token = token;
+  manager.started(token);
   v.src = test.name;
   v._name = test.name;
   v._playedOnce = false;
@@ -105,14 +103,9 @@ for (var i=0; i<gSmallTests.length; ++i) {
   v.addEventListener("seeking", seekStarted, false);
   v.addEventListener("seeked", seekEnded, false);
   document.body.appendChild(v);
-  videos.push(v);
 }
 
-if (videos.length == 0) {
-  todo(false, "No types supported");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gSmallTests, startTest);
 
 </script>
 </pre>
