@@ -88,7 +88,7 @@ var shown = false;
 function checkFirst()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(shown,
+  todo(shown,
      "File picker show method should have been called");
   shown = false;
   document.getElementById("a").click();
