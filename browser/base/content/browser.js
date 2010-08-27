@@ -505,6 +505,10 @@ const gPopupBlockerObserver = {
     var pageReport = gBrowser.pageReport;
     if (pageReport) {
       for (var i = 0; i < pageReport.length; ++i) {
+        // popupWindowURI will be null if the file picker popup is blocked.
+        // xxxdz this should make the option say "Show file picker" and do it (Bug 590306) 
+        if (!pageReport[i].popupWindowURI)
+          continue;
         var popupURIspec = pageReport[i].popupWindowURI.spec;
 
         // Sometimes the popup URI that we get back from the pageReport
