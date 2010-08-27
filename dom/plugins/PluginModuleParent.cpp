@@ -233,7 +233,13 @@ PluginModuleParent::ShouldContinueFromReplyTimeout()
 #ifdef MOZ_CRASHREPORTER
     nsCOMPtr<nsILocalFile> pluginDump;
     nsCOMPtr<nsILocalFile> browserDump;
-    if (CrashReporter::CreatePairedMinidumps(OtherProcess(),
+    CrashReporter::ProcessHandle child;
+#ifdef XP_MACOSX
+    child = mSubprocess->GetChildTask();
+#else
+    child = OtherProcess();
+#endif
+    if (CrashReporter::CreatePairedMinidumps(child,
                                              mPluginThread,
                                              &mHangID,
                                              getter_AddRefs(pluginDump),
