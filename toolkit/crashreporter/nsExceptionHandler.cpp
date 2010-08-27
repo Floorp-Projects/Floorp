@@ -61,6 +61,7 @@
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <fcntl.h>
+#include <mach/mach.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "mac_utils.h"
@@ -1763,7 +1764,17 @@ CurrentThreadId()
 #elif defined(XP_LINUX)
   return sys_gettid();
 #elif defined(XP_MACOSX)
-  return mach_thread_self();
+  // Just return an index, since Mach ports can't be directly serialized
+  thread_act_port_array_t   threads_for_task;
+  mach_msg_type_number_t    thread_count;
+
+  if (task_threads(mach_task_self(), &threads_for_task, &thread_count))
+    return -1;
+
+  for (unsigned int i = 0; i < thread_count; ++i) {
+    if (threads_for_task[i] == mach_thread_self())
+      return i;
+  }
 #else
 #  error "Unsupported platform"
 #endif
@@ -1776,9 +1787,6 @@ CreatePairedMinidumps(ProcessHandle childPid,
                       nsILocalFile** childDump,
                       nsILocalFile** parentDump)
 {
-#ifdef XP_MACOSX
-  return false;
-#else
   if (!GetEnabled())
     return false;
 
@@ -1800,6 +1808,19 @@ CreatePairedMinidumps(ProcessHandle childPid,
   pairGUID->Cut(0, 1);
   pairGUID->Cut(pairGUID->Length()-1, 1);
 
+#ifdef XP_MACOSX
+  mach_port_t childThread = MACH_PORT_NULL;
+  thread_act_port_array_t   threads_for_task;
+  mach_msg_type_number_t    thread_count;
+
+  if (task_threads(childPid, &threads_for_task, &thread_count)
+      == KERN_SUCCESS && childBlamedThread < thread_count) {
+    childThread = threads_for_task[childBlamedThread];
+  }
+#else
+  ThreadId childThread = childBlamedThread;
+#endif
+
   // dump the child
   nsCOMPtr<nsILocalFile> childMinidump;
   nsCOMPtr<nsILocalFile> childExtra;
@@ -1809,7 +1830,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &childMinidump, &childExtra, childBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
          childPid,
-         childBlamedThread,
+         childThread,
          gExceptionHandler->dump_path(),
          PairedDumpCallback,
          &childCtx))
@@ -1824,9 +1845,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
     { &parentMinidump, &parentExtra, parentBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidump(
          gExceptionHandler->dump_path(),
-#ifndef XP_MACOSX
          true,                  // write exception stream
-#endif
          PairedDumpCallback,
          &parentCtx))
     return false;
@@ -1843,7 +1862,6 @@ CreatePairedMinidumps(ProcessHandle childPid,
   parentMinidump.swap(*parentDump);
 
   return true;
-#endif
 }
 
 bool
