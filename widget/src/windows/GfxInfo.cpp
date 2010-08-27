@@ -42,6 +42,14 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#include "nsICrashReporter.h"
+#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
+#include "nsIPrefService.h"
+#endif
+
+
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
@@ -209,6 +217,9 @@ void GfxInfo::Init()
   }
 
   RegCloseKey(key);
+
+
+  AddCrashReportAnnotations();
 }
 
 /* readonly attribute DOMString adapterDescription; */
@@ -276,4 +287,31 @@ NS_IMETHODIMP GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
   nsresult err;
   *aAdapterDeviceID = device.ToInteger(&err, 16);
   return NS_OK;
+}
+
+void GfxInfo::AddCrashReportAnnotations()
+{
+#ifdef MOZ_CRASHREPORTER
+  nsCAutoString deviceIDString, vendorIDString;
+  PRUint32 deviceID, vendorID;
+
+  GetAdapterDeviceID(&deviceID);
+  GetAdapterVendorID(&vendorID);
+
+  deviceIDString.AppendPrintf("%04x", &deviceID);
+  vendorIDString.AppendPrintf("%04x", &vendorID);
+
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
+      vendorIDString);
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
+      deviceIDString);
+
+  /* Add an App Note for now so that we get the data immediately. These
+   * can go away after we store the above in the socorro db */
+  CrashReporter::AppendAppNotesToCrashReport(nsCAutoString(NS_LITERAL_CSTRING("AdapterVendorID: ")) +
+      vendorIDString);
+  CrashReporter::AppendAppNotesToCrashReport(nsCAutoString(NS_LITERAL_CSTRING("AdapterDeviceID: ")) +
+      deviceIDString);
+
+#endif
 }
