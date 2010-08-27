@@ -7009,8 +7009,13 @@ var gIdentityHandler = {
     if (!this._eTLDService)
       this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
                          .getService(Ci.nsIEffectiveTLDService);
+    if (!this._IDNService)
+      this._IDNService = Cc["@mozilla.org/network/idn-service;1"]
+                         .getService(Ci.nsIIDNService);
     try {
-      return this._eTLDService.getBaseDomainFromHost(this._lastLocation.hostname);
+      let baseDomain =
+        this._eTLDService.getBaseDomainFromHost(this._lastLocation.hostname);
+      return this._IDNService.convertToDisplayIDN(baseDomain, {});
     } catch (e) {
       // If something goes wrong (e.g. hostname is an IP address) just fail back
       // to the full domain.
