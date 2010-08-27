@@ -135,6 +135,8 @@ struct _cairo_dwrite_scaled_font {
     cairo_scaled_font_t base;
     cairo_matrix_t mat;
     cairo_matrix_t mat_inverse;
+    cairo_antialias_t antialias_mode;
+    DWRITE_MEASURING_MODE measuring_mode;
 };
 typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
@@ -333,6 +335,54 @@ _cairo_dwrite_font_face_destroy (void *font_face)
 	dwrite_font_face->font->Release();
 }
 
+
+static inline unsigned short
+read_short(const char *buf)
+{
+    return be16_to_cpu(*(unsigned short*)buf);
+}
+
+#define GASP_TAG 0x70736167
+#define GASP_DOGRAY 0x2
+
+static cairo_bool_t
+do_grayscale(IDWriteFontFace *dwface, unsigned int ppem)
+{
+    void *tableContext;
+    char *tableData;
+    UINT32 tableSize;
+    BOOL exists;
+    dwface->TryGetFontTable(GASP_TAG, (const void**)&tableData, &tableSize, &tableContext, &exists);
+
+    if (tableSize < 4) {
+	return true;
+    }
+
+    if (exists) {
+	struct gaspRange {
+	    unsigned short maxPPEM; // Stored big-endian
+	    unsigned short behavior; // Stored big-endian
+	};
+	unsigned short numRanges = read_short(tableData + 2);
+	if (tableSize < (UINT)4 + numRanges * 4) {
+	    dwface->ReleaseFontTable(tableContext);
+	    return true;
+	}
+	gaspRange *ranges = (gaspRange *)(tableData + 4);
+	for (int i = 0; i < numRanges; i++) {
+	    if (be16_to_cpu(ranges[i].maxPPEM) > ppem) {
+		if (!(be16_to_cpu(ranges[i].behavior) & GASP_DOGRAY)) {
+		    dwface->ReleaseFontTable(tableContext);
+		    return false;
+		}
+		break;
+	    }
+	}
+	dwface->ReleaseFontTable(tableContext);
+    }
+    return true;
+}
+
 static cairo_status_t
 _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
 					    const cairo_matrix_t	*font_matrix,
@@ -362,6 +412,41 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     cairo_matrix_multiply(&dwriteFont->mat, &dwriteFont->mat, font_matrix);
     dwriteFont->mat_inverse = dwriteFont->mat;
     cairo_matrix_invert (&dwriteFont->mat_inverse);
+
+    cairo_antialias_t default_quality = CAIRO_ANTIALIAS_SUBPIXEL;
+
+    dwriteFont->measuring_mode = DWRITE_MEASURING_MODE_NATURAL;
+
+    // The following code detects the system quality at scaled_font creation time,
+    // this means that if cleartype settings are changed but the scaled_fonts
+    // are re-used, they might not adhere to the new system setting until re-
+    // creation.
+    switch (_cairo_win32_get_system_text_quality()) {
+	case CLEARTYPE_QUALITY:
+	    default_quality = CAIRO_ANTIALIAS_SUBPIXEL;
+	    break;
+	case ANTIALIASED_QUALITY:
+	    default_quality = CAIRO_ANTIALIAS_GRAY;
+	    dwriteFont->measuring_mode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
+	    break;
+	case DEFAULT_QUALITY:
+	    // _get_system_quality() seems to think aliased is default!
+	    default_quality = CAIRO_ANTIALIAS_NONE;
+	    dwriteFont->measuring_mode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
+	    break;
+    }
+
+    if (default_quality == CAIRO_ANTIALIAS_GRAY) {
+	if (!do_grayscale(font_face->dwriteface, (unsigned int)_cairo_round(font_matrix->yy))) {
+	    default_quality = CAIRO_ANTIALIAS_NONE;
+	}
+    }
+
+    if (options->antialias == CAIRO_ANTIALIAS_DEFAULT) {
+	dwriteFont->antialias_mode = default_quality;
+    } else {
+	dwriteFont->antialias_mode = options->antialias;
+    }
 
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
@@ -1237,6 +1322,7 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 }
 
 #if CAIRO_HAS_D2D_SURFACE
+
 /* Surface helper function */
 //XXX: this function should probably be in cairo-d2d-surface.cpp
 cairo_int_status_t
@@ -1287,17 +1373,14 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     }
 #endif
 
-    D2D1_TEXT_ANTIALIAS_MODE highest_quality = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
+    D2D1_TEXT_ANTIALIAS_MODE cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
 
     // If we're rendering to a temporary surface we cannot do sub-pixel AA.
     if (dst->base.content != CAIRO_CONTENT_COLOR || dst->rt.get() != target_rt.get()) {
-	highest_quality = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
+	cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
     }
 
-    switch (scaled_font->options.antialias) {
-	case CAIRO_ANTIALIAS_DEFAULT:
-	    target_rt->SetTextAntialiasMode(highest_quality);
-	    break;
+    switch (dwritesf->antialias_mode) {
 	case CAIRO_ANTIALIAS_NONE:
 	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_ALIASED);
 	    break;
@@ -1305,7 +1388,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 	    break;
 	case CAIRO_ANTIALIAS_SUBPIXEL:
-	    target_rt->SetTextAntialiasMode(highest_quality);
+	    target_rt->SetTextAntialiasMode(cleartype_quality);
 	    break;
     }
 
@@ -1414,7 +1497,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	brush->SetTransform(&mat_brush);
     }
     
-    target_rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush);
+    target_rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush, dwritesf->measuring_mode);
     
     if (transform) {
 	target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
