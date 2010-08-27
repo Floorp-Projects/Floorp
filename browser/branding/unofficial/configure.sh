@@ -1,2 +1,1 @@
-MOZ_APP_DISPLAYNAME="MozillaDeveloperPreview"
-MOZ_APP_UA_NAME="MozillaDeveloperPreview"
+MOZ_APP_DISPLAYNAME=MozillaDeveloperPreview
