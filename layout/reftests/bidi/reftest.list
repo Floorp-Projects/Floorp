@@ -9,8 +9,8 @@
 == bidi-005.html bidi-005-ref.html
 == bidi-006.html bidi-006-ref.html
 == bidi-006-j.html bidi-006-ref.html
-== visualmarquee.html marquee-ref.html
-== logicalmarquee.html marquee-ref.html
+random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
+random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == visualmarquee.html logicalmarquee.html
 # test for glyph mirroring in right-to-left text
 == mirroring-01.html mirroring-01-ref.html
