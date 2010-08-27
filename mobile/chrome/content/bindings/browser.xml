@@ -152,6 +152,8 @@
 
             case "Content:FastScrollTo:Return":
               this._flushingFastScroll = false;
+              this._pendingPixelsX = 0;
+              this._pendingPixelsY = 0;
               break;
          }
         ]]></body>
@@ -264,6 +266,8 @@
                   this._browser._documentURI = json.documentURI;
                   this._browser._searchEngines = [];
                 }
+
+                this._zoomLevel = 1;
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
@@ -385,14 +389,19 @@
                 onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;"
                 readonly="true"/>
 
+      <field name="_cssViewportWidth">0</field>
       <field name="_flushingFastScroll">false</field>
       <field name="_widthInDevicePx">0</field>
       <field name="_heightInDevicePx">0</field>
       <field name="_zoomLevel">1</field>
+      <field name="_defaultZoomLevel">1</field>
+      <field name="_pendingPixelsX">0</field>
+      <field name="_pendingPixelsY">0</field>
 
       <property name="widthInDevicePx"
                 onget="return this._widthInDevicePx;"
                 readonly="true"/>
+
       <property name="heightInDevicePx"
                 onget="return this._heightInDevicePx;"
                 readonly="true"/>
@@ -400,6 +409,10 @@
       <property name="zoomLevel"
                 onget="return this._zoomLevel;"
                 onset="return this._setZoomLevel(val);"/>
+
+      <property name="defaultZoomLevel"
+                onget="return this._defaultZoomLevel;"
+                onset="return this._setDefaultZoomLevel(val);"/>
 
       <method name="_setZoomLevel">
         <parameter name="zl"/>
@@ -413,6 +426,19 @@
         </body>
       </method>
 
+      <method name="setCssViewportSize">
+        <parameter name="width"/>
+        <parameter name="height"/>
+        <body>
+          <![CDATA[
+            this.messageManager.sendAsyncMessage("Content:SetCssViewportSize", {
+              width: width,
+              height: height
+            });
+          ]]>
+        </body>
+      </method>
+
       <method name="flushScroll">
         <body>
           <![CDATA[
@@ -421,6 +447,8 @@
               x: frameLoader.viewportScrollX,
               y: frameLoader.viewportScrollY
             });
+            this._pendingPixelsX = 0;
+            this._pendingPixelsY = 0;
           ]]>
         </body>
       </method>
@@ -444,16 +472,17 @@
 
             frameLoader.scrollViewportBy(x, y);
 
-            /*
-            XXX broken right now
-            if (this._flushingFastScroll == false) {
+            this._pendingPixelsX += x;
+            this._pendingPixelsY += y;
+
+            if (this._flushingFastScroll == false &&
+                (Math.abs(this._pendingPixelsX) >= 150 || Math.abs(this._pendingPixelsY) >= 250)) {
               this._flushingFastScroll = true;
               this.messageManager.sendAsyncMessage("Content:FastScrollTo", {
                 x: frameLoader.viewportScrollX + x,
                 y: frameLoader.viewportScrollY + y
               });
             }
-            */
           ]]>
         </body>
       </method>
