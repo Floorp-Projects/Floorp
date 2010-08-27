@@ -149,6 +149,10 @@
               this._widthInDevicePx = aMessage.json.width;
               this._heightInDevicePx = aMessage.json.height;
               break;
+
+            case "Content:FastScrollTo:Return":
+              this._flushingFastScroll = false;
+              break;
          }
         ]]></body>
       </method>
@@ -381,14 +385,33 @@
                 onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;"
                 readonly="true"/>
 
+      <field name="_flushingFastScroll">false</field>
       <field name="_widthInDevicePx">0</field>
       <field name="_heightInDevicePx">0</field>
+      <field name="_zoomLevel">1</field>
+
       <property name="widthInDevicePx"
                 onget="return this._widthInDevicePx;"
                 readonly="true"/>
       <property name="heightInDevicePx"
                 onget="return this._heightInDevicePx;"
                 readonly="true"/>
+
+      <property name="zoomLevel"
+                onget="return this._zoomLevel;"
+                onset="return this._setZoomLevel(val);"/>
+
+      <method name="_setZoomLevel">
+        <parameter name="zl"/>
+        <body>
+          <![CDATA[
+            throw "Not supported yet!";
+            if (zl <= 0) throw "Bad zoom level given.";
+            this._zoomLevel = zl;
+            this.messageManager.sendAsyncMessage("Content:ZoomLevel", { zoomLevel: zl });
+          ]]>
+        </body>
+      </method>
 
       <method name="flushScroll">
         <body>
@@ -415,7 +438,22 @@
 
             x = Math.max(0, Math.min(this.widthInDevicePx - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX;
             y = Math.max(0, Math.min(this.heightInDevicePx - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY;
+
+            if (x == 0 && y == 0)
+              return;
+
             frameLoader.scrollViewportBy(x, y);
+
+            /*
+            XXX broken right now
+            if (this._flushingFastScroll == false) {
+              this._flushingFastScroll = true;
+              this.messageManager.sendAsyncMessage("Content:FastScrollTo", {
+                x: frameLoader.viewportScrollX + x,
+                y: frameLoader.viewportScrollY + y
+              });
+            }
+            */
           ]]>
         </body>
       </method>
@@ -469,6 +507,7 @@
           }, this);
 
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this);
+          this.messageManager.addMessageListener("Content:FastScrollTo:Return", this);
 
           this._webProgress._init();
         ]]>
