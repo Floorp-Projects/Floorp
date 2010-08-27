@@ -456,6 +456,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (subdocRootFrame && NS_SUCCEEDED(rv)) {
     PRBool save = aBuilder->IsBackgroundOnly();
     if (presShell->IsPaintingSuppressed() &&
+        aBuilder->IsIgnoringPaintSuppression()) {
+      aBuilder->SetHadToIgnorePaintSuppression();
+    }
+    if (presShell->IsPaintingSuppressed() &&
         !aBuilder->IsIgnoringPaintSuppression()) {
       aBuilder->SetBackgroundOnly(PR_TRUE);
     }
