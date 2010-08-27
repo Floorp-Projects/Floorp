@@ -216,6 +216,7 @@ var TestPilotXulWindow = {
   },
 
   onUnload: function() {
+    document.getElementById("settings-pane").writePreferences(true);
     Observers.remove("testpilot:task:changed", this._onTaskStatusChanged, this);
   },
 
