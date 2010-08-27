@@ -1,1 +1,2 @@
 MOZ_APP_DISPLAYNAME=Minefield
+MOZ_APP_UA_NAME=Minefield
