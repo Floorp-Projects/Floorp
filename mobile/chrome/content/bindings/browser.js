@@ -61,6 +61,7 @@ let WebProgressListener = {
     };
     sendAsyncMessage("WebProgress:LocationChange", json);
 
+    let cwu = Util.getWindowUtils(content);
     let scrollOffset = Util.getScrollOffset(content);
     cwu.setDisplayport(scrollOffset.x - 200, scrollOffset.y - 400,
                        content.innerWidth + 400, content.innerHeight + 800);
@@ -379,10 +380,9 @@ let ContentScroll =  {
     let json = aMessage.json;
     switch (aMessage.name) {
       case "Content:ScrollTo":
-        content.scrollTo(json.x, json.y);
+//        content.scrollTo(json.x, json.y);
         let cwu = Util.getWindowUtils(content);
-        let scrollOffset = Util.getScrollOffset(content);
-        cwu.setDisplayport(scrollOffset.x - 200, scrollOffset.y - 400,
+        cwu.setDisplayport(json.x - 200, json.y - 400,
                            content.innerWidth + 400, content.innerHeight + 800);
         break;
 
@@ -391,7 +391,8 @@ let ContentScroll =  {
         break;
 
       case "Content:ZoomLevel":
-        // XXX not working yet
+        content.document.body.style.MozTransformOrigin = "top left";
+        content.document.body.style.MozTransform = "scale(" + json.zoomLevel + ")";
         break;
 
       case "Content:FastScrollTo": {

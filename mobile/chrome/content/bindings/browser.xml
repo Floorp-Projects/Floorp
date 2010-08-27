@@ -398,6 +398,14 @@
       <field name="_pendingPixelsX">0</field>
       <field name="_pendingPixelsY">0</field>
 
+      <property name="widthInCssPx"
+                onget="return this._widthInDevicePx / this.zoomLevel;"
+                readonly="true"/>
+
+      <property name="heightInCssPx"
+                onget="return this._heightInDevicePx / this.zoomLevel;"
+                readonly="true"/>
+
       <property name="widthInDevicePx"
                 onget="return this._widthInDevicePx;"
                 readonly="true"/>
@@ -418,8 +426,9 @@
         <parameter name="zl"/>
         <body>
           <![CDATA[
-            throw "Not supported yet!";
+            return;
             if (zl <= 0) throw "Bad zoom level given.";
+
             this._zoomLevel = zl;
             this.messageManager.sendAsyncMessage("Content:ZoomLevel", { zoomLevel: zl });
           ]]>
@@ -431,6 +440,7 @@
         <parameter name="height"/>
         <body>
           <![CDATA[
+            return;
             this.messageManager.sendAsyncMessage("Content:SetCssViewportSize", {
               width: width,
               height: height
