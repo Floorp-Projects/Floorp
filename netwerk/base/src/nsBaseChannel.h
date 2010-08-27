@@ -290,6 +290,7 @@ private:
   nsCOMPtr<nsIChannel>                mRedirectChannel;
   nsCString                           mContentType;
   nsCString                           mContentCharset;
+  nsCString                           mContentDisposition;
   PRInt64                             mContentLength;
   PRUint32                            mLoadFlags;
   nsresult                            mStatus;
