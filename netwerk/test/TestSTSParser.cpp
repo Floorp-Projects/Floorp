@@ -45,27 +45,27 @@
 #include "nsIStrictTransportSecurityService.h"
 #include "nsIPermissionManager.h"
 
-#define EXPECT_SUCCESS(rv,msg, ...) \
+#define EXPECT_SUCCESS(rv, ...) \
   PR_BEGIN_MACRO \
   if (NS_FAILED(rv)) { \
-    fail(msg,##__VA_ARGS__); \
+    fail(__VA_ARGS__); \
     return PR_FALSE; \
   } \
   PR_END_MACRO
 
 
-#define EXPECT_FAILURE(rv,msg, ...) \
+#define EXPECT_FAILURE(rv, ...) \
   PR_BEGIN_MACRO \
   if (NS_SUCCEEDED(rv)) { \
-    fail(msg,##__VA_ARGS__); \
+    fail(__VA_ARGS__); \
     return PR_FALSE; \
   } \
   PR_END_MACRO
 
-#define REQUIRE_EQUAL(a,b,msg, ...) \
+#define REQUIRE_EQUAL(a, b, ...) \
   PR_BEGIN_MACRO \
   if (a != b) { \
-    fail(msg, ##__VA_ARGS__); \
+    fail(__VA_ARGS__); \
     return PR_FALSE; \
   } \
   PR_END_MACRO
