@@ -68,6 +68,11 @@
   padding-top: 0;
 }
 
+#browser-bottombox:not([lwthemefooter="true"]) {
+  /* opaque for layers optimization */
+  -moz-appearance: window;
+}
+
 #urlbar:-moz-lwtheme:not([focused="true"]),
 .searchbar-textbox:-moz-lwtheme:not([focused="true"]),
 .tabbrowser-tab:-moz-lwtheme:not([selected="true"]) {
