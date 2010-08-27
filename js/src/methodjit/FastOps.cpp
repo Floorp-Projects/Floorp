@@ -1506,20 +1506,45 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     Assembler::Condition cond = (op == JSOP_STRICTEQ) ? Assembler::Equal : Assembler::NotEqual;
 
+    /*
+     * NB: x64 can do full-Value comparisons. This is beneficial
+     * to do if the payload/type are not yet in registers.
+     */
+
+    /* Constant-fold. */
+    if (lhs->isConstant() && rhs->isConstant()) {
+        bool b = StrictlyEqual(cx, lhs->getValue(), rhs->getValue());
+        frame.popn(2);
+        frame.push(BooleanValue((op == JSOP_STRICTEQ) ? b : !b));
+        return;
+    }
+
+    if (frame.haveSameBacking(lhs, rhs)) {
+        /* False iff NaN. */
+        if (lhs->isTypeKnown() && lhs->isNotType(JSVAL_TYPE_DOUBLE)) {
+            frame.popn(2);
+            frame.push(BooleanValue(true));
+            return;
+        }
+        
+        /* 
+         * NB: An efficient path for comparing against NaN can go here.
+         * In practice, this situation should rarely arise.
+         */
+    }
+
     /* Comparison against undefined or null is super easy. */
     bool lhsTest;
     if ((lhsTest = ReallySimpleStrictTest(lhs)) || ReallySimpleStrictTest(rhs)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
+        FrameEntry *known = lhsTest ? lhs : rhs;
 
         if (test->isTypeKnown()) {
-            FrameEntry *known = lhsTest ? lhs : rhs;
             frame.popn(2);
             frame.push(BooleanValue((test->getKnownType() == known->getKnownType()) ==
                                   (op == JSOP_STRICTEQ)));
             return;
         }
-
-        FrameEntry *known = lhsTest ? lhs : rhs;
 
         /* This is only true if the other side is |null|. */
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
@@ -1546,7 +1571,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if ((lhsTest = BooleanStrictTest(lhs)) || BooleanStrictTest(rhs)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
 
-        if (test->isTypeKnown() && test->getKnownType() != JSVAL_TYPE_BOOLEAN) {
+        if (test->isTypeKnown() && test->isNotType(JSVAL_TYPE_BOOLEAN)) {
             frame.popn(2);
             frame.push(BooleanValue(op == JSOP_STRICTNE));
             return;
@@ -1591,14 +1616,89 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         return;
     }
 
+    /* Is it impossible that both Values are ints? */
+    if ((lhs->isTypeKnown() && lhs->isNotType(JSVAL_TYPE_INT32)) ||
+        (rhs->isTypeKnown() && rhs->isNotType(JSVAL_TYPE_INT32))) {
+        prepareStubCall(Uses(2));
+
+        if (op == JSOP_STRICTEQ)
+            stubCall(stubs::StrictEq);
+        else
+            stubCall(stubs::StrictNe);
+
+        frame.popn(2);
+        frame.pushSyncedType(JSVAL_TYPE_BOOLEAN);
+        return;
+    }
+
+#ifndef JS_CPU_ARM
+    /* Try an integer fast-path. */
+    bool needStub = false;
+    if (!lhs->isTypeKnown()) {
+        Jump j = frame.testInt32(Assembler::NotEqual, lhs);
+        stubcc.linkExit(j, Uses(2));
+        needStub = true;
+    }
+
+    if (!rhs->isTypeKnown() && !frame.haveSameBacking(lhs, rhs)) {
+        Jump j = frame.testInt32(Assembler::NotEqual, rhs);
+        stubcc.linkExit(j, Uses(2));
+        needStub = true;
+    }
+
+    FrameEntry *test  = lhs->isConstant() ? rhs : lhs;
+    FrameEntry *other = lhs->isConstant() ? lhs : rhs;
+
+    /* ReturnReg is safely usable with set32, since %ah can be accessed. */
+    RegisterID resultReg = Registers::ReturnReg;
+    frame.takeReg(resultReg);
+    RegisterID testReg = frame.tempRegForData(test);
+    frame.pinReg(testReg);
+
+    JS_ASSERT(resultReg != testReg);
+
+    /* Set boolean in resultReg. */
+    if (other->isConstant()) {
+        masm.set32(cond, testReg, Imm32(other->getValue().toInt32()), resultReg);
+    } else if (frame.shouldAvoidDataRemat(other)) {
+        masm.set32(cond, testReg, frame.addressOf(other), resultReg);
+    } else {
+        RegisterID otherReg = frame.tempRegForData(other);
+
+        JS_ASSERT(otherReg != resultReg);
+        JS_ASSERT(otherReg != testReg);
+
+        masm.set32(cond, testReg, otherReg, resultReg);
+    }
+
+    frame.unpinReg(testReg);
+
+    if (needStub) {
+        stubcc.leave();
+        if (op == JSOP_STRICTEQ)
+            stubcc.call(stubs::StrictEq);
+        else
+            stubcc.call(stubs::StrictNe);
+    }
+
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, resultReg);
+
+    if (needStub)
+        stubcc.rejoin(Changes(1));
+#else
+    /* TODO: Port set32() logic to ARM. */
     prepareStubCall(Uses(2));
+
     if (op == JSOP_STRICTEQ)
         stubCall(stubs::StrictEq);
     else
         stubCall(stubs::StrictNe);
+
     frame.popn(2);
-    frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
+    frame.pushSyncedType(JSVAL_TYPE_BOOLEAN);
+    return;
+#endif
 }
 
 void

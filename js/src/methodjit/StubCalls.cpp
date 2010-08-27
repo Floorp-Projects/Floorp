@@ -2352,20 +2352,24 @@ stubs::TypeOf(VMFrame &f)
     return ATOM_TO_STRING(atom);
 }
 
-JSBool JS_FASTCALL
+void JS_FASTCALL
 stubs::StrictEq(VMFrame &f)
 {
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
-    return StrictlyEqual(f.cx, lhs, rhs) == true;
+    const bool b = StrictlyEqual(f.cx, lhs, rhs) == true;
+    f.regs.sp--;
+    f.regs.sp[-1].setBoolean(b);
 }
 
-JSBool JS_FASTCALL
+void JS_FASTCALL
 stubs::StrictNe(VMFrame &f)
 {
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
-    return StrictlyEqual(f.cx, lhs, rhs) != true;
+    const bool b = StrictlyEqual(f.cx, lhs, rhs) != true;
+    f.regs.sp--;
+    f.regs.sp[-1].setBoolean(b);
 }
 
 void JS_FASTCALL

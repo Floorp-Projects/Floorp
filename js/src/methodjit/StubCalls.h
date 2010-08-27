@@ -157,8 +157,8 @@ void JS_FASTCALL Mod(VMFrame &f);
 void JS_FASTCALL Neg(VMFrame &f);
 void JS_FASTCALL Pos(VMFrame &f);
 void JS_FASTCALL Not(VMFrame &f);
-JSBool JS_FASTCALL StrictEq(VMFrame &f);
-JSBool JS_FASTCALL StrictNe(VMFrame &f);
+void JS_FASTCALL StrictEq(VMFrame &f);
+void JS_FASTCALL StrictNe(VMFrame &f);
 
 void JS_FASTCALL Iter(VMFrame &f, uint32 flags);
 void JS_FASTCALL IterNext(VMFrame &f);
