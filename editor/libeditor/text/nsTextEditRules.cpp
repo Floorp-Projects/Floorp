@@ -312,7 +312,7 @@ nsTextEditRules::WillDoAction(nsISelection *aSelection,
   switch (info->action)
   {
     case kInsertBreak:
-      return WillInsertBreak(aSelection, aCancel, aHandled);
+      return WillInsertBreak(aSelection, aCancel, aHandled, info->maxLength);
     case kInsertText:
     case kInsertTextIME:
       return WillInsertText(info->action,
@@ -424,7 +424,10 @@ nsTextEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillInsertBreak(nsISelection *aSelection,
+                                 PRBool *aCancel,
+                                 PRBool *aHandled,
+                                 PRInt32 aMaxLength)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -434,11 +437,24 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   }
   else 
   {
+    // handle docs with a max length
+    // NOTE, this function copies inString into outString for us.
+    NS_NAMED_LITERAL_STRING(inString, "\n");
+    nsAutoString outString;
+    PRBool didTruncate;
+    nsresult res = TruncateInsertionIfNeeded(aSelection, &inString, &outString,
+                                             aMaxLength, &didTruncate);
+    NS_ENSURE_SUCCESS(res, res);
+    if (didTruncate) {
+      *aCancel = PR_TRUE;
+      return NS_OK;
+    }
+
     *aCancel = PR_FALSE;
 
     // if the selection isn't collapsed, delete it.
     PRBool bCollapsed;
-    nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+    res = aSelection->GetIsCollapsed(&bCollapsed);
     NS_ENSURE_SUCCESS(res, res);
     if (!bCollapsed)
     {
@@ -642,7 +658,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
   // handle docs with a max length
   // NOTE, this function copies inString into outString for us.
-  nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString, aMaxLength);
+  nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString, aMaxLength, nsnull);
   NS_ENSURE_SUCCESS(res, res);
   
   PRUint32 start = 0;
@@ -1256,12 +1272,16 @@ nsresult
 nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection, 
                                            const nsAString  *aInString,
                                            nsAString  *aOutString,
-                                           PRInt32          aMaxLength)
+                                           PRInt32          aMaxLength,
+                                           PRBool *aTruncated)
 {
   if (!aSelection || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
   
   nsresult res = NS_OK;
   *aOutString = *aInString;
+  if (aTruncated) {
+    *aTruncated = PR_FALSE;
+  }
   
   if ((-1 != aMaxLength) && IsPlaintextEditor() && !mEditor->IsIMEComposing() )
   {
@@ -1294,6 +1314,9 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     if (resultingDocLength >= aMaxLength)
     {
       aOutString->Truncate();
+      if (aTruncated) {
+        *aTruncated = PR_TRUE;
+      }
     }
     else
     {
@@ -1301,6 +1324,9 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
       if (inCount + resultingDocLength > aMaxLength)
       {
         aOutString->Truncate(aMaxLength - resultingDocLength);
+        if (aTruncated) {
+          *aTruncated = PR_TRUE;
+        }
       }
     }
   }
