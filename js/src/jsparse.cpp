@@ -2951,16 +2951,22 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
      * be accessed.  For such functions we synthesize an access to arguments to
      * initialize it with the original parameter values.
      */
-    if (funtc.inStrictMode()) {
-        /*
-         * Fruit of the poisonous tree: eval forces eager arguments
-         * creation in (strict mode) parent functions.
-         */
-        if (outertc->inFunction() && outertc->inStrictMode()) {
-            if (funtc.callsEval())
-                outertc->noteCallsEval();
-        }
-    }
+
+    /*
+     * Fruit of the poisonous tree: if a closure calls eval, we consider the
+     * parent to call eval. We need this for two reasons: (1) the Jaegermonkey
+     * optimizations really need to know if eval is called transitively, and
+     * (2) in strict mode, eval called transitively requires eager argument
+     * creation in strict mode parent functions. 
+     *
+     * For the latter, we really only need to propagate callsEval if both 
+     * functions are strict mode, but we don't lose much by always propagating. 
+     * The only optimization we lose this way is in the case where a function 
+     * is strict, does not mutate arguments, does not call eval directly, but
+     * calls eval transitively.
+     */
+    if (funtc.callsEval())
+        outertc->noteCallsEval();
 
 #if JS_HAS_DESTRUCTURING
     /*
