@@ -110,6 +110,7 @@
 #include "nsIContentPrefService.h"
 #include "nsIObserverService.h"
 #include "nsIPopupWindowManager.h"
+#include "nsGlobalWindow.h"
 
 // input type=image
 #include "nsImageLoadingContent.h"
@@ -276,8 +277,11 @@ AsyncClickHandler::Run()
 
     PRUint32 permission;
     pm->TestPermission(doc->GetDocumentURI(), &permission);
-    if (permission == nsIPopupWindowManager::DENY_POPUP)
+    if (permission == nsIPopupWindowManager::DENY_POPUP) {
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+      nsGlobalWindow::FirePopupBlockedEvent(domDoc, win, nsnull, EmptyString(), EmptyString());
       return NS_OK;
+    }
   }
 
   // Get Loc title
