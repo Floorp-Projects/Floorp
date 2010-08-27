@@ -136,6 +136,17 @@ interface nsIDOMWindowUtils : nsISupports {
                       in long aModifiers,
                       [optional] in boolean aIgnoreRootScrollFrame);
 
+  /** The same as sendMouseEvent but dispatches the event directly to the
+   *  window.
+   */
+  void sendMouseEventToWindow(in AString aType,
+                              in float aX,
+                              in float aY,
+                              in long aButton,
+                              in long aClickCount,
+                              in long aModifiers,
+                              [optional] in boolean aIgnoreRootScrollFrame);
+
   /** Synthesize a mouse scroll event for a window. The event types supported
    *  are: 
    *    DOMMouseScroll
