@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,13 +43,17 @@
 
 #include "nsDOMCSSDeclaration.h"
 
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
-#include "nsIContent.h"
 
 namespace mozilla {
 namespace css {
 class Loader;
+}
+
+namespace dom {
+class Element;
 }
 }
 
@@ -56,7 +61,8 @@ class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration,
                                      public nsWrapperCache
 {
 public:
-  nsDOMCSSAttributeDeclaration(nsIContent *aContent
+  typedef mozilla::dom::Element Element;
+  nsDOMCSSAttributeDeclaration(Element* aContent
 #ifdef MOZ_SMIL
                                , PRBool aIsSMILOverride
 #endif // MOZ_SMIL
@@ -76,17 +82,13 @@ public:
                                             mozilla::css::Loader** aCSSLoader);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
 
-  virtual nsINode *GetParentObject()
-  {
-    return mContent;
-  }
+  virtual nsINode* GetParentObject();
 
 protected:
   virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl);
   virtual nsIDocument* DocToUpdate();
 
-  // XXX bug 585014 use nsRefPtr<Element> and fix mContent->AsElement()
-  nsCOMPtr<nsIContent> mContent;
+  nsRefPtr<Element> mElement;
 
 #ifdef MOZ_SMIL
   /* If true, this indicates that this nsDOMCSSAttributeDeclaration
