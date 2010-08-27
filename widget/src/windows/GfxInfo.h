@@ -48,12 +48,19 @@ namespace widget {
 class GfxInfo : public nsIGfxInfo
 {
 public:
-  GfxInfo() {}
+  GfxInfo() {Init();}
   virtual ~GfxInfo() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGFXINFO
+private:
 
+  void Init();
+  nsString mDeviceString;
+  nsString mDeviceID;
+  nsString mDriverVersion;
+  nsString mDriverDate;
+  nsString mDeviceKey;
 };
 
 } // namespace widget
