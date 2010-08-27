@@ -5776,22 +5776,41 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
       new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
 }
 
+static PRBool IsTransparentContainerElement(nsPresContext* aPresContext)
+{
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainerInternal();
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryInterface(container);
+  nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
+  if (!pwin)
+    return PR_FALSE;
+  nsCOMPtr<nsIContent> containerElement =
+    do_QueryInterface(pwin->GetFrameElementInternal());
+  return containerElement &&
+         containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
+}
+
 void PresShell::UpdateCanvasBackground()
 {
   // If we have a frame tree and it has style information that
   // specifies the background color of the canvas, update our local
   // cache of that color.
-  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
-  if (rootFrame) {
+  nsIFrame* rootStyleFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (rootStyleFrame) {
     nsStyleContext* bgStyle =
-      nsCSSRendering::FindRootFrameBackground(rootFrame);
+      nsCSSRendering::FindRootFrameBackground(rootStyleFrame);
     // XXX We should really be passing the canvasframe, not the root element
     // style frame but we don't have access to the canvasframe here. It isn't
     // a problem because only a few frames can return something other than true
     // and none of them would be a canvas frame or root element style frame.
     mCanvasBackgroundColor =
-      nsCSSRendering::DetermineBackgroundColor(GetPresContext(), bgStyle,
-                                               rootFrame);
+      nsCSSRendering::DetermineBackgroundColor(mPresContext, bgStyle,
+                                               rootStyleFrame);
+    if (nsLayoutUtils::GetCrossDocParentFrame(FrameManager()->GetRootFrame()) &&
+        !nsContentUtils::IsChildOfSameType(mDocument) &&
+        !IsTransparentContainerElement(mPresContext)) {
+      mCanvasBackgroundColor =
+        NS_ComposeColors(mPresContext->DefaultBackgroundColor(), mCanvasBackgroundColor);
+    }
   }
 
   // If the root element of the document (ie html) has style 'display: none'
