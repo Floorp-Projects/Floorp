@@ -29,9 +29,12 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="keypress" keycode="VK_RETURN" phase="capturing">
+      <handler event="keypress" phase="capturing">
         <![CDATA[
-          setTimeout(function() { BrowserUI.activePanel = null }, 0);
+          if (event.keyCode == event.DOM_VK_RETURN)
+            setTimeout(function() { BrowserUI.activePanel = null }, 0);
+          else if (this.readOnly)
+            this.readOnly = false;
         ]]>
       </handler>
       <handler event="text" phase="bubbling"
