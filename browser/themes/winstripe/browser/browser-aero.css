@@ -21,7 +21,7 @@
     display: none;
   }
 
-  #main-window:not(:-moz-lwtheme) {
+  #main-window {
     -moz-appearance: -moz-win-borderless-glass;
     background: transparent;
   }
