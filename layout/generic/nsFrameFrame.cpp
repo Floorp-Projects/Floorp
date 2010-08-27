@@ -454,18 +454,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
 
   if (subdocRootFrame && NS_SUCCEEDED(rv)) {
-    PRBool save = aBuilder->IsBackgroundOnly();
-    if (presShell->IsPaintingSuppressed() &&
-        aBuilder->IsIgnoringPaintSuppression()) {
-      aBuilder->SetHadToIgnorePaintSuppression();
-    }
-    if (presShell->IsPaintingSuppressed() &&
-        !aBuilder->IsIgnoringPaintSuppression()) {
-      aBuilder->SetBackgroundOnly(PR_TRUE);
-    }
     rv = subdocRootFrame->
            BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
-    aBuilder->SetBackgroundOnly(save);
   }
 
   if (!aBuilder->IsForEventDelivery()) {
