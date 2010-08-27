@@ -1211,7 +1211,7 @@
     </vbox>
   </hbox>
 
-  <vbox id="browser-bottombox">
+  <vbox id="browser-bottombox" layer="true">
     <statusbar class="chromeclass-status" id="status-bar"
 #ifdef WINCE
                hidden="true"
