@@ -252,6 +252,7 @@ function testNet()
   browser.addEventListener("load", function onTestNetLoad () {
     browser.removeEventListener("load", onTestNetLoad, true);
 
+    executeSoon(function(){
     let group = outputNode.querySelector(".hud-group");
     is(group.childNodes.length, 5, "Four children in output");
     let outputChildren = group.childNodes;
@@ -264,7 +265,7 @@ function testNet()
                                               "image is logged");
     isnot(outputChildren[4].textContent.
       indexOf("running network console logging tests"), -1, "log() is logged");
-
+    });
     testLiveFilteringForMessageTypes();
   }, true);
 
