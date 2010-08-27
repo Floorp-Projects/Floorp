@@ -37,9 +37,6 @@ chrome/toolkit.manifest
 component.reg
 components/browser.manifest
 components/components.list
-#ifndef LIBXUL_SDK
-components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
-#endif
 components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
 components/@DLL_PREFIX@brwsrdir@DLL_SUFFIX@
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
