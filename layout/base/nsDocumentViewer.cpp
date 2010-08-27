@@ -2388,17 +2388,13 @@ DocumentViewerImpl::FindContainerView()
 {
   nsIView* containerView = nsnull;
 
-  nsCOMPtr<nsIContent> containerElement;
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
-  nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
-  if (pwin) {
-    containerElement = do_QueryInterface(pwin->GetFrameElementInternal());
-  }
-        
   if (mParentWidget) {
     containerView = nsIView::GetViewFor(mParentWidget);
-  } else {
-    if (mContainer) {
+  } else if (mContainer) {
+    nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
+    nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
+    if (pwin) {
+      nsCOMPtr<nsIContent> containerElement = do_QueryInterface(pwin->GetFrameElementInternal());
       nsCOMPtr<nsIPresShell> parentPresShell;
       if (docShellItem) {
         nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
@@ -2442,32 +2438,7 @@ DocumentViewerImpl::FindContainerView()
     }
   }
 
-  if (!containerView)
-    return nsnull;
-
-  if (containerElement &&
-      containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent))
-    return containerView;
-
-  nsIWidget* outerWidget = containerView->GetNearestWidget(nsnull);
-  if (outerWidget &&
-      outerWidget->GetTransparencyMode() == eTransparencyTransparent)
-    return containerView;
-
-  // If the parent container is a chrome shell and we are a content shell
-  // then we won't hook into its view
-  // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
-  // but is really just for peace of mind. This check can be removed if we want to support fancy
-  // chrome effects like transparent controls floating over content, transparent Web browsers, and
-  // things like that, and the perf bugs are fixed.
-  nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
-  if (container) {
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-    container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
-    if (sameTypeParent)
-      return containerView;
-  }
-  return nsnull;
+  return containerView;
 }
 
 nsresult
