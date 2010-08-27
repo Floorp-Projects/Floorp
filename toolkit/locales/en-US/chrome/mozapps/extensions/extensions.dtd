@@ -7,7 +7,7 @@
 <!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
-<!ENTITY installFromFile.label                "Install from file…">
+<!ENTITY installFromFile.label                "Install From File…">
 <!ENTITY installFromFile.accesskey            "I">
 
 <!-- categories / views -->
@@ -37,9 +37,9 @@
 <!ENTITY updates.manualUpdatesFound.label     "View Available Updates">
 
 <!-- addon actions -->
-<!ENTITY cmd.showDetails.label                "Show more information">
+<!ENTITY cmd.showDetails.label                "Show More Information">
 <!ENTITY cmd.showDetails.accesskey            "S">
-<!ENTITY cmd.findUpdates.label                "Find updates">
+<!ENTITY cmd.findUpdates.label                "Find Updates">
 <!ENTITY cmd.findUpdates.accesskey            "F">
 <!ENTITY cmd.preferences.label                "Preferences">
 <!ENTITY cmd.preferences.accesskey            "P">
