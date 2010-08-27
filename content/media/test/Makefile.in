@@ -123,6 +123,8 @@ _TEST_FILES = \
 		test_play_twice.html \
 		test_playback.html \
 		test_playback_errors.html \
+		test_preload_actions.html \
+		test_preload_attribute.html \
 		test_progress.html \
 		test_reactivate.html \
 		test_readyState.html \

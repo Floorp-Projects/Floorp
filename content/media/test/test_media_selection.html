@@ -10,23 +10,24 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
+var manager = new MediaTestManager;
 
 function maketest(attach_media, name, type, check_metadata) {
-  return function (testNum) {
+  return function (token) {
     var e = document.createElement('video');
+    manager.started(token);
     var errorRun = false;
     if (check_metadata) {
       e.addEventListener('loadedmetadata', function () {
           ok(e.readyState >= HTMLMediaElement.HAVE_METADATA,
-             'test ' +  testNum + ' readyState ' + e.readyState + ' expected >= ' + HTMLMediaElement.HAVE_METADATA);
-          is(e.currentSrc.substring(e.currentSrc.length - name.length), name, 'test ' + testNum);
+             'test ' +  token + ' readyState ' + e.readyState + ' expected >= ' + HTMLMediaElement.HAVE_METADATA);
+          is(e.currentSrc.substring(e.currentSrc.length - name.length), name, 'test ' + token);
           // The load can go idle due to cache size limits
           ok(e.networkState >= HTMLMediaElement.NETWORK_IDLE,
-              'test ' + testNum + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_IDLE);
+              'test ' + token + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_IDLE);
           check_metadata(e);
           e.parentNode.removeChild(e);
-          runNextTest();
+          manager.finished(token);
         }, false);
       e.addEventListener('error', function(e) { e.stopPropagation();}, false);      
     } else {
@@ -35,11 +36,11 @@ function maketest(attach_media, name, type, check_metadata) {
         is(errorRun, false, "error handler should run once only!");
         errorRun = true;
         is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
-           'test ' + testNum + ' readyState should be HAVE_NOTHING when load fails.');
+           'test ' + token + ' readyState should be HAVE_NOTHING when load fails.');
         e.parentNode.removeChild(e);
-        runNextTest();
+        manager.finished(token);
       }, false);
-    }    
+    }
     attach_media(e, name, type);
   }
 }
@@ -128,18 +129,12 @@ for (var i = 0; i < gSmallTests.length; ++i) {
                 maketest(late_add_sources_first, src, type, check));
 }
 
-function runNextTest() {
-  if (nextTest >= subtests.length) {
-    SimpleTest.finish();
-    return;
-  }
-  setTimeout(function () {
-    subtests[nextTest](nextTest);
-    nextTest += 1;
-  }, 0);
+function startTest(test, token) {
+  test(token);
 }
 
-addLoadEvent(runNextTest);
+manager.runTests(subtests, startTest);
+
 </script>
 </pre>
 </body>
