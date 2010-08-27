@@ -58,7 +58,10 @@
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
-/* Whether the iterator is currently active. Not serialized by XDR. */
+/*
+ * For cacheable native iterators, whether the iterator is currently active.
+ * Not serialized by XDR.
+ */
 #define JSITER_ACTIVE     0x1000
 
 struct NativeIterator {
