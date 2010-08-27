@@ -2531,7 +2531,9 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 
   case NS_THEME_SCROLLBAR_SMALL:
   case NS_THEME_SCROLLBAR:
-    // Scrollbars are drawn opaque. Knowing this improves performance.
+  case NS_THEME_STATUSBAR:
+    // Knowing that scrollbars and statusbars are opaque improves
+    // performance, because we create layers for them.
     return eOpaque;
 
   default:
