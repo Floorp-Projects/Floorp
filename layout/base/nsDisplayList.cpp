@@ -287,9 +287,25 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
 }
 
 PRBool
-nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion) {
-  mVisibleRect = aVisibleRegion->GetBounds();
+nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
+                                        nsRegion* aVisibleRegion) {
+  NS_ASSERTION(aBuilder->ReferenceFrame()->GetOverflowRect().Contains(aVisibleRegion->GetBounds()),
+               "aVisibleRegion out of bounds");
+  return ComputeVisibilityForSublist(aBuilder, aVisibleRegion,
+                                     aVisibleRegion->GetBounds());
+}
+
+PRBool
+nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion,
+                                           const nsRect& aListVisibleBounds) {
+#ifdef DEBUG
+  nsRegion r;
+  r.And(*aVisibleRegion, GetBounds(aBuilder));
+  NS_ASSERTION(r.GetBounds() == aListVisibleBounds,
+               "bad aListVisibleBounds");
+#endif
+  mVisibleRect = aListVisibleBounds;
   PRBool anyVisible = PR_FALSE;
 
   nsAutoTArray<nsDisplayItem*, 512> elements;
@@ -322,7 +338,7 @@ nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     AppendToBottom(item);
   }
 
-  mIsOpaque = aVisibleRegion->IsEmpty();
+  mIsOpaque = !aVisibleRegion->Intersects(mVisibleRect);
 #ifdef DEBUG
   mDidComputeVisibility = PR_TRUE;
 #endif
@@ -1055,14 +1071,13 @@ nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder) {
 PRBool
 nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                      nsRegion* aVisibleRegion) {
-  return mList.ComputeVisibility(aBuilder, aVisibleRegion);
+  return mList.ComputeVisibilityForSublist(aBuilder, aVisibleRegion,
+                                           mVisibleRect);
 }
 
 PRBool
 nsDisplayWrapList::IsOpaque(nsDisplayListBuilder* aBuilder) {
-  // We could try to do something but let's conservatively just return PR_FALSE.
-  // We reimplement ComputeVisibility and that's what really matters
-  return PR_FALSE;
+  return mList.IsOpaque();
 }
 
 PRBool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
@@ -1384,8 +1399,11 @@ PRBool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
     aVisibleRegion->ConvertAppUnitsRoundOut(mParentAPD, mAPD);
   nsRegion originalVisibleRegion = visibleRegion;
 
+  nsRect transformedVisibleRect =
+    mVisibleRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
   PRBool retval =
-    nsDisplayWrapList::ComputeVisibility(aBuilder, &visibleRegion);
+    mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion,
+                                      transformedVisibleRect);
 
   nsRegion removed;
   // removed = originalVisibleRegion - visibleRegion
