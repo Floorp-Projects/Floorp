@@ -354,11 +354,11 @@ do_grayscale(IDWriteFontFace *dwface, unsigned int ppem)
     BOOL exists;
     dwface->TryGetFontTable(GASP_TAG, (const void**)&tableData, &tableSize, &tableContext, &exists);
 
-    if (tableSize < 4) {
-	return true;
-    }
-
     if (exists) {
+	if (tableSize < 4) {
+	    dwface->ReleaseFontTable(tableContext);
+	    return true;
+	}
 	struct gaspRange {
 	    unsigned short maxPPEM; // Stored big-endian
 	    unsigned short behavior; // Stored big-endian
