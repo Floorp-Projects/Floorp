@@ -1843,7 +1843,9 @@ HeadsUpDisplay.prototype = {
       // (re)inserted into the DOM (which happens during a search, for
       // example). For this reason, we need to ensure that we only check
       // message nodes.
-      if (ev.target.classList.contains("hud-msg-node")) {
+      let node = ev.target;
+      if (node.nodeType === node.ELEMENT_NODE &&
+          node.classList.contains("hud-msg-node")) {
         HUDService.adjustVisibilityForNewlyInsertedNode(self.hudId, ev.target);
       }
     }, false);
