@@ -514,31 +514,36 @@ var Browser = {
 
     // If this is an intial window launch (was a nsICommandLine passed via window params)
     // we execute some logic to load the initial launch page
-    if (window.arguments && window.arguments[0] &&
-        window.arguments[0] instanceof Ci.nsICommandLine) {
-      try {
-        var cmdLine = window.arguments[0];
+    if (window.arguments && window.arguments[0]) {
+      if (window.arguments[0] instanceof Ci.nsICommandLine) {
+        try {
+          var cmdLine = window.arguments[0];
 
-        // Check for and use a single commandline parameter
-        if (cmdLine.length == 1) {
-          // Assume the first arg is a URI if it is not a flag
-          var uri = cmdLine.getArgument(0);
-          if (uri != "" && uri[0] != '-') {
-            whereURI = cmdLine.resolveURI(uri);
+          // Check for and use a single commandline parameter
+          if (cmdLine.length == 1) {
+            // Assume the first arg is a URI if it is not a flag
+            var uri = cmdLine.getArgument(0);
+            if (uri != "" && uri[0] != '-') {
+              whereURI = cmdLine.resolveURI(uri);
+              if (whereURI)
+                whereURI = whereURI.spec;
+            }
+          }
+
+          // Check for the "url" flag
+          var uriFlag = cmdLine.handleFlagWithParam("url", false);
+          if (uriFlag) {
+            whereURI = cmdLine.resolveURI(uriFlag);
             if (whereURI)
               whereURI = whereURI.spec;
           }
-        }
-
-        // Check for the "url" flag
-        var uriFlag = cmdLine.handleFlagWithParam("url", false);
-        if (uriFlag) {
-          whereURI = cmdLine.resolveURI(uriFlag);
-          if (whereURI)
-            whereURI = whereURI.spec;
-        }
-      } catch (e) {}
-    }
+        } catch (e) {}
+      }
+      else {
+        // This window could have been opened by nsIBrowserDOMWindow.openURI
+        whereURI = window.arguments[0];
+      }
+    } 
 
     this.addTab(whereURI, true);
 
@@ -1469,7 +1474,8 @@ nsBrowserAccess.prototype = {
       let url = aURI ? aURI.spec : "about:blank";
       let newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
                                  "all,dialog=no", url, null, null, null);
-      browser = newWindow.Browser.selectedBrowser;
+      // since newWindow.Browser doesn't exist yet, just return null
+      return null;
     } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       browser = Browser.addTab("about:blank", true, Browser.selectedTab).browser;
     } else { // OPEN_CURRENTWINDOW and illegal values
