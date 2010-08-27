@@ -213,7 +213,15 @@ public:
    * Allows callers to selectively override the regular paint suppression checks,
    * so that methods like GetFrameForPoint work when painting is suppressed.
    */
-  void IgnorePaintSuppression() { mIsBackgroundOnly = PR_FALSE; }
+  void IgnorePaintSuppression() {
+    mIsBackgroundOnly = PR_FALSE;
+    mIgnoreSuppression = PR_TRUE;
+  }
+  /**
+   * @return PR_TRUE if this builder is set to ignore painting suppression in
+   * all documents.
+   */
+  PRBool IsIgnoringPaintSuppression() { return mIgnoreSuppression; }
   /**
    * Call this if we're doing normal painting to the window.
    */
@@ -386,6 +394,7 @@ private:
   PRPackedBool                   mBuildCaret;
   PRPackedBool                   mEventDelivery;
   PRPackedBool                   mIsBackgroundOnly;
+  PRPackedBool                   mIgnoreSuppression;
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;
   PRPackedBool                   mSelectedFramesOnly;
   PRPackedBool                   mAccurateVisibleRegions;
