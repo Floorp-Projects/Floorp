@@ -96,6 +96,7 @@ public:
 
    void LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; }
    PRBool IsLocked() const { return mLockedUntilChromeLoad; }
+   void IgnoreXULSizeMode(PRBool aEnable) { mIgnoreXULSizeMode = aEnable; }
 
 protected:
    enum persistentAttributes {
@@ -172,6 +173,7 @@ protected:
    PRPackedBool            mIgnoreXULSize;
    PRPackedBool            mIgnoreXULPosition;
    PRPackedBool            mChromeFlagsFrozen;
+   PRPackedBool            mIgnoreXULSizeMode;
    PRUint32                mContextFlags;
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
