@@ -37,8 +37,18 @@
             this.readOnly = false;
         ]]>
       </handler>
-      <handler event="text" phase="bubbling"
-               action="if (this.mController.input == this) this.mController.handleText();"/>
+      <handler event="text" phase="bubbling">
+        <![CDATA[
+          if (this.mController.input == this)
+            this.mController.handleText();
+        ]]>
+      </handler>
+      <handler event="blur" phase="capturing">
+        <![CDATA[
+          // suppress disconnect of autocomplete controller
+          this._dontBlur = true;
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
