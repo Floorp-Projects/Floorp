@@ -1073,12 +1073,11 @@ namespace nanojit
                     return 0; // no jump needed
                 } else {
 #ifdef JS_TRACER
-                    // We're emitting a guard that will always fail. Any code
-                    // between here and the target is dead (if it's a forward
-                    // jump).  But it won't be optimized away, and it could
-                    // indicate a performance problem or other bug, so assert
+                    // We're emitting a branch that will always be taken.  This may
+                    // result in dead code that will not be optimized away, and
+                    // could indicate a performance problem or other bug, so assert
                     // in debug builds.
-                    NanoAssertMsg(0, "Constantly false branch detected");
+                    NanoAssertMsg(0, "Constantly taken branch detected");
 #endif
                     return out->insBranch(LIR_j, NULL, t);
                 }
