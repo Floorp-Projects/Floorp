@@ -223,6 +223,16 @@ public:
    */
   PRBool IsIgnoringPaintSuppression() { return mIgnoreSuppression; }
   /**
+   * @return Call this if we ignore painting suppression on some document when
+   * using this builder to build a display list.
+   */
+  void SetHadToIgnorePaintSuppression() { mHadToIgnoreSuppression = PR_TRUE; }
+  /**
+   * @return Returns if this builder had to ignore painting suppression on some
+   * document when when building the display list.
+   */
+  PRBool GetHadToIgnorePaintSuppression() { return mHadToIgnoreSuppression; }
+  /**
    * Call this if we're doing normal painting to the window.
    */
   void SetPaintingToWindow(PRBool aToWindow) { mIsPaintingToWindow = aToWindow; }
@@ -395,6 +405,7 @@ private:
   PRPackedBool                   mEventDelivery;
   PRPackedBool                   mIsBackgroundOnly;
   PRPackedBool                   mIgnoreSuppression;
+  PRPackedBool                   mHadToIgnoreSuppression;
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;
   PRPackedBool                   mSelectedFramesOnly;
   PRPackedBool                   mAccurateVisibleRegions;
