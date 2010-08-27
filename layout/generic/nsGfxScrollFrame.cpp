@@ -1568,7 +1568,7 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
     return;
 
   nsRegion visibleRegion(aUpdateRect);
-  list.ComputeVisibility(&builder, &visibleRegion);
+  list.ComputeVisibilityForRoot(&builder, &visibleRegion);
 
   InvalidateFixedBackgroundFramesFromList(&builder, aMovingFrame, list);
   list.DeleteAll();
