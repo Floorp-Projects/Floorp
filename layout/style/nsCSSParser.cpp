@@ -2083,6 +2083,9 @@ CSSParserImpl::ParseNameSpaceRule(RuleAppendFunc aAppendFunc, void* aData)
       return PR_TRUE;
     }
   }
+  else {
+    UngetToken();
+  }
   REPORT_UNEXPECTED_TOKEN(PEAtNSUnexpected);
 
   return PR_FALSE;
@@ -5639,7 +5642,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_top:
   case eCSSProperty_left:
   case eCSSProperty_right:
-    return ParseVariant(aValue, VARIANT_AHLP, nsnull);
+    return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
   case eCSSProperty_box_align:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBoxAlignKTable);
@@ -5731,7 +5734,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBoxSizingKTable);
   case eCSSProperty_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHLP, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_AHLP | VARIANT_CALC,
+                                   nsnull);
   case eCSSProperty_width:
     return ParseNonNegativeVariant(aValue, VARIANT_AHKLP | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
@@ -5830,14 +5834,16 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_marks:
     return ParseMarks(aValue);
   case eCSSProperty_max_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLPO, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HLPO | VARIANT_CALC,
+                                   nsnull);
   case eCSSProperty_max_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKLPO,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKLPO | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
   case eCSSProperty_min_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLP, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HLP | VARIANT_CALC,
+                                   nsnull);
   case eCSSProperty_min_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKLP,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKLP | VARIANT_CALC,
                                    nsCSSProps::kWidthKTable);
   case eCSSProperty_opacity:
     return ParseVariant(aValue, VARIANT_HN, nsnull);

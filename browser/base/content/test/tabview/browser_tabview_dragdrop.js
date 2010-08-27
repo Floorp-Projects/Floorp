@@ -39,7 +39,7 @@ function test() {
   waitForExplicitFinish();
 
   window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-  setTimeout(function() { TabView.toggle(); }, 0);
+  TabView.toggle();
 }
 
 function onTabViewWindowLoaded() {
@@ -48,6 +48,7 @@ function onTabViewWindowLoaded() {
   ok(TabView.isVisible(), "Tab View is visible");
 
   let contentWindow = document.getElementById("tab-view").contentWindow;
+  let [originalTab] = gBrowser.visibleTabs;
 
   // create group one and two
   let padding = 10;
@@ -65,29 +66,29 @@ function onTabViewWindowLoaded() {
 
   groupOne.addSubscriber(groupOne, "tabAdded", function() {
     groupOne.removeSubscriber(groupOne, "tabAdded");
-    groupTwo.newTab("");
-  });
-  groupTwo.addSubscriber(groupTwo, "tabAdded", function() {
-    groupTwo.removeSubscriber(groupTwo, "tabAdded");
-    // carry on testing
-    addTest(contentWindow, groupOne.id, groupTwo.id);
+    groupTwo.newTab();
   });
 
   let count = 0;
-  let onTabViewHidden = function() {
-    // show the tab view.
-    TabView.toggle();
-    if (++count == 2) {
-      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+  let onTabViewShown = function() {
+    if (count == 2) {
+      window.removeEventListener("tabviewshown", onTabViewShown, false);
+      addTest(contentWindow, groupOne.id, groupTwo.id, originalTab);
     }
   };
+  let onTabViewHidden = function() {
+    TabView.toggle();
+    if (++count == 2)
+      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+  };
+  window.addEventListener("tabviewshown", onTabViewShown, false);
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
 
   // open tab in group
-  groupOne.newTab("");
+  groupOne.newTab();
 }
 
-function addTest(contentWindow, groupOneId, groupTwoId) {
+function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
   let groupOne = contentWindow.GroupItems.groupItem(groupOneId);
   let groupTwo = contentWindow.GroupItems.groupItem(groupTwoId);
   let groupOneTabItemCount = groupOne.getChildren().length;
@@ -115,15 +116,14 @@ function addTest(contentWindow, groupOneId, groupTwoId) {
 
   let onTabViewHidden = function() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    finish();
+     groupTwo.closeAll();
   };
-  window.addEventListener("tabviewhidden", onTabViewHidden, false);
-
   groupTwo.addSubscriber(groupTwo, "close", function() {
     groupTwo.removeSubscriber(groupTwo, "close");
-    contentWindow.UI.hideTabView();
+    finish();  
   });
-  groupTwo.closeAll();
+  window.addEventListener("tabviewhidden", onTabViewHidden, false);
+  gBrowser.selectedTab = originalTab;
 }
 
 function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {

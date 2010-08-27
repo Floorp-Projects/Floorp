@@ -1299,9 +1299,8 @@ Assembler::asm_restore(LIns* i, Register r)
 }
 
 void
-Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
+Assembler::asm_spill(Register rr, int d, bool quad)
 {
-    (void) pop;
     (void) quad;
     NanoAssert(d);
     // The following registers should never be spilled:
@@ -1570,7 +1569,7 @@ Assembler::asm_immd(LIns* ins)
 
     if (_config.arm_vfp && deprecated_isKnownReg(rr)) {
         if (d)
-            asm_spill(rr, d, false, true);
+            asm_spill(rr, d, true);
 
         underrunProtect(4*4);
         asm_immd_nochk(rr, ins->immDlo(), ins->immDhi());
@@ -2759,13 +2758,14 @@ Assembler::asm_cmov(LIns* ins)
 
     Register rf = findRegFor(iffalse, allow & ~rmask(rr));
 
-    // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
-    Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
-
     if (ins->isop(LIR_cmovd)) {
         NIns* target = _nIns;
         asm_nongp_copy(rr, rf);
         asm_branch(false, condval, target);
+
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
         if (rr != rt)
             asm_nongp_copy(rr, rt);
         freeResourcesOf(ins);
@@ -2775,6 +2775,9 @@ Assembler::asm_cmov(LIns* ins)
         }
         return;
     }
+
+    // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+    Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
 
     // WARNING: We cannot generate any code that affects the condition
     // codes between the MRcc generation here and the asm_cmp() call

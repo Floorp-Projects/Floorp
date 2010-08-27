@@ -142,6 +142,7 @@ _BROWSER_FILES = \
                  browser_bug577121.js \
                  browser_bug580956.js \
                  browser_bug581242.js \
+                 browser_bug585830.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
@@ -157,6 +158,8 @@ _BROWSER_FILES = \
                  browser_inspector_domPanel.js \
                  browser_inspector_iframeTest.js \
                  browser_inspector_scrolling.js \
+                 browser_inspector_store.js \
+                 browser_inspector_tab_switch.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \

@@ -10,7 +10,6 @@ found in the LICENSE file.
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>WebGL uniformMatrix Conformance Tests</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
-<script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
 </head>
@@ -56,12 +55,12 @@ for (var ii = 2; ii <= 4; ++ii) {
   }
   name = "uniformMatrix" + ii + "fv";
   gl[name](loc, false, mat);
-  assertMsg(gl.getError() == gl.INVALID_VALUE, "should fail with insufficient array size for " + name);
+  glErrorShouldBe(gl, gl.INVALID_VALUE, "should fail with insufficient array size for " + name);
   mat[ii * ii - 1] = 1;
   gl[name](loc, false, mat);
-  assertMsg(gl.getError() == gl.NO_ERROR, "can call " + name + "with transpose = false");
+  glErrorShouldBe(gl, gl.NO_ERROR, "can call " + name + "with transpose = false");
   gl[name](loc, true, mat);
-  assertMsg(gl.getError() == gl.INVALID_VALUE, name + " should return INVALID_VALUE with transpose = true");
+  glErrorShouldBe(gl, gl.INVALID_VALUE, name + " should return INVALID_VALUE with transpose = true");
 }
 
 debug("");

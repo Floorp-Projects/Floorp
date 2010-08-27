@@ -184,7 +184,23 @@ struct JSScript {
     uint16          staticLevel;/* static level for display maintenance */
     JSPrincipals    *principals;/* principals for this script */
     union {
-        JSObject    *object;    /* optional Script-class object wrapper */
+        /*
+         * A script object of class js_ScriptClass, to ensure the script is GC'd.
+         * - All scripts returned by JSAPI functions (JS_CompileScript,
+         *   JS_CompileFile, etc.) have these objects.
+         * - Function scripts never have script objects; such scripts are owned
+         *   by their function objects.
+         * - Temporary scripts created by obj_eval, JS_EvaluateScript, and 
+         *   similar functions never have these objects; such scripts are
+         *   explicitly destroyed by the code that created them.
+         * Debugging API functions (JSDebugHooks::newScriptHook;
+         * JS_GetFunctionScript) may reveal sans-script-object Function and
+         * temporary scripts to clients, but clients must never call
+         * JS_NewScriptObject on such scripts: doing so would double-free them,
+         * once from the explicit call to js_DestroyScript, and once when the
+         * script object is garbage collected.
+         */
+        JSObject    *object;
         JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
     } u;
 #ifdef CHECK_SCRIPT_OWNER
@@ -374,6 +390,9 @@ js_DestroyScript(JSContext *cx, JSScript *script);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);
+
+extern JSBool
+js_NewScriptObject(JSContext *cx, JSScript *script);
 
 /*
  * To perturb as little code as possible, we introduce a js_GetSrcNote lookup

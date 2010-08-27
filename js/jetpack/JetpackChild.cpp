@@ -114,6 +114,9 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
       JS_NewGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass));
     if (!implGlobal ||
         !JS_InitStandardClasses(mCx, implGlobal) ||
+#ifdef BUILD_CTYPES
+        !JS_InitCTypesClass(mCx, implGlobal) ||
+#endif
         !JS_DefineFunctions(mCx, implGlobal,
                             const_cast<JSFunctionSpec*>(sImplMethods)))
       return false;

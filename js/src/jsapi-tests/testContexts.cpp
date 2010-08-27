@@ -68,6 +68,8 @@ BEGIN_TEST(testContexts_bug561444)
         JS_BeginRequest(cx);
         {
             jsvalRoot v(cx);
+            JSAutoCrossCompartmentCall crossCall;
+            crossCall.enter(cx, d->obj);            
             if (!JS_EvaluateScript(cx, d->obj, d->code, strlen(d->code), __FILE__, __LINE__, v.addr()))
                 return;
         }

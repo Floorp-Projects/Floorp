@@ -51,39 +51,37 @@ DIRS            = \
                   $(NULL)
 
 
-CPPSRCS		= \
-		TestIncrementalDownload.cpp \
-		TestStreamLoader.cpp \
-		PropertiesTest.cpp \
-		urltest.cpp \
-		TestCallbacks.cpp \
-		TestPageLoad.cpp \
-		TestURLParser.cpp \
-		TestStandardURL.cpp \
-		TestUpload.cpp \
-		TestBlockingSocket.cpp \
-		TestDNS.cpp \
-		TestOpen.cpp \
-		TestCookie.cpp \
-		TestServ.cpp \
-		ReadNTLM.cpp \
+SIMPLE_PROGRAMS	= \
+		TestIncrementalDownload$(BIN_SUFFIX) \
+		TestStreamLoader$(BIN_SUFFIX) \
+		PropertiesTest$(BIN_SUFFIX) \
+		urltest$(BIN_SUFFIX) \
+		TestCallbacks$(BIN_SUFFIX) \
+		TestPageLoad$(BIN_SUFFIX) \
+		TestURLParser$(BIN_SUFFIX) \
+		TestStandardURL$(BIN_SUFFIX) \
+		TestUpload$(BIN_SUFFIX) \
+		TestBlockingSocket$(BIN_SUFFIX) \
+		TestDNS$(BIN_SUFFIX) \
+		TestOpen$(BIN_SUFFIX) \
+		TestCookie$(BIN_SUFFIX) \
+		TestServ$(BIN_SUFFIX) \
+		ReadNTLM$(BIN_SUFFIX) \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
-CPPSRCS += \
-		TestPerf.cpp \
-		TestIDN.cpp \
-		TestSocketTransport.cpp \
-		TestStreamTransport.cpp \
-		TestStreamChannel.cpp \
-		TestStreamPump.cpp \
-		TestProtocols.cpp \
-		TestIOThreads.cpp \
-		TestUDPSocketProvider.cpp \
+SIMPLE_PROGRAMS += \
+		TestPerf$(BIN_SUFFIX) \
+		TestIDN$(BIN_SUFFIX) \
+		TestSocketTransport$(BIN_SUFFIX) \
+		TestStreamTransport$(BIN_SUFFIX) \
+		TestStreamChannel$(BIN_SUFFIX) \
+		TestStreamPump$(BIN_SUFFIX) \
+		TestProtocols$(BIN_SUFFIX) \
+		TestIOThreads$(BIN_SUFFIX) \
+		TestUDPSocketProvider$(BIN_SUFFIX) \
 		$(NULL)
 endif
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
 		 TestSTSParser.cpp \

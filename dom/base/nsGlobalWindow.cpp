@@ -646,8 +646,8 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
-  mIsModalContentWindow(PR_FALSE), mIsActive(PR_FALSE),
-  mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
+  mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
+  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
@@ -2203,17 +2203,32 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   if (mScreen)
     mScreen->SetDocShell(aDocShell);
 
+  // tell our member elements about the new browserwindow
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+  GetWebBrowserChrome(getter_AddRefs(browserChrome));
+  if (mMenubar) {
+    mMenubar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mToolbar) {
+    mToolbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mLocationbar) {
+    mLocationbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mPersonalbar) {
+    mPersonalbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mStatusbar) {
+    mStatusbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mScrollbars) {
+    mScrollbars->SetWebBrowserChrome(browserChrome);
+  }
+
   if (!mDocShell) {
     MaybeForgiveSpamCount();
     CleanUp(PR_FALSE);
   } else {
-    // tell our member elements about the new browserwindow
-    if (mMenubar) {
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      GetWebBrowserChrome(getter_AddRefs(browserChrome));
-      mMenubar->SetWebBrowserChrome(browserChrome);
-    }
-
     // Get our enclosing chrome shell and retrieve its global window impl, so
     // that we can do some forwarding to the chrome document.
     nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;

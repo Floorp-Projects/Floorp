@@ -165,7 +165,7 @@ struct nsHTMLReflowMetrics {
   // The rect is in the local coordinate space of the frame, and should be at
   // least as big as the desired size. If there is no content that overflows,
   // then the overflow area is identical to the desired size and should be
-  // {0, 0, mWidth, mHeight}.
+  // {0, 0, width, height}.
   nsRect mOverflowArea;
 
   PRUint32 mFlags;

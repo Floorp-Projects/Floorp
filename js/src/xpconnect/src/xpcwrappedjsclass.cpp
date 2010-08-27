@@ -1430,10 +1430,11 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                             if(newThis)
                             {
                                 jsval v;
+                                xpcObjectHelper helper(newThis);
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,
-                                        &v, nsnull, newThis, newWrapperIID,
-                                        nsnull, nsnull, obj, PR_FALSE, PR_FALSE,
+                                        &v, nsnull, helper, newWrapperIID,
+                                        nsnull, obj, PR_FALSE, PR_FALSE,
                                         nsnull);
                                 if(newWrapperIID)
                                     nsMemory::Free(newWrapperIID);

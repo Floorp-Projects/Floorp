@@ -704,7 +704,7 @@ nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     serializable->Read(stream);
-    mCert = reinterpret_cast<nsNSSCertificate*>(serializable.get());
+    mCert = do_QueryInterface(serializable);
 
     // We are done with reading the certificate, now read the version
     // as we did before.

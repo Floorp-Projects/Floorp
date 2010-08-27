@@ -158,6 +158,56 @@ AsyncObjectCaller.prototype = {
 };
 
 /**
+ * This represents an author of an add-on (e.g. creator or developer)
+ *
+ * @param  aName
+ *         The name of the author
+ * @param  aURL
+ *         The URL of the author's profile page
+ */
+function AddonAuthor(aName, aURL) {
+  this.name = aName;
+  this.url = aURL;
+}
+
+AddonAuthor.prototype = {
+  name: null,
+  url: null,
+
+  // Returns the author's name, defaulting to the empty string
+  toString: function() {
+    return this.name || "";
+  }
+}
+
+/**
+ * This represents an screenshot for an add-on
+ *
+ * @param  aURL
+ *         The URL to the full version of the screenshot
+ * @param  aThumbnailURL
+ *         The URL to the thumbnail version of the screenshot
+ * @param  aCaption
+ *         The caption of the screenshot
+ */
+function AddonScreenshot(aURL, aThumbnailURL, aCaption) {
+  this.url = aURL;
+  this.thumbnailURL = aThumbnailURL;
+  this.caption = aCaption;
+}
+
+AddonScreenshot.prototype = {
+  url: null,
+  thumbnailURL: null,
+  caption: null,
+
+  // Returns the screenshot URL, defaulting to the empty string
+  toString: function() {
+    return this.url || "";
+  }
+}
+
+/**
  * This is the real manager, kept here rather than in AddonManager to keep its
  * contents hidden from API users.
  */
@@ -169,7 +219,7 @@ var AddonManagerInternal = {
 
   /**
    * Initializes the AddonManager, loading any known providers and initializing
-   * them. 
+   * them.
    */
   startup: function AMI_startup() {
     if (this.started)
@@ -277,11 +327,27 @@ var AddonManagerInternal = {
     if (!Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED))
       return;
 
+    Services.obs.notifyObservers(null, "addons-background-update-start", null);
+    let pendingUpdates = 1;
+
+    function notifyComplete() {
+      if (--pendingUpdates == 0)
+        Services.obs.notifyObservers(null, "addons-background-update-complete", null);
+    }
+
     let scope = {};
+    Components.utils.import("resource://gre/modules/AddonRepository.jsm", scope);
     Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
     scope.LightweightThemeManager.updateCurrentTheme();
 
     this.getAllAddons(function getAddonsCallback(aAddons) {
+      if ("getCachedAddonByID" in scope.AddonRepository) {
+        pendingUpdates++;
+        var ids = [a.id for each (a in aAddons)];
+        scope.AddonRepository.repopulateCache(ids, notifyComplete);
+      }
+
+      pendingUpdates += aAddons.length;
       aAddons.forEach(function BUC_forEachCallback(aAddon) {
         // Check all add-ons for updates so that any compatibility updates will
         // be applied
@@ -293,9 +359,13 @@ var AddonManagerInternal = {
                 aAddon.applyBackgroundUpdates) {
               aInstall.install();
             }
-          }
+          },
+
+          onUpdateFinished: notifyComplete
         }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
       });
+
+      notifyComplete();
     });
   },
 
@@ -802,7 +872,11 @@ var AddonManagerPrivate = {
 
   callAddonListeners: function AMP_callAddonListeners(aMethod) {
     AddonManagerInternal.callAddonListeners.apply(AddonManagerInternal, arguments);
-  }
+  },
+
+  AddonAuthor: AddonAuthor,
+
+  AddonScreenshot: AddonScreenshot
 };
 
 /**
