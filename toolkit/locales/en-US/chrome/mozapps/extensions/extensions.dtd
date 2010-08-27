@@ -94,8 +94,8 @@
 <!ENTITY sort.name.tooltip                    "Sort by name">
 <!ENTITY sort.dateUpdated.label               "Last Updated">
 <!ENTITY sort.dateUpdated.tooltip             "Sort by date updated">
-<!ENTITY sort.rating.label                    "Rating">
-<!ENTITY sort.rating.tooltip                  "Sort by average rating">
+<!ENTITY sort.relevance.label                 "Best match">
+<!ENTITY sort.relevance.tooltip               "Sort by relevance">
 
 <!ENTITY search.filter2.label                 "Search:">
 <!ENTITY search.filter2.installed.label       "My Add-ons">

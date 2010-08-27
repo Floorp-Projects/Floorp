@@ -215,8 +215,8 @@
             </radiogroup>
           </hbox>
           <hbox class="view-header" pack="end">
-            <hbox id="search-sorters" class="sort-controls" sortby="name"
-                  ascending="true"/>
+            <hbox id="search-sorters" class="sort-controls"
+                  showrelevance="true" sortby="relevancescore" ascending="false"/>
           </hbox>
           <richlistbox id="search-list" class="list" flex="1">
             <vbox id="search-list-empty" class="empty-list-notice"
