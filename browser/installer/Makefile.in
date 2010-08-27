@@ -110,6 +110,8 @@ endif
 
 ifndef LIBXUL_SDK
 INSTALL_SDK = 1
+else
+DEFINES += -DLIBXUL_SDK=1
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

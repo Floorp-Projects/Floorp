@@ -7,17 +7,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = browsercomps
 LIBRARY_NAME = browsercomps
-SHORT_LIBNAME = brwsrcmp
+
+ifdef LIBXUL_SDK
 IS_COMPONENT = 1
-MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
-
-# Because we are an application component, link against the CRT statically
-# (on Windows, but only if we're not building our own CRT for jemalloc)
-ifndef MOZ_MEMORY
-USE_STATIC_LIBS = 1
+else
+FORCE_STATIC_LIB = 1
+DEFINES += -DBROWSERCOMPS_LINK_STATICALLY
 endif
-
 
 EXPORTS = nsBrowserCompsCID.h
 
