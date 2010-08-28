@@ -3193,6 +3193,9 @@ pref("layers.accelerate-none", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
+// Whether to disable the automatic detection and use of direct2d.
+pref("gfx.direct2d.disabled", false);
+
 pref("layers.prefer-opengl", false);
 #endif
 #endif
