@@ -40,9 +40,6 @@ const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
 const NS_APP_HISTORY_50_FILE = "UHist";
 const NS_APP_BOOKMARKS_50_FILE = "BMarks";
 
-// Backwards compatible consts, use PlacesUtils properties if possible.
-const TOPIC_GLOBAL_SHUTDOWN = "profile-before-change";
-
 // Shortcuts to transactions type.
 const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
 const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
@@ -347,11 +344,11 @@ function waitForClearHistory(aCallback) {
 /**
  * Simulates a Places shutdown.
  */
-function shutdownPlaces()
+function shutdownPlaces(aKeepAliveConnection)
 {
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsIObserver);
-  hs.observe(null, TOPIC_GLOBAL_SHUTDOWN, null);
+  let hs = PlacesUtils.history.QueryInterface(Ci.nsIObserver);
+  hs.observe(null, "profile-change-teardown", null);
+  hs.observe(null, "profile-before-change", null);
 }
 
 

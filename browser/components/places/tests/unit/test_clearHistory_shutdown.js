@@ -47,20 +47,47 @@ const URIS = [
 , "http://c.example3.com/"
 ];
 
-let expirationObserver = {
-  observe: function observe(aSubject, aTopic, aData) {
-    print("Finished expiration.");
-    Services.obs.removeObserver(expirationObserver,
-                                PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  
-    let db = PlacesUtils.history
-                        .QueryInterface(Ci.nsPIPlacesDatabase)
-                        .DBConnection;
+const TOPIC_CONNECTION_CLOSED = "places-connection-closed";
 
-    let stmt = db.createStatement(
-      "SELECT id FROM moz_places_temp WHERE url = :page_url "
-    + "UNION ALL "
-    + "SELECT id FROM moz_places WHERE url = :page_url "
+let EXPECTED_NOTIFICATIONS = [
+  "places-shutdown"
+, "places-will-close-connection"
+, "places-connection-closing"
+, "places-sync-finished"
+, "places-expiration-finished"
+, "places-sync-finished"
+, "places-connection-closed"
+];
+
+const UNEXPECTED_NOTIFICATIONS = [
+  "xpcom-shutdown"
+];
+
+const URL = "ftp://localhost/clearHistoryOnShutdown/";
+
+let notificationIndex = 0;
+
+let notificationsObserver = {
+  observe: function observe(aSubject, aTopic, aData) {
+    print("Received notification: " + aTopic);
+
+    // Note that some of these notifications could arrive multiple times, for
+    // example in case of sync, we allow that.
+    if (EXPECTED_NOTIFICATIONS[notificationIndex] != aTopic)
+      notificationIndex++;
+    do_check_eq(EXPECTED_NOTIFICATIONS[notificationIndex], aTopic);
+
+    if (aTopic != TOPIC_CONNECTION_CLOSED)
+      return;
+
+    getDistinctNotifications().forEach(
+      function (topic) Services.obs.removeObserver(notificationsObserver, topic)
+    );
+
+    print("Looking for uncleared stuff.");
+
+    let stmt = DBConn().createStatement(
+      "SELECT id FROM moz_places WHERE url = :page_url "
     );
 
     try {
@@ -72,6 +99,9 @@ let expirationObserver = {
     } finally {
       stmt.finalize();
     }
+
+    // Check cache.
+    do_check_false(cacheExists(URL));
 
     do_test_finished();
   }
@@ -104,11 +134,60 @@ function run_test() {
                                  PlacesUtils.history.TRANSITION_TYPED,
                                  false, 0);
   });
+  print("Add cache.");
+  storeCache(URL, "testData");
 
-  print("Wait expiration.");
-  Services.obs.addObserver(expirationObserver,
-                           PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-  print("Simulate shutdown.");
-  PlacesUtils.history.QueryInterface(Ci.nsIObserver)
-                     .observe(null, TOPIC_GLOBAL_SHUTDOWN, null);
+  print("Simulate and wait shutdown.");
+  getDistinctNotifications().forEach(
+    function (topic)
+      Services.obs.addObserver(notificationsObserver, topic, false)
+  );
+
+  shutdownPlaces();
+}
+
+function getDistinctNotifications() {
+  let ar = EXPECTED_NOTIFICATIONS.concat(UNEXPECTED_NOTIFICATIONS);
+  return [ar[i] for (i in ar) if (ar.slice(0, i).indexOf(ar[i]) == -1)];
+}
+
+function storeCache(aURL, aContent) {
+  let cache = Cc["@mozilla.org/network/cache-service;1"].
+              getService(Ci.nsICacheService);
+  let session = cache.createSession("FTP", Ci.nsICache.STORE_ANYWHERE,
+                                    Ci.nsICache.STREAM_BASED);
+  let cacheEntry =
+    session.openCacheEntry(aURL, Ci.nsICache.ACCESS_READ_WRITE, false);
+
+  cacheEntry.setMetaDataElement("servertype", "0");
+  var oStream = cacheEntry.openOutputStream(0);
+
+  var written = oStream.write(aContent, aContent.length);
+  if (written != aContent.length) {
+    do_throw("oStream.write has not written all data!\n" +
+             "  Expected: " + written  + "\n" +
+             "  Actual: " + aContent.length + "\n");
+  }
+  oStream.close();
+  cacheEntry.close();
+}
+
+function cacheExists(aURL) {
+  let cache = Cc["@mozilla.org/network/cache-service;1"].
+              getService(Ci.nsICacheService);
+  let session = cache.createSession("FTP", Ci.nsICache.STORE_ANYWHERE,
+                                    Ci.nsICache.STREAM_BASED);
+  try {
+    let cacheEntry =
+      session.openCacheEntry(aURL, Ci.nsICache.ACCESS_READ, true);
+  } catch (e) {
+    if (e.result == Cr.NS_ERROR_CACHE_KEY_NOT_FOUND ||
+        e.result == Cr.NS_ERROR_FAILURE)
+      return false;
+ 
+    // Throw the textual error description.
+    do_throw(e);
+  }
+  cacheEntry.close();
+  return true;
 }
