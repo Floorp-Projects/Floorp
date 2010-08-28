@@ -63,12 +63,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "sss",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
-  var obj = {};
-  Cu.import("resource://gre/modules/NetUtil.jsm", obj);
-  return obj.NetUtil;
-});
-
 XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
   var obj = {};
   try {
@@ -112,152 +106,6 @@ const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  MISSING_ARGS: "Missing arguments",
                  LOG_OUTPUT_FAILED: "Log Failure: Could not append messageNode to outputNode",
 };
-
-/**
- * Implements the nsIStreamListener and nsIRequestObserver interface. Used
- * within the HS_httpObserverFactory function to get the response body of
- * requests.
- *
- * The code is mostly based on code listings from:
- *
- *   http://www.softwareishard.com/blog/firebug/
- *      nsitraceablechannel-intercept-http-traffic/
- *
- * @param object aHttpActivity
- *        HttpActivity object associated with this request (see
- *        HS_httpObserverFactory). As the response is done, the response header,
- *        body and status is stored on aHttpActivity.
- */
-function ResponseListener(aHttpActivity) {
-  this.receivedData = "";
-  this.httpActivity = aHttpActivity;
-}
-
-ResponseListener.prototype =
-{
-  /**
-   * The original listener for this request.
-   */
-  originalListener: null,
-
-  /**
-   * The HttpActivity object associated with this response.
-   */
-  httpActivity: null,
-
-  /**
-   * Stores the received data as a string.
-   */
-  receivedData: null,
-
-  /**
-   * Sets the httpActivity object's response header if it isn't set already.
-   *
-   * @param nsIRequest aRequest
-   */
-  setResponseHeader: function RL_setResponseHeader(aRequest)
-  {
-    let httpActivity = this.httpActivity;
-    // Check if the header isn't set yet.
-    if (!httpActivity.response.header) {
-      httpActivity.response.header = {};
-      if (aRequest instanceof Ci.nsIHttpChannel) {
-        aRequest.visitResponseHeaders({
-          visitHeader: function(aName, aValue) {
-            httpActivity.response.header[aName] = aValue;
-          }
-        });
-      }
-    }
-  },
-
-  /**
-   * See documention at
-   * https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIStreamListener
-   *
-   * Grabs a copy of the original data and passes it on to the original listener.
-   *
-   * @param nsIRequest aRequest
-   * @param nsISupports aContext
-   * @param nsIInputStream aInputStream
-   * @param unsigned long aOffset
-   * @param unsigned long aCount
-   */
-  onDataAvailable: function RL_onDataAvailable(aRequest, aContext, aInputStream,
-                                                aOffset, aCount)
-  {
-    this.setResponseHeader(aRequest);
-
-    let StorageStream = Components.Constructor("@mozilla.org/storagestream;1",
-                                                "nsIStorageStream",
-                                                "init");
-    let BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstream;1",
-                                                      "nsIBinaryOutputStream",
-                                                      "setOutputStream");
-
-    storageStream = new StorageStream(8192, aCount, null);
-    binaryOutputStream = new BinaryOutputStream(storageStream.getOutputStream(0));
-
-    let data = NetUtil.readInputStreamToString(aInputStream, aCount);
-    this.receivedData += data;
-    binaryOutputStream.writeBytes(data, aCount);
-
-    this.originalListener.onDataAvailable(aRequest, aContext,
-      storageStream.newInputStream(0), aOffset, aCount);
-  },
-
-  /**
-   * See documentation at
-   * https://developer.mozilla.org/En/NsIRequestObserver
-   *
-   * @param nsIRequest aRequest
-   * @param nsISupports aContext
-   */
-  onStartRequest: function RL_onStartRequest(aRequest, aContext)
-  {
-    this.originalListener.onStartRequest(aRequest, aContext);
-  },
-
-  /**
-   * See documentation at
-   * https://developer.mozilla.org/En/NsIRequestObserver
-   *
-   * If aRequest is an nsIHttpChannel then the response header is stored on the
-   * httpActivity object. Also, the response body is set on the httpActivity
-   * object and the HUDService.lastFinishedRequestCallback is called if there
-   * is one.
-   *
-   * @param nsIRequest aRequest
-   * @param nsISupports aContext
-   * @param nsresult aStatusCode
-   */
-  onStopRequest: function RL_onStopRequest(aRequest, aContext, aStatusCode)
-  {
-    this.originalListener.onStopRequest(aRequest, aContext, aStatusCode);
-
-    this.setResponseHeader(aRequest);
-    this.httpActivity.response.body = this.receivedData;
-
-    if (HUDService.lastFinishedRequestCallback) {
-      HUDService.lastFinishedRequestCallback(this.httpActivity);
-    }
-
-    // Call update on all panels.
-    this.httpActivity.panels.forEach(function(weakRef) {
-      let panel = weakRef.get();
-      if (panel) {
-        panel.update();
-      }
-    });
-    this.httpActivity.response.isDone = true;
-    this.httpActivity = null;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIStreamListener,
-    Ci.nsISupports
-  ])
-}
 
 /**
  * Helper object for networking stuff.
@@ -322,109 +170,6 @@ ResponseListener.prototype =
 var NetworkHelper =
 {
   /**
-   * Converts aText with a given aCharset to unicode.
-   *
-   * @param string aText
-   *        Text to convert.
-   * @param string aCharset
-   *        Charset to convert the text to.
-   * @returns string
-   *          Converted text.
-   */
-  convertToUnicode: function NH_convertToUnicode(aText, aCharset)
-  {
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-               createInstance(Ci.nsIScriptableUnicodeConverter);
-    conv.charset = aCharset || "UTF-8";
-    return conv.ConvertToUnicode(aText);
-  },
-
-  /**
-   * Reads all available bytes from aStream and converts them to aCharset.
-   *
-   * @param nsIInputStream aStream
-   * @param string aCharset
-   * @returns string
-   *          UTF-16 encoded string based on the content of aStream and aCharset.
-   */
-  readAndConvertFromStream: function NH_readAndConvertFromStream(aStream, aCharset)
-  {
-    let text = null;
-    try {
-      text = NetUtil.readInputStreamToString(aStream, aStream.available())
-      return this.convertToUnicode(text, aCharset);
-    }
-    catch (err) {
-      return text;
-    }
-  },
-
-   /**
-   * Reads the posted text from aRequest.
-   *
-   * @param nsIHttpChannel aRequest
-   * @param nsIDOMNode aBrowser
-   * @returns string or null
-   *          Returns the posted string if it was possible to read from aRequest
-   *          otherwise null.
-   */
-  readPostTextFromRequest: function NH_readPostTextFromRequest(aRequest, aBrowser)
-  {
-    if (aRequest instanceof Ci.nsIUploadChannel) {
-      let iStream = aRequest.uploadStream;
-
-      let isSeekableStream = false;
-      if (iStream instanceof Ci.nsISeekableStream) {
-        isSeekableStream = true;
-      }
-
-      let prevOffset;
-      if (isSeekableStream) {
-        prevOffset = iStream.tell();
-        iStream.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
-      }
-
-      // Read data from the stream.
-      let charset = aBrowser.contentWindow.document.characterSet;
-      let text = this.readAndConvertFromStream(iStream, charset);
-
-      // Seek locks the file, so seek to the beginning only if necko hasn't
-      // read it yet, since necko doesn't seek to 0 before reading (at lest
-      // not till 459384 is fixed).
-      if (isSeekableStream && prevOffset == 0) {
-        iStream.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
-      }
-      return text;
-    }
-    return null;
-  },
-
-  /**
-   * Reads the posted text from the page's cache.
-   *
-   * @param nsIDOMNode aBrowser
-   * @returns string or null
-   *          Returns the posted string if it was possible to read from aBrowser
-   *          otherwise null.
-   */
-  readPostTextFromPage: function NH_readPostTextFromPage(aBrowser)
-  {
-    let webNav = aBrowser.webNavigation;
-    if (webNav instanceof Ci.nsIWebPageDescriptor) {
-      let descriptor = webNav.currentDescriptor;
-
-      if (descriptor instanceof Ci.nsISHEntry && descriptor.postData &&
-          descriptor instanceof Ci.nsISeekableStream) {
-        descriptor.seek(NS_SEEK_SET, 0);
-
-        let charset = browser.contentWindow.document.characterSet;
-        return this.readAndConvertFromStream(descriptor, charset);
-      }
-    }
-    return null;
-  },
-
-  /**
    * Gets the nsIDOMWindow that is associated with aRequest.
    *
    * @param nsIHttpChannel aRequest
@@ -461,610 +206,10 @@ var NetworkHelper =
     }
 
     return null;
-  },
-
-  /**
-   * Loads the content of aUrl from the cache.
-   *
-   * @param string aUrl
-   *        URL to load the cached content for.
-   * @param string aCharset
-   *        Assumed charset of the cached content. Used if there is no charset
-   *        on the channel directly.
-   * @param function aCallback
-   *        Callback that is called with the loaded cached content if available
-   *        or null if something failed while getting the cached content.
-   */
-  loadFromCache: function NH_loadFromCache(aUrl, aCharset, aCallback)
-  {
-    let channel = NetUtil.newChannel(aUrl);
-
-    // Ensure that we only read from the cache and not the server.
-    channel.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE |
-      Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
-      Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
-
-    NetUtil.asyncFetch(channel, function (aInputStream, aStatusCode, aRequest) {
-      if (!Components.isSuccessCode(aStatusCode)) {
-        aCallback(null);
-        return;
-      }
-
-      // Try to get the encoding from the channel. If there is none, then use
-      // the passed assumed aCharset.
-      let aChannel = aRequest.QueryInterface(Ci.nsIChannel);
-      let contentCharset = aChannel.contentCharset || aCharset;
-
-      // Read the content of the stream using contentCharset as encoding.
-      aCallback(NetworkHelper.readAndConvertFromStream(aInputStream,
-                                                       contentCharset));
-    });
-  }
+   }
 }
 
 // FIREBUG CODE END.
-
-///////////////////////////////////////////////////////////////////////////
-//// Helper for creating the network panel.
-
-/**
- * Creates a DOMNode and sets all the attributes of aAttributes on the created
- * element.
- *
- * @param nsIDOMDocument aDocument
- *        Document to create the new DOMNode.
- * @param string aTag
- *        Name of the tag for the DOMNode.
- * @param object aAttributes
- *        Attributes set on the created DOMNode.
- *
- * @returns nsIDOMNode
- */
-function createElement(aDocument, aTag, aAttributes)
-{
-  let node = aDocument.createElement(aTag);
-  for (var attr in aAttributes) {
-    node.setAttribute(attr, aAttributes[attr]);
-  }
-  return node;
-}
-
-/**
- * Creates a new DOMNode and appends it to aParent.
- *
- * @param nsIDOMNode aParent
- *        A parent node to append the created element.
- * @param string aTag
- *        Name of the tag for the DOMNode.
- * @param object aAttributes
- *        Attributes set on the created DOMNode.
- *
- * @returns nsIDOMNode
- */
-function createAndAppendElement(aParent, aTag, aAttributes)
-{
-  let node = createElement(aParent.ownerDocument, aTag, aAttributes);
-  aParent.appendChild(node);
-  return node;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//// NetworkPanel
-
-/**
- * Creates a new NetworkPanel.
- *
- * @param nsIDOMNode aParent
- *        Parent node to append the created panel to.
- * @param object aHttpActivity
- *        HttpActivity to display in the panel.
- */
-function NetworkPanel(aParent, aHttpActivity)
-{
-  let doc = aParent.ownerDocument;
-  this.httpActivity = aHttpActivity;
-
-  // Create the underlaying panel
-  this.panel = createElement(doc, "panel", {
-    label: HUDService.getStr("NetworkPanel.label"),
-    titlebar: "normal",
-    noautofocus: "true",
-    noautohide: "true",
-    close: "true"
-  });
-
-  // Create the browser that displays the NetworkPanel XHTML.
-  this.browser = createAndAppendElement(this.panel, "browser", {
-    src: "chrome://global/content/NetworkPanel.xhtml",
-    disablehistory: "true",
-    flex: "1"
-  });
-
-  // Destroy the panel when it's closed.
-  this.panel.addEventListener("popuphidden", function onPopupHide() {
-    self.panel.removeEventListener("popuphidden", onPopupHide, false);
-    self.panel.parentNode.removeChild(self.panel);
-    self.panel = null;
-    self.browser = null;
-    self.document = null;
-    self.httpActivity = null;
-  }, false);
-
-  // Set the document object and update the content once the panel is loaded.
-  let self = this;
-  this.panel.addEventListener("load", function onLoad() {
-    self.panel.removeEventListener("load", onLoad, true)
-    self.document = self.browser.contentWindow.document;
-    self.update();
-  }, true);
-
-  // Create the footer.
-  let footer = createElement(doc, "hbox", { align: "end" });
-  createAndAppendElement(footer, "spacer", { flex: 1 });
-
-  createAndAppendElement(footer, "resizer", { dir: "bottomend" });
-  this.panel.appendChild(footer);
-
-  aParent.appendChild(this.panel);
-}
-
-NetworkPanel.prototype =
-{
-  /**
-   * Callback is called once the NetworkPanel is processed completly. Used by
-   * unit tests.
-   */
-  isDoneCallback: null,
-
-  /**
-   * The current state of the output.
-   */
-  _state: 0,
-
-  /**
-   * State variables.
-   */
-  _INIT: 0,
-  _DISPLAYED_REQUEST_HEADER: 1,
-  _DISPLAYED_REQUEST_BODY: 2,
-  _DISPLAYED_RESPONSE_HEADER: 3,
-  _TRANSITION_CLOSED: 4,
-
-  _fromDataRegExp: /Content-Type\:\s*application\/x-www-form-urlencoded/,
-
-  /**
-   * Small helper function that is nearly equal to  HUDService.getFormatStr
-   * except that it prefixes aName with "NetworkPanel.".
-   *
-   * @param string aName
-   *        The name of an i10n string to format. This string is prefixed with
-   *        "NetworkPanel." before calling the HUDService.getFormatStr function.
-   * @param array aArray
-   *        Values used as placeholder for the i10n string.
-   * @returns string
-   *          The i10n formated string.
-   */
-  _format: function NP_format(aName, aArray)
-  {
-    return HUDService.getFormatStr("NetworkPanel." + aName, aArray);
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          True if the response is an image, false otherwise.
-   */
-  get _responseIsImage()
-  {
-    let response = this.httpActivity.response;
-    if (!response || !response.header || !response.header["Content-Type"]) {
-      let request = this.httpActivity.request;
-      if (request.header["Accept"] &&
-          request.header["Accept"].indexOf("image/") != -1) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
-    return response.header["Content-Type"].indexOf("image/") != -1;
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          Returns true if the server responded that the request is already
-   *          in the browser's cache, false otherwise.
-   */
-  get _isResponseCached()
-  {
-    return this.httpActivity.response.status.indexOf("304") != -1;
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          Returns true if the posted body contains form data.
-   */
-  get _isRequestBodyFormData()
-  {
-    let requestBody = this.httpActivity.request.body;
-    return this._fromDataRegExp.test(requestBody);
-  },
-
-  /**
-   * Appends the node with id=aId by the text aValue.
-   *
-   * @param string aId
-   * @param string aValue
-   * @returns void
-   */
-  _appendTextNode: function NP_appendTextNode(aId, aValue)
-  {
-    let textNode = this.document.createTextNode(aValue);
-    this.document.getElementById(aId).appendChild(textNode);
-  },
-
-  /**
-   * Generates some HTML to display the key-value pair of the aList data. The
-   * generated HTML is added to node with id=aParentId.
-   *
-   * @param string aParentId
-   *        Id of the parent node to append the list to.
-   * @oaram object aList
-   *        Object that holds the key-value information to display in aParentId.
-   * @param boolean aIgnoreCookie
-   *        If true, the key-value named "Cookie" is not added to the list.
-   * @returns void
-   */
-  _appendList: function NP_appendList(aParentId, aList, aIgnoreCookie)
-  {
-    let parent = this.document.getElementById(aParentId);
-    let doc = this.document;
-
-    let sortedList = {};
-    Object.keys(aList).sort().forEach(function(aKey) {
-      sortedList[aKey] = aList[aKey];
-    });
-
-    for (let key in sortedList) {
-      if (aIgnoreCookie && key == "Cookie") {
-        continue;
-      }
-
-      /**
-       * The following code creates the HTML:
-       *
-       * <span class="property-name">${line}:</span>
-       * <span class="property-value">${aList[line]}</span><br>
-       *
-       * and adds it to parent.
-       */
-      let textNode = doc.createTextNode(key + ":");
-      let span = doc.createElement("span");
-      span.setAttribute("class", "property-name");
-      span.appendChild(textNode);
-      parent.appendChild(span);
-
-      textNode = doc.createTextNode(sortedList[key]);
-      span = doc.createElement("span");
-      span.setAttribute("class", "property-value");
-      span.appendChild(textNode);
-      parent.appendChild(span);
-
-      parent.appendChild(doc.createElement("br"));
-    }
-  },
-
-  /**
-   * Displays the node with id=aId.
-   *
-   * @param string aId
-   * @returns void
-   */
-  _displayNode: function NP_displayNode(aId)
-  {
-    this.document.getElementById(aId).style.display = "block";
-  },
-
-  /**
-   * Sets the request URL, request method, the timing information when the
-   * request started and the request header content on the NetworkPanel.
-   * If the request header contains cookie data, a list of sent cookies is
-   * generated and a special sent cookie section is displayed + the cookie list
-   * added to it.
-   *
-   * @returns void
-   */
-  _displayRequestHeader: function NP_displayRequestHeader()
-  {
-    let timing = this.httpActivity.timing;
-    let request = this.httpActivity.request;
-
-    this._appendTextNode("headUrl", this.httpActivity.url);
-    this._appendTextNode("headMethod", this.httpActivity.method);
-
-    this._appendTextNode("requestHeadersInfo",
-      ConsoleUtils.timestampString(timing.REQUEST_HEADER/1000));
-
-    this._appendList("requestHeadersContent", request.header, true);
-
-    if ("Cookie" in request.header) {
-      this._displayNode("requestCookie");
-
-      let cookies = request.header.Cookie.split(";");
-      let cookieList = {};
-      let cookieListSorted = {};
-      cookies.forEach(function(cookie) {
-        let name, value;
-        [name, value] = cookie.trim().split("=");
-        cookieList[name] = value;
-      });
-      this._appendList("requestCookieContent", cookieList);
-    }
-  },
-
-  /**
-   * Displays the request body section of the NetworkPanel and set the request
-   * body content on the NetworkPanel.
-   *
-   * @returns void
-   */
-  _displayRequestBody: function NP_displayRequestBody() {
-    this._displayNode("requestBody");
-    this._appendTextNode("requestBodyContent", this.httpActivity.request.body);
-  },
-
-  /*
-   * Displays the `sent form data` section. Parses the request header for the
-   * submitted form data displays it inside of the `sent form data` section.
-   *
-   * @returns void
-   */
-  _displayRequestForm: function NP_processRequestForm() {
-    let requestBodyLines = this.httpActivity.request.body.split("\n");
-    let formData = requestBodyLines[requestBodyLines.length - 1].
-                      replace(/\+/g, " ").split("&");
-
-    function unescapeText(aText)
-    {
-      try {
-        return decodeURIComponent(aText);
-      }
-      catch (ex) {
-        return decodeURIComponent(unescape(aText));
-      }
-    }
-
-    let formDataObj = {};
-    for (let i = 0; i < formData.length; i++) {
-      let data = formData[i];
-      let idx = data.indexOf("=");
-      let key = data.substring(0, idx);
-      let value = data.substring(idx + 1);
-      formDataObj[unescapeText(key)] = unescapeText(value);
-    }
-
-    this._appendList("requestFormDataContent", formDataObj);
-    this._displayNode("requestFormData");
-  },
-
-  /**
-   * Displays the response section of the NetworkPanel, sets the response status,
-   * the duration between the start of the request and the receiving of the
-   * response header as well as the response header content on the the NetworkPanel.
-   *
-   * @returns void
-   */
-  _displayResponseHeader: function NP_displayResponseHeader()
-  {
-    let timing = this.httpActivity.timing;
-    let response = this.httpActivity.response;
-
-    this._appendTextNode("headStatus", response.status);
-
-    let deltaDuration =
-      Math.round((timing.RESPONSE_HEADER - timing.REQUEST_HEADER) / 1000);
-    this._appendTextNode("responseHeadersInfo",
-      this._format("durationMS", [deltaDuration]));
-
-    this._displayNode("responseContainer");
-    this._appendList("responseHeadersContent", response.header);
-  },
-
-  /**
-   * Displays the respones image section, sets the source of the image displayed
-   * in the image response section to the request URL and the duration between
-   * the receiving of the response header and the end of the request. Once the
-   * image is loaded, the size of the requested image is set.
-   *
-   * @returns void
-   */
-  _displayResponseImage: function NP_displayResponseImage()
-  {
-    let self = this;
-    let timing = this.httpActivity.timing;
-    let response = this.httpActivity.response;
-    let cached = "";
-
-    if (this._isResponseCached) {
-      cached = "Cached";
-    }
-
-    let imageNode = this.document.getElementById("responseImage" + cached +"Node");
-    imageNode.setAttribute("src", this.httpActivity.url);
-
-    // This function is called to set the imageInfo.
-    function setImageInfo() {
-      let deltaDuration =
-        Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-      self._appendTextNode("responseImage" + cached + "Info",
-        self._format("imageSizeDeltaDurationMS", [
-          imageNode.width, imageNode.height, deltaDuration
-        ]
-      ));
-    }
-
-    // Check if the image is already loaded.
-    if (imageNode.width != 0) {
-      setImageInfo();
-    }
-    else {
-      // Image is not loaded yet therefore add a load event.
-      imageNode.addEventListener("load", function imageNodeLoad() {
-        imageNode.removeEventListener("load", imageNodeLoad, false);
-        setImageInfo();
-      }, false);
-    }
-
-    this._displayNode("responseImage" + cached);
-  },
-
-  /**
-   * Displays the response body section, sets the the duration between
-   * the receiving of the response header and the end of the request as well as
-   * the content of the response body on the NetworkPanel.
-   *
-   * @param [optional] string aCachedContent
-   *        Cached content for this request. If this argument is set, the
-   *        responseBodyCached section is displayed.
-   * @returns void
-   */
-  _displayResponseBody: function NP_displayResponseBody(aCachedContent)
-  {
-    let timing = this.httpActivity.timing;
-    let response = this.httpActivity.response;
-    let cached =  "";
-    if (aCachedContent) {
-      cached = "Cached";
-    }
-
-    let deltaDuration =
-      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseBody" + cached + "Info",
-      this._format("durationMS", [deltaDuration]));
-
-    this._displayNode("responseBody" + cached);
-    this._appendTextNode("responseBody" + cached + "Content",
-                            aCachedContent || response.body);
-  },
-
-  /**
-   * Displays the `no response body` section and sets the the duration between
-   * the receiving of the response header and the end of the request.
-   *
-   * @returns void
-   */
-  _displayNoResponseBody: function NP_displayNoResponseBody()
-  {
-    let timing = this.httpActivity.timing;
-
-    this._displayNode("responseNoBody");
-    let deltaDuration =
-      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseNoBodyInfo",
-      this._format("durationMS", [deltaDuration]));
-  },
-
-  /*
-   * Calls the isDoneCallback function if one is specified.
-   */
-  _callIsDone: function() {
-    if (this.isDoneCallback) {
-      this.isDoneCallback();
-    }
-  },
-
-  /**
-   * Updates the content of the NetworkPanel's browser.
-   *
-   * @returns void
-   */
-  update: function NP_update()
-  {
-    /**
-     * After the browser contentWindow is ready, the document object is set.
-     * If the document object isn't set yet, then the page is loaded and nothing
-     * can be updated.
-     */
-    if (!this.document) {
-      return;
-    }
-
-    let timing = this.httpActivity.timing;
-    let request = this.httpActivity.request;
-    let response = this.httpActivity.response;
-
-    switch (this._state) {
-      case this._INIT:
-        this._displayRequestHeader();
-        this._state = this._DISPLAYED_REQUEST_HEADER;
-        // FALL THROUGH
-
-      case this._DISPLAYED_REQUEST_HEADER:
-        // Process the request body if there is one.
-        if (request.body) {
-          // Check if we send some form data. If so, display the form data special.
-          if (this._isRequestBodyFormData) {
-            this._displayRequestForm();
-          }
-          else {
-            this._displayRequestBody();
-          }
-          this._state = this._DISPLAYED_REQUEST_BODY;
-        }
-        // FALL THROUGH
-
-      case this._DISPLAYED_REQUEST_BODY:
-        // There is always a response header. Therefore we can skip here if
-        // we don't have a response header yet and don't have to try updating
-        // anything else in the NetworkPanel.
-        if (!response.header) {
-          break
-        }
-        this._displayResponseHeader();
-        this._state = this._DISPLAYED_RESPONSE_HEADER;
-        // FALL THROUGH
-
-      case this._DISPLAYED_RESPONSE_HEADER:
-        // Check if the transition is done.
-        if (timing.TRANSACTION_CLOSE && response.isDone) {
-          if (this._responseIsImage) {
-            this._displayResponseImage();
-            this._callIsDone();
-          }
-          else if (response.body) {
-            this._displayResponseBody();
-            this._callIsDone();
-          }
-          else if (this._isResponseCached) {
-            let self = this;
-            NetworkHelper.loadFromCache(this.httpActivity.url,
-                                        this.httpActivity.charset,
-                                        function(aContent) {
-              // If some content could be loaded from the cache, then display
-              // the body.
-              if (aContent) {
-                self._displayResponseBody(aContent);
-                self._callIsDone();
-              }
-              // Otherwise, show the "There is no response body" hint.
-              else {
-                self._displayNoResponseBody();
-                self._callIsDone();
-              }
-            });
-          }
-          else {
-            this._displayNoResponseBody();
-            this._callIsDone();
-          }
-          this._state = this._TRANSITION_CLOSED;
-        }
-        break;
-    }
-  }
-}
 
 function HUD_SERVICE()
 {
@@ -1617,11 +762,6 @@ HUD_SERVICE.prototype =
    */
   unregisterDisplay: function HS_unregisterDisplay(aId)
   {
-    // Remove children from the output. If the output is not cleared, there can
-    // be leaks as some nodes has node.onclick = function; set and GC can't
-    // remove the nodes then.
-    HUDService.clearDisplay(aId);
-
     // remove HUD DOM node and
     // remove display references from local registries get the outputNode
     var outputNode = this.mixins.getOutputNodeById(aId);
@@ -1970,39 +1110,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Requests that haven't finished yet.
-   */
-  openRequests: {},
-
-  /**
-   * Assign a function to this property to listen for finished httpRequests.
-   * Used by unit tests.
-   */
-  lastFinishedRequestCallback: null,
-
-  /**
-   * Opens a NetworkPanel.
-   *
-   * @param nsIDOMNode aNode
-   *        DOMNode to display the panel next to.
-   * @param object aHttpActivity
-   *        httpActivity object. The data of this object is displayed in the
-   *        NetworkPanel.
-   * @returns NetworkPanel
-   */
-  openNetworkPanel: function (aNode, aHttpActivity) {
-    let doc = aNode.ownerDocument;
-    let parent = doc.getElementById("mainPopupSet");
-    let netPanel = new NetworkPanel(parent, aHttpActivity);
-
-    let panel = netPanel.panel;
-    panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
-    panel.sizeTo(350, 400);
-    aHttpActivity.panels.push(Cu.getWeakReference(netPanel));
-    return netPanel;
-  },
-
-  /**
    * Begin observing HTTP traffic that we care about,
    * namely traffic that originates inside any context that a Heads Up Display
    * is active for.
@@ -2016,15 +1123,13 @@ HUD_SERVICE.prototype =
       function (aChannel, aActivityType, aActivitySubtype,
                 aTimestamp, aExtraSizeData, aExtraStringData)
       {
+        var loadGroup;
         if (aActivityType ==
-              activityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION ||
-            aActivityType ==
-              activityDistributor.ACTIVITY_TYPE_SOCKET_TRANSPORT) {
+            activityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION) {
 
           aChannel = aChannel.QueryInterface(Ci.nsIHttpChannel);
 
-          let transCodes = this.httpTransactionCodes;
-          let hudId;
+          var transCodes = this.httpTransactionCodes;
 
           if (aActivitySubtype ==
               activityDistributor.ACTIVITY_SUBTYPE_REQUEST_HEADER ) {
@@ -2035,177 +1140,29 @@ HUD_SERVICE.prototype =
             }
 
             // Try to get the hudId that is associated to the window.
-            hudId = self.getHudIdByWindow(win);
+            let hudId = self.getHudIdByWindow(win);
             if (!hudId) {
               return;
             }
 
-            // The httpActivity object will hold all information concerning
-            // this request and later response.
-            let httpActivity = {
-              id: self.sequenceId(),
-              hudId: hudId,
-              url: aChannel.URI.spec,
-              method: aChannel.requestMethod,
+            var httpActivity = {
               channel: aChannel,
-              charset: win.document.characterSet,
-
-              panels: [],
-              request: {
-                header: { }
-              },
-              response: {
-                header: null
-              },
-              timing: {
-                "REQUEST_HEADER": aTimestamp
-              }
+              type: aActivityType,
+              subType: aActivitySubtype,
+              timestamp: aTimestamp,
+              extraSizeData: aExtraSizeData,
+              extraStringData: aExtraStringData,
+              stage: transCodes[aActivitySubtype],
+              hudId: hudId
             };
 
-            // Add a new output entry.
+            // create a unique ID to track this transaction and be able to
+            // update the logged node with subsequent http transactions
+            httpActivity.httpId = self.sequenceId();
             let loggedNode =
               self.logActivity("network", aChannel.URI, httpActivity);
-
-            // In some cases loggedNode can be undefined (e.g. if an image was
-            // requested). Don't continue in such a case.
-            if (!loggedNode) {
-              return;
-            }
-
-            // Add listener for the response body.
-            let newListener = new ResponseListener(httpActivity);
-            aChannel.QueryInterface(Ci.nsITraceableChannel);
-            newListener.originalListener = aChannel.setNewListener(newListener);
-            httpActivity.response.listener = newListener;
-
-            // Copy the request header data.
-            aChannel.visitRequestHeaders({
-              visitHeader: function(aName, aValue) {
-                httpActivity.request.header[aName] = aValue;
-              }
-            });
-
-            // Store the loggedNode and the httpActivity object for later reuse.
-            httpActivity.messageObject = loggedNode;
-            self.openRequests[httpActivity.id] = httpActivity;
-
-            // Make the network span clickable.
-            let linkNode = loggedNode.messageNode;
-            linkNode.setAttribute("aria-haspopup", "true");
-            linkNode.onclick = function() {
-              self.openNetworkPanel(linkNode, httpActivity);
-            }
-          }
-          else {
-            // Iterate over all currently ongoing requests. If aChannel can't
-            // be found within them, then exit this function.
-            let httpActivity = null;
-            for each (var item in self.openRequests) {
-              if (item.channel !== aChannel) {
-                continue;
-              }
-              httpActivity = item;
-              break;
-            }
-
-            if (!httpActivity) {
-              return;
-            }
-
-            let msgObject, updatePanel = false;
-            let data, textNode;
-            // Store the time information for this activity subtype.
-            httpActivity.timing[transCodes[aActivitySubtype]] = aTimestamp;
-
-            switch (aActivitySubtype) {
-              case activityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
-                let gBrowser = HUDService.currentContext().gBrowser;
-
-                let sentBody = NetworkHelper.readPostTextFromRequest(
-                                aChannel, gBrowser);
-                if (!sentBody) {
-                  // If the request URL is the same as the current page url, then
-                  // we can try to get the posted text from the page directly.
-                  // This check is necessary as otherwise the
-                  //   NetworkHelper.readPostTextFromPage
-                  // function is called for image requests as well but these
-                  // are not web pages and as such don't store the posted text
-                  // in the cache of the webpage.
-                  if (httpActivity.url == gBrowser.contentWindow.location.href) {
-                    sentBody = NetworkHelper.readPostTextFromPage(gBrowser);
-                  }
-                  if (!sentBody) {
-                    sentBody = "";
-                  }
-                }
-                httpActivity.request.body = sentBody;
-                break;
-
-              case activityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
-                msgObject = httpActivity.messageObject;
-
-                // aExtraStringData contains the response header. The first line
-                // contains the response status (e.g. HTTP/1.1 200 OK).
-                //
-                // Note: The response header is not saved here. Calling the
-                //       aChannel.visitResponseHeaders at this point sometimes
-                //       causes an NS_ERROR_NOT_AVAILABLE exception. Therefore,
-                //       the response header and response body is stored on the
-                //       httpActivity object within the RL_onStopRequest function.
-                httpActivity.response.status =
-                  aExtraStringData.split(/\r\n|\n|\r/)[0];
-
-                // Remove the textNode from the messageNode and add a new one
-                // that contains the respond http status.
-                textNode = msgObject.messageNode.firstChild;
-                textNode.parentNode.removeChild(textNode);
-
-                data = [ httpActivity.url,
-                         httpActivity.response.status ];
-
-                msgObject.messageNode.appendChild(
-                  msgObject.textFactory(
-                    msgObject.prefix +
-                    self.getFormatStr("networkUrlWithStatus", data)));
-
-                break;
-
-              case activityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
-                msgObject = httpActivity.messageObject;
-
-
-                let timing = httpActivity.timing;
-                let requestDuration =
-                  Math.round((timing.RESPONSE_COMPLETE -
-                                timing.REQUEST_HEADER) / 1000);
-
-                // Remove the textNode from the messageNode and add a new one
-                // that contains the request duration.
-                textNode = msgObject.messageNode.firstChild;
-                textNode.parentNode.removeChild(textNode);
-
-                data = [ httpActivity.url,
-                         httpActivity.response.status,
-                         requestDuration ];
-
-                msgObject.messageNode.appendChild(
-                  msgObject.textFactory(
-                    msgObject.prefix +
-                    self.getFormatStr("networkUrlWithStatusAndDuration", data)));
-
-                delete self.openRequests[item.id];
-                updatePanel = true;
-                break;
-            }
-
-            if (updatePanel) {
-              httpActivity.panels.forEach(function(weakRef) {
-                let panel = weakRef.get();
-                if (panel) {
-                  panel.update();
-                }
-              });
-            }
+            self.httpTransactions[aChannel] =
+              new Number(httpActivity.httpId);
           }
         }
       },
@@ -2217,18 +1174,15 @@ HUD_SERVICE.prototype =
         0x5004: "RESPONSE_HEADER",
         0x5005: "RESPONSE_COMPLETE",
         0x5006: "TRANSACTION_CLOSE",
-
-        0x804b0003: "STATUS_RESOLVING",
-        0x804b0007: "STATUS_CONNECTING_TO",
-        0x804b0004: "STATUS_CONNECTED_TO",
-        0x804b0005: "STATUS_SENDING_TO",
-        0x804b000a: "STATUS_WAITING_FOR",
-        0x804b0006: "STATUS_RECEIVING_FROM"
       }
     };
 
     activityDistributor.addObserver(httpObserver);
   },
+
+  // keep tracked of trasactions where the request header was logged
+  // update logged transactions thereafter.
+  httpTransactions: {},
 
   /**
    * Logs network activity
@@ -2257,20 +1211,13 @@ HUD_SERVICE.prototype =
                     };
       var msgType = this.getStr("typeNetwork");
       var msg = msgType + " " +
-        aActivityObject.method +
+        aActivityObject.channel.requestMethod +
         " " +
-        aActivityObject.url;
+        aURI.spec;
       message.message = msg;
-
       var messageObject =
-        this.messageFactory(message, aType, outputNode, aActivityObject);
-
-      var timestampedMessage = messageObject.timestampedMessage;
-      var urlIdx = timestampedMessage.indexOf(aActivityObject.url);
-      messageObject.prefix = timestampedMessage.substring(0, urlIdx);
-
+      this.messageFactory(message, aType, outputNode, aActivityObject);
       this.logMessage(messageObject.messageObject, outputNode, messageObject.messageNode);
-      return messageObject;
     }
     catch (ex) {
       Cu.reportError(ex);
@@ -2360,7 +1307,7 @@ HUD_SERVICE.prototype =
     var displayNode, outputNode, hudId;
 
     if (aType == "network") {
-      return this.logNetActivity(aType, aURI, aActivityObject);
+      var result = this.logNetActivity(aType, aURI, aActivityObject);
     }
     else if (aType == "console-listener") {
       this.logConsoleActivity(aURI, aActivityObject);
@@ -4198,9 +3145,9 @@ LogMessage.prototype = {
     this.messageNode = this.xulElementFactory("label");
 
     var ts = ConsoleUtils.timestamp();
-    this.timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
+    var timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
       this.message.message;
-    var messageTxtNode = this.textFactory(this.timestampedMessage);
+    var messageTxtNode = this.textFactory(timestampedMessage);
 
     this.messageNode.appendChild(messageTxtNode);
 
