@@ -236,7 +236,7 @@ public:
    */
   void SetVacuumInProgress(bool aValue)
   {
-    NS_ASSERTION(NS_IsMainThread(), "SetVacuumInProgress() off main thread!");
+    NS_PRECONDITION(NS_IsMainThread(), "SetVacuumInProgress() off main thread!");
     mVacuumInProgress = aValue;
   }
 
