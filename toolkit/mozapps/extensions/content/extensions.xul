@@ -69,8 +69,13 @@
                 accesskey="&cmd.findUpdates.accesskey;"/>
       <menuseparator/>
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
+#ifdef XP_WIN
                 label="&cmd.preferences.label;"
                 accesskey="&cmd.preferences.accesskey;"/>
+#else
+                label="&cmd.preferencesUnix.label;"
+                accesskey="&cmd.preferencesUnix.accesskey;"/>
+#endif
       <menuitem id="menuitem_about" command="cmd_showItemAbout"
                 label="&cmd.about.label;"
                 accesskey="&cmd.about.accesskey;"/>
@@ -350,9 +355,15 @@
                           tooltiptext="&detail.checkForUpdates.tooltip;"
                           command="cmd_findItemUpdates"/>
                   <button id="detail-prefs" class="addon-control"
+#ifdef XP_WIN
                           label="&detail.showPreferences.label;"
                           accesskey="&detail.showPreferences.accesskey;"
                           tooltiptext="&detail.showPreferences.tooltip;"
+#else
+                          label="&detail.showPreferencesUnix.label;"
+                          accesskey="&detail.showPreferencesUnix.accesskey;"
+                          tooltiptext="&detail.showPreferencesUnix.tooltip;"
+#endif
                           command="cmd_showItemPreferences"/>
                </vbox>
                <grid class="detail-meta fade" flex="1">

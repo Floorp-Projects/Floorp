@@ -43,8 +43,10 @@
 <!ENTITY cmd.showDetails.accesskey            "S">
 <!ENTITY cmd.findUpdates.label                "Find Updates">
 <!ENTITY cmd.findUpdates.accesskey            "F">
-<!ENTITY cmd.preferences.label                "Preferences">
-<!ENTITY cmd.preferences.accesskey            "P">
+<!ENTITY cmd.preferences.label                "Options">
+<!ENTITY cmd.preferences.accesskey            "O">
+<!ENTITY cmd.preferencesUnix.label            "Preferences">
+<!ENTITY cmd.preferencesUnix.accesskey        "P">
 <!ENTITY cmd.about.label                      "About">
 <!ENTITY cmd.about.accesskey                  "A">
 
@@ -54,8 +56,12 @@
 <!ENTITY cmd.disableAddon.accesskey           "D">
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
-<!ENTITY cmd.showPreferences.label            "Preferences">
-<!ENTITY cmd.showPreferences.tooltip          "Change this add-on's preferences">
+<!ENTITY cmd.showPreferences.label            "Options">
+<!ENTITY cmd.showPreferences.accesskey        "O">
+<!ENTITY cmd.showPreferences.tooltip          "Change this add-on's options">
+<!ENTITY cmd.showPreferencesUnix.label        "Preferences">
+<!ENTITY cmd.showPreferencesUnix.tooltip      "Change this add-on's preferences">
+<!ENTITY cmd.showPreferencesUnix.accesskey    "P">
 <!ENTITY cmd.contribute.label                 "Contribute">
 <!ENTITY cmd.contribute.accesskey             "C">
 <!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
@@ -78,9 +84,12 @@
 <!ENTITY detail.checkForUpdates.label         "Check for updates">
 <!ENTITY detail.checkForUpdates.accesskey     "F">
 <!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
-<!ENTITY detail.showPreferences.label         "Preferences">
-<!ENTITY detail.showPreferences.accesskey     "P">
-<!ENTITY detail.showPreferences.tooltip       "Change this add-on's preferences">
+<!ENTITY detail.showPreferences.label         "Options">
+<!ENTITY detail.showPreferences.accesskey     "O">
+<!ENTITY detail.showPreferences.tooltip       "Change this add-on's Options">
+<!ENTITY detail.showPreferencesUnix.label     "Preferences">
+<!ENTITY detail.showPreferencesUnix.accesskey "P">
+<!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on's preferences">
 
 
 <!-- ratings -->
