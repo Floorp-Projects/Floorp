@@ -5537,6 +5537,11 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
     return NS_OK;
   }
 
+  JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+  if (wrapper) {
+    return NS_OK;
+  }
+
   NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
 
   // Keep sXPConnect and sThreadJSContextStack alive. If we're on the main
