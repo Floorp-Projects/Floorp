@@ -2773,7 +2773,7 @@ nsNavBookmarks::UpdateKeywordsHashForRemovedBookmark(PRInt64 aItemId)
 
 NS_IMETHODIMP
 nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId,
-                                      const nsAString& aKeyword)
+                                      const nsAString& aUserCasedKeyword)
 {
   NS_ENSURE_ARG_MIN(aBookmarkId, 1);
 
@@ -2781,7 +2781,7 @@ nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Shortcuts are always lowercased internally.
-  nsAutoString keyword(aKeyword);
+  nsAutoString keyword(aUserCasedKeyword);
   ToLowerCase(keyword);
 
   // Check if bookmark was already associated to a keyword.
@@ -2899,21 +2899,22 @@ nsNavBookmarks::GetKeywordForBookmark(PRInt64 aBookmarkId, nsAString& aKeyword)
 
 
 NS_IMETHODIMP
-nsNavBookmarks::GetURIForKeyword(const nsAString& aKeyword, nsIURI** aURI)
+nsNavBookmarks::GetURIForKeyword(const nsAString& aUserCasedKeyword,
+                                 nsIURI** aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_TRUE(!aKeyword.IsEmpty(), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(!aUserCasedKeyword.IsEmpty(), NS_ERROR_INVALID_ARG);
   *aURI = nsnull;
 
   // Shortcuts are always lowercased internally.
-  nsAutoString keyword(aKeyword);
+  nsAutoString keyword(aUserCasedKeyword);
   ToLowerCase(keyword);
 
   nsresult rv = EnsureKeywordsHash();
   NS_ENSURE_SUCCESS(rv, rv);
 
   keywordSearchData searchData;
-  searchData.keyword.Assign(aKeyword);
+  searchData.keyword.Assign(keyword);
   searchData.itemId = -1;
   mBookmarkToKeywordHash.EnumerateRead(SearchBookmarkForKeyword, &searchData);
 
