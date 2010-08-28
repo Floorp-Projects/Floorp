@@ -44,6 +44,10 @@ interface nsIIDBKeyRange;
 interface nsIIDBRequest;
 interface nsIVariant;
 
+%{C++
+#include "jsapi.h"
+%}
+
 /**
  * Interface that defines the indexedDB property on a window.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
@@ -52,6 +56,7 @@ interface nsIVariant;
 [scriptable, uuid(a1e1dbd1-53a7-490a-ab6f-aa55809dd867)]
 interface nsIIDBFactory : nsISupports
 {
+  [implicit_jscontext]
   nsIIDBRequest
   open(in AString name,
        in AString description);

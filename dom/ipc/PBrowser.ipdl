@@ -121,7 +121,9 @@ parent:
 
     __delete__();
 
-    PExternalHelperApp(URI uri, nsCString aMimeContentType, bool aForceSave, PRInt64 aContentLength);
+    PExternalHelperApp(URI uri, nsCString aMimeContentType,
+                       nsCString aContentDisposition, bool aForceSave,
+                       PRInt64 aContentLength);
 
 child:
     CreateWidget(MagicWindowHandle parentWidget);

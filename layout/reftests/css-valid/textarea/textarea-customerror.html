@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if textarea has a custom error, it should not be affected by :valid
              pseudo-class. -->
-  <style>
-    textarea { background-color: green; }
-    textarea:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('t').setCustomValidity('foo'); document.documentElement.className='';">
-    <textarea id='t'></textarea>
+    <textarea class='notvalid' id='t'></textarea>
   </body>
 </html>

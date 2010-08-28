@@ -27,7 +27,6 @@ toolkit.jar:
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
-*       skin/classic/global/headsUpDisplay.css
         skin/classic/global/linkTree.css
         skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
@@ -54,6 +53,7 @@ toolkit.jar:
 *       skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
         skin/classic/global/tree.css
+*       skin/classic/global/webConsole.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
         skin/classic/global/arrow/arrow-dn.gif                   (arrow/arrow-dn.gif)
@@ -195,7 +195,6 @@ toolkit.jar:
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css
-*       skin/classic/aero/global/headsUpDisplay.css
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
 *       skin/classic/aero/global/menu.css                                (menu-aero.css)
@@ -222,6 +221,7 @@ toolkit.jar:
 *       skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
+*       skin/classic/aero/global/webConsole.css
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
         skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)

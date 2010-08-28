@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=36619
+-->
+<head>
+  <title>Test for Bug 36619</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTests();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=36619">Mozilla Bug 36619</a>
+<p id="display"></p>
+<div id="content">
+  <input id='a' type='file'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 36619 **/
+
+SimpleTest.waitForExplicitFinish();
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+const Cu = Components.utils;
+
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript("chrome://mochikit/content/browser/toolkit/content/tests/browser/common/mockObjects.js", this);
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function MockFilePicker()
+{
+}
+
+MockFilePicker.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
+
+  // properties
+  defaultExtension: "",
+  defaultString: "",
+  get displayDirectory() { return null; },
+  set displayDirectory(val) { },
+  file: null,
+  get files() { return null; },
+  get fileURL() { return null; },
+  filterIndex: 0,
+
+  // methods
+  appendFilter: function(val)
+  {
+  },
+
+  appendFilters: function(val)
+  {
+  },
+
+  init: function() {
+  },
+
+  show: function()
+  {
+    shown = true;
+  }
+};
+
+var mockFilePickerRegisterer =
+  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
+
+mockFilePickerRegisterer.register();
+
+// enable popups the first time
+var pbi = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
+var oldAllow = pbi.getBoolPref("dom.disable_open_during_load");
+var oldShowBar = pbi.getBoolPref("privacy.popups.showBrowserMessage");
+pbi.setBoolPref("dom.disable_open_during_load", true);
+pbi.setBoolPref("privacy.popups.showBrowserMessage", false);
+
+var shown = false;
+
+function checkFirst()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  todo(shown,
+     "File picker show method should have been called");
+  shown = false;
+  document.getElementById("a").click();
+  setTimeout(finishTest, 1000);
+}
+
+function finishTest()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(!shown,
+    "File picker show method should not have been called");
+    
+  mockFilePickerRegisterer.unregister();
+                                 
+  pbi.setBoolPref("dom.disable_open_during_load", oldAllow);
+  pbi.setBoolPref("privacy.popups.showBrowserMessage", oldShowBar);
+  SimpleTest.finish();
+}
+  
+function runTests()
+{
+  document.getElementById("a").click();
+  SimpleTest.executeSoon(checkFirst);
+}
+
+</script>
+</pre>
+</body>
+</html>

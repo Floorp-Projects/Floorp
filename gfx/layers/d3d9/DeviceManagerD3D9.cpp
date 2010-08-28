@@ -41,6 +41,8 @@
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
 #include "nsPrintfCString.h"
+#include "nsIPrefService.h" 
+#include "Nv3DVUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -213,6 +215,19 @@ DeviceManagerD3D9::Init()
     return false;
   }
 
+  /* Create an Nv3DVUtils instance */ 
+  if (!mNv3DVUtils) { 
+    mNv3DVUtils = new Nv3DVUtils(); 
+    if (!mNv3DVUtils) { 
+      NS_WARNING("Could not create a new instance of Nv3DVUtils.\n"); 
+    } 
+  } 
+
+  /* Initialize the Nv3DVUtils object */ 
+  if (mNv3DVUtils) { 
+    mNv3DVUtils->Initialize(); 
+  } 
+
   HMODULE d3d9 = LoadLibraryW(L"d3d9.dll");
   Direct3DCreate9Func d3d9Create = (Direct3DCreate9Func)
     GetProcAddress(d3d9, "Direct3DCreate9");
@@ -297,6 +312,17 @@ DeviceManagerD3D9::Init()
   if (!VerifyCaps()) {
     return false;
   }
+
+  /* 
+   * Do some post device creation setup 
+   */ 
+  if (mNv3DVUtils) { 
+    IUnknown* devUnknown = NULL; 
+    if (mDevice) { 
+      mDevice->QueryInterface(IID_IUnknown, (void **)&devUnknown); 
+    } 
+    mNv3DVUtils->SetDeviceInfo(devUnknown); 
+  } 
 
   hr = mDevice->CreateVertexShader((DWORD*)LayerQuadVS,
                                    getter_AddRefs(mLayerVS));
@@ -402,6 +428,9 @@ DeviceManagerD3D9::SetupRenderState()
   mDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
   mDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
   mDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
+  mDevice->SetRenderState(D3DRS_SRCBLENDALPHA, D3DBLEND_ONE);
+  mDevice->SetRenderState(D3DRS_DESTBLENDALPHA, D3DBLEND_INVSRCALPHA);
+  mDevice->SetRenderState(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
   mDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
   mDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
   mDevice->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);

@@ -49,8 +49,6 @@
 #include "prlog.h"
 #include "prtime.h"
 
-#include "nsInt64.h"
-
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIWebProgressListener2.h"
@@ -342,8 +340,8 @@ protected:
   PRBool mTempFileIsExecutable;
 
   PRTime mTimeDownloadStarted;
-  nsInt64 mContentLength;
-  nsInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */
+  PRInt64 mContentLength;
+  PRInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */
 
   /**
    * When we are told to save the temp file to disk (in a more permament
@@ -359,7 +357,7 @@ protected:
    * Creates the temporary file for the download and an output stream for it.
    * Upon successful return, both mTempFile and mOutStream will be valid.
    */
-  nsresult SetUpTempFile(nsIChannel * aChannel);
+  nsresult SetUpTempFile();
   /**
    * When we download a helper app, we are going to retarget all load
    * notifications into our own docloader and load group instead of

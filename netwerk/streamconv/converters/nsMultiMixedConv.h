@@ -43,7 +43,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsInt64.h"
 #include "nsIByteRangeRequest.h"
 #include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
@@ -78,6 +77,11 @@ public:
                                PRUint32 aOffset, PRUint32 aLen);
   nsresult SendOnStopRequest(nsISupports* aContext, nsresult aStatus);
 
+  void SetContentDisposition(const nsACString& aDisposition)
+  {
+    mContentDisposition = aDisposition;
+  }
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
@@ -102,8 +106,8 @@ protected:
   PRUint64                mContentLength;
 
   PRBool                  mIsByteRangeRequest;
-  nsInt64                 mByteRangeStart;
-  nsInt64                 mByteRangeEnd;
+  PRInt64                 mByteRangeStart;
+  PRInt64                 mByteRangeEnd;
 
   PRUint32                mPartID; // unique ID that can be used to identify
                                    // this part of the multipart document
@@ -190,8 +194,8 @@ protected:
     // The following members are for tracking the byte ranges in
     // multipart/mixed content which specified the 'Content-Range:'
     // header...
-    nsInt64             mByteRangeStart;
-    nsInt64             mByteRangeEnd;
+    PRInt64             mByteRangeStart;
+    PRInt64             mByteRangeEnd;
     PRBool              mIsByteRangeRequest;
 
     PRUint32            mCurrentPartID;

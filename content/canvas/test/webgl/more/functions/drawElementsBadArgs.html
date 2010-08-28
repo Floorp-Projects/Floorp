@@ -79,7 +79,7 @@ Tests.testDrawElementsVBO = function(gl, prog, v,n,t) {
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 5, gl.UNSIGNED_SHORT, 1);});
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 5, gl.UNSIGNED_SHORT, 1*2);});
   vbo.destroy();
-  assert(0 == checkError(gl, "vbo.destroy"));
+  assert(gl.NO_ERROR == checkError(gl, "vbo.destroy"));
 }
 
 Tests.testDrawElementsVBOByte = function(gl, prog, v,n,t) {
@@ -92,7 +92,7 @@ Tests.testDrawElementsVBOByte = function(gl, prog, v,n,t) {
   assertOk(function(){gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_BYTE, 0);});
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 5, gl.UNSIGNED_BYTE, 1);});
   vbo.destroy();
-  assert(0 == checkError(gl, "vbo.destroy"));
+  assert(gl.NO_ERROR == checkError(gl, "vbo.destroy"));
 }
 
 Tests.testDrawElementsVBOMulti = function(gl, prog, v,n,t) {
@@ -129,7 +129,7 @@ Tests.testDrawElementsVBOMulti = function(gl, prog, v,n,t) {
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 1);});
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 1, gl.UNSIGNED_SHORT, 6*2);});
   vbo.destroy();
-  assert(0 == checkError(gl, "vbo.destroy"));
+  assert(gl.NO_ERROR == checkError(gl, "vbo.destroy"));
 }
 
 Tests.testDrawElementsVBOMultiByte = function(gl, prog, v,n,t) {
@@ -166,7 +166,7 @@ Tests.testDrawElementsVBOMultiByte = function(gl, prog, v,n,t) {
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 1);});
   assertFail(function(){gl.drawElements(gl.TRIANGLES, 1, gl.UNSIGNED_BYTE, 6);});
   vbo.destroy();
-  assert(0 == checkError(gl, "vbo.destroy"));
+  assert(gl.NO_ERROR == checkError(gl, "vbo.destroy"));
 }
 
 Tests.testSharedBuffers = function(gl, prog, v,n,t) {
@@ -192,8 +192,6 @@ Tests.testSharedBuffers = function(gl, prog, v,n,t) {
 
 </script>
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
-
   attribute vec3 Vertex;
   attribute vec3 Normal;
   attribute vec2 Tex;
@@ -206,8 +204,9 @@ Tests.testSharedBuffers = function(gl, prog, v,n,t) {
   }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
-
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec4 texCoord0;
   void main()
   {

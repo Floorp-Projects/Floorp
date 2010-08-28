@@ -163,19 +163,8 @@ nsresult
 nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
 {
   nsIntRect r(mGIFStruct.x_offset, mGIFStruct.y_offset + fromRow, mGIFStruct.width, rows);
+  PostInvalidation(r);
 
-  // Update image  
-  nsresult rv = mImage->FrameUpdated(mGIFStruct.images_decoded, r);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Offset to the frame position
-  // Only notify observer(s) for first frame
-  if (!mGIFStruct.images_decoded && mObserver) {
-    PRUint32 imgCurFrame = mImage->GetCurrentFrameIndex();
-    mObserver->OnDataAvailable(nsnull, imgCurFrame == PRUint32(mGIFStruct.images_decoded), &r);
-  }
   return NS_OK;
 }
 
@@ -285,22 +274,6 @@ void nsGIFDecoder2::EndGIF(PRBool aSuccess)
 //******************************************************************************
 nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
 {
-  if (!mGIFStruct.images_decoded) {
-    // Send a onetime OnDataAvailable (Display Refresh) for the first frame
-    // if it has a y-axis offset.  Otherwise, the area may never be refreshed
-    // and the placeholder will remain on the screen. (Bug 37589)
-    if (mGIFStruct.y_offset > 0) {
-      PRInt32 imgWidth;
-      mImage->GetWidth(&imgWidth);
-      PRUint32 imgCurFrame = mImage->GetCurrentFrameIndex();
-      nsIntRect r(0, 0, imgWidth, mGIFStruct.y_offset);
-      if (mObserver)
-        mObserver->OnDataAvailable(nsnull,
-                                   imgCurFrame == PRUint32(mGIFStruct.images_decoded),
-                                   &r);
-    }
-  }
-
   PRUint32 imageDataLength;
   nsresult rv;
   gfxASurface::gfxImageFormat format;
@@ -333,6 +306,18 @@ nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
   // Tell the superclass we're starting a frame
   PostFrameStart();
 
+  if (!mGIFStruct.images_decoded) {
+    // Send a onetime invalidation for the first frame if it has a y-axis offset. 
+    // Otherwise, the area may never be refreshed and the placeholder will remain
+    // on the screen. (Bug 37589)
+    if (mGIFStruct.y_offset > 0) {
+      PRInt32 imgWidth;
+      mImage->GetWidth(&imgWidth);
+      nsIntRect r(0, 0, imgWidth, mGIFStruct.y_offset);
+      PostInvalidation(r);
+    }
+  }
+
   mCurrentFrame = mGIFStruct.images_decoded;
   return NS_OK;
 }
@@ -346,19 +331,15 @@ void nsGIFDecoder2::EndImageFrame()
     // Only need to flush first frame
     (void) FlushImageData();
 
-    // If the first frame is smaller in height than the entire image, send a
-    // OnDataAvailable (Display Refresh) for the area it does not have data for.
+    // If the first frame is smaller in height than the entire image, send an
+    // invalidation for the area it does not have data for.
     // This will clear the remaining bits of the placeholder. (Bug 37589)
     const PRUint32 realFrameHeight = mGIFStruct.height + mGIFStruct.y_offset;
     if (realFrameHeight < mGIFStruct.screen_height) {
-      PRUint32 imgCurFrame = mImage->GetCurrentFrameIndex();
       nsIntRect r(0, realFrameHeight,
                   mGIFStruct.screen_width,
                   mGIFStruct.screen_height - realFrameHeight);
-      if (mObserver)
-        mObserver->OnDataAvailable(nsnull,
-                                  imgCurFrame == PRUint32(mGIFStruct.images_decoded),
-                                  &r);
+      PostInvalidation(r);
     }
     // This transparency check is only valid for first frame
     if (mGIFStruct.is_transparent && !mSawTransparency) {

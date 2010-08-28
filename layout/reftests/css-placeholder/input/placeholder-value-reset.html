@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      document.getElementById('i').value = 'bar';
+      document.forms[0].reset();
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='loadHandler();'>
+    <form>
+      <input id='i' placeholder='foo'>
+    </form>
+  </body>
+</html>

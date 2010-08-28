@@ -196,8 +196,8 @@ let TabView = {
       if (!event.ctrlKey && !event.metaKey && !event.shiftKey &&
           charCode == 160) { // alt + space
 #else
-      if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-          !event.altKey && charCode == 32) { // ctrl + space
+      if (event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && 
+          charCode == KeyEvent.DOM_VK_SPACE) { // ctrl + space
 #endif
 
         // Don't handle this event if it's coming from a node that might allow

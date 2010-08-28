@@ -99,6 +99,7 @@ _BROWSER_TEST_FILES = \
 	browser_476161_sample.html \
 	browser_477657.js \
 	browser_480148.js \
+	browser_480893.js \
 	browser_483330.js \
 	browser_485482.js \
 	browser_485482_sample.html \

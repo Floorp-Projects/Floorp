@@ -3801,6 +3801,30 @@ nsDocument::ScriptLoader()
   return mScriptLoader;
 }
 
+PRBool
+nsDocument::InternalAllowXULXBL()
+{
+  if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
+    mAllowXULXBL = eTriTrue;
+    return PR_TRUE;
+  }
+  
+  nsCOMPtr<nsIURI> princURI;
+  NodePrincipal()->GetURI(getter_AddRefs(princURI));
+  if (!princURI) {
+    mAllowXULXBL = eTriFalse;
+    return PR_FALSE;
+  }
+
+  if (nsContentUtils::IsSitePermAllow(princURI, "allowXULXBL")) {
+    mAllowXULXBL = eTriTrue;
+    return PR_TRUE;
+  }
+
+  mAllowXULXBL = eTriFalse;
+  return PR_FALSE;
+}
+
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
 void
@@ -6694,14 +6718,11 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         }
       }
     } else {
-      nsCOMPtr<nsIMultiPartChannel> partChannel = do_QueryInterface(aChannel);
-      if (partChannel) {
-        nsCAutoString contentDisp;
-        rv = partChannel->GetContentDisposition(contentDisp);
-        if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
-          SetHeaderData(nsGkAtoms::headerContentDisposition,
-                        NS_ConvertASCIItoUTF16(contentDisp));
-        }
+      nsCAutoString contentDisp;
+      rv = aChannel->GetContentDisposition(contentDisp);
+      if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
+        SetHeaderData(nsGkAtoms::headerContentDisposition,
+                      NS_ConvertASCIItoUTF16(contentDisp));
       }
     }
   }

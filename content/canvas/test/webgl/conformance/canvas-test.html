@@ -20,6 +20,10 @@ found in the LICENSE file.
 <canvas id="canvas" style="width: 50px; height: 50px;"> </canvas>
 <canvas id="canvas2d" width="40" height="40"> </canvas>
 <script>
+if (window.initNonKhronosFramework) {
+  window.initNonKhronosFramework(true);
+}
+
 description("This test ensures WebGL implementations interact correctly with the canvas tag.");
 
 debug("");
@@ -53,11 +57,11 @@ if (!gl) {
   }
 
   function getViewport() {
-  return getValue4v(gl.VIEWPORT);
+    return getValue4v(gl.VIEWPORT);
   }
 
   function getClearColor() {
-  return getValue4v(gl.COLOR_CLEAR_VALUE);
+    return getValue4v(gl.COLOR_CLEAR_VALUE);
   }
 
   function isAboutEqual(a, b) {
@@ -174,13 +178,19 @@ if (!gl) {
 
       debug("");
       successfullyParsed = true;
-      shouldBeTrue("successfullyParsed");
-      debug('<br /><span class="pass">TEST COMPLETE</span>');
-      notifyFinishedToHarness();
+      var epilogue = document.createElement("script");
+      epilogue.onload = finish;
+      epilogue.src = "../resources/js-test-post.js";
+      document.body.appendChild(epilogue);
     }
    }, 1000/30);
 }
 
+function finish() {
+  if (window.nonKhronosFrameworkNotifyDone) {
+    window.nonKhronosFrameworkNotifyDone();
+  }
+}
 
 </script>
 <script>

@@ -41,10 +41,15 @@ namespace mozilla {
 namespace imagelib {
 
 // Constructor
-Image::Image() :
-  mStatusTracker(this),
+Image::Image(imgStatusTracker* aStatusTracker) :
   mInitialized(PR_FALSE)
 {
+  if (aStatusTracker) {
+    mStatusTracker = aStatusTracker;
+    mStatusTracker->SetImage(this);
+  } else {
+    mStatusTracker = new imgStatusTracker(this);
+  }
 }
 
 // Translates a mimetype into a concrete decoder

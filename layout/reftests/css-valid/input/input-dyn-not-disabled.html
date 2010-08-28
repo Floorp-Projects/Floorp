@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if input is not disabled, it is candidate for constraint validation
              and should be affected by :valid pseudo-class. -->
-  <style>
-    input { background-color: red; }
-    input:valid { background-color: green; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i').removeAttribute('disabled'); document.documentElement.className='';">
-    <input id='i' disabled>
+    <input class='valid' id='i' disabled>
   </body>
 </html>

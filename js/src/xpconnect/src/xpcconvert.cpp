@@ -469,8 +469,9 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     // global object will not have been collected, and
                     // therefore this NativeInterface2JSObject will not end up
                     // creating a new XPCNativeScriptableShared.
-                    if(!NativeInterface2JSObject(lccx, d, nsnull, iface, iid,
-                                                 nsnull, nsnull, scope, PR_TRUE,
+                    xpcObjectHelper helper(iface);
+                    if(!NativeInterface2JSObject(lccx, d, nsnull, helper, iid,
+                                                 nsnull, scope, PR_TRUE,
                                                  OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
 
@@ -1084,15 +1085,13 @@ JSBool
 XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                      jsval* d,
                                      nsIXPConnectJSObjectHolder** dest,
-                                     nsISupports* src,
+                                     xpcObjectHelper& aHelper,
                                      const nsID* iid,
                                      XPCNativeInterface** Interface,
-                                     nsWrapperCache *cache,
                                      JSObject* scope,
                                      PRBool allowNativeWrapper,
                                      PRBool isGlobal,
-                                     nsresult* pErr,
-                                     qsObjectHelper* aHelper)
+                                     nsresult* pErr)
 {
     NS_ASSERTION(scope, "bad param");
     NS_ASSERTION(!Interface || iid,
@@ -1101,6 +1100,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     *d = JSVAL_NULL;
     if(dest)
         *dest = nsnull;
+    nsISupports *src = aHelper.Object();
     if(!src)
         return JS_TRUE;
     if(pErr)
@@ -1149,8 +1149,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         if(!xpcscope)
             return JS_FALSE;
 
-        if(!cache)
-            CallQueryInterface(src, &cache);
+        nsWrapperCache *cache = aHelper.GetWrapperCache();
 
         PRBool tryConstructSlimWrapper = PR_FALSE;
         JSObject *flat;
@@ -1186,7 +1185,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                 return JS_FALSE;
 
             jsval slim;
-            if(ConstructSlimWrapper(ccx, src, aHelper, cache, xpcscope, &slim))
+            if(ConstructSlimWrapper(ccx, aHelper, xpcscope, &slim))
             {
                 *d = slim;
                 return JS_TRUE;
@@ -1234,8 +1233,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             if(!ccx.IsValid())
                 return JS_FALSE;
 
-            rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope, iface,
-                                                cache, isGlobal,
+            rv = XPCWrappedNative::GetNewOrUsed(ccx, aHelper, xpcscope, iface,
+                                                isGlobal,
                                                 getter_AddRefs(strongWrapper));
 
             wrapper = strongWrapper;

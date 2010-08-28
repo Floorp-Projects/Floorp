@@ -52,10 +52,16 @@ function test() {
   waitForExplicitFinish();
 
   // builds the tests state based on a few parameters
-  function buildTestState(num, selected) {
+  function buildTestState(num, selected, hidden) {
     let state = { windows: [ { "tabs": [], "selected": selected } ] };
-    while (num--)
+    while (num--) {
       state.windows[0].tabs.push({entries: [{url: "http://example.com/"}]});
+      let i = state.windows[0].tabs.length - 1;
+      if (hidden.length > 0 && i == hidden[0]) {
+        state.windows[0].tabs[i].hidden = true;
+        hidden.splice(0, 1);
+      }
+    }
     return state;
   }
 
@@ -80,17 +86,17 @@ function test() {
   }
 
   // the number of tests we're running
-  let numTests = 4;
+  let numTests = 6;
   let completedTests = 0;
 
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
 
-  function runTest(testNum, totalTabs, selectedTab, shownTabs, order) {
+  function runTest(testNum, totalTabs, selectedTab, shownTabs, hiddenTabs, order) {
     let test = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
                                              Ci.nsISupportsWeakReference]),
 
-      state: buildTestState(totalTabs, selectedTab),
+      state: buildTestState(totalTabs, selectedTab, hiddenTabs),
       numTabsToShow: shownTabs,
       expectedOrder: order,
       actualOrder: [],
@@ -157,10 +163,12 @@ function test() {
   }
 
   // actually create & run the tests
-  runTest(1, 13, 1, 6,  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-  runTest(2, 13, 13, 6, [12, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6]);
-  runTest(3, 13, 4, 6,  [3, 4, 5, 6, 7, 8, 0, 1, 2, 9, 10, 11, 12]);
-  runTest(4, 13, 11, 6, [10, 7, 8, 9, 11, 12, 0, 1, 2, 3, 4, 5, 6]);
+  runTest(1, 13, 1,  6, [],         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  runTest(2, 13, 13, 6, [],         [12, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6]);
+  runTest(3, 13, 4,  6, [],         [3, 4, 5, 6, 7, 8, 0, 1, 2, 9, 10, 11, 12]);
+  runTest(4, 13, 11, 6, [],         [10, 7, 8, 9, 11, 12, 0, 1, 2, 3, 4, 5, 6]);
+  runTest(5, 13, 13, 6, [0, 4, 9],  [12, 6, 7, 8, 10, 11, 1, 2, 3, 5, 0, 4, 9]);
+  runTest(6, 13, 4,  6, [1, 7, 12], [3, 4, 5, 6, 8, 9, 0, 2, 10, 11, 1, 7, 12]);
 
   // finish() is run by the last test to finish, so no cleanup down here
 }

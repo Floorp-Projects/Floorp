@@ -37,21 +37,21 @@
 
       let key1 = event.result;
 
-      request = objectStore.modify({}, key1);
+      request = objectStore.put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "modify gave the same key back");
+      is(event.result, key1, "put gave the same key back");
 
       let key2 = 10;
 
-      request = objectStore.addOrModify({}, key2);
+      request = objectStore.put({}, key2);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key2, "modify gave the same key back");
+      is(event.result, key2, "put gave the same key back");
 
       key2 = 100;
 
@@ -60,22 +60,22 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key2, "modify gave the same key back");
+      is(event.result, key2, "put gave the same key back");
 
       try {
-        objectStore.addOrModify({});
-        ok(false, "addOrModify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "addOrModify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
-        objectStore.modify({});
-        ok(false, "modify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "modify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
@@ -102,19 +102,19 @@
       }
 
       try {
-        objectStore.addOrModify({});
-        ok(false, "addOrModify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "addOrModify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
-        objectStore.modify({});
-        ok(false, "modify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "modify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
@@ -141,19 +141,19 @@
       }
 
       try {
-        objectStore.addOrModify({});
-        ok(false, "addOrModify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "addOrModify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
-        objectStore.modify({});
-        ok(false, "modify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "modify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
@@ -173,19 +173,19 @@
 
       is(event.result, key1, "add gave back the same key");
 
-      request = objectStore.modify({id:10});
+      request = objectStore.put({id:10});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "modify gave back the same key");
+      is(event.result, key1, "put gave back the same key");
 
-      request = objectStore.addOrModify({id:10});
+      request = objectStore.put({id:10});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "addOrModify gave back the same key");
+      is(event.result, key1, "put gave back the same key");
 
       request = objectStore.add({id:10});
       request.onerror = grabEventAndContinueHandler;
@@ -200,19 +200,19 @@
       is(typeof(event.result), "string", "Good generated key");
 
       try {
-        objectStore.modify({}, null);
-        ok(false, "modify with null key should throw!");
+        objectStore.put({}, null);
+        ok(false, "put with null key should throw!");
       }
       catch (e) {
-        ok(true, "modify with null key threw");
+        ok(true, "put with null key threw");
       }
 
       try {
-        objectStore.addOrModify({}, null);
-        ok(false, "addOrModify with null key should throw!");
+        objectStore.put({}, null);
+        ok(false, "put with null key should throw!");
       }
       catch (e) {
-        ok(true, "addOrModify with null key threw");
+        ok(true, "put with null key threw");
       }
 
       try {
@@ -237,36 +237,36 @@
 
       key1 = event.result;
 
-      request = objectStore.modify({id:key1});
+      request = objectStore.put({id:key1});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "modify gave the same key back");
+      is(event.result, key1, "put gave the same key back");
 
       key2 = 10;
 
-      request = objectStore.addOrModify({id:key2});
+      request = objectStore.put({id:key2});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key2, "modify gave the same key back");
+      is(event.result, key2, "put gave the same key back");
 
       try {
-        objectStore.addOrModify({});
-        ok(false, "addOrModify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "addOrModify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {
-        objectStore.modify({});
-        ok(false, "modify with no key should throw!");
+        objectStore.put({});
+        ok(false, "put with no key should throw!");
       }
       catch (e) {
-        ok(true, "modify with no key threw");
+        ok(true, "put with no key threw");
       }
 
       try {

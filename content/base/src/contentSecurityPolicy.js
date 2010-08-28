@@ -37,7 +37,7 @@
 
 /**
  * Content Security Policy
- * 
+ *
  * Overview
  * This is a stub component that will be fleshed out to do all the fancy stuff
  * that ContentSecurityPolicy has to do.
@@ -267,6 +267,9 @@ ContentSecurityPolicy.prototype = {
       }
       CSPdebug("Constructed violation report:\n" + JSON.stringify(report));
 
+      CSPWarning("Directive \"" + violatedDirective + "\" violated"
+               + (blockedUri['asciiSpec'] ? " by " + blockedUri.asciiSpec : ""));
+
       // For each URI in the report list, send out a report.
       for (let i in uris) {
         if (uris[i] === "")
@@ -285,8 +288,7 @@ ContentSecurityPolicy.prototype = {
           req.setRequestHeader('Content-Type', 'application/json');
           req.upload.addEventListener("error", failure, false);
           req.upload.addEventListener("abort", failure, false);
-          //req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
- 
+
           // make request anonymous
           // This prevents sending cookies with the request,
           // in case the policy URI is injected, it can't be
@@ -382,7 +384,6 @@ ContentSecurityPolicy.prototype = {
     CSPdebug("shouldLoad location = " + aContentLocation.asciiSpec);
     CSPdebug("shouldLoad content type = " + aContentType);
     var cspContext = ContentSecurityPolicy._MAPPINGS[aContentType];
-    // CSPdebug("shouldLoad CSP directive =" + cspContext);
 
     // if the mapping is null, there's no policy, let it through.
     if (!cspContext) {
