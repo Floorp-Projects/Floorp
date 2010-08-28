@@ -304,7 +304,7 @@ let gSyncUI = {
   _updateLastSyncItem: function SUI__updateLastSyncItem() {
     let lastSync;
     try {
-      Services.prefs.getCharPref("services.sync.lastSync");
+      lastSync = Services.prefs.getCharPref("services.sync.lastSync");
     }
     catch (e) { };
     if (!lastSync)
