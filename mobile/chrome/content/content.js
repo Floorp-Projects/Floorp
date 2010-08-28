@@ -479,7 +479,7 @@ Content.prototype = {
 
       case "Browser:MouseDown":
         this._overlayTimeout.clear();
-        this._overlayTimeout.clear();
+        this._contextTimeout.clear();
 
         let element = elementFromPoint(x, y);
         if (!element)
