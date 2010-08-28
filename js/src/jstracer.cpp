@@ -315,9 +315,6 @@ ValueToTypeChar(const Value &v)
 /* Maximum number of peer trees allowed. */
 #define MAXPEERS 9
 
-/* Max number of hits to a RECURSIVE_UNLINKED exit before we trash the tree. */
-#define MAX_RECURSIVE_UNLINK_HITS 64
-
 /* Max call depths for inlining. */
 #define MAX_CALLDEPTH 10
 
@@ -1388,14 +1385,8 @@ static void
 Blacklist(jsbytecode* pc)
 {
     AUDIT(blacklisted);
-    JS_ASSERT(*pc == JSOP_TRACE || *pc == JSOP_NOP || *pc == JSOP_CALL);
-    if (*pc == JSOP_CALL) {
-        JS_ASSERT(*(pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
-                  *(pc + JSOP_CALL_LENGTH) == JSOP_NOP);
-        *(pc + JSOP_CALL_LENGTH) = JSOP_NOP;
-    } else if (*pc == JSOP_TRACE) {
-        *pc = JSOP_NOP;
-    }
+    JS_ASSERT(*pc == JSOP_TRACE || *pc == JSOP_NOP);
+    *pc = JSOP_NOP;
 }
 
 static bool
@@ -1547,7 +1538,6 @@ TreeFragment::initialize(JSContext* cx, SlotList *globalSlots, bool speculate)
     this->treePCOffset = FramePCOffset(cx, cx->fp());
 #endif
     this->script = cx->fp()->getScript();
-    this->recursion = Recursion_None;
     this->gcthings.clear();
     this->sprops.clear();
     this->unstableExits = NULL;
@@ -1604,9 +1594,8 @@ AttemptCompilation(JSContext *cx, JSObject* globalObj, jsbytecode* pc, uint32 ar
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
 
     /* If we already permanently blacklisted the location, undo that. */
-    JS_ASSERT(*pc == JSOP_NOP || *pc == JSOP_TRACE || *pc == JSOP_CALL);
-    if (*pc == JSOP_NOP)
-        *pc = JSOP_TRACE;
+    JS_ASSERT(*pc == JSOP_NOP || *pc == JSOP_TRACE);
+    *pc = JSOP_TRACE;
     ResetRecordingAttempts(cx, pc);
 
     /* Breathe new life into all peer fragments at the designated loop header. */
@@ -2225,13 +2214,12 @@ JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* fragment,
                              unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
                              VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
-                             RecordReason recordReason, bool speculate)
+                             bool speculate)
   : cx(cx),
     traceMonitor(&JS_TRACE_MONITOR(cx)),
     oracle(speculate ? JS_TRACE_MONITOR(cx).oracle : NULL),
     fragment(fragment),
     tree(fragment->root),
-    recordReason(recordReason),
     globalObj(tree->globalObj),
     outer(outer),
     outerArgc(outerArgc),
@@ -2403,10 +2391,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 
     /* read into registers all values on the stack and all globals we know so far */
     import(tree, lirbuf->sp, stackSlots, ngslots, callDepth, typeMap);
-
-    /* Finish handling RECURSIVE_SLURP_FAIL_EXIT in startRecorder. */
-    if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
-        return;
 
     if (fragment == fragment->root) {
         /*
@@ -3042,19 +3026,16 @@ class FlushNativeStackFrameVisitor : public SlotVisitorBase
     const JSValueType *mTypeMap;
     double *mStack;
     Value *mStop;
-    unsigned mIgnoreSlots;
 public:
     FlushNativeStackFrameVisitor(JSContext *cx,
                                  const JSValueType *typeMap,
                                  double *stack,
-                                 Value *stop,
-                                 unsigned ignoreSlots) :
+                                 Value *stop) :
         mCx(cx),
         mInitTypeMap(typeMap),
         mTypeMap(typeMap),
         mStack(stack),
-        mStop(stop),
-        mIgnoreSlots(ignoreSlots)
+        mStop(stop)
     {}
 
     const JSValueType* getTypeMap()
@@ -3069,8 +3050,7 @@ public:
             if (vp == mStop)
                 return false;
             debug_only_printf(LC_TMTracer, "%s%u=", stackSlotKind(), unsigned(i));
-            if (unsigned(mTypeMap - mInitTypeMap) >= mIgnoreSlots)
-                NativeToValue(mCx, *vp, *mTypeMap, mStack);
+            NativeToValue(mCx, *vp, *mTypeMap, mStack);
             vp++;
             mTypeMap++;
             mStack++;
@@ -3084,22 +3064,20 @@ public:
         if ((Value *)p == mStop)
             return false;
         debug_only_printf(LC_TMTracer, "%s%u=", stackSlotKind(), 0);
-        if (unsigned(mTypeMap - mInitTypeMap) >= mIgnoreSlots) {
-            *p = *(JSObject **)mStack;
+        *p = *(JSObject **)mStack;
 #ifdef DEBUG
-            JSValueType type = *mTypeMap;
-            if (type == JSVAL_TYPE_NULL) {
-                debug_only_print0(LC_TMTracer, "null ");
-            } else {
-                JS_ASSERT(type == JSVAL_TYPE_NONFUNOBJ);
-                JS_ASSERT(!(*p)->isFunction());
-                debug_only_printf(LC_TMTracer,
-                                  "object<%p:%s> ",
-                                  (void*) *p,
-                                  (*p)->getClass()->name);
-            }
-#endif
+        JSValueType type = *mTypeMap;
+        if (type == JSVAL_TYPE_NULL) {
+            debug_only_print0(LC_TMTracer, "null ");
+        } else {
+            JS_ASSERT(type == JSVAL_TYPE_NONFUNOBJ);
+            JS_ASSERT(!(*p)->isFunction());
+            debug_only_printf(LC_TMTracer,
+                              "object<%p:%s> ",
+                              (void*) *p,
+                              (*p)->getClass()->name);
         }
+#endif
         mTypeMap++;
         mStack++;
         return true;
@@ -3436,12 +3414,12 @@ GetClosureVar(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double*
  */
 static JS_REQUIRES_STACK int
 FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, double* np,
-                      JSStackFrame* stopFrame, unsigned ignoreSlots)
+                      JSStackFrame* stopFrame)
 {
     Value* stopAt = stopFrame ? &stopFrame->argv[-2] : NULL;
 
     /* Root all string and object references first (we don't need to call the GC for this). */
-    FlushNativeStackFrameVisitor visitor(cx, mp, np, stopAt, ignoreSlots);
+    FlushNativeStackFrameVisitor visitor(cx, mp, np, stopAt);
     VisitStackSlots(visitor, cx, callDepth);
 
     // Restore thisv from the now-restored argv[-1] in each pending frame.
@@ -3657,11 +3635,8 @@ TraceRecorder::import(TreeFragment* tree, LIns* sp, unsigned stackSlots, unsigne
      * Check whether there are any values on the stack we have to unbox and do
      * that first before we waste any time fetching the state from the stack.
      */
-    if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-        ImportBoxedStackSlotVisitor boxedStackVisitor(*this, sp, -tree->nativeStackBase, typeMap);
-        VisitStackSlots(boxedStackVisitor, cx, callDepth);
-    }
-
+    ImportBoxedStackSlotVisitor boxedStackVisitor(*this, sp, -tree->nativeStackBase, typeMap);
+    VisitStackSlots(boxedStackVisitor, cx, callDepth);
 
     /*
      * Remember the import type map so we can lazily import later whatever
@@ -4882,8 +4857,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
      * to be in an imacro here and the opcode should be either JSOP_TRACE or, in
      * case this loop was blacklisted in the meantime, JSOP_NOP.
      */
-    JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOP ||
-               *cx->regs->pc == JSOP_RETURN || *cx->regs->pc == JSOP_STOP) &&
+    JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOP) &&
               !cx->fp()->hasIMacroPC());
 
     if (callDepth != 0) {
@@ -4896,9 +4870,6 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
 
     JS_ASSERT_IF(exit->exitType == UNSTABLE_LOOP_EXIT,
                  exit->numStackSlots == tree->nStackTypes);
-    JS_ASSERT_IF(exit->exitType != UNSTABLE_LOOP_EXIT, exit->exitType == RECURSIVE_UNLINKED_EXIT);
-    JS_ASSERT_IF(exit->exitType == RECURSIVE_UNLINKED_EXIT,
-                 exit->recursive_pc != tree->ip);
 
     JS_ASSERT(fragment->root == tree);
 
@@ -4909,9 +4880,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     if (exit->exitType == UNSTABLE_LOOP_EXIT)
         consensus = selfTypeStability(slotMap);
     if (consensus != TypeConsensus_Okay) {
-        const void* ip = exit->exitType == RECURSIVE_UNLINKED_EXIT ?
-                         exit->recursive_pc : tree->ip;
-        TypeConsensus peerConsensus = peerTypeStability(slotMap, ip, &peer);
+        TypeConsensus peerConsensus = peerTypeStability(slotMap, tree->ip, &peer);
         /* If there was a semblance of a stable peer (even if not linkable), keep the result. */
         if (peerConsensus != TypeConsensus_Bad)
             consensus = peerConsensus;
@@ -5087,11 +5056,6 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
             continue;
         UnstableExit* uexit = peer->unstableExits;
         while (uexit != NULL) {
-            /* :TODO: these exits go somewhere else. */
-            if (uexit->exit->exitType == RECURSIVE_UNLINKED_EXIT) {
-                uexit = uexit->next;
-                continue;
-            }
             /* Build the full typemap for this unstable exit */
             FullMapFromExit(typeMap, uexit->exit);
             /* Check its compatibility against this tree */
@@ -5150,9 +5114,6 @@ TraceRecorder::endLoop(VMSideExit* exit)
         trashSelf = true;
         return ARECORD_STOP;
     }
-
-    if (recordReason != Record_Branch)
-        RETURN_STOP_A("control flow should have been recursive");
 
     fragment->lastIns =
         lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
@@ -5613,30 +5574,17 @@ bool JS_REQUIRES_STACK
 TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
                              unsigned stackSlots, unsigned ngslots,
                              JSValueType* typeMap, VMSideExit* expectedInnerExit,
-                             jsbytecode* outer, uint32 outerArgc, RecordReason recordReason,
-                             bool speculate)
+                             jsbytecode* outer, uint32 outerArgc, bool speculate)
 {
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(!tm->needFlush);
     JS_ASSERT_IF(cx->fp()->hasIMacroPC(), f->root != f);
 
     tm->recorder = new TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
-                                     expectedInnerExit, outer, outerArgc, recordReason,
-                                     speculate);
+                                     expectedInnerExit, outer, outerArgc, speculate);
 
     if (!tm->recorder || tm->outOfMemory() || OverfullJITCache(tm)) {
         ResetJIT(cx, FR_OOM);
-        return false;
-    }
-
-    /*
-     * If slurping failed, there's no reason to start recording again. Emit LIR
-     * to capture the rest of the slots, then immediately compile and finish.
-     */
-    if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT) {
-        tm->recorder->slurpDownFrames((jsbytecode*)anchor->recursive_pc - JSOP_CALL_LENGTH);
-        if (tm->recorder)
-            tm->recorder->finishAbort("Failed to slurp down frames");
         return false;
     }
 
@@ -5813,7 +5761,7 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
 
 static JS_REQUIRES_STACK bool
 RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
-           uint32 outerArgc, SlotList* globalSlots, RecordReason reason)
+           uint32 outerArgc, SlotList* globalSlots)
 {
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
@@ -5875,8 +5823,7 @@ RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
     return TraceRecorder::startRecorder(cx, NULL, f, f->nStackTypes,
                                         f->globalSlots->length(),
                                         f->typeMap.data(), NULL,
-                                        outer, outerArgc, reason,
-                                        speculate);
+                                        outer, outerArgc, speculate);
 }
 
 static JS_REQUIRES_STACK TypeConsensus
@@ -5895,12 +5842,6 @@ FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, TreeFragment** peerp)
     uint16* gslots = from->globalSlots->data();
     for (unsigned i = 0; i < typeMap.length(); i++) {
         if (typeMap[i] == JSVAL_TYPE_DOUBLE) {
-            if (exit->exitType == RECURSIVE_UNLINKED_EXIT) {
-                if (i < exit->numStackSlots)
-                    oracle->markStackSlotUndemotable(cx, i, exit->recursive_pc);
-                else
-                    oracle->markGlobalSlotUndemotable(cx, gslots[i - exit->numStackSlots]);
-            }
             if (i < from->nStackTypes)
                 oracle->markStackSlotUndemotable(cx, i, from->ip);
             else if (i >= exit->numStackSlots)
@@ -5908,16 +5849,9 @@ FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, TreeFragment** peerp)
         }
     }
 
-    JS_ASSERT(exit->exitType == UNSTABLE_LOOP_EXIT ||
-              (exit->exitType == RECURSIVE_UNLINKED_EXIT && exit->recursive_pc));
+    JS_ASSERT(exit->exitType == UNSTABLE_LOOP_EXIT);
 
-    TreeFragment* firstPeer = NULL;
-    if (exit->exitType == UNSTABLE_LOOP_EXIT || exit->recursive_pc == from->ip) {
-        firstPeer = from->first;
-    } else {
-        firstPeer = LookupLoop(&JS_TRACE_MONITOR(cx), exit->recursive_pc, from->globalObj,
-                               from->globalShape, from->argc);
-    }
+    TreeFragment* firstPeer = from->first;
 
     for (TreeFragment* peer = firstPeer; peer; peer = peer->peer) {
         if (!peer->code())
@@ -5973,23 +5907,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         return false;
     }
 
-    uint32 globalShape = from->globalShape;
     SlotList *globalSlots = from->globalSlots;
-
-    /* Don't bother recording if the exit doesn't expect this PC */
-    if (exit->exitType == RECURSIVE_UNLINKED_EXIT) {
-        if (++exit->hitcount >= MAX_RECURSIVE_UNLINK_HITS) {
-            Blacklist((jsbytecode*)from->ip);
-            TrashTree(cx, from);
-            return false;
-        }
-        if (exit->recursive_pc != cx->regs->pc)
-            return false;
-        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, numActualArgs(cx->fp()));
-        if (!from)
-            return false;
-        /* use stale TI for RecordTree - since from might not have one anymore. */
-    }
 
     JS_ASSERT(from == from->root);
 
@@ -5997,7 +5915,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
     if (*(jsbytecode*)from->ip == JSOP_NOP)
         return false;
 
-    return RecordTree(cx, from->first, outer, outerArgc, globalSlots, Record_Branch);
+    return RecordTree(cx, from->first, outer, outerArgc, globalSlots);
 }
 
 static JS_REQUIRES_STACK VMFragment*
@@ -6113,7 +6031,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
                                                exitedFrom, outer, numActualArgs(cx->fp()),
-                                               Record_Branch, hits < maxHits);
+                                               hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
             tvso->r = R_FAIL_EXTEND_START;
@@ -6192,7 +6110,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         JS_ASSERT(numActualArgs(cx->fp()) == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
-        return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch));
+        return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots));
     }
 
     AbortableRecordingStatus status = r->attemptTreeCall(f, inlineCallCount);
@@ -6210,25 +6128,6 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
 {
-    /*
-     * It is absolutely forbidden to have recursive loops tree call themselves
-     * because it could accidentally pop frames owned by the parent call, and
-     * there is no way to deal with this yet. We could have to set a "start of
-     * poppable rp stack" variable, and if that unequals "real start of rp stack",
-     * it would be illegal to pop frames.
-     * --
-     * In the interim, just do tree calls knowing that they won't go into
-     * recursive trees that can pop parent frames.
-     */
-    if (f->script == cx->fp()->getScript()) {
-        if (f->recursion >= Recursion_Unwinds) {
-            Blacklist(cx->fp()->getScript()->code);
-            AbortRecording(cx, "Inner tree is an unsupported type of recursion");
-            return ARECORD_ABORTED;
-        }
-        f->recursion = Recursion_Disallowed;
-    }
-
     adjustCallerTypes(f);
     prepareTreeCall(f);
 
@@ -6273,7 +6172,6 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     TreeFragment* outerFragment = tree;
     jsbytecode* outer = (jsbytecode*) outerFragment->ip;
     switch (lr->exitType) {
-      case RECURSIVE_LOOP_EXIT:
       case LOOP_EXIT:
         /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
         if (innermostNestedGuard) {
@@ -6301,10 +6199,6 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       case OVERFLOW_EXIT:
         traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
-      case RECURSIVE_SLURP_FAIL_EXIT:
-      case RECURSIVE_SLURP_MISMATCH_EXIT:
-      case RECURSIVE_MISMATCH_EXIT:
-      case RECURSIVE_EMPTY_RP_EXIT:
       case BRANCH_EXIT:
       case CASE_EXIT: {
         /* Abort recording the outer tree, extend the inner tree. */
@@ -6949,20 +6843,6 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
         return;
     }
 
-    /* Save the innermost FrameInfo for guardUpRecursion */
-    if (innermost->exitType == RECURSIVE_MISMATCH_EXIT) {
-        /* There should never be a static calldepth for a recursive mismatch. */
-        JS_ASSERT(innermost->calldepth == 0);
-        /* There must be at least one item on the rp stack. */
-        JS_ASSERT(callstack < rp);
-        /* :TODO: don't be all squirrelin' this in here */
-        innermost->recursive_down = *(rp - 1);
-    }
-
-    /* Slurp failure should have no frames */
-    JS_ASSERT_IF(innermost->exitType == RECURSIVE_SLURP_FAIL_EXIT,
-                 innermost->calldepth == 0 && callstack == rp);
-
     while (callstack < rp) {
         FrameInfo* fi = *callstack;
         /* Peek at the callee native slot in the not-yet-synthesized down frame. */
@@ -6974,7 +6854,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
          */
         SynthesizeFrame(cx, *fi, callee);
         int slots = FlushNativeStackFrame(cx, 1 /* callDepth */, (*callstack)->get_typemap(),
-                                          stack, cx->fp(), 0);
+                                          stack, cx->fp());
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp();
         debug_only_printf(LC_TMTracer,
@@ -7102,15 +6982,12 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
         globalTypeMap = typeMap.data();
     }
 
-    /* Write back the topmost native stack frame. */
-    unsigned ignoreSlots = innermost->exitType == RECURSIVE_SLURP_FAIL_EXIT ?
-                           innermost->numStackSlots - 1 : 0;
 #ifdef DEBUG
     int slots =
 #endif
         FlushNativeStackFrame(cx, innermost->calldepth,
                               innermost->stackTypeMap(),
-                              stack, NULL, ignoreSlots);
+                              stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
     if (innermost->nativeCalleeWord)
@@ -7150,7 +7027,7 @@ ApplyBlacklistHeuristics(JSContext *cx, TreeFragment *tree)
 }
 
 JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_MONITOR);
@@ -7242,7 +7119,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
          * it will walk the peer list and find us a free slot or allocate a new
          * tree if needed.
          */
-        bool rv = RecordTree(cx, f->first, NULL, 0, globalSlots, reason);
+        bool rv = RecordTree(cx, f->first, NULL, 0, globalSlots);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_RECORD_TREE;
@@ -7273,14 +7150,6 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
         return MONITOR_NOT_RECORDING;
     }
 
-    /*
-     * Trees that only unwind recursive frames usually won't do much work, and
-     * most time will be spent entering and exiting ExecuteTree(). There's no
-     * benefit to doing this until the down-recursive side completes.
-     */
-    if (match->recursion == Recursion_Unwinds)
-        return MONITOR_NOT_RECORDING;
-
     VMSideExit* lr = NULL;
     VMSideExit* innermostNestedGuard = NULL;
 
@@ -7304,7 +7173,6 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
      */
     bool rv;
     switch (lr->exitType) {
-      case RECURSIVE_UNLINKED_EXIT:
       case UNSTABLE_LOOP_EXIT:
           rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0);
 #ifdef MOZ_TRACEVIS
@@ -7316,10 +7184,6 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
       case OVERFLOW_EXIT:
           tm->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
-      case RECURSIVE_SLURP_FAIL_EXIT:
-      case RECURSIVE_SLURP_MISMATCH_EXIT:
-      case RECURSIVE_EMPTY_RP_EXIT:
-      case RECURSIVE_MISMATCH_EXIT:
       case BRANCH_EXIT:
       case CASE_EXIT:
         rv = AttemptToExtendTree(cx, lr, NULL, NULL
@@ -7329,7 +7193,6 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
                                  );
         return RecordingIfTrue(rv);
 
-      case RECURSIVE_LOOP_EXIT:
       case LOOP_EXIT:
         if (innermostNestedGuard) {
             rv = AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL
@@ -10357,34 +10220,8 @@ TraceRecorder::putActivationObjects()
     }
 }
 
-static JS_REQUIRES_STACK inline bool
-IsTraceableRecursion(JSContext *cx)
-{
-    JSStackFrame *fp = cx->fp();
-    JSStackFrame *down = fp->down;
-    if (!down)
-        return false;
-    if (down->maybeScript() != fp->maybeScript())
-        return false;
-    if (down->isEvalFrame())
-        return false;
-    if (down->numActualArgs() != fp->numActualArgs())
-        return false;
-    if (fp->numActualArgs() != fp->numFormalArgs())
-        return false;
-    if (fp->hasIMacroPC() || down->hasIMacroPC())
-        return false;
-    if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
-        return false;
-    if (fp->hasBlockChain() || down->hasBlockChain())
-        return false;
-    if (*fp->getScript()->code != JSOP_TRACE)
-        return false;
-    return !fp->getFunction()->isHeavyweight();
-}
-
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
+TraceRecorder::record_EnterFrame()
 {
     JSStackFrame* const fp = cx->fp();
 
@@ -10460,70 +10297,11 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         setFrameObjPtr(fp->addressScopeChain(), scopeChain_ins);
     }
 
-#if 0
-    /*
-     * Check for recursion. This is a special check for recursive cases that can be
-     * a trace-tree, just like a loop. If recursion acts weird, for example
-     * differing argc or existence of an imacpc, it's not something this code is
-     * concerned about. That should pass through below to not regress pre-recursion
-     * functionality.
-     */
-    if (IsTraceableRecursion(cx) && tree->script == cx->fp()->getScript()) {
-        if (tree->recursion == Recursion_Disallowed)
-            RETURN_STOP_A("recursion not allowed in this tree");
-        if (tree->script != cx->fp()->getScript())
-            RETURN_STOP_A("recursion does not match original tree");
-        return InjectStatus(downRecursion());
-    }
-#endif
-
     /* Try inlining one level in case this recursion doesn't go too deep. */
     if (fp->getScript() == fp->down->getScript() &&
         fp->down->down && fp->down->down->getScript() == fp->getScript()) {
         RETURN_STOP_A("recursion started inlining");
     }
-
-#if 0
-    TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), cx->regs->pc, tree->globalObj,
-                                     tree->globalShape, fp->numActualArgs());
-    if (!first)
-        return ARECORD_CONTINUE;
-    TreeFragment* f = findNestedCompatiblePeer(first);
-    if (!f) {
-        /*
-         * If there were no compatible peers, but there were peers at all, then it is probable that
-         * an inner recursive function is type mismatching. Start a new recorder that must be
-         * recursive.
-         */
-        for (f = first; f; f = f->peer) {
-            if (f->code() && f->recursion == Recursion_Detected) {
-                /* Since this recorder is about to die, save its values. */
-                if (++first->hits() <= HOTLOOP)
-                    return ARECORD_STOP;
-                if (IsBlacklisted((jsbytecode*)f->ip))
-                    RETURN_STOP_A("inner recursive tree is blacklisted");
-                JSContext* _cx = cx;
-                SlotList* globalSlots = tree->globalSlots;
-                AbortRecording(cx, "trying to compile inner recursive tree");
-                JS_ASSERT(_cx->fp()->numActualArgs() == first->argc);
-                RecordTree(_cx, first, NULL, 0, globalSlots, Record_EnterFrame);
-                break;
-            }
-        }
-        return ARECORD_CONTINUE;
-    } else if (f) {
-        /*
-         * Make sure the shape of the global object still matches (this might
-         * flush the JIT cache).
-         */
-        JSObject* globalObj = cx->fp()->getScopeChain()->getGlobal();
-        uint32 globalShape = -1;
-        SlotList* globalSlots = NULL;
-        if (!CheckGlobalObjectShape(cx, traceMonitor, globalObj, &globalShape, &globalSlots))
-            return ARECORD_ABORTED;
-        return attemptTreeCall(f, inlineCallCount);
-    }
-#endif
 
     return ARECORD_CONTINUE;
 }
@@ -10605,16 +10383,8 @@ TraceRecorder::record_JSOP_RETURN()
 {
     /* A return from callDepth 0 terminates the current loop, except for recursion. */
     if (callDepth == 0) {
-#if 0
-        if (IsTraceableRecursion(cx) && tree->recursion != Recursion_Disallowed &&
-            tree->script == cx->fp()->getScript()) {
-            return InjectStatus(upRecursion());
-        } else
-#endif
-        {
-            AUDIT(returnLoopExits);
-            return endLoop();
-        }
+        AUDIT(returnLoopExits);
+        return endLoop();
     }
 
     putActivationObjects();
@@ -15740,13 +15510,6 @@ TraceRecorder::record_JSOP_CALLELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STOP()
 {
-#if 0
-    if (callDepth == 0 && IsTraceableRecursion(cx) &&
-        tree->recursion != Recursion_Disallowed &&
-        tree->script == cx->fp()->getScript()) {
-        return InjectStatus(upRecursion());
-    }
-#endif
     JSStackFrame *fp = cx->fp();
 
     if (fp->hasIMacroPC()) {
@@ -16435,8 +16198,6 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
         uintN count;
         TreeFragment* match = FindVMCompatiblePeer(cx, globalObj, tree, count);
         if (match) {
-            JS_ASSERT(match->recursion < Recursion_Unwinds);
-
             VMSideExit* lr = NULL;
             VMSideExit* innermostNestedGuard = NULL;
 
@@ -16492,7 +16253,7 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
         return TPA_Nothing;
     if (!ScopeChainCheck(cx, tree))
         return TPA_Nothing;
-    if (!RecordTree(cx, tree->first, NULL, 0, globalSlots, Record_Branch))
+    if (!RecordTree(cx, tree->first, NULL, 0, globalSlots))
         return TPA_Nothing;
 
   interpret:
@@ -16509,7 +16270,5 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
 }
 
 #endif
-
-#include "jsrecursion.cpp"
 
 } /* namespace js */

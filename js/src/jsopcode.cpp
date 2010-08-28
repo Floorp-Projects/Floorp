@@ -4990,20 +4990,6 @@ js_DecompileFunction(JSPrinter *jp)
         endpc = pc + script->length;
         ok = JS_TRUE;
 
-        /* Skip trace hint if it appears here. */
-#if JS_HAS_GENERATORS
-        if (js_GetOpcode(jp->sprinter.context, script, script->code) != JSOP_GENERATOR)
-#endif
-        {
-            JSOp op = js_GetOpcode(jp->sprinter.context, script, pc);
-            if (op == JSOP_TRACE || op == JSOP_NOP) {
-                JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
-                pc += JSOP_TRACE_LENGTH;
-            } else {
-                JS_ASSERT(op == JSOP_STOP);  /* empty script singleton */
-            }
-        }
-
 #if JS_HAS_DESTRUCTURING
         ss.printer = NULL;
         jp->script = script;

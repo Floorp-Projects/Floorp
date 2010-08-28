@@ -1011,16 +1011,10 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (prologLength + mainLength <= 3) {
         /*
          * Check very short scripts to see whether they are "empty" and return
-         * the const empty-script singleton if so. We are deliberately flexible
-         * about whether JSOP_TRACE is in the prolog.
+         * the const empty-script singleton if so.
          */
         jsbytecode *pc = prologLength ? CG_PROLOG_BASE(cg) : CG_BASE(cg);
 
-        if (JSOp(*pc) == JSOP_TRACE) {
-            ++pc;
-            if (pc == CG_PROLOG_BASE(cg) + prologLength)
-                pc = CG_BASE(cg);
-        }
         if ((cg->flags & TCF_NO_SCRIPT_RVAL) && JSOp(*pc) == JSOP_FALSE)
             ++pc;
 

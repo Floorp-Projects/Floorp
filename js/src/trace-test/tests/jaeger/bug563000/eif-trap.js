@@ -6,5 +6,5 @@ function caller(obj) {
   var x = "failure";
   return x;
 }
-trap(caller, 16, "x = 'success'; nop()");
+trap(caller, 14, "x = 'success'; nop()");
 assertEq(caller(this), "success");

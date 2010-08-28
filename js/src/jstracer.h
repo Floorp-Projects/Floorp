@@ -388,19 +388,7 @@ public:
     _(UNSTABLE_LOOP)                                                            \
     _(TIMEOUT)                                                                  \
     _(DEEP_BAIL)                                                                \
-    _(STATUS)                                                                   \
-    /* Exit is almost recursive and wants a peer at recursive_pc */             \
-    _(RECURSIVE_UNLINKED)                                                       \
-    /* Exit is recursive, and there are no more frames */                       \
-    _(RECURSIVE_LOOP)                                                           \
-    /* Exit is recursive, but type-mismatched guarding on a down frame */       \
-    _(RECURSIVE_MISMATCH)                                                       \
-    /* Exit is recursive, and the JIT wants to try slurping interp frames */    \
-    _(RECURSIVE_EMPTY_RP)                                                       \
-    /* Slurping interp frames in up-recursion failed */                         \
-    _(RECURSIVE_SLURP_FAIL)                                                     \
-    /* Tried to slurp an interp frame, but the pc or argc mismatched */         \
-    _(RECURSIVE_SLURP_MISMATCH)
+    _(STATUS)
 
 enum ExitType {
     #define MAKE_EXIT_CODE(x) x##_EXIT,
@@ -424,11 +412,7 @@ struct VMSideExit : public nanojit::SideExit
     uint32 numStackSlotsBelowCurrentFrame;
     ExitType exitType;
     uintN lookupFlags;
-    jsbytecode* recursive_pc;
-    FrameInfo* recursive_down;
     unsigned hitcount;
-    unsigned slurpFailSlot;
-    JSValueType slurpType;
 
     /*
      * Ordinarily 0.  If a slow native function is atop the stack, the 1 bit is
@@ -615,21 +599,6 @@ struct UnstableExit
     UnstableExit* next;
 };
 
-enum RecordReason
-{
-    Record_Branch,
-    Record_EnterFrame,
-    Record_LeaveFrame
-};
-
-enum RecursionStatus
-{
-    Recursion_None,             /* No recursion has been compiled yet. */
-    Recursion_Disallowed,       /* This tree cannot be recursive. */
-    Recursion_Unwinds,          /* Tree is up-recursive only. */
-    Recursion_Detected          /* Tree has down recursion and maybe up recursion. */
-};
-
 struct LinkableFragment : public VMFragment
 {
     LinkableFragment(const void* _ip, nanojit::Allocator* alloc
@@ -687,7 +656,6 @@ struct TreeFragment : public LinkableFragment
     uintN                   treePCOffset;
 #endif
     JSScript*               script;
-    RecursionStatus         recursion;
     UnstableExit*           unstableExits;
     Queue<VMSideExit*>      sideExits;
     ptrdiff_t               nativeStackBase;
@@ -910,9 +878,6 @@ class TraceRecorder
     /* The root fragment representing the tree. */
     TreeFragment* const             tree;
 
-    /* The reason we started recording. */
-    RecordReason const              recordReason;
-
     /* The global object from the start of recording until now. */
     JSObject* const                 globalObj;
 
@@ -1082,18 +1047,6 @@ class TraceRecorder
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
                                                nanojit::LIns* d1, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpNonDoubleObjectSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
-                                                              JSValueType type, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpObjectSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
-                                                     JSValueType type, VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpDoubleSlot(nanojit::LIns* val_ins, ptrdiff_t offset,
-                                                     VMSideExit* exit);
-    JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit);
-    JS_REQUIRES_STACK void slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, SlurpInfo* info);
-    JS_REQUIRES_STACK void slurpFrameObjPtrSlot(nanojit::LIns* val_ins, ptrdiff_t offset, JSObject** p, SlurpInfo* info);
-    JS_REQUIRES_STACK AbortableRecordingStatus slurpDownFrames(jsbytecode* return_pc);
-    JS_REQUIRES_STACK AbortableRecordingStatus upRecursion();
-    JS_REQUIRES_STACK AbortableRecordingStatus downRecursion();
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
@@ -1448,7 +1401,7 @@ class TraceRecorder
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
-                  uint32 outerArgc, RecordReason reason, bool speculate);
+                  uint32 outerArgc, bool speculate);
 
     /* The destructor should only be called through finish*, not directly. */
     ~TraceRecorder();
@@ -1467,7 +1420,7 @@ class TraceRecorder
     friend class DetermineTypesVisitor;
     friend class RecursiveSlotMap;
     friend class UpRecursiveSlotMap;
-    friend MonitorResult MonitorLoopEdge(JSContext*, uintN&, RecordReason);
+    friend MonitorResult MonitorLoopEdge(JSContext*, uintN&);
     friend TracePointAction MonitorTracePoint(JSContext*, uintN &inlineCallCount,
                                               bool &blacklist);
     friend void AbortRecording(JSContext*, const char*);
@@ -1477,8 +1430,7 @@ public:
     startRecorder(JSContext*, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
-                  uint32 outerArgc, RecordReason reason,
-                  bool speculate);
+                  uint32 outerArgc, bool speculate);
 
     /* Accessors. */
     VMFragment*         getFragment() const { return fragment; }
@@ -1488,7 +1440,7 @@ public:
 
     /* Entry points / callbacks from the interpreter. */
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
-    JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame(uintN& inlineCallCount);
+    JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame();
     JS_REQUIRES_STACK AbortableRecordingStatus record_LeaveFrame();
     JS_REQUIRES_STACK AbortableRecordingStatus record_SetPropHit(PropertyCacheEntry* entry,
                                                                  JSScopeProperty* sprop);
@@ -1550,7 +1502,7 @@ public:
 #define TRACE_2(x,a,b)          TRACE_ARGS(x, (a, b))
 
 extern JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason);
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount);
 
 extern JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool& blacklist);
