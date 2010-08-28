@@ -3950,3 +3950,11 @@ ConstructSlimWrapper(XPCCallContext &ccx,
 
     return JS_TRUE;
 }
+
+JSBool
+DebugCheckWrapperClass(JSObject* obj)
+{
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
+                 "Forgot to check if this is a wrapper?");
+    return JS_TRUE;
+}
