@@ -53,10 +53,7 @@ const TEST_URI = "http://test.com/";
 const PREF_SYNC_INTERVAL = "syncDBTableIntervalInSecs";
 const SYNC_INTERVAL = 600; // ten minutes
 const TOPIC_SYNC_FINISHED = "places-sync-finished";
-
-// Polling constants to check the connection closed status.
-const POLLING_TIMEOUT_MS = 100;
-const POLLING_MAX_PASSES = 20;
+const TOPIC_CONNECTION_CLOSED = "places-connection-closed";
 
 var historyObserver = {
   visitId: -1,
@@ -82,6 +79,7 @@ var observer = {
         // The first sync is due to the insert bookmark.
         // Simulate a clear private data just before shutdown.
         bh.removeAllPages();
+        os.addObserver(shutdownObserver, TOPIC_CONNECTION_CLOSED, false);
         // Immediately notify shutdown.
         shutdownPlaces();
         return;
@@ -94,27 +92,16 @@ var observer = {
       do_check_neq(historyObserver.visitId, -1);
       // History must have been cleared.
       do_check_true(historyObserver.cleared);
-
-      // The database connection will be closed after this sync, but we can't
-      // know how much time it will take, so we use a polling strategy.
-      do_timeout(POLLING_TIMEOUT_MS, check_results);
     }
   }
 }
 os.addObserver(observer, TOPIC_SYNC_FINISHED, false);
 
-var gPasses = 0;
-function check_results() {
-    if (++gPasses >= POLLING_MAX_PASSES) {
-      do_throw("Maximum time elapsdes waiting for Places database connection to close");
-      do_test_finished();
-    }
-
-    if (PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                           .DBConnection.connectionReady) {
-      do_timeout(POLLING_TIMEOUT_MS, check_results);
-      return;
-    }
+let shutdownObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    os.removeObserver(this, aTopic);
+    do_check_false(PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                              .DBConnection.connectionReady);
 
     let dbConn = DBConn();
     do_check_true(dbConn.connectionReady);
@@ -144,6 +131,7 @@ function check_results() {
 
       do_test_finished();
     });
+  }
 }
 
 function run_test()
