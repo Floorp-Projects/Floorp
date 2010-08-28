@@ -85,7 +85,7 @@ function clickNotificationButton(aButtonIndex) {
   var chromeWin = getChromeWindow();
   if (chromeWin.PopupNotifications) {
     var panel = chromeWin.PopupNotifications.panel;
-    var notificationEl = panel.getElementsByAttribute("id", "geolocation")[0];
+    var notificationEl = panel.getElementsByAttribute("id", "geolocation-notification")[0];
     if (aButtonIndex == kAcceptButton)
       notificationEl.button.doCommand();
     else if (aButtonIndex == kDenyButton)
