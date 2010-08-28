@@ -1150,7 +1150,9 @@ var gSearchView = {
   _sorters: null,
   _listBox: null,
   _emptyNotice: null,
+  _allResultsLink: null,
   _lastQuery: null,
+  _lastRemoteTotal: 0,
   _pendingSearches: 0,
 
   initialize: function() {
@@ -1160,6 +1162,7 @@ var gSearchView = {
     this._sorters.handler = this;
     this._listBox = document.getElementById("search-list");
     this._emptyNotice = document.getElementById("search-list-empty");
+    this._allResultsLink = document.getElementById("search-allresults-link");
 
     var self = this;
     this._listBox.addEventListener("keydown", function(aEvent) {
@@ -1186,6 +1189,7 @@ var gSearchView = {
   show: function(aQuery, aRequest) {
     gHeader.isSearching = true;
     this.showEmptyNotice(false);
+    this.showAllResultsLink(0);
 
     gHeader.searchQuery = aQuery;
     aQuery = aQuery.trim().toLocaleLowerCase();
@@ -1199,8 +1203,8 @@ var gSearchView = {
     if (AddonRepository.isSearching)
       AddonRepository.cancelSearch();
 
-    while (this._listBox.lastChild.localName == "richlistitem")
-      this._listBox.removeChild(this._listBox.lastChild);
+    while (this._listBox.firstChild.localName == "richlistitem")
+      this._listBox.removeChild(this._listBox.firstChild);
 
     var self = this;
     gCachedAddons = {};
@@ -1222,7 +1226,7 @@ var gSearchView = {
         if (aIsRemote)
           gCachedAddons[aObj.id] = aObj;
 
-        self._listBox.appendChild(item);
+        self._listBox.insertBefore(item, self._listBox.lastChild);
         createdCount++;
       });
 
@@ -1264,6 +1268,8 @@ var gSearchView = {
         if (gViewController && aRequest != gViewController.currentViewRequest)
           return;
 
+        self._lastRemoteTotal = 0;
+
         // XXXunf Better handling of AMO search failure. See bug 579502
         finishSearch(0); // Silently fail
       },
@@ -1271,6 +1277,11 @@ var gSearchView = {
       searchSucceeded: function(aAddonsList, aAddonCount, aTotalResults) {
         if (gViewController && aRequest != gViewController.currentViewRequest)
           return;
+
+        if (aTotalResults > maxRemoteResults)
+          self._lastRemoteTotal = aTotalResults;
+        else
+          self._lastRemoteTotal = 0;
 
         var createdCount = createSearchResults(aAddonsList, false, true);
         finishSearch(createdCount);
@@ -1296,6 +1307,7 @@ var gSearchView = {
       }
 
       this.showEmptyNotice(isEmpty);
+      this.showAllResultsLink(this._lastRemoteTotal);
     }
 
     gViewController.updateCommands();
@@ -1356,9 +1368,24 @@ var gSearchView = {
     this._emptyNotice.hidden = !aShow;
   },
 
+  showAllResultsLink: function(aTotalResults) {
+    if (aTotalResults == 0) {
+      this._allResultsLink.hidden = true;
+      return;
+    }
+
+    var linkStr = gStrings.ext.GetStringFromName("showAllSearchResults");
+    linkStr = PluralForm.get(aTotalResults, linkStr);
+    linkStr = linkStr.replace("#1", aTotalResults);
+    this._allResultsLink.value = linkStr;
+
+    this._allResultsLink.href = AddonRepository.getSearchURL(this._lastQuery);
+    this._allResultsLink.hidden = false;
+ },
+
   onSortChanged: function(aSortBy, aAscending) {
-    var header = this._listBox.firstChild;
-    this._listBox.removeChild(header);
+    var footer = this._listBox.lastChild;
+    this._listBox.removeChild(footer);
 
     var hints = aAscending ? "ascending" : "descending";
     if (INTEGER_FIELDS.indexOf(aSortBy) >= 0)
@@ -1368,7 +1395,7 @@ var gSearchView = {
                       getService(Ci.nsIXULSortService);
     sortService.sort(this._listBox, aSortBy, hints);
 
-    this._listBox.insertBefore(header, this._listBox.firstChild);
+    this._listBox.appendChild(footer);
   },
 
   getSelectedAddon: function() {
