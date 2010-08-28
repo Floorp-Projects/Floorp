@@ -71,7 +71,7 @@
 #include "nsINode.h"
 #include "nsHashtable.h"
 
-#include "jsapi.h"
+#include "xpcpublic.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -1725,11 +1725,34 @@ private:
   static PRBool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
 
+  static nsresult WrapNativeHelper(JSContext *cx, JSObject *scope,
+                                   nsISupports *native, nsWrapperCache *cache,
+                                   const nsIID* aIID, jsval *vp,
+                                   nsIXPConnectJSObjectHolder** aHolder,
+                                   PRBool aAllowWrapping);
+
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, nsWrapperCache *cache,
                              const nsIID* aIID, jsval *vp,
                              nsIXPConnectJSObjectHolder** aHolder,
-                             PRBool aAllowWrapping);
+                             PRBool aAllowWrapping)
+  {
+    if (!native) {
+      NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
+
+      *vp = JSVAL_NULL;
+
+      return NS_OK;
+    }
+
+    JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+    if (wrapper) {
+      return NS_OK;
+    }
+
+    return WrapNativeHelper(cx, scope, native, cache, aIID, vp, aHolder,
+                            aAllowWrapping);
+  }
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
