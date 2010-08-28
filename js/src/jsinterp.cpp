@@ -2322,10 +2322,10 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
             goto error;                                                       \
     JS_END_MACRO
 
-#define MONITOR_BRANCH(reason)                                                \
+#define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
+            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount);           \
             if (r == MONITOR_RECORDING) {                                     \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
@@ -2341,7 +2341,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 
 #else /* !JS_TRACER */
 
-#define MONITOR_BRANCH(reason) ((void) 0)
+#define MONITOR_BRANCH() ((void) 0)
 
 #endif /* !JS_TRACER */
 
@@ -2380,13 +2380,13 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
             CHECK_BRANCH();                                                   \
             if (op == JSOP_NOP) {                                             \
                 if (TRACE_RECORDER(cx)) {                                     \
-                    MONITOR_BRANCH(Record_Branch);                            \
+                    MONITOR_BRANCH();                                         \
                     op = (JSOp) *regs.pc;                                     \
                 } else {                                                      \
                     op = (JSOp) *++regs.pc;                                   \
                 }                                                             \
             } else if (op == JSOP_TRACE) {                                    \
-                MONITOR_BRANCH(Record_Branch);                                \
+                MONITOR_BRANCH();                                             \
                 op = (JSOp) *regs.pc;                                         \
             }                                                                 \
         }                                                                     \
@@ -2800,14 +2800,7 @@ BEGIN_CASE(JSOP_STOP)
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
-            if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
-                *(regs.pc + JSOP_CALL_LENGTH) == JSOP_NOP) {
-                JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
-                regs.pc += JSOP_CALL_LENGTH;
-                len = JSOP_TRACE_LENGTH;
-            } else {
-                len = JSOP_CALL_LENGTH;
-            }
+            len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
         }
         goto error;
@@ -4776,20 +4769,7 @@ BEGIN_CASE(JSOP_APPLY)
 
             DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
 
-#ifdef JS_TRACER
-            if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
-                AbortableRecordingStatus status = tr->record_EnterFrame(inlineCallCount);
-                RESTORE_INTERP_VARS();
-                if (StatusAbortsRecorderIfActive(status)) {
-                    if (TRACE_RECORDER(cx)) {
-                        JS_ASSERT(TRACE_RECORDER(cx) == tr);
-                        AbortRecording(cx, "record_EnterFrame failed");
-                    }
-                    if (status == ARECORD_ERROR)
-                        goto error;
-                }
-            }
-#endif
+            TRACE_0(EnterFrame);
 
 #ifdef JS_METHODJIT
             /* Try to ensure methods are method JIT'd.  */

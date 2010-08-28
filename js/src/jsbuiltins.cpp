@@ -332,35 +332,3 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT,
                      0, ACCSET_STORE_ANY)
 
-JS_REQUIRES_STACK JSBool FASTCALL
-js_PopInterpFrame(JSContext* cx, TracerState* state)
-{
-    JS_ASSERT(cx->hasfp() && cx->fp()->down);
-    JSStackFrame* const fp = cx->fp();
-
-    /*
-     * Mirror frame popping code from inline_return in js_Interpret. There are
-     * some things we just don't want to handle. In those cases, the trace will
-     * MISMATCH_EXIT.
-     */
-    if (fp->hasHookData())
-        return JS_FALSE;
-    if (cx->version != fp->getCallerVersion())
-        return JS_FALSE;
-    if (fp->flags & JSFRAME_CONSTRUCTING)
-        return JS_FALSE;
-    if (fp->hasIMacroPC())
-        return JS_FALSE;
-    if (fp->hasBlockChain())
-        return JS_FALSE;
-
-    fp->putActivationObjects(cx);
-    
-    /* Pop the frame and its memory. */
-    cx->stack().popInlineFrame(cx, fp, fp->down);
-
-    /* Update the inline call count. */
-    *state->inlineCallCountp = *state->inlineCallCountp - 1;
-    return JS_TRUE;
-}
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, TRACERSTATE, 0, ACCSET_STORE_ANY)
