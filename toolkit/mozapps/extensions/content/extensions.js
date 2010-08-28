@@ -93,9 +93,11 @@ XPCOMUtils.defineLazyGetter(gStrings, "appVersion", function() {
   return Services.appinfo.version;
 });
 
-
 window.addEventListener("load",  initialize, false);
 window.addEventListener("unload",  shutdown, false);
+window.addEventListener("popstate", function(event) {
+  gViewController.statePopped(event);
+}, false);
 
 var gPendingInitializations = 1;
 __defineGetter__("gIsInitializing", function() gPendingInitializations > 0);
@@ -105,19 +107,6 @@ function initialize() {
   gHeader.initialize();
   gViewController.initialize();
   gEventManager.initialize();
-
-  var view = VIEW_DEFAULT;
-  if (gCategories.node.selectedItem &&
-      gCategories.node.selectedItem.id != "category-search")
-    view = gCategories.node.selectedItem.value;
-
-  if ("arguments" in window && window.arguments.length > 0) {
-    if ("view" in window.arguments[0])
-      view = window.arguments[0].view;
-  }
-
-  gViewController.loadView(view);
-  notifyInitialized();
 }
 
 function notifyInitialized() {
@@ -140,8 +129,14 @@ function shutdown() {
 }
 
 // Used by external callers to load a specific view into the manager
-function loadView(aViewId, aCallback) {
-  gViewController.loadView(aViewId, aCallback);
+function loadView(aViewId) {
+  if (!gViewController.initialViewSelected) {
+    // The caller opened the window and immediately loaded the view so it
+    // should be the initial history entry
+    gViewController.loadInitialView(aViewId);
+  } else {
+    gViewController.loadView(aViewId);
+  }
 }
 
 var gEventManager = {
@@ -258,9 +253,9 @@ var gViewController = {
   currentViewId: "",
   currentViewObj: null,
   currentViewRequest: 0,
-  previousViewId: "",
   viewObjects: {},
   viewChangeCallback: null,
+  initialViewSelected: false,
 
   initialize: function() {
     this.viewPort = document.getElementById("view-port");
@@ -294,6 +289,32 @@ var gViewController = {
     }
   },
 
+  statePopped: function(e) {
+    // If this is a navigation to a previous state then load that state
+    if (e.state) {
+      this.loadViewInternal(e.state.view, e.state.previousView);
+      return;
+    }
+
+    // If the initial view has already been selected (by a call to loadView) then
+    // bail out now
+    if (this.initialViewSelected)
+      return;
+
+    // Otherwise load the default view
+    var view = VIEW_DEFAULT;
+    if (gCategories.node.selectedItem &&
+        gCategories.node.selectedItem.id != "category-search")
+      view = gCategories.node.selectedItem.value;
+
+    if ("arguments" in window && window.arguments.length > 0) {
+      if ("view" in window.arguments[0])
+        view = window.arguments[0].view;
+    }
+
+    this.loadInitialView(view);
+  },
+
   parseViewId: function(aViewId) {
     var matchRegex = /^addons:\/\/([^\/]+)\/(.*)$/;
     var [,viewType, viewParam] = aViewId.match(matchRegex) || [];
@@ -301,13 +322,32 @@ var gViewController = {
   },
 
   get isLoading() {
-    return this.currentViewObj.node.hasAttribute("loading");
+    return !this.currentViewObj || this.currentViewObj.node.hasAttribute("loading");
   },
 
-  loadView: function(aViewId, aCallback) {
+  loadView: function(aViewId) {
     if (aViewId == this.currentViewId)
       return;
 
+    window.history.pushState({
+      view: aViewId,
+      previousView: this.currentViewId
+    }, document.title);
+    this.loadViewInternal(aViewId, this.currentViewId);
+  },
+
+  loadInitialView: function(aViewId) {
+    window.history.replaceState({
+      view: aViewId,
+      previousView: null
+    }, document.title);
+
+    this.loadViewInternal(aViewId, null);
+    this.initialViewSelected = true;
+    notifyInitialized();
+  },
+
+  loadViewInternal: function(aViewId, aPreviousView) {
     var view = this.parseViewId(aViewId);
 
     if (!view.type || !(view.type in this.viewObjects))
@@ -329,25 +369,41 @@ var gViewController = {
       }
     }
 
-    gCategories.select(aViewId);
-
-    this.previousViewId = this.currentViewId;
+    gCategories.select(aViewId, aPreviousView);
 
     this.currentViewId = aViewId;
     this.currentViewObj = viewObj;
-
-    this.viewChangeCallback = aCallback;
 
     this.viewPort.selectedPanel = this.currentViewObj.node;
     this.viewPort.selectedPanel.setAttribute("loading", "true");
     this.currentViewObj.show(view.param, ++this.currentViewRequest);
   },
 
+  // Moves back in the document history and removes the current history entry
+  popState: function(aCallback) {
+    this.viewChangeCallback = function() {
+      // TODO To ensure we can't go forward again we put an additional entry for
+      // the current page into the history. Ideally we would just strip the
+      // history but there doesn't seem to be a way to do that. Bug 590661
+      window.history.pushState({
+        view: gViewController.currentViewId,
+        previousView: gViewController.currentViewId
+      }, document.title);
+      this.updateCommands();
+
+      if (aCallback)
+        aCallback();
+    };
+    window.history.back();
+  },
+
   notifyViewChanged: function() {
     this.viewPort.selectedPanel.removeAttribute("loading");
 
-    if (this.viewChangeCallback)
+    if (this.viewChangeCallback) {
       this.viewChangeCallback();
+      this.viewChangeCallback = null;
+    }
 
     var event = document.createEvent("Events");
     event.initEvent("ViewChanged", true, true);
@@ -355,6 +411,28 @@ var gViewController = {
   },
 
   commands: {
+    cmd_back: {
+      isEnabled: function() {
+        return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .canGoBack;
+      },
+      doCommand: function() {
+        window.history.back();
+      }
+    },
+
+    cmd_forward: {
+      isEnabled: function() {
+        return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .canGoForward;
+      },
+      doCommand: function() {
+        window.history.forward();
+      }
+    },
+
     cmd_restartApp: {
       isEnabled: function() true,
       doCommand: function() {
@@ -616,7 +694,7 @@ var gViewController = {
           return;
         }
 
-        gViewController.loadView(gViewController.previousViewId, function() {
+        gViewController.popState(function() {
           gViewController.currentViewObj.getListItemForID(aAddon.id).uninstall();
         });
       },
@@ -921,13 +999,15 @@ var gCategories = {
     });
   },
 
-  select: function(aId) {
+  select: function(aId, aPreviousView) {
+    var view = gViewController.parseViewId(aId);
+    if (view.type == "detail") {
+      aId = aPreviousView;
+      view = gViewController.parseViewId(aPreviousView);
+    }
+
     if (this.node.selectedItem &&
         this.node.selectedItem.value == aId)
-      return;
-
-    var view = gViewController.parseViewId(aId);
-    if (view.type == "detail")
       return;
 
     if (view.type == "search")
@@ -942,6 +1022,8 @@ var gCategories = {
       this.node.selectedItem = item;
       this.node.suppressOnSelect = false;
       this.node.ensureElementIsVisible(item);
+      // When supressing onselect last-selected doesn't get updated
+      this.node.setAttribute("last-selected", item.id);
 
       this.maybeHideSearch();
     }
@@ -970,20 +1052,11 @@ var gCategories = {
 var gHeader = {
   _search: null,
   _searching: null,
-  _name: null,
-  _link: null,
   _dest: "",
 
   initialize: function() {
-    this._name = document.getElementById("header-name");
-    this._link = document.getElementById("header-link");
     this._search = document.getElementById("header-search");
     this._searching = document.getElementById("header-searching");
-
-    var self = this;
-    this._link.addEventListener("command", function() {
-      gViewController.loadView(gViewController.previousViewId);
-    }, false);
 
     this._search.addEventListener("command", function(aEvent) {
       var query = aEvent.target.value;
@@ -992,21 +1065,6 @@ var gHeader = {
 
       gViewController.loadView("addons://search/" + encodeURIComponent(query));
     }, false);
-
-    this.setName("");
-  },
-
-  setName: function(aName) {
-    this._name.value = aName;
-    this._name.hidden = false;
-    this._link.hidden = true;
-  },
-
-  showBackButton: function() {
-    this._link.label = gStrings.ext.formatStringFromName("header-goBack",
-                                                         [this._name.value], 1);
-    this._name.hidden = true;
-    this._link.hidden = false;
   },
 
   get searchQuery() {
@@ -1069,7 +1127,6 @@ var gDiscoverView = {
   },
 
   show: function() {
-    gHeader.setName(gStrings.ext.GetStringFromName("header-discover"));
     // load content only if we're not already showing something on AMO
     // XXXunf should only be comparing hostname. bug 557698
     if (this._browser.currentURI.spec.indexOf(this._browser.homePage) == -1)
@@ -1127,7 +1184,6 @@ var gSearchView = {
   },
 
   show: function(aQuery, aRequest) {
-    gHeader.setName(gStrings.ext.GetStringFromName("header-search"));
     gHeader.isSearching = true;
     this.showEmptyNotice(false);
 
@@ -1360,7 +1416,6 @@ var gListView = {
   },
 
   show: function(aType, aRequest) {
-    gHeader.setName(gStrings.ext.GetStringFromName("header-" + aType));
     this.showEmptyNotice(false);
 
     while (this._listBox.itemCount > 0)
@@ -1499,7 +1554,6 @@ var gDetailView = {
     this._loadingTimer = setTimeout(function() {
       self.node.setAttribute("loading-extended", true);
     }, LOADING_MSG_DELAY);
-    gHeader.showBackButton();
 
     var view = gViewController.currentViewId;
 
@@ -1624,7 +1678,7 @@ var gDetailView = {
   },
 
   onUninstalled: function() {
-    gViewController.loadView(gViewController.previousViewId);
+    gViewController.popState();
   },
 
   onOperationCancelled: function() {
@@ -1678,8 +1732,6 @@ var gUpdatesView = {
   },
 
   show: function(aType, aRequest) {
-    gHeader.setName(gStrings.ext.GetStringFromName("header-" + aType + "Updates"));
-
     document.getElementById("empty-availableUpdates-msg").hidden = aType != "available";
     document.getElementById("empty-recentUpdates-msg").hidden = aType != "recent";
     this.showEmptyNotice(false);

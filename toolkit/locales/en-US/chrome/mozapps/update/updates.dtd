@@ -52,15 +52,21 @@
 
 <!ENTITY  details.link                    "Details">
 
+<!ENTITY  error.title                     "Update Failed">
+
 <!ENTITY  error.label                     "There were problems checking for, downloading, or installing this 
                                            update. &brandShortName; could not be updated because:">
                                            
 <!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
                                            and downloading the latest version:">
                                            
-<!ENTITY  errorpatching.title             "Update Failed">
 <!ENTITY  errorpatching.intro             "The partial Update could not be applied. 
                                            &brandShortName; will try again by downloading a complete Update.">
+
+<!ENTITY  errorCertAttrNoUpdate.label     "Something is preventing &brandShortName; from updating securely.
+                                           Please check you have the latest version of &brandShortName; at:">
+<!ENTITY  errorCertAttrHasUpdate.label    "Something is trying to trick &brandShortName; into accepting an
+                                           insecure update. Please contact your network provider and seek help.">
 
 <!ENTITY  finishedPage.title              "Update Ready to Install">
 <!ENTITY  finishedPage.text               "The update will be installed the next time &brandShortName; starts. You 
