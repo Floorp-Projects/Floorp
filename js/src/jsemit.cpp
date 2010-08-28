@@ -3624,13 +3624,6 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return false;
         CG_SWITCH_TO_MAIN(cg);
-    } else {
-        /*
-         * Emit a trace hint opcode only if not in a generator, since generators
-         * are not yet traced and both want to be the first instruction.
-         */
-        if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
-            return false;
     }
 
     if (cg->needsEagerArguments()) {
@@ -6435,11 +6428,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         argc = pn->pn_count - 1;
         if (js_Emit3(cx, cg, PN_OP(pn), ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
-        if (PN_OP(pn) == JSOP_CALL) {
-            /* Add a trace hint opcode for recursion. */
-            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
-                return JS_FALSE;
-        }
         if (PN_OP(pn) == JSOP_EVAL)
             EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
         break;

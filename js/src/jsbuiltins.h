@@ -595,7 +595,6 @@ JS_DECLARE_CALLINFO(js_HasNamedPropertyInt32)
 JS_DECLARE_CALLINFO(js_TypeOfObject)
 JS_DECLARE_CALLINFO(js_BooleanIntToString)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
-JS_DECLARE_CALLINFO(js_PopInterpFrame)
 
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
