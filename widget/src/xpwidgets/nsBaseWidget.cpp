@@ -762,13 +762,22 @@ LayerManager* nsBaseWidget::GetLayerManager()
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-    PRBool allowAcceleration = PR_TRUE;
+    PRBool disableAcceleration = PR_FALSE;
+    PRBool accelerateByDefault = PR_TRUE;
+
     if (prefs) {
-      prefs->GetBoolPref("mozilla.widget.accelerated-layers",
-                         &allowAcceleration);
+      prefs->GetBoolPref("layers.accelerate-all",
+                         &accelerateByDefault);
+      prefs->GetBoolPref("layers.accelerate-none",
+                         &disableAcceleration);
     }
 
-    if (mUseAcceleratedRendering && allowAcceleration) {
+    if (disableAcceleration)
+      mUseAcceleratedRendering = PR_FALSE;
+    else if (accelerateByDefault)
+      mUseAcceleratedRendering = PR_TRUE;
+
+    if (mUseAcceleratedRendering) {
       nsRefPtr<LayerManagerOGL> layerManager =
         new mozilla::layers::LayerManagerOGL(this);
       /**
