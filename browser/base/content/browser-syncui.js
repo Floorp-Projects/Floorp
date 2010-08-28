@@ -328,6 +328,10 @@ let gSyncUI = {
   _onSyncEnd: function SUI__onSyncEnd(success) {
     let title = this._stringBundle.GetStringFromName("error.sync.title");
     if (!success) {
+      if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
+        this.onLoginError();
+        return;
+      }
       let error = Weave.Utils.getErrorString(Weave.Status.sync);
       let description =
         this._stringBundle.formatStringFromName("error.sync.description", [error], 1);
