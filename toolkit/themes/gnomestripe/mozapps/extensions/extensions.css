@@ -507,6 +507,11 @@
   display: none;
 }
 
+#search-allresults-link {
+  margin-top: 1em;
+  margin-bottom: 2em;
+}
+
 /*** detail view ***/
 
 #detail-view[active="false"] .fade {
