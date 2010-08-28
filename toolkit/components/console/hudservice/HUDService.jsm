@@ -586,6 +586,8 @@ NetworkPanel.prototype =
   _DISPLAYED_RESPONSE_HEADER: 3,
   _TRANSITION_CLOSED: 4,
 
+  _fromDataRegExp: /Content-Type\:\s*application\/x-www-form-urlencoded/,
+
   /**
    * Small helper function that is nearly equal to  HUDService.getFormatStr
    * except that it prefixes aName with "NetworkPanel.".
@@ -633,6 +635,17 @@ NetworkPanel.prototype =
   get _isResponseCached()
   {
     return this.httpActivity.response.status.indexOf("304") != -1;
+  },
+
+  /**
+   *
+   * @returns boolean
+   *          Returns true if the posted body contains form data.
+   */
+  get _isRequestBodyFormData()
+  {
+    let requestBody = this.httpActivity.request.body;
+    return this._fromDataRegExp.test(requestBody);
   },
 
   /**
@@ -756,6 +769,40 @@ NetworkPanel.prototype =
   _displayRequestBody: function NP_displayRequestBody() {
     this._displayNode("requestBody");
     this._appendTextNode("requestBodyContent", this.httpActivity.request.body);
+  },
+
+  /*
+   * Displays the `sent form data` section. Parses the request header for the
+   * submitted form data displays it inside of the `sent form data` section.
+   *
+   * @returns void
+   */
+  _displayRequestForm: function NP_processRequestForm() {
+    let requestBodyLines = this.httpActivity.request.body.split("\n");
+    let formData = requestBodyLines[requestBodyLines.length - 1].
+                      replace(/\+/g, " ").split("&");
+
+    function unescapeText(aText)
+    {
+      try {
+        return decodeURIComponent(aText);
+      }
+      catch (ex) {
+        return decodeURIComponent(unescape(aText));
+      }
+    }
+
+    let formDataObj = {};
+    for (let i = 0; i < formData.length; i++) {
+      let data = formData[i];
+      let idx = data.indexOf("=");
+      let key = data.substring(0, idx);
+      let value = data.substring(idx + 1);
+      formDataObj[unescapeText(key)] = unescapeText(value);
+    }
+
+    this._appendList("requestFormDataContent", formDataObj);
+    this._displayNode("requestFormData");
   },
 
   /**
@@ -896,7 +943,13 @@ NetworkPanel.prototype =
       case this._DISPLAYED_REQUEST_HEADER:
         // Process the request body if there is one.
         if (request.body) {
-          this._displayRequestBody();
+          // Check if we send some form data. If so, display the form data special.
+          if (this._isRequestBodyFormData) {
+            this._displayRequestForm();
+          }
+          else {
+            this._displayRequestBody();
+          }
           this._state = this._DISPLAYED_REQUEST_BODY;
         }
         // FALL THROUGH
