@@ -10,7 +10,6 @@ found in the LICENSE file.
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>WebGL vertexAttrib Conformance Tests</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
-<script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
 </head>
@@ -33,17 +32,57 @@ if (!gl) {
   debug("");
   debug("Checking gl.vertexAttrib.");
 
-  gl.vertexAttrib4fv(0, [1, 2, 3, 4]);
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[0]', '1');
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[1]', '2');
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[2]', '3');
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[3]', '4');
+  var numVertexAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+  for (var ii = 0; ii < numVertexAttribs; ++ii) {
+    gl.vertexAttrib1fv(ii, [1]);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '1');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '0');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '0');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
 
-  gl.vertexAttrib1f(0, 5);
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[0]', '5');
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[1]', '0');
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[2]', '0');
-  shouldBe('gl.getVertexAttrib(0, gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
+    gl.vertexAttrib2fv(ii, [1, 2]);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '1');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '2');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '0');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
+
+    gl.vertexAttrib3fv(ii, [1, 2, 3]);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '1');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '2');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '3');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
+
+    gl.vertexAttrib4fv(ii, [1, 2, 3, 4]);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '1');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '2');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '3');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '4');
+
+    gl.vertexAttrib1f(ii, 5);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '5');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '0');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '0');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
+
+    gl.vertexAttrib2f(ii, 6, 7);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '6');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '7');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '0');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
+
+    gl.vertexAttrib3f(ii, 7, 8, 9);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '7');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '8');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '9');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '1');
+
+    gl.vertexAttrib4f(ii, 6, 7, 8, 9);
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[0]', '6');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[1]', '7');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[2]', '8');
+    shouldBe('gl.getVertexAttrib(' + ii + ', gl.CURRENT_VERTEX_ATTRIB)[3]', '9');
+  }
+  glErrorShouldBe(gl, gl.NO_ERROR);
 }
 
 debug("");
@@ -51,9 +90,6 @@ successfullyParsed = true;
 
 </script>
 <script src="../resources/js-test-post.js"></script>
-
-<script>
-</script>
 
 </body>
 </html>

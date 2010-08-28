@@ -122,6 +122,7 @@ bool HTTPUpload::SendRequest(const wstring &url,
   }
 
   DWORD http_open_flags = secure ? INTERNET_FLAG_SECURE : 0;
+  http_open_flags |= INTERNET_FLAG_NO_COOKIES;
   AutoInternetHandle request(HttpOpenRequest(connection.get(),
                                              L"POST",
                                              path,

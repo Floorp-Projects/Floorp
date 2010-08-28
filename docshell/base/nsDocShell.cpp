@@ -161,6 +161,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWebBrowserChrome2.h"
 #include "nsITabChild.h"
+#include "nsIStrictTransportSecurityService.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -3781,13 +3782,27 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         if (!messageStr.IsEmpty()) {
             if (errorClass == nsINSSErrorsService::ERROR_CLASS_BAD_CERT) {
                 error.AssignLiteral("nssBadCert");
+
+                // if this is a Strict-Transport-Security host and the cert
+                // is bad, don't allow overrides (STS Spec section 7.3).
+                nsCOMPtr<nsIStrictTransportSecurityService> stss =
+                          do_GetService(NS_STSSERVICE_CONTRACTID, &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                PRBool isStsHost = PR_FALSE;
+                rv = stss->IsStsURI(aURI, &isStsHost);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                if (isStsHost)
+                  cssClass.AssignLiteral("badStsCert");
+
                 PRBool expert = PR_FALSE;
                 mPrefs->GetBoolPref("browser.xul.error_pages.expert_bad_cert",
                                     &expert);
                 if (expert) {
                     cssClass.AssignLiteral("expertBadCert");
                 }
-                
+
                 // See if an alternate cert error page is registered
                 nsXPIDLCString alternateErrorPage;
                 mPrefs->GetCharPref("security.alternate_certificate_error_page",
@@ -8084,11 +8099,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
         PRBool wasAnchor = PR_FALSE;
         PRBool doHashchange = PR_FALSE;
+
+        // Get the position of the scrollers.
         nscoord cx = 0, cy = 0;
+        GetCurScrollPos(ScrollOrientation_X, &cx);
+        GetCurScrollPos(ScrollOrientation_Y, &cy);
 
         if (allowScroll) {
-            NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx,
-                                             &cy, &doHashchange),
+            NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType,
+                                             &doHashchange),
                               NS_ERROR_FAILURE);
         }
 
@@ -8867,8 +8886,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
 
 nsresult
 nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
-                           PRUint32 aLoadType, nscoord *cx, nscoord *cy,
-                           PRBool * aDoHashchange)
+                           PRUint32 aLoadType, PRBool * aDoHashchange)
 {
     NS_ASSERTION(aURI, "null uri arg");
     NS_ASSERTION(aWasAnchor, "null anchor arg");
@@ -8992,12 +9010,6 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
 
     // Both the new and current URIs refer to the same page. We can now
     // browse to the hash stored in the new URI.
-    //
-    // But first let's capture positions of scroller(s) that can
-    // (and usually will) be modified by GoToAnchor() call.
-
-    GetCurScrollPos(ScrollOrientation_X, cx);
-    GetCurScrollPos(ScrollOrientation_Y, cy);
 
     if (!sNewRef.IsEmpty()) {
         // anchor is there, but if it's a load from history,
@@ -9401,13 +9413,15 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     //        <fragment> components, raise a SECURITY_ERR and abort.
     // 3. If !aReplace:
     //     Remove from the session history all entries after the current entry,
-    //     as we would after a regular navigation.
+    //     as we would after a regular navigation, and save the current
+    //     entry's scroll position (bug 590573).
     // 4. As apropriate, either add a state object entry to the session history
     //    after the current entry with the following properties, or modify the
     //    current session history entry to set
     //      a. cloned data as the state object,
     //      b. if the third argument was present, the absolute URL found in
     //         step 2
+    //    Also clear the new history entry's POST data (see bug 580069).
     // 5. If aReplace is false (i.e. we're doing a pushState instead of a
     //    replaceState), notify bfcache that we've navigated to a new page.
     // 6. If the third argument is present, set the document's current address
@@ -9539,7 +9553,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         do_QueryInterface(sessionHistory, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Step 3: Create a new entry in the session history; this will erase
+    // Step 3: Create a new entry in the session history. This will erase
     // all SHEntries after the new entry and make this entry the current
     // one.  This operation may modify mOSHE, which we need later, so we
     // keep a reference here.
@@ -9548,6 +9562,12 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
 
     nsCOMPtr<nsISHEntry> newSHEntry;
     if (!aReplace) {
+        // Save the current scroll position (bug 590573).
+        nscoord cx = 0, cy = 0;
+        GetCurScrollPos(ScrollOrientation_X, &cx);
+        GetCurScrollPos(ScrollOrientation_Y, &cy);
+        mOSHE->SetScrollPosition(cx, cy);
+
         rv = AddToSessionHistory(newURI, nsnull, nsnull,
                                  getter_AddRefs(newSHEntry));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -9570,8 +9590,10 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         newSHEntry->SetURI(newURI);
     }
 
-    // Step 4: Modify new/original session history entry
+    // Step 4: Modify new/original session history entry and clear its POST
+    // data, if there is any.
     newSHEntry->SetStateData(dataStr);
+    newSHEntry->SetPostData(nsnull);
 
     // Step 5: If aReplace is false, indicating that we're doing a pushState
     // rather than a replaceState, notify bfcache that we've added a page to
@@ -10901,16 +10923,18 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP
 nsDocShell::GetAssociatedWindow(nsIDOMWindow** aWindow)
 {
-    return CallGetInterface(this, aWindow);
+    CallGetInterface(this, aWindow);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
 {
-    nsresult rv;
-    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this), &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return win->GetTop(aWindow);
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    if (win) {
+        win->GetTop(aWindow);
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP

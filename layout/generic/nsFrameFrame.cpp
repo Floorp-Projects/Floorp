@@ -292,11 +292,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   }
   nsIView* view = GetView();
 
-  if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK
-      && !view->HasWidget()) {
-    view->CreateWidget();
-  }
-
   // Set the primary frame now so that
   // DocumentViewerImpl::FindContainerView called by ShowViewer below
   // can find it if necessary.
@@ -971,15 +966,6 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   mInnerView = innerView;
   viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
-  if (aContentType == eContentTypeContent) {
-    // widget needed.
-    nsresult rv = innerView->CreateWidget(nsnull,
-                                          PR_TRUE, PR_TRUE, aContentType);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Couldn't create widget for frame.");
-      mInnerView = nsnull;
-    }
-  }
   return mInnerView;
 }
 

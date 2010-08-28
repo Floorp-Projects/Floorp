@@ -4196,7 +4196,8 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
         return JS_FALSE;
 
     nsCOMPtr<XPCWrappedNative> wrapper;
-    XPCWrappedNative::GetNewOrUsed(ccx, cholder, aScope, iface, nsnull,
+    xpcObjectHelper helper(cholder);
+    XPCWrappedNative::GetNewOrUsed(ccx, helper, aScope, iface,
                                    OBJ_IS_NOT_GLOBAL, getter_AddRefs(wrapper));
     if(!wrapper)
         return JS_FALSE;

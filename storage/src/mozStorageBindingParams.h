@@ -43,7 +43,7 @@
 
 #include "nsCOMArray.h"
 #include "nsIVariant.h"
-#include "nsTHashtable.h"
+#include "nsInterfaceHashtable.h"
 
 #include "mozStorageBindingParamsArray.h"
 #include "mozStorageStatement.h"

@@ -12,7 +12,7 @@
 <script src="use_large_cache.js"></script>
 <script class="testbody" type="text/javascript">
 
-var videos = [];
+var manager = new MediaTestManager;
 
 function do_progress(e) {
   var v = e.target;
@@ -28,16 +28,15 @@ function do_ended(e) {
   var v = e.target;
   ok(!v._finished, "Only one ended event for " + v._name);
   v._finished = true;
-  if (AllFinished(videos))
-    SimpleTest.finish();
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
 }
 
-for (var i=0; i<gProgressTests.length; ++i) {
-  var test = gProgressTests[i];
+function startTest(test, token) {
   var type = /^video/.test(test.type) ? "video" : "audio";
   var v = document.createElement(type);
-  if (!v.canPlayType(test.type))
-    continue;
+  v.token = token;
+  manager.started(token);
   v.src = test.name;
   v.autoplay = true;
   v._name = test.name;
@@ -47,14 +46,9 @@ for (var i=0; i<gProgressTests.length; ++i) {
   v.addEventListener("ended", do_ended, false);
   v.addEventListener("progress", do_progress, false);
   document.body.appendChild(v);
-  videos.push(v);
 }
 
-if (videos.length == 0) {
-  todo(false, "No types supported");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gProgressTests, startTest);
 
 </script>
 </pre>

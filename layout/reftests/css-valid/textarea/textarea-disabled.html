@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if textarea is disabled, it is barred from constraint validation
              and should not be affected by :valid pseudo-class. -->
-  <style>
-    textarea { background-color: green; }
-    textarea:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <textarea disabled></textarea>
+    <textarea class='notvalid' disabled></textarea>
   </body>
 </html>

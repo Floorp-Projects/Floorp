@@ -1,0 +1,159 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Strict-Transport-Security.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2010
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Sid Stamm <sid@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>opens additional content that should be converted to https</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const STSPATH = "/tests/security/ssl/stricttransportsecurity";
+
+  // initialized manually here
+  var testsleft = {'plain': 4, 'subdom': 4};
+  var roundsLeft = 2;
+
+  var testframes = {
+    'samedom':
+      {'url':     "http://example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'SECURE', 'subdom': 'SECURE'}},
+    'subdom':
+      {'url':     "http://test1.example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'INSECURE', 'subdom': 'SECURE'}},
+    'otherdom':
+      {'url':     "http://example.org" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'INSECURE', 'subdom': 'INSECURE'}},
+    'alreadysecure':
+      {'url':     "https://test2.example.com" + STSPATH + "/verify.sjs",
+        'expected': {'plain': 'SECURE', 'subdom': 'SECURE'}},
+  };
+
+  function startRound(round) {
+    var frame = document.createElement("iframe");
+    frame.setAttribute('id', 'ifr_bootstrap');
+    frame.setAttribute('src', "https://example.com" + STSPATH + "/" + round + "_bootstrap.html");
+    document.body.appendChild(frame);
+  }
+
+  function endRound(round) {
+    // remove all the iframes in the document
+    document.body.removeChild(document.getElementById('ifr_bootstrap'));
+    for (var test in testframes)
+      document.body.removeChild(document.getElementById('ifr_' + test));
+
+    // clean up the STS state
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var thehost = ios.newURI("http://example.com", null, null);
+
+    var stss = Cc["@mozilla.org/stsservice;1"].getService(Ci.nsIStrictTransportSecurityService);
+    stss.removeStsState(thehost);
+  }
+
+  function loadVerifyFrames(round) {
+    for (var test in testframes) {
+      var frame = document.createElement("iframe");
+      frame.setAttribute('id', 'ifr_' + test);
+      frame.setAttribute('src', testframes[test].url + '?id=' + test);
+      document.body.appendChild(frame);
+    }
+  }
+
+  /* Messages received are in this format:
+   *  (BOOTSTRAP|SECURE|INSECURE) testid
+   * For example: "BOOTSTRAP plain"
+   *          or: "INSECURE otherdom"
+   */
+  function onMessageReceived(event) {
+
+    // otherwise, it's a test result
+    var result = event.data.split(/\s+/);
+    if (result.length != 2) {
+      SimpleTest.ok(false, event.data);
+      return;
+    }
+
+    // figure out which round of tests we're in
+    var round = (roundsLeft == 2) ? 'plain' : 'subdom';
+
+    if (result[0] === "BOOTSTRAP") {
+      loadVerifyFrames(round);
+      return;
+    }
+
+    // check if the result (SECURE/INSECURE) is expected for this round/test combo
+    SimpleTest.is(result[0], testframes[result[1]].expected[round], 
+                  "in ROUND " + round + ", test " + result[1]);
+    testsleft[round]--;
+
+    // check if there are more tests to run.
+    if (testsleft[round] < 1) {
+      // if not, advance to next round
+      endRound(round);
+      roundsLeft--;
+
+      // defer this so it doesn't muck with the stack too much.
+      if (roundsLeft == 1)
+        setTimeout(function () {
+            startRound('subdom'); 
+          }, 0);
+    }
+
+    if (roundsLeft < 1) {
+      SimpleTest.finish();
+    }
+  }
+
+  // listen for calls back from the sts-setting iframe and then
+  // the verification frames.
+  window.addEventListener("message", onMessageReceived, false);
+  window.addEventListener('load', function() {startRound('plain');}, false);
+  </script>
+</head>
+
+<body>
+  This test will load some iframes and do some tests.
+
+</body>
+</html>

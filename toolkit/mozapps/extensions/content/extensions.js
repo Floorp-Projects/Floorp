@@ -762,7 +762,7 @@ function isInState(aInstall, aState) {
 }
 
 
-function createItem(aObj, aIsInstall, aRequiresRestart, aIsRemote) {
+function createItem(aObj, aIsInstall, aIsRemote) {
   let item = document.createElement("richlistitem");
 
   item.setAttribute("class", "addon");
@@ -772,30 +772,29 @@ function createItem(aObj, aIsInstall, aRequiresRestart, aIsRemote) {
 
   if (aIsInstall) {
     item.mInstall = aObj;
-    item.setAttribute("status", "installing");
-  } else if (aRequiresRestart) {
-    item.mAddon = aObj;
-    item.setAttribute("status", "installing");
-  } else {
-    item.mAddon = aObj;
 
-    if (isPending(aObj, "uninstall"))
-      item.setAttribute("status", "uninstalled");
-    else
-      item.setAttribute("status", "installed");
-
-    // set only attributes needed for sorting and XBL binding,
-    // the binding handles the rest
-    item.setAttribute("value", aObj.id);
-
-    // The XUL sort service only supports 32 bit integers so we strip the
-    // milliseconds to make this small enough
-    if (aObj.updateDate)
-      item.setAttribute("dateUpdated", aObj.updateDate.getTime() / 1000);
-
-    if (aObj.size)
-      item.setAttribute("size", aObj.size);
+    if (aObj.state != AddonManager.STATE_INSTALLED) {
+      item.setAttribute("status", "installing");
+      return item;
+    }
+    aObj = aObj.addon;
   }
+
+  item.mAddon = aObj;
+
+  item.setAttribute("status", "installed");
+
+  // set only attributes needed for sorting and XBL binding,
+  // the binding handles the rest
+  item.setAttribute("value", aObj.id);
+
+  // The XUL sort service only supports 32 bit integers so we strip the
+  // milliseconds to make this small enough
+  if (aObj.updateDate)
+    item.setAttribute("dateUpdated", aObj.updateDate.getTime() / 1000);
+
+  if (aObj.size)
+    item.setAttribute("size", aObj.size);
   return item;
 }
 
@@ -1090,8 +1089,7 @@ var gCachedAddons = {};
 
 var gSearchView = {
   node: null,
-  _localFilter: null,
-  _remoteFilter: null,
+  _filter: null,
   _sorters: null,
   _listBox: null,
   _emptyNotice: null,
@@ -1100,8 +1098,7 @@ var gSearchView = {
 
   initialize: function() {
     this.node = document.getElementById("search-view");
-    this._localFilter = document.getElementById("search-filter-local");
-    this._remoteFilter = document.getElementById("search-filter-remote");
+    this._filter = document.getElementById("search-filter-radiogroup");
     this._sorters = document.getElementById("search-sorters");
     this._sorters.handler = this;
     this._listBox = document.getElementById("search-list");
@@ -1117,15 +1114,10 @@ var gSearchView = {
       }
     }, false);
 
-    this._localFilter.addEventListener("command", function() self.updateView(), false);
-    this._remoteFilter.addEventListener("command", function() self.updateView(), false);
+    this._filter.addEventListener("command", function() self.updateView(), false);
   },
 
   shutdown: function() {
-    // Force persist of checked state. See bug 15232
-    this._localFilter.setAttribute("checked", !!this._localFilter.checked);
-    this._remoteFilter.setAttribute("checked", !!this._remoteFilter.checked);
-
     if (AddonRepository.isSearching)
       AddonRepository.cancelSearch();
   },
@@ -1169,7 +1161,7 @@ var gSearchView = {
             return;
         }
 
-        let item = createItem(aObj, aIsInstall, false, aIsRemote);
+        let item = createItem(aObj, aIsInstall, aIsRemote);
         item.setAttribute("relevancescore", score);
         if (aIsRemote)
           gCachedAddons[aObj.id] = aObj;
@@ -1231,10 +1223,9 @@ var gSearchView = {
   },
 
   updateView: function() {
-    var showLocal = this._localFilter.checked;
-    var showRemote = this._remoteFilter.checked;
+    var showLocal = this._filter.value == "local";
     this._listBox.setAttribute("local", showLocal);
-    this._listBox.setAttribute("remote", showRemote);
+    this._listBox.setAttribute("remote", !showLocal);
 
     gHeader.isSearching = this.isSearching;
     if (!this.isSearching) {
@@ -1242,7 +1233,7 @@ var gSearchView = {
       var results = this._listBox.getElementsByTagName("richlistitem");
       for (let i = 0; i < results.length; i++) {
         var isRemote = (results[i].getAttribute("remote") == "true");
-        if ((isRemote && showRemote) || (!isRemote && showLocal)) {
+        if ((isRemote && !showLocal) || (!isRemote && showLocal)) {
           isEmpty = false;
           break;
         }
@@ -1257,7 +1248,7 @@ var gSearchView = {
   hide: function() {
     var listitem = this._listBox.firstChild;
     while (listitem) {
-      if (listitem.getAttribute("status") == "uninstalled" &&
+      if (listitem.getAttribute("pending") == "uninstall" &&
           !listitem.isPending("uninstall"))
         listitem.mAddon.uninstall();
       listitem = listitem.nextSibling;
@@ -1409,7 +1400,7 @@ var gListView = {
 
     var listitem = this._listBox.firstChild;
     while (listitem) {
-      if (listitem.getAttribute("status") == "uninstalled" &&
+      if (listitem.getAttribute("pending") == "uninstall" &&
           !listitem.isPending("uninstall"))
         listitem.mAddon.uninstall();
       listitem = listitem.nextSibling;
@@ -1440,7 +1431,7 @@ var gListView = {
     if (this._types.indexOf(aAddon.type) == -1)
       return;
 
-    var item = createItem(aAddon, false, aRequiresRestart);
+    var item = createItem(aAddon, false);
     this._listBox.insertBefore(item, this._listBox.firstChild);
   },
 

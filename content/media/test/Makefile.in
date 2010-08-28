@@ -123,6 +123,8 @@ _TEST_FILES = \
 		test_play_twice.html \
 		test_playback.html \
 		test_playback_errors.html \
+		test_preload_actions.html \
+		test_preload_attribute.html \
 		test_progress.html \
 		test_reactivate.html \
 		test_readyState.html \
@@ -137,6 +139,7 @@ _TEST_FILES = \
 		test_volume.html \
 		test_video_to_canvas.html \
 		use_large_cache.js \
+		test_audiowrite.html \
 		$(NULL)
 
 # These tests are disabled until we figure out random failures.
@@ -205,6 +208,7 @@ _TEST_FILES += \
 		small-shot.ogg \
 		sound.ogg \
 		video-overhang.ogg \
+		file_a4_tone.ogg \
 		$(NULL)
 
 # Wave sample files
@@ -243,6 +247,10 @@ _TEST_FILES += \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
 		contentDuration7.sjs \
+		test_a4_tone.html \
+		file_audio_event_adopt_iframe.html \
+		test_audio_event_adopt.html \
+		test_framebuffer.html \
 		$(NULL)
 else
 _TEST_FILES += \

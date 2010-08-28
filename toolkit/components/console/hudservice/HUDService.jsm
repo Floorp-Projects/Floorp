@@ -85,7 +85,7 @@ function LogFactory(aMessagePrefix)
 
 let log = LogFactory("*** HUDService:");
 
-const HUD_STYLESHEET_URI = "chrome://global/skin/headsUpDisplay.css";
+const HUD_STYLESHEET_URI = "chrome://global/skin/webConsole.css";
 const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
 
 XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
@@ -106,6 +106,110 @@ const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  MISSING_ARGS: "Missing arguments",
                  LOG_OUTPUT_FAILED: "Log Failure: Could not append messageNode to outputNode",
 };
+
+/**
+ * Helper object for networking stuff.
+ *
+ * All of the following functions have been taken from the Firebug source. They
+ * have been modified to match the Firefox coding rules.
+ */
+
+// FIREBUG CODE BEGIN.
+
+/*
+ * Software License Agreement (BSD License)
+ *
+ * Copyright (c) 2007, Parakey Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use of this software in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above
+ *   copyright notice, this list of conditions and the
+ *   following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above
+ *   copyright notice, this list of conditions and the
+ *   following disclaimer in the documentation and/or other
+ *   materials provided with the distribution.
+ *
+ * * Neither the name of Parakey Inc. nor the names of its
+ *   contributors may be used to endorse or promote products
+ *   derived from this software without specific prior
+ *   written permission of Parakey Inc.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Creator:
+ *  Joe Hewitt
+ * Contributors
+ *  John J. Barton (IBM Almaden)
+ *  Jan Odvarko (Mozilla Corp.)
+ *  Max Stepanov (Aptana Inc.)
+ *  Rob Campbell (Mozilla Corp.)
+ *  Hans Hillen (Paciello Group, Mozilla)
+ *  Curtis Bartley (Mozilla Corp.)
+ *  Mike Collins (IBM Almaden)
+ *  Kevin Decker
+ *  Mike Ratcliffe (Comartis AG)
+ *  Hernan Rodríguez Colmeiro
+ *  Austin Andrews
+ *  Christoph Dorn
+ *  Steven Roussey (AppCenter Inc, Network54)
+ */
+var NetworkHelper =
+{
+  /**
+   * Gets the nsIDOMWindow that is associated with aRequest.
+   *
+   * @param nsIHttpChannel aRequest
+   * @returns nsIDOMWindow or null
+   */
+  getWindowForRequest: function NH_getWindowForRequest(aRequest)
+  {
+    let loadContext = this.getRequestLoadContext(aRequest);
+    if (loadContext) {
+      return loadContext.associatedWindow;
+    }
+    return null;
+  },
+
+  /**
+   * Gets the nsILoadContext that is associated with aRequest.
+   *
+   * @param nsIHttpChannel aRequest
+   * @returns nsILoadContext or null
+   */
+  getRequestLoadContext: function NH_getRequestLoadContext(aRequest)
+  {
+    if (aRequest && aRequest.notificationCallbacks) {
+      try {
+        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    if (aRequest && aRequest.loadGroup
+                 && aRequest.loadGroup.notificationCallbacks) {
+      try {
+        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    return null;
+   }
+}
+
+// FIREBUG CODE END.
 
 function HUD_SERVICE()
 {
@@ -180,14 +284,14 @@ HUD_SERVICE.prototype =
   displayRegistry: {},
 
   /**
+   * Mapping of HUDIds to contentWindows.
+   */
+  windowRegistry: {},
+
+  /**
    * Mapping of URISpecs to HUDIds
    */
   uriRegistry: {},
-
-  /**
-   * The nsILoadGroups being tracked
-   */
-  loadGroups: {},
 
   /**
    * The sequencer is a generator (after initialization) that returns unique
@@ -604,24 +708,25 @@ HUD_SERVICE.prototype =
    * Register a new Heads Up Display
    *
    * @param string aHUDId
-   * @param string aURISpec
+   * @param nsIDOMWindow aContentWindow
    * @returns void
    */
-  registerDisplay: function HS_registerDisplay(aHUDId, aURISpec)
+  registerDisplay: function HS_registerDisplay(aHUDId, aContentWindow)
   {
     // register a display DOM node Id and HUD uriSpec with the service
 
-    if (!aHUDId || !aURISpec){
+    if (!aHUDId || !aContentWindow){
       throw new Error(ERRORS.MISSING_ARGS);
     }
+    var URISpec = aContentWindow.document.location.href
     this.filterPrefs[aHUDId] = this.defaultFilterPrefs;
-    this.displayRegistry[aHUDId] = aURISpec;
+    this.displayRegistry[aHUDId] = URISpec;
     this._headsUpDisplays[aHUDId] = { id: aHUDId, };
     this.registerActiveContext(aHUDId);
     // init storage objects:
     this.storage.createDisplay(aHUDId);
 
-    var huds = this.uriRegistry[aURISpec];
+    var huds = this.uriRegistry[URISpec];
     var foundHUDId = false;
 
     if (huds) {
@@ -633,11 +738,19 @@ HUD_SERVICE.prototype =
         }
       }
       if (!foundHUDId) {
-        this.uriRegistry[aURISpec].push(aHUDId);
+        this.uriRegistry[URISpec].push(aHUDId);
       }
     }
     else {
-      this.uriRegistry[aURISpec] = [aHUDId];
+      this.uriRegistry[URISpec] = [aHUDId];
+    }
+
+    var windows = this.windowRegistry[aHUDId];
+    if (!windows) {
+      this.windowRegistry[aHUDId] = [aContentWindow];
+    }
+    else {
+      windows.push(aContentWindow);
     }
   },
 
@@ -669,6 +782,9 @@ HUD_SERVICE.prototype =
     this.deleteHeadsUpDisplay(aId);
     // remove the related storage object
     this.storage.removeDisplay(aId);
+    // remove the related window objects
+    delete this.windowRegistry[aId];
+
     let displays = this.displays();
 
     var uri  = this.displayRegistry[aId];
@@ -727,6 +843,24 @@ HUD_SERVICE.prototype =
       // see bug 567165
       return this.getHeadsUpDisplay(hudIds[0]);
     }
+  },
+
+  /**
+   * Returns the hudId that is corresponding to the hud activated for the
+   * passed aContentWindow. If there is no matching hudId null is returned.
+   *
+   * @param nsIDOMWindow aContentWindow
+   * @returns string or null
+   */
+  getHudIdByWindow: function HS_getHudIdByWindow(aContentWindow)
+  {
+    for (let hudId in this.windowRegistry) {
+      if (this.windowRegistry[hudId] &&
+          this.windowRegistry[hudId].indexOf(aContentWindow) != -1) {
+        return hudId;
+      }
+    }
+    return null;
   },
 
   /**
@@ -958,51 +1092,6 @@ HUD_SERVICE.prototype =
    */
   applicationHooks: null,
 
-  /**
-   * Given an nsIChannel, return the corresponding nsILoadContext
-   *
-   * @param nsIChannel aChannel
-   * @returns nsILoadContext
-   */
-  getLoadContext: function HS_getLoadContext(aChannel)
-  {
-    if (!aChannel) {
-      return null;
-    }
-    var loadContext;
-    var callbacks = aChannel.notificationCallbacks;
-
-    loadContext =
-      aChannel.notificationCallbacks.getInterface(Ci.nsILoadContext);
-    if (!loadContext) {
-      loadContext =
-        aChannel.QueryInterface(Ci.nsIRequest).loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
-    }
-    return loadContext;
-  },
-
-  /**
-   * Given an nsILoadContext, return the corresponding nsIDOMWindow
-   *
-   * @param nsILoadContext aLoadContext
-   * @returns nsIDOMWindow
-   */
-  getWindowFromContext: function HS_getWindowFromContext(aLoadContext)
-  {
-    if (!aLoadContext) {
-      throw new Error("loadContext is null");
-    }
-    if (aLoadContext.isContent) {
-      if (aLoadContext.associatedWindow) {
-        return aLoadContext.associatedWindow;
-      }
-      else if (aLoadContext.topWindow) {
-        return aLoadContext.topWindow;
-      }
-    }
-    throw new Error("Cannot get window from " + aLoadContext);
-  },
-
   getChromeWindowFromContentWindow:
   function HS_getChromeWindowFromContentWindow(aContentWindow)
   {
@@ -1018,63 +1107,6 @@ HUD_SERVICE.prototype =
       .getInterface(Ci.nsIDOMWindow)
       .QueryInterface(Ci.nsIDOMChromeWindow);
     return win;
-  },
-
-  /**
-   * get the outputNode from the window object
-   *
-   * @param nsIDOMWindow aWindow
-   * @returns nsIDOMNode
-   */
-  getOutputNodeFromWindow:
-  function HS_getOutputNodeFromWindow(aWindow)
-  {
-    var browser = gBrowser.getBrowserForDocument(aWindow.top.document);
-    var tabId = gBrowser.getNotificationBox(browser).getAttribute("id");
-    var hudId = "hud_" + tabId;
-    var displayNode = this.getHeadsUpDisplay(hudId);
-    return displayNode.querySelectorAll(".hud-output-node")[0];
-  },
-
-  /**
-   * Try to get the outputNode via the nsIRequest
-   * TODO: get node via request, see bug 552140
-   * @param nsIRequest aRequest
-   * @returns nsIDOMNode
-   */
-  getOutputNodeFromRequest: function HS_getOutputNodeFromRequest(aRequest)
-  {
-    var context = this.getLoadContext(aRequest);
-    var window = this.getWindowFromContext(context);
-    return this.getOutputNodeFromWindow(window);
-  },
-
-  getLoadContextFromChannel: function HS_getLoadContextFromChannel(aChannel)
-  {
-    try {
-      return aChannel.QueryInterface(Ci.nsIChannel).notificationCallbacks.getInterface(Ci.nsILoadContext);
-    }
-    catch (ex) {
-      // noop, keep this output quiet. see bug 552140
-    }
-    try {
-      return aChannel.QueryInterface(Ci.nsIChannel).loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
-    }
-    catch (ex) {
-      // noop, keep this output quiet. see bug 552140
-    }
-    return null;
-  },
-
-  getWindowFromLoadContext:
-  function HS_getWindowFromLoadContext(aLoadContext)
-  {
-    if (aLoadContext.topWindow) {
-      return aLoadContext.topWindow;
-    }
-    else {
-      return aLoadContext.associatedWindow;
-    }
   },
 
   /**
@@ -1094,55 +1126,43 @@ HUD_SERVICE.prototype =
         var loadGroup;
         if (aActivityType ==
             activityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION) {
-          try {
-            var loadContext = self.getLoadContextFromChannel(aChannel);
-            // TODO: get image request data from the channel
-            // see bug 552140
-            var window = self.getWindowFromLoadContext(loadContext);
-            window = XPCNativeWrapper.unwrap(window);
-            var chromeWin = self.getChromeWindowFromContentWindow(window);
-            var vboxes =
-              chromeWin.document.getElementsByTagName("vbox");
-            var hudId;
-            for (var i = 0; i < vboxes.length; i++) {
-              if (vboxes[i].getAttribute("class") == "hud-box") {
-                hudId = vboxes[i].getAttribute("id");
-              }
-            }
-            loadGroup = self.getLoadGroup(hudId);
-          }
-          catch (ex) {
-            loadGroup = aChannel.QueryInterface(Ci.nsIChannel)
-                        .QueryInterface(Ci.nsIRequest).loadGroup;
-          }
-
-          if (!loadGroup) {
-              return;
-          }
 
           aChannel = aChannel.QueryInterface(Ci.nsIHttpChannel);
 
           var transCodes = this.httpTransactionCodes;
 
-          var httpActivity = {
-            channel: aChannel,
-            loadGroup: loadGroup,
-            type: aActivityType,
-            subType: aActivitySubtype,
-            timestamp: aTimestamp,
-            extraSizeData: aExtraSizeData,
-            extraStringData: aExtraStringData,
-            stage: transCodes[aActivitySubtype],
-          };
           if (aActivitySubtype ==
               activityDistributor.ACTIVITY_SUBTYPE_REQUEST_HEADER ) {
-                // create a unique ID to track this transaction and be able to
-                // update the logged node with subsequent http transactions
-                httpActivity.httpId = self.sequenceId();
-                let loggedNode =
-                  self.logActivity("network", aChannel.URI, httpActivity);
-                self.httpTransactions[aChannel] =
-                  new Number(httpActivity.httpId);
+            // Try to get the source window of the request.
+            let win = NetworkHelper.getWindowForRequest(aChannel);
+            if (!win) {
+              return;
+            }
+
+            // Try to get the hudId that is associated to the window.
+            let hudId = self.getHudIdByWindow(win);
+            if (!hudId) {
+              return;
+            }
+
+            var httpActivity = {
+              channel: aChannel,
+              type: aActivityType,
+              subType: aActivitySubtype,
+              timestamp: aTimestamp,
+              extraSizeData: aExtraSizeData,
+              extraStringData: aExtraStringData,
+              stage: transCodes[aActivitySubtype],
+              hudId: hudId
+            };
+
+            // create a unique ID to track this transaction and be able to
+            // update the logged node with subsequent http transactions
+            httpActivity.httpId = self.sequenceId();
+            let loggedNode =
+              self.logActivity("network", aChannel.URI, httpActivity);
+            self.httpTransactions[aChannel] =
+              new Number(httpActivity.httpId);
           }
         }
       },
@@ -1173,22 +1193,11 @@ HUD_SERVICE.prototype =
    */
   logNetActivity: function HS_logNetActivity(aType, aURI, aActivityObject)
   {
-    var displayNode, outputNode, hudId;
+    var outputNode, hudId;
     try {
-      displayNode =
-      this.getDisplayByLoadGroup(aActivityObject.loadGroup,
-                                 {URI: aURI}, aActivityObject);
-      if (!displayNode) {
-        return;
-      }
-      outputNode = displayNode.querySelectorAll(".hud-output-node")[0];
-      hudId = displayNode.getAttribute("id");
-
-      if (!outputNode) {
-        outputNode = this.getOutputNodeFromRequest(aActivityObject.request);
-        hudId = outputNode.ownerDocument.querySelectorAll(".hud-box")[0].
-                getAttribute("id");
-      }
+      hudId = aActivityObject.hudId;
+      outputNode = this.getHeadsUpDisplay(hudId).
+                                  querySelector(".hud-output-node");
 
       // get an id to attach to the dom node for lookup of node
       // when updating the log entry with additional http transactions
@@ -1348,88 +1357,6 @@ HUD_SERVICE.prototype =
 
     aConsoleNode.appendChild(groupNode);
     return groupNode;
-  },
-
-  /**
-   * update loadgroup when the window object is re-created
-   *
-   * @param string aId
-   * @param nsILoadGroup aLoadGroup
-   * @returns void
-   */
-  updateLoadGroup: function HS_updateLoadGroup(aId, aLoadGroup)
-  {
-    if (this.loadGroups[aId] == undefined) {
-      this.loadGroups[aId] = { id: aId,
-                               loadGroup: Cu.getWeakReference(aLoadGroup) };
-    }
-    else {
-      this.loadGroups[aId].loadGroup = Cu.getWeakReference(aLoadGroup);
-    }
-  },
-
-  /**
-   * gets the load group that corresponds to a HUDId
-   *
-   * @param string aId
-   * @returns nsILoadGroup
-   */
-  getLoadGroup: function HS_getLoadGroup(aId)
-  {
-    try {
-      return this.loadGroups[aId].loadGroup.get();
-    }
-    catch (ex) {
-      return null;
-    }
-  },
-
-  /**
-   * gets outputNode for a specific heads up display by loadGroup
-   *
-   * @param nsILoadGroup aLoadGroup
-   * @returns nsIDOMNode
-   */
-  getDisplayByLoadGroup:
-  function HS_getDisplayByLoadGroup(aLoadGroup, aChannel, aActivityObject)
-  {
-    if (!aLoadGroup) {
-      return null;
-    }
-    var trackedLoadGroups = this.getAllLoadGroups();
-    var len = trackedLoadGroups.length;
-    for (var i = 0; i < len; i++) {
-      try {
-        var unwrappedLoadGroup =
-        XPCNativeWrapper.unwrap(trackedLoadGroups[i].loadGroup);
-        if (aLoadGroup == unwrappedLoadGroup) {
-          return this.getOutputNodeById(trackedLoadGroups[i].hudId);
-        }
-      }
-      catch (ex) {
-        // noop
-      }
-    }
-    // TODO: also need to check parent loadGroup(s) incase of iframe activity?;
-    // see bug 568643
-    return null;
-  },
-
-  /**
-   * gets all nsILoadGroups that are being tracked by this service
-   * the loadgroups are matched to HUDIds in an object and an array is returned
-   * @returns array
-   */
-  getAllLoadGroups: function HS_getAllLoadGroups()
-  {
-    var loadGroups = [];
-    for (var hudId in this.loadGroups) {
-      let loadGroupObj = { loadGroup: this.loadGroups[hudId].loadGroup.get(),
-                           hudId: this.loadGroups[hudId].id,
-                         };
-      loadGroups.push(loadGroupObj);
-    }
-    return loadGroups;
   },
 
   /**
@@ -1602,7 +1529,7 @@ HUD_SERVICE.prototype =
       return;
     }
 
-    this.registerDisplay(hudId, aContentWindow.document.location.href);
+    this.registerDisplay(hudId, aContentWindow);
 
     // check if aContentWindow has a console Object
     let _console = aContentWindow.wrappedJSObject.console;
@@ -1866,20 +1793,6 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
-   * Gets the loadGroup for the contentWindow
-   *
-   * @returns nsILoadGroup
-   */
-  get loadGroup()
-  {
-    var loadGroup = this.contentWindow
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocumentLoader).loadGroup;
-    return loadGroup;
-  },
-
-  /**
    * Shortcut to make XUL nodes
    *
    * @param string aTag
@@ -1930,7 +1843,9 @@ HeadsUpDisplay.prototype = {
       // (re)inserted into the DOM (which happens during a search, for
       // example). For this reason, we need to ensure that we only check
       // message nodes.
-      if (ev.target.classList.contains("hud-msg-node")) {
+      let node = ev.target;
+      if (node.nodeType === node.ELEMENT_NODE &&
+          node.classList.contains("hud-msg-node")) {
         HUDService.adjustVisibilityForNewlyInsertedNode(self.hudId, ev.target);
       }
     }, false);
@@ -2201,8 +2116,6 @@ function HUDConsole(aHeadsUpDisplay)
   let chromeDocument = hud.chromeDocument;
 
   aHeadsUpDisplay._console = this;
-
-  HUDService.updateLoadGroup(hudId, hud.loadGroup);
 
   let sendToHUDService = function console_send(aLevel, aArguments)
   {
@@ -3337,7 +3250,7 @@ ConsoleUtils = {
   /**
    * Generates a formatted timestamp string for displaying in console messages.
    *
-   * @param integer [ms] Optional, allows you to specify the timestamp in 
+   * @param integer [ms] Optional, allows you to specify the timestamp in
    * milliseconds since the UNIX epoch.
    * @returns string The timestamp formatted for display.
    */
