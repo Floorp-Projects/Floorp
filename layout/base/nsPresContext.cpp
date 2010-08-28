@@ -2536,7 +2536,7 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
 #endif
 
     nsRegion visibleRegion(bounds);
-    list.ComputeVisibilityForRoot(&builder, &visibleRegion);
+    list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
     if (gDumpPluginList) {
