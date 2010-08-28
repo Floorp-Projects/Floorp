@@ -372,7 +372,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
         tc = job_list[0]
-        cmd = [ 'gdb', '--args' ] + get_test_cmd(tc.path, lib_dir)
+        cmd = [ 'gdb', '--args' ] + get_test_cmd(tc.path, tc.jitflags, lib_dir)
         call(cmd)
         sys.exit()
 
