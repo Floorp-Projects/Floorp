@@ -592,10 +592,12 @@ var gSyncSetup = {
       }
 
       if (uri.schemeIs("http")) {
-        let uri2 = uri;
-        uri2.scheme = "https";
-        if (isValid(uri2))
+        uri.scheme = "https";
+        if (isValid(uri))
           valid = true;
+        else
+          // setting the scheme back to http
+          uri.scheme = "http";
       }
       if (!valid)
         valid = isValid(uri);
