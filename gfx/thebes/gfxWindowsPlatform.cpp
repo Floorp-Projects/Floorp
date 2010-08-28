@@ -232,7 +232,12 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     NS_RegisterMemoryReporter(new D2DVRAMReporter());
     mD2DDevice = NULL;
 
-    if (isVistaOrHigher) {
+    PRBool d2dDisabled = PR_FALSE;
+    nsresult rv = pref->GetBoolPref("gfx.direct2d.disabled", &d2dDisabled);
+    if (NS_FAILED(rv))
+        d2dDisabled = PR_FALSE;
+
+    if (isVistaOrHigher && !d2dDisabled) {
         // We need a DWriteFactory to work.
         HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
         D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
@@ -282,7 +287,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 #endif
 
 #ifdef CAIRO_HAS_DWRITE_FONT
-    nsresult rv;
     PRBool useDirectWrite = PR_FALSE;
 
     rv = pref->GetBoolPref(
