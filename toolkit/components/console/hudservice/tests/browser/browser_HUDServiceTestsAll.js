@@ -257,20 +257,28 @@ function testNet()
     browser.removeEventListener("load", onTestNetLoad, true);
 
     executeSoon(function(){
-    let group = outputNode.querySelector(".hud-group");
-    is(group.childNodes.length, 5, "Four children in output");
-    let outputChildren = group.childNodes;
+      let group = outputNode.querySelector(".hud-group");
+      is(group.childNodes.length, 5, "Four children in output");
+      let outputChildren = group.childNodes;
 
-    isnot(outputChildren[1].textContent.indexOf("test-network.html"), -1,
-                                              "html page is logged");
-    isnot(outputChildren[2].textContent.indexOf("testscript.js"), -1,
-                                              "javascript is logged");
-    isnot(outputChildren[3].textContent.indexOf("test-image.png"), -1,
-                                              "image is logged");
-    isnot(outputChildren[4].textContent.
-      indexOf("running network console logging tests"), -1, "log() is logged");
+      isnot(outputChildren[1].textContent.indexOf("test-network.html"), -1,
+                                                "html page is logged");
+      isnot(outputChildren[2].textContent.indexOf("testscript.js"), -1,
+                                                "javascript is logged");
+
+      let imageLogged =
+        (outputChildren[3].textContent.indexOf("test-image.png") != -1 ||
+         outputChildren[4].textContent.indexOf("test-image.png") != -1);
+      ok(imageLogged, "image is logged");
+
+      let logOutput = "running network console logging tests";
+      let logLogged =
+        (outputChildren[3].textContent.indexOf(logOutput) != -1 ||
+         outputChildren[4].textContent.indexOf(logOutput) != -1);
+      ok(logLogged, "log() is logged")
+
+      testLiveFilteringForMessageTypes();
     });
-    testLiveFilteringForMessageTypes();
   }, true);
 
   content.location = TEST_NETWORK_URI;
