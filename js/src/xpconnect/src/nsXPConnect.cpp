@@ -1014,6 +1014,8 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
     SaveFrame sf(aJSContext);
 
+    JSAutoEnterCompartment autoCompartment(ccx, aGlobalJSObj);
+
     xpc_InitJSxIDClassObjects();
 
     XPCWrappedNativeScope* scope =
