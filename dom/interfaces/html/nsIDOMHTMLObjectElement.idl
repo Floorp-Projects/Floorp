@@ -47,7 +47,9 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf90ac-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMValidityState;
+
+[scriptable, uuid(9b93aab4-7fe8-4f79-9ad2-0623178a0c46)]
 interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
@@ -70,4 +72,12 @@ interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
            attribute DOMString             width;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument        contentDocument;
+
+  // The following lines are parte of the constraint validation API, see:
+  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
+  readonly attribute boolean               willValidate;
+  readonly attribute nsIDOMValidityState   validity;
+  readonly attribute DOMString             validationMessage;
+  boolean  checkValidity();
+  void     setCustomValidity(in DOMString error);
 };

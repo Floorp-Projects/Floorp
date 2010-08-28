@@ -50,10 +50,13 @@
 #include "nsFormSubmission.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"
+#include "nsIConstraintValidation.h"
+
 
 class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsObjectLoadingContent,
-                            public nsIDOMHTMLObjectElement
+                            public nsIDOMHTMLObjectElement,
+                            public nsIConstraintValidation
 #ifdef MOZ_SVG
                             , public nsIDOMGetSVGDocument
 #endif
@@ -126,6 +129,9 @@ public:
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
   void StartObjectLoad() { StartObjectLoad(PR_TRUE); }
+
+  // nsIConstraintValidation
+  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLObjectElement,
                                                      nsGenericHTMLFormElement)
@@ -201,6 +207,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLObjectElement)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, imgIContainerObserver)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIInterfaceRequestor)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIChannelEventSink)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIConstraintValidation)
 #ifdef MOZ_SVG
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMGetSVGDocument)
 #endif
@@ -211,6 +218,8 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLObjectElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLObjectElement)
 
+// nsIConstraintValidation
+NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLObjectElement)
 
 NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement **aForm)
