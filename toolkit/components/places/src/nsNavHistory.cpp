@@ -62,7 +62,6 @@
 #include "nsEscape.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
-#include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"
 
@@ -221,6 +220,42 @@ static PRInt64 GetSimpleBookmarksQueryFolder(
     nsNavHistoryQueryOptions* aOptions);
 static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsTArray<nsTArray<nsString>*>* aTerms);
+
+class VacuumDBListener : public mozIStorageStatementCallback
+{
+public:
+  VacuumDBListener(nsIPrefBranch* aBranch) : mPrefBranch(aBranch)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD HandleError(mozIStorageError* aError)
+  {
+    NS_WARNING("Error vacuuming database");
+    nsNavHistory::GetSingleton()->SetVacuumInProgress(false);
+    return NS_OK;
+  }
+  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  {
+    NS_NOTREACHED("Unexpected call to HandleResult");
+    return NS_OK;
+  }
+  NS_IMETHOD HandleCompletion(PRUint16 aReason)
+  {
+    if (mPrefBranch) {
+      (void)mPrefBranch->SetIntPref(PREF_LAST_VACUUM,
+                                    (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
+    }
+    nsNavHistory::GetSingleton()->SetVacuumInProgress(false);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
+};
+
+NS_IMPL_ISUPPORTS1(VacuumDBListener, mozIStorageStatementCallback);
 
 } // anonymous namespace
 
@@ -388,6 +423,7 @@ nsNavHistory::nsNavHistory()
 , mHasHistoryEntries(-1)
 , mCanNotify(true)
 , mCacheObservers("history-observers")
+, mVacuumInProgress(false)
 {
   NS_ASSERTION(!gHistoryService,
                "Attempting to create two instances of the service!");
@@ -459,6 +495,8 @@ nsNavHistory::Init()
   NS_ENSURE_TRUE(mRecentLink.Init(128), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mRecentBookmark.Init(128), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mRecentRedirects.Init(128), NS_ERROR_OUT_OF_MEMORY);
+
+  mVacuumDBListener = new VacuumDBListener(mPrefBranch);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -5819,6 +5857,11 @@ nsNavHistory::VacuumDatabase()
   // This ratio is used in conjunction with a time pref to avoid vacuuming too
   // often or too rarely.
 
+  // If an async vacuum has already been kicked off, we're done.
+  if (mVacuumInProgress) {
+    return NS_OK;
+  }
+
   PRInt32 lastVacuumPref;
   PRInt64 lastVacuumTime = 0;
   if (mPrefBranch &&
@@ -5901,14 +5944,10 @@ nsNavHistory::VacuumDatabase()
       journalToDefault
     };
     nsCOMPtr<mozIStoragePendingStatement> ps;
-    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
-                               getter_AddRefs(ps));
+    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts),
+                               mVacuumDBListener, getter_AddRefs(ps));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mPrefBranch) {
-      (void)mPrefBranch->SetIntPref(PREF_LAST_VACUUM,
-                                    (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
-    }
+    mVacuumInProgress = true;
   }
 
   return NS_OK;
