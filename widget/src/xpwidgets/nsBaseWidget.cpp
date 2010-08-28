@@ -51,6 +51,7 @@
 #include "nsIPrefBranch2.h"
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
+#include "nsIXULRuntime.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -772,7 +773,12 @@ LayerManager* nsBaseWidget::GetLayerManager()
                          &disableAcceleration);
     }
 
-    if (disableAcceleration)
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    PRBool safeMode = PR_FALSE;
+    if (xr)
+      xr->GetInSafeMode(&safeMode);
+
+    if (disableAcceleration || safeMode)
       mUseAcceleratedRendering = PR_FALSE;
     else if (accelerateByDefault)
       mUseAcceleratedRendering = PR_TRUE;
