@@ -83,6 +83,9 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mChannelInitialized(false),
     mDelegate(aDelegate),
     mChildProcessHandle(0)
+#if defined(XP_MACOSX)
+  , mChildTask(MACH_PORT_NULL)
+#endif
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
     
@@ -105,6 +108,11 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
                                             , false // don't "force"
 #endif
     );
+
+#if defined(XP_MACOSX)
+  if (mChildTask != MACH_PORT_NULL)
+    mach_port_deallocate(mach_task_self(), mChildTask);
+#endif
 }
 
 #ifdef XP_WIN
@@ -216,6 +224,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   }
 
   base::ProcessHandle process;
+#if defined(XP_MACOSX)
+  task_t child_task;
+#endif
 
   // send the child the PID so that it can open a ProcessHandle back to us.
   // probably don't want to do this in the long run
@@ -326,7 +337,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 #if defined(OS_LINUX) || defined(OS_MACOSX)
                   newEnvVars,
 #endif
-                  false, &process);
+                  false, &process
+#if defined(XP_MACOSX)
+                  , &child_task
+#endif
+                  );
 
 //--------------------------------------------------
 #elif defined(OS_WIN)
@@ -376,6 +391,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     return false;
   }
   SetHandle(process);
+#if defined(XP_MACOSX)
+  mChildTask = child_task;
+#endif
 
   return true;
 }

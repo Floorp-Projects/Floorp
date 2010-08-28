@@ -84,6 +84,7 @@ static const short escapes[] = {
      0,      0,      0                                            /* x - z */
 };
 static const unsigned OPCODE_LEN = 1;
+static const unsigned BRAZERO_LEN = OPCODE_LEN;
 static const unsigned BRA_NEST_SIZE = 2;
 static const unsigned BRA_LEN = OPCODE_LEN + LINK_SIZE + BRA_NEST_SIZE;
 static const unsigned KET_LEN = OPCODE_LEN + LINK_SIZE;
@@ -2485,7 +2486,7 @@ static int calculateCompiledPatternLength(const UChar* pattern, int patternLengt
                     }
                     length += repeatsLength;
                     if (maxRepeats > minRepeats) { /* Need this test as maxRepeats=-1 means no limit */
-                        repeatsLength = multiplyWithOverflowCheck(maxRepeats - minRepeats, duplength + BRA_LEN + KET_LEN);
+                        repeatsLength = multiplyWithOverflowCheck(maxRepeats - minRepeats, duplength + BRAZERO_LEN + BRA_LEN + KET_LEN);
                         if (repeatsLength < 0) {
                             errorcode = ERR16;
                             return -1;

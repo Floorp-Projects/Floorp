@@ -90,7 +90,6 @@
 #include "nsGeolocation.h"
 
 #ifdef MOZ_WIDGET_QT
-#include <QX11EmbedWidget>
 #include <QGraphicsView>
 #include <QGraphicsWidget>
 #endif
@@ -430,17 +429,9 @@ TabChild::RecvCreateWidget(const MagicWindowHandle& parentWidget)
     }
 
 #ifdef MOZ_WIDGET_GTK2
-    GtkWidget* win = gtk_plug_new((GdkNativeWindow)parentWidget);
-    gtk_widget_show(win);
+    GtkWidget* win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 #elif defined(MOZ_WIDGET_QT)
-    QX11EmbedWidget *embedWin = nsnull;
-    if (parentWidget) {
-      embedWin = new QX11EmbedWidget();
-      NS_ENSURE_TRUE(embedWin, false);
-      embedWin->embedInto(parentWidget);
-      embedWin->show();
-    }
-    QGraphicsView *view = new QGraphicsView(new QGraphicsScene(), embedWin);
+    QGraphicsView *view = new QGraphicsView(new QGraphicsScene());
     NS_ENSURE_TRUE(view, false);
     QGraphicsWidget *win = new QGraphicsWidget();
     NS_ENSURE_TRUE(win, false);
@@ -1011,6 +1002,9 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 bool
 TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
+  if (!mCx && !InitTabChildGlobal())
+    return false;
+
   LoadFrameScriptInternal(aURL);
   return true;
 }
@@ -1071,6 +1065,9 @@ TabChild::RecvDestroy()
 bool
 TabChild::InitTabChildGlobal()
 {
+  if (mCx && mTabChildGlobal)
+    return true;
+
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   NS_ENSURE_TRUE(window, false);
   nsCOMPtr<nsIDOMEventTarget> chromeHandler =

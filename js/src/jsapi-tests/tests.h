@@ -285,6 +285,7 @@ protected:
         if (!global)
             return NULL;
 
+        JSAutoEnterCompartment enter(cx, global);
         /* Populate the global object with the standard globals,
            like Object and Array. */
         if (!JS_InitStandardClasses(cx, global))

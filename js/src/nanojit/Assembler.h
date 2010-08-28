@@ -429,8 +429,12 @@ namespace nanojit
             // Otherwise, register allocation decisions will be suboptimal.
             void        asm_restore(LIns*, Register);
 
-            void        asm_maybe_spill(LIns* ins, bool pop);
-            void        asm_spill(Register rr, int d, bool pop, bool quad);
+            bool        asm_maybe_spill(LIns* ins, bool pop);
+#ifdef NANOJIT_IA32
+            void        asm_spill(Register rr, int d, bool pop);
+#else
+            void        asm_spill(Register rr, int d, bool quad);
+#endif
             void        asm_load64(LIns* ins);
             void        asm_ret(LIns* ins);
 #ifdef NANOJIT_64BIT
@@ -502,10 +506,10 @@ namespace nanojit
 
             // since we generate backwards the depth is negative
             inline void fpu_push() {
-                debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
+                debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth <= 0); )
             }
             inline void fpu_pop() {
-                debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
+                debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth >= -7); )
             }
 #endif
             const Config& _config;

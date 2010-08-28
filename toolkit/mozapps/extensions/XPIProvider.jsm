@@ -45,6 +45,7 @@ var EXPORTED_SYMBOLS = [];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
@@ -1210,14 +1211,17 @@ var XPIProvider = {
       XPIDatabase.writeAddonsList(updates);
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
     }
-    XPIDatabase.shutdown();
-    this.installs = null;
 
+    this.installs = null;
     this.installLocations = null;
     this.installLocationsByName = null;
 
     // This is needed to allow xpcshell tests to simulate a restart
     this.extensionsActive = false;
+
+    XPIDatabase.shutdown(function() {
+      Services.obs.notifyObservers(null, "xpi-provider-shutdown", null);
+    });
   },
 
   /**
@@ -2725,9 +2729,17 @@ AsyncAddonListCallback.prototype = {
       this.count++;
       let self = this;
       XPIDatabase.makeAddonFromRowAsync(row, function(aAddon) {
-        self.addons.push(aAddon);
-        if (self.complete && self.addons.length == self.count)
-          self.callback(self.addons);
+        function completeAddon(aRepositoryAddon) {
+          aAddon._repositoryAddon = aRepositoryAddon;
+          self.addons.push(aAddon);
+          if (self.complete && self.addons.length == self.count)
+           self.callback(self.addons);
+        }
+
+        if ("getCachedAddonByID" in AddonRepository)
+          AddonRepository.getCachedAddonByID(aAddon.id, completeAddon);
+        else
+          completeAddon(null);
       });
     }
   },
@@ -3029,7 +3041,7 @@ var XPIDatabase = {
   /**
    * Shuts down the database connection and releases all cached objects.
    */
-  shutdown: function XPIDB_shutdown() {
+  shutdown: function XPIDB_shutdown(aCallback) {
     if (this.initialized) {
       for each (let stmt in this.statementCache)
         stmt.finalize();
@@ -3042,8 +3054,8 @@ var XPIDatabase = {
           this.rollbackTransaction();
       }
 
-      this.connection.asyncClose();
       this.initialized = false;
+      let connection = this.connection;
       delete this.connection;
 
       // Re-create the connection smart getter to allow the database to be
@@ -3051,6 +3063,12 @@ var XPIDatabase = {
       this.__defineGetter__("connection", function() {
         return this.openConnection();
       });
+
+      connection.asyncClose(aCallback);
+    }
+    else {
+      if (aCallback)
+        aCallback();
     }
   },
 
@@ -5366,10 +5384,34 @@ function createWrapper(aAddon) {
  * the public API.
  */
 function AddonWrapper(aAddon) {
+  function chooseValue(aObj, aProp) {
+    let repositoryAddon = aAddon._repositoryAddon;
+    let objValue = aObj[aProp];
+
+    if (repositoryAddon && (aProp in repositoryAddon) &&
+        (objValue === undefined || objValue === null)) {
+      return [repositoryAddon[aProp], true];
+    }
+
+    return [objValue, false];
+  }
+
   ["id", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "appDisabled",
    "userDisabled", "skinnable", "size"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function() aAddon[aProp]);
+  }, this);
+
+  ["fullDescription", "developerComments", "eula", "supportURL",
+   "contributionURL", "contributionAmount", "averageRating", "reviewCount",
+   "reviewURL", "totalDownloads", "weeklyDownloads", "dailyUsers",
+   "repositoryStatus"].forEach(function(aProp) {
+    this.__defineGetter__(aProp, function() {
+      if (aAddon._repositoryAddon)
+        return aAddon._repositoryAddon[aProp];
+
+      return null;
+    });
   }, this);
 
   ["optionsURL", "aboutURL"].forEach(function(aProp) {
@@ -5384,9 +5426,10 @@ function AddonWrapper(aAddon) {
 
   ["sourceURI", "releaseNotesURI"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function() {
-      if (!aAddon[aProp])
+      let target = chooseValue(aAddon, aProp)[0];
+      if (!target)
         return null;
-      return NetUtil.newURI(aAddon[aProp]);
+      return NetUtil.newURI(target);
     });
   }, this);
 
@@ -5397,56 +5440,91 @@ function AddonWrapper(aAddon) {
     if (this.hasResource("icon.png"))
       return this.getResourceURI("icon.png").spec;
 
+    if (aAddon._repositoryAddon)
+      return aAddon._repositoryAddon.iconURL;
+
     return null;
   }, this);
 
   PROP_LOCALE_SINGLE.forEach(function(aProp) {
     this.__defineGetter__(aProp, function() {
+      // Override XPI creator if repository creator is defined
+      if (aProp == "creator" &&
+          aAddon._repositoryAddon && aAddon._repositoryAddon.creator) {
+        return aAddon._repositoryAddon.creator;
+      }
+
+      let result = null;
+
       if (aAddon.active) {
         try {
           let pref = PREF_EM_EXTENSION_FORMAT + aAddon.id + "." + aProp;
           let value = Services.prefs.getComplexValue(pref,
                                                      Ci.nsIPrefLocalizedString);
           if (value.data)
-            return value.data;
+            result = value.data;
         }
         catch (e) {
         }
       }
-      return aAddon.selectedLocale[aProp];
+
+      if (result == null)
+        [result, ] = chooseValue(aAddon.selectedLocale, aProp);
+
+      if (aProp == "creator")
+        return result ? new AddonManagerPrivate.AddonAuthor(result) : null;
+
+      return result;
     });
   }, this);
 
   PROP_LOCALE_MULTI.forEach(function(aProp) {
     this.__defineGetter__(aProp, function() {
+      let results = null;
+      let usedRepository = false;
+
       if (aAddon.active) {
         let pref = PREF_EM_EXTENSION_FORMAT + aAddon.id + "." +
                    aProp.substring(0, aProp.length - 1);
         let list = Services.prefs.getChildList(pref, {});
         if (list.length > 0) {
-          let results = [];
+          results = [];
           list.forEach(function(aPref) {
             let value = Services.prefs.getComplexValue(aPref,
                                                        Ci.nsIPrefLocalizedString);
             if (value.data)
               results.push(value.data);
           });
-          return results;
         }
       }
 
-      return aAddon.selectedLocale[aProp];
+      if (results == null)
+        [results, usedRepository] = chooseValue(aAddon.selectedLocale, aProp);
 
+      if (results && !usedRepository) {
+        results = results.map(function(aResult) {
+          return new AddonManagerPrivate.AddonAuthor(aResult);
+        });
+      }
+
+      return results;
     });
   }, this);
 
   this.__defineGetter__("screenshots", function() {
-    let screenshots = [];
+    let repositoryAddon = aAddon._repositoryAddon;
+    if (repositoryAddon && ("screenshots" in repositoryAddon)) {
+      let repositoryScreenshots = repositoryAddon.screenshots;
+      if (repositoryScreenshots && repositoryScreenshots.length > 0)
+        return repositoryScreenshots;
+    }
 
-    if (aAddon.type == "theme" && this.hasResource("preview.png"))
-      screenshots.push(this.getResourceURI("preview.png").spec);
+    if (aAddon.type == "theme" && this.hasResource("preview.png")) {
+      let url = this.getResourceURI("preview.png").spec;
+      return [new AddonManagerPrivate.AddonScreenshot(url)];
+    }
 
-    return screenshots;
+    return null;
   });
 
   this.__defineGetter__("applyBackgroundUpdates", function() {
@@ -5635,12 +5713,6 @@ function AddonWrapper(aAddon) {
     return buildJarURI(bundle, aPath);
   }
 }
-
-AddonWrapper.prototype = {
-  get screenshots() {
-    return [];
-  }
-};
 
 /**
  * An object which identifies a directory install location for add-ons. The

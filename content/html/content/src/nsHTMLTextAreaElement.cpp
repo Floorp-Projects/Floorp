@@ -546,6 +546,15 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
   if (!aValueChanged && !mState->IsEmpty()) {
     mState->EmptyValue();
   }
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -691,6 +700,18 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   if (aVisitor.mEvent->message == NS_FORM_SELECTED) {
     mHandlingSelect = PR_FALSE;
+  }
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
+      // TODO: checking if the value is empty could be a good idea but we do not
+      // have a simple way to do that, see bug 585100
+      (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
+       aVisitor.mEvent->message == NS_BLUR_CONTENT)) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
+    }
   }
 
   // Reset the flag for other content besides this text field
@@ -894,7 +915,6 @@ nsHTMLTextAreaElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   return rv;
 }
 
-
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SaveState()
 {
@@ -969,6 +989,15 @@ nsHTMLTextAreaElement::IntrinsicState() const
 
   if (IsCandidateForConstraintValidation()) {
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
+  }
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
+      !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
+    nsAutoString value;
+    GetValueInternal(value, PR_TRUE);
+    if (value.IsEmpty()) {
+      state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
+    }
   }
 
   return state;
@@ -1308,8 +1337,14 @@ nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
   if (aNotify) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
       doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
-                                              NS_EVENT_STATE_INVALID);
+                                              NS_EVENT_STATE_INVALID |
+                                              // We could check if that is
+                                              // really needed but considering
+                                              // we are already updating the
+                                              // state for valid/invalid...
+                                              NS_EVENT_STATE_MOZ_PLACEHOLDER);
     }
   }
 }

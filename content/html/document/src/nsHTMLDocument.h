@@ -361,6 +361,8 @@ protected:
 
   PRPackedBool mDisableDocWrite;
 
+  PRPackedBool mWarnedWidthHeight;
+
   nsCOMPtr<nsIWyciwygChannel> mWyciwygChannel;
 
   /* Midas implementation */

@@ -18,12 +18,18 @@ Tests.testTexImage2D = function(gl) {
     var b = document.createElement('b');
     var div = document.createElement('div');
     var c = document.getElementById('c');
-    assertFail(function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, b); });
-    assertFail(function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, div); });
-    assertFail(function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, 0); });
-    assertFail(function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, "foo"); });
-    assertOk(function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texImage2D(gl.FLOAT, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertFail("bad element b",
+        function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, b); });
+    assertFail("bad element div",
+        function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, div); });
+    assertFail("no element",
+        function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, 0); });
+    assertFail("string as data",
+        function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, "foo"); });
+    assertOk("canvas as data",
+         function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertFail("bad target",
+        function() {gl.texImage2D(gl.FLOAT, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); });
 }
 
 Tests.endUnit = function(gl, tex) {

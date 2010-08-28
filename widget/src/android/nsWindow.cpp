@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <android/log.h>
+#include <math.h>
 
 #include "nsAppShell.h"
 #include "nsIdleService.h"
@@ -43,6 +44,7 @@
 
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
+#include "nsIDOMSimpleGestureEvent.h"
 
 #include "nsWidgetAtoms.h"
 #include "nsWidgetsCID.h"
@@ -81,7 +83,10 @@ static nsTArray<nsWindow*> gTopLevelWindows;
 static nsWindow* gFocusedWindow = nsnull;
 
 static nsRefPtr<gl::GLContext> sGLContext;
-static PRBool sFailedToCreateGLContext = PR_FALSE;
+
+// Multitouch swipe thresholds (in screen pixels)
+static const double SWIPE_MAX_PINCH_DELTA = 100;
+static const double SWIPE_MIN_DISTANCE = 150;
 
 static nsWindow*
 TopWindow()
@@ -779,8 +784,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
     AndroidBridge::AutoLocalJNIFrame jniFrame;
 
-    static bool firstDraw = true;
-
     ALOG(">> OnDraw");
 
     AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
@@ -970,48 +973,98 @@ send_again:
 }
 
 static double
-getDistance(int x1, int y1, int x2, int y2)
+getDistance(const nsIntPoint &p1, const nsIntPoint &p2)
 {
-    double deltaX = x2 - x1;
-    double deltaY = y2 - y1;
+    double deltaX = p2.x - p1.x;
+    double deltaY = p2.y - p1.y;
     return sqrt(deltaX*deltaX + deltaY*deltaY);
 }
 
 void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
-    double dist = getDistance(ae->P0().x, ae->P0().y, ae->P1().x, ae->P1().y);
+    PRUint32 msg = 0;
 
-    PRUint32 msg;
+    nsIntPoint midPoint;
+    midPoint.x = ((ae->P0().x + ae->P1().x) / 2);
+    midPoint.y = ((ae->P0().y + ae->P1().y) / 2);
+    nsIntPoint refPoint = midPoint - WidgetToScreenOffset();
+
+    double pinchDist = getDistance(ae->P0(), ae->P1());
+    double pinchDelta = 0;
+
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
-        case AndroidMotionEvent::ACTION_MOVE:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-            break;
         case AndroidMotionEvent::ACTION_POINTER_DOWN:
             msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
-            mStartDist = dist;
+            mStartPoint = new nsIntPoint(midPoint);
+            mStartDist = mLastDist = pinchDist;
+            mGestureFinished = false;
+            break;
+        case AndroidMotionEvent::ACTION_MOVE:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            pinchDelta = pinchDist - mLastDist;
+            mLastDist = pinchDist;
             break;
         case AndroidMotionEvent::ACTION_POINTER_UP:
             msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            pinchDelta = pinchDist - mStartDist;
+            mStartPoint = nsnull;
             break;
-
         default:
             return;
     }
 
-    nsIntPoint offset = WidgetToScreenOffset();
-    nsSimpleGestureEvent event(PR_TRUE, msg, this, 0, dist - mStartDist);
+    if (!mGestureFinished) {
+        DispatchGestureEvent(msg, 0, pinchDelta, refPoint, ae->Time());
+
+        // If the cumulative pinch delta goes past the threshold, treat this
+        // as a pinch only, and not a swipe.
+        if (fabs(pinchDist - mStartDist) > SWIPE_MAX_PINCH_DELTA)
+            mStartPoint = nsnull;
+
+        // If we have traveled more than SWIPE_MIN_DISTANCE from the start
+        // point, stop the pinch gesture and fire a swipe event.
+        if (mStartPoint) {
+            double swipeDistance = getDistance(midPoint, *mStartPoint);
+            if (swipeDistance > SWIPE_MIN_DISTANCE) {
+                PRUint32 direction = 0;
+                nsIntPoint motion = midPoint - *mStartPoint;
+
+                if (motion.x < -swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+                if (motion.x > swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+                if (motion.y < -swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_UP;
+                if (motion.y > swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
+
+                // Finish the pinch gesture, then fire the swipe event:
+                msg = NS_SIMPLE_GESTURE_MAGNIFY;
+                DispatchGestureEvent(msg, 0, pinchDist - mStartDist, refPoint, ae->Time());
+                msg = NS_SIMPLE_GESTURE_SWIPE;
+                DispatchGestureEvent(msg, direction, 0, refPoint, ae->Time());
+
+                // Don't generate any more gesture events for this touch.
+                mGestureFinished = true;
+            }
+        }
+    }
+}
+
+void
+nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
+                               const nsIntPoint &refPoint, PRUint64 time)
+{
+    nsSimpleGestureEvent event(PR_TRUE, msg, this, direction, delta);
 
     event.isShift = gLeftShift || gRightShift;
     event.isControl = gSym;
     event.isMeta = PR_FALSE;
     event.isAlt = gLeftAlt || gRightAlt;
-    event.time = ae->Time();
-    event.refPoint.x = ((ae->P0().x + ae->P1().x) / 2) - offset.x;
-    event.refPoint.y = ((ae->P0().y + ae->P1().y) / 2) - offset.y;
+    event.time = time;
+    event.refPoint = refPoint;
 
     DispatchEvent(&event);
-
-    mStartDist = dist;
 }
 
 void

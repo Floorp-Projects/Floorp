@@ -40,50 +40,20 @@ Tests.startUnit = function () {
 }
 
 Tests.testReadPixels = function(gl) {
-  assertOk(function(){gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertOk(function(){gl.readPixels(0,0,16,16,gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertOk(function(){gl.readPixels(15,15,1,1,gl.RGBA, gl.UNSIGNED_BYTE);});
-  assertOk(function(){gl.readPixels(15,15,1,1,gl.ALPHA, gl.UNSIGNED_BYTE);});
-  assertOk(function(){gl.readPixels(15,15,1,1,gl.RGB, gl.UNSIGNED_BYTE);});
-}
-Tests.testReadPixelsDataDimensions = function(gl) {
-  var id = gl.readPixels(1,2,12,13,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals(12, id.width);
-  assertEquals(13, id.height);
-  assertEquals(12*13*4, id.data.length);
+  var id = new Uint8Array(16 * 16 * 4);
+  assertOk(function(){gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);});
+  assertOk(function(){gl.readPixels(0,0,16,16,gl.RGBA, gl.UNSIGNED_BYTE, id);});
+  assertOk(function(){gl.readPixels(15,15,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);});
+  var format = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT);
+  var type = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
+  assertOk(function(){gl.readPixels(15,15,1,1, format, type, id);});
 }
 Tests.testReadPixelsRGBA = function(gl) {
-  gl.clearColor(0.5, 0.5, 0.5, 0.5);
+  gl.clearColor(1, 0, 1, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
-  var id = gl.readPixels(1,2,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals(1, id.width);
-  assertEquals(1, id.height);
-  assertEquals(4, id.data.length);
-  assertEquals([128, 128, 128, 128], id.data);
-  gl.clearColor(0.5, 0.5, 0.5, 0.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-}
-Tests.testReadPixelsAlpha = function(gl) {
-    gl.clearColor(0.5, 0.5, 0.5, 0.5);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    var id = gl.readPixels(1,2,1,1,gl.ALPHA, gl.UNSIGNED_BYTE);
-    assertEquals(1, id.width);
-    assertEquals(1, id.height);
-    assertEquals(1, id.data.length);
-    assertEquals([128], id.data);
-    gl.clearColor(0.5, 0.5, 0.5, 0.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-}
-Tests.testReadPixelsRGB = function(gl) {
-    gl.clearColor(0.5, 0.5, 0.5, 0.5);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    var id = gl.readPixels(1,2,1,1,gl.RGB, gl.UNSIGNED_BYTE);
-    assertEquals(1, id.width);
-    assertEquals(1, id.height);
-    assertEquals(3, id.data.length);
-    assertEquals([128, 128, 128], id.data);
-    gl.clearColor(0.5, 0.5, 0.5, 0.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+  var id = new Uint8Array(4);
+  gl.readPixels(1,2,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertArrayEquals([255, 0, 255, 0], id);
 }
 
 Tests.endUnit = function(gl) {

@@ -400,8 +400,6 @@ struct MarkArray : ArrayOf<MarkRecord>	/* Array of MarkRecords--in Coverage orde
     glyph_anchor.get_anchor (c->layout, c->buffer->info[glyph_pos].codepoint, &base_x, &base_y);
 
     hb_internal_glyph_position_t &o = c->buffer->pos[c->buffer->i];
-    o.x_advance = 0;
-    o.y_advance = 0;
     o.x_offset  = base_x - mark_x;
     o.y_offset  = base_y - mark_y;
     o.back      = c->buffer->i - glyph_pos;

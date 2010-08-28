@@ -52,49 +52,50 @@ Tests.teardown = function(gl,tex) {
 
 Tests.testTexImage2D = function(gl) {
     gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0,0, 16,16, 0);
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "width > dst tex width", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,0, 17,1);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "height > dst tex height", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,0, 1,17);
     });
-    assertFail(function(){
+    // The spec says the source image dimensions can be out of range.
+    assertOk("x > dst tex width", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 16,0, 1,1);
     });
-    assertFail(function(){
+    assertOk("y > dst tex width", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,16, 1,1);
     });
-    assertFail(function(){
+    assertOk("x < 0", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, -1,0, 1,1);
     });
-    assertFail(function(){
+    assertOk("y < 0", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,-1, 1,1);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "width < 0", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,0, -1,1);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "height < 0", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,0, 1,-1);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "xoffset < 0", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, -1,0, 0,0, 16,16);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "yoffset < 0", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,-1, 0,0, 16,16);
     });
-    assertFail(function(){
+    assertOk("x < 0 full width", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, -1,0, 16,16);
     });
-    assertFail(function(){
+    assertOk("y < 0 full height", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,-1, 16,16);
     });
     assertOk(function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0,0, 0,0, 16,16);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_ENUM, "bad target", function(){
         gl.copyTexSubImage2D(gl.FLOAT, 0, 0,0, 0,0, 16,16);
     });
-    assertFail(function(){
+    assertGLError(gl, gl.INVALID_VALUE, "", function(){
         gl.copyTexSubImage2D(gl.TEXTURE_2D, -1, 0,0, 0,0, 16,16);
     });
 }

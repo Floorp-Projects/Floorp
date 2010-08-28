@@ -183,10 +183,10 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     JS_ASSERT(unsigned(exit->calldepth) == callDepth);
     exit->numGlobalSlots = ngslots;
     exit->numStackSlots = downPostSlots + 1;
-    exit->numStackSlotsBelowCurrentFrame = cx->fp->down->argv ?
-        nativeStackOffset(&cx->fp->argv[-2]) / sizeof(double) : 0;
+    exit->numStackSlotsBelowCurrentFrame = cx->fp()->down->argv ?
+        nativeStackOffset(&cx->fp()->argv[-2]) / sizeof(double) : 0;
     exit->exitType = UNSTABLE_LOOP_EXIT;
-    exit->block = cx->fp->down->maybeBlockChain();
+    exit->block = cx->fp()->down->maybeBlockChain();
     exit->pc = downFrame->pc + JSOP_CALL_LENGTH;
     exit->imacpc = NULL;
     exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - tree->nativeStackBase;
@@ -205,16 +205,16 @@ DownFrameSP(JSContext *cx)
 {
     FrameRegsIter i(cx);
     ++i;
-    JS_ASSERT(i.fp() == cx->fp->down);
+    JS_ASSERT(i.fp() == cx->fp()->down);
     return i.sp();
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::upRecursion()
 {
-    JS_ASSERT((JSOp)*cx->fp->down->savedPC == JSOP_CALL);
-    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp->down->getScript(),
-              cx->fp->down->savedPC)].length == JSOP_CALL_LENGTH);
+    JS_ASSERT((JSOp)*cx->fp()->down->savedPC == JSOP_CALL);
+    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp()->down->getScript(),
+              cx->fp()->down->savedPC)].length == JSOP_CALL_LENGTH);
 
     JS_ASSERT(callDepth == 0);
 
@@ -226,10 +226,10 @@ TraceRecorder::upRecursion()
     if (anchor && (anchor->exitType == RECURSIVE_EMPTY_RP_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_MISMATCH_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)) {
-        return slurpDownFrames(cx->fp->down->savedPC);
+        return slurpDownFrames(cx->fp()->down->savedPC);
     }
 
-    jsbytecode* return_pc = cx->fp->down->savedPC;
+    jsbytecode* return_pc = cx->fp()->down->savedPC;
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
 
     /*
@@ -256,11 +256,11 @@ TraceRecorder::upRecursion()
      * Need to compute this from the down frame, since the stack could have
      * moved on this one.
      */
-    fi->spdist = DownFrameSP(cx) - cx->fp->down->slots();
-    JS_ASSERT(cx->fp->numActualArgs() == cx->fp->down->numActualArgs());
-    fi->set_argc(uint16(cx->fp->numActualArgs()), false);
+    fi->spdist = DownFrameSP(cx) - cx->fp()->down->slots();
+    JS_ASSERT(cx->fp()->numActualArgs() == cx->fp()->down->numActualArgs());
+    fi->set_argc(uint16(cx->fp()->numActualArgs()), false);
     fi->callerHeight = downPostSlots;
-    fi->callerArgc = cx->fp->down->numActualArgs();
+    fi->callerArgc = cx->fp()->down->numActualArgs();
 
     if (anchor && anchor->exitType == RECURSIVE_MISMATCH_EXIT) {
         /*
@@ -390,7 +390,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 {
     /* Missing - no go */
-    if (cx->fp->numActualArgs() != cx->fp->numFormalArgs())
+    if (cx->fp()->numActualArgs() != cx->fp()->numFormalArgs())
         RETURN_STOP_A("argc != nargs");
 
     LIns* argv_ins;
@@ -398,8 +398,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     unsigned downPostSlots;
 
     FrameRegsIter i(cx);
-    LIns* fp_ins =
-        addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER), "fp");
+    LIns* fp_ins = addName(entryFrameIns(), "fp");
 
     /*
      * When first emitting slurp code, do so against the down frame. After
@@ -434,7 +433,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                             addName(lir->insLoad(LIR_ldp, fp_ins,
                                                  JSStackFrame::offsetScript(), ACCSET_OTHER),
                                     "script"),
-                            INS_CONSTPTR(cx->fp->down->getScript())),
+                            INS_CONSTPTR(cx->fp()->down->getScript())),
                   RECURSIVE_LOOP_EXIT);
         }
 
@@ -453,7 +452,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                         addName(lir->insLoad(LIR_ldi, fp_ins, JSStackFrame::offsetNumActualArgs(),
                                              ACCSET_OTHER),
                                 "argc"),
-                        INS_CONST(cx->fp->numActualArgs())),
+                        INS_CONST(cx->fp()->numActualArgs())),
               MISMATCH_EXIT);
 
         /* Pop the interpreter frame. */
@@ -672,7 +671,7 @@ public:
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::downRecursion()
 {
-    JSStackFrame* fp = cx->fp;
+    JSStackFrame* fp = cx->fp();
     JSScript *script = fp->getScript();
     if ((jsbytecode*)fragment->ip < script->code ||
         (jsbytecode*)fragment->ip >= script->code + script->length) {

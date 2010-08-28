@@ -130,6 +130,16 @@ public:
   IDirect3DDevice9 *device() const { return mDeviceManager->device(); }
   DeviceManagerD3D9 *deviceManager() const { return mDeviceManager; }
 
+  /** 
+   * Return pointer to the Nv3DVUtils instance. Re-direct to mDeviceManager.
+   */ 
+  Nv3DVUtils *GetNv3DVUtils()  { return mDeviceManager ? mDeviceManager->GetNv3DVUtils() : NULL; } 
+
+  /** 
+   * Indicate whether 3D is enabled or not 
+   */ 
+  PRBool Is3DEnabled() { return mIs3DEnabled; } 
+
   static void OnDeviceManagerDestroy(DeviceManagerD3D9 *aDeviceManager) {
     if(aDeviceManager == mDeviceManager)
       mDeviceManager = nsnull;
@@ -155,6 +165,9 @@ private:
 
   /* Callback info for current transaction */
   CallbackInfo mCurrentCallbackInfo;
+
+  /* Flag that indicates whether 3D is enabled or not*/ 
+  PRBool mIs3DEnabled; 
 
   /*
    * Region we're clipping our current drawing to.

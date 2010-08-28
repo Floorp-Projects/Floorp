@@ -51,6 +51,7 @@
 #include "jsvalue.h"
 
 typedef struct JSFrameRegs {
+    JSStackFrame    *fp;            /* active frame */
     jsbytecode      *pc;            /* program counter */
     js::Value       *sp;            /* stack pointer */
 } JSFrameRegs;
@@ -160,6 +161,7 @@ struct JSStackFrame
 
     JSObject* getArgsObj() const {
         JS_ASSERT(hasArgsObj());
+        JS_ASSERT(!isEvalFrame());
         return argsobj;
     }
 
@@ -384,6 +386,7 @@ struct JSStackFrame
     }
 
     size_t numFormalArgs() const {
+        JS_ASSERT(!isEvalFrame());
         return getFunction()->nargs;
     }
 
@@ -426,6 +429,7 @@ struct JSStackFrame
     /* Argument count accessors */
 
     size_t numActualArgs() const {
+        JS_ASSERT(!isEvalFrame());
         return argc;
     }
 
@@ -499,6 +503,7 @@ struct JSStackFrame
     }
 
     bool isDummyFrame() const { return !!(flags & JSFRAME_DUMMY); }
+    bool isEvalFrame() const { return !!(flags & JSFRAME_EVAL); }
 
     /* Contains static assertions for member alignment, don't call. */
     inline void staticAsserts();

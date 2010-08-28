@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if select is disabled, it is barred from constraint validation
              and should not be affected by :valid pseudo-class. -->
-  <style>
-    select { background-color: green; }
-    select:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('s').disabled='true'; document.documentElement.className='';">
-    <select id='s'></select>
+    <select class='notvalid' id='s'></select>
   </body>
 </html>

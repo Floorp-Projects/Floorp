@@ -5607,9 +5607,10 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsIFrame *frame = content->GetPrimaryFrame();
+  NS_ENSURE_TRUE(frame, NS_OK);
 
   nsIFrame *container = ps->GetAbsoluteContainingBlock(frame);
-  NS_ENSURE_TRUE(frame, NS_OK);
+  NS_ENSURE_TRUE(container, NS_OK);
   nsPoint off = frame->GetOffsetTo(container);
   aX = nsPresContext::AppUnitsToIntCSSPixels(off.x);
   aY = nsPresContext::AppUnitsToIntCSSPixels(off.y);

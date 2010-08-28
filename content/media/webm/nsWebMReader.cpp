@@ -693,7 +693,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   return DecodeToTarget(aTarget);
 }
 
-nsresult nsWebMReader::GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime)
+nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   return NS_OK;
 }

@@ -63,6 +63,10 @@ JAVAFILES = \
 
 RES_FILES = \
   res/drawable/icon.png \
+  res/drawable/ateamlogo.png \
+  res/drawable/ic_stat_first.png \
+  res/drawable/ic_stat_neterror.png \
+  res/drawable/ic_stat_warning.png \
   res/layout/main.xml \
   res/values/strings.xml \
   $(NULL)

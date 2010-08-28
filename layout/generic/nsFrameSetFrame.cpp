@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -70,7 +69,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
 #include "mozAutoDocUpdate.h"
@@ -259,7 +258,8 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   nsIDocument* doc = frame->mContent->GetDocument();
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
   if (doc) {
-    nsNodeUtils::AttributeWillChange(frame->mContent, kNameSpaceID_None,
+    nsNodeUtils::AttributeWillChange(frame->GetContent()->AsElement(),
+                                     kNameSpaceID_None,
                                      nsGkAtoms::frameborder,
                                      nsIDOMMutationEvent::MODIFICATION);
   }
@@ -270,7 +270,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 
   frame->RecalculateBorderResize();
   if (doc) {
-    nsNodeUtils::AttributeChanged(frame->GetContent(),
+    nsNodeUtils::AttributeChanged(frame->GetContent()->AsElement(),
                                   kNameSpaceID_None,
                                   nsGkAtoms::frameborder,
                                   nsIDOMMutationEvent::MODIFICATION);
