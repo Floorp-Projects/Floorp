@@ -845,7 +845,9 @@ ExternalResourceShower(nsIURI* aKey,
                        nsExternalResourceMap::ExternalResource* aData,
                        void* aClosure)
 {
-  aData->mViewer->Show();
+  if (aData->mViewer) {
+    aData->mViewer->Show();
+  }
   return PL_DHASH_NEXT;
 }
 
