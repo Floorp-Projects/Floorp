@@ -5503,19 +5503,12 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 
 // static
 nsresult
-nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-                           nsWrapperCache *cache, const nsIID* aIID, jsval *vp,
-                           nsIXPConnectJSObjectHolder **aHolder,
-                           PRBool aAllowWrapping)
+nsContentUtils::WrapNativeHelper(JSContext *cx, JSObject *scope,
+                                 nsISupports *native, nsWrapperCache *cache,
+                                 const nsIID* aIID, jsval *vp,
+                                 nsIXPConnectJSObjectHolder **aHolder,
+                                 PRBool aAllowWrapping)
 {
-  if (!native) {
-    NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
-
-    *vp = JSVAL_NULL;
-
-    return NS_OK;
-  }
-
   NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
 
   // Keep sXPConnect and sThreadJSContextStack alive. If we're on the main
