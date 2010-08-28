@@ -23,6 +23,8 @@
 <!ENTITY view.plugins.label                   "Plugins">
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
+<!ENTITY view.utilites.preferences.tooltip    "Options for all add-ons">
+<!ENTITY view.utilites.preferencesUnix.tooltip "Preferences for all add-ons">
 
 <!-- addon updates -->
 <!ENTITY updates.updateAddonsNow.label        "Update Add-ons Now">
