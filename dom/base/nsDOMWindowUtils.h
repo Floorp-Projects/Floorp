@@ -62,13 +62,4 @@ protected:
   nsIWidget* GetWidgetForElement(nsIDOMElement* aElement);
 
   nsPresContext* GetPresContext();
-
-  NS_IMETHOD SendMouseEventCommon(const nsAString& aType,
-                                  float aX,
-                                  float aY,
-                                  PRInt32 aButton,
-                                  PRInt32 aClickCount,
-                                  PRInt32 aModifiers,
-                                  PRBool aIgnoreRootScrollFrame,
-                                  PRBool aToWindow);
 };

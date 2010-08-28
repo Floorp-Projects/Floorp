@@ -122,6 +122,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
 void 
 nsPrintObject::DestroyPresentation()
 {
+  mWindow      = nsnull;
   mPresContext = nsnull;
   if (mPresShell) {
     mPresShell->EndObservingDocument();

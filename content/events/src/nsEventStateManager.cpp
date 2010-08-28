@@ -3294,7 +3294,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   //Reset target frame to null to avoid mistargeting after reentrant event
   mCurrentTarget = nsnull;
-  mCurrentTargetContent = nsnull;
 
   return ret;
 }
@@ -3613,8 +3612,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   event.relatedTarget = aRelatedContent;
   event.inputSource = static_cast<nsMouseEvent*>(aEvent)->inputSource;
 
-  nsWeakFrame previousTarget = mCurrentTarget;
-
   mCurrentTargetContent = aTargetContent;
 
   nsIFrame* targetFrame = nsnull;
@@ -3632,7 +3629,6 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   }
 
   mCurrentTargetContent = nsnull;
-  mCurrentTarget = previousTarget;
 
   return targetFrame;
 }
