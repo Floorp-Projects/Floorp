@@ -60,6 +60,7 @@ function test () {
       [ 'select',   false, null],
       [ 'output',   true,  null],
       [ 'fieldset', true,  null],
+      [ 'object', 'false' ],
     ];
 
     for each (let data in testData) {
@@ -68,7 +69,6 @@ function test () {
 
     let todo_testData = [
       [ 'keygen', 'false' ],
-      [ 'object', 'false' ],
     ];
 
     for each(let data in todo_testData) {

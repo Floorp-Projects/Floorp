@@ -847,7 +847,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("compatMode.firefox"))) {
         rv = prefs->GetBoolPref(UA_PREF("compatMode.firefox"), &cVar);
         if (NS_SUCCEEDED(rv) && cVar) {
-            mCompatFirefox.AssignLiteral("Firefox/" FIREFOX_VERSION);
+            mCompatFirefox.AssignLiteral("Firefox/" MOZ_UA_FIREFOX_VERSION);
         } else {
             mCompatFirefox.Truncate();
         }

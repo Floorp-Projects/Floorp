@@ -1579,9 +1579,6 @@ var gErrorsPage = {
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
 
-    var errorsTitle = gUpdates.getAUSString("errorsPageHeader");
-    document.getElementById("errorsHeader").setAttribute("label", errorsTitle);
-
     var statusText = gUpdates.update.statusText;
     LOG("gErrorsPage" , "onPageShow - update.statusText: " + statusText);
 

@@ -226,6 +226,8 @@
 #include "nsICrashReporter.h"
 #endif
 
+#include "nsIXULRuntime.h"
+
 using namespace mozilla::widget;
 
 /**************************************************************
@@ -2439,20 +2441,6 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   GetTopLevelWindow(PR_TRUE)->SetWindowTranslucencyInner(aMode);
 }
 
-namespace {
-  BOOL CALLBACK AddClientAreaToRegion(HWND hWnd, LPARAM lParam) {
-    nsIntRegion *region = reinterpret_cast<nsIntRegion*>(lParam);
-
-    RECT clientRect;
-    ::GetWindowRect(hWnd, &clientRect);
-    nsIntRect clientArea(clientRect.left, clientRect.top,
-                         clientRect.right - clientRect.left,
-                         clientRect.bottom - clientRect.top);
-    region->Or(*region, clientArea);
-    return TRUE;
-  }
-}
-
 void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
                                                const nsIntRegion &aPossiblyTransparentRegion) {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
@@ -2468,24 +2456,10 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
   mPossiblyTransparentRegion.Sub(mPossiblyTransparentRegion, aDirtyRegion);
   mPossiblyTransparentRegion.Or(mPossiblyTransparentRegion, aPossiblyTransparentRegion);
 
-  nsIntRegion childWindowRegion;
-
-  ::EnumChildWindows(mWnd, AddClientAreaToRegion, reinterpret_cast<LPARAM>(&childWindowRegion));
-
-  nsIntPoint clientOffset = GetClientOffset();
-  childWindowRegion.MoveBy(-clientOffset);
-
-  RECT r;
-  ::GetWindowRect(mWnd, &r);
-  childWindowRegion.MoveBy(-r.left, -r.top);
-
   nsIntRect clientBounds;
   topWindow->GetClientBounds(clientBounds);
   nsIntRegion opaqueRegion;
   opaqueRegion.Sub(clientBounds, mPossiblyTransparentRegion);
-  opaqueRegion.Or(opaqueRegion, childWindowRegion);
-  // Sometimes child windows overlap our bounds
-  opaqueRegion.And(opaqueRegion, clientBounds);
  
   MARGINS margins = { 0, 0, 0, 0 };
   DWORD_PTR dwStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
@@ -3217,34 +3191,45 @@ nsWindow::GetLayerManager()
 
 #ifndef WINCE
   if (!mLayerManager) {
-    if (mUseAcceleratedRendering) {
-      nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-      PRBool allowAcceleration = PR_TRUE;
-      PRBool preferOpenGL = PR_FALSE;
-      if (prefs) {
-        prefs->GetBoolPref("mozilla.widget.accelerated-layers",
-                           &allowAcceleration);
-        prefs->GetBoolPref("mozilla.layers.prefer-opengl",
-                           &preferOpenGL);
-      }
-      
-      if (allowAcceleration) {
+    PRBool accelerateByDefault = PR_TRUE;
+    PRBool disableAcceleration = PR_FALSE;
+    PRBool preferOpenGL = PR_FALSE;
+    if (prefs) {
+      prefs->GetBoolPref("layers.accelerate-all",
+                         &accelerateByDefault);
+      prefs->GetBoolPref("layers.accelerate-none",
+                         &disableAcceleration);
+      prefs->GetBoolPref("layers.prefer-opengl",
+                         &preferOpenGL);
+    }
+
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    PRBool safeMode = PR_FALSE;
+    if (xr)
+      xr->GetInSafeMode(&safeMode);
+
+    if (disableAcceleration || safeMode)
+      mUseAcceleratedRendering = PR_FALSE;
+    else if (accelerateByDefault)
+      mUseAcceleratedRendering = PR_TRUE;
+
+    if (mUseAcceleratedRendering) {
 #ifdef MOZ_ENABLE_D3D9_LAYER
-        if (!preferOpenGL) {
-          nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
-            new mozilla::layers::LayerManagerD3D9(this);
-          if (layerManager->Initialize()) {
-            mLayerManager = layerManager;
-          }
+      if (!preferOpenGL) {
+        nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
+          new mozilla::layers::LayerManagerD3D9(this);
+        if (layerManager->Initialize()) {
+          mLayerManager = layerManager;
         }
+      }
 #endif
-        if (!mLayerManager) {
-          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
-            new mozilla::layers::LayerManagerOGL(this);
-          if (layerManager->Initialize()) {
-            mLayerManager = layerManager;
-          }
+      if (!mLayerManager) {
+        nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+          new mozilla::layers::LayerManagerOGL(this);
+        if (layerManager->Initialize()) {
+          mLayerManager = layerManager;
         }
       }
     }
@@ -6860,6 +6845,8 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     // We put the region back just below, anyway.
     ::SetWindowRgn(w->mWnd, NULL, TRUE);
 #endif
+    nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsIntRect bounds;
     w->GetBounds(bounds);
     if (bounds.Size() != configuration.mBounds.Size()) {
@@ -6869,7 +6856,7 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
       w->Move(configuration.mBounds.x, configuration.mBounds.y);
     }
-    nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
+    rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -6904,6 +6891,14 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
   if (!aIntersectWithExisting) {
     if (!StoreWindowClipRegion(aRects))
       return NS_OK;
+  } else {
+    // In this case still early return if nothing changed.
+    if (mClipRects && mClipRectCount == aRects.Length() &&
+        memcmp(mClipRects,
+               aRects.Elements(),
+               sizeof(nsIntRect)*mClipRectCount) == 0) {
+      return NS_OK;
+    }
   }
 
   HRGN dest = CreateHRGNFromArray(aRects);
