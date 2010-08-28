@@ -54,6 +54,7 @@
 #include "nsIWindowsRegKey.h"
 #include "nsILocalFile.h"
 #include "plbase64.h"
+#include "nsIXULRuntime.h"
 
 #ifdef MOZ_FT2_FONTS
 #include "ft2build.h"
@@ -237,7 +238,12 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     if (NS_FAILED(rv))
         d2dDisabled = PR_FALSE;
 
-    if (isVistaOrHigher && !d2dDisabled) {
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    PRBool safeMode = PR_FALSE;
+    if (xr)
+      xr->GetInSafeMode(&safeMode);
+
+    if (isVistaOrHigher && !d2dDisabled && !safeMode) {
         // We need a DWriteFactory to work.
         HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
         D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
@@ -319,7 +325,8 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 #endif
 
     PRInt32 rmode;
-    if (NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
+    if (!safeMode &&
+	NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
         if (rmode >= 0 && rmode < RENDER_MODE_MAX) {
 #ifdef CAIRO_HAS_DWRITE_FONT
 	    if (rmode != RENDER_DIRECT2D && !useDirectWrite) {

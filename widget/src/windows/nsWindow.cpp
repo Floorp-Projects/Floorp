@@ -226,6 +226,8 @@
 #include "nsICrashReporter.h"
 #endif
 
+#include "nsIXULRuntime.h"
+
 using namespace mozilla::widget;
 
 /**************************************************************
@@ -3231,7 +3233,12 @@ nsWindow::GetLayerManager()
                          &preferOpenGL);
     }
 
-    if (disableAcceleration)
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    PRBool safeMode = PR_FALSE;
+    if (xr)
+      xr->GetInSafeMode(&safeMode);
+
+    if (disableAcceleration || safeMode)
       mUseAcceleratedRendering = PR_FALSE;
     else if (accelerateByDefault)
       mUseAcceleratedRendering = PR_TRUE;
