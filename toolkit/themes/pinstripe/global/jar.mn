@@ -50,7 +50,6 @@ toolkit.jar:
   skin/classic/global/tree.css
 * skin/classic/global/viewbuttons.css
 * skin/classic/global/webConsole.css
-* skin/classic/global/webConsole_networkPanel.css
   skin/classic/global/wizard.css
   skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
   skin/classic/global/arrow/arrow-dn-dis.png                         (arrow/arrow-dn-dis.png)
