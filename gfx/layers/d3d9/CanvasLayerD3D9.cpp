@@ -58,11 +58,12 @@ CanvasLayerD3D9::Initialize(const Data& aData)
     NS_ASSERTION(aData.mGLContext == nsnull,
                  "CanvasLayer can't have both surface and GLContext");
     mNeedsYFlip = PR_FALSE;
+    mDataIsPremultiplied = PR_TRUE;
   } else if (aData.mGLContext) {
     NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
     mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
-    mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+    mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = PR_TRUE;
   } else {
     NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
@@ -163,7 +164,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
                   aRect.x * 4;
       sourceStride = sourceSurface->Stride();
     } else if (mSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-      sourceSurface = static_cast<gfxImageSurface*>(sourceSurface.get());
+      sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
       if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32 &&
           sourceSurface->Format() != gfxASurface::ImageFormatRGB24)
       {
@@ -179,7 +180,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
       nsRefPtr<gfxContext> ctx = new gfxContext(sourceSurface);
       ctx->Translate(gfxPoint(-aRect.x, -aRect.y));
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx->SetSource(sourceSurface);
+      ctx->SetSource(mSurface);
       ctx->Paint();
       startBits = sourceSurface->Data();
       sourceStride = sourceSurface->Stride();
@@ -240,13 +241,15 @@ CanvasLayerD3D9::RenderLayer()
 
   mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
 
-  if (!mGLBufferIsPremultiplied) {
+  if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
   }
   device()->SetTexture(0, mTexture);
   device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-  if (!mGLBufferIsPremultiplied) {
+  if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
   }
 }
 

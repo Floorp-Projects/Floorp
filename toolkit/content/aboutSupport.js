@@ -141,14 +141,63 @@ function populatePreferencesSection() {
 }
 
 function populateGraphicsSection() {
+  function createHeader(name)
+  {
+    let elem = createElement("th", name);
+    elem.className = "column";
+    return elem;
+  }
+  
   try {
     // nsIGfxInfo is currently only implemented on Windows
-    var d2d = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).D2DEnabled;
+    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    let trGraphics = [];
+    var SBS = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+    var bundle = SBS.createBundle("chrome://global/locale/aboutSupport.properties");
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterDescription")),
+      createElement("td", gfxInfo.adapterDescription),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterVendorID")),
+      // pad with zeros. (printf would be nicer)
+      createElement("td", String('0000'+gfxInfo.adapterVendorID.toString(16)).slice(-4)),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterDeviceID")),
+      // pad with zeros. (printf would be nicer)
+      createElement("td", String('0000'+gfxInfo.adapterDeviceID.toString(16)).slice(-4)),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterRAM")),
+      createElement("td", gfxInfo.adapterRAM),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterDrivers")),
+      createElement("td", gfxInfo.adapterDriver),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("driverVersion")),
+      createElement("td", gfxInfo.adapterDriverVersion),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("driverDate")),
+      createElement("td", gfxInfo.adapterDriverDate),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("direct2DEnabled")),
+      createElement("td", gfxInfo.D2DEnabled),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("directWriteEnabled")),
+      createElement("td", gfxInfo.DWriteEnabled),
+    ]));
+
+    appendChildren(document.getElementById("graphics-tbody"), trGraphics);
+
   } catch (e) {
-    d2d = false;
   }
 
-  document.getElementById("direct2d").textContent = d2d;
 }
 
 

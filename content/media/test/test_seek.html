@@ -21,55 +21,58 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var testNum = 0;
-var testsWaiting = 0;
-var videos = [];
 
-var tmpVid = document.createElement("video");
-function doNextFile() {
-  if (testNum >= gSeekTests.length) {
-    SimpleTest.finish();
-    return;
+var manager = new MediaTestManager;
+
+const NUM_SEEK_TESTS = 11
+
+function createTestArray() {
+  var tests = [];
+  var tmpVid = document.createElement("video");
+
+  for (var testNum=0; testNum<gSeekTests.length; testNum++) {
+    var test = gSeekTests[testNum];
+    if (!tmpVid.canPlayType(test.type)) {
+      continue;
+    }
+
+    for (var i = 1; i <= NUM_SEEK_TESTS; ++i) {
+      var t = new Object;
+      t.name = test.name;
+      t.type = test.type;
+      t.duration = test.duration;
+      t.number = i;
+      tests.push(t);
+    }
   }
-
-  var test = gSeekTests[testNum];
-  ++testNum;
-
-  if (!tmpVid.canPlayType(test.type)) {
-    doNextFile();
-    return;
-  }
-
-  for (var i = 1; i <= 11; ++i) {
-    var v = document.createElement('video');
-    v.src = test.name;
-    document.body.appendChild(v);
-    var name = test.name + " seek test " + i;
-    var localIs = function(name) { return function(a, b, msg) {
-      is(a, b, name + ": " + msg);
-    }}(name);
-    var localOk = function(name) { return function(a, msg) {
-      ok(a, name + ": " + msg);
-    }}(name);
-    var localFinish = function() {
-      --testsWaiting;
-      if (testsWaiting == 0) {
-        for (var j = 0; j < videos.length; ++j) {
-          document.body.removeChild(videos[j]);
-        }
-        videos = [];
-        doNextFile();
-      }
-    };
-    dump("Seek test: " + i + "\n");
-    window['test_seek' + i](v, test.duration/2, localIs, localOk, localFinish);
-    ++testsWaiting;
-  }
+  return tests;
 }
 
-doNextFile();
+function startTest(test, token) {
+  var v = document.createElement('video');
+  manager.started(token);
+  v.src = test.name;
+  v.token = token;
+  document.body.appendChild(v);
+  var name = test.name + " seek test " + test.number;
+  var localIs = function(name) { return function(a, b, msg) {
+    is(a, b, name + ": " + msg);
+  }}(name);
+  var localOk = function(name) { return function(a, msg) {
+    ok(a, name + ": " + msg);
+  }}(name);
+  var localFinish = function(v, manager) { return function() {
+    if (v.parentNode) {
+      v.parentNode.removeChild(v);
+    }
+    manager.finished(v.token);
+  }}(v, manager);
+  dump("Seek test: " + test.number + "\n");
+  window['test_seek' + test.number](v, test.duration/2, localIs, localOk, localFinish);
+}
 
-SimpleTest.waitForExplicitFinish();
+manager.runTests(createTestArray(), startTest);
+
 </script>
 </pre>
 </body>

@@ -213,6 +213,9 @@ _cairo_win32_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font);
 cairo_bool_t
 _cairo_win32_scaled_font_is_bitmap (cairo_scaled_font_t *scaled_font);
 
+BYTE
+_cairo_win32_get_system_text_quality (void);
+
 #ifdef WINCE
 
 // These are the required stubs for windows mobile

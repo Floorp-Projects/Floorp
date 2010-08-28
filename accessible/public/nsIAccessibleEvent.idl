@@ -59,7 +59,7 @@ interface nsIDOMNode;
  *   if (NS_SUCCEEDED(rv)) 
  *     rv = observerService->AddObserver(this, "accessible-event", PR_TRUE);
  */
-[scriptable, uuid(c68b4386-dca7-4b88-8988-7a95ce7be92f)]
+[scriptable, uuid(fd1378c5-c606-4a5e-a321-8e7fc107e5cf)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
@@ -476,7 +476,7 @@ interface nsIAccessibleEvent : nsISupports
    * Returns true if the event was caused by explicit user input,
    * as opposed to purely originating from a timer or mouse movement
    */
-  attribute boolean isFromUserInput;
+  readonly attribute boolean isFromUserInput;
 };
 
 

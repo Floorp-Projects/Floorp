@@ -49,7 +49,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsWaveDecoder.h"
-#include "nsHTMLTimeRanges.h"
+#include "nsTimeRanges.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -147,6 +147,15 @@ public:
   // before metadata validation has completed.  Threadsafe.
   float GetDuration();
 
+  // Returns the number of channels extracted from the metadata.  Returns 0
+  // if called before metadata validation has completed.  Threadsafe.
+  PRUint32 GetChannels();
+
+  // Returns the audio sample rate (number of samples per second) extracted
+  // from the metadata.  Returns 0 if called before metadata validation has
+  // completed.  Threadsafe.
+  PRUint32 GetSampleRate();
+
   // Returns true if the state machine is seeking.  Threadsafe.
   PRBool IsSeeking();
 
@@ -170,7 +179,7 @@ public:
   // main thread.
   float GetTimeForPositionChange();
 
-  nsresult GetBuffered(nsHTMLTimeRanges* aBuffered);
+  nsresult GetBuffered(nsTimeRanges* aBuffered);
 
 private:
   // Returns PR_TRUE if we're in shutdown state. Threadsafe.
@@ -471,6 +480,26 @@ nsWaveStateMachine::GetDuration()
   return std::numeric_limits<float>::quiet_NaN();
 }
 
+PRUint32
+nsWaveStateMachine::GetChannels()
+{
+  nsAutoMonitor monitor(mMonitor);
+  if (mMetadataValid) {
+    return mChannels;
+  }
+  return 0;
+}
+
+PRUint32
+nsWaveStateMachine::GetSampleRate()
+{
+  nsAutoMonitor monitor(mMonitor);
+  if (mMetadataValid) {
+    return mSampleRate;
+  }
+  return 0;
+}
+
 PRBool
 nsWaveStateMachine::IsSeeking()
 {
@@ -761,9 +790,12 @@ nsWaveStateMachine::Run()
           NS_NewRunnableMethod(mDecoder, &nsWaveDecoder::PlaybackEnded);
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
-        do {
-          monitor.Wait();
-        } while (mState == STATE_ENDED);
+        // We've finished playback. Shutdown the state machine thread, 
+        // in order to save memory on thread stacks, particuarly on Linux.
+        event = new ShutdownThreadEvent(mDecoder->mPlaybackThread);
+        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+        mDecoder->mPlaybackThread = nsnull;
+        return NS_OK;
       }
       break;
 
@@ -1181,7 +1213,7 @@ nsWaveStateMachine::FirePositionChanged(PRBool aCoalesce)
 }
 
 nsresult
-nsWaveStateMachine::GetBuffered(nsHTMLTimeRanges* aBuffered)
+nsWaveStateMachine::GetBuffered(nsTimeRanges* aBuffered)
 {
   PRInt64 startOffset = mStream->GetNextCachedData(mWavePCMOffset);
   while (startOffset >= 0) {
@@ -1258,12 +1290,25 @@ nsWaveDecoder::GetCurrentTime()
 }
 
 nsresult
+nsWaveDecoder::StartStateMachineThread()
+{
+  NS_ASSERTION(mPlaybackStateMachine, "Must have state machine");
+  if (mPlaybackThread) {
+    return NS_OK;
+  }
+  nsresult rv = NS_NewThread(getter_AddRefs(mPlaybackThread));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mPlaybackThread->Dispatch(mPlaybackStateMachine, NS_DISPATCH_NORMAL);
+}
+
+nsresult
 nsWaveDecoder::Seek(float aTime)
 {
   if (mPlaybackStateMachine) {
     PinForSeek();
     mPlaybackStateMachine->Seek(aTime);
-    return NS_OK;
+    return StartStateMachineThread();
   }
 
   return NS_ERROR_FAILURE;
@@ -1306,7 +1351,7 @@ nsWaveDecoder::Play()
 {
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Play();
-    return NS_OK;
+    return StartStateMachineThread();
   }
 
   return NS_ERROR_FAILURE;
@@ -1372,7 +1417,8 @@ nsWaveDecoder::MetadataLoaded()
   }
 
   if (mElement) {
-    mElement->MetadataLoaded();
+    mElement->MetadataLoaded(mPlaybackStateMachine->GetChannels(),
+                             mPlaybackStateMachine->GetSampleRate());
     mElement->FirstFrameLoaded(mResourceLoaded);
   }
 
@@ -1675,7 +1721,7 @@ nsWaveDecoder::MoveLoadsToBackground()
 }
 
 nsresult
-nsWaveDecoder::GetBuffered(nsHTMLTimeRanges* aBuffered)
+nsWaveDecoder::GetBuffered(nsTimeRanges* aBuffered)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   return mPlaybackStateMachine->GetBuffered(aBuffered);

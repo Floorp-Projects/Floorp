@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScriptElement.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
@@ -46,6 +46,8 @@
 #include "nsIParser.h"
 #include "nsAutoPtr.h"
 #include "nsGkAtoms.h"
+
+using namespace mozilla::dom;
 
 NS_IMETHODIMP
 nsScriptElement::ScriptAvailable(nsresult aResult,
@@ -118,7 +120,7 @@ nsScriptElement::CharacterDataChanged(nsIDocument *aDocument,
 
 void
 nsScriptElement::AttributeChanged(nsIDocument* aDocument,
-                                  nsIContent* aContent,
+                                  Element* aElement,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
                                   PRInt32 aModType)

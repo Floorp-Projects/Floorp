@@ -52,7 +52,6 @@
 #include "gfxUtils.h"
 
 #include "CanvasUtils.h"
-#include "NativeJSContext.h"
 
 #include "GLContextProvider.h"
 
@@ -100,6 +99,9 @@ WebGLContext::WebGLContext()
     mMapShaders.Init();
     mMapFramebuffers.Init();
     mMapRenderbuffers.Init();
+
+    mBlackTexturesAreInitialized = PR_FALSE;
+    mFakeBlackStatus = DoNotNeedFakeBlack;
 }
 
 WebGLContext::~WebGLContext()
@@ -199,6 +201,12 @@ WebGLContext::DestroyResourcesAndContext()
     mMapRenderbuffers.EnumerateRead(DeleteRenderbufferFunction, gl);
     mMapRenderbuffers.Clear();
 
+    if (mBlackTexturesAreInitialized) {
+        gl->fDeleteTextures(1, &mBlackTexture2D);
+        gl->fDeleteTextures(1, &mBlackTextureCubeMap);
+        mBlackTexturesAreInitialized = PR_FALSE;
+    }
+
     // We just got rid of everything, so the context had better
     // have been going away.
     printf_stderr("--- WebGL context destroyed: %p\n", gl.get());
@@ -284,46 +292,53 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     format.depth = 16;
     format.minDepth = 1;
 
-    
-#ifdef XP_WIN
-    // On Windows, we may have a choice of backends, including straight
-    // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
-    // We don't differentiate the latter two yet, but we allow for
-    // a env var to try EGL first, instead of last.
-    bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
+    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
 
-    // if we want EGL, try it first
-    if (!gl && preferEGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
-        }
-    }
+    PRBool forceOSMesa;
+    prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
 
-    // if it failed, then try the default provider, whatever that is
-    if (!gl) {
-        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
-        }
-    }
+    if (!forceOSMesa) {
+    #ifdef XP_WIN
+        // On Windows, we may have a choice of backends, including straight
+        // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
+        // We don't differentiate the latter two yet, but we allow for
+        // a env var to try EGL first, instead of last.
+        bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
 
-    // if that failed, and we weren't already preferring EGL, try it now.
-    if (!gl && !preferEGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
+        // if we want EGL, try it first
+        if (!gl && preferEGL) {
+            gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
         }
-    }
-#else
-    // other platforms just use whatever the default is
-    if (!gl) {
-        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
+
+        // if it failed, then try the default provider, whatever that is
+        if (!gl) {
+            gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
         }
+
+        // if that failed, and we weren't already preferring EGL, try it now.
+        if (!gl && !preferEGL) {
+            gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
+        }
+    #else
+        // other platforms just use whatever the default is
+        if (!gl) {
+            gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+            if (gl && !InitAndValidateGL()) {
+                gl = nsnull;
+            }
+        }
+    #endif
     }
-#endif
 
     // last chance, try OSMesa
     if (!gl) {
@@ -340,7 +355,17 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
     if (!gl) {
-        LogMessage("WebGL: Can't get a usable OpenGL context.");
+        if (forceOSMesa) {
+            LogMessage("WebGL: You set the webgl.force_osmesa preference to true, but OSMesa can't be found. "
+                       "Either install OSMesa and let webgl.osmesalib point to it, "
+                       "or set webgl.force_osmesa back to false.");
+        } else {
+            #ifdef XP_WIN
+                LogMessage("WebGL: Can't get a usable OpenGL context (also tried Direct3D via ANGLE)");
+            #else
+                LogMessage("WebGL: Can't get a usable OpenGL context");
+            #endif
+        }
         return NS_ERROR_FAILURE;
     }
 
@@ -635,6 +660,18 @@ NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLActiveInfo)
+NS_IMPL_RELEASE(WebGLActiveInfo)
+
+DOMCI_DATA(WebGLActiveInfo, WebGLActiveInfo)
+
+NS_INTERFACE_MAP_BEGIN(WebGLActiveInfo)
+  NS_INTERFACE_MAP_ENTRY(WebGLActiveInfo)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLActiveInfo)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLActiveInfo)
+NS_INTERFACE_MAP_END
+
 #define NAME_NOT_SUPPORTED(base) \
 NS_IMETHODIMP base::GetName(WebGLuint *aName) \
 { return NS_ERROR_NOT_IMPLEMENTED; } \
@@ -656,4 +693,25 @@ NS_IMETHODIMP WebGLUniformLocation::GetLocation(WebGLint *aLocation)
 NS_IMETHODIMP WebGLUniformLocation::SetLocation(WebGLint aLocation)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute WebGLint size; */
+NS_IMETHODIMP WebGLActiveInfo::GetSize(WebGLint *aSize)
+{
+    *aSize = mSize;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLenum type; */
+NS_IMETHODIMP WebGLActiveInfo::GetType(WebGLenum *aType)
+{
+    *aType = mType;
+    return NS_OK;
+}
+
+/* readonly attribute DOMString name; */
+NS_IMETHODIMP WebGLActiveInfo::GetName(nsAString & aName)
+{
+    aName = mName;
+    return NS_OK;
 }

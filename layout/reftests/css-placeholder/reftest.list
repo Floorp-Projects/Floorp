@@ -1,0 +1,2 @@
+include input/reftest.list
+include textarea/reftest.list

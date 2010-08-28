@@ -723,19 +723,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: setNewTabButtonBounds
-  // Used for positioning the "new tab" button in the "new tabs" groupItem.
-  setNewTabButtonBounds: function(box, immediately) {
-    if (!immediately)
-      this.$ntb.animate(box.css(), {
-        duration: 320,
-        easing: "tabviewBounce"
-      });
-    else
-      this.$ntb.css(box.css());
-  },
-
-  // ----------
   // Function: hideExpandControl
   // Hide the control which expands a stacked groupItem into a quick-look view.
   hideExpandControl: function() {
@@ -1604,14 +1591,12 @@ window.GroupItems = {
   },
 
   // ----------
-  // Function: updateTabBar
+  // Function: _updateTabBar
   // Hides and shows tabs in the tab bar based on the active groupItem or
   // currently active orphan tabItem
-  updateTabBar: function() {
+  _updateTabBar: function() {
     if (!window.UI)
       return; // called too soon
-
-//    Utils.log('updateTabBar', this._activeGroupItem, this._activeOrphanTab);
 
     if (!this._activeGroupItem && !this._activeOrphanTab) {
       Utils.assert(false, "There must be something to show in the tab bar!");
@@ -1621,6 +1606,21 @@ window.GroupItems = {
     let tabItems = this._activeGroupItem == null ?
       [this._activeOrphanTab] : this._activeGroupItem._children;
     gBrowser.showOnlyTheseTabs(tabItems.map(function(item) item.tab));
+  },
+
+  // ----------
+  // Function: updateActiveGroupItemAndTabBar
+  // Sets active group item and updates tab bar
+  updateActiveGroupItemAndTabBar: function(tabItem) {
+    if (tabItem.parent) {
+      let groupItem = tabItem.parent;
+      this.setActiveGroupItem(groupItem);
+      groupItem.setActiveTab(tabItem);
+    } else {
+      this.setActiveGroupItem(null);
+      this.setActiveOrphanTab(tabItem);
+    }
+    this._updateTabBar();
   },
 
   // ----------
@@ -1641,15 +1641,15 @@ window.GroupItems = {
   // Returns the <tabItem>. If nothing is found, return null.
   getNextGroupItemTab: function(reverse) {
     var groupItems = Utils.copy(GroupItems.groupItems);
-    if (reverse)
-      groupItems = groupItems.reverse();
     var activeGroupItem = GroupItems.getActiveGroupItem();
     var activeOrphanTab = GroupItems.getActiveOrphanTab();
     var tabItem = null;
 
+    if (reverse)
+      groupItems = groupItems.reverse();
+
     if (!activeGroupItem) {
       if (groupItems.length > 0) {
-
         groupItems.some(function(groupItem) {
           var child = groupItem.getChild(0);
           if (child) {
@@ -1660,9 +1660,6 @@ window.GroupItems = {
         });
       }
     } else {
-      if (reverse)
-        groupItems = groupItems.reverse();
-
       var currentIndex;
       groupItems.some(function(groupItem, index) {
         if (groupItem == activeGroupItem) {
@@ -1749,7 +1746,7 @@ window.GroupItems = {
     }
 
     if (shouldUpdateTabBar)
-      this.updateTabBar();
+      this._updateTabBar();
     else if (shouldShowTabView) {
       tab.tabItem.setZoomPrep(false);
       UI.showTabView();

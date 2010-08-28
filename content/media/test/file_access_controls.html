@@ -132,6 +132,10 @@ function nextTest() {
 
   if (gVideo && gVideo.parentNode)
     gVideo.parentNode.removeChild(gVideo);
+
+  gVideo = null;
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.forceGC();  
   
   gVideo = createVideo();
   gVideo.expectedResult = gTests[gTestNum].result;
@@ -154,6 +158,7 @@ function done() {
                                .getService(Components.interfaces.nsIPrefService);
   var branch = prefService.getBranch("media.");
   branch.setBoolPref("enforce_same_site_origin", gOldPref);
+  mediaTestCleanup();
   opener.done();
 }
 

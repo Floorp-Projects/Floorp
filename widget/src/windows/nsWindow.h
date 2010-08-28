@@ -454,6 +454,9 @@ protected:
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY
   void                    ClearCachedResources();
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  void                    UpdateCaptionButtonsClippingRect();
+#endif
 
 protected:
   nsCOMPtr<nsIWidget>   mParent;
@@ -505,10 +508,16 @@ protected:
   nsIntMargin           mNonClientOffset;
   // Margins set by the owner
   nsIntMargin           mNonClientMargins;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  // Represents the area taken by the caption buttons
+  // on dwm-enabled systems
+  nsIntRect             mCaptionButtons;
+  nsIntRegion           mCaptionButtonsRoundedRegion;
+#endif
+
   // Indicates custom frames are enabled
   PRPackedBool          mCustomNonClient;
-  // Disable non client margins on non-comsitor desktops
-  PRPackedBool          mCompositorFlag;
   // Cached copy of L&F's resize border  
   PRInt32               mHorResizeMargin;
   PRInt32               mVertResizeMargin;

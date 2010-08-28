@@ -61,10 +61,13 @@
 #include "nsIFormProcessor.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_SVG
 #include "nsHtml5SVGLoadDispatcher.h"
 #endif
+
+namespace dom = mozilla::dom;
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
@@ -313,7 +316,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return AppendToDocument(node, aBuilder);
     }
     case eTreeOpAddAttributes: {
-      nsIContent* node = *(mOne.node);
+      dom::Element* node = (*(mOne.node))->AsElement();
       nsHtml5HtmlAttributes* attributes = mTwo.attributes;
 
       nsHtml5OtherDocUpdate update(node->GetOwnerDoc(),
@@ -481,10 +484,12 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* parent = *(mTwo.node);
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
       // NS_ASSERTION(formControl, "Form-associated element did not implement nsIFormControl.");
-      // TODO: uncomment the above line when <output> (bug 346485) and <keygen> (bug 101019) are supported by Gecko
+      // TODO: uncomment the above line when <keygen> (bug 101019) is supported by Gecko
       nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(parent));
       NS_ASSERTION(formElement, "The form element doesn't implement nsIDOMHTMLFormElement.");
-      if (formControl) { // avoid crashing on <output> and <keygen>
+      // avoid crashing on <keygen>
+      if (formControl &&
+          !node->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
         formControl->SetForm(formElement);
       }
       return rv;

@@ -76,6 +76,27 @@ static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("Compre
 #define gCompressedImageAccountingLog
 #endif
 
+// Tweakable progressive decoding parameters
+static PRUint32 gDecodeBytesAtATime = 200000;
+static PRUint32 gMaxMSBeforeYield = 400;
+static PRUint32 gMaxBytesForSyncDecode = 150000;
+
+void
+RasterImage::SetDecodeBytesAtATime(PRUint32 aBytesAtATime)
+{
+  gDecodeBytesAtATime = aBytesAtATime;
+}
+void
+RasterImage::SetMaxMSBeforeYield(PRUint32 aMaxMS)
+{
+  gMaxMSBeforeYield = aMaxMS;
+}
+void
+RasterImage::SetMaxBytesForSyncDecode(PRUint32 aMaxBytes)
+{
+  gMaxBytesForSyncDecode = aMaxBytes;
+}
+
 /* We define our own error checking macros here for 2 reasons:
  *
  * 1) Most of the failures we encounter here will (hopefully) be
@@ -149,7 +170,8 @@ NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
                    nsISupportsWeakReference)
 
 //******************************************************************************
-RasterImage::RasterImage() :
+RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
+  Image(aStatusTracker), // invoke superclass's constructor
   mSize(0,0),
   mAnim(nsnull),
   mAnimationMode(kNormalAnimMode),
@@ -342,8 +364,8 @@ RasterImage::ExtractFrame(PRUint32 aWhichFrame,
 
   img->mFrames.AppendElement(subframe.forget());
 
-  img->mStatusTracker.RecordLoaded();
-  img->mStatusTracker.RecordDecoded();
+  img->mStatusTracker->RecordLoaded();
+  img->mStatusTracker->RecordDecoded();
 
   *_retval = img.forget().get();
 
@@ -467,30 +489,24 @@ RasterImage::GetCurrentFrameIsOpaque(PRBool *aIsOpaque)
   return NS_OK;
 }
 
-nsresult
-RasterImage::GetCurrentFrameRect(nsIntRect &aRect)
+void
+RasterImage::GetCurrentFrameRect(nsIntRect& aRect)
 {
-  if (mError)
-    return NS_ERROR_FAILURE;
-
   // Get the current frame
-  imgFrame *curframe = GetCurrentImgFrame();
+  imgFrame* curframe = GetCurrentImgFrame();
 
   // If we have the frame, use that rectangle
-  if (curframe)
+  if (curframe) {
     aRect = curframe->GetRect();
-
-  // If the frame doesn't exist, we pass the empty rectangle. It's not clear
-  // whether this is appropriate in general, but at the moment the only
-  // consumer of this method is imgRequest (when it wants to figure out dirty
-  // rectangles to send out batched observer updates). This should probably be
-  // revisited when we fix bug 503973.
-  else {
+  } else {
+    // If the frame doesn't exist, we pass the empty rectangle. It's not clear
+    // whether this is appropriate in general, but at the moment the only
+    // consumer of this method is imgStatusTracker (when it wants to figure out
+    // dirty rectangles to send out batched observer updates). This should
+    // probably be revisited when we fix bug 503973.
     aRect.MoveTo(0, 0);
     aRect.SizeTo(0, 0);
   }
-
-  return NS_OK;
 }
 
 PRUint32
@@ -916,20 +932,15 @@ RasterImage::EnsureCleanFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
 }
 
 
-nsresult
+void
 RasterImage::FrameUpdated(PRUint32 aFrameNum, nsIntRect &aUpdatedRect)
 {
-  NS_ASSERTION(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
-    return NS_ERROR_INVALID_ARG;
+  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
 
   imgFrame *frame = GetImgFrame(aFrameNum);
   NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   frame->ImageUpdated(aUpdatedRect);
-
-  return NS_OK;
 }
 
 nsresult
@@ -1237,6 +1248,13 @@ RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
   if (!StoringSourceData()) {
     rv = WriteToDecoder(aBuffer, aCount);
     CONTAINER_ENSURE_SUCCESS(rv);
+
+    // We're not storing source data, so this data is probably coming straight
+    // from the network. In this case, we want to display data as soon as we
+    // get it, so we want to flush invalidations after every write.
+    mInDecoder = PR_TRUE;
+    mDecoder->FlushInvalidations();
+    mInDecoder = PR_FALSE;
   }
 
   // Otherwise, we're storing data in the source buffer
@@ -2326,6 +2344,10 @@ RasterImage::RequestDecode()
   if (mBytesDecoded == mSourceData.Length())
     return NS_OK;
 
+  // If it's a smallish image, it's not worth it to do things async
+  if (!mDecoded && !mInDecoder && mHasSourceData && (mSourceData.Length() < gMaxBytesForSyncDecode))
+    return SyncDecode();
+
   // If we get this far, dispatch the worker. We do this instead of starting
   // any immediate decoding to guarantee that all our decode notifications are
   // dispatched asynchronously, and to ensure we stay responsive.
@@ -2369,6 +2391,14 @@ RasterImage::SyncDecode()
   rv = WriteToDecoder(mSourceData.Elements() + mBytesDecoded,
                       mSourceData.Length() - mBytesDecoded);
   CONTAINER_ENSURE_SUCCESS(rv);
+
+  // When we're doing a sync decode, we want to get as much information from the
+  // image as possible. We've send the decoder all of our data, so now's a good
+  // time  to flush any invalidations (in case we don't have all the data and what
+  // we got left us mid-frame).
+  mInDecoder = PR_TRUE;
+  mDecoder->FlushInvalidations();
+  mInDecoder = PR_FALSE;
 
   // If we finished the decode, shutdown the decoder
   if (IsDecodeFinished()) {
@@ -2562,10 +2592,6 @@ RasterImage::DoError()
   LOG_CONTAINER_ERROR;
 }
 
-// Tweakable progressive decoding parameters
-#define DECODE_BYTES_AT_A_TIME 4096
-#define MAX_USEC_BEFORE_YIELD (1000 * 5)
-
 // Decodes some data, then re-posts itself to the end of the event queue if
 // there's more processing to be done
 NS_IMETHODIMP
@@ -2603,11 +2629,11 @@ imgDecodeWorker::Run()
   // synchronous. Write all the data in that case, otherwise write a
   // chunk
   PRUint32 maxBytes = image->mDecoder->IsSizeDecode()
-    ? image->mSourceData.Length() : DECODE_BYTES_AT_A_TIME;
+    ? image->mSourceData.Length() : gDecodeBytesAtATime;
 
   // Loop control
   PRBool haveMoreData = PR_TRUE;
-  nsTime deadline(PR_Now() + MAX_USEC_BEFORE_YIELD);
+  nsTime deadline(PR_Now() + 1000 * gMaxMSBeforeYield);
 
   // We keep decoding chunks until one of three possible events occur:
   // 1) We don't have any data left to decode
@@ -2626,6 +2652,16 @@ imgDecodeWorker::Run()
     // Figure out if we still have more data
     haveMoreData =
       image->mSourceData.Length() > image->mBytesDecoded;
+  }
+
+  // Flush invalidations _after_ we've written everything we're going to.
+  // Furthermore, if this is a redecode, we don't want to do progressive
+  // display at all. In that case, let Decoder::PostFrameStop() do the
+  // flush once the whole frame is ready.
+  if (!image->mHasBeenDecoded) {
+    image->mInDecoder = PR_TRUE;
+    image->mDecoder->FlushInvalidations();
+    image->mInDecoder = PR_FALSE;
   }
 
   // If the decode finished, shutdown the decoder

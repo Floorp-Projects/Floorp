@@ -65,6 +65,8 @@
 #endif
 #endif
 
+#define RUNDLL32_EXE L"\\rundll32.exe"
+
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
 
@@ -133,13 +135,19 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
         if (!GetDllLaunchInfo(executable, locFile, args, PR_FALSE))
           return NS_ERROR_INVALID_ARG;
 
+        WCHAR rundll32Path[MAX_PATH + sizeof(RUNDLL32_EXE) / sizeof(WCHAR) + 1] = {L'\0'};
+        if (!GetSystemDirectoryW(rundll32Path, MAX_PATH)) {
+          return NS_ERROR_FILE_NOT_FOUND;
+        }
+        lstrcatW(rundll32Path, RUNDLL32_EXE);
+
         SHELLEXECUTEINFOW seinfo;
         memset(&seinfo, 0, sizeof(seinfo));
         seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
         seinfo.fMask  = NULL;
         seinfo.hwnd   = NULL;
         seinfo.lpVerb = NULL;
-        seinfo.lpFile = L"rundll32.exe";
+        seinfo.lpFile = rundll32Path;
         seinfo.lpParameters =  args.get();
         seinfo.lpDirectory  = NULL;
         seinfo.nShow  = SW_SHOWNORMAL;

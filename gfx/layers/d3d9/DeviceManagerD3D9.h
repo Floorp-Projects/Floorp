@@ -49,6 +49,7 @@ namespace layers {
 
 class DeviceManagerD3D9;
 class ThebesLayerD3D9;
+class Nv3DVUtils;
 
 /**
  * SwapChain class, this class manages the swap chain belonging to a
@@ -134,6 +135,11 @@ public:
 
   void SetShaderMode(ShaderMode aMode);
 
+  /** 
+   * Return pointer to the Nv3DVUtils instance 
+   */ 
+  Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; } 
+
   /**
    * We keep a list of all thebes layers since we need their D3DPOOL_DEFAULT
    * surfaces to be released when we want to reset the device.
@@ -191,6 +197,9 @@ private:
 
   /* If this device supports dynamic textures */
   bool mHasDynamicTextures;
+
+  /* Nv3DVUtils instance */ 
+  nsAutoPtr<Nv3DVUtils> mNv3DVUtils; 
 
   /**
    * Verifies all required device capabilities are present.

@@ -51,9 +51,11 @@
 #include "nsIDOMDocument.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsBindingManager.h"
+
+using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS2(nsXMLPrettyPrinter,
                    nsIDocumentObserver,
@@ -235,12 +237,12 @@ nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
 
 void
 nsXMLPrettyPrinter::AttributeChanged(nsIDocument* aDocument,
-                                     nsIContent* aContent,
+                                     Element* aElement,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
 {
-    MaybeUnhook(aContent);
+    MaybeUnhook(aElement);
 }
 
 void
