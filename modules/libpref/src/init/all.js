@@ -3185,12 +3185,15 @@ pref("gfx.color_management.mode", 0);
 // Initialize default render-mode.
 pref("mozilla.widget.render-mode", -1);
 
-// Initialize default accelerated layers
-pref("mozilla.widget.accelerated-layers", true);
+// Default value of acceleration for all widgets.
+pref("layers.accelerate-all", false);
+
+// Whether to allow acceleration on layers at all.
+pref("layers.accelerate-none", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
-pref("mozilla.layers.prefer-opengl", false);
+pref("layers.prefer-opengl", false);
 #endif
 #endif
 
