@@ -398,6 +398,12 @@ let gSyncUI = {
       case "weave:service:ready":
         this.initUI();
         break;
+      case "weave:notification:added":
+        this.onNotificationAdded();
+        break;
+      case "weave:notification:removed":
+        this.onNotificationRemoved();
+        break;
     }
   },
 
