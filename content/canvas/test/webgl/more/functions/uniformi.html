@@ -20,16 +20,17 @@ Tests.testUniformf = function(gl) {
     gl.uniform4iv(foo, [1,2,3,4]);
     gl.uniform1iv(bar, [2]);
   });
-  var d = gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([1,2,3,8], d.data);
+  var d = new Uint8Array(4);
+  gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE, d);
+  assertEquals([1,2,3,8], [d[0], d[1], d[2], d[3]]);
   sh.apply(function(f){
     var foo = f.uniform('foo');
     var bar = f.uniform('bar');
     gl.uniform4i(foo, 2,2,3,4);
     gl.uniform1i(bar, 3);
   });
-  var d = gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([2,2,3,12], d.data);
+  gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE, d);
+  assertEquals([2,2,3,12], [d[0], d[1], d[2], d[3]]);
   sh.destroy();
 }
 
@@ -38,7 +39,6 @@ Tests.endUnit = function(gl) {
 
 </script>
 <script id="foobar-vert" type="x-shader/x-vertex">
-#version 120
 attribute vec3 Vertex;
 attribute vec2 Tex;
 
@@ -52,8 +52,9 @@ void main()
 }
 </script>
 <script id="foobar-frag" type="x-shader/x-fragment">
-#version 120
-
+#ifdef GL_ES
+precision highp float;
+#endif
 uniform ivec4 foo;
 
 varying vec4 texCoord0;

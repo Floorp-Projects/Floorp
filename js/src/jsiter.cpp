@@ -123,16 +123,11 @@ NativeIterator::mark(JSTracer *trc)
         MarkObject(trc, obj, "obj");
 }
 
-/*
- * Shared code to close iterator's state either through an explicit call or
- * when GC detects that the iterator is no longer reachable.
- */
 static void
 iterator_finalize(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &js_IteratorClass);
 
-    /* Avoid double work if the iterator was closed by JSOP_ENDITER. */
     NativeIterator *ni = obj->getNativeIterator();
     if (ni) {
         cx->free(ni);
@@ -811,8 +806,6 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
             ni->props_cursor = ni->props_array;
             ni->next = *hp;
             *hp = obj;
-        } else {
-            iterator_finalize(cx, obj);
         }
     }
 #if JS_HAS_GENERATORS
@@ -1094,7 +1087,7 @@ js_NewGenerator(JSContext *cx)
         return NULL;
 
     /* Load and compute stack slot counts. */
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     uintN argc = fp->numActualArgs();
     uintN nargs = JS_MAX(argc, fp->numFormalArgs());
     uintN vplen = 2 + nargs;
@@ -1229,8 +1222,8 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
          * Get a pointer to new frame/slots. This memory is not "claimed", so
          * the code before pushExecuteFrame must not reenter the interpreter.
          */
-        ExecuteFrameGuard frame;
-        if (!cx->stack().getExecuteFrame(cx, cx->fp, vplen, nfixed, frame)) {
+        FrameGuard frame;
+        if (!cx->stack().getExecuteFrame(cx, cx->maybefp(), vplen, nfixed, frame)) {
             gen->state = JSGEN_CLOSED;
             return JS_FALSE;
         }

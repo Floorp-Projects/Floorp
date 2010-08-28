@@ -2340,7 +2340,7 @@ ASTSerializer::literal(JSParseNode *pn, Value *dst)
         LOCAL_ASSERT(re1 && re1->isRegExp());
 
         JSObject *proto;
-        if (!js_GetClassPrototype(cx, cx->fp->getScopeChain(), JSProto_RegExp, &proto))
+        if (!js_GetClassPrototype(cx, cx->fp()->getScopeChain(), JSProto_RegExp, &proto))
             return false;
 
         JSObject *re2 = js_CloneRegExpObject(cx, re1, proto);

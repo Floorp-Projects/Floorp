@@ -535,8 +535,8 @@ struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,
   {
     nscoord result;
     if (aValue.GetUnit() == eStyleUnit_Percent) {
-      result = NSCoordSaturatingMultiply(mPercentageBasis,
-                                         aValue.GetPercentValue());
+      result =
+        NSToCoordFloorClamped(mPercentageBasis * aValue.GetPercentValue());
     } else {
       result = aValue.GetCoordValue();
     }
@@ -5526,12 +5526,13 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Position, (), pos, parentPos, Position, posData)
 
-  // box offsets: length, percent, auto, inherit
+  // box offsets: length, percent, calc, auto, inherit
   nsStyleCoord  coord;
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentPos->mOffset.Get(side);
     if (SetCoord(posData.mOffset.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_AUTO,
+                 coord, parentCoord,
+                 SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       pos->mOffset.Set(side, coord);
     }
@@ -5541,21 +5542,21 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
            aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
-           SETCOORD_LPEH | SETCOORD_INITIAL_ZERO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPEH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
-           SETCOORD_LPOEH | SETCOORD_INITIAL_NONE, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPOEH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
 
   SetCoord(posData.mHeight, pos->mHeight, parentPos->mHeight,
-           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMinHeight, pos->mMinHeight, parentPos->mMinHeight,
-           SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMaxHeight, pos->mMaxHeight, parentPos->mMaxHeight,
-           SETCOORD_LPOH | SETCOORD_INITIAL_NONE, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPOH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
 
   // box-sizing: enum, inherit, initial
   SetDiscrete(posData.mBoxSizing, pos->mBoxSizing, canStoreInRuleTree,

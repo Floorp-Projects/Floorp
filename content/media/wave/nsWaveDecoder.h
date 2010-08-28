@@ -134,7 +134,7 @@
  */
 
 class nsWaveStateMachine;
-class nsHTMLTimeRanges;
+class nsTimeRanges;
 
 class nsWaveDecoder : public nsMediaDecoder
 {
@@ -239,7 +239,7 @@ class nsWaveDecoder : public nsMediaDecoder
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
-  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered);
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered);
 
 private:
   // Notifies the element that seeking has started.
@@ -257,6 +257,10 @@ private:
 
   // Notifies the element that decoding has failed.
   void DecodeError();
+
+  // Ensures that state machine thread is running, starting a new one
+  // if necessary.
+  nsresult StartStateMachineThread();
 
   // Volume that the audio backend will be initialized with.
   float mInitialVolume;

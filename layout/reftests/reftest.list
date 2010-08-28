@@ -65,6 +65,9 @@ include css-namespace/reftest.list
 # css parsing
 include css-parsing/reftest.list
 
+# css placeholder
+include css-placeholder/reftest.list
+
 # css required
 include css-required/reftest.list
 

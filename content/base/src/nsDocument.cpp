@@ -845,7 +845,9 @@ ExternalResourceShower(nsIURI* aKey,
                        nsExternalResourceMap::ExternalResource* aData,
                        void* aClosure)
 {
-  aData->mViewer->Show();
+  if (aData->mViewer) {
+    aData->mViewer->Show();
+  }
   return PL_DHASH_NEXT;
 }
 
@@ -3801,6 +3803,30 @@ nsDocument::ScriptLoader()
   return mScriptLoader;
 }
 
+PRBool
+nsDocument::InternalAllowXULXBL()
+{
+  if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
+    mAllowXULXBL = eTriTrue;
+    return PR_TRUE;
+  }
+  
+  nsCOMPtr<nsIURI> princURI;
+  NodePrincipal()->GetURI(getter_AddRefs(princURI));
+  if (!princURI) {
+    mAllowXULXBL = eTriFalse;
+    return PR_FALSE;
+  }
+
+  if (nsContentUtils::IsSitePermAllow(princURI, "allowXULXBL")) {
+    mAllowXULXBL = eTriTrue;
+    return PR_TRUE;
+  }
+
+  mAllowXULXBL = eTriFalse;
+  return PR_FALSE;
+}
+
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
 void
@@ -4273,7 +4299,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIContent> content;
   PRInt32 ns = nodeInfo->NamespaceID();
-  NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(), PR_FALSE);
+  rv = NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(), PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);

@@ -263,10 +263,10 @@
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
                        class="toolbarbutton-text"
-                       oncommand="InspectorUI.toggleStylePanel();'"/>
+                       oncommand="InspectorUI.toggleStylePanel();"/>
         <toolbarbutton id="inspector-dom-toolbutton"
-                       label="&inspectDOMButton.label;"
-                       accesskey="&inspectDOMButton.accesskey;"
+                       label="&inspectObjectButton.label;"
+                       accesskey="&inspectObjectButton.accesskey;"
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
@@ -449,7 +449,9 @@
   </popupset>
 
 #ifdef MENUBAR_CAN_AUTOHIDE
-<hbox id="appmenu-button-container">
+  <vbox id="titlebar">
+  <hbox id="titlebar-content">
+  <hbox id="appmenu-button-container" align="start">
   <button id="appmenu-button"
           type="menu"
           label="&brandShortName;"
@@ -483,11 +485,10 @@
           <menuitem id="appmenu_privateBrowsing"
                     class="menuitem-iconic"
                     label="&privateBrowsingCmd.start.label;"
-                    accesskey="&privateBrowsingCmd.start.accesskey;"
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"/>
-          <menuseparator class="menu-seperator"/>
+          <menuseparator/>
           <hbox class="split-menuitem">
             <menuitem id="appmenu-edit-menuitem"
                       label="&editMenu.label;"
@@ -558,7 +559,6 @@
                         command="View:PageSource"/>
               <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
-                        accesskey="&goOfflineCmd.accesskey;"
                         type="checkbox"
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
@@ -746,7 +746,15 @@
       </hbox>
     </menupopup>
   </button>
-</hbox>
+  </hbox>
+  <spacer id="titlebar-spacer" flex="1"/>
+  <hbox id="titlebar-buttonbox">
+    <toolbarbutton id="titlebar-min" oncommand="window.minimize();"/>
+    <toolbarbutton id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+    <toolbarbutton id="titlebar-close" oncommand="window.close();"/>
+  </hbox>
+  </hbox>
+  </vbox>
 #endif
 
 <deck flex="1" id="tab-view-deck">
@@ -1065,7 +1073,7 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,tabview-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
              collapsed="true">
 
       <tabs id="tabbrowser-tabs"
@@ -1114,6 +1122,9 @@
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
+
+# Update primaryToolbarButtons in browser/themes/browserShared.inc when adding
+# or removing default items with the toolbarbutton-1 class.
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&printButton.label;" command="cmd_print"
@@ -1200,7 +1211,7 @@
     </vbox>
   </hbox>
 
-  <vbox id="browser-bottombox">
+  <vbox id="browser-bottombox" layer="true">
     <statusbar class="chromeclass-status" id="status-bar"
 #ifdef WINCE
                hidden="true"

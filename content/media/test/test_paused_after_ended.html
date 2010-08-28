@@ -11,21 +11,18 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var videos = [];
+var manager = new MediaTestManager;
 
 function ended(evt) {
   var v = evt.target;
   is(v.paused, false, v._name + " must not be paused after end");
-  if (AllFinished(videos)) {
-    SimpleTest.finish();
-  }
+  manager.finished(v.token);
 }
 
-for (var i=0; i<gPausedAfterEndedTests.length; ++i) {
+function startTest(test, token) {
   var v = document.createElement('video');
-  var test = gPausedAfterEndedTests[i];
-  if (!v.canPlayType(test.type))
-    continue;
+  v.token = v;
+  manager.started(v);
   v.src = test.name;
   v._name = test.name;
   v._finished = false;
@@ -38,11 +35,7 @@ for (var i=0; i<gPausedAfterEndedTests.length; ++i) {
   v.addEventListener("ended", ended, false);
 }
 
-if (videos.length == 0) {
-  todo(false, "No types supported");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gPausedAfterEndedTests, startTest);
 
 </script>
 </pre>

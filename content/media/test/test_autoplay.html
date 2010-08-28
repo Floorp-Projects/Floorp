@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <video id='v1' onerror="event.stopPropagation();"></video><audio id='a1' onerror="event.stopPropagation();"></audio>
@@ -26,6 +27,9 @@ ok(v1.autoplay, "video.autoplay not true");
 ok(a1.autoplay, "audio.autoplay not true");
 is(v1.getAttribute("autoplay"), "", "video autoplay attribute not set");
 is(a1.getAttribute("autoplay"), "", "video autoplay attribute not set");
+
+mediaTestCleanup();
+
 </script>
 </pre>
 </body>

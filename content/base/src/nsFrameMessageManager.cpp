@@ -617,7 +617,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   channel->Open(getter_AddRefs(input));
   nsString dataString;
   if (input) {
-    const PRUint32 bufferSize = 1024;
+    const PRUint32 bufferSize = 8192;
     char buffer[bufferSize];
     nsCString data;
     PRUint32 avail = 0;
@@ -679,5 +679,5 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver);
+NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 

@@ -251,19 +251,6 @@ function checkMetadata(msg, e, test) {
   }
 }
 
-// Returns true if all members of array 'v' have their _finished field set to true.
-function AllFinished(v) {
-  if (v.length == 0) {
-    return false;
-  }
-  for (var i=0; i<v.length; ++i) {
-    if (!v[i]._finished) {
-      return false;
-    }
-  }
-  return true;
-}
-
 // Returns the first test from candidates array which we can play with the
 // installed video backends.
 function getPlayableVideo(candidates) {
@@ -272,4 +259,119 @@ function getPlayableVideo(candidates) {
   if (resources.length > 0)
     return resources[0];
   return null;
+}
+
+// Number of tests to run in parallel. Warning: Each media element requires
+// at least 3 threads (4 on Linux), and on Linux each thread uses 10MB of
+// virtual address space. Beware!
+var PARALLEL_TESTS = 2;
+
+// Manages a run of media tests. Runs them in chunks in order to limit
+// the number of media elements/threads running in parallel. This limits peak
+// memory use, particularly on Linux x86 where thread stacks use 10MB of
+// virtual address space.
+// Usage:
+//   1. Create a new MediaTestManager object.
+//   2. Create a test startTest function. This takes a test object and a token,
+//      and performs anything necessary to start the test. The test object is an
+//      element in one of the g*Tests above. Your startTest function must call 
+//      MediaTestManager.start(token) if it starts a test. The test object is
+//      guaranteed to be playable by our supported decoders; you don't need to
+//      check canPlayType.
+//   3. When your tests finishes, call MediaTestManager.finished(), passing
+//      the token back to the manager. The manager may either start the next run
+//      or end the mochitest if all the tests are done.
+function MediaTestManager() {
+
+  // Sets up a MediaTestManager to runs through the 'tests' array, which needs
+  // to be one of, or have the same fields as, the g*Test arrays of tests. Uses
+  // the user supplied 'startTest' function to initialize the test. This 
+  // function must accept two arguments, the test entry from the 'tests' array,
+  // and a token. Call MediaTestManager.started(token) if you start the test,
+  // and MediaTestManager.finished(token) when the test finishes. You don't have
+  // to start every test, but if you call started() you *must* call finish()
+  // else you'll timeout. 
+  this.runTests = function(tests, startTest) {
+    this.testNum = 0;
+    this.tests = tests;
+    this.startTest = startTest;
+    this.tokens = [];
+    // Always wait for explicit finish.
+    SimpleTest.waitForExplicitFinish();
+    this.nextTest();
+  }
+  
+  // Registers that the test corresponding to 'token' has been started.
+  // Don't call more than once per token.
+  this.started = function(token) {
+    this.tokens.push(token);
+  }
+  
+  // Registers that the test corresponding to 'token' has finished. Call when
+  // you've finished your test. If all tests are complete this will finish the
+  // run, otherwise it may start up the next run. It's ok to call multiple times
+  // per token.
+  this.finished = function(token) {
+    var i = this.tokens.indexOf(token);
+    if (i != -1) {
+      // Remove the element from the list of running tests.
+      this.tokens.splice(i, 1);
+    }
+    if (this.tokens.length == 0) {
+      this.nextTest();
+    }
+  }
+  
+  // Starts the next batch of tests, or finishes if they're all done.
+  // Don't call this directly, call finished(token) when you're done.
+  this.nextTest = function() {
+    // Force a GC after every completed testcase. This ensures that any decoders
+    // with live threads waiting for the GC are killed promptly, to free up the
+    // thread stacks' address space.
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    Components.utils.forceGC();
+    if (this.testNum == this.tests.length) {
+      if (this.onFinished) {
+        this.onFinished();
+      }
+      mediaTestCleanup();
+      SimpleTest.finish();
+      return;
+    }
+    while (this.testNum < this.tests.length && this.tokens.length < PARALLEL_TESTS) {
+      var test = this.tests[this.testNum];
+      var token = (test.name ? (test.name + "-"): "") + this.testNum;
+      this.testNum++;
+
+      // Ensure we can play the resource type.
+      if (test.type && !document.createElement('video').canPlayType(test.type))
+        continue;
+      
+      // Do the init. This should start the test.
+      this.startTest(test, token);
+      
+    }
+    if (this.tokens.length == 0) {
+      // No tests were added, we must have tried everything, exit.
+      SimpleTest.finish();
+    }
+  }
+}
+
+// Ensures we've got no active video or audio elements in the document, and
+// forces a GC to release the address space reserved by the decoders' threads'
+// stacks.
+function mediaTestCleanup() {
+    var V = document.getElementsByTagName("video");
+    for (i=0; i<V.length; i++) {
+      V[i].parentNode.removeChild(V[i]);
+      V[i] = null;
+    }
+    var A = document.getElementsByTagName("audio");
+    for (i=0; i<A.length; i++) {
+      A[i].parentNode.removeChild(A[i]);
+      A[i] = null;
+    }
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    Components.utils.forceGC();
 }

@@ -164,9 +164,13 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
+input:-moz-placeholder,
+textarea:-moz-placeholder {
+  color: GrayText;
+}
+
 input > .placeholder,
 textarea > .placeholder {
-  color: GrayText;
   overflow: hidden;
   pointer-events: none;
   resize: none;
@@ -614,6 +618,16 @@ optgroup:before {
 input[type="file"] > input[type="text"] {
   direction: ltr !important;
   text-align: inherit;
+}
+
+/**
+ * Set default style for invalid elements.
+ * <output> is the only element which may not follow this rule (but color: red).
+ * However it is barred from constraint validation per the specifications so, at
+ * least for now, it will not be affected by :invalid.
+ */
+:invalid {
+  -moz-box-shadow: 0 0 2px 1px red;
 }
 
 @media print {
