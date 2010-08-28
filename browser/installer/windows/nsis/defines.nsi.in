@@ -16,7 +16,6 @@
 !define WindowClass           "FirefoxMessageWindow"
 !define DDEApplication        "Firefox"
 !define AppRegName            "Firefox"
-!define MinSupportedVer       "Microsoft Windows 2000"
 
 !define BrandShortName        "@MOZ_APP_DISPLAYNAME@"
 !define PreReleaseSuffix      "@PRE_RELEASE_SUFFIX@"
@@ -38,3 +37,14 @@
 !if "@PRE_RELEASE_SUFFIX@" != ""
 !define NO_INSTDIR_FROM_REG
 !endif
+
+# ARCH is used when it is necessary to differentiate the x64 registry keys from
+# the x86 registry keys (e.g. the uninstall registry key).
+#ifdef HAVE_64BIT_OS
+!define HAVE_64BIT_OS
+!define ARCH "x64"
+!define MinSupportedVer "Microsoft Windows Vista x64"
+#else
+!define ARCH "x86"
+!define MinSupportedVer "Microsoft Windows 2000"
+#endif
