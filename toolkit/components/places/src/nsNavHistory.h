@@ -61,7 +61,6 @@
 #include "nsICharsetResolver.h"
 #include "nsNetCID.h"
 #include "nsToolkitCompsCID.h"
-#include "nsThreadUtils.h"
 
 #include "nsINavBookmarksService.h"
 #include "nsIPrivateBrowsingService.h"
@@ -228,16 +227,6 @@ public:
   mozIStorageConnection* GetStorageConnection()
   {
     return mDBConn;
-  }
-
-  /**
-   * Accessor for the vaccum-in-progress flag: since the vacuum is performed
-   * asynchronously, we want to ensure we only have one in flight at a time.
-   */
-  void SetVacuumInProgress(bool aValue)
-  {
-    NS_PRECONDITION(NS_IsMainThread(), "SetVacuumInProgress() off main thread!");
-    mVacuumInProgress = aValue;
   }
 
   /**
@@ -739,10 +728,6 @@ protected:
   // Used to enable and disable the observer notifications
   bool mCanNotify;
   nsCategoryCache<nsINavHistoryObserver> mCacheObservers;
-
-  // Used to keep track of db vacuum operations
-  nsCOMPtr<mozIStorageStatementCallback> mVacuumDBListener;
-  bool mVacuumInProgress;
 };
 
 
