@@ -253,13 +253,26 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
             mSafeJSContext = JS_NewContext(rt, 8192);
             if(mSafeJSContext)
             {
+                nsCString origin;
+                principal->GetOrigin(getter_Copies(origin));
+
                 // scoped JS Request
                 JSAutoRequest req(mSafeJSContext);
-                glob = JS_NewGlobalObject(mSafeJSContext, &global_class);
+
+                JSCompartment *compartment;
+                nsresult rv = xpc_CreateGlobalObject(mSafeJSContext, &global_class,
+                                                     origin, principal, &glob,
+                                                     &compartment);
+                if(NS_FAILED(rv))
+                    glob = nsnull;
 
 #ifndef XPCONNECT_STANDALONE
                 if(glob)
                 {
+                    // Make sure the context is associated with a proper compartment
+                    // and not the default compartment.
+                    JS_SetGlobalObject(mSafeJSContext, glob);
+
                     // Note: make sure to set the private before calling
                     // InitClasses
                     nsIScriptObjectPrincipal* priv = nsnull;
