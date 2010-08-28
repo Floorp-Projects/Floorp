@@ -43,6 +43,13 @@ let gSyncUI = {
     // this will be the first notification fired during init
     // we can set up everything else later
     Services.obs.addObserver(this, "weave:service:ready", true);
+
+    // Remove the observer if the window is closed before the observer
+    // was triggered.
+    window.addEventListener("unload", function() {
+      window.removeEventListener("unload", arguments.callee, false);
+      Services.obs.removeObserver(gSyncUI, "weave:service:ready");
+    }, false);
   },
   initUI: function SUI_initUI() {
     let obs = ["weave:service:sync:start",
