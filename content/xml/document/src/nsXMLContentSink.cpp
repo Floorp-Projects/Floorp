@@ -446,7 +446,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
                                  mDocument->IndexOf(rootElement));
     mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
-  
+
   // Start the layout process
   StartLayout(PR_FALSE);
 
@@ -1086,6 +1086,10 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     // This isn't the root and we're not inside an XHTML <head>.
     // Might need to start layout
     MaybeStartLayout(PR_FALSE);
+  }
+
+  if (content == mDocElement) {
+    NotifyDocElementCreated(mDocument);
   }
 
   return aInterruptable && NS_SUCCEEDED(result) ? DidProcessATokenImpl() :

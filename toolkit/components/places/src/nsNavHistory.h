@@ -93,12 +93,22 @@
 // Fired after autocomplete feedback has been updated.
 #define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
 #endif
-// Fired when Places is shutting down.
+
+// Fired when Places is shutting down.  Any code should stop accessing Places
+// APIs after this notification.  If you need to listen for Places shutdown
+// you should only use this notification, next ones are intended only for
+// internal Places use.
 #define TOPIC_PLACES_SHUTDOWN "places-shutdown"
-// Internal notification, called after places-shutdown.
-// If you need to listen for Places shutdown, you should really use
-// places-shutdown, because places-teardown is guaranteed to break your code.
-#define TOPIC_PLACES_TEARDOWN "places-teardown"
+// For Internal use only.  Fired when connection is about to be closed, only
+// cleanup tasks should run at this stage, nothing should be added to the
+// database, nor APIs should be called.
+#define TOPIC_PLACES_WILL_CLOSE_CONNECTION "places-will-close-connection"
+// For Internal use only. Fired as the last notification before the connection
+// is gone.
+#define TOPIC_PLACES_CONNECTION_CLOSING "places-connection-closing"
+// Fired when the connection has gone, nothing will work from now on.
+#define TOPIC_PLACES_CONNECTION_CLOSED "places-connection-closed"
+
 // Fired when Places found a locked database while initing.
 #define TOPIC_DATABASE_LOCKED "places-database-locked"
 // Fired after Places inited.

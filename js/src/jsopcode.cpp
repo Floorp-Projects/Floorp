@@ -279,7 +279,7 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    return js_DisassembleAtPC(cx, cx->fp->getScript(), true, stdout, cx->regs->pc);
+    return js_DisassembleAtPC(cx, cx->fp()->getScript(), true, stdout, cx->regs->pc);
 }
 
 JSBool
@@ -5155,7 +5155,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
         jsbytecode* savepc = i.pc();
         jsbytecode* savedIMacroPC = fp->maybeIMacroPC();
         if (savedIMacroPC) {
-            if (fp == cx->fp)
+            JS_ASSERT(cx->hasfp());
+            if (fp == cx->fp())
                 cx->regs->pc = savedIMacroPC;
             else
                 fp->savedPC = savedIMacroPC;
@@ -5173,7 +5174,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
             name = DecompileExpression(cx, script, fp->maybeFunction(), pc);
 
         if (savedIMacroPC) {
-            if (fp == cx->fp)
+            JS_ASSERT(cx->hasfp());
+            if (fp == cx->fp())
                 cx->regs->pc = savedIMacroPC;
             else
                 fp->savedPC = savepc;

@@ -23,6 +23,7 @@
  *   Steven Garrity <steven@silverorange.com>
  *   Henrik Skupin  <mozilla@hskupin.info>
  *   Johnathan Nightingale <johnath@mozilla.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,9 +49,15 @@
 
 #technicalContent > h2, #expertContent > h2 {
   cursor: pointer;
-  padding-left: 20px;
+  -moz-padding-start: 20px;
   position: relative;
   left: -20px;
+}
+
+body[dir="rtl"] #technicalContent > h2,
+body[dir="rtl"] #expertContent > h2 {
+  left: auto;
+  right: -20px;
 }
 
 div[collapsed] > p,

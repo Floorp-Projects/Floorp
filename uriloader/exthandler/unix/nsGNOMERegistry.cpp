@@ -126,7 +126,6 @@ nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
 /* static */ already_AddRefed<nsMIMEInfoBase>
 nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
 {
-  NS_ASSERTION(aFileExt[0] != '.', "aFileExt shouldn't start with a dot");
   nsCAutoString mimeType;
   nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);

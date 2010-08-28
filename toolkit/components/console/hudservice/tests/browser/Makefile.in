@@ -58,6 +58,7 @@ _BROWSER_TEST_PAGES = \
 	test-property-provider.html \
 	test-error.html \
 	test-duplicate-error.html \
+	test-image.png \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      document.getElementById('i').removeAttribute('placeholder');
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='loadHandler();'>
+    <input id='i' placeholder='foo'>
+  </body>
+</html>

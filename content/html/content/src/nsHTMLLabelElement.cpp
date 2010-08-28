@@ -359,8 +359,8 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
   }
 
   nsresult rv =
-      nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                    aNotify);
+      nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                        aNotify);
 
   if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
       !aValue.IsEmpty()) {
@@ -382,7 +382,7 @@ nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     UnsetFlags(NODE_HAS_ACCESSKEY);
   }
 
-  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 void

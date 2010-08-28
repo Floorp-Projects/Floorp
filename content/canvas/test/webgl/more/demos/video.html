@@ -61,7 +61,6 @@ var processor = {
 
 </script>
 <script id="identity-flip-vert" type="x-shader/x-vertex">
-    #version 120
     attribute vec3 Vertex;
     attribute vec2 Tex;
 
@@ -73,7 +72,9 @@ var processor = {
     }
 </script>
 <script id="greenScreen" type="x-shader/x-fragment">
-    #version 120
+    #ifdef GL_ES
+precision highp float;
+#endif
     uniform sampler2D Texture;
     uniform sampler2D Texture2;
 

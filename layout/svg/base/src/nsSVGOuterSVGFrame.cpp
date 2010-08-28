@@ -53,6 +53,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGMatrix.h"
 
+namespace dom = mozilla::dom;
+
 class nsSVGMutationObserver : public nsStubMutationObserver
 {
 public:
@@ -81,17 +83,17 @@ static nsSVGMutationObserver sSVGMutationObserver;
 // nsIMutationObserver methods
 
 void
-nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
-                                        nsIContent *aContent,
+nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
+                                        dom::Element* aElement,
                                         PRInt32 aNameSpaceID,
-                                        nsIAtom *aAttribute,
+                                        nsIAtom* aAttribute,
                                         PRInt32 aModType)
 {
   if (aNameSpaceID != kNameSpaceID_XML || aAttribute != nsGkAtoms::space) {
     return;
   }
 
-  nsIFrame* frame = aContent->GetPrimaryFrame();
+  nsIFrame* frame = aElement->GetPrimaryFrame();
   if (!frame) {
     return;
   }
@@ -478,10 +480,8 @@ DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
   // XXX it would be nice to know if the size of aEmbeddingFrame's containing
   // block depends on aEmbeddingFrame, then we'd know if we can return false
   // for eStyleUnit_Percent too.
-  return (width.GetUnit() != eStyleUnit_Coord &&
-          (!width.IsCalcUnit() || width.CalcHasPercent())) ||
-         (height.GetUnit() != eStyleUnit_Coord &&
-          (!height.IsCalcUnit() || height.CalcHasPercent()));
+  return !width.ConvertsToLength() ||
+         !height.ConvertsToLength();
 }
 
 NS_IMETHODIMP

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,8 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIMutationObserver_h___
-#define nsIMutationObserver_h___
+
+#ifndef nsIMutationObserver_h
+#define nsIMutationObserver_h
 
 #include "nsISupports.h"
 
@@ -43,6 +45,12 @@ class nsIAtom;
 class nsIContent;
 class nsIDocument;
 class nsINode;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 #define NS_IMUTATION_OBSERVER_IID \
 { 0x85eea794, 0xed8e, 0x4e1b, \
@@ -172,7 +180,7 @@ public:
    *       the stack.
    */
   virtual void AttributeWillChange(nsIDocument* aDocument,
-                                   nsIContent*  aContent,
+                                   mozilla::dom::Element* aElement,
                                    PRInt32      aNameSpaceID,
                                    nsIAtom*     aAttribute,
                                    PRInt32      aModType) = 0;
@@ -181,7 +189,7 @@ public:
    * Notification that an attribute of an element has changed.
    *
    * @param aDocument    The owner-document of aContent. Can be null.
-   * @param aContent     The element whose attribute changed
+   * @param aElement     The element whose attribute changed
    * @param aNameSpaceID The namespace id of the changed attribute
    * @param aAttribute   The name of the changed attribute
    * @param aModType     Whether or not the attribute was added, changed, or
@@ -195,7 +203,7 @@ public:
    *       the stack.
    */
   virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent*  aContent,
+                                mozilla::dom::Element* aElement,
                                 PRInt32      aNameSpaceID,
                                 nsIAtom*     aAttribute,
                                 PRInt32      aModType) = 0;
@@ -326,14 +334,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE                      \
     virtual void AttributeWillChange(nsIDocument* aDocument,                 \
-                                     nsIContent* aContent,                   \
+                                     mozilla::dom::Element* aElement,        \
                                      PRInt32 aNameSpaceID,                   \
                                      nsIAtom* aAttribute,                    \
                                      PRInt32 aModType);
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                         \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
-                                  nsIContent* aContent,                      \
+                                  mozilla::dom::Element* aElement,           \
                                   PRInt32 aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
                                   PRInt32 aModType);
@@ -395,7 +403,7 @@ _class::CharacterDataChanged(nsIDocument* aDocument,                      \
 }                                                                         \
 void                                                                      \
 _class::AttributeWillChange(nsIDocument* aDocument,                       \
-                            nsIContent* aContent,                         \
+                            mozilla::dom::Element* aElement,              \
                             PRInt32 aNameSpaceID,                         \
                             nsIAtom* aAttribute,                          \
                             PRInt32 aModType)                             \
@@ -403,7 +411,7 @@ _class::AttributeWillChange(nsIDocument* aDocument,                       \
 }                                                                         \
 void                                                                      \
 _class::AttributeChanged(nsIDocument* aDocument,                          \
-                         nsIContent* aContent,                            \
+                         mozilla::dom::Element* aElement,                 \
                          PRInt32 aNameSpaceID,                            \
                          nsIAtom* aAttribute,                             \
                          PRInt32 aModType)                                \
@@ -437,4 +445,4 @@ _class::ParentChainChanged(nsIContent *aContent)                          \
 }
 
 
-#endif /* nsIMutationObserver_h___ */
+#endif /* nsIMutationObserver_h */

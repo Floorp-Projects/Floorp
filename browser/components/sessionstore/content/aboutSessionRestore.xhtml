@@ -103,9 +103,21 @@
 
       <!-- Buttons -->
       <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="buttons">
+#ifdef XP_UNIX
+        <button id="errorCancel" label="&restorepage.cancelButton;"
+                accesskey="&restorepage.cancel.access;"
+                oncommand="startNewSession();"/>
         <button id="errorTryAgain" label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
+#else
+        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
+                accesskey="&restorepage.restore.access;"
+                oncommand="restoreSession();"/>
+        <button id="errorCancel" label="&restorepage.cancelButton;"
+                accesskey="&restorepage.cancel.access;"
+                oncommand="startNewSession();"/>
+#endif
       </hbox>
       <!-- holds the session data for when the tab is closed -->
       <input type="text" id="sessionData" style="display: none;"/>

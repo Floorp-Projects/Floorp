@@ -1698,6 +1698,20 @@ nsContentSink::ContinueInterruptedParsingAsync()
   NS_DispatchToCurrentThread(ev);
 }
 
+/* static */
+void
+nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
+    observerService->
+      NotifyObservers(domDoc, "document-element-inserted",
+                      EmptyString().get());
+  }
+}
+
 // URIs: action, href, src, longdesc, usemap, cite
 PRBool 
 IsAttrURI(nsIAtom *aName)

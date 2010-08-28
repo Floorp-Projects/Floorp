@@ -152,7 +152,7 @@ XPCOMUtils.defineLazyGetter(this, "gABI", function aus_gABI() {
                  getService(Ci.nsIMacUtils);
 
   if (macutils.isUniversalBinary)
-    abi = "Universal-gcc3";
+    abi += "-u-" + macutils.architecturesInBinary;
 #endif
   return abi;
 });

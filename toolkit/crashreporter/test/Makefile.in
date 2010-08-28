@@ -96,6 +96,6 @@ libs::  $(_BROWSER_FILES)
 endif
 
 libs:: $(SHARED_LIBRARY) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
-	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-	$(INSTALL) $^ $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/testcrasher.manifest > $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components/testcrasher.manifest
+	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/components
+	$(INSTALL) $^ $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/components
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/testcrasher.manifest > $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/components/testcrasher.manifest

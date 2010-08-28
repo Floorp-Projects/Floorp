@@ -54,6 +54,7 @@ _TEST_FILES = \
 	  smilAnimateMotionValueLists.js \
 	  smilTestUtils.js \
 	  smilXHR_helper.svg \
+	  test_smilAccessKey.xhtml \
 	  test_smilAnimateMotion.xhtml \
 	  test_smilAnimateMotionInvalidValues.xhtml \
 	  test_smilAnimateMotionOverrideRules.xhtml \

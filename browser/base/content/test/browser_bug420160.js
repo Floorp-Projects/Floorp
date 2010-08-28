@@ -18,9 +18,20 @@ function test() {
   content.location = "http://test1.example.org/";
 }
 
+// Greek IDN for 'example.test'.
+var idnDomain = "\u03C0\u03B1\u03C1\u03AC\u03B4\u03B5\u03B9\u03B3\u03BC\u03B1.\u03B4\u03BF\u03BA\u03B9\u03BC\u03AE";
+
 function testNormalDomain() {
   is(gIdentityHandler._lastLocation.host, 'test1.example.org', "Identity handler is getting the full location");
   is(gIdentityHandler.getEffectiveHost(), 'example.org', "getEffectiveHost should return example.org for test1.example.org");
+
+  listener.testFunction = testIDNDomain;
+  content.location = "http://sub1." + idnDomain + "/";
+}
+
+function testIDNDomain() {
+  is(gIdentityHandler._lastLocation.host, "sub1." + idnDomain, "Identity handler is getting the full location");
+  is(gIdentityHandler.getEffectiveHost(), idnDomain, "getEffectiveHost should return the IDN base domain in UTF-8");
 
   listener.testFunction = testNormalDomainWithPort;
   content.location = "http://sub1.test1.example.org:8000/";

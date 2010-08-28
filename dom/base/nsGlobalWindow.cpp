@@ -646,8 +646,8 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
-  mIsModalContentWindow(PR_FALSE), mIsActive(PR_FALSE),
-  mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
+  mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
+  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
@@ -2203,17 +2203,32 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   if (mScreen)
     mScreen->SetDocShell(aDocShell);
 
+  // tell our member elements about the new browserwindow
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+  GetWebBrowserChrome(getter_AddRefs(browserChrome));
+  if (mMenubar) {
+    mMenubar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mToolbar) {
+    mToolbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mLocationbar) {
+    mLocationbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mPersonalbar) {
+    mPersonalbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mStatusbar) {
+    mStatusbar->SetWebBrowserChrome(browserChrome);
+  }
+  if (mScrollbars) {
+    mScrollbars->SetWebBrowserChrome(browserChrome);
+  }
+
   if (!mDocShell) {
     MaybeForgiveSpamCount();
     CleanUp(PR_FALSE);
   } else {
-    // tell our member elements about the new browserwindow
-    if (mMenubar) {
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      GetWebBrowserChrome(getter_AddRefs(browserChrome));
-      mMenubar->SetWebBrowserChrome(browserChrome);
-    }
-
     // Get our enclosing chrome shell and retrieve its global window impl, so
     // that we can do some forwarding to the chrome document.
     nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
@@ -3971,6 +3986,10 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
   if (itemType != nsIDocShellTreeItem::typeChrome)
     return NS_ERROR_FAILURE;
 
+  // If we are already in full screen mode, just return.
+  if (mFullScreen == aFullScreen)
+    return NS_OK;
+
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
   if (!DispatchCustomEvent("fullscreen")) {
@@ -3986,11 +4005,13 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
     xulWin->SetIntrinsicallySized(PR_FALSE);
   }
 
+  // Set this before so if widget sends an event indicating its
+  // gone full screen, the state trap above works.
+  mFullScreen = aFullScreen;
+
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
   if (widget)
     widget->MakeFullScreen(aFullScreen);
-
-  mFullScreen = aFullScreen;
 
   return NS_OK;
 }
@@ -4992,11 +5013,12 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
   return blocked;
 }
 
-static
-void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
-                           nsIDOMWindow *aRequestingWindow, nsIURI *aPopupURI,
-                           const nsAString &aPopupWindowName,
-                           const nsAString &aPopupWindowFeatures)
+/* static */
+void 
+nsGlobalWindow::FirePopupBlockedEvent(nsIDOMDocument* aDoc,
+                                      nsIDOMWindow *aRequestingWindow, nsIURI *aPopupURI,
+                                      const nsAString &aPopupWindowName,
+                                      const nsAString &aPopupWindowFeatures)
 {
   if (aDoc) {
     // Fire a "DOMPopupBlocked" event so that the UI can hear about

@@ -420,6 +420,10 @@ struct JSObject {
 
     JSObject *getGlobal() const;
 
+    bool isGlobal() const {
+        return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
+    }
+
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
         void *priv = fslots[JSSLOT_PRIVATE].toPrivate();
@@ -578,6 +582,9 @@ struct JSObject {
     static const uint32 JSSLOT_FUN_METHOD_ATOM = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_FUN_METHOD_OBJ  = JSSLOT_PRIVATE + 2;
 
+    static const uint32 JSSLOT_BOUND_FUNCTION_THIS       = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_BOUND_FUNCTION_ARGS_COUNT = JSSLOT_PRIVATE + 2;
+
   public:
     static const uint32 FUN_FIXED_RESERVED_SLOTS = 2;
 
@@ -585,6 +592,14 @@ struct JSObject {
     inline void setMethodObj(JSObject& obj);
 
     inline JSFunction *getFunctionPrivate() const;
+
+    inline bool
+    initBoundFunction(JSContext *cx, const js::Value &thisArg,
+                      const js::Value *args, uintN argslen);
+
+    inline JSObject *getBoundFunctionTarget() const;
+    inline const js::Value &getBoundFunctionThis() const;
+    inline const js::Value *getBoundFunctionArguments(uintN &argslen) const;
 
     /*
      * RegExp-specific getters and setters.

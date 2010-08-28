@@ -88,11 +88,7 @@ MODULE_OPTIMIZE_FLAGS = -O2 -ip
 #XXX: do we want different INTERP_OPTIMIZER flags here?
 endif
 else # not INTEL_CXX
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
-ifeq ($(OS_ARCH),Linux)
-#TODO: move this up a line when we fix OS X (bug 517832)
-MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
-endif
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fomit-frame-pointer $(MOZ_OPTIMIZE_SIZE_TWEAK)
 # Special optimization flags for jsinterp.c
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 endif
@@ -143,6 +139,7 @@ CPPSRCS		= \
 		jsfun.cpp \
 		jsgc.cpp \
 		jsgcchunk.cpp \
+		jsgcstats.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -202,6 +199,7 @@ INSTALLED_HEADERS = \
 		jsfun.h \
 		jsgc.h \
 		jsgcchunk.h \
+		jsgcstats.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \

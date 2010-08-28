@@ -193,6 +193,7 @@ public:
   typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
   typedef HRESULT (WINAPI*DwmSetIconicThumbnailProc)(HWND hWnd, HBITMAP hBitmap, DWORD dwSITFlags);
   typedef HRESULT (WINAPI*DwmSetIconicLivePreviewBitmapProc)(HWND hWnd, HBITMAP hBitmap, POINT *pptClient, DWORD dwSITFlags);
+  typedef HRESULT (WINAPI*DwmGetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
   typedef HRESULT (WINAPI*DwmSetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
   typedef HRESULT (WINAPI*DwmInvalidateIconicBitmapsProc)(HWND hWnd);
   typedef HRESULT (WINAPI*DwmDefWindowProcProc)(HWND hWnd, UINT msg, LPARAM lParam, WPARAM wParam, LRESULT *aRetValue);
@@ -201,6 +202,7 @@ public:
   static DwmIsCompositionEnabledProc dwmIsCompositionEnabledPtr;
   static DwmSetIconicThumbnailProc dwmSetIconicThumbnailPtr;
   static DwmSetIconicLivePreviewBitmapProc dwmSetIconicLivePreviewBitmapPtr;
+  static DwmGetWindowAttributeProc dwmGetWindowAttributePtr;
   static DwmSetWindowAttributeProc dwmSetWindowAttributePtr;
   static DwmInvalidateIconicBitmapsProc dwmInvalidateIconicBitmapsPtr;
   static DwmDefWindowProcProc dwmDwmDefWindowProcPtr;

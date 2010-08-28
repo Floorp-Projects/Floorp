@@ -45,7 +45,7 @@ include $(srcdir)/objs.mk
 
 EXTRA_DEPS += $(srcdir)/objs.mk
 
-DIRS            = standalone
+DIRS            = standalone nomozalloc
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s

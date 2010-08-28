@@ -126,6 +126,14 @@ public:
 
     void MoveTaskToBack();
 
+    bool GetClipboardText(nsAString& aText);
+
+    void SetClipboardText(const nsAString& aText);
+    
+    void EmptyClipboard();
+
+    bool ClipboardHasText();
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
@@ -181,6 +189,8 @@ protected:
     jmethodID jOpenUriExternal;
     jmethodID jGetMimeTypeFromExtension;
     jmethodID jMoveTaskToBack;
+    jmethodID jGetClipboardText;
+    jmethodID jSetClipboardText;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

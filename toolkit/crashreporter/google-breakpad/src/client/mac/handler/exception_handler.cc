@@ -53,6 +53,14 @@ namespace google_breakpad {
 
 using std::map;
 
+// Message ID telling the handler thread to write a dump.
+static const mach_msg_id_t kWriteDumpMessage = 0;
+// Message ID telling the handler thread to quit.
+static const mach_msg_id_t kQuitMessage = 1;
+// Message ID telling the handler thread to write a dump and include
+// an exception stream.
+static const mach_msg_id_t kWriteDumpWithExceptionMessage = 2;
+
 // These structures and techniques are illustrated in
 // Mac OS X Internals, Amit Singh, ch 9.7
 struct ExceptionMessage {
@@ -269,7 +277,7 @@ ExceptionHandler::~ExceptionHandler() {
   Teardown();
 }
 
-bool ExceptionHandler::WriteMinidump() {
+bool ExceptionHandler::WriteMinidump(bool write_exception_stream) {
   // If we're currently writing, just return
   if (use_minidump_write_mutex_)
     return false;
@@ -281,7 +289,9 @@ bool ExceptionHandler::WriteMinidump() {
   if (pthread_mutex_lock(&minidump_write_mutex_) == 0) {
     // Send an empty message to the handle port so that a minidump will
     // be written
-    SendEmptyMachMessage();
+    SendMessageToHandlerThread(write_exception_stream ?
+                               kWriteDumpWithExceptionMessage
+                               : kWriteDumpMessage);
 
     // Wait for the minidump writer to complete its writing.  It will unlock
     // the mutex when completed
@@ -295,11 +305,12 @@ bool ExceptionHandler::WriteMinidump() {
 
 // static
 bool ExceptionHandler::WriteMinidump(const string &dump_path,
+                                     bool write_exception_stream,
                                      MinidumpCallback callback,
                                      void *callback_context) {
   ExceptionHandler handler(dump_path, NULL, callback, callback_context, false,
 			   NULL);
-  return handler.WriteMinidump();
+  return handler.WriteMinidump(write_exception_stream);
 }
 
 // static
@@ -336,7 +347,8 @@ bool ExceptionHandler::WriteMinidumpForChild(mach_port_t child,
 bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
                                                   int exception_code,
                                                   int exception_subcode,
-                                                  mach_port_t thread_name) {
+                                                  mach_port_t thread_name,
+                                                  bool exit_after_write) {
   bool result = false;
 
   if (directCallback_) {
@@ -345,7 +357,7 @@ bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
                         exception_code,
                         exception_subcode,
                         thread_name) ) {
-      if (exception_type && exception_code)
+      if (exit_after_write)
         _exit(exception_type);
     }
   } else if (IsOutOfProcess()) {
@@ -387,7 +399,7 @@ bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
       // forwarding the exception to the next handler.
       if (callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
                     result)) {
-        if (exception_type && exception_code)
+        if (exit_after_write)
           _exit(exception_type);
       }
     }
@@ -522,7 +534,9 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
       // to avoid misleading stacks.  If appropriate they will be resumed
       // afterwards.
       if (!receive.exception) {
-        if (self->is_in_teardown_)
+        // Don't touch self, since this message could have been sent
+        // from its destructor.
+        if (receive.header.msgh_id == kQuitMessage)
           return NULL;
 
         self->SuspendThreads();
@@ -532,9 +546,26 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
           gBreakpadAllocator->Unprotect();
 #endif
 
+        mach_port_t thread = MACH_PORT_NULL;
+        int exception_type = 0;
+        int exception_code = 0;
+        if (receive.header.msgh_id == kWriteDumpWithExceptionMessage) {
+          thread = receive.thread.name;
+          exception_type = EXC_BREAKPOINT;
+#if defined (__i386__) || defined(__x86_64__)
+          exception_code = EXC_I386_BPT;
+#elif defined (__ppc__) || defined (__ppc64__)
+          exception_code = EXC_PPC_BREAKPOINT;
+#else
+  #error architecture not supported
+#endif
+        }
+
         // Write out the dump and save the result for later retrieval
         self->last_minidump_write_result_ =
-          self->WriteMinidumpWithException(0, 0, 0, 0);
+          self->WriteMinidumpWithException(exception_type, exception_code,
+                                           0, thread,
+                                           exception_type != EXC_BREAKPOINT);
 
         self->UninstallHandler(false);
 
@@ -570,7 +601,7 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
 
         // Generate the minidump with the exception data.
         self->WriteMinidumpWithException(receive.exception, receive.code[0],
-                                         subcode, receive.thread.name);
+                                         subcode, receive.thread.name, true);
 
         self->UninstallHandler(true);
 
@@ -705,7 +736,7 @@ bool ExceptionHandler::Teardown() {
     return false;
 
   // Send an empty message so that the handler_thread exits
-  if (SendEmptyMachMessage()) {
+  if (SendMessageToHandlerThread(kQuitMessage)) {
     mach_port_t current_task = mach_task_self();
     result = mach_port_deallocate(current_task, handler_port_);
     if (result != KERN_SUCCESS)
@@ -721,16 +752,24 @@ bool ExceptionHandler::Teardown() {
   return result == KERN_SUCCESS;
 }
 
-bool ExceptionHandler::SendEmptyMachMessage() {
-  ExceptionMessage empty;
-  memset(&empty, 0, sizeof(empty));
-  empty.header.msgh_size = sizeof(empty) - sizeof(empty.padding);
-  empty.header.msgh_remote_port = handler_port_;
-  empty.header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND,
+bool ExceptionHandler::SendMessageToHandlerThread(mach_msg_id_t message_id) {
+  ExceptionMessage msg;
+  memset(&msg, 0, sizeof(msg));
+  msg.header.msgh_id = message_id;
+  if (message_id == kWriteDumpMessage ||
+      message_id == kWriteDumpWithExceptionMessage) {
+    // Include this thread's port.
+    msg.thread.name = mach_thread_self();
+    msg.thread.disposition = MACH_MSG_TYPE_PORT_SEND;
+    msg.thread.type = MACH_MSG_PORT_DESCRIPTOR;
+  }
+  msg.header.msgh_size = sizeof(msg) - sizeof(msg.padding);
+  msg.header.msgh_remote_port = handler_port_;
+  msg.header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND,
                                           MACH_MSG_TYPE_MAKE_SEND_ONCE);
-  kern_return_t result = mach_msg(&(empty.header),
+  kern_return_t result = mach_msg(&(msg.header),
                                   MACH_SEND_MSG | MACH_SEND_TIMEOUT,
-                                  empty.header.msgh_size, 0, 0,
+                                  msg.header.msgh_size, 0, 0,
                                   MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 
   return result == KERN_SUCCESS;

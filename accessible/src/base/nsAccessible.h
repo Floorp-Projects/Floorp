@@ -55,7 +55,7 @@
 class AccGroupInfo;
 class EmbeddedObjCollector;
 class nsAccessible;
-class nsAccEvent;
+class AccEvent;
 struct nsRoleMapEntry;
 
 struct nsRect;
@@ -303,7 +303,7 @@ public:
    * Handle accessible event, i.e. process it, notifies observers and fires
    * platform specific event.
    */
-  virtual nsresult HandleAccEvent(nsAccEvent *aAccEvent);
+  virtual nsresult HandleAccEvent(AccEvent* aAccEvent);
 
   /**
    * Return true if there are accessible children in anonymous content
@@ -454,7 +454,7 @@ protected:
    *
    * @param aEvent  the accessible event to fire.
    */
-  virtual nsresult FirePlatformEvent(nsAccEvent *aEvent) = 0;
+  virtual nsresult FirePlatformEvent(AccEvent* aEvent) = 0;
 
   // Data Members
   nsRefPtr<nsAccessible> mParent;

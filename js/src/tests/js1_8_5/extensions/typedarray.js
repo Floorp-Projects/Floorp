@@ -96,9 +96,24 @@ function test()
     check(function() (new Int32Array(zerobuf)).length == 0);
     checkThrows(function() new Int32Array(zerobuf, 1));
 
+    var zerobuf2 = new ArrayBuffer();
+    check(function() zerobuf2.byteLength == 0);
+
     checkThrows(function() new ArrayBuffer(-100));
     // this is using js_ValueToECMAUInt32, which is giving 0 for "abc"
     checkThrows(function() new ArrayBuffer("abc"), TODO);
+
+    var zeroarray = new Int32Array(0);
+    check(function() zeroarray.length == 0);
+    check(function() zeroarray.byteLength == 0);
+    check(function() zeroarray.buffer);
+    check(function() zeroarray.buffer.byteLength == 0);
+
+    var zeroarray2 = new Int32Array();
+    check(function() zeroarray2.length == 0);
+    check(function() zeroarray2.byteLength == 0);
+    check(function() zeroarray2.buffer);
+    check(function() zeroarray2.buffer.byteLength == 0);
 
     var a = new Int32Array(20);
     check(function() a);
@@ -214,6 +229,73 @@ function test()
     check(function() !(a[2] == a[2]));
     check(function() !(a[3] == a[3]));
     check(function() a[4] == 1);
+
+    // test set()
+    var empty = new Int32Array(0);
+    a = new Int32Array(9);
+
+    empty.set([]);
+    empty.set([], 0);
+
+    checkThrows(function() empty.set([1]));
+    checkThrows(function() empty.set([1], 0));
+    checkThrows(function() empty.set([1], 1));
+
+    a.set([]);
+    a.set([], 3);
+    a.set([], 9);
+
+    a.set(empty);
+    a.set(empty, 3);
+    a.set(empty, 9);
+    a.set(Array.prototype);
+    checkThrows(function() a.set(empty, 100));
+
+    checkThrows(function() a.set([1,2,3,4,5,6,7,8,9,10]));
+    checkThrows(function() a.set([1,2,3,4,5,6,7,8,9,10], 0));
+    checkThrows(function() a.set([1,2,3,4,5,6,7,8,9,10], 0x7fffffff));
+    checkThrows(function() a.set([1,2,3,4,5,6,7,8,9,10], 0xffffffff));
+    checkThrows(function() a.set([1,2,3,4,5,6], 6));
+
+    checkThrows(function() a.set(new Array(0x7fffffff)));
+    checkThrows(function() a.set([1,2,3], 2147483647));
+
+    checkThrows(function() a.set(ArrayBuffer.prototype));
+    checkThrows(function() a.set(UInt16Array.prototype));
+    checkThrows(function() a.set(Int32Array.prototype));
+
+    a.set([1,2,3]);
+    a.set([4,5,6], 3);
+    check(function()
+          a[0] == 1 && a[1] == 2 && a[2] == 3 &&
+          a[3] == 4 && a[4] == 5 && a[5] == 6 &&
+          a[6] == 0 && a[7] == 0 && a[8] == 0);
+
+    b = new Float32Array([7,8,9]);
+    a.set(b, 0);
+    a.set(b, 3);
+    check(function()
+          a[0] == 7 && a[1] == 8 && a[2] == 9 &&
+          a[3] == 7 && a[4] == 8 && a[5] == 9 &&
+          a[6] == 0 && a[7] == 0 && a[8] == 0);
+    a.set(a.slice(0,3), 6);
+    check(function()
+          a[0] == 7 && a[1] == 8 && a[2] == 9 &&
+          a[3] == 7 && a[4] == 8 && a[5] == 9 &&
+          a[6] == 7 && a[7] == 8 && a[8] == 9);
+
+    a.set([1,2,3,4,5,6,7,8,9]);
+    a.set(a.slice(0,6), 3);
+    check(function()
+          a[0] == 1 && a[1] == 2 && a[2] == 3 &&
+          a[3] == 1 && a[4] == 2 && a[5] == 3 &&
+          a[6] == 4 && a[7] == 5 && a[8] == 6);
+
+    a.set(a.slice(3,9), 0);
+    check(function()
+          a[0] == 1 && a[1] == 2 && a[2] == 3 &&
+          a[3] == 4 && a[4] == 5 && a[5] == 6 &&
+          a[6] == 4 && a[7] == 5 && a[8] == 6);
 
     a = new ArrayBuffer(0x10);
     checkThrows(function() new Uint32Array(buffer, 4, 0x3FFFFFFF));

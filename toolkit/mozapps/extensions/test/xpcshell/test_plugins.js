@@ -75,7 +75,7 @@ function run_test_1() {
       do_check_neq(p, null);
       do_check_eq(p.name, "Test Plug-in");
       do_check_eq(p.description, "Plug-in for testing purposes.");
-      do_check_eq(p.creator, "");
+      do_check_eq(p.creator, null);
       do_check_eq(p.version, "1.0.0.0");
       do_check_eq(p.type, "plugin");
       do_check_false(p.userDisabled);
