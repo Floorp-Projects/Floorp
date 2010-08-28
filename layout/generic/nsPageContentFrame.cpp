@@ -149,8 +149,6 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     aDesiredSize.height = aReflowState.availableHeight;
   }
 
-  FinishAndStoreOverflow(&aDesiredSize);
-
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }

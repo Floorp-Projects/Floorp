@@ -1213,7 +1213,7 @@
     </vbox>
   </hbox>
 
-  <vbox id="browser-bottombox" layer="true">
+  <vbox id="browser-bottombox">
     <statusbar class="chromeclass-status" id="status-bar"
 #ifdef WINCE
                hidden="true"

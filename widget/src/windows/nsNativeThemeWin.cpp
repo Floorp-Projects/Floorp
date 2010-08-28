@@ -2048,17 +2048,6 @@ nsNativeThemeWin::ThemeNeedsComboboxDropmarker()
 nsITheme::Transparency
 nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
-  switch (aWidgetType) {
-  case NS_THEME_SCROLLBAR_SMALL:
-  case NS_THEME_SCROLLBAR:
-  case NS_THEME_STATUSBAR:
-    // Knowing that scrollbars and statusbars are opaque improves
-    // performance, because we create layers for them. This better be
-    // true across all Windows themes! If it's not true, we should
-    // paint an opaque background for them to make it true!
-    return eOpaque;
-  }
-
   HANDLE theme = GetTheme(aWidgetType);
   // For the classic theme we don't really have a way of knowing
   if (!theme)
