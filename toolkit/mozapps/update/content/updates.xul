@@ -215,7 +215,7 @@
   
   <wizardpage id="errors" pageid="errors" object="gErrorsPage"
               onpageshow="gErrorsPage.onPageShow();">
-    <updateheader id="errorsHeader" label=""/>
+    <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="errorIntro">&error.label;</label>
       <separator/>
@@ -233,7 +233,7 @@
   <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
               object="gErrorPatchingPage"
               onpageshow="gErrorPatchingPage.onPageShow();">
-    <updateheader label="&errorpatching.title;"/>
+    <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label>&errorpatching.intro;</label>
     </vbox>
