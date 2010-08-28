@@ -100,7 +100,8 @@ xhtml|link {
 .addon[active="true"] .disabled-postfix,
 .addon[pending="install"] .update-postfix,
 .addon[pending="install"] .disabled-postfix,
-#detail-view[loading] > .detail-view-container {
+#detail-view[loading] > .detail-view-container,
+#search-list[remote="false"] #search-allresults-link {
   display: none;
 }
 

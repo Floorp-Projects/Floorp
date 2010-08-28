@@ -233,15 +233,18 @@
             <hbox id="search-sorters" class="sort-controls"
                   showrelevance="true" sortby="relevancescore" ascending="false"/>
           </hbox>
+          <vbox id="search-list-empty" class="empty-list-notice"
+                flex="1" hidden="true">
+            <spacer flex="1"/>
+            <label value="&listEmpty.search.label;"/>
+            <button label="&listEmpty.button.label;" class="addon-control"
+                    command="cmd_goToDiscoverPane"/>
+            <spacer flex="3"/>
+          </vbox>
           <richlistbox id="search-list" class="list" flex="1">
-            <vbox id="search-list-empty" class="empty-list-notice"
-                  flex="1" hidden="true">
-              <spacer flex="1"/>
-              <label value="&listEmpty.search.label;"/>
-              <button label="&listEmpty.button.label;" class="addon-control"
-                      command="cmd_goToDiscoverPane"/>
-              <spacer flex="3"/>
-            </vbox>
+            <hbox pack="center">
+              <label id="search-allresults-link" class="text-link"/>
+            </hbox>
           </richlistbox>
         </vbox>
 
