@@ -42,7 +42,7 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
 
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
@@ -308,7 +308,7 @@ NS_IMETHODIMP GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 
 void GfxInfo::AddCrashReportAnnotations()
 {
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
   nsCAutoString deviceIDString, vendorIDString;
   PRUint32 deviceID, vendorID;
 
