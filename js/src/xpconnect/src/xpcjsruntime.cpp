@@ -430,7 +430,8 @@ void XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
         // callback does not want all traces (a debug feature).
         // Otherwise, we do want to know about all JSContexts to get
         // better graphs and explanations.
-        if(!cb.WantAllTraces() && nsXPConnect::GetXPConnect()->GetOutstandingRequests(acx))
+        if(!cb.WantAllTraces() &&
+           nsXPConnect::GetXPConnect()->GetRequestDepth(acx) != 0)
             continue;
         cb.NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, acx,
                     nsXPConnect::JSContextParticipant());
@@ -459,7 +460,7 @@ XPCJSRuntime::ClearWeakRoots()
     while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
     {
         if(XPCPerThreadData::IsMainThread(acx) &&
-           !nsXPConnect::GetXPConnect()->GetOutstandingRequests(acx))
+           nsXPConnect::GetXPConnect()->GetRequestDepth(acx) == 0)
         {
             JS_ClearNewbornRoots(acx);
         }
