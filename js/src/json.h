@@ -119,6 +119,14 @@ struct JSONParser;
 extern JSONParser *
 js_BeginJSONParse(JSContext *cx, js::Value *rootVal, bool suppressErrors = false);
 
+/* Aargh, Windows. */
+#ifdef STRICT
+#undef STRICT
+#endif
+#ifdef LEGACY
+#undef LEGACY
+#endif
+
 /*
  * The type of JSON decoding to perform.  Strict decoding is to-the-spec;
  * legacy decoding accepts a few non-JSON syntaxes historically accepted by the
