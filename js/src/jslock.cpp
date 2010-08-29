@@ -1237,7 +1237,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
         return;
 
     if (obj->sealed() && !cx->lockedSealedTitle) {
-        cx->lockedSealedTitle = title;
+        cx->lockedSealedTitle = &obj->title;
         return;
     }
 
