@@ -324,11 +324,6 @@ function SetClickAndHoldHandlers() {
 }
 #endif
 
-function BookmarkThisTab(aTab) {
-  PlacesCommandHook.bookmarkPage(aTab.linkedBrowser,
-                                 PlacesUtils.bookmarksMenuFolderId, true);
-}
-
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
