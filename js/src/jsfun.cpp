@@ -2375,7 +2375,7 @@ JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
 }
 
-inline bool
+bool
 JSFunction::isBound() const
 {
     return isFastNative() && u.n.native == FastNativeToNative(CallOrConstructBoundFunction);
