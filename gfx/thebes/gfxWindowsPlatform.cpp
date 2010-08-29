@@ -228,6 +228,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     ::GetVersionExA(&versionInfo);
     bool isVistaOrHigher = versionInfo.dwMajorVersion >= 6;
 
+    PRBool safeMode = PR_FALSE;
 #ifdef CAIRO_HAS_D2D_SURFACE
     NS_RegisterMemoryReporter(new D2DCacheReporter());
     NS_RegisterMemoryReporter(new D2DVRAMReporter());
@@ -239,7 +240,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
         d2dDisabled = PR_FALSE;
 
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-    PRBool safeMode = PR_FALSE;
     if (xr)
       xr->GetInSafeMode(&safeMode);
 
