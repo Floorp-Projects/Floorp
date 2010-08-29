@@ -61,6 +61,7 @@ _BROWSER_TEST_PAGES = \
 	test-error.html \
 	test-duplicate-error.html \
 	test-image.png \
+	test-encoding-ISO-8859-1.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

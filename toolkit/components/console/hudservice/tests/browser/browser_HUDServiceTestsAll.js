@@ -72,6 +72,8 @@ const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/toolkit/components/
 
 const TEST_IMG = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-image.png";
 
+const TEST_ENCODING_ISO_8859_1 = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-encoding-ISO-8859-1.html";
+
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
 }
@@ -868,9 +870,44 @@ function testNetworkPanel()
 
     networkPanel.panel.hidePopup();
 
-    // Run the next test.
-    testErrorOnPageReload();
+    // Test cached data.
 
+    // Load a Latein-1 encoded page.
+    browser.addEventListener("load", function onLoad () {
+      browser.removeEventListener("load", onLoad, true);
+      httpActivity.charset = content.document.characterSet;
+      testDriver.next();
+    }, true);
+    content.location = TEST_ENCODING_ISO_8859_1;
+
+    yield;
+
+    httpActivity.url = TEST_ENCODING_ISO_8859_1;
+    httpActivity.response.header["Content-Type"] = "application/json";
+    httpActivity.response.body = "";
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.isDoneCallback = function NP_doneCallback() {
+      networkPanel.isDoneCallback = null;
+
+      checkIsVisible(networkPanel, {
+        requestBody: false,
+        requestFormData: true,
+        requestCookie: true,
+        responseContainer: true,
+        responseBody: false,
+        responseBodyCached: true,
+        responseNoBody: false,
+        responseImage: false,
+        responseImageCached: false
+      });
+
+      checkNodeContent(networkPanel, "responseBodyCachedContent", "<body>\u00fc\u00f6\u00E4</body>");
+      networkPanel.panel.hidePopup();
+
+      // Run the next test.
+      testErrorOnPageReload();
+    }
     yield;
   };
 
