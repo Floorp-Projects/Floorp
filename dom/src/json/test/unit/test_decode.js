@@ -167,14 +167,7 @@ function test_files() {
     try {
       dump(path +"\n");
       x = read_file(path);
-      if (i == 4) {
-        // ["extra comma",]
-        do_check_eq(x[0], "extra comma");
-        do_check_eq(x.length, 1);
-      } else if (i == 9) {
-        // {"Extra comma": true,}
-        do_check_eq(x["Extra comma"], true);
-      } else if (i == 13) {
+      if (i == 13) {
         // {"Numbers cannot have leading zeroes": 013}
         do_check_eq(x["Numbers cannot have leading zeroes"], 13);
       } else if (i == 18) {
@@ -189,7 +182,7 @@ function test_files() {
 
     } catch (ex) {
       // expected from parsing invalid JSON
-      if (i == 4 || i == 9 || i == 13 || i == 18) {
+      if (i == 13 || i == 18) {
         do_throw("Unexpected pass in " + path);
       }
     }
