@@ -222,7 +222,7 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CONSTRUCTOR_RETRY _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL | \
                                                                                   JSTN_CONSTRUCTOR)
 #define _JS_CTYPE_REGEXP            _JS_CTYPE(JSObject *,             _JS_PTR, "","r", INFALLIBLE)
-#define _JS_CTYPE_SCOPEPROP         _JS_CTYPE(JSScopeProperty *,      _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_SHAPE             _JS_CTYPE(js::Shape *,            _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_TRACERSTATE       _JS_CTYPE(TracerState *,          _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CLASS             _JS_CTYPE(js::Class *,            _JS_PTR, --, --, INFALLIBLE)

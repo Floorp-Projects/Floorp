@@ -469,7 +469,7 @@ struct JSStackFrame
 
     /*
      * Fallible getter to compute the correct callee function object, which may
-     * require deferred cloning due to JSScope::methodReadBarrier. For a frame
+     * require deferred cloning due to JSObject::methodReadBarrier. For a frame
      * with null fun member, return true with *vp set from this->calleeValue(),
      * which may not be an object (it could be undefined).
      */

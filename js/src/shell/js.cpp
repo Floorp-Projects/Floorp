@@ -1800,7 +1800,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
                     fputs("\nupvars: {\n", stdout);
 
                     void *mark = JS_ARENA_MARK(&cx->tempPool);
-                    jsuword *localNames = js_GetLocalNameArray(cx, fun, &cx->tempPool);
+                    jsuword *localNames = fun->getLocalNameArray(cx, &cx->tempPool);
                     if (!localNames)
                         return false;
 
@@ -2047,7 +2047,7 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
     uintN i = 0;
     for (JSScopeProperty *sprop = NULL; JS_PropertyIterator(obj, &sprop);) {
         fprintf(fp, "%3u %p ", i++, (void *) sprop);
-        sprop->dump(cx, fp);
+        ((Shape *) sprop)->dump(cx, fp);
     }
 }
 

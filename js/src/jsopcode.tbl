@@ -351,12 +351,13 @@ OPDEF(JSOP_TRY,         132,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FINALLY,     133,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
 
 /*
- * Get a dynamic slot from an object known to have at least one greater than
- * the slot index number of values at obj->dslots. The CALL variant computes
- * the callee and this-object in preparation for a JSOP_CALL.
+ * Get a slot from a flat closure function object that contains a snapshot of
+ * the closure-invariant upvar values. The immediate operand indexes the upvar
+ * in the function's u.i.script->upvars() array. The CALL variant computes the
+ * callee and this-object in preparation for a JSOP_CALL.
  */
-OPDEF(JSOP_GETDSLOT,    134,"getdslot",   NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
-OPDEF(JSOP_CALLDSLOT,   135,"calldslot",  NULL,       3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
+OPDEF(JSOP_GETFCSLOT,   134,"getfcslot",  NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
+OPDEF(JSOP_CALLFCSLOT,  135,"callfcslot", NULL,       3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
 
 /*
  * Bytecodes that avoid making an arguments object in most cases:

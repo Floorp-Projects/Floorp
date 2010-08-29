@@ -1275,9 +1275,9 @@ JSTreeContext::ensureSharpSlots()
             return false;
 
         sharpSlotBase = fun->u.i.nvars;
-        if (!js_AddLocal(cx, fun, sharpArrayAtom, JSLOCAL_VAR))
+        if (!fun->addLocal(cx, sharpArrayAtom, JSLOCAL_VAR))
             return false;
-        if (!js_AddLocal(cx, fun, sharpDepthAtom, JSLOCAL_VAR))
+        if (!fun->addLocal(cx, sharpDepthAtom, JSLOCAL_VAR))
             return false;
     } else {
         /*
@@ -1561,10 +1561,6 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 JSStmtInfo *
 js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt)
 {
-    JSObject *obj;
-    JSScope *scope;
-    JSScopeProperty *sprop;
-
     if (!stmt)
         stmt = tc->topScopeStmt;
     for (; stmt; stmt = stmt->downScope) {
@@ -1575,17 +1571,17 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
         if (!(stmt->flags & SIF_SCOPE))
             continue;
 
-        obj = stmt->blockObj;
+        JSObject *obj = stmt->blockObj;
         JS_ASSERT(obj->getClass() == &js_BlockClass);
-        scope = obj->scope();
-        sprop = scope->lookup(ATOM_TO_JSID(atom));
-        if (sprop) {
-            JS_ASSERT(sprop->hasShortID());
+
+        const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
+        if (shape) {
+            JS_ASSERT(shape->hasShortID());
 
             if (slotp) {
                 JS_ASSERT(obj->fslots[JSSLOT_BLOCK_DEPTH].isInt32());
                 *slotp = obj->fslots[JSSLOT_BLOCK_DEPTH].toInt32() +
-                         sprop->shortid;
+                         shape->shortid;
             }
             return stmt;
         }
@@ -1634,30 +1630,29 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             if (cg->inFunction()) {
-                if (js_LookupLocal(cx, cg->fun, atom, NULL) != JSLOCAL_NONE)
+                if (cg->fun->lookupLocal(cx, atom, NULL) != JSLOCAL_NONE)
                     break;
             } else {
                 JS_ASSERT(cg->compileAndGo());
                 obj = cg->scopeChain;
 
                 JS_LOCK_OBJ(cx, obj);
-                JSScope *scope = obj->scope();
-                JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
-                if (sprop) {
+                const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
+                if (shape) {
                     /*
                      * We're compiling code that will be executed immediately,
                      * not re-executed against a different scope chain and/or
                      * variable object.  Therefore we can get constant values
                      * from our variable object here.
                      */
-                    if (!sprop->writable() && !sprop->configurable() &&
-                        sprop->hasDefaultGetter() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
-                        *constp = obj->lockedGetSlot(sprop->slot);
+                    if (!shape->writable() && !shape->configurable() &&
+                        shape->hasDefaultGetter() && obj->containsSlot(shape->slot)) {
+                        *constp = obj->lockedGetSlot(shape->slot);
                     }
                 }
-                JS_UNLOCK_SCOPE(cx, scope);
+                JS_UNLOCK_OBJ(cx, obj);
 
-                if (sprop)
+                if (shape)
                     break;
             }
         }
@@ -1852,8 +1847,10 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 #endif
     }
 
-    blockObj->scope()->freeslot = base;
-    return blockObj->growSlots(cx, base);
+    if (!blockObj->growSlots(cx, base))
+        return false;
+    blockObj->freeslot = base;
+    return true;
 }
 
 /*
@@ -1904,7 +1901,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
     JSAtom *atom = pn->pn_atom;
 
     uintN index;
-    JSLocalKind localKind = js_LookupLocal(cx, fun, atom, &index);
+    JSLocalKind localKind = fun->lookupLocal(cx, atom, &index);
     if (localKind == JSLOCAL_NONE)
         return true;
 
@@ -1914,10 +1911,8 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 
     JSAtomListElement *ale = cg->upvarList.lookup(atom);
     if (!ale) {
-        if (cg->inFunction() &&
-            !js_AddLocal(cx, cg->fun, atom, JSLOCAL_UPVAR)) {
+        if (cg->inFunction() && !cg->fun->addLocal(cx, atom, JSLOCAL_UPVAR))
             return false;
-        }
 
         ale = cg->upvarList.add(cg->parser, atom);
         if (!ale)
@@ -2206,7 +2201,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_TRUE;
 
         if (FUN_FLAT_CLOSURE(cg->fun)) {
-            op = JSOP_GETDSLOT;
+            op = JSOP_GETFCSLOT;
         } else {
             /*
              * The function we're compiling may not be heavyweight, but if it
@@ -2233,7 +2228,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (ale) {
             index = ALE_INDEX(ale);
         } else {
-            if (!js_AddLocal(cx, cg->fun, atom, JSLOCAL_UPVAR))
+            if (!cg->fun->addLocal(cx, atom, JSLOCAL_UPVAR))
                 return JS_FALSE;
 
             ale = cg->upvarList.add(cg->parser, atom);
@@ -2601,8 +2596,8 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
           case JSOP_GETUPVAR:
             op = JSOP_CALLUPVAR;
             break;
-          case JSOP_GETDSLOT:
-            op = JSOP_CALLDSLOT;
+          case JSOP_GETFCSLOT:
+            op = JSOP_CALLFCSLOT;
             break;
           default:
             JS_ASSERT(op == JSOP_ARGUMENTS || op == JSOP_CALLEE);
@@ -4446,7 +4441,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #ifdef DEBUG
             JSLocalKind localKind =
 #endif
-                js_LookupLocal(cx, cg->fun, fun->atom, &slot);
+                cg->fun->lookupLocal(cx, fun->atom, &slot);
             JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;
@@ -7307,8 +7302,8 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * cloned function objects and with the compiler-created clone-parent. There
  * are nregexps = script->regexps()->length such reserved slots in each
  * function object cloned from fun->object. NB: during compilation, a funobj
- * slots element must never be allocated, because js_AllocSlot could hand out
- * one of the slots that should be given to a regexp clone.
+ * slots element must never be allocated, because JSObject::allocSlot could
+ * hand out one of the slots that should be given to a regexp clone.
  *
  * If the code being compiled is global code, the cloned regexp are stored in
  * fp->vars slot after cg->ngvars and to protect regexp slots from GC we set

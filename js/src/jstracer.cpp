@@ -449,7 +449,7 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 
 /*
  * INS_CONSTPTR can be used to embed arbitrary pointers into the native code. It should not
- * be used directly to embed GC thing pointers. Instead, use the INS_CONSTOBJ/FUN/STR/SPROP
+ * be used directly to embed GC thing pointers. Instead, use the INS_CONSTOBJ/FUN/STR/SHAPE
  * variants which ensure that the embedded pointer will be kept alive across GCs.
  */
 
@@ -461,7 +461,7 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_CONSTOBJ(obj)     addName(insImmObj(obj), #obj)
 #define INS_CONSTFUN(fun)     addName(insImmFun(fun), #fun)
 #define INS_CONSTSTR(str)     addName(insImmStr(str), #str)
-#define INS_CONSTSPROP(sprop) addName(insImmSprop(sprop), #sprop)
+#define INS_CONSTSHAPE(shape) addName(insImmShape(shape), #shape)
 #define INS_CONSTID(id)       addName(insImmId(id), #id)
 #define INS_ATOM(atom)        INS_CONSTSTR(ATOM_TO_STRING(atom))
 #define INS_NULL()            INS_CONSTPTR(NULL)
@@ -1546,7 +1546,7 @@ TreeFragment::initialize(JSContext* cx, SlotList *globalSlots, bool speculate)
     this->script = cx->fp()->getScript();
     this->recursion = Recursion_None;
     this->gcthings.clear();
-    this->sprops.clear();
+    this->shapes.clear();
     this->unstableExits = NULL;
     this->sideExits.clear();
 
@@ -2265,7 +2265,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     tempTypeMap(cx)
 {
     JS_ASSERT(globalObj == cx->fp()->getScopeChain()->getGlobal());
-    JS_ASSERT(globalObj->scope()->hasOwnShape());
+    JS_ASSERT(globalObj->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
     fragment->lirbuf = lirbuf;
@@ -2565,10 +2565,10 @@ TraceRecorder::insImmStr(JSString* str)
 }
 
 inline LIns*
-TraceRecorder::insImmSprop(JSScopeProperty* sprop)
+TraceRecorder::insImmShape(const Shape* shape)
 {
-    tree->sprops.addUnique(sprop);
-    return lir->insImmP((void*)sprop);
+    tree->shapes.addUnique(shape);
+    return lir->insImmP((void*)shape);
 }
 
 inline LIns*
@@ -2828,11 +2828,11 @@ MarkTree(JSTracer* trc, TreeFragment *f)
         JS_ASSERT(v.isMarkable());
         Mark(trc, v.asGCThing(), v.gcKind());
     }
-    JSScopeProperty** spropp = f->sprops.data();
-    len = f->sprops.length();
+    const Shape** shapep = f->shapes.data();
+    len = f->shapes.length();
     while (len--) {
-        JSScopeProperty* sprop = *spropp++;
-        sprop->trace(trc);
+        const Shape* shape = *shapep++;
+        shape->trace(trc);
     }
 }
 
@@ -3277,7 +3277,7 @@ template<typename T>
 inline uint32
 GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* result)
 {
-    JS_ASSERT(call->getClass() == &js_CallClass);
+    JS_ASSERT(call->isCall());
 
     TracerState* state = cx->tracerState;
 
@@ -3321,7 +3321,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
     JSStackFrame* fp = (JSStackFrame*) call->getPrivate();
     Value v;
     if (fp) {
-        v = T::slots(fp)[slot];
+        v = T::get_slot(fp, slot);
     } else {
         /*
          * Get the value from the object. We know we have a Call object, and
@@ -3331,7 +3331,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
          * asserts in jsfun.cpp which make sure Call objects use dslots.
          */
         JS_ASSERT(slot < T::slot_count(call));
-        v = T::slots(call)[slot];
+        v = T::get_slot(call, slot);
     }
     JSValueType type = getCoercedType(v);
     ValueToNative(v, type, result);
@@ -3351,22 +3351,26 @@ struct ArgClosureTraits
 
     // Get the right frame slots to use our slot index with.
     // See also UpvarArgTraits.
-    static inline Value* slots(JSStackFrame* fp) { return fp->argv; }
+    static inline Value get_slot(JSStackFrame* fp, unsigned slot) {
+        JS_ASSERT(slot < fp->numFormalArgs());
+        return fp->argv[slot];
+    }
 
     // Get the right object slots to use our slot index with.
-    static inline Value* slots(JSObject* obj) {
-        // We know Call objects use dslots.
-        return obj->dslots + slot_offset(obj);
+    static inline Value get_slot(JSObject* obj, unsigned slot) {
+        return obj->getSlot(slot_offset(obj) + slot);
     }
+
     // Get the offset of our object slots from the object's dslots pointer.
     static inline uint32 slot_offset(JSObject* obj) {
-        return JSSLOT_START(&js_CallClass) +
-            CALL_CLASS_FIXED_RESERVED_SLOTS - JS_INITIAL_NSLOTS;
+        return JSSLOT_START(&js_CallClass) + CALL_CLASS_RESERVED_SLOTS;
     }
+
     // Get the maximum slot index of this type that should be allowed
     static inline uint16 slot_count(JSObject* obj) {
         return js_GetCallObjectFunction(obj)->nargs;
     }
+
 private:
     ArgClosureTraits();
 };
@@ -3392,19 +3396,24 @@ struct VarClosureTraits
     }
 
     // See also UpvarVarTraits.
-    static inline Value* slots(JSStackFrame* fp) { return fp->slots(); }
-    static inline Value* slots(JSObject* obj) {
-        // We know Call objects use dslots.
-        return obj->dslots + slot_offset(obj);
+    static inline Value get_slot(JSStackFrame* fp, unsigned slot) {
+        JS_ASSERT(slot < fp->getFunction()->u.i.nvars);
+        return fp->slots()[slot];
     }
+
+    static inline Value get_slot(JSObject* obj, unsigned slot) {
+        return obj->getSlot(slot_offset(obj) + slot);
+    }
+
     static inline uint32 slot_offset(JSObject* obj) {
-        return JSSLOT_START(&js_CallClass) +
-            CALL_CLASS_FIXED_RESERVED_SLOTS - JS_INITIAL_NSLOTS +
-            js_GetCallObjectFunction(obj)->nargs;
+        return JSSLOT_START(&js_CallClass) + CALL_CLASS_RESERVED_SLOTS +
+               js_GetCallObjectFunction(obj)->nargs;
     }
+
     static inline uint16 slot_count(JSObject* obj) {
         return js_GetCallObjectFunction(obj)->u.i.nvars;
     }
+
 private:
     VarClosureTraits();
 };
@@ -3460,7 +3469,9 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                if (fp->hasArgsObj() && fp->getArgsObj()->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE) {
+                if (fp->hasArgsObj() &&
+                    fp->getArgsObj()->getPrivate() == JS_ARGUMENTS_OBJECT_ON_TRACE)
+                {
                     JS_ASSERT(fp->getArgsObj()->isNormalArguments());
                     fp->getArgsObj()->setPrivate(fp);
                 }
@@ -3539,7 +3550,7 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
     if (*prefix == 'a' || *prefix == 'v') {
         mark = JS_ARENA_MARK(&cx->tempPool);
         if (fp->getFunction()->hasLocalNames())
-            localNames = js_GetLocalNameArray(cx, fp->getFunction(), &cx->tempPool);
+            localNames = fp->getFunction()->getLocalNameArray(cx, &cx->tempPool);
         funName = fp->getFunction()->atom
                 ? js_AtomToPrintableString(cx, fp->getFunction()->atom)
                 : "<anonymous>";
@@ -3671,24 +3682,24 @@ TraceRecorder::import(TreeFragment* tree, LIns* sp, unsigned stackSlots, unsigne
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::isValidSlot(JSScope* scope, JSScopeProperty* sprop)
+TraceRecorder::isValidSlot(JSObject *obj, const Shape* shape)
 {
     uint32 setflags = (js_CodeSpec[*cx->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
 
     if (setflags) {
-        if (!sprop->hasDefaultSetter())
+        if (!shape->hasDefaultSetter())
             RETURN_VALUE("non-stub setter", false);
-        if (!sprop->writable())
+        if (!shape->writable())
             RETURN_VALUE("writing to a read-only property", false);
     }
 
     /* This check applies even when setflags == 0. */
-    if (setflags != JOF_SET && !sprop->hasDefaultGetter()) {
-        JS_ASSERT(!sprop->isMethod());
+    if (setflags != JOF_SET && !shape->hasDefaultGetter()) {
+        JS_ASSERT(!shape->isMethod());
         RETURN_VALUE("non-stub getter", false);
     }
 
-    if (!SPROP_HAS_VALID_SLOT(sprop, scope))
+    if (!obj->containsSlot(shape->slot))
         RETURN_VALUE("invalid-slot obj property", false);
 
     return true;
@@ -5539,10 +5550,9 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
      * isn't the global at record time, a shape guard suffices to ensure
      * that it isn't the global at run time.
      */
-    if (!globalObj->scope()->hasOwnShape()) {
+    if (!globalObj->hasOwnShape()) {
         JS_LOCK_OBJ(cx, globalObj);
-        JSScope *scope = js_GetMutableScope(cx, globalObj);
-        bool ok = scope && scope->globalObjectOwnShapeChange(cx);
+        bool ok = globalObj->globalObjectOwnShapeChange(cx);
         JS_UNLOCK_OBJ(cx, globalObj);
         if (!ok) {
             debug_only_print0(LC_TMTracer,
@@ -6142,7 +6152,7 @@ JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
-    if (cx->fp()->getScopeChain()->getGlobal()->scope()->title.ownercx != cx) {
+    if (cx->fp()->getScopeChain()->getGlobal()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
     }
@@ -8203,23 +8213,23 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
             RETURN_STOP_A("prototype property");
         }
 
-        JSScopeProperty* sprop = (JSScopeProperty*) prop;
-        if (!isValidSlot(obj->scope(), sprop)) {
+        Shape* shape = (Shape*) prop;
+        if (!isValidSlot(obj, shape)) {
             JS_UNLOCK_OBJ(cx, obj2);
             return ARECORD_STOP;
         }
-        if (!lazilyImportGlobalSlot(sprop->slot)) {
+        if (!lazilyImportGlobalSlot(shape->slot)) {
             JS_UNLOCK_OBJ(cx, obj2);
             RETURN_STOP_A("lazy import of global slot failed");
         }
-        vp = &obj->getSlotRef(sprop->slot);
+        vp = &obj->getSlotRef(shape->slot);
         ins = get(vp);
         JS_UNLOCK_OBJ(cx, obj2);
         nr.tracked = true;
         return ARECORD_CONTINUE;
     }
 
-    if (obj == obj2 && obj->getClass() == &js_CallClass) {
+    if (obj == obj2 && obj->isCall()) {
         AbortableRecordingStatus status =
             InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
         JS_UNLOCK_OBJ(cx, obj);
@@ -8237,24 +8247,24 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
                         LIns*& ins, NameResult& nr)
 {
-    JSScopeProperty *sprop = (JSScopeProperty*) prop;
+    Shape *shape = (Shape*) prop;
 
     JSOp op = JSOp(*cx->regs->pc);
     uint32 setflags = (js_CodeSpec[op].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
-    if (setflags && !sprop->writable())
+    if (setflags && !shape->writable())
         RETURN_STOP("writing to a read-only property");
 
-    uintN slot = uint16(sprop->shortid);
+    uintN slot = uint16(shape->shortid);
 
     vp = NULL;
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
-        if (sprop->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == js_GetCallArg) {
             JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->argv[slot];
             nr.v = *vp;
-        } else if (sprop->getterOp() == js_GetCallVar ||
-                   sprop->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == js_GetCallVar ||
+                   shape->getterOp() == js_GetCallVarChecked) {
             JS_ASSERT(slot < cfp->getSlotCount());
             vp = &cfp->slots()[slot];
             nr.v = *vp;
@@ -8262,8 +8272,8 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             RETURN_STOP("dynamic property of Call object");
         }
 
-        // Now assert that our use of sprop->shortid was in fact kosher.
-        JS_ASSERT(sprop->hasShortID());
+        // Now assert that our use of shape->shortid was in fact kosher.
+        JS_ASSERT(shape->hasShortID());
 
         if (frameIfInRange(obj)) {
             // At this point we are guaranteed to be looking at an active call oject
@@ -8273,13 +8283,13 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             return RECORD_CONTINUE;
         }
     } else {
-        // Call objects do not yet have sprop->isMethod() properties, but they
+        // Call objects do not yet have shape->isMethod() properties, but they
         // should. See bug 514046, for which this code is future-proof. Remove
         // this comment when that bug is fixed (so, FIXME: 514046).
 #ifdef DEBUG
         JSBool rv =
 #endif
-            js_GetPropertyHelper(cx, obj, sprop->id,
+            js_GetPropertyHelper(cx, obj, shape->id,
                                  (op == JSOP_CALLNAME)
                                  ? JSGET_NO_METHOD_BARRIER
                                  : JSGET_METHOD_BARRIER,
@@ -8292,31 +8302,27 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     LIns* parent_ins = stobj_get_parent(get(&cx->fp()->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
-    LIns* call_ins;
     if (!cfp) {
         // Because the parent guard in guardCallee ensures this Call object
         // will be the same object now and on trace, and because once a Call
         // object loses its frame it never regains one, on trace we will also
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
-        int32 dslot_index = slot;
-        if (sprop->getterOp() == js_GetCallArg) {
-            JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(obj));
-            dslot_index += ArgClosureTraits::slot_offset(obj);
-        } else if (sprop->getterOp() == js_GetCallVar ||
-                   sprop->getterOp() == js_GetCallVarChecked) {
-            JS_ASSERT(dslot_index < VarClosureTraits::slot_count(obj));
-            dslot_index += VarClosureTraits::slot_offset(obj);
+        if (shape->getterOp() == js_GetCallArg) {
+            JS_ASSERT(slot < ArgClosureTraits::slot_count(obj));
+            slot += ArgClosureTraits::slot_offset(obj);
+        } else if (shape->getterOp() == js_GetCallVar ||
+                   shape->getterOp() == js_GetCallVarChecked) {
+            JS_ASSERT(slot < VarClosureTraits::slot_count(obj));
+            slot += VarClosureTraits::slot_offset(obj);
         } else {
             RETURN_STOP("dynamic property of Call object");
         }
 
-        // Now assert that our use of sprop->shortid was in fact kosher.
-        JS_ASSERT(sprop->hasShortID());
+        // Now assert that our use of shape->shortid was in fact kosher.
+        JS_ASSERT(shape->hasShortID());
 
-        LIns* base = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER);
-        ins = unbox_value(obj->dslots[dslot_index], base, dslot_index * sizeof(Value),
-                          snapshot(BRANCH_EXIT));
+        ins = unbox_slot(obj, obj_ins, slot, snapshot(BRANCH_EXIT));
     } else {
         ClosureVarInfo* cv = new (traceAlloc()) ClosureVarInfo();
         cv->slot = slot;
@@ -8332,19 +8338,19 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             cx_ins
         };
         const CallInfo* ci;
-        if (sprop->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == js_GetCallArg) {
             ci = &GetClosureArg_ci;
-        } else if (sprop->getterOp() == js_GetCallVar ||
-                   sprop->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == js_GetCallVar ||
+                   shape->getterOp() == js_GetCallVarChecked) {
             ci = &GetClosureVar_ci;
         } else {
             RETURN_STOP("dynamic property of Call object");
         }
 
-        // Now assert that our use of sprop->shortid was in fact kosher.
-        JS_ASSERT(sprop->hasShortID());
+        // Now assert that our use of shape->shortid was in fact kosher.
+        JS_ASSERT(shape->hasShortID());
 
-        call_ins = lir->insCall(ci, args);
+        LIns* call_ins = lir->insCall(ci, args);
 
         JSValueType type = getCoercedType(nr.v);
         guard(true,
@@ -8356,7 +8362,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     nr.tracked = false;
     nr.obj = obj;
     nr.obj_ins = obj_ins;
-    nr.sprop = sprop;
+    nr.shape = shape;
     return RECORD_CONTINUE;
 }
 
@@ -8867,7 +8873,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
     LIns* v_ins;
     CHECK_STATUS_A(prop(obj, obj_ins, &slot, &v_ins, NULL));
 
-    if (slot == SPROP_INVALID_SLOT)
+    if (slot == SHAPE_INVALID_SLOT)
         RETURN_STOP_A("incProp on invalid slot");
 
     Value& v = obj->getSlotRef(slot);
@@ -9352,25 +9358,24 @@ static FILE* shapefp = NULL;
 static void
 DumpShape(JSObject* obj, const char* prefix)
 {
-    JSScope* scope = obj->scope();
-
     if (!shapefp) {
         shapefp = fopen("/tmp/shapes.dump", "w");
         if (!shapefp)
             return;
     }
 
-    fprintf(shapefp, "\n%s: shape %u flags %x\n", prefix, scope->shape, scope->flags);
-    for (JSScopeProperty* sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
-        if (JSID_IS_ATOM(sprop->id)) {
-            fprintf(shapefp, " %s", JS_GetStringBytes(JSID_TO_STRING(sprop->id)));
+    fprintf(shapefp, "\n%s: shape %u flags %x\n", prefix, obj->shape(), obj->flags);
+    for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+
+        if (JSID_IS_ATOM(shape.id)) {
+            fprintf(shapefp, " %s", JS_GetStringBytes(JSID_TO_STRING(shape.id)));
         } else {
-            JS_ASSERT(!JSID_IS_OBJECT(sprop->id));
-            fprintf(shapefp, " %d", JSID_TO_INT(sprop->id));
+            JS_ASSERT(!JSID_IS_OBJECT(shape.id));
+            fprintf(shapefp, " %d", JSID_TO_INT(shape.id));
         }
         fprintf(shapefp, " %u %p %p %x %x %d\n",
-                sprop->slot, sprop->getter, sprop->setter, sprop->attrs, sprop->flags,
-                sprop->shortid);
+                shape.slot, shape.getter, shape.setter, shape.attrs, shape.flags, shape.shortid);
     }
     fflush(shapefp);
 }
@@ -9410,11 +9415,7 @@ TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char
 #endif
 
     // Finally, emit the shape guard.
-    LIns* shape_ins =
-        addName(lir->insLoad(LIR_ldi, map(obj_ins), offsetof(JSScope, shape), ACCSET_OTHER), "shape");
-    guard(true,
-          addName(lir->ins2ImmI(LIR_eqi, shape_ins, shape), guardName),
-          exit);
+    guard(true, addName(lir->ins2ImmI(LIR_eqi, shape_ins(obj_ins), shape), guardName), exit);
     return RECORD_CONTINUE;
 }
 
@@ -9441,9 +9442,10 @@ TraceRecorder::forgetGuardedShapes()
 }
 
 inline LIns*
-TraceRecorder::map(LIns* obj_ins)
+TraceRecorder::shape_ins(LIns* obj_ins)
 {
-    return addName(lir->insLoad(LIR_ldp, obj_ins, (int) offsetof(JSObject, map), ACCSET_OTHER), "map");
+    return addName(lir->insLoad(LIR_ldi, obj_ins, int(offsetof(JSObject, objShape)), ACCSET_OTHER),
+                   "objShape");
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -9513,7 +9515,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 if (!obj2->isNative())
                     RETURN_STOP_A("property found on non-native object");
                 entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2,
-                                                   (JSScopeProperty*) prop);
+                                                   (Shape*) prop);
                 JS_ASSERT(entry);
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;
@@ -9632,11 +9634,10 @@ void
 TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins,
                               const Value &v, LIns* v_ins)
 {
-    if (slot < JS_INITIAL_NSLOTS) {
+    if (slot < JS_INITIAL_NSLOTS)
         stobj_set_fslot(obj_ins, slot, v, v_ins);
-    } else {
+    else
         stobj_set_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins, v, v_ins);
-    }
 }
 
 #if JS_BITS_PER_WORD == 32 || JS_BITS_PER_WORD == 64
@@ -9682,10 +9683,11 @@ TraceRecorder::unbox_slot(JSObject *obj, LIns *obj_ins, uint32 slot, VMSideExit 
 #if JS_BITS_PER_WORD == 32
 
 LIns*
-TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins)
+TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins, unsigned slot)
 {
+    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
     return lir->insLoad(LIR_ldi, obj_ins,
-                        offsetof(JSObject, fslots) + JSSLOT_PRIVATE * sizeof(Value) + sPayloadOffset,
+                        offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
                         ACCSET_OTHER, LOAD_CONST);
 }
 
@@ -9852,11 +9854,12 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
 #elif JS_BITS_PER_WORD == 64
 
 LIns*
-TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins)
+TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins, unsigned slot)
 {
-    /* N.B. On 64-bit, privates are encoded differently than other pointers. */
+    /* N.B. On 64-bit, privates are encoded differently from other pointers. */
+    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
     LIns *v_ins = lir->insLoad(LIR_ldq, obj_ins,
-                               offsetof(JSObject, fslots) + JSSLOT_PRIVATE * sizeof(Value),
+                               offsetof(JSObject, fslots) + slot * sizeof(Value),
                                ACCSET_OTHER, LOAD_CONST);
     return lir->ins2ImmI(LIR_lshq, v_ins, 1);
 }
@@ -10676,18 +10679,22 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
     LIns* argc_ins = INS_CONST(cx->fp()->numActualArgs());
 
     LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
-    LIns* call_ins = lir->insCall(&js_Arguments_ci, args);
-    guard(false, lir->insEqP_0(call_ins), OOM_EXIT);
+    LIns* argsobj_ins = lir->insCall(&js_Arguments_ci, args);
+    guard(false, lir->insEqP_0(argsobj_ins), OOM_EXIT);
 
     if (strict) {
         JSStackFrame* fp = cx->fp();
         uintN argc = fp->numActualArgs();
-        LIns* argsSlots_ins = NULL;
-        for (uintN i = 0; i < argc; i++)
-            stobj_set_dslot(call_ins, i, argsSlots_ins, fp->argv[i], get(&fp->argv[i]));
+        LIns* argsData_ins = stobj_get_const_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+
+        for (uintN i = 0; i < argc; i++) {
+            box_value_into(fp->argv[i], get(&fp->argv[i]), argsData_ins,
+                           offsetof(ArgumentsData, slots) + i * sizeof(Value),
+                           ACCSET_OTHER);
+        }
     }
 
-    return call_ins;
+    return argsobj_ins;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -11077,7 +11084,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     // that pval is usable.
     JS_ASSERT(!pval.isPrimitive());
     JSObject *proto = &pval.toObject();
-    JS_ASSERT_IF(clasp != &js_ArrayClass, proto->scope()->emptyScope->clasp == clasp);
+    JS_ASSERT_IF(clasp != &js_ArrayClass, proto->emptyShape->getClass() == clasp);
 
     proto_ins = INS_CONSTOBJ(proto);
     return RECORD_CONTINUE;
@@ -11098,12 +11105,12 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
     JS_ASSERT(localtm.recorder);
 
 #ifdef DEBUG
-    /* Double-check that a native proto has a matching emptyScope. */
+    /* Double-check that a native proto has a matching emptyShape. */
     if (key != JSProto_Array) {
         JS_ASSERT(proto->isNative());
-        JSEmptyScope *emptyScope = proto->scope()->emptyScope;
-        JS_ASSERT(emptyScope);
-        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(emptyScope->clasp) == key);
+        EmptyShape *empty = proto->emptyShape;
+        JS_ASSERT(empty);
+        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
     }
 #endif
 
@@ -11190,12 +11197,12 @@ TraceRecorder::propagateFailureToBuiltinStatus(LIns* ok_ins, LIns*& status_ins)
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns* obj_ins,
+TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
                                     bool setflag, LIns* addr_boxed_val_ins)
 {
     JS_ASSERT(addr_boxed_val_ins->isop(LIR_allocp));
-    JS_ASSERT(setflag ? !sprop->hasSetterValue() : !sprop->hasGetterValue());
-    JS_ASSERT(setflag ? !sprop->hasDefaultSetter() : !sprop->hasDefaultGetterOrIsMethod());
+    JS_ASSERT(setflag ? !shape->hasSetterValue() : !shape->hasGetterValue());
+    JS_ASSERT(setflag ? !shape->hasDefaultSetter() : !shape->hasDefaultGetterOrIsMethod());
 
     enterDeepBailCall();
 
@@ -11203,7 +11210,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     lir->insStore(INS_CONST(1), lirbuf->state, offsetof(TracerState, nativeVpLen), ACCSET_OTHER);
 
     CallInfo* ci = new (traceAlloc()) CallInfo();
-    ci->_address = uintptr_t(setflag ? sprop->setterOp() : sprop->getterOp());
+    ci->_address = uintptr_t(setflag ? shape->setterOp() : shape->getterOp());
     ci->_typesig = CallInfo::typeSig4(ARGTYPE_I, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P);
     ci->_isPure = 0;
     ci->_storeAccSet = ACCSET_STORE_ANY;
@@ -11211,7 +11218,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 #ifdef DEBUG
     ci->_name = "JSPropertyOp";
 #endif
-    LIns* args[] = { addr_boxed_val_ins, INS_CONSTID(SPROP_USERID(sprop)), obj_ins, cx_ins };
+    LIns* args[] = { addr_boxed_val_ins, INS_CONSTID(SHAPE_USERID(shape)), obj_ins, cx_ins };
     LIns* ok_ins = lir->insCall(ci, args);
 
     // Cleanup. Immediately clear nativeVp before we might deep bail.
@@ -11906,10 +11913,10 @@ TraceRecorder::incName(jsint incr, bool pre)
         return ARECORD_CONTINUE;
     }
 
-    if (nr.obj->getClass() != &js_CallClass)
+    if (!nr.obj->isCall())
         RETURN_STOP_A("incName on unsupported object class");
 
-    CHECK_STATUS_A(setCallProp(nr.obj, nr.obj_ins, nr.sprop, v_after, v));
+    CHECK_STATUS_A(setCallProp(nr.obj, nr.obj_ins, nr.shape, v_after, v));
     stack(0, v_result);
     return ARECORD_CONTINUE;
 }
@@ -11966,17 +11973,16 @@ TraceRecorder::record_JSOP_SETPROP()
 
     JSObject* obj = &l.toObject();
     if (obj->getOps()->setProperty)
-        RETURN_STOP_A("non-native JSObjectOps::setProperty");
+        RETURN_STOP_A("non-native js::ObjectOps::setProperty");
     return ARECORD_CONTINUE;
 }
 
 /* Emit a specialized, inlined copy of js_NativeSet. */
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
+TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
                          const Value &v, LIns* v_ins)
 {
-    JSScope* scope = obj->scope();
-    uint32 slot = sprop->slot;
+    uint32 slot = shape->slot;
 
     /*
      * We do not trace assignment to properties that have both a nonstub setter
@@ -11996,16 +12002,16 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
      * case unboxing would fail and, having called a native setter, we could
      * not just retry the instruction in the interpreter.
      */
-    JS_ASSERT(sprop->hasDefaultSetter() || slot == SPROP_INVALID_SLOT);
+    JS_ASSERT(shape->hasDefaultSetter() || slot == SHAPE_INVALID_SLOT);
 
     // Call the setter, if any.
-    if (!sprop->hasDefaultSetter())
-        emitNativePropertyOp(scope, sprop, obj_ins, true, box_value_into_alloc(v, v_ins));
+    if (!shape->hasDefaultSetter())
+        emitNativePropertyOp(shape, obj_ins, true, box_value_into_alloc(v, v_ins));
 
     // Store the value, if this property has a slot.
-    if (slot != SPROP_INVALID_SLOT) {
-        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
-        JS_ASSERT(sprop->hasSlot());
+    if (slot != SHAPE_INVALID_SLOT) {
+        JS_ASSERT(obj->containsSlot(shape->slot));
+        JS_ASSERT(shape->hasSlot());
         if (obj == globalObj) {
             if (!lazilyImportGlobalSlot(slot))
                 RETURN_STOP("lazy import of global slot failed");
@@ -12020,43 +12026,45 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
 }
 
 static JSBool FASTCALL
-MethodWriteBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
+MethodWriteBarrier(JSContext* cx, JSObject* obj, Shape* shape, JSObject* funobj)
 {
     AutoObjectRooter tvr(cx, funobj);
 
-    return obj->scope()->methodWriteBarrier(cx, sprop, ObjectValue(*tvr.object()));
+    return obj->methodWriteBarrier(cx, *shape, ObjectValue(*tvr.object()));
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
                      0, ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, JSScopeProperty* sprop,
+TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, const Shape* shape,
                        Value &v, LIns*& v_ins, bool isDefinitelyAtom)
 {
     if (entry == JS_NO_PROP_CACHE_FILL)
         RETURN_STOP("can't trace uncacheable property set");
-    JS_ASSERT_IF(entry->vcapTag() >= 1, !sprop->hasSlot());
-    if (!sprop->hasDefaultSetter() && sprop->slot != SPROP_INVALID_SLOT)
-        RETURN_STOP("can't trace set of property with setter and slot");
-    if (sprop->hasSetterValue())
-        RETURN_STOP("can't trace JavaScript function setter");
-
-    // These two cases are errors and can't be traced.
-    if (sprop->hasGetterValue())
-        RETURN_STOP("can't assign to property with script getter but no setter");
-    if (!sprop->writable())
-        RETURN_STOP("can't assign to readonly property");
+    JS_ASSERT_IF(entry->vcapTag() >= 1, !shape->hasSlot());
 
     JS_ASSERT(!l.isPrimitive());
     JSObject* obj = &l.toObject();
+
+    if (!shape->hasDefaultSetter() && shape->slot != SHAPE_INVALID_SLOT && !obj->isCall())
+        RETURN_STOP("can't trace set of property with setter and slot");
+    if (shape->hasSetterValue())
+        RETURN_STOP("can't trace JavaScript function setter");
+
+    // These two cases are errors and can't be traced.
+    if (shape->hasGetterValue())
+        RETURN_STOP("can't assign to property with script getter but no setter");
+    if (!shape->writable())
+        RETURN_STOP("can't assign to readonly property");
+
     LIns* obj_ins = get(&l);
 
-    JS_ASSERT_IF(entry->directHit(), obj->scope()->hasProperty(sprop));
+    JS_ASSERT_IF(entry->directHit(), obj->nativeContains(*shape));
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     v_ins = get(&v);
-    if (obj->getClass() == &js_CallClass)
-        return setCallProp(obj, obj_ins, sprop, v_ins, v);
+    if (obj->isCall())
+        return setCallProp(obj, obj_ins, shape, v_ins, v);
 
     // Find obj2. If entry->adding(), the TAG bits are all 0.
     JSObject* obj2 = obj;
@@ -12064,15 +12072,14 @@ TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, JSScopeProperty* spr
         obj2 = obj2->getParent();
     for (jsuword j = entry->protoIndex(); j; j--)
         obj2 = obj2->getProto();
-    JSScope *scope = obj2->scope();
     JS_ASSERT_IF(entry->adding(), obj2 == obj);
 
     // Guard before anything else.
     PCVal pcval;
     CHECK_STATUS(guardPropertyCacheHit(obj_ins, obj, obj2, entry, pcval));
-    JS_ASSERT(scope->object == obj2);
-    JS_ASSERT(scope->hasProperty(sprop));
-    JS_ASSERT_IF(obj2 != obj, !sprop->hasSlot());
+    JS_ASSERT(!obj2->nativeEmpty());
+    JS_ASSERT(obj2->nativeContains(*shape));
+    JS_ASSERT_IF(obj2 != obj, !shape->hasSlot());
 
     /*
      * Setting a function-valued property might need to rebrand the object, so
@@ -12080,12 +12087,12 @@ TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, JSScopeProperty* spr
      * this, because functions have distinct trace-type from other values and
      * branded-ness is implied by the shape, which we've already guarded on.
      */
-    if (scope->brandedOrHasMethodBarrier() && IsFunctionObject(v) && entry->directHit()) {
+    if (obj2->brandedOrHasMethodBarrier() && IsFunctionObject(v) && entry->directHit()) {
         if (obj == globalObj)
             RETURN_STOP("can't trace function-valued property set in branded global scope");
 
         enterDeepBailCall();
-        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+        LIns* args[] = { v_ins, INS_CONSTSHAPE(shape), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
         guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
         leaveDeepBailCall();
@@ -12093,17 +12100,17 @@ TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, JSScopeProperty* spr
 
     // Add a property to the object if necessary.
     if (entry->adding()) {
-        JS_ASSERT(sprop->hasSlot());
+        JS_ASSERT(shape->hasSlot());
         if (obj == globalObj)
             RETURN_STOP("adding a property to the global object");
 
-        LIns* args[] = { INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+        LIns* args[] = { INS_CONSTSHAPE(shape), obj_ins, cx_ins };
         const CallInfo *ci = isDefinitelyAtom ? &js_AddAtomProperty_ci : &js_AddProperty_ci;
         LIns* ok_ins = lir->insCall(ci, args);
         guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
     }
 
-    return nativeSet(obj, obj_ins, sprop, v, v_ins);
+    return nativeSet(obj, obj_ins, shape, v, v_ins);
 }
 
 JS_REQUIRES_STACK RecordingStatus
@@ -12127,22 +12134,22 @@ TraceRecorder::setUpwardTrackedVar(Value* stackVp, const Value &v, LIns* v_ins)
 }
 
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty *sprop,
+TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, const Shape *shape,
                            LIns *v_ins, const Value &v)
 {
     // Set variables in on-trace-stack call objects by updating the tracker.
     JSStackFrame *fp = frameIfInRange(callobj);
     if (fp) {
-        if (sprop->setterOp() == SetCallArg) {
-            JS_ASSERT(sprop->hasShortID());
-            uintN slot = uint16(sprop->shortid);
+        if (shape->setterOp() == SetCallArg) {
+            JS_ASSERT(shape->hasShortID());
+            uintN slot = uint16(shape->shortid);
             Value *vp2 = &fp->argv[slot];
             CHECK_STATUS(setUpwardTrackedVar(vp2, v, v_ins));
             return RECORD_CONTINUE;
         }
-        if (sprop->setterOp() == SetCallVar) {
-            JS_ASSERT(sprop->hasShortID());
-            uintN slot = uint16(sprop->shortid);
+        if (shape->setterOp() == SetCallVar) {
+            JS_ASSERT(shape->hasShortID());
+            uintN slot = uint16(shape->shortid);
             Value *vp2 = &fp->slots()[slot];
             CHECK_STATUS(setUpwardTrackedVar(vp2, v, v_ins));
             return RECORD_CONTINUE;
@@ -12156,13 +12163,13 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         // object loses its frame it never regains one, on trace we will also
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
-        int32 dslot_index = uint16(sprop->shortid);
-        if (sprop->setterOp() == SetCallArg) {
-            JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(callobj));
-            dslot_index += ArgClosureTraits::slot_offset(callobj);
-        } else if (sprop->setterOp() == SetCallVar) {
-            JS_ASSERT(dslot_index < VarClosureTraits::slot_count(callobj));
-            dslot_index += VarClosureTraits::slot_offset(callobj);
+        intN slot = uint16(shape->shortid);
+        if (shape->setterOp() == SetCallArg) {
+            JS_ASSERT(slot < ArgClosureTraits::slot_count(callobj));
+            slot += ArgClosureTraits::slot_offset(callobj);
+        } else if (shape->setterOp() == SetCallVar) {
+            JS_ASSERT(slot < VarClosureTraits::slot_count(callobj));
+            slot += VarClosureTraits::slot_offset(callobj);
         } else {
             RETURN_STOP("can't trace special CallClass setter");
         }
@@ -12170,10 +12177,10 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         // Now assert that the shortid get we did above was ok. Have to do it
         // after the RETURN_STOP above, since in that case we may in fact not
         // have a valid shortid; but we don't use it in that case anyway.
-        JS_ASSERT(sprop->hasShortID());
+        JS_ASSERT(shape->hasShortID());
 
-        LIns* base = lir->insLoad(LIR_ldp, callobj_ins, offsetof(JSObject, dslots), ACCSET_OTHER);
-        box_value_into(v, v_ins, base, dslot_index * sizeof(Value), ACCSET_OTHER);
+        LIns* dslots_ins = NULL;
+        stobj_set_slot(callobj_ins, slot, dslots_ins, v, v_ins);
         return RECORD_CONTINUE;
     }
 
@@ -12183,9 +12190,9 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
 
     // Set variables in off-trace-stack call objects by calling standard builtins.
     const CallInfo* ci = NULL;
-    if (sprop->setterOp() == SetCallArg)
+    if (shape->setterOp() == SetCallArg)
         ci = &js_SetCallArg_ci;
-    else if (sprop->setterOp() == SetCallVar)
+    else if (shape->setterOp() == SetCallVar)
         ci = &js_SetCallVar_ci;
     else
         RETURN_STOP("can't trace special CallClass setter");
@@ -12203,9 +12210,9 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     // Case 1: storing to native stack area.
 
     // Compute native stack slot and address offset we are storing to.
-    unsigned slot = uint16(sprop->shortid);
+    unsigned slot = uint16(shape->shortid);
     LIns *slot_ins;
-    if (sprop->setterOp() == SetCallArg)
+    if (shape->setterOp() == SetCallArg)
         slot_ins = ArgClosureTraits::adj_slot_lir(lir, fp_ins, slot);
     else
         slot_ins = VarClosureTraits::adj_slot_lir(lir, fp_ins, slot);
@@ -12241,7 +12248,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     br1->setTarget(label1);
     LIns* args[] = {
         box_value_for_native_call(v, v_ins),
-        INS_CONSTWORD(JSID_BITS(SPROP_USERID(sprop))),
+        INS_CONSTWORD(JSID_BITS(SHAPE_USERID(shape))),
         callobj_ins,
         cx_ins
     };
@@ -12255,7 +12262,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, JSScopeProperty* sprop)
+TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, const Shape* shape)
 {
     Value& r = stackval(-1);
     Value& l = stackval(-2);
@@ -12264,7 +12271,7 @@ TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, JSScopeProperty* spr
     jsbytecode* pc = cx->regs->pc;
 
     bool isDefinitelyAtom = (*pc == JSOP_SETPROP);
-    CHECK_STATUS_A(setProp(l, entry, sprop, r, v_ins, isDefinitelyAtom));
+    CHECK_STATUS_A(setProp(l, entry, shape, r, v_ins, isDefinitelyAtom));
 
     switch (*pc) {
       case JSOP_SETPROP:
@@ -12482,46 +12489,46 @@ TraceRecorder::getPropertyById(LIns* obj_ins, Value* outp)
 
 /* Manually inlined, specialized copy of js_NativeGet. */
 static JSBool FASTCALL
-GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, Value* vp)
+GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* vp)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
 #ifdef DEBUG
     JSProperty* prop;
     JSObject* pobj;
-    JS_ASSERT(obj->lookupProperty(cx, sprop->id, &pobj, &prop));
-    JS_ASSERT(prop == (JSProperty*) sprop);
+    JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
+    JS_ASSERT(prop == (JSProperty*) shape);
     pobj->dropProperty(cx, prop);
 #endif
 
-    // JSScopeProperty::get contains a special case for With objects. We can
-    // elide it here because With objects are, we claim, never on the operand
-    // stack while recording.
+    // Shape::get contains a special case for With objects. We can elide it
+    // here because With objects are, we claim, never on the operand stack
+    // while recording.
     JS_ASSERT(obj->getClass() != &js_WithClass);
 
     vp->setUndefined();
-    if (!sprop->getterOp()(cx, obj, SPROP_USERID(sprop), vp)) {
+    if (!shape->getterOp()(cx, obj, SHAPE_USERID(shape), vp)) {
         SetBuiltinError(cx);
         return JS_FALSE;
     }
     return cx->tracerState->builtinStatus == 0;
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyWithNativeGetter,
-                     CONTEXT, OBJECT, SCOPEPROP, VALUEPTR, 0, ACCSET_STORE_ANY)
+                     CONTEXT, OBJECT, SHAPE, VALUEPTR, 0, ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop, Value* outp)
+TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, const Shape* shape, Value* outp)
 {
-    JS_ASSERT(!sprop->hasGetterValue());
-    JS_ASSERT(sprop->slot == SPROP_INVALID_SLOT);
-    JS_ASSERT(!sprop->hasDefaultGetterOrIsMethod());
+    JS_ASSERT(!shape->hasGetterValue());
+    JS_ASSERT(shape->slot == SHAPE_INVALID_SLOT);
+    JS_ASSERT(!shape->hasDefaultGetterOrIsMethod());
 
     // Call GetPropertyWithNativeGetter. See note in getPropertyByName about vp.
     // FIXME - We should call the getter directly. Using a builtin function for
     // now because it buys some extra asserts. See bug 508310.
     enterDeepBailCall();
     LIns* vp_ins = addName(lir->insAlloc(sizeof(Value)), "vp");
-    LIns* args[] = {vp_ins, INS_CONSTPTR(sprop), obj_ins, cx_ins};
+    LIns* args[] = {vp_ins, INS_CONSTPTR(shape), obj_ins, cx_ins};
     LIns* ok_ins = lir->insCall(&GetPropertyWithNativeGetter_ci, args);
     finishGetProp(obj_ins, vp_ins, ok_ins, outp);
     leaveDeepBailCall();
@@ -12529,7 +12536,7 @@ TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop
 }
 
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, JSScopeProperty* sprop)
+TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, const Shape* shape)
 {
     if (!canCallImacro())
         RETURN_STOP("cannot trace script getter, already in imacro");
@@ -12537,7 +12544,7 @@ TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, JSScope
     // Rearrange the stack in preparation for the imacro, taking care to adjust
     // the interpreter state and the tracker in the same way. This adjustment
     // is noted in imacros.jsasm with .fixup tags.
-    Value getter = sprop->getterValue();
+    Value getter = shape->getterValue();
     Value*& sp = cx->regs->sp;
     switch (*cx->regs->pc) {
       case JSOP_GETPROP:
@@ -12958,7 +12965,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
     LIns* idx_ins = get(&idx);
     LIns* v_ins = get(&v);
 
-    if (InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+    if (obj->isArguments())
         RETURN_STOP_A("can't trace setting elements of the |arguments| object");
 
     if (obj == globalObj)
@@ -13300,22 +13307,25 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GETDSLOT()
+TraceRecorder::record_JSOP_GETFCSLOT()
 {
     JSObject* callee = cx->fp()->callee();
     LIns* callee_ins = get(&cx->fp()->argv[-2]);
 
+    LIns* upvars_ins = stobj_get_const_private_ptr(callee_ins,
+                                                   JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
+
     unsigned index = GET_UINT16(cx->regs->pc);
-    LIns* dslots_ins = lir->insLoad(LIR_ldp, callee_ins, offsetof(JSObject, dslots), ACCSET_OTHER);
-    stack(0, unbox_value(callee->dslots[index], dslots_ins, index * sizeof(Value), 
-                         snapshot(BRANCH_EXIT)));
+    LIns *v_ins = unbox_value(callee->getFlatClosureUpvar(index), upvars_ins, index * sizeof(Value),
+                              snapshot(BRANCH_EXIT));
+    stack(0, v_ins);
     return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CALLDSLOT()
+TraceRecorder::record_JSOP_CALLFCSLOT()
 {
-    CHECK_STATUS_A(record_JSOP_GETDSLOT());
+    CHECK_STATUS_A(record_JSOP_GETFCSLOT());
     stack(1, INS_NULL());
     return ARECORD_CONTINUE;
 }
@@ -13350,7 +13360,7 @@ TraceRecorder::guardCallee(Value& callee)
      * variable accesses for a Call object having no private data that we can
      * emit code that avoids checking for an active JSStackFrame for the Call
      * object (which would hold fresh variable values -- the Call object's
-     * dslots would be stale until the stack frame is popped). This is because
+     * slots would be stale until the stack frame is popped). This is because
      * Call objects can't pick up a new stack frame in their private slot once
      * they have none. TR::callProp and TR::setCallProp depend on this fact and
      * document where; if this guard is removed make sure to fix those methods.
@@ -13370,7 +13380,7 @@ TraceRecorder::guardCallee(Value& callee)
         JSObject* parent = callee_obj->getParent();
 
         if (parent != globalObj) {
-            if (parent->getClass() != &js_CallClass)
+            if (!parent->isCall())
                 RETURN_STOP("closure scoped by neither the global object nor a Call object");
 
             guard(true,
@@ -13713,11 +13723,11 @@ TraceRecorder::name(Value*& vp, LIns*& ins, NameResult& nr)
         RETURN_STOP_A("name() hit prototype chain");
 
     /* Don't trace getter or setter calls, our caller wants a direct slot. */
-    if (pcval.isSprop()) {
-        JSScopeProperty* sprop = pcval.toSprop();
-        if (!isValidSlot(obj->scope(), sprop))
+    if (pcval.isShape()) {
+        const Shape* shape = pcval.toShape();
+        if (!isValidSlot(obj, shape))
             RETURN_STOP_A("name() not accessing a valid slot");
-        slot = sprop->slot;
+        slot = shape->slot;
     } else {
         if (!pcval.isSlot())
             RETURN_STOP_A("PCE is not a slot");
@@ -13734,16 +13744,16 @@ TraceRecorder::name(Value*& vp, LIns*& ins, NameResult& nr)
 }
 
 static JSObject* FASTCALL
-MethodReadBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
+MethodReadBarrier(JSContext* cx, JSObject* obj, Shape* shape, JSObject* funobj)
 {
     Value v = ObjectValue(*funobj);
     AutoValueRooter tvr(cx, v);
 
-    if (!obj->scope()->methodReadBarrier(cx, sprop, tvr.addr()))
+    if (!obj->methodReadBarrier(cx, *shape, tvr.addr()))
         return NULL;
     return &tvr.value().toObject();
 }
-JS_DEFINE_CALLINFO_4(static, OBJECT_FAIL, MethodReadBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
+JS_DEFINE_CALLINFO_4(static, OBJECT_FAIL, MethodReadBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
                      0, ACCSET_STORE_ANY)
 
 /*
@@ -13765,7 +13775,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
      * must differ in its shape (or not be the global object).
      */
     if (!obj->isDenseArray() && obj->getOps()->getProperty)
-        RETURN_STOP_A("non-dense-array, non-native JSObjectOps::getProperty");
+        RETURN_STOP_A("non-dense-array, non-native js::ObjectOps::getProperty");
 
     JS_ASSERT((slotp && v_insp && !outp) || (!slotp && !v_insp && outp));
 
@@ -13825,37 +13835,37 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
     uint32 setflags = (cs.format & (JOF_INCDEC | JOF_FOR));
     JS_ASSERT(!(cs.format & JOF_SET));
 
-    JSScopeProperty* sprop;
+    const Shape* shape;
     uint32 slot;
     bool isMethod;
 
-    if (pcval.isSprop()) {
-        sprop = pcval.toSprop();
-        JS_ASSERT(obj2->scope()->hasProperty(sprop));
+    if (pcval.isShape()) {
+        shape = pcval.toShape();
+        JS_ASSERT(obj2->nativeContains(*shape));
 
-        if (setflags && !sprop->hasDefaultSetter())
+        if (setflags && !shape->hasDefaultSetter())
             RETURN_STOP("non-stub setter");
-        if (setflags && !sprop->writable())
+        if (setflags && !shape->writable())
             RETURN_STOP("writing to a readonly property");
-        if (!sprop->hasDefaultGetterOrIsMethod()) {
+        if (!shape->hasDefaultGetterOrIsMethod()) {
             if (slotp)
                 RETURN_STOP("can't trace non-stub getter for this opcode");
-            if (sprop->hasGetterValue())
-                return getPropertyWithScriptGetter(obj, obj_ins, sprop);
-            if (sprop->slot == SPROP_INVALID_SLOT)
-                return getPropertyWithNativeGetter(obj_ins, sprop, outp);
+            if (shape->hasGetterValue())
+                return getPropertyWithScriptGetter(obj, obj_ins, shape);
+            if (shape->slot == SHAPE_INVALID_SLOT)
+                return getPropertyWithNativeGetter(obj_ins, shape, outp);
             return getPropertyById(obj_ins, outp);
         }
-        if (!SPROP_HAS_VALID_SLOT(sprop, obj2->scope()))
+        if (!obj2->containsSlot(shape->slot))
             RETURN_STOP("no valid slot");
-        slot = sprop->slot;
-        isMethod = sprop->isMethod();
-        JS_ASSERT_IF(isMethod, obj2->scope()->hasMethodBarrier());
+        slot = shape->slot;
+        isMethod = shape->isMethod();
+        JS_ASSERT_IF(isMethod, obj2->hasMethodBarrier());
     } else {
         if (!pcval.isSlot())
             RETURN_STOP("PCE is not a slot");
         slot = pcval.toSlot();
-        sprop = NULL;
+        shape = NULL;
         isMethod = false;
     }
 
@@ -13905,7 +13915,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
      */
     if (isMethod && !cx->fp()->hasIMacroPC()) {
         enterDeepBailCall();
-        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+        LIns* args[] = { v_ins, INS_CONSTSHAPE(shape), obj_ins, cx_ins };
         v_ins = lir->insCall(&MethodReadBarrier_ci, args);
         leaveDeepBailCall();
     }
@@ -14755,16 +14765,13 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
             // We must guard on the shape of all call objects for heavyweight functions
             // that we traverse on the scope chain: if the shape changes, a variable with
             // the same name may have been inserted in the scope chain.
-            if (obj->getClass() == &js_CallClass &&
+            if (obj->isCall() &&
                 JSFUN_HEAVYWEIGHT_TEST(js_GetCallObjectFunction(obj)->flags)) {
-                LIns* map_ins = map(obj_ins);
-                LIns* shape_ins = addName(lir->insLoad(LIR_ldi, map_ins, offsetof(JSScope, shape),
-                                                       ACCSET_OTHER),
-                                          "obj_shape");
                 if (!exit)
                     exit = snapshot(BRANCH_EXIT);
                 guard(true,
-                      addName(lir->ins2ImmI(LIR_eqi, shape_ins, obj->shape()), "guard_shape"),
+                      addName(lir->ins2ImmI(LIR_eqi, shape_ins(obj_ins), obj->shape()),
+                              "guard_shape"),
                       exit);
             }
         }
@@ -14855,7 +14862,7 @@ TraceRecorder::record_JSOP_BINDNAME()
         RETURN_ERROR_A("error in js_FindIdentifierBase");
     if (!TRACE_RECORDER(localCx))
         return ARECORD_ABORTED;
-    if (obj2 != globalObj && obj2->getClass() != &js_CallClass)
+    if (obj2 != globalObj && !obj2->isCall())
         RETURN_STOP_A("BINDNAME on non-global, non-call object");
 
     // Generate LIR to get to the target object from the start object.
@@ -15205,25 +15212,28 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
         INS_CONSTFUN(fun),
         cx_ins
     };
-    LIns* call_ins = lir->insCall(&js_AllocFlatClosure_ci, args);
+    LIns* closure_ins = lir->insCall(&js_AllocFlatClosure_ci, args);
     guard(false,
-          addName(lir->ins2(LIR_eqp, call_ins, INS_NULL()),
+          addName(lir->ins2(LIR_eqp, closure_ins, INS_NULL()),
                   "guard(js_AllocFlatClosure)"),
           OOM_EXIT);
 
     if (fun->u.i.nupvars) {
         JSUpvarArray *uva = fun->u.i.script->upvars();
+        LIns* upvars_ins = stobj_get_const_private_ptr(closure_ins,
+                                                       JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
+
         for (uint32 i = 0, n = uva->length; i < n; i++) {
             Value v;
-            LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
-            if (!upvar_ins)
+            LIns* v_ins = upvar(fun->u.i.script, uva, i, v);
+            if (!v_ins)
                 return ARECORD_STOP;
-            LIns* dslots_ins = NULL;
-            stobj_set_dslot(call_ins, i, dslots_ins, v, upvar_ins);
+
+            box_value_into(v, v_ins, upvars_ins, i * sizeof(Value), ACCSET_OTHER);
         }
     }
 
-    stack(0, call_ins);
+    stack(0, closure_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -15781,7 +15791,7 @@ TraceRecorder::record_JSOP_CALLPROP()
     } else {
         if (l.isPrimitive())
             RETURN_STOP_A("callprop of primitive method");
-        JS_ASSERT_IF(pcval.isSprop(), !pcval.toSprop()->isMethod());
+        JS_ASSERT_IF(pcval.isShape(), !pcval.toShape()->isMethod());
         CHECK_STATUS_A(propTail(obj, obj_ins, obj2, pcval, NULL, NULL, &l));
     }
     stack(0, this_ins);
