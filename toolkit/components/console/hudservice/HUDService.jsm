@@ -461,7 +461,45 @@ var NetworkHelper =
     }
 
     return null;
-   }
+  },
+
+  /**
+   * Loads the content of aUrl from the cache.
+   *
+   * @param string aUrl
+   *        URL to load the cached content for.
+   * @param string aCharset
+   *        Assumed charset of the cached content. Used if there is no charset
+   *        on the channel directly.
+   * @param function aCallback
+   *        Callback that is called with the loaded cached content if available
+   *        or null if something failed while getting the cached content.
+   */
+  loadFromCache: function NH_loadFromCache(aUrl, aCharset, aCallback)
+  {
+    let channel = NetUtil.newChannel(aUrl);
+
+    // Ensure that we only read from the cache and not the server.
+    channel.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE |
+      Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
+      Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
+
+    NetUtil.asyncFetch(channel, function (aInputStream, aStatusCode, aRequest) {
+      if (!Components.isSuccessCode(aStatusCode)) {
+        aCallback(null);
+        return;
+      }
+
+      // Try to get the encoding from the channel. If there is none, then use
+      // the passed assumed aCharset.
+      let aChannel = aRequest.QueryInterface(Ci.nsIChannel);
+      let contentCharset = aChannel.contentCharset || aCharset;
+
+      // Read the content of the stream using contentCharset as encoding.
+      aCallback(NetworkHelper.readAndConvertFromStream(aInputStream,
+                                                       contentCharset));
+    });
+  }
 }
 
 // FIREBUG CODE END.
@@ -572,6 +610,12 @@ function NetworkPanel(aParent, aHttpActivity)
 
 NetworkPanel.prototype =
 {
+  /**
+   * Callback is called once the NetworkPanel is processed completly. Used by
+   * unit tests.
+   */
+  isDoneCallback: null,
+
   /**
    * The current state of the output.
    */
@@ -881,20 +925,28 @@ NetworkPanel.prototype =
    * the receiving of the response header and the end of the request as well as
    * the content of the response body on the NetworkPanel.
    *
+   * @param [optional] string aCachedContent
+   *        Cached content for this request. If this argument is set, the
+   *        responseBodyCached section is displayed.
    * @returns void
    */
-  _displayResponseBody: function NP_displayResponseBody()
+  _displayResponseBody: function NP_displayResponseBody(aCachedContent)
   {
     let timing = this.httpActivity.timing;
     let response = this.httpActivity.response;
+    let cached =  "";
+    if (aCachedContent) {
+      cached = "Cached";
+    }
 
     let deltaDuration =
       Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseBodyInfo",
+    this._appendTextNode("responseBody" + cached + "Info",
       this._format("durationMS", [deltaDuration]));
 
-    this._displayNode("responseBody");
-    this._appendTextNode("responseBodyContent", response.body);
+    this._displayNode("responseBody" + cached);
+    this._appendTextNode("responseBody" + cached + "Content",
+                            aCachedContent || response.body);
   },
 
   /**
@@ -912,6 +964,15 @@ NetworkPanel.prototype =
       Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
     this._appendTextNode("responseNoBodyInfo",
       this._format("durationMS", [deltaDuration]));
+  },
+
+  /*
+   * Calls the isDoneCallback function if one is specified.
+   */
+  _callIsDone: function() {
+    if (this.isDoneCallback) {
+      this.isDoneCallback();
+    }
   },
 
   /**
@@ -970,12 +1031,33 @@ NetworkPanel.prototype =
         if (timing.TRANSACTION_CLOSE && response.isDone) {
           if (this._responseIsImage) {
             this._displayResponseImage();
+            this._callIsDone();
           }
           else if (response.body) {
             this._displayResponseBody();
+            this._callIsDone();
+          }
+          else if (this._isResponseCached) {
+            let self = this;
+            NetworkHelper.loadFromCache(this.httpActivity.url,
+                                        this.httpActivity.charset,
+                                        function(aContent) {
+              // If some content could be loaded from the cache, then display
+              // the body.
+              if (aContent) {
+                self._displayResponseBody(aContent);
+                self._callIsDone();
+              }
+              // Otherwise, show the "There is no response body" hint.
+              else {
+                self._displayNoResponseBody();
+                self._callIsDone();
+              }
+            });
           }
           else {
             this._displayNoResponseBody();
+            this._callIsDone();
           }
           this._state = this._TRANSITION_CLOSED;
         }
@@ -1966,6 +2048,7 @@ HUD_SERVICE.prototype =
               url: aChannel.URI.spec,
               method: aChannel.requestMethod,
               channel: aChannel,
+              charset: win.document.characterSet,
 
               panels: [],
               request: {
