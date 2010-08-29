@@ -70,6 +70,8 @@ const TEST_ERROR_URI = "http://example.com/browser/toolkit/components/console/hu
 
 const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-duplicate-error.html";
 
+const TEST_IMG = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-image.png";
+
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
 }
@@ -569,6 +571,254 @@ function testConsoleHistory()
   is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
 }
 
+function testNetworkPanel()
+{
+  function checkIsVisible(aPanel, aList) {
+    for (let id in aList) {
+      let node = aPanel.document.getElementById(id);
+      let isVisible = aList[id];
+      is(node.style.display, (isVisible ? "block" : "none"), id + " isVisible=" + isVisible);
+    }
+  }
+
+  function checkNodeContent(aPanel, aId, aContent) {
+    let node = aPanel.document.getElementById(aId);
+    if (node == null) {
+      ok(false, "Tried to access node " + aId + " that doesn't exist!");
+    }
+    else if (node.textContent.indexOf(aContent) != -1) {
+      ok(true, "checking content of " + aId);
+    }
+    else {
+      ok(false, "Got false value for " + aId + ": " + node.textContent + " doesn't have " + aContent);
+    }
+  }
+
+  function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
+    let node = aPanel.document.getElementById(aId);
+
+    let testHTML = '<span xmlns="http://www.w3.org/1999/xhtml" class="property-name">' + aKey + ':</span>';
+    testHTML += '<span xmlns="http://www.w3.org/1999/xhtml" class="property-value">' + aValue + '</span>';
+    isnot(node.innerHTML.indexOf(testHTML), -1, "checking content of " + aId);
+  }
+
+  let testDriver;
+  function testGen() {
+    var httpActivity = {
+      url: "http://www.testpage.com",
+      method: "GET",
+
+      panels: [],
+      request: {
+        header: {
+          foo: "bar"
+        }
+      },
+      response: { },
+      timing: {
+        "REQUEST_HEADER": 0
+      }
+    };
+
+    let networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+
+    is (networkPanel, httpActivity.panels[0].get(), "Network panel stored on httpActivity object");
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+      testDriver.next();
+    }, true);
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestCookie: false,
+      requestBody: false,
+      responseContainer: false,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    checkNodeContent(networkPanel, "header", "http://www.testpage.com");
+    checkNodeContent(networkPanel, "header", "GET");
+    checkNodeKeyValue(networkPanel, "requestHeadersContent", "foo", "bar");
+
+    // Test request body.
+    httpActivity.request.body = "hello world";
+    networkPanel.update();
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: false,
+      responseContainer: false,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+    checkNodeContent(networkPanel, "requestBodyContent", "hello world");
+
+    // Test response header.
+    httpActivity.timing.RESPONSE_HEADER = 1000;
+    httpActivity.response.status = "999 earthquake win";
+    httpActivity.response.header = {
+      leaveHouses: "true"
+    }
+    networkPanel.update();
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: false,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    checkNodeContent(networkPanel, "header", "999 earthquake win");
+    checkNodeKeyValue(networkPanel, "responseHeadersContent", "leaveHouses", "true");
+    checkNodeContent(networkPanel, "responseHeadersInfo", "1ms");
+
+    httpActivity.timing.RESPONSE_COMPLETE = 2500;
+    // This is necessary to show that the request is done.
+    httpActivity.timing.TRANSACTION_CLOSE = 2500;
+    networkPanel.update();
+
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: false,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    httpActivity.response.isDone = true;
+    networkPanel.update();
+
+    checkNodeContent(networkPanel, "responseNoBodyInfo", "2ms");
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: false,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: true,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    networkPanel.panel.hidePopup();
+
+    // Second run: Test for cookies and response body.
+    httpActivity.request.header.Cookie = "foo=bar;  hello=world";
+    httpActivity.response.body = "get out here";
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    is (networkPanel, httpActivity.panels[1].get(), "Network panel stored on httpActivity object");
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+      testDriver.next();
+    }, true);
+    yield;
+
+
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: true,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    checkNodeKeyValue(networkPanel, "requestCookieContent", "foo", "bar");
+    checkNodeKeyValue(networkPanel, "requestCookieContent", "hello", "world");
+    checkNodeContent(networkPanel, "responseBodyContent", "get out here");
+    checkNodeContent(networkPanel, "responseBodyInfo", "2ms");
+
+    networkPanel.panel.hidePopup();
+
+    // Check image request.
+    httpActivity.response.header["Content-Type"] = "image/png";
+    httpActivity.url =  TEST_IMG;
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+      testDriver.next();
+    }, true);
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: true,
+      responseImageCached: false
+    });
+
+    let imgNode = networkPanel.document.getElementById("responseImageNode");
+    is(imgNode.getAttribute("src"), TEST_IMG, "Displayed image is correct");
+
+    function checkImageResponseInfo() {
+      checkNodeContent(networkPanel, "responseImageInfo", "2ms");
+      checkNodeContent(networkPanel, "responseImageInfo", "16x16px");
+    }
+
+    // Check if the image is loaded already.
+    if (imgNode.width == 0) {
+      imgNode.addEventListener("load", function onLoad() {
+        imgNode.removeEventListener("load", onLoad, false);
+        checkImageResponseInfo();
+        networkPanel.panel.hidePopup();
+        testDriver.next();
+      }, false);
+      // Wait until the image is loaded.
+      yield;
+    }
+    else {
+      checkImageResponseInfo();
+      networkPanel.panel.hidePopup();
+    }
+
+    // Check cached image request.
+    httpActivity.response.status = "HTTP/1.1 304 Not Modified";
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+      testDriver.next();
+    }, true);
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: true
+    });
+
+    let imgNode = networkPanel.document.getElementById("responseImageCachedNode");
+    is(imgNode.getAttribute("src"), TEST_IMG, "Displayed image is correct");
+
+    networkPanel.panel.hidePopup();
+
+    // Run the next test.
+    testErrorOnPageReload();
+
+    yield;
+  };
+
+  testDriver = testGen();
+  testDriver.next();
+}
+
 // test property provider
 function testPropertyProvider()
 {
@@ -829,7 +1079,7 @@ function testPageReload() {
     is(typeof console.error, "function", "console.error is a function");
     is(typeof console.exception, "function", "console.exception is a function");
 
-    testErrorOnPageReload();
+    testNetworkPanel();
   }, false);
 
   content.location.reload();
