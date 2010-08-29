@@ -294,7 +294,7 @@ js_NewGCExternalString(JSContext *cx, uintN type)
     return (JSString *) js_NewFinalizableGCThing(cx, type);
 }
 
-static inline JSFunction*
+static inline JSFunction *
 js_NewGCFunction(JSContext *cx)
 {
     JSFunction* obj = (JSFunction *)js_NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
@@ -383,7 +383,7 @@ class BackgroundSweepTask : public JSBackgroundTask {
     BackgroundSweepTask()
         : freeCursor(NULL), freeCursorEnd(NULL) { }
 
-    void freeLater(void* ptr) {
+    void freeLater(void *ptr) {
         if (freeCursor != freeCursorEnd)
             *freeCursor++ = ptr;
         else

@@ -130,7 +130,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     }
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
-    return callJSPropertyOp(cx, desc.getter, proxy, id, vp);
+    return CallJSPropertyOp(cx, desc.getter, proxy, id, vp);
 }
 
 bool
@@ -149,7 +149,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
-            return callJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
+            return CallJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
         }
         if (desc.attrs & JSPROP_READONLY)
             return true;
@@ -166,7 +166,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
-            return callJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
+            return CallJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
         }
         if (desc.attrs & JSPROP_READONLY)
             return true;
@@ -1005,14 +1005,16 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
     bool fun = call || construct;
     Class *clasp = fun ? &FunctionProxyClass : &ObjectProxyClass;
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
-    if (!obj || (construct && !js_EnsureReservedSlots(cx, obj, 0)))
+    if (!obj || (construct && !obj->ensureInstanceReservedSlots(cx, 0)))
         return NULL;
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->setSlot(JSSLOT_PROXY_PRIVATE, priv);
     if (fun) {
         obj->setSlot(JSSLOT_PROXY_CALL, call ? ObjectValue(*call) : UndefinedValue());
-        if (construct)
-            obj->setSlot(JSSLOT_PROXY_CONSTRUCT, construct ? ObjectValue(*construct) : UndefinedValue());
+        if (construct) {
+            obj->setSlot(JSSLOT_PROXY_CONSTRUCT,
+                         construct ? ObjectValue(*construct) : UndefinedValue());
+        }
     }
     return obj;
 }

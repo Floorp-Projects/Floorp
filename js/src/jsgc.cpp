@@ -2024,8 +2024,8 @@ AutoGCRooter::trace(JSTracer *trc)
         MarkValue(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
         return;
 
-      case SPROP:
-        static_cast<AutoScopePropertyRooter *>(this)->sprop->trace(trc);
+      case SHAPE:
+        static_cast<AutoShapeRooter *>(this)->shape->trace(trc);
         return;
 
       case PARSER:
@@ -2244,6 +2244,19 @@ MarkRuntime(JSTracer *trc)
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
 
+    if (rt->emptyArgumentsShape)
+        rt->emptyArgumentsShape->trace(trc);
+    if (rt->emptyBlockShape)
+        rt->emptyBlockShape->trace(trc);
+    if (rt->emptyCallShape)
+        rt->emptyCallShape->trace(trc);
+    if (rt->emptyDeclEnvShape)
+        rt->emptyDeclEnvShape->trace(trc);
+    if (rt->emptyEnumeratorShape)
+        rt->emptyEnumeratorShape->trace(trc);
+    if (rt->emptyWithShape)
+        rt->emptyWithShape->trace(trc);
+
     /*
      * We mark extra roots at the last thing so it can use use additional
      * colors to implement cycle collection.
@@ -2319,15 +2332,7 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
 
     DTrace::finalizeObject(obj);
 
-    if (JS_LIKELY(obj->isNative())) {
-        JSScope *scope = obj->scope();
-        if (scope->isSharedEmpty())
-            static_cast<JSEmptyScope *>(scope)->dropFromGC(cx);
-        else
-            scope->destroy(cx);
-    }
-    if (obj->hasSlotsArray())
-        obj->freeSlotsArray(cx);
+    obj->finish(cx);
 }
 
 inline void
@@ -2635,7 +2640,7 @@ SweepCompartments(JSContext *cx)
 
 /*
  * Common cache invalidation and so forth that must be done before GC. Even if
- * GCUntilDone calls GC several times, this work only needs to be done once.
+ * GCUntilDone calls GC several times, this work needs to be done only once.
  */
 static void
 PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
@@ -2666,8 +2671,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
 #endif
         ) {
         rt->gcRegenShapes = true;
-        rt->gcRegenShapesScopeFlag ^= JSScope::SHAPE_REGEN;
-        rt->shapeGen = JSScope::LAST_RESERVED_SHAPE;
+        rt->shapeGen = Shape::LAST_RESERVED_SHAPE;
         rt->protoHazardShape = 0;
     }
 
@@ -2745,7 +2749,7 @@ MarkAndSweep(JSContext *cx  GCTIMER_PARAM)
 
 #ifdef DEBUG
     /* Save the pre-sweep count of scope-mapped properties. */
-    rt->liveScopePropsPreSweep = rt->liveScopeProps;
+    rt->liveObjectPropsPreSweep = rt->liveObjectProps;
 #endif
 
     /*
@@ -2780,10 +2784,10 @@ MarkAndSweep(JSContext *cx  GCTIMER_PARAM)
     SweepCompartments(cx);
 
     /*
-     * Sweep the runtime's property tree after finalizing objects, in case any
+     * Sweep the runtime's property trees after finalizing objects, in case any
      * had watchpoints referencing tree nodes.
      */
-    js::SweepScopeProperties(cx);
+    js::PropertyTree::sweepShapes(cx);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop

@@ -655,7 +655,7 @@ regexp_enumerate(JSContext *cx, JSObject *obj)
 js::Class js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */

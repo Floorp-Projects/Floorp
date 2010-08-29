@@ -668,7 +668,7 @@ struct TreeFragment : public LinkableFragment
         linkedTrees(alloc),
         sideExits(alloc),
         gcthings(alloc),
-        sprops(alloc)
+        shapes(alloc)
     { }
 
     TreeFragment* first;
@@ -694,7 +694,7 @@ struct TreeFragment : public LinkableFragment
     unsigned                maxCallDepth;
     /* All embedded GC things are registered here so the GC can scan them. */
     Queue<Value>            gcthings;
-    Queue<JSScopeProperty*> sprops;
+    Queue<const js::Shape*> shapes;
     unsigned                maxNativeStackSlots;
 
     inline unsigned nGlobalTypes() {
@@ -1014,7 +1014,7 @@ class TraceRecorder
     nanojit::LIns* insImmObj(JSObject* obj);
     nanojit::LIns* insImmFun(JSFunction* fun);
     nanojit::LIns* insImmStr(JSString* str);
-    nanojit::LIns* insImmSprop(JSScopeProperty* sprop);
+    nanojit::LIns* insImmShape(const js::Shape* shape);
     nanojit::LIns* insImmId(jsid id);
     nanojit::LIns* p2i(nanojit::LIns* ins);
 
@@ -1066,7 +1066,7 @@ class TraceRecorder
                                   unsigned callDepth, unsigned ngslots, JSValueType* typeMap);
     void trackNativeStackUse(unsigned slots);
 
-    JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
+    JS_REQUIRES_STACK bool isValidSlot(JSObject *obj, const js::Shape* shape);
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
     JS_REQUIRES_STACK void importGlobalSlot(unsigned slot);
 
@@ -1131,7 +1131,7 @@ class TraceRecorder
         Value            v;              // current property value
         JSObject         *obj;           // Call object where name was found
         nanojit::LIns    *obj_ins;       // LIR value for obj
-        JSScopeProperty  *sprop;         // sprop name was resolved to
+        js::Shape        *shape;         // shape name was resolved to
     };
 
     JS_REQUIRES_STACK nanojit::LIns* scopeChain();
@@ -1140,7 +1140,7 @@ class TraceRecorder
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
     JS_REQUIRES_STACK RecordingStatus traverseScopeChain(JSObject *obj, nanojit::LIns *obj_ins, JSObject *obj2, nanojit::LIns *&obj2_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus scopeChainProp(JSObject* obj, Value*& vp, nanojit::LIns*& ins, NameResult& nr);
-    JS_REQUIRES_STACK RecordingStatus callProp(JSObject* obj, JSProperty* sprop, jsid id, Value*& vp, nanojit::LIns*& ins, NameResult& nr);
+    JS_REQUIRES_STACK RecordingStatus callProp(JSObject* obj, JSProperty* shape, jsid id, Value*& vp, nanojit::LIns*& ins, NameResult& nr);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
     JS_REQUIRES_STACK void arg(unsigned n, nanojit::LIns* i);
@@ -1200,7 +1200,7 @@ class TraceRecorder
 
     void forgetGuardedShapes();
 
-    inline nanojit::LIns* map(nanojit::LIns *obj_ins);
+    inline nanojit::LIns* shape_ins(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                                      JSObject*& obj2, PCVal& pcval);
     JS_REQUIRES_STACK RecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
@@ -1217,7 +1217,8 @@ class TraceRecorder
                         nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
     void set_array_fslot(nanojit::LIns *obj_ins, unsigned slot, uint32 val);
 
-    nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns* obj_ins);
+    nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns* obj_ins,
+                                               unsigned slot = JSSLOT_PRIVATE);
     nanojit::LIns* stobj_get_fslot_uint32(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* stobj_get_fslot_ptr(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* unbox_slot(JSObject *obj, nanojit::LIns *obj_ins, uint32 slot,
@@ -1261,11 +1262,11 @@ class TraceRecorder
                                                          nanojit::LIns* index_ins, Value* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyById(nanojit::LIns* obj_ins, Value* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyWithNativeGetter(nanojit::LIns* obj_ins,
-                                                                  JSScopeProperty* sprop,
+                                                                  const js::Shape* shape,
                                                                   Value* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyWithScriptGetter(JSObject *obj,
                                                                   nanojit::LIns* obj_ins,
-                                                                  JSScopeProperty* sprop);
+                                                                  const js::Shape* shape);
 
     JS_REQUIRES_STACK nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
@@ -1276,21 +1277,21 @@ class TraceRecorder
                                                JSOp mode);
 
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
-                                                  JSScopeProperty* sprop,
-                                                  const Value &v, nanojit::LIns* v_ins);
+                                                const js::Shape* shape,
+                                                const Value &v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK RecordingStatus setProp(Value &l, PropertyCacheEntry* entry,
-                                                JSScopeProperty* sprop,
-                                                Value &v, nanojit::LIns*& v_ins,
-                                                bool isDefinitelyAtom);
+                                              const js::Shape* shape,
+                                              Value &v, nanojit::LIns*& v_ins,
+                                              bool isDefinitelyAtom);
     JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
-                                                    JSScopeProperty *sprop, nanojit::LIns *v_ins,
-                                                    const Value &v);
+                                                  const js::Shape *shape, nanojit::LIns *v_ins,
+                                                  const Value &v);
     JS_REQUIRES_STACK RecordingStatus initOrSetPropertyByName(nanojit::LIns* obj_ins,
-                                                                Value* idvalp, Value* rvalp,
-                                                                bool init);
+                                                              Value* idvalp, Value* rvalp,
+                                                              bool init);
     JS_REQUIRES_STACK RecordingStatus initOrSetPropertyByIndex(nanojit::LIns* obj_ins,
-                                                                 nanojit::LIns* index_ins,
-                                                                 Value* rvalp, bool init);
+                                                               nanojit::LIns* index_ins,
+                                                               Value* rvalp, bool init);
     JS_REQUIRES_STACK AbortableRecordingStatus setElem(int lval_spindex, int idx_spindex,
                                                        int v_spindex);
 
@@ -1379,8 +1380,7 @@ class TraceRecorder
                                                            nanojit::LIns *&status_ins);
     JS_REQUIRES_STACK RecordingStatus emitNativeCall(JSSpecializedNative* sn, uintN argc,
                                                        nanojit::LIns* args[], bool rooted);
-    JS_REQUIRES_STACK void emitNativePropertyOp(JSScope* scope,
-                                                JSScopeProperty* sprop,
+    JS_REQUIRES_STACK void emitNativePropertyOp(const js::Shape* shape,
                                                 nanojit::LIns* obj_ins,
                                                 bool setflag,
                                                 nanojit::LIns* addr_boxed_val_ins);
@@ -1482,8 +1482,9 @@ public:
     JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame(uintN& inlineCallCount);
     JS_REQUIRES_STACK AbortableRecordingStatus record_LeaveFrame();
     JS_REQUIRES_STACK AbortableRecordingStatus record_SetPropHit(PropertyCacheEntry* entry,
-                                                                 JSScopeProperty* sprop);
-    JS_REQUIRES_STACK AbortableRecordingStatus record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
+                                                                 const js::Shape* shape);
+    JS_REQUIRES_STACK AbortableRecordingStatus record_DefLocalFunSetSlot(uint32 slot,
+                                                                         JSObject* obj);
     JS_REQUIRES_STACK AbortableRecordingStatus record_NativeCallComplete();
     void forgetGuardedShapesForObject(JSObject* obj);
 

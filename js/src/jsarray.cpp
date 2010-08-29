@@ -755,7 +755,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
         JSObject *obj2;
         JSProperty *prop;
-        JSScopeProperty *sprop;
+        const Shape *shape;
 
         JSObject *proto = obj->getProto();
         if (!proto) {
@@ -769,8 +769,8 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return JS_FALSE;
 
         if (prop && obj2->isNative()) {
-            sprop = (JSScopeProperty *) prop;
-            if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
+            shape = (const Shape *) prop;
+            if (!js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp))
                 return JS_FALSE;
             JS_UNLOCK_OBJ(cx, obj2);
         }
@@ -842,7 +842,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
          */
         if (!obj->isNative())
             return JS_TRUE;
-        if (obj->scope()->hadIndexedProperties())
+        if (obj->isIndexed())
             return JS_TRUE;
     }
     return JS_FALSE;
@@ -1006,7 +1006,7 @@ array_trace(JSTracer *trc, JSObject *obj)
 Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
     JSCLASS_FAST_CONSTRUCTOR,
     PropertyStub,   /* addProperty */
@@ -1064,29 +1064,24 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     JS_ASSERT(isDenseArray());
 
     /*
+     * Save old map now, before calling InitScopeForObject. We'll have to undo
+     * on error. This is gross, but a better way is not obvious.
+     */
+    JSObjectMap *oldMap = map;
+
+    /*
      * Create a native scope. All slow arrays other than Array.prototype get
      * the same initial shape.
      */
-    uint32 emptyShape;
-    JSObject *obj = this;
-    JSObject *arrayProto = obj->getProto();
-    if (arrayProto->getClass() == &js_ObjectClass) {
-        /* obj is Array.prototype. */
-        emptyShape = js_GenerateShape(cx, false);
-    } else {
-        /* arrayProto is Array.prototype. */
-        JS_ASSERT(arrayProto->getClass() == &js_SlowArrayClass);
-        emptyShape = arrayProto->scope()->emptyScope->shape;
-    }
-    JSScope *scope = JSScope::create(cx, &js_SlowArrayClass, obj, emptyShape);
-    if (!scope)
-        return JS_FALSE;
+    JSObject *arrayProto = getProto();
+    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, arrayProto))
+        return false;
 
     uint32 capacity;
 
-    if (obj->dslots) {
-        capacity = obj->getDenseArrayCapacity();
-        obj->dslots[-1].setPrivateUint32(JS_INITIAL_NSLOTS + capacity);
+    if (dslots) {
+        capacity = getDenseArrayCapacity();
+        dslots[-1].setPrivateUint32(JS_INITIAL_NSLOTS + capacity);
     } else {
         /*
          * Array.prototype is constructed as a dense array, but is immediately slowified before
@@ -1095,28 +1090,40 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         capacity = 0;
     }
 
-    scope->freeslot = obj->numSlots();
+    uint32 nslots = numSlots();
+    if (nslots >= JS_NSLOTS_LIMIT) {
+        setMap(oldMap);
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    freeslot = nslots;
 
     /* Begin with the length property to share more of the property tree. */
-    if (!scope->addProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                            array_length_getter, array_length_setter,
-                            JSSLOT_ARRAY_LENGTH, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0)) {
-        goto out_bad;
+    if (!addProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                     array_length_getter, array_length_setter,
+                     JSSLOT_ARRAY_LENGTH, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0)) {
+        setMap(oldMap);
+        return false;
     }
 
     /* Create new properties pointing to existing elements. */
     for (uint32 i = 0; i < capacity; i++) {
         jsid id;
-        if (!ValueToId(cx, Int32Value(i), &id))
-            goto out_bad;
+        if (!ValueToId(cx, Int32Value(i), &id)) {
+            setMap(oldMap);
+            return false;
+        }
 
-        if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-            obj->setDenseArrayElement(i, UndefinedValue());
+        if (getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
+            setDenseArrayElement(i, UndefinedValue());
             continue;
         }
 
-        if (!scope->addDataProperty(cx, id, JS_INITIAL_NSLOTS + i, JSPROP_ENUMERATE))
-            goto out_bad;
+        if (!addDataProperty(cx, id, JS_INITIAL_NSLOTS + i, JSPROP_ENUMERATE)) {
+            setMap(oldMap);
+            return false;
+        }
     }
 
     /*
@@ -1126,14 +1133,11 @@ JSObject::makeDenseArraySlow(JSContext *cx)
      * can store an arbitrary value.
      */
     JS_ASSERT(js_SlowArrayClass.flags & JSCLASS_HAS_PRIVATE);
-    obj->voidDenseOnlyArraySlots();
-    obj->clasp = &js_SlowArrayClass;
-    obj->map = scope;
-    return JS_TRUE;
+    voidDenseOnlyArraySlots();
 
-  out_bad:
-    scope->destroy(cx);
-    return JS_FALSE;
+    /* Finally, update class. */
+    clasp = &js_SlowArrayClass;
+    return true;
 }
 
 /* Transfer ownership of buffer to returned string. */
@@ -2998,9 +3002,9 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto, int32 len)
     if (!obj)
         return NULL;
 
-    /* Initialize all fields of JSObject. */
-    obj->map = const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative);
-    obj->init(&js_ArrayClass, proto, proto->getParent(), NullValue());
+    /* Initialize all fields, calling init before setting obj->map. */
+    obj->init(&js_ArrayClass, proto, proto->getParent(), NullValue(), cx);
+    obj->setSharedNonNativeMap();
     obj->setArrayLength(len);
     obj->setDenseArrayCapacity(0);
     return obj;

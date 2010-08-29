@@ -251,7 +251,7 @@ namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 JS_FRIEND_DATA(Class) js_NamespaceClass = {
     "Namespace",
     JSCLASS_CONSTRUCT_PROTOTYPE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -370,7 +370,7 @@ qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 JS_FRIEND_DATA(Class) js_QNameClass = {
     "QName",
     JSCLASS_CONSTRUCT_PROTOTYPE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -405,7 +405,7 @@ JS_FRIEND_DATA(Class) js_QNameClass = {
 JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     js_AttributeName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -419,7 +419,7 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
 JS_FRIEND_DATA(Class) js_AnyNameClass = {
     js_AnyName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AnyName),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -4642,15 +4642,14 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
 
 /*
  * XML objects are native. Thus xml_lookupProperty must return a valid
- * JSScopeProperty pointer parameter via *propp to signify "property found".
- * Since the only call to xml_lookupProperty is via JSObject::lookupProperty,
- * and then only from js_FindProperty (in jsobj.c, called from jsinterp.c) or
- * from JSOP_IN case in the interpreter, the only time we add a
- * JSScopeProperty here is when an unqualified name is being accessed or when
- * "name in xml" is called.
+ * Shape pointer parameter via *propp to signify "property found". Since the
+ * only call to xml_lookupProperty is via JSObject::lookupProperty, and then
+ * only from js_FindProperty (in jsobj.c, called from jsinterp.c) or from
+ * JSOP_IN case in the interpreter, the only time we add a Shape here is when
+ * an unqualified name is being accessed or when "name in xml" is called.
  *
  * This scope property keeps the JSOP_NAME code in js_Interpret happy by
- * giving it an sprop with (getter, setter) == (GetProperty, PutProperty).
+ * giving it an shape with (getter, setter) == (GetProperty, PutProperty).
  *
  * NB: xml_deleteProperty must take care to remove any property added here.
  *
@@ -4673,7 +4672,6 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     uint32 i;
     JSObject *qn;
     jsid funid;
-    JSScopeProperty *sprop;
 
     xml = (JSXML *) obj->getPrivate();
     if (js_IdIsIndex(id, &i)) {
@@ -4690,16 +4688,17 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         *objp = NULL;
         *propp = NULL;
     } else {
-        sprop = js_AddNativeProperty(cx, obj, id,
-                                     Valueify(GetProperty), Valueify(PutProperty),
-                                     SPROP_INVALID_SLOT, JSPROP_ENUMERATE,
-                                     0, 0);
-        if (!sprop)
+        const Shape *shape =
+            js_AddNativeProperty(cx, obj, id,
+                                 Valueify(GetProperty), Valueify(PutProperty),
+                                 SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
+                                 0, 0);
+        if (!shape)
             return JS_FALSE;
 
         JS_LOCK_OBJ(cx, obj);
         *objp = obj;
-        *propp = (JSProperty *) sprop;
+        *propp = (JSProperty *) shape;
     }
     return JS_TRUE;
 }
@@ -4799,7 +4798,7 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
      * property's getter or setter. But now it's time to remove any such
      * property, to purge the property cache and remove the scope entry.
      */
-    if (obj->scope()->object == obj && !js_DeleteProperty(cx, obj, id, rval))
+    if (!obj->nativeEmpty() && !js_DeleteProperty(cx, obj, id, rval))
         return JS_FALSE;
 
     rval->setBoolean(true);
@@ -7072,7 +7071,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     JSFunction *fun;
     JSXML *xml;
     JSProperty *prop;
-    JSScopeProperty *sprop;
+    Shape *shape;
     jsval cval, vp[3];
 
     /* Define the isXMLName function. */
@@ -7105,9 +7104,9 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
     JS_ASSERT(prop);
-    sprop = (JSScopeProperty *) prop;
-    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
-    cval = Jsvalify(pobj->getSlotMT(cx, sprop->slot));
+    shape = (Shape *) prop;
+    JS_ASSERT(pobj->containsSlot(shape->slot));
+    cval = Jsvalify(pobj->getSlotMT(cx, shape->slot));
     JS_UNLOCK_OBJ(cx, pobj);
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
