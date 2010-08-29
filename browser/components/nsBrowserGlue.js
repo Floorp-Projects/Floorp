@@ -225,8 +225,7 @@ BrowserGlue.prototype = {
           Services.obs.removeObserver(this, "places-shutdown");
           this._isPlacesShutdownObserver = false;
         }
-        // places-shutdown is fired on profile-before-change, but before
-        // Places executes the last flush and closes connection.
+        // places-shutdown is fired when the profile is about to disappear.
         this._onProfileShutdown();
         break;
       case "idle":

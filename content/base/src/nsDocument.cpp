@@ -845,7 +845,9 @@ ExternalResourceShower(nsIURI* aKey,
                        nsExternalResourceMap::ExternalResource* aData,
                        void* aClosure)
 {
-  aData->mViewer->Show();
+  if (aData->mViewer) {
+    aData->mViewer->Show();
+  }
   return PL_DHASH_NEXT;
 }
 
@@ -4297,7 +4299,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIContent> content;
   PRInt32 ns = nodeInfo->NamespaceID();
-  NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(), PR_FALSE);
+  rv = NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(), PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);
