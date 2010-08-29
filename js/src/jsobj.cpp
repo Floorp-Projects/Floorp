@@ -3584,7 +3584,7 @@ bool
 JSObject::ensureInstanceReservedSlots(JSContext *cx, size_t nreserved)
 {
     JS_ASSERT_IF(isNative(),
-                 isBlock() || isCall() || isFunction() && getFunctionPrivate()->isBound());
+                 isBlock() || isCall() || (isFunction() && getFunctionPrivate()->isBound()));
     JS_ASSERT_IF(isBlock(), nativeEmpty());
 
     uintN nslots = JSSLOT_FREE(clasp) + nreserved;
