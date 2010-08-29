@@ -548,7 +548,7 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 #undef START_ASSERT_SAME_COMPARTMENT
 
 inline JSBool
-callJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
+CallJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
 {
     assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
     JSBool ok = native(cx, thisobj, argc, argv, rval);
@@ -558,7 +558,7 @@ callJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js
 }
 
 inline JSBool
-callJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
+CallJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
 {
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
@@ -568,7 +568,7 @@ callJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp
 }
 
 inline JSBool
-callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     JSBool ok = op(cx, obj, id, vp);
@@ -578,7 +578,7 @@ callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::V
 }
 
 inline JSBool
-callJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     return op(cx, obj, id, vp);

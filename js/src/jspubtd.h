@@ -170,7 +170,7 @@ typedef class JSWrapper          JSWrapper;
 typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
 #endif
 
-/* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
+/* JSClass (and js::ObjectOps where appropriate) function pointer typedefs. */
 
 /*
  * Add, delete, get or set a property named by id in obj.  Note the jsid id
