@@ -54,6 +54,8 @@ using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
 
+/* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
+ * has occurred because they depend on it for information. (See bug 591561) */
 nsresult GfxInfo::GetD2DEnabled(PRBool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
@@ -68,13 +70,12 @@ nsresult GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 
 /* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
 
-static nsresult GetKeyValue(const TCHAR* keyLocation, const TCHAR* keyName, nsAString& destString, int type)
+static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
 {
   HKEY key;
   DWORD dwcbData;
-  WCHAR wCharValue[1024];
-  TCHAR tCharValue[1024];
   DWORD dValue;
+  DWORD resultType;
   LONG result;
   nsresult retval = NS_OK;
 
@@ -87,27 +88,47 @@ static nsresult GetKeyValue(const TCHAR* keyLocation, const TCHAR* keyName, nsAS
     case REG_DWORD: {
       // We only use this for vram size
       dwcbData = sizeof(dValue);
-      result = RegQueryValueExW(key, keyName, NULL, NULL, (LPBYTE)&dValue, &dwcbData);
-      if (result != ERROR_SUCCESS) {
+      result = RegQueryValueExW(key, keyName, NULL, &resultType, (LPBYTE)&dValue, &dwcbData);
+      if (result == ERROR_SUCCESS && resultType == REG_DWORD) {
+        dValue = dValue / 1024 / 1024;
+        destString.AppendInt(static_cast<PRInt32>(dValue));
+      } else {
         retval = NS_ERROR_FAILURE;
       }
-      dValue = dValue / 1024 / 1024;
-      destString.AppendInt(static_cast<PRInt32>(dValue));
       break;
     }
     case REG_MULTI_SZ: {
       // A chain of null-separated strings; we convert the nulls to spaces
-      dwcbData = sizeof(tCharValue);
-      result = RegQueryValueExW(key, keyName, NULL, NULL, (LPBYTE)tCharValue, &dwcbData);
-      if (result != ERROR_SUCCESS) {
+      WCHAR wCharValue[1024];
+      dwcbData = sizeof(wCharValue);
+
+      result = RegQueryValueExW(key, keyName, NULL, &resultType, (LPBYTE)wCharValue, &dwcbData);
+      if (result == ERROR_SUCCESS && resultType == REG_MULTI_SZ) {
+        // This bit here could probably be cleaner.
+        bool isValid = false;
+
+        DWORD strLen = dwcbData/sizeof(wCharValue[0]);
+        for (DWORD i = 0; i < strLen; i++) {
+          if (wCharValue[i] == '\0') {
+            if (i < strLen - 1 && wCharValue[i + 1] == '\0') {
+              isValid = true;
+              break;
+            } else {
+              wCharValue[i] = ' ';
+            }
+          }
+        }
+
+        // ensure wCharValue is null terminated
+        wCharValue[strLen-1] = '\0';
+
+        if (isValid)
+          destString = wCharValue;
+
+      } else {
         retval = NS_ERROR_FAILURE;
       }
-      // This bit here could probably be cleaner.
-      for (DWORD i = 0, len = dwcbData/sizeof(tCharValue[0]); i < len; i++) {
-        if (tCharValue[i] == '\0')
-          tCharValue[i] = ' ';
-      }
-      destString = tCharValue;
+
       break;
     }
   }
@@ -140,44 +161,40 @@ void GfxInfo::Init()
 {
   NS_TIME_FUNCTION;
 
-  DISPLAY_DEVICE lpDisplayDevice;
-  lpDisplayDevice.cb = sizeof(lpDisplayDevice);
+  DISPLAY_DEVICEW displayDevice;
+  displayDevice.cb = sizeof(displayDevice);
   int deviceIndex = 0;
 
-  while (EnumDisplayDevices(NULL, deviceIndex, &lpDisplayDevice, 0)) {
-    if (lpDisplayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+  while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)) {
+    if (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
       break;
     deviceIndex++;
   }
 
   /* DeviceKey is "reserved" according to MSDN so we'll be careful with it */
-  if (wcsncmp(lpDisplayDevice.DeviceKey, DEVICE_KEY_PREFIX, wcslen(DEVICE_KEY_PREFIX)) != 0)
+  /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
+  if (wcsncmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
     return;
 
   // make sure the string is NULL terminated
-  size_t i;
-  for (i = 0; i < sizeof(lpDisplayDevice.DeviceKey); i++) {
-    if (lpDisplayDevice.DeviceKey[i] == L'\0')
-      break;
-  }
-
-  if (i == sizeof(lpDisplayDevice.DeviceKey)) {
-      // we did not find a NULL
-      return;
+  if (wcsnlen(displayDevice.DeviceKey, NS_ARRAY_LENGTH(displayDevice.DeviceKey))
+      == NS_ARRAY_LENGTH(displayDevice.DeviceKey)) {
+    // we did not find a NULL
+    return;
   }
 
   // chop off DEVICE_KEY_PREFIX
-  mDeviceKey = lpDisplayDevice.DeviceKey + wcslen(DEVICE_KEY_PREFIX);
+  mDeviceKey = displayDevice.DeviceKey + NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1;
 
-  mDeviceID = lpDisplayDevice.DeviceID;
-  mDeviceString = lpDisplayDevice.DeviceString;
+  mDeviceID = displayDevice.DeviceID;
+  mDeviceString = displayDevice.DeviceString;
 
 
   HKEY key, subkey;
   LONG result, enumresult;
   DWORD index = 0;
-  TCHAR subkeyname[64];
-  TCHAR value[128];
+  WCHAR subkeyname[64];
+  WCHAR value[128];
   DWORD dwcbData = sizeof(subkeyname);
 
   // "{4D36E968-E325-11CE-BFC1-08002BE10318}" is the display class

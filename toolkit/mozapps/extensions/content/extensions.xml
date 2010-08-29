@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Blair McBride <bmcbride@mozilla.com>
+   -   David Dahl <ddahl@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -801,8 +802,13 @@
           </xul:hbox>
           <xul:hbox anonid="control-container" class="control-container">
             <xul:button anonid="preferences-btn" class="addon-control"
-                        label="&cmd.showPreferences.label;"
-                        tooltiptext="&cmd.showPreferences.tooltip;"
+#ifdef XP_WIN
+                        label="&cmd.showPreferencesWin.label;"
+                        tooltiptext="&cmd.showPreferencesWin.tooltip;"
+#else
+                        label="&cmd.showPreferencesUnix.label;"
+                        tooltiptext="&cmd.showPreferencesUnix.tooltip;"
+#endif
                         oncommand="document.getBindingParent(this).showPreferences();"/>
             <xul:button anonid="enable-btn"  class="addon-control enable"
                         label="&cmd.enableAddon.label;"

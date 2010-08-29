@@ -1236,7 +1236,7 @@ statusbarpanel#statusbar-display {
 }
 
 .tabbrowser-tab[pinned] > .tab-icon-image {
-  margin: 2px 0 0;
+  margin: 2px 2px 0;
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {
