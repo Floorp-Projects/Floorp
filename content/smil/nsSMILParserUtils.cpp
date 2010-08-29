@@ -60,9 +60,8 @@ const PRUint32 MSEC_PER_MIN  = 1000 * 60;
 const PRUint32 MSEC_PER_HOUR = 1000 * 60 * 60;
 const PRInt32  DECIMAL_BASE  = 10;
 
-// XXX SVG/SMIL Animation use 'accessKey' whilst SMIL3 uses 'accesskey'
-//     We should allow both
-#define ACCESSKEY_PREFIX NS_LITERAL_STRING("accessKey(")
+#define ACCESSKEY_PREFIX_LC NS_LITERAL_STRING("accesskey(") // SMIL2+
+#define ACCESSKEY_PREFIX_CC NS_LITERAL_STRING("accessKey(") // SVG/SMIL ANIM
 #define REPEAT_PREFIX    NS_LITERAL_STRING("repeat(")
 #define WALLCLOCK_PREFIX NS_LITERAL_STRING("wallclock(")
 
@@ -264,13 +263,17 @@ ParseOptionalOffset(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
 nsresult
 ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
 {
-  NS_ABORT_IF_FALSE(StringBeginsWith(aSpec, ACCESSKEY_PREFIX),
+  NS_ABORT_IF_FALSE(StringBeginsWith(aSpec, ACCESSKEY_PREFIX_CC) ||
+      StringBeginsWith(aSpec, ACCESSKEY_PREFIX_LC),
       "Calling ParseAccessKey on non-accesskey-type spec");
 
   nsSMILTimeValueSpecParams result;
   result.mType = nsSMILTimeValueSpecParams::ACCESSKEY;
 
-  const PRUnichar* start = aSpec.BeginReading() + ACCESSKEY_PREFIX.Length();
+  NS_ABORT_IF_FALSE(
+      ACCESSKEY_PREFIX_LC.Length() == ACCESSKEY_PREFIX_CC.Length(),
+      "Case variations for accesskey prefix differ in length");
+  const PRUnichar* start = aSpec.BeginReading() + ACCESSKEY_PREFIX_LC.Length();
   const PRUnichar* end = aSpec.EndReading();
 
   // Expecting at least <accesskey> + ')'
@@ -703,7 +706,8 @@ nsSMILParserUtils::ParseTimeValueSpecParams(const nsAString& aSpec,
   }
 
   // accesskey type
-  else if (StringBeginsWith(spec, ACCESSKEY_PREFIX)) {
+  else if (StringBeginsWith(spec, ACCESSKEY_PREFIX_LC) ||
+           StringBeginsWith(spec, ACCESSKEY_PREFIX_CC)) {
     rv = ParseAccessKey(spec, aResult);
   }
 

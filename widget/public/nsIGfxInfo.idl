@@ -66,6 +66,5 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString adapterDriverVersion;
   
   readonly attribute DOMString adapterDriverDate;
-  
 };
 

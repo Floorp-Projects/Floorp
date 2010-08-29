@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Blair McBride <bmcbride@mozilla.com>
+   -   David Dahl <ddahl@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,8 +70,13 @@
                 accesskey="&cmd.findUpdates.accesskey;"/>
       <menuseparator/>
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
-                label="&cmd.preferences.label;"
-                accesskey="&cmd.preferences.accesskey;"/>
+#ifdef XP_WIN
+                label="&cmd.preferencesWin.label;"
+                accesskey="&cmd.preferencesWin.accesskey;"/>
+#else
+                label="&cmd.preferencesUnix.label;"
+                accesskey="&cmd.preferencesUnix.accesskey;"/>
+#endif
       <menuitem id="menuitem_about" command="cmd_showItemAbout"
                 label="&cmd.about.label;"
                 accesskey="&cmd.about.accesskey;"/>
@@ -88,6 +94,8 @@
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_toggleBackgroundUpdateCheck"/>
     <command id="cmd_installFromFile"/>
+    <command id="cmd_back"/>
+    <command id="cmd_forward"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -107,8 +115,10 @@
 
   <!-- main header -->
   <hbox id="header" align="center">
-    <label id="header-name"/>
-    <button id="header-link"/>
+    <button id="back-btn" class="nav-button" command="cmd_back"
+            tooltiptext="&cmd.back.tooltip;"/>
+    <button id="forward-btn" class="nav-button" command="cmd_forward"
+            tooltiptext="&cmd.forward.tooltip;"/>
     <spacer flex="1"/>
     <hbox id="updates-container" align="center">
       <image class="spinner"/>
@@ -127,7 +137,12 @@
               label="&updates.restart.label;"
               command="cmd_restartApp"/>
     </hbox>
-    <button id="header-utils-btn" type="menu">
+    <button id="header-utils-btn" type="menu"
+#ifdef XP_WIN
+            tooltiptext="&view.utilites.preferences.tooltip;">
+#else
+            tooltiptext="&view.utilites.preferencesUnix.tooltip;">
+#endif
       <menupopup id="utils-menu">
         <menuitem id="utils-updateNow"
                   label="&updates.updateAddonsNow.label;"
@@ -346,9 +361,15 @@
                           tooltiptext="&detail.checkForUpdates.tooltip;"
                           command="cmd_findItemUpdates"/>
                   <button id="detail-prefs" class="addon-control"
-                          label="&detail.showPreferences.label;"
-                          accesskey="&detail.showPreferences.accesskey;"
-                          tooltiptext="&detail.showPreferences.tooltip;"
+#ifdef XP_WIN
+                          label="&detail.showPreferencesWin.label;"
+                          accesskey="&detail.showPreferencesWin.accesskey;"
+                          tooltiptext="&detail.showPreferencesWin.tooltip;"
+#else
+                          label="&detail.showPreferencesUnix.label;"
+                          accesskey="&detail.showPreferencesUnix.accesskey;"
+                          tooltiptext="&detail.showPreferencesUnix.tooltip;"
+#endif
                           command="cmd_showItemPreferences"/>
                </vbox>
                <grid class="detail-meta fade" flex="1">

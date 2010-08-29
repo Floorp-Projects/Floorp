@@ -20,6 +20,8 @@ const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
 var gPendingTests = [];
 var gTestsRun = 0;
 
+var gUseInContentUI = ("switchToTabHavingURI" in window);
+
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 // Turn off remote results in searches
@@ -71,6 +73,49 @@ function get_addon_file_url(aFilename) {
   }
 }
 
+function check_all_in_list(aManager, aIds, aIgnoreExtras) {
+  var doc = aManager.document;
+  var view = doc.getElementById("view-port").selectedPanel;
+  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var list = doc.getElementById(listid);
+
+  var inlist = [];
+  var node = list.firstChild;
+  while (node) {
+    if (node.value)
+      inlist.push(node.value);
+    node = node.nextSibling;
+  }
+
+  for (var i = 0; i < aIds.length; i++) {
+    if (inlist.indexOf(aIds[i]) == -1)
+      ok(false, "Should find " + aIds[i] + " in the list");
+  }
+
+  if (aIgnoreExtras)
+    return;
+
+  for (i = 0; i < inlist.length; i++) {
+    if (aIds.indexOf(inlist[i]) == -1)
+      ok(false, "Shouldn't have seen " + inlist[i] + " in the list");
+  }
+}
+
+function get_addon_element(aManager, aId) {
+  var doc = aManager.document;
+  var view = doc.getElementById("view-port").selectedPanel;
+  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var list = doc.getElementById(listid);
+
+  var node = list.firstChild;
+  while (node) {
+    if (node.value == aId)
+      return node;
+    node = node.nextSibling;
+  }
+  return null;
+}
+
 function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
   if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
     aCallback(aManagerWindow);
@@ -89,6 +134,7 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
     return;
   }
 
+  info("Waiting for initialization");
   aManagerWindow.document.addEventListener("Initialized", function() {
     aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
     aCallback(aManagerWindow);
@@ -111,7 +157,7 @@ function open_manager(aView, aCallback, aLoadCallback) {
     });
   }
 
-  if ("switchToTabHavingURI" in window) {
+  if (gUseInContentUI) {
     gBrowser.selectedTab = gBrowser.addTab();
     switchToTabHavingURI(MANAGER_URI, true, function(aBrowser) {
       setup_manager(aBrowser.contentWindow.wrappedJSObject);

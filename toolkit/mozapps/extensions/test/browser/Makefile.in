@@ -52,6 +52,7 @@ _TEST_FILES = \
   browser_bug557956.rdf \
   browser_bug557956_8_2.xpi \
   browser_bug557956_9_2.xpi \
+  browser_bug562797.js \
   browser_bug562890.js \
   browser_bug562899.js \
   browser_bug562992.js \

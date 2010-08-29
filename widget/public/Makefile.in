@@ -112,6 +112,7 @@ XPIDLSRCS	= \
 		nsIPrintSettingsService.idl \
 		nsIPrintOptions.idl \
 		nsIIdleService.idl \
+		nsIGfxInfo.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -126,7 +127,6 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 		nsITaskbarPreviewButton.idl \
 		nsIJumpListBuilder.idl \
 		nsIJumpListItem.idl \
-		nsIGfxInfo.idl \
 		$(NULL)
 endif
 
