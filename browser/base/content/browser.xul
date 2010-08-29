@@ -136,10 +136,6 @@
         </menupopup>
       </menu>
       <menuseparator/>
-      <menuitem id="context_bookmarkTab"
-                label="&bookmarkThisTab.label;"
-                accesskey="&bookmarkThisTab.accesskey;"
-                oncommand="BookmarkThisTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
