@@ -5,6 +5,8 @@
 <!ENTITY networkPanel.requestHeaders              "Request Headers">
 <!ENTITY networkPanel.requestCookie               "Sent Cookie">
 <!ENTITY networkPanel.requestBody                 "Request Body">
+<!ENTITY networkPanel.requestFormData             "Sent Form Data">
+
 <!ENTITY networkPanel.responseHeaders             "Response Headers">
 <!ENTITY networkPanel.responseBody                "Response Body">
 <!ENTITY networkPanel.responseNoBody              "No Response Body">

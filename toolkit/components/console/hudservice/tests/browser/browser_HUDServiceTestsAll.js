@@ -631,6 +631,7 @@ function testNetworkPanel()
 
     checkIsVisible(networkPanel, {
       requestCookie: false,
+      requestFormData: false,
       requestBody: false,
       responseContainer: false,
       responseBody: false,
@@ -648,6 +649,7 @@ function testNetworkPanel()
     networkPanel.update();
     checkIsVisible(networkPanel, {
       requestBody: true,
+      requestFormData: false,
       requestCookie: false,
       responseContainer: false,
       responseBody: false,
@@ -666,6 +668,7 @@ function testNetworkPanel()
     networkPanel.update();
     checkIsVisible(networkPanel, {
       requestBody: true,
+      requestFormData: false,
       requestCookie: false,
       responseContainer: true,
       responseBody: false,
@@ -686,6 +689,7 @@ function testNetworkPanel()
     checkIsVisible(networkPanel, {
       requestBody: true,
       requestCookie: false,
+      requestFormData: false,
       responseContainer: true,
       responseBody: false,
       responseNoBody: false,
@@ -724,6 +728,7 @@ function testNetworkPanel()
 
     checkIsVisible(networkPanel, {
       requestBody: true,
+      requestFormData: false,
       requestCookie: true,
       responseContainer: true,
       responseBody: true,
@@ -752,6 +757,7 @@ function testNetworkPanel()
 
     checkIsVisible(networkPanel, {
       requestBody: true,
+      requestFormData: false,
       requestCookie: true,
       responseContainer: true,
       responseBody: false,
@@ -796,6 +802,7 @@ function testNetworkPanel()
 
     checkIsVisible(networkPanel, {
       requestBody: true,
+      requestFormData: false,
       requestCookie: true,
       responseContainer: true,
       responseBody: false,
@@ -806,6 +813,58 @@ function testNetworkPanel()
 
     let imgNode = networkPanel.document.getElementById("responseImageCachedNode");
     is(imgNode.getAttribute("src"), TEST_IMG, "Displayed image is correct");
+
+    networkPanel.panel.hidePopup();
+
+    // Test sent form data.
+    httpActivity.request.body = [
+      "Content-Type:      application/x-www-form-urlencoded\n" +
+      "Content-Length: 59\n" +
+      "name=rob&age=20"
+    ].join("");
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+      testDriver.next();
+    }, true);
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: false,
+      requestFormData: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: true
+    });
+
+    checkNodeKeyValue(networkPanel, "requestFormDataContent", "name", "rob");
+    checkNodeKeyValue(networkPanel, "requestFormDataContent", "age", "20");
+    networkPanel.panel.hidePopup();
+
+    // Test no space after Content-Type:
+    httpActivity.request.body = "Content-Type:application/x-www-form-urlencoded\n";
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.panel.addEventListener("load", function onLoad() {
+      networkPanel.panel.removeEventListener("load", onLoad, true);
+      testDriver.next();
+    }, true);
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: false,
+      requestFormData: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: true
+    });
 
     networkPanel.panel.hidePopup();
 
