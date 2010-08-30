@@ -165,18 +165,11 @@ js_GCThingIsMarked(void *thing, uint32 color);
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
 
-namespace js {
-
 extern JS_REQUIRES_STACK void
-MarkRuntime(JSTracer *trc);
-
-extern void
-TraceRuntime(JSTracer *trc);
+js_TraceRuntime(JSTracer *trc);
 
 extern JS_REQUIRES_STACK JS_FRIEND_API(void)
-MarkContext(JSTracer *trc, JSContext *acx);
-
-} /* namespace js */
+js_TraceContext(JSTracer *trc, JSContext *acx);
 
 /*
  * Schedule the GC call at a later safe point.
@@ -433,27 +426,11 @@ struct ConservativeGCThreadData {
         jsuword         words[JS_HOWMANY(sizeof(jmp_buf), sizeof(jsuword))];
     } registerSnapshot;
 
-    /*
-     * Cycle collector uses this to communicate that the native stack of the
-     * GC thread should be scanned only if the thread have more than the given
-     * threshold of requests.
-     */
-    unsigned requestThreshold;
+    int                 enableCount;
 
-    JS_NEVER_INLINE void recordStackTop();
-
-#ifdef JS_THREADSAFE
-    void updateForRequestEnd(unsigned suspendCount) {
-        if (suspendCount)
-            recordStackTop();
-        else
-            nativeStackTop = NULL;
-    }
-#endif
-   
-    bool hasStackToScan() const {
-        return !!nativeStackTop;
-    }
+    JS_NEVER_INLINE JS_FRIEND_API(void) enable(bool knownStackBoundary = false);
+    JS_FRIEND_API(void) disable();
+    bool isEnabled() const { return enableCount > 0; }
 };
 
 struct GCMarker : public JSTracer {

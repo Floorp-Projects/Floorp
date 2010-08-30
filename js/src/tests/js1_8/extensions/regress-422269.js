@@ -44,7 +44,6 @@ var expect = 'No leak';
 
 //-----------------------------------------------------------------------------
 test();
-
 //-----------------------------------------------------------------------------
 
 function test()
@@ -68,7 +67,6 @@ function test()
   else
   {
     var x = f();
-    f(); // overwrite the machine stack with new objects
     gc();
     var n = countHeap();
     x = null;
