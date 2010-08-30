@@ -4316,7 +4316,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
              */
             if (!entry->adding()) {
                 if (entry->vcapTag() == 0 ||
-                    (obj2 = obj->getProto()) && obj2->shape() == entry->vshape())
+                    ((obj2 = obj->getProto()) && obj2->shape() == entry->vshape()))
                 {
 #ifdef DEBUG
                     if (entry->directHit()) {

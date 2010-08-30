@@ -5026,11 +5026,12 @@ FunctionType::Call(JSContext* cx,
 
   // suspend the request before we call into the function, since the call
   // may block or otherwise take a long time to return.
-  {
-    JSAutoSuspendRequest suspend(cx);
-    ffi_call(&fninfo->mCIF, FFI_FN(fn), returnValue.mData,
-             reinterpret_cast<void**>(values.begin()));
-  }
+  jsrefcount rc = JS_SuspendRequest(cx);
+
+  ffi_call(&fninfo->mCIF, FFI_FN(fn), returnValue.mData,
+    reinterpret_cast<void**>(values.begin()));
+
+  JS_ResumeRequest(cx, rc);
 
   // Small integer types get returned as a word-sized ffi_arg. Coerce it back
   // into the correct size for ConvertToJS.
