@@ -822,8 +822,6 @@
               return;
 
             frameLoader.scrollViewportBy(x, y);
-            Util.dumpLn(frameLoader.viewportScrollY, "+", bcr.height, "=", frameLoader.viewportScrollY + bcr.height);
-            Util.dumpLn("and zoom level is", this._zoomLevel);
 
             // XXX comment this behavior
             this._pendingPixelsX += x;
