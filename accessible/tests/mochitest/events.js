@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
 
+const EVENT_ALERT = nsIAccessibleEvent.EVENT_ALERT;
 const EVENT_DOCUMENT_LOAD_COMPLETE = nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE;
 const EVENT_DOCUMENT_RELOAD = nsIAccessibleEvent.EVENT_DOCUMENT_RELOAD;
 const EVENT_DOCUMENT_LOAD_STOPPED = nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_STOPPED;
