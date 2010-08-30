@@ -77,7 +77,9 @@ ifndef ANDROID
 EXTRA_COMPONENTS += AlertsService.js
 endif
 
+ifneq (Android,$(OS_TARGET))
 DIRS =  phone \
         $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
