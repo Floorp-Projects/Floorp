@@ -48,7 +48,6 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsURLHelper.h"
 #include "nsIStreamConverterService.h"
-#include "prprf.h"
 
 //
 // Helper function for determining the length of data bytes up to
