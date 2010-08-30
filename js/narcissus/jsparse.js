@@ -2328,6 +2328,9 @@ Narcissus.parser = (function() {
         parse: parse,
         Node: Node,
         DefaultBuilder: DefaultBuilder,
+        get SSABuilder() {
+            throw new Error("SSA builder not yet supported");
+        },
         bindSubBuilders: bindSubBuilders,
         DECLARED_FORM: DECLARED_FORM,
         EXPRESSED_FORM: EXPRESSED_FORM,
