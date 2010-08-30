@@ -86,8 +86,7 @@ private:
 // nsBaseChannel
 
 nsBaseChannel::nsBaseChannel()
-  : mContentLength(-1)
-  , mLoadFlags(LOAD_NORMAL)
+  : mLoadFlags(LOAD_NORMAL)
   , mStatus(NS_OK)
   , mQueriedProgressSink(PR_TRUE)
   , mSynthProgressEvents(PR_FALSE)
@@ -186,6 +185,23 @@ nsBaseChannel::HasContentTypeHint() const
   return !mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE);
 }
 
+void
+nsBaseChannel::SetContentLength64(PRInt64 len)
+{
+  // XXX: Storing the content-length as a property may not be what we want.
+  //      It has the drawback of being copied if we redirect this channel.
+  //      Maybe it is time for nsIChannel2.
+  SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, len);
+}
+
+PRInt64
+nsBaseChannel::ContentLength64()
+{
+  PRInt64 len;
+  nsresult rv = GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &len);
+  return NS_SUCCEEDED(rv) ? len : -1;
+}
+
 nsresult
 nsBaseChannel::PushStreamConverter(const char *fromType,
                                    const char *toType,
@@ -206,7 +222,7 @@ nsBaseChannel::PushStreamConverter(const char *fromType,
   if (NS_SUCCEEDED(rv)) {
     mListener = converter;
     if (invalidatesContentLength)
-      mContentLength = -1;
+      SetContentLength64(-1);
     if (result) {
       *result = nsnull;
       converter.swap(*result);
@@ -504,16 +520,20 @@ nsBaseChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetContentLength(PRInt64 *aContentLength)
+nsBaseChannel::GetContentLength(PRInt32 *aContentLength)
 {
-  *aContentLength = mContentLength;
+  PRInt64 len = ContentLength64();
+  if (len > PR_INT32_MAX || len < 0)
+    *aContentLength = -1;
+  else
+    *aContentLength = (PRInt32) len;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseChannel::SetContentLength(PRInt64 aContentLength)
+nsBaseChannel::SetContentLength(PRInt32 aContentLength)
 {
-  mContentLength = aContentLength;
+  SetContentLength64(aContentLength);
   return NS_OK;
 }
 
@@ -735,7 +755,8 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     PRUint64 prog = PRUint64(offset) + count;
-    OnTransportStatus(nsnull, nsITransport::STATUS_READING, prog, mContentLength);
+    PRUint64 progMax = ContentLength64();
+    OnTransportStatus(nsnull, nsITransport::STATUS_READING, prog, progMax);
   }
 
   return rv;

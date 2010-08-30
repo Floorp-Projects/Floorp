@@ -72,7 +72,7 @@ public:
 protected:
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
-  PRInt64          mContentLength;
+  PRInt32          mContentLength;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner; 

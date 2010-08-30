@@ -265,13 +265,13 @@ nsWyciwygChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::GetContentLength(PRInt64 *aContentLength)
+nsWyciwygChannel::GetContentLength(PRInt32 *aContentLength)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::SetContentLength(PRInt64 aContentLength)
+nsWyciwygChannel::SetContentLength(PRInt32 aContentLength)
 {
   mContentLength = aContentLength;
 
@@ -506,9 +506,10 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
   
   rv = mListener->OnDataAvailable(this, mListenerContext, input, offset, count);
 
+  // XXX handle 64-bit stuff for real
   if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
     mProgressSink->OnProgress(this, nsnull, PRUint64(offset + count),
-                              mContentLength);
+                              PRUint64(mContentLength));
 
   return rv; // let the pump cancel on failure
 }
