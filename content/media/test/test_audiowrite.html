@@ -21,7 +21,13 @@ var rate = 44100;
 
 function runTests() {
   var a1 = new Audio();
-  a1.mozSetup(channels, rate);
+  try {
+    a1.mozSetup(channels, rate);
+  } catch (ex) {
+    todo(false, "Audio hardware is disabled, can't test audio write API");
+    SimpleTest.finish();
+    return;
+  }
 
   is(a1.mozChannels, channels, "mozChannels should be " + channels + ".");
   is(a1.mozSampleRate, rate, "mozSampleRate should be " + rate + ".");
