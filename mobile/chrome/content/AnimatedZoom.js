@@ -205,6 +205,8 @@ AnimatedZoom.prototype.updateTo = function(nextRect) {
 /** Starts an animated zoom to zoomRect. */
 AnimatedZoom.prototype.animateTo = function(aZoomRect) {
   this.zoomTo = aZoomRect;
+  this.finish();
+  return;
   this.startTimer();
 };
 
@@ -237,6 +239,7 @@ AnimatedZoom.prototype._callback = function() {
 
 /** Stop animation, zoom to point, and clean up. */
 AnimatedZoom.prototype.finish = function() {
+  Browser.setVisibleRect(this.zoomTo);
   return;
   try {
     Elements.viewBuffer.style.display = "none";

@@ -166,37 +166,19 @@ var Browser = {
     this.contentScrollbox = container;
     this.contentScrollboxScroller = {
       flush: function() {
-        if (!getBrowser().contentWindow) {
-          getBrowser().flushScroll();
-        }
+        getBrowser().flushScroll();
       },
 
       scrollBy: function(x, y) {
-        if (getBrowser().contentWindow) {
-          getBrowser().contentWindow.scrollBy(x, y);
-        }
-        else {
-          getBrowser().scrollBy(x, y);
-        }
+        getBrowser().scrollBy(x, y);
       },
 
       scrollTo: function(x, y) {
-        if (getBrowser().contentWindow) {
-          getBrowser().contentWindow.scrollTo(x, y);
-        }
-        else {
-          getBrowser().scrollTo(x, y);
-        }
+        getBrowser().scrollTo(x, y);
       },
 
       getPosition: function(scrollX, scrollY) {
-        if (getBrowser().contentWindow) {
-          let cwu = Util.getWindowUtils(getBrowser().contentWindow);
-          cwu.getScrollXY(false, scrollX, scrollY);
-        }
-        else {
-          getBrowser().getPosition(scrollX, scrollY);
-        }
+        getBrowser().getPosition(scrollX, scrollY);
       }
     };
 
@@ -849,33 +831,27 @@ var Browser = {
 
   /** Zoom one step in (negative) or out (positive). */
   zoom: function zoom(aDirection) {
-    return;
-
-    let bv = this._browserView;
-    if (!bv.allowZoom)
+    let tab = this.selectedTab;
+    if (!tab.allowZoom)
       return;
 
-    let zoomLevel = bv.getZoomLevel();
-
+    let zoomLevel = getBrowser().zoomLevel;
     let zoomValues = ZoomManager.zoomValues;
     let i = zoomValues.indexOf(ZoomManager.snap(zoomLevel)) + (aDirection < 0 ? 1 : -1);
     if (i >= 0 && i < zoomValues.length)
       zoomLevel = zoomValues[i];
 
-    zoomLevel = bv.clampZoomLevel(zoomLevel);
+    zoomLevel = tab.clampZoomLevel(zoomLevel);
 
-    let center = this.getVisibleRect().center().map(bv.viewportToBrowser);
-    this.animatedZoomTo(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
+    let centerX = getBrowser().viewportScrollX + window.innerWidth / 2;
+    let centerY = getBrowser().viewportScrollY + window.innerHeight / 2;
+    this.animatedZoomTo(this._getZoomRectForPoint(centerX, centerY, zoomLevel));
   },
 
   /** Rect should be in browser coordinates. */
   _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
     const margin = 15;
-
-    let bv = this._browserView;
-    let vis = bv.getVisibleRect();
-
-    return bv.clampZoomLevel(vis.width / (rect.width + margin * 2));
+    return this.selectedTab.clampZoomLevel(window.innerWidth / (rect.width + margin * 2));
   },
 
   /**
@@ -883,15 +859,14 @@ var Browser = {
    * @return Rect in viewport coordinates
    * */
   _getZoomRectForRect: function _getZoomRectForRect(rect, y) {
-    let bv = this._browserView;
-    let oldZoomLevel = bv.getZoomLevel();
+    let oldZoomLevel = getBrowser().zoomLevel;
     let zoomLevel = this._getZoomLevelForRect(rect);
     let zoomRatio = oldZoomLevel / zoomLevel;
 
     // Don't zoom in a marginal amount, but be more lenient for the first zoom.
     // > 2/3 means operation increases the zoom level by less than 1.5
     // > 9/10 means operation increases the zoom level by less than 1.1
-    let zoomTolerance = (bv.isDefaultZoom()) ? .9 : .6666;
+    let zoomTolerance = (this.selectedTab.isDefaultZoomLevel()) ? .9 : .6666;
     if (zoomRatio >= zoomTolerance)
       return null;
     else
@@ -903,58 +878,47 @@ var Browser = {
    * @return Rect in viewport coordinates
    */
   _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
-    let bv = this._browserView;
-    let vis = bv.getVisibleRect();
-    x = bv.browserToViewport(x);
-    y = bv.browserToViewport(y);
+    x = x * getBrowser().zoomLevel;
+    y = y * getBrowser().zoomLevel;
 
     zoomLevel = Math.min(ZoomManager.MAX, zoomLevel);
-    let zoomRatio = zoomLevel / bv.getZoomLevel();
-    let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
+    let zoomRatio = zoomLevel / getBrowser().zoomLevel;
+    let newVisW = window.innerWidth / zoomRatio, newVisH = window.innerHeight / zoomRatio;
     let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
 
     // Make sure rectangle doesn't poke out of viewport
-    return result.translateInside(bv._browserViewportState.viewportRect);
+    return result.translateInside(new Rect(0, 0, getBrowser().widthInDevicePx, getBrowser().heightInDevicePx));
   },
 
   animatedZoomTo: function animatedZoomTo(rect) {
-    return;
-
-    let zoom = new AnimatedZoom(this._browserView);
+    let zoom = new AnimatedZoom();
     zoom.animateTo(rect);
   },
 
   setVisibleRect: function setVisibleRect(rect) {
-    return;
-
-    let bv = this._browserView;
-    let vis = bv.getVisibleRect();
-    let zoomRatio = vis.width / rect.width;
-    let zoomLevel = bv.getZoomLevel() * zoomRatio;
+    let zoomRatio = window.innerWidth / rect.width;
+    let zoomLevel = getBrowser().zoomLevel * zoomRatio;
     let scrollX = rect.left * zoomRatio;
     let scrollY = rect.top * zoomRatio;
 
     this.hideSidebars();
     this.hideTitlebar();
 
-    bv.setZoomLevel(zoomLevel);
-
-    this.contentScrollboxScroller.scrollTo(scrollX, scrollY);
+    getBrowser().setZoomLevel(zoomLevel);
+    getBrowser().scrollTo(scrollX, scrollY);
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
-    return;
-
-    let bv = this._browserView;
-    if (!bv.allowZoom)
+    let tab = this.selectedTab;
+    if (!tab.allowZoom)
       return null;
 
     let zoomRect = null;
     if (aRect)
       zoomRect = this._getZoomRectForRect(aRect, cY);
 
-    if (!zoomRect && bv.isDefaultZoom())
-      zoomRect = this._getZoomRectForPoint(cX, cY, bv.getZoomLevel() * 2);
+    if (!zoomRect && tab.isDefaultZoomLevel())
+      zoomRect = this._getZoomRectForPoint(cX, cY, getBrowser().zoomLevel * 2);
 
     if (zoomRect)
       this.animatedZoomTo(zoomRect);
@@ -963,11 +927,9 @@ var Browser = {
   },
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
-    return;
-
-    let bv = this._browserView;
-    if (bv.allowZoom && !bv.isDefaultZoom()) {
-      let zoomLevel = bv.getDefaultZoomLevel();
+    let tab = this.selectedTab;
+    if (tab.allowZoom && !tab.isDefaultZoomLevel()) {
+      let zoomLevel = tab.getDefaultZoomLevel();
       let zoomRect = this._getZoomRectForPoint(cX, cY, zoomLevel);
       this.animatedZoomTo(zoomRect);
     }
@@ -1368,11 +1330,9 @@ ContentCustomClicker.prototype = {
 
     this._dispatchMouseEvent("Browser:MouseCancel");
 
-    return;
-
     const kDoubleClickRadius = 32;
 
-    let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
+    let maxRadius = kDoubleClickRadius * getBrowser().zoomLevel;
     let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
     if (isClickInRadius)
       this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
@@ -2291,8 +2251,7 @@ Tab.prototype = {
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
 
-      if (!getBrowser().contentWindow)
-        browser.setCssViewportSize(viewportW, viewportH);
+      browser.setCssViewportSize(viewportW, viewportH);
     }
     else {
       let browserBCR = browser.getBoundingClientRect();
@@ -2304,8 +2263,7 @@ Tab.prototype = {
         h /= dpiScale;
       }
 
-      if (!getBrowser().contentWindow)
-        browser.setCssViewportSize(w, h);
+      browser.setCssViewportSize(w, h);
     }
 
     // Local XUL documents are not firing MozScrolledAreaChanged
@@ -2397,21 +2355,18 @@ Tab.prototype = {
 
   clampZoomLevel: function clampZoomLevel(zl) {
     let browser = this._browser;
-    if (!browser.contentWindow) {
-      let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
+    let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
 
-      let md = this.metaData;
-      if (md && md.minZoom)
-        bounded = Math.max(bounded, md.minZoom);
-      if (md && md.maxZoom)
-        bounded = Math.min(bounded, md.maxZoom);
+    let md = this.metaData;
+    if (md && md.minZoom)
+      bounded = Math.max(bounded, md.minZoom);
+    if (md && md.maxZoom)
+      bounded = Math.min(bounded, md.maxZoom);
 
-      bounded = Math.max(bounded, this.getPageZoomLevel());
+    bounded = Math.max(bounded, this.getPageZoomLevel());
 
-      let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
-      return rounded || 1.0;
-    }
-    return 1;
+    let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
+    return rounded || 1.0;
   },
 
   /**
@@ -2419,8 +2374,7 @@ Tab.prototype = {
    */
   resetZoomLevel: function resetZoomLevel() {
     let browser = this._browser;
-    if (!browser.contentWindow)
-      this._defaultZoomLevel = browser.zoomLevel;
+    this._defaultZoomLevel = browser.zoomLevel;
   },
 
   /**
@@ -2428,12 +2382,14 @@ Tab.prototype = {
    */
   updateDefaultZoomLevel: function updateDefaultZoomLevel() {
     let browser = this._browser;
-    if (!browser.contentWindow) {
-      let isDefault = (browser.zoomLevel == this._defaultZoomLevel);
-      this._defaultZoomLevel = this.getDefaultZoomLevel();
-      if (isDefault)
-        browser.zoomLevel = this._defaultZoomLevel;
-    }
+    let isDefault = (browser.zoomLevel == this._defaultZoomLevel);
+    this._defaultZoomLevel = this.getDefaultZoomLevel();
+    if (isDefault)
+      browser.setZoomLevel(this._defaultZoomLevel);
+  },
+
+  isDefaultZoomLevel: function isDefaultZoomLevel() {
+    return getBrowser().zoomLevel == this._defaultZoomLevel;
   },
 
   getDefaultZoomLevel: function getDefaultZoomLevel() {
@@ -2453,8 +2409,12 @@ Tab.prototype = {
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
-    let browserW = this._browser.widthInCssPx;
+    let browserW = this._browser.viewportWidthInCSSPx;
     return this._browser.getBoundingClientRect().width / browserW;
+  },
+
+  get allowZoom() {
+    return this.metaData.allowZoom;
   },
 
   updateThumbnail: function updateThumbnail() {
