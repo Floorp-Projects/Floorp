@@ -3429,7 +3429,7 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
             }
         }
 
-        JS_UNLOCK_OBJ(cg->parser->context, obj);
+        JS_UNLOCK_OBJ(cg->parser->context, globalObj);
         return true;
     }
     JS_UNLOCK_OBJ(cg->parser->context, globalObj);
