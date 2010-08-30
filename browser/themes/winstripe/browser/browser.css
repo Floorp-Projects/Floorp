@@ -1807,6 +1807,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://browser/skin/Geolocation-64.png);
 }
 
+.geolocation-text-link {
+  padding-top: 5px;
+}
+
 .popup-notification-icon[popupid="xpinstall-disabled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-failed"],
