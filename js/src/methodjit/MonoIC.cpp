@@ -74,27 +74,25 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     JS_ASSERT(mic.kind == ic::MICInfo::GET);
 
     JS_LOCK_OBJ(f.cx, obj);
-    JSScope *scope = obj->scope();
-    JSScopeProperty *sprop = scope->lookup(id);
-    if (!sprop ||
-        !sprop->hasDefaultGetterOrIsMethod() ||
-        !SPROP_HAS_VALID_SLOT(sprop, scope))
+    const Shape *shape = obj->nativeLookup(id);
+    if (!shape ||
+        !shape->hasDefaultGetterOrIsMethod() ||
+        !shape->hasSlot())
     {
-        JS_UNLOCK_SCOPE(f.cx, scope);
-        if (sprop)
+        JS_UNLOCK_OBJ(f.cx, obj);
+        if (shape)
             PatchGetFallback(f, mic);
         stubs::GetGlobalName(f);
         return;
     }
-    uint32 shape = obj->shape();
-    uint32 slot = sprop->slot;
-    JS_UNLOCK_SCOPE(f.cx, scope);
+    uint32 slot = shape->slot;
+    JS_UNLOCK_OBJ(f.cx, obj);
 
     mic.u.name.touched = true;
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-    repatch.repatch(mic.shape, shape);
+    repatch.repatch(mic.shape, obj->shape());
 
     /* Patch loads. */
     JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
@@ -152,28 +150,26 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     JS_ASSERT(mic.kind == ic::MICInfo::SET);
 
     JS_LOCK_OBJ(f.cx, obj);
-    JSScope *scope = obj->scope();
-    JSScopeProperty *sprop = scope->lookup(id);
-    if (!sprop ||
-        !sprop->hasDefaultGetterOrIsMethod() ||
-        !sprop->writable() ||
-        !SPROP_HAS_VALID_SLOT(sprop, scope))
+    const Shape *shape = obj->nativeLookup(id);
+    if (!shape ||
+        !shape->hasDefaultGetterOrIsMethod() ||
+        !shape->writable() ||
+        !shape->hasSlot())
     {
-        JS_UNLOCK_SCOPE(f.cx, scope);
-        if (sprop)
+        JS_UNLOCK_OBJ(f.cx, obj);
+        if (shape)
             PatchSetFallback(f, mic);
         GetStubForSetGlobalName(f)(f, atom);
         return;
     }
-    uint32 shape = obj->shape();
-    uint32 slot = sprop->slot;
-    JS_UNLOCK_SCOPE(f.cx, scope);
+    uint32 slot = shape->slot;
+    JS_UNLOCK_OBJ(f.cx, obj);
 
     mic.u.name.touched = true;
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-    repatch.repatch(mic.shape, shape);
+    repatch.repatch(mic.shape, obj->shape());
 
     /* Patch loads. */
     JS_ASSERT(slot >= JS_INITIAL_NSLOTS);

@@ -1075,13 +1075,10 @@ mjit::Compiler::generateMethod()
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
             prepareStubCall(Uses(0));
-            if (i == JSProto_Array) {
+            if (i == JSProto_Array)
                 stubCall(stubs::NewInitArray);
-            } else {
-                JSOp next = JSOp(PC[JSOP_NEWINIT_LENGTH]);
-                masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
+            else
                 stubCall(stubs::NewInitObject);
-            }
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
@@ -1245,20 +1242,25 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRY)
           END_CASE(JSOP_TRY)
 
-          BEGIN_CASE(JSOP_GETDSLOT)
-          BEGIN_CASE(JSOP_CALLDSLOT)
+          BEGIN_CASE(JSOP_GETFCSLOT)
+          BEGIN_CASE(JSOP_CALLFCSLOT)
           {
-            // :FIXME: x64
+            uintN index = GET_UINT16(PC);
+            // JSObject *obj = &fp->argv[-2].toObject();
             RegisterID reg = frame.allocReg();
             masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, argv)), reg);
             masm.loadPayload(Address(reg, int32(sizeof(Value)) * -2), reg);
-            masm.loadPtr(Address(reg, offsetof(JSObject, dslots)), reg);
+            // obj->getFlatClosureUpvars()
+            Address upvarAddress(reg, offsetof(JSObject, fslots) + 
+                                      JSObject::JSSLOT_FLAT_CLOSURE_UPVARS * sizeof(Value));
+            masm.loadPrivate(upvarAddress, reg);
+            // push ((Value *) reg)[index]
             frame.freeReg(reg);
-            frame.push(Address(reg, GET_UINT16(PC) * sizeof(Value)));
-            if (op == JSOP_CALLDSLOT)
+            frame.push(Address(reg, index * sizeof(Value)));
+            if (op == JSOP_CALLFCSLOT)
                 frame.push(NullValue());
           }
-          END_CASE(JSOP_CALLDSLOT)
+          END_CASE(JSOP_CALLFCSLOT)
 
           BEGIN_CASE(JSOP_ARGSUB)
             prepareStubCall(Uses(0));
@@ -3550,10 +3552,9 @@ mjit::Compiler::jsop_getgname(uint32 index)
         frame.pop();
         JS_ASSERT(obj->isNative());
 
-        JSObjectMap *map = obj->map;
         objReg = frame.allocReg();
 
-        masm.load32FromImm(&map->shape, objReg);
+        masm.load32FromImm(&obj->objShape, objReg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)), mic.shape);
         masm.move(ImmPtr(obj), objReg);
@@ -3649,10 +3650,9 @@ mjit::Compiler::jsop_setgname(uint32 index)
         JSObject *obj = &objFe->getValue().toObject();
         JS_ASSERT(obj->isNative());
 
-        JSObjectMap *map = obj->map;
         objReg = frame.allocReg();
 
-        masm.load32FromImm(&map->shape, objReg);
+        masm.load32FromImm(&obj->objShape, objReg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                             mic.shape);

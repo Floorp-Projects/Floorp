@@ -152,8 +152,7 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
     }
 
     void loadShape(RegisterID obj, RegisterID shape) {
-        loadPtr(Address(obj, offsetof(JSObject, map)), shape);
-        load32(Address(shape, offsetof(JSObjectMap, shape)), shape);
+        load32(Address(obj, offsetof(JSObject, objShape)), shape);
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {

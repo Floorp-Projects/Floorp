@@ -1058,7 +1058,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                      */
                     goto skip_empty;
                 }
-                js_FreezeLocalNames(cx, fun);
+                fun->freezeLocalNames(cx);
                 fun->u.i.script = empty;
             }
 
@@ -1154,7 +1154,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         else
             fun->u.i.nupvars = 0;
 
-        js_FreezeLocalNames(cx, fun);
+        fun->freezeLocalNames(cx);
         fun->u.i.script = script;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;

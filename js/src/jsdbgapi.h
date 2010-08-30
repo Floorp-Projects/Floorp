@@ -133,17 +133,10 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj);
 extern void
 js_SweepWatchPoints(JSContext *cx);
 
-extern JSScopeProperty *
-js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);
-
 #ifdef __cplusplus
 
-/*
- * NB: callers outside of jsdbgapi.c must pass non-null scope.
- */
-extern js::PropertyOp
-js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
-                    const JSScopeProperty *sprop);
+extern const js::Shape *
+js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id);
 
 extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
@@ -402,11 +395,13 @@ typedef struct JSPropertyDescArray {
     JSPropertyDesc  *array;     /* alloc'd by Get, freed by Put */
 } JSPropertyDescArray;
 
+typedef struct JSScopeProperty JSScopeProperty;
+
 extern JS_PUBLIC_API(JSScopeProperty *)
 JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *shape,
                    JSPropertyDesc *pd);
 
 extern JS_PUBLIC_API(JSBool)

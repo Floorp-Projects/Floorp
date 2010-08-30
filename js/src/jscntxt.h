@@ -59,6 +59,7 @@
 #include "jsatom.h"
 #include "jsdhash.h"
 #include "jsdtoa.h"
+#include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcchunk.h"
 #include "jshashtable.h"
@@ -1260,7 +1261,7 @@ typedef enum JSRuntimeState {
 
 typedef struct JSPropertyTreeEntry {
     JSDHashEntryHdr     hdr;
-    JSScopeProperty     *child;
+    js::Shape           *child;
 } JSPropertyTreeEntry;
 
 
@@ -1433,17 +1434,6 @@ struct JSRuntime {
     bool                gcRunning;
     bool                gcRegenShapes;
 
-    /*
-     * During gc, if rt->gcRegenShapes &&
-     *   (scope->flags & JSScope::SHAPE_REGEN) == rt->gcRegenShapesScopeFlag,
-     * then the scope's shape has already been regenerated during this GC.
-     * To avoid having to sweep JSScopes, the bit's meaning toggles with each
-     * shape-regenerating GC.
-     *
-     * FIXME Once scopes are GC'd (bug 505004), this will be obsolete.
-     */
-    uint8               gcRegenShapesScopeFlag;
-
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
 #endif
@@ -1572,9 +1562,9 @@ struct JSRuntime {
 #define JS_PROPERTY_TREE(cx) ((cx)->runtime->propertyTree)
 
     /*
-     * The propertyRemovals counter is incremented for every JSScope::clear,
-     * and for each JSScope::remove method call that frees a slot in an object.
-     * See js_NativeGet and js_NativeSet in jsobj.cpp.
+     * The propertyRemovals counter is incremented for every JSObject::clear,
+     * and for each JSObject::remove method call that frees a slot in the given
+     * object. See js_NativeGet and js_NativeSet in jsobj.cpp.
      */
     int32               propertyRemovals;
 
@@ -1626,14 +1616,14 @@ struct JSRuntime {
 
     /*
      * Runtime-shared empty scopes for well-known built-in objects that lack
-     * class prototypes (the usual locus of an emptyScope). Mnemonic: ABCDEW
+     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
      */
-    JSEmptyScope          *emptyArgumentsScope;
-    JSEmptyScope          *emptyBlockScope;
-    JSEmptyScope          *emptyCallScope;
-    JSEmptyScope          *emptyDeclEnvScope;
-    JSEmptyScope          *emptyEnumeratorScope;
-    JSEmptyScope          *emptyWithScope;
+    js::EmptyShape      *emptyArgumentsShape;
+    js::EmptyShape      *emptyBlockShape;
+    js::EmptyShape      *emptyCallShape;
+    js::EmptyShape      *emptyDeclEnvShape;
+    js::EmptyShape      *emptyEnumeratorShape;
+    js::EmptyShape      *emptyWithShape;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
@@ -1665,16 +1655,34 @@ struct JSRuntime {
     jsrefcount          claimedTitles;
     jsrefcount          deadContexts;
     jsrefcount          deadlocksAvoided;
-    jsrefcount          liveScopes;
+    jsrefcount          liveShapes;
     jsrefcount          sharedTitles;
-    jsrefcount          totalScopes;
-    jsrefcount          liveScopeProps;
-    jsrefcount          liveScopePropsPreSweep;
-    jsrefcount          totalScopeProps;
+    jsrefcount          totalShapes;
+    jsrefcount          liveObjectProps;
+    jsrefcount          liveObjectPropsPreSweep;
+    jsrefcount          totalObjectProps;
     jsrefcount          livePropTreeNodes;
     jsrefcount          duplicatePropTreeNodes;
     jsrefcount          totalPropTreeNodes;
     jsrefcount          propTreeKidsChunks;
+    jsrefcount          liveDictModeNodes;
+
+    /*
+     * NB: emptyShapes is init'ed iff at least one of these envars is set:
+     *
+     *  JS_PROPTREE_STATFILE  statistics on the property tree forest
+     *  JS_PROPTREE_DUMPFILE  all paths in the property tree forest
+     */
+    const char          *propTreeStatFilename;
+    const char          *propTreeDumpFilename;
+
+    bool meterEmptyShapes() const { return propTreeStatFilename || propTreeDumpFilename; }
+
+    typedef js::HashSet<js::EmptyShape *,
+                        js::DefaultHasher<js::EmptyShape *>,
+                        js::SystemAllocPolicy> EmptyShapeSet;
+
+    EmptyShapeSet       emptyShapes;
 
     /* String instrumentation. */
     jsrefcount          liveStrings;
@@ -1829,12 +1837,8 @@ typedef struct JSResolvingEntry {
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
 namespace js {
+
 class AutoGCRooter;
-}
-
-namespace js {
-
-class RegExp;
 
 class RegExpStatics
 {
@@ -1941,7 +1945,7 @@ class RegExpStatics
     void getRightContext(JSSubString *out) const;
 };
 
-}
+} /* namespace js */
 
 struct JSContext
 {
@@ -2503,7 +2507,7 @@ class AutoGCRooter {
 
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
-        SPROP =        -2, /* js::AutoScopePropertyRooter */
+        SHAPE =        -2, /* js::AutoShapeRooter */
         PARSER =       -3, /* js::Parser */
         SCRIPT =       -4, /* js::AutoScriptRooter */
         ENUMERATOR =   -5, /* js::AutoEnumStateRooter */
@@ -2687,11 +2691,11 @@ class AutoArrayRooter : private AutoGCRooter {
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoScopePropertyRooter : private AutoGCRooter {
+class AutoShapeRooter : private AutoGCRooter {
   public:
-    AutoScopePropertyRooter(JSContext *cx, JSScopeProperty *sprop
-                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, SPROP), sprop(sprop)
+    AutoShapeRooter(JSContext *cx, const js::Shape *shape
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, SHAPE), shape(shape)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2700,7 +2704,7 @@ class AutoScopePropertyRooter : private AutoGCRooter {
     friend void MarkRuntime(JSTracer *trc);
 
   private:
-    JSScopeProperty * const sprop;
+    const js::Shape * const shape;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -2894,6 +2898,37 @@ class AutoReleasePtr {
   public:
     explicit AutoReleasePtr(JSContext *cx, void *ptr) : cx(cx), ptr(ptr) {}
     ~AutoReleasePtr() { cx->free(ptr); }
+};
+
+class AutoLocalNameArray {
+  public:
+    explicit AutoLocalNameArray(JSContext *cx, JSFunction *fun
+                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : context(cx),
+        mark(JS_ARENA_MARK(&cx->tempPool)),
+        names(fun->getLocalNameArray(cx, &cx->tempPool)),
+        count(fun->countLocalNames())
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~AutoLocalNameArray() {
+        JS_ARENA_RELEASE(&context->tempPool, mark);
+    }
+
+    operator bool() const { return !!names; }
+
+    uint32 length() const { return count; }
+
+    const jsuword &operator [](unsigned i) const { return names[i]; }
+
+  private:
+    JSContext   *context;
+    void        *mark;
+    jsuword     *names;
+    uint32      count;
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } /* namespace js */

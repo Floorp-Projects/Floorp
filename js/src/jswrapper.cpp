@@ -416,7 +416,8 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp)
 }
 
 bool
-JSCompartment::wrapId(JSContext *cx, jsid *idp) {
+JSCompartment::wrapId(JSContext *cx, jsid *idp)
+{
     if (JSID_IS_INT(*idp))
         return true;
     AutoValueRooter tvr(cx, IdToValue(*idp));
@@ -436,7 +437,8 @@ JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc) {
+JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
+{
     return wrap(cx, &desc->obj) &&
            (!(desc->attrs & JSPROP_GETTER) || wrap(cx, &desc->getter)) &&
            (!(desc->attrs & JSPROP_SETTER) || wrap(cx, &desc->setter)) &&
@@ -444,7 +446,8 @@ JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc) {
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, AutoIdVector &props) {
+JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
+{
     jsid *vector = props.begin();
     jsint length = props.length();
     for (size_t n = 0; n < size_t(length); ++n) {
@@ -455,7 +458,8 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props) {
 }
 
 bool
-JSCompartment::wrapException(JSContext *cx) {
+JSCompartment::wrapException(JSContext *cx)
+{
     JS_ASSERT(cx->compartment == this);
 
     if (cx->throwing) {
