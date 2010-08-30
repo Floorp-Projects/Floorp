@@ -256,12 +256,13 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     size_t initialLength = props.length();
 
     /* Collect all unique properties from this object's scope. */
-    JSScope *scope = pobj->scope();
-    for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
-        if (!JSID_IS_DEFAULT_XML_NAMESPACE(sprop->id) &&
-            !sprop->isAlias() &&
-            !Enumerate<EnumPolicy>(cx, obj, pobj, sprop->id, sprop->enumerable(), sprop->isSharedPermanent(),
-                                   flags, ht, props))
+    for (Shape::Range r = pobj->lastProperty()->all(); !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+
+        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.id) &&
+            !shape.isAlias() &&
+            !Enumerate<EnumPolicy>(cx, obj, pobj, shape.id, shape.enumerable(),
+                                   shape.isSharedPermanent(), flags, ht, props))
         {
             return false;
         }
@@ -269,7 +270,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
 
     Reverse(props.begin() + initialLength, props.end());
 
-    JS_UNLOCK_SCOPE(cx, scope);
+    JS_UNLOCK_OBJ(cx, pobj);
     return true;
 }
 
@@ -455,8 +456,8 @@ NewIteratorObject(JSContext *cx, uintN flags)
         JSObject *obj = js_NewGCObject(cx);
         if (!obj)
             return false;
-        obj->map = cx->runtime->emptyEnumeratorScope->hold();
-        obj->init(&js_IteratorClass, NULL, NULL, NullValue());
+        obj->init(&js_IteratorClass, NULL, NULL, NullValue(), cx);
+        obj->setMap(cx->runtime->emptyEnumeratorShape);
         return obj;
     }
 
@@ -630,8 +631,10 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
                 if (!(lastni->flags & JSITER_ACTIVE) &&
-                    obj->shapeUnchecked() == lastni->shapes_array[0] &&
-                    proto && proto->shapeUnchecked() == lastni->shapes_array[1] &&
+                    obj->isNative() && 
+                    obj->shape() == lastni->shapes_array[0] &&
+                    proto && proto->isNative() && 
+                    proto->shape() == lastni->shapes_array[1] &&
                     !proto->getProto()) {
                     vp->setObject(*last);
                     RegisterEnumerator(cx, last, lastni);
@@ -903,7 +906,7 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
                         if (prop) {
                             uintN attrs;
                             if (obj2.object()->isNative()) {
-                                attrs = ((JSScopeProperty *) prop)->attributes();
+                                attrs = ((Shape *) prop)->attributes();
                                 JS_UNLOCK_OBJ(cx, obj2.object());
                             } else if (!obj2.object()->getAttributes(cx, id, &attrs)) {
                                 return false;

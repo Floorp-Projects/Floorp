@@ -308,21 +308,22 @@ JSVAL_TO_PRIVATE(jsval v)
 #define JSID_TYPE_MASK                   0x7
 
 /*
- * Do not use canonical 'id' for jsid parameters since this is a magic word in
+ * Avoid using canonical 'id' for jsid parameters since this is a magic word in
  * Objective-C++ which, apparently, wants to be able to #include jsapi.h.
  */
+#define id iden
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_STRING(jsid iden)
+JSID_IS_STRING(jsid id)
 {
-    return (JSID_BITS(iden) & JSID_TYPE_MASK) == 0;
+    return (JSID_BITS(id) & JSID_TYPE_MASK) == 0;
 }
 
 static JS_ALWAYS_INLINE JSString *
-JSID_TO_STRING(jsid iden)
+JSID_TO_STRING(jsid id)
 {
-    JS_ASSERT(JSID_IS_STRING(iden));
-    return (JSString *)(JSID_BITS(iden));
+    JS_ASSERT(JSID_IS_STRING(id));
+    return (JSString *)(JSID_BITS(id));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -332,24 +333,24 @@ JS_StringHasBeenInterned(JSString *str);
 static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
-    jsid iden;
+    jsid id;
     JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-    JSID_BITS(iden) = (size_t)str;
-    return iden;
+    JSID_BITS(id) = (size_t)str;
+    return id;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_INT(jsid iden)
+JSID_IS_INT(jsid id)
 {
-    return !!(JSID_BITS(iden) & JSID_TYPE_INT);
+    return !!(JSID_BITS(id) & JSID_TYPE_INT);
 }
 
 static JS_ALWAYS_INLINE int32
-JSID_TO_INT(jsid iden)
+JSID_TO_INT(jsid id)
 {
-    JS_ASSERT(JSID_IS_INT(iden));
-    return ((int32)JSID_BITS(iden)) >> 1;
+    JS_ASSERT(JSID_IS_INT(id));
+    return ((int32)JSID_BITS(id)) >> 1;
 }
 
 #define JSID_INT_MIN  (-(1 << 30))
@@ -365,45 +366,46 @@ INT_FITS_IN_JSID(int32 i)
 static JS_ALWAYS_INLINE jsid
 INT_TO_JSID(int32 i)
 {
-    jsid iden;
+    jsid id;
     JS_ASSERT(INT_FITS_IN_JSID(i));
-    JSID_BITS(iden) = ((i << 1) | JSID_TYPE_INT);
-    return iden;
+    JSID_BITS(id) = ((i << 1) | JSID_TYPE_INT);
+    return id;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_OBJECT(jsid iden)
+JSID_IS_OBJECT(jsid id)
 {
-    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT;
+    return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT &&
+           (size_t)JSID_BITS(id) != JSID_TYPE_OBJECT;
 }
 
 static JS_ALWAYS_INLINE JSObject *
-JSID_TO_OBJECT(jsid iden)
+JSID_TO_OBJECT(jsid id)
 {
-    JS_ASSERT(JSID_IS_OBJECT(iden));
-    return (JSObject *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
+    JS_ASSERT(JSID_IS_OBJECT(id));
+    return (JSObject *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
 static JS_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
-    jsid iden;
+    jsid id;
     JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
-    JSID_BITS(iden) = ((size_t)obj | JSID_TYPE_OBJECT);
-    return iden;
+    JSID_BITS(id) = ((size_t)obj | JSID_TYPE_OBJECT);
+    return id;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_GCTHING(jsid iden)
+JSID_IS_GCTHING(jsid id)
 {
-    return JSID_IS_STRING(iden) || JSID_IS_OBJECT(iden);
+    return JSID_IS_STRING(id) || JSID_IS_OBJECT(id);
 }
 
 static JS_ALWAYS_INLINE void *
-JSID_TO_GCTHING(jsid iden)
+JSID_TO_GCTHING(jsid id)
 {
-    return (void *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
+    return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
 /*
@@ -412,11 +414,11 @@ JSID_TO_GCTHING(jsid iden)
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
+JSID_IS_DEFAULT_XML_NAMESPACE(jsid id)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
-                 JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
-    return ((size_t)JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
+                 JSID_BITS(id) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
+    return ((size_t)JSID_BITS(id) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
 }
 
 #ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
@@ -433,17 +435,27 @@ extern JS_PUBLIC_DATA(jsid) JS_DEFAULT_XML_NAMESPACE_ID;
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_VOID(jsid iden)
+JSID_IS_VOID(jsid id)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
-                 JSID_BITS(iden) == JSID_TYPE_VOID);
-    return ((size_t)JSID_BITS(iden) == JSID_TYPE_VOID);
+    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+                 JSID_BITS(id) == JSID_TYPE_VOID);
+    return ((size_t)JSID_BITS(id) == JSID_TYPE_VOID);
 }
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_EMPTY(jsid id)
+{
+    return ((size_t)JSID_BITS(id) == JSID_TYPE_OBJECT);
+}
+
+#undef id
 
 #ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
+extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 #else
-#define JSID_VOID  ((jsid)JSID_TYPE_VOID)
+# define JSID_VOID      ((jsid)JSID_TYPE_VOID)
+# define JSID_EMPTY     ((jsid)JSID_TYPE_OBJECT)
 #endif
 
 /************************************************************************/

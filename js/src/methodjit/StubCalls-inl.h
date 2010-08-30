@@ -74,31 +74,31 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         js_ReportIsNotDefined(cx, printable);
 }
 
-#define NATIVE_SET(cx,obj,sprop,entry,vp)                                     \
+#define NATIVE_SET(cx,obj,shape,entry,vp)                                     \
     JS_BEGIN_MACRO                                                            \
-        if (sprop->hasDefaultSetter() &&                                      \
-            (sprop)->slot != SPROP_INVALID_SLOT &&                            \
-            !obj->scope()->brandedOrHasMethodBarrier()) {                     \
+        if (shape->hasDefaultSetter() &&                                      \
+            (shape)->slot != SHAPE_INVALID_SLOT &&                            \
+            !(obj)->brandedOrHasMethodBarrier()) {                            \
             /* Fast path for, e.g., plain Object instance properties. */      \
-            obj->setSlot(sprop->slot, *vp);                                   \
+            (obj)->lockedSetSlot((shape)->slot, *vp);                         \
         } else {                                                              \
-            if (!js_NativeSet(cx, obj, sprop, false, vp))                     \
+            if (!js_NativeSet(cx, obj, shape, false, vp))                     \
                 THROW();                                                      \
         }                                                                     \
     JS_END_MACRO
 
-#define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp,onerr)                         \
+#define NATIVE_GET(cx,obj,pobj,shape,getHow,vp,onerr)                         \
     JS_BEGIN_MACRO                                                            \
-        if (sprop->hasDefaultGetter()) {                                      \
+        if (shape->hasDefaultGetter()) {                                      \
             /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
-                      !sprop->hasDefaultSetter());                            \
-            if (((sprop)->slot != SPROP_INVALID_SLOT))                        \
-                *(vp) = (pobj)->lockedGetSlot((sprop)->slot);                 \
+            JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
+                      !shape->hasDefaultSetter());                            \
+            if (((shape)->slot != SHAPE_INVALID_SLOT))                        \
+                *(vp) = (pobj)->lockedGetSlot((shape)->slot);                 \
             else                                                              \
                 (vp)->setUndefined();                                         \
         } else {                                                              \
-            if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
+            if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp))              \
                 onerr;                                                        \
         }                                                                     \
     JS_END_MACRO

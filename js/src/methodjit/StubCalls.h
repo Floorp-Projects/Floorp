@@ -50,7 +50,7 @@ namespace stubs {
 void JS_FASTCALL This(VMFrame &f);
 void JS_FASTCALL ComputeThis(VMFrame &f);
 JSObject * JS_FASTCALL NewInitArray(VMFrame &f);
-JSObject * JS_FASTCALL NewInitObject(VMFrame &f, uint32 empty);
+JSObject * JS_FASTCALL NewInitObject(VMFrame &f);
 JSObject * JS_FASTCALL NewArray(VMFrame &f, uint32 len);
 void JS_FASTCALL Trap(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Debugger(VMFrame &f, jsbytecode *pc);

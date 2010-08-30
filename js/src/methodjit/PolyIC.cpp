@@ -242,7 +242,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.repatchLEAToLoadPtr(pic.storeBack.instructionAtOffset(dslotsLoadOffset(pic)));
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
                            pic.shapeGuard + inlineShapeOffset(pic)),
-                          int32(JSScope::INVALID_SHAPE));
+                          int32(JSObjectMap::INVALID_SHAPE));
         repatcher.relink(pic.fastPathStart.jumpAtOffset(
                           pic.shapeGuard + inlineShapeJump(pic)),
                          pic.slowPathStart);
@@ -253,7 +253,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
 
-    bool patchInline(JSScopeProperty *sprop)
+    bool patchInline(const Shape *shape)
     {
         JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
@@ -261,7 +261,7 @@ class SetPropCompiler : public PICStubCompiler
         PICRepatchBuffer repatcher(pic, pic.fastPathStart);
 
         int32 offset;
-        if (sprop->slot < JS_INITIAL_NSLOTS) {
+        if (shape->slot < JS_INITIAL_NSLOTS) {
             JSC::CodeLocationInstruction istr;
             istr = pic.storeBack.instructionAtOffset(dslotsLoadOffset());
             repatcher.repatchLoadPtrToLEA(istr);
@@ -276,9 +276,9 @@ class SetPropCompiler : public PICStubCompiler
             int32 diff = int32(offsetof(JSObject, fslots)) -
                          int32(offsetof(JSObject, dslots));
             JS_ASSERT(diff != 0);
-            offset  = (int32(sprop->slot) * sizeof(Value)) + diff;
+            offset  = (int32(shape->slot) * sizeof(Value)) + diff;
         } else {
-            offset = (sprop->slot - JS_INITIAL_NSLOTS) * sizeof(Value);
+            offset = (shape->slot - JS_INITIAL_NSLOTS) * sizeof(Value);
         }
 
         uint32 shapeOffs = pic.shapeGuard + inlineShapeOffset();
@@ -326,7 +326,7 @@ class SetPropCompiler : public PICStubCompiler
         }
     }
 
-    bool generateStub(JSScopeProperty *sprop)
+    bool generateStub(const Shape *shape)
     {
         Assembler masm;
 
@@ -347,21 +347,20 @@ class SetPropCompiler : public PICStubCompiler
         Label stubShapeJumpLabel = masm.label();
 #endif
 
-        JSScope *scope = obj->scope();
-        JS_ASSERT_IF(!sprop->hasDefaultSetter(), obj->getClass() == &js_CallClass);
+        JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->getClass() == &js_CallClass);
 
         Jump rebrand;
         Jump skipOver;
-        if (sprop->hasDefaultSetter()) {
-            Address address(pic.objReg, offsetof(JSObject, fslots) + sprop->slot * sizeof(Value));
-            if (sprop->slot >= JS_INITIAL_NSLOTS) {
+        if (shape->hasDefaultSetter()) {
+            Address address(pic.objReg, offsetof(JSObject, fslots) + shape->slot * sizeof(Value));
+            if (shape->slot >= JS_INITIAL_NSLOTS) {
                 masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.objReg);
-                address = Address(pic.objReg, (sprop->slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+                address = Address(pic.objReg, (shape->slot - JS_INITIAL_NSLOTS) * sizeof(Value));
             }
 
             // If the scope is branded, or has a method barrier. It's now necessary
             // to guard that we're not overwriting a function-valued property.
-            if (scope->brandedOrHasMethodBarrier()) {
+            if (obj->brandedOrHasMethodBarrier()) {
                 masm.loadTypeTag(address, pic.shapeReg);
                 Jump skip = masm.testObject(Assembler::NotEqual, pic.shapeReg);
                 masm.loadPayload(address, pic.shapeReg);
@@ -372,7 +371,7 @@ class SetPropCompiler : public PICStubCompiler
 
             emitStore(masm, address);
         } else {
-            uint16 slot = uint16(sprop->shortid);
+            uint16 slot = uint16(shape->shortid);
 
             /* Guard that the call object has a frame. */
             masm.loadFunctionPrivate(pic.objReg, pic.shapeReg);
@@ -380,7 +379,7 @@ class SetPropCompiler : public PICStubCompiler
 
             {
                 uint32 bias = 0;
-                if (sprop->setterOp() == SetCallArg)
+                if (shape->setterOp() == SetCallArg)
                     masm.loadPtr(Address(pic.shapeReg, offsetof(JSStackFrame, argv)), pic.shapeReg);
                 else
                     bias = sizeof(JSStackFrame);
@@ -391,7 +390,7 @@ class SetPropCompiler : public PICStubCompiler
 
             escapedFrame.linkTo(masm.label(), &masm);
             {
-                if (sprop->setterOp() == SetCallVar) {
+                if (shape->setterOp() == SetCallVar) {
                     JSFunction *fun = js_GetCallObjectFunction(obj);
                     slot += fun->nargs;
                 }
@@ -416,9 +415,9 @@ class SetPropCompiler : public PICStubCompiler
         JSC::LinkBuffer buffer(&masm, ep);
         buffer.link(shapeMismatch, pic.slowPathStart);
         buffer.link(done, pic.storeBack);
-        if (sprop->hasDefaultSetter() && (scope->brandedOrHasMethodBarrier()))
+        if (shape->hasDefaultSetter() && (obj->brandedOrHasMethodBarrier()))
             buffer.link(rebrand, pic.slowPathStart);
-        if (!sprop->hasDefaultSetter())
+        if (!shape->hasDefaultSetter())
             buffer.link(skipOver, pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %d %d at %p\n",
@@ -471,34 +470,33 @@ class SetPropCompiler : public PICStubCompiler
         if (holder != obj)
             return disable("property not on object");
 
-        JSScope *scope = obj->scope();
-        JSScopeProperty *sprop = (JSScopeProperty *)prop;
-        if (!sprop->writable())
+        const Shape *shape = (const Shape *) prop;
+        if (!shape->writable())
             return disable("readonly");
-        if (scope->sealed() && !sprop->hasSlot())
+        if (obj->sealed() && !shape->hasSlot())
             return disable("what does this even mean");
 
-        if (sprop->hasDefaultSetter()) {
-            if (!SPROP_HAS_VALID_SLOT(sprop, scope))
+        if (shape->hasDefaultSetter()) {
+            if (!shape->hasSlot())
                 return disable("invalid slot");
         } else {
-            if (sprop->hasSetterValue())
+            if (shape->hasSetterValue())
                 return disable("scripted setter");
-            if (sprop->setterOp() != SetCallArg &&
-                sprop->setterOp() != SetCallVar) {
+            if (shape->setterOp() != SetCallArg &&
+                shape->setterOp() != SetCallVar) {
                 return disable("setter");
             }
         }
 
         JS_ASSERT(obj == holder);
         if (!pic.inlinePathPatched &&
-            !scope->brandedOrHasMethodBarrier() &&
-            sprop->hasDefaultSetter() &&
+            !obj->brandedOrHasMethodBarrier() &&
+            shape->hasDefaultSetter() &&
             !obj->isDenseArray()) {
-            return patchInline(sprop);
+            return patchInline(shape);
         } 
 
-        return generateStub(sprop);
+        return generateStub(shape);
     }
 };
 
@@ -566,7 +564,7 @@ class GetPropCompiler : public PICStubCompiler
         repatcher.repatchLEAToLoadPtr(pic.storeBack.instructionAtOffset(dslotsLoad(pic)));
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
                            pic.shapeGuard + inlineShapeOffset(pic)),
-                          int32(JSScope::INVALID_SHAPE));
+                          int32(JSObjectMap::INVALID_SHAPE));
         repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineShapeJump(pic)),
                          pic.slowPathStart);
 
@@ -695,12 +693,12 @@ class GetPropCompiler : public PICStubCompiler
             return disable("property not found");
 
         AutoPropertyDropper dropper(f.cx, holder, prop);
-        JSScopeProperty *sprop = (JSScopeProperty *)prop;
+        const Shape *shape = (const Shape *)prop;
         if (holder != obj)
             return disable("proto walk on String.prototype");
-        if (!sprop->hasDefaultGetterOrIsMethod())
+        if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
-        if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
+        if (!shape->hasSlot())
             return disable("invalid slot");
 
         JS_ASSERT(holder->isNative());
@@ -734,7 +732,7 @@ class GetPropCompiler : public PICStubCompiler
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump shapeMismatch = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                            Imm32(obj->shape()));
-        masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
+        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
 
         Jump done = masm.jump();
 
@@ -807,13 +805,13 @@ class GetPropCompiler : public PICStubCompiler
         return true;
     }
 
-    bool patchInline(JSObject *holder, JSScopeProperty *sprop)
+    bool patchInline(JSObject *holder, const Shape *shape)
     {
         spew("patch", "inline");
         PICRepatchBuffer repatcher(pic, pic.fastPathStart);
 
         int32 offset;
-        if (sprop->slot < JS_INITIAL_NSLOTS) {
+        if (shape->slot < JS_INITIAL_NSLOTS) {
             JSC::CodeLocationInstruction istr;
             istr = pic.storeBack.instructionAtOffset(dslotsLoad());
             repatcher.repatchLoadPtrToLEA(istr);
@@ -828,9 +826,9 @@ class GetPropCompiler : public PICStubCompiler
             int32 diff = int32(offsetof(JSObject, fslots)) -
                          int32(offsetof(JSObject, dslots));
             JS_ASSERT(diff != 0);
-            offset  = (int32(sprop->slot) * sizeof(Value)) + diff;
+            offset  = (int32(shape->slot) * sizeof(Value)) + diff;
         } else {
-            offset = (sprop->slot - JS_INITIAL_NSLOTS) * sizeof(Value);
+            offset = (shape->slot - JS_INITIAL_NSLOTS) * sizeof(Value);
         }
 
         uint32 shapeOffs = pic.shapeGuard + inlineShapeOffset();
@@ -847,7 +845,7 @@ class GetPropCompiler : public PICStubCompiler
         return true;
     }
 
-    bool generateStub(JSObject *holder, JSScopeProperty *sprop)
+    bool generateStub(JSObject *holder, const Shape *shape)
     {
         Vector<Jump, 8> shapeMismatches(f.cx);
 
@@ -936,7 +934,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         /* Load the value out of the object. */
-        masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
+        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1026,16 +1024,16 @@ class GetPropCompiler : public PICStubCompiler
         if (!holder->isNative())
             return disable("non-native holder");
 
-        JSScopeProperty *sprop = (JSScopeProperty *)prop;
-        if (!sprop->hasDefaultGetterOrIsMethod())
+        const Shape *shape = (const Shape *)prop;
+        if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
-        if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
+        if (!shape->hasSlot())
             return disable("invalid slot");
 
         if (obj == holder && !pic.inlinePathPatched)
-            return patchInline(holder, sprop);
+            return patchInline(holder, shape);
         
-        return generateStub(holder, sprop);
+        return generateStub(holder, shape);
     }
 
     bool disable(const char *reason)
@@ -1129,7 +1127,7 @@ class GetElemCompiler : public PICStubCompiler
         /* Only the shape needs to be patched to fail -- atom jump will never be taken. */
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
                            pic.shapeGuard + inlineShapeOffset(pic)),
-                          int32(JSScope::INVALID_SHAPE));
+                          int32(JSObjectMap::INVALID_SHAPE));
         repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineShapeJump(pic)),
                          pic.slowPathStart);
 
@@ -1140,13 +1138,13 @@ class GetElemCompiler : public PICStubCompiler
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
 
-    bool patchInline(JSObject *holder, JSScopeProperty *sprop)
+    bool patchInline(JSObject *holder, const Shape *shape)
     {
         spew("patch", "inline");
         PICRepatchBuffer repatcher(pic, pic.fastPathStart);
 
         int32 offset;
-        if (sprop->slot < JS_INITIAL_NSLOTS) {
+        if (shape->slot < JS_INITIAL_NSLOTS) {
             JSC::CodeLocationInstruction istr = pic.storeBack.instructionAtOffset(dslotsLoad());
             repatcher.repatchLoadPtrToLEA(istr);
 
@@ -1159,9 +1157,9 @@ class GetElemCompiler : public PICStubCompiler
             //
             int32 diff = int32(offsetof(JSObject, fslots)) - int32(offsetof(JSObject, dslots));
             JS_ASSERT(diff != 0);
-            offset  = (int32(sprop->slot) * sizeof(Value)) + diff;
+            offset  = (int32(shape->slot) * sizeof(Value)) + diff;
         } else {
-            offset = (sprop->slot - JS_INITIAL_NSLOTS) * sizeof(Value);
+            offset = (shape->slot - JS_INITIAL_NSLOTS) * sizeof(Value);
         }
         
         uint32 shapeOffset = pic.shapeGuard + inlineShapeOffset();
@@ -1203,7 +1201,7 @@ class GetElemCompiler : public PICStubCompiler
             repatcher.relink(lastStubSecondShapeGuard, cs);
     }
 
-    bool generateStub(JSObject *holder, JSScopeProperty *sprop)
+    bool generateStub(JSObject *holder, const Shape *shape)
     {
         JS_ASSERT(pic.u.get.idReg != pic.shapeReg);
         Vector<Jump, 8> shapeMismatches(f.cx);
@@ -1290,7 +1288,7 @@ class GetElemCompiler : public PICStubCompiler
         }
 
         /* Load the value out of the object. */
-        masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
+        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1368,16 +1366,16 @@ class GetElemCompiler : public PICStubCompiler
         if (!holder->isNative())
             return disable("non-native holder");
 
-        JSScopeProperty *sprop = (JSScopeProperty *)prop;
-        if (!sprop->hasDefaultGetterOrIsMethod())
+        const Shape *shape = (const Shape *)prop;
+        if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
-        if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
+        if (!shape->hasSlot())
             return disable("invalid slot");
 
         if (obj == holder && !pic.inlinePathPatched)
-            return patchInline(holder, sprop);
+            return patchInline(holder, shape);
 
-        return generateStub(holder, sprop);
+        return generateStub(holder, shape);
     }
 
     bool disable(const char *reason)
@@ -1396,7 +1394,7 @@ class ScopeNameCompiler : public PICStubCompiler
     JSObject *obj;
     JSObject *holder;
     JSProperty *prop;
-    JSScopeProperty *sprop;
+    const Shape *shape;
 
   public:
     ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
@@ -1479,7 +1477,7 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(holder->shape()));
 
-        masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
+        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
 
         Jump done = masm.jump();
 
@@ -1543,9 +1541,9 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(holder != scopeChain->getGlobal());
 
         CallObjPropKind kind;
-        if (sprop->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == js_GetCallArg) {
             kind = ARG;
-        } else if (sprop->getterOp() == js_GetCallVar) {
+        } else if (shape->getterOp() == js_GetCallVar) {
             kind = VAR;
         } else {
             return disable("unhandled callobj sprop getter");
@@ -1564,7 +1562,7 @@ class ScopeNameCompiler : public PICStubCompiler
         /* Get callobj's stack frame. */
         masm.loadFunctionPrivate(pic.objReg, pic.shapeReg);
 
-        uint16 slot = uint16(sprop->shortid);
+        uint16 slot = uint16(shape->shortid);
 
         Jump skipOver;
         Jump escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
@@ -1658,14 +1656,14 @@ class ScopeNameCompiler : public PICStubCompiler
         if (obj != holder)
             return disable("property is on proto of a scope object");
         
-        sprop = (JSScopeProperty *)prop;
+        shape = (const Shape *)prop;
 
         if (obj->getClass() == &js_CallClass)
             return generateCallStub();
 
-        if (!sprop->hasDefaultGetterOrIsMethod())
+        if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
-        if (!SPROP_HAS_VALID_SLOT(sprop, holder->scope()))
+        if (!shape->hasSlot())
             return disable("invalid slot");
 
         if (!obj->getParent())
@@ -2034,12 +2032,12 @@ ic::CallProp(VMFrame &f, uint32 index)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj2->scope()->freeslot);
+            JS_ASSERT(slot < obj2->freeslot);
             rval = obj2->lockedGetSlot(slot);
         } else {
-            JS_ASSERT(entry->vword.isSprop());
-            JSScopeProperty *sprop = entry->vword.toSprop();
-            NATIVE_GET(cx, &objv.toObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
+            JS_ASSERT(entry->vword.isShape());
+            const Shape *shape = entry->vword.toShape();
+            NATIVE_GET(cx, &objv.toObject(), obj2, shape, JSGET_NO_METHOD_BARRIER, &rval,
                        THROW());
         }
         regs.sp++;
@@ -2156,11 +2154,11 @@ ic::Name(VMFrame &f, uint32 index)
             ReportAtomNotDefined(f.cx, atom);
             THROW();
         }
-        JSScopeProperty *sprop = (JSScopeProperty *)cc.prop;
+        const Shape *shape = (const Shape *)cc.prop;
         JSObject *normalized = cc.obj;
-        if (cc.obj->getClass() == &js_WithClass && !sprop->hasDefaultGetter())
+        if (cc.obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(f.cx, cc.obj);
-        NATIVE_GET(f.cx, normalized, cc.holder, sprop, JSGET_METHOD_BARRIER, &rval,
+        NATIVE_GET(f.cx, normalized, cc.holder, shape, JSGET_METHOD_BARRIER, &rval,
                    THROW());
         JS_UNLOCK_OBJ(f.cx, cc.holder);
     }
