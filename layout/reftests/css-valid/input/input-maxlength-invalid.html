@@ -2,12 +2,9 @@
 <html class="reftest-wait">
   <!-- Test: if input isn't valid nor barred from constraint validation,
              it should not be affected by :valid pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i').value='foo'; document.documentElement.className='';">
-    <input maxlength="2" id='i'>
+    <input class='notvalid' maxlength="2" id='i'>
   </body>
 </html>
 

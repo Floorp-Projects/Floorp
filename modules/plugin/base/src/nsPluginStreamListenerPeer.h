@@ -136,7 +136,7 @@ private:
   PRPackedBool      mStartBinding;
   PRPackedBool      mHaveFiredOnStartRequest;
   // these get passed to the plugin stream listener
-  PRUint32                mLength;
+  PRUint64                mLength;
   PRInt32                 mStreamType;
   
   // local cached file, we save the content into local cache if browser cache is not available,

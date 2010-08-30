@@ -312,17 +312,23 @@ interface nsIBrowserSearchService : nsISupports
   void removeEngine(in nsISearchEngine engine);
 
   /**
-   * The default search engine. May be null if there are no visible
-   * search engines installed.
+   * The default search engine. Returns the first visible engine if the default
+   * engine is hidden. May be null if there are no visible search engines.
    */
   readonly attribute nsISearchEngine defaultEngine;
 
   /**
    * The currently active search engine. May be null if there are no visible
-   * search engines installed.
+   * search engines.
    */
   attribute nsISearchEngine currentEngine;
 
+  /**
+   * The original default engine. This differs from the "defaultEngine"
+   * attribute in that it always returns a given build's default engine,
+   * regardless of whether it is hidden.
+   */
+  readonly attribute nsISearchEngine originalDefaultEngine;
 };
 
 %{ C++

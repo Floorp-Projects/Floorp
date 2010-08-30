@@ -306,6 +306,182 @@ function test_close_fails_with_async_statement_ran()
   }
 }
 
+function test_clone_optional_param()
+{
+  let db1 = getService().openUnsharedDatabase(getTestDB());
+  let db2 = db1.clone();
+  do_check_true(db2.connectionReady);
+
+  // A write statement should not fail here.
+  let stmt = db2.createStatement("INSERT INTO test (name) VALUES (:name)");
+  stmt.params.name = "dwitte";
+  stmt.execute();
+  stmt.finalize();
+
+  // And a read statement should succeed.
+  stmt = db2.createStatement("SELECT * FROM test");
+  do_check_true(stmt.executeStep());
+  stmt.finalize();
+
+  // Additionally check that it is a connection on the same database.
+  do_check_true(db1.databaseFile.equals(db2.databaseFile));
+
+  run_next_test();
+}
+
+function test_clone_readonly()
+{
+  let db1 = getService().openUnsharedDatabase(getTestDB());
+  let db2 = db1.clone(true);
+  do_check_true(db2.connectionReady);
+
+  // A write statement should fail here.
+  let stmt = db2.createStatement("INSERT INTO test (name) VALUES (:name)");
+  stmt.params.name = "reed";
+  expectError(Cr.NS_ERROR_FILE_READ_ONLY, function() stmt.execute());
+  stmt.finalize();
+
+  // And a read statement should succeed.
+  stmt = db2.createStatement("SELECT * FROM test");
+  do_check_true(stmt.executeStep());
+  stmt.finalize();
+
+  run_next_test();
+}
+
+function test_clone_shared_readonly()
+{
+  let db1 = getService().openDatabase(getTestDB());
+  let db2 = db1.clone(true);
+  do_check_true(db2.connectionReady);
+
+  // A write statement should fail here.
+  let stmt = db2.createStatement("INSERT INTO test (name) VALUES (:name)");
+  stmt.params.name = "reed";
+  // TODO currently SQLite does not actually work correctly here.  The behavior
+  //      we want is commented out, and the current behavior is being tested
+  //      for.  Our IDL comments will have to be updated when this starts to
+  //      work again.
+  stmt.execute(); // This should not throw!
+  //expectError(Cr.NS_ERROR_FILE_READ_ONLY, function() stmt.execute());
+  stmt.finalize();
+
+  // And a read statement should succeed.
+  stmt = db2.createStatement("SELECT * FROM test");
+  do_check_true(stmt.executeStep());
+  stmt.finalize();
+
+  run_next_test();
+}
+
+function test_close_clone_fails()
+{
+  let calls = [
+    "openDatabase",
+    "openUnsharedDatabase",
+  ];
+  calls.forEach(function(methodName) {
+    let db = getService()[methodName](getTestDB());
+    db.close();
+    expectError(Cr.NS_ERROR_NOT_INITIALIZED, function() db.clone());
+  });
+
+  run_next_test();
+}
+
+function test_memory_clone_fails()
+{
+  let db = getService().openSpecialDatabase("memory");
+  db.close();
+  expectError(Cr.NS_ERROR_NOT_INIALIZED, function() db.clone());
+
+  run_next_test();
+}
+
+function test_clone_copies_functions()
+{
+  const FUNC_NAME = "test_func";
+  let calls = [
+    "openDatabase",
+    "openUnsharedDatabase",
+  ];
+  let functionMethods = [
+    "createFunction",
+    "createAggregateFunction",
+  ];
+  calls.forEach(function(methodName) {
+    [true, false].forEach(function(readOnly) {
+      functionMethods.forEach(function(functionMethod) {
+        let db1 = getService()[methodName](getTestDB());
+        // Create a function for db1.
+        db1[functionMethod](FUNC_NAME, 1, {
+          onFunctionCall: function() 0,
+          onStep: function() 0,
+          onFinal: function() 0,
+        });
+
+        // Clone it, and make sure the function exists still.
+        let db2 = db1.clone(readOnly);
+        // Note: this would fail if the function did not exist.
+        let stmt = db2.createStatement("SELECT " + FUNC_NAME + "(id) FROM test");
+        stmt.finalize();
+        db1.close();
+        db2.close();
+      });
+    });
+  });
+
+  run_next_test();
+}
+
+function test_clone_copies_overridden_functions()
+{
+  const FUNC_NAME = "lower";
+  function test_func() {
+    this.called = false;
+  }
+  test_func.prototype = {
+    onFunctionCall: function() {
+      this.called = true;
+    },
+    onStep: function() {
+      this.called = true;
+    },
+    onFinal: function() 0,
+  };
+
+  let calls = [
+    "openDatabase",
+    "openUnsharedDatabase",
+  ];
+  let functionMethods = [
+    "createFunction",
+    "createAggregateFunction",
+  ];
+  calls.forEach(function(methodName) {
+    [true, false].forEach(function(readOnly) {
+      functionMethods.forEach(function(functionMethod) {
+        let db1 = getService()[methodName](getTestDB());
+        // Create a function for db1.
+        let func = new test_func();
+        db1[functionMethod](FUNC_NAME, 1, func);
+        do_check_false(func.called);
+
+        // Clone it, and make sure the function gets called.
+        let db2 = db1.clone(readOnly);
+        let stmt = db2.createStatement("SELECT " + FUNC_NAME + "(id) FROM test");
+        stmt.executeStep();
+        do_check_true(func.called);
+        stmt.finalize();
+        db1.close();
+        db2.close();
+      });
+    });
+  });
+
+  run_next_test();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -332,6 +508,11 @@ var tests = [
   test_close_does_not_spin_event_loop, // must be ran before executeAsync tests
   test_asyncClose_succeeds_with_finalized_async_statement,
   test_close_fails_with_async_statement_ran,
+  test_clone_optional_param,
+  test_clone_readonly,
+  test_close_clone_fails,
+  test_clone_copies_functions,
+  test_clone_copies_overridden_functions,
 ];
 let index = 0;
 

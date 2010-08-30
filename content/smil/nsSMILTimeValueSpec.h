@@ -99,6 +99,8 @@ protected:
       nsIDOMEventGroup** aSystemGroup);
   void HandleEvent(nsIDOMEvent* aEvent);
   PRBool CheckEventDetail(nsIDOMEvent* aEvent);
+  PRBool CheckRepeatEventDetail(nsIDOMEvent* aEvent);
+  PRBool CheckAccessKeyEventDetail(nsIDOMEvent* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
                                       const nsSMILTimeContainer* aSrcContainer);
 

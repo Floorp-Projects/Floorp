@@ -2,11 +2,8 @@
 <html>
   <!-- Test: if select is disabled, it is barred from constraint validation
              and should not be affected by :valid pseudo-class. -->
-  <style>
-    select { background-color: green; }
-    select:valid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <select disabled></select>
+    <select class='notvalid' disabled></select>
   </body>
 </html>

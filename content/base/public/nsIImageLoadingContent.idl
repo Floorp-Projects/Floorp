@@ -41,6 +41,7 @@ interface imgIRequest;
 interface nsIChannel;
 interface nsIStreamListener;
 interface nsIURI;
+interface nsIDocument;
 
 /**
  * This interface represents a content node that loads images.  The interface
@@ -64,7 +65,7 @@ interface nsIURI;
  * sufficient, when combined with the imageBlockingStatus information.)
  */
 
-[scriptable, uuid(e036857e-3417-4812-a5f2-89668a616781)]
+[scriptable, uuid(7974082c-3267-4ab1-96fa-bd47d7e3a093)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -174,5 +175,9 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * as PR_FALSE to revert ImageState() to its original behaviour.
    */
   void forceImageState(in boolean aForce, in long aState);
-  
+
+  /**
+    * We need to be notified when our document changes.
+    */
+  [noscript, notxpcom] void NotifyOwnerDocumentChanged(in nsIDocument aOldDoc);
 };

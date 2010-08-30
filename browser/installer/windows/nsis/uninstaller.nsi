@@ -70,6 +70,7 @@ Var TmpVal
 !include WinVer.nsh
 !include WordFunc.nsh
 
+!insertmacro GetSize
 !insertmacro StrFilter
 !insertmacro WordReplace
 
@@ -133,11 +134,15 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro UninstallOnInitCommon
 
 !insertmacro un.OnEndCommon
+!insertmacro un.UninstallUnOnInitCommon
 
 Name "${BrandFullName}"
 OutFile "helper.exe"
-InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
-InstallDir "$PROGRAMFILES\${BrandFullName}"
+!ifdef HAVE_64BIT_OS
+  InstallDir "$PROGRAMFILES64\${BrandFullName}\"
+!else
+  InstallDir "$PROGRAMFILES32\${BrandFullName}\"
+!endif
 ShowUnInstDetails nevershow
 
 ################################################################################
@@ -209,7 +214,7 @@ Section "Uninstall"
   ${If} ${Errors}
     ; If the user closed the application it can take several seconds for it to
     ; shut down completely. If the application is being used by another user we
-    ; can still delete the files when the system is restarted. 
+    ; can still delete the files when the system is restarted.
     Sleep 5000
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
     ClearErrors
@@ -571,18 +576,9 @@ Function .onInit
 FunctionEnd
 
 Function un.onInit
-  ${un.GetParent} "$INSTDIR" $INSTDIR
-  ${un.GetLongPath} "$INSTDIR" $INSTDIR
-  ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
-    Abort
-  ${EndUnless}
-
   StrCpy $LANGUAGE 0
-  ${un.SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
 
-  ; Initialize $hHeaderBitmap to prevent redundant changing of the bitmap if
-  ; the user clicks the back button
-  StrCpy $hHeaderBitmap ""
+  ${un.UninstallUnOnInitCommon}
 
   !insertmacro InitInstallOptionsFile "unconfirm.ini"
 FunctionEnd

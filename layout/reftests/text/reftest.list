@@ -33,7 +33,7 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 == white-space-2.html white-space-2-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 random == wordwrap-02.html wordwrap-02-ref.html # bad fonts on test boxes
-random-if(gtk2Widget) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
+random-if(gtk2Widget) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html

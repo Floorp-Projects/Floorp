@@ -25,8 +25,6 @@
       window[import] = window.opener.wrappedJSObject[import];
     }
     
-    var HTMLNS = "http://www.w3.org/1999/xhtml";
-
     function runTests() {
       var testCanvas = snapshotWindow(window);
 
@@ -37,8 +35,6 @@
 
       var comparison = compareSnapshots(testCanvas, refCanvas, true);
       ok(comparison[0], "Rendering OK, got " + comparison[1] + ", expected " + comparison[2]);
-      dump(comparison[1] + "\n");
-      dump(comparison[2] + "\n");
 
       var tester = window.SimpleTest;
       window.close();

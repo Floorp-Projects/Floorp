@@ -65,6 +65,11 @@
 #include <QPinchGesture>
 #endif // QT version check
 
+#ifdef MOZ_X11
+#include <QX11Info>
+#include <X11/Xlib.h>
+#endif //MOZ_X11
+
 #include "nsXULAppAPI.h"
 
 #include "prlink.h"
@@ -100,6 +105,10 @@
 #include "gfxImageSurface.h"
 
 #include "nsIDOMSimpleGestureEvent.h" //Gesture support
+
+#ifdef MOZ_X11
+#include "keysym2ucs.h"
+#endif //MOZ_X11
 
 #include <QtOpenGL/QGLWidget>
 #define GLdouble_defined 1
@@ -1308,6 +1317,267 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 
     PRBool setNoDefault = PR_FALSE;
 
+#ifdef MOZ_X11
+    // before we dispatch a key, check if it's the context menu key.
+    // If so, send a context menu key event instead.
+    if (isContextMenuKeyEvent(aEvent)) {
+        nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
+                                      nsMouseEvent::eReal,
+                                      nsMouseEvent::eContextMenuKey);
+        //keyEventToContextMenuEvent(&event, &contextMenuEvent);
+        return DispatchEvent(&contextMenuEvent);
+    }
+
+    PRUint32 domCharCode = 0;
+    PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
+
+    // get keymap and modifier map from the Xserver
+    Display *display = QX11Info::display();
+    int x_min_keycode = 0, x_max_keycode = 0, xkeysyms_per_keycode;
+    XDisplayKeycodes(display, &x_min_keycode, &x_max_keycode);
+    XModifierKeymap *xmodmap = XGetModifierMapping(display);
+    KeySym *xkeymap = XGetKeyboardMapping(display, x_min_keycode, x_max_keycode - x_min_keycode,
+                                          &xkeysyms_per_keycode);
+
+    // create modifier masks
+    qint32 shift_mask = 0, shift_lock_mask = 0, caps_lock_mask = 0, num_lock_mask = 0;
+
+    for (int i = 0; i < 8 * xmodmap->max_keypermod; ++i) {
+        qint32 maskbit = 1 << (i / xmodmap->max_keypermod);
+        KeyCode modkeycode = xmodmap->modifiermap[i];
+        if (modkeycode == NoSymbol) {
+            continue;
+        }
+
+        quint32 mapindex = (modkeycode - x_min_keycode) * xkeysyms_per_keycode;
+        for (int j = 0; j < xkeysyms_per_keycode; ++j) {
+            KeySym modkeysym = xkeymap[mapindex + j];
+            switch (modkeysym) {
+                case XK_Num_Lock:
+                    num_lock_mask |= maskbit;
+                    break;
+                case XK_Caps_Lock:
+                    caps_lock_mask |= maskbit;
+                    break;
+                case XK_Shift_Lock:
+                    shift_lock_mask |= maskbit;
+                    break;
+                case XK_Shift_L:
+                case XK_Shift_R:
+                    shift_mask |= maskbit;
+                    break;
+            }
+        }
+    }
+    // indicate whether is down or not
+    PRBool shift_state = ((shift_mask & aEvent->nativeModifiers()) != 0) ^
+                          (bool)(shift_lock_mask & aEvent->nativeModifiers());
+    PRBool capslock_state = (bool)(caps_lock_mask & aEvent->nativeModifiers());
+
+    // try to find a keysym that we can translate to a DOMKeyCode
+    // this is needed because some of Qt's keycodes cannot be translated
+    // TODO: use US keyboard keymap instead of localised keymap
+    if (!domKeyCode &&
+        aEvent->nativeScanCode() >= (quint32)x_min_keycode &&
+        aEvent->nativeScanCode() <= (quint32)x_max_keycode) {
+        int index = (aEvent->nativeScanCode() - x_min_keycode) * xkeysyms_per_keycode;
+        for(int i = 0; (i < xkeysyms_per_keycode) && (domKeyCode == (quint32)NoSymbol); ++i) {
+            domKeyCode = QtKeyCodeToDOMKeyCode(xkeymap[index + i]);
+        }
+    }
+
+    // store character in domCharCode
+    if (aEvent->text().length() && aEvent->text()[0].isPrint())
+        domCharCode = (PRInt32) aEvent->text()[0].unicode();
+
+    // If the key isn't autorepeat, we need to send the initial down event
+    if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
+        // send the key down event
+
+        SetKeyDownFlag(domKeyCode);
+
+        nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
+        InitKeyEvent(downEvent, aEvent);
+
+        downEvent.keyCode = domKeyCode;
+
+        nsEventStatus status = DispatchEvent(&downEvent);
+
+        // DispatchEvent can Destroy us (bug 378273)
+        if (NS_UNLIKELY(mIsDestroyed)) {
+            qWarning() << "Returning[" << __LINE__ << "]: " << "Window destroyed";
+            return status;
+        }
+
+        // If prevent default on keydown, do same for keypress
+        if (status == nsEventStatus_eConsumeNoDefault)
+            setNoDefault = PR_TRUE;
+    }
+
+    // Don't pass modifiers as NS_KEY_PRESS events.
+    // Instead of selectively excluding some keys from NS_KEY_PRESS events,
+    // we instead selectively include (as per MSDN spec
+    // ( http://msdn.microsoft.com/en-us/library/system.windows.forms.control.keypress%28VS.71%29.aspx );
+    // no official spec covers KeyPress events).
+    if (aEvent->key() == Qt::Key_Shift   ||
+        aEvent->key() == Qt::Key_Control ||
+        aEvent->key() == Qt::Key_Meta    ||
+        aEvent->key() == Qt::Key_Alt     ||
+        aEvent->key() == Qt::Key_AltGr) {
+
+        return setNoDefault ?
+            nsEventStatus_eConsumeNoDefault :
+            nsEventStatus_eIgnore;
+    }
+
+    nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
+    InitKeyEvent(event, aEvent);
+
+    // If prevent default on keydown, do same for keypress
+    if (setNoDefault) {
+        event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    }
+
+    // If there is no charcode attainable from the text, try to
+    // generate it from the keycode. Check shift state for case
+    // Also replace the charcode if ControlModifier is the only
+    // pressed Modifier
+    if ((!domCharCode) &&
+        (QApplication::keyboardModifiers() &
+        (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+
+        // get a character from X11 key map
+        KeySym keysym = aEvent->nativeVirtualKey();
+        if (keysym) {
+            domCharCode = (PRUint32) keysym2ucs(keysym);
+            if (domCharCode == -1 || ! QChar((quint32)domCharCode).isPrint()) {
+                domCharCode = 0;
+            }
+        }
+
+        // if Ctrl is pressed and domCharCode is not a ASCII character
+        if (domCharCode > 0xFF && (QApplication::keyboardModifiers() & Qt::ControlModifier)) {
+            // replace Unicode character
+            int index = (aEvent->nativeScanCode() - x_min_keycode) * xkeysyms_per_keycode;
+            for (int i = 0; i < xkeysyms_per_keycode; ++i) {
+                if (xkeymap[index + i] <= 0xFF && !shift_state) {
+                    domCharCode = (PRUint32) QChar::toLower((uint) xkeymap[index + i]);
+                    break;
+                }
+            }
+        }
+
+    } else { // The key event should cause a character input.
+             // At that time, we need to reset the modifiers
+             // because nsEditor will not accept a key event
+             // for text input if one or more modifiers are set.
+        event.isControl = PR_FALSE;
+        event.isAlt = PR_FALSE;
+        event.isMeta = PR_FALSE;
+    }
+
+    KeySym keysym = NoSymbol;
+    int index = (aEvent->nativeScanCode() - x_min_keycode) * xkeysyms_per_keycode;
+    for (int i = 0; i < xkeysyms_per_keycode; ++i) {
+        if (xkeymap[index + i] == aEvent->nativeVirtualKey()) {
+            if ((i % 2) == 0) { // shifted char
+                keysym = xkeymap[index + i + 1];
+                break;
+            } else { // unshifted char
+                keysym = xkeymap[index + i - 1];
+                break;
+            }
+        }
+        if (xkeysyms_per_keycode - 1 == i) {
+            qWarning() << "Symbol '" << aEvent->nativeVirtualKey() << "' not found";
+        }
+    }
+    QChar unshiftedChar(domCharCode);
+    long ucs = keysym2ucs(keysym);
+    ucs = ucs == -1 ? 0 : ucs;
+    QChar shiftedChar((uint)ucs);
+
+    // append alternativeCharCodes if modifier is pressed
+    // append an additional alternativeCharCodes if domCharCode is not a Latin character
+    // and if one of these modifiers is pressed (i.e. Ctrl, Alt, Meta)
+    if (domCharCode &&
+        (QApplication::keyboardModifiers() &
+        (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+
+        event.charCode = domCharCode;
+        event.keyCode = 0;
+        nsAlternativeCharCode altCharCode(0, 0);
+        // if character has a lower and upper representation
+        if ((unshiftedChar.isUpper() || unshiftedChar.isLower()) &&
+            unshiftedChar.toLower() == shiftedChar.toLower()) {
+            if (shift_state ^ capslock_state) {
+                altCharCode.mUnshiftedCharCode = (PRUint32) QChar::toUpper((uint)domCharCode);
+                altCharCode.mShiftedCharCode = (PRUint32) QChar::toLower((uint)domCharCode);
+            } else {
+                altCharCode.mUnshiftedCharCode = (PRUint32) QChar::toLower((uint)domCharCode);
+                altCharCode.mShiftedCharCode = (PRUint32) QChar::toUpper((uint)domCharCode);
+            }
+        } else {
+            altCharCode.mUnshiftedCharCode = (PRUint32) unshiftedChar.unicode();
+            altCharCode.mShiftedCharCode = (PRUint32) shiftedChar.unicode();
+        }
+
+        // append alternative char code to event
+        if ((altCharCode.mUnshiftedCharCode && altCharCode.mUnshiftedCharCode != domCharCode) ||
+            (altCharCode.mShiftedCharCode && altCharCode.mShiftedCharCode != domCharCode)) {
+            event.alternativeCharCodes.AppendElement(altCharCode);
+        }
+
+        // check if the alternative char codes are latin-1
+        if (altCharCode.mUnshiftedCharCode > 0xFF || altCharCode.mShiftedCharCode > 0xFF) {
+            altCharCode.mUnshiftedCharCode = altCharCode.mShiftedCharCode = 0;
+
+            // find latin char for keycode
+            KeySym keysym = NoSymbol;
+            int index = (aEvent->nativeScanCode() - x_min_keycode) * xkeysyms_per_keycode;
+            // find first shifted and unshifted Latin-Char in XKeyMap
+            for (int i = 0; i < xkeysyms_per_keycode; ++i) {
+                keysym = xkeymap[index + i];
+                if (keysym && keysym <= 0xFF) {
+                    if ((shift_state && (i % 2 == 1)) ||
+                        (!shift_state && (i % 2 == 0))) {
+                        altCharCode.mUnshiftedCharCode = altCharCode.mUnshiftedCharCode ?
+                            altCharCode.mUnshiftedCharCode :
+                            keysym;
+                    } else {
+                        altCharCode.mShiftedCharCode = altCharCode.mShiftedCharCode ?
+                            altCharCode.mShiftedCharCode :
+                            keysym;
+                    }
+                    if (altCharCode.mUnshiftedCharCode && altCharCode.mShiftedCharCode) {
+                        break;
+                    }
+                }
+            }
+
+            if (altCharCode.mUnshiftedCharCode || altCharCode.mShiftedCharCode) {
+                event.alternativeCharCodes.AppendElement(altCharCode);
+            }
+        }
+    } else {
+        event.charCode = domCharCode;
+    }
+
+    if (xmodmap) {
+        XFreeModifiermap(xmodmap);
+    }
+    if (xkeymap) {
+        XFree(xkeymap);
+    }
+
+    event.keyCode = domCharCode ? 0 : domKeyCode;
+    // send the key press event
+    return DispatchEvent(&event);
+#else
+
+    //:TODO: fix shortcuts hebrew for non X11,
+    //see Bug 562195##51
+
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
     if (isContextMenuKeyEvent(aEvent)) {
@@ -1346,6 +1616,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     InitKeyEvent(event, aEvent);
 
     event.charCode = domCharCode;
+
     event.keyCode = domCharCode ? 0 : domKeyCode;
 
     if (setNoDefault)
@@ -1353,6 +1624,8 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 
     // send the key press event
     return DispatchEvent(&event);
+ }
+#endif
 }
 
 nsEventStatus
@@ -1369,6 +1642,29 @@ nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
     }
 
     PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
+
+#ifdef MOZ_X11
+    if (!domKeyCode) {
+        // get keymap from the Xserver
+        Display *display = QX11Info::display();
+        int x_min_keycode = 0, x_max_keycode = 0, xkeysyms_per_keycode;
+        XDisplayKeycodes(display, &x_min_keycode, &x_max_keycode);
+        KeySym *xkeymap = XGetKeyboardMapping(display, x_min_keycode, x_max_keycode - x_min_keycode,
+                                              &xkeysyms_per_keycode);
+
+        if (aEvent->nativeScanCode() >= (quint32)x_min_keycode &&
+            aEvent->nativeScanCode() <= (quint32)x_max_keycode) {
+            int index = (aEvent->nativeScanCode() - x_min_keycode) * xkeysyms_per_keycode;
+            for(int i = 0; (i < xkeysyms_per_keycode) && (domKeyCode == (quint32)NoSymbol); ++i) {
+                domKeyCode = QtKeyCodeToDOMKeyCode(xkeymap[index + i]);
+            }
+        }
+
+        if (xkeymap) {
+            XFree(xkeymap);
+        }
+    }
+#endif // MOZ_X11
 
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);

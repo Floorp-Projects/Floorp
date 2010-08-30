@@ -44,7 +44,7 @@ debug("Checking gl.uniform1f with bool.");
 gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 1);
 var loc = gl.getUniformLocation(gl.program, "color");
 gl.uniform1f(loc, 1);
-assertMsg(gl.getError() == gl.NO_ERROR,
+glErrorShouldBe(gl, gl.NO_ERROR,
           "should be able to set bool with gl.uniform1f");
 
 debug("");

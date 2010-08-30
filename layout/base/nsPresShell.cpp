@@ -4928,12 +4928,12 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
 
 void
 PresShell::AttributeWillChange(nsIDocument* aDocument,
-                               nsIContent*  aContent,
+                               Element*     aElement,
                                PRInt32      aNameSpaceID,
                                nsIAtom*     aAttribute,
                                PRInt32      aModType)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeWillChange");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   // XXXwaterson it might be more elegant to wait until after the
@@ -4941,7 +4941,7 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeWillChange(aContent, aNameSpaceID,
+    mFrameConstructor->AttributeWillChange(aElement, aNameSpaceID,
                                            aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
@@ -4949,7 +4949,7 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
 
 void
 PresShell::AttributeChanged(nsIDocument* aDocument,
-                            nsIContent*  aContent,
+                            Element*     aElement,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType)
@@ -4962,7 +4962,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mFrameConstructor->AttributeChanged(aContent, aNameSpaceID,
+    mFrameConstructor->AttributeChanged(aElement, aNameSpaceID,
                                         aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
@@ -5618,7 +5618,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
-    rangeInfo->mList.ComputeVisibility(&rangeInfo->mBuilder, &visible);
+    rangeInfo->mList.ComputeVisibilityForRoot(&rangeInfo->mBuilder, &visible);
     rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, rc, nsDisplayList::PAINT_DEFAULT);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
@@ -5776,22 +5776,41 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
       new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
 }
 
+static PRBool IsTransparentContainerElement(nsPresContext* aPresContext)
+{
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainerInternal();
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryInterface(container);
+  nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
+  if (!pwin)
+    return PR_FALSE;
+  nsCOMPtr<nsIContent> containerElement =
+    do_QueryInterface(pwin->GetFrameElementInternal());
+  return containerElement &&
+         containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
+}
+
 void PresShell::UpdateCanvasBackground()
 {
   // If we have a frame tree and it has style information that
   // specifies the background color of the canvas, update our local
   // cache of that color.
-  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
-  if (rootFrame) {
+  nsIFrame* rootStyleFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (rootStyleFrame) {
     nsStyleContext* bgStyle =
-      nsCSSRendering::FindRootFrameBackground(rootFrame);
+      nsCSSRendering::FindRootFrameBackground(rootStyleFrame);
     // XXX We should really be passing the canvasframe, not the root element
     // style frame but we don't have access to the canvasframe here. It isn't
     // a problem because only a few frames can return something other than true
     // and none of them would be a canvas frame or root element style frame.
     mCanvasBackgroundColor =
-      nsCSSRendering::DetermineBackgroundColor(GetPresContext(), bgStyle,
-                                               rootFrame);
+      nsCSSRendering::DetermineBackgroundColor(mPresContext, bgStyle,
+                                               rootStyleFrame);
+    if (nsLayoutUtils::GetCrossDocParentFrame(FrameManager()->GetRootFrame()) &&
+        !nsContentUtils::IsChildOfSameType(mDocument) &&
+        !IsTransparentContainerElement(mPresContext)) {
+      mCanvasBackgroundColor =
+        NS_ComposeColors(mPresContext->DefaultBackgroundColor(), mCanvasBackgroundColor);
+    }
   }
 
   // If the root element of the document (ie html) has style 'display: none'
@@ -8993,6 +9012,11 @@ nsresult
 PresShell::SetIsActive(PRBool aIsActive)
 {
   mIsActive = aIsActive;
+  nsPresContext* presContext = GetPresContext();
+  if (presContext &&
+      presContext->RefreshDriver()->PresContext() == presContext) {
+    presContext->RefreshDriver()->SetThrottled(!mIsActive);
+  }
   return UpdateImageLockingState();
 }
 

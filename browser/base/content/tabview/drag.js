@@ -109,7 +109,7 @@ Drag.prototype = {
   //   checkItemStatus    - (boolean) make sure this is a valid item which should be snapped
   snapBounds: function Drag_snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional, checkItemStatus) {
     if (!stationaryCorner)
-      stationaryCorner || 'topleft';
+      stationaryCorner = 'topleft';
     var update = false; // need to update
     var updateX = false;
     var updateY = false;

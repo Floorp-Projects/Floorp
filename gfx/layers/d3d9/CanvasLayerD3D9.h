@@ -55,7 +55,7 @@ public:
     : CanvasLayer(aManager, NULL),
       LayerD3D9(aManager),
       mTexture(0),
-      mGLBufferIsPremultiplied(PR_FALSE),
+      mDataIsPremultiplied(PR_FALSE),
       mNeedsYFlip(PR_FALSE)
   {
       mImplData = static_cast<LayerD3D9*>(this);
@@ -83,7 +83,7 @@ protected:
 
   nsIntRect mBounds;
 
-  PRPackedBool mGLBufferIsPremultiplied;
+  PRPackedBool mDataIsPremultiplied;
   PRPackedBool mNeedsYFlip;
 };
 

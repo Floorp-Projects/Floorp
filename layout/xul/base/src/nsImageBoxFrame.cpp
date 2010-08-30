@@ -287,6 +287,10 @@ nsImageBoxFrame::UpdateImage()
   if (!mImageRequest) {
     // We have no image, so size to 0
     mIntrinsicSize.SizeTo(0, 0);
+  } else {
+    // We don't want discarding or decode-on-draw for xul images.
+    mImageRequest->RequestDecode();
+    mImageRequest->LockImage();
   }
 }
 

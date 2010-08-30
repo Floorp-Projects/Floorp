@@ -84,6 +84,8 @@
 
 #include "mozilla/FunctionTimer.h"
 
+#include "nsIGfxInfo.h"
+
 gfxPlatform *gPlatform = nsnull;
 
 // These two may point to the same profile
@@ -219,6 +221,17 @@ gfxPlatform::Init()
     NS_ASSERTION(!gPlatform, "Already started???");
 
     gfxAtoms::RegisterAtoms();
+
+    /* Initialize the GfxInfo service.
+     * Note: we can't call functions on GfxInfo that depend
+     * on gPlatform until after it has been initialized
+     * below. GfxInfo initialization annotates our
+     * crash reports so we want to do it before
+     * we try to load any drivers and do device detection
+     * incase that code crashes. See bug #591561. */
+    nsCOMPtr<nsIGfxInfo> gfxInfo;
+    /* this currently will only succeed on Windows */
+    gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
 
 #if defined(XP_WIN)
     gPlatform = new gfxWindowsPlatform;

@@ -20,6 +20,8 @@ const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
 var gPendingTests = [];
 var gTestsRun = 0;
 
+var gUseInContentUI = ("switchToTabHavingURI" in window);
+
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 // Turn off remote results in searches
@@ -50,10 +52,68 @@ function run_next_test() {
 }
 
 function get_addon_file_url(aFilename) {
-  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-           getService(Ci.nsIChromeRegistry);
-  var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
-  return fileurl.QueryInterface(Ci.nsIFileURL);
+  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                         .getService(Ci.mozIJSSubScriptLoader);
+  loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
+
+  var jar = getJar(CHROMEROOT + "addons/" + aFilename);
+
+  if (jar == null) {
+    var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+             getService(Ci.nsIChromeRegistry);
+    var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
+    return fileurl.QueryInterface(Ci.nsIFileURL);
+  } else {
+    var ios = Cc["@mozilla.org/network/io-service;1"].  
+                getService(Ci.nsIIOService);
+
+    var tmpDir = extractJarToTmp(jar);
+    tmpDir.append(aFilename);
+    return ios.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
+  }
+}
+
+function check_all_in_list(aManager, aIds, aIgnoreExtras) {
+  var doc = aManager.document;
+  var view = doc.getElementById("view-port").selectedPanel;
+  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var list = doc.getElementById(listid);
+
+  var inlist = [];
+  var node = list.firstChild;
+  while (node) {
+    if (node.value)
+      inlist.push(node.value);
+    node = node.nextSibling;
+  }
+
+  for (var i = 0; i < aIds.length; i++) {
+    if (inlist.indexOf(aIds[i]) == -1)
+      ok(false, "Should find " + aIds[i] + " in the list");
+  }
+
+  if (aIgnoreExtras)
+    return;
+
+  for (i = 0; i < inlist.length; i++) {
+    if (aIds.indexOf(inlist[i]) == -1)
+      ok(false, "Shouldn't have seen " + inlist[i] + " in the list");
+  }
+}
+
+function get_addon_element(aManager, aId) {
+  var doc = aManager.document;
+  var view = doc.getElementById("view-port").selectedPanel;
+  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var list = doc.getElementById(listid);
+
+  var node = list.firstChild;
+  while (node) {
+    if (node.value == aId)
+      return node;
+    node = node.nextSibling;
+  }
+  return null;
 }
 
 function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
@@ -74,6 +134,7 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
     return;
   }
 
+  info("Waiting for initialization");
   aManagerWindow.document.addEventListener("Initialized", function() {
     aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
     aCallback(aManagerWindow);
@@ -96,7 +157,7 @@ function open_manager(aView, aCallback, aLoadCallback) {
     });
   }
 
-  if ("switchToTabHavingURI" in window) {
+  if (gUseInContentUI) {
     gBrowser.selectedTab = gBrowser.addTab();
     switchToTabHavingURI(MANAGER_URI, true, function(aBrowser) {
       setup_manager(aBrowser.contentWindow.wrappedJSObject);
@@ -133,11 +194,28 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
   });
 }
 
-function is_element_visible(aWindow, aElement, aExpected, aMsg) {
+function is_hidden(aElement) {
+  var style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, "");
+  if (style.display == "none")
+    return true;
+  if (style.visibility != "visible")
+    return true;
+
+  // Hiding a parent element will hide all its children
+  if (aElement.parentNode != aElement.ownerDocument)
+    return is_hidden(aElement.parentNode);
+
+  return false;
+}
+
+function is_element_visible(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null, when checking visibility");
-  var style = aWindow.getComputedStyle(aElement, "");
-  var visible = style.display != "none" && style.visibility == "visible";
-  is(visible, aExpected, aMsg);
+  ok(!is_hidden(aElement), aMsg);
+}
+
+function is_element_hidden(aElement, aMsg) {
+  isnot(aElement, null, "Element should not be null, when checking visibility");
+  ok(is_hidden(aElement), aMsg);
 }
 
 function CategoryUtilities(aManagerWindow) {
@@ -190,8 +268,7 @@ CategoryUtilities.prototype = {
         aCategory.getAttribute("disabled") == "true")
       return false;
 
-    var style = this.window.document.defaultView.getComputedStyle(aCategory, "");
-    return style.display != "none" && style.visibility == "visible";
+    return !is_hidden(aCategory);
   },
 
   isTypeVisible: function(aCategoryType) {
@@ -647,10 +724,10 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this.isActive = true;
   this.creator = "";
   this.pendingOperations = 0;
-  this.permissions = AddonManager.PERM_CAN_UNINSTALL |
-                     AddonManager.PERM_CAN_ENABLE |
-                     AddonManager.PERM_CAN_DISABLE |
-                     AddonManager.PERM_CAN_UPGRADE;
+  this._permissions = AddonManager.PERM_CAN_UNINSTALL |
+                      AddonManager.PERM_CAN_ENABLE |
+                      AddonManager.PERM_CAN_DISABLE |
+                      AddonManager.PERM_CAN_UPGRADE;
   this.operationsRequiringRestart = aOperationsRequiringRestart ||
     (AddonManager.OP_NEEDS_RESTART_INSTALL |
      AddonManager.OP_NEEDS_RESTART_UNINSTALL |
@@ -678,7 +755,20 @@ MockAddon.prototype = {
 
     return val;
   },
-  
+
+  get permissions() {
+    let permissions = this._permissions;
+    if (this.appDisabled || !this._userDisabled)
+      permissions &= ~AddonManager.PERM_CAN_ENABLE;
+    if (this.appDisabled || this._userDisabled)
+      permissions &= ~AddonManager.PERM_CAN_DISABLE;
+    return permissions;
+  },
+
+  set permissions(val) {
+    return this._permissions = val;
+  },
+
   get applyBackgroundUpdates() {
     return this._applyBackgroundUpdates;
   },
@@ -722,6 +812,7 @@ MockAddon.prototype = {
       return;
 
     if (newActive == this.isActive) {
+      this.pendingOperations -= (newActive ? AddonManager.PENDING_DISABLE : AddonManager.PENDING_ENABLE);
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
     }
     else if (newActive) {
