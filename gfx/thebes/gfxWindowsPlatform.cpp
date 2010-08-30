@@ -56,6 +56,8 @@
 #include "plbase64.h"
 #include "nsIXULRuntime.h"
 
+#include "nsIGfxInfo.h"
+
 #ifdef MOZ_FT2_FONTS
 #include "ft2build.h"
 #include FT_FREETYPE_H
@@ -228,13 +230,30 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     ::GetVersionExA(&versionInfo);
     bool isVistaOrHigher = versionInfo.dwMajorVersion >= 6;
 
-    PRBool safeMode = PR_FALSE;
 #ifdef CAIRO_HAS_D2D_SURFACE
+    PRBool d2dDisabled = PR_FALSE;
+    PRBool d2dBlocked = PR_FALSE;
+    PRBool safeMode = PR_FALSE;
+
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+        PRInt32 status;
+        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
+            if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+                status != nsIGfxInfo::FEATURE_AVAILABLE)
+            {
+                d2dDisabled = PR_TRUE;
+                if (status == nsIGfxInfo::FEATURE_BLOCKED) {
+                    d2dBlocked = PR_TRUE;
+                }
+            }
+        }
+    }
+
     NS_RegisterMemoryReporter(new D2DCacheReporter());
     NS_RegisterMemoryReporter(new D2DVRAMReporter());
     mD2DDevice = NULL;
 
-    PRBool d2dDisabled = PR_FALSE;
     nsresult rv = pref->GetBoolPref("gfx.direct2d.disabled", &d2dDisabled);
     if (NS_FAILED(rv))
         d2dDisabled = PR_FALSE;
@@ -243,7 +262,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     if (xr)
       xr->GetInSafeMode(&safeMode);
 
-    if (isVistaOrHigher && !d2dDisabled && !safeMode) {
+    if (isVistaOrHigher && !d2dDisabled && !d2dBlocked && !safeMode) {
         // We need a DWriteFactory to work.
         HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
         D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
@@ -329,9 +348,9 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 	NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
         if (rmode >= 0 && rmode < RENDER_MODE_MAX) {
 #ifdef CAIRO_HAS_DWRITE_FONT
-	    if (rmode != RENDER_DIRECT2D && !useDirectWrite) {
-		mDWriteFactory = nsnull;
-	    }
+            if (rmode != RENDER_DIRECT2D && !useDirectWrite) {
+                mDWriteFactory = nsnull;
+            }
 #endif
 #ifndef CAIRO_HAS_DDRAW_SURFACE
             if (rmode == RENDER_DDRAW || rmode == RENDER_DDRAW_GL)
@@ -341,8 +360,12 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 #ifndef CAIRO_HAS_D2D_SURFACE
                 return;
 #else
+                if (d2dBlocked) {
+                    return;
+                }
+
                 if (!mD2DDevice) {
-		    mD2DDevice = cairo_d2d_create_device();
+                    mD2DDevice = cairo_d2d_create_device();
                     if (!mD2DDevice) {
                         return;
                     }
@@ -369,7 +392,7 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
     // these FT_Faces.  See bug 458169.
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mD2DDevice) {
-	cairo_release_device(mD2DDevice);
+        cairo_release_device(mD2DDevice);
     }
 #endif
 
