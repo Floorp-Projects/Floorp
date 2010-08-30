@@ -432,7 +432,7 @@ WillDeadlock(JSContext *ownercx, JSThread *thread)
 
      for (;;) {
         JS_ASSERT(ownercx->thread);
-        JS_ASSERT(ownercx->thread->requestContext);
+        JS_ASSERT(ownercx->thread->requestDepth);
         JSTitle *title = ownercx->thread->titleToShare;
         if (!title || !title->ownercx) {
             /*
@@ -541,8 +541,7 @@ static JSBool
 ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT_IF(!cx->thread->requestContext,
-                 cx->thread == rt->gcThread && rt->gcRunning);
+    JS_ASSERT_IF(!cx->thread->requestDepth, cx->thread == rt->gcThread && rt->gcRunning);
 
     JS_RUNTIME_METER(rt, claimAttempts);
     AutoLockGC lock(rt);
@@ -570,13 +569,13 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         bool canClaim;
         if (title->u.link) {
             JS_ASSERT(js_ValidContextPointer(rt, ownercx));
-            JS_ASSERT(ownercx->thread->requestContext);
+            JS_ASSERT(ownercx->thread->requestDepth);
             JS_ASSERT(!rt->gcRunning);
             canClaim = (ownercx->thread == cx->thread);
         } else {
             canClaim = (!js_ValidContextPointer(rt, ownercx) ||
                         !ownercx->thread ||
-                        !ownercx->thread->requestContext ||
+                        !ownercx->thread->requestDepth ||
                         cx->thread == ownercx->thread  ||
                         cx->thread == rt->gcThread ||
                         ownercx->thread->gcWaiting);
@@ -1218,8 +1217,8 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
     /* We hope compilers use me instead of reloading cx->thread in the macro. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
-    if (cx->lockedSealedTitle == title) {
-        cx->lockedSealedTitle = NULL;
+    if (cx->thread->lockedSealedTitle == title) {
+        cx->thread->lockedSealedTitle = NULL;
         return;
     }
 
@@ -1270,7 +1269,7 @@ js_DropAllEmptyScopeLocks(JSContext *cx, JSScope *scope)
      * cx->lockedSealedTitle.
      */
     JS_ASSERT(!scope->sealed());
-    JS_ASSERT(cx->lockedSealedTitle != &scope->title);
+    JS_ASSERT(cx->thread->lockedSealedTitle != &scope->title);
 
     /*
      * Special case in js_LockTitle and js_UnlockTitle for the GC calling
@@ -1311,8 +1310,8 @@ js_LockObj(JSContext *cx, JSObject *obj)
     for (;;) {
         scope = obj->scope();
         title = &scope->title;
-        if (scope->sealed() && !cx->lockedSealedTitle) {
-            cx->lockedSealedTitle = title;
+        if (scope->sealed() && !cx->thread->lockedSealedTitle) {
+            cx->thread->lockedSealedTitle = title;
             return;
         }
 
@@ -1391,7 +1390,7 @@ js_IsTitleLocked(JSContext *cx, JSTitle *title)
         return JS_TRUE;
 
     /* Special case: locked object owning a sealed scope, see js_LockObj. */
-    if (cx->lockedSealedTitle == title)
+    if (cx->thread->lockedSealedTitle == title)
         return JS_TRUE;
 
     /*
