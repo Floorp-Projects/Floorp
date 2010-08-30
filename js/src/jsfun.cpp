@@ -3189,9 +3189,10 @@ JSFunction::addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind)
      * encode as an INT id. The parser adds such locals after adding vars for
      * the destructured-to parameter bindings -- those must be vars to avoid
      * aliasing arguments[i] for any i -- so we must switch u.i.names to a
-     * dictionary list to cope with insertion in the middle of an index-named
+     * dictionary list to cope with insertion "in the middle" of an index-named
      * shape for the object or array argument.
      */
+    bool findArgInsertionPoint = false;
     if (!atom) {
         JS_ASSERT(kind == JSLOCAL_ARG);
         if (u.i.nvars != 0) {
@@ -3201,15 +3202,21 @@ JSFunction::addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind)
              */
             if (!parent->inDictionary() && !(parent = Shape::newDictionaryList(cx, listp)))
                 return false;
-            while (parent->parent && parent->getter() != js_GetCallArg) {
-                ++parent->slot;
-                listp = &parent->parent;
-                parent = *listp;
-            }
+            findArgInsertionPoint = true;
         }
         id = INT_TO_JSID(nargs);
     } else {
+        if (kind == JSLOCAL_ARG && parent->inDictionary())
+            findArgInsertionPoint = true;
         id = ATOM_TO_JSID(atom);
+    }
+
+    if (findArgInsertionPoint) {
+        while (parent->parent && parent->getter() != js_GetCallArg) {
+            ++parent->slot;
+            listp = &parent->parent;
+            parent = *listp;
+        }
     }
 
     Shape child(id, getter, setter, slot, attrs, Shape::HAS_SHORTID, *indexp);
