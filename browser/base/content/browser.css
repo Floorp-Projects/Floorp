@@ -58,6 +58,10 @@ tabbrowser {
   display: none;
 }
 
+.tabbrowser-tab[pinned] > .tab-icon-image {
+  vertical-align: middle;
+}
+
 #alltabs-popup {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
 }
