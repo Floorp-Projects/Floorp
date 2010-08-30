@@ -128,7 +128,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
         nsXPITriggerItem*   mItem;
         PRUint32            mNextItem;
         PRUint32            mChromeType;
-        PRInt32             mContentLength;
+        PRInt64             mContentLength;
         PRInt32             mOutstandingCertLoads;
         PRBool              mDialogOpen;
         PRBool              mCancelled;

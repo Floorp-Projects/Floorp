@@ -3,10 +3,7 @@
   <!-- Test: if a button has is candidate for constraint validation then change
              its type to be barred from constraint validation, it should not be
              affected by :invalid pseudo-class. -->
-  <style>
-    button { background-color: green; }
-    button:invalid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
     function onLoadHandler()
     {
@@ -17,6 +14,6 @@
     }
   </script>
   <body onload="document.getElementById('b').type='button'; document.documentElement.className='';">
-    <button type='submit' id='b'></button>
+    <button class='notinvalid' type='submit' id='b'></button>
   </body>
 </html>

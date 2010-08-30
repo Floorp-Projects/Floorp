@@ -584,15 +584,12 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     
     const PRUint32 rows = mOldLine - mCurLine;
     if (rows) {
+
+        // Invalidate
         nsIntRect r(0, mBIH.height < 0 ? -mBIH.height - mOldLine : mCurLine,
                     mBIH.width, rows);
+        PostInvalidation(r);
 
-        // Tell the image that its data has been updated
-        rv = mImage->FrameUpdated(0, r); 
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (mObserver)
-            mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
         mOldLine = mCurLine;
     }
 

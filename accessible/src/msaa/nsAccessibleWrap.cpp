@@ -1582,7 +1582,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 // nsAccessible
 
 nsresult
-nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
+nsAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
   nsresult rv = nsAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1591,7 +1591,7 @@ nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
+nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 {
   PRUint32 eventType = aEvent->GetEventType();
 

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIPropertyBag.idl"
+#include "nsISupports.idl"
 
 interface nsIInputStream;
 interface nsILocalFile;
@@ -391,8 +391,8 @@ interface nsIHttpRequestHandler : nsISupports
 /**
  * A representation of the data included in an HTTP request.
  */
-[scriptable, uuid(80cbca71-dc51-4fa0-9010-1cec262dbd4a)]
-interface nsIHttpRequest : nsIPropertyBag
+[scriptable, uuid(978cf30e-ad73-42ee-8f22-fe0aaf1bf5d2)]
+interface nsIHttpRequest : nsISupports
 {
   /**
    * The request type for this request (see RFC 2616, section 5.1.1).

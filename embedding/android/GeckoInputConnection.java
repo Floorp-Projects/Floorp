@@ -234,10 +234,17 @@ public class GeckoInputConnection
 
         /* Compatible with both positive and negative length
             (no need for separate code for getTextBeforeCursor) */
-        int textStart = length > 0 ? mSelectionStart :
-            mSelectionStart + length > 0 ? mSelectionStart + length : 0;
-        int textLength = length > 0 ? length:
-            textStart == 0 ? mSelectionStart : length;
+        int textStart = mSelectionStart;
+        int textLength = length;
+
+        if (length < 0) {
+          textStart += length;
+          textLength = -length;
+          if (textStart < 0) {
+            textStart = 0;
+            textLength = mSelectionStart;
+          }
+        }
 
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.IME_GET_TEXT, textStart, textLength));

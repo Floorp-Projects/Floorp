@@ -399,13 +399,20 @@ nsIconChannel::SetContentCharset(const nsACString &aContentCharset)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsIconChannel::GetContentLength(PRInt32 *aContentLength)
+NS_IMETHODIMP
+nsIconChannel::GetContentDisposition(nsACString &aContentDisposition)
+{
+  aContentDisposition.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsIconChannel::GetContentLength(PRInt64 *aContentLength)
 {
   *aContentLength = mContentLength;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetContentLength(PRInt32 aContentLength)
+NS_IMETHODIMP nsIconChannel::SetContentLength(PRInt64 aContentLength)
 {
   NS_NOTREACHED("nsIconChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;

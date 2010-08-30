@@ -37,6 +37,14 @@ void main()
     gl_FragColor = mediump vec4(1.0,0.0,0.0,1.0);
 }
 </script>
+<script id="vshaderWithDefaultPrecision" type="text/something-not-javascript">
+precision mediump float;
+attribute vec4 vPosition;
+void main()
+{
+    gl_Position = vPosition;
+}
+</script>
 <script id="fshaderWithDefaultPrecision" type="text/something-not-javascript">
 precision mediump float;
 void main()
@@ -58,6 +66,17 @@ void main()
 {
     gl_FragColor = vec4(gl_foo,0.0,0.0,1.0);
 }
+</script>
+<script id="fshaderWithGL_ESeq1" type="text/something-not-javascript">
+#if GL_ES == 1
+  precision mediump float;
+  void main()
+  {
+      gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+  }
+#else
+  foo
+#endif
 </script>
 <script id="fshaderWithGLSLPreprocessorSymbol" type="text/something-not-javascript">
 #if defined(GL_ES)
@@ -181,6 +200,14 @@ void main()
     gl_Position = vPosition;
 }
 </script>
+<script id="vshaderWithVersion120" type="text/something-not-javascript">
+#version 120
+attribute vec4 vPosition;
+void main()
+{
+    gl_Position = vPosition;
+}
+</script>
 <script id="vshaderWithVersion100" type="text/something-not-javascript">
 #version 100
 attribute vec4 vPosition;
@@ -234,6 +261,13 @@ if (!gl) {
       linkSuccess: true,
       passMsg: 'fragment shader with default precision compiled and linked'
     },
+    { vShaderId: 'vshaderWithDefaultPrecision',
+      vShaderSuccess: true,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: true,
+      passMsg: 'vertex shader with default precision compiled and linked'
+    },
     { vShaderId: 'vshader',
       vShaderSuccess: true,
       fShaderId: 'fshaderWithOutPrecision',
@@ -247,6 +281,13 @@ if (!gl) {
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'fragment shader with gl_ identifier should fail',
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithGL_ESeq1',
+      fShaderSuccess: true,
+      linkSuccess: true,
+      passMsg: 'fragment shader that expects GL_ES == 1 should succeed',
     },
     { vShaderId: 'vshader',
       vShaderSuccess: true,
@@ -353,6 +394,13 @@ if (!gl) {
       linkSuccess: false,
       passMsg: 'vertex shader uses the #version not 100 directive should fail',
     },
+    { vShaderId: 'vshaderWithVersion120',
+      vShaderSuccess: false,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: false,
+      passMsg: 'vertex shader uses the #version not 100 directive should fail',
+    },
     { vShaderId: 'vshaderWithVersion100',
       vShaderSuccess: true,
       fShaderId: 'fshader',
@@ -378,21 +426,58 @@ if (!gl) {
   }
 
   // Add more tests from external file
-  var fShader = document.getElementById('fshader').text;
-  var files = wtu.readFileList("shaders/implicit/00_shaders.txt");
-  for (var ii = 0; ii < files.length; ++ii) {
-    var file = files[ii];
-    var vShader = wtu.readFile(file);
-    shaderInfo.push({
-        vShaderId: file,
-        vShaderSource: vShader,
-        vShaderSuccess: false,
-        fShaderId: 'fshader',
-        fShaderSource: fShader,
-        fShaderSuccess: true,
-        linkSuccess: false,
-        passMsg: 'shader with implicit cast should fail',
-      })
+  var simpleVertShader = document.getElementById('vshader').text;
+  var simpleFragShader = document.getElementById('fshader').text;
+
+  addExternalShaders('shaders/00_shaders.txt');
+
+  function addExternalShaders(filename, passMsg) {
+    var files = wtu.readFileList(filename);
+    for (var ii = 0; ii < files.length; ++ii) {
+      var file = files[ii];
+      var shaderSource = wtu.readFile(file);
+      var firstLine = shaderSource.split("\n")[0];
+      var success = undefined;
+      if (wtu.endsWith(firstLine, " fail") ||
+          wtu.endsWith(firstLine, " fail.")) {
+        success = false;
+      } else if (wtu.endsWith(firstLine, " succeed") ||
+                 wtu.endsWith(firstLine, " succeed.")) {
+        success = true;
+      }
+      if (success === undefined) {
+        testFailed("bad first line in " + file);
+        continue;
+      }
+      if (!wtu.startsWith(firstLine, "// ")) {
+        testFailed("bad first line in " + file);
+        continue;
+      }
+      var passMsg = firstLine.substr(3);
+      if (wtu.endsWith(file, ".vert")) {
+        shaderInfo.push({
+            vShaderId: file,
+            vShaderSource: shaderSource,
+            vShaderSuccess: success,
+            fShaderId: 'fshader',
+            fShaderSource: simpleFragShader,
+            fShaderSuccess: true,
+            linkSuccess: success,
+            passMsg: passMsg,
+          });
+      } else if (wtu.endsWith(file, ".frag")) {
+        shaderInfo.push({
+            vShaderId: 'vshader',
+            vShaderSource: simpleVertShader,
+            vShaderSuccess: true,
+            fShaderId: file,
+            fShaderSource: shaderSource,
+            fShaderSuccess: success,
+            linkSuccess: success,
+            passMsg: passMsg,
+          });
+      }
+    }
   }
 
   for (var ii = 0; ii < shaderInfo.length; ++ii) {

@@ -905,7 +905,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
             }
         }
 
-        PRInt32 channelContentLength = -1;
+        PRInt64 channelContentLength = -1;
         if (!cancel &&
             NS_SUCCEEDED(channel->GetContentLength(&channelContentLength)))
         {

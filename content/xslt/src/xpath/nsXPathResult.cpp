@@ -40,7 +40,7 @@
 #include "txExprResult.h"
 #include "txNodeSet.h"
 #include "nsDOMError.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIAttribute.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMNode.h"
@@ -48,6 +48,8 @@
 #include "nsDOMString.h"
 #include "txXPathTreeWalker.h"
 #include "nsCycleCollectionParticipant.h"
+
+using namespace mozilla::dom;
 
 nsXPathResult::nsXPathResult() : mDocument(nsnull),
                                  mCurrentPos(0),
@@ -248,12 +250,12 @@ nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
 
 void
 nsXPathResult::AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
+                                Element* aElement,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType)
 {
-    Invalidate(aContent);
+    Invalidate(aElement);
 }
 
 void

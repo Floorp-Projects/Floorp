@@ -48,6 +48,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+%include ../../browserShared.inc
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -64,6 +66,11 @@
 #navigator-toolbox[inFullscreen="true"] > #nav-bar {
   border-top: none;
   padding-top: 0;
+}
+
+#browser-bottombox:not([lwthemefooter="true"]) {
+  /* opaque for layers optimization */
+  background-color: -moz-Dialog;
 }
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
@@ -481,22 +488,23 @@ menuitem:not([type]) {
 }
 
 /* Primary toolbar buttons */
-.toolbarbutton-1 {
+.toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon {
-  -moz-margin-end: 0px;
+  -moz-margin-end: 0;
 }
 
-toolbar[mode="full"] .toolbarbutton-1,
-toolbar[mode="full"] .toolbarbutton-menubutton-button {
+toolbar[mode="full"] .toolbarbutton-1:not([type="menu-button"]),
+toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
-.toolbarbutton-1, .toolbarbutton-menubutton-button {
+.toolbarbutton-1:not([type="menu-button"]),
+.toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 5px;
 }
 
@@ -629,7 +637,7 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 }
 
 /* 16px primary toolbar buttons */
-toolbar[iconsize="small"] .toolbarbutton-1 {
+toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
@@ -1077,7 +1085,7 @@ toolbar[iconsize="small"] #fullscreen-button {
   color: -moz-nativehyperlinktext;
 }
 
-richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
 }
 
@@ -1228,7 +1236,7 @@ statusbarpanel#statusbar-display {
 }
 
 .tabbrowser-tab[pinned] > .tab-icon-image {
-  margin: 2px 0 0;
+  margin: 2px 2px 0;
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {

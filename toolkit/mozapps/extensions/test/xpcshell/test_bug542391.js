@@ -45,6 +45,9 @@ const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/upd
 const PREF_EM_DISABLED_ADDONS_LIST    = "extensions.disabledAddons";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 
+const profileDir = gProfD.clone();
+profileDir.append("extensions");
+
 var gInstallUpdate = false;
 
 // This will be called to show the compatiiblity update dialog.
@@ -200,7 +203,24 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_EM_SHOW_MISMATCH_UI, true);
 
+  // Add an extension to the profile to make sure the dialog doesn't show up
+  // on new profiles
+  var dest = profileDir.clone();
+  dest.append("addon1@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon1@tests.mozilla.org",
+    version: "1.0",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 1",
+  }, dest);
+
   startupManager();
+
+  dest.remove(true);
 
   installAllFiles([do_get_addon("test_bug542391_1"),
                    do_get_addon("test_bug542391_2"),

@@ -64,6 +64,7 @@ class nsClientRectList;
 #include "gfxPattern.h"
 #include "imgIContainer.h"
 #include "nsCSSPseudoElements.h"
+#include "nsHTMLReflowState.h"
 
 class nsBlockFrame;
 class gfxDrawable;
@@ -775,6 +776,27 @@ public:
   static nscoord ComputeHeightDependentValue(
                    nscoord              aContainingBlockHeight,
                    const nsStyleCoord&  aCoord);
+
+  /*
+   * Likewise, but for 'height', 'min-height', or 'max-height'.
+   */
+  static nscoord ComputeHeightValue(nscoord aContainingBlockHeight,
+                                    const nsStyleCoord& aCoord)
+  {
+    nscoord result =
+      ComputeHeightDependentValue(aContainingBlockHeight, aCoord);
+    if (result < 0)
+      result = 0; // clamp calc()
+    return result;
+  }
+
+  static PRBool IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
+  {
+    nsStyleUnit unit = aCoord.GetUnit();
+    return unit == eStyleUnit_Auto ||  // only for 'height'
+           unit == eStyleUnit_None ||  // only for 'max-height'
+           (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
+  }
 
   /*
    * Calculate the used values for 'width' and 'height' for a replaced element.

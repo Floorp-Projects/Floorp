@@ -29,7 +29,7 @@ function testAttachment(attachment, buffer, isConflicted)
     shouldBeNonNull("fbo = gl.createFramebuffer()");
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, buffer);
-    shouldBe("gl.getError()", isConflicted ? "gl.INVALID_OPERATION" : "gl.NO_ERROR");
+    glErrorShouldBe(gl, isConflicted ? gl.INVALID_OPERATION : gl.NO_ERROR);
 }
 
 function testAttachments(attachment0, buffer0, attachment1, buffer1, isConflicted)
@@ -37,15 +37,15 @@ function testAttachments(attachment0, buffer0, attachment1, buffer1, isConflicte
     shouldBeNonNull("fbo = gl.createFramebuffer()");
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment0, gl.RENDERBUFFER, buffer0);
-    shouldBe("gl.getError()", "gl.NO_ERROR");
+    glErrorShouldBe(gl, gl.NO_ERROR);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment1, gl.RENDERBUFFER, buffer1);
-    shouldBe("gl.getError()", isConflicted ? "gl.INVALID_OPERATION" : "gl.NO_ERROR");
+    glErrorShouldBe(gl, isConflicted ? gl.INVALID_OPERATION : gl.NO_ERROR);
     if (isConflicted) {
         // Detach buffer0 first using a null object, then attaching buffer1 should succeed.
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment0, gl.RENDERBUFFER, null);
-        shouldBe("gl.getError()", "gl.NO_ERROR");
+        glErrorShouldBe(gl, gl.NO_ERROR);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment1, gl.RENDERBUFFER, buffer1);
-        shouldBe("gl.getError()", "gl.NO_ERROR");
+        glErrorShouldBe(gl, gl.NO_ERROR);
     }
 }
 
@@ -54,7 +54,7 @@ function testColorRenderbuffer(internalformat)
     shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
     gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, internalformat, width, height);
-    shouldBe("gl.getError()", "gl.NO_ERROR");
+    glErrorShouldBe(gl, gl.NO_ERROR);
     testAttachment(gl.COLOR_ATTACHMENT0, colorBuffer, false);
 }
 
@@ -65,15 +65,15 @@ shouldBeNonNull("gl = create3DContext()");
 shouldBeNonNull("depthBuffer = gl.createRenderbuffer()");
 gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
 gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 shouldBeNonNull("stencilBuffer = gl.createRenderbuffer()");
 gl.bindRenderbuffer(gl.RENDERBUFFER, stencilBuffer);
 gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, width, height);
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 shouldBeNonNull("depthStencilBuffer = gl.createRenderbuffer()");
 gl.bindRenderbuffer(gl.RENDERBUFFER, depthStencilBuffer);
 gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 
 debug("Attach depth using DEPTH_ATTACHMENT");
 testAttachment(gl.DEPTH_ATTACHMENT, depthBuffer, false);

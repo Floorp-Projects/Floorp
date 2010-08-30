@@ -23,6 +23,9 @@ void main()
 </script>
 
 <script id="fshader" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision mediump float;
+#endif
 varying vec4 color;
 
 void main()
@@ -45,9 +48,9 @@ function runTest()
     // The choice of (0.4, 0.4) ensures that the centers of the surrounding
     // pixels are not contained within the point when it is of size 1, but
     // that they definitely are when it is of size 2.
-    var vertices = new WebGLFloatArray([
+    var vertices = new Float32Array([
         0.4, 0.4, 0.0]);
-    var colors = new WebGLUnsignedByteArray([
+    var colors = new Uint8Array([
         255, 0, 0, 255]);
 
     var colorOffset = vertices.byteLength;
@@ -117,8 +120,6 @@ function runTest()
 <div id="console"></div>
 <script>
 description('Verify GL_VERTEX_PROGRAM_POINT_SIZE is enabled in WebGL');
-
-debug('');
 
 if (runTest())
     testPassed("");

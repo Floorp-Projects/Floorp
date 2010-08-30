@@ -424,8 +424,14 @@ function AddonWrapper(aTheme, aBeingEnabled) {
     });
   }, this);
 
-  this.__defineGetter__("creator", function() aTheme.author);
-  this.__defineGetter__("screenshots", function() [aTheme.previewURL]);
+  this.__defineGetter__("creator", function() {
+    return new AddonManagerPrivate.AddonAuthor(aTheme.author);
+  });
+
+  this.__defineGetter__("screenshots", function() {
+    let url = aTheme.previewURL;
+    return [new AddonManagerPrivate.AddonScreenshot(url)];
+  });
 
   this.__defineGetter__("pendingOperations", function() {
     let pending = AddonManager.PENDING_NONE;

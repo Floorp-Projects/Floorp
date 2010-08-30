@@ -7,11 +7,13 @@
 <!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
-<!ENTITY installFromFile.label                "Install from file…">
+<!ENTITY installFromFile.label                "Install From File…">
 <!ENTITY installFromFile.accesskey            "I">
 
+<!ENTITY cmd.back.tooltip                     "Go back one page">
+<!ENTITY cmd.forward.tooltip                  "Go forward one page">
+
 <!-- categories / views -->
-<!-- LOCALIZATION NOTE: These should match the header-* entries in extensions.properties -->
 <!ENTITY view.search.label                    "Search">
 <!ENTITY view.discover.label                  "Get Add-ons">
 <!ENTITY view.locales.label                   "Languages">
@@ -21,6 +23,8 @@
 <!ENTITY view.plugins.label                   "Plugins">
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
+<!ENTITY view.utilites.preferences.tooltip    "Options for all add-ons">
+<!ENTITY view.utilites.preferencesUnix.tooltip "Preferences for all add-ons">
 
 <!-- addon updates -->
 <!ENTITY updates.updateAddonsNow.label        "Update Add-ons Now">
@@ -37,12 +41,14 @@
 <!ENTITY updates.manualUpdatesFound.label     "View Available Updates">
 
 <!-- addon actions -->
-<!ENTITY cmd.showDetails.label                "Show more information">
+<!ENTITY cmd.showDetails.label                "Show More Information">
 <!ENTITY cmd.showDetails.accesskey            "S">
-<!ENTITY cmd.findUpdates.label                "Find updates">
+<!ENTITY cmd.findUpdates.label                "Find Updates">
 <!ENTITY cmd.findUpdates.accesskey            "F">
-<!ENTITY cmd.preferences.label                "Preferences">
-<!ENTITY cmd.preferences.accesskey            "P">
+<!ENTITY cmd.preferencesWin.label             "Options">
+<!ENTITY cmd.preferencesWin.accesskey         "O">
+<!ENTITY cmd.preferencesUnix.label            "Preferences">
+<!ENTITY cmd.preferencesUnix.accesskey        "P">
 <!ENTITY cmd.about.label                      "About">
 <!ENTITY cmd.about.accesskey                  "A">
 
@@ -52,8 +58,10 @@
 <!ENTITY cmd.disableAddon.accesskey           "D">
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
-<!ENTITY cmd.showPreferences.label            "Preferences">
-<!ENTITY cmd.showPreferences.tooltip          "Change this add-on's preferences">
+<!ENTITY cmd.showPreferencesWin.label         "Options">
+<!ENTITY cmd.showPreferencesWin.tooltip       "Change this add-on's options">
+<!ENTITY cmd.showPreferencesUnix.label        "Preferences">
+<!ENTITY cmd.showPreferencesUnix.tooltip      "Change this add-on's preferences">
 <!ENTITY cmd.contribute.label                 "Contribute">
 <!ENTITY cmd.contribute.accesskey             "C">
 <!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
@@ -76,9 +84,12 @@
 <!ENTITY detail.checkForUpdates.label         "Check for updates">
 <!ENTITY detail.checkForUpdates.accesskey     "F">
 <!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
-<!ENTITY detail.showPreferences.label         "Preferences">
-<!ENTITY detail.showPreferences.accesskey     "P">
-<!ENTITY detail.showPreferences.tooltip       "Change this add-on's preferences">
+<!ENTITY detail.showPreferencesWin.label      "Options">
+<!ENTITY detail.showPreferencesWin.accesskey  "O">
+<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on's Options">
+<!ENTITY detail.showPreferencesUnix.label     "Preferences">
+<!ENTITY detail.showPreferencesUnix.accesskey "P">
+<!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on's preferences">
 
 
 <!-- ratings -->
@@ -92,24 +103,20 @@
 <!-- list sorting -->
 <!ENTITY sort.name.label                      "Name">
 <!ENTITY sort.name.tooltip                    "Sort by name">
-<!ENTITY sort.size.label                      "Size">
-<!ENTITY sort.size.tooltip                    "Sort by size">
 <!ENTITY sort.dateUpdated.label               "Last Updated">
 <!ENTITY sort.dateUpdated.tooltip             "Sort by date updated">
-<!ENTITY sort.rating.label                    "Rating">
-<!ENTITY sort.rating.tooltip                  "Sort by average rating">
+<!ENTITY sort.relevance.label                 "Best match">
+<!ENTITY sort.relevance.tooltip               "Sort by relevance">
 
-
-<!ENTITY showMore.label                       "Show more">
-<!ENTITY showMore.tooltip                     "Show more details">
-<!ENTITY showLess.label                       "Show less">
-<!ENTITY showLess.tooltip                     "Show fewer details">
-
-<!ENTITY search.filter.label                  "Show:">
-<!ENTITY search.filter.installed.label        "Your installed add-ons">
-<!ENTITY search.filter.available.label        "Available add-ons">
+<!ENTITY search.filter2.label                 "Search:">
+<!ENTITY search.filter2.installed.label       "My Add-ons">
+<!ENTITY search.filter2.installed.tooltip     "Show installed add-ons">
+<!ENTITY search.filter2.available.label       "Available Add-ons">
+<!ENTITY search.filter2.available.tooltip     "Show add-ons available to install">
 
 <!ENTITY addon.homepage                       "Homepage">
+<!ENTITY addon.details.label                  "More">
+<!ENTITY addon.details.tooltip                "Show more details about this add-on">
 <!ENTITY addon.unknownDate                    "Unknown">
 <!ENTITY addon.disabled.postfix               "(disabled)">
 <!-- LOCALIZATION NOTE (addon.update.postfix): This is used to signify that an item is an update, in the form "Addon v1.0 Update" -->
@@ -119,7 +126,6 @@
 <!ENTITY addon.undoUninstall.label            "Undo?">
 <!ENTITY addon.undoUninstall.tooltip          "Keep this add-on installed">
 <!ENTITY addon.restartNow.label               "Restart now">
-<!ENTITY addon.restartNow.tooltip             "Restart now to complete installation">
 <!ENTITY addon.install.label                  "Install">
 <!ENTITY addon.install.tooltip                "Install this add-on">
 <!ENTITY addon.updateNow.label                "Update Now">

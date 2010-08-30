@@ -121,6 +121,8 @@ nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
   // Fill in the event symbol to simplify handling later
   if (mParams.mType == nsSMILTimeValueSpecParams::REPEAT) {
     mParams.mEventSymbol = nsGkAtoms::repeatEvent;
+  } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
+    mParams.mEventSymbol = nsGkAtoms::keypress;
   }
 
   ResolveReferences(aContextNode);
@@ -131,9 +133,7 @@ nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
 void
 nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
 {
-  if (mParams.mType != nsSMILTimeValueSpecParams::SYNCBASE &&
-      mParams.mType != nsSMILTimeValueSpecParams::EVENT &&
-      mParams.mType != nsSMILTimeValueSpecParams::REPEAT)
+  if (mParams.mType != nsSMILTimeValueSpecParams::SYNCBASE && !IsEventBased())
     return;
 
   NS_ABORT_IF_FALSE(aContextNode,
@@ -155,6 +155,10 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   } else if (mParams.mType == nsSMILTimeValueSpecParams::EVENT) {
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);
+  } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
+    nsIDocument* doc = aContextNode->GetCurrentDoc();
+    NS_ABORT_IF_FALSE(doc, "We are in the document but current doc is null");
+    mReferencedElement.ResetWithElement(doc->GetRootElement());
   } else {
     NS_ABORT_IF_FALSE(PR_FALSE, "Syncbase or repeat spec without ID");
   }
@@ -277,11 +281,12 @@ nsSMILTimeValueSpec::UpdateReferencedElement(Element* aFrom, Element* aTo)
 
   case nsSMILTimeValueSpecParams::EVENT:
   case nsSMILTimeValueSpecParams::REPEAT:
+  case nsSMILTimeValueSpecParams::ACCESSKEY:
     RegisterEventListener(aTo);
     break;
 
   default:
-    // not a referencing-type or not yet supported
+    // not a referencing-type
     break;
   }
 }
@@ -319,8 +324,7 @@ nsSMILTimeValueSpec::GetTimedElement(Element* aElement)
 void
 nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
 {
-  NS_ABORT_IF_FALSE(mParams.mType == nsSMILTimeValueSpecParams::EVENT ||
-                    mParams.mType == nsSMILTimeValueSpecParams::REPEAT,
+  NS_ABORT_IF_FALSE(IsEventBased(),
     "Attempting to register event-listener for unexpected nsSMILTimeValueSpec"
     " type");
   NS_ABORT_IF_FALSE(mParams.mEventSymbol,
@@ -373,7 +377,23 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
   NS_ABORT_IF_FALSE(aSystemGroup && !*aSystemGroup,
       "Bad out param for system group");
 
-  nsIEventListenerManager* elm = aTarget->GetListenerManager(PR_TRUE);
+  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+
+  if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
+    nsIDocument* doc = aTarget->GetCurrentDoc();
+    if (!doc)
+      return nsnull;
+    nsPIDOMWindow* win = doc->GetWindow();
+    if (!win)
+      return nsnull;
+    piTarget = do_QueryInterface(win);
+  } else {
+    piTarget = aTarget;
+  }
+  if (!piTarget)
+    return nsnull;
+
+  nsIEventListenerManager* elm = piTarget->GetListenerManager(PR_TRUE);
   if (!elm)
     return nsnull;
 
@@ -413,9 +433,23 @@ nsSMILTimeValueSpec::HandleEvent(nsIDOMEvent* aEvent)
 PRBool
 nsSMILTimeValueSpec::CheckEventDetail(nsIDOMEvent *aEvent)
 {
-  if (mParams.mType != nsSMILTimeValueSpecParams::REPEAT)
-    return PR_TRUE;
+  switch (mParams.mType)
+  {
+  case nsSMILTimeValueSpecParams::REPEAT:
+    return CheckRepeatEventDetail(aEvent);
 
+  case nsSMILTimeValueSpecParams::ACCESSKEY:
+    return CheckAccessKeyEventDetail(aEvent);
+
+  default:
+    // nothing to check
+    return PR_TRUE;
+  }
+}
+
+PRBool
+nsSMILTimeValueSpec::CheckRepeatEventDetail(nsIDOMEvent *aEvent)
+{
   nsCOMPtr<nsIDOMTimeEvent> timeEvent = do_QueryInterface(aEvent);
   if (!timeEvent) {
     NS_WARNING("Received a repeat event that was not a DOMTimeEvent");
@@ -424,7 +458,64 @@ nsSMILTimeValueSpec::CheckEventDetail(nsIDOMEvent *aEvent)
 
   PRInt32 detail;
   timeEvent->GetDetail(&detail);
-  return detail == mParams.mRepeatIterationOrAccessKey;
+  return detail > 0 && (PRUint32)detail == mParams.mRepeatIterationOrAccessKey;
+}
+
+PRBool
+nsSMILTimeValueSpec::CheckAccessKeyEventDetail(nsIDOMEvent *aEvent)
+{
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+  if (!keyEvent) {
+    NS_WARNING("Received an accesskey event that was not a DOMKeyEvent");
+    return PR_FALSE;
+  }
+
+  // Ignore the key event if any modifier keys are pressed UNLESS we're matching
+  // on the charCode in which case we ignore the state of the shift and alt keys
+  // since they might be needed to generate the character in question.
+  PRBool isCtrl;
+  PRBool isMeta;
+  keyEvent->GetCtrlKey(&isCtrl);
+  keyEvent->GetMetaKey(&isMeta);
+  if (isCtrl || isMeta)
+    return PR_FALSE;
+
+  PRUint32 code;
+  keyEvent->GetCharCode(&code);
+  if (code)
+    return code == mParams.mRepeatIterationOrAccessKey;
+
+  // Only match on the keyCode if it corresponds to some ASCII character that
+  // does not produce a charCode.
+  // In this case we can safely bail out if either alt or shift is pressed since
+  // they won't already be incorporated into the keyCode unlike the charCode.
+  PRBool isAlt;
+  PRBool isShift;
+  keyEvent->GetAltKey(&isAlt);
+  keyEvent->GetShiftKey(&isShift);
+  if (isAlt || isShift)
+    return PR_FALSE;
+
+  keyEvent->GetKeyCode(&code);
+  switch (code)
+  {
+  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+    return mParams.mRepeatIterationOrAccessKey == 0x08;
+
+  case nsIDOMKeyEvent::DOM_VK_RETURN:
+  case nsIDOMKeyEvent::DOM_VK_ENTER:
+    return mParams.mRepeatIterationOrAccessKey == 0x0A ||
+           mParams.mRepeatIterationOrAccessKey == 0x0D;
+
+  case nsIDOMKeyEvent::DOM_VK_ESCAPE:
+    return mParams.mRepeatIterationOrAccessKey == 0x1B;
+
+  case nsIDOMKeyEvent::DOM_VK_DELETE:
+    return mParams.mRepeatIterationOrAccessKey == 0x7F;
+
+  default:
+    return PR_FALSE;
+  }
 }
 
 nsSMILTimeValue

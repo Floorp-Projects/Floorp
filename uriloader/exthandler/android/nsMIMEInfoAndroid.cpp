@@ -42,7 +42,7 @@
 #include "nsStringEnumerator.h"
 #include "nsNetUtil.h"
 
-NS_IMPL_ISUPPORTS1(nsMIMEInfoAndroid, nsIMIMEInfo)
+NS_IMPL_ISUPPORTS2(nsMIMEInfoAndroid, nsIMIMEInfo, nsIHandlerInfo)
 
 NS_IMETHODIMP
 nsMIMEInfoAndroid::LaunchDefaultWithFile(nsIFile* aFile)

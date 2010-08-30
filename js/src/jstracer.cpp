@@ -11198,7 +11198,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 if (native == (FastNative)js_str_charAt) {
                     LIns* str_ins = get(&vp[1]);
                     LIns* idx_ins = get(&vp[2]);
-                    set(&vp[0], getCharAt(str, str_ins, idx_ins));
+                    set(&vp[0], getCharAt(str, str_ins, idx_ins, mode));
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
                 } else if (native == (FastNative)js_str_charCodeAt) {
@@ -12391,7 +12391,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
 JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
+TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode)
 {
     idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
@@ -12404,12 +12404,28 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
     lir->insCall(&js_Flatten_ci, &str_ins);
     br->setTarget(lir->ins0(LIR_label));
 
-    LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
-    lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
+    LIns *phi_ins = NULL;
+    if (mode == JSOP_GETELEM) {
+        guard(true,
+              lir->ins2(LIR_ltup,
+                        idx_ins,
+                        lir->ins2ImmI(LIR_rshup,
+                                      length_ins,
+                                      JSString::FLAGS_LENGTH_SHIFT)),
+              MISMATCH_EXIT);
+    } else {
+        phi_ins = lir->insAlloc(sizeof(JSString *));
+        lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
 
-    br = lir->insBranch(LIR_jf,
-                        lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
-                        NULL);
+        br = lir->insBranch(LIR_jf,
+                            lir->ins2(LIR_ltup,
+                                      idx_ins,
+                                      lir->ins2ImmI(LIR_rshup,
+                                                    length_ins,
+                                                    JSString::FLAGS_LENGTH_SHIFT)),
+                            NULL);
+    }
+
     LIns *chars_ins = getStringChars(str_ins);
     LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
                                 lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
@@ -12420,6 +12436,9 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
                                   lir->ins2ImmI(LIR_lshp,
                                                 lir->insUI2P(ch_ins),
                                                 (sizeof(JSString) == 16) ? 4 : 5));
+    if (mode == JSOP_GETELEM)
+        return unitstr_ins;
+
     lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
     br->setTarget(lir->ins0(LIR_label));
 
@@ -12451,7 +12470,7 @@ TraceRecorder::record_JSOP_GETELEM()
         int i = asInt32(idx);
         if (size_t(i) >= lval.toString()->length())
             RETURN_STOP_A("Invalid string index in JSOP_GETELEM");
-        set(&lval, getCharAt(lval.toString(), obj_ins, idx_ins));
+        set(&lval, getCharAt(lval.toString(), obj_ins, idx_ins, JSOP_GETELEM));
         return ARECORD_CONTINUE;
     }
 
