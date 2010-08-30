@@ -222,6 +222,31 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
   return rv;
 }
 
+/** Gets the content-disposition header from a channel, using nsIHttpChannel
+ * or nsIMultipartChannel if available
+ * @param aChannel The channel to extract the disposition header from
+ * @param aDisposition Reference to a string where the header is to be stored
+ */
+static void ExtractDisposition(nsIChannel* aChannel, nsACString& aDisposition)
+{
+  aDisposition.Truncate();
+  // First see whether this is an http channel
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) 
+  {
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), aDisposition);
+  }
+  if (aDisposition.IsEmpty())
+  {
+    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(aChannel));
+    if (multipartChannel)
+    {
+      multipartChannel->GetContentDisposition(aDisposition);
+    }
+  }
+
+}
+
 /** Extracts the filename out of a content-disposition header
  * @param aFilename [out] The filename. Can be empty on error.
  * @param aDisposition Value of a Content-Disposition header
@@ -289,7 +314,7 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
    * permission... otherwise just use our temp file
    */
   nsCAutoString disp;
-  aChannel->GetContentDisposition(disp);
+  ExtractDisposition(aChannel, disp);
   PRBool handleExternally = PR_FALSE;
   nsCOMPtr<nsIURI> uri;
   nsresult rv;

@@ -359,18 +359,6 @@ HttpBaseChannel::SetContentCharset(const nsACString& aContentCharset)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetContentDisposition(nsACString& aContentDisposition)
-{
-  aContentDisposition.Truncate();
-
-  if (!mResponseHead)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  mResponseHead->GetHeader(nsHttp::Content_Disposition, aContentDisposition);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::GetContentLength(PRInt64 *aContentLength)
 {
   if (!mResponseHead)

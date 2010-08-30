@@ -265,13 +265,6 @@ nsWyciwygChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::GetContentDisposition(nsACString &aContentDisposition)
-{
-  aContentDisposition.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWyciwygChannel::GetContentLength(PRInt64 *aContentLength)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
