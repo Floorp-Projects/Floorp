@@ -284,7 +284,7 @@ nsHttpHandler::Init()
         appInfo->GetName(mAppName);
         appInfo->GetVersion(mAppVersion);
     } else {
-        mAppVersion.AssignLiteral(MOZ_APP_VERSION);
+        mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
 
 #if DEBUG
