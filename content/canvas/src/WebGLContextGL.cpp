@@ -2988,7 +2988,14 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             return NS_OK;
         }
 
-        s = ShGetObjectCode(compiler);
+        /* If the GL context is really GLES2, we want to use the original provided code,
+         * since it's actually GLES2.  We still need to validate it however, which is
+         * why we ran it through the above, but we don't want the desktop GLSL.
+         */
+        if (!gl->IsGLES2()) {
+            s = ShGetObjectCode(compiler);
+        }
+
         gl->fShaderSource(shadername, 1, &s, NULL);
         shader->SetTranslationSuccess();
 
