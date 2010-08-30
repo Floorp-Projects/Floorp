@@ -104,16 +104,21 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
     MakeContextCurrent(); gl->f##glname(a1,a2,a3,a4,a5,a6); return NS_OK; \
 }
 
-already_AddRefed<WebGLUniformLocation> WebGLProgram::GetUniformLocationObject(GLint glLocation)
+already_AddRefed<WebGLUniformLocation>
+WebGLProgram::GetUniformLocationObject(GLint glLocation)
 {
     WebGLUniformLocation *existingLocationObject;
     if (mMapUniformLocations.Get(glLocation, &existingLocationObject)) {
         return existingLocationObject;
-    } else {
-        nsRefPtr<WebGLUniformLocation> loc = new WebGLUniformLocation(mContext, this, glLocation);
-        mMapUniformLocations.Put(glLocation, loc);
-        return loc.forget();
     }
+
+    if (glLocation < 0) {
+        return nsnull;
+    }
+
+    nsRefPtr<WebGLUniformLocation> loc = new WebGLUniformLocation(mContext, this, glLocation);
+    mMapUniformLocations.Put(glLocation, loc);
+    return loc.forget();
 }
 
 //
