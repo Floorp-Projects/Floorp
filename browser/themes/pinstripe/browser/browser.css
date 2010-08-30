@@ -1859,6 +1859,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #notification-popup {
+  color: #fff;
   margin-top: -1px;
   margin-left: -27px;
 }
@@ -1882,12 +1883,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 
-#addons-notification-icon {
-  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
+.geolocation-text-link {
+  color: #fff;
 }
 
-.popup-notification-description {
-  color: #fff;
+#addons-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
 .popup-notification-icon {

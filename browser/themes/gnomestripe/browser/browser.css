@@ -1027,6 +1027,11 @@ toolbar[iconsize="small"] #fullscreen-button {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 
+.geolocation-text-link {
+  -moz-padding-start: 13px;
+  padding-top: 10px;
+}
+
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
