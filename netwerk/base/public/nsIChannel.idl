@@ -56,7 +56,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(3906f857-3d79-4716-be55-ed2455d666f4)]
+[scriptable, uuid(e0bb5c49-c54e-4efb-8f0d-6a7edd926fab)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -156,13 +156,6 @@ interface nsIChannel : nsIRequest
      * some channels.
      */
     attribute PRInt64 contentLength;
-
-    /**
-     * Access to the Content-Disposition header if available and if applicable.
-     * This allows getting the preferred handling method, preferred filename,
-     * etc.  See RFC 2183.
-     */
-    readonly attribute ACString contentDisposition;
 
     /**
      * Synchronously open the channel.

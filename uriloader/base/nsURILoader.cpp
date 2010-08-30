@@ -386,9 +386,26 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // future, because the user has specified external handling for the MIME
   // type.
   PRBool forceExternalHandling = PR_FALSE;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   nsCAutoString disposition;
-  rv = aChannel->GetContentDisposition(disposition);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  nsCOMPtr<nsIURI> uri;
+  if (httpChannel)
+  {
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"),
+                                        disposition);
+    httpChannel->GetURI(getter_AddRefs(uri));
+  }
+  else
+  {
+    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(request));
+    if (multipartChannel)
+    {
+      rv = multipartChannel->GetContentDisposition(disposition);
+    } else {
+      // Soon-to-be common way to get Disposition: right now only JARChannel
+      rv = NS_GetContentDisposition(request, disposition);
+    }
+  }
 
   LOG(("  Disposition header: '%s'", disposition.get()));
 
@@ -398,9 +415,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     if (NS_SUCCEEDED(rv))
     {
       nsCAutoString fallbackCharset;
-      nsCOMPtr<nsIURI> uri;
-      if (httpChannel)
-        httpChannel->GetURI(getter_AddRefs(uri));
       if (uri)
         uri->GetOriginCharset(fallbackCharset);
       nsAutoString dispToken;

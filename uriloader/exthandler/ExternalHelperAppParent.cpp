@@ -296,13 +296,6 @@ ExternalHelperAppParent::SetContentCharset(const nsACString& aContentCharset)
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetContentDisposition(nsACString& aContentDisposition)
-{
-  aContentDisposition.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ExternalHelperAppParent::GetContentLength(PRInt64 *aContentLength)
 {
   *aContentLength = mContentLength;

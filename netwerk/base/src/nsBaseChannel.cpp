@@ -504,13 +504,6 @@ nsBaseChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetContentDisposition(nsACString &aContentDisposition)
-{
-  aContentDisposition = mContentDisposition;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBaseChannel::GetContentLength(PRInt64 *aContentLength)
 {
   *aContentLength = mContentLength;
