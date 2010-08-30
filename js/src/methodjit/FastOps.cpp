@@ -41,6 +41,7 @@
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsscope.h"
+#include "jsobjinlines.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -1202,18 +1203,16 @@ mjit::Compiler::jsop_setelem()
          * quantity, but will be aligned on 4 bytes.
          */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, map)), T1);
-        stubcc.masm.load32(Address(T1, offsetof(JSScope, flags)), T1);
-        stubcc.masm.and32(Imm32(JSScope::INDEXED_PROPERTIES), T1);
+        stubcc.masm.loadPtr(Address(T1, JSObject::flagsOffset()), T1);
+        stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
         Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
         extendedArray.linkTo(syncTarget, &stubcc.masm);
 
         /* Test for indexed properties in Object.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, map)), T1);
-        stubcc.masm.load32(Address(T1, offsetof(JSScope, flags)), T1);
-        stubcc.masm.and32(Imm32(JSScope::INDEXED_PROPERTIES), T1);
+        stubcc.masm.loadPtr(Address(T1, JSObject::flagsOffset()), T1);
+        stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
         Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
         extendedObject.linkTo(syncTarget, &stubcc.masm);
 

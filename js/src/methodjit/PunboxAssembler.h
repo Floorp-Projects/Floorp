@@ -229,11 +229,15 @@ class Assembler : public BaseAssembler
         return label();
     }
 
+    void loadPrivate(Address privAddr, RegisterID to) {
+        loadPtr(privAddr, to);
+        lshiftPtr(Imm32(1), to);
+    }
+
     void loadFunctionPrivate(RegisterID base, RegisterID to) {
         Address privSlot(base, offsetof(JSObject, fslots) +
                                JSSLOT_PRIVATE * sizeof(Value));
-        loadPtr(privSlot, to);
-        lshiftPtr(Imm32(1), to);
+        loadPrivate(privSlot, to);
     }
 
     Jump testNull(Assembler::Condition cond, RegisterID reg) {

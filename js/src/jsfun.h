@@ -48,21 +48,6 @@
 #include "jsatom.h"
 #include "jsstr.h"
 
-typedef struct JSLocalNameMap JSLocalNameMap;
-
-/*
- * Depending on the number of arguments and variables in the function their
- * names and attributes are stored either as a single atom or as an array of
- * tagged atoms (when there are few locals) or as a hash-based map (when there
- * are many locals). In the first 2 cases the lowest bit of the atom is used
- * as a tag to distinguish const from var. See jsfun.c for details.
- */
-typedef union JSLocalNames {
-    jsuword         taggedAtom;
-    jsuword         *array;
-    JSLocalNameMap  *map;
-} JSLocalNames;
-
 /*
  * The high two bits of JSFunction.flags encode whether the function is native
  * or interpreted, and if interpreted, what kind of optimized closure form (if
@@ -143,6 +128,29 @@ typedef union JSLocalNames {
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
+/*
+ * Formal parameters, local variables, and upvars are stored in a shape tree
+ * path with its latest node at fun->u.i.names. The addLocal, lookupLocal, and
+ * getLocalNameArray methods abstract away this detail.
+ *
+ * The lastArg, lastVar, and lastUpvar JSFunction methods provide more direct
+ * access to the shape path. These methods may be used to make a Shape::Range
+ * for iterating over the relevant shapes from youngest to oldest (i.e., last
+ * or right-most to first or left-most in source order).
+ *
+ * Sometimes iteration order must be from oldest to youngest, however. For such
+ * cases, use getLocalNameArray. The RAII helper class js::AutoLocalNameArray,
+ * defined in jscntxt.h, should be used where possible instead of direct calls
+ * to getLocalNameArray.
+ */
+enum JSLocalKind {
+    JSLOCAL_NONE,
+    JSLOCAL_ARG,
+    JSLOCAL_VAR,
+    JSLOCAL_CONST,
+    JSLOCAL_UPVAR
+};
+
 struct JSFunction : public JSObject
 {
     uint16          nargs;        /* maximum number of specified arguments,
@@ -171,7 +179,7 @@ struct JSFunction : public JSObject
                                      indirect eval; if true, then this function
                                      object's proto is the wrapped object */
             JSScript    *script;  /* interpreted bytecode descriptor or null */
-            JSLocalNames names;   /* argument and variable names */
+            js::Shape   *names;   /* argument and variable names */
         } i;
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
@@ -186,7 +194,7 @@ struct JSFunction : public JSObject
 
     inline bool inStrictMode() const;
 
-    inline bool isBound() const;
+    bool isBound() const;
 
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -213,13 +221,51 @@ struct JSFunction : public JSObject
 
     int sharpSlotBase(JSContext *cx);
 
+    uint32 countUpvarSlots() const;
+
+    const js::Shape *lastArg() const;
+    const js::Shape *lastVar() const;
+    const js::Shape *lastUpvar() const { return u.i.names; }
+
+    bool addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind);
+
+    /*
+     * Look up an argument or variable name returning its kind when found or
+     * JSLOCAL_NONE when no such name exists. When indexp is not null and the
+     * name exists, *indexp will receive the index of the corresponding
+     * argument or variable.
+     */
+    JSLocalKind lookupLocal(JSContext *cx, JSAtom *atom, uintN *indexp);
+
+    /*
+     * Function and macros to work with local names as an array of words.
+     * getLocalNameArray returns the array, or null if we are out of memory.
+     * This function must be called only when fun->hasLocalNames().
+     *
+     * The supplied pool is used to allocate the returned array, so the caller
+     * is obligated to mark and release to free it.
+     *
+     * The elements of the array with index less than fun->nargs correspond to
+     * the names of function formal parameters. An index >= fun->nargs
+     * addresses a var binding. Use JS_LOCAL_NAME_TO_ATOM to convert array's
+     * element to an atom pointer. This pointer can be null when the element is
+     * for a formal parameter corresponding to a destructuring pattern.
+     *
+     * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST
+     * to check if nameWord corresponds to the const declaration.
+     */
+    jsuword *getLocalNameArray(JSContext *cx, struct JSArenaPool *pool);
+
+    void freezeLocalNames(JSContext *cx);
+
     /*
      * If fun's formal parameters include any duplicate names, return one
      * of them (chosen arbitrarily). If they are all unique, return NULL.
      */
     JSAtom *findDuplicateFormal() const;
 
-    uint32 countInterpretedReservedSlots() const;
+#define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~(jsuword) 1))
+#define JS_LOCAL_NAME_IS_CONST(nameWord) ((((nameWord) & (jsuword) 1)) != 0)
 
     bool mightEscape() const {
         return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
@@ -262,6 +308,10 @@ struct JSFunction : public JSObject
         JS_ASSERT(joinable());
         fslots[METHOD_ATOM_SLOT].setString(ATOM_TO_STRING(atom));
     }
+
+    /* Number of extra fixed function object slots besides JSSLOT_PRIVATE. */
+    static const uint32 CLASS_RESERVED_SLOTS = JSObject::FUN_CLASS_RESERVED_SLOTS;
+    static const uint32 FIRST_FREE_SLOT = JSSLOT_PRIVATE + CLASS_RESERVED_SLOTS + 1;
 };
 
 JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
@@ -296,8 +346,16 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
  * single-threaded objects and GC heaps.
  */
 extern js::Class js_ArgumentsClass;
+
 namespace js {
+
 extern Class StrictArgumentsClass;
+
+struct ArgumentsData {
+    js::Value   callee;
+    js::Value   slots[1];
+};
+
 }
 
 inline bool
@@ -318,29 +376,23 @@ JSObject::isArguments() const
     return isNormalArguments() || isStrictArguments();
 }
 
-#define JS_ARGUMENT_OBJECT_ON_TRACE ((void *)0xa126)
+#define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
 
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
 extern js::Class js_DeclEnvClass;
-extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
+extern const uint32 CALL_CLASS_RESERVED_SLOTS;
+
+inline bool
+JSObject::isCall() const
+{
+    return getClass() == &js_CallClass;
+}
 
 inline bool
 JSObject::isFunction() const
 {
     return getClass() == &js_FunctionClass;
-}
-
-inline bool
-JSObject::isCallable()
-{
-    return isFunction() || getClass()->call;
-}
-
-static inline bool
-js_IsCallable(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isCallable();
 }
 
 /*
@@ -418,6 +470,9 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
         return NULL;
     return js_CloneFunctionObject(cx, fun, parent, proto);
 }
+
+extern JSObject * JS_FASTCALL
+js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
@@ -530,56 +585,6 @@ JS_STATIC_ASSERT(((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
 
 extern JSBool
 js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
-
-typedef enum JSLocalKind {
-    JSLOCAL_NONE,
-    JSLOCAL_ARG,
-    JSLOCAL_VAR,
-    JSLOCAL_CONST,
-    JSLOCAL_UPVAR
-} JSLocalKind;
-
-extern JSBool
-js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
-
-/*
- * Look up an argument or variable name returning its kind when found or
- * JSLOCAL_NONE when no such name exists. When indexp is not null and the name
- * exists, *indexp will receive the index of the corresponding argument or
- * variable.
- */
-extern JSLocalKind
-js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
-
-/*
- * Functions to work with local names as an array of words.
- *
- * js_GetLocalNameArray returns the array, or null if we are out of memory.
- * This function must be called only when fun->hasLocalNames().
- *
- * The supplied pool is used to allocate the returned array, so the caller is
- * obligated to mark and release to free it.
- *
- * The elements of the array with index less than fun->nargs correspond to the
- * names of function formal parameters. An index >= fun->nargs addresses a var
- * binding. Use JS_LOCAL_NAME_TO_ATOM to convert array's element to an atom
- * pointer. This pointer can be null when the element is for a formal parameter
- * corresponding to a destructuring pattern.
- *
- * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST to
- * check if nameWord corresponds to the const declaration.
- */
-extern jsuword *
-js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);
-
-#define JS_LOCAL_NAME_TO_ATOM(nameWord)                                       \
-    ((JSAtom *) ((nameWord) & ~(jsuword) 1))
-
-#define JS_LOCAL_NAME_IS_CONST(nameWord)                                      \
-    ((((nameWord) & (jsuword) 1)) != 0)
-
-extern void
-js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
 
 extern JSBool
 js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);

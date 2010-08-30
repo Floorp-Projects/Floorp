@@ -929,9 +929,9 @@ struct JSFunctionBox : public JSObjectBox
      * be joined to one compiler-created null closure shared among N different
      * closure environments.
      *
-     * We despecialize from caching function objects, caching slots or sprops
+     * We despecialize from caching function objects, caching slots or shapes
      * instead, because an unbranded object may still have joined methods (for
-     * which sprop->isMethod), since PropertyCache::fill gives precedence to
+     * which shape->isMethod), since PropertyCache::fill gives precedence to
      * joined methods over branded methods.
      */
     bool shouldUnbrand(uintN methods, uintN slowMethods) const;
