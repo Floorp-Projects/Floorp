@@ -135,7 +135,7 @@ JS_FRIEND_DATA(JSScopeStats) js_scope_stats = {0};
 #endif
 
 bool
-PropertyTable::init(JSContext *cx, Shape *lastProp)
+PropertyTable::init(Shape *lastProp)
 {
     int sizeLog2;
 
@@ -158,7 +158,6 @@ PropertyTable::init(JSContext *cx, Shape *lastProp)
         METER(tableAllocFails);
         return false;
     }
-    cx->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(Shape *));
 
     hashShift = JS_DHASH_BITS - sizeLog2;
     for (Shape::Range r = lastProp->all(); !r.empty(); r.popFront()) {
@@ -172,15 +171,19 @@ PropertyTable::init(JSContext *cx, Shape *lastProp)
 }
 
 bool
-Shape::maybeHash(JSContext *cx)
+Shape::reallyHash(int count)
 {
     JS_ASSERT(!table);
-    uint32 nentries = entryCount();
-    if (nentries >= PropertyTable::HASH_THRESHOLD) {
-        table = cx->create<PropertyTable>(nentries);
-        return table && table->init(cx, this);
+    JS_ASSERT(count >= PropertyTable::HASH_THRESHOLD);
+
+    /* Inline version of JSContext::create to avoid cx dependency. */
+    void *mem = js_malloc(sizeof(PropertyTable));
+    if (mem) {
+        table = new (mem) PropertyTable(uint32(count));
+        if (table)
+            return table->init(this);
     }
-    return true;
+    return false;
 }
 
 #ifdef DEBUG
@@ -375,7 +378,7 @@ PropertyTable::search(jsid id, bool adding)
 }
 
 bool
-PropertyTable::change(JSContext *cx, int change)
+PropertyTable::change(int change)
 {
     int oldlog2, newlog2;
     uint32 oldsize, newsize, nbytes;
@@ -389,7 +392,7 @@ PropertyTable::change(JSContext *cx, int change)
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
     nbytes = PROPERTY_TABLE_NBYTES(newsize);
-    newTable = (Shape **) cx->calloc(nbytes);
+    newTable = (Shape **) js_calloc(nbytes);
     if (!newTable) {
         METER(tableAllocFails);
         return false;
@@ -400,9 +403,6 @@ PropertyTable::change(JSContext *cx, int change)
     removedCount = 0;
     oldTable = entries;
     entries = newTable;
-
-    /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
-    cx->updateMallocCounter(nbytes);
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldTable; oldsize != 0; oldspp++) {
@@ -418,7 +418,7 @@ PropertyTable::change(JSContext *cx, int change)
     }
 
     /* Finally, free the old entries storage. */
-    cx->free(oldTable);
+    js_free(oldTable);
     return true;
 }
 
@@ -545,6 +545,7 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
     Shape **childp = listp;
     *childp = NULL;
 
+    int count = -1;
     while (shape) {
         JS_ASSERT(!shape->inDictionary());
 
@@ -558,11 +559,15 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
         JS_ASSERT(!dprop->table);
         childp = &dprop->parent;
         shape = shape->parent;
+        ++count;
     }
 
     list = *listp;
     JS_ASSERT(list->inDictionary());
-    list->maybeHash(cx);
+
+    /* Update memory pressure, since this table is not a shared resource. */
+    if (list->maybeHash(count))
+        list->table->updateMemoryPressure(cx);
     return list;
 }
 
@@ -672,8 +677,9 @@ JSObject::addPropertyCommon(JSContext *cx, jsid id,
                 METER(compresses);
             else
                 METER(grows);
-            if (!table->change(cx, change) && table->entryCount + table->removedCount == size - 1)
+            if (!table->change(change) && table->entryCount + table->removedCount == size - 1)
                 return NULL;
+            table->updateMemoryPressure(cx);
             METER(searches);
             METER(changeSearches);
             spp = table->search(id, true);
@@ -705,17 +711,6 @@ JSObject::addPropertyCommon(JSContext *cx, jsid id,
         LIVE_SCOPE_METER(cx, ++cx->runtime->liveObjectProps);
         JS_RUNTIME_METER(cx->runtime, totalObjectProps);
 #endif
-
-        /*
-         * If we reach the hashing threshold, try to allocate lastProp->table.
-         * If we can't (a rare event, preceded by swapping to death on most
-         * modern OSes), stick with linear search rather than whining about
-         * this little set-back.  Therefore we must test !lastProp->table and
-         * entry count >= PropertyTable::HASH_THRESHOLD, not merely whether the
-         * entry count just reached the threshold.
-         */
-        if (!lastProp->table)
-            lastProp->maybeHash(cx);
 
         METER(adds);
         return shape;
@@ -816,11 +811,6 @@ JSObject::putProperty(JSContext *cx, jsid id,
             JS_ASSERT(oldLastProp->table == table);
             oldLastProp->setTable(NULL);
             shape->setTable(table);
-        }
-
-        if (!lastProp->table) {
-            /* See comment in JSObject::addPropertyCommon about ignoring OOM here. */
-            lastProp->maybeHash(cx);
         }
 
         METER(puts);
@@ -998,7 +988,9 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         uint32 size = table->capacity();
         if (size > PropertyTable::MIN_SIZE && table->entryCount <= size >> 2) {
             METER(shrinks);
-            (void) table->change(cx, -1);
+            (void) table->change(-1);
+            if (inDictionaryMode())
+                table->updateMemoryPressure(cx);
         }
     }
 

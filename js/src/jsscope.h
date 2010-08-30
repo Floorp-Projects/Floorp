@@ -226,9 +226,9 @@ struct PropertyTable {
     uint32          removedCount;       /* removed entry sentinels in table */
     js::Shape       **entries;          /* table of ptrs to shared tree nodes */
 
-    PropertyTable(uint32 nentries)
+    PropertyTable(uint32 count)
       : hashShift(JS_DHASH_BITS - MIN_SIZE_LOG2),
-        entryCount(nentries),
+        entryCount(count),
         removedCount(0)
     {
         /* NB: entries is set by init, which must be called. */
@@ -241,12 +241,16 @@ struct PropertyTable {
     /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
     uint32 capacity() const { return JS_BIT(JS_DHASH_BITS - hashShift); }
 
+    void updateMemoryPressure(JSContext *cx) const {
+        cx->updateMallocCounter(capacity() * sizeof(Shape *));
+    }
+
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
      * cope or ignore. They do update the malloc counter on success.
      */
-    bool            init(JSContext *cx, js::Shape *lastProp);
-    bool            change(JSContext *cx, int change);
+    bool            init(js::Shape *lastProp);
+    bool            change(int change);
     js::Shape       **search(jsid id, bool adding);
 };
 
@@ -352,7 +356,18 @@ struct Shape : public JSObjectMap
 
     js::Shape *getChild(JSContext *cx, const js::Shape &child, js::Shape **listp);
 
-    bool maybeHash(JSContext *cx);
+    /*
+     * NB: return true only if we need a PropertyTable and we successfully
+     * allocated one, so callers who care can update memory pressure.
+     */
+    bool maybeHash(int count) {
+        JS_ASSERT(!table);
+        if (count >= PropertyTable::HASH_THRESHOLD)
+            return reallyHash(count);
+        return false;
+    }
+
+    bool reallyHash(int count);
 
     void setTable(js::PropertyTable *t) const { table = t; }
 
@@ -778,15 +793,20 @@ Shape::search(js::Shape **startp, jsid id, bool adding)
          * at the end), to avoid an extra load per iteration just to save a
          * load and id test at the end (when missing).
          */
-        js::Shape **spp;
+        js::Shape **spp = startp;
+        int count = -1;
 
-        for (spp = startp; js::Shape *shape = *spp; spp = &shape->parent) {
+        while (js::Shape *shape = *spp) {
             if (shape->id == id) {
                 METER(hits);
                 return spp;
             }
+            spp = &shape->parent;
+            ++count;
         }
+
         METER(misses);
+        (*startp)->maybeHash(count);
         return spp;
     }
     return (*startp)->table->search(id, adding);
