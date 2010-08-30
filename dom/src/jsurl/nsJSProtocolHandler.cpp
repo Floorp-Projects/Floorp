@@ -1012,12 +1012,6 @@ nsJSChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetContentDisposition(nsACString &aContentDisposition)
-{
-    return mStreamChannel->GetContentDisposition(aContentDisposition);
-}
-
-NS_IMETHODIMP
 nsJSChannel::GetContentLength(PRInt64 *aContentLength)
 {
     return mStreamChannel->GetContentLength(aContentLength);

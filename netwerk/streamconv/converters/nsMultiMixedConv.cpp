@@ -345,6 +345,13 @@ nsPartChannel::GetContentDisposition(nsACString &aContentDisposition)
 }
 
 NS_IMETHODIMP
+nsPartChannel::SetContentDisposition(const nsACString &aContentDisposition)
+{
+    mContentDisposition = aContentDisposition;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPartChannel::GetPartID(PRUint32 *aPartID)
 {
     *aPartID = mPartID;
@@ -793,7 +800,8 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = mPartChannel->SetContentLength(mContentLength);
     if (NS_FAILED(rv)) return rv;
 
-    mPartChannel->SetContentDisposition(mContentDisposition);
+    rv = mPartChannel->SetContentDisposition(mContentDisposition);
+    if (NS_FAILED(rv)) return rv;
 
     nsLoadFlags loadFlags = 0;
     mPartChannel->GetLoadFlags(&loadFlags);

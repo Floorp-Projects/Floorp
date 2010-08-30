@@ -47,6 +47,7 @@ class nsNetStrings {
 public:
   nsNetStrings();
 
+  const nsLiteralString kContentDisposition;
   const nsLiteralString kChannelPolicy;
 };
 
