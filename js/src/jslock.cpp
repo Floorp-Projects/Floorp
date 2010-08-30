@@ -432,7 +432,7 @@ WillDeadlock(JSContext *ownercx, JSThread *thread)
 
      for (;;) {
         JS_ASSERT(ownercx->thread);
-        JS_ASSERT(ownercx->thread->requestContext);
+        JS_ASSERT(ownercx->thread->requestDepth);
         JSTitle *title = ownercx->thread->titleToShare;
         if (!title || !title->ownercx) {
             /*
@@ -540,8 +540,7 @@ static JSBool
 ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT_IF(!cx->thread->requestContext,
-                 cx->thread == rt->gcThread && rt->gcRunning);
+    JS_ASSERT_IF(!cx->thread->requestDepth, cx->thread == rt->gcThread && rt->gcRunning);
 
     JS_RUNTIME_METER(rt, claimAttempts);
     AutoLockGC lock(rt);
@@ -568,13 +567,13 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         bool canClaim;
         if (title->u.link) {
             JS_ASSERT(js_ValidContextPointer(rt, ownercx));
-            JS_ASSERT(ownercx->thread->requestContext);
+            JS_ASSERT(ownercx->thread->requestDepth);
             JS_ASSERT(!rt->gcRunning);
             canClaim = (ownercx->thread == cx->thread);
         } else {
             canClaim = (!js_ValidContextPointer(rt, ownercx) ||
                         !ownercx->thread ||
-                        !ownercx->thread->requestContext ||
+                        !ownercx->thread->requestDepth ||
                         cx->thread == ownercx->thread  ||
                         cx->thread == rt->gcThread ||
                         ownercx->thread->gcWaiting);
@@ -1198,8 +1197,8 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
     /* We hope compilers use me instead of reloading cx->thread in the macro. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
-    if (cx->lockedSealedTitle == title) {
-        cx->lockedSealedTitle = NULL;
+    if (cx->thread->lockedSealedTitle == title) {
+        cx->thread->lockedSealedTitle = NULL;
         return;
     }
 
@@ -1241,14 +1240,14 @@ js_LockObj(JSContext *cx, JSObject *obj)
 
     /*
      * We must test whether the GC is calling and return without mutating any
-     * state, especially cx->lockedSealedScope. Note asymmetry with respect to
+     * state, especially lockedSealedScope. Note asymmetry with respect to
      * js_UnlockObj, which is a thin-layer on top of js_UnlockTitle.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
 
-    if (obj->sealed() && !cx->lockedSealedTitle) {
-        cx->lockedSealedTitle = &obj->title;
+    if (obj->sealed() && !cx->thread->lockedSealedTitle) {
+        cx->thread->lockedSealedTitle = &obj->title;
         return;
     }
 
@@ -1314,7 +1313,7 @@ js_IsTitleLocked(JSContext *cx, JSTitle *title)
         return JS_TRUE;
 
     /* Special case: locked object is sealed (ES5 frozen) -- see js_LockObj. */
-    if (cx->lockedSealedTitle == title)
+    if (cx->thread->lockedSealedTitle == title)
         return JS_TRUE;
 
     /*
