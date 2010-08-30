@@ -653,12 +653,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
       return NS_ERROR_FAILURE;
 
     PRInt64 contentLength = -1;
-    nsCString disp;
-    if (channel) {
+    if (channel)
       channel->GetContentLength(&contentLength);
-      channel->GetContentDisposition(disp);
-    }
-
 
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
@@ -669,7 +665,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     TabChild *child = static_cast<TabChild*>(tabchild.get());
     mozilla::dom::PExternalHelperAppChild *pc;
     pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
-                                                  nsCString(aMimeContentType), disp,
+                                                  nsCString(aMimeContentType),
                                                   aForceSave, contentLength);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
