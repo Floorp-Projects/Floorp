@@ -359,17 +359,20 @@ HttpBaseChannel::SetContentCharset(const nsACString& aContentCharset)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetContentLength(PRInt64 *aContentLength)
+HttpBaseChannel::GetContentLength(PRInt32 *aContentLength)
 {
+  NS_ENSURE_ARG_POINTER(aContentLength);
+
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
 
+  // XXX truncates to 32 bit
   *aContentLength = mResponseHead->ContentLength();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetContentLength(PRInt64 value)
+HttpBaseChannel::SetContentLength(PRInt32 value)
 {
   NS_NOTYETIMPLEMENTED("nsHttpChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;
