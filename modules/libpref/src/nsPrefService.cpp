@@ -784,6 +784,24 @@ static nsresult pref_InitAppDefaultsFromOmnijar()
       NS_WARNING("Error parsing preferences.");
   }
 
+  nsCOMPtr<nsIFile> file;
+  // Bug 591866 - channel-prefs.js should not be in omni.jar
+  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error getting default prefs dir");
+    return NS_OK;
+  }
+
+  rv = file->AppendNative(NS_LITERAL_CSTRING("channel-prefs.js"));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error setting channel-prefs.js path");
+    return NS_OK;
+  }
+
+  rv = openPrefFile(file);
+  if (NS_FAILED(rv))
+    NS_WARNING("Error reading channel-prefs.js");
+
   return NS_OK;
 }
 #endif
