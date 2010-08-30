@@ -670,7 +670,7 @@ JSObject::flagsOffset()
     JSObject fakeObj;
     memset(&fakeObj, 0, sizeof(fakeObj));
     fakeObj.flags = 1;
-    for (int testOffset = 0; testOffset < sizeof(fakeObj); testOffset += sizeof(uint32)) {
+    for (unsigned testOffset = 0; testOffset < sizeof(fakeObj); testOffset += sizeof(uint32)) {
         uint32 *ptr = reinterpret_cast<uint32 *>(reinterpret_cast<char *>(&fakeObj) + testOffset);
         if (*ptr) {
             JS_ASSERT(*ptr == 1);
