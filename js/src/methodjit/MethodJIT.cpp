@@ -529,6 +529,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     /* If js_InternalThrow found a scripted handler, jump to it. Otherwise, tidy
      * up and return. */
 "   cmp     r0, #0"                         "\n"
+"   it      ne"                             "\n"
 "   bxne    r0"                             "\n"
 
     /* Tidy up, then return '0' to represent an unhandled exception. */
