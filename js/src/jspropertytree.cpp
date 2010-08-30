@@ -118,7 +118,7 @@ KidsChunk::create(JSContext *cx)
 {
     KidsChunk *chunk;
 
-    chunk = (KidsChunk *) js_calloc(sizeof *chunk);
+    chunk = (KidsChunk *) js_calloc(sizeof(KidsChunk));
     if (!chunk) {
         JS_UNLOCK_GC(cx->runtime);
         JS_ReportOutOfMemory(cx);
