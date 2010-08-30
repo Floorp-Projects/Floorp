@@ -634,7 +634,8 @@ nsPlaintextEditor::GetTextSelectionOffsets(nsISelection *aSelection,
 
   if (endOffset == -1) {
     NS_ASSERTION(endNode == rootNode, "failed to find the end node");
-    NS_ASSERTION(endNodeOffset == nodeCount-1 || endNodeOffset == 0,
+    NS_ASSERTION(IsPasswordEditor() ||
+                 (endNodeOffset == nodeCount-1 || endNodeOffset == 0),
                  "invalid end node offset");
     endOffset = endNodeOffset == 0 ? 0 : totalLength;
   }
