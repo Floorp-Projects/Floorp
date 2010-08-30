@@ -60,11 +60,6 @@ let WebProgressListener = {
       canGoForward: docShell.canGoForward
     };
     sendAsyncMessage("WebProgress:LocationChange", json);
-
-    let cwu = Util.getWindowUtils(content);
-    let scrollOffset = Util.getScrollOffset(content);
-    cwu.setDisplayport(scrollOffset.x - 200, scrollOffset.y - 400,
-                       content.innerWidth + 400, content.innerHeight + 800);
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
@@ -262,7 +257,6 @@ let DOMEvents =  {
     addEventListener("DOMPopupBlocked", this, false);
     addEventListener("pageshow", this, false);
     addEventListener("pagehide", this, false);
-    addEventListener("MozScrolledAreaChanged", this, false);
   },
 
   handleEvent: function(aEvent) {
@@ -338,6 +332,67 @@ let DOMEvents =  {
           }
         }
         break;
+    }
+  }
+};
+
+DOMEvents.init();
+
+let ContentScroll =  {
+  _contentArea: new Rect(0, 0, 0, 0),
+
+  init: function() {
+    addMessageListener("Content:ScrollTo", this);
+    addMessageListener("Content:ScrollBy", this);
+    addMessageListener("Content:SetResolution", this);
+    addMessageListener("Content:SetDisplayportArea", this);
+    addMessageListener("Content:SetCssViewportSize", this);
+
+    addEventListener("scroll", this, false);
+    addEventListener("MozScrolledAreaChanged", this, false);
+  },
+
+  receiveMessage: function(aMessage) {
+    let json = aMessage.json;
+    switch (aMessage.name) {
+      case "Content:ScrollTo":
+        content.scrollTo(json.x, json.y);
+        break;
+
+      case "Content:ScrollBy":
+        content.scrollBy(json.dx, json.dy);
+        break;
+
+      case "Content:SetResolution":
+        let cwu = Util.getWindowUtils(content);
+        cwu.setResolution(json.zoomLevel, json.zoomLevel);
+        sendAsyncMessage("Content:SetResolution:Return", { zoomLevel: json.zoomLevel });
+        break;
+
+      case "Content:SetDisplayportArea": {
+        let displayport = new Rect(json.x, json.y, json.w, json.h).restrictTo(this._contentArea);
+        if (displayport.isEmpty())
+          break;
+
+        let cwu = Util.getWindowUtils(content);
+        cwu.setDisplayport(displayport.x, displayport.y, displayport.width, displayport.height);
+        sendAsyncMessage("Content:SetDisplayportArea:Return");
+        break;
+      }
+
+      case "Content:SetCssViewportSize": {
+        let cwu = Util.getWindowUtils(content);
+        cwu.setCSSViewport(json.width, json.height);
+        break;
+      }
+    }
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "scroll":
+        Util.dumpLn("XXX stub");
+        break;
 
       case "MozScrolledAreaChanged": {
         let doc = aEvent.originalTarget;
@@ -354,62 +409,17 @@ let DOMEvents =  {
         let y = aEvent.y + scrollOffset.y;
         let width = aEvent.width + (x < 0 ? x : 0);
         let height = aEvent.height + (y < 0 ? y : 0);
+
+        this._contentArea.width = width;
+        this._contentArea.height = height;
+
         sendAsyncMessage("MozScrolledAreaChanged", {
           width: width,
-          height: height
+          height: height,
+          viewportWidth: content.innerWidth,
+          viewportHeight: content.innerHeight
         });
 
-        break;
-      }
-    }
-  }
-};
-
-DOMEvents.init();
-
-let ContentScroll =  {
-  init: function() {
-    addMessageListener("Content:ScrollTo", this);
-    addMessageListener("Content:ScrollBy", this);
-    addMessageListener("Content:ZoomLevel", this);
-    addMessageListener("Content:FastScrollTo", this);
-    addMessageListener("Content:SetCssViewportSize", this);
-  },
-
-  receiveMessage: function(aMessage) {
-    let json = aMessage.json;
-    switch (aMessage.name) {
-      case "Content:ScrollTo":
-//        content.scrollTo(json.x, json.y);
-        let cwu = Util.getWindowUtils(content);
-        cwu.setDisplayport(json.x - 200, json.y - 400,
-                           content.innerWidth + 400, content.innerHeight + 800);
-        break;
-
-      case "Content:ScrollBy":
-        content.scrollBy(json.dx, json.dy);
-        break;
-
-      case "Content:ZoomLevel":
-        content.document.body.style.MozTransformOrigin = "top left";
-        content.document.body.style.MozTransform = "scale(" + json.zoomLevel + ")";
-        break;
-
-      case "Content:FastScrollTo": {
-        try {
-          let cwu = Util.getWindowUtils(content);
-          cwu.setDisplayport(json.x - 200, json.y - 400,
-                             content.innerWidth + 400, content.innerHeight + 800);
-        } catch(e) {
-          Util.dumpLn(e);
-        }
-        sendAsyncMessage("Content:FastScrollTo:Return");
-        break;
-      }
-
-      case "Content:SetCssViewportSize": {
-        let cwu = Util.getWindowUtils(content);
-        cwu.setCSSViewport(json.width, json.height);
         break;
       }
     }

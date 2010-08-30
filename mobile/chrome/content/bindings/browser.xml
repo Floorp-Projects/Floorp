@@ -146,14 +146,22 @@
               return prompt(aMessage.json.text, aMessage.json.value);
 
             case "MozScrolledAreaChanged":
-              this._widthInDevicePx = aMessage.json.width;
-              this._heightInDevicePx = aMessage.json.height;
+              this._widthInCSSPx = aMessage.json.width;
+              this._heightInCSSPx = aMessage.json.height;
+              this._viewportWidthInCSSPx = aMessage.json.viewportWidth;
+              this._viewportHeightInCSSPx = aMessage.json.viewportHeight;
+              this._updateDisplayport();
               break;
 
-            case "Content:FastScrollTo:Return":
+            case "Content:SetDisplayportArea:Return":
+              // XXX explain behavior
               this._flushingFastScroll = false;
               this._pendingPixelsX = 0;
               this._pendingPixelsY = 0;
+              break;
+
+            case "Content:SetResolution:Return":
+              this._zoomLevel = aMessage.json.zoomLevel;
               break;
          }
         ]]></body>
@@ -267,7 +275,9 @@
                   this._browser._searchEngines = [];
                 }
 
-                this._zoomLevel = 1;
+                this._browser._zoomLevel = 1;
+
+                this._browser._updateDisplayport();
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
@@ -385,52 +395,72 @@
         </body>
       </method>
 
-      <property name="_frameLoader"
-                onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;"
-                readonly="true"/>
-
-      <field name="_cssViewportWidth">0</field>
+      <field name="_frameLoader">null</field>
+      <field name="_cssViewportWidthInCSSPx">0</field>
       <field name="_flushingFastScroll">false</field>
-      <field name="_widthInDevicePx">0</field>
-      <field name="_heightInDevicePx">0</field>
+      <field name="_widthInCSSPx">0</field>
+      <field name="_heightInCSSPx">0</field>
       <field name="_zoomLevel">1</field>
       <field name="_defaultZoomLevel">1</field>
       <field name="_pendingPixelsX">0</field>
       <field name="_pendingPixelsY">0</field>
 
-      <property name="widthInCssPx"
-                onget="return this._widthInDevicePx / this.zoomLevel;"
+      <property name="widthInCSSPx"
+                onget="return this._widthInCSSPx;"
                 readonly="true"/>
 
-      <property name="heightInCssPx"
-                onget="return this._heightInDevicePx / this.zoomLevel;"
+      <property name="heightInCSSPx"
+                onget="return this._heightInCSSPx;"
                 readonly="true"/>
 
       <property name="widthInDevicePx"
-                onget="return this._widthInDevicePx;"
+                onget="return this._widthInCSSPx * this._zoomLevel;"
                 readonly="true"/>
 
       <property name="heightInDevicePx"
-                onget="return this._heightInDevicePx;"
+                onget="return this._heightInCSSPx * this._zoomLevel;"
                 readonly="true"/>
 
       <property name="zoomLevel"
                 onget="return this._zoomLevel;"
-                onset="return this._setZoomLevel(val);"/>
+                readonly="true"/>
 
       <property name="defaultZoomLevel"
                 onget="return this._defaultZoomLevel;"
                 onset="return this._setDefaultZoomLevel(val);"/>
 
-      <method name="_setZoomLevel">
+      <property name="viewportWidthInCSSPx"
+                onget="return this._viewportWidthInCSSPx;"
+                readonly="true"/>
+
+      <property name="viewportHeightInCSSPx"
+                onget="return this._viewportHeightInCSSPx;"
+                readonly="true"/>
+
+      <method name="_updateDisplayport">
+        <body>
+          <![CDATA[
+            let frameLoader = this._frameLoader;
+            this.messageManager.sendAsyncMessage("Content:SetDisplayportArea", {
+              x: frameLoader.viewportScrollX / this._zoomLevel - 200,
+              y: frameLoader.viewportScrollY / this._zoomLevel - 400,
+              w: this._viewportWidthInCSSPx + 400,
+              h: this._viewportHeightInCSSPx + 800
+            });
+          ]]>
+        </body>
+      </method>
+
+      <method name="setZoomLevel">
         <parameter name="zl"/>
         <body>
           <![CDATA[
-            return;
             if (zl <= 0) throw "Bad zoom level given.";
 
-            this._zoomLevel = zl;
-            this.messageManager.sendAsyncMessage("Content:ZoomLevel", { zoomLevel: zl });
+            this._frameLoader.setViewportScale(zl, zl);
+            this.messageManager.sendAsyncMessage("Content:SetResolution", {
+              zoomLevel: zl
+            });
           ]]>
         </body>
       </method>
@@ -440,7 +470,6 @@
         <parameter name="height"/>
         <body>
           <![CDATA[
-            return;
             this.messageManager.sendAsyncMessage("Content:SetCssViewportSize", {
               width: width,
               height: height
@@ -452,13 +481,7 @@
       <method name="flushScroll">
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
-            this.messageManager.sendAsyncMessage("Content:ScrollTo", {
-              x: frameLoader.viewportScrollX,
-              y: frameLoader.viewportScrollY
-            });
-            this._pendingPixelsX = 0;
-            this._pendingPixelsY = 0;
+            this._updateDisplayport();
           ]]>
         </body>
       </method>
@@ -468,31 +491,7 @@
         <parameter name="y"/>
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
-
-            // XXX don't assume window size is viewport size
-            let viewportWidth = window.innerWidth;
-            let viewportHeight = window.innerHeight;
-
-            x = Math.max(0, Math.min(this.widthInDevicePx - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX;
-            y = Math.max(0, Math.min(this.heightInDevicePx - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY;
-
-            if (x == 0 && y == 0)
-              return;
-
-            frameLoader.scrollViewportBy(x, y);
-
-            this._pendingPixelsX += x;
-            this._pendingPixelsY += y;
-
-            if (this._flushingFastScroll == false &&
-                (Math.abs(this._pendingPixelsX) >= 150 || Math.abs(this._pendingPixelsY) >= 250)) {
-              this._flushingFastScroll = true;
-              this.messageManager.sendAsyncMessage("Content:FastScrollTo", {
-                x: frameLoader.viewportScrollX + x,
-                y: frameLoader.viewportScrollY + y
-              });
-            }
+            this.contentWindow.scrollBy(x, y);
           ]]>
         </body>
       </method>
@@ -502,35 +501,27 @@
         <parameter name="y"/>
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
-
-            // XXX don't assume window size is viewport size
-            let viewportWidth = window.innerWidth;
-            let viewportHeight = window.innerHeight;
-
-            x = Math.max(0, Math.min(this.widthInDevicePx - viewportWidth, x));
-            y = Math.max(0, Math.min(this.heightInDevicePx - viewportHeight, y));
-            frameLoader.scrollViewportTo(x, y);
+            this.contentWindow.scrollTo(x, y);
           ]]>
         </body>
       </method>
 
-      <!-- XXX There is no reason this API needs to act like scrollbar's.
-           Should we change it to something less XPCOMy? -->
       <method name="getPosition">
         <parameter name="scrollX"/>
         <parameter name="scrollY"/>
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
-            scrollX.value = frameLoader.viewportScrollX;
-            scrollY.value = frameLoader.viewportScrollY;
+            let cwu = this.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                      getInterface(Components.interfaces.nsIDOMWindowUtils);
+            cwu.getScrollXY(false, scrollX, scrollY);
           ]]>
         </body>
       </method>
 
       <constructor>
         <![CDATA[
+          this._frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+
           this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("DOMLinkAdded", this);
@@ -546,7 +537,8 @@
           }, this);
 
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this);
-          this.messageManager.addMessageListener("Content:FastScrollTo:Return", this);
+          this.messageManager.addMessageListener("Content:SetDisplayportArea:Return", this);
+          this.messageManager.addMessageListener("Content:SetResolution:Return", this);
 
           this._webProgress._init();
         ]]>
@@ -740,6 +732,8 @@
                   this._browser._searchEngines = [];
                 }
 
+                this._browser._zoomLevel = 1;
+
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
                              args);
@@ -809,6 +803,64 @@
       <property name="documentCharsetInfo"
                 onget="throw 'documentCharsetInfo: Not Remoteable'"
                 readonly="true"/>
+
+      <method name="scrollBy">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body>
+          <![CDATA[
+            let frameLoader = this._frameLoader;
+
+            let bcr = this.getBoundingClientRect();
+            let viewportWidth = bcr.width;
+            let viewportHeight = bcr.height;
+
+            x = Math.floor(Math.max(0, Math.min(this.widthInDevicePx - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX);
+            y = Math.floor(Math.max(0, Math.min(this.heightInDevicePx - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY);
+
+            if (x == 0 && y == 0)
+              return;
+
+            frameLoader.scrollViewportBy(x, y);
+            Util.dumpLn(frameLoader.viewportScrollY, "+", bcr.height, "=", frameLoader.viewportScrollY + bcr.height);
+            Util.dumpLn("and zoom level is", this._zoomLevel);
+
+            // XXX comment this behavior
+            this._pendingPixelsX += x;
+            this._pendingPixelsY += y;
+
+            if (this._flushingFastScroll == false &&
+                (Math.abs(this._pendingPixelsX) >= 150 || Math.abs(this._pendingPixelsY) >= 250)) {
+              this._flushingFastScroll = true;
+              this._updateDisplayport();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="scrollTo">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body>
+          <![CDATA[
+            let frameLoader = this._frameLoader;
+            this.scrollBy(x - frameLoader.viewportScrollX, y - frameLoader.viewportScrollY);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getPosition">
+        <parameter name="scrollX"/>
+        <parameter name="scrollY"/>
+        <body>
+          <![CDATA[
+            let frameLoader = this._frameLoader;
+            scrollX.value = frameLoader.viewportScrollX;
+            scrollY.value = frameLoader.viewportScrollY;
+          ]]>
+        </body>
+      </method>
+
     </implementation>
 
   </binding>
