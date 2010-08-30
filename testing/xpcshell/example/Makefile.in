@@ -50,6 +50,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = testing/xpcshell/example
 
 include $(DEPTH)/config/autoconf.mk
 

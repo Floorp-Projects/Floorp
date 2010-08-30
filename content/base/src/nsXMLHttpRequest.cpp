@@ -2017,6 +2017,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsCOMPtr<nsIDocument> responseDoc = do_QueryInterface(mResponseXML);
     responseDoc->SetPrincipal(documentPrincipal);
 
+    if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+      responseDoc->ForceEnableXULXBL();
+    }
+
     if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mResponseXML);
       if (htmlDoc) {

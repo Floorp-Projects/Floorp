@@ -51,7 +51,7 @@ IMPL_IUNKNOWN_INHERITED2(nsHyperTextAccessibleWrap,
                          CAccessibleEditableText);
 
 nsresult
-nsHyperTextAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
+nsHyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
   PRUint32 eventType = aEvent->GetEventType();
 
@@ -100,6 +100,8 @@ nsHyperTextAccessibleWrap::GetModifiedText(PRBool aGetInsertedText,
 
   *aStartOffset = gTextEvent->GetStartOffset();
   *aEndOffset = *aStartOffset + gTextEvent->GetLength();
-  return gTextEvent->GetModifiedText(aText);
+  gTextEvent->GetModifiedText(aText);
+
+  return NS_OK;
 }
 

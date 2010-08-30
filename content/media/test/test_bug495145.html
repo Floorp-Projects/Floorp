@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495145
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var videos = [];
+var manager = new MediaTestManager;
 
 function start(e) {
   e.target.play();
@@ -32,8 +32,8 @@ function ended1(e) {
   if (v._endCount == 2) {
     ok(true, "Playing after pause while ended works for " + v._name);
     v._finished = true;
-    if (AllFinished(videos))
-      SimpleTest.finish();
+    v.parentNode.removeChild(v);
+    manager.finished(v.token);
     return;
   }
 
@@ -57,14 +57,14 @@ function seeked2(e) {
 
   ok(v.paused, "Paused after seek after pause while ended for " + v._name);
   v._finished = true;
-  if (AllFinished(videos))
-    SimpleTest.finish();
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
 }
 
-function createVideo(test, x) {
+function createVideo(test, x, token) {
   var v = document.createElement('video');
-  if (!v.canPlayType(test.type))
-    return null;
+  v.token = token;
+  manager.started(token);
   v.src = test.name;
   v._name = test.name + "#" + x;
   v._endCount = 0;
@@ -74,20 +74,15 @@ function createVideo(test, x) {
   if (x == 2)
     v.addEventListener("seeked", seeked2, false);
   document.body.appendChild(v);
-  videos.push(v);
 }
 
-for (var i=0; i<gSmallTests.length; ++i) {
-  var test = gSmallTests[i];
-  createVideo(test, 1);
-  createVideo(test, 2);
+function startTest(test, token) {
+  createVideo(test, 1, token + "a");
+  createVideo(test, 2, token + "b");
 }
 
-if (videos.length == 0) {
-  todo(false, "No types supported");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gSmallTests, startTest);
+
 
 </script>
 </pre>

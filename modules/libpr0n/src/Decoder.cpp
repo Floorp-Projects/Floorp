@@ -92,6 +92,26 @@ Decoder::Finish()
   return FinishInternal();
 }
 
+void
+Decoder::FlushInvalidations()
+{
+  // If we've got an empty invalidation rect, we have nothing to do
+  if (mInvalidRect.IsEmpty())
+    return;
+
+  // Tell the image that it's been updated
+  mImage->FrameUpdated(mFrameCount - 1, mInvalidRect);
+
+  // Fire OnDataAvailable
+  if (mObserver) {
+    PRBool isCurrentFrame = mImage->GetCurrentFrameIndex() == (mFrameCount - 1);
+    mObserver->OnDataAvailable(nsnull, isCurrentFrame, &mInvalidRect);
+  }
+
+  // Clear the invalidation rectangle
+  mInvalidRect.Empty();
+}
+
 /*
  * Hook stubs. Override these as necessary in decoder implementations.
  */
@@ -125,6 +145,11 @@ Decoder::PostFrameStart()
   // We shouldn't already be mid-frame
   NS_ABORT_IF_FALSE(!mInFrame, "Starting new frame but not done with old one!");
 
+  // We should take care of any invalidation region when wrapping up the
+  // previous frame
+  NS_ABORT_IF_FALSE(mInvalidRect.IsEmpty(),
+                    "Start image frame with non-empty invalidation region!");
+
   // Update our state to reflect the new frame
   mFrameCount++;
   mInFrame = true;
@@ -149,9 +174,22 @@ Decoder::PostFrameStop()
   // Update our state
   mInFrame = false;
 
+  // Flush any invalidations before we finish the frame
+  FlushInvalidations();
+
   // Fire notification
   if (mObserver)
     mObserver->OnStopFrame(nsnull, mFrameCount - 1); // frame # is zero-indexed
+}
+
+void
+Decoder::PostInvalidation(nsIntRect& aRect)
+{
+  // We should be mid-frame
+  NS_ABORT_IF_FALSE(mInFrame, "Can't invalidate when not mid-frame!");
+
+  // Account for the new region
+  mInvalidRect.UnionRect(mInvalidRect, aRect);
 }
 
 } // namespace imagelib

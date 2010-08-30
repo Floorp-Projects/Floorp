@@ -75,7 +75,7 @@ Tests.testMandelbrot = function(gl) {
 
 </script>
 <script id="identity-vert" type="x-shader/x-vertex">
-  #version 120
+
   attribute vec3 Vertex;
   attribute vec2 Tex;
 
@@ -87,7 +87,10 @@ Tests.testMandelbrot = function(gl) {
   }
 </script>
 <script id="mandelbrot-frag" type="x-shader/x-fragment">
-    #version 120
+    #ifdef GL_ES
+precision highp float;
+#endif
+
     uniform float x,y,z;
     varying vec2 texCoord0;
     vec4 iter_z(float cr, float ci) {
@@ -111,7 +114,7 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="whiletruevert" type="x-shader/x-vertex">
-    #version 120
+
 
     attribute vec3 Vertex; attribute vec2 Tex;
     varying vec2 TexCoord;
@@ -124,7 +127,7 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="loop100Mvert" type="x-shader/x-vertex">
-    #version 120
+
 
     attribute vec3 Vertex; attribute vec2 Tex;
     varying vec2 TexCoord;
@@ -140,7 +143,7 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="loopCompvert" type="x-shader/x-vertex">
-    #version 120
+
 
     attribute vec3 Vertex; attribute vec2 Tex;
     varying vec2 TexCoord;
@@ -153,11 +156,11 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="variablevert" type="x-shader/x-vertex">
-    #version 120
+
 
     attribute vec3 Vertex; attribute vec2 Tex;
     varying vec2 TexCoord;
-    
+
     void main()
     {
         float z = 1.0;
@@ -167,7 +170,7 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="vert" type="x-shader/x-vertex">
-    #version 120
+
 
     attribute vec3 Vertex; attribute vec2 Tex;
     varying vec2 TexCoord;
@@ -179,9 +182,11 @@ Tests.testMandelbrot = function(gl) {
 </script>
 
 <script id="whiletruefrag" type="x-shader/x-fragment">
-    #version 120
 
 
+    #ifdef GL_ES
+precision highp float;
+#endif
     varying vec2 TexCoord;
     void main()
     {
@@ -191,9 +196,11 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="loop100Mfrag" type="x-shader/x-fragment">
-    #version 120
 
 
+    #ifdef GL_ES
+precision highp float;
+#endif
     varying vec2 TexCoord;
     void main()
     {
@@ -206,9 +213,11 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="loopCompfrag" type="x-shader/x-fragment">
-    #version 120
 
 
+    #ifdef GL_ES
+precision highp float;
+#endif
     varying vec2 TexCoord;
     void main()
     {
@@ -218,9 +227,11 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="variablefrag" type="x-shader/x-fragment">
-    #version 120
 
 
+    #ifdef GL_ES
+precision highp float;
+#endif
     varying vec2 TexCoord;
     void main()
     {
@@ -230,9 +241,11 @@ Tests.testMandelbrot = function(gl) {
     }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
 
 
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec2 TexCoord;
   void main()
   {

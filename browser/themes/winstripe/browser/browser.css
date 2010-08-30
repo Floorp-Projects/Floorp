@@ -26,6 +26,7 @@
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
+ *   Jim Mathies (jmathies@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,6 +47,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+%include ../../browserShared.inc
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.5)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
@@ -90,6 +92,12 @@
   background-image: -moz-linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
+#navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+  border-top: 1px solid ThreeDShadow;
+}
+
 #personal-bookmarks {
   min-height: 24px;
 }
@@ -102,21 +110,7 @@ statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
 }
 
-/* App menu button */
-
-%ifndef WINSTRIPE_AERO
-#appmenu-button-container {
-  background: ActiveCaption;
-}
-
-#appmenu-button-container:-moz-window-inactive {
-  background: InactiveCaption;
-}
-%endif
-
-#appmenu-button-container {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
-}
+/* ::::: app menu button ::::: */
 
 #appmenu-button {
   -moz-appearance: none;
@@ -279,24 +273,75 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0 16px 16px 0);
 }
 
-/* XXX: stop-gap until the button can be drawn in the title bar */
-%ifdef WINSTRIPE_AERO
-@media not all and (-moz-windows-compositor) {
-%endif
-  #main-window[tabsontop="true"] > #appmenu-button-container > #appmenu-button {
-    position: relative !important;
-    margin-bottom: -1.6em !important;
-  }
-  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] {
-    position: relative !important;
-    background-color: -moz-dialog !important;
-  }
-  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar:not([inFullscreen]) {
-    -moz-padding-start: 10em !important;
-  }
-%ifdef WINSTRIPE_AERO
+/* ::::: titlebar ::::: */
+
+#titlebar {
+  -moz-appearance: -moz-window-titlebar;
+  /* we only need to the middle section, hide the edges of the
+  theme background beyond the window frame. */
+  margin-left: -15px;
+  margin-right: -15px;
 }
+
+#main-window[sizemode="maximized"] > #titlebar {
+  -moz-appearance: -moz-window-titlebar-maximized;
+}
+
+#titlebar-content {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+/* aesthetic - push the fx button off the top window border */
+@media not all and (-moz-windows-classic) {
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+%ifndef WINSTRIPE_AERO
+    margin-top: 1px;
+%else
+    margin-top: 2px;
 %endif
+  }
+}
+
+#titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box;
+  -moz-box-align: start;
+}
+
+#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box-maximized;
+}
+
+/* titlebar command buttons */
+
+#titlebar-min {
+  -moz-appearance: -moz-window-button-minimize;
+}
+
+#titlebar-max {
+  -moz-appearance: -moz-window-button-maximize;
+}
+
+#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox > #titlebar-max {
+  -moz-appearance: -moz-window-button-restore;
+}
+
+#titlebar-close {
+  -moz-appearance: -moz-window-button-close;
+}
+
+@media not all and (-moz-windows-classic) {
+  #titlebar-min,
+  #titlebar-max {
+    -moz-margin-end: 2px;
+  }
+}
+
+@media all and (-moz-windows-classic) {
+  #titlebar-close {
+    -moz-margin-start: 2px;
+  }
+}
 
 /* ::::: bookmark buttons ::::: */
 
@@ -407,8 +452,8 @@ menuitem.bookmark-item {
 
 /* ::::: primary toolbar buttons ::::: */
 
-.toolbarbutton-menubutton-button,
-.toolbarbutton-menubutton-dropmarker,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1 {
   -moz-appearance: none;
   padding: 1px 5px;
@@ -426,19 +471,19 @@ menuitem.bookmark-item {
   text-shadow: 0 0 3px white;
 }
 
-.toolbarbutton-menubutton-dropmarker,
-toolbar[iconsize="small"][mode="icons"] .toolbarbutton-menubutton-button,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
   padding-left: 3px;
   padding-right: 3px;
 }
 
-.toolbarbutton-1 {
+.toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-toolbarbutton[type="menu-button"] {
+.toolbarbutton-1[type="menu-button"] {
   -moz-appearance: none;
   padding: 0;
   background: none !important;
@@ -446,47 +491,43 @@ toolbarbutton[type="menu-button"] {
   -moz-box-shadow: none !important;
 }
 
-.toolbarbutton-1,
-toolbarbutton[type="menu-button"] {
+.toolbarbutton-1 {
   margin: 1px 3px;
 }
 
-toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1,
-toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
+toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
   margin-left: 2px;
   margin-right: 2px;
 }
 
-.toolbarbutton-menubutton-dropmarker {
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-border-start-style: none;
 }
 
-.toolbarbutton-menubutton-button:-moz-locale-dir(ltr),
-.toolbarbutton-menubutton-dropmarker:-moz-locale-dir(rtl) {
+.toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(ltr),
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-locale-dir(rtl) {
   -moz-border-radius-topright: 0;
   -moz-border-radius-bottomright: 0;
 }
 
-.toolbarbutton-menubutton-button:-moz-locale-dir(rtl),
-.toolbarbutton-menubutton-dropmarker:-moz-locale-dir(ltr) {
+.toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(rtl),
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-locale-dir(ltr) {
   -moz-border-radius-topleft: 0;
   -moz-border-radius-bottomleft: 0;
 }
 
-.toolbarbutton-menubutton-button[disabled="true"],
-.toolbarbutton-menubutton-dropmarker[disabled="true"],
 .toolbarbutton-1[disabled="true"] {
   opacity: .8;
 }
 
-.toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
+.toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon {
   opacity: .5;
 }
 
-.toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
-toolbarbutton[type="menu-button"]:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
-.toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not([open="true"]):not(:active):hover {
+.toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
+.toolbarbutton-1:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
+.toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):not([checked="true"]):not([open="true"]):not(:active):hover {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
@@ -498,11 +539,11 @@ toolbarbutton[type="menu-button"]:not([open="true"]):not(:active):hover > .toolb
                    -moz-box-shadow .3s ease-in;
 }
 
-.toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
-toolbarbutton[type="menu-button"]:hover:active > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
-toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
-.toolbarbutton-1:not([disabled="true"]):hover:active,
-.toolbarbutton-1[checked="true"],
+.toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
+.toolbarbutton-1:hover:active > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
+.toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker,
+.toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):hover:active,
+.toolbarbutton-1:not([type="menu-button"])[checked="true"],
 .toolbarbutton-1[open="true"] {
   background-color: transparent;
   border-color: rgba(0,0,0,.65) rgba(0,0,0,.55) rgba(0,0,0,.5);
@@ -517,14 +558,14 @@ toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropm
   -moz-transition: background-color .4s;
 }
 
-.toolbarbutton-menubutton-button > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
   width: 18px;
   height: 18px;
 }
 
-toolbar[iconsize="small"] .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-icon {
   margin: 1px;
   width: 16px;
@@ -534,33 +575,49 @@ toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-icon {
 /* Default icons have a built-in glow, so they are 18*18px even in small mode,
    except for the large back icon, which is why the code below uses 'auto' rather
    than 18px. This will pick the correct size based on the image region. */
-:-moz-any(
-    #back-button, #forward-button, #reload-button, #stop-button,
-    #home-button, #print-button, #downloads-button, #history-button,
-    #bookmarks-button, #bookmarks-menu-button, #new-tab-button,
-    #new-window-button, #cut-button, #copy-button, #paste-button,
-    #fullscreen-button) > .toolbarbutton-icon {
+:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon {
   margin: 0 !important;
   width: auto !important;
   height: auto !important;
 }
 
 toolbar[mode="full"] .toolbarbutton-1,
-toolbar[mode="full"] .toolbarbutton-menubutton-button {
+toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
 #TabsToolbar > .toolbarbutton-1,
+#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1,
+#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   -moz-appearance: toolbarbutton;
+%ifdef WINSTRIPE_AERO
+  margin: -1px 0;
+%else
   margin: 0;
+%endif
   padding: 0 3px;
   border: none !important;
   color: inherit !important;
   background: transparent !important;
   text-shadow: inherit !important;
   -moz-box-shadow: none !important;
+}
+
+%ifdef WINSTRIPE_AERO
+/* resetting the margin from the above rule */
+.toolbarbutton-1 > .toolbarbutton-menubutton-button,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  margin: 0 !important;
+}
+%endif
+
+#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
+#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none;
 }
 
 /* unified back/forward button */
@@ -1084,7 +1141,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 %endif
 
-richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
 }
 
@@ -1226,8 +1283,15 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
                                          rgba(0,0,0,.05) 90%, rgba(0,0,0,.1));
 }
 
-#TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
-  -moz-box-shadow: 0 -1px ThreeDShadow inset;
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > scrollbox:not(:-moz-lwtheme) {
+  padding-bottom: 1px;
+  margin-bottom: -1px;
+  position: relative;
+}
+
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+  margin-bottom: -1px;
+  padding-bottom: 1px;
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {
@@ -1327,10 +1391,12 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   height: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-margin-end: 3px;
 }
 
-.tabbrowser-tab:not([pinned]) > .tab-icon-image {
-  -moz-margin-end: 3px;
+.tabbrowser-tab[pinned] > .tab-icon-image {
+  -moz-margin-start: 2px;
+  -moz-margin-end: 2px;
 }
 
 /* tabbrowser-tab focus ring */
@@ -1401,7 +1467,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-image-region: rect(0, 15px, 17px, 0);
+%ifdef WINSTRIPE_AERO
+  margin: -1px 0;
+%else
   margin: 0;
+%endif
   padding-top: 0;
   padding-bottom: 0;
 }

@@ -10,7 +10,6 @@ found in the LICENSE file.
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>WebGL Framebuffer Test</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
-<script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
 </head>
@@ -38,8 +37,8 @@ if (!gl) {
      gl.FRAMEBUFFER,
      gl.COLOR_ATTACHMENT0,
      gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE);
-  assertMsg(gl.getError() == gl.INVALID_OPERATION,
-     "calling getFramebufferAttachmentParameter on the default framebuffer should generate INVALID_OPERATION.");
+  glErrorShouldBe(gl, gl.INVALID_OPERATION,
+            "calling getFramebufferAttachmentParameter on the default framebuffer should generate INVALID_OPERATION.");
 
   assertMsg(gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
             "calling checkFramebufferStatus on the default framebuffer should generate FRAMEBUFFER_COMPLETE.");
@@ -65,7 +64,7 @@ if (!gl) {
       gl.TEXTURE_2D,
       tex,
       0);
-  assertMsg(gl.getError() == gl.INVALID_OPERATION,
+  glErrorShouldBe(gl, gl.INVALID_OPERATION,
             "trying to attach a texture to default framebuffer should generate INVALID_OPERATION.");
 
   gl.framebufferRenderbuffer(
@@ -73,13 +72,13 @@ if (!gl) {
       gl.COLOR_ATTACHMENT0,
       gl.RENDERBUFFER,
       null);
-  assertMsg(gl.getError() == gl.INVALID_OPERATION,
+  glErrorShouldBe(gl, gl.INVALID_OPERATION,
             "trying to detach default renderbuffer from default framebuffer should generate INVALID_OPERATION.");
 
   var rb = gl.createRenderbuffer();
   gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
   gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, canvas.width, canvas.height);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "allocating renderbuffer storage of a newly created renderbuffer should succeed.");
 
   gl.framebufferRenderbuffer(
@@ -87,7 +86,7 @@ if (!gl) {
       gl.COLOR_ATTACHMENT0,
       gl.RENDERBUFFER,
       rb);
-  assertMsg(gl.getError() == gl.INVALID_OPERATION,
+  glErrorShouldBe(gl, gl.INVALID_OPERATION,
             "trying to attach a renderbuffer to the default framebuffer should generate INVALID_OPERATION.");
 
   var fbtex = gl.createTexture();
@@ -96,7 +95,7 @@ if (!gl) {
   var fb = gl.createFramebuffer();
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "binding a newly created framebuffer should succeed.");
 
   var target = 0x8CA8; // GL_READ_FRAMEBUFFER
@@ -104,63 +103,63 @@ if (!gl) {
      target,
      gl.COLOR_ATTACHMENT0,
      gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE);
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling getFramebufferAttachmentParameter with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
   assertMsg(gl.checkFramebufferStatus(target) == 0,
             "calling checkFramebufferStatus with target = READ_FRAMEBUFFER should return 0.");
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling checkFramebufferStatus with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
   gl.bindFramebuffer(target, gl.createFramebuffer());
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling bindFramebuffer with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
   assertMsg(fb == gl.getParameter(gl.FRAMEBUFFER_BINDING),
             "calling bindFramebuffer with target = READ_FRAMEBUFFER should not change FRAMEBUFFER_BINDING.");
   gl.getFramebufferAttachmentParameter(target, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE);
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling getFramebufferAttachmentParameter with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
   gl.framebufferTexture2D(target, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbtex, 0);
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferTexImage2D with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
   gl.framebufferRenderbuffer(target, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferRenderbuffer with target = READ_FRAMEBUFFER should generate INVALID_ENUM.");
 
   var attachment = 0x8CE1; // GL_COLOR_ATTACHMENT1
   gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, fbtex, 0);
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferTexImage2D with attachment = COLOR_ATTACHMENT1 should generate INVALID_ENUM.");
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, rb);
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferRenderbuffer with attachment = COLOR_ATTACHMENT1 should generate INVALID_ENUM.");
 
   gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,
                                        gl.COLOR_ATTACHMENT0,
                                        0x8210); // GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING
-  assertMsg(gl.getError() == gl.INVALID_ENUM,
+  glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling getFramebufferAttachmentParameter with pname = GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING should generate INVALID_ENUM.");
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbtex, 0);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "attaching a texture to a framebuffer should succeed.");
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "detaching a texture from a framebuffer should succeed.");
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbtex, 1);
-  assertMsg(gl.getError() == gl.INVALID_VALUE,
+  glErrorShouldBe(gl, gl.INVALID_VALUE,
             "calling framebufferTexture2D with non-zero mipmap level should generate INVALID_VALUE.");
 
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "attaching a renderbuffer to a framebuffer should succeed.");
 
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, null);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "detaching a renderbuffer from a framebuffer should succeed.");
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "binding default (null) framebuffer should succeed.");
 }
 

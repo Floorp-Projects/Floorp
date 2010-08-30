@@ -2,11 +2,8 @@
 <html class="reftest-wait">
   <!-- Test: if input is readonly, it is barred from constraint validation
              and should not be affected by :invalid pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:invalid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i').readOnly='ro'; document.documentElement.className='';">
-    <input id='i' required>
+    <input class='notinvalid' id='i' required>
   </body>
 </html>

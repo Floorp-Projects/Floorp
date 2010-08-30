@@ -71,6 +71,7 @@ typedef struct FT_LibraryRec_ *FT_Library;
 #endif
 
 #include <windows.h>
+#include <objbase.h>
 
 // Utility to get a Windows HDC from a thebes context,
 // used by both GDI and Uniscribe font shapers

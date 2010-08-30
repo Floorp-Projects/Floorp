@@ -2,12 +2,9 @@
 <html>
   <!-- Test: if input is of reset type, it is barred from constraint validation
              and should not be affected by :invalid pseudo-class. -->
-  <style>
-    input { background-color: green; }
-    input:invalid { background-color: red; }
-  </style>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
     <!-- Setting value to the empty string let us check against input-button-ref.html -->
-    <input type='reset' value=''>
+    <input class='notinvalid' type='reset' value=''>
   </body>
 </html>

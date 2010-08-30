@@ -63,6 +63,8 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+namespace dom = mozilla::dom;
+
 ////////////////////////////////////////////////////////////////////////
 // inDOMViewNode
 
@@ -682,7 +684,7 @@ inDOMView::NodeWillBeDestroyed(const nsINode* aNode)
 }
 
 void
-inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
                             PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                             PRInt32 aModType)
 {
@@ -697,8 +699,8 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   
   // get the dom attribute node, if there is any
-  nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
-  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aElement));
+  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aElement));
   nsCOMPtr<nsIDOMAttr> domAttr;
   nsDependentAtomString attrStr(aAttribute);
   if (aNameSpaceID) {

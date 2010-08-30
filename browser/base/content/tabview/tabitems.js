@@ -523,28 +523,16 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       function onZoomDone() {
         TabItems.resumePainting();
-        // If it's not focused, the onFocus lsitener would handle it.
-        if (gBrowser.selectedTab == tab)
-          UI.tabOnFocus(tab);
-        else
-          gBrowser.selectedTab = tab;
 
         $tabEl
           .css(orig.css())
           .removeClass("front");
 
-        // If the tab is in a groupItem set then set the active
-        // groupItem to the tab's parent.
-        if (self.parent) {
-          var gID = self.parent.id;
-          var groupItem = GroupItems.groupItem(gID);
-          GroupItems.setActiveGroupItem(groupItem);
-          groupItem.setActiveTab(self);
-        } else {
-          GroupItems.setActiveGroupItem(null);
-          GroupItems.setActiveOrphanTab(self);
-        }
-        GroupItems.updateTabBar();
+        // If it's not focused, the onFocus lsitener would handle it.
+        if (gBrowser.selectedTab == tab)
+          UI.onTabSelect(tab);
+        else
+          gBrowser.selectedTab = tab;
 
         if (isNewBlankTab)
           gWindow.gURLBar.focus();
@@ -602,14 +590,11 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       duration: 300,
       easing: 'cubic-bezier', // note that this is legal easing, even without parameters
       complete: function() { // note that this will happen on the DOM thread
-        $tab.removeClass('front');
+        self.setZoomPrep(false);
 
         GroupItems.setActiveOrphanTab(null);
 
         TabItems.resumePainting();
-
-        self._zoomPrep = false;
-        self.setBounds(self.getBounds(), true, {force: true});
 
         if (typeof complete == "function")
           complete();

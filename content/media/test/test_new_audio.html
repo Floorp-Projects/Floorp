@@ -21,18 +21,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=528566
 
 /** Test for Bug 528566 **/
 
-var testsStarted = 0;
-var testsComplete = 0;
+var manager = new MediaTestManager;
 
 var player = new Audio();
 
-var audios = [];
-for (var i=0; i<gAudioTests.length; i++) {
-  var test = gAudioTests[i];
+function startTest(test, token) {
   if (!player.canPlayType(test.type))
-    continue;
+    return;
+  manager.started(token);
   var a = new Audio(test.name);
-  ++testsStarted;
   a.setAttribute("autoplay", false);
   a.addEventListener("canplaythrough",
                      function(e){ e.target.play(); },
@@ -40,20 +37,12 @@ for (var i=0; i<gAudioTests.length; i++) {
   a.addEventListener("ended",
                      function(e){
                         ok(true, "We should get to the end. Oh look we did.");
-                        testsComplete++;
-                        if (testsStarted == testsComplete) {
-                          SimpleTest.finish();
-                        }
+                        manager.finished(token);
                      },
                      false);
-  audios.push(a);
 }
 
-if (testsStarted != 0) {
-  SimpleTest.waitForExplicitFinish();
-} else {
-  todo(false, "No types supported");
-}
+manager.runTests(gAudioTests, startTest);
 
 </script>
 </pre>

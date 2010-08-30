@@ -150,6 +150,7 @@ public:
     virtual PExternalHelperAppParent* AllocPExternalHelperApp(
             const IPC::URI& uri,
             const nsCString& aMimeContentType,
+            const nsCString& aContentDisposition,
             const bool& aForceSave,
             const PRInt64& aContentLength);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);

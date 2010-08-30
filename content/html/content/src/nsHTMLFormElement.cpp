@@ -1022,7 +1022,10 @@ CompareFormControlPosition(nsGenericHTMLFormElement *aControl1,
 
   NS_ASSERTION(aControl1->GetParent() && aControl2->GetParent(),
                "Form controls should always have parents");
- 
+
+  // If we pass aForm, we are assuming both controls are form descendants which
+  // is not always the case. This function should work but maybe slower.
+  // However, checking if both elements are form descendants may be slow too...
   return nsLayoutUtils::CompareTreePosition(aControl1, aControl2, aForm);
 }
  

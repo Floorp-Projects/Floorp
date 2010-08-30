@@ -37,6 +37,7 @@
 
 #include "nsScriptableInputStream.h"
 #include "nsMemory.h"
+#include "nsString.h"
 
 NS_IMPL_ISUPPORTS1(nsScriptableInputStream, nsIScriptableInputStream)
 
@@ -85,6 +86,43 @@ nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
 
     buffer[amtRead] = '\0';
     *_retval = buffer;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptableInputStream::ReadBytes(PRUint32 aCount, nsACString &_retval) {
+    if (!mInputStream) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    _retval.SetLength(aCount);
+    if (_retval.Length() != aCount) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    char *ptr = _retval.BeginWriting();
+    PRUint32 totalBytesRead = 0;
+    while (1) {
+      PRUint32 bytesRead;
+      nsresult rv = mInputStream->Read(ptr + totalBytesRead,
+                                       aCount - totalBytesRead,
+                                       &bytesRead);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      totalBytesRead += bytesRead;
+      if (totalBytesRead == aCount) {
+        break;
+      }
+
+      // If we have read zero bytes, we have hit EOF.
+      if (bytesRead == 0) {
+        _retval.Truncate();
+        return NS_ERROR_FAILURE;
+      }
+
+    }
     return NS_OK;
 }
 

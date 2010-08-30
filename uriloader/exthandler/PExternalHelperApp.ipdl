@@ -45,7 +45,7 @@ protocol PExternalHelperApp
   manager PBrowser;
 
 parent:
-  OnStartRequest();
+  OnStartRequest(nsCString entityID);
   OnDataAvailable(nsCString data, PRUint32 offset, PRUint32 count);
   OnStopRequest(nsresult code);
 
