@@ -69,7 +69,6 @@ ExternalHelperAppParent::ExternalHelperAppParent(
 void
 ExternalHelperAppParent::Init(TabParent *parent,
                               const nsCString& aMimeContentType,
-                              const nsCString& aContentDisposition,
                               const PRBool& aForceSave)
 {
   nsHashPropertyBag::Init();
@@ -83,7 +82,7 @@ ExternalHelperAppParent::Init(TabParent *parent,
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
   NS_ASSERTION(helperAppService, "No Helper App Service!");
 
-  mContentDisposition = aContentDisposition;
+  SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, mContentLength);
   helperAppService->DoContent(aMimeContentType, this, ir,
                               aForceSave, getter_AddRefs(mListener));
 }
@@ -298,21 +297,17 @@ ExternalHelperAppParent::SetContentCharset(const nsACString& aContentCharset)
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetContentDisposition(nsACString& aContentDisposition)
+ExternalHelperAppParent::GetContentLength(PRInt32 *aContentLength)
 {
-  aContentDisposition = mContentDisposition;
+  if (mContentLength > PR_INT32_MAX || mContentLength < 0)
+    *aContentLength = -1;
+  else
+    *aContentLength = (PRInt32)mContentLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetContentLength(PRInt64 *aContentLength)
-{
-  *aContentLength = mContentLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ExternalHelperAppParent::SetContentLength(PRInt64 aContentLength)
+ExternalHelperAppParent::SetContentLength(PRInt32 aContentLength)
 {
   mContentLength = aContentLength;
   return NS_OK;
