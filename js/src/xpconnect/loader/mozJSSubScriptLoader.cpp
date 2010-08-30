@@ -216,7 +216,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
-    PRInt64   len = -1;
+    PRInt32   len = -1;
     PRUint32  readcount = 0;  // Total amount of data read
     PRUint32  lastReadCount = 0;  // Amount of data read in last Read() call
     nsAutoArrayPtr<char> buf;
@@ -312,9 +312,6 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOCONTENT);
         goto return_exception;
     }
-
-    if (len > PR_INT32_MAX)
-      return NS_ERROR_OUT_OF_MEMORY;
 
     buf = new char[len + 1];
     if (!buf)
