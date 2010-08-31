@@ -216,7 +216,9 @@ static const char sMagic[] =
 
 
 struct Header {
-  size_t mSize;
+  // Don't use size_t here because the data type's length depends
+  // on the architecture.
+  uint32 mSize;
   char mMagic[sizeof(sMagic)];
 };
 
@@ -328,7 +330,7 @@ Shmem::Shmem(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   Header* header = reinterpret_cast<Header*>(frontSentinel);
   NS_ABORT_IF_FALSE(!strncmp(header->mMagic, sMagic, sizeof(sMagic)),
                       "invalid segment");
-  mSize = header->mSize;
+  mSize = static_cast<size_t>(header->mSize);
 
   size_t pageSize = SharedMemory::SystemPageSize();
   // transition into the "mapped" state by protecting the front and
@@ -393,7 +395,8 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   // initialize the segment with Shmem-internal information
   Header* header = reinterpret_cast<Header*>(frontSentinel);
   memcpy(header->mMagic, sMagic, sizeof(sMagic));
-  header->mSize = aNBytes;
+  NS_ASSERTION(aNBytes <= PR_UINT32_MAX, "Will truncate shmem segment size!");
+  header->mSize = static_cast<uint32>(aNBytes);
 
   if (aProtect)
     Protect(segment);
