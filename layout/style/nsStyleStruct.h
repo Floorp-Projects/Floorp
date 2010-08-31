@@ -558,7 +558,7 @@ struct nsStyleMargin {
 #endif
   static PRBool ForceCompare() { return PR_TRUE; }
 
-  nsStyleSides  mMargin;          // [reset] coord, percent, auto
+  nsStyleSides  mMargin;          // [reset] coord, percent, calc, auto
 
   PRBool GetMargin(nsMargin& aMargin) const
   {
@@ -592,7 +592,7 @@ struct nsStylePadding {
 #endif
   static PRBool ForceCompare() { return PR_TRUE; }
 
-  nsStyleSides  mPadding;         // [reset] coord, percent
+  nsStyleSides  mPadding;         // [reset] coord, percent, calc
 
   PRBool GetPadding(nsMargin& aPadding) const
   {

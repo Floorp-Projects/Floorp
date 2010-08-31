@@ -648,7 +648,7 @@ static PRBool
 HasPercentageUnitSide(const nsStyleSides& aSides)
 {
   NS_FOR_CSS_SIDES(side) {
-    if (eStyleUnit_Percent == aSides.GetUnit(side))
+    if (aSides.Get(side).HasPercent())
       return PR_TRUE;
   }
   return PR_FALSE;
