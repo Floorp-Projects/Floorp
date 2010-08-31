@@ -347,7 +347,8 @@ Narcissus.interpreter = (function() {
                                         u.filename, u.lineno);
                 }
                 if (u.readOnly || !hasDirectProperty(t, s)) {
-                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, u.readOnly);
+                    // Does not correctly handle 'const x;' -- see bug 592335.
+                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, false);
                 }
             }
             // FALL THROUGH
