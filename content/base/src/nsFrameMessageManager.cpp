@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "ContentChild.h"
+#include "ContentParent.h"
+#endif
 #include "jscntxt.h"
 #include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
@@ -46,6 +50,17 @@
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsIJSContextStack.h"
+#include "nsIXULRuntime.h"
+
+static PRBool
+IsChromeProcess()
+{
+  nsCOMPtr<nsIXULRuntime> rt = do_GetService("@mozilla.org/xre/runtime;1");
+  NS_ABORT_IF_FALSE(rt, "We must have a xre runtime");
+  PRUint32 type;
+  rt->GetProcessType(&type);
+  return type == nsIXULRuntime::PROCESS_TYPE_DEFAULT;
+}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
 
@@ -76,8 +91,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
                                          static_cast<nsIChromeFrameMessageManager*>(this)) :
                                        static_cast<nsIFrameMessageManager*>(
                                          static_cast<nsIContentFrameMessageManager*>(this))))
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager, !mChrome)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChromeFrameMessageManager, mChrome)
+  /* nsIContentFrameMessageManager is accessible only in TabChildGlobal. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager,
+                                     !mChrome && !mIsProcessManager)
+  /* Message managers in child process support nsISyncMessageSender. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISyncMessageSender, !mChrome)
+  /* Process message manager doesn't support nsIChromeFrameMessageManager. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChromeFrameMessageManager,
+                                     mChrome && !mIsProcessManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFrameMessageManager,
@@ -307,6 +328,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       JSContext* aContext)
 {
   JSContext* ctx = mContext ? mContext : aContext;
+  if (!ctx) {
+    nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&ctx);
+  }
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     nsRefPtr<nsFrameMessageManager> kungfuDeathGrip(this);
@@ -496,6 +520,7 @@ nsFrameMessageManager::Disconnect(PRBool aRemoveFromParent)
 nsresult
 NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult)
 {
+  NS_ENSURE_TRUE(IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
   nsFrameMessageManager* mm = new nsFrameMessageManager(PR_TRUE,
                                                         nsnull,
                                                         nsnull,
@@ -681,3 +706,96 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
 
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
 
+nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nsnull;
+nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nsnull;
+
+#ifdef MOZ_IPC
+bool SendAsyncMessageToChildProcess(void* aCallbackData,
+                                    const nsAString& aMessage,
+                                    const nsAString& aJSON)
+{
+  mozilla::dom::ContentParent* cp =
+    mozilla::dom::ContentParent::GetSingleton(PR_FALSE);
+  NS_WARN_IF_FALSE(cp, "No child process!");
+  if (cp) {
+    return cp->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
+  }
+  return true;
+}
+
+bool SendSyncMessageToParentProcess(void* aCallbackData,
+                                    const nsAString& aMessage,
+                                    const nsAString& aJSON,
+                                    nsTArray<nsString>* aJSONRetVal)
+{
+  mozilla::dom::ContentChild* cc =
+    mozilla::dom::ContentChild::GetSingleton();
+  if (cc) {
+    return
+      cc->SendSyncMessage(nsString(aMessage), nsString(aJSON), aJSONRetVal);
+  }
+  return true;
+}
+
+bool SendAsyncMessageToParentProcess(void* aCallbackData,
+                                     const nsAString& aMessage,
+                                     const nsAString& aJSON)
+{
+  mozilla::dom::ContentChild* cc =
+    mozilla::dom::ContentChild::GetSingleton();
+  if (cc) {
+    return cc->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
+  }
+  return true;
+}
+
+#endif
+
+nsresult
+NS_NewParentProcessMessageManager(nsIFrameMessageManager** aResult)
+{
+  NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
+               "Re-creating sParentProcessManager");
+#ifdef MOZ_IPC
+  NS_ENSURE_TRUE(IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
+  nsFrameMessageManager* mm = new nsFrameMessageManager(PR_TRUE,
+                                                        nsnull,
+                                                        SendAsyncMessageToChildProcess,
+                                                        nsnull,
+                                                        &nsFrameMessageManager::sParentProcessManager,
+                                                        nsnull,
+                                                        nsnull,
+                                                        PR_FALSE,
+                                                        PR_TRUE);
+  NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
+  nsFrameMessageManager::sParentProcessManager = mm;
+  return CallQueryInterface(mm, aResult);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+
+nsresult
+NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
+{
+  NS_ASSERTION(!nsFrameMessageManager::sChildProcessManager,
+               "Re-creating sChildProcessManager");
+#ifdef MOZ_IPC
+  NS_ENSURE_TRUE(!IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
+  nsFrameMessageManager* mm = new nsFrameMessageManager(PR_FALSE,
+                                                        SendSyncMessageToParentProcess,
+                                                        SendAsyncMessageToParentProcess,
+                                                        nsnull,
+                                                        &nsFrameMessageManager::sChildProcessManager,
+                                                        nsnull,
+                                                        nsnull,
+                                                        PR_FALSE,
+                                                        PR_TRUE);
+  NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
+  nsFrameMessageManager::sChildProcessManager = mm;
+  return CallQueryInterface(mm, aResult);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
