@@ -3437,6 +3437,14 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
     /*
      * Functions can be redeclared, and the last one takes effect. Check for
      * this and make sure to rewrite the definition.
+     *
+     * Note: This could overwrite an existing variable declaration, for example:
+     *   var c = []
+     *   function c() { }
+     *
+     * This rewrite is allowed because the function will be statically hoisted
+     * to the top of the script, and the |c = []| will just overwrite it at
+     * runtime.
      */
     uint32 slot = SHAPE_INVALID_SLOT;
     JSFunctionBox *funbox = NULL;
@@ -3447,7 +3455,6 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
             uint32 index = ALE_INDEX(ale);
             slot = cg->globalUses[index].slot;
             uint32 defSlot = slot - globalScope->globalFreeSlot;
-            JS_ASSERT(globalScope->defs[defSlot].funbox);
             globalScope->defs[defSlot].funbox = funbox;
         }
     }
