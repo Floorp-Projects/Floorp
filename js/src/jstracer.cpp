@@ -6779,7 +6779,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
         }
         JS_ASSERT(cx->fp()->hasScript());
 
-        if (!(bs & BUILTIN_ERROR)) {
+        if (!(bs & (BUILTIN_ERROR | BUILTIN_NO_FIXUP_NEEDED))) {
             /*
              * The builtin or native deep-bailed but finished successfully
              * (no exception or error).
@@ -11800,11 +11800,11 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
 static JSBool FASTCALL
 MethodWriteBarrier(JSContext* cx, JSObject* obj, Shape* shape, JSObject* funobj)
 {
-    AutoObjectRooter tvr(cx, funobj);
-
-    return obj->methodWriteBarrier(cx, *shape, ObjectValue(*tvr.object()));
+    bool ok = obj->methodWriteBarrier(cx, *shape, ObjectValue(*funobj));
+    JS_ASSERT(cx->tracerState->builtinStatus == 0);
+    return ok;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
+JS_DEFINE_CALLINFO_4(static, BOOL_RETRY, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
                      0, ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK RecordingStatus
@@ -11860,14 +11860,21 @@ TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, const Shape* shape,
      * branded-ness is implied by the shape, which we've already guarded on.
      */
     if (obj2->brandedOrHasMethodBarrier() && IsFunctionObject(v) && entry->directHit()) {
+        /*
+         * This guarantees that generateOwnShape (possibly called by the
+         * methodWriteBarrier) will not leave trace.
+         */
         if (obj == globalObj)
             RETURN_STOP("can't trace function-valued property set in branded global scope");
 
-        enterDeepBailCall();
+        /*
+         * MethodWriteBarrier takes care not to deep bail, but it may reshape
+         * the given object, so forget anything we knew about obj's shape.
+         */
+        guardedShapeTable.remove(obj_ins);
         LIns* args[] = { v_ins, INS_CONSTSHAPE(shape), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
         guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
-        leaveDeepBailCall();
     }
 
     // Add a property to the object if necessary.
@@ -14216,13 +14223,14 @@ TraceRecorder::record_JSOP_ITER()
 static JSBool FASTCALL
 IteratorMore(JSContext *cx, JSObject *iterobj, Value *vp)
 {
-    AutoValueRooter tvr(cx);
-    if (!js_IteratorMore(cx, iterobj, tvr.addr())) {
-        SetBuiltinError(cx);
+    if (!js_IteratorMore(cx, iterobj, vp)) {
+        SetBuiltinError(cx, BUILTIN_ERROR_NO_FIXUP_NEEDED);
+        return false;
+    } else if (cx->tracerState->builtinStatus) {
+        SetBuiltinError(cx, BUILTIN_NO_FIXUP_NEEDED);
         return false;
     }
-    *vp = tvr.value();
-    return cx->tracerState->builtinStatus == 0;
+    return true;
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, IteratorMore, CONTEXT, OBJECT, VALUEPTR,
                      0, ACCSET_STORE_ANY)
@@ -14268,12 +14276,14 @@ TraceRecorder::record_JSOP_MOREITER()
         LIns* ok_ins = lir->insCall(&IteratorMore_ci, args);
 
         /*
-         * OOM_EXIT here is all sorts of wrong, but until we fix the deep bail situation for non-calls, its our best
-         * option. We will re-execute IteratorMore from the interpreter in case of a bail-out or an error. Note that
-         * we can't rely on pendingGuardCondition here, because monitorRecording will not be triggered in case we
-         * close the loop below with endLoop.
+         * We cannot use pendingGuardCondition since monitorRecording may not be
+         * triggered if we close the loop below with endLoop. Instead, we guard
+         * here with STATUS_EXIT. By default, STATUS_EXIT means "advance the pc
+         * and fixup the stack", so IteratorMore sets BUILTIN_NO_FIXUP_NEEDED.
+         * If IteratorMore fails, we will reexecute this op in the interpreter,
+         * but js_IteratoreMore is idempotent so this is ok.
          */
-        guard(true, ok_ins, OOM_EXIT);
+        guard(false, lir->insEqI_0(ok_ins), STATUS_EXIT);
 
         leaveDeepBailCall();
 
