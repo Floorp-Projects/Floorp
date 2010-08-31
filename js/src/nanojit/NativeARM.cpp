@@ -95,45 +95,14 @@ Assembler::decOp2Imm(uint32_t enc)
 #endif
 
 // Calculate the number of leading zeroes in data.
-inline uint32_t
-Assembler::CountLeadingZeroes(uint32_t data)
+static inline uint32_t
+CountLeadingZeroesSlow(uint32_t data)
 {
-    uint32_t    leading_zeroes;
-
-    // We can't do CLZ on anything earlier than ARMv5. Architectures as early
-    // as that aren't supported, but assert that we aren't running on one
-    // anyway.
-    // If ARMv4 support is required in the future for some reason, we can do a
-    // run-time check on _config.arm_arch and fall back to the C routine, but for
-    // now we can avoid the cost of the check as we don't intend to support
-    // ARMv4 anyway.
-    NanoAssert(ARM_ARCH_AT_LEAST(5));
-
-#if defined(__ARMCC__)
-    // ARMCC can do this with an intrinsic.
-    leading_zeroes = __clz(data);
-
-#elif defined(__GNUC__) && (NJ_COMPILER_ARM_ARCH >= 5)
-    // GCC can use inline assembler to insert a CLZ instruction.
-    __asm (
-#if defined(ANDROID) && (NJ_COMPILER_ARM_ARCH < 7)
-    // On Android gcc compiler, the clz instruction is not supported with a
-    // target smaller than armv7, despite it being legal for armv5+.
-        "   .arch armv7-a\n"
-#endif
-        "   clz     %0, %1  \n"
-        :   "=r"    (leading_zeroes)
-        :   "r"     (data)
-    );
-#elif defined(UNDER_CE)
-    // WinCE can do this with an intrinsic.
-    leading_zeroes = _CountLeadingZeros(data);
-#else
     // Other platforms must fall back to a C routine. This won't be as
     // efficient as the CLZ instruction, but it is functional.
     uint32_t    try_shift;
 
-    leading_zeroes = 0;
+    uint32_t    leading_zeroes = 0;
 
     // This loop does a bisection search rather than the obvious rotation loop.
     // This should be faster, though it will still be no match for CLZ.
@@ -143,6 +112,43 @@ Assembler::CountLeadingZeroes(uint32_t data)
             leading_zeroes = shift;
         }
     }
+
+    return leading_zeroes;
+}
+
+inline uint32_t
+Assembler::CountLeadingZeroes(uint32_t data)
+{
+    uint32_t    leading_zeroes;
+
+#if defined(__ARMCC__)
+    // ARMCC can do this with an intrinsic.
+    leading_zeroes = __clz(data);
+#elif defined(__GNUC__)
+    // GCC can use inline assembler to insert a CLZ instruction.
+    if (ARM_ARCH_AT_LEAST(5)) {
+        __asm (
+#if defined(ANDROID) && (NJ_COMPILER_ARM_ARCH < 7)
+        // On Android gcc compiler, the clz instruction is not supported with a
+        // target smaller than armv7, despite it being legal for armv5+.
+            "   .arch armv7-a\n"
+#elif (NJ_COMPILER_ARM_ARCH < 5)
+        // Targetting armv5t allows a toolchain with armv4t target to still build
+        // with clz, and clz to be used when appropriate at runtime.
+            "   .arch armv5t\n"
+#endif
+            "   clz     %0, %1  \n"
+            :   "=r"    (leading_zeroes)
+            :   "r"     (data)
+        );
+    } else {
+        leading_zeroes = CountLeadingZeroesSlow(data);
+    }
+#elif defined(UNDER_CE)
+    // WinCE can do this with an intrinsic.
+    leading_zeroes = _CountLeadingZeros(data);
+#else
+    leading_zeroes = CountLeadingZeroesSlow(data);
 #endif
 
     // Assert that the operation worked!
@@ -570,12 +576,18 @@ Assembler::nFragExit(LIns* guard)
 NIns*
 Assembler::genEpilogue()
 {
-    // On ARMv5+, loading directly to PC correctly handles interworking.
-    // Note that we don't support anything older than ARMv5.
-    NanoAssert(ARM_ARCH_AT_LEAST(5));
+    RegisterMask savingMask;
 
-    RegisterMask savingMask = rmask(FP) | rmask(PC);
+    if (ARM_ARCH_AT_LEAST(5)) {
+        // On ARMv5+, loading directly to PC correctly handles interworking.
+        savingMask = rmask(FP) | rmask(PC);
 
+    } else {
+        // On ARMv4T, interworking is not handled properly, therefore, we pop
+        // lr and use bx lr to avoid that.
+        savingMask = rmask(FP) | rmask(LR);
+        BX(LR);
+    }
     POP_mask(savingMask); // regs
 
     // NB: this is the later half of the dual-nature patchable exit branch
@@ -906,14 +918,21 @@ Assembler::asm_call(LIns* ins)
         BranchWithLink((NIns*)ci->_address);
     } else {
         // Indirect call: we assign the address arg to LR
-#ifdef UNDER_CE
-        // workaround for msft device emulator bug (blx lr emulated as no-op)
-        underrunProtect(8);
-        BLX(IP);
-        MOV(IP, LR);
+        if (ARM_ARCH_AT_LEAST(5)) {
+#ifndef UNDER_CE
+            // workaround for msft device emulator bug (blx lr emulated as no-op)
+            underrunProtect(8);
+            BLX(IP);
+            MOV(IP, LR);
 #else
-        BLX(LR);
+            BLX(LR);
 #endif
+        } else {
+            underrunProtect(12);
+            BX(IP);
+            MOV(LR, PC);
+            MOV(IP, LR);
+        }
         asm_regarg(ARGTYPE_I, ins->arg(--argc), LR);
     }
 
@@ -1849,7 +1868,7 @@ Assembler::BranchWithLink(NIns* addr)
     // reserve enough space for the LDR sequence. This should give us a slight
     // net gain over reserving the exact amount required for shorter branches.
     // This _must_ be called before PC_OFFSET_FROM as it can move _nIns!
-    underrunProtect(4+LD32_size);
+    underrunProtect(8+LD32_size);
 
     // Calculate the offset from the instruction that is about to be
     // written (at _nIns-1) to the target.
@@ -1868,29 +1887,30 @@ Assembler::BranchWithLink(NIns* addr)
             // BL target
             *(--_nIns) = (NIns)( (COND_AL) | (0xB<<24) | (offs2) );
             asm_output("bl %p", (void*)addr);
-        } else {
-            // The target is Thumb, so emit a BLX.
-
-            // We need to emit an ARMv5+ instruction, so assert that we have a
-            // suitable processor. Note that we don't support ARMv4(T), but
-            // this serves as a useful sanity check.
-            NanoAssert(ARM_ARCH_AT_LEAST(5));
-
+            return;
+        } else if (ARM_ARCH_AT_LEAST(5)) {
+            // The target is Thumb, so emit a BLX (ARMv5+)
             // The (pre-shifted) value of the "H" bit in the BLX encoding.
             uint32_t    H = (offs & 0x2) << 23;
 
             // BLX addr
             *(--_nIns) = (NIns)( (0xF << 28) | (0x5<<25) | (H) | (offs2) );
             asm_output("blx %p", (void*)addr);
+            return;
         }
-    } else {
+        /* If we get here, it means we are on ARMv4T, and the target is Thumb,
+           in which case we want to emit a branch with a register */
+    }
+    if (ARM_ARCH_AT_LEAST(5)) {
         // Load the target address into IP and branch to that. We've already
         // done underrunProtect, so we can skip that here.
         BLX(IP, false);
-
-        // LDR IP, =addr
-        asm_ld_imm(IP, (int32_t)addr, false);
+    } else {
+        BX(IP);
+        MOV(LR, PC);
     }
+    // LDR IP, =addr
+    asm_ld_imm(IP, (int32_t)addr, false);
 }
 
 // This is identical to BranchWithLink(NIns*) but emits a branch to an address
