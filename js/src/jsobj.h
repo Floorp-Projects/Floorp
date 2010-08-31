@@ -418,7 +418,11 @@ struct JSObject {
         parent = newParent;
     }
 
-    JSObject *getGlobal();
+    JSObject *getGlobal() const;
+
+    bool isGlobal() const {
+        return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
+    }
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
@@ -498,7 +502,10 @@ struct JSObject {
      * JSSLOT_PRIVATE       - the corresponding frame until the frame exits.
      * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag
      *                        indicating whether arguments.length was
-     *                        overwritten.
+     *                        overwritten.  This slot is not used to represent
+     *                        arguments.length after that property has been
+     *                        assigned, even if the new value is integral: it's
+     *                        always the original length.
      * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that
      *                        was overwritten.
      *
@@ -512,8 +519,21 @@ struct JSObject {
     /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
     static const uint32 ARGS_FIXED_RESERVED_SLOTS = 2;
 
-    inline uint32 getArgsLength() const;
+    /* Lower-order bit stolen from the length slot. */
+    static const uint32 ARGS_LENGTH_OVERRIDDEN_BIT = 0x1;
+    static const uint32 ARGS_PACKED_BITS_COUNT = 1;
+
+    /*
+     * Set the initial length of the arguments, and mark it as not overridden.
+     */
     inline void setArgsLength(uint32 argc);
+
+    /*
+     * Return the initial length of the arguments.  This may differ from the
+     * current value of arguments.length!
+     */
+    inline uint32 getArgsInitialLength() const;
+
     inline void setArgsLengthOverridden();
     inline bool isArgsLengthOverridden() const;
 
@@ -528,16 +548,26 @@ struct JSObject {
      * Date-specific getters and setters.
      */
 
-  private:
-    // The second slot caches the local time;  it's initialized to NaN.
-    static const uint32 JSSLOT_DATE_UTC_TIME   = JSSLOT_PRIVATE;
-    static const uint32 JSSLOT_DATE_LOCAL_TIME = JSSLOT_PRIVATE + 1;
-
   public:
-    static const uint32 DATE_FIXED_RESERVED_SLOTS = 2;
+    static const uint32 JSSLOT_DATE_UTC_TIME = JSSLOT_PRIVATE;
 
-    inline const js::Value &getDateLocalTime() const;
-    inline void setDateLocalTime(const js::Value &pthis);
+    /*
+     * Cached slots holding local properties of the date.
+     * These are undefined until the first actual lookup occurs
+     * and are reset to undefined whenever the date's time is modified.
+     */
+    static const uint32 JSSLOT_DATE_COMPONENTS_START = JSSLOT_PRIVATE + 1;
+
+    static const uint32 JSSLOT_DATE_LOCAL_TIME = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_DATE_LOCAL_YEAR = JSSLOT_PRIVATE + 2;
+    static const uint32 JSSLOT_DATE_LOCAL_MONTH = JSSLOT_PRIVATE + 3;
+    static const uint32 JSSLOT_DATE_LOCAL_DATE = JSSLOT_PRIVATE + 4;
+    static const uint32 JSSLOT_DATE_LOCAL_DAY = JSSLOT_PRIVATE + 5;
+    static const uint32 JSSLOT_DATE_LOCAL_HOURS = JSSLOT_PRIVATE + 6;
+    static const uint32 JSSLOT_DATE_LOCAL_MINUTES = JSSLOT_PRIVATE + 7;
+    static const uint32 JSSLOT_DATE_LOCAL_SECONDS = JSSLOT_PRIVATE + 8;
+
+    static const uint32 DATE_CLASS_RESERVED_SLOTS = 9;
 
     inline const js::Value &getDateUTCTime() const;
     inline void setDateUTCTime(const js::Value &pthis);
@@ -557,6 +587,8 @@ struct JSObject {
 
     inline bool hasMethodObj(const JSObject& obj) const;
     inline void setMethodObj(JSObject& obj);
+
+    inline JSFunction *getFunctionPrivate() const;
 
     /*
      * RegExp-specific getters and setters.
@@ -729,11 +761,15 @@ struct JSObject {
 
     JS_FRIEND_API(JSCompartment *) getCompartment(JSContext *cx);
 
+    inline JSObject *getThrowTypeError() const;
+
     void swap(JSObject *obj);
 
     inline bool canHaveMethodBarrier() const;
 
     inline bool isArguments() const;
+    inline bool isNormalArguments() const;
+    inline bool isStrictArguments() const;
     inline bool isArray() const;
     inline bool isDenseArray() const;
     inline bool isSlowArray() const;

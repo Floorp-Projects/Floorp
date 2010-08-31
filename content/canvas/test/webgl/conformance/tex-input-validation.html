@@ -26,7 +26,7 @@ function testTexImage2D(testCase)
     var height = 16;
     gl.texImage2D(testCase.target, level, testCase.internalformat, width, height, testCase.border, testCase.format, testCase.type, null);
     error = testCase.expectedError;
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
 }
 
 function testTexSubImage2D(testCase)
@@ -36,26 +36,26 @@ function testTexSubImage2D(testCase)
     var yoffset = 0;
     var width = 16;
     var height = 16;
-    var array = new WebGLUnsignedByteArray(width * height * 4);
+    var array = new Uint8Array(width * height * 4);
     gl.texSubImage2D(testCase.target, level, xoffset, yoffset, width, height, testCase.format, testCase.type, array);
     error = testCase.expectedError;
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
 }
 
 function testTexParameter(testCase)
 {
     error = testCase.expectedError;
     gl.texParameteri(testCase.target, testCase.pname, testCase.param);
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
     gl.texParameterf(testCase.target, testCase.pname, testCase.param);
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
 }
 
 function testGetTexParameter(testCase)
 {
     error = testCase.expectedError;
     gl.getTexParameter(testCase.target, testCase.pname);
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
 }
 
 function testCopyTexImage2D(testCase)
@@ -67,12 +67,12 @@ function testCopyTexImage2D(testCase)
     var height = 16;
 
     gl.renderbufferStorage(gl.RENDERBUFFER, testCase.colorBufferFormat, width, height);
-    shouldBe("gl.getError()", "gl.NO_ERROR");
+    glErrorShouldBe(gl, gl.NO_ERROR);
     shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
 
     gl.copyTexImage2D(testCase.target, level, testCase.internalformat, x, y, width, height, testCase.border);
     error = testCase.expectedError;
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
 }
 
 function testCopyTexSubImage2D(testCase)
@@ -87,17 +87,17 @@ function testCopyTexSubImage2D(testCase)
     var border = 0;
 
     gl.renderbufferStorage(gl.RENDERBUFFER, testCase.colorBufferFormat, width, height);
-    shouldBe("gl.getError()", "gl.NO_ERROR");
+    glErrorShouldBe(gl, gl.NO_ERROR);
     shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
 
     if (testCase.initTex) {
         gl.copyTexImage2D(testCase.target, level, testCase.internalformat, x, y, width, height, border);
-        shouldBe("gl.getError()", "gl.NO_ERROR");
+        glErrorShouldBe(gl, gl.NO_ERROR);
     }
 
     gl.copyTexSubImage2D(testCase.target, level, xoffset, yoffset, x, y, width, height);
     error = testCase.expectedError;
-    shouldBe("gl.getError()", "error");
+    glErrorShouldBe(gl, error);
 }
 
 description("Validate tex functions input parameters");
@@ -105,7 +105,7 @@ description("Validate tex functions input parameters");
 shouldBeNonNull("gl = create3DContext()");
 shouldBeNonNull("tex = gl.createTexture()");
 gl.bindTexture(gl.TEXTURE_2D, tex);
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 
 debug("Checking TexImage2D: a set of inputs that are valid in GL but invalid in GLES2");
 
@@ -218,7 +218,7 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
 gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 
 testCases =
   [ {target: gl.TEXTURE_2D,

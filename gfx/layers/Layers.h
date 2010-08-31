@@ -460,6 +460,17 @@ public:
   // quality.
   PRBool CanUseOpaqueSurface();
 
+  /**
+   * |Disconnect()| is used by layers hooked up over IPC.  It may be
+   * called at any time, and may not be called at all.  Using an
+   * IPC-enabled layer after Destroy() (drawing etc.) results in a
+   * safe no-op; no crashy or uaf etc.
+   *
+   * XXX: this interface is essentially LayerManager::Destroy, but at
+   * Layer granularity.  It might be beneficial to unify them.
+   */
+  virtual void Disconnect() {}
+
   // This setter and getter can be used anytime. The user data is initially
   // null.
   void SetUserData(void* aData) { mUserData = aData; }

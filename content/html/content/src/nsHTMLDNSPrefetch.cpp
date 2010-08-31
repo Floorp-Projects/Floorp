@@ -40,6 +40,7 @@
 #include "base/basictypes.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoChild.h"
+#include "nsURLHelper.h"
 #endif
 
 #include "nsHTMLDNSPrefetch.h"
@@ -47,7 +48,6 @@
 #include "nsString.h"
 
 #include "nsNetUtil.h"
-#include "nsURLHelper.h"
 
 #include "nsIDNSListener.h"
 #include "nsIWebProgressListener.h"

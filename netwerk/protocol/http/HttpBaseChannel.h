@@ -129,8 +129,8 @@ public:
   NS_IMETHOD SetContentType(const nsACString& aContentType);
   NS_IMETHOD GetContentCharset(nsACString& aContentCharset);
   NS_IMETHOD SetContentCharset(const nsACString& aContentCharset);
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength);
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength);
+  NS_IMETHOD GetContentLength(PRInt64 *aContentLength);
+  NS_IMETHOD SetContentLength(PRInt64 aContentLength);
   NS_IMETHOD Open(nsIInputStream **aResult);
 
   // HttpBaseChannel::nsIHttpChannel

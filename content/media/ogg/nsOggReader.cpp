@@ -42,7 +42,7 @@
 #include "nsOggReader.h"
 #include "VideoUtils.h"
 #include "theora/theoradec.h"
-#include "nsHTMLTimeRanges.h"
+#include "nsTimeRanges.h"
 
 using namespace mozilla;
 
@@ -1539,7 +1539,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
   return NS_OK;
 }
 
-nsresult nsOggReader::GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime)
+nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();

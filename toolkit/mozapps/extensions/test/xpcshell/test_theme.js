@@ -4,6 +4,10 @@
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+// The maximum allowable time since install. If an add-on claims to have been
+// installed longer ago than this the the test will fail.
+const MAX_INSTALL_TIME = 10000;
+
 // This verifies that themes behave as expected
 
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
@@ -102,7 +106,7 @@ function run_test() {
     do_check_false(t1.appDisabled);
     do_check_true(t1.isActive);
     do_check_true(t1.skinnable);
-    do_check_eq(t1.screenshots.length, 0);
+    do_check_eq(t1.screenshots, null);
     do_check_true(isThemeInAddonsList(profileDir, t1.id));
     do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -112,7 +116,7 @@ function run_test() {
     do_check_false(t2.appDisabled);
     do_check_false(t2.isActive);
     do_check_false(t2.skinnable);
-    do_check_eq(t2.screenshots.length, 0);
+    do_check_eq(t2.screenshots, null);
     do_check_false(isThemeInAddonsList(profileDir, t2.id));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_true(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -277,10 +281,12 @@ function run_test_3() {
     do_check_true("findUpdates" in p1);
     do_check_eq(p1.installDate.getTime(), p1.updateDate.getTime());
 
-    // 5 seconds leeway seems like a lot, but tests can run slow and really if
-    // this is within 5 seconds it is fine. If it is going to be wrong then it
-    // is likely to be hours out at least
-    do_check_true((Date.now() - p1.installDate.getTime()) < 5000);
+    // Should have been installed sometime in the last few seconds.
+    let difference = Date.now() - p1.installDate.getTime();
+    if (difference > MAX_INSTALL_TIME)
+      do_throw("Add-on was installed " + difference + "ms ago");
+    else if (difference < 0)
+      do_throw("Add-on was installed " + difference + "ms in the future");
 
     AddonManager.getAddonsByTypes(["theme"], function(addons) {
       let seen = false;
@@ -346,10 +352,12 @@ function run_test_4() {
     do_check_eq(p2.permissions, AddonManager.PERM_CAN_UNINSTALL);
     do_check_eq(p2.installDate.getTime(), p2.updateDate.getTime());
 
-    // 5 seconds leeway seems like a lot, but tests can run slow and really if
-    // this is within 5 seconds it is fine. If it is going to be wrong then it
-    // is likely to be hours out at least
-    do_check_true((Date.now() - p2.installDate.getTime()) < 5000);
+    // Should have been installed sometime in the last few seconds.
+    let difference = Date.now() - p2.installDate.getTime();
+    if (difference > MAX_INSTALL_TIME)
+      do_throw("Add-on was installed " + difference + "ms ago");
+    else if (difference < 0)
+      do_throw("Add-on was installed " + difference + "ms in the future");
 
     do_check_neq(null, p1);
     do_check_false(p1.appDisabled);

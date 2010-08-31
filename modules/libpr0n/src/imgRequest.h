@@ -41,7 +41,6 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
 #include "nsIChannelEventSink.h"
@@ -60,6 +59,7 @@
 #include "nsWeakReference.h"
 #include "ImageErrors.h"
 #include "imgIRequest.h"
+#include "imgStatusTracker.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
 class imgCacheValidator;
@@ -147,6 +147,11 @@ private:
     return mProperties;
   }
 
+  // Return the imgStatusTracker associated with this imgRequest.  It may live
+  // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
+  // mImage has been instantiated yet..
+  imgStatusTracker& GetStatusTracker();
+    
   // Reset the cache entry after we've dropped our reference to it. Used by the
   // imgLoader when our cache entry is re-requested after we've dropped our
   // reference to it.
@@ -196,6 +201,8 @@ private:
   // The URI we are keyed on in the cache.
   nsCOMPtr<nsIURI> mKeyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  // Status-tracker -- transferred to mImage, when it gets instantiated
+  nsAutoPtr<imgStatusTracker> mStatusTracker;
   nsRefPtr<mozilla::imagelib::Image> mImage;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;

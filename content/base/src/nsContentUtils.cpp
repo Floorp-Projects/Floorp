@@ -153,6 +153,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIPrivateDOMEvent.h"
 #include "nsXULPopupManager.h"
 #include "nsIPermissionManager.h"
+#include "nsIContentPrefService.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsDOMJSUtils.h"
@@ -206,7 +207,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentDLF.h"
+#ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
+#endif
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -670,6 +673,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onratechange,                  NS_RATECHANGE, EventNameType_HTML, NS_EVENT_NULL },
     { nsGkAtoms::ondurationchange,              NS_DURATIONCHANGE, EventNameType_HTML, NS_EVENT_NULL },
     { nsGkAtoms::onvolumechange,                NS_VOLUMECHANGE, EventNameType_HTML, NS_EVENT_NULL },
+    { nsGkAtoms::onMozAudioAvailable,           NS_MOZAUDIOAVAILABLE, EventNameType_None, NS_EVENT_NULL },
 #endif // MOZ_MEDIA
     { nsGkAtoms::onMozAfterPaint,               NS_AFTERPAINT, EventNameType_None, NS_EVENT },
     { nsGkAtoms::onMozBeforePaint,              NS_BEFOREPAINT, EventNameType_None, NS_EVENT_NULL },
@@ -2804,6 +2808,20 @@ nsContentUtils::AddIntPrefVarCache(const char *aPref,
   data->defaultValueInt = aDefault;
   sPrefCacheData->AppendElement(data);
   RegisterPrefCallback(aPref, IntVarChanged, data);
+}
+
+PRBool
+nsContentUtils::IsSitePermAllow(nsIURI* aURI, const char* aType)
+{
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService("@mozilla.org/permissionmanager;1");
+  NS_ENSURE_TRUE(permMgr, PR_FALSE);
+
+  PRUint32 perm;
+  nsresult rv = permMgr->TestPermission(aURI, aType, &perm);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  return perm == nsIPermissionManager::ALLOW_ACTION;
 }
 
 static const char *gEventNames[] = {"event"};
@@ -5405,7 +5423,7 @@ nsContentUtils::CanAccessNativeAnon()
     // Some code is running, we can't make the assumption, as above, but we
     // can't use a native frame, so clear fp.
     fp = nsnull;
-  } else if (!fp->script) {
+  } else if (!fp->hasScript()) {
     fp = nsnull;
   }
 
@@ -5420,8 +5438,8 @@ nsContentUtils::CanAccessNativeAnon()
   // if they've been cloned into less privileged contexts.
   static const char prefix[] = "chrome://global/";
   const char *filename;
-  if (fp && fp->script &&
-      (filename = fp->script->filename) &&
+  if (fp && fp->hasScript() &&
+      (filename = fp->getScript()->filename) &&
       !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return PR_TRUE;
   }

@@ -110,18 +110,18 @@ CPPSRCS		= \
 		nsHTMLTableRowElement.cpp \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
-		nsHTMLTimeRanges.cpp \
 		nsHTMLTitleElement.cpp \
 		nsDOMValidityState.cpp \
-		nsConstraintValidation.cpp \
+		nsIConstraintValidation.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA
 CPPSRCS		+= \
 		nsHTMLAudioElement.cpp \
 		nsHTMLMediaElement.cpp \
-		nsHTMLMediaError.cpp \
+		nsMediaError.cpp \
 		nsHTMLSourceElement.cpp \
+		nsTimeRanges.cpp \
 		nsHTMLVideoElement.cpp \
 		$(NULL)
 endif

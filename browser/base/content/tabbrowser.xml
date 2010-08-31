@@ -184,6 +184,7 @@
           this.moveTabTo(aTab, this._numPinnedTabs);
           aTab.setAttribute("pinned", "true");
           this.tabContainer._positionPinnedTabs();
+          this.tabContainer.adjustTabstrip();
         ]]></body>
       </method>
 
@@ -198,6 +199,7 @@
           aTab.removeAttribute("pinned");
           aTab.style.MozMarginStart = "";
           this.tabContainer._positionPinnedTabs();
+          this.tabContainer.adjustTabstrip();
         ]]></body>
       </method>
 
@@ -2648,9 +2650,12 @@
               this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
-              this.setAttribute("closebuttons", "noclose");
-            else {
+            if (this.childNodes.length == 1) {
+              if (this._closeWindowWithLastTab)
+                this.setAttribute("closebuttons", "noclose");
+              else
+                this.setAttribute("closebuttons", "alltabs");
+            } else {
               let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
@@ -2863,6 +2868,15 @@
           // overflowed.
           this.mTabstrip._updateScrollButtonsDisabledState();
         ]]></body>
+      </method>
+      
+      <method name="_canAdvanceToTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          return this.tabbrowser._removingTabs.indexOf(aTab) == -1;
+        ]]>
+        </body>
       </method>
 
       <!-- Deprecated stuff, implemented for backwards compatibility. -->

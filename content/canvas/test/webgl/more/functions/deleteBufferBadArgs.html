@@ -13,14 +13,14 @@ Tests.startUnit = function () {
 }
 
 Tests.testDeleteBuffer = function(gl) {
-  assertFail(function(){ gl.deleteBuffer(1); });
-  assertFail(function(){ gl.deleteBuffer(null); });
-  assertFail(function(){ gl.deleteBuffer(0); });
-  assertFail(function(){ gl.deleteBuffer(false); });
-  assertFail(function(){ gl.deleteBuffer(true); });
-  assertFail(function(){ gl.deleteBuffer({}); });
+  assertThrowNoGLError(gl, "number ", function(){ gl.deleteBuffer(1); });
+  assertThrowNoGLError(gl, "null", function(){ gl.deleteBuffer(null); });
+  assertThrowNoGLError(gl, "0", function(){ gl.deleteBuffer(0); });
+  assertThrowNoGLError(gl, "false", function(){ gl.deleteBuffer(false); });
+  assertThrowNoGLError(gl, "true", function(){ gl.deleteBuffer(true); });
+  assertThrowNoGLError(gl, "{}", function(){ gl.deleteBuffer({}); });
   var tex = gl.createTexture();
-  assertFail(function(){ gl.deleteBuffer(tex); });
+  assertThrowNoGLError(gl, "tex as buf", function(){ gl.deleteBuffer(tex); });
   var buf = gl.createBuffer();
   assertOk(function(){ gl.deleteBuffer(buf); });
   assertOk(function(){ gl.deleteBuffer(buf); });

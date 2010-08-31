@@ -127,11 +127,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                           kNameSpaceID_XUL);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = NS_NewElement(getter_AddRefs(mVideoControls),
-                              kNameSpaceID_XUL,
-                              nodeInfo.forget(),
-                              PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_TrustedNewXULElement(getter_AddRefs(mVideoControls), nodeInfo.forget());
   if (!aElements.AppendElement(mVideoControls))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -180,7 +176,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          LayerManager* aManager,
                          nsDisplayItem* aItem)
 {
-  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
+  nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
   nsIntSize videoSize = element->GetVideoSize(nsIntSize(0, 0));
   if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
@@ -356,8 +352,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
 
 class nsDisplayVideo : public nsDisplayItem {
 public:
-  nsDisplayVideo(nsVideoFrame* aFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayVideo(nsDisplayListBuilder* aBuilder, nsVideoFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayVideo);
   }
@@ -380,7 +376,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     nsIFrame* f = GetUnderlyingFrame();
-    return f->GetContentRect() + aBuilder->ToReferenceFrame(f->GetParent());
+    return f->GetContentRect() - f->GetPosition() + ToReferenceFrame();
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -423,7 +419,7 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (HasVideoElement() && !ShouldDisplayPoster()) {
     rv = aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayVideo(this));
+      new (aBuilder) nsDisplayVideo(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

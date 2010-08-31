@@ -290,14 +290,14 @@ STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags)
   SystemTimeToFileTime((const SYSTEMTIME*)&st, (LPFILETIME)&statstg->mtime);
   statstg->ctime = statstg->atime = statstg->mtime;
 
-  PRInt32 nLength = 0;
+  PRInt64 nLength = 0;
   if (mChannel)
     mChannel->GetContentLength(&nLength);
 
   if (nLength < 0) 
     nLength = 0;
 
-  statstg->cbSize.LowPart = (DWORD)nLength;
+  statstg->cbSize.QuadPart = nLength;
   statstg->grfMode = STGM_READ;
   statstg->grfLocksSupported = LOCK_ONLYONCE;
   statstg->clsid = CLSID_NULL;
@@ -348,7 +348,7 @@ HRESULT nsDataObj::CreateStream(IStream **outStream)
   return S_OK;
 }
 
-EXTERN_C GUID CDECL CLSID_nsDataObj =
+static GUID CLSID_nsDataObj =
 	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
 
 /* 
@@ -1310,7 +1310,6 @@ HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   ULONG count;
   FORMATETC fe;
   m_enumFE->Reset();
-  PRBool found = PR_FALSE;
   while (NOERROR == m_enumFE->Next(1, &fe, &count)
     && dfInx < mDataFlavors.Length()) {
       if (mDataFlavors[dfInx].EqualsLiteral(kNativeImageMime))
@@ -1530,8 +1529,6 @@ HRESULT nsDataObj::DropTempFile(FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   nsresult rv;
   if (!mCachedTempFile) {
-    PRUint32 len = 0;
-
     // Tempfile will need a temporary location.      
     nsCOMPtr<nsIFile> dropFile;
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dropFile));

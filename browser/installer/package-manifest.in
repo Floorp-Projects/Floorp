@@ -380,7 +380,6 @@
 @BINPATH@/components/nsPrompter.js
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
-@BINPATH@/components/FormNotifier.js
 @BINPATH@/components/Weave.js
 @BINPATH@/components/WeaveCrypto.manifest
 @BINPATH@/components/WeaveCrypto.js
@@ -413,7 +412,6 @@
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
-@BINPATH@/@PREF_DIR@/reporter.js
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
 @BINPATH@/chrome/icons/default/default16.png

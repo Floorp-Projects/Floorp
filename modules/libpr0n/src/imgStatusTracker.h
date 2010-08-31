@@ -87,6 +87,12 @@ public:
   imgStatusTracker(mozilla::imagelib::Image* aImage);
   imgStatusTracker(const imgStatusTracker& aOther);
 
+  // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
+  // are created before their Image is created.  This method should only
+  // be called once, and only on an imgStatusTracker that was initialized
+  // without an image.
+  void SetImage(mozilla::imagelib::Image* aImage);
+
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
   // We will also take note of any notifications that happen between the time

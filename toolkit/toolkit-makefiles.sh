@@ -938,6 +938,7 @@ if [ "$ENABLE_TESTS" ]; then
     testing/mochitest/tests/MochiKit-1.4.2/tests/SimpleTest/Makefile
     testing/mochitest/tests/SimpleTest/Makefile
     testing/mochitest/tests/browser/Makefile
+    testing/tools/screenshot/Makefile
     testing/xpcshell/Makefile
     testing/xpcshell/example/Makefile
     toolkit/components/alerts/test/Makefile

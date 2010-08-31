@@ -460,7 +460,7 @@ public:
   // must be the presentation time of the first sample/frame in the media, e.g.
   // the media time corresponding to playback time/position 0. This function
   // should only be called on the main thread.
-  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered,
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered,
                                PRInt64 aStartTime) = 0;
 
 protected:

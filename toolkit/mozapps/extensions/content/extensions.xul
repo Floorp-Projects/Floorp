@@ -46,10 +46,14 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="addons-page" title="&addons.windowTitle;"
+      xmlns:xhtml="http://www.w3.org/1999/xhtml"
+      id="addons-page" title="&addons.windowTitle;" disablechrome="true"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
+
+  <xhtml:link rel="shortcut icon"
+              href="chrome://mozapps/skin/extensions/extensionGeneric-16.png"/>
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>
@@ -101,12 +105,60 @@
     <command id="cmd_cancelUninstallItem"/>
   </commandset>
 
+  <!-- main header -->
+  <hbox id="header" align="center">
+    <label id="header-name"/>
+    <button id="header-link"/>
+    <spacer flex="1"/>
+    <hbox id="updates-container" align="center">
+      <image class="spinner"/>
+      <label id="updates-noneFound" hidden="true"
+             value="&updates.noneFound.label;"/>
+      <button id="updates-manualUpdatesFound" class="button-link"
+              hidden="true" label="&updates.manualUpdatesFound.label;"
+              command="cmd_goToAvailableUpdates"/>
+      <label id="updates-progress" hidden="true"
+             value="&updates.updating.label;"/>
+      <label id="updates-installed" hidden="true"
+             value="&updates.installed.label;"/>
+      <label id="updates-downloaded" hidden="true"
+             value="&updates.downloaded.label;"/>
+      <button id="updates-restart" class="button-link" hidden="true"
+              label="&updates.restart.label;"
+              command="cmd_restartApp"/>
+    </hbox>
+    <button id="header-utils-btn" type="menu">
+      <menupopup id="utils-menu">
+        <menuitem id="utils-updateNow"
+                  label="&updates.updateAddonsNow.label;"
+                  accesskey="&updates.updateAddonsNow.accesskey;"
+                  command="cmd_findAllUpdates"/>
+        <menuitem id="utils-viewUpdates"
+                  label="&updates.viewUpdates.label;"
+                  accesskey="&updates.viewUpdates.accesskey;"
+                  command="cmd_goToRecentUpdates"/>
+        <menuseparator id="utils-installFromFile-separator"/>
+        <menuitem id="utils-installFromFile"
+                  label="&installFromFile.label;"
+                  accesskey="&installFromFile.accesskey;"
+                  command="cmd_installFromFile"/>
+        <menuseparator/>
+        <menuitem id="utils-backgroudUpdateCheck"
+                  label="&updates.backgroudUpdateCheck.label;"
+                  accesskey="&updates.backgroudUpdateCheck.accesskey;"
+                  type="checkbox" autocheck="false"
+                  command="cmd_toggleBackgroundUpdateCheck"/>
+      </menupopup>
+    </button>
+    <textbox id="header-search" type="search" searchbutton="true"
+             placeholder="&search.placeholder;"/>
+    <image id="header-searching"/>
+  </hbox>
+
   <hbox flex="1">
-    <!-- left pane -->
-    <vbox id="left-pane">
 
       <!-- category list -->
-      <richlistbox id="categories" flex="1" persist="last-selected">
+      <richlistbox id="categories" persist="last-selected">
         <richlistitem id="category-search" value="addons://search/"
                       class="category"
                       name="&view.search.label;" disabled="true"/>
@@ -139,63 +191,6 @@
                       name="&view.recentUpdates.label;" disabled="true"/>
       </richlistbox>
 
-    </vbox>
-
-    <splitter class="pane-splitter" collapse="none"/>
-
-    <!-- right pane -->
-    <vbox id="view-container" flex="4">
-
-      <!-- main header -->
-      <hbox id="header">
-        <label id="header-name"/>
-        <button id="header-link"/>
-        <spacer flex="1"/>
-        <hbox id="updates-container">
-          <image class="spinner"/>
-          <label id="updates-noneFound" hidden="true"
-                 value="&updates.noneFound.label;"/>
-          <button id="updates-manualUpdatesFound" class="button-link"
-                  hidden="true" label="&updates.manualUpdatesFound.label;"
-                  command="cmd_goToAvailableUpdates"/>
-          <label id="updates-progress" hidden="true"
-                 value="&updates.updating.label;"/>
-          <label id="updates-installed" hidden="true"
-                 value="&updates.installed.label;"/>
-          <label id="updates-downloaded" hidden="true"
-                 value="&updates.downloaded.label;"/>
-          <button id="updates-restart" class="button-link" hidden="true"
-                  label="&updates.restart.label;"
-                  command="cmd_restartApp"/>
-        </hbox>
-        <button id="header-utils-btn" type="menu">
-          <menupopup id="utils-menu">
-            <menuitem id="utils-updateNow"
-                      label="&updates.updateAddonsNow.label;"
-                      accesskey="&updates.updateAddonsNow.accesskey;"
-                      command="cmd_findAllUpdates"/>
-            <menuitem id="utils-viewUpdates"
-                      label="&updates.viewUpdates.label;"
-                      accesskey="&updates.viewUpdates.accesskey;"
-                      command="cmd_goToRecentUpdates"/>
-            <menuseparator id="utils-installFromFile-separator"/>
-            <menuitem id="utils-installFromFile"
-                      label="&installFromFile.label;"
-                      accesskey="&installFromFile.accesskey;"
-                      command="cmd_installFromFile"/>
-            <menuseparator/>
-            <menuitem id="utils-backgroudUpdateCheck"
-                      label="&updates.backgroudUpdateCheck.label;"
-                      accesskey="&updates.backgroudUpdateCheck.accesskey;"
-                      type="checkbox" autocheck="false"
-                      command="cmd_toggleBackgroundUpdateCheck"/>
-          </menupopup>
-        </button>
-        <textbox id="header-search" type="search" searchbutton="true"
-                 placeholder="&search.placeholder;"/>
-        <image id="header-searching"/>
-      </hbox>
-
       <!-- view port -->
       <deck id="view-port" flex="1">
 
@@ -207,29 +202,30 @@
 
         <!-- search view -->
         <vbox id="search-view" flex="1" class="view-pane">
+          <hbox id="search-filter" align="center">
+            <label id="search-filter-label" value="&search.filter2.label;"/>
+            <radiogroup id="search-filter-radiogroup" orient="horizontal"
+                        align="center" persist="value" value="local">
+              <radio id="search-filter-local" class="search-filter-radio"
+                     label="&search.filter2.installed.label;" value="local"
+                     tooltiptext="&search.filter2.installed.tooltip;"/>
+              <radio id="search-filter-remote" class="search-filter-radio"
+                     label="&search.filter2.available.label;" value="remote"
+                     tooltiptext="&search.filter2.available.tooltip;"/>
+            </radiogroup>
+          </hbox>
           <hbox class="view-header" pack="end">
             <hbox id="search-sorters" class="sort-controls" sortby="name"
                   ascending="true"/>
           </hbox>
           <richlistbox id="search-list" class="list" flex="1">
-            <vbox>
-              <hbox class="search-filter">
-                <label value="&search.filter.label;"/>
-                <checkbox id="search-filter-local"
-                          persist="checked" checked="true"
-                          label="&search.filter.installed.label;"/>
-                <checkbox id="search-filter-remote"
-                          persist="checked" checked="true"
-                          label="&search.filter.available.label;"/>
-              </hbox>
-              <vbox id="search-list-empty" class="empty-list-notice"
-                    flex="1" hidden="true">
-                <spacer flex="1"/>
-                <label value="&listEmpty.search.label;"/>
-                <button label="&listEmpty.button.label;" class="addon-control"
-                        command="cmd_goToDiscoverPane"/>
-                <spacer flex="3"/>
-              </vbox>
+            <vbox id="search-list-empty" class="empty-list-notice"
+                  flex="1" hidden="true">
+              <spacer flex="1"/>
+              <label value="&listEmpty.search.label;"/>
+              <button label="&listEmpty.button.label;" class="addon-control"
+                      command="cmd_goToDiscoverPane"/>
+              <spacer flex="3"/>
             </vbox>
           </richlistbox>
         </vbox>
@@ -385,7 +381,7 @@
         </hbox>
 
       </deck>
-    </vbox>
+
   </hbox>
 
 </page>

@@ -18,20 +18,50 @@ Tests.testTexImage2D = function(gl) {
     var b = document.createElement('b');
     var div = document.createElement('div');
     var c = document.getElementById('c');
-    assertOk(function() {gl.texImage2D(gl.TEXTURE_2D, 0, c); });
-    assertOk(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 1, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 100, 100, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, -1, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, -1, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, -1, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, -1, -1, -1, gl.RGBA, gl.UNSIGNED_BYTE, c); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, b); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, div); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, 0); });
-    assertFail(function() {gl.texSubImage2D(gl.TEXTURE_2D, 0,0, 0, gl.RGBA, gl.UNSIGNED_BYTE, "foo"); });
-    assertFail(function() {gl.texSubImage2D(gl.FLOAT, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertOk("make texture",
+         function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "y + height > texture height",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 1, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "x + width > texture width",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "negative x",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, -1, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "negative y",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, -1, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "negative level",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, -1, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertThrowNoGLError(gl, "bad element b",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, b); });
+    assertThrowNoGLError(gl, "bad element div",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, div); });
+    assertThrowNoGLError(gl, "no element",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, 0); });
+    assertThrowNoGLError(gl, "string as data",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0,0, 0, gl.RGBA, gl.UNSIGNED_BYTE, "foo"); });
+    assertGLError(gl, gl.INVALID_ENUM, "bad target",
+        function() {gl.texSubImage2D(gl.FLOAT, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertOk("good args",
+         function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "format not same as original",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGB, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "type not same as original",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c); });
+    assertOk("make texture RGB",
+         function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, c); });
+    assertOk("format same as original RGB",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGB, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "format not same as original RGB",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "type not same as original RGB",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, c); });
+    assertOk("make texture RGBA 4_4_4_4",
+         function() {gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c); });
+    assertOk("format same as original RGBA 4_4_4_4",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "format not same as original RGBA 4_4_4_4",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGB, gl.UNSIGNED_BYTE, c); });
+    assertGLError(gl, gl.INVALID_VALUE, "type not same as original RGBA 4_4_4_4",
+        function() {gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, gl.RGBA, gl.UNSIGNED_BYTE, c); });
 }
 
 Tests.endUnit = function(gl, tex) {

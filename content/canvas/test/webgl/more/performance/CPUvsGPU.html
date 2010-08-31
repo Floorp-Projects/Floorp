@@ -85,7 +85,7 @@ function hblur(ctx,idata) {
       row_offset = col_offset+x*4;
       sumR=sumG=sumB=sumA=0.0;
       for (var k=-3; k<4; ++k) {
-        if (k+x < 0) 
+        if (k+x < 0)
           k4 = 0;
         else
           k4 = k * 4;
@@ -108,7 +108,7 @@ function hblur(ctx,idata) {
       row_offset = col_offset+x*4;
       sumR=sumG=sumB=sumA=0.0;
       for (var k=-3; k<4; ++k) {
-        if (k+x >= idata.width) 
+        if (k+x >= idata.width)
           k4 = (idata.width-x-1)*4;
         else
           k4 = k * 4;
@@ -159,7 +159,7 @@ function vblur(ctx,idata) {
       row_offset = col_offset+x*4;
       sumR=sumG=sumB=sumA=0.0;
       for (var k=-3; k<4; ++k) {
-        if (k+y < 0) 
+        if (k+y < 0)
           k4 = 0;
         else
           k4 = k * kfac;
@@ -182,7 +182,7 @@ function vblur(ctx,idata) {
       row_offset = col_offset+x*4;
       sumR=sumG=sumB=sumA=0.0;
       for (var k=-3; k<4; ++k) {
-        if (k+y >= idata.height) 
+        if (k+y >= idata.height)
           k4 = (idata.height-y-1)*kfac;
         else
           k4 = k * kfac;
@@ -272,7 +272,7 @@ Tests.gpuGaussianBlur = function(gl) {
 
 </script>
 <script id="identity-vert" type="x-shader/x-vertex">
-  #version 120
+
   attribute vec3 Vertex;
   attribute vec2 Tex;
 
@@ -284,7 +284,7 @@ Tests.gpuGaussianBlur = function(gl) {
   }
 </script>
 <script id="identity-flip-vert" type="x-shader/x-vertex">
-  #version 120
+
   attribute vec3 Vertex;
   attribute vec2 Tex;
 
@@ -296,7 +296,10 @@ Tests.gpuGaussianBlur = function(gl) {
   }
 </script>
 <script id="identity-frag" type="x-shader/x-fragment">
-  #version 120
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   uniform sampler2D Texture;
 
   varying vec4 texCoord0;
@@ -306,7 +309,10 @@ Tests.gpuGaussianBlur = function(gl) {
   }
 </script>
 <script id="hblur-frag" type="x-shader/x-fragment">
-  #version 120
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   uniform sampler2D Texture;
   uniform float width;
 
@@ -325,7 +331,10 @@ Tests.gpuGaussianBlur = function(gl) {
   }
 </script>
 <script id="vblur-frag" type="x-shader/x-fragment">
-  #version 120
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   uniform sampler2D Texture;
   uniform float height;
 

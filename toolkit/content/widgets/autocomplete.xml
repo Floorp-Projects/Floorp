@@ -1412,6 +1412,23 @@
 
           var setupUrl = true;
 
+          // If the type includes an action, set up the item appropriately.
+          var types = type.split(/\s+/);
+          var actionIndex = types.indexOf("action");
+          if (actionIndex >= 0) {
+            let [,action, param] = url.match(/^moz-action:([^,]+),(.*)$/);
+            this.setAttribute("actiontype", action);
+            url = param;
+            let desc = "]]>&action.switchToTab.label;<![CDATA[";
+            this._setUpDescription(this._url, desc, true);
+            setupUrl = false;
+
+            // Remove the "action" substring so that the correct style, if any,
+            // is applied below.
+            types.splice(actionIndex, 1);
+            type = types.join(" ");
+          }
+
           // If we have a tag match, show the tags and icon
           if (type == "tag") {
             // Configure the extra box for tags display
@@ -1440,7 +1457,7 @@
             this._extraBox.childNodes[1].hidden = false;
             this._extraBox.pack = "start";
             this._titleBox.flex = 0;
-            
+
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
             let params = "";
@@ -1453,15 +1470,6 @@
 
             // Don't emphasize keyword searches in the title or url
             this.setAttribute("text", "");
-          } else if (type == "action") {
-            let [,action, param] = url.match(/^moz-action:([^,]+),(.*)$/);
-            this.setAttribute("actiontype", action);
-            url = param;
-            this._extraBox.hidden = true;
-            this._titleBox.flex = 1;
-            let desc = "]]>&action.switchToTab.label;<![CDATA[";
-            this._setUpDescription(this._url, desc, true);
-            setupUrl = false;
           } else {
             // Hide the title's extra box if we don't need extra stuff
             this._extraBox.hidden = true;

@@ -94,7 +94,7 @@ protected:
     PRPackedBool                        mNeedToWriteCharset;
     PRInt32                             mCharsetSource;
     nsCString                           mCharset;
-    PRInt32                             mContentLength;
+    PRInt64                             mContentLength;
     PRUint32                            mLoadFlags;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;

@@ -342,6 +342,13 @@ class LazilyConstructed
         constructed = true;
     }
 
+    template <class T1, class T2, class T3, class T4>
+    void construct(const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4) {
+        JS_ASSERT(!constructed);
+        new(storage.addr()) T(t1, t2, t3, t4);
+        constructed = true;
+    }
+
     T *addr() {
         JS_ASSERT(constructed);
         return &asT();

@@ -240,6 +240,12 @@ struct JSStmtInfo {
  */
 #define TCF_FUN_ENTRAINS_SCOPES 0x400000
 
+/* The function calls 'eval'. */
+#define TCF_FUN_CALLS_EVAL       0x800000
+
+/* The function mutates a positional (non-destructuring) parameter. */
+#define TCF_FUN_MUTATES_PARAMETER 0x1000000
+
 /*
  * Flags to check for return; vs. return expr; in a function.
  */
@@ -255,6 +261,8 @@ struct JSStmtInfo {
                                  TCF_FUN_IS_GENERATOR    |                    \
                                  TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS          |                    \
+                                 TCF_FUN_CALLS_EVAL      |                    \
+                                 TCF_FUN_MUTATES_PARAMETER |                  \
                                  TCF_STRICT_MODE_CODE)
 
 struct JSTreeContext {              /* tree context for semantic checks */
@@ -324,6 +332,10 @@ struct JSTreeContext {              /* tree context for semantic checks */
     /* Test whether we're in a statement of given type. */
     bool inStatement(JSStmtType type);
 
+    bool inStrictMode() const {
+        return flags & TCF_STRICT_MODE_CODE;
+    }
+
     inline bool needStrictChecks();
 
     /* 
@@ -338,9 +350,43 @@ struct JSTreeContext {              /* tree context for semantic checks */
     // this context is itself a generator.
     bool skipSpansGenerator(unsigned skip);
 
-    bool compileAndGo() { return !!(flags & TCF_COMPILE_N_GO); }
-    bool inFunction() { return !!(flags & TCF_IN_FUNCTION); }
-    bool compiling() { return !!(flags & TCF_COMPILING); }
+    bool compileAndGo() const { return flags & TCF_COMPILE_N_GO; }
+    bool inFunction() const { return flags & TCF_IN_FUNCTION; }
+    bool compiling() const { return flags & TCF_COMPILING; }
+
+    bool usesArguments() const {
+        return flags & TCF_FUN_USES_ARGUMENTS;
+    }
+
+    void noteCallsEval() {
+        flags |= TCF_FUN_CALLS_EVAL;
+    }
+
+    bool callsEval() const {
+        JS_ASSERT(inFunction());
+        return flags & TCF_FUN_CALLS_EVAL;
+    }
+
+    void noteParameterMutation() {
+        JS_ASSERT(inFunction());
+        flags |= TCF_FUN_MUTATES_PARAMETER;
+    }
+
+    bool mutatesParameter() const {
+        JS_ASSERT(inFunction());
+        return flags & TCF_FUN_MUTATES_PARAMETER;
+    }
+
+    void noteArgumentsUse() {
+        JS_ASSERT(inFunction());
+        flags |= TCF_FUN_USES_ARGUMENTS;
+        if (funbox)
+            funbox->node->pn_dflags |= PND_FUNARG;
+    }
+
+    bool needsEagerArguments() const {
+        return inStrictMode() && ((usesArguments() && mutatesParameter()) || callsEval());
+    }
 };
 
 /*
@@ -348,8 +394,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
  * JSOPTION_STRICT warnings or strict mode errors.
  */
 inline bool JSTreeContext::needStrictChecks() {
-    return JS_HAS_STRICT_OPTION(parser->context) ||
-           (flags & TCF_STRICT_MODE_CODE);
+    return JS_HAS_STRICT_OPTION(parser->context) || inStrictMode();
 }
 
 /*

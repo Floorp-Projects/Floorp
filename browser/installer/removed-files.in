@@ -74,6 +74,7 @@ components/xptitemp.dat
 defaults/pref/all.js
 defaults/pref/bug259708.js
 defaults/pref/bug307259.js
+defaults/pref/reporter.js
 defaults/pref/security-prefs.js
 defaults/pref/winpref.js
 defaults/pref/xpinstall.js
@@ -629,7 +630,6 @@ xpicleanup@BIN_SUFFIX@
   defaults/pref/firefox-branding.js
   defaults/pref/firefox.js
   defaults/pref/firefox-l10n.js
-  defaults/pref/reporter.js
   defaults/pref/services-sync.js
   defaults/profile/bookmarks.html
   defaults/profile/chrome/userChrome-example.css
@@ -672,6 +672,7 @@ xpicleanup@BIN_SUFFIX@
   modules/PluginProvider.jsm
   modules/PluralForm.jsm
   modules/PopupNotifications.jsm
+  modules/PropertyPanel.jsm
   modules/Services.jsm
   modules/services-sync/auth.js
   modules/services-sync/base_records/collection.js
@@ -736,6 +737,9 @@ xpicleanup@BIN_SUFFIX@
   res/fonts/mathfontSTIXNonUnicode.properties
   res/fonts/mathfontSTIXSize1.properties
   res/fonts/mathfontSTIXSizeOneSym.properties
+  #ifdef XP_WIN
+    res/fonts/mathfontSymbol.properties
+  #endif
   res/fonts/mathfontUnicode.properties
   res/grabber.gif
   res/html/folder.png

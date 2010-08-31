@@ -737,10 +737,10 @@ namespace nanojit
     asm_output("movvs %d, %s", simm11, gpn(rd)); \
     } while (0)
 
-#define MULX(rs1, rs2, rd) \
+#define SMULCC(rs1, rs2, rd) \
     do { \
-    Format_3_1(2, rd, 0x9, rs1, 0, rs2); \
-    asm_output("mul %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
+    Format_3_1(2, rd, 0x1b, rs1, 0, rs2); \
+    asm_output("smulcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define NOP() \
@@ -771,6 +771,12 @@ namespace nanojit
     do { \
     Format_3_1(2, rd, 0x11, rs1, 0, rs2); \
     asm_output("andcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
+    } while (0)
+
+#define RDY(rd) \
+    do { \
+    Format_3_1(2, rd, 0x28, 0, 0, 0); \
+    asm_output("rdy %s", gpn(rd)); \
     } while (0)
 
 #define RESTORE(rs1, rs2, rd) \
@@ -807,6 +813,12 @@ namespace nanojit
     do { \
     Format_3_5(2, rd, 0x27, rs1, 0, rs2); \
     asm_output("sra %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
+    } while (0)
+
+#define SRAI(rs1, shcnt32, rd) \
+    do { \
+    Format_3_6(2, rd, 0x27, rs1, shcnt32); \
+    asm_output("sra %s, %d, %s", gpn(rs1), shcnt32, gpn(rd)); \
     } while (0)
 
 #define SRL(rs1, rs2, rd) \
