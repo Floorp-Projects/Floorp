@@ -727,7 +727,7 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
   *aReturn = nsnull;
 
   PRBool animated;
-  if (NS_SUCCEEDED(mImage->GetAnimated(&animated)) && !animated) {
+  if (!mImage || (NS_SUCCEEDED(mImage->GetAnimated(&animated)) && !animated)) {
     // Early exit - we're not animated, so we don't have to do anything.
     NS_ADDREF(*aReturn = this);
     return NS_OK;
@@ -795,7 +795,7 @@ void imgRequestProxy::SyncNotifyListener()
 void
 imgRequestProxy::SetImage(Image* aImage)
 {
-  NS_ABORT_IF_FALSE(!mImage, "Setting null image");
+  NS_ABORT_IF_FALSE(aImage,  "Setting null image");
   NS_ABORT_IF_FALSE(!mImage, "Setting image when we already have one");
 
   mImage = aImage;

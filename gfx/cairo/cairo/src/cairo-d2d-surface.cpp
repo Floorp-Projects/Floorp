@@ -2425,7 +2425,7 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     softDesc.BindFlags = 0;
     hr = d2dsurf->device->mD3D10Device->CreateTexture2D(&softDesc, NULL, &softTexture);
     if (FAILED(hr)) {
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error(CAIRO_STATUS_NO_MEMORY);
     }
 
     d2dsurf->device->mD3D10Device->CopyResource(softTexture, d2dsurf->surface);
@@ -2433,7 +2433,7 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
     if (FAILED(hr)) {
-	return (cairo_status_t)CAIRO_INT_STATUS_UNSUPPORTED;
+	return _cairo_error(CAIRO_STATUS_NO_DEVICE);
     }
     *image_out = 
 	(cairo_image_surface_t*)_cairo_image_surface_create_for_data_with_content((unsigned char*)data.pData,
@@ -2498,14 +2498,14 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     softDesc.BindFlags = 0;
     hr = d2dsurf->device->mD3D10Device->CreateTexture2D(&softDesc, NULL, &softTexture);
     if (FAILED(hr)) {
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error(CAIRO_STATUS_NO_MEMORY);
     }
     d2dsurf->device->mD3D10Device->CopyResource(softTexture, d2dsurf->surface);
 
     D3D10_MAPPED_TEXTURE2D data;
     hr = softTexture->Map(0, D3D10_MAP_READ_WRITE, 0, &data);
     if (FAILED(hr)) {
-	return (cairo_status_t)CAIRO_INT_STATUS_UNSUPPORTED;
+	return _cairo_error(CAIRO_STATUS_NO_DEVICE);
     }
     *image_out = 
 	(cairo_image_surface_t*)_cairo_image_surface_create_for_data_with_content((unsigned char*)data.pData,

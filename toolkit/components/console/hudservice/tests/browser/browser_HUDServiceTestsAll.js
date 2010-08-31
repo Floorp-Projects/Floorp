@@ -236,6 +236,9 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 }
 
 // test network logging
+//
+// NB: After this test, the HUD (including its "jsterm" attribute) will be gone
+// forever due to bug 580618!
 function testNet()
 {
   HUDService.setFilterState(hudId, "network", true);
@@ -249,6 +252,7 @@ function testNet()
   browser.addEventListener("load", function onTestNetLoad () {
     browser.removeEventListener("load", onTestNetLoad, true);
 
+    executeSoon(function(){
     let group = outputNode.querySelector(".hud-group");
     is(group.childNodes.length, 5, "Four children in output");
     let outputChildren = group.childNodes;
@@ -261,7 +265,7 @@ function testNet()
                                               "image is logged");
     isnot(outputChildren[4].textContent.
       indexOf("running network console logging tests"), -1, "log() is logged");
-
+    });
     testLiveFilteringForMessageTypes();
   }, true);
 
@@ -354,7 +358,7 @@ function testLiveFilteringForSearchStrings()
     is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
       "for the string \"foo\"bar'baz\"boo'\"");
 
-    testPageReload();
+    testTextNodeInsertion();
   });
 }
 
@@ -769,6 +773,44 @@ function testHUDGetters()
   is(typeof hudconsole, "object", "HUD.console is an object");
   is(typeof hudconsole.log, "function", "HUD.console.log is a function");
   is(typeof hudconsole.info, "function", "HUD.console.info is a function");
+}
+
+// Test for bug 588730: Adding a text node to an existing label element causes
+// warnings
+function testTextNodeInsertion() {
+  HUDService.clearDisplay(hudId);
+
+  let display = HUDService.getDisplayByURISpec(TEST_NETWORK_URI);
+  let outputNode = display.querySelector(".hud-output-node");
+
+  let label = document.createElementNS(
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "label");
+  outputNode.appendChild(label);
+
+  let error = false;
+  let listener = {
+    observe: function(aMessage) {
+      let messageText = aMessage.message;
+      if (messageText.indexOf("JavaScript Warning") !== -1) {
+        error = true;
+      }
+    }
+  };
+
+  let nsIConsoleServiceClass = Cc["@mozilla.org/consoleservice;1"];
+  let nsIConsoleService = nsIConsoleServiceClass.getService(Ci.
+    nsIConsoleService);
+  nsIConsoleService.registerListener(listener);
+
+  // This shouldn't fail.
+  label.appendChild(document.createTextNode("foo"));
+
+  executeSoon(function() {
+    nsIConsoleService.unregisterListener(listener);
+    ok(!error, "no error when adding text nodes as children of labels");
+
+    testPageReload();
+  });
 }
 
 function testPageReload() {

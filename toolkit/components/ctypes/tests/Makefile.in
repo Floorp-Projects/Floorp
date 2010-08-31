@@ -40,6 +40,7 @@ DEPTH = ../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
+relativesrcdir = toolkit/components/ctypes/tests
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -71,10 +72,10 @@ _CHROME_TEST_FILES = \
 
 include $(topsrcdir)/config/rules.mk
 
-xpctestdir = $(testxpcobjdir)/$(MODULE)/unit
+xpctestdir = $(testxpcobjdir)/$(relativesrcdir)/unit
 
 chrometestdir = \
-  $(DEPTH)/_tests/testing/mochitest/chrome/toolkit/components/$(MODULE)
+  $(DEPTH)/_tests/testing/mochitest/chrome/toolkit/components/$(relativesrcdir)
 
 # preprocess and install our unit test into the appropriate directory,
 # and install the test library as well. the xpcshell test rules will

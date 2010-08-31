@@ -6718,14 +6718,11 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         }
       }
     } else {
-      nsCOMPtr<nsIMultiPartChannel> partChannel = do_QueryInterface(aChannel);
-      if (partChannel) {
-        nsCAutoString contentDisp;
-        rv = partChannel->GetContentDisposition(contentDisp);
-        if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
-          SetHeaderData(nsGkAtoms::headerContentDisposition,
-                        NS_ConvertASCIItoUTF16(contentDisp));
-        }
+      nsCAutoString contentDisp;
+      rv = aChannel->GetContentDisposition(contentDisp);
+      if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
+        SetHeaderData(nsGkAtoms::headerContentDisposition,
+                      NS_ConvertASCIItoUTF16(contentDisp));
       }
     }
   }

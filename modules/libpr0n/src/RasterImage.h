@@ -226,7 +226,7 @@ public:
                                PRUint32** paletteData,
                                PRUint32*  paletteLength);
 
-  nsresult FrameUpdated(PRUint32 aFrameNum, nsIntRect& aUpdatedRect);
+  void FrameUpdated(PRUint32 aFrameNum, nsIntRect& aUpdatedRect);
 
   /* notification when the current frame is done decoding */
   nsresult EndFrameDecode(PRUint32 aFrameNum);
@@ -289,6 +289,11 @@ public:
     kDisposeClear,          // Clear the frame's area, revealing bg
     kDisposeRestorePrevious // Restore the previous (composited) frame
   };
+
+  // Progressive decoding knobs
+  static void SetDecodeBytesAtATime(PRUint32 aBytesAtATime);
+  static void SetMaxMSBeforeYield(PRUint32 aMaxMS);
+  static void SetMaxBytesForSyncDecode(PRUint32 aMaxBytes);
 
 private:
   struct Anim

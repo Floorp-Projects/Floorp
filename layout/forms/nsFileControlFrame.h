@@ -99,11 +99,6 @@ public:
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
-  // create and destroy the static UploadLastDir object for remembering
-  // which directory was last used on a site-by-site basis
-  static void InitUploadLastDir();
-  static void DestroyUploadLastDir();
-
   /**
    * This methods return the file filter mask requested by the HTML5 accept
    * attribute. If the accept attribute isn't present or the value isn't valid,
@@ -119,7 +114,10 @@ public:
   typedef PRBool (*AcceptAttrCallback)(const nsAString&, void*);
   void ParseAcceptAttribute(AcceptAttrCallback aCallback, void* aClosure) const;
 
+  nsIFrame* GetTextFrame() { return mTextFrame; }
+
 protected:
+
   class MouseListener;
   friend class MouseListener;
   class MouseListener : public nsIDOMMouseListener {
@@ -161,7 +159,7 @@ protected:
     BrowseMouseListener(nsFileControlFrame* aFrame) : MouseListener(aFrame) {};
      NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
   };
-  
+
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &

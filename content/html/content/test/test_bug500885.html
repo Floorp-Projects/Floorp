@@ -52,15 +52,15 @@ MockFilePicker.prototype = {
   }
 };
 
-var mockFilePickerRegisterer =
+var mockFilePickerRegisterer = 
   new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
-
 
 function test() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var wu = window.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIDOMWindowUtils);
                   
+
   mockFilePickerRegisterer.register();
   try {
     var domActivateEvents;
@@ -82,8 +82,14 @@ function test() {
     is(domActivateEvents, 1, "click on button should only fire 1 DOMActivate event");
 
   } finally {
-    mockFilePickerRegisterer.unregister();
+    SimpleTest.executeSoon(unregister);
+    
   }
+}
+
+function unregister()
+{
+  mockFilePickerRegisterer.unregister();
   SimpleTest.finish();
 }
 

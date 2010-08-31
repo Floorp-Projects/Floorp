@@ -88,7 +88,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameList.h"
 #include "nsListControlFrame.h"
-#include "nsFileControlFrame.h"
+#include "nsHTMLInputElement.h"
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
 #endif
@@ -383,5 +383,5 @@ nsLayoutStatics::Shutdown()
 
   nsFrameList::Shutdown();
 
-  nsFileControlFrame::DestroyUploadLastDir();
+  nsHTMLInputElement::DestroyUploadLastDir();
 }

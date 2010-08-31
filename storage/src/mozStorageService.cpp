@@ -248,15 +248,6 @@ Service::initialize()
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
-  // This makes multiple connections to the same database share the same pager
-  // cache.  We do not need to lock here with mMutex because this function is
-  // only ever called from Service::GetSingleton, which will only
-  // call this function once, and will not return until this function returns.
-  // (It does not matter where this is called relative to sqlite3_initialize.)
-  rc = ::sqlite3_enable_shared_cache(1);
-  if (rc != SQLITE_OK)
-    return convertResultCode(rc);
-
   // Run the things that need to run on the main thread there.
   nsCOMPtr<nsIRunnable> event =
     new ServiceMainThreadInitializer(this, &sXPConnect);
@@ -366,7 +357,7 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  Connection *msc = new Connection(this);
+  Connection *msc = new Connection(this, SQLITE_OPEN_READWRITE);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
   rv = msc->initialize(storageFile);
@@ -388,14 +379,15 @@ Service::OpenDatabase(nsIFile *aDatabaseFile,
   NS_TIME_FUNCTION_FMT("mozIStorageService::OpenDatabase(%s)", leafname.get());
 #endif
 
-  nsRefPtr<Connection> msc = new Connection(this);
+  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
+  // reasons.
+  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
+              SQLITE_OPEN_CREATE;
+  nsRefPtr<Connection> msc = new Connection(this, flags);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-  {
-    MutexAutoLock mutex(mMutex);
-    nsresult rv = msc->initialize(aDatabaseFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv = msc->initialize(aDatabaseFile);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*_connection = msc);
   return NS_OK;
@@ -412,28 +404,14 @@ Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
                        leafname.get());
 #endif
 
-  nsRefPtr<Connection> msc = new Connection(this);
+  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
+  // reasons.
+  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_PRIVATECACHE |
+              SQLITE_OPEN_CREATE;
+  nsRefPtr<Connection> msc = new Connection(this, flags);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-  // Initialize the connection, temporarily turning off shared caches so the
-  // new connection gets its own cache.  Database connections are assigned
-  // caches when they are opened, and they retain those caches for their
-  // lifetimes, unaffected by changes to the shared caches setting, so we can
-  // disable shared caches temporarily while we initialize the new connection
-  // without affecting the caches currently in use by other connections.
-  nsresult rv;
-  {
-    MutexAutoLock mutex(mMutex);
-    int rc = ::sqlite3_enable_shared_cache(0);
-    if (rc != SQLITE_OK)
-      return convertResultCode(rc);
-
-    rv = msc->initialize(aDatabaseFile);
-
-    rc = ::sqlite3_enable_shared_cache(1);
-    if (rc != SQLITE_OK)
-      return convertResultCode(rc);
-  }
+  nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*_connection = msc);
