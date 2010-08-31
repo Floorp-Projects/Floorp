@@ -43,6 +43,7 @@
 #include "nsTArray.h"
 #include "nsRegion.h"
 #include "nsIFrame.h"
+#include "Layers.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
@@ -50,12 +51,6 @@ class nsDisplayItem;
 class gfxContext;
 
 namespace mozilla {
-
-namespace layers {
-class Layer;
-class ThebesLayer;
-class LayerManager;
-}
 
 enum LayerState {
   LAYER_NONE,
@@ -171,6 +166,14 @@ public:
    */
   static void InvalidateThebesLayerContents(nsIFrame* aFrame,
                                             const nsRect& aRect);
+
+  /**
+   * For any descendant frame of aFrame (including across documents) that
+   * has an associated container layer, invalidate all the contents of
+   * all ThebesLayer children of the container. Useful when aFrame is
+   * being moved and we need to invalidate everything in aFrame's subtree.
+   */
+  static void InvalidateThebesLayersInSubtree(nsIFrame* aFrame);
 
   /**
    * Call this to force *all* retained layer contents to be discarded at

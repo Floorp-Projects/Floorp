@@ -123,16 +123,11 @@ NativeIterator::mark(JSTracer *trc)
         MarkObject(trc, obj, "obj");
 }
 
-/*
- * Shared code to close iterator's state either through an explicit call or
- * when GC detects that the iterator is no longer reachable.
- */
 static void
 iterator_finalize(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &js_IteratorClass);
 
-    /* Avoid double work if the iterator was closed by JSOP_ENDITER. */
     NativeIterator *ni = obj->getNativeIterator();
     if (ni) {
         cx->free(ni);
@@ -811,8 +806,6 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
             ni->props_cursor = ni->props_array;
             ni->next = *hp;
             *hp = obj;
-        } else {
-            iterator_finalize(cx, obj);
         }
     }
 #if JS_HAS_GENERATORS

@@ -189,9 +189,9 @@ nsHttpHandler::nsHttpHandler()
     , mPipeliningOverSSL(PR_FALSE)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
-    , mProduct("Gecko")
     , mLegacyAppName("Mozilla")
     , mLegacyAppVersion("5.0")
+    , mProduct("Gecko")
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
     , mPromptTempRedirect(PR_TRUE)
@@ -284,7 +284,7 @@ nsHttpHandler::Init()
         appInfo->GetName(mAppName);
         appInfo->GetVersion(mAppVersion);
     } else {
-        mAppVersion.AssignLiteral(MOZ_APP_VERSION);
+        mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
 
 #if DEBUG
@@ -313,7 +313,8 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-    if (appInfo)
+    mProductSub.AssignLiteral(MOZ_UA_BUILDID);
+    if (mProductSub.IsEmpty() && appInfo)
         appInfo->GetPlatformBuildID(mProductSub);
     if (mProductSub.Length() > 8)
         mProductSub.SetLength(8);
@@ -808,12 +809,6 @@ nsHttpHandler::InitUserAgentComponents()
     mUserAgentIsDirty = PR_TRUE;
 }
 
-static int StringCompare(const void* s1, const void* s2, void*)
-{
-    return nsCRT::strcmp(*static_cast<const char *const *>(s1),
-                         *static_cast<const char *const *>(s2));
-}
-
 void
 nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
@@ -847,7 +842,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("compatMode.firefox"))) {
         rv = prefs->GetBoolPref(UA_PREF("compatMode.firefox"), &cVar);
         if (NS_SUCCEEDED(rv) && cVar) {
-            mCompatFirefox.AssignLiteral("Firefox/" FIREFOX_VERSION);
+            mCompatFirefox.AssignLiteral("Firefox/" MOZ_UA_FIREFOX_VERSION);
         } else {
             mCompatFirefox.Truncate();
         }

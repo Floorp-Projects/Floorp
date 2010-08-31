@@ -56,6 +56,9 @@
 #include "nsITheme.h"
 #include "nsIServiceManager.h"
 #include "nsIBoxLayout.h"
+#include "FrameLayerBuilder.h"
+
+using namespace mozilla;
 
 #ifdef DEBUG_LAYOUT
 PRInt32 gIndent = 0;
@@ -648,8 +651,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
 nsresult
 nsIFrame::Redraw(nsBoxLayoutState& aState,
-                 const nsRect*   aDamageRect,
-                 PRBool          aImmediate)
+                 const nsRect*   aDamageRect)
 {
   if (aState.PaintingDisabled())
     return NS_OK;
@@ -660,7 +662,10 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
   else
     damageRect = GetOverflowRect();
 
-  InvalidateWithFlags(damageRect, aImmediate ? INVALIDATE_IMMEDIATE : 0);
+  Invalidate(damageRect);
+  // nsStackLayout, at least, expects us to repaint descendants even
+  // if a damage rect is provided
+  FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
 
   return NS_OK;
 }

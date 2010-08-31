@@ -2493,6 +2493,9 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   
   file->SetNativeLeafName(NS_LITERAL_CSTRING("XPC" PLATFORM_FASL_SUFFIX));
   file->Remove(PR_FALSE);
+
+  file->SetNativeLeafName(NS_LITERAL_CSTRING("startupCache"));
+  file->Remove(PR_TRUE);
 }
 
 // To support application initiated restart via nsIAppStartup.quit, we

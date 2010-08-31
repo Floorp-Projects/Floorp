@@ -42,6 +42,7 @@
 #include "nsLayoutUtils.h"
 #include "Layers.h"
 #include "BasicLayers.h"
+#include "nsSubDocumentFrame.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -88,6 +89,9 @@ static void DestroyRegion(void* aPropertyValue)
  * We add to this region in InvalidateThebesLayerContents. The region
  * is propagated to ContainerState in BuildContainerLayerFor, and then
  * the region(s) are actually invalidated in CreateOrRecycleThebesLayer.
+ *
+ * When the property value is null, the region is infinite --- i.e. all
+ * areas of the ThebesLayers should be invalidated.
  */
 NS_DECLARE_FRAME_PROPERTY(ThebesLayerInvalidRegionProperty, DestroyRegion)
 
@@ -465,17 +469,19 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
     return PL_DHASH_REMOVE;
   }
 
-  if (!newDisplayItems->HasContainerLayer()) {
+  if (newDisplayItems->HasContainerLayer()) {
+    // Reset or create the invalid region now so we can start collecting
+    // new dirty areas.
+    nsRegion* invalidRegion = static_cast<nsRegion*>
+      (props.Get(ThebesLayerInvalidRegionProperty()));
+    if (invalidRegion) {
+      invalidRegion->SetEmpty();
+    } else {
+      props.Set(ThebesLayerInvalidRegionProperty(), new nsRegion());
+    }
+  } else {
     props.Delete(ThebesLayerInvalidRegionProperty());
     f->RemoveStateBits(NS_FRAME_HAS_CONTAINER_LAYER);
-  }
-
-  // Reset the invalid region now so we can start collecting new dirty
-  // areas.
-  nsRegion* invalidRegion = static_cast<nsRegion*>
-    (props.Get(ThebesLayerInvalidRegionProperty()));
-  if (invalidRegion) {
-    invalidRegion->SetEmpty();
   }
 
   // We need to remove and re-add the DisplayItemDataProperty in
@@ -1160,6 +1166,17 @@ ContainerState::Finish()
   }
 }
 
+static void
+SetHasContainerLayer(nsIFrame* aFrame)
+{
+  aFrame->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER);
+  for (nsIFrame* f = aFrame;
+       f && !(f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+       f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    f->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+  }
+}
+
 already_AddRefed<Layer>
 FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           LayerManager* aManager,
@@ -1220,12 +1237,17 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       invalidThebesContent->MoveBy(offset);
       state.SetInvalidThebesContent(invalidThebesContent->
         ToOutsidePixels(aContainerFrame->PresContext()->AppUnitsPerDevPixel()));
+      // We have to preserve the current contents of invalidThebesContent
+      // because there might be multiple container layers for the same
+      // frame and we need to invalidate the ThebesLayer children of all
+      // of them.
       invalidThebesContent->MoveBy(-offset);
     } else {
-      // Set up region to collect invalidation data
-      props.Set(ThebesLayerInvalidRegionProperty(), new nsRegion());
+      // The region was deleted to indicate that everything should be
+      // invalidated.
+      state.SetInvalidateAllThebesContent();
     }
-    aContainerFrame->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER);
+    SetHasContainerLayer(aContainerFrame);
   }
 
   state.ProcessDisplayItems(aChildren, nsnull);
@@ -1269,6 +1291,55 @@ FrameLayerBuilder::InvalidateThebesLayerContents(nsIFrame* aFrame,
     return;
   invalidThebesContent->Or(*invalidThebesContent, aRect);
   invalidThebesContent->SimplifyOutward(20);
+}
+
+/**
+ * Returns true if we find a descendant with a container layer
+ */
+static PRBool
+InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
+{
+  if (!(aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT))
+    return PR_FALSE;
+
+  PRBool foundContainerLayer = PR_FALSE;
+  if (aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
+    // Delete the invalid region to indicate that all Thebes contents
+    // need to be invalidated
+    aFrame->Properties().Delete(ThebesLayerInvalidRegionProperty());
+    foundContainerLayer = PR_TRUE;
+  }
+
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+  do {
+    nsIFrame* child = aFrame->GetFirstChild(childList);
+    if (!child && !childList) {
+      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(aFrame);
+      if (subdocumentFrame) {
+        // Descend into the subdocument
+        child = subdocumentFrame->GetSubdocumentRootFrame();
+      }
+    }
+    while (child) {
+      if (InternalInvalidateThebesLayersInSubtree(child)) {
+        foundContainerLayer = PR_TRUE;
+      }
+      child = child->GetNextSibling();
+    }
+    childList = aFrame->GetAdditionalChildListName(listIndex++);
+  } while (childList);
+
+  if (!foundContainerLayer) {
+    aFrame->RemoveStateBits(NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+  }
+  return foundContainerLayer;
+}
+
+/* static */ void
+FrameLayerBuilder::InvalidateThebesLayersInSubtree(nsIFrame* aFrame)
+{
+  InternalInvalidateThebesLayersInSubtree(aFrame);
 }
 
 /* static */ void

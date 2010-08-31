@@ -4,3 +4,4 @@ script arguments-caller-callee.js
 script function-caller.js
 script strict-arguments.js
 script arguments-property-attributes.js
+script function-bind.js

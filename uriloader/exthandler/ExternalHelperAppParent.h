@@ -69,7 +69,6 @@ public:
     ExternalHelperAppParent(const IPC::URI& uri, const PRInt64& contentLength);
     void Init(TabParent *parent,
               const nsCString& aMimeContentType,
-              const nsCString& aContentDisposition,
               const PRBool& aForceSave);
     virtual ~ExternalHelperAppParent();
 
@@ -80,7 +79,6 @@ private:
   nsLoadFlags mLoadFlags;
   nsresult mStatus;
   PRInt64 mContentLength;
-  nsCString mContentDisposition;
   nsCString mEntityID;
 };
 

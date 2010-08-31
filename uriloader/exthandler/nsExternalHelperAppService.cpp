@@ -222,6 +222,31 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
   return rv;
 }
 
+/** Gets the content-disposition header from a channel, using nsIHttpChannel
+ * or nsIMultipartChannel if available
+ * @param aChannel The channel to extract the disposition header from
+ * @param aDisposition Reference to a string where the header is to be stored
+ */
+static void ExtractDisposition(nsIChannel* aChannel, nsACString& aDisposition)
+{
+  aDisposition.Truncate();
+  // First see whether this is an http channel
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) 
+  {
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), aDisposition);
+  }
+  if (aDisposition.IsEmpty())
+  {
+    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(aChannel));
+    if (multipartChannel)
+    {
+      multipartChannel->GetContentDisposition(aDisposition);
+    }
+  }
+
+}
+
 /** Extracts the filename out of a content-disposition header
  * @param aFilename [out] The filename. Can be empty on error.
  * @param aDisposition Value of a Content-Disposition header
@@ -289,7 +314,7 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
    * permission... otherwise just use our temp file
    */
   nsCAutoString disp;
-  aChannel->GetContentDisposition(disp);
+  ExtractDisposition(aChannel, disp);
   PRBool handleExternally = PR_FALSE;
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
@@ -618,6 +643,26 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
   gExtProtSvc = nsnull;
 }
 
+static PRInt64 GetContentLengthAsInt64(nsIRequest *request)
+{
+  PRInt64 contentLength = -1;
+  nsresult rv;
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
+  if (props)
+    rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &contentLength);
+
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    if (channel) {
+      PRInt32 smallLen;
+      channel->GetContentLength(&smallLen);
+      contentLength = smallLen;
+    }
+  }
+
+  return contentLength;
+}
+
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
@@ -636,6 +681,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     channel->GetURI(getter_AddRefs(uri));
 
 #ifdef MOZ_IPC
+  PRInt64 contentLength = GetContentLengthAsInt64(aRequest);
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // We need to get a hold of a TabChild so that we can begin forwarding
     // this data to the parent.  In the HTTP case, this is unfortunate, since
@@ -652,14 +698,6 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     if (!tabchild)
       return NS_ERROR_FAILURE;
 
-    PRInt64 contentLength = -1;
-    nsCString disp;
-    if (channel) {
-      channel->GetContentLength(&contentLength);
-      channel->GetContentDisposition(disp);
-    }
-
-
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
     // helperAppService listener on the parent-side, via another call to
@@ -669,7 +707,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     TabChild *child = static_cast<TabChild*>(tabchild.get());
     mozilla::dom::PExternalHelperAppChild *pc;
     pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
-                                                  nsCString(aMimeContentType), disp,
+                                                  nsCString(aMimeContentType),
                                                   aForceSave, contentLength);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
@@ -1379,7 +1417,7 @@ void nsExternalAppHandler::EnsureSuggestedFileName()
   }
 }
 
-nsresult nsExternalAppHandler::SetUpTempFile()
+nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
   // First we need to try to get the destination directory for the temporary
   // file.
@@ -1516,6 +1554,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(request));
   mIsFileChannel = fileChan != nsnull;
 
+  // Get content length
+  mContentLength.mValue = GetContentLengthAsInt64(request);
+
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   // Determine whether a new window was opened specifically for this request
   if (props) {
@@ -1525,15 +1566,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     mShouldCloseWindow = tmp;
   }
 
-  // Get content length and URI
-  mContentLength = -1;
+  // Now get the URI
   if (aChannel)
   {
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
-    aChannel->GetContentLength(&mContentLength);
   }
 
-  rv = SetUpTempFile();
+  rv = SetUpTempFile(aChannel);
   if (NS_FAILED(rv)) {
     mCanceled = PR_TRUE;
     request->Cancel(rv);

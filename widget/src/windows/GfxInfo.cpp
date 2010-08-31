@@ -42,7 +42,7 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
 
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
@@ -54,13 +54,17 @@ using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
 
-nsresult GfxInfo::GetD2DEnabled(PRBool *aEnabled)
+/* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
+ * has occurred because they depend on it for information. (See bug 591561) */
+nsresult
+GfxInfo::GetD2DEnabled(PRBool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
   return NS_OK;
 }
 
-nsresult GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+nsresult
+GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->DWriteEnabled();
   return NS_OK;
@@ -68,13 +72,12 @@ nsresult GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 
 /* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
 
-static nsresult GetKeyValue(const TCHAR* keyLocation, const TCHAR* keyName, nsAString& destString, int type)
+static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
 {
   HKEY key;
   DWORD dwcbData;
-  WCHAR wCharValue[1024];
-  TCHAR tCharValue[1024];
   DWORD dValue;
+  DWORD resultType;
   LONG result;
   nsresult retval = NS_OK;
 
@@ -87,27 +90,47 @@ static nsresult GetKeyValue(const TCHAR* keyLocation, const TCHAR* keyName, nsAS
     case REG_DWORD: {
       // We only use this for vram size
       dwcbData = sizeof(dValue);
-      result = RegQueryValueExW(key, keyName, NULL, NULL, (LPBYTE)&dValue, &dwcbData);
-      if (result != ERROR_SUCCESS) {
+      result = RegQueryValueExW(key, keyName, NULL, &resultType, (LPBYTE)&dValue, &dwcbData);
+      if (result == ERROR_SUCCESS && resultType == REG_DWORD) {
+        dValue = dValue / 1024 / 1024;
+        destString.AppendInt(static_cast<PRInt32>(dValue));
+      } else {
         retval = NS_ERROR_FAILURE;
       }
-      dValue = dValue / 1024 / 1024;
-      destString.AppendInt(static_cast<PRInt32>(dValue));
       break;
     }
     case REG_MULTI_SZ: {
       // A chain of null-separated strings; we convert the nulls to spaces
-      dwcbData = sizeof(tCharValue);
-      result = RegQueryValueExW(key, keyName, NULL, NULL, (LPBYTE)tCharValue, &dwcbData);
-      if (result != ERROR_SUCCESS) {
+      WCHAR wCharValue[1024];
+      dwcbData = sizeof(wCharValue);
+
+      result = RegQueryValueExW(key, keyName, NULL, &resultType, (LPBYTE)wCharValue, &dwcbData);
+      if (result == ERROR_SUCCESS && resultType == REG_MULTI_SZ) {
+        // This bit here could probably be cleaner.
+        bool isValid = false;
+
+        DWORD strLen = dwcbData/sizeof(wCharValue[0]);
+        for (DWORD i = 0; i < strLen; i++) {
+          if (wCharValue[i] == '\0') {
+            if (i < strLen - 1 && wCharValue[i + 1] == '\0') {
+              isValid = true;
+              break;
+            } else {
+              wCharValue[i] = ' ';
+            }
+          }
+        }
+
+        // ensure wCharValue is null terminated
+        wCharValue[strLen-1] = '\0';
+
+        if (isValid)
+          destString = wCharValue;
+
+      } else {
         retval = NS_ERROR_FAILURE;
       }
-      // This bit here could probably be cleaner.
-      for (DWORD i = 0, len = dwcbData/sizeof(tCharValue[0]); i < len; i++) {
-        if (tCharValue[i] == '\0')
-          tCharValue[i] = ' ';
-      }
-      destString = tCharValue;
+
       break;
     }
   }
@@ -136,48 +159,45 @@ static void normalizeDriverId(nsString& driverid) {
  * */
 
 #define DEVICE_KEY_PREFIX L"\\Registry\\Machine\\"
-void GfxInfo::Init()
+void
+GfxInfo::Init()
 {
   NS_TIME_FUNCTION;
 
-  DISPLAY_DEVICE lpDisplayDevice;
-  lpDisplayDevice.cb = sizeof(lpDisplayDevice);
+  DISPLAY_DEVICEW displayDevice;
+  displayDevice.cb = sizeof(displayDevice);
   int deviceIndex = 0;
 
-  while (EnumDisplayDevices(NULL, deviceIndex, &lpDisplayDevice, 0)) {
-    if (lpDisplayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+  while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)) {
+    if (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
       break;
     deviceIndex++;
   }
 
   /* DeviceKey is "reserved" according to MSDN so we'll be careful with it */
-  if (wcsncmp(lpDisplayDevice.DeviceKey, DEVICE_KEY_PREFIX, wcslen(DEVICE_KEY_PREFIX)) != 0)
+  /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
+  if (wcsncmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
     return;
 
   // make sure the string is NULL terminated
-  size_t i;
-  for (i = 0; i < sizeof(lpDisplayDevice.DeviceKey); i++) {
-    if (lpDisplayDevice.DeviceKey[i] == L'\0')
-      break;
-  }
-
-  if (i == sizeof(lpDisplayDevice.DeviceKey)) {
-      // we did not find a NULL
-      return;
+  if (wcsnlen(displayDevice.DeviceKey, NS_ARRAY_LENGTH(displayDevice.DeviceKey))
+      == NS_ARRAY_LENGTH(displayDevice.DeviceKey)) {
+    // we did not find a NULL
+    return;
   }
 
   // chop off DEVICE_KEY_PREFIX
-  mDeviceKey = lpDisplayDevice.DeviceKey + wcslen(DEVICE_KEY_PREFIX);
+  mDeviceKey = displayDevice.DeviceKey + NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1;
 
-  mDeviceID = lpDisplayDevice.DeviceID;
-  mDeviceString = lpDisplayDevice.DeviceString;
+  mDeviceID = displayDevice.DeviceID;
+  mDeviceString = displayDevice.DeviceString;
 
 
   HKEY key, subkey;
   LONG result, enumresult;
   DWORD index = 0;
-  TCHAR subkeyname[64];
-  TCHAR value[128];
+  WCHAR subkeyname[64];
+  WCHAR value[128];
   DWORD dwcbData = sizeof(subkeyname);
 
   // "{4D36E968-E325-11CE-BFC1-08002BE10318}" is the display class
@@ -223,14 +243,16 @@ void GfxInfo::Init()
 }
 
 /* readonly attribute DOMString adapterDescription; */
-NS_IMETHODIMP GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
+NS_IMETHODIMP
+GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
 {
   aAdapterDescription = mDeviceString;
   return NS_OK;
 }
 
 /* readonly attribute DOMString adapterRAM; */
-NS_IMETHODIMP GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
+NS_IMETHODIMP
+GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
   if (NS_FAILED(GetKeyValue(mDeviceKey.BeginReading(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD)))
     aAdapterRAM = L"Unknown";
@@ -238,7 +260,8 @@ NS_IMETHODIMP GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 }
 
 /* readonly attribute DOMString adapterDriver; */
-NS_IMETHODIMP GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 {
   if (NS_FAILED(GetKeyValue(mDeviceKey.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ)))
     aAdapterDriver = L"Unknown";
@@ -246,21 +269,24 @@ NS_IMETHODIMP GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 }
 
 /* readonly attribute DOMString adapterDriverVersion; */
-NS_IMETHODIMP GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
 {
   aAdapterDriverVersion = mDriverVersion;
   return NS_OK;
 }
 
 /* readonly attribute DOMString adapterDriverDate; */
-NS_IMETHODIMP GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 {
   aAdapterDriverDate = mDriverDate;
   return NS_OK;
 }
 
 /* readonly attribute unsigned long adapterVendorID; */
-NS_IMETHODIMP GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
+NS_IMETHODIMP
+GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
   nsAutoString vendor(mDeviceID);
   ToUpperCase(vendor);
@@ -275,7 +301,8 @@ NS_IMETHODIMP GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 }
 
 /* readonly attribute unsigned long adapterDeviceID; */
-NS_IMETHODIMP GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
+NS_IMETHODIMP
+GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
   nsAutoString device(mDeviceID);
   ToUpperCase(device);
@@ -289,17 +316,18 @@ NS_IMETHODIMP GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
   return NS_OK;
 }
 
-void GfxInfo::AddCrashReportAnnotations()
+void
+GfxInfo::AddCrashReportAnnotations()
 {
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
   nsCAutoString deviceIDString, vendorIDString;
   PRUint32 deviceID, vendorID;
 
   GetAdapterDeviceID(&deviceID);
   GetAdapterVendorID(&vendorID);
 
-  deviceIDString.AppendPrintf("%04x", &deviceID);
-  vendorIDString.AppendPrintf("%04x", &vendorID);
+  deviceIDString.AppendPrintf("%04x", deviceID);
+  vendorIDString.AppendPrintf("%04x", vendorID);
 
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
       vendorIDString);
@@ -308,10 +336,190 @@ void GfxInfo::AddCrashReportAnnotations()
 
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
-  CrashReporter::AppendAppNotesToCrashReport(nsCAutoString(NS_LITERAL_CSTRING("AdapterVendorID: ")) +
-      vendorIDString);
-  CrashReporter::AppendAppNotesToCrashReport(nsCAutoString(NS_LITERAL_CSTRING("AdapterDeviceID: ")) +
-      deviceIDString);
+  nsCAutoString note;
+  /* AppendPrintf only supports 32 character strings, mrghh. */
+  note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
+  note.AppendPrintf("AdapterDeviceID: %04x\n", deviceID);
+
+  CrashReporter::AppendAppNotesToCrashReport(note);
 
 #endif
+}
+
+enum VersionComparisonOp {
+  DRIVER_LESS_THAN,             // driver <  version
+  DRIVER_LESS_THAN_OR_EQUAL,    // driver <= version
+  DRIVER_GREATER_THAN,          // driver >  version
+  DRIVER_GREATER_THAN_OR_EQUAL, // driver >= version
+  DRIVER_EQUAL,                 // driver == version
+  DRIVER_NOT_EQUAL,             // driver != version
+  DRIVER_BETWEEN_EXCLUSIVE,     // driver > version && driver < versionMax
+  DRIVER_BETWEEN_INCLUSIVE,     // driver >= version && driver <= versionMax
+  DRIVER_BETWEEN_INCLUSIVE_START // driver >= version && driver < versionMax
+};
+
+
+struct GfxDriverInfo {
+  PRUint32 vendor;
+  PRUint32 device;
+
+  PRInt32 feature;
+  PRInt32 featureStatus;
+
+  VersionComparisonOp op;
+
+  /* versions are assumed to be A.B.C.D packed as 0xAAAABBBBCCCCDDDD */
+  PRUint64 version;
+  PRUint64 versionMax;
+};
+
+#define ALL_FEATURES -1
+#define ANY_DEVICE PRUint32(-1)
+#define ALL_VERSIONS 0xffffffffffffffffULL
+
+/* Intel vendor and device IDs */
+#define VENDOR_INTEL 0x8086
+
+#define DEVICE_INTEL_GM965_0 0x2A02
+#define DEVICE_INTEL_GM965_1 0x2A03
+#define DEVICE_INTEL_G965_0 0x29A2
+#define DEVICE_INTEL_G965_1 0x29A3
+#define DEVICE_INTEL_945GM_0 0x27A2
+#define DEVICE_INTEL_945GM_1 0x27A6
+#define DEVICE_INTEL_945G_0 0x2772
+#define DEVICE_INTEL_945G_1 0x2776
+#define DEVICE_INTEL_915GM_0 0x2592
+#define DEVICE_INTEL_915GM_1 0x2792
+#define DEVICE_INTEL_915G_0 0x2582
+#define DEVICE_INTEL_915G_1 0x2782
+
+/* NVIDIA vendor and device IDs */
+
+#define V(a,b,c,d)   ((PRUint64(a)<<48) | (PRUint64(b)<<32) | (PRUint64(c)<<16) | PRUint64(d))
+
+/* AMD vendor and device IDs */
+
+static GfxDriverInfo driverInfo[] = {
+  /*
+   * Intel entries
+   */
+  /* Don't allow D2D on any drivers before this, as there's a crash when a MS Hotfix is installed */
+  { VENDOR_INTEL, ANY_DEVICE,
+    nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED,
+    DRIVER_LESS_THAN, V(15,17,9,2182) },
+
+  /* OpenGL on any Intel hardware is not suggested */
+  { VENDOR_INTEL, ANY_DEVICE,
+    nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_NOT_SUGGESTED,
+    DRIVER_LESS_THAN, ALL_VERSIONS },  
+  { VENDOR_INTEL, ANY_DEVICE,
+    nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_NOT_SUGGESTED,
+    DRIVER_LESS_THAN, ALL_VERSIONS },  
+
+  /*
+   * NVIDIA entries
+   */
+
+  /*
+   * AMD entries
+   */
+
+  { 0 }
+};
+
+static bool
+ParseDriverVersion(nsAString& aVersion, PRUint64 *aNumericVersion)
+{
+  int a, b, c, d;
+  /* honestly, why do I even bother */
+  if (sscanf(nsPromiseFlatCString(NS_LossyConvertUTF16toASCII(aVersion)).get(),
+             "%d.%d.%d.%d", &a, &b, &c, &d) != 4)
+    return false;
+  if (a < 0 || a > 0xffff) return false;
+  if (b < 0 || b > 0xffff) return false;
+  if (c < 0 || c > 0xffff) return false;
+  if (d < 0 || d > 0xffff) return false;
+
+  *aNumericVersion = V(a, b, c, d);
+  return true;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+{
+  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+
+  PRUint32 adapterVendor = 0;
+  PRUint32 adapterDeviceID = 0;
+  nsAutoString adapterDriverVersionString;
+  if (NS_FAILED(GetAdapterVendorID(&adapterVendor)) ||
+      NS_FAILED(GetAdapterDeviceID(&adapterDeviceID)) ||
+      NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString)))
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint64 driverVersion;
+  if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GfxDriverInfo *info = &driverInfo[0];
+  while (info->vendor && info->device) {
+    bool match = false;
+
+    if (info->vendor != adapterVendor ||
+        info->device != adapterDeviceID)
+    {
+      info++;
+      continue;
+    }
+
+    switch (info->op) {
+    case DRIVER_LESS_THAN:
+      match = driverVersion < info->version;
+      break;
+    case DRIVER_LESS_THAN_OR_EQUAL:
+      match = driverVersion <= info->version;
+      break;
+    case DRIVER_GREATER_THAN:
+      match = driverVersion > info->version;
+      break;
+    case DRIVER_GREATER_THAN_OR_EQUAL:
+      match = driverVersion >= info->version;
+      break;
+    case DRIVER_EQUAL:
+      match = driverVersion == info->version;
+      break;
+    case DRIVER_NOT_EQUAL:
+      match = driverVersion != info->version;
+      break;
+    case DRIVER_BETWEEN_EXCLUSIVE:
+      match = driverVersion > info->version && driverVersion < info->versionMax;
+      break;
+    case DRIVER_BETWEEN_INCLUSIVE:
+      match = driverVersion >= info->version && driverVersion <= info->versionMax;
+      break;
+    case DRIVER_BETWEEN_INCLUSIVE_START:
+      match = driverVersion >= info->version && driverVersion < info->versionMax;
+      break;
+    default:
+      NS_WARNING("Bogus op in GfxDriverInfo");
+      break;
+    }
+
+    if (match) {
+      if (info->feature == ALL_FEATURES ||
+          info->feature == aFeature)
+      {
+        status = info->featureStatus;
+        break;
+      }
+    }
+
+    info++;
+  }
+
+  *aStatus = status;
+  return NS_OK;
 }

@@ -574,11 +574,7 @@ NS_IMETHODIMP
 nsOfflineCacheUpdateItem::GetTotalSize(PRInt32 *aTotalSize)
 {
     if (mChannel) {
-        PRInt64 length;
-        mChannel->GetContentLength(&length);
-
-        *aTotalSize = PRInt32(length);
-        return NS_OK;
+        return mChannel->GetContentLength(aTotalSize);
     }
 
     *aTotalSize = -1;
@@ -588,7 +584,7 @@ nsOfflineCacheUpdateItem::GetTotalSize(PRInt32 *aTotalSize)
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::GetLoadedSize(PRInt32 *aLoadedSize)
 {
-    *aLoadedSize = PRInt32(mBytesRead);
+    *aLoadedSize = mBytesRead;
     return NS_OK;
 }
 

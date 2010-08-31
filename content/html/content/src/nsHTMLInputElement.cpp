@@ -972,7 +972,7 @@ nsHTMLInputElement::SetIndeterminateInternal(PRBool aValue,
     // Repaint the frame
     nsIFrame* frame = GetPrimaryFrame();
     if (frame)
-      frame->InvalidateOverflowRect();
+      frame->InvalidateFrameSubtree();
   }
 
   // Notify the document so it can update :indeterminate pseudoclass rules
@@ -1619,7 +1619,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
-      frame->InvalidateOverflowRect();
+      frame->InvalidateFrameSubtree();
     }
   }
 
