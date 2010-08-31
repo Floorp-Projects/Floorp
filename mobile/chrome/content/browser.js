@@ -71,8 +71,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
 const endl = '\n';
 
 function onDebugKeyPress(ev) {
-  let bv = Browser._browserView;
-
   if (!ev.ctrlKey)
     return;
 
@@ -153,12 +151,12 @@ var Browser = {
       this.initNewProfile();
 
     let container = document.getElementById("browsers");
-    let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect);
+    // XXX change
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
-    container.customClicker = new ContentCustomClicker(bv);
-    container.customKeySender = new ContentCustomKeySender(bv);
-    container.customDragger = new Browser.MainDragger(bv);
+    container.customClicker = new ContentCustomClicker();
+    container.customKeySender = new ContentCustomKeySender();
+    container.customDragger = new Browser.MainDragger();
 
     // Warning, total hack ahead. All of the real-browser related scrolling code
     // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
@@ -414,7 +412,6 @@ var Browser = {
   },
 
   shutdown: function shutdown() {
-    this._browserView.uninit();
     BrowserUI.uninit();
 
     var os = Services.obs;
@@ -581,8 +578,6 @@ var Browser = {
   },
 
   set selectedTab(tab) {
-    let bv = this._browserView;
-
     if (tab instanceof XULElement)
       tab = this.getTabFromChrome(tab);
 
@@ -599,13 +594,26 @@ var Browser = {
 
     let isFirstTab = this._selectedTab == null;
     let lastTab = this._selectedTab;
+    let oldBrowser = lastTab ? lastTab._browser : null;
+    let browser = tab.browser;
+
     this._selectedTab = tab;
 
     // Lock the toolbar if the new tab is still loading
     if (this._selectedTab.isLoading())
       BrowserUI.lockToolbar();
 
-    bv.setBrowser(tab.browser, tab.browserViewportState);
+    if (oldBrowser) {
+      oldBrowser.setAttribute("type", "content");
+      oldBrowser.style.display = "none";
+      oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
+    }
+
+    if (browser) {
+      browser.setAttribute("type", "content-primary");
+      browser.style.display = "";
+      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
+    }
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
 
@@ -905,7 +913,10 @@ var Browser = {
     this.hideTitlebar();
 
     getBrowser().setZoomLevel(zoomLevel);
-    getBrowser().scrollTo(scrollX, scrollY);
+    // XXX
+    setTimeout(function() {
+      getBrowser().scrollTo(scrollX, scrollY);
+    }, 500);
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
@@ -947,7 +958,9 @@ var Browser = {
     if (arguments.length > 1)
       y0 = Math.round(containerBCR.top);
 
-    return (arguments.length > 1) ? [x - x0, y - y0] : (x - x0);
+    let scrollX = {}, scrollY = {};
+    getBrowser().getPosition(scrollX, scrollY);
+    return (arguments.length > 1) ? [x - x0 + scrollX.value, y - y0 + scrollY.value] : (x - x0 + scrollX.value);
   },
 
   browserViewToClient: function browserViewToClient(x, y) {
@@ -973,24 +986,7 @@ var Browser = {
    * zoom and page position)
    */
   transformClientToBrowser: function transformClientToBrowser(cX, cY) {
-    return this.clientToBrowserView(cX, cY);// .map(this._browserView.viewportToBrowser);
-  },
-
-  /**
-   * Return the visible rect in coordinates with origin at the (left, top) of
-   * the browser container, i.e. BrowserView coordinates.
-   */
-  getVisibleRect: function getVisibleRect() {
-    let stack = document.getElementById("tile-stack");
-    let container = document.getElementById("browsers");
-    let containerBCR = container.getBoundingClientRect();
-
-    let x = Math.round(-containerBCR.left);
-    let y = Math.round(-containerBCR.top);
-    let w = window.innerWidth;
-    let h = stack.getBoundingClientRect().height;
-
-    return new Rect(x, y, w, h);
+    return this.clientToBrowserView(cX, cY).map(function(val) { return val / getBrowser().zoomLevel });
   },
 
   /**
@@ -1046,8 +1042,7 @@ var Browser = {
 };
 
 
-Browser.MainDragger = function MainDragger(browserView) {
-  this.bv = browserView;
+Browser.MainDragger = function MainDragger() {
 };
 
 Browser.MainDragger.prototype = {
@@ -1100,6 +1095,7 @@ Browser.MainDragger.prototype = {
       x = Math.min(doffset.x, rect.left);
 
     let height = document.getElementById("tile-stack").getBoundingClientRect().height;
+    // XXX change
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
     if (doffset.y < 0 && rect.bottom < height)
       y = Math.max(doffset.y, rect.bottom - height);
@@ -1281,8 +1277,7 @@ const BrowserSearch = {
 
 
 /** Watches for mouse events in chrome and sends them to content. */
-function ContentCustomClicker(browserView) {
-  this._browserView = browserView;
+function ContentCustomClicker() {
 }
 
 ContentCustomClicker.prototype = {
@@ -1290,14 +1285,14 @@ ContentCustomClicker.prototype = {
     let aX = aX || 0;
     let aY = aY || 0;
     let aModifiers = aModifiers || null;
-    let browser = this._browserView.getBrowser();
+    let browser = getBrowser();
     let [x, y] = Browser.transformClientToBrowser(aX, aY);
     browser.messageManager.sendAsyncMessage(aName, { x: x, y: y, modifiers: aModifiers });
   },
 
   mouseDown: function mouseDown(aX, aY) {
     // Ensure that the content process has gets an activate event
-    let browser = this._browserView.getBrowser();
+    let browser = getBrowser();
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     browser.focus();
     try {
@@ -1345,14 +1340,13 @@ ContentCustomClicker.prototype = {
 
 
 /** Watches for mouse events in chrome and sends them to content. */
-function ContentCustomKeySender(browserView) {
-  this._browserView = browserView;
+function ContentCustomKeySender() {
 }
 
 ContentCustomKeySender.prototype = {
   /** Dispatch a mouse event with chrome client coordinates. */
   dispatchKeyEvent: function _dispatchKeyEvent(aEvent) {
-    let browser = this._browserView.getBrowser();
+    let browser = getBrowser();
     if (browser) {
       browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
         type: aEvent.type,
