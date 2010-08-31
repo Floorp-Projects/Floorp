@@ -3450,12 +3450,13 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * Object.prototype.)
      *
      * All callers of JSObject::initSharingEmptyShape depend on this.
+     *
+     * FIXME: bug 592296 -- js_InitArrayClass should pass &js_SlowArrayClass
+     * and make the Array.prototype slow from the start.
      */
-    bool ok;
-    JS_LOCK_OBJ(cx, proto);
-    ok = proto->getEmptyShape(cx, clasp);
-    JS_UNLOCK_OBJ(cx, proto);
-    if (!ok)
+    JS_ASSERT_IF(proto->clasp != clasp,
+                 clasp == &js_ArrayClass && proto->clasp == &js_SlowArrayClass);
+    if (!proto->getEmptyShape(cx, proto->clasp))
         goto bad;
 
     /* If this is a standard class, cache its prototype. */

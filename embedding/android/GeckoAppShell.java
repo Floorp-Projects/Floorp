@@ -91,6 +91,8 @@ class GeckoAppShell
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
     public static native void onResume();
+    public static native void callObserver(String observerKey, String topic, String data);
+    public static native void removeObserver(String observerKey);
 
     // java-side stuff
     public static void loadGeckoLibs() {
@@ -438,5 +440,70 @@ class GeckoAppShell
         ClipboardManager cm = (ClipboardManager)
             context.getSystemService(Context.CLIPBOARD_SERVICE);
         cm.setText(text);
+    }
+
+    static void showAlertNotification(String imageUrl, String alertTitle, String alertText,
+                                      String alertCookie, String alertName) {
+        Log.i("GeckoAppJava", "GeckoAppShell.showAlertNotification\n" +
+              "- image = '" + imageUrl + "'\n" +
+              "- title = '" + alertTitle + "'\n" +
+              "- text = '" + alertText +"'\n" +
+              "- cookie = '" + alertCookie +"'\n" +
+              "- name = '" + alertName + "'");
+
+        int icon = R.drawable.icon; // Just use the app icon by default
+
+        Uri imageUri = Uri.parse(imageUrl);
+        String scheme = imageUri.getScheme();
+
+        if ("drawable".equals(scheme)) {
+            String resource = imageUri.getSchemeSpecificPart();
+            if ("//alertdownloads".equals(resource))
+                icon = R.drawable.alertdownloads;
+            else if ("//alertaddons".equals(resource))
+                icon = R.drawable.alertaddons;
+        }
+
+        int notificationID = alertName.hashCode();
+
+        Notification notification = new Notification(icon, alertTitle, System.currentTimeMillis());
+
+        // The intent to launch when the user clicks the expanded notification
+        Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLICK);
+        notificationIntent.setClassName(GeckoApp.mAppContext,
+                                        "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".NotificationHandler");
+
+        // Put the strings into the intent as an URI "alert:<name>#<cookie>"
+        Uri dataUri = Uri.fromParts("alert", alertName, alertCookie);
+        notificationIntent.setData(dataUri);
+
+        PendingIntent contentIntent = PendingIntent.getActivity(GeckoApp.mAppContext, 0, notificationIntent, 0);
+        notification.setLatestEventInfo(GeckoApp.mAppContext, alertTitle, alertText, contentIntent);
+
+        // The intent to execute when the status entry is deleted by the user with the "Clear All Notifications" button
+        Intent clearNotificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLEAR);
+        clearNotificationIntent.setClassName(GeckoApp.mAppContext,
+                                        "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".NotificationHandler");
+        clearNotificationIntent.setData(dataUri);
+
+        PendingIntent pendingClearIntent = PendingIntent.getActivity(GeckoApp.mAppContext, 0, clearNotificationIntent, 0);
+        notification.deleteIntent = pendingClearIntent;
+
+        // Show the notification
+        NotificationManager notificationManager = (NotificationManager)
+            GeckoApp.mAppContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(notificationID, notification);
+        Log.i("GeckoAppJava", "Created notification ID " + notificationID);
+    }
+
+    public static void handleNotification(String action, String alertName, String alertCookie) {
+        if (GeckoApp.ACTION_ALERT_CLICK.equals(action)) {
+            Log.i("GeckoAppJava", "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
+            callObserver(alertName, "alertclickcallback", alertCookie);
+        }
+
+        Log.i("GeckoAppJava", "GeckoAppShell.handleNotification: callObserver(alertfinished)");
+        callObserver(alertName, "alertfinished", alertCookie);
+        removeObserver(alertName);
     }
 }

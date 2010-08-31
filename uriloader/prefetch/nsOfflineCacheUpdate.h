@@ -110,7 +110,7 @@ private:
     PRUint16                       mState;
 
 protected:
-    PRInt64                        mBytesRead;
+    PRInt32                        mBytesRead;
 };
 
 

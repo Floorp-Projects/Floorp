@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Startup Cache.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Mozilla Foundation <http://www.mozilla.org/>.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Benedict Hsieh <bhsieh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,39 +35,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsStartupCacheUtils_h_
+#define nsStartupCacheUtils_h_
 
-/*
- * interface for rendering objects for replaced elements containing a
- * document, such as <frame>, <iframe>, and some <object>s
- */
+#include "nsIStorageStream.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 
-#ifndef nsIFrameFrame_h___
-#define nsIFrameFrame_h___
+namespace mozilla {
+namespace scache {
 
-class nsIDocShell;
-class nsIView;
+NS_EXPORT nsresult
+NS_NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len, 
+                                  nsIObjectInputStream** stream);
 
-class nsIFrameFrame
-{
-public:
-  NS_DECL_QUERYFRAME_TARGET(nsIFrameFrame)
+// We can't retrieve the wrapped stream from the objectOutputStream later,
+// so we return it here.
+NS_EXPORT nsresult
+NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
+                                       nsIStorageStream** stream);
 
-  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) = 0;
-
-  /**
-   * Only allowed to fail if the other frame is not the same type as
-   * this one or if one of the frames has no docshell.  Don't call
-   * EndSwapDocShells() unless BeginSwapDocShells() succeeds.
-   */
-  NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther) = 0;
-  virtual void EndSwapDocShells(nsIFrame* aOther) = 0;
-
-  /**
-   * The frameloader informs us what kind of widget to create during Show()
-   */
-  virtual nsIView* CreateViewAndWidget(nsContentType aContentType) = 0;
-
-  virtual nsIFrame* GetFrame() = 0;
-};
-
-#endif
+NS_EXPORT nsresult
+NS_NewBufferFromStorageStream(nsIStorageStream *storageStream, 
+                              char** buffer, PRUint32* len);
+}
+}
+#endif //nsStartupCacheUtils_h_
