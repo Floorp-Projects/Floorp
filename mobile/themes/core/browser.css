@@ -219,8 +219,21 @@ toolbarbutton.urlbar-cap-button {
   background: url("images/rightcapSSL-active-64.png");
 }
 
+#urlbar-image-box[mode=edit] > #urlbar-favicon,
+#urlbar-image-box[mode=edit] > #urlbar-throbber {
+  display: none;
+}
+
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+#urlbar-magnifier {
+  list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
+}
+
+#urlbar-image-box[mode=edit] > #urlbar-magnifier {
+  display: block !important;
 }
 
 #urlbar-favicon {
@@ -244,6 +257,10 @@ toolbarbutton.urlbar-cap-button {
   -moz-border-radius: 0;
 }
 
+#urlbar-edit:not([open]):hover:active {
+  background-color: #8db8d8;
+}
+
 #urlbar-edit > hbox > .textbox-input-box {
   margin: 0;
 }
@@ -251,10 +268,6 @@ toolbarbutton.urlbar-cap-button {
 #urlbar-edit > hbox > hbox > .textbox-input {
   min-height: 60px;
   text-indent: 3px;
-}
-
-#urlbar-edit:not([open]):hover:active {
-  background-color: #8db8d8;
 }
 
 /* make sure this endcap matches the other endcap */
@@ -762,6 +775,7 @@ placeitem > .bookmark-manage > image {
   -moz-margin-start: 8px;
 }
 
+.autocomplete-item-label > image[src=""],
 placeitem[src=""] .bookmark-item-label > image {
   list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.png);
 }
@@ -864,8 +878,6 @@ autocompleteresult.noresults > .autocomplete-item-label {
   border-right-width: 0;
 }
 
-#awesome-header > toolbarbutton:hover,
-#awesome-header > toolbarbutton:hover,
 #awesome-header > toolbarbutton:hover:active,
 #awesome-header > toolbarbutton[checked="true"] {
   border-color: #36373b !important;
@@ -977,13 +989,13 @@ box[type="documenttab"] {
   line-height: 0;
 }
 
-box[type="documenttab"] .documenttab-canvas {
+.documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
   border: 8px solid #36373b;
   background-color: white;
 }
 
-box[type="documenttab"][selected="true"] .documenttab-canvas {
+.documenttab-canvas[selected="true"] {
   border: 8px solid;
   -moz-border-radius: 3px;
   -moz-border-top-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
@@ -992,17 +1004,17 @@ box[type="documenttab"][selected="true"] .documenttab-canvas {
   -moz-border-left-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
 }
 
-box[type="documenttab"] .documenttab-close {
+.documenttab-close {
   width: 40px;
   height: 40px;
   list-style-image: url("chrome://browser/skin/images/close-default-40.png");
 }
 
-box[type="documenttab"] hbox:hover:active .documenttab-close {
+hbox:hover:active > .documenttab-close {
   list-style-image: url("chrome://browser/skin/images/close-active-40.png");
 }
 
-box[type="documenttab"]:only-child .documenttab-close {
+box[type="documenttab"]:only-child > stack > hbox > .documenttab-close {
   display: none;
 }
 
@@ -1509,15 +1521,34 @@ pageaction:hover:active > vbox > .pageaction-desc {
   -moz-border-radius: 8px;
 }
 
+#menulist-popup > #menulist-title {
+  padding: 12px 4px 4px 4px;
+  font-size: 18px;
+}
+
+#menulist-popup > #menulist-title[value=""] {
+  display: none;
+}
+
 #menulist-commands {
   border: 1px solid rgb(207,207,207);
   -moz-border-radius: 8px;
+}
+
+#menulist-popup > label:not([value=""]) + #menulist-commands {
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-topright: 0px;
 }
 
 .menulist-command {
   -moz-box-align: center;
   background-color: rgb(245,245,245);
   min-width: 200px; /* keep the command from being too narrow */
+}
+
+.menulist-command > image {
+  width: 32px;
+  height: 32px;
 }
 
 .menulist-command:first-child {
@@ -1538,9 +1569,21 @@ pageaction:hover:active > vbox > .pageaction-desc {
   background: #8db8d8;
 }
 
-.menulist-command[selected="true"] {
-  pointer-events: none;
+.menulist-command.selected {
   background: #8db8d8;
+  pointer-events: none;
+}
+
+.menulist-command.selected > image {
+  width: 30px;
+  height: 30px;
+  list-style-image: url("chrome://browser/skin/images/check-30.png");
+  margin-right: 2px;
+  margin-top: 2px;
+}
+
+.menulist-command:not(.selected) > image[src=""] {
+  visibility: hidden;
 }
 
 /* context popup ----------------------------------------------------------- */
