@@ -289,7 +289,7 @@
   WriteRegStr HKLM "$0\Capabilities" "ApplicationIcon" "$8,0"
   WriteRegStr HKLM "$0\Capabilities" "ApplicationName" "${BrandShortName}"
 
-  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML" 
+  WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML"
   WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".html"  "FirefoxHTML"
   WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".shtml" "FirefoxHTML"
   WriteRegStr HKLM "$0\Capabilities\FileAssociations" ".xht"   "FirefoxHTML"
@@ -331,7 +331,7 @@
   ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$8\${FileMainEXE}" 0
 
   StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
-  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullNameInternal} (${AppVersion})" 0
+  ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullNameInternal} ${AppVersion} (${ARCH} ${AB_CD})" 0
 
   StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})"
   ${WriteRegStr2} $TmpVal  "$0" "" "${AppVersion} (${AB_CD})" 0
@@ -355,7 +355,7 @@
 ; Add uninstall registry entries. This macro tests for write access to determine
 ; if the uninstall keys should be added to HKLM or HKCU.
 !macro SetUninstallKeys
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} ${AppVersion} (${ARCH} ${AB_CD})"
 
   WriteRegStr HKLM "$0" "${BrandShortName}InstallerTest" "Write Test"
   ${If} ${Errors}
@@ -370,10 +370,10 @@
   ${GetLongPath} "$INSTDIR" $8
 
   ; Write the uninstall registry keys
-  ${WriteRegStr2} $1 "$0" "Comments" "${BrandFullNameInternal}" 0
+  ${WriteRegStr2} $1 "$0" "Comments" "${BrandFullNameInternal} ${AppVersion} (${ARCH} ${AB_CD})" 0
   ${WriteRegStr2} $1 "$0" "DisplayIcon" "$8\${FileMainEXE},0" 0
-  ${WriteRegStr2} $1 "$0" "DisplayName" "${BrandFullNameInternal} (${AppVersion})" 0
-  ${WriteRegStr2} $1 "$0" "DisplayVersion" "${AppVersion} (${AB_CD})" 0
+  ${WriteRegStr2} $1 "$0" "DisplayName" "${BrandFullNameInternal} ${AppVersion} (${ARCH} ${AB_CD})" 0
+  ${WriteRegStr2} $1 "$0" "DisplayVersion" "${AppVersion}" 0
   ${WriteRegStr2} $1 "$0" "InstallLocation" "$8" 0
   ${WriteRegStr2} $1 "$0" "Publisher" "Mozilla" 0
   ${WriteRegStr2} $1 "$0" "UninstallString" "$8\uninstall\helper.exe" 0
@@ -381,6 +381,9 @@
   ${WriteRegStr2} $1 "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
   ${WriteRegDWORD2} $1 "$0" "NoModify" 1 0
   ${WriteRegDWORD2} $1 "$0" "NoRepair" 1 0
+
+  ${GetSize} "$8" "/S=0K" $R2 $R3 $R4
+  ${WriteRegDWORD2} $1 "$0" "EstimatedSize" $R2 0
 
   ${If} "$TmpVal" == "HKLM"
     SetShellVarContext all     ; Set SHCTX to all users (e.g. HKLM)

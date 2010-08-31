@@ -724,7 +724,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
     if ((aFlags & NS_FRAME_INVALIDATE_ON_MOVE) &&
         !(aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
         aKidFrame->GetPosition() != nsPoint(aX, aY)) {
-      aKidFrame->InvalidateOverflowRect();
+      aKidFrame->InvalidateFrameSubtree();
     }
     aKidFrame->SetPosition(nsPoint(aX, aY));
   }
@@ -1130,7 +1130,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     }
   }
 
-  aNextInFlow->InvalidateOverflowRect();
+  aNextInFlow->InvalidateFrameSubtree();
 
   // Take the next-in-flow out of the parent's child list
 #ifdef DEBUG

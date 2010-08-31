@@ -99,15 +99,9 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsCOMPtr<nsIChannel> chan( do_QueryInterface(request) );
   if (chan) {
-    PRInt64 contentLength = -1;
+    PRInt32 contentLength = -1;
     chan->GetContentLength(&contentLength);
     if (contentLength >= 0) {
-      if (contentLength > PR_UINT32_MAX) {
-        // too big to fit in a PRUint32, bail now.
-        // XXX make mAllocated and mLength 64-bit
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
       // preallocate buffer
       mData = static_cast<PRUint8*>(NS_Alloc(contentLength));
       if (!mData) {

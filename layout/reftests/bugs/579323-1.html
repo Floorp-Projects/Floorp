@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+body {
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  width: 400px;
+}
+canvas {
+  -moz-box-flex: 1;
+  height: 100px;
+  opacity: 0.5;
+  border: 1px solid black;
+}
+</style>
+<script>
+function doTest() {
+  document.body.style.width = "500px";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+<body>
+<canvas></canvas>
+</body>
+</html>

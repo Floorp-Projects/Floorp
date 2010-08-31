@@ -1,0 +1,142 @@
+<html>
+
+<head>
+  <title>CSS overflow testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    a.link:focus {
+      overflow: scroll;
+    }
+  </style>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function focusAnchor(aID)
+    {
+      this.DOMNode = getNode(aID);
+      this.link = getAccessible(this.DOMNode);
+      this.linkChild = this.link.firstChild;
+      this.linkChildNode = getAccessible(this.linkChild, [nsIAccessNode]).DOMNode;
+
+      this.eventSeq = [
+//        new invokerChecker(EVENT_HIDE, this.linkChild),
+//        new invokerChecker(EVENT_SHOW, getAccessible, this.linkChildNode),
+        new invokerChecker(EVENT_FOCUS, this.link)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_HIDE, this.link),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.DOMNode)
+      ];
+
+      this.invoke = function focusAnchor_invoke()
+      {
+        todo(false, "enable event hide/show events");
+        getNode(aID).focus();
+      }
+
+      this.getID = function focusAnchor_getID()
+      {
+        return "focus a:focus{overflow:scroll} #1";
+      }
+    }
+
+    function tabAnchor(aID, aPrevID)
+    {
+      this.DOMNode = getNode(aID);
+      this.link = getAccessible(this.DOMNode);
+      this.linkChild = this.link.firstChild;
+      this.linkChildNode = getAccessible(this.linkChild, [nsIAccessNode]).DOMNode;
+      this.prevLink = getAccessible(aPrevID);
+      this.prevLinkNode = getAccessible(this.prevLink, [nsIAccessNode]).DOMNode;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.prevLink),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.prevLinkNode),
+        new invokerChecker(EVENT_HIDE, this.linkChild),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.linkChildNode),
+        new invokerChecker(EVENT_FOCUS, this.link)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_HIDE, this.link),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.DOMNode)
+      ];
+
+      this.invoke = function focusAnchor_invoke()
+      {
+        synthesizeKey("VK_TAB", { shiftKey: false });
+      }
+
+      this.getID = function focusAnchor_getID()
+      {
+        return "focus a:focus{overflow:scroll} #2";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // CSS 'overflow: scroll' property setting and unsetting causes accessible
+      // recreation (and fire show/hide events) if the accessible is not
+      // focused. If it's focused its children are recreated. For example,
+      // focusing the HTML:a with ':focus {overflow: scroll; }' CSS style
+      // shouldn't cause of HTML:a accessible recreation. The same time blur
+      // makes its accessible to be recreated.
+      gQueue.push(new focusAnchor("a"))
+      gQueue.push(new tabAnchor("a2", "a"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=591163"
+     title="mochitest for bug 413777: focus the a:focus {overflow: scroll;} shouldn't recreate HTML a accessible">
+    Mozilla Bug 591163
+  </a><br>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div>
+    <a id="a" class="link" href="www">link</a>
+  </div>
+  <div>
+    <a id="a2" class="link" href="www">link2</a>
+  </div>
+</body>
+</html>

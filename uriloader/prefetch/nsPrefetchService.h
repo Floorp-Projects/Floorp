@@ -146,7 +146,7 @@ private:
     nsRefPtr<nsPrefetchService> mService;
     nsCOMPtr<nsIChannel>        mChannel;
     PRUint16                    mState;
-    PRInt64                     mBytesRead;
+    PRInt32                     mBytesRead;
 };
 
 #endif // !nsPrefetchService_h__

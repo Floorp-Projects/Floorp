@@ -262,6 +262,10 @@ typedef PRUint64 nsFrameState;
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
 
+// Frame or one of its (cross-doc) descendants may have the
+// NS_FRAME_HAS_CONTAINER_LAYER bit.
+#define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
@@ -756,7 +760,7 @@ public:
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }
-  NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
+  virtual void SetParent(nsIFrame* aParent) = 0;
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
@@ -1963,10 +1967,21 @@ public:
   void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
 
   /**
-   * Invalidate the overflow rect of this frame
+   * Invalidate the entire frame subtree for this frame. Invalidates this
+   * frame's overflow rect, and also ensures that all ThebesLayer children
+   * of ContainerLayers associated with frames in this subtree are
+   * completely invalidated.
+   */
+  void InvalidateFrameSubtree();
+
+  /**
+   * Invalidate the overflow area for this frame. Invalidates this
+   * frame's overflow rect. Does not necessarily cause ThebesLayers for
+   * descendant frames to be repainted; only this frame can be relied on
+   * to be repainted.
    */
   void InvalidateOverflowRect();
-  
+
   /**
    * Computes a rect that encompasses everything that might be painted by
    * this frame.  This includes this frame, all its descendent frames, this
@@ -2401,7 +2416,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   PRBool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   PRBool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
+  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   virtual PRBool GetMouseThrough() const = 0;
 
@@ -2631,6 +2646,11 @@ class nsWeakFrame {
 public:
   nsWeakFrame() : mPrev(nsnull), mFrame(nsnull) { }
 
+  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nsnull), mFrame(nsnull)
+  {
+    Init(aOther.GetFrame());
+  }
+
   nsWeakFrame(nsIFrame* aFrame) : mPrev(nsnull), mFrame(nsnull)
   {
     Init(aFrame);
@@ -2666,7 +2686,7 @@ public:
 
   PRBool IsAlive() { return !!mFrame; }
 
-  nsIFrame* GetFrame() { return mFrame; }
+  nsIFrame* GetFrame() const { return mFrame; }
 
   nsWeakFrame* GetPreviousWeakFrame() { return mPrev; }
 

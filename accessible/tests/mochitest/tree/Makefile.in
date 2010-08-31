@@ -52,6 +52,7 @@ _TEST_FILES =\
 		test_button.xul \
 		test_colorpicker.xul \
 		test_combobox.xul \
+		test_cssoverflow.html \
 		test_filectrl.html \
 		test_formctrl.html \
 		test_formctrl.xul \

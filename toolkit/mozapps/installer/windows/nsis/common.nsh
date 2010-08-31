@@ -20,6 +20,7 @@
 # Contributor(s):
 #  Robert Strong <robert.bugzilla@gmail.com>
 #  Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#  Amir Szekely <kichik@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -110,6 +111,8 @@
 !ifndef ___WINVER__NSH___
   !include /NONFATAL WinVer.nsh
 !endif
+
+!include x64.nsh
 
 ; NSIS provided macros that we have overridden.
 !include overrides.nsh
@@ -468,21 +471,38 @@
       SetOutPath "$R7"
       StrCpy $R9 "false"
 
-      start:
       Pop $R8
-      StrCmp "$R8" "end" end +1
-      IfFileExists "$INSTDIR\$R8" +1 start
+      ${While} $R8 != "end"
+        ${Unless} ${FileExists} "$INSTDIR\$R8"
+          Pop $R8 ; get next file to check before continuing
+          ${Continue}
+        ${EndUnless}
 
-      ClearErrors
-      CopyFiles /SILENT "$INSTDIR\$R8" "$R7\$R8"
-      IfErrors +4 +1
-      Delete "$INSTDIR\$R8"
-      IfErrors +1 start
-      Delete "$R7\$R8"
+        ClearErrors
+        CopyFiles /SILENT "$INSTDIR\$R8" "$R7\$R8" ; try to copy
+        ${If} ${Errors}
+          ; File is in use
+          StrCpy $R9 "true"
+          ${Break}
+        ${EndIf}
 
-      StrCpy $R9 "true"
+        Delete "$INSTDIR\$R8" ; delete original
+        ${If} ${Errors}
+          ; File is in use
+          StrCpy $R9 "true"
+          Delete "$R7\$R8" ; delete temp copy
+          ${Break}
+        ${EndIf}
 
-      end:
+        Pop $R8 ; get next file to check
+      ${EndWhile}
+
+      ; clear stack
+      ${While} $R8 != "end"
+        Pop $R8
+      ${EndWhile}
+
+      ; restore everything
       SetOutPath "$INSTDIR"
       CopyFiles /SILENT "$R7\*" "$INSTDIR\"
       RmDir /r "$R7"
@@ -577,9 +597,10 @@
       Push $R7
 
       FindWindow $R7 "$R8"
-      IntCmp $R7 0 +3 +1 +1
-      MessageBox MB_OK|MB_ICONQUESTION "$R9"
-      Abort
+      ${If} $R7 <> 0 ; integer comparison
+        MessageBox MB_OK|MB_ICONQUESTION "$R9"
+        Abort
+      ${EndIf}
 
       Pop $R7
       Exch $R8
@@ -665,8 +686,8 @@
 
       FindWindow $R7 "${WindowClass}"
       IntCmp $R7 0 +4 +1 +1
-      System::Call 'user32::PostMessage(i r17, i ${WM_QUIT}, i 0, i 0)'
-      # The amount of time to wait for the app to shutdown before prompting again
+      System::Call 'user32::PostMessage(i R7, i ${WM_QUIT}, i 0, i 0)'
+      ; The amount of time to wait for the app to shutdown before prompting again
       Sleep 5000
 
       Push $R6
@@ -781,12 +802,14 @@
       WriteRegStr SHCTX "$R6" "$R7" "$R8"
 
       !ifndef NO_LOG
-        IfErrors 0 +3
-        ${LogMsg} "** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **"
-        GoTo +4
-        StrCmp "$R9" "1" +1 +2
-        ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
-        ${LogMsg} "Added Registry String: $R5 | $R6 | $R7 | $R8"
+        ${If} ${Errors}
+          ${LogMsg} "** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **"
+        ${Else}
+          ${If} $R9 == 1 ; add to the uninstall log?
+            ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
+          ${EndIf}
+          ${LogMsg} "Added Registry String: $R5 | $R6 | $R7 | $R8"
+        ${EndIf}
       !endif
 
       Exch $R5
@@ -889,12 +912,14 @@
       WriteRegDWORD SHCTX "$R6" "$R7" "$R8"
 
       !ifndef NO_LOG
-        IfErrors 0 +3
-        ${LogMsg} "** ERROR Adding Registry DWord: $R5 | $R6 | $R7 | $R8 **"
-        GoTo +4
-        StrCmp "$R9" "1" +1 +2
-        ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
-        ${LogMsg} "Added Registry DWord: $R5 | $R6 | $R7 | $R8"
+        ${If} ${Errors}
+          ${LogMsg} "** ERROR Adding Registry DWord: $R5 | $R6 | $R7 | $R8 **"
+        ${Else}
+          ${If} $R9 == 1 ; add to the uninstall log?
+            ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
+          ${EndIf}
+          ${LogMsg} "Added Registry DWord: $R5 | $R6 | $R7 | $R8"
+        ${EndIf}
       !endif
 
       Exch $R5
@@ -997,12 +1022,14 @@
       WriteRegStr HKCR "$R6" "$R7" "$R8"
 
       !ifndef NO_LOG
-        IfErrors 0 +3
-        ${LogMsg} "** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **"
-        GoTo +4
-        StrCmp "$R9" "1" +1 +2
-        ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
-        ${LogMsg} "Added Registry String: $R5 | $R6 | $R7 | $R8"
+        ${If} ${Errors}
+          ${LogMsg} "** ERROR Adding Registry String: $R5 | $R6 | $R7 | $R8 **"
+        ${Else}
+          ${If} $R9 == 1 ; add to the uninstall log?
+            ${LogUninstall} "RegVal: $R5 | $R6 | $R7"
+          ${EndIf}
+          ${LogMsg} "Added Registry String: $R5 | $R6 | $R7 | $R8"
+        ${EndIf}
       !endif
 
       Exch $R5
@@ -1059,16 +1086,13 @@
   !endif
 !macroend
 
-/**
- * Creates a registry key. NSIS doesn't supply a RegCreateKey method and instead
- * will auto create keys when a reg key name value pair is set.
- * i - int (includes char, byte, short, handles, pointers and so on)
- * w - wide-char text, string (LPCWSTR, pointer to first character)
- * * - pointer specifier -> the proc needs the pointer to type, affects next
- *     char (parameter) [ex: '*i' - pointer to int]
- * see the NSIS documentation for additional information.
- */
-!define RegCreateKey "Advapi32::RegCreateKeyW(i, w, *i) i"
+!define KEY_SET_VALUE 0x0002
+!define KEY_WOW64_64KEY 0x0100
+!ifndef HAVE_64BIT_OS
+  !define CREATE_KEY_SAM ${KEY_SET_VALUE}
+!else
+  !define CREATE_KEY_SAM ${KEY_SET_VALUE}|${KEY_WOW64_64KEY}
+!endif
 
 /**
  * Creates a registry key. This will log the actions to the install and
@@ -1088,8 +1112,8 @@
  *       located in one of the predefined registry keys this must be closed
  *       with RegCloseKey (this should not be needed unless someone decides to
  *       do something extremely squirrelly with NSIS).
- * $R5 = return value from RegCreateKeyA (represented by r15 in the system call).
- * $R6 = [in] hKey passed to RegCreateKeyA.
+ * $R5 = return value from RegCreateKeyExW (represented by R5 in the system call).
+ * $R6 = [in] hKey passed to RegCreateKeyExW.
  * $R7 = _ROOT
  * $R8 = _KEY
  * $R9 = _LOG_UNINSTALL
@@ -1119,17 +1143,24 @@
       StrCpy $R6 "0x80000002"
 
       ; see definition of RegCreateKey
-      System::Call "${RegCreateKey}($R6, '$R8', .r14) .r15"
+      System::Call "Advapi32::RegCreateKeyExW(i R6, w R8, i 0, i 0, i 0,\
+                                              i ${CREATE_KEY_SAM}, i 0, *i .R4,\
+                                              i 0) i .R5"
 
       !ifndef NO_LOG
         ; if $R5 is not 0 then there was an error creating the registry key.
-        IntCmp $R5 0 +3 +3
-        ${LogMsg} "** ERROR Adding Registry Key: $R7 | $R8 **"
-        GoTo +4
-        StrCmp "$R9" "1" +1 +2
-        ${LogUninstall} "RegKey: $R7 | $R8"
-        ${LogMsg} "Added Registry Key: $R7 | $R8"
+        ${If} $R5 <> 0
+          ${LogMsg} "** ERROR Adding Registry Key: $R7 | $R8 **"
+        ${Else}
+          ${If} $R9 == 1 ; add to the uninstall log?
+            ${LogUninstall} "RegKey: $R7 | $R8"
+          ${EndIf}
+          ${LogMsg} "Added Registry Key: $R7 | $R8"
+        ${EndIf}
       !endif
+
+      StrCmp $R5 0 +1 +2
+      System::Call "Advapi32::RegCloseKey(iR4)"
 
       Pop $R4
       Pop $R5
@@ -1485,6 +1516,43 @@
 !macroend
 
 ################################################################################
+# Macros for handling DLL registration
+
+
+!macro RegisterDLL DLL
+
+  ; The x64 regsvr32.exe registers x86 DLL's properly on Windows Vista and above
+  ; (not on Windows XP http://support.microsoft.com/kb/282747) so just use it
+  ; when installing on an x64 systems even when installing an x86 application.
+  ${If} ${RunningX64}
+    ${DisableX64FSRedirection}
+    ExecWait '"$SYSDIR\regsvr32.exe" /s "${DLL}"'
+    ${EnableX64FSRedirection}
+  ${Else}
+    RegDLL "${DLL}"
+  ${EndIf}
+
+!macroend
+
+!macro UnregisterDLL DLL
+
+  ; The x64 regsvr32.exe registers x86 DLL's properly on Windows Vista and above
+  ; (not on Windows XP http://support.microsoft.com/kb/282747) so just use it
+  ; when installing on an x64 systems even when installing an x86 application.
+  ${If} ${RunningX64}
+    ${DisableX64FSRedirection}
+    ExecWait '"$SYSDIR\regsvr32.exe" /s /u "${DLL}"'
+    ${EnableX64FSRedirection}
+  ${Else}
+    UnRegDLL "${DLL}"
+  ${EndIf}
+
+!macroend
+
+!define RegisterDLL `!insertmacro RegisterDLL`
+!define UnregisterDLL `!insertmacro UnregisterDLL`
+
+################################################################################
 # Macros for retrieving existing install paths
 
 /**
@@ -1781,20 +1849,31 @@
       ; UNC path so always try to create $INSTDIR
       CreateDirectory "$INSTDIR\"
       GetTempFileName $R8 "$INSTDIR\"
-      IfFileExists "$R8" +3 +1 ; Can files be created?
-      StrCpy $R9 "false"
-      Goto +12
-      Delete "$R8"
-      IfFileExists "$R8" +1 +3 ; Can files be deleted?
-      StrCpy $R9 "false"
-      Goto +8
-      CreateDirectory "$R8"
-      IfFileExists "$R8" +3 +1 ; Can directories be created?
-      StrCpy $R9 "false"
-      GoTo +4
-      RmDir "$R8"
-      IfFileExists "$R8" +1 +2 ; Can directories be deleted?
-      StrCpy $R9 "false"
+
+      ${Unless} ${FileExists} $R8 ; Can files be created?
+        StrCpy $R9 "false"
+        Goto done
+      ${EndUnless}
+
+      Delete $R8
+      ${If} ${FileExists} $R8 ; Can files be deleted?
+        StrCpy $R9 "false"
+        Goto done
+      ${EndIf}
+
+      CreateDirectory $R8
+      ${Unless} ${FileExists} $R8  ; Can directories be created?
+        StrCpy $R9 "false"
+        Goto done
+      ${EndUnless}
+
+      RmDir $R8
+      ${If} ${FileExists} $R8  ; Can directories be deleted?
+        StrCpy $R9 "false"
+        Goto done
+      ${EndIf}
+
+      done:
 
       RmDir "$INSTDIR\" ; Only remove $INSTDIR if it is empty
       ClearErrors
@@ -1843,7 +1922,7 @@
  * directory using GetDiskFreeSpaceExW which respects disk quotas. This macro
  * will calculate the size of all sections that are selected, compare that with
  * the free space available, and if there is sufficient free space it will
- * return true... if not, it will return false. 
+ * return true... if not, it will return false.
  *
  * @return  _RESULT
  *          "true" if there is sufficient free space otherwise "false".
@@ -1902,7 +1981,7 @@
       Delete "$R7"
       CreateDirectory "$R7"
 
-      System::Call 'kernel32::GetDiskFreeSpaceExW(w, *l, *l, *l) i(r17, .r16, ., .) .'
+      System::Call 'kernel32::GetDiskFreeSpaceExW(w, *l, *l, *l) i(R7, .R6, ., .) .'
 
       ; Convert to KB for comparison with $R8 which is in KB
       System::Int64Op $R6 / 1024
@@ -2199,7 +2278,7 @@
       GetFullPathName $R8 "$R9"
       IfErrors end_GetLongPath +1 ; If the path doesn't exist return an empty string.
 
-      System::Call 'kernel32::GetLongPathNameW(w r18, w .r17, i 1024)i .r16'
+      System::Call 'kernel32::GetLongPathNameW(w R8, w .R7, i 1024)i .R6'
       StrCmp "$R7" "" +4 +1 ; Empty string when GetLongPathNameW is not present.
       StrCmp $R6 0 +3 +1    ; Should never equal 0 since the path exists.
       StrCpy $R9 "$R7"
@@ -2307,6 +2386,9 @@
  * to this reg cleanup since the referenced key would be for an app that is no
  * longer installed on the system.
  *
+ * $R0 = on x64 systems set to 'false' at the beginning of the macro when
+ *       enumerating the x86 registry view and set to 'true' when enumerating
+ *       the x64 registry view.
  * $R1 = stores the long path to $INSTDIR
  * $R2 = return value from the stack from the GetParent and GetLongPath macros
  * $R3 = return value from the outer loop's EnumRegKey
@@ -2342,9 +2424,22 @@
       Push $R3
       Push $R2
       Push $R1
+      Push $R0
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R1
       StrCpy $R6 0  ; set the counter for the outer loop to 0
+
+      ${If} ${RunningX64}
+        StrCpy $R0 "false"
+        ; Set the registry to the 32 bit registry for 64 bit installations or to
+        ; the 64 bit registry for 32 bit installations at the beginning so it can
+        ; easily be set back to the correct registry view when finished.
+        !ifdef HAVE_64BIT_OS
+          SetRegView 32
+        !else
+          SetRegView 64
+        !endif
+      ${EndIf}
 
       outerloop:
       EnumRegKey $R3 SHCTX $R9 $R6
@@ -2393,8 +2488,23 @@
       GoTo outerloop
 
       end:
+      ${If} ${RunningX64}
+      ${AndIf} "$R0" == "false"
+        ; Set the registry to the correct view.
+        !ifdef HAVE_64BIT_OS
+          SetRegView 64
+        !else
+          SetRegView 32
+        !endif
+
+        StrCpy $R6 0  ; set the counter for the outer loop to 0
+        StrCpy $R0 "true"
+        GoTo outerloop
+      ${EndIf}
+
       ClearErrors
 
+      Pop $R0
       Pop $R1
       Pop $R2
       Pop $R3
@@ -2443,9 +2553,13 @@
 
 /**
  * Removes all registry keys from \Software\Windows\CurrentVersion\Uninstall
- * that reference this install location. This uses SHCTX to determine the
- * registry hive so you must call SetShellVarContext first.
+ * that reference this install location in both the 32 bit and 64 bit registry
+ * view. This macro uses SHCTX to determine the registry hive so you must call
+ * SetShellVarContext first.
  *
+ * $R3 = on x64 systems set to 'false' at the beginning of the macro when
+ *       enumerating the x86 registry view and set to 'true' when enumerating
+ *       the x64 registry view.
  * $R4 = stores the long path to $INSTDIR
  * $R5 = return value from ReadRegStr
  * $R6 = string for the base reg key (e.g. Software\Microsoft\Windows\CurrentVersion\Uninstall)
@@ -2474,11 +2588,24 @@
       Push $R6
       Push $R5
       Push $R4
+      Push $R3
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R4
       StrCpy $R6 "Software\Microsoft\Windows\CurrentVersion\Uninstall"
       StrCpy $R7 ""
       StrCpy $R8 0
+
+      ${If} ${RunningX64}
+        StrCpy $R3 "false"
+        ; Set the registry to the 32 bit registry for 64 bit installations or to
+        ; the 64 bit registry for 32 bit installations at the beginning so it can
+        ; easily be set back to the correct registry view when finished.
+        !ifdef HAVE_64BIT_OS
+          SetRegView 32
+        !else
+          SetRegView 64
+        !endif
+      ${EndIf}
 
       loop:
       EnumRegKey $R7 SHCTX $R6 $R8
@@ -2492,13 +2619,29 @@
       StrCmp "$R9" "$R4" +1 loop
       ClearErrors
       DeleteRegKey SHCTX "$R6\$R7"
-      IfErrors loop
+      IfErrors loop +1
       IntOp $R8 $R8 - 1 ; Decrement the counter on successful deletion
       GoTo loop
 
       end:
+      ${If} ${RunningX64}
+      ${AndIf} "$R3" == "false"
+        ; Set the registry to the correct view.
+        !ifdef HAVE_64BIT_OS
+          SetRegView 64
+        !else
+          SetRegView 32
+        !endif
+
+        StrCpy $R7 ""
+        StrCpy $R8 0
+        StrCpy $R3 "true"
+        GoTo loop
+      ${EndIf}
+
       ClearErrors
 
+      Pop $R3
       Pop $R4
       Pop $R5
       Pop $R6
@@ -2838,15 +2981,16 @@
       StrCpy $R8 "$R9"
       StrCpy $R9 "false"
       ReadRegStr $R7 SHCTX "Software\Classes\$R8\shell\open\command" ""
-      StrCmp "$R7" "" end
 
-      ${GetPathFromString} "$R7" $R7
-      ${GetParent} "$R7" $R7
-      ${GetLongPath} "$R7" $R7
-      StrCmp "$R7" "$INSTDIR" +1 end
-      StrCpy $R9 "true"
+      ${If} $R7 != ""
+        ${GetPathFromString} "$R7" $R7
+        ${GetParent} "$R7" $R7
+        ${GetLongPath} "$R7" $R7
+        ${If} $R7 == $INSTDIR
+          StrCpy $R9 "true"
+        ${EndIf}
+      ${EndIf}
 
-      end:
       ClearErrors
 
       Pop $R7
@@ -2892,14 +3036,14 @@
 !macroend
 
 /**
- * If present removes the VirtualStore directory for this installation. Uses the
- * program files directory path and the current install location to determine
- * the sub-directory in the VirtualStore directory.
+ * Removes the application's VirtualStore directory if present when the
+ * installation directory is a sub-directory of the program files directory.
  *
+ * $R4 = $PROGRAMFILES/$PROGRAMFILES64 for CleanVirtualStore_Internal
  * $R5 = various path values.
- * $R6 = length of the long path to $PROGRAMFILES
- * $R7 = length of the long path to $INSTDIR
- * $R8 = long path to $PROGRAMFILES
+ * $R6 = length of the long path to $PROGRAMFILES32 or $PROGRAMFILES64
+ * $R7 = long path to $PROGRAMFILES32 or $PROGRAMFILES64
+ * $R8 = length of the long path to $INSTDIR
  * $R9 = long path to $INSTDIR
  */
 !macro CleanVirtualStore
@@ -2921,39 +3065,51 @@
       Push $R7
       Push $R6
       Push $R5
+      Push $R4
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R9
-      StrCmp $R9 "" end +1
-      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES" $R8
-      StrCmp $R8 "" end +1
+      ${If} "$R9" != ""
+        StrLen $R8 "$R9"
 
-      StrLen $R7 "$R9"
-      StrLen $R6 "$R8"
-      ; Only continue If the length of $INSTDIR is greater than the length of
-      ; $PROGRAMFILES
-      IntCmp $R7 $R6 end end +1
+        StrCpy $R4 $PROGRAMFILES32
+        Call ${_MOZFUNC_UN}CleanVirtualStore_Internal
 
-      ; Copy from the start of $INSTDIR the length of $PROGRAMFILES 
-      StrCpy $R5 "$R9" $R6
-      StrCmp "$R5" "$R8" +1 end ; Check if $INSTDIR is under $PROGRAMFILES
+        ${If} ${RunningX64}
+          StrCpy $R4 $PROGRAMFILES64
+          Call ${_MOZFUNC_UN}CleanVirtualStore_Internal
+        ${EndIf}
 
-      ; Remove the drive letter and colon from the $INSTDIR long path
-      StrCpy $R5 "$R9" "" 2
-      StrCpy $R5 "$PROFILE\AppData\Local\VirtualStore$R5"
-      ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
-      StrCmp $R5 "" end +1
+      ${EndIf}
 
-      IfFileExists "$R5" +1 end
-      RmDir /r "$R5"
-
-      end:
       ClearErrors
 
+      Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
       Pop $R8
       Pop $R9
+    FunctionEnd
+
+    Function ${_MOZFUNC_UN}CleanVirtualStore_Internal
+      ${${_MOZFUNC_UN}GetLongPath} "" $R7
+      ${If} "$R7" != ""
+        StrLen $R6 "$R7"
+        ${If} $R8 < $R6
+          ; Copy from the start of $INSTDIR the length of $PROGRAMFILES64
+          StrCpy $R5 "$R9" $R6
+          ${If} "$R5" == "$R7"
+            ; Remove the drive letter and colon from the $INSTDIR long path
+            StrCpy $R5 "$R9" "" 2
+            StrCpy $R5 "$LOCALAPPDATA\VirtualStore$R5"
+            ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+            ${If} "$R5" != ""
+            ${AndIf} ${FileExists} "$R5"
+              RmDir /r "$R5"
+            ${EndIf}
+          ${EndIf}
+        ${EndIf}
+      ${EndIf}
     FunctionEnd
 
     !verbose pop
@@ -3036,7 +3192,7 @@
       ; $PROGRAMFILES
       IntCmp $R6 $R5 end end +1
 
-      ; Copy from the start of $INSTDIR the length of $PROGRAMFILES 
+      ; Copy from the start of $INSTDIR the length of $PROGRAMFILES
       StrCpy $R4 "$R8" $R5
       StrCmp "$R4" "$R7" +1 end ; Check if $INSTDIR is under $PROGRAMFILES
 
@@ -3430,21 +3586,20 @@
       ClearErrors
 
       GetFullPathName $R3 "$INSTDIR\uninstall"
-      IfFileExists "$R3\uninstall.update" +1 end_UpdateUninstallLog
+      ${If} ${FileExists} "$R3\uninstall.update"
+        ${LineFind} "$R3\uninstall.update" "" "1:-1" "CleanupUpdateLog"
 
-      ${LineFind} "$R3\uninstall.update" "" "1:-1" "CleanupUpdateLog"
+        GetTempFileName $R2 "$R3"
+        FileOpen $R1 "$R2" w
+        ${TextCompareNoDetails} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "CreateUpdateDiff"
+        FileClose $R1
 
-      GetTempFileName $R2 "$R3"
-      FileOpen $R1 "$R2" w
-      ${TextCompareNoDetails} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "CreateUpdateDiff"
-      FileClose $R1
+        IfErrors +2 0
+        ${FileJoin} "$R3\uninstall.log" "$R2" "$R3\uninstall.log"
 
-      IfErrors +2 0
-      ${FileJoin} "$R3\uninstall.log" "$R2" "$R3\uninstall.log"
+        ${DeleteFile} "$R2"
+      ${EndIf}
 
-      ${DeleteFile} "$R2"
-
-      end_UpdateUninstallLog:
       ClearErrors
 
       Pop $R0
@@ -3491,8 +3646,9 @@
 
     Function CreateUpdateDiff
       ${TrimNewLines} "$9" $9
-      StrCmp $9 "" +2 +1
-      FileWrite $R1 "$9$\r$\n"
+      ${If} $9 != ""
+        FileWrite $R1 "$9$\r$\n"
+      ${EndIf}
 
       Push 0
     FunctionEnd
@@ -3764,24 +3920,27 @@
 
       ClearErrors
       Delete "$R1"
-      IfErrors +3 +1
-      ${LogMsg} "Deleted File: $R1"
-      GoTo end
+      ${Unless} ${Errors}
+        ${LogMsg} "Deleted File: $R1"
+        Goto end
+      ${EndUnless}
 
       ClearErrors
       Rename "$R1" "$R1.moz-delete"
-      IfErrors +4 +1
-      Delete /REBOOTOK "$R1.moz-delete"
-      ${LogMsg} "Delayed Delete File (Reboot Required): $R1.moz-delete"
-      GoTo end
+      ${Unless} ${Errors}
+        Delete /REBOOTOK "$R1.moz-delete"
+        ${LogMsg} "Delayed Delete File (Reboot Required): $R1.moz-delete"
+        GoTo end
+      ${EndUnless}
 
       ; Check if the file exists in the source. If it does the new file will
       ; replace the existing file when the system is rebooted. If it doesn't
       ; the file will be deleted when the system is rebooted.
-      IfFileExists "$EXEDIR\core$R9" end +1
-      IfFileExists "$EXEDIR\optional$R9" end +1
-      Delete /REBOOTOK "$R1"
-      ${LogMsg} "Delayed Delete File (Reboot Required): $R1"
+      ${Unless} ${FileExists} "$EXEDIR\core$R9"
+      ${AndUnless}  ${FileExists} "$EXEDIR\optional$R9"
+        Delete /REBOOTOK "$R1"
+        ${LogMsg} "Delayed Delete File (Reboot Required): $R1"
+      ${EndUnless}
 
       end:
       ClearErrors
@@ -3937,7 +4096,7 @@
       StrCmp $R0 "\" +2 +1
       StrCpy $R1 "$R9"
 
-      UnRegDLL $R1
+      ${UnregisterDLL} $R1
 
       end:
       ClearErrors
@@ -4030,10 +4189,9 @@
       Push $R0
 
       StrCpy $R3 ""
-      IfFileExists "$INSTDIR\uninstall\uninstall.log" +1 end_FindSMProgramsDir
-      ${LineFind} "$INSTDIR\uninstall\uninstall.log" "/NUL" "1:-1" "FindSMProgramsDirRelPath"
-
-      end_FindSMProgramsDir:
+      ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
+        ${LineFind} "$INSTDIR\uninstall\uninstall.log" "/NUL" "1:-1" "FindSMProgramsDirRelPath"
+      ${EndIf}
       ClearErrors
 
       Pop $R0
@@ -4406,24 +4564,35 @@
       Push $R6
       Push $R5
 
-      ${Unless} ${AtLeastWin2000}
-        ; XXX-rstrong - some systems fail the AtLeastWin2000 test for an
-        ; unknown reason. To work around this also check if the Windows NT
-        ; registry Key exists and if it does if the first char in
-        ; CurrentVersion is equal to 3 (Windows NT 3.5 and 3.5.1) or 4
-        ; (Windows NT 4).
-        StrCpy $R8 ""
-        ClearErrors
-        ReadRegStr $R8 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentVersion"
-        StrCpy $R8 "$R8" 1
-        ${If} ${Errors}
-        ${OrIf} "$R8" == "3"
-        ${OrIf} "$R8" == "4"
+      !ifdef HAVE_64BIT_OS
+        ${Unless} ${RunningX64}
+        ${OrUnless} ${AtLeastWinVista}
           MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
           ; Nothing initialized so no need to call OnEndCommon
           Quit
-        ${EndIf}
-      ${EndUnless}
+        ${EndUnless}
+
+        SetRegView 64
+      !else
+        ${Unless} ${AtLeastWin2000}
+          ; XXX-rstrong - some systems fail the AtLeastWin2000 test for an
+          ; unknown reason. To work around this also check if the Windows NT
+          ; registry Key exists and if it does if the first char in
+          ; CurrentVersion is equal to 3 (Windows NT 3.5 and 3.5.1) or 4
+          ; (Windows NT 4).
+          StrCpy $R8 ""
+          ClearErrors
+          ReadRegStr $R8 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentVersion"
+          StrCpy $R8 "$R8" 1
+          ${If} ${Errors}
+          ${OrIf} "$R8" == "3"
+          ${OrIf} "$R8" == "4"
+            MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+            ; Nothing initialized so no need to call OnEndCommon
+            Quit
+          ${EndIf}
+        ${EndUnless}
+      !endif
 
       ${GetParameters} $R8
 
@@ -4445,7 +4614,11 @@
               SetSilent silent
               ReadINIStr $R8 $R7 "Install" "InstallDirectoryName"
               ${If} $R8 != ""
-                StrCpy $INSTDIR "$PROGRAMFILES\$R8"
+                !ifdef HAVE_64BIT_OS
+                  StrCpy $INSTDIR "$PROGRAMFILES64\$R8"
+                !else
+                  StrCpy $INSTDIR "$PROGRAMFILES32\$R8"
+                !endif
               ${Else}
                 ReadINIStr $R8 $R7 "Install" "InstallDirectoryPath"
                 ${If} $R8 != ""
@@ -4459,11 +4632,19 @@
                 StrCpy $R6 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
                 ReadRegStr $R8 HKLM "$R6" "InstallLocation"
                 ${If} $R8 == ""
-                  StrCpy $INSTDIR "$PROGRAMFILES\${BrandFullName}"
+                  !ifdef HAVE_64BIT_OS
+                    StrCpy $INSTDIR "$PROGRAMFILES64\${BrandFullName}"
+                  !else
+                    StrCpy $INSTDIR "$PROGRAMFILES32\${BrandFullName}"
+                  !endif
                 ${Else}
                   GetFullPathName $INSTDIR "$R8"
                   ${Unless} ${FileExists} "$INSTDIR"
-                    StrCpy $INSTDIR "$PROGRAMFILES\${BrandFullName}"
+                    !ifdef HAVE_64BIT_OS
+                      StrCpy $INSTDIR "$PROGRAMFILES64\${BrandFullName}"
+                    !else
+                      StrCpy $INSTDIR "$PROGRAMFILES32\${BrandFullName}"
+                    !endif
                   ${EndUnless}
                 ${EndIf}
               ${EndIf}
@@ -4589,10 +4770,10 @@
     !define UninstallOnInitCommon "!insertmacro UninstallOnInitCommonCall"
 
     Function UninstallOnInitCommon
-; Prevents breaking apps that don't use SetBrandNameVars
-!ifdef SetBrandNameVars
-      ${SetBrandNameVars} "$EXEDIR\distribution\setup.ini"
-!endif
+      ; Prevents breaking apps that don't use SetBrandNameVars
+      !ifdef SetBrandNameVars
+        ${SetBrandNameVars} "$EXEDIR\distribution\setup.ini"
+      !endif
 
       ; Prevent launching the application when a reboot is required and this
       ; executable is the main application executable
@@ -4606,10 +4787,10 @@
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
 
-; Prevents breaking apps that don't use SetBrandNameVars
-!ifdef SetBrandNameVars
-      ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
-!endif
+      ; Prevents breaking apps that don't use SetBrandNameVars
+      !ifdef SetBrandNameVars
+        ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
+      !endif
 
       ; Prevent all operations (e.g. set as default, postupdate, etc.) when a
       ; reboot is required and the executable launched is helper.exe
@@ -4617,6 +4798,10 @@
       MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
       Reboot
       Quit ; Nothing initialized so no need to call OnEndCommon
+
+      !ifdef HAVE_64BIT_OS
+        SetRegView 64
+      !endif
 
       ${GetParameters} $R0
 
@@ -4718,8 +4903,9 @@
       WriteUninstaller "$EXEDIR\uninstaller.exe"
 
       StrCpy $R1 "$\"$EXEDIR\uninstaller.exe$\""
-      StrCmp $R0 "/S" +1 +2
-      StrCpy $R1 "$\"$EXEDIR\uninstaller.exe$\" /S"
+      ${If} ${Silent}
+        StrCpy $R1 "$\"$EXEDIR\uninstaller.exe$\" /S"
+      ${EndIf}
 
       ; When the uninstaller is launched it copies itself to the temp directory
       ; so it won't be in use so it can delete itself.
@@ -4739,6 +4925,53 @@
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
   Call UninstallOnInitCommon
+  !verbose pop
+!macroend
+
+/**
+ * Called from the uninstaller's un.onInit function not to be confused with the
+ * installer's .onInit or the uninstaller's .onInit functions.
+ */
+!macro un.UninstallUnOnInitCommon
+
+  !ifndef un.UninstallUnOnInitCommon
+    !insertmacro un.GetLongPath
+    !insertmacro un.GetParent
+    !insertmacro un.SetBrandNameVars
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define un.UninstallUnOnInitCommon "!insertmacro un.UninstallUnOnInitCommonCall"
+
+    Function un.UninstallUnOnInitCommon
+      ${un.GetParent} "$INSTDIR" $INSTDIR
+      ${un.GetLongPath} "$INSTDIR" $INSTDIR
+      ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
+        Abort
+      ${EndUnless}
+
+      !ifdef HAVE_64BIT_OS
+        SetRegView 64
+      !endif
+
+      ; Prevents breaking apps that don't use SetBrandNameVars
+      !ifdef un.SetBrandNameVars
+        ${un.SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
+      !endif
+
+      ; Initialize $hHeaderBitmap to prevent redundant changing of the bitmap if
+      ; the user clicks the back button
+      StrCpy $hHeaderBitmap ""
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro un.UninstallUnOnInitCommonCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.UninstallUnOnInitCommon
   !verbose pop
 !macroend
 
@@ -4891,14 +5124,16 @@
       Push $R7
 
       ${CanWriteToInstallDir} $R7
-      StrCmp $R7 "false" +1 +3
-      MessageBox MB_OK|MB_ICONEXCLAMATION "$R9"
-      Abort
+      ${If} $R7 == "false"
+        MessageBox MB_OK|MB_ICONEXCLAMATION "$R9"
+        Abort
+      ${EndIf}
 
       ${CheckDiskSpace} $R7
-      StrCmp $R7 "false" +1 +3
-      MessageBox MB_OK|MB_ICONEXCLAMATION "$R8"
-      Abort
+      ${If} $R7 == "false"
+        MessageBox MB_OK|MB_ICONEXCLAMATION "$R8"
+        Abort
+      ${EndIf}
 
       Pop $R7
       Exch $R8
@@ -4951,12 +5186,13 @@
       RmDir /r "$INSTDIR\distribution"
 
       ; Remove files from the uninstall directory.
-      IfFileExists "$INSTDIR\uninstall" +1 +7
-      Delete "$INSTDIR\uninstall\*wizard*"
-      Delete "$INSTDIR\uninstall\uninstall.ini"
-      Delete "$INSTDIR\uninstall\cleanup.log"
-      Delete "$INSTDIR\uninstall\uninstall.update"
-      ${OnInstallUninstall}
+      ${If} ${FileExists} "$INSTDIR\uninstall"
+        Delete "$INSTDIR\uninstall\*wizard*"
+        Delete "$INSTDIR\uninstall\uninstall.ini"
+        Delete "$INSTDIR\uninstall\cleanup.log"
+        Delete "$INSTDIR\uninstall\uninstall.update"
+        ${OnInstallUninstall}
+      ${EndIf}
 
       ; Since we write to the uninstall.log in this directory during the
       ; installation create the directory if it doesn't already exist.
@@ -5064,7 +5300,7 @@
               ; the UAC plugin to use UAC::ExecCodeSegment to execute code in
               ; the non-elevated context.
               ${Unless} ${Errors}
-                UAC::RunElevated 
+                UAC::RunElevated
               ${EndUnless}
             ${EndIf}
           ${EndIf}
@@ -5117,7 +5353,7 @@
           ; plugin to use UAC::ExecCodeSegment to execute code in the
           ; non-elevated context.
           ${Unless} ${Errors}
-            UAC::RunElevated 
+            UAC::RunElevated
           ${EndUnless}
         ${EndIf}
       ${EndIf}
@@ -5329,6 +5565,12 @@
       ${Else}
         ${LogMsg} "OS Name    : Unable to detect"
       ${EndIf}
+
+      !ifdef HAVE_64BIT_OS
+        ${LogMsg} "Target CPU : x64"
+      !else
+        ${LogMsg} "Target CPU : x86"
+      !endif
 
       Pop $9
       Pop $R0
@@ -5551,7 +5793,7 @@
  * @param   _SECTION_NAME
  *          The section name to write to in the shortcut log ini file
  * @param   _FILE_NAME
- *          The 
+ *          The shortcut's file name
  *
  * $R6 = return value from ReadIniStr for the shortcut file name
  * $R7 = counter for supporting multiple shortcuts in the same location
@@ -5741,7 +5983,8 @@
  * to the shortcuts log ini file.
  *
  * @param   _REL_PATH_TO_DIR
- *          The 
+ *          The relative path from the Start Menu Programs directory to the
+ *          program's directory.
  *
  * $R9 = _REL_PATH_TO_DIR
  */
@@ -5843,12 +6086,12 @@
       ; the categories  will be removed by the second call to
       ; WSCSetApplicationCategory.
       StrCmp "$R9" "0x00000000" +2 +1
-      System::Call "Ws2_32::WSCSetApplicationCategory(w r18, i r17, w n, i 0,\
+      System::Call "Ws2_32::WSCSetApplicationCategory(w R8, i R7, w n, i 0,\
                                                       i 0x00000000, i n, *i) i"
 
       ; Set the permitted LSP categories
-      System::Call "Ws2_32::WSCSetApplicationCategory(w r18, i r17, w n, i 0,\
-                                                      i r19, i n, *i .s) i.r16"
+      System::Call "Ws2_32::WSCSetApplicationCategory(w R8, i R7, w n, i 0,\
+                                                      i R9, i n, *i .s) i.R6"
       Pop $R5
 
 !ifndef NO_LOG
@@ -5923,9 +6166,9 @@
       ClearErrors
 
       ; stack: path, appid
-      Exch $R9 ; stack: $R9, appid | $R9 = path 
+      Exch $R9 ; stack: $R9, appid | $R9 = path
       Exch 1   ; stack: appid, $R9
-      Exch $R8 ; stack: $R8, $R9   | $R8 = appid 
+      Exch $R8 ; stack: $R8, $R9   | $R8 = appid
       Push $R7 ; stack: $R7, $R8, $R9
       Push $R6
       Push $R5

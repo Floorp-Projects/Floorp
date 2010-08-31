@@ -57,6 +57,8 @@
 #include "nsIFormControl.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
 #include "nsIMutationObserver.h"
 #include "nsIFormProcessor.h"
 #include "nsIServiceManager.h"
@@ -227,6 +229,23 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
   return rv;
 }
 
+class nsDocElementCreatedNotificationRunner : public nsRunnable
+{
+public:
+  nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
+    : mDoc(aDoc)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsContentSink::NotifyDocElementCreated(mDoc);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> mDoc;
+};
+
 nsresult
 nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
                                        nsHtml5TreeOpExecutor* aBuilder)
@@ -238,6 +257,12 @@ nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
   rv = doc->AppendChildTo(aNode, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   nsNodeUtils::ContentInserted(doc, aNode, childCount);
+
+  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+               "Someone forgot to block scripts");
+  nsContentUtils::AddScriptRunner(
+    new nsDocElementCreatedNotificationRunner(doc));
+
   return rv;
 }
 

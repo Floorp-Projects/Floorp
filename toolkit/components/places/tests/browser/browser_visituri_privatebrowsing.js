@@ -9,7 +9,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const INITIAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
 const FINAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
 
-let gTab = gBrowser.selectedTab = gBrowser.addTab();
+let gTab;
 
 /**
  * One-time observer callback.
@@ -58,6 +58,13 @@ function waitForClearHistory(aCallback)
 
 function test()
 {
+  if (!("@mozilla.org/privatebrowsing;1" in Cc)) {
+    todo(false, "PB service is not available, bail out");
+    return;
+  }
+
+  gTab = gBrowser.selectedTab = gBrowser.addTab();
+
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);

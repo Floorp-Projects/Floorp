@@ -608,7 +608,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
 
   if (kidYTop != kidRect.y) {
     // Invalidate at the old position first
-    firstKid->InvalidateOverflowRect();
+    firstKid->InvalidateFrameSubtree();
   }
 
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
@@ -624,7 +624,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     nsContainerFrame::PositionChildViews(firstKid);
 
     // Invalidate new overflow rect
-    firstKid->InvalidateOverflowRect();
+    firstKid->InvalidateFrameSubtree();
   }
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this,
@@ -926,7 +926,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   // XXXbz is this invalidate actually needed, really?
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
 
 #ifdef NS_DEBUG

@@ -185,11 +185,10 @@ public:
     return mPump || mWaitingOnAsyncRedirect;
   }
 
-  // Get or set the content length that should be reported for this channel.  -1
-  // indicates an unspecified content length.
-  PRInt64& ContentLength() {
-    return mContentLength;
-  }
+  // Set the content length that should be reported for this channel.  Pass -1
+  // to indicate an unspecified content length.
+  void SetContentLength64(PRInt64 len);
+  PRInt64 ContentLength64();
 
   // Helper function for querying the channel's notification callbacks.
   template <class T> void GetCallback(nsCOMPtr<T> &result) {
@@ -290,8 +289,6 @@ private:
   nsCOMPtr<nsIChannel>                mRedirectChannel;
   nsCString                           mContentType;
   nsCString                           mContentCharset;
-  nsCString                           mContentDisposition;
-  PRInt64                             mContentLength;
   PRUint32                            mLoadFlags;
   nsresult                            mStatus;
   PRPackedBool                        mQueriedProgressSink;
