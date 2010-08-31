@@ -415,16 +415,20 @@ JS_STATIC_ASSERT(offsetof(VMFrame, oldRegs) ==          (4*4));
 JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 60);
 
+JS_STATIC_ASSERT(JSFrameReg == JSC::ARMRegisters::r11);
+JS_STATIC_ASSERT(JSReturnReg_Data == JSC::ARMRegisters::r1);
+JS_STATIC_ASSERT(JSReturnReg_Type == JSC::ARMRegisters::r2);
+
 asm volatile (
 ".text\n"
-".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
-SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
+".globl " SYMBOL_STRING(InjectJaegerReturn) "\n"
+SYMBOL_STRING(InjectJaegerReturn) ":"       "\n"
     /* Restore frame regs. */
+    "ldr lr, [r11, #60]"                    "\n" /* fp->ncode */
     "ldr r1, [r11, #40]"                    "\n" /* fp->rval data */
     "ldr r2, [r11, #44]"                    "\n" /* fp->rval type */
-    "ldr r0, [r11, #60]"                    "\n" /* fp->ncode */
     "ldr r11, [sp, #28]"                    "\n" /* load f.fp */
-    "bx  r0"                                "\n"
+    "bx  lr"                                "\n"
 );
 
 asm volatile (
