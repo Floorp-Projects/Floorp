@@ -65,11 +65,20 @@ include css-namespace/reftest.list
 # css parsing
 include css-parsing/reftest.list
 
+# css placeholder
+include css-placeholder/reftest.list
+
 # css required
 include css-required/reftest.list
 
 # css optional
 include css-optional/reftest.list
+
+# css valid
+include css-valid/reftest.list
+
+# css invalid
+include css-invalid/reftest.list
 
 # css transitions
 include css-transitions/reftest.list

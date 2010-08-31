@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if a button has a custom error when barred from constraint
+             validation then move a type candidate for constraint validation,
+             it should not be affected by :invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function onLoadHandler()
+    {
+      var b = document.getElementById('b');
+      b.setCustomValidity('foo');
+      b.type = 'submit';
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onLoadHandler();">
+    <button class='invalid' type='button' id='b'></button>
+  </body>
+</html>

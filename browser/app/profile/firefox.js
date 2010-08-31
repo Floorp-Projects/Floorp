@@ -56,8 +56,10 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
 
-// Preferences for the Get Add-ons pane
+// Preferences for the Addon Repository
+pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
+pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/guid:%IDS%");
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%");
 
 // Preferences for AMO integration

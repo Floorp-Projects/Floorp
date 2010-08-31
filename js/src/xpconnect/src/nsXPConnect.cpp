@@ -1042,25 +1042,6 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     return NS_OK;
 }
 
-/* void initClassesForOuterObject (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
-NS_IMETHODIMP nsXPConnect::InitClassesForOuterObject(JSContext * aJSContext, JSObject * aGlobalJSObj)
-{
-    // Nest frame chain save/restore in request created by XPCCallContext.
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if(!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    SaveFrame sf(aJSContext);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
-
-    if(!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    scope->RemoveWrappedNativeProtos();
-    return NS_OK;
-}
-
 static JSBool
 TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsid id)
 {
@@ -1168,11 +1149,13 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
+        nsresult rv;
+        xpcObjectHelper helper(aCOMObj);
         if(!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                  getter_AddRefs(holder),
-                                                 aCOMObj, &aIID, nsnull,
-                                                 nsnull, tempGlobal,
-                                                 PR_FALSE, OBJ_IS_GLOBAL, &rv))
+                                                 helper, &aIID, nsnull,
+                                                 tempGlobal, PR_FALSE,
+                                                 OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1252,10 +1235,10 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
     nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, aCOMObj, aIID,
-                                             nsnull, aCache, aScope,
-                                             aAllowWrapping, OBJ_IS_NOT_GLOBAL,
-                                             &rv))
+    xpcObjectHelper helper(aCOMObj, aCache);
+    if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
+                                             nsnull, aScope, aAllowWrapping,
+                                             OBJ_IS_NOT_GLOBAL, &rv))
         return rv;
 
 #ifdef DEBUG
@@ -2784,6 +2767,19 @@ nsXPConnect::GetNativeWrapperGetPropertyOp(JSPropertyOp *getPropertyPtr)
                  "Call and NoCall XPCNativeWrapper Class must use the same "
                  "getProperty hook.");
     *getPropertyPtr = XPCNativeWrapper::GetJSClass(true)->getProperty;
+}
+
+NS_IMETHODIMP
+nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObject,
+                        nsIXPConnectJSObjectHolder **aHolder)
+{
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(ccx, aObject);
+    if(!objHolder)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aHolder = objHolder);
+    return NS_OK;
 }
 
 /* These are here to be callable from a debugger */

@@ -43,7 +43,6 @@
 
 #ifdef UNDER_CE
 #include <cmnintrin.h>
-extern "C" bool blx_lr_broken();
 #endif
 
 #if defined(FEATURE_NANOJIT) && defined(NANOJIT_ARM)
@@ -114,13 +113,14 @@ Assembler::CountLeadingZeroes(uint32_t data)
     // ARMCC can do this with an intrinsic.
     leading_zeroes = __clz(data);
 
-// current Android GCC compiler incorrectly refuses to compile 'clz' for armv5
-// (even though this is a legal instruction there). Since we currently only compile for ARMv5
-// for emulation, we don't care too much (but we DO care for ARMv6+ since those are "real"
-// devices).
-#elif defined(__GNUC__) && !(defined(ANDROID) && __ARM_ARCH__ <= 5)
+#elif defined(__GNUC__) && (NJ_COMPILER_ARM_ARCH >= 5)
     // GCC can use inline assembler to insert a CLZ instruction.
     __asm (
+#if defined(ANDROID) && (NJ_COMPILER_ARM_ARCH < 7)
+    // On Android gcc compiler, the clz instruction is not supported with a
+    // target smaller than armv7, despite it being legal for armv5+.
+        "   .arch armv7-a\n"
+#endif
         "   clz     %0, %1  \n"
         :   "=r"    (leading_zeroes)
         :   "r"     (data)
@@ -463,11 +463,6 @@ Assembler::asm_eor_imm(Register rd, Register rn, int32_t imm, int stat /* =0 */)
 void
 Assembler::nInit(AvmCore*)
 {
-#ifdef UNDER_CE
-    blx_lr_bug = blx_lr_broken();
-#else
-    blx_lr_bug = 0;
-#endif
     nHints[LIR_calli]  = rmask(retRegs[0]);
     nHints[LIR_hcalli] = rmask(retRegs[1]);
     nHints[LIR_paramp] = PREFER_SPECIAL;
@@ -628,7 +623,7 @@ Assembler::asm_arg(ArgType ty, LIns* arg, Register& r, int& stkd)
         // pre-assign registers R0-R3 for arguments (if they fit)
         if (r < R4) {
             asm_regarg(ty, arg, r);
-            r = nextreg(r);
+            r = Register(r + 1);
         } else {
             asm_stkarg(arg, stkd);
             stkd += 4;
@@ -662,14 +657,14 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
     // R3 if r is R3 to start with, and will force the argument to go on
     // the stack.
     if ((r == R1) || (r == R3)) {
-        r = nextreg(r);
+        r = Register(r + 1);
     }
 #endif
 
     if (r < R3) {
         Register    ra = r;
-        Register    rb = nextreg(r);
-        r = nextreg(rb);
+        Register    rb = Register(r + 1);
+        r = Register(rb + 1);
 
 #ifdef NJ_ARM_EABI
         // EABI requires that 64-bit arguments are aligned on even-numbered
@@ -692,12 +687,8 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
         // We only have one register left, but the legacy ABI requires that we
         // put 32 bits of the argument in the register (R3) and the remaining
         // 32 bits on the stack.
-        Register    ra = r;
-        r = nextreg(r);
-
-        // This really just checks that nextreg() works properly, as we know
-        // that r was previously R3.
-        NanoAssert(r == R4);
+        Register    ra = r; // R3
+        r = R4;
 
         // We're splitting the argument between registers and the stack.  This
         // must be the first time that the stack is used, so stkd must be at 0.
@@ -912,26 +903,17 @@ Assembler::asm_call(LIns* ins)
             outputf("        %p:", _nIns);
         )
 
-        // Direct call: on v5 and above (where the calling sequence doesn't
-        // corrupt LR until the actual branch instruction), we can avoid an
-        // interlock in the "long" branch sequence by manually loading the
-        // target address into LR ourselves before setting up the parameters
-        // in other registers.
         BranchWithLink((NIns*)ci->_address);
     } else {
-        // Indirect call: we assign the address arg to LR since it's not
-        // used for regular arguments, and is otherwise scratch since it's
-        // clobberred by the call. On v4/v4T, where we have to manually do
-        // the equivalent of a BLX, move LR into IP before corrupting LR
-        // with the return address.
-        if (blx_lr_bug) {
-            // workaround for msft device emulator bug (blx lr emulated as no-op)
-            underrunProtect(8);
-            BLX(IP);
-            MOV(IP,LR);
-        } else {
-            BLX(LR);
-        }
+        // Indirect call: we assign the address arg to LR
+#ifdef UNDER_CE
+        // workaround for msft device emulator bug (blx lr emulated as no-op)
+        underrunProtect(8);
+        BLX(IP);
+        MOV(IP, LR);
+#else
+        BLX(LR);
+#endif
         asm_regarg(ARGTYPE_I, ins->arg(--argc), LR);
     }
 
@@ -981,8 +963,6 @@ Assembler::nRegisterResetAll(RegAlloc& a)
         rmask(R10) | rmask(LR);
     if (_config.arm_vfp)
         a.free |= FpRegs;
-
-    debug_only(a.managed = a.free);
 }
 
 static inline ConditionCode
@@ -1319,9 +1299,8 @@ Assembler::asm_restore(LIns* i, Register r)
 }
 
 void
-Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
+Assembler::asm_spill(Register rr, int d, bool quad)
 {
-    (void) pop;
     (void) quad;
     NanoAssert(d);
     // The following registers should never be spilled:
@@ -1590,7 +1569,7 @@ Assembler::asm_immd(LIns* ins)
 
     if (_config.arm_vfp && deprecated_isKnownReg(rr)) {
         if (d)
-            asm_spill(rr, d, false, true);
+            asm_spill(rr, d, true);
 
         underrunProtect(4*4);
         asm_immd_nochk(rr, ins->immDlo(), ins->immDhi());
@@ -1925,17 +1904,19 @@ Assembler::BLX(Register addr, bool chk /* = true */)
     NanoAssert(_config.arm_arch >= 5);
 
     NanoAssert(IsGpReg(addr));
+#ifdef UNDER_CE
     // There is a bug in the WinCE device emulator which stops "BLX LR" from
     // working as expected. Assert that we never do that!
-    if (blx_lr_bug) { NanoAssert(addr != LR); }
+    NanoAssert(addr != LR);
+#endif
 
     if (chk) {
         underrunProtect(4);
     }
 
-    // BLX IP
+    // BLX reg
     *(--_nIns) = (NIns)( (COND_AL) | (0x12<<20) | (0xFFF<<8) | (0x3<<4) | (addr) );
-    asm_output("blx ip");
+    asm_output("blx %s", gpn(addr));
 }
 
 // Emit the code required to load a memory address into a register as follows:

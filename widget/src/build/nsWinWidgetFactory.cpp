@@ -79,6 +79,8 @@
 #include "nsPrintSession.h"
 #endif
 
+using namespace mozilla::widget;
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -91,7 +93,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
-using namespace mozilla::widget;
 NS_GENERIC_FACTORY_CONSTRUCTOR(WinTaskbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListBuilder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListItem)

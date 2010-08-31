@@ -143,11 +143,9 @@ inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
   // see bug 156731
   const nsStyleCoord &height = aReflowState.mStylePosition->mHeight;
   const nsStyleCoord &width = aReflowState.mStylePosition->mWidth;
-  return (((eStyleUnit_Percent == height.GetUnit() ||
-            (height.IsCalcUnit() && height.CalcHasPercent())) &&
+  return ((height.HasPercent() &&
            NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight()) ||
-          ((eStyleUnit_Percent == width.GetUnit() ||
-            (width.IsCalcUnit() && width.CalcHasPercent())) &&
+          (width.HasPercent() &&
            (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedWidth() ||
             0 == aReflowState.ComputedWidth())))
           ? PR_FALSE
@@ -1132,8 +1130,9 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
  */
 class nsDisplayImage : public nsDisplayItem {
 public:
-  nsDisplayImage(nsImageFrame* aFrame, imgIContainer* aImage)
-    : nsDisplayItem(aFrame), mImage(aImage) {
+  nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
+                 imgIContainer* aImage)
+    : nsDisplayItem(aBuilder, aFrame), mImage(aImage) {
     MOZ_COUNT_CTOR(nsDisplayImage);
   }
   virtual ~nsDisplayImage() {
@@ -1150,7 +1149,7 @@ void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
                       nsIRenderingContext* aCtx) {
   static_cast<nsImageFrame*>(mFrame)->
-    PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), mVisibleRect, mImage,
+    PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage,
                aBuilder->ShouldSyncDecodeImages()
                  ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
                  : (PRUint32) imgIContainer::FLAG_NONE);
@@ -1235,13 +1234,13 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
       rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-          nsDisplayGeneric(this, PaintAltFeedback, "AltFeedback",
+          nsDisplayGeneric(aBuilder, this, PaintAltFeedback, "AltFeedback",
                            nsDisplayItem::TYPE_ALT_FEEDBACK));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
       rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-          nsDisplayImage(this, imgCon));
+          nsDisplayImage(aBuilder, this, imgCon));
       NS_ENSURE_SUCCESS(rv, rv);
 
       // If we were previously displaying an icon, we're not anymore
@@ -1254,7 +1253,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #ifdef DEBUG
       if (GetShowFrameBorders() && GetImageMap(PresContext())) {
         rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
-            nsDisplayGeneric(this, PaintDebugImageMap, "DebugImageMap",
+            nsDisplayGeneric(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
                              nsDisplayItem::TYPE_DEBUG_IMAGE_MAP));
         NS_ENSURE_SUCCESS(rv, rv);
       }

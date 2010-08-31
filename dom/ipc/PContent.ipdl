@@ -40,7 +40,6 @@ include protocol PBrowser;
 include protocol PTestShell;
 include protocol PNecko;
 
-include "mozilla/TabTypes.h";
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 

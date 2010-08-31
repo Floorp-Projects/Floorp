@@ -485,9 +485,9 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             targetSurfaceDDraw = new gfxDDrawSurface(gpDDSurf.get(), winrect);
             targetSurface = targetSurfaceDDraw;
           }
-#endif
 
 DDRAW_FAILED:
+#endif
           nsRefPtr<gfxImageSurface> targetSurfaceImage;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
@@ -760,8 +760,6 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   PRUint32 aHotspotX,
                                   PRUint32 aHotspotY,
                                   HICON *aIcon) {
-
-  nsresult rv;
 
   // Get the image data
   nsRefPtr<gfxImageSurface> frame;

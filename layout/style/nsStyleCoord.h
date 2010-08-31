@@ -138,6 +138,16 @@ public:
     return IsCalcUnit();
   }
 
+  PRBool HasPercent() const {
+    return mUnit == eStyleUnit_Percent ||
+           (IsCalcUnit() && CalcHasPercent());
+  }
+
+  PRBool ConvertsToLength() const {
+    return mUnit == eStyleUnit_Coord ||
+           (IsCalcUnit() && !CalcHasPercent());
+  }
+
   nscoord     GetCoordValue() const;
   PRInt32     GetIntValue() const;
   float       GetPercentValue() const;
@@ -311,11 +321,7 @@ inline nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
 inline nsStyleCoord::nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
-#if PR_BYTES_PER_INT == PR_BYTES_PER_FLOAT
-  mValue.mInt = aValue.mInt;
-#else
   memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
-#endif
 }
 
 inline PRBool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const

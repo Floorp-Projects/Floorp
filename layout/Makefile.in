@@ -58,6 +58,10 @@ ifdef NS_PRINTING
 PARALLEL_DIRS += printing
 endif
 
+ifdef MOZ_IPC
+PARALLEL_DIRS += ipc
+endif
+
 ifdef MOZ_MATHML
 PARALLEL_DIRS += \
   mathml \

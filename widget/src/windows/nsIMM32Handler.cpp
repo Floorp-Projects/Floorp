@@ -318,8 +318,8 @@ nsIMM32Handler::CommitComposition(nsWindow* aWindow, PRBool aForce)
   }
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   if (IMEContext.IsValid()) {
-    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_COMPLETE, NULL);
-    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, NULL);
+    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, 0);
   }
 }
 
@@ -339,7 +339,7 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, PRBool aForce)
   }
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   if (IMEContext.IsValid()) {
-    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, NULL);
+    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, 0);
   }
 }
 
@@ -991,8 +991,7 @@ nsIMM32Handler::OnIMESetContextOnPlugin(nsWindow* aWindow,
   // Dispatch message to the plug-in.
   // XXX When a windowless plug-in gets focus, we should send
   //     WM_IME_SETCONTEXT
-  PRBool handled =
-    aWindow->DispatchPluginEvent(WM_IME_SETCONTEXT, wParam, lParam, PR_FALSE);
+  aWindow->DispatchPluginEvent(WM_IME_SETCONTEXT, wParam, lParam, PR_FALSE);
 
   // We should send WM_IME_SETCONTEXT to the DefWndProc here.  It shouldn't
   // be received on ancestor windows, see OnIMESetContext() for the detail.
@@ -1046,7 +1045,8 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
     "HandleStartComposition should not be called when a plug-in has focus");
 
   nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
-  aWindow->InitEvent(selection, &nsIntPoint(0, 0));
+  nsIntPoint point(0, 0);
+  aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (!selection.mSucceeded) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -1057,7 +1057,6 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
   mCompositionStart = selection.mReply.mOffset;
 
   nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, aWindow);
-  nsIntPoint point(0, 0);
   aWindow->InitEvent(event, &point);
   aWindow->DispatchWindowEvent(&event);
 

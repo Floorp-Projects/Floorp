@@ -42,6 +42,11 @@
  * as <frame>, <iframe>, and some <object>s
  */
 
+#ifdef MOZ_IPC
+#include "mozilla/layout/RenderFrameParent.h"
+using mozilla::layout::RenderFrameParent;
+#endif
+
 #include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
 #include "nsGenericHTMLElement.h"
@@ -292,11 +297,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   }
   nsIView* view = GetView();
 
-  if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK
-      && !view->HasWidget()) {
-    view->CreateWidget();
-  }
-
   // Set the primary frame now so that
   // DocumentViewerImpl::FindContainerView called by ShowViewer below
   // can find it if necessary.
@@ -374,7 +374,20 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+#ifdef MOZ_IPC
+  nsFrameLoader* frameLoader = FrameLoader();
+  if (frameLoader) {
+    RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
+    if (rfp) {
+      // We're the subdoc for <browser remote="true"> and it has
+      // painted content.  Display its shadow layer tree.
+      return aLists.Content()
+        ->AppendNewToTop(new (aBuilder) nsDisplayRemote(aBuilder, this, rfp));
+    }
+  }
+#endif
+
   if (!mInnerView)
     return NS_OK;
   nsIView* subdocView = mInnerView->GetFirstChild();
@@ -480,13 +493,21 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (NS_SUCCEEDED(rv)) {
     if (subdocRootFrame && parentAPD != subdocAPD) {
       nsDisplayZoom* zoomItem =
-        new (aBuilder) nsDisplayZoom(subdocRootFrame, &childItems,
+        new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                      subdocAPD, parentAPD);
       childItems.AppendToTop(zoomItem);
+    } else if (!nsContentUtils::IsChildOfSameType(presShell->GetDocument())) {
+      // We always want top level content documents to be in their own layer.
+      // If we need a zoom item then we are good because it creates a layer. If
+      // not then create our own layer.
+      nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
+        aBuilder, subdocRootFrame ? subdocRootFrame : this, &childItems);
+      childItems.AppendToTop(layerItem);
     }
+
     // Clip children to the child root frame's rectangle
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(this, this, &childItems,
+        new (aBuilder) nsDisplayClip(aBuilder, this, this, &childItems,
                                      subdocBoundsInParentUnits));
   }
   // delete childItems in case of OOM

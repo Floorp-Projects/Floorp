@@ -64,8 +64,6 @@ const TEST_HTTP_URI = "http://example.com/browser/toolkit/components/console/hud
 
 const TEST_NETWORK_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-network.html";
 
-const TEST_FILTER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-filter.html";
-
 const TEST_PROPERTY_PROVIDER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-property-provider.html";
 
 const TEST_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-error.html";
@@ -159,48 +157,6 @@ function getAllHUDS() {
   ok(idx.length > 0, "idx.length > 0: " + len);
 }
 
-function testGetDisplayByLoadGroup() {
-  var outputNode = HUDService.getDisplayByURISpec(TEST_URI);
-  var hudId = outputNode.getAttribute("id");
-  var loadGroup = HUDService.getLoadGroup(hudId);
-  var display = HUDService.getDisplayByLoadGroup(loadGroup);
-  ok(display.getAttribute("id") == hudId, "got display by loadGroup");
-
-  content.location = TEST_HTTP_URI;
-
-  executeSoon(function () {
-                let id = HUDService.displaysIndex()[0];
-
-                let domLogEntries =
-                  outputNode.childNodes;
-
-                let count = outputNode.childNodes.length;
-                ok(count > 0, "LogCount: " + count);
-
-                let klasses = ["hud-network"];
-
-                function verifyClass(klass) {
-                  let len = klasses.length;
-                  for (var i = 0; i < len; i++) {
-                    if (klass == klasses[i]) {
-                      return true;
-                    }
-                  }
-                  return false;
-                }
-
-                for (var i = 0; i < count; i++) {
-                  let klass = domLogEntries[i].getAttribute("class");
-                  if (klass != "hud-network") {
-                    continue;
-                  }
-                  ok(verifyClass(klass),
-                     "Log Node network class verified");
-                }
-
-              });
-}
-
 function testUnregister()  {
   HUDService.deactivateHUDForContext(tab);
   ok(HUDService.displays()[0] == undefined,
@@ -285,21 +241,29 @@ function testNet()
   HUDService.setFilterState(hudId, "network", true);
   setStringFilter("");
 
-  browser.addEventListener("DOMContentLoaded", function onTestNetLoad () {
-    browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
+  jsterm.clearOutput();
 
-    var successMsg =
-      "Found the loggged network message referencing a js file";
-    var errMsg = "Could not get logged network message for js file";
+  browser.addEventListener("load", function onTestNetLoad () {
+    browser.removeEventListener("load", onTestNetLoad, true);
 
-    var display = HUDService.getDisplayByURISpec(TEST_NETWORK_URI);
-    var outputNode = display.querySelectorAll(".hud-output-node")[0];
+    let group = outputNode.querySelector(".hud-group");
+    is(group.childNodes.length, 5, "Four children in output");
+    let outputChildren = group.childNodes;
 
-    testLogEntry(outputNode, "Network:",
-      { success: successMsg, err: errMsg });
+    isnot(outputChildren[1].textContent.indexOf("test-network.html"), -1,
+                                              "html page is logged");
+    isnot(outputChildren[2].textContent.indexOf("testscript.js"), -1,
+                                              "javascript is logged");
+    isnot(outputChildren[3].textContent.indexOf("test-image.png"), -1,
+                                              "image is logged");
+    isnot(outputChildren[4].textContent.
+      indexOf("running network console logging tests"), -1, "log() is logged");
 
-    testPageReload();
-  }, false);
+    testLiveFilteringForMessageTypes();
+  }, true);
 
   content.location = TEST_NETWORK_URI;
 }
@@ -341,6 +305,8 @@ function testLiveFilteringForMessageTypes() {
     HUDService.setFilterState(hudId, "network", true);
     isnot(countNetworkNodes(), 0, "the network nodes reappear when the " +
       "corresponding filter is switched on");
+
+    testLiveFilteringForSearchStrings();
   });
 }
 
@@ -387,6 +353,8 @@ function testLiveFilteringForSearchStrings()
     setStringFilter("foo\"bar'baz\"boo'");
     is(countNetworkNodes(), 0, "the network nodes are hidden when searching " +
       "for the string \"foo\"bar'baz\"boo'\"");
+
+    testPageReload();
   });
 }
 
@@ -804,7 +772,7 @@ function testHUDGetters()
 }
 
 function testPageReload() {
-  // see bug 578437 - The HUD console fails to re-attach the window.console 
+  // see bug 578437 - The HUD console fails to re-attach the window.console
   // object after page reload.
 
   browser.addEventListener("DOMContentLoaded", function onDOMLoad () {
@@ -990,10 +958,7 @@ function test() {
       getAllHUDS();
       getHUDById();
       testInputFocus();
-      testGetDisplayByLoadGroup();
       testGetContentWindowFromHUDId();
-
-      content.location.href = TEST_FILTER_URI;
 
       testConsoleLoggingAPI("log");
       testConsoleLoggingAPI("info");
@@ -1016,9 +981,13 @@ function test() {
       testPropertyProvider();
       testJSInputExpand();
       testPropertyPanel();
+
+      // NOTE: Put any sync test above this comment.
+      //
+      // There is a set of async tests that have to run one after another.
+      // Currently, when one test is done the next one is called from within the
+      // test function until testEnd() is called that terminates the test.
       testNet();
-      testLiveFilteringForMessageTypes();
-      testLiveFilteringForSearchStrings();
     });
   }, false);
 }

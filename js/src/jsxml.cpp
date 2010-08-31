@@ -1716,14 +1716,14 @@ ParseXMLSource(JSContext *cx, JSString *src)
     xml = NULL;
     FrameRegsIter i(cx);
     for (; !i.done() && !i.pc(); ++i)
-        JS_ASSERT(!i.fp()->script);
+        JS_ASSERT(!i.fp()->hasScript());
     filename = NULL;
     lineno = 1;
     if (!i.done()) {
         JSStackFrame *fp = i.fp();
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            filename = fp->script->filename;
+            filename = fp->getScript()->filename;
             lineno = js_FramePCToLineNumber(cx, fp);
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
@@ -1735,7 +1735,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, NULL, filename, lineno)) {
-            JSObject *scopeChain = js_GetTopStackFrame(cx)->scopeChain;
+            JSObject *scopeChain = js_GetTopStackFrame(cx)->getScopeChain();
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
             uintN flags;
             if (pn && GetXMLSettingFlags(cx, &flags)) {
@@ -7227,7 +7227,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     fp = js_GetTopStackFrame(cx);
 
     obj = NULL;
-    for (tmp = fp->scopeChain; tmp; tmp = tmp->getParent()) {
+    for (tmp = fp->getScopeChain(); tmp; tmp = tmp->getParent()) {
         Class *clasp = tmp->getClass();
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
@@ -7440,7 +7440,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = js_GetTopStackFrame(cx)->scopeChain;
+    obj = js_GetTopStackFrame(cx)->getScopeChain();
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

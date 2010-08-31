@@ -1976,13 +1976,16 @@ namespace nanojit
         m_capNL[LIns3]     = 16;
         m_capNL[LInsCall]  = 64;
 
-        for (NLKind nlkind = LInsFirst; nlkind <= LInsLast; nlkind = nextNLKind(nlkind))
+        for (NLKind nlkind = LInsFirst; nlkind <= LInsLast; nlkind = nextNLKind(nlkind)) {
             m_listNL[nlkind] = new (alloc) LIns*[m_capNL[nlkind]];
+            m_usedNL[nlkind] = 1; // Force memset in clearAll().
+        }
 
         // Note that this allocates the CONST and MULTIPLE tables as well.
         for (CseAcc a = 0; a < CSE_NUM_USED_ACCS; a++) {
             m_capL[a] = 16;
             m_listL[a] = new (alloc) LIns*[m_capL[a]];
+            m_usedL[a] = 1; // Force memset(0) in first clearAll().
         }
 
         clearAll();
@@ -2484,7 +2487,7 @@ namespace nanojit
                 // this function.  
                 AccSet a = storesSinceLastLoad & ((1 << EMB_NUM_USED_ACCS) - 1);
                 while (a) {
-                    int acc = msbSet(a);
+                    int acc = msbSet32(a);
                     clearL((CseAcc)acc);
                     a &= ~(1 << acc);
                 }
@@ -3038,7 +3041,7 @@ namespace nanojit
 
         case LIR_file:
         case LIR_line:
-            // XXX: not sure about these ones.  Ignore for the moment.
+            // These will never get hit since VTUNE implies !DEBUG.  Ignore for the moment.
             nArgs = 0;
             break;
 

@@ -2604,11 +2604,6 @@ function BrowserOnClick(event) {
         );
       }
     }
-    else if (/^about:privatebrowsing/.test(errorDoc.documentURI)) {
-      if (ot == errorDoc.getElementById("startPrivateBrowsing")) {
-        gPrivateBrowsingUI.toggleMode();
-      }
-    }
 }
 
 /**
@@ -3075,15 +3070,16 @@ const DOMLinkHandler = {
               break;
 
             // Verify that the load of this icon is legal.
-            // error pages can load their favicon, to be on the safe side,
-            // only allow chrome:// favicons
-            const aboutNeterr = /^about:neterror\?/;
-            const aboutBlocked = /^about:blocked\?/;
-            const aboutCert = /^about:certerror\?/;
-            if (!(aboutNeterr.test(targetDoc.documentURI) ||
-                  aboutBlocked.test(targetDoc.documentURI) ||
-                  aboutCert.test(targetDoc.documentURI)) ||
-                !uri.schemeIs("chrome")) {
+            // Some error or special pages can load their favicon.
+            // To be on the safe side, only allow chrome:// favicons.
+            var isAllowedPage = [
+              /^about:neterror\?/,
+              /^about:blocked\?/,
+              /^about:certerror\?/,
+              /^about:home$/,
+            ].some(function (re) re.test(targetDoc.documentURI));
+
+            if (!isAllowedPage || !uri.schemeIs("chrome")) {
               var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                         getService(Ci.nsIScriptSecurityManager);
               try {
@@ -4782,12 +4778,19 @@ function updateAppButtonDisplay() {
     window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
-  document.getElementById("appmenu-button-container").hidden = !displayAppButton;
+  document.getElementById("titlebar").hidden = !displayAppButton;
 
   if (displayAppButton)
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
+}
+
+function onTitlebarMaxClick() {
+  if (window.windowState == window.STATE_MAXIMIZED)
+    window.restore();
+  else
+    window.maximize();
 }
 #endif
 
@@ -6643,16 +6646,22 @@ var FeedHandler = {
     }
   },
 
+  get _feedMenuitem() {
+    delete this._feedMenuitem;
+    return this._feedMenuitem = document.getElementById("singleFeedMenuitemState");
+  },
+
+  get _feedMenupopup() {
+    delete this._feedMenupopup;
+    return this._feedMenupopup = document.getElementById("multipleFeedsMenuState");
+  },
+
   /**
    * Update the browser UI to show whether or not feeds are available when
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
     var feedButton = document.getElementById("feed-button");
-    if (!this._feedMenuitem)
-      this._feedMenuitem = document.getElementById("subscribeToPageMenuitem");
-    if (!this._feedMenupopup)
-      this._feedMenupopup = document.getElementById("subscribeToPageMenupopup");
 
     var feeds = gBrowser.selectedBrowser.feeds;
     if (!feeds || feeds.length == 0) {

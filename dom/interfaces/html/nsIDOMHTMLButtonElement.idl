@@ -49,13 +49,15 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(f80d0ab0-a9a0-11df-94e2-0800200c9a66)]
+[scriptable, uuid(d76a7412-f70b-43fe-becb-d30dac13cc7b)]
 interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
 {
            attribute boolean               autofocus;
            attribute boolean               disabled;
   readonly attribute nsIDOMHTMLFormElement form;
            attribute DOMString             formAction;
+           attribute DOMString             formEnctype;
+           attribute DOMString             formMethod;
            attribute DOMString             formTarget;
 
            attribute DOMString             name;

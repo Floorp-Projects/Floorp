@@ -495,7 +495,7 @@ struct JSString {
     }
 
 #ifdef __SUNPRO_CC
-#pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringOintStringTable_)
+#pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringSlength2StringTable_, __1cIJSStringShundredStringTable_)
 #endif
 
     static const SmallChar INVALID_SMALL_CHAR = -1;
@@ -678,17 +678,15 @@ class JSRopeLeafIterator {
 };
 
 class JSRopeBuilder {
-  private:
-    JSString *mStr;
+    JSContext   * const cx;
+    JSString    *mStr;
 
   public:
     JSRopeBuilder(JSContext *cx);
 
-    inline bool append(JSContext *cx, JSString *str) {
+    inline bool append(JSString *str) {
         mStr = js_ConcatStrings(cx, mStr, str);
-        if (!mStr)
-            return false;
-        return true;
+        return !!mStr;
     }
 
     inline JSString *getStr() {

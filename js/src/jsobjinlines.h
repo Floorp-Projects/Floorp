@@ -220,15 +220,16 @@ JSObject::setArgsLength(uint32 argc)
 {
     JS_ASSERT(isArguments());
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << 1);
+    JS_ASSERT(UINT32_MAX > (uint64(argc) << ARGS_PACKED_BITS_COUNT));
+    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << ARGS_PACKED_BITS_COUNT);
     JS_ASSERT(!isArgsLengthOverridden());
 }
 
 inline uint32
-JSObject::getArgsLength() const
+JSObject::getArgsInitialLength() const
 {
     JS_ASSERT(isArguments());
-    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> 1;
+    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> ARGS_PACKED_BITS_COUNT;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
 }
@@ -237,7 +238,7 @@ inline void
 JSObject::setArgsLengthOverridden()
 {
     JS_ASSERT(isArguments());
-    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= 1;
+    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= ARGS_LENGTH_OVERRIDDEN_BIT;
 }
 
 inline bool
@@ -245,7 +246,7 @@ JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
     const js::Value &v = fslots[JSSLOT_ARGS_LENGTH];
-    return (v.toInt32() & 1) != 0;
+    return v.toInt32() & ARGS_LENGTH_OVERRIDDEN_BIT;
 }
 
 inline const js::Value & 
@@ -287,20 +288,6 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
 }
 
 inline const js::Value &
-JSObject::getDateLocalTime() const
-{
-    JS_ASSERT(isDate());
-    return fslots[JSSLOT_DATE_LOCAL_TIME];
-}
-
-inline void 
-JSObject::setDateLocalTime(const js::Value &time)
-{
-    JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_LOCAL_TIME] = time;
-}
-
-inline const js::Value &
 JSObject::getDateUTCTime() const
 {
     JS_ASSERT(isDate());
@@ -325,6 +312,13 @@ inline void
 JSObject::setMethodObj(JSObject& obj)
 {
     fslots[JSSLOT_FUN_METHOD_OBJ].setObject(obj);
+}
+
+inline JSFunction *
+JSObject::getFunctionPrivate() const
+{
+    JS_ASSERT(isFunction());
+    return reinterpret_cast<JSFunction *>(getPrivate());
 }
 
 inline NativeIterator *
@@ -553,7 +547,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
     JS_ASSERT(proto->isNative());
     JS_ASSERT(parent);
 
-    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->maybefp(), clasp);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
@@ -605,13 +599,13 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->fp) {
+    if (!cx->hasfp()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)
             return NULL;
     } else {
-        global = cx->fp->scopeChain->getGlobal();
+        global = cx->fp()->getScopeChain()->getGlobal();
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 
@@ -688,7 +682,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
      }
 
 
-    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->maybefp(), clasp);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before

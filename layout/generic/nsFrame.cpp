@@ -749,17 +749,6 @@ nsFrame::SetAdditionalStyleContext(PRInt32 aIndex,
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
 }
 
-nsCSSShadowArray*
-nsIFrame::GetEffectiveBoxShadows()
-{
-  nsCSSShadowArray* shadows = GetStyleBorder()->mBoxShadow;
-  if (!shadows ||
-      (IsThemed() && GetContent() &&
-       !nsContentUtils::IsChromeDoc(GetContent()->GetCurrentDoc())))
-    return nsnull;
-  return shadows;
-}
-
 nscoord
 nsFrame::GetBaseline() const
 {
@@ -825,8 +814,9 @@ nsFrame::DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn)
 
 class nsDisplaySelectionOverlay : public nsDisplayItem {
 public:
-  nsDisplaySelectionOverlay(nsFrame* aFrame, PRInt16 aSelectionValue)
-    : nsDisplayItem(aFrame), mSelectionValue(aSelectionValue) {
+  nsDisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
+                            nsFrame* aFrame, PRInt16 aSelectionValue)
+    : nsDisplayItem(aBuilder, aFrame), mSelectionValue(aSelectionValue) {
     MOZ_COUNT_CTOR(nsDisplaySelectionOverlay);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -929,7 +919,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   }
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplaySelectionOverlay(this, selectionValue));
+      nsDisplaySelectionOverlay(aBuilder, this, selectionValue));
 }
 
 nsresult
@@ -939,7 +929,8 @@ nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder*   aBuilder,
   if (GetStyleOutline()->GetOutlineStyle() == NS_STYLE_BORDER_STYLE_NONE)
     return NS_OK;
     
-  return aLists.Outlines()->AppendNewToTop(new (aBuilder) nsDisplayOutline(this));
+  return aLists.Outlines()->AppendNewToTop(
+      new (aBuilder) nsDisplayOutline(aBuilder, this));
 }
 
 nsresult
@@ -960,7 +951,7 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
     return NS_OK;
 
   return aList->AppendNewToTop(
-      new (aBuilder) nsDisplayCaret(this, aBuilder->GetCaret()));
+      new (aBuilder) nsDisplayCaret(aBuilder, this, aBuilder->GetCaret()));
 }
 
 nscolor
@@ -990,7 +981,7 @@ nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery() || aForceBackground ||
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
     return aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBackground(this));
+        nsDisplayBackground(aBuilder, this));
   }
   return NS_OK;
 }
@@ -1006,10 +997,10 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  PRBool hasBoxShadow = GetEffectiveBoxShadows() != nsnull;
+  PRBool hasBoxShadow = GetStyleBorder()->mBoxShadow != nsnull;
   if (hasBoxShadow) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBoxShadowOuter(this));
+        nsDisplayBoxShadowOuter(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1019,13 +1010,13 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
 
   if (hasBoxShadow) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBoxShadowInner(this));
+        nsDisplayBoxShadowInner(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
   if (HasBorder()) {
     rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBorder(this));
+        nsDisplayBorder(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1128,13 +1119,13 @@ public:
     // We are not a stacking context root. There is no valid underlying
     // frame for the whole list. These items are all in-flow descendants so
     // we can safely just clip them.
-    return new (aBuilder) nsDisplayClip(nsnull, mContainer, aList, mRect);
+    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, mContainer, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
     nsIFrame* f = aItem->GetUnderlyingFrame();
     if (mClipAll || nsLayoutUtils::IsProperAncestorFrame(mContainer, f, nsnull))
-      return new (aBuilder) nsDisplayClip(f, mContainer, aItem, mRect);
+      return new (aBuilder) nsDisplayClip(aBuilder, f, mContainer, aItem, mRect);
     return aItem;
   }
 protected:
@@ -1153,11 +1144,11 @@ public:
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We are not a stacking context root. There is no valid underlying
     // frame for the whole list.
-    return new (aBuilder) nsDisplayClip(nsnull, mContainer, aList, mRect);
+    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, mContainer, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
-    return new (aBuilder) nsDisplayClip(aItem->GetUnderlyingFrame(),
+    return new (aBuilder) nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(),
             mContainer, aItem, mRect);
   }
 protected:
@@ -1217,14 +1208,14 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   // REVIEW: From nsContainerFrame::PaintChild
   if (nsFrame::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aFrame, PaintDebugBorder, "DebugBorder",
+        nsDisplayGeneric(aBuilder, aFrame, PaintDebugBorder, "DebugBorder",
                          nsDisplayItem::TYPE_DEBUG_BORDER));
   }
   // Draw a border around the current event target
   if (nsFrame::GetShowEventTargetFrameBorder() &&
       aFrame->PresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aFrame, PaintEventTargetBorder, "EventTargetBorder",
+        nsDisplayGeneric(aBuilder, aFrame, PaintEventTargetBorder, "EventTargetBorder",
                          nsDisplayItem::TYPE_EVENT_TARGET_BORDER));
   }
 }
@@ -1361,22 +1352,20 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 #ifdef MOZ_SVG
   /* If there are any SVG effects, wrap up the list in an effects list. */
   if (usingSVGEffects) {
-    nsDisplaySVGEffects* svgList = new (aBuilder) nsDisplaySVGEffects(this, &resultList);
-    if (!svgList)
-      return NS_ERROR_OUT_OF_MEMORY;
-
     /* List now emptied, so add the new list to the top. */
-    resultList.AppendToTop(svgList);
+    rv = resultList.AppendNewToTop(
+        new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList));
+    if (NS_FAILED(rv))
+      return rv;
   } else
 #endif
 
   /* If there is any opacity, wrap it up in an opacity list. */
   if (disp->mOpacity < 1.0f) {
-    nsDisplayOpacity* opacityList = new (aBuilder) nsDisplayOpacity(this, &resultList);
-    if (!opacityList)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    resultList.AppendToTop(opacityList);
+    rv = resultList.AppendNewToTop(
+        new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   /* If we're going to apply a transformation, wrap everything in an
@@ -1384,11 +1373,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
-    nsDisplayTransform* transform = new (aBuilder) nsDisplayTransform(this, &resultList);
-    if (!transform)  
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    resultList.AppendToTop(transform);
+    rv = resultList.AppendNewToTop(
+        new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList));
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   aList->AppendToTop(&resultList);
@@ -1598,11 +1586,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     rv = aLists.PositionedDescendants()->AppendNewToTop(new (aBuilder)
-        nsDisplayWrapList(aChild, &list));
+        nsDisplayWrapList(aBuilder, aChild, &list));
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (disp->IsFloating()) {
     rv = aLists.Floats()->AppendNewToTop(new (aBuilder)
-        nsDisplayWrapList(aChild, &list));
+        nsDisplayWrapList(aBuilder, aChild, &list));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     aLists.Content()->AppendToTop(&list);
@@ -3108,16 +3096,6 @@ nsFrame::GetIntrinsicRatio()
   return nsSize(0, 0);
 }
 
-inline PRBool
-IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
-{
-  nsStyleUnit unit = aCoord.GetUnit();
-  return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_None ||  // only for 'max-height'
-         (unit == eStyleUnit_Percent && 
-          aCBHeight == NS_AUTOHEIGHT);
-}
-
 /* virtual */ nsSize
 nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                      nsSize aCBSize, nscoord aAvailableWidth,
@@ -3166,27 +3144,24 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
   // Compute height
 
-  if (!IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
+  if (!nsLayoutUtils::IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
     result.height =
-      nsLayoutUtils::ComputeHeightDependentValue(aCBSize.height,
-                                                 stylePos->mHeight) -
+      nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mHeight) -
       boxSizingAdjust.height;
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
-    if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
+    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
       nscoord maxHeight =
-        nsLayoutUtils::ComputeHeightDependentValue(aCBSize.height,
-                                                   stylePos->mMaxHeight) -
+        nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mMaxHeight) -
         boxSizingAdjust.height;
       if (maxHeight < result.height)
         result.height = maxHeight;
     }
 
-    if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
+    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
       nscoord minHeight =
-        nsLayoutUtils::ComputeHeightDependentValue(aCBSize.height,
-                                                   stylePos->mMinHeight) -
+        nsLayoutUtils::ComputeHeightValue(aCBSize.height, stylePos->mMinHeight) -
         boxSizingAdjust.height;
       if (minHeight > result.height)
         result.height = minHeight;
@@ -3325,10 +3300,9 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   // height. This happens in the case where a table cell has no computed
   // height but can fabricate one when the cell height is known.
   if (aReflowState && aReflowState->mPercentHeightObserver &&
-      (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
-
-    nsIFrame* prevInFlow = GetPrevInFlow();
-    if (!prevInFlow) { // 1st in flow
+      !GetPrevInFlow()) {
+    const nsStyleCoord &height = aReflowState->mStylePosition->mHeight;
+    if (height.HasPercent()) {
       aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
     }
   }
@@ -4057,7 +4031,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
   *aAnyOutlineOrEffects = PR_FALSE;
 
   // box-shadow
-  nsCSSShadowArray* boxShadows = aFrame->GetEffectiveBoxShadows();
+  nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
   if (boxShadows) {
     nsRect shadows;
     for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {

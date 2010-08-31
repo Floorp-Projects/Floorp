@@ -184,6 +184,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxPersistentConnectionsPerProxy(4)
     , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
+    , mInPrivateBrowsingMode(PR_FALSE)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
     , mPipeliningOverSSL(PR_FALSE)
@@ -251,6 +252,12 @@ nsHttpHandler::Init()
         NeckoChild::InitNeckoChild();
 #endif // MOZ_IPC
 
+    // figure out if we're starting in private browsing mode
+    nsCOMPtr<nsIPrivateBrowsingService> pbs =
+      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs)
+      pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsingMode);
+
     InitUserAgentComponents();
 
     // monitor some preference changes
@@ -294,14 +301,6 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewThread(getter_AddRefs(mCacheWriteThread));
-    if (NS_FAILED(rv)) {
-        mCacheWriteThread = nsnull;
-        LOG(("Failed creating cache-write thread - writes will be synchronous"));
-    } else {
-        LOG(("Created cache-write thread = %p", mCacheWriteThread.get()));
-    }
-
     nsCOMPtr<nsIXULAppInfo> appInfo =
         do_GetService("@mozilla.org/xre/app-info;1");
     if (appInfo)
@@ -321,7 +320,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "profile-change-net-restore", PR_TRUE);
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
         mObserverService->AddObserver(this, "net:clear-active-logins", PR_TRUE);
-        mObserverService->AddObserver(this, "xpcom-shutdown-threads", PR_TRUE);
+        mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
     }
  
     StartPruneDeadConnectionsTimer();
@@ -507,6 +506,14 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
     *result = mStreamConvSvc;
     NS_ADDREF(*result);
     return NS_OK;
+}
+
+nsIStrictTransportSecurityService*
+nsHttpHandler::GetSTSService()
+{
+    if (!mSTSService)
+      mSTSService = do_GetService(NS_STSSERVICE_CONTRACTID);
+    return mSTSService;
 }
 
 nsICookieService *
@@ -695,6 +702,8 @@ nsHttpHandler::InitUserAgentComponents()
     "Macintosh"
 #elif defined(XP_BEOS)
     "BeOS"
+#elif defined(MOZ_PLATFORM_MAEMO)
+    "Maemo"
 #elif defined(MOZ_X11)
     "X11"
 #else
@@ -1780,19 +1789,13 @@ nsHttpHandler::Observe(nsISupports *subject,
     else if (strcmp(topic, "net:clear-active-logins") == 0) {
         mAuthCache.ClearAll();
     }
-    else if (strcmp(topic, "xpcom-shutdown-threads") == 0) {
-        // Shutdown the cache write thread. This must be done after shutting down
-        // the cache service, because the (memory) cache entries' storage streams
-        // get released on the thread on which they were first written to, which
-        // is this thread.
-        if (mCacheWriteThread) {
-            LOG(("  shutting down cache-write thread...\n"));
-            mCacheWriteThread->Shutdown();
-            LOG(("  cache-write thread shutdown complete\n"));
-            mCacheWriteThread = nsnull;
-        }
+    else if (strcmp(topic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
+        if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(data))
+            mInPrivateBrowsingMode = PR_TRUE;
+        else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(data))
+            mInPrivateBrowsingMode = PR_FALSE;
     }
-
+  
     return NS_OK;
 }
 

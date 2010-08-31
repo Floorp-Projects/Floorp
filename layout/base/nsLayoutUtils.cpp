@@ -1219,13 +1219,13 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           PRUint32 aFlags)
 {
-#ifdef DEBUG
   if (aFlags & PAINT_WIDGET_LAYERS) {
     nsIView* view = aFrame->GetView();
-    NS_ASSERTION(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame,
-      "PAINT_WIDGET_LAYERS should only be used on a display root that has a widget");
+    if (!(view && view->GetWidget() && GetDisplayRootFrame(aFrame) == aFrame)) {
+      aFlags &= ~PAINT_WIDGET_LAYERS;
+      NS_ASSERTION(aRenderingContext, "need a rendering context");
+    }
   }
-#endif
 
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
@@ -1773,6 +1773,8 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
   return result;
 }
 
+// Use only for widths/heights (or their min/max), since it clamps
+// negative calc() results to 0.
 static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
 {
   if (aStyle.IsCalcUnit()) {
@@ -1781,6 +1783,8 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
     }
     // If it has no percents, we can pass 0 for the percentage basis.
     aResult = nsRuleNode::ComputeComputedCalc(aStyle, 0);
+    if (aResult < 0)
+      aResult = 0;
     return PR_TRUE;
   }
 
@@ -1788,6 +1792,7 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
     return PR_FALSE;
 
   aResult = aStyle.GetCoordValue();
+  NS_ASSERTION(aResult >= 0, "negative widths not allowed");
   return PR_TRUE;
 }
 
@@ -1813,7 +1818,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
   if (!GetAbsoluteCoord(pos->mHeight, h) &&
       !GetPercentHeight(pos->mHeight, f, h)) {
     NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto ||
-                 pos->mHeight.GetUnit() == eStyleUnit_Percent,
+                 pos->mHeight.HasPercent(),
                  "unknown height unit");
     nsIAtom* fType = f->GetType();
     if (fType != nsGkAtoms::viewportFrame && fType != nsGkAtoms::canvasFrame &&
@@ -1844,7 +1849,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
       h = maxh;
   } else {
     NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_None ||
-                 pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+                 pos->mMaxHeight.HasPercent(),
                  "unknown max-height unit");
   }
 
@@ -1854,7 +1859,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     if (minh > h)
       h = minh;
   } else {
-    NS_ASSERTION(pos->mMinHeight.GetUnit() == eStyleUnit_Percent,
+    NS_ASSERTION(pos->mMinHeight.HasPercent(),
                  "unknown min-height unit");
   }
 
@@ -1949,6 +1954,11 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   //     intrinsic minimum width
   nscoord result = 0, min = 0;
 
+  nscoord maxw;
+  PRBool haveFixedMaxWidth = GetAbsoluteCoord(styleMaxWidth, maxw);
+  nscoord minw;
+  PRBool haveFixedMinWidth = GetAbsoluteCoord(styleMinWidth, minw);
+
   // If we have a specified width (or a specified 'min-width' greater
   // than the specified 'max-width', which works out to the same thing),
   // don't even bother getting the frame's intrinsic width.
@@ -1961,9 +1971,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
     // specified widths, but ignore -moz-box-sizing.
     boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   } else if (styleWidth.GetUnit() != eStyleUnit_Coord &&
-             (styleMinWidth.GetUnit() != eStyleUnit_Coord ||
-              styleMaxWidth.GetUnit() != eStyleUnit_Coord ||
-              styleMaxWidth.GetCoordValue() > styleMinWidth.GetCoordValue())) {
+             !(haveFixedMinWidth && haveFixedMaxWidth && maxw <= minw)) {
 #ifdef DEBUG_INTRINSIC_WIDTH
     ++gNoiseIndent;
 #endif
@@ -2086,8 +2094,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
     result = AddPercents(aType, result, pctTotal);
   }
 
-  nscoord maxw;
-  if (GetAbsoluteCoord(styleMaxWidth, maxw) ||
+  if (haveFixedMaxWidth ||
       GetIntrinsicCoord(styleMaxWidth, aRenderingContext, aFrame,
                         PROP_MAX_WIDTH, maxw)) {
     maxw = AddPercents(aType, maxw + coordOutsideWidth, pctOutsideWidth);
@@ -2095,8 +2102,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
       result = maxw;
   }
 
-  nscoord minw;
-  if (GetAbsoluteCoord(styleMinWidth, minw) ||
+  if (haveFixedMinWidth ||
       GetIntrinsicCoord(styleMinWidth, aRenderingContext, aFrame,
                         PROP_MIN_WIDTH, minw)) {
     minw = AddPercents(aType, minw + coordOutsideWidth, pctOutsideWidth);
@@ -2147,12 +2153,8 @@ nsLayoutUtils::ComputeWidthDependentValue(
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
 
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  }
-  if (eStyleUnit_Percent == aCoord.GetUnit()) {
-    return NSToCoordFloorClamped(aContainingBlockWidth *
-                                 aCoord.GetPercentValue());
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockWidth);
   }
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
@@ -2225,39 +2227,25 @@ nsLayoutUtils::ComputeHeightDependentValue(
                  nscoord              aContainingBlockHeight,
                  const nsStyleCoord&  aCoord)
 {
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  }
-  if (eStyleUnit_Percent == aCoord.GetUnit()) {
-    // XXXldb Some callers explicitly check aContainingBlockHeight
-    // against NS_AUTOHEIGHT *and* unit against eStyleUnit_Percent
-    // before calling this function, so this assertion probably needs to
-    // be inside the percentage case.  However, it would be much more
-    // likely to catch problems if it were at the start of the function.
-    // XXXldb Many callers pass a non-'auto' containing block height when
-    // according to CSS2.1 they should be passing 'auto'.
-    NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight,
-                    "unexpected 'containing block height'");
+  // XXXldb Some callers explicitly check aContainingBlockHeight
+  // against NS_AUTOHEIGHT *and* unit against eStyleUnit_Percent or
+  // calc()s containing percents before calling this function.
+  // However, it would be much more likely to catch problems without
+  // the unit conditions.
+  // XXXldb Many callers pass a non-'auto' containing block height when
+  // according to CSS2.1 they should be passing 'auto'.
+  NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight ||
+                  !aCoord.HasPercent(),
+                  "unexpected containing block height");
 
-    if (NS_AUTOHEIGHT != aContainingBlockHeight) {
-      return NSToCoordFloorClamped(aContainingBlockHeight *
-                                   aCoord.GetPercentValue());
-    }
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockHeight);
   }
+
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
                "unexpected height value");
   return 0;
-}
-
-inline PRBool
-IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
-{
-  nsStyleUnit unit = aCoord.GetUnit();
-  return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_None ||  // only for 'max-height'
-         (unit == eStyleUnit_Percent &&
-          aCBHeight == NS_AUTOHEIGHT);
 }
 
 #define MULDIV(a,b,c) (nscoord(PRInt64(a) * PRInt64(b) / PRInt64(c)))
@@ -2317,7 +2305,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
   if (!isAutoHeight) {
     height = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, stylePos->mHeight) -
+      ComputeHeightValue(aCBSize.height, stylePos->mHeight) -
       boxSizingAdjust.height;
     if (height < 0)
       height = 0;
@@ -2325,7 +2313,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
   if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
     maxHeight = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, stylePos->mMaxHeight) -
+      ComputeHeightValue(aCBSize.height, stylePos->mMaxHeight) -
       boxSizingAdjust.height;
     if (maxHeight < 0)
       maxHeight = 0;
@@ -2335,7 +2323,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
   if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
     minHeight = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, stylePos->mMinHeight) -
+      ComputeHeightValue(aCBSize.height, stylePos->mMinHeight) -
       boxSizingAdjust.height;
     if (minHeight < 0)
       minHeight = 0;
