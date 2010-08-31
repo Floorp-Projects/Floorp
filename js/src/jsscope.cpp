@@ -1039,14 +1039,8 @@ void
 JSObject::generateOwnShape(JSContext *cx)
 {
 #ifdef JS_TRACER
+    JS_ASSERT_IF(!parent && JS_ON_TRACE(cx), cx->bailExit);
      LeaveTraceIfGlobalObject(cx, this);
-
-    /*
-     * The JIT must have arranged to re-guard after any unpredictable shape
-     * change, so if we are on trace here, we should already be prepared to
-     * bail off trace.
-     */
-    JS_ASSERT_IF(JS_ON_TRACE(cx), cx->bailExit);
 
     /*
      * If we are recording, here is where we forget already-guarded shapes.

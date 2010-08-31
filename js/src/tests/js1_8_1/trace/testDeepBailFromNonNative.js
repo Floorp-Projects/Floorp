@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,8 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 489682;
-var summary = 'TM: wrong number with nested type-unstable loops';
+var BUGNUMBER = 0;
+var summary = 'Test deep bail from non-native call; don\'t crash';
 var actual = '';
 var expect = '';
 
@@ -46,20 +46,14 @@ printStatus (summary);
 
 jit(true);
 
-var v = 0;
+test();
 
-for each (var a in [0, {}, {}, {}]) {
-  print(v);
-  v = v >>> 0;
-  for each (var b in [{}, {}, new String(''), 42, new String(''), {}, 42]) 
-           {
-           }
-         }
-print(v);
+function test()
+{
+    try {
+        [1 for each (i in this)];
+    } catch (ex) {}
+}
 
 jit(false);
-
-expect = '0';
-actual = v + '';
-
 reportCompare(expect, actual, summary);
