@@ -505,6 +505,10 @@ const gPopupBlockerObserver = {
     var pageReport = gBrowser.pageReport;
     if (pageReport) {
       for (var i = 0; i < pageReport.length; ++i) {
+        // popupWindowURI will be null if the file picker popup is blocked.
+        // xxxdz this should make the option say "Show file picker" and do it (Bug 590306) 
+        if (!pageReport[i].popupWindowURI)
+          continue;
         var popupURIspec = pageReport[i].popupWindowURI.spec;
 
         // Sometimes the popup URI that we get back from the pageReport
@@ -1347,10 +1351,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   PlacesStarButton.init();
 
-  // called when we go into full screen, even if it is
-  // initiated by a web page script
-  window.addEventListener("fullscreen", onFullScreen, true);
-
   if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
     gURLBar.focus();
   else
@@ -1513,6 +1513,12 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   if (Win7Features)
     Win7Features.onOpenWindow();
+
+  // called when we go into full screen, even if it is
+  // initiated by a web page script
+  window.addEventListener("fullscreen", onFullScreen, true);
+  if (window.fullScreen)
+    onFullScreen();
 
 #ifdef MOZ_SERVICES_SYNC
   // initialize the sync UI
@@ -2635,9 +2641,8 @@ function BrowserFullScreen()
   window.fullScreen = !window.fullScreen;
 }
 
-function onFullScreen()
-{
-  FullScreen.toggle();
+function onFullScreen(event) {
+  FullScreen.toggle(event);
 }
 
 function getWebNavigation()
@@ -2787,6 +2792,17 @@ function FillInHTMLTooltip(tipElement)
   var lookingForSVGTitle = false;
 #endif // MOZ_SVG
   var direction = tipElement.ownerDocument.dir;
+
+  // If the element is invalid per HTML5 Forms specifications,
+  // show the constraint validation error message instead of @tooltip.
+  if (tipElement instanceof HTMLInputElement ||
+      tipElement instanceof HTMLTextAreaElement ||
+      tipElement instanceof HTMLSelectElement ||
+      tipElement instanceof HTMLButtonElement) {
+    // If the element is barred from constraint validation or valid,
+    // the validation message will be the empty string.
+    titleText = tipElement.validationMessage;
+  }
 
   while (!titleText && !XLinkTitleText && !SVGTitleText && tipElement) {
     if (tipElement.nodeType == Node.ELEMENT_NODE) {
@@ -3620,17 +3636,21 @@ function updateEditUIVisibility()
 #endif
 }
 
-var FullScreen =
-{
+var FullScreen = {
   _XULNS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-  toggle: function()
-  {
-    // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
-    this.showXULChrome("toolbar", window.fullScreen);
-    this.showXULChrome("statusbar", window.fullScreen);
-    document.getElementById("View:FullScreen").setAttribute("checked", !window.fullScreen);
+  toggle: function (event) {
+    var enterFS = window.fullScreen;
 
-    if (!window.fullScreen) {
+    // We get the fullscreen event _before_ the window transitions into or out of FS mode.
+    if (event && event.type == "fullscreen")
+      enterFS = !enterFS;
+
+    // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
+    this.showXULChrome("toolbar", !enterFS);
+    this.showXULChrome("statusbar", !enterFS);
+    document.getElementById("View:FullScreen").setAttribute("checked", enterFS);
+
+    if (enterFS) {
       // Add a tiny toolbar to receive mouseover and dragenter events, and provide affordance.
       // This will help simulate the "collapse" metaphor while also requiring less code and
       // events than raw listening of mouse coords.
@@ -6993,8 +7013,13 @@ var gIdentityHandler = {
     if (!this._eTLDService)
       this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
                          .getService(Ci.nsIEffectiveTLDService);
+    if (!this._IDNService)
+      this._IDNService = Cc["@mozilla.org/network/idn-service;1"]
+                         .getService(Ci.nsIIDNService);
     try {
-      return this._eTLDService.getBaseDomainFromHost(this._lastLocation.hostname);
+      let baseDomain =
+        this._eTLDService.getBaseDomainFromHost(this._lastLocation.hostname);
+      return this._IDNService.convertToDisplayIDN(baseDomain, {});
     } catch (e) {
       // If something goes wrong (e.g. hostname is an IP address) just fail back
       // to the full domain.

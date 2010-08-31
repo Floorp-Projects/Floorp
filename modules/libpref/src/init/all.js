@@ -50,6 +50,7 @@
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
+pref("general.useragent.compatMode.firefox", false);
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
@@ -177,6 +178,8 @@ pref("media.autoplay.enabled", true);
 pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
+
+pref("gfx.3d_video.enabled", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
 
@@ -3150,6 +3153,15 @@ pref("image.mem.decodeondraw", false);
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.
 pref("image.mem.min_discard_timeout_ms", 10000);
+
+// Chunk size for calls to the image decoders
+pref("image.mem.decode_bytes_at_a_time", 200000);
+
+// The longest time we can spend in an iteration of an async decode
+pref("image.mem.max_ms_before_yield", 400);
+
+// The maximum source data size for which we auto sync decode
+pref("image.mem.max_bytes_for_sync_decode", 150000);
 
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);

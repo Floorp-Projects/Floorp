@@ -39,7 +39,6 @@ conformance/texparameter-test.html
 conformance/texture-active-bind-2.html
 conformance/texture-formats-test.html
 conformance/texture-npot.html
-conformance/uniform-location.html
 conformance/uniform-samplers-test.html
 conformance/viewport-unchanged-upon-resize.html
 more/conformance/constants.html

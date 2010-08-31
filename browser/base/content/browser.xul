@@ -485,7 +485,6 @@
           <menuitem id="appmenu_privateBrowsing"
                     class="menuitem-iconic"
                     label="&privateBrowsingCmd.start.label;"
-                    accesskey="&privateBrowsingCmd.start.accesskey;"
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"/>
@@ -560,7 +559,6 @@
                         command="View:PageSource"/>
               <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
-                        accesskey="&goOfflineCmd.accesskey;"
                         type="checkbox"
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
@@ -1213,7 +1211,7 @@
     </vbox>
   </hbox>
 
-  <vbox id="browser-bottombox">
+  <vbox id="browser-bottombox" layer="true">
     <statusbar class="chromeclass-status" id="status-bar"
 #ifdef WINCE
                hidden="true"

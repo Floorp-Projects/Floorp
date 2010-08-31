@@ -2501,8 +2501,11 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
     nsIntRect largest = opaqueRegion.GetLargestRectangle();
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
-    margins.cyTopHeight = largest.y;
     margins.cyBottomHeight = clientBounds.height - largest.YMost();
+
+    // The minimum glass height must be the caption buttons height,
+    // otherwise the buttons are drawn incorrectly.
+    margins.cyTopHeight = PR_MAX(largest.y, mCaptionButtons.height);
   }
 
   // Only update glass area if there are changes
@@ -2546,6 +2549,65 @@ void nsWindow::UpdateGlass()
     nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 #endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+}
+#endif
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+void nsWindow::UpdateCaptionButtonsClippingRect()
+{
+  NS_ASSERTION(mWnd, "UpdateCaptionButtonsClippingRect called with invalid mWnd.");
+
+  RECT captionButtons;
+  mCaptionButtonsRoundedRegion.SetEmpty();
+  mCaptionButtons.Empty();
+
+  if (!mCustomNonClient ||
+      mSizeMode == nsSizeMode_Fullscreen || 
+      mSizeMode == nsSizeMode_Minimized ||
+      !nsUXThemeData::CheckForCompositor() ||
+      FAILED(nsUXThemeData::dwmGetWindowAttributePtr(mWnd,
+                                                     DWMWA_CAPTION_BUTTON_BOUNDS,
+                                                     &captionButtons,
+                                                     sizeof(captionButtons)))) {
+    return;
+  }
+
+  mCaptionButtons = nsWindowGfx::ToIntRect(captionButtons);
+
+  // Adjustments to reported area
+  PRInt32 leftMargin = (mNonClientMargins.left == -1) ? mHorResizeMargin  : mNonClientMargins.left;
+
+  // "leftMargin - 1" represents the resizer border and an
+  // one pixel adjustment to hide the semi-transparent highlight.
+  // The extra width is already excluded when the window is maximized.
+  mCaptionButtons.x -= leftMargin - 1;
+
+  if (mSizeMode != nsSizeMode_Maximized) {
+    mCaptionButtons.width += leftMargin - 1;
+    mCaptionButtons.height -= mVertResizeMargin + 1;
+  } else {
+    // Adjustments to the buttons' shift from the edge of the screen,
+    // plus some apparently transparent drop shadow below them.
+    mCaptionButtons.width -= 2;
+    mCaptionButtons.height -= 3;
+  }
+
+  // Create a rounded region by shrinking the 2 bottommost pixel rows from
+  // the rect by 1 and 2 pixels.
+  // mCaptionButtons:        mCaptionButtonsRoundedRegion:
+  //  +-----------+                  +-----------+
+  //  |           |                  |           |
+  //  |           |                   |         |
+  //  +-----------+                    +-------+
+  nsIntRect round1(mCaptionButtons.x, mCaptionButtons.y,
+                   mCaptionButtons.width, mCaptionButtons.height - 2);
+  nsIntRect round2(mCaptionButtons.x + 1, mCaptionButtons.YMost() - 2,
+                   mCaptionButtons.width - 2, 1);
+  nsIntRect round3(mCaptionButtons.x + 2, mCaptionButtons.YMost() - 1,
+                   mCaptionButtons.width - 4, 1);
+  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round1);
+  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round2);
+  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round3);
 }
 #endif
 
@@ -2705,8 +2767,9 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 #else
 
   if (aFullScreen) {
-    if (mSizeMode != nsSizeMode_Fullscreen)
-      mOldSizeMode = mSizeMode;
+    if (mSizeMode == nsSizeMode_Fullscreen)
+      return NS_OK;
+    mOldSizeMode = mSizeMode;
     SetSizeMode(nsSizeMode_Fullscreen);
   } else {
     SetSizeMode(mOldSizeMode);
@@ -2717,7 +2780,15 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
-  return nsBaseWidget::MakeFullScreen(aFullScreen);
+  nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
+
+  // Let the dom know via web shell window
+  nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+  event.mSizeMode = mSizeMode;
+  InitEvent(event);
+  DispatchWindowEvent(&event);
+
+  return rv;
 #endif
 }
 
@@ -5221,12 +5292,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   case WM_GESTURENOTIFY:
     {
       if (mWindowType != eWindowType_invisible &&
-          mWindowType != eWindowType_plugin &&
-          mWindowType != eWindowType_toplevel) {
-        // eWindowType_toplevel is the top level main frame window. Gesture support
-        // there prevents the user from interacting with the title bar or nc
-        // areas using a single finger. Java and plugin windows can make their
-        // own calls.
+          mWindowType != eWindowType_plugin) {
+        // A GestureNotify event is dispatched to decide which single-finger panning
+        // direction should be active (including none) and if pan feedback should
+        // be displayed. Java and plugin windows can make their own calls.
         GESTURENOTIFYSTRUCT * gestureinfo = (GESTURENOTIFYSTRUCT*)lParam;
         nsPointWin touchPoint;
         touchPoint = gestureinfo->ptsLocation;
@@ -6984,6 +7053,11 @@ PRBool nsWindow::OnResize(nsIntRect &aWindowRect)
     Invalidate(PR_FALSE);
   }
 #endif
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  UpdateCaptionButtonsClippingRect();
+#endif
+
   // call the event callback
   if (mEventCallback) {
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);

@@ -42,6 +42,7 @@ function log(msg) {
 }
 
 function nextTest() {
+  mediaTestCleanup();
   if (gTestNum == gInfoLeakTests.length) {
     gFinished = true;
     SimpleTest.finish();

@@ -16,7 +16,7 @@
  * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -255,6 +255,56 @@ const NetUtil = {
         }
 
         return this.ioService.newChannelFromURI(uri);
+    },
+
+    /**
+     * Reads aCount bytes from aInputStream into a string.
+     *
+     * @param aInputStream
+     *        The input stream to read from.
+     * @param aCount
+     *        The number of bytes to read from the stream.
+     *
+     * @return the bytes from the input stream in string form.
+     *
+     * @throws NS_ERROR_INVALID_ARG if aInputStream is not an nsIInputStream.
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from aInputStream would
+     *         block the calling thread (non-blocking mode only).
+     * @throws NS_ERROR_FAILURE if there are not enough bytes available to read
+     *         aCount amount of data.
+     */
+    readInputStreamToString: function NetUtil_readInputStreamToString(aInputStream,
+                                                                      aCount)
+    {
+        if (!(aInputStream instanceof Ci.nsIInputStream)) {
+            let exception = new Components.Exception(
+                "First argument should be an nsIInputStream",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        if (!aCount) {
+            let exception = new Components.Exception(
+                "Non-zero amount of bytes must be specified",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        let sis = Cc["@mozilla.org/scriptableinputstream;1"].
+                  createInstance(Ci.nsIScriptableInputStream);
+        sis.init(aInputStream);
+        try {
+            return sis.readBytes(aCount);
+        }
+        catch (e) {
+            // Adjust the stack so it throws at the caller's location.
+            throw new Components.Exception(e.message, e.result,
+                                           Components.stack.caller, e.data);
+        }
     },
 
     /**
