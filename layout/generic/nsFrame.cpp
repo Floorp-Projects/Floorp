@@ -3754,7 +3754,7 @@ LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
   nsIFrame* f = aObject->mFrame;
   aObject->mFrame = nsnull;
   f->Properties().Delete(LayerActivityProperty());
-  f->InvalidateOverflowRect();
+  f->InvalidateFrameSubtree();
 }
 
 void
@@ -3960,10 +3960,16 @@ nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
 }
 
 void
-nsIFrame::InvalidateOverflowRect()
+nsIFrame::InvalidateFrameSubtree()
 {
   Invalidate(GetOverflowRectRelativeToSelf());
   FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
+}
+
+void
+nsIFrame::InvalidateOverflowRect()
+{
+  Invalidate(GetOverflowRectRelativeToSelf());
 }
 
 NS_DECLARE_FRAME_PROPERTY(DeferInvalidatesProperty, nsIFrame::DestroyRegion)
@@ -4640,7 +4646,7 @@ nsIFrame::SetSelected(PRBool aSelected, SelectionType aType)
     }
 
     // Repaint this frame subtree's entire area
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
 }
 

@@ -822,12 +822,12 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
   if (weakThis.IsAlive()) {
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
   if (weakOther.IsAlive()) {
     other->PresContext()->PresShell()->
       FrameNeedsReflow(other, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
-    other->InvalidateOverflowRect();
+    other->InvalidateFrameSubtree();
   }
 }
 

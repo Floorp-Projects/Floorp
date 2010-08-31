@@ -7743,7 +7743,7 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 
   nsIViewManager::UpdateViewBatch batch(presShell->GetViewManager());
   nsIFrame* rootFrame = presShell->GetRootFrame();
-  rootFrame->InvalidateOverflowRect();
+  rootFrame->InvalidateFrameSubtree();
   batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 

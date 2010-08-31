@@ -1972,8 +1972,16 @@ public:
    * of ContainerLayers associated with frames in this subtree are
    * completely invalidated.
    */
+  void InvalidateFrameSubtree();
+
+  /**
+   * Invalidate the overflow area for this frame. Invalidates this
+   * frame's overflow rect. Does not necessarily cause ThebesLayers for
+   * descendant frames to be repainted; only this frame can be relied on
+   * to be repainted.
+   */
   void InvalidateOverflowRect();
-  
+
   /**
    * Computes a rect that encompasses everything that might be painted by
    * this frame.  This includes this frame, all its descendent frames, this
