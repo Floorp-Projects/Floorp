@@ -1530,7 +1530,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
           aState.mReflowState.mStyleVisibility->mDirection)) &&
       // The left content-edge must be a constant distance from the left
       // border-edge.
-      GetStylePadding()->mPadding.GetLeftUnit() != eStyleUnit_Percent;
+      !GetStylePadding()->mPadding.GetLeft().HasPercent();
 
 #ifdef DEBUG
   if (gDisableResizeOpt) {
@@ -2502,7 +2502,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     printf("%p invalidate (%d, %d, %d, %d)\n",
            this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
     if (aLine->IsForceInvalidate())
-      printf("  dirty line is %p\n", static_cast<void*>(aLine.get());
+      printf("  dirty line is %p\n", static_cast<void*>(aLine.get()));
 #endif
     Invalidate(dirtyRect);
     if (GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
@@ -2754,10 +2754,15 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 static inline PRBool
-IsPaddingZero(nsStyleUnit aUnit, const nsStyleCoord &aCoord)
+IsPaddingZero(const nsStyleCoord &aCoord)
 {
-    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
-            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
+  return (aCoord.GetUnit() == eStyleUnit_Coord &&
+          aCoord.GetCoordValue() == 0) ||
+         (aCoord.GetUnit() == eStyleUnit_Percent &&
+          aCoord.GetPercentValue() == 0.0) ||
+         (aCoord.IsCalcUnit() &&
+          nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
+          nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
 }
 
 static inline PRBool
@@ -2796,10 +2801,8 @@ nsBlockFrame::IsSelfEmpty()
   const nsStylePadding* padding = GetStylePadding();
   if (border->GetActualBorderWidth(NS_SIDE_TOP) != 0 ||
       border->GetActualBorderWidth(NS_SIDE_BOTTOM) != 0 ||
-      !IsPaddingZero(padding->mPadding.GetTopUnit(),
-                     padding->mPadding.GetTop()) ||
-      !IsPaddingZero(padding->mPadding.GetBottomUnit(),
-                     padding->mPadding.GetBottom())) {
+      !IsPaddingZero(padding->mPadding.GetTop()) ||
+      !IsPaddingZero(padding->mPadding.GetBottom())) {
     return PR_FALSE;
   }
 

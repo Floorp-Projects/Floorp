@@ -4941,7 +4941,8 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentMargin->mMargin.Get(side);
     if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_ZERO,
+                 coord, parentCoord,
+                 SETCOORD_LPAH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       margin->mMargin.Set(side, coord);
     }
@@ -5310,7 +5311,8 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentPadding->mPadding.Get(side);
     if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                 coord, parentCoord,
+                 SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       padding->mPadding.Set(side, coord);
     }
