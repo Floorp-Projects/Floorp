@@ -56,6 +56,15 @@ then
     done
 fi
 
+# 32-bit platforms
+if [[ $($LIRASM --word-size) == 32 ]]
+then
+    for infile in "$TESTS_DIR"/32-bit/*.in
+    do
+        runtest $infile
+    done
+fi
+
 # ARM
 if [[ $(uname -m) == arm* ]]
 then
