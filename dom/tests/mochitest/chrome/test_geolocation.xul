@@ -24,13 +24,11 @@ function error(error)
 {
   ok(0, "error occured trying to get geolocation from chrome");
   SimpleTest.finish();
-  newwindow.close();
 }
 function done(position)
 {
   ok(position, "geolocation was found from chrome");
   SimpleTest.finish();
-  newwindow.close();
 }
 </script>
 
