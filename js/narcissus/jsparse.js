@@ -518,7 +518,7 @@ Narcissus.parser = (function() {
 
         CONST: {
             build: function(t) {
-                return new Node(t, VAR);
+                return new Node(t, CONST);
             },
 
             addDecl: function(n, n2, x) {
