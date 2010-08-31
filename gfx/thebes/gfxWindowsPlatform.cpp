@@ -230,10 +230,14 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     ::GetVersionExA(&versionInfo);
     bool isVistaOrHigher = versionInfo.dwMajorVersion >= 6;
 
+    PRBool safeMode = PR_FALSE;
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    if (xr)
+      xr->GetInSafeMode(&safeMode);
+
 #ifdef CAIRO_HAS_D2D_SURFACE
     PRBool d2dDisabled = PR_FALSE;
     PRBool d2dBlocked = PR_FALSE;
-    PRBool safeMode = PR_FALSE;
 
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo) {
@@ -257,10 +261,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     nsresult rv = pref->GetBoolPref("gfx.direct2d.disabled", &d2dDisabled);
     if (NS_FAILED(rv))
         d2dDisabled = PR_FALSE;
-
-    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-    if (xr)
-      xr->GetInSafeMode(&safeMode);
 
     if (isVistaOrHigher && !d2dDisabled && !d2dBlocked && !safeMode) {
         // We need a DWriteFactory to work.
