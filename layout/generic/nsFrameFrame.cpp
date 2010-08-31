@@ -181,6 +181,7 @@ public:
   NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther);
   virtual void EndSwapDocShells(nsIFrame* aOther);
   virtual nsIFrame* GetFrame() { return this; }
+  virtual nsIFrame* GetSubdocumentRootFrame();
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
@@ -353,6 +354,17 @@ PRIntn
 nsSubDocumentFrame::GetSkipSides() const
 {
   return 0;
+}
+
+nsIFrame*
+nsSubDocumentFrame::GetSubdocumentRootFrame()
+{
+  if (!mInnerView)
+    return nsnull;
+  nsIView* subdocView = mInnerView->GetFirstChild();
+  if (!subdocView)
+    return nsnull;
+  return static_cast<nsIFrame*>(subdocView->GetClientData());
 }
 
 NS_IMETHODIMP

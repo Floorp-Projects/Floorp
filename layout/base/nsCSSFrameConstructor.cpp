@@ -428,15 +428,6 @@ ReparentFrame(nsFrameManager* aFrameManager,
 {
   aFrame->SetParent(aNewParentFrame);
   aFrameManager->ReparentStyleContext(aFrame);
-  if (aFrame->GetStateBits() &
-      (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    // No need to walk up the tree, since the bits are already set
-    // right on the parent of aNewParentFrame.
-    NS_ASSERTION(aNewParentFrame->GetParent()->GetStateBits() &
-                   NS_FRAME_HAS_CHILD_WITH_VIEW,
-                 "aNewParentFrame's parent should have this bit set!");
-    aNewParentFrame->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-  }
 }
 
 static void
@@ -1317,12 +1308,13 @@ PRBool IsBorderCollapse(nsIFrame* aFrame)
 
 /**
  * Moves aFrameList from aOldParent to aNewParent.  This updates the parent
- * pointer of the frames in the list, reparents their views as needed, and sets
- * the NS_FRAME_HAS_VIEW bit on aNewParent and its ancestors as needed.  Then
- * it sets the list as the initial child list on aNewParent, unless aNewParent
- * either already has kids or has been reflowed; in that case it appends the
- * new frames.  Note that this method differs from ReparentFrames in that it
- * doesn't change the kids' style contexts.
+ * pointer of the frames in the list, and reparents their views as needed.
+ * nsFrame::SetParent sets the NS_FRAME_HAS_VIEW bit on aNewParent and its
+ * ancestors as needed. Then it sets the list as the initial child list
+ * on aNewParent, unless aNewParent either already has kids or has been
+ * reflowed; in that case it appends the new frames.  Note that this
+ * method differs from ReparentFrames in that it doesn't change the kids'
+ * style contexts.
  */
 // XXXbz Since this is only used for {ib} splits, could we just copy the view
 // bits from aOldParent to aNewParent and then use the
@@ -1344,26 +1336,8 @@ MoveChildrenTo(nsPresContext* aPresContext,
                                                 aOldParent, aNewParent);
   }
 
-  PRBool setHasChildWithView = PR_FALSE;
-
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    if (!setHasChildWithView
-        && (e.get()->GetStateBits() &
-            (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW))) {
-      setHasChildWithView = PR_TRUE;
-    }
-
     e.get()->SetParent(aNewParent);
-  }
-
-  if (setHasChildWithView) {
-    aNewParent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-    if (!sameGrandParent) {
-      for (nsIFrame* ancestor = aNewParent->GetParent();
-           ancestor; ancestor = ancestor->GetParent()) {
-        ancestor->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-      }
-    }
   }
 
   if (aNewParent->GetChildList(nsnull).IsEmpty() &&

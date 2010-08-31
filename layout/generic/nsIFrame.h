@@ -262,6 +262,10 @@ typedef PRUint64 nsFrameState;
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
 
+// Frame or one of its (cross-doc) descendants may have the
+// NS_FRAME_HAS_CONTAINER_LAYER bit.
+#define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
@@ -756,7 +760,7 @@ public:
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }
-  NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
+  virtual void SetParent(nsIFrame* aParent) = 0;
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
@@ -1963,7 +1967,10 @@ public:
   void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
 
   /**
-   * Invalidate the overflow rect of this frame
+   * Invalidate the entire frame subtree for this frame. Invalidates this
+   * frame's overflow rect, and also ensures that all ThebesLayer children
+   * of ContainerLayers associated with frames in this subtree are
+   * completely invalidated.
    */
   void InvalidateOverflowRect();
   
