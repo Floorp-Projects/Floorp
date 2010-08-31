@@ -690,6 +690,9 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     // can restore them.
     fViewport(0, 0, aSize.width, aSize.height);
 
+    // Clear the new framebuffer with the full viewport
+    ClearSafely();
+
     // Ok, now restore the GL state back to what it was before the resize took place.
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
@@ -699,8 +702,6 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     // the previous one isn't valid.
     if (!firstTime)
         fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-    ClearSafely();
 
     return PR_TRUE;
 }

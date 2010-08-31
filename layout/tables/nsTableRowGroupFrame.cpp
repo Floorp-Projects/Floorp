@@ -816,7 +816,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*           aPresContext,
     if (movedFrame || (rowHeight != rowBounds.height)) {
       // Resize/move the row to its final size and position
       if (movedFrame) {
-        rowFrame->InvalidateOverflowRect();
+        rowFrame->InvalidateFrameSubtree();
       }
       
       rowFrame->SetRect(nsRect(rowBounds.x, yOrigin, rowBounds.width,
@@ -881,7 +881,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
   groupRect.width = aWidth;
 
   if (aYTotalOffset != 0) {
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
   
   SetRect(groupRect);
@@ -906,10 +906,10 @@ nsTableRowGroupFrame::SlideChild(nsRowGroupReflowState& aReflowState,
   nsPoint newPosition = oldPosition;
   newPosition.y = aReflowState.y;
   if (oldPosition.y != newPosition.y) {
-    aKidFrame->InvalidateOverflowRect();
+    aKidFrame->InvalidateFrameSubtree();
     aKidFrame->SetPosition(newPosition);
     nsTableFrame::RePositionViews(aKidFrame);
-    aKidFrame->InvalidateOverflowRect();
+    aKidFrame->InvalidateFrameSubtree();
   }
 }
 

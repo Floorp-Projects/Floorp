@@ -1222,6 +1222,10 @@ statusbarpanel#statusbar-display {
   min-height: 28px;
 }
 
+.tabbrowser-tab[pinned] {
+  min-height: 20px; /* corresponds to the max. height of non-textual tab contents, i.e. the tab close button */
+}
+
 .tabbrowser-tab[pinned] + .tabbrowser-tab:not([pinned]) {
   -moz-margin-start: 0;
 }
@@ -1236,7 +1240,8 @@ statusbarpanel#statusbar-display {
 }
 
 .tabbrowser-tab[pinned] > .tab-icon-image {
-  margin: 2px 2px 0;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 2px;
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {

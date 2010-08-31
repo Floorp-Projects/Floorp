@@ -238,6 +238,19 @@ NS_NewChannel(nsIChannel           **result,
     return rv;
 }
 
+// For now, works only with JARChannel.  Future: with all channels that may
+// have Content-Disposition header (JAR, nsIHttpChannel, and nsIMultiPartChannel).
+inline nsresult
+NS_GetContentDisposition(nsIRequest     *channel,
+                         nsACString     &result)
+{
+    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
+    if (props)
+        return props->GetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION,
+                                            result);
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
 // Use this function with CAUTION. It creates a stream that blocks when you
 // Read() from it and blocking the UI thread is a bad idea. If you don't want
 // to implement a full blown asynchronous consumer (via nsIStreamListener) look

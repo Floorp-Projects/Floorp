@@ -1263,7 +1263,7 @@ public:
   virtual void NotifyExpired(nsGfxScrollFrameInner *aObject) {
     RemoveObject(aObject);
     aObject->mScrollingActive = PR_FALSE;
-    aObject->mOuter->InvalidateOverflowRect();
+    aObject->mOuter->InvalidateFrameSubtree();
   }
 };
 
@@ -2968,7 +2968,7 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
     if (aScrollbarIsBeingHidden) {
       aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
     } else {
-      aBox->InvalidateOverflowRect();
+      aBox->InvalidateFrameSubtree();
     }
   }
   nsBoxFrame::LayoutChildAt(aState, aBox, aRect);
@@ -2976,7 +2976,7 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
     if (aScrollbarIsBeingHidden) {
       aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
     } else {
-      aBox->InvalidateOverflowRect();
+      aBox->InvalidateFrameSubtree();
     }
   }
 }

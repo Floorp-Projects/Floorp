@@ -3754,7 +3754,7 @@ LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
   nsIFrame* f = aObject->mFrame;
   aObject->mFrame = nsnull;
   f->Properties().Delete(LayerActivityProperty());
-  f->InvalidateOverflowRect();
+  f->InvalidateFrameSubtree();
 }
 
 void
@@ -3957,6 +3957,13 @@ nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
   nsLayoutUtils::GetRectDifferenceStrips(aR1, aR2, &sizeHStrip, &sizeVStrip);
   Invalidate(sizeVStrip);
   Invalidate(sizeHStrip);
+}
+
+void
+nsIFrame::InvalidateFrameSubtree()
+{
+  Invalidate(GetOverflowRectRelativeToSelf());
+  FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
 }
 
 void
@@ -4639,7 +4646,7 @@ nsIFrame::SetSelected(PRBool aSelected, SelectionType aType)
     }
 
     // Repaint this frame subtree's entire area
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
 }
 
@@ -6775,18 +6782,32 @@ nsFrame::BoxMetrics() const
   return metrics;
 }
 
-NS_IMETHODIMP
-nsFrame::SetParent(const nsIFrame* aParent)
+void
+nsFrame::SetParent(nsIFrame* aParent)
 {
   PRBool wasBoxWrapped = IsBoxWrapped();
-  nsIFrame::SetParent(aParent);
+  mParent = aParent;
   if (!wasBoxWrapped && IsBoxWrapped()) {
     InitBoxMetrics(PR_TRUE);
   } else if (wasBoxWrapped && !IsBoxWrapped()) {
     Properties().Delete(BoxMetricsProperty());
   }
 
-  return NS_OK;
+  if (GetStateBits() & (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+    for (nsIFrame* f = aParent;
+         f && !(f->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
+         f = f->GetParent()) {
+      f->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+    }
+  }
+
+  if (GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
+    for (nsIFrame* f = aParent;
+         f && !(f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+         f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+      f->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+    }
+  }
 }
 
 void
