@@ -42,7 +42,7 @@
 #include "nsLayoutUtils.h"
 #include "Layers.h"
 #include "BasicLayers.h"
-#include "nsIFrameFrame.h"
+#include "nsSubDocumentFrame.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -1315,7 +1315,7 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
   do {
     nsIFrame* child = aFrame->GetFirstChild(childList);
     if (!child && !childList) {
-      nsIFrameFrame* subdocumentFrame = do_QueryFrame(aFrame);
+      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(aFrame);
       if (subdocumentFrame) {
         // Descend into the subdocument
         child = subdocumentFrame->GetSubdocumentRootFrame();
