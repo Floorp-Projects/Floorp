@@ -39,7 +39,6 @@
 #define NSSUBDOCUMENTFRAME_H_
 
 #include "nsLeafFrame.h"
-#include "nsIFrameFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsFrameLoader.h"
 
@@ -47,10 +46,10 @@
  * nsSubDocumentFrame
  *****************************************************************************/
 class nsSubDocumentFrame : public nsLeafFrame,
-                           public nsIFrameFrame,
                            public nsIReflowCallback
 {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsSubDocumentFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
   nsSubDocumentFrame(nsStyleContext* aContext);
@@ -115,11 +114,10 @@ public:
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
-  // nsIFrameFrame
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther);
   virtual void EndSwapDocShells(nsIFrame* aOther);
-  virtual nsIFrame* GetFrame() { return this; }
+  nsIView* CreateViewAndWidget(nsContentType aContentType);
   virtual nsIFrame* GetSubdocumentRootFrame();
 
   // nsIReflowCallback
@@ -135,7 +133,6 @@ protected:
   nsFrameLoader* FrameLoader();
 
   PRBool IsInline() { return mIsInline; }
-  nsIView* CreateViewAndWidget(nsContentType aContentType);
 
   virtual nscoord GetIntrinsicWidth();
   virtual nscoord GetIntrinsicHeight();

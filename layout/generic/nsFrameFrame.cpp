@@ -121,7 +121,7 @@ nsSubDocumentFrame::CreateAccessible()
 #endif
 
 NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
-  NS_QUERYFRAME_ENTRY(nsIFrameFrame)
+  NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
 
 class AsyncFrameInit : public nsRunnable

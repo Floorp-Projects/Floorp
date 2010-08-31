@@ -60,7 +60,6 @@ EXPORTS		= \
 		nsHTMLReflowState.h \
 		nsIAnonymousContentCreator.h \
 		nsIFrame.h \
-		nsIFrameFrame.h \
 		nsIFrameUtil.h \
 		nsIImageFrame.h \
 		nsILineIterator.h \
@@ -69,6 +68,7 @@ EXPORTS		= \
 		nsIScrollableFrame.h \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
+		nsSubDocumentFrame.h \
 		$(NULL)
 
 ifdef IBMBIDI
