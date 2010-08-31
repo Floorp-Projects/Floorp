@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+    <title>Console HTTP test page</title>
+    <script type="text/javascript">
+      function makeXhr(aMethod, aUrl, aRequestBody, aTestGenerator) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open(aMethod, aUrl, true);
+        xmlhttp.onreadystatechange = function (aEvt) {
+          if (xmlhttp.readyState == 4) {
+            aTestGenerator.next();
+          }
+        };
+        xmlhttp.send(aRequestBody);
+      }
+
+      function testXhrGet(aTestGenerator) {
+        makeXhr('get', 'test-data.json', null, aTestGenerator);
+      }
+
+      function testXhrPost(aTestGenerator) {
+        makeXhr('post', 'test-data.json', "Hello world!", aTestGenerator);
+      }
+
+      function testSubmitForm() {
+        document.getElementsByTagName("form")[0].submit();
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Heads Up Display HTTP Logging Testpage</h1>
+    <h2>This page is used to test the HTTP logging.</h2>
+
+    <form action="http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-network-request.html" method="post">
+      <input name="name" type="text" value="foo bar"><br>
+      <input name="age" type="text" value="144"><br>
+    </form>
+  </body>
+</html>

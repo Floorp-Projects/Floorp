@@ -18,7 +18,6 @@ function do_progress(e) {
   var v = e.target;
   ok(!v._finished, "Check no progress events after completed for " + v._name);
   ok(e.lengthComputable, "Check progress lengthComputable for " + v._name);
-  ok(e.loaded >= v._last_progress_total, "Check progress increasing: " + e.loaded + " for " + v._name);
   v._last_progress_total = e.loaded;
   ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded + " for " + v._name);
   is(e.total, v._size, "Check progress total for " + v._name);

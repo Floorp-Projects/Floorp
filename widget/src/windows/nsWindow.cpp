@@ -746,12 +746,6 @@ LPCWSTR nsWindow::WindowClass()
       nsWindow::sIsRegistered = FALSE;
     }
 
-    wc.lpszClassName = kClassNameUI;
-    if (!::RegisterClassW(&wc) && 
-      ERROR_CLASS_ALREADY_EXISTS != GetLastError()) {
-      nsWindow::sIsRegistered = FALSE;
-    }
-
     wc.lpszClassName = kClassNameGeneral;
     ATOM generalClassAtom = ::RegisterClassW(&wc);
     if (!generalClassAtom && 
@@ -778,9 +772,6 @@ LPCWSTR nsWindow::WindowClass()
   }
   if (mContentType == eContentTypeContentFrame) {
     return kClassNameContentFrame;
-  }
-  if (mContentType == eContentTypeUI) {
-    return kClassNameUI;
   }
   return kClassNameGeneral;
 }

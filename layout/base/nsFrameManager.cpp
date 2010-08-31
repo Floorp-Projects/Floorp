@@ -500,7 +500,7 @@ nsFrameManager::RemoveFrame(nsIAtom*        aListName,
   // that doesn't change the size of the parent.)
   // This has to sure to invalidate the entire overflow rect; this
   // is important in the presence of absolute positioning
-  aOldFrame->InvalidateOverflowRect();
+  aOldFrame->InvalidateFrameSubtree();
 
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
                // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
