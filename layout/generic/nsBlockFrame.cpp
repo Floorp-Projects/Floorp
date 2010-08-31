@@ -2754,18 +2754,6 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 static inline PRBool
-IsPaddingZero(const nsStyleCoord &aCoord)
-{
-  return (aCoord.GetUnit() == eStyleUnit_Coord &&
-          aCoord.GetCoordValue() == 0) ||
-         (aCoord.GetUnit() == eStyleUnit_Percent &&
-          aCoord.GetPercentValue() == 0.0) ||
-         (aCoord.IsCalcUnit() &&
-          nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
-          nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
-}
-
-static inline PRBool
 IsNonAutoNonZeroHeight(const nsStyleCoord& aCoord)
 {
   if (aCoord.GetUnit() == eStyleUnit_Auto)
@@ -2801,8 +2789,8 @@ nsBlockFrame::IsSelfEmpty()
   const nsStylePadding* padding = GetStylePadding();
   if (border->GetActualBorderWidth(NS_SIDE_TOP) != 0 ||
       border->GetActualBorderWidth(NS_SIDE_BOTTOM) != 0 ||
-      !IsPaddingZero(padding->mPadding.GetTop()) ||
-      !IsPaddingZero(padding->mPadding.GetBottom())) {
+      !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
+      !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBottom())) {
     return PR_FALSE;
   }
 

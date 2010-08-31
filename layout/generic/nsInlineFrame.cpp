@@ -94,21 +94,10 @@ nsInlineFrame::GetType() const
 }
 
 static inline PRBool
-IsPaddingZero(const nsStyleCoord &aCoord)
-{
-  return (aCoord.GetUnit() == eStyleUnit_Coord &&
-          aCoord.GetCoordValue() == 0) ||
-         (aCoord.GetUnit() == eStyleUnit_Percent &&
-          aCoord.GetPercentValue() == 0.0) ||
-         (aCoord.IsCalcUnit() &&
-          nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
-          nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
-}
-
-static inline PRBool
 IsMarginZero(const nsStyleCoord &aCoord)
 {
-  return aCoord.GetUnit() == eStyleUnit_Auto || IsPaddingZero(aCoord);
+  return aCoord.GetUnit() == eStyleUnit_Auto ||
+         nsLayoutUtils::IsPaddingZero(aCoord);
 }
 
 /* virtual */ PRBool
@@ -129,11 +118,11 @@ nsInlineFrame::IsSelfEmpty()
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
   PRBool haveRight =
     border->GetActualBorderWidth(NS_SIDE_RIGHT) != 0 ||
-    !IsPaddingZero(padding->mPadding.GetRight()) ||
+    !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight()) ||
     !IsMarginZero(margin->mMargin.GetRight());
   PRBool haveLeft =
     border->GetActualBorderWidth(NS_SIDE_LEFT) != 0 ||
-    !IsPaddingZero(padding->mPadding.GetLeft()) ||
+    !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
     !IsMarginZero(margin->mMargin.GetLeft());
   if (haveLeft || haveRight) {
     if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
