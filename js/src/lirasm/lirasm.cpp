@@ -2247,7 +2247,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
             arm_arch = strtoul(argv[i+1], &endptr, 10);
             // Check that the argument was a number.
             if ('\0' == *endptr) {
-                if ((arm_arch < 5) || (arm_arch > 7)) {
+                if ((arm_arch < 4) || (arm_arch > 7)) {
                     errMsgAndQuit(opts.progname, "Unsupported argument to --arm-arch.\n");
                 }
             } else {
