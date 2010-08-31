@@ -3151,7 +3151,7 @@ PSMContentDownloader::~PSMContentDownloader()
 
 NS_IMPL_ISUPPORTS2(PSMContentDownloader, nsIStreamListener, nsIRequestObserver)
 
-const PRInt64 kDefaultCertAllocLength = 2048;
+const PRInt32 kDefaultCertAllocLength = 2048;
 
 NS_IMETHODIMP
 PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
@@ -3164,14 +3164,11 @@ PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
   // Get the URI //
   channel->GetURI(getter_AddRefs(mURI));
 
-  PRInt64 contentLength;
+  PRInt32 contentLength;
   rv = channel->GetContentLength(&contentLength);
   if (NS_FAILED(rv) || contentLength <= 0)
     contentLength = kDefaultCertAllocLength;
   
-  if (contentLength > PR_INT32_MAX)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   mBufferOffset = 0;
   mBufferSize = 0;
   mByteData = (char*) nsMemory::Alloc(contentLength);

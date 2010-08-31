@@ -46,6 +46,7 @@
 #include "nsXPCOMStrings.h"
 
 #include "AndroidBridge.h"
+#include "nsAppShell.h"
 
 using namespace mozilla;
 
@@ -110,6 +111,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
     jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
+    jShowAlertNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
@@ -401,6 +403,30 @@ void
 AndroidBridge::EmptyClipboard()
 {
     mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
+}
+
+void
+AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
+                                     const nsAString& aAlertTitle,
+                                     const nsAString& aAlertText,
+                                     const nsAString& aAlertCookie,
+                                     nsIObserver *aAlertListener,
+                                     const nsAString& aAlertName)
+{
+    ALOG("ShowAlertNotification");
+
+    AutoLocalJNIFrame jniFrame;
+
+    if (nsAppShell::gAppShell && aAlertListener)
+        nsAppShell::gAppShell->AddObserver(aAlertName, aAlertListener);
+
+    jvalue args[5];
+    args[0].l = mJNIEnv->NewString(nsPromiseFlatString(aImageUrl).get(), aImageUrl.Length());
+    args[1].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertTitle).get(), aAlertTitle.Length());
+    args[2].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertText).get(), aAlertText.Length());
+    args[3].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertCookie).get(), aAlertCookie.Length());
+    args[4].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
+    mJNIEnv->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotification, args);
 }
 
 void

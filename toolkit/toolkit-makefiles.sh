@@ -779,6 +779,10 @@ MAKEFILES_extensions="
   extensions/pref/autoconfig/src/Makefile
 "
 
+MAKEFILES_startupcache="
+  startupcache/Makefile
+"
+
 add_makefiles "
   $MAKEFILES_db
   $MAKEFILES_dom
@@ -820,6 +824,7 @@ add_makefiles "
   $MAKEFILES_libmar
   $MAKEFILES_lib7z
   $MAKEFILES_extensions
+  $MAKEFILES_startupcache
 "
 
 #
@@ -926,6 +931,7 @@ if [ "$ENABLE_TESTS" ]; then
     parser/htmlparser/tests/mochitest/Makefile
     parser/xml/test/Makefile
     rdf/tests/triplescat/Makefile
+    startupcache/tests/Makefile
     testing/mochitest/Makefile
     testing/mochitest/MochiKit/Makefile
     testing/mochitest/chrome/Makefile
