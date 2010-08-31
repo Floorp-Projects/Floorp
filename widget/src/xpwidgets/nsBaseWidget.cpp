@@ -533,9 +533,8 @@ NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 // merely stores the state.
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::SetSizeMode(PRInt32 aMode) {
-
-
+NS_IMETHODIMP nsBaseWidget::SetSizeMode(PRInt32 aMode)
+{
   if (aMode == nsSizeMode_Normal ||
       aMode == nsSizeMode_Minimized ||
       aMode == nsSizeMode_Maximized ||
@@ -552,8 +551,8 @@ NS_IMETHODIMP nsBaseWidget::SetSizeMode(PRInt32 aMode) {
 // Get the size mode (minimized, maximized, that sort of thing...)
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::GetSizeMode(PRInt32* aMode) {
-
+NS_IMETHODIMP nsBaseWidget::GetSizeMode(PRInt32* aMode)
+{
   *aMode = mSizeMode;
   return NS_OK;
 }

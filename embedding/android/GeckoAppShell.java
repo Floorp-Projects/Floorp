@@ -423,4 +423,20 @@ class GeckoAppShell
             return false;
         }
     }
+
+    static String getClipboardText() {
+        Context context = GeckoApp.surfaceView.getContext();
+        ClipboardManager cm = (ClipboardManager)
+            context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (!cm.hasText())
+            return null;
+        return cm.getText().toString();
+    }
+
+    static void setClipboardText(String text) {
+        Context context = GeckoApp.surfaceView.getContext();
+        ClipboardManager cm = (ClipboardManager)
+            context.getSystemService(Context.CLIPBOARD_SERVICE);
+        cm.setText(text);
+    }
 }

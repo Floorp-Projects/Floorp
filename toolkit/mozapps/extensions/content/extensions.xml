@@ -244,12 +244,19 @@
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
                   oncommand="this.parentNode._handleChange('dateUpdated');"/>
+      <xul:button anonid="btn-relevance" class="sorter" hidden="true"
+                  label="&sort.relevance.label;"
+                  tooltiptext="&sort.relevance.tooltip;"
+                  oncommand="this.parentNode._handleChange('relevancescore');"/>
     </content>
 
     <implementation>
       <constructor><![CDATA[
         if (!this.hasAttribute("sortby"))
           this.setAttribute("sortby", "name");
+
+        if (this.getAttribute("showrelevance") == "true")
+          this._btnRelevance.hidden = false;
 
         this._refreshState();
       ]]></constructor>
@@ -260,6 +267,9 @@
       </field>
       <field name="_btnDate">
         document.getAnonymousElementByAttribute(this, "anonid", "btn-date");
+      </field>
+      <field name="_btnRelevance">
+        document.getAnonymousElementByAttribute(this, "anonid", "btn-relevance");
       </field>
 
       <property name="sortBy">
@@ -337,6 +347,10 @@
           else
             this._btnDate.checkState = 0;
 
+          if (sortBy == "relevancescore")
+            this._btnRelevance.checkState = checkState;
+          else
+            this._btnRelevance.checkState = 0;
 
           if (this.handler && "onSortChanged" in this.handler)
             this.handler.onSortChanged(sortBy, this.ascending);

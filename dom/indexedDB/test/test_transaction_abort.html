@@ -91,19 +91,19 @@
       }
 
       try {
-        objectStore.modify({}, 1);
+        objectStore.put({}, 1);
         ok(false, "Should have thrown");
       }
       catch (e) {
-        ok(true, "Modify threw");
+        ok(true, "Put threw");
       }
 
       try {
-        objectStore.addOrModify({}, 1);
+        objectStore.put({}, 1);
         ok(false, "Should have thrown");
       }
       catch (e) {
-        ok(true, "AddOrModify threw");
+        ok(true, "Put threw");
       }
 
       try {

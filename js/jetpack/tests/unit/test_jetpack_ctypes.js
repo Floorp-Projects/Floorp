@@ -6,7 +6,7 @@ function run_test() {
     do_check_true(ok, "onCTypesTested");
     do_test_finished();
   });
-  var jetpacktestdir = do_get_file('../../jsctypes-test/unit').path;
+  var jetpacktestdir = do_get_file('../../../../toolkit/components/ctypes/tests/unit').path;
   jetpack.sendMessage("testCTypes", jetpacktestdir);
   do_test_pending();
 }

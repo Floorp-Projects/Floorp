@@ -447,6 +447,83 @@ function test_newChannel_with_nsIFile()
   run_next_test();
 }
 
+function test_readInputStreamToString()
+{
+  const TEST_DATA = "this is a test string\0 with an embedded null";
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsISupportsCString);
+  istream.data = TEST_DATA;
+
+  do_check_eq(NetUtil.readInputStreamToString(istream, TEST_DATA.length),
+              TEST_DATA);
+
+  run_next_test();
+}
+
+function test_readInputStreamToString_no_input_stream()
+{
+  try {
+    NetUtil.readInputStreamToString("hi", 2);
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+
+  run_next_test();
+}
+
+function test_readInputStreamToString_no_bytes_arg()
+{
+  const TEST_DATA = "this is a test string";
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsIStringInputStream);
+  istream.setData(TEST_DATA, TEST_DATA.length);
+
+  try {
+    NetUtil.readInputStreamToString(istream);
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+
+  run_next_test();
+}
+
+function test_readInputStreamToString_blocking_stream()
+{
+  let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+  pipe.init(true, true, 0, 0, null);
+
+  try {
+    NetUtil.readInputStreamToString(pipe.inputStream, 10);
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_BASE_STREAM_WOULD_BLOCK);
+  }
+  run_next_test();
+}
+
+function test_readInputStreamToString_too_many_bytes()
+{
+  const TEST_DATA = "this is a test string";
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsIStringInputStream);
+  istream.setData(TEST_DATA, TEST_DATA.length);
+
+  try {
+    NetUtil.readInputStreamToString(istream, TEST_DATA.length + 10);
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_FAILURE);
+  }
+
+  run_next_test();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -468,6 +545,11 @@ let tests = [
   test_newChannel_with_string,
   test_newChannel_with_nsIURI,
   test_newChannel_with_nsIFile,
+  test_readInputStreamToString,
+  test_readInputStreamToString_no_input_stream,
+  test_readInputStreamToString_no_bytes_arg,
+  test_readInputStreamToString_blocking_stream,
+  test_readInputStreamToString_too_many_bytes,
 ];
 let index = 0;
 
@@ -475,15 +557,17 @@ function run_next_test()
 {
   if (index < tests.length) {
     do_test_pending();
-    print("Running the next test: " + tests[index].name);
 
     // Asynchronous test exceptions do not kill the test...
-    try {
-      tests[index++]();
-    }
-    catch (e) {
-      do_throw(e);
-    }
+    do_execute_soon(function() {
+      try {
+        print("Running the next test: " + tests[index].name);
+        tests[index++]();
+      }
+      catch (e) {
+        do_throw(e);
+      }
+    });
   }
 
   do_test_finished();

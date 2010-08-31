@@ -96,6 +96,7 @@ private:
     nsCOMPtr<nsISupports>           mListenerContext;
     nsCString                       mContentType;
     nsCString                       mContentCharset;
+    nsCString                       mContentDisposition;
     PRInt64                         mContentLength;
     PRUint32                        mLoadFlags;
     nsresult                        mStatus;

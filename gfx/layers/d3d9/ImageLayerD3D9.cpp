@@ -38,6 +38,10 @@
 #include "ImageLayerD3D9.h"
 #include "gfxImageSurface.h"
 #include "yuv_convert.h"
+#include "nsIServiceManager.h" 
+#include "nsIConsoleService.h" 
+#include "nsPrintfCString.h" 
+#include "Nv3DVUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -186,6 +190,18 @@ ImageLayerD3D9::RenderLayer()
     device()->SetPixelShaderConstantF(0, opacity, 1);
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
+
+    /* 
+     * Send 3d control data and metadata 
+     */ 
+    if (mD3DManager->Is3DEnabled() && mD3DManager->GetNv3DVUtils()) { 
+      mD3DManager->GetNv3DVUtils()->SendNv3DVControl(STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE); 
+
+      nsRefPtr<IDirect3DSurface9> renderTarget; 
+      device()->GetRenderTarget(0, getter_AddRefs(renderTarget)); 
+      mD3DManager->GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width, 
+        (unsigned int)yuvImage->mSize.height, (HANDLE)(yuvImage->mYTexture), (HANDLE)(renderTarget)); 
+    } 
 
     device()->SetTexture(0, yuvImage->mYTexture);
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);

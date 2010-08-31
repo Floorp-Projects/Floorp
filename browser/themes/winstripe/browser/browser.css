@@ -92,6 +92,12 @@
   background-image: -moz-linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
+#navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+  border-top: 1px solid ThreeDShadow;
+}
+
 #personal-bookmarks {
   min-height: 24px;
 }
@@ -1277,8 +1283,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
                                          rgba(0,0,0,.05) 90%, rgba(0,0,0,.1));
 }
 
-#TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
-  -moz-box-shadow: 0 -1px ThreeDShadow inset;
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > scrollbox:not(:-moz-lwtheme) {
+  padding-bottom: 1px;
+  margin-bottom: -1px;
+  position: relative;
+}
+
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+  margin-bottom: -1px;
+  padding-bottom: 1px;
 }
 
 .tabbrowser-tabs:-moz-system-metric(touch-enabled) {

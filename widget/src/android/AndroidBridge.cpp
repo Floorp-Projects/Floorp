@@ -108,6 +108,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
+    jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
+    jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
 
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
@@ -358,6 +360,47 @@ void
 AndroidBridge::MoveTaskToBack()
 {
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jMoveTaskToBack);
+}
+
+bool
+AndroidBridge::GetClipboardText(nsAString& aText)
+{
+    jstring jstrType =  
+        static_cast<jstring>(mJNIEnv->
+                             CallStaticObjectMethod(mGeckoAppShellClass,
+                                                    jGetClipboardText));
+    if (!jstrType)
+        return PR_FALSE;
+    nsJNIString jniStr(jstrType);
+    aText.Assign(jniStr);
+    return PR_TRUE;
+}
+
+void
+AndroidBridge::SetClipboardText(const nsAString& aText)
+{
+    const PRUnichar* wText;
+    PRUint32 wTextLen = NS_StringGetData(aText, &wText);
+    jstring jstr = mJNIEnv->NewString(wText, wTextLen);
+    mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
+}
+
+bool
+AndroidBridge::ClipboardHasText()
+{
+    jstring jstrType =  
+        static_cast<jstring>(mJNIEnv->
+                             CallStaticObjectMethod(mGeckoAppShellClass,
+                                                    jGetClipboardText));
+    if (!jstrType)
+        return PR_FALSE;
+    return PR_TRUE;
+}
+
+void
+AndroidBridge::EmptyClipboard()
+{
+    mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
 }
 
 void

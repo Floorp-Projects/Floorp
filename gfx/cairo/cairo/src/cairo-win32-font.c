@@ -239,14 +239,14 @@ _have_cleartype_quality (void)
 	     version_info.dwMinorVersion >= 1));	/* XP or newer */
 }
 
-static BYTE
-_get_system_quality (void)
+BYTE
+_cairo_win32_get_system_text_quality (void)
 {
     BOOL font_smoothing;
     UINT smoothing_type;
 
     if (!SystemParametersInfo (SPI_GETFONTSMOOTHING, 0, &font_smoothing, 0)) {
-	_cairo_win32_print_gdi_error ("_get_system_quality");
+	_cairo_win32_print_gdi_error ("_cairo_win32_get_system_text_quality");
 	return DEFAULT_QUALITY;
     }
 
@@ -254,7 +254,7 @@ _get_system_quality (void)
 	if (_have_cleartype_quality ()) {
 	    if (!SystemParametersInfo (SPI_GETFONTSMOOTHINGTYPE,
 				       0, &smoothing_type, 0)) {
-		_cairo_win32_print_gdi_error ("_get_system_quality");
+		_cairo_win32_print_gdi_error ("_cairo_win32_get_system_text_quality");
 		return DEFAULT_QUALITY;
 	    }
 
@@ -307,7 +307,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
      *      here is the hint_metrics options.
      */
     if (options->antialias == CAIRO_ANTIALIAS_DEFAULT)
-	f->quality = _get_system_quality ();
+	f->quality = _cairo_win32_get_system_text_quality ();
     else {
 	switch (options->antialias) {
 	case CAIRO_ANTIALIAS_NONE:

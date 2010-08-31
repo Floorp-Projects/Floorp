@@ -21,7 +21,7 @@
     display: none;
   }
 
-  #main-window:not(:-moz-lwtheme) {
+  #main-window {
     -moz-appearance: -moz-win-borderless-glass;
     background: transparent;
   }
@@ -40,7 +40,7 @@
     text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
     border-left: 1px solid ThreeDShadow;
     border-right: 1px solid ThreeDShadow;
   }
