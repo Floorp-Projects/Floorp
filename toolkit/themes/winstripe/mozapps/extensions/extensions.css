@@ -122,7 +122,7 @@
   background-color: #55D4FF;
   padding: 2px 8px;
   margin: 6px 0px;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   color: #FFF;
   font-weight: bold;
   text-align: center;
@@ -245,7 +245,7 @@
   -moz-appearance: none;
   border: none;
   background-color: transparent;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   padding: 0px 6px;
   margin: 0px 6px;
   min-width: 12px !important;
@@ -488,7 +488,7 @@
   -moz-appearance: none;
   padding: 0px 6px;
   margin: 0px 3px;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
 }
 
 .search-filter-radio[selected] {
@@ -641,7 +641,7 @@
 
 .download-progress {
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   border: 1px solid #555;
   -moz-box-shadow: #777 1px 1px 2px;
   width: 200px;
@@ -666,12 +666,12 @@
 
 .download-progress .start-cap:-moz-locale-dir(ltr),
 .download-progress .end-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 100% 0 0 100%;
+  -moz-border-radius: 10000px 0 0 10000px;
 }
 
 .download-progress .end-cap:-moz-locale-dir(ltr),
 .download-progress .start-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 0 100% 100% 0;
+  -moz-border-radius: 0 10000px 10000px 0;
 }
 
 .download-progress .progress {
@@ -689,7 +689,7 @@
   border-style: solid;
   -moz-border-top-colors: #FFF;
   -moz-border-left-colors: #FFF;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   min-width: 16px;
   width: 16px;
   height: 16px;
@@ -772,7 +772,7 @@
   font-weight: bold;
   text-shadow: #4C9EF8 -1px -1px 1px;
   border: 1px solid #4C9EF8;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   background-image: -moz-linear-gradient(#93C5FA, #4C9EF8);
   -moz-padding-start: 20px;
   -moz-padding-end: 4px;

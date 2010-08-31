@@ -650,7 +650,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 toolbar:not([iconsize="small"])[mode="icons"] #back-button {
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   padding: 0;
   width: 30px;
   height: 30px;
