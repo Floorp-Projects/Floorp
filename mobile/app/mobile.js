@@ -37,7 +37,7 @@
 #filter substitution
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
-pref("general.useragent.extra.mobile", "@APP_UA_NAME_EXTRA@/@APP_VERSION_EXTRA@ Fennec/@APP_VERSION@");
+pref("general.useragent.compatMode.firefox", true);
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);
@@ -80,6 +80,10 @@ pref("browser.cache.offline.enable", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
 pref("offline-apps.quota.max", 2048); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
+
+/* protocol warning prefs */
+pref("network.protocol-handler.warn-external.tel", false);
+pref("network.protocol-handler.warn-external.mailto", false);
 
 /* http prefs */
 pref("network.http.pipelining", true);
@@ -135,6 +139,10 @@ pref("signon.SignonFileName", "signons.txt");
 pref("formhelper.enabled", true);
 pref("formhelper.autozoom", true);
 pref("formhelper.restore", false);
+pref("formhelper.caretLines.portrait", 4);
+pref("formhelper.caretLines.landscape", 1);
+pref("formhelper.harmonizeValue", 10);
+pref("formhelper.margin", 15);
 
 /* find helper */
 pref("findhelper.autozoom", true);
@@ -359,7 +367,7 @@ pref("browser.ui.kinetic.speedSensitivity", 80);
 pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
-pref("browser.ui.zoom.pageFitGranularity", 10); // don't zoom to fit by less than 1/10.
+pref("browser.ui.zoom.pageFitGranularity", 9); // don't zoom to fit by less than 1/9
 pref("browser.ui.zoom.animationFps", 60);
 pref("browser.ui.zoom.animationDuration", 350); // ms duration of double-tap zoom animation
 

@@ -95,6 +95,7 @@ HelperAppLauncherDialog.prototype = {
         aLauncher.saveToDisk(null, false);
       }
       else if (choice == 1) {
+        aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
         aLauncher.launchWithApplication(null, false);
       }
       else {

@@ -140,13 +140,12 @@ var BrowserUI = {
   },
 
   _updateToolbar: function _updateToolbar() {
-    let icons = document.getElementById("urlbar-icons");
-    let mode = icons.getAttribute("mode");
+    let mode = Elements.urlbarState.getAttribute("mode");
     if (Browser.selectedTab.isLoading() && mode != "loading") {
-      icons.setAttribute("mode", "loading");
+      Elements.urlbarState.setAttribute("mode", "loading");
     }
     else if (mode != "view") {
-      icons.setAttribute("mode", "view");
+      Elements.urlbarState.setAttribute("mode", "view");
     }
   },
 
@@ -196,21 +195,27 @@ var BrowserUI = {
   },
 
   _editURI: function _editURI(aEdit) {
-    var icons = document.getElementById("urlbar-icons");
-    if (aEdit && icons.getAttribute("mode") != "edit") {
-      icons.setAttribute("mode", "edit");
-      this._edit.defaultValue = this._edit.value;
+    if (aEdit) {
+      let isOpened = this._edit.hasAttribute("open");
+      if (!isOpened) {
+        Elements.urlbarState.setAttribute("mode", "edit");
+        this._edit.defaultValue = this._edit.value;
+      }
 
+      // Replace the web page title by the url of the page
       let urlString = this.getDisplayURI(Browser.selectedBrowser);
       if (Util.isURLEmpty(urlString))
         urlString = "";
       this._edit.value = urlString;
 
-      // This is a workaround for bug 488420, needed to cycle focus for the
-      // IME state to be set properly. Testing shows we only really need to
-      // do this the first time.
-      this._edit.blur();
-      gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      if (!this._edit.readOnly) {
+        // This is a workaround needed to cycle focus for the IME state
+        // to be set properly (bug 488420)
+        this._edit.blur();
+        gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      }
+
+      this._edit.readOnly = !isOpened;
     }
     else if (!aEdit) {
       this._updateToolbar();
@@ -240,6 +245,9 @@ var BrowserUI = {
   },
 
   set activePanel(aPanel) {
+    if (this._activePanel == aPanel)
+      return;
+
     let container = document.getElementById("awesome-panels");
     if (aPanel) {
       container.hidden = false;
@@ -249,7 +257,7 @@ var BrowserUI = {
       BrowserUI.showToolbar(false);
     }
 
-    if (this._activePanel && this._activePanel != aPanel)
+    if (this._activePanel)
       this._activePanel.close();
     this._activePanel = aPanel;
   },
@@ -378,6 +386,10 @@ var BrowserUI = {
     this._edit.addEventListener("click", this, false);
     this._edit.addEventListener("mousedown", this, false);
 
+    let awesomePopup = document.getElementById("popup_autocomplete");
+    awesomePopup.addEventListener("popupshown", this, false);
+    awesomePopup.addEventListener("popuphidden", this, false);
+
     document.getElementById("toolbar-main").ignoreDrag = true;
 
     let tabs = document.getElementById("tabs");
@@ -439,15 +451,15 @@ var BrowserUI = {
   uninit: function() {
     ExtensionsView.uninit();
     ConsoleView.uninit();
+    FormHelperUI.uninit();
   },
 
   update: function(aState) {
-    let icons = document.getElementById("urlbar-icons");
     let browser = Browser.selectedBrowser;
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
-        if (icons.getAttribute("mode") != "edit")
+        if (Elements.urlbarState.getAttribute("mode") != "edit")
           this._updateToolbar();
 
         this._updateIcon(browser.mIconURL);
@@ -455,7 +467,7 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        if (icons.getAttribute("mode") != "edit")
+        if (Elements.urlbarState.getAttribute("mode") != "edit")
           this._updateToolbar();
 
         browser.mIconURL = "";
@@ -536,8 +548,6 @@ var BrowserUI = {
     if (this.isAutoCompleteOpen())
       return;
 
-    BrowserSearch.updateSearchButtons();
-
     this._hidePopup();
     this.activePanel = AllPagesList;
   },
@@ -556,12 +566,9 @@ var BrowserUI = {
     return this._edit.popup.popupOpen;
   },
 
-  doButtonSearch: function(button) {
-    if (!("engine" in button) || !button.engine)
-      return;
-
-    // We don't want the button to look pressed for now
-    button.parentNode.selectedItem = null;
+  doOpenSearch: function doOpenSearch(aName) {
+    // save the current value of the urlbar
+    let searchValue = this._edit.value;
 
     // Give the new page lots of room
     Browser.hideSidebars();
@@ -571,7 +578,8 @@ var BrowserUI = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    let submission = button.engine.getSubmission(this._edit.value, null);
+    let engine = Services.search.getEngineByName(aName);
+    let submission = engine.getSubmission(searchValue, null);
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
   },
 
@@ -673,6 +681,13 @@ var BrowserUI = {
   handleEscape: function (aEvent) {
     aEvent.stopPropagation();
 
+    // Check open popups
+    if (this._popup) {
+      this._hidePopup();
+      return;
+    }
+
+    // Check active panel
     if (BrowserUI.activePanel) {
       BrowserUI.activePanel = null;
       return;
@@ -682,12 +697,6 @@ var BrowserUI = {
     let dialog = this.activeDialog;
     if (dialog) {
       dialog.close();
-      return;
-    }
-
-    // Check open popups
-    if (this._popup) {
-      this._hidePopup();
       return;
     }
 
@@ -771,6 +780,14 @@ var BrowserUI = {
       case "error":
         this._favicon.src = "";
         break;
+      // Awesome popup event
+      case "popupshown":
+        this._edit.setAttribute("open", "true");
+        break;
+      case "popuphidden":
+        this._edit.removeAttribute("open");
+        this._edit.readOnly = true;
+        break;
     }
   },
 
@@ -843,6 +860,7 @@ var BrowserUI = {
       case "cmd_go":
       case "cmd_openLocation":
       case "cmd_star":
+      case "cmd_opensearch":
       case "cmd_bookmarks":
       case "cmd_history":
       case "cmd_remoteTabs":
@@ -926,6 +944,18 @@ var BrowserUI = {
         BookmarkPopup.toggle(autoClose);
         break;
       }
+      case "cmd_opensearch":
+        this._edit.blur();
+
+        MenuListHelperUI.show({
+          title: Elements.browserBundle.getString("opensearch.searchWith"),
+          menupopup: { children: BrowserSearch.engines },
+          set selectedIndex(aIndex) {
+            let name = this.menupopup.children[aIndex].label;
+            BrowserUI.doOpenSearch(name);
+          }
+        });
+        break;
       case "cmd_bookmarks":
         this.activePanel = BookmarkList;
         break;
@@ -1561,6 +1591,10 @@ var FormHelperUI = {
     close: "cmd_formClose"
   },
 
+  //for resize/rotate case
+  _currentCaretRect: null,
+  _currentElementRect: null,
+
   init: function formHelperInit() {
     this._container = document.getElementById("content-navigator");
     this._autofillContainer = document.getElementById("form-helper-autofill");
@@ -1571,6 +1605,7 @@ var FormHelperUI = {
     messageManager.addMessageListener("FormAssist:Show", this);
     messageManager.addMessageListener("FormAssist:Hide", this);
     messageManager.addMessageListener("FormAssist:Update", this);
+    messageManager.addMessageListener("FormAssist:Resize", this);
     messageManager.addMessageListener("FormAssist:AutoComplete", this);
 
     // Listen for events where form assistant should be closed
@@ -1580,6 +1615,12 @@ var FormHelperUI = {
     // Listen for modal dialog to show/hide the UI
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMModalDialogClosed", this);
+
+    Services.obs.addObserver(this, "softkb-change", false);
+  },
+
+  uninit: function formHelperUninit() {
+    Services.obs.removeObserver(this, "softkb-change");
   },
 
   show: function formHelperShow(aElement, aHasPrevious, aHasNext) {
@@ -1601,12 +1642,21 @@ var FormHelperUI = {
     }
     this._updateContainer(lastElement, this._currentElement);
 
-    this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
+    //hide all sidebars, this will adjust the visible rect.
+    Browser.hideSidebars();
+
+    //save the element Rect and reuse it to avoid jumps in cases the element moves slighty on the website.
+    this._currentElementRect = Rect.fromRect(aElement.rect);
+    this._zoom(this._currentElementRect, Rect.fromRect(aElement.caretRect));
   },
 
   hide: function formHelperHide() {
     if (!this._open)
       return;
+
+    // reset current Element and Caret Rect
+    this._currentElementRect = null;
+    this._currentCaretRect = null;
 
     this._updateContainerForSelect(this._currentElement, null);
     this._open = false;
@@ -1638,8 +1688,19 @@ var FormHelperUI = {
         this._container.contentHasChanged();
         break;
 
-      case "FormAssist:Update":
-        this._zoom(null, Rect.fromRect(json.caretRect));
+      case "FormAssist:Resize":
+        // First hide all tool/sidebars they take to much space, this will adjust the visible rect.
+        Browser.hideSidebars();
+        this._zoom(this._currentElementRect, this._currentCaretRect);
+        this._container.contentHasChanged();
+        break;
+
+       case "FormAssist:Update":
+        // Using currentElementRect here is maybe not 100% perfect since
+        // elements might change there position while typing
+        // out of screen movement is covered by simply following the caret
+        // as long as we see what we type, let the element move
+        this._zoom(this._currentElementRect, Rect.fromRect(json.caretRect));
         break;
 
       case "DOMWillOpenModalDialog":
@@ -1656,6 +1717,16 @@ var FormHelperUI = {
         }
         break;
     }
+  },
+  
+  observe: function formHelperObserve(aSubject, aTopic, aData) {
+    let rect = Rect.fromRect(JSON.parse(aData));
+    rect.height = rect.bottom - rect.top;
+    rect.width  = rect.right - rect.left;
+
+    Browser._browserView._visibleScreenArea = rect;
+    BrowserUI.sizeControls(rect.width, rect.height);
+    this._zoom(this._currentElementRect, this._currentCaretRect);
   },
 
   goToPrevious: function formHelperGoToPrevious() {
@@ -1681,6 +1752,7 @@ var FormHelperUI = {
       return;
 
     this._container.hidden = !aVal;
+    this._container.contentHasChanged();
 
     if (aVal) {
       this._zoomStart();
@@ -1766,30 +1838,107 @@ var FormHelperUI = {
   _zoom: function _formHelperZoom(aElementRect, aCaretRect) {
     return;
 
-    let zoomRect = Browser.getVisibleRect();
+    let bv = Browser._browserView;
 
-    // Zoom to a specified Rect
-    if (aElementRect && bv.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {
-      // Zoom to an element by keeping the caret into view
-      let zoomLevel = Browser._getZoomLevelForRect(aElementRect);
-      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+    if (aElementRect && aCaretRect && this._open) {
+      this._currentCaretRect = aCaretRect;
 
-      zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
-      Browser.animatedZoomTo(zoomRect);
-    }
+      // might not always be set, if not - use the windowsize
+      let visibleScreenArea = !bv._visibleScreenArea.isEmpty() ? bv._visibleScreenArea : new Rect(0, 0, window.innerWidth, window.innerHeight);
 
-    // Move the view to show the caret if needed
-    if (aCaretRect) {
-      let caretRect = bv.browserToViewportRect(aCaretRect);
-      if (zoomRect.contains(caretRect))
-        return;
+      // respect the helper container in setting the correct viewAreaHeight
+      let viewAreaHeight = visibleScreenArea.height - this._container.getBoundingClientRect().height;
+      let viewAreaWidth = visibleScreenArea.width;
+      let caretLines = Services.prefs.getIntPref("formhelper.caretLines.portrait");
+      let harmonizeValue = Services.prefs.getIntPref("formhelper.harmonizeValue");
 
-      let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
-      if (deltaX != 0 || deltaY != 0) {
-        Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
+      if (!Util.isPortrait())
+        caretLines = Services.prefs.getIntPref("formhelper.caretLines.landscape");
+
+      // hide titlebar if the remaining space would be smaller than the height of the titlebar itself
+      // if there is enough space left than adjust the height. Since this adjust the the visible rects
+      // there is no need to adjust the y later
+      let toolbar = document.getElementById("toolbar-main");
+      if (viewAreaHeight - toolbar.boxObject.height <= toolbar.boxObject.height * 2)
+        Browser.hideTitlebar();
+      else
+        viewAreaHeight -= toolbar.boxObject.height;
+
+      // To ensure the correct calculation when the sidebars are visible - get the sidebar size and
+      // use them as margin
+      let [leftvis, rightvis, leftW, rightW] = Browser.computeSidebarVisibility(0, 0);
+      let marginLeft = leftvis ? leftW : 0;
+      let marginRight = rightvis ? rightW : 0;
+
+      // The height and Y of the caret might change during writing - even in cases the
+      // fontsize keeps the same. To avoid unneeded zooming and scrolling
+      let harmonizedCaretHeight = 0;
+      let harmonizedCaretY = 0;
+
+      // Start calculation here, the order is important
+      // All calculations are done in non_zoomed_coordinates => 1:1 to "screen-pixels"
+
+      // for buttons and non input field elements a caretRect with the height of 0 gets reported
+      // cover this case.
+      if (!aCaretRect.isEmpty()) {
+        // the height and y position may vary from letter to letter
+        // adjust position and zooming only if a bigger step was done.
+        harmonizedCaretHeight = aCaretRect.height - aCaretRect.height % harmonizeValue;
+        harmonizedCaretY = aCaretRect.y - aCaretRect.y % harmonizeValue;
+      } else {
+        harmonizedCaretHeight = 30; // fallback height
+
+        // use the element as position
+        harmonizedCaretY = aElementRect.y;
+        aCaretRect.x = aElementRect.x;
       }
 
-      Browser.animatedZoomTo(zoomRect);
+      let zoomLevel = bv.getZoomLevel();
+      let enableZoom = bv.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom");
+      if (enableZoom) {
+        zoomLevel = (viewAreaHeight / caretLines) / harmonizedCaretHeight;
+        zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+      }
+      viewAreaWidth /= zoomLevel;
+
+      const margin = Services.prefs.getIntPref("formhelper.margin");
+
+      // if the viewAreaWidth is smaller than the neutralized position + margins.
+      // [YES] use the x position of the element minus margins as x position for our visible rect.
+      // [NO] use the x position of the caret minus margins as the x position for our visible rect.
+      let x = (marginLeft + marginRight + margin + aCaretRect.x - aElementRect.x) < viewAreaWidth
+               ? aElementRect.x - margin - marginLeft
+               : aCaretRect.x - viewAreaWidth + margin + marginRight;
+      // use the adjustet Caret Y minus a margin four our visible rect
+      let y = harmonizedCaretY - margin;
+
+      // from here on play with zoomed values
+      // if we want to have it animated, build up zoom rect and animate.
+      if (enableZoom && bv.getZoomLevel() != zoomLevel) {
+        let vis = bv.getVisibleRect();
+        x = bv.browserToViewport(x);
+        y = bv.browserToViewport(y);
+
+        //dont use browser functions they are bogus for this case
+        let zoomRatio = zoomLevel / bv.getZoomLevel();
+        let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
+        let zoomRect = new Rect(x, y, newVisW, newVisH);
+
+        Browser.animatedZoomTo(zoomRect);
+      }
+      else { // no zooming at all
+        let vis = bv.getVisibleRect();
+        // get our x and y in viewport "zoomed" coordinates
+        x = bv.browserToViewport(x);
+        y = bv.browserToViewport(y);
+
+        Browser.contentScrollboxScroller.scrollBy(x-vis.x, y-vis.y);
+
+        // workaround for tilemanager bug, after scrolling one screen height, text gets not painted on typing
+        bv.invalidateEntireView();
+
+        bv.onAfterVisibleMove();
+      }
     }
   },
 
@@ -2079,12 +2228,18 @@ var MenuListHelperUI = {
     return this._popup = document.getElementById("menulist-popup");
   },
 
+  get _title() {
+    delete this._title;
+    return this._title = document.getElementById("menulist-title");
+  },
+
   _currentList: null,
   show: function mn_show(aMenulist) {
     this._currentList = aMenulist;
+    this._title.value = aMenulist.title || "";
 
     let container = this._container;
-    let listbox = this._popup.firstChild;
+    let listbox = this._popup.lastChild;
     while (listbox.firstChild)
       listbox.removeChild(listbox.firstChild);
 
@@ -2092,9 +2247,13 @@ var MenuListHelperUI = {
     for (let i = 0; i < children.length; i++) {
       let child = children[i];
       let item = document.createElement("richlistitem");
-      if (child.selected)
-        item.setAttribute("selected", child.selected);
-      item.setAttribute("class", "menulist-command");
+      // Add selected as a class name instead of an attribute to not being overidden
+      // by the richlistbox behavior (it sets the "current" and "selected" attribute
+      item.setAttribute("class", "menulist-command" + (child.selected ? " selected" : ""));
+
+      let image = document.createElement("image");
+      image.setAttribute("src", child.image || "");
+      item.appendChild(image);
 
       let label = document.createElement("label");
       label.setAttribute("value", child.label);
@@ -2103,13 +2262,16 @@ var MenuListHelperUI = {
       listbox.appendChild(item);
     }
 
+    window.addEventListener("resize", this, true);
     container.hidden = false;
+    this.sizeToContent();
     BrowserUI.pushPopup(this, [this._popup]);
   },
 
   hide: function mn_hide() {
     this._currentList = null;
     this._container.hidden = true;
+    window.removeEventListener("resize", this, true);
     BrowserUI.popPopup();
   },
 
@@ -2117,11 +2279,37 @@ var MenuListHelperUI = {
     this._currentList.selectedIndex = aIndex;
 
     // Dispatch a xul command event to the attached menulist
-    let evt = document.createEvent("XULCommandEvent");
-    evt.initCommandEvent("command", true, true, window, 0, false, false, false, false, null);
-    this._currentList.dispatchEvent(evt);
+    if (this._currentList.dispatchEvent) {
+      let evt = document.createEvent("XULCommandEvent");
+      evt.initCommandEvent("command", true, true, window, 0, false, false, false, false, null);
+      this._currentList.dispatchEvent(evt);
+    }
 
     this.hide();
+  },
+
+  sizeToContent: function sizeToContent() {
+    // Make sure the container is at least sized to the content
+    let popup = this._popup;
+    let preferredHeight = 0;
+    for (let i=0; i<popup.childElementCount; i++) {
+      preferredHeight += popup.children[i].getBoundingClientRect().height;
+    }
+
+    // Ensure to reset the assigned width/height to have the default's one set
+    // by the content
+    popup.width = popup.height = "";
+
+    let rect = popup.getBoundingClientRect();
+    let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
+    let width = Math.min(rect.width, 0.75 * window.innerWidth);
+
+    popup.height = height;
+    popup.width = width;
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    this.sizeToContent();
   }
 }
 
