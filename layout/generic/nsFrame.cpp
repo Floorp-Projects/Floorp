@@ -3963,6 +3963,7 @@ void
 nsIFrame::InvalidateOverflowRect()
 {
   Invalidate(GetOverflowRectRelativeToSelf());
+  FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
 }
 
 NS_DECLARE_FRAME_PROPERTY(DeferInvalidatesProperty, nsIFrame::DestroyRegion)
@@ -6775,18 +6776,32 @@ nsFrame::BoxMetrics() const
   return metrics;
 }
 
-NS_IMETHODIMP
-nsFrame::SetParent(const nsIFrame* aParent)
+void
+nsFrame::SetParent(nsIFrame* aParent)
 {
   PRBool wasBoxWrapped = IsBoxWrapped();
-  nsIFrame::SetParent(aParent);
+  mParent = aParent;
   if (!wasBoxWrapped && IsBoxWrapped()) {
     InitBoxMetrics(PR_TRUE);
   } else if (wasBoxWrapped && !IsBoxWrapped()) {
     Properties().Delete(BoxMetricsProperty());
   }
 
-  return NS_OK;
+  if (GetStateBits() & (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+    for (nsIFrame* f = aParent;
+         f && !(f->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
+         f = f->GetParent()) {
+      f->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+    }
+  }
+
+  if (GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
+    for (nsIFrame* f = aParent;
+         f && !(f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+         f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+      f->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
+    }
+  }
 }
 
 void
