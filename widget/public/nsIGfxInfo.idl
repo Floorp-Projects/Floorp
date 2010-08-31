@@ -40,7 +40,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(d2bfa0fd-8f73-4660-9609-f999680243b0)]
+[scriptable, uuid(d2bfa0fd-8f73-4660-9609-f999680243b1)]
 interface nsIGfxInfo : nsISupports
 {
   readonly attribute boolean D2DEnabled;
@@ -66,6 +66,44 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString adapterDriverVersion;
   
   readonly attribute DOMString adapterDriverDate;
-  
+
+  /*
+   * A set of constants for features that we can ask this GfxInfo object
+   * about via GetFeatureStatus
+   */
+  /* Don't assign 0 or -1 */
+  /* Whether Direct2D is supported for content rendering. */
+  const long FEATURE_DIRECT2D = 1;
+  /* Whether Direct3D 9 is supported for layers. */
+  const long FEATURE_DIRECT3D_9_LAYERS = 2;
+  /* Whether Direct3D 10.0 is supported for layers. */
+  const long FEATURE_DIRECT3D_10_LAYERS = 3;
+  /* Whether Direct3D 10.1 is supported for layers. */
+  const long FEATURE_DIRECT3D_10_1_LAYERS = 4;
+  /* Whether OpenGL is supported for layers */
+  const long FEATURE_OPENGL_LAYERS = 5;
+  /* Whether WebGL is supported via OpenGL. */
+  const long FEATURE_WEBGL_OPENGL = 6;
+  /* Whether WebGL is supported via ANGLE (D3D9 -- does not check for the presence of ANGLE libs). */
+  const long FEATURE_WEBGL_ANGLE = 7;
+
+  /*
+   * A set of return values from GetFeatureStatus
+   */
+  /* We don't have any information about this feature on this hardware */
+  const long FEATURE_STATUS_UNKNOWN = 0;
+  /* This feature is available and can be used */
+  const long FEATURE_AVAILABLE = 1;
+  /* This feature is not available */
+  const long FEATURE_NOT_AVAILABLE = 2;
+  /* This feature is available, but is blocked due to a blocklist entry */
+  const long FEATURE_BLOCKED = 3;
+  /* This feature is available and can be used, but is not suggested (e.g. shouldn't be used by default */
+  const long FEATURE_NOT_SUGGESTED = 4;
+
+  /**
+   * Ask about a feature, and return the status of that feature
+   */
+  long getFeatureStatus(in long aFeature);
 };
 

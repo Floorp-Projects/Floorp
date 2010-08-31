@@ -46,10 +46,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-// Use places-teardown to ensure we run last in the shutdown process.
-// Any other implementer should use places-shutdown instead, since teardown is
-// where things really break.
-const kTopicShutdown = "places-teardown";
+// A database flush should be the last operation during the shutdown process.
+const kTopicShutdown = "places-connection-closing";
 const kSyncFinished = "places-sync-finished";
 const kDebugStopSync = "places-debug-stop-sync";
 const kDebugStartSync = "places-debug-start-sync";
@@ -125,22 +123,9 @@ nsPlacesDBFlush.prototype = {
         this._timer = null;
       }
 
-      // Other components could still make changes to history at this point,
-      // for example to clear private data on shutdown, so here we dispatch
-      // an event to the main thread so that we will sync after
-      // Places shutdown ensuring all data have been saved.
-      Services.tm.mainThread.dispatch({
-        _self: this,
-        run: function() {
-          // Flush any remaining change to disk tables.
-          this._self._flushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
-
-          // Close the database connection, this was the last sync and we can't
-          // ensure database coherence from now on.
-          this._self._finalizeInternalStatements();
-          this._self._db.asyncClose();
-        }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      // Flush any remaining change to disk tables.
+      this._flushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
+      this._finalizeInternalStatements();
     }
     else if (aTopic == "nsPref:changed" && aData == kSyncPrefName) {
       // Get the new pref value, and then update our timer

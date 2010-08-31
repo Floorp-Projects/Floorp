@@ -682,8 +682,6 @@ const gXPInstallObserver = {
 
       if (!enabled) {
         notificationID = "xpinstall-disabled"
-        if (PopupNotifications.getNotification(notificationID, browser))
-          return;
 
         if (gPrefService.prefIsLocked("xpinstall.enabled")) {
           messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
@@ -702,9 +700,6 @@ const gXPInstallObserver = {
         }
       }
       else {
-        if (PopupNotifications.getNotification(notificationID, browser))
-          return;
-
         messageString = gNavigatorBundle.getFormattedString("xpinstallPromptWarning",
                           [brandShortName, installInfo.originatingURI.host]);
 
@@ -749,10 +744,6 @@ const gXPInstallObserver = {
       });
       break;
     case "addon-install-complete":
-      var notification = PopupNotifications.getNotification(notificationID, browser);
-      if (notification)
-        PopupNotifications.remove(notification);
-
       var needsRestart = installInfo.installs.some(function(i) {
         return i.addon.pendingOperations != AddonManager.PENDING_NONE;
       });

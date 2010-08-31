@@ -232,12 +232,11 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext):
 
 } // cntr
 
-NS_IMETHODIMP
-nsMenuFrame::SetParent(const nsIFrame* aParent)
+void
+nsMenuFrame::SetParent(nsIFrame* aParent)
 {
   nsBoxFrame::SetParent(aParent);
-  InitMenuParent(const_cast<nsIFrame *>(aParent));
-  return NS_OK;
+  InitMenuParent(aParent);
 }
 
 void

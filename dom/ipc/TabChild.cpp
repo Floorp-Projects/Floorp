@@ -1289,7 +1289,6 @@ TabChildGlobal::GetPrincipal()
 PExternalHelperAppChild*
 TabChild::AllocPExternalHelperApp(const IPC::URI& uri,
                                   const nsCString& aMimeContentType,
-                                  const nsCString& aContentDisposition,
                                   const bool& aForceSave,
                                   const PRInt64& aContentLength)
 {

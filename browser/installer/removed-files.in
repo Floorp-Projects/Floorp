@@ -626,7 +626,6 @@ xpicleanup@BIN_SUFFIX@
   components/WebContentConverter.js
   defaults/autoconfig/platform.js
   defaults/autoconfig/prefcalls.js
-  defaults/pref/channel-prefs.js
   defaults/pref/firefox-branding.js
   defaults/pref/firefox.js
   defaults/pref/firefox-l10n.js

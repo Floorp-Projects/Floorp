@@ -51,14 +51,6 @@ const bool JS_WANT_GC_METER_PRINT = true;
 const bool JS_WANT_GC_METER_PRINT = false;
 #endif
 
-/* MOZ_GCTIMER is a compile flag. --enable-gctimer */
-#if defined MOZ_GCTIMER
-const bool JS_WANT_GC_TIMER_PRINT = true;
-#elif defined DEBUG
-# define MOZ_GCTIMER 1
-const bool JS_WANT_GC_TIMER_PRINT = false;
-#endif
-
 #define METER_UPDATE_MAX(maxLval, rval)                                       \
     METER_IF((maxLval) < (rval), (maxLval) = (rval))
 

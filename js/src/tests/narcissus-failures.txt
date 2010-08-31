@@ -272,6 +272,8 @@ ecma/Date/15.9.5.3-1-n.js
 ecma/Date/15.9.5.4-2-n.js
 ecma/Date/15.9.5.8.js
 ecma/Date/15.9.5.9.js
+ecma/ExecutionContexts/10.2.2-1.js
+ecma/ExecutionContexts/10.2.2-2.js
 ecma/Expressions/11.12-2-n.js
 ecma/Expressions/11.2.1-1.js
 ecma/Expressions/11.2.1-3-n.js
@@ -433,8 +435,6 @@ ecma/extensions/15.6.3.js
 ecma/extensions/15.7.3.js
 ecma/extensions/9.9-1.js
 ecma/extensions/trapflatclosure.js
-ecma/ExecutionContexts/10.2.2-1.js
-ecma/ExecutionContexts/10.2.2-2.js
 ecma_2/Exceptions/boolean-001.js
 ecma_2/Exceptions/boolean-002.js
 ecma_2/Exceptions/date-001.js
@@ -572,9 +572,15 @@ ecma_3/extensions/regress-385393-03.js
 ecma_3/extensions/regress-429248.js
 ecma_3_1/Object/regress-444787.js
 ecma_5/Array/toString-01.js
+ecma_5/Date/toJSON-01.js
 ecma_5/Expressions/11.1.5-01.js
 ecma_5/Expressions/named-accessor-function.js
+ecma_5/Expressions/object-literal-accessor-arguments.js
 ecma_5/Function/15.3.4.3-01.js
+ecma_5/Function/arguments-caller-callee.js
+ecma_5/Function/arguments-property-attributes.js
+ecma_5/Function/function-caller.js
+ecma_5/Function/strict-arguments.js
 ecma_5/JSON/cyclic-stringify.js
 ecma_5/Object/15.2.3.3-01.js
 ecma_5/Object/15.2.3.4-03.js
@@ -624,10 +630,10 @@ ecma_5/strict/8.7.2.js
 ecma_5/strict/B.1.1.js
 ecma_5/strict/B.1.2.js
 ecma_5/strict/regress-532254.js
-js1_2/regexp/alphanumeric.js
-js1_2/regexp/digit.js
 js1_2/regexp/RegExp_multiline.js
 js1_2/regexp/RegExp_multiline_as_array.js
+js1_2/regexp/alphanumeric.js
+js1_2/regexp/digit.js
 js1_2/regexp/whitespace.js
 js1_2/regexp/word_boundary.js
 js1_2/regress/regress-144834.js
@@ -694,6 +700,7 @@ js1_5/Regress/regress-224956.js
 js1_5/Regress/regress-234389.js
 js1_5/Regress/regress-238945.js
 js1_5/Regress/regress-243389-n.js
+js1_5/Regress/regress-244470.js
 js1_5/Regress/regress-245113.js
 js1_5/Regress/regress-252892.js
 js1_5/Regress/regress-253150.js
@@ -738,6 +745,10 @@ js1_5/Regress/regress-352197.js
 js1_5/Regress/regress-352208.js
 js1_5/Regress/regress-355556.js
 js1_5/Regress/regress-356693.js
+js1_5/Regress/regress-360969-01.js
+js1_5/Regress/regress-360969-02.js
+js1_5/Regress/regress-360969-03.js
+js1_5/Regress/regress-360969-04.js
 js1_5/Regress/regress-360969-05.js
 js1_5/Regress/regress-360969-06.js
 js1_5/Regress/regress-372364.js
@@ -1324,6 +1335,8 @@ js1_8_1/strict/generator-eval-arguments.js
 js1_8_1/strict/let-block-eval-arguments.js
 js1_8_1/trace/math-trace-tests.js
 js1_8_1/trace/trace-test.js
+js1_8_5/extensions/destructure-accessor.js
+js1_8_5/extensions/reflect-parse.js
 js1_8_5/extensions/scripted-proxies.js
 js1_8_5/extensions/typedarray.js
 js1_8_5/regress/regress-500528.js
@@ -1344,6 +1357,7 @@ js1_8_5/regress/regress-571014.js
 js1_8_5/regress/regress-577648-1.js
 js1_8_5/regress/regress-577648-2.js
 js1_8_5/regress/regress-584355.js
+js1_8_5/regress/regress-588339.js
 narcissus/../ecma/Date/15.9.5.10-2.js
 narcissus/../ecma/Date/15.9.5.11-2.js
 narcissus/../ecma/Date/15.9.5.12-2.js

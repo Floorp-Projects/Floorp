@@ -54,7 +54,7 @@
 
 class nsIContent;
 class nsIURI;
-class nsIFrameFrame;
+class nsSubDocumentFrame;
 class nsIView;
 class nsIInProcessContentFrameMessageManager;
 class AutoResetInShow;
@@ -135,7 +135,7 @@ public:
    */
   PRBool Show(PRInt32 marginWidth, PRInt32 marginHeight,
               PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
-              nsIFrameFrame* frame);
+              nsSubDocumentFrame* frame);
 
   /**
    * Called from the layout frame associated with this frame loader, when

@@ -60,7 +60,6 @@ EXPORTS		= \
 		nsHTMLReflowState.h \
 		nsIAnonymousContentCreator.h \
 		nsIFrame.h \
-		nsIFrameFrame.h \
 		nsIFrameUtil.h \
 		nsIImageFrame.h \
 		nsILineIterator.h \
@@ -69,6 +68,7 @@ EXPORTS		= \
 		nsIScrollableFrame.h \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
+		nsSubDocumentFrame.h \
 		$(NULL)
 
 ifdef IBMBIDI
@@ -90,7 +90,6 @@ CPPSRCS		= \
 		nsFirstLetterFrame.cpp \
 		nsFloatManager.cpp \
 		nsFrame.cpp \
-		nsFrameFrame.cpp \
 		nsFrameList.cpp \
 		nsFrameSetFrame.cpp \
 		nsFrameUtil.cpp \
@@ -113,6 +112,7 @@ CPPSRCS		= \
 		nsSelection.cpp \
 		nsSimplePageSequence.cpp \
 		nsSplittableFrame.cpp \
+		nsSubDocumentFrame.cpp \
 		nsTextFrameThebes.cpp \
 		nsTextFrameUtils.cpp \
 		nsTextRunTransformations.cpp \

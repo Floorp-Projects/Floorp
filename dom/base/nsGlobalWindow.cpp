@@ -3986,6 +3986,10 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
   if (itemType != nsIDocShellTreeItem::typeChrome)
     return NS_ERROR_FAILURE;
 
+  // If we are already in full screen mode, just return.
+  if (mFullScreen == aFullScreen)
+    return NS_OK;
+
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
   if (!DispatchCustomEvent("fullscreen")) {
@@ -4001,11 +4005,13 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
     xulWin->SetIntrinsicallySized(PR_FALSE);
   }
 
+  // Set this before so if widget sends an event indicating its
+  // gone full screen, the state trap above works.
+  mFullScreen = aFullScreen;
+
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
   if (widget)
     widget->MakeFullScreen(aFullScreen);
-
-  mFullScreen = aFullScreen;
 
   return NS_OK;
 }
