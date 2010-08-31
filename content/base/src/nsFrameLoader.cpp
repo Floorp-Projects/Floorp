@@ -84,7 +84,7 @@
 #include "nsFrameLoader.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
-#include "nsIFrameFrame.h"
+#include "nsSubDocumentFrame.h"
 #include "nsDOMError.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
@@ -645,7 +645,7 @@ class NS_STACK_CLASS AutoResetInShow {
 PRBool
 nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
                     PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
-                    nsIFrameFrame* frame)
+                    nsSubDocumentFrame* frame)
 {
   if (mInShow) {
     return PR_FALSE;
@@ -754,7 +754,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
 #ifdef MOZ_IPC
 bool
-nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
+nsFrameLoader::ShowRemoteFrame(nsSubDocumentFrame* frame, nsIView* view)
 {
   NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
 
@@ -767,7 +767,7 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
     return false;
   }
 
-  nsIntSize size = GetSubDocumentSize(frame->GetFrame());
+  nsIntSize size = GetSubDocumentSize(frame);
 
   // Painting with shared memory
   if (!mRemoteBrowser->SendCreateWidget(0))
@@ -985,7 +985,7 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsIFrameFrame* ourFrameFrame = do_QueryFrame(ourFrame);
+  nsSubDocumentFrame* ourFrameFrame = do_QueryFrame(ourFrame);
   if (!ourFrameFrame) {
     mInSwap = aOther->mInSwap = PR_FALSE;
     FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);

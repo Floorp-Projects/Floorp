@@ -468,7 +468,7 @@ public:
 class nsJNIString : public nsString
 {
 public:
-    nsJNIString(jstring jstr);
+    nsJNIString(jstring jstr, JNIEnv *jenv = NULL);
 };
 
 }

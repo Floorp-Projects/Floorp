@@ -112,7 +112,7 @@ public:
         NS_IF_ADDREF(*result = mJarReader);
     }
 
-    PRInt64 GetContentLength()
+    PRInt32 GetContentLength()
     {
         return mContentLength;
     }
@@ -127,7 +127,7 @@ private:
     nsCString                   mJarDirSpec;
     nsCOMPtr<nsIInputStream>    mJarStream;
     nsCString                   mJarEntry;
-    PRInt64                     mContentLength;
+    PRInt32                     mContentLength;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
@@ -173,11 +173,8 @@ nsJARInputThunk::EnsureJarStream()
     }
 
     // ask the JarStream for the content length
-    // XXX want a 64-bit value from nsIInputStream::Available()
-    PRUint32 contentLength;
-    rv = mJarStream->Available(&contentLength);
+    rv = mJarStream->Available((PRUint32 *) &mContentLength);
     if (NS_FAILED(rv)) return rv;
-    mContentLength = contentLength;
 
     return NS_OK;
 }
@@ -632,14 +629,7 @@ nsJARChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetContentDisposition(nsACString &result)
-{
-    result = mContentDisposition;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetContentLength(PRInt64 *result)
+nsJARChannel::GetContentLength(PRInt32 *result)
 {
     // if content length is unknown, query mJarInput...
     if (mContentLength < 0 && mJarInput)
@@ -650,7 +640,7 @@ nsJARChannel::GetContentLength(PRInt64 *result)
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetContentLength(PRInt64 aContentLength)
+nsJARChannel::SetContentLength(PRInt32 aContentLength)
 {
     // XXX does this really make any sense at all?
     mContentLength = aContentLength;
@@ -778,6 +768,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
     }
 
     if (NS_SUCCEEDED(status) && channel) {
+        nsCAutoString header;
         // Grab the security info from our base channel
         channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
@@ -786,7 +777,6 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
             // We only want to run scripts if the server really intended to
             // send us a JAR file.  Check the server-supplied content type for
             // a JAR type.
-            nsCAutoString header;
             httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
                                            header);
             nsCAutoString contentType;
@@ -797,6 +787,10 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
             mIsUnsafe = !(contentType.Equals(channelContentType) &&
                           (contentType.EqualsLiteral("application/java-archive") ||
                            contentType.EqualsLiteral("application/x-jar")));
+            rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Disposition"),
+                                                header);
+            if (NS_SUCCEEDED(rv))
+                SetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION, header);
         } else {
             nsCOMPtr<nsIJARChannel> innerJARChannel(do_QueryInterface(channel));
             if (innerJARChannel) {
@@ -804,9 +798,11 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
                 innerJARChannel->GetIsUnsafe(&unsafe);
                 mIsUnsafe = unsafe;
             }
+            // Soon-to-be common way to get Disposition: right now only nsIJARChannel
+            rv = NS_GetContentDisposition(request, header);
+            if (NS_SUCCEEDED(rv))
+                SetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION, header);
         }
-
-        channel->GetContentDisposition(mContentDisposition);
     }
 
     if (NS_SUCCEEDED(status) && mIsUnsafe) {
@@ -906,14 +902,14 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
     nsresult rv;
 
-    // XXX want 64-bit values in OnDataAvailable
     rv = mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
 
     // simply report progress here instead of hooking ourselves up as a
     // nsITransportEventSink implementation.
+    // XXX do the 64-bit stuff for real
     if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
         mProgressSink->OnProgress(this, nsnull, PRUint64(offset + count),
-                                  mContentLength);
+                                  PRUint64(mContentLength));
 
     return rv; // let the pump cancel on failure
 }
