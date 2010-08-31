@@ -673,8 +673,7 @@ function testNetworkPanel()
     httpActivity.timing.RESPONSE_HEADER = 1000;
     httpActivity.response.status = "999 earthquake win";
     httpActivity.response.header = {
-      leaveHouses: "true",
-      "Content-Type": "text/html"
+      leaveHouses: "true"
     }
     networkPanel.update();
     checkIsVisible(networkPanel, {
@@ -898,84 +897,26 @@ function testNetworkPanel()
     networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
     networkPanel.isDoneCallback = function NP_doneCallback() {
       networkPanel.isDoneCallback = null;
-      testDriver.next();
+
+      checkIsVisible(networkPanel, {
+        requestBody: false,
+        requestFormData: true,
+        requestCookie: true,
+        responseContainer: true,
+        responseBody: false,
+        responseBodyCached: true,
+        responseNoBody: false,
+        responseImage: false,
+        responseImageCached: false
+      });
+
+      checkNodeContent(networkPanel, "responseBodyCachedContent", "<body>\u00fc\u00f6\u00E4</body>");
+      networkPanel.panel.hidePopup();
+
+      // Run the next test.
+      testErrorOnPageReload();
     }
     yield;
-
-    checkIsVisible(networkPanel, {
-      requestBody: false,
-      requestFormData: true,
-      requestCookie: true,
-      responseContainer: true,
-      responseBody: false,
-      responseBodyCached: true,
-      responseNoBody: false,
-      responseImage: false,
-      responseImageCached: false
-    });
-
-    checkNodeContent(networkPanel, "responseBodyCachedContent", "<body>\u00fc\u00f6\u00E4</body>");
-    networkPanel.panel.hidePopup();
-
-    // Test a response with a content type that can't be displayed in the
-    // NetworkPanel.
-    httpActivity.response.header["Content-Type"] = "application/x-shockwave-flash";
-
-    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
-    networkPanel.isDoneCallback = function NP_doneCallback() {
-      networkPanel.isDoneCallback = null;
-      testDriver.next();
-    }
-
-    yield;
-
-    checkIsVisible(networkPanel, {
-      requestBody: false,
-      requestFormData: true,
-      requestCookie: true,
-      responseContainer: true,
-      responseBody: false,
-      responseBodyCached: false,
-      responseBodyUnknownType: true,
-      responseNoBody: false,
-      responseImage: false,
-      responseImageCached: false
-    });
-
-    checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", "Unable to display responses of type \"application/x-shockwave-flash\"");
-    networkPanel.panel.hidePopup();
-
-    // Test if the NetworkPanel figures out the content type based on an URL as
-    // well.
-    delete httpActivity.response.header["Content-Type"];
-    httpActivity.url = "http://www.test.com/someCrazyFile.swf?done=right&ending=txt"
-
-    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
-    networkPanel.isDoneCallback = function NP_doneCallback() {
-      networkPanel.isDoneCallback = null;
-      testDriver.next();
-    }
-
-    yield;
-
-    checkIsVisible(networkPanel, {
-      requestBody: false,
-      requestFormData: true,
-      requestCookie: true,
-      responseContainer: true,
-      responseBody: false,
-      responseBodyCached: false,
-      responseBodyUnknownType: true,
-      responseNoBody: false,
-      responseImage: false,
-      responseImageCached: false
-    });
-
-    checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", "Unable to display responses of type \"application/x-shockwave-flash\"");
-    networkPanel.panel.hidePopup();
-
-    // Run the next test.
-    testErrorOnPageReload();
   };
 
   testDriver = testGen();
@@ -1106,51 +1047,6 @@ function testExecutionScope()
 
   isnot(outputChildren[2].childNodes[0].textContent.indexOf(TEST_URI), -1,
     "command was executed in the window scope");
-}
-
-function testJSTermHelper()
-{
-  content.location.href = TEST_URI;
-
-  let HUD = HUDService.hudWeakReferences[hudId].get();
-  let jsterm = HUD.jsterm;
-
-  jsterm.clearOutput();
-  jsterm.execute("'id=' + $('header').getAttribute('id')");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[2].textContent, "id=header", "$() worked");
-
-  jsterm.clearOutput();
-  jsterm.execute("headerQuery = $$('h1')");
-  jsterm.execute("'length=' + headerQuery.length");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[4].textContent, "length=1", "$$() worked");
-
-  jsterm.clearOutput();
-  jsterm.execute("xpathQuery = $x('.//*', document.body);");
-  jsterm.execute("'headerFound='  + (xpathQuery[0] == headerQuery[0])");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[4].textContent, "headerFound=true", "$x() worked");
-
-  // no jsterm.clearOutput() here as we clear the output using the clear() fn.
-  jsterm.execute("clear()");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[1].textContent, "undefined", "clear() worked");
-
-  jsterm.clearOutput();
-  jsterm.execute("'keysResult=' + (keys({b:1})[0] == 'b')");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[2].textContent, "keysResult=true", "keys() worked");
-
-  jsterm.clearOutput();
-  jsterm.execute("'valuesResult=' + (values({b:1})[0] == 1)");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[2].textContent, "valuesResult=true", "values() worked");
-
-  jsterm.clearOutput();
-  jsterm.execute("pprint({b:2, a:1})");
-  let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[2].textContent, "  a: 1\n  b: 2", "pprint() worked");
 }
 
 function testPropertyPanel()
@@ -1481,7 +1377,6 @@ function test() {
       testPropertyProvider();
       testJSInputExpand();
       testPropertyPanel();
-      testJSTermHelper();
 
       // NOTE: Put any sync test above this comment.
       //
