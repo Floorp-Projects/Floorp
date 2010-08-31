@@ -63,10 +63,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "sss",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "mimeService",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
-
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
   var obj = {};
   Cu.import("resource://gre/modules/NetUtil.jsm", obj);
@@ -83,11 +79,6 @@ XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
   return obj.PropertyPanel;
 });
 
-XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
-  var obj = {};
-  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
-  return obj.namesAndValuesOf;
-});
 
 function LogFactory(aMessagePrefix)
 {
@@ -508,76 +499,6 @@ var NetworkHelper =
       aCallback(NetworkHelper.readAndConvertFromStream(aInputStream,
                                                        contentCharset));
     });
-  },
-
-  // This is a list of all the mine category maps jviereck could find in the
-  // firebug code base.
-  mimeCategoryMap: {
-    "text/plain": "txt",
-    "text/html": "html",
-    "text/xml": "xml",
-    "text/xsl": "txt",
-    "text/xul": "txt",
-    "text/css": "css",
-    "text/sgml": "txt",
-    "text/rtf": "txt",
-    "text/x-setext": "txt",
-    "text/richtext": "txt",
-    "text/javascript": "js",
-    "text/jscript": "txt",
-    "text/tab-separated-values": "txt",
-    "text/rdf": "txt",
-    "text/xif": "txt",
-    "text/ecmascript": "js",
-    "text/vnd.curl": "txt",
-    "text/x-json": "json",
-    "text/x-js": "txt",
-    "text/js": "txt",
-    "text/vbscript": "txt",
-    "view-source": "txt",
-    "view-fragment": "txt",
-    "application/xml": "xml",
-    "application/xhtml+xml": "xml",
-    "application/atom+xml": "xml",
-    "application/rss+xml": "xml",
-    "application/vnd.mozilla.maybe.feed": "xml",
-    "application/vnd.mozilla.xul+xml": "xml",
-    "application/javascript": "js",
-    "application/x-javascript": "js",
-    "application/x-httpd-php": "txt",
-    "application/rdf+xml": "xml",
-    "application/ecmascript": "js",
-    "application/http-index-format": "txt",
-    "application/json": "json",
-    "application/x-js": "txt",
-    "multipart/mixed": "txt",
-    "multipart/x-mixed-replace": "txt",
-    "image/svg+xml": "svg",
-    "application/octet-stream": "bin",
-    "image/jpeg": "image",
-    "image/jpg": "image",
-    "image/gif": "image",
-    "image/png": "image",
-    "image/bmp": "image",
-    "application/x-shockwave-flash": "flash",
-    "video/x-flv": "flash",
-    "audio/mpeg3": "media",
-    "audio/x-mpeg-3": "media",
-    "video/mpeg": "media",
-    "video/x-mpeg": "media",
-    "audio/ogg": "media",
-    "application/ogg": "media",
-    "application/x-ogg": "media",
-    "application/x-midi": "media",
-    "audio/midi": "media",
-    "audio/x-mid": "media",
-    "audio/x-midi": "media",
-    "music/crescendo": "media",
-    "audio/wav": "media",
-    "audio/x-wav": "media",
-    "text/json": "json",
-    "application/x-json": "json",
-    "application/json-rpc": "json"
   }
 }
 
@@ -729,73 +650,24 @@ NetworkPanel.prototype =
   },
 
   /**
-   * Returns the content type of the response body. This is based on the
-   * response.header["Content-Type"] info. If this value is not available, then
-   * the content type is tried to be estimated by the url file ending.
-   *
-   * @returns string or null
-   *          Content type or null if no content type could be figured out.
-   */
-  get _contentType()
-  {
-    let response = this.httpActivity.response;
-    let contentTypeValue = null;
-
-    if (response.header && response.header["Content-Type"]) {
-      let types = response.header["Content-Type"].split(/,|;/);
-      for (let i = 0; i < types.length; i++) {
-        let type = NetworkHelper.mimeCategoryMap[types[i]];
-        if (type) {
-          return types[i];
-        }
-      }
-    }
-
-    // Try to get the content type from the request file extension.
-    let uri = NetUtil.newURI(this.httpActivity.url, null, null);
-    if (uri instanceof Ci.nsIURL) {
-      if (uri.fileExtension) {
-        return mimeService.getTypeFromExtension(uri.fileExtension);
-      }
-    }
-    return null;
-  },
-
-  /**
    *
    * @returns boolean
    *          True if the response is an image, false otherwise.
    */
   get _responseIsImage()
   {
-    return NetworkHelper.mimeCategoryMap[this._contentType] == "image";
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          True if the response body contains text, false otherwise.
-   */
-  get _isResponseBodyTextData()
-  {
-    let contentType = this._contentType;
-    if (contentType.indexOf("text/") == 0) {
-      return true;
-    }
-
-    switch (NetworkHelper.mimeCategoryMap[contentType]) {
-      case "txt":
-      case "js":
-      case "json":
-      case "css":
-      case "html":
-      case "svg":
-      case "xml":
+    let response = this.httpActivity.response;
+    if (!response || !response.header || !response.header["Content-Type"]) {
+      let request = this.httpActivity.request;
+      if (request.header["Accept"] &&
+          request.header["Accept"].indexOf("image/") != -1) {
         return true;
-
-      default:
+      }
+      else {
         return false;
+      }
     }
+    return response.header["Content-Type"].indexOf("image/") != -1;
   },
 
   /**
@@ -1078,26 +950,6 @@ NetworkPanel.prototype =
   },
 
   /**
-   * Displays the `Unknown Content-Type hint` and sets the duration between the
-   * receiving of the response header on the NetworkPanel.
-   *
-   * @returns void
-   */
-  _displayResponseBodyUnknownType: function NP_displayResponseBodyUnknownType()
-  {
-    let timing = this.httpActivity.timing;
-
-    this._displayNode("responseBodyUnknownType");
-    let deltaDuration =
-      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseBodyUnknownTypeInfo",
-      this._format("durationMS", [deltaDuration]));
-
-    this._appendTextNode("responseBodyUnknownTypeContent",
-      this._format("responseBodyUnableToDisplay.content", [this._contentType]));
-  },
-
-  /**
    * Displays the `no response body` section and sets the the duration between
    * the receiving of the response header and the end of the request.
    *
@@ -1179,10 +1031,6 @@ NetworkPanel.prototype =
         if (timing.TRANSACTION_CLOSE && response.isDone) {
           if (this._responseIsImage) {
             this._displayResponseImage();
-            this._callIsDone();
-          }
-          else if (!this._isResponseBodyTextData) {
-            this._displayResponseBodyUnknownType();
             this._callIsDone();
           }
           else if (response.body) {
@@ -3627,171 +3475,6 @@ function JSPropertyProvider(aScope, aInputValue)
 //////////////////////////////////////////////////////////////////////////
 
 /**
- * JSTermHelper
- *
- * Defines a set of functions ("helper functions") that are available from the
- * WebConsole but not from the webpage.
- * A list of helper functions used by Firebug can be found here:
- *   http://getfirebug.com/wiki/index.php/Command_Line_API
- */
-function JSTermHelper(aJSTerm)
-{
-  return {
-    /**
-     * Returns the result of document.getElementById(aId).
-     *
-     * @param string aId
-     *        A string that is passed to window.document.getElementById.
-     * @returns nsIDOMNode or null
-     */
-    $: function JSTH_$(aId)
-    {
-      try {
-        return aJSTerm._window.document.getElementById(aId);
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-    },
-
-    /**
-     * Returns the result of document.querySelectorAll(aSelector).
-     *
-     * @param string aSelector
-     *        A string that is passed to window.document.querySelectorAll.
-     * @returns array of nsIDOMNode
-     */
-    $$: function JSTH_$$(aSelector)
-    {
-      try {
-        return aJSTerm._window.document.querySelectorAll(aSelector);
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-    },
-
-    /**
-     * Runs a xPath query and returns all matched nodes.
-     *
-     * @param string aXPath
-     *        xPath search query to execute.
-     * @param [optional] nsIDOMNode aContext
-     *        Context to run the xPath query on. Uses window.document if not set.
-     * @returns array of nsIDOMNode
-     */
-    $x: function JSTH_$x(aXPath, aContext)
-    {
-      let nodes = [];
-      let doc = aJSTerm._window.wrappedJSObject.document;
-      let aContext = aContext || doc;
-
-      try {
-        let results = doc.evaluate(aXPath, aContext, null,
-                                    Ci.nsIDOMXPathResult.ANY_TYPE, null);
-
-        let node;
-        while (node = results.iterateNext()) {
-          nodes.push(node);
-        }
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-
-      return nodes;
-    },
-
-    /**
-     * Clears the output of the JSTerm.
-     */
-    clear: function JSTH_clear()
-    {
-      aJSTerm.clearOutput();
-    },
-
-    /**
-     * Returns the result of Object.keys(aObject).
-     *
-     * @param object aObject
-     *        Object to return the property names from.
-     * @returns array of string
-     */
-    keys: function JSTH_keys(aObject)
-    {
-      try {
-        return Object.keys(XPCNativeWrapper.unwrap(aObject));
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-    },
-
-    /**
-     * Returns the values of all properties on aObject.
-     *
-     * @param object aObject
-     *        Object to display the values from.
-     * @returns array of string
-     */
-    values: function JSTH_values(aObject)
-    {
-      let arrValues = [];
-      let obj = XPCNativeWrapper.unwrap(aObject);
-
-      try {
-        for (let prop in obj) {
-          arrValues.push(obj[prop]);
-        }
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-      return arrValues;
-    },
-
-    /**
-     * Inspects the passed aObject. This is done by opening the PropertyPanel.
-     *
-     * @param object aObject
-     *        Object to inspect.
-     * @returns void
-     */
-    inspect: function JSTH_inspect(aObject)
-    {
-      let obj = XPCNativeWrapper.unwrap(aObject);
-      aJSTerm.openPropertyPanel(null, obj);
-    },
-
-    /**
-     * Prints aObject to the output.
-     *
-     * @param object aObject
-     *        Object to print to the output.
-     * @returns void
-     */
-    pprint: function JSTH_pprint(aObject)
-    {
-      if (aObject === null || aObject === undefined || aObject === true || aObject === false) {
-        aJSTerm.console.error(HUDService.getStr("helperFuncUnsupportedTypeError"));
-        return;
-      }
-      let output = [];
-      if (typeof aObject != "string") {
-        aObject = XPCNativeWrapper.unwrap(aObject);
-      }
-      let pairs = namesAndValuesOf(aObject);
-
-      pairs.forEach(function(pair) {
-        output.push("  " + pair.display);
-      });
-
-      aJSTerm.writeOutput(output.join("\n"));
-    }
-  }
-}
-
-/**
  * JSTerm
  *
  * JavaScript Terminal: creates input nodes for console code interpretation
@@ -3879,7 +3562,6 @@ JSTerm.prototype = {
     this.sandbox = new Cu.Sandbox(this._window);
     this.sandbox.window = this._window;
     this.sandbox.console = this.console;
-    this.sandbox.__helperFunctions__ = JSTermHelper(this);
     this.sandbox.__proto__ = this._window.wrappedJSObject;
   },
 
@@ -3898,7 +3580,7 @@ JSTerm.prototype = {
    */
   evalInSandbox: function JST_evalInSandbox(aString)
   {
-    let execStr = "with(__helperFunctions__) { with(window) {" + aString + "} }";
+    let execStr = "with(window) {" + aString + "}";
     return Cu.evalInSandbox(execStr,  this.sandbox, "default", "HUD Console", 1);
   },
 
