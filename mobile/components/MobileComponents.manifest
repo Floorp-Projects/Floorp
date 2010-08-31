@@ -1,4 +1,6 @@
 # AboutRedirector.js
+component {433d2d75-5923-49b0-854d-f37267b03dc7} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=empty {433d2d75-5923-49b0-854d-f37267b03dc7}
 component {077ea23e-0f22-4168-a744-8e444b560197} AboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=firstrun {077ea23e-0f22-4168-a744-8e444b560197}
 component {842a6d11-b369-4610-ba66-c3b5217e82be} AboutRedirector.js
@@ -11,8 +13,6 @@ component {972efe64-8ac0-4e91-bdb0-22835d987815} AboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=certerror {972efe64-8ac0-4e91-bdb0-22835d987815}
 component {b071364f-ab68-4669-a9db-33fca168271a} AboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=home {b071364f-ab68-4669-a9db-33fca168271a}
-component {d503134a-f6f3-4824-bc3c-09c123177944} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=sync-tabs {d503134a-f6f3-4824-bc3c-09c123177944}
 
 # DirectoryProvider.js
 component {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b} DirectoryProvider.js
