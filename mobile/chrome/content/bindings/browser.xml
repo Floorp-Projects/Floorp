@@ -451,6 +451,18 @@
         </body>
       </method>
 
+      <method name="_updateCSSViewport">
+        <body>
+          <![CDATA[
+            let frameLoader = this._frameLoader;
+            this.messageManager.sendAsyncMessage("Content:ScrollTo", {
+              x: frameLoader.viewportScrollX / this._zoomLevel,
+              y: frameLoader.viewportScrollY / this._zoomLevel
+            });
+          ]]>
+        </body>
+      </method>
+
       <method name="setZoomLevel">
         <parameter name="zl"/>
         <body>

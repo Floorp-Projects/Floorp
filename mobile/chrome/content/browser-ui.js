@@ -1007,7 +1007,8 @@ var TapHighlightHelper = {
   },
 
   show: function show(aRects) {
-    let bv = Browser._browserView;
+    return;
+
     let union = aRects.reduce(function(a, b) {
       return a.expandToContain(b);
     }, new Rect(0, 0, 0, 0)).map(bv.browserToViewport);
@@ -1529,7 +1530,8 @@ var FindHelperUI = {
   },
 
   _zoom: function _findHelperZoom(aElementRect) {
-    let bv = Browser._browserView;
+    return;
+
     let zoomRect = bv.getVisibleRect();
 
     // Zoom to a specified Rect
@@ -1764,8 +1766,7 @@ var FormHelperUI = {
   _zoom: function _formHelperZoom(aElementRect, aCaretRect) {
     return;
 
-    let bv = Browser._browserView;
-    let zoomRect = bv.getVisibleRect();
+    let zoomRect = Browser.getVisibleRect();
 
     // Zoom to a specified Rect
     if (aElementRect && bv.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {

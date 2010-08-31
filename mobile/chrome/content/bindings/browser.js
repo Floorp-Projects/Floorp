@@ -370,7 +370,7 @@ let ContentScroll =  {
         break;
 
       case "Content:SetDisplayportArea": {
-        let displayport = new Rect(json.x, json.y, json.w, json.h).restrictTo(this._contentArea);
+        let displayport = new Rect(json.x, json.y, json.w, json.h).translateInside(this._contentArea);
         if (displayport.isEmpty())
           break;
 
