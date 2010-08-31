@@ -231,7 +231,8 @@ abstract public class GeckoApp
     public void onLowMemory()
     {
         Log.i("GeckoApp", "low memory");
-        // XXX TODO
+        if (GeckoAppShell.sGeckoRunning)
+            GeckoAppShell.onLowMemory();
         super.onLowMemory();
     }
 
