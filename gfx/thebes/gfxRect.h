@@ -137,6 +137,10 @@ struct THEBES_API gfxRect {
         Inset(sides[0], sides[1], sides[2], sides[3]);
     }
 
+    void Inset(const gfxIntSize& size) {
+        Inset(size.height, size.width, size.height, size.width);
+    }
+
     void Outset(gfxFloat k) {
         pos.x -= k;
         pos.y -= k;
@@ -153,6 +157,10 @@ struct THEBES_API gfxRect {
 
     void Outset(const gfxFloat *sides) {
         Outset(sides[0], sides[1], sides[2], sides[3]);
+    }
+
+    void Outset(const gfxIntSize& size) {
+        Outset(size.height, size.width, size.height, size.width);
     }
 
     // Round the rectangle edges to integer coordinates, such that the rounded

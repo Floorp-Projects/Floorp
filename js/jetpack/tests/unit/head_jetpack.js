@@ -14,7 +14,7 @@ function createJetpack(args)
 
   if (!args.skipRegisterError)
     jp.registerReceiver("core:exception", function(msgName, e) {
-      dump("Received exception from remote code: " + e + "\n");
+      dump("Received exception from remote code: " + uneval(e) + "\n");
       do_check_true(false);
     });
 

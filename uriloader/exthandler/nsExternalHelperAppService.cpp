@@ -456,6 +456,22 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
                                          getter_AddRefs(dir));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#elif defined(ANDROID)
+  char* sdcard = getenv("EXTERNAL_STORAGE");
+  nsresult rv;
+  if (sdcard) {
+    nsCOMPtr<nsILocalFile> ldir; 
+    rv = NS_NewNativeLocalFile(nsDependentCString(sdcard),
+                               PR_TRUE, getter_AddRefs(ldir));
+    NS_ENSURE_SUCCESS(rv, rv);
+    dir = ldir;
+    
+  }
+  else {
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
 #else
   // On all other platforms, we default to the systems temporary directory.
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
@@ -627,26 +643,6 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
   gExtProtSvc = nsnull;
 }
 
-static PRInt64 GetContentLengthAsInt64(nsIRequest *request)
-{
-  PRInt64 contentLength = -1;
-  nsresult rv;
-  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
-  if (props)
-    rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &contentLength);
-
-  if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel) {
-      PRInt32 smallLen;
-      channel->GetContentLength(&smallLen);
-      contentLength = smallLen;
-    }
-  }
-
-  return contentLength;
-}
-
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
@@ -665,7 +661,6 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     channel->GetURI(getter_AddRefs(uri));
 
 #ifdef MOZ_IPC
-  PRInt64 contentLength = GetContentLengthAsInt64(aRequest);
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // We need to get a hold of a TabChild so that we can begin forwarding
     // this data to the parent.  In the HTTP case, this is unfortunate, since
@@ -681,6 +676,10 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     nsCOMPtr<nsITabChild> tabchild = do_GetInterface(owner);
     if (!tabchild)
       return NS_ERROR_FAILURE;
+
+    PRInt64 contentLength = -1;
+    if (channel)
+      channel->GetContentLength(&contentLength);
 
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
@@ -1401,7 +1400,7 @@ void nsExternalAppHandler::EnsureSuggestedFileName()
   }
 }
 
-nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
+nsresult nsExternalAppHandler::SetUpTempFile()
 {
   // First we need to try to get the destination directory for the temporary
   // file.
@@ -1538,9 +1537,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(request));
   mIsFileChannel = fileChan != nsnull;
 
-  // Get content length
-  mContentLength.mValue = GetContentLengthAsInt64(request);
-
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   // Determine whether a new window was opened specifically for this request
   if (props) {
@@ -1550,13 +1546,15 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     mShouldCloseWindow = tmp;
   }
 
-  // Now get the URI
+  // Get content length and URI
+  mContentLength = -1;
   if (aChannel)
   {
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
+    aChannel->GetContentLength(&mContentLength);
   }
 
-  rv = SetUpTempFile(aChannel);
+  rv = SetUpTempFile();
   if (NS_FAILED(rv)) {
     mCanceled = PR_TRUE;
     request->Cancel(rv);

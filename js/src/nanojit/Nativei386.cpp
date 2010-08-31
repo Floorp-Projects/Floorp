@@ -1112,7 +1112,6 @@ namespace nanojit
         a.free = SavedRegs | ScratchRegs;
         if (!_config.i386_sse2)
             a.free &= ~XmmRegs;
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* targ)
@@ -1216,7 +1215,7 @@ namespace nanojit
                 if (rmask(r) & XmmRegs) {
                     SSE_LDQ(r, d, FP);
                 } else {
-                    NanoAssert(rmask(r) & x87Regs);
+                    NanoAssert(r == FST0);
                     FLDQ(d, FP);
                 }
             }
@@ -1276,17 +1275,16 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
+    void Assembler::asm_spill(Register rr, int d, bool pop)
     {
-        (void)quad;
         NanoAssert(d);
         if (rmask(rr) & GpRegs) {
             ST(FP, d, rr);
         } else if (rmask(rr) & XmmRegs) {
             SSE_STQ(d, FP, rr);
         } else {
-            NanoAssert(rmask(rr) & x87Regs);
-            FSTQ((pop?1:0), d, FP);
+            NanoAssert(rr == FST0);
+            FSTQ(pop, d, FP);
         }
     }
 
@@ -1314,7 +1312,7 @@ namespace nanojit
                 if (rmask(rr) & XmmRegs) {
                     SSE_LDQ(rr, db, rb);
                 } else {
-                    NanoAssert(rmask(rr) & x87Regs);
+                    NanoAssert(rr == FST0);
                     FLDQ(db, rb);
                 }
                 break;
@@ -1325,7 +1323,7 @@ namespace nanojit
                     SSE_LDSS(rr, db, rb);
                     SSE_XORPDr(rr,rr);
                 } else {
-                    NanoAssert(rmask(rr) & x87Regs);
+                    NanoAssert(rr == FST0);
                     FLD32(db, rb);
                 }
                 break;
@@ -1380,7 +1378,7 @@ namespace nanojit
                 SSE_XORPDr(rt, rt);     // zero dest to ensure no dependency stalls
 
             } else {
-                FST32(pop?1:0, dr, rb);
+                FST32(pop, dr, rb);
             }
 
         } else if (value->isImmD()) {
@@ -1414,7 +1412,7 @@ namespace nanojit
             if (rmask(rv) & XmmRegs) {
                 SSE_STQ(dr, rb, rv);
             } else {
-                FSTQ(pop?1:0, dr, rb);
+                FSTQ(pop, dr, rb);
             }
         }
     }
@@ -2563,12 +2561,12 @@ namespace nanojit
             Register ra = findRegFor(lhs, XmmRegs);
             SSE_CVTSD2SI(rr, ra);
         } else {
-            int pop = !lhs->isInReg();
+            bool pop = !lhs->isInReg();
             findSpecificRegFor(lhs, FST0);
             if (ins->isInReg())
                 evict(ins);
             int d = findMemFor(ins);
-            FIST((pop?1:0), d, FP);
+            FIST(pop, d, FP);
         }
 
         freeResourcesOf(ins);
@@ -2765,7 +2763,7 @@ namespace nanojit
             }
 
             evictIfActive(EAX);
-            int pop = !lhs->isInReg();
+            bool pop = !lhs->isInReg();
             findSpecificRegFor(lhs, FST0);
 
             if (lhs == rhs) {
@@ -2783,12 +2781,12 @@ namespace nanojit
                 if (rhs->isImmD())
                 {
                     const uint64_t* p = findImmDFromPool(rhs->immDasQ());
-                    FCOMdm((pop?1:0), (const double*)p);
+                    FCOMdm(pop, (const double*)p);
                 }
                 else
                 {
                     int d = findMemFor(rhs);
-                    FCOM((pop?1:0), d, FP);
+                    FCOM(pop, d, FP);
                 }
             }
         }

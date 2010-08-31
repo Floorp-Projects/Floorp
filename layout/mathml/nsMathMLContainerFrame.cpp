@@ -124,8 +124,8 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
 
 class nsDisplayMathMLError : public nsDisplayItem {
 public:
-  nsDisplayMathMLError(nsIFrame* aFrame)
-    : nsDisplayItem(aFrame) {
+  nsDisplayMathMLError(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayMathMLError);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -145,7 +145,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   // Set color and font ...
   nsLayoutUtils::SetFontFromStyle(aCtx, mFrame->GetStyleContext());
 
-  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
+  nsPoint pt = ToReferenceFrame();
   aCtx->SetColor(NS_RGB(255,0,0));
   aCtx->FillRect(nsRect(pt, mFrame->GetSize()));
   aCtx->SetColor(NS_RGB(255,255,255));
@@ -672,7 +672,8 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!IsVisibleForPainting(aBuilder))
       return NS_OK;
 
-    return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayMathMLError(this));
+    return aLists.Content()->AppendNewToTop(
+        new (aBuilder) nsDisplayMathMLError(aBuilder, this));
   }
 
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);

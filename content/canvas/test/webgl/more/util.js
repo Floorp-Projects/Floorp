@@ -118,10 +118,22 @@ function deleteShader(gl, sh) {
   gl.deleteProgram(sh.program);
 }
 
+function getGLErrorAsString(ctx, err) {
+  if (err === ctx.NO_ERROR) {
+    return "NO_ERROR";
+  }
+  for (var name in ctx) {
+    if (ctx[name] === err) {
+      return name;
+    }
+  }
+  return err.toString();
+}
+
 function checkError(gl, msg) {
   var e = gl.getError();
-  if (e != 0) {
-    log("Error " + e + " at " + msg);
+  if (e != gl.NO_ERROR) {
+    log("Error " + getGLErrorAsString(gl, e) + " at " + msg);
   }
   return e;
 }
@@ -129,7 +141,7 @@ function checkError(gl, msg) {
 function throwError(gl, msg) {
   var e = gl.getError();
   if (e != 0) {
-    throw(new Error("Error " + e + " at " + msg));
+    throw(new Error("Error " + getGLErrorAsString(gl, e) + " at " + msg));
   }
 }
 
@@ -940,16 +952,28 @@ FBO.prototype = {
   }
 }
 
+function GLError(err, msg, fileName, lineNumber) {
+  this.message = msg;
+  this.glError = err;
+}
+
+GLError.prototype = new Error();
+
 function makeGLErrorWrapper(gl, fname) {
   return (function() {
     try {
       var rv = gl[fname].apply(gl, arguments);
       var err = gl.getError();
-      if (err != 0)
-        throw(new Error("GL error "+err+" in "+fname));
+      if (err != gl.NO_ERROR) {
+        throw(new GLError(
+            err, "GL error "+getGLErrorAsString(gl, err)+" in "+fname));
+      }
       return rv;
     } catch (e) {
-      throw(new Error("GL error " + e.name +
+      if (e.glError !== undefined) {
+        throw e;
+      }
+      throw(new Error("Threw " + e.name +
                       " in " + fname + "\n" +
                       e.message + "\n" +
                       arguments.callee.caller));
@@ -974,6 +998,67 @@ function wrapGLContext(gl) {
   return wrap;
 }
 
+// Assert that f generates a specific GL error.
+function assertGLError(gl, err, name, f) {
+  if (f == null) { f = name; name = null; }
+  var r = false;
+  var glErr = 0;
+  try { f(); } catch(e) { r=true; glErr = e.glError; }
+  if (glErr !== err) {
+    if (glErr === undefined) {
+      testFailed("assertGLError: UNEXPCETED EXCEPTION", name, f);
+    } else {
+      testFailed("assertGLError: expected: " + getGLErrorAsString(gl, err) +
+                 " actual: " + getGLErrorAsString(gl, glErr), name, f);
+    }
+    return false;
+  }
+  return true;
+}
+
+// Assert that f generates some GL error. Used in situations where it's
+// ambigious which of multiple possible errors will be generated.
+function assertSomeGLError(gl, name, f) {
+  if (f == null) { f = name; name = null; }
+  var r = false;
+  var glErr = 0;
+  var err = 0;
+  try { f(); } catch(e) { r=true; glErr = e.glError; }
+  if (glErr === 0) {
+    if (glErr === undefined) {
+      testFailed("assertGLError: UNEXPCETED EXCEPTION", name, f);
+    } else {
+      testFailed("assertGLError: expected: " + getGLErrorAsString(gl, err) +
+                 " actual: " + getGLErrorAsString(gl, glErr), name, f);
+    }
+    return false;
+  }
+  return true;
+}
+
+// Assert that f throws an exception but does not generate a GL error.
+function assertThrowNoGLError(gl, name, f) {
+  if (f == null) { f = name; name = null; }
+  var r = false;
+  var glErr = undefined;
+  var exp;
+  try { f(); } catch(e) { r=true; glErr = e.glError; exp = e;}
+  if (!r) {
+    testFailed(
+      "assertThrowNoGError: should have thrown exception", name, f);
+    return false;
+  } else {
+    if (glErr !== undefined) {
+      testFailed(
+        "assertThrowNoGError: should be no GL error but generated: " +
+        getGLErrorAsString(gl, glErr), name, f);
+      return false;
+    } else {
+      // console.log("threw:" + exp);
+    }
+  }
+  return true;
+}
 
 Quad = {
   vertices : [

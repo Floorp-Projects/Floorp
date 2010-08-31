@@ -98,6 +98,8 @@ _TEST_FILES =	\
 		     bug512295-1-ref.html \
 		     bug512295-2.html \
 		     bug512295-2-ref.html \
+		     bug585922.html \
+		     bug585922-ref.html \
 		test_bug514127.html \
 		test_bug518777.html \
 		test_bug548545.xhtml \

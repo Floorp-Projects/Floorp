@@ -33,6 +33,7 @@
  *
  * Contributor(s):
  *     Peter Weilbacher <mozilla@Weilbacher.org>
+ *     Rich Walsh <dragtext@e-vertise.com>
  */
 
 #include "cairoint.h"
@@ -66,7 +67,7 @@
 /* Initialization counter: */
 static int cairo_os2_initialization_count = 0;
 
-static void inline
+static inline void
 DisableFPUException (void)
 {
     unsigned short usCW;
@@ -169,43 +170,35 @@ cairo_os2_fini (void)
  */
 void *_buffer_alloc (size_t a, size_t b, const unsigned int size)
 {
-    /* check length like in the _cairo_malloc_abc macro, but we can leave
-     * away the unsigned casts as our arguments are unsigned already
-     */
-    size_t nbytes = b &&
-                    a >= INT32_MAX / b ? 0 : size &&
-                    a*b >= INT32_MAX / size ? 0 : a * b * size;
-    void *buffer = NULL;
-#ifdef OS2_USE_PLATFORM_ALLOC
-    APIRET rc = NO_ERROR;
+    size_t nbytes;
+    void  *buffer = NULL;
 
-    rc = DosAllocMem ((PPVOID)&buffer,
-                      nbytes,
-#ifdef OS2_HIGH_MEMORY           /* only if compiled with high-memory support, */
-                      OBJ_ANY |  /* we can allocate anywhere!                  */
-#endif
-                      PAG_READ | PAG_WRITE | PAG_COMMIT);
-    if (rc != NO_ERROR) {
-        /* should there for some reason be another error, let's return
-         * a null surface and free the buffer again, because that's
-         * how a malloc failure would look like
-         */
-        if (rc != ERROR_NOT_ENOUGH_MEMORY && buffer) {
-            DosFreeMem (buffer);
-        }
+    if (!a || !b || !size ||
+        a >= INT32_MAX / b || a*b >= INT32_MAX / size) {
         return NULL;
     }
-#else
-    buffer = malloc (nbytes);
+    nbytes = a * b * size;
+
+#ifdef OS2_USE_PLATFORM_ALLOC
+    /* Using OBJ_ANY on a machine that isn't configured for hi-mem
+     * will cause ERROR_INVALID_PARAMETER.  If this occurs, or this
+     * build doesn't have hi-mem enabled, fall back to using lo-mem.
+     */
+#ifdef OS2_HIGH_MEMORY
+    if (!DosAllocMem (&buffer, nbytes,
+                      OBJ_ANY | PAG_READ | PAG_WRITE | PAG_COMMIT))
+        return buffer;
 #endif
-
-    /* This does not seem to be needed, malloc'd space is usually
-     * already zero'd out!
-     */
-    /*
-     * memset (buffer, 0x00, nbytes);
-     */
-
+    if (DosAllocMem (&buffer, nbytes,
+                     PAG_READ | PAG_WRITE | PAG_COMMIT))
+        return NULL;
+#else
+    /* Clear the malloc'd buffer the way DosAllocMem() does. */
+    buffer = malloc (nbytes);
+    if (buffer) {
+        memset (buffer, 0, nbytes);
+    }
+#endif
     return buffer;
 }
 
@@ -303,45 +296,37 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
                                 PRECTL               prcl_begin_paint_rect)
 {
     POINTL aptlPoints[4];
-    LONG lOldYInversion, rc = GPI_OK;
+    LONG   lOldYInversion;
+    LONG   rc = GPI_OK;
 
-    /* Enable Y Inversion for the HPS, so the
-     * GpiDrawBits will work with upside-top image, not with upside-down image!
+    /* Check the limits (may not be necessary) */
+    if (prcl_begin_paint_rect->xLeft < 0)
+        prcl_begin_paint_rect->xLeft = 0;
+    if (prcl_begin_paint_rect->yBottom < 0)
+        prcl_begin_paint_rect->yBottom = 0;
+    if (prcl_begin_paint_rect->xRight > (LONG) surface->bitmap_info.cx)
+        prcl_begin_paint_rect->xRight = (LONG) surface->bitmap_info.cx;
+    if (prcl_begin_paint_rect->yTop > (LONG) surface->bitmap_info.cy)
+        prcl_begin_paint_rect->yTop = (LONG) surface->bitmap_info.cy;
+
+    /* Exit if the rectangle is empty */
+    if (prcl_begin_paint_rect->xLeft   >= prcl_begin_paint_rect->xRight ||
+        prcl_begin_paint_rect->yBottom >= prcl_begin_paint_rect->yTop)
+        return;
+
+    /* Set the Target & Source coordinates */
+    *((PRECTL)&aptlPoints[0]) = *prcl_begin_paint_rect;
+    *((PRECTL)&aptlPoints[2]) = *prcl_begin_paint_rect;
+
+    /* Make the Target coordinates non-inclusive */
+    aptlPoints[1].x -= 1;
+    aptlPoints[1].y -= 1;
+
+    /* Enable Y Inversion for the HPS, so  GpiDrawBits will
+     * work with upside-top image, not with upside-down image!
      */
     lOldYInversion = GpiQueryYInversion (hps_begin_paint);
     GpiEnableYInversion (hps_begin_paint, surface->bitmap_info.cy-1);
-
-    /* Target coordinates (Noninclusive) */
-    aptlPoints[0].x = prcl_begin_paint_rect->xLeft;
-    aptlPoints[0].y = prcl_begin_paint_rect->yBottom;
-
-    aptlPoints[1].x = prcl_begin_paint_rect->xRight-1;
-    aptlPoints[1].y = prcl_begin_paint_rect->yTop-1;
-
-    /* Source coordinates (Inclusive) */
-    aptlPoints[2].x = prcl_begin_paint_rect->xLeft;
-    aptlPoints[2].y = prcl_begin_paint_rect->yBottom;
-
-    aptlPoints[3].x = prcl_begin_paint_rect->xRight;
-    aptlPoints[3].y = (prcl_begin_paint_rect->yTop);
-
-    /* Some extra checking for limits
-     * (Dunno if really needed, but had some crashes sometimes without it,
-     *  while developing the code...)
-     */
-    {
-        int i;
-        for (i = 0; i < 4; i++) {
-            if (aptlPoints[i].x < 0)
-                aptlPoints[i].x = 0;
-            if (aptlPoints[i].y < 0)
-                aptlPoints[i].y = 0;
-            if (aptlPoints[i].x > (LONG) surface->bitmap_info.cx)
-                aptlPoints[i].x = (LONG) surface->bitmap_info.cx;
-            if (aptlPoints[i].y > (LONG) surface->bitmap_info.cy)
-                aptlPoints[i].y = (LONG) surface->bitmap_info.cy;
-        }
-    }
 
     /* Debug code to draw rectangle limits */
 #if 0
@@ -364,63 +349,81 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
         }
     }
 #endif
-    rc = GpiDrawBits (hps_begin_paint,
-                      surface->pixels,
-                      &(surface->bitmap_info),
-                      4,
-                      aptlPoints,
-                      ROP_SRCCOPY,
-                      BBO_IGNORE);
+    if (!surface->use_24bpp) {
+        rc = GpiDrawBits (hps_begin_paint,
+                          surface->pixels,
+                          &(surface->bitmap_info),
+                          4,
+                          aptlPoints,
+                          ROP_SRCCOPY,
+                          BBO_IGNORE);
+        if (rc != GPI_OK)
+            surface->use_24bpp = TRUE;
+    }
 
-    if (rc != GPI_OK) {
-        /* if GpiDrawBits () failed then this is most likely because the
+    if (surface->use_24bpp) {
+        /* If GpiDrawBits () failed then this is most likely because the
          * display driver could not handle a 32bit bitmap. So we need to
          * - create a buffer that only contains 3 bytes per pixel
          * - change the bitmap info header to contain 24bit
          * - pass the new buffer to GpiDrawBits () again
          * - clean up the new buffer
          */
-        BITMAPINFOHEADER2 bmpheader;
-        unsigned char *pchPixBuf, *pchPixSource;
-        void *pBufStart;
-        ULONG ulPixels;
+        BITMAPINFO2       bmpinfo;
+        unsigned char    *pchPixBuf;
+        unsigned char    *pchTarget;
+        ULONG            *pulSource;
+        ULONG             ulX;
+        ULONG             ulY;
+        ULONG             ulPad;
 
-        /* allocate temporary pixel buffer */
-        pchPixBuf = (unsigned char *) _buffer_alloc (surface->bitmap_info.cy,
-                                                     surface->bitmap_info.cx,
-                                                     3);
-        pchPixSource = surface->pixels; /* start at beginning of pixel buffer */
-        pBufStart = pchPixBuf; /* remember beginning of the new pixel buffer */
+        /* Set up the bitmap header, but this time for 24bit depth. */
+        bmpinfo = surface->bitmap_info;
+        bmpinfo.cBitCount = 24;
 
-        /* copy the first three bytes for each pixel but skip over the fourth */
-        for (ulPixels = 0; ulPixels < surface->bitmap_info.cx * surface->bitmap_info.cy; ulPixels++)
-        {
-            /* copy BGR from source buffer */
-            *pchPixBuf++ = *pchPixSource++;
-            *pchPixBuf++ = *pchPixSource++;
-            *pchPixBuf++ = *pchPixSource++;
-            pchPixSource++; /* jump over alpha channel in source buffer */
+        /* The start of each row has to be DWORD aligned.  Calculate the
+         * of number aligned bytes per row, the total size of the bitmap,
+         * and the number of padding bytes at the end of each row.
+         */
+        ulX = (((bmpinfo.cx * bmpinfo.cBitCount) + 31) / 32) * 4;
+        bmpinfo.cbImage = ulX * bmpinfo.cy;
+        ulPad = ulX - bmpinfo.cx * 3;
+
+        /* Allocate temporary pixel buffer.  If the rows don't need
+         * padding, it has to be 1 byte larger than the size of the
+         * bitmap  or else the high-order byte from the last source
+         * row will end up in unallocated memory.
+         */
+        pchPixBuf = (unsigned char *)_buffer_alloc (1, 1,
+                                        bmpinfo.cbImage + (ulPad ? 0 : 1));
+
+        if (pchPixBuf) {
+            /* Copy 4 bytes from the source but advance the target ptr only
+             * 3 bytes, so the high-order alpha byte will be overwritten by
+             * the next copy. At the end of each row, skip over the padding.
+             */
+            pchTarget = pchPixBuf;
+            pulSource = (ULONG*)surface->pixels;
+            for (ulY = bmpinfo.cy; ulY; ulY--) {
+                for (ulX = bmpinfo.cx; ulX; ulX--) {
+                    *((ULONG*)pchTarget) = *pulSource++;
+                    pchTarget += 3;
+                }
+                pchTarget += ulPad;
+            }
+
+            rc = GpiDrawBits (hps_begin_paint,
+                              pchPixBuf,
+                              &bmpinfo,
+                              4,
+                              aptlPoints,
+                              ROP_SRCCOPY,
+                              BBO_IGNORE);
+            if (rc != GPI_OK)
+                surface->use_24bpp = FALSE;
+
+            _buffer_free (pchPixBuf);
         }
-
-        /* jump back to start of the buffer for display and cleanup */
-        pchPixBuf = pBufStart;
-
-        /* set up the bitmap header, but this time with 24bit depth only */
-        memset (&bmpheader, 0, sizeof (bmpheader));
-        bmpheader.cbFix = sizeof (BITMAPINFOHEADER2);
-        bmpheader.cx = surface->bitmap_info.cx;
-        bmpheader.cy = surface->bitmap_info.cy;
-        bmpheader.cPlanes = surface->bitmap_info.cPlanes;
-        bmpheader.cBitCount = 24;
-        rc = GpiDrawBits (hps_begin_paint,
-                          pchPixBuf,
-                          (PBITMAPINFO2)&bmpheader,
-                          4,
-                          aptlPoints,
-                          ROP_SRCCOPY,
-                          BBO_IGNORE);
-
-        _buffer_free (pchPixBuf);
     }
 
     /* Restore Y inversion */
@@ -434,7 +437,6 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
 {
     HPS hps;
     HDC hdc;
-    HAB hab;
     SIZEL sizlTemp;
     HBITMAP hbmpTemp;
     BITMAPINFO2 bmi2Temp;
@@ -452,19 +454,10 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
      *   -- Blit dirty pixels from screen to HBITMAP
      * - Copy HBITMAP lines (pixels) into our buffer
      * - Free resources
-     *
-     * These steps will require an Anchor Block (HAB). However,
-     * WinQUeryAnchorBlock () documentation says that HAB is not
-     * used in current OS/2 implementations, OS/2 deduces all information
-     * it needs from the TID. Anyway, we'd be in trouble if we'd have to
-     * get a HAB where we only know a HPS...
-     * So, we'll simply use a fake HAB.
      */
 
-    hab = (HAB) 1; /* OS/2 doesn't really use HAB... */
-
     /* Create a memory device context */
-    hdc = DevOpenDC (hab, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
+    hdc = DevOpenDC (0, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
     if (!hdc) {
         return;
     }
@@ -472,7 +465,7 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
     /* Create a memory PS */
     sizlTemp.cx = prcl_begin_paint_rect->xRight - prcl_begin_paint_rect->xLeft;
     sizlTemp.cy = prcl_begin_paint_rect->yTop - prcl_begin_paint_rect->yBottom;
-    hps = GpiCreatePS (hab,
+    hps = GpiCreatePS (0,
                        hdc,
                        &sizlTemp,
                        PU_PELS | GPIT_NORMAL | GPIA_ASSOC);
@@ -537,7 +530,7 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
         GpiQueryBitmapBits (hps,
                             sizlTemp.cy - y - 1, /* lScanStart */
                             1,                   /* lScans */
-                            pchTemp,
+                            (PBYTE)pchTemp,
                             &bmi2Temp);
 
         /* Go for next line */
@@ -722,6 +715,14 @@ _cairo_os2_surface_get_extents (void                    *abstract_surface,
 {
     cairo_os2_surface_t *local_os2_surface;
 
+    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
+    if ((!local_os2_surface) ||
+        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
+    {
+        /* Invalid parameter (wrong surface)! */
+        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    }
+
     rectangle->x = 0;
     rectangle->y = 0;
     rectangle->width  = local_os2_surface->bitmap_info.cx;
@@ -737,14 +738,15 @@ _cairo_os2_surface_get_extents (void                    *abstract_surface,
  * @height: the height of the surface
  *
  * Create a Cairo surface which is bound to a given presentation space (HPS).
- * The surface will be created to have the given size.
- * By default every change to the surface will be made visible immediately by
- * blitting it into the window. This can be changed with
+ * The caller retains ownership of the HPS and must dispose of it after the
+ * the surface has been destroyed.  The surface will be created to have the
+ * given size. By default every change to the surface will be made visible
+ * immediately by blitting it into the window. This can be changed with
  * cairo_os2_surface_set_manual_window_refresh().
- * Note that the surface will contain garbage when created, so the pixels have
- * to be initialized by hand first. You can use the Cairo functions to fill it
- * with black, or use cairo_surface_mark_dirty() to fill the surface with pixels
- * from the window/HPS.
+ * Note that the surface will contain garbage when created, so the pixels
+ * have to be initialized by hand first. You can use the Cairo functions to
+ * fill it with black, or use cairo_surface_mark_dirty() to fill the surface
+ * with pixels from the window/HPS.
  *
  * Return value: the newly created surface
  *
@@ -755,72 +757,48 @@ cairo_os2_surface_create (HPS hps_client_window,
                           int width,
                           int height)
 {
-    cairo_os2_surface_t *local_os2_surface;
+    cairo_os2_surface_t *local_os2_surface = 0;
     cairo_status_t status;
     int rc;
 
     /* Check the size of the window */
-    if ((width <= 0) ||
-        (height <= 0))
-    {
-        /* Invalid window size! */
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    if ((width <= 0) || (height <= 0)) {
+        status = _cairo_error (CAIRO_STATUS_INVALID_SIZE);
+        goto error_exit;
     }
 
+    /* Allocate an OS/2 surface structure. */
     local_os2_surface = (cairo_os2_surface_t *) malloc (sizeof (cairo_os2_surface_t));
     if (!local_os2_surface) {
-        /* Not enough memory! */
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        goto error_exit;
     }
 
-    /* Initialize the OS/2 specific parts of the surface! */
+    memset(local_os2_surface, 0, sizeof(cairo_os2_surface_t));
 
-    /* Create mutex semaphore */
-    rc = DosCreateMutexSem (NULL,
-                            &(local_os2_surface->hmtx_use_private_fields),
-                            0,
-                            FALSE);
-    if (rc != NO_ERROR) {
-        /* Could not create mutex semaphore! */
-        free (local_os2_surface);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    /* Allocate resources:  mutex & event semaphores and the pixel buffer */
+    if (DosCreateMutexSem (NULL,
+                           &(local_os2_surface->hmtx_use_private_fields),
+                           0,
+                           FALSE))
+    {
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        goto error_exit;
     }
 
-    /* Save PS handle */
-    local_os2_surface->hps_client_window = hps_client_window;
-
-    /* Defaults */
-    local_os2_surface->hwnd_client_window = NULLHANDLE;
-    local_os2_surface->blit_as_changes = TRUE;
-    local_os2_surface->pixel_array_lend_count = 0;
-    rc = DosCreateEventSem (NULL,
-                            &(local_os2_surface->hev_pixel_array_came_back),
-                            0,
-                            FALSE);
-
-    if (rc != NO_ERROR) {
-        /* Could not create event semaphore! */
-        DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
-        free (local_os2_surface);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    if (DosCreateEventSem (NULL,
+                           &(local_os2_surface->hev_pixel_array_came_back),
+                           0,
+                           FALSE))
+    {
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        goto error_exit;
     }
 
-    /* Prepare BITMAPINFO2 structure for our buffer */
-    memset (&(local_os2_surface->bitmap_info), 0, sizeof (local_os2_surface->bitmap_info));
-    local_os2_surface->bitmap_info.cbFix = sizeof (BITMAPINFOHEADER2);
-    local_os2_surface->bitmap_info.cx = width;
-    local_os2_surface->bitmap_info.cy = height;
-    local_os2_surface->bitmap_info.cPlanes = 1;
-    local_os2_surface->bitmap_info.cBitCount = 32;
-
-    /* Allocate memory for pixels */
     local_os2_surface->pixels = (unsigned char *) _buffer_alloc (height, width, 4);
-    if (!(local_os2_surface->pixels)) {
-        /* Not enough memory for the pixels! */
-        DosCloseEventSem (local_os2_surface->hev_pixel_array_came_back);
-        DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
-        free (local_os2_surface);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    if (!local_os2_surface->pixels) {
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        goto error_exit;
     }
 
     /* Create image surface from pixel array */
@@ -830,21 +808,90 @@ cairo_os2_surface_create (HPS hps_client_window,
                                              width,      /* Width */
                                              height,     /* Height */
                                              width * 4); /* Rowstride */
-
     status = local_os2_surface->image_surface->base.status;
-    if (status) {
-        /* Could not create image surface! */
-        _buffer_free (local_os2_surface->pixels);
-        DosCloseEventSem (local_os2_surface->hev_pixel_array_came_back);
-        DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
-        free (local_os2_surface);
-        return _cairo_surface_create_in_error (status);
-    }
+    if (status)
+        goto error_exit;
+
+    /* Set values for OS/2-specific data that aren't zero/NULL/FALSE.
+     * Note: hps_client_window may be null if this was called by
+     * cairo_os2_surface_create_for_window().
+     */
+    local_os2_surface->hps_client_window = hps_client_window;
+    local_os2_surface->blit_as_changes = TRUE;
+
+    /* Prepare BITMAPINFO2 structure for our buffer */
+    local_os2_surface->bitmap_info.cbFix = sizeof (BITMAPINFOHEADER2);
+    local_os2_surface->bitmap_info.cx = width;
+    local_os2_surface->bitmap_info.cy = height;
+    local_os2_surface->bitmap_info.cPlanes = 1;
+    local_os2_surface->bitmap_info.cBitCount = 32;
 
     /* Initialize base surface */
     _cairo_surface_init (&local_os2_surface->base,
                          &cairo_os2_surface_backend,
                          _cairo_content_from_format (CAIRO_FORMAT_ARGB32));
+
+    /* Successful exit */
+    return (cairo_surface_t *)local_os2_surface;
+
+ error_exit:
+
+    /* This point will only be reached if an error occured */
+
+    if (local_os2_surface) {
+        if (local_os2_surface->pixels)
+            _buffer_free (local_os2_surface->pixels);
+        if (local_os2_surface->hev_pixel_array_came_back)
+            DosCloseEventSem (local_os2_surface->hev_pixel_array_came_back);
+        if (local_os2_surface->hmtx_use_private_fields)
+            DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
+        free (local_os2_surface);
+    }
+
+    return _cairo_surface_create_in_error (status);
+}
+
+/**
+ * cairo_os2_surface_create_for_window:
+ * @hwnd_client_window: the window handle to bind the surface to
+ * @width: the width of the surface
+ * @height: the height of the surface
+ *
+ * Create a Cairo surface which is bound to a given window; the caller retains
+ * ownership of the window.  This is a convenience function for use with
+ * windows that will only be updated when cairo_os2_surface_refresh_window()
+ * is called (usually in response to a WM_PAINT message).  It avoids the need
+ * to create a persistent HPS for every window and assumes that one will be
+ * supplied by the caller when a cairo function needs one.  If it isn't, an
+ * HPS will be created on-the-fly and released before the function which needs
+ * it returns.
+ *
+ * Return value: the newly created surface
+ *
+ * Since: 1.10
+ **/
+cairo_surface_t *
+cairo_os2_surface_create_for_window (HWND hwnd_client_window,
+                                     int width,
+                                     int height)
+{
+    cairo_os2_surface_t *local_os2_surface;
+
+    /* A window handle must be provided. */
+    if (!hwnd_client_window) {
+        return _cairo_surface_create_in_error (
+                                _cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    /* Create the surface. */
+    local_os2_surface = (cairo_os2_surface_t *)
+        cairo_os2_surface_create (0, width, height);
+
+    /* If successful, save the hwnd & turn off automatic repainting. */
+    if (!local_os2_surface->image_surface->base.status) {
+        local_os2_surface->hwnd_client_window = hwnd_client_window;
+        local_os2_surface->blit_as_changes = FALSE;
+    }
 
     return (cairo_surface_t *)local_os2_surface;
 }
@@ -1014,6 +1061,7 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
 {
     cairo_os2_surface_t *local_os2_surface;
     RECTL rclTemp;
+    HPS hpsTemp = 0;
 
     local_os2_surface = (cairo_os2_surface_t *) surface;
     if ((!local_os2_surface) ||
@@ -1023,9 +1071,19 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
         return;
     }
 
-    /* Manage defaults (NULLs) */
-    if (!hps_begin_paint)
+    /* If an HPS wasn't provided, see if we can get one. */
+    if (!hps_begin_paint) {
         hps_begin_paint = local_os2_surface->hps_client_window;
+        if (!hps_begin_paint) {
+            if (local_os2_surface->hwnd_client_window) {
+                hpsTemp = WinGetPS(local_os2_surface->hwnd_client_window);
+                hps_begin_paint = hpsTemp;
+            }
+            /* No HPS & no way to get one, so exit */
+            if (!hps_begin_paint)
+                return;
+        }
+    }
 
     if (prcl_begin_paint_rect == NULL) {
         /* Update the whole window! */
@@ -1046,6 +1104,8 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
         != NO_ERROR)
     {
         /* Could not get mutex! */
+        if (hpsTemp)
+            WinReleasePS(hpsTemp);
         return;
     }
 
@@ -1073,6 +1133,9 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
     }
 
     DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
+
+    if (hpsTemp)
+        WinReleasePS(hpsTemp);
 }
 
 static cairo_status_t
@@ -1109,10 +1172,10 @@ _cairo_os2_surface_finish (void *abstract_surface)
  * @surface: the cairo surface to associate with the window handle
  * @hwnd_client_window: the window handle of the client window
  *
- * Sets window handle for surface. If Cairo wants to blit into the window
- * because it is set to blit as the surface changes (see
- * cairo_os2_surface_set_manual_window_refresh()), then there are two ways it
- * can choose:
+ * Sets window handle for surface; the caller retains ownership of the window.
+ * If Cairo wants to blit into the window because it is set to blit as the
+ * surface changes (see cairo_os2_surface_set_manual_window_refresh()), then
+ * there are two ways it can choose:
  * If it knows the HWND of the surface, then it invalidates that area, so the
  * application will get a WM_PAINT message and it can call
  * cairo_os2_surface_refresh_window() to redraw that area. Otherwise cairo itself
@@ -1212,6 +1275,74 @@ cairo_os2_surface_get_manual_window_refresh (cairo_surface_t *surface)
     }
 
     return !(local_os2_surface->blit_as_changes);
+}
+
+/**
+ * cairo_os2_surface_get_hps:
+ * @surface: the cairo surface to be querued
+ * @hps: HPS currently associated with the surface (if any)
+ *
+ * This API retrieves the HPS associated with the surface.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the hps could be retrieved,
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
+ * %CAIRO_STATUS_NULL_POINTER if the hps argument is null
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_os2_surface_get_hps (cairo_surface_t *surface,
+                           HPS             *hps)
+{
+    cairo_os2_surface_t *local_os2_surface;
+
+    local_os2_surface = (cairo_os2_surface_t *) surface;
+    if ((!local_os2_surface) ||
+        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
+    {
+        /* Invalid parameter (wrong surface)! */
+        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    }
+    if (!hps)
+    {
+        return _cairo_error (CAIRO_STATUS_NULL_POINTER);
+    }
+    *hps = local_os2_surface->hps_client_window;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_os2_surface_set_hps:
+ * @surface: the cairo surface to associate with the HPS
+ * @hps: new HPS to be associated with the surface (the HPS may be null)
+ *
+ * This API replaces the HPS associated with the surface with a new one.
+ * The caller retains ownership of the HPS and must dispose of it after
+ * the surface has been destroyed or it has been replaced by another
+ * call to this function.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the hps could be replaced,
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_os2_surface_set_hps (cairo_surface_t *surface,
+                           HPS              hps)
+{
+    cairo_os2_surface_t *local_os2_surface;
+
+    local_os2_surface = (cairo_os2_surface_t *) surface;
+    if ((!local_os2_surface) ||
+        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
+    {
+        /* Invalid parameter (wrong surface)! */
+        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    }
+    local_os2_surface->hps_client_window = hps;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1331,5 +1462,11 @@ static const cairo_surface_backend_t cairo_os2_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     NULL, /* show_glyphs */
-    NULL  /* snapshot */
+    NULL, /* snapshot */
+    NULL, /* is_similar */
+    NULL, /* fill_stroke */
+    NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
+    NULL, /* has_show_text_glyphs */
+    NULL  /* show_text_glyphs */
 };

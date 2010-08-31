@@ -50,7 +50,7 @@ public:
     enum {
         FLAG_TAKE_DC = (1 << 0),
         FLAG_FOR_PRINTING = (1 << 1),
-        FLAG_IS_TRANSPARENT = (1 << 2),
+        FLAG_IS_TRANSPARENT = (1 << 2)
     };
 
     gfxWindowsSurface(HWND wnd, PRUint32 flags = 0);

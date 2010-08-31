@@ -966,7 +966,7 @@ namespace nanojit
             else if (ty == ARGTYPE_D && fr < XMM8) {
                 // double goes in next available XMM register
                 asm_regarg(ty, arg, fr);
-                fr = nextreg(fr);
+                fr = Register(fr + 1);
             }
         #endif
             else {
@@ -1185,12 +1185,21 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
-        if (target && !isTargetWithinS32(target)) {
-            setError(ConditionalBranchTooFar);
-            NanoAssert(0);
-        }
         NanoAssert(cond->isCmp());
         LOpcode condop = cond->opcode();
+
+        if (target && !isTargetWithinS32(target)) {
+            // conditional jumps beyond 32bit range, so invert the branch/compare
+            // and emit an unconditional jump to the target
+            //         j(inverted) B1
+            //         jmp target
+            //     B1:
+            NIns* shortTarget = _nIns;
+            JMP(target);
+            target = shortTarget;
+
+            onFalse = !onFalse;
+        }
         if (isCmpDOpcode(condop))
             return asm_branchd(onFalse, cond, target);
 
@@ -1848,7 +1857,7 @@ namespace nanojit
         endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_spill(Register rr, int d, bool /*pop*/, bool quad) {
+    void Assembler::asm_spill(Register rr, int d, bool quad) {
         NanoAssert(d);
         if (!IsFpReg(rr)) {
             if (quad)
@@ -1905,7 +1914,6 @@ namespace nanojit
 #else
         a.free = 0xffffffff & ~(1<<RSP | 1<<RBP);
 #endif
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns *patch, NIns *target) {

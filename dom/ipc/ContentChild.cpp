@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_GTK2
+#include <gtk/gtk.h>
+#endif
+
 #include "ContentChild.h"
 #include "TabChild.h"
 
@@ -192,6 +196,11 @@ ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessHandle aParentHandle,
                    IPC::Channel* aChannel)
 {
+#ifdef MOZ_WIDGET_GTK2
+    // sigh
+    gtk_init(NULL, NULL);
+#endif
+
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
   
     Open(aChannel, aParentHandle, aIOLoop);
@@ -203,8 +212,8 @@ ContentChild::Init(MessageLoop* aIOLoop,
 PBrowserChild*
 ContentChild::AllocPBrowser(const PRUint32& aChromeFlags)
 {
-  nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
-  return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
+    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 
 bool

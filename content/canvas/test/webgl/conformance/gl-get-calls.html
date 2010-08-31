@@ -50,6 +50,13 @@ else {
     testPassed("context exists");
 
     debug("");
+    debug("Context is correct type");
+    if (context instanceof WebGLRenderingContext)
+      testPassed("context is correct type");
+    else
+      testFailed("context is not correct type");
+
+    debug("");
     debug("Context contains getError");
     if ("getError" in context)
       testPassed("context contains getError");
@@ -75,6 +82,7 @@ else {
     shouldBe('context.getParameter(context.CULL_FACE)', 'false');
     shouldBe('context.getParameter(context.CULL_FACE_MODE)', 'context.BACK');
     shouldBe('context.getParameter(context.CURRENT_PROGRAM)', 'null');
+    shouldBe('context.getParameter(context.DEPTH_CLEAR_VALUE)', '1');
     shouldBe('context.getParameter(context.DEPTH_FUNC)', 'context.LESS');
     shouldBe('context.getParameter(context.DEPTH_RANGE)', '[0, 1]');
     shouldBe('context.getParameter(context.DEPTH_TEST)', 'false');
@@ -125,7 +133,6 @@ else {
     shouldBeTrue('context.getParameter(context.MAX_VERTEX_UNIFORM_VECTORS) >= 128');
     shouldBeTrue('context.getParameter(context.MAX_VARYING_VECTORS) >= 8');
     shouldBe('context.getParameter(context.NUM_COMPRESSED_TEXTURE_FORMATS)', '0');
-    shouldBe('context.getParameter(context.SHADER_COMPILER)', 'true');
 }
 
 debug("");

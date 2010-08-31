@@ -49,11 +49,7 @@ EXPORT_LIBRARY = 1
 
 EXPORTS = TabMessageUtils.h
 
-EXPORTS_NAMESPACES = mozilla mozilla/dom
-
-EXPORTS_mozilla = \
-  TabTypes.h \
-  $(NULL)
+EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
   ContentChild.h \
@@ -86,6 +82,6 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../netwerk/base/src \
 		$(NULL)
 
-CXXFLAGS += $(TK_CFLAGS)
-
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
+
+CXXFLAGS += $(TK_CFLAGS)

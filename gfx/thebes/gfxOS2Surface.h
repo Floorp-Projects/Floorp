@@ -66,11 +66,11 @@ public:
     // Reset the cairo surface to the given size.
     int Resize(const gfxIntSize& aSize);
 
-    HPS GetPS() { return mPS; }
+    HPS GetPS();
     gfxIntSize GetSize() { return mSize; }
 
 private:
-    PRBool mHasWnd; // indicates if created through the HWND constructor
+    HWND mWnd; // non-null if created through the HWND constructor
     HDC mDC; // memory device context
     HPS mPS; // presentation space connected to window or memory device
     HBITMAP mBitmap; // bitmap for initialization of memory surface

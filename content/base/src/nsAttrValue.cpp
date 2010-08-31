@@ -525,7 +525,7 @@ nsIAtom*
 nsAttrValue::AtomAt(PRInt32 aIndex) const
 {
   NS_PRECONDITION(aIndex >= 0, "Index must not be negative");
-  NS_PRECONDITION(GetAtomCount() > aIndex, "aIndex out of range");
+  NS_PRECONDITION(GetAtomCount() > PRUint32(aIndex), "aIndex out of range");
   
   if (BaseType() == eAtomBase) {
     return GetAtomValue();

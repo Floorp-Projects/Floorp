@@ -969,8 +969,11 @@ nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsHTMLFormElement*
-nsGenericHTMLElement::FindForm(nsHTMLFormElement* aCurrentForm)
+nsGenericHTMLElement::FindAncestorForm(nsHTMLFormElement* aCurrentForm)
 {
+  NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::form),
+               "FindAncestorForm should not be called if @form is set!");
+
   // Make sure we don't end up finding a form that's anonymous from
   // our point of view.
   nsIContent* bindingParent = GetBindingParent();
@@ -2480,40 +2483,15 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!aParent) {
-    return NS_OK;
-  }
-
-  PRBool hadForm = (mForm != nsnull);
-  
-  if (!mForm) {
-    // We now have a parent, so we may have picked up an ancestor form.  Search
-    // for it.  Note that if mForm is already set we don't want to do this,
-    // because that means someone (probably the content sink) has already set
-    // it to the right value.  Also note that even if being bound here didn't
-    // change our parent, we still need to search, since our parent chain
-    // probably changed _somewhere_.
-    mForm = FindForm();
-  }
-
-  if (mForm && !HasFlag(ADDED_TO_FORM)) {
-    // Now we need to add ourselves to the form
-    nsAutoString nameVal, idVal;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
-    
-    SetFlags(ADDED_TO_FORM);
-
-    // Notify only if we just found this mForm.
-    mForm->AddElement(this, !hadForm);
-    
-    if (!nameVal.IsEmpty()) {
-      mForm->AddElementToTable(this, nameVal);
-    }
-
-    if (!idVal.IsEmpty()) {
-      mForm->AddElementToTable(this, idVal);
-    }
+  // If @form is set, the element *has* to be in a document, otherwise it
+  // wouldn't be possible to find an element with the corresponding id.
+  // If @form isn't set, the element *has* to have a parent, otherwise it
+  // wouldn't be possible to find a form ancestor.
+  // We should not call UpdateFormOwner if none of these conditions are
+  // fulfilled.
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ? !!GetCurrentDoc()
+                                                  : !!aParent) {
+    UpdateFormOwner(true, nsnull);
   }
 
   return NS_OK;
@@ -2532,12 +2510,20 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       ClearForm(PR_TRUE, PR_TRUE);
     } else {
       // Recheck whether we should still have an mForm.
-      if (!FindForm(mForm)) {
+      if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
+          !FindAncestorForm(mForm)) {
         ClearForm(PR_TRUE, PR_TRUE);
       } else {
         UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }
     }
+  }
+
+  // We have to remove the form id observer if there was one.
+  // We will re-add one later if needed (during bind to tree).
+  if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                      nsGkAtoms::form)) {
+    RemoveFormIdObserver();
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -2586,6 +2572,17 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
       }
     }
+
+    if (aName == nsGkAtoms::form) {
+      // If @form isn't set or set to the empty string, there were no observer
+      // so we don't have to remove it.
+      if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                          nsGkAtoms::form)) {
+        // The current form id observer is no longer needed.
+        // A new one may be added in AfterSetAttr.
+        RemoveFormIdObserver();
+      }
+    }
   }
 
   return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName,
@@ -2632,6 +2629,21 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // changes can't affect that.
       if (doc && aNotify) {
         doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
+      }
+    }
+
+    if (aName == nsGkAtoms::form) {
+      // We need a new form id observer.
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        Element* formIdElement = nsnull;
+        if (aValue && !aValue->IsEmpty()) {
+          formIdElement = AddFormIdObserver();
+        }
+
+        // Because we have a new @form value (or no more @form), we have to
+        // update our form owner.
+        UpdateFormOwner(false, formIdElement);
       }
     }
   }
@@ -2727,6 +2739,18 @@ nsGenericHTMLFormElement::IsLabelableControl() const
          type != NS_FORM_OBJECT;
 }
 
+PRBool
+nsGenericHTMLFormElement::IsSubmittableControl() const
+{
+  // TODO: keygen should be in that list, see bug 101019.
+  PRInt32 type = GetType();
+  return type == NS_FORM_OBJECT ||
+         type == NS_FORM_TEXTAREA ||
+         type == NS_FORM_SELECT ||
+         type & NS_FORM_BUTTON_ELEMENT ||
+         type & NS_FORM_INPUT_ELEMENT;
+}
+
 PRInt32
 nsGenericHTMLFormElement::IntrinsicState() const
 {
@@ -2789,6 +2813,139 @@ nsGenericHTMLFormElement::FocusState()
   }
 
   return eInactiveWindow;
+}
+
+Element*
+nsGenericHTMLFormElement::AddFormIdObserver()
+{
+  NS_ASSERTION(GetCurrentDoc(), "When adding a form id observer, "
+                                "we should be in a document!");
+
+  nsAutoString formId;
+  nsIDocument* doc = GetOwnerDoc();
+  GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
+  NS_ASSERTION(!formId.IsEmpty(),
+               "@form value should not be the empty string!");
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(formId);
+
+  return doc->AddIDTargetObserver(atom, FormIdUpdated, this, PR_FALSE);
+}
+
+void
+nsGenericHTMLFormElement::RemoveFormIdObserver()
+{
+  /**
+   * We are using GetOwnerDoc() because we don't really care about having the
+   * element actually being in the tree. If it is not and @form value changes,
+   * this method will be called for nothing but removing an observer which does
+   * not exist doesn't cost so much (no entry in the hash table) so having a
+   * boolean for GetCurrentDoc()/GetOwnerDoc() would make everything look more
+   * complex for nothing.
+   */
+
+  nsIDocument* doc = GetOwnerDoc();
+
+  // At this point, we may not have a document anymore. In that case, we can't
+  // remove the observer. The document did that for us.
+  if (!doc) {
+    return;
+  }
+
+  nsAutoString formId;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
+  NS_ASSERTION(!formId.IsEmpty(),
+               "@form value should not be the empty string!");
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(formId);
+
+  doc->RemoveIDTargetObserver(atom, FormIdUpdated, this, PR_FALSE);
+}
+
+
+/* static */
+PRBool
+nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
+                                        Element* aNewElement,
+                                        void* aData)
+{
+  nsGenericHTMLFormElement* element =
+    static_cast<nsGenericHTMLFormElement*>(aData);
+
+  NS_ASSERTION(element->IsHTML(), "aData should be an HTML element");
+
+  element->UpdateFormOwner(false, aNewElement);
+
+  return PR_TRUE;
+}
+
+void
+nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
+                                          Element* aFormIdElement)
+{
+  NS_PRECONDITION(!aBindToTree || !aFormIdElement,
+                  "aFormIdElement shouldn't be set if aBindToTree is true!");
+
+  bool hadForm = mForm;
+
+  if (!aBindToTree) {
+    // TODO: we should get ride of this aNotify parameter, bug 589977.
+    ClearForm(PR_TRUE, PR_TRUE);
+  }
+
+  if (!mForm) {
+    // If @form is set, we have to use that to find the form.
+    nsAutoString formId;
+    if (GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId)) {
+      if (!formId.IsEmpty()) {
+        Element* element = nsnull;
+
+        if (aBindToTree) {
+          element = AddFormIdObserver();
+        } else {
+          element = aFormIdElement;
+        }
+
+        NS_ASSERTION(GetCurrentDoc(), "The element should be in a document "
+                                      "when UpdateFormOwner is called!");
+        NS_ASSERTION(!GetCurrentDoc() ||
+                     element == GetCurrentDoc()->GetElementById(formId),
+                     "element should be equals to the current element "
+                     "associated with the id in @form!");
+
+        if (element && element->Tag() == nsGkAtoms::form &&
+            element->IsHTML()) {
+          mForm = static_cast<nsHTMLFormElement*>(element);
+        }
+      }
+     } else {
+      // We now have a parent, so we may have picked up an ancestor form.  Search
+      // for it.  Note that if mForm is already set we don't want to do this,
+      // because that means someone (probably the content sink) has already set
+      // it to the right value.  Also note that even if being bound here didn't
+      // change our parent, we still need to search, since our parent chain
+      // probably changed _somewhere_.
+      mForm = FindAncestorForm();
+    }
+  }
+
+  if (mForm && !HasFlag(ADDED_TO_FORM)) {
+    // Now we need to add ourselves to the form
+    nsAutoString nameVal, idVal;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+
+    SetFlags(ADDED_TO_FORM);
+
+    // Notify only if we just found this mForm.
+    mForm->AddElement(this, !hadForm);
+
+    if (!nameVal.IsEmpty()) {
+      mForm->AddElementToTable(this, nameVal);
+    }
+
+    if (!idVal.IsEmpty()) {
+      mForm->AddElementToTable(this, idVal);
+    }
+  }
 }
 
 //----------------------------------------------------------------------

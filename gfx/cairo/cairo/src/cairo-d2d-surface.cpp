@@ -717,7 +717,7 @@ static ID3D10Texture2D*
 _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface) 
 {
     if (!surface->bufferTexture) {
-	IDXGISurface *surf;
+	RefPtr<IDXGISurface> surf;
 	DXGI_SURFACE_DESC surfDesc;
 	surface->surface->QueryInterface(&surf);
 	surf->GetDesc(&surfDesc);
@@ -3383,13 +3383,13 @@ cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
     }
     /** Get the backbuffer surface from the swap chain */
     hr = newSurf->dxgiChain->GetBuffer(0,
-	                               IID_PPV_ARGS(&newSurf->backBuf));
+	                               IID_PPV_ARGS(&newSurf->surface));
 
     if (FAILED(hr)) {
 	goto FAIL_HWND;
     }
 
-    newSurf->backBuf->QueryInterface(&newSurf->surface);
+    newSurf->surface->QueryInterface(&newSurf->backBuf);
 
     size.width = sizePixels.width * dpiX;
     size.height = sizePixels.height * dpiY;
@@ -3431,6 +3431,10 @@ cairo_d2d_surface_create(cairo_device_t *device,
                          int width,
                          int height)
 {
+    if (width == 0 || height == 0) {
+	return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_SIZE));
+    }
+
     cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     new (newSurf) cairo_d2d_surface_t();

@@ -133,6 +133,8 @@ nsWebMReader::~nsWebMReader()
   mVideoPackets.Reset();
   mAudioPackets.Reset();
 
+  vpx_codec_destroy(&mVP8);
+
   vorbis_block_clear(&mVorbisBlock);
   vorbis_dsp_clear(&mVorbisDsp);
   vorbis_info_clear(&mVorbisInfo);
@@ -143,7 +145,7 @@ nsWebMReader::~nsWebMReader()
 
 nsresult nsWebMReader::Init()
 {
-  if(vpx_codec_dec_init(&mVP8, &vpx_codec_vp8_dx_algo, NULL, 0)) {
+  if (vpx_codec_dec_init(&mVP8, &vpx_codec_vp8_dx_algo, NULL, 0)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -691,7 +693,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   return DecodeToTarget(aTarget);
 }
 
-nsresult nsWebMReader::GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime)
+nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   return NS_OK;
 }
