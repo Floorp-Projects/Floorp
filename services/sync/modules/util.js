@@ -793,7 +793,8 @@ let Utils = {
     let status  = sdrSlot.status;
     let slots = Ci.nsIPKCS11Slot;
 
-    if (status == slots.SLOT_READY || status == slots.SLOT_LOGGED_IN)
+    if (status == slots.SLOT_READY || status == slots.SLOT_LOGGED_IN
+                                   || status == slots.SLOT_UNINITIALIZED)
       return false;
 
     if (status == slots.SLOT_NOT_LOGGED_IN)
