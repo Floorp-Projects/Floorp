@@ -88,6 +88,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
+#include "FrameLayerBuilder.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -2459,6 +2460,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
              this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
       Invalidate(dirtyRect);
+      FrameLayerBuilder::InvalidateThebesLayersInSubtree(aLine->mFirstChild);
     } else {
       nsRect combinedAreaHStrip, combinedAreaVStrip;
       nsRect boundsHStrip, boundsVStrip;
@@ -2503,6 +2505,13 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       printf("  dirty line is %p\n", static_cast<void*>(aLine.get());
 #endif
     Invalidate(dirtyRect);
+    if (GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
+      PRInt32 childCount = aLine->GetChildCount();
+      for (nsIFrame* f = aLine->mFirstChild; childCount;
+           --childCount, f = f->GetNextSibling()) {
+        FrameLayerBuilder::InvalidateThebesLayersInSubtree(f);
+      }
+    }
   }
 
   return rv;

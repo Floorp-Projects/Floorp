@@ -1136,7 +1136,12 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     JS_ASSERT(js_SlowArrayClass.flags & JSCLASS_HAS_PRIVATE);
     voidDenseOnlyArraySlots();
 
-    /* Finally, update class. */
+    /*
+     * Finally, update class. If |this| is Array.prototype, then js_InitClass
+     * will create an emptyShape whose class is &js_SlowArrayClass, to ensure
+     * that delegating instances can share shapes in the tree rooted at the
+     * proto's empty shape.
+     */
     clasp = &js_SlowArrayClass;
     return true;
 }
@@ -3037,8 +3042,14 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
                                    NULL, array_methods, NULL, array_static_methods);
     if (!proto)
         return NULL;
-    proto->setArrayLength(0);
 
+    /*
+     * Assert that js_InitClass used the correct (slow array, not dense array)
+     * class for proto's emptyShape class.
+     */
+    JS_ASSERT(proto->emptyShape->getClass() == proto->getClass());
+
+    proto->setArrayLength(0);
     return proto;
 }
 

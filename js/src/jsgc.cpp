@@ -633,7 +633,9 @@ static JSGCArena *
 NewGCArena(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    if (!JS_THREAD_DATA(cx)->waiveGCQuota && rt->gcBytes >= rt->gcMaxBytes) {
+    if (!JS_THREAD_DATA(cx)->waiveGCQuota && 
+        (rt->gcBytes >= rt->gcMaxBytes || 
+        rt->gcBytes > GC_HEAP_GROWTH_FACTOR * rt->gcNewArenaTriggerBytes)) {
         /*
          * FIXME bug 524051 We cannot run a last-ditch GC on trace for now, so
          * just pretend we are out of memory which will throw us off trace and
@@ -952,6 +954,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * (during JS engine start).
      */
     rt->setGCLastBytes(8192);
+    rt->gcNewArenaTriggerBytes = GC_ARENA_ALLOCATION_TRIGGER;
 
     METER(PodZero(&rt->gcStats));
     return true;
@@ -2784,6 +2787,11 @@ GC(JSContext *cx  GCTIMER_PARAM)
          ++i) {
         FinalizeArenaList<JSString, FinalizeExternalString>(cx, i);
     }
+    
+    rt->gcNewArenaTriggerBytes = rt->gcBytes < GC_ARENA_ALLOCATION_TRIGGER ?
+                                 GC_ARENA_ALLOCATION_TRIGGER :
+                                 rt->gcBytes;
+
     TIMESTAMP(sweepStringEnd);
 
     SweepCompartments(cx);

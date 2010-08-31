@@ -350,7 +350,7 @@ class nsGnomeVFSInputStream : public nsIInputStream
       : mSpec(uriSpec)
       , mChannel(nsnull)
       , mHandle(nsnull)
-      , mBytesRemaining(LL_MAXUINT)
+      , mBytesRemaining(PR_UINT32_MAX)
       , mStatus(NS_OK)
       , mDirList(nsnull)
       , mDirListPtr(nsnull)
@@ -386,7 +386,7 @@ class nsGnomeVFSInputStream : public nsIInputStream
     nsCString                mSpec;
     nsIChannel              *mChannel; // manually refcounted
     GnomeVFSHandle          *mHandle;
-    PRUint64                 mBytesRemaining;
+    PRUint32                 mBytesRemaining;
     nsresult                 mStatus;
     GList                   *mDirList;
     GList                   *mDirListPtr;
@@ -460,11 +460,12 @@ nsGnomeVFSInputStream::DoOpen()
       if (info.mime_type && (strcmp(info.mime_type, APPLICATION_OCTET_STREAM) != 0))
         SetContentTypeOfChannel(info.mime_type);
 
-      mBytesRemaining = info.size;
+      // XXX truncates size from 64-bit to 32-bit
+      mBytesRemaining = (PRUint32) info.size;
 
       // Update the content length attribute on the channel.  We do this
       // synchronously without proxying.  This hack is not as bad as it looks!
-      if (mBytesRemaining != PRUint64(-1))
+      if (mBytesRemaining != PR_UINT32_MAX)
         mChannel->SetContentLength(mBytesRemaining);
     }
     else
@@ -508,7 +509,6 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
     rv = gnome_vfs_read(mHandle, aBuf, aCount, &bytesRead);
     if (rv == GNOME_VFS_OK)
     {
-      // XXX 64-bit here
       *aCountRead = (PRUint32) bytesRead;
       mBytesRemaining -= *aCountRead;
     }
@@ -704,7 +704,6 @@ nsGnomeVFSInputStream::Available(PRUint32 *aResult)
   if (NS_FAILED(mStatus))
     return mStatus;
 
-  // XXX 64-bit here
   *aResult = mBytesRemaining;
   return NS_OK;
 }
