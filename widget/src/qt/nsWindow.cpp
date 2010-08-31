@@ -1972,6 +1972,26 @@ nsWindow::Create(nsIWidget        *aParent,
     return NS_OK;
 }
 
+already_AddRefed<nsIWidget>
+nsWindow::CreateChild(const nsIntRect&  aRect,
+                      EVENT_CALLBACK    aHandleEventFunction,
+                      nsIDeviceContext* aContext,
+                      nsIAppShell*      aAppShell,
+                      nsIToolkit*       aToolkit,
+                      nsWidgetInitData* aInitData,
+                      PRBool            /*aForceUseIWidgetParent*/)
+{
+    //We need to force parent widget, otherwise GetTopLevelWindow doesn't work
+    return nsBaseWidget::CreateChild(aRect,
+                                     aHandleEventFunction,
+                                     aContext,
+                                     aAppShell,
+                                     aToolkit,
+                                     aInitData,
+                                     PR_TRUE); // Force parent
+}
+
+
 NS_IMETHODIMP
 nsWindow::SetWindowClass(const nsAString &xulWinType)
 {
