@@ -114,11 +114,11 @@ public:
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
-  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
-  NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther);
-  virtual void EndSwapDocShells(nsIFrame* aOther);
+  nsresult GetDocShell(nsIDocShell **aDocShell);
+  nsresult BeginSwapDocShells(nsIFrame* aOther);
+  void EndSwapDocShells(nsIFrame* aOther);
   nsIView* CreateViewAndWidget(nsContentType aContentType);
-  virtual nsIFrame* GetSubdocumentRootFrame();
+  nsIFrame* GetSubdocumentRootFrame();
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();

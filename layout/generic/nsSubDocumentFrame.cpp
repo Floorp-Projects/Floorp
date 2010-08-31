@@ -777,7 +777,7 @@ nsSubDocumentFrame::FrameLoader()
 
 // XXX this should be called ObtainDocShell or something like that,
 // to indicate that it could have side effects
-NS_IMETHODIMP
+nsresult
 nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;
@@ -786,7 +786,7 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   return mFrameLoader->GetDocShell(aDocShell);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
 {
   if (!aOther || aOther->GetType() != nsGkAtoms::subDocumentFrame) {
