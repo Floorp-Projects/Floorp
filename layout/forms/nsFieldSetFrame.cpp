@@ -674,7 +674,6 @@ nsFieldSetFrame::ReparentFrameList(const nsFrameList& aFrameList)
     e.get()->SetParent(mContentFrame);
     frameManager->ReparentStyleContext(e.get());
   }
-  mContentFrame->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
 }
 
 nscoord
