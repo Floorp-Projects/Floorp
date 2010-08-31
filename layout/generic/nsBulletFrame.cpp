@@ -62,6 +62,8 @@
 #include "nsIComponentManager.h"
 #include "nsContentUtils.h"
 
+#define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
+
 class nsBulletListener : public nsStubImageDecoderObserver
 {
 public:
@@ -1278,6 +1280,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   const nsStyleList* myList = GetStyleList();
   nscoord ascent;
 
+  RemoveStateBits(BULLET_FRAME_IMAGE_LOADING);
+
   if (myList->GetListStyleImage() && mImageRequest) {
     PRUint32 status;
     mImageRequest->GetImageStatus(&status);
@@ -1289,6 +1293,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 
       aMetrics.width = mComputedSize.width;
       aMetrics.ascent = aMetrics.height = mComputedSize.height;
+
+      AddStateBits(BULLET_FRAME_IMAGE_LOADING);
 
       return;
     }
@@ -1537,6 +1543,38 @@ nsBulletFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGro
     return;
 
   *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
+}
+
+nscoord
+nsBulletFrame::GetBaseline() const
+{
+  nscoord ascent = 0, bottomPadding;
+  if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
+    ascent = GetRect().height;
+  } else {
+    nsCOMPtr<nsIFontMetrics> fm;
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+    const nsStyleList* myList = GetStyleList();
+    switch (myList->mListStyleType) {
+      case NS_STYLE_LIST_STYLE_NONE:
+        break;
+
+      case NS_STYLE_LIST_STYLE_DISC:
+      case NS_STYLE_LIST_STYLE_CIRCLE:
+      case NS_STYLE_LIST_STYLE_SQUARE:
+        fm->GetMaxAscent(ascent);
+        bottomPadding = NSToCoordRound(float(ascent) / 8.0f);
+        ascent = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
+                        NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
+        ascent += bottomPadding;
+        break;
+
+      default:
+        fm->GetMaxAscent(ascent);
+        break;
+    }
+  }
+  return ascent + GetUsedBorderAndPadding().top;
 }
 
 
