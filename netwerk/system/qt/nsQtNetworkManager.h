@@ -11,16 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla.
+ * The Original Code is Nokia Corporation Code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Nokia Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
- *   Steve Meredith <smeredith@netscape.com>
+ * Jeremias Bosch <jeremias.bosch@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,44 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsNativeConnectionHelper.h"
+#ifndef NSQTNETWORKMANAGER_H_
+#define NSQTNETWORKMANAGER_H_
 
-#if defined(MOZ_PLATFORM_MAEMO)
-#include "nsAutodialMaemo.h"
-#elif defined(WINCE)
-#include "nsAutodialWinCE.h"
-#else
-#include "nsAutodialWin.h"
-#endif
+#include "nscore.h"
 
-#include "nsIOService.h"
-
-//-----------------------------------------------------------------------------
-// API typically invoked on the socket transport thread
-//-----------------------------------------------------------------------------
-
-PRBool
-nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
+class nsQtNetworkManager
 {
-  // On mobile platforms, instead of relying on the link service, we
-  // should ask the dialer directly.  This allows the dialer to update
-  // link status more forcefully rather than passively watching link
-  // status changes.
-#if !defined(MOZ_PLATFORM_MAEMO) && !defined(WINCE_WINDOWS_MOBILE)
-    if (gIOService->IsLinkUp())
-        return PR_FALSE;
-#endif
+public:
+  // Can be called from any thread, most likely the socket transport thread
+  static PRBool OpenConnectionSync();
+  static void CloseConnection();
 
-    nsAutodial autodial;
-    if (autodial.ShouldDialOnNetworkError())
-        return NS_SUCCEEDED(autodial.DialDefault(hostName));
+  static PRBool IsConnected();
+  static PRBool GetLinkStatusKnown();
 
-    return PR_FALSE;
-}
+  // Called from the nsQtNetworkLinkService (main thread only)
+  static PRBool Startup();
+  static void Shutdown();
+};
 
-PRBool
-nsNativeConnectionHelper::IsAutodialEnabled()
-{
-    nsAutodial autodial;
-    return autodial.Init() == NS_OK && autodial.ShouldDialOnNetworkError();
-}
+#endif /* NSQTNETWORKMANAGER_H_ */
