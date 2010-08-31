@@ -696,7 +696,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
 #ifdef MOZ_IPC
   if (mRemoteFrame) {
-    return ShowRemoteFrame(GetSubDocumentSize(frame->GetFrame()));
+    return ShowRemoteFrame(GetSubDocumentSize(frame));
   }
 #endif
 
