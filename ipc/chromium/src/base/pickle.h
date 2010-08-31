@@ -75,6 +75,7 @@ class Pickle {
   bool ReadInt32(void** iter, int32* result) const;
   bool ReadUInt32(void** iter, uint32* result) const;
   bool ReadInt64(void** iter, int64* result) const;
+  bool ReadUInt64(void** iter, uint64* result) const;
   bool ReadDouble(void** iter, double* result) const;
   bool ReadIntPtr(void** iter, intptr_t* result) const;
   bool ReadUnsignedChar(void** iter, unsigned char* result) const;
@@ -105,13 +106,19 @@ class Pickle {
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteLong(long value) {
-    return WriteBytes(&value, sizeof(value));
+    // Always written as a 64-bit value since the size for this type can
+    // differ between architectures.
+    return WriteInt64(int64(value));
   }
   bool WriteULong(unsigned long value) {
-    return WriteBytes(&value, sizeof(value));
+    // Always written as a 64-bit value since the size for this type can
+    // differ between architectures.
+    return WriteUInt64(uint64(value));
   }
   bool WriteSize(size_t value) {
-    return WriteBytes(&value, sizeof(value));
+    // Always written as a 64-bit value since the size for this type can
+    // differ between architectures.
+    return WriteUInt64(uint64(value));
   }
   bool WriteInt32(int32 value) {
     return WriteBytes(&value, sizeof(value));
@@ -122,11 +129,16 @@ class Pickle {
   bool WriteInt64(int64 value) {
     return WriteBytes(&value, sizeof(value));
   }
+  bool WriteUInt64(uint64 value) {
+    return WriteBytes(&value, sizeof(value));
+  }
   bool WriteDouble(double value) {
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteIntPtr(intptr_t value) {
-    return WriteBytes(&value, sizeof(value));
+    // Always written as a 64-bit value since the size for this type can
+    // differ between architectures.
+    return WriteInt64(int64(value));
   }
   bool WriteUnsignedChar(unsigned char value) {
     return WriteBytes(&value, sizeof(value));
