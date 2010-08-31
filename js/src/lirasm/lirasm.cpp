@@ -368,11 +368,17 @@ double sinFn(double d) {
 }
 #define sin sinFn
 
+double calld1(double x, double i, double y, double l, double x1, double i1, double y1, double l1) { 
+    return x + i * y - l + x1 / i1 - y1 * l1; 
+}
+
 Function functions[] = {
     FN(puts,   CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_P)),
     FN(sin,    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)),
     FN(malloc, CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P)),
     FN(free,   CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_P)),
+    FN(calld1, CallInfo::typeSig8(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
+                                  ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)),
 };
 
 template<typename out, typename in> out
