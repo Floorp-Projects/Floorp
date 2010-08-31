@@ -57,6 +57,7 @@ browser.jar:
         skin/classic/browser/feeds/videoFeedIcon16.png               (feeds/videoFeedIcon16.png)
         skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
         skin/classic/browser/feeds/subscribe-ui.css                  (feeds/subscribe-ui.css)
+        skin/classic/browser/inspector.css
         skin/classic/browser/places/places.css                       (places/places.css)
 *       skin/classic/browser/places/organizer.css                    (places/organizer.css)
         skin/classic/browser/places/bookmark.png                     (places/bookmark.png)
@@ -171,6 +172,7 @@ browser.jar:
         skin/classic/aero/browser/feeds/videoFeedIcon.png            (feeds/videoFeedIcon-aero.png)
         skin/classic/aero/browser/feeds/videoFeedIcon16.png          (feeds/videoFeedIcon16-aero.png)
         skin/classic/aero/browser/feeds/subscribe.css                (feeds/subscribe.css)
+        skin/classic/aero/browser/inspector.css
 *       skin/classic/aero/browser/places/places.css                  (places/places-aero.css)
 *       skin/classic/aero/browser/places/organizer.css               (places/organizer-aero.css)
         skin/classic/aero/browser/places/bookmark.png                (places/bookmark-aero.png)
