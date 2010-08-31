@@ -65,6 +65,18 @@
  */
 #define JSTRACE_LIMIT       3
 
+/*
+ * Lower limit after which we limit the heap growth
+ */
+const size_t GC_ARENA_ALLOCATION_TRIGGER = 25 * js::GC_CHUNK_SIZE;
+
+/*
+ * A GC is triggered once the number of newly allocated arenas 
+ * is 1.5 times the number of live arenas after the last GC.
+ * (Starting after the lower limit of GC_ARENA_ALLOCATION_TRIGGER)
+ */
+const float GC_HEAP_GROWTH_FACTOR = 1.5;
+
 const uintN JS_EXTERNAL_STRING_LIMIT = 8;
 
 /*
