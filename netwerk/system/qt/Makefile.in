@@ -12,14 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Nokia Corporation Code.
 #
 # The Initial Developer of the Original Code is
-# Juan Lang
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Nokia Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Jeremias Bosch <jeremias.bosch@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,33 +36,27 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
+srcdir	 = @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE         = necko
+LIBRARY_NAME   = neckosystem_s
+LIBXUL_LIBRARY = 1
 
-ifeq ($(OS_ARCH),WINNT)
-    DIRS += win32
-endif
+FORCE_STATIC_LIB = 1
 
-ifeq ($(OS_ARCH),WINCE)
-    DIRS += wince
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    DIRS += mac
-endif
-
-ifdef MOZ_ENABLE_LIBCONIC
-    DIRS += maemo
-endif
-
-ifdef MOZ_ENABLE_QTNETWORK
-    DIRS += qt
-endif
+CPPSRCS += \
+	nsQtNetworkLinkService.cpp \
+	nsQtNetworkManager.cpp \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DIMPL_NS_NET
+
+OS_INCLUDES += $(GLIB_CFLAGS) $(MOZ_QT_CFLAGS)
+LOCAL_INCLUDES += -I$(srcdir)/../../base/src
