@@ -5828,7 +5828,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_margin_right_value: // for internal use
   case eCSSProperty_margin_start_value: // for internal use
   case eCSSProperty_margin_top:
-    return ParseVariant(aValue, VARIANT_AHLP, nsnull);
+    return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
   case eCSSProperty_marker_offset:
     return ParseVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty_marks:
@@ -5871,7 +5871,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_padding_right_value: // for internal use
   case eCSSProperty_padding_start_value: // for internal use
   case eCSSProperty_padding_top:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLP, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
   case eCSSProperty_page:
     return ParseVariant(aValue, VARIANT_AUTO | VARIANT_IDENTIFIER, nsnull);
   case eCSSProperty_page_break_after:
