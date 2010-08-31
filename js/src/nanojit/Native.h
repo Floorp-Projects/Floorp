@@ -64,6 +64,8 @@
 #include "NativeSparc.h"
 #elif defined(NANOJIT_X64)
 #include "NativeX64.h"
+#elif defined(NANOJIT_SH4)
+#include "NativeSH4.h"
 #elif defined(NANOJIT_MIPS)
 #include "NativeMIPS.h"
 #else
