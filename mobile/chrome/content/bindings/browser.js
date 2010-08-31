@@ -375,7 +375,7 @@ let ContentScroll =  {
           break;
 
         let cwu = Util.getWindowUtils(content);
-        cwu.setDisplayport(displayport.x, displayport.y, displayport.width, displayport.height);
+        cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
         sendAsyncMessage("Content:SetDisplayportArea:Return");
         break;
       }
