@@ -207,7 +207,7 @@
         outer.appendChild(inner);
         list.appendChild(outer);
       }
-      
+
       if (allPageURLs.length > 0) {
         document.getElementById("loadingTabs").style.display = "none";
 
@@ -234,6 +234,8 @@
       if ("WeaveGlue" in chromeWin) {
         chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:login:finish", false);
         chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:logout:finish", false);
+
+        updateWeaveButton();
       }
       else {
         document.getElementById("remoteTabs").style.display = "none";
@@ -249,8 +251,11 @@
     }
 
     function updateWeaveButton() {
-      let isDisabled = !getChromeWin().Weave.Service.isLoggedIn;
-      document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
+      let chromeWin = getChromeWin();
+      if (chromeWin.Weave) {
+        let isDisabled = !chromeWin.Weave.Service.isLoggedIn;
+        document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
+      }
     }
 
     function openRemoteTabs() {
