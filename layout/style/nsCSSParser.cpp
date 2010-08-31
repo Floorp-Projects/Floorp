@@ -5939,7 +5939,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_text_decoration:
     return ParseTextDecoration(aValue);
   case eCSSProperty_text_indent:
-    return ParseVariant(aValue, VARIANT_HLP, nsnull);
+    return ParseVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
   case eCSSProperty_text_transform:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kTextTransformKTable);
@@ -5959,7 +5959,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kUserSelectKTable);
   case eCSSProperty_vertical_align:
-    return ParseVariant(aValue, VARIANT_HKLP,
+    return ParseVariant(aValue, VARIANT_HKLP | VARIANT_CALC,
                         nsCSSProps::kVerticalAlignKTable);
   case eCSSProperty_visibility:
     return ParseVariant(aValue, VARIANT_HK,
