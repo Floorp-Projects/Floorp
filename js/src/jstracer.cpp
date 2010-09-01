@@ -11157,6 +11157,41 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                     return RECORD_CONTINUE;
                 }
             }
+        } else if (vp[2].isString() && mode == JSOP_CALL) {
+            if (native == js_regexp_exec) {
+                jsbytecode *pc = cx->regs->pc;
+                /*
+                 * If we see any of these sequences, the result is unused:
+                 * - call / pop
+                 * - call / trace / pop
+                 *
+                 * If we see any of these sequences, the result is only tested for nullness:
+                 * - call / ifeq
+                 * - call / trace / ifeq
+                 * - call / not / ifeq
+                 * - call / trace / not / ifeq
+                 *
+                 * In either case, we call RegExp.test() because "r.exec(s) !=
+                 * null" is equivalent to "r.test(s)".  This avoids building
+                 * the result array, which can be expensive.
+                 */
+                if (pc[0] == JSOP_CALL) {
+                    if ((pc[JSOP_CALL_LENGTH] == JSOP_POP) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_POP) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_IFEQ) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_IFEQ) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_NOT &&
+                         pc[JSOP_CALL_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_NOT &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ))
+                    {
+                        fun->u.n.native = js_regexp_test;
+                    }
+                }
+            }
         }
         break;
 
