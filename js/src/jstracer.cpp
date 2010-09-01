@@ -10310,12 +10310,9 @@ TraceRecorder::putActivationObjects()
 {
     JSStackFrame *fp = cx->fp();
 
-    bool have_args = fp->hasArgsObj() &&
-        !fp->getArgsObj()->isStrictArguments() &&
-        fp->numActualArgs() > 0;
-    bool have_call = fp->hasFunction() &&
-        JSFUN_HEAVYWEIGHT_TEST(fp->getFunction()->flags) &&
-        fp->getFunction()->countArgsAndVars();
+    bool have_args = fp->hasArgsObj() && !fp->getArgsObj()->isStrictArguments();
+    bool have_call = fp->hasCallObj();
+    JS_ASSERT(have_call == (fp->hasFunction() && fp->getFunction()->isHeavyweight()));
 
     if (!have_args && !have_call)
         return;

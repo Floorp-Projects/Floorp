@@ -623,7 +623,8 @@ function run_test_10() {
 
       prepare_test({
         "theme2@tests.mozilla.org": [
-          "onUninstalling",
+          ["onUninstalling", false],
+          "onUninstalled"
         ],
         "default@tests.mozilla.org": [
           ["onEnabling", false],
@@ -660,7 +661,8 @@ function run_test_11() {
 
     prepare_test({
       "theme1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled"
       ]
     }, [
       "onInstallStarted",
@@ -702,7 +704,8 @@ function run_test_12() {
 
     prepare_test({
       "theme1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled"
       ]
     }, [
       "onInstallStarted",
