@@ -250,7 +250,7 @@ function InstallTriggerManager() {
 
 InstallTriggerManager.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    var window = aEvent.originalTarget.defaultView.content;
+    var window = aEvent.target.defaultView;
 
     // Need to make sure we are called on what we care about -
     // content windows. DOMWindowCreated is called on *all* HTMLDocuments,

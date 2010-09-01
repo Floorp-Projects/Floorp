@@ -83,6 +83,10 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-status");
 }
 
+.detail-row {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
+}
+
 #header-searching:not([active]) {
   visibility: hidden;
 }
@@ -90,6 +94,10 @@ xhtml|link {
 #search-list[local="false"]  > .addon[remote="false"],
 #search-list[remote="false"] > .addon[remote="true"] {
   visibility: collapse;
+}
+
+#detail-view {
+  overflow-y: auto;
 }
 
 .addon:not([notification="warning"]) .warning,
@@ -100,7 +108,14 @@ xhtml|link {
 .addon[active="true"] .disabled-postfix,
 .addon[pending="install"] .update-postfix,
 .addon[pending="install"] .disabled-postfix,
-#detail-view[loading] > .detail-view-container {
+#detail-view:not([notification="warning"]) .warning,
+#detail-view:not([notification="error"]) .error,
+#detail-view:not([notification="info"]) .info,
+#detail-view:not([pending]) .pending,
+#detail-view:not([upgrade="true"]) .update-postfix,
+#detail-view[active="true"] .disabled-postfix,
+#detail-view[loading] > .detail-view-container,
+.detail-row:not([value]) {
   display: none;
 }
 

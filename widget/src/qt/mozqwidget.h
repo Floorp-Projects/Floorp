@@ -47,6 +47,7 @@
 #include <MSceneWindow>
 #include <QTimer>
 #include <mstatusbar.h>
+#include <MInputMethodState>
 #endif
 
 #include "nsIWidget.h"

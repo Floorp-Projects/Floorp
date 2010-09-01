@@ -56,7 +56,7 @@ function createDocument()
     '<p id="closing">end transmission</p>\n' +
     '</div>';
   doc.title = "Inspector DOM Test";
-  Services.obs.addObserver(runDOMTests, "inspector-opened", false);
+  document.addEventListener("popupshown", runDOMTests, false);
   InspectorUI.openInspectorUI();
 }
 
@@ -71,17 +71,19 @@ function nodeGenerator()
   let first = doc.getElementById("first");
   InspectorUI.inspectNode(first);
   yield;
-  let closing = doc.getElementById("closing");
+  let closing = doc.getElementById("#closing");
   InspectorUI.inspectNode(closing);
   yield;
 }
 
-function runDOMTests()
+function runDOMTests(evt)
 {
+  if (evt.target.id != "inspector-dom-panel")
+    return true;
   InspectorUI._log("runDOMtests");
-  Services.obs.removeObserver(runDOMTests, "inspector-opened", false);
-  document.addEventListener("popupshown", performTestComparisons, false);
+  document.removeEventListener("popupshown", runDOMTests, false);
   InspectorUI.stopInspecting();
+  document.addEventListener("popupshown", performTestComparisons, false);
   testGen = nodeGenerator();
   testGen.next();
 }
@@ -92,7 +94,7 @@ function performTestComparisons(evt)
   if (evt.target.id != "highlighter-panel")
     return true;
 
-  ok(InspectorUI.selection, "selection");
+  ok(InspectorUI.treeView.selectedNode, "selection");
   ok(InspectorUI.isDOMPanelOpen, "DOM panel is open?");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
   ok(InspectorUI.domTreeView.rowCount > 0, "domBox has items");
