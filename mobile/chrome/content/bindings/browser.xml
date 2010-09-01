@@ -161,18 +161,12 @@
               this._heightInCSSPx = aMessage.json.height;
               this._viewportWidthInCSSPx = aMessage.json.viewportWidth;
               this._viewportHeightInCSSPx = aMessage.json.viewportHeight;
-              this._updateDisplayport();
-              break;
-
-            case "Content:SetDisplayportArea:Return":
-              // XXX explain behavior
-              this._flushingFastScroll = false;
-              this._pendingPixelsX = 0;
-              this._pendingPixelsY = 0;
+              this._updateCacheViewport();
               break;
 
             case "Content:SetResolution:Return":
               this._zoomLevel = aMessage.json.zoomLevel;
+              this._updateCacheViewport();
               break;
          }
         ]]></body>
@@ -287,8 +281,7 @@
                 }
 
                 this._browser._zoomLevel = 1;
-
-                this._browser._updateDisplayport();
+                this._browser._updateCacheViewport();
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
@@ -407,61 +400,56 @@
       </method>
 
       <field name="_frameLoader">null</field>
-      <field name="_cssViewportWidthInCSSPx">0</field>
-      <field name="_flushingFastScroll">false</field>
-      <field name="_widthInCSSPx">0</field>
-      <field name="_heightInCSSPx">0</field>
-      <field name="_zoomLevel">1</field>
-      <field name="_defaultZoomLevel">1</field>
-      <field name="_pendingPixelsX">0</field>
-      <field name="_pendingPixelsY">0</field>
 
-      <property name="widthInCSSPx"
-                onget="return this._widthInCSSPx;"
-                readonly="true"/>
-
-      <property name="heightInCSSPx"
-                onget="return this._heightInCSSPx;"
-                readonly="true"/>
-
-      <property name="widthInDevicePx"
-                onget="return this._widthInCSSPx * this._zoomLevel;"
-                readonly="true"/>
-
-      <property name="heightInDevicePx"
-                onget="return this._heightInCSSPx * this._zoomLevel;"
-                readonly="true"/>
-
-      <property name="zoomLevel"
-                onget="return this._zoomLevel;"
-                readonly="true"/>
-
-      <property name="defaultZoomLevel"
-                onget="return this._defaultZoomLevel;"
-                onset="return this._setDefaultZoomLevel(val);"/>
-
+      <!-- Dimensions of content window -->
       <property name="viewportWidthInCSSPx"
                 onget="return this._viewportWidthInCSSPx;"
                 readonly="true"/>
-
       <property name="viewportHeightInCSSPx"
                 onget="return this._viewportHeightInCSSPx;"
                 readonly="true"/>
 
-      <method name="_updateDisplayport">
+      <!-- Dimensions of content document -->
+      <field name="_widthInCSSPx">0</field>
+      <field name="_heightInCSSPx">0</field>
+      <property name="_widthInDevicePx"
+                onget="return this._widthInCSSPx * this._zoomLevel;"
+                readonly="true"/>
+      <property name="_heightInDevicePx"
+                onget="return this._heightInCSSPx * this._zoomLevel;"
+                readonly="true"/>
+
+      <!-- Zoom level is the ratio of device pixels to CSS pixels -->
+      <field name="_zoomLevel">1</field>
+      <property name="scale"
+                onget="return this._zoomLevel;"
+                readonly="true"/>
+
+      <!-- These counters are used to update the cached viewport after they reach a certain
+           threshold when scrolling -->
+      <field name="_pendingPixelsX">0</field>
+      <field name="_pendingPixelsY">0</field>
+
+      <!-- The cache viewport is what parts of content is cached in the parent process for
+           fast scrolling. This syncs that up with the current projection viewport. -->
+      <method name="_updateCacheViewport">
         <body>
           <![CDATA[
             let frameLoader = this._frameLoader;
-            this.messageManager.sendAsyncMessage("Content:SetDisplayportArea", {
-              x: frameLoader.viewportScrollX / this._zoomLevel - 200,
-              y: frameLoader.viewportScrollY / this._zoomLevel - 400,
-              w: this._viewportWidthInCSSPx + 400,
-              h: this._viewportHeightInCSSPx + 800
+            this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
+              x: (frameLoader.viewportScrollX - 200) / this._zoomLevel,
+              y: (frameLoader.viewportScrollY - 1250) / this._zoomLevel,
+              w: (this._viewportWidthInCSSPx + 400) / this._zoomLevel,
+              h: (this._viewportHeightInCSSPx + 2500) / this._zoomLevel
             });
+
+            this._pendingPixelsX = 0;
+            this._pendingPixelsY = 0;
           ]]>
         </body>
       </method>
 
+      <!-- Synchronize the CSS viewport with the projection viewport. -->
       <method name="_updateCSSViewport">
         <body>
           <![CDATA[
@@ -474,20 +462,20 @@
         </body>
       </method>
 
-      <method name="setZoomLevel">
+      <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
+      <method name="setScale">
         <parameter name="zl"/>
         <body>
           <![CDATA[
             if (zl <= 0) throw "Bad zoom level given.";
 
             this._frameLoader.setViewportScale(zl, zl);
-            this.messageManager.sendAsyncMessage("Content:SetResolution", {
-              zoomLevel: zl
-            });
+            this.messageManager.sendAsyncMessage("Content:SetResolution", { zoomLevel: zl });
           ]]>
         </body>
       </method>
 
+      <!-- Sets size of CSS viewport, which affects how page is layout. -->
       <method name="setCssViewportSize">
         <parameter name="width"/>
         <parameter name="height"/>
@@ -501,14 +489,7 @@
         </body>
       </method>
 
-      <method name="flushScroll">
-        <body>
-          <![CDATA[
-            this._updateDisplayport();
-          ]]>
-        </body>
-      </method>
-
+      <!-- Scroll viewport by (x, y) device pixels. -->
       <method name="scrollBy">
         <parameter name="x"/>
         <parameter name="y"/>
@@ -519,6 +500,7 @@
         </body>
       </method>
 
+      <!-- Scroll viewport to (x, y) offset of document in device pixels. -->
       <method name="scrollTo">
         <parameter name="x"/>
         <parameter name="y"/>
@@ -529,6 +511,7 @@
         </body>
       </method>
 
+      <!-- Get position of viewport in device pixels. -->
       <method name="getPosition">
         <parameter name="scrollX"/>
         <parameter name="scrollY"/>
@@ -838,8 +821,8 @@
             let viewportWidth = bcr.width;
             let viewportHeight = bcr.height;
 
-            x = Math.floor(Math.max(0, Math.min(this.widthInDevicePx - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX);
-            y = Math.floor(Math.max(0, Math.min(this.heightInDevicePx - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY);
+            x = Math.floor(Math.max(0, Math.min(this._widthInDevicePx - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX);
+            y = Math.floor(Math.max(0, Math.min(this._heightInDevicePx - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY);
 
             if (x == 0 && y == 0)
               return;
@@ -850,10 +833,8 @@
             this._pendingPixelsX += x;
             this._pendingPixelsY += y;
 
-            if (this._flushingFastScroll == false &&
-                (Math.abs(this._pendingPixelsX) >= 150 || Math.abs(this._pendingPixelsY) >= 250)) {
-              this._flushingFastScroll = true;
-              this._updateDisplayport();
+            if ((Math.abs(this._pendingPixelsX) >= 150 || Math.abs(this._pendingPixelsY) >= 1000)) {
+              this._updateCacheViewport();
             }
           ]]>
         </body>
@@ -881,7 +862,6 @@
           ]]>
         </body>
       </method>
-
     </implementation>
 
   </binding>
