@@ -79,8 +79,8 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsdtracef.h"
 #include "jsobjinlines.h"
+#include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -614,7 +614,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     if (hook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData);
 
-    DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
+    Probes::enterJSFun(cx, fun);
 
     /* Call the function, either a native method or an interpreted script. */
     JSBool ok;
@@ -639,7 +639,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         ok = RunScript(cx, script, fun, fp->getScopeChain());
     }
 
-    DTrace::exitJSFun(cx, fp, fun, fp->getReturnValue());
+    Probes::exitJSFun(cx, fun);
 
     if (hookData) {
         hook = cx->debugHooks->callHook;
@@ -829,7 +829,6 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     LeaveTrace(cx);
 
-    DTrace::ExecutionScope executionScope(cx, script);
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
      * code before pushExecuteFrame must not reenter the interpreter.
@@ -934,6 +933,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->setThisValue(ObjectValue(*thisp));
     }
 
+    Probes::startExecution(cx, script);
+
     void *hookData = NULL;
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
@@ -947,6 +948,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (JSInterpreterHook hook = cx->debugHooks->executeHook)
             hook(cx, fp, JS_FALSE, &ok, hookData);
     }
+
+    Probes::stopExecution(cx, script);
 
     return !!ok;
 }
@@ -2757,7 +2760,7 @@ BEGIN_CASE(JSOP_STOP)
          */
         fp->putActivationObjects(cx);
 
-        DTrace::exitJSFun(cx, fp, fp->getFunction(), fp->getReturnValue());
+        Probes::exitJSFun(cx, fp->maybeFunction());
 
         /* Restore context version only if callee hasn't set version. */
         if (JS_LIKELY(cx->version == currentVersion)) {
@@ -4739,7 +4742,7 @@ BEGIN_CASE(JSOP_APPLY)
             inlineCallCount++;
             JS_RUNTIME_METER(rt, inlineCalls);
 
-            DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
+            Probes::enterJSFun(cx, fun);
 
             TRACE_0(EnterFrame);
 
@@ -4765,12 +4768,12 @@ BEGIN_CASE(JSOP_APPLY)
         }
 
         if (fun->flags & JSFUN_FAST_NATIVE) {
-            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, vp);
+            Probes::enterJSFun(cx, fun);
 
             JS_ASSERT(fun->u.n.extra == 0);
             JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(fun, vp[1]));
             JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
-            DTrace::exitJSFun(cx, NULL, fun, *vp, vp);
+            Probes::exitJSFun(cx, fun);
             regs.sp = vp + 1;
             if (!ok)
                 goto error;
