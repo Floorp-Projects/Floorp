@@ -3590,10 +3590,10 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                 NS_STYLE_TEXT_ALIGN_DEFAULT,
                 0, 0, 0, 0);
 
-  // text-indent: length, percent, inherit, initial
+  // text-indent: length, percent, calc, inherit, initial
   SetCoord(textData.mTextIndent, text->mTextIndent, parentText->mTextIndent,
-           SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
 
   // text-transform: enum, inherit, initial
   SetDiscrete(textData.mTextTransform, text->mTextTransform, canStoreInRuleTree,
@@ -3643,9 +3643,10 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
 {
   COMPUTE_START_RESET(TextReset, (), text, parentText, Text, textData)
 
-  // vertical-align: enum, length, percent, inherit
+  // vertical-align: enum, length, percent, calc, inherit
   if (!SetCoord(textData.mVerticalAlign, text->mVerticalAlign,
-                parentText->mVerticalAlign, SETCOORD_LPH | SETCOORD_ENUMERATED,
+                parentText->mVerticalAlign,
+                SETCOORD_LPH | SETCOORD_ENUMERATED | SETCOORD_STORE_CALC,
                 aContext, mPresContext, canStoreInRuleTree)) {
     if (eCSSUnit_Initial == textData.mVerticalAlign.GetUnit()) {
       text->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
@@ -4941,7 +4942,8 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentMargin->mMargin.Get(side);
     if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_ZERO,
+                 coord, parentCoord,
+                 SETCOORD_LPAH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       margin->mMargin.Set(side, coord);
     }
@@ -5310,7 +5312,8 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentPadding->mPadding.Get(side);
     if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                 coord, parentCoord,
+                 SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       padding->mPadding.Set(side, coord);
     }

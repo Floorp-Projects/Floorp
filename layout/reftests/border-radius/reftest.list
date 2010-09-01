@@ -17,6 +17,11 @@
 != curved-borders-all-styles.html about:blank # no way to generate reference for dotted/dashed/inset/outset
 # ridge/groove borders
 
+# percent units
+== percent-1.html percent-1-ref.html
+== percent-2.html percent-2-ref.html
+== percent-3.html percent-3-ref.html
+
 # more serious tests, using SVG reference
 == border-circle-2.html border-circle-2-ref.xhtml
 fails == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945

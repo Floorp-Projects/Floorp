@@ -234,13 +234,15 @@
            onmousemove="InspectorUI.highlighter.handleMouseMove(event);"
            onMozMousePixelScroll="InspectorUI.highlighter.handlePixelScroll(event);"/>
 
-    <panel id="inspector-panel"
+    <panel id="inspector-tree-panel"
            orient="vertical"
            hidden="true"
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
            titlebar="normal"
+           close="true"
+           onpopuphiding="InspectorUI.closeInspectorUI(true);"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
                nowindowdrag="true">
@@ -270,20 +272,13 @@
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
-      <tree id="inspector-tree" class="plain"
-            seltype="single"
-            treelines="true"
-            onselect="InspectorUI.onTreeSelected()"
-            flex="1">
-        <treecols>
-          <treecol id="colNodeName" label="nodeName" primary="true"
-                   persist="width,hidden,ordinal" flex="1"/>
-          <splitter class="tree-splitter"/>
-          <treecol id="colNodeValue" label="nodeValue"
-                   persist="width,hidden,ordinal" flex="1"/>
-        </treecols>
-        <treechildren id="inspector-tree-body"/>
-      </tree>
+      <browser id="inspector-tree-browser"
+               flex="1"
+               type="content"
+               disablesecurity="true"
+               src="chrome://browser/content/inspector.html"
+               onclick="InspectorUI.onTreeClick(event);"
+               disablehistory="true" />
       <hbox align="end">
         <spacer flex="1" />
         <resizer dir="bottomend" />
@@ -751,7 +746,7 @@
   <hbox id="titlebar-buttonbox">
     <toolbarbutton id="titlebar-min" oncommand="window.minimize();"/>
     <toolbarbutton id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-    <toolbarbutton id="titlebar-close" oncommand="window.close();"/>
+    <toolbarbutton id="titlebar-close" command="cmd_closeWindow"/>
   </hbox>
   </hbox>
   </vbox>

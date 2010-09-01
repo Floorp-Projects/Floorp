@@ -56,11 +56,8 @@ getHyperlinkCB(AtkHyperlinkImpl *aImpl)
     if (!accWrap)
         return nsnull;
 
-    nsCOMPtr<nsIAccessibleHyperLink> accHyperlink;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),
-                            getter_AddRefs(accHyperlink));
-    NS_ENSURE_TRUE(accHyperlink, nsnull);
-    
+    NS_ENSURE_TRUE(accWrap->IsHyperLink(), nsnull);
+
     MaiHyperlink *maiHyperlink = accWrap->GetMaiHyperlink();
     NS_ENSURE_TRUE(maiHyperlink, nsnull);
     return maiHyperlink->GetAtkHyperlink();

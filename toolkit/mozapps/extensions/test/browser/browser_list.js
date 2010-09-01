@@ -73,6 +73,21 @@ function end_test() {
   });
 }
 
+function get_test_items() {
+  var tests = "@tests.mozilla.org";
+
+  var items = [];
+  var item = gManagerWindow.document.getElementById("addon-list").firstChild;
+
+  while (item) {
+    if (item.mAddon.id.substring(item.mAddon.id.length - tests.length) == tests)
+      items.push(item);
+    item = item.nextSibling;
+  }
+
+  return items;
+}
+
 function get_node(parent, anonid) {
   return parent.ownerDocument.getAnonymousElementByAttribute(parent, "anonid", anonid);
 }
@@ -85,11 +100,12 @@ function get_class_node(parent, cls) {
 // changes
 add_test(function() {
   gCategoryUtilities.openType("extension", function() {
-    let list = gManagerWindow.document.getElementById("addon-list");
-    is(list.childNodes.length, 6, "Should be six add-ons installed");
+    let items = get_test_items();
+    is(items.length, 6, "Should be six add-ons installed");
 
     info("Addon 1");
-    let addon = list.firstChild;
+    let addon = items[0];
+    addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
     is_element_visible(get_node(addon, "version"), "Version should be visible");
     is(get_node(addon, "version").value, "1.0", "Version should be correct");
@@ -126,7 +142,8 @@ add_test(function() {
     is(get_node(addon, "pending").textContent, "Test add-on will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
     info("Addon 2");
-    addon = addon.nextSibling;
+    addon = items[1];
+    addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
     is_element_visible(get_node(addon, "version"), "Version should be visible");
     is(get_node(addon, "version").value, "2.0", "Version should be correct");
@@ -162,7 +179,8 @@ add_test(function() {
     is(get_node(addon, "pending").textContent, "Test add-on 2 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
     info("Addon 3");
-    addon = addon.nextSibling;
+    addon = items[2];
+    addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 3", "Name should be correct");
     is_element_hidden(get_node(addon, "version"), "Version should be hidden");
 
@@ -179,7 +197,8 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Addon 4");
-    addon = addon.nextSibling;
+    addon = items[3];
+    addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
 
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
@@ -211,7 +230,8 @@ add_test(function() {
     is(get_node(addon, "pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
     info("Addon 5");
-    addon = addon.nextSibling;
+    addon = items[4];
+    addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 5", "Name should be correct");
 
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
@@ -229,7 +249,8 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Addon 6");
-    addon = addon.nextSibling;
+    addon = items[5];
+    addon.parentNode.ensureElementIsVisible(addon);
     is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
     is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
 
@@ -283,11 +304,12 @@ add_test(function() {
 add_test(function() {
   gCategoryUtilities.openType("plugin", function() {
     gCategoryUtilities.openType("extension", function() {
-      let list = gManagerWindow.document.getElementById("addon-list");
-      is(list.childNodes.length, 6, "Should be six add-ons installed");
+      let items = get_test_items();
+      is(items.length, 6, "Should be six add-ons installed");
 
       info("Addon 1");
-      let addon = list.firstChild;
+      let addon = items[0];
+      addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
       is_element_visible(get_node(addon, "version"), "Version should be visible");
       is(get_node(addon, "version").value, "1.0", "Version should be correct");
@@ -324,7 +346,8 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 2");
-      addon = addon.nextSibling;
+      addon = items[1];
+      addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
       is_element_visible(get_node(addon, "version"), "Version should be visible");
       is(get_node(addon, "version").value, "2.0", "Version should be correct");
@@ -360,8 +383,8 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 4");
-      addon = addon.nextSibling;
-      addon = addon.nextSibling;
+      addon = items[3];
+      addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
 
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
@@ -393,8 +416,8 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Addon 6");
-      addon = addon.nextSibling;
-      addon = addon.nextSibling;
+      addon = items[5];
+      addon.parentNode.ensureElementIsVisible(addon);
       is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
       is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
 

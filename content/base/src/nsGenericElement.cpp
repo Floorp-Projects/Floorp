@@ -3521,7 +3521,7 @@ nsGenericElement::SetScriptTypeID(PRUint32 aLang)
     }
     /* SetFlags will just mask in the specific flags set, leaving existing
        ones alone.  So we must clear all the bits first */
-    UnsetFlags(0x000FU << NODE_SCRIPT_TYPE_OFFSET);
+    UnsetFlags(NODE_SCRIPT_TYPE_MASK << NODE_SCRIPT_TYPE_OFFSET);
     SetFlags(aLang << NODE_SCRIPT_TYPE_OFFSET);
     return NS_OK;
 }

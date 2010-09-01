@@ -798,6 +798,17 @@ public:
            (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
   }
 
+  static PRBool IsPaddingZero(const nsStyleCoord &aCoord)
+  {
+    return (aCoord.GetUnit() == eStyleUnit_Coord &&
+            aCoord.GetCoordValue() == 0) ||
+           (aCoord.GetUnit() == eStyleUnit_Percent &&
+            aCoord.GetPercentValue() == 0.0) ||
+           (aCoord.IsCalcUnit() &&
+            nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
+            nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
+  }
+
   /*
    * Calculate the used values for 'width' and 'height' for a replaced element.
    *

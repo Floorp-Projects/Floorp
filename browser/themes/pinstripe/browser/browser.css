@@ -165,7 +165,7 @@ toolbarbutton.bookmark-item {
   font-weight: bold;
   color: #222;
   border: 0;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   padding: 0 8px;
   margin: 0 0 1px;
 }
@@ -452,7 +452,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   width: 30px;
   height: 30px;
   padding: 4px 5px 4px 3px;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
 }
 
 toolbar[mode="icons"] #forward-button {
@@ -1239,11 +1239,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   color: inherit;
 }
 
-/*
 #editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #bbb !important;
 }
-*/
 
 #editBMPanel_tagsField[focused="true"],
 #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {

@@ -228,6 +228,18 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
 
   var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground");
 
+  if (where == "current" && w.gBrowser.selectedTab.pinned) {
+    try {
+      let uriObj = Services.io.newURI(url, null, null);
+      if (!uriObj.schemeIs("javascript") &&
+          w.gBrowser.currentURI.host != uriObj.host) {
+        where = "tab";
+      }
+    } catch (err) {
+      where = "tab";
+    }
+  }
+
   switch (where) {
   case "current":
     w.loadURI(url, aReferrerURI, aPostData, aAllowThirdPartyFixup);
