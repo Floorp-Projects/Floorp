@@ -5877,8 +5877,20 @@ if test -n "$MOZ_NO_FAST_LOAD"; then
     AC_DEFINE(MOZ_NO_FAST_LOAD)
 fi
 
+dnl ========================================================
+dnl = Disable Raw Codecs
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(raw,
+[  --disable-raw           Disable support for RAW media],
+    MOZ_RAW=,
+    MOZ_RAW=1)
+
+if test -n "$MOZ_RAW"; then
+    AC_DEFINE(MOZ_RAW)
+    MOZ_MEDIA=1
+fi
+
 AC_SUBST(MOZ_RAW)
-AC_DEFINE(MOZ_RAW)
 
 dnl ========================================================
 dnl = Disable Ogg Codecs
