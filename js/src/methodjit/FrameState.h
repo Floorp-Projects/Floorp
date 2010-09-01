@@ -713,7 +713,6 @@ class FrameState
      */
     uint32 stackDepth() const { return sp - spBase; }
     uint32 frameDepth() const { return stackDepth() + script->nfixed; }
-    inline FrameEntry *tosFe() const;
 
 #ifdef DEBUG
     void assertValidRegisterState() const;
