@@ -476,7 +476,7 @@ mjit::Compiler::generateMethod()
         OpcodeStatus &opinfo = analysis[PC];
         frame.setInTryBlock(opinfo.inTryBlock);
         if (opinfo.nincoming || opinfo.trap) {
-            frame.forgetEverything(opinfo.stackDepth);
+            frame.syncAndForgetEverything(opinfo.stackDepth);
             opinfo.safePoint = true;
         }
         jumpMap[uint32(PC - script->code)] = masm.label();
@@ -557,7 +557,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GOTO)
           {
             /* :XXX: this isn't really necessary if we follow the branch. */
-            frame.forgetEverything();
+            frame.syncAndForgetEverything();
             Jump j = masm.jump();
             jumpAndTrace(j, PC + GET_JUMP_OFFSET(PC));
           }
@@ -660,7 +660,7 @@ mjit::Compiler::generateMethod()
 
                         /* Branch is never taken, don't bother doing anything. */
                         if (result) {
-                            frame.forgetEverything();
+                            frame.syncAndForgetEverything();
                             Jump j = masm.jump();
                             jumpAndTrace(j, target);
                         }
@@ -950,10 +950,10 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_AND)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
-            frame.forgetEverything();
+            frame.syncAndForgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
-            /* prepareStubCall() is not needed due to forgetEverything() */
+            /* prepareStubCall() is not needed due to syncAndForgetEverything() */
             stubCall(stubs::TableSwitch);
             frame.pop();
 
@@ -963,10 +963,10 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_TABLESWITCH)
 
           BEGIN_CASE(JSOP_LOOKUPSWITCH)
-            frame.forgetEverything();
+            frame.syncAndForgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
-            /* prepareStubCall() is not needed due to forgetEverything() */
+            /* prepareStubCall() is not needed due to syncAndForgetEverything() */
             stubCall(stubs::LookupSwitch);
             frame.pop();
 
@@ -1365,7 +1365,7 @@ mjit::Compiler::generateMethod()
 
             /* For now, don't bother doing anything for this opcode. */
             JSObject *obj = script->getObject(fullAtomIndex(PC));
-            frame.forgetEverything();
+            frame.syncAndForgetEverything();
             masm.move(ImmPtr(obj), Registers::ArgReg1);
             uint32 n = js_GetEnterBlockStackDefs(cx, script, PC);
             stubCall(stubs::EnterBlock);
@@ -1630,7 +1630,7 @@ mjit::Compiler::emitReturn()
             /* There will always be a call object. */
             prepareStubCall(Uses(0));
             stubCall(stubs::PutCallObject);
-            frame.throwaway();
+            frame.discardFrame();
         } else {
             /* if (callobj) ... */
             Jump callObj = masm.branchPtr(Assembler::NotEqual,
@@ -1638,7 +1638,7 @@ mjit::Compiler::emitReturn()
                                           ImmPtr(0));
             stubcc.linkExit(callObj, Uses(frame.frameDepth()));
 
-            frame.throwaway();
+            frame.discardFrame();
 
             stubcc.leave();
             stubcc.call(stubs::PutCallObject);
@@ -1776,7 +1776,9 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * registers we've preserved.
      */
     frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
-    frame.resetRegState();
+    frame.unpinKilledReg(data);
+    if (typeReg.isSet())
+        frame.unpinKilledReg(typeReg.reg());
 
     Label invoke = stubcc.masm.label();
 
@@ -1997,7 +1999,7 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
     } else {
         JS_ASSERT(fused == JSOP_IFEQ || fused == JSOP_IFNE);
 
-        frame.forgetEverything();
+        frame.syncAndForgetEverything();
         Assembler::Condition cond = (fused == JSOP_IFEQ)
                                     ? Assembler::Zero
                                     : Assembler::NonZero;
@@ -3421,7 +3423,7 @@ mjit::Compiler::iterMore()
 
     /* Get props_cursor, test */
     RegisterID T2 = frame.allocReg();
-    frame.forgetEverything();
+    frame.syncAndForgetEverything();
     masm.loadPtr(Address(T1, offsetof(NativeIterator, props_cursor)), T2);
     masm.loadPtr(Address(T1, offsetof(NativeIterator, props_end)), T1);
     Jump jFast = masm.branchPtr(Assembler::LessThan, T2, T1);
@@ -3658,8 +3660,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
                                             mic.shape);
         masm.move(ImmPtr(obj), objReg);
     } else {
-        objReg = frame.tempRegForData(objFe);
-        frame.pinReg(objReg);
+        objReg = frame.copyDataIntoReg(objFe);
         RegisterID reg = frame.allocReg();
 
         masm.loadShape(objReg, reg);
@@ -3753,8 +3754,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
     JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, masm.label()));
 #endif
 
-    if (objFe->isConstant())
-        frame.freeReg(objReg);
+    frame.freeReg(objReg);
     frame.popn(2);
     if (mic.u.name.dataConst) {
         frame.push(v);

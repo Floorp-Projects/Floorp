@@ -110,19 +110,20 @@ FrameState::takeReg(RegisterID reg)
 {
     if (freeRegs.hasReg(reg)) {
         freeRegs.takeReg(reg);
+        JS_ASSERT(!regstate[reg].usedBy());
     } else {
-        JS_ASSERT(regstate[reg].fe);
+        JS_ASSERT(regstate[reg].fe());
         evictReg(reg);
+        regstate[reg].forget();
     }
-    regstate[reg].fe = NULL;
 }
 
 void
 FrameState::evictReg(RegisterID reg)
 {
-    FrameEntry *fe = regstate[reg].fe;
+    FrameEntry *fe = regstate[reg].fe();
 
-    if (regstate[reg].type == RematInfo::TYPE) {
+    if (regstate[reg].type() == RematInfo::TYPE) {
         if (!fe->type.synced()) {
             syncType(fe, addressOf(fe), masm);
             fe->type.sync();
@@ -153,7 +154,7 @@ FrameState::evictSomeReg(uint32 mask)
             continue;
 
         /* Register is not owned by the FrameState. */
-        FrameEntry *fe = regstate[i].fe;
+        FrameEntry *fe = regstate[i].fe();
         if (!fe)
             continue;
 
@@ -163,11 +164,11 @@ FrameState::evictSomeReg(uint32 mask)
 #endif
         fallback = reg;
 
-        if (regstate[i].type == RematInfo::TYPE && fe->type.synced()) {
+        if (regstate[i].type() == RematInfo::TYPE && fe->type.synced()) {
             fe->type.setMemory();
             return fallback;
         }
-        if (regstate[i].type == RematInfo::DATA && fe->data.synced()) {
+        if (regstate[i].type() == RematInfo::DATA && fe->data.synced()) {
             fe->data.setMemory();
             return fallback;
         }
@@ -181,22 +182,40 @@ FrameState::evictSomeReg(uint32 mask)
 
 
 void
-FrameState::forgetEverything()
+FrameState::syncAndForgetEverything()
 {
     syncAndKill(Registers(Registers::AvailRegs), Uses(frameDepth()));
-
-    throwaway();
+    forgetEverything();
 }
 
-
 void
-FrameState::throwaway()
+FrameState::resetInternalState()
 {
     for (uint32 i = 0; i < tracker.nentries; i++)
         tracker[i]->untrack();
 
     tracker.reset();
     freeRegs.reset();
+}
+
+void
+FrameState::discardFrame()
+{
+    resetInternalState();
+
+    memset(regstate, 0, sizeof(regstate));
+}
+
+void
+FrameState::forgetEverything()
+{
+    resetInternalState();
+
+#ifdef DEBUG
+    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
+        JS_ASSERT(!regstate[i].usedBy());
+    }
+#endif
 }
 
 void
@@ -270,15 +289,21 @@ FrameState::assertValidRegisterState() const
             continue;
         if (fe->type.inRegister()) {
             checkedFreeRegs.takeReg(fe->type.reg());
-            JS_ASSERT(regstate[fe->type.reg()].fe == fe);
+            JS_ASSERT(regstate[fe->type.reg()].fe() == fe);
         }
         if (fe->data.inRegister()) {
             checkedFreeRegs.takeReg(fe->data.reg());
-            JS_ASSERT(regstate[fe->data.reg()].fe == fe);
+            JS_ASSERT(regstate[fe->data.reg()].fe() == fe);
         }
     }
 
     JS_ASSERT(checkedFreeRegs == freeRegs);
+
+    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
+        JS_ASSERT(!regstate[i].isPinned());
+        JS_ASSERT_IF(regstate[i].fe(), !freeRegs.hasReg(RegisterID(i)));
+        JS_ASSERT_IF(regstate[i].fe(), regstate[i].fe()->isTracked());
+    }
 }
 #endif
 
@@ -405,7 +430,7 @@ FrameState::syncAndKill(Registers kill, Uses uses)
         if (killData) {
             JS_ASSERT(backing == fe);
             JS_ASSERT(fe->data.synced());
-            if (regstate[fe->data.reg()].fe)
+            if (regstate[fe->data.reg()].fe())
                 forgetReg(fe->data.reg());
             fe->data.setMemory();
         }
@@ -419,17 +444,11 @@ FrameState::syncAndKill(Registers kill, Uses uses)
         if (killType) {
             JS_ASSERT(backing == fe);
             JS_ASSERT(fe->type.synced());
-            if (regstate[fe->type.reg()].fe)
+            if (regstate[fe->type.reg()].fe())
                 forgetReg(fe->type.reg());
             fe->type.setMemory();
         }
     }
-}
-
-void
-FrameState::resetRegState()
-{
-    freeRegs = Registers();
 }
 
 void
@@ -491,9 +510,9 @@ FrameState::copyDataIntoReg(FrameEntry *fe, RegisterID hint)
             reg = allocReg();
             masm.move(hint, reg);
             fe->data.setRegister(reg);
-            regstate[reg] = regstate[hint];
+            regstate[reg].associate(regstate[hint].fe(), RematInfo::DATA);
         }
-        regstate[hint].fe = NULL;
+        regstate[hint].forget();
     } else {
         pinReg(reg);
         takeReg(hint);
@@ -516,7 +535,7 @@ FrameState::copyDataIntoReg(Assembler &masm, FrameEntry *fe)
             if (!fe->data.synced())
                 syncData(fe, addressOf(fe), masm);
             fe->data.setMemory();
-            regstate[reg].fe = NULL;
+            regstate[reg].forget();
         } else {
             RegisterID newReg = allocReg();
             masm.move(reg, newReg);
@@ -549,7 +568,7 @@ FrameState::copyTypeIntoReg(FrameEntry *fe)
             if (!fe->type.synced())
                 syncType(fe, addressOf(fe), masm);
             fe->type.setMemory();
-            regstate[reg].fe = NULL;
+            regstate[reg].forget();
         } else {
             RegisterID newReg = allocReg();
             masm.move(reg, newReg);
@@ -636,7 +655,7 @@ FrameState::ownRegForType(FrameEntry *fe)
                 syncType(backing, addressOf(backing), masm);
             reg = backing->type.reg();
             backing->type.setMemory();
-            moveOwnership(reg, NULL);
+            regstate[reg].forget();
         } else {
             reg = allocReg();
             masm.move(backing->type.reg(), reg);
@@ -646,10 +665,11 @@ FrameState::ownRegForType(FrameEntry *fe)
 
     if (fe->type.inRegister()) {
         reg = fe->type.reg();
+
         /* Remove ownership of this register. */
-        JS_ASSERT(regstate[reg].fe == fe);
-        JS_ASSERT(regstate[reg].type == RematInfo::TYPE);
-        regstate[reg].fe = NULL;
+        JS_ASSERT(regstate[reg].fe() == fe);
+        JS_ASSERT(regstate[reg].type() == RematInfo::TYPE);
+        regstate[reg].forget();
         fe->type.invalidate();
     } else {
         JS_ASSERT(fe->type.inMemory());
@@ -679,7 +699,7 @@ FrameState::ownRegForData(FrameEntry *fe)
                 syncData(backing, addressOf(backing), masm);
             reg = backing->data.reg();
             backing->data.setMemory();
-            moveOwnership(reg, NULL);
+            regstate[reg].forget();
         } else {
             reg = allocReg();
             masm.move(backing->data.reg(), reg);
@@ -699,9 +719,9 @@ FrameState::ownRegForData(FrameEntry *fe)
     if (fe->data.inRegister()) {
         reg = fe->data.reg();
         /* Remove ownership of this register. */
-        JS_ASSERT(regstate[reg].fe == fe);
-        JS_ASSERT(regstate[reg].type == RematInfo::DATA);
-        regstate[reg].fe = NULL;
+        JS_ASSERT(regstate[reg].fe() == fe);
+        JS_ASSERT(regstate[reg].type() == RematInfo::DATA);
+        regstate[reg].forget();
         fe->data.invalidate();
     } else {
         JS_ASSERT(fe->data.inMemory());
@@ -840,7 +860,7 @@ FrameState::uncopy(FrameEntry *original)
             tempRegForType(original);
         fe->type.inherit(original->type);
         if (fe->type.inRegister())
-            moveOwnership(fe->type.reg(), fe);
+            regstate[fe->type.reg()].reassociate(fe);
     } else {
         JS_ASSERT(fe->isTypeKnown());
         JS_ASSERT(fe->getKnownType() == original->getKnownType());
@@ -849,7 +869,7 @@ FrameState::uncopy(FrameEntry *original)
         tempRegForData(original);
     fe->data.inherit(original->data);
     if (fe->data.inRegister())
-        moveOwnership(fe->data.reg(), fe);
+        regstate[fe->data.reg()].reassociate(fe);
 
     return fe;
 }
@@ -976,7 +996,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
      */
     RegisterID reg = tempRegForData(backing);
     localFe->data.setRegister(reg);
-    moveOwnership(reg, localFe);
+    regstate[reg].reassociate(localFe);
 
     if (typeChange) {
         if (backing->isTypeKnown()) {
@@ -984,7 +1004,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         } else {
             RegisterID reg = tempRegForType(backing);
             localFe->type.setRegister(reg);
-            moveOwnership(reg, localFe);
+            regstate[reg].reassociate(localFe);
         }
     } else {
         if (!wasSynced)
