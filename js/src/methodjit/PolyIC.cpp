@@ -1130,6 +1130,8 @@ class GetElemCompiler : public PICStubCompiler
                           int32(JSObjectMap::INVALID_SHAPE));
         repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineShapeJump(pic)),
                          pic.slowPathStart);
+        repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineAtomJump(pic)),
+                         pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
