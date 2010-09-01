@@ -707,6 +707,7 @@ js_PurgeThreads(JSContext *cx)
             e.removeFront();
         } else {
             thread->data.purge(cx);
+            thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
         }
     }
 #else
@@ -1931,16 +1932,15 @@ js_HandleExecutionInterrupt(JSContext *cx)
     return result;
 }
 
-namespace js {
-
 void
-TriggerAllOperationCallbacks(JSRuntime *rt)
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked)
 {
+#ifdef JS_THREADSAFE
+    Conditionally<AutoLockGC> lockIf(!gcLocked, rt);
+#endif
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->triggerOperationCallback();
 }
-
-} /* namespace js */
 
 JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
@@ -2154,38 +2154,45 @@ JSContext::containingSegment(const JSStackFrame *target)
     return NULL;
 }
 
-JS_FRIEND_API(void)
-JSRuntime::onTooMuchMalloc()
+void
+JSContext::checkMallocGCPressure(void *p)
 {
+    if (!p) {
+        js_ReportOutOfMemory(this);
+        return;
+    }
+
 #ifdef JS_THREADSAFE
-    AutoLockGC lock(this);
+    JS_ASSERT(thread);
+    JS_ASSERT(thread->gcThreadMallocBytes <= 0);
+    ptrdiff_t n = JS_GC_THREAD_MALLOC_LIMIT - thread->gcThreadMallocBytes;
+    thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
+
+    AutoLockGC lock(runtime);
+    runtime->gcMallocBytes -= n;
 
     /*
-     * We can be called outside a request and can race against a GC that
-     * mutates the JSThread set during the sweeping phase.
+     * Trigger the GC on memory pressure but only if we are inside a request
+     * and not inside a GC.
      */
-    js_WaitForGC(this);
+    if (runtime->isGCMallocLimitReached() && thread->requestDepth != 0)
 #endif
-    TriggerGC(this);
-}
+    {
+        if (!runtime->gcRunning) {
+            JS_ASSERT(runtime->isGCMallocLimitReached());
+            runtime->gcMallocBytes = -1;
 
-JS_FRIEND_API(void *)
-JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
-{
-#ifdef JS_THREADSAFE
-    gcHelperThread.waitBackgroundSweepEnd(this);
-    if (!p)
-        p = ::js_malloc(nbytes);
-    else if (p == reinterpret_cast<void *>(1))
-        p = ::js_calloc(nbytes);
-    else
-      p = ::js_realloc(p, nbytes);
-    if (p)
-        return p;
-#endif
-    if (cx)
-        js_ReportOutOfMemory(cx);
-    return NULL;
+            /*
+             * Empty the GC free lists to trigger a last-ditch GC when any GC
+             * thing is allocated later on this thread. This makes unnecessary
+             * to check for the memory pressure on the fast path of the GC
+             * allocator. We cannot touch the free lists on other threads as
+             * their manipulation is not thread-safe.
+             */
+            JS_THREAD_DATA(this)->gcFreeLists.purge();
+            js_TriggerGC(this, true);
+        }
+    }
 }
 
 bool
