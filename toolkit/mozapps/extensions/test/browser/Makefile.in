@@ -75,6 +75,7 @@ _TEST_FILES = \
   browser_backgroundupdate_menuitem.js \
   browser_recentupdates.js \
   browser_manualupdates.js \
+  browser_globalwarnings.js \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)
