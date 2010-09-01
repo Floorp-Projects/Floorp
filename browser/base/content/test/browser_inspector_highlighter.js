@@ -78,13 +78,15 @@ function setupHighlighterTests()
 {
   h1 = doc.querySelectorAll("h1")[0];
   ok(h1, "we have the header node");
-  Services.obs.addObserver(runSelectionTests, "inspector-opened", false);
+  document.addEventListener("popupshown", runSelectionTests, false);
   InspectorUI.toggleInspectorUI();
 }
 
-function runSelectionTests()
+function runSelectionTests(evt)
 {
-  Services.obs.removeObserver(runSelectionTests, "inspector-opened", false);
+  if (evt.target.id != "inspector-panel")
+    return true;
+  document.removeEventListener("popupshown", runSelectionTests, false);
   document.addEventListener("popupshown", performTestComparisons, false);
   EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
 }
@@ -94,7 +96,7 @@ function performTestComparisons(evt)
   if (evt.target.id != "highlighter-panel")
     return true;
   document.removeEventListener("popupshown", performTestComparisons, false);
-  is(h1, InspectorUI.selection, "selection matches node");
+  is(h1, InspectorUI.treeView.selectedNode, "selection matches node");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
   is(InspectorUI.highlighter.highlitNode, h1, "highlighter matches selection");
   executeSoon(finishUp);
