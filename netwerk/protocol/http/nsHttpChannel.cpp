@@ -3163,10 +3163,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (!httpChannel)
         return NS_OK; // no other options to set
 
-    // transfer the remote flag
-    nsHttpChannel *httpChannelImpl = static_cast<nsHttpChannel*>(httpChannel.get());
-    httpChannelImpl->SetRemoteChannel(mRemoteChannel);
-
     // convey the mApplyConversion flag (bug 91862)
     nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
     if (encodedChannel)
@@ -3181,6 +3177,12 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
+
+    // transfer the remote flag
+    nsCOMPtr<nsIHttpChannelParentInternal> httpInternal = 
+        do_QueryInterface(newChannel);
+    if (httpInternal)
+        httpInternal->SetServicingRemoteChannel(mRemoteChannel);
 
     return NS_OK;
 }
@@ -3630,6 +3632,23 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     mFallbackChannel = PR_TRUE;
     mFallbackKey = aFallbackKey;
 
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIHttpChannelParentInternal
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::GetServicingRemoteChannel(PRBool *value)
+{
+    *value = mRemoteChannel;
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsHttpChannel::SetServicingRemoteChannel(PRBool value)
+{
+    mRemoteChannel = value;
     return NS_OK;
 }
 //-----------------------------------------------------------------------------
