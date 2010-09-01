@@ -37,6 +37,12 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+[scriptable, uuid(2051f802-d377-441d-ace1-b0d9405e16f2)]
+interface nsIDOMHTMLCanvasContextOptions : nsISupports
+{
+  // empty
+};
+
 /**
  * The nsIDOMHTMLCanvasElement interface is the interface to a HTML
  * <canvas> element.
@@ -47,15 +53,15 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(56cee121-df62-49b6-b76d-71189441c98e)]
+[scriptable, uuid(53ad994a-3cd0-48fa-8ffb-7f3d8cd19c50)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
   attribute long height;
   attribute boolean mozOpaque;
 
-  nsISupports getContext(in DOMString contextId);
-
+  nsISupports getContext(in DOMString contextId,
+                         [optional] in nsIDOMHTMLCanvasContextOptions contextOptions);
 
   // Valid calls are:
   //  toDataURL();              -- defaults to image/png

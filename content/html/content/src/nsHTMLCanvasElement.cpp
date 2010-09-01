@@ -148,7 +148,7 @@ nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest) const
   if (aDest->GetOwnerDoc()->IsStaticDocument()) {
     nsHTMLCanvasElement* dest = static_cast<nsHTMLCanvasElement*>(aDest);
     nsCOMPtr<nsISupports> cxt;
-    dest->GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
+    dest->GetContext(NS_LITERAL_STRING("2d"), nsnull, getter_AddRefs(cxt));
     nsCOMPtr<nsIDOMCanvasRenderingContext2D> context2d = do_QueryInterface(cxt);
     if (context2d) {
       context2d->DrawImage(const_cast<nsHTMLCanvasElement*>(this),
@@ -226,31 +226,27 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
                                    nsAString& aDataURL)
 {
   bool fallbackToPNG = false;
-  
+  nsresult rv;
+
   // We get an input stream from the context. If more than one context type
   // is supported in the future, this will have to be changed to do the right
   // thing. For now, just assume that the 2D context has all the goods.
-  nsCOMPtr<nsICanvasRenderingContextInternal> context;
-  nsresult rv = GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(context));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!context) {
-    // XXX bug 578349
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  if (!mCurrentContext)
+    return NS_ERROR_FAILURE;
 
   // get image bytes
   nsCOMPtr<nsIInputStream> imgStream;
   NS_ConvertUTF16toUTF8 aMimeType8(aMimeType);
-  rv = context->GetInputStream(nsPromiseFlatCString(aMimeType8).get(),
-                               nsPromiseFlatString(aEncoderOptions).get(),
-                               getter_AddRefs(imgStream));
+  rv = mCurrentContext->GetInputStream(nsPromiseFlatCString(aMimeType8).get(),
+                                       nsPromiseFlatString(aEncoderOptions).get(),
+                                       getter_AddRefs(imgStream));
   if (NS_FAILED(rv)) {
     // Use image/png instead.
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     fallbackToPNG = true;
-    rv = context->GetInputStream("image/png",
-                                 nsPromiseFlatString(aEncoderOptions).get(),
-                                 getter_AddRefs(imgStream));
+    rv = mCurrentContext->GetInputStream("image/png",
+                                         nsPromiseFlatString(aEncoderOptions).get(),
+                                         getter_AddRefs(imgStream));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -353,6 +349,7 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
+                                nsIDOMHTMLCanvasContextOptions *aContextOptions,
                                 nsISupports **aContext)
 {
   nsresult rv;
@@ -379,7 +376,8 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return rv;
     }
 
-    rv = UpdateContext();
+    nsCOMPtr<nsIPropertyBag> contextProps = do_QueryInterface(aContextOptions);
+    rv = UpdateContext(contextProps);
     if (NS_FAILED(rv)) {
       mCurrentContext = nsnull;
       return rv;
@@ -440,14 +438,25 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
 }
 
 nsresult
-nsHTMLCanvasElement::UpdateContext()
+nsHTMLCanvasElement::UpdateContext(nsIPropertyBag *aNewContextOptions)
 {
+  if (!mCurrentContext)
+    return NS_OK;
+
   nsresult rv = NS_OK;
-  if (mCurrentContext) {
-    nsIntSize sz = GetWidthHeight();
-    rv = mCurrentContext->SetIsOpaque(GetIsOpaque());
-    rv = mCurrentContext->SetDimensions(sz.width, sz.height);
-  }
+
+  rv = mCurrentContext->SetIsOpaque(GetIsOpaque());
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = mCurrentContext->SetContextOptions(aNewContextOptions);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsIntSize sz = GetWidthHeight();
+  rv = mCurrentContext->SetDimensions(sz.width, sz.height);
+  if (NS_FAILED(rv))
+    return rv;
 
   return rv;
 }
