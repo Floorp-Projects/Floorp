@@ -459,7 +459,7 @@ MouseModule.prototype = {
 
       if (this._dragger) {
         // do not allow axis locking if panning is only possible in one direction
-        let draggable = this._dragger.isDraggable();
+        let draggable = this._dragger.isDraggable(targetScrollbox, targetScrollInterface);
         dragData.locked = !draggable.x || !draggable.y;
       }
     }
