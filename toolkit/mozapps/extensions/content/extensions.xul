@@ -199,7 +199,7 @@
                       name="&view.features.label;"/>
         <richlistitem id="category-themes" value="addons://list/theme"
                       class="category"
-                      name="&view.appearance.label;"/>
+                      name="&view.appearance2.label;"/>
         <richlistitem id="category-plugins" value="addons://list/plugin"
                       class="category"
                       name="&view.plugins.label;"/>
