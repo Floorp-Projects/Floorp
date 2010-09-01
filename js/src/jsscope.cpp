@@ -86,11 +86,7 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
          */
         rt->shapeGen = SHAPE_OVERFLOW_BIT;
         shape = SHAPE_OVERFLOW_BIT;
-        
-#ifdef JS_THREADSAFE
-        Conditionally<AutoLockGC> lockIf(!gcLocked, rt);
-#endif
-        TriggerGC(rt);
+        js_TriggerGC(cx, gcLocked);
     }
     return shape;
 }
@@ -162,7 +158,7 @@ PropertyTable::init(JSContext *cx, Shape *lastProp)
         METER(tableAllocFails);
         return false;
     }
-    cx->runtime->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(Shape *));
+    cx->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(Shape *));
 
     hashShift = JS_DHASH_BITS - sizeLog2;
     for (Shape::Range r = lastProp->all(); !r.empty(); r.popFront()) {
@@ -406,7 +402,7 @@ PropertyTable::change(JSContext *cx, int change)
     entries = newTable;
 
     /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
-    cx->runtime->updateMallocCounter(nbytes);
+    cx->updateMallocCounter(nbytes);
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldTable; oldsize != 0; oldspp++) {
