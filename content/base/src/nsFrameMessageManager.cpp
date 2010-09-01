@@ -56,7 +56,9 @@ static PRBool
 IsChromeProcess()
 {
   nsCOMPtr<nsIXULRuntime> rt = do_GetService("@mozilla.org/xre/runtime;1");
-  NS_ABORT_IF_FALSE(rt, "We must have a xre runtime");
+  if (!rt)
+    return PR_TRUE;
+
   PRUint32 type;
   rt->GetProcessType(&type);
   return type == nsIXULRuntime::PROCESS_TYPE_DEFAULT;
