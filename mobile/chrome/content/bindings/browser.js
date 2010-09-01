@@ -339,13 +339,11 @@ let DOMEvents =  {
 DOMEvents.init();
 
 let ContentScroll =  {
-  _contentArea: new Rect(0, 0, 0, 0),
-
   init: function() {
     addMessageListener("Content:ScrollTo", this);
     addMessageListener("Content:ScrollBy", this);
     addMessageListener("Content:SetResolution", this);
-    addMessageListener("Content:SetDisplayportArea", this);
+    addMessageListener("Content:SetCacheViewport", this);
     addMessageListener("Content:SetCssViewportSize", this);
 
     addEventListener("scroll", this, false);
@@ -363,20 +361,20 @@ let ContentScroll =  {
         content.scrollBy(json.dx, json.dy);
         break;
 
-      case "Content:SetResolution":
+      case "Content:SetResolution": {
         let cwu = Util.getWindowUtils(content);
         cwu.setResolution(json.zoomLevel, json.zoomLevel);
         sendAsyncMessage("Content:SetResolution:Return", { zoomLevel: json.zoomLevel });
         break;
+      }
 
-      case "Content:SetDisplayportArea": {
-        let displayport = new Rect(json.x, json.y, json.w, json.h).translateInside(this._contentArea);
+      case "Content:SetCacheViewport": {
+        let displayport = new Rect(json.x, json.y, json.w, json.h);
         if (displayport.isEmpty())
           break;
 
         let cwu = Util.getWindowUtils(content);
         cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
-        sendAsyncMessage("Content:SetDisplayportArea:Return");
         break;
       }
 
@@ -409,9 +407,6 @@ let ContentScroll =  {
         let y = aEvent.y + scrollOffset.y;
         let width = aEvent.width + (x < 0 ? x : 0);
         let height = aEvent.height + (y < 0 ? y : 0);
-
-        this._contentArea.width = width;
-        this._contentArea.height = height;
 
         sendAsyncMessage("MozScrolledAreaChanged", {
           width: width,
