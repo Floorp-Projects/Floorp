@@ -44,45 +44,34 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "jsdtracef.h"
+#include "jsprobes.h"
 #include <sys/types.h>
 
 #define TYPEOF(cx,v)    (JSVAL_IS_NULL(v) ? JSTYPE_NULL : JS_TypeOfValue(cx,v))
 
 using namespace js;
 
-static char dempty[] = "<null>";
+const char Probes::nullName[] = "(null)";
 
-static char *
-jsdtrace_fun_classname(const JSFunction *fun)
+const char *
+Probes::FunctionClassname(const JSFunction *fun)
 {
     return (fun && !FUN_INTERPRETED(fun) && !(fun->flags & JSFUN_TRCINFO) && FUN_CLASP(fun))
            ? (char *)FUN_CLASP(fun)->name
-           : dempty;
+           : nullName;
 }
 
-static char *
-jsdtrace_filename(JSStackFrame *fp)
+const char *
+Probes::ScriptFilename(JSScript *script)
 {
-    return (fp && fp->hasScript() && fp->getScript()->filename)
-           ? (char *)fp->getScript()->filename
-           : dempty;
+    return (script && script->filename) ? (char *)script->filename : nullName;
 }
 
-static int
-jsdtrace_fun_linenumber(JSContext *cx, const JSFunction *fun)
+int
+Probes::FunctionLineNumber(JSContext *cx, const JSFunction *fun)
 {
     if (fun && FUN_INTERPRETED(fun))
         return (int) JS_GetScriptBaseLineNumber(cx, FUN_SCRIPT(fun));
-
-    return 0;
-}
-
-static int
-jsdtrace_frame_linenumber(JSContext *cx, JSStackFrame *fp)
-{
-    if (fp)
-        return (int) js_FramePCToLineNumber(cx, fp);
 
     return 0;
 }
@@ -108,7 +97,7 @@ jsdtrace_frame_linenumber(JSContext *cx, JSStackFrame *fp)
  * provide raw (unmasked) jsvals should type info be useful from D scripts.
  */
 static void *
-jsdtrace_jsvaltovoid(JSContext *cx, const js::Value &argval)
+jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
 {
     if (argval.isNull())
         return (void *)JS_TYPE_STR(JSTYPE_NULL);
@@ -132,11 +121,11 @@ jsdtrace_jsvaltovoid(JSContext *cx, const js::Value &argval)
     return argval.asGCThing();
 }
 
-static char *
-jsdtrace_fun_name(JSContext *cx, const JSFunction *fun)
+const char *
+Probes::FunctionName(JSContext *cx, const JSFunction *fun)
 {
     if (!fun)
-        return dempty;
+        return nullName;
 
     JSAtom *atom = fun->atom;
     if (!atom) {
@@ -145,13 +134,14 @@ jsdtrace_fun_name(JSContext *cx, const JSFunction *fun)
          * or variable that held the anonymous function that we're calling, if anyone
          * cares; an easy workaround is to just give your anonymous functions names.
          */
-        return dempty;
+        return nullName;
     }
 
     char *name = (char *)js_GetStringBytes(cx, ATOM_TO_STRING(atom));
-    return name ? name : dempty;
+    return name ? name : nullName;
 }
 
+#ifdef INCLUDE_MOZILLA_DTRACE
 /*
  * These functions call the DTrace macros for the JavaScript USDT probes.
  * Originally this code was inlined in the JavaScript code; however since
@@ -160,85 +150,17 @@ jsdtrace_fun_name(JSContext *cx, const JSFunction *fun)
  * a number of usually unused lines of code would cause.
  */
 void
-DTrace::enterJSFunImpl(JSContext *cx, JSStackFrame *fp, const JSFunction *fun)
+Probes::enterJSFunImpl(JSContext *cx, const JSFunction *fun)
 {
-    JAVASCRIPT_FUNCTION_ENTRY(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
-                              jsdtrace_fun_name(cx, fun));
+    JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(FUN_SCRIPT(fun)), FunctionClassname(fun),
+                              FunctionName(cx, fun));
 }
 
 void
-DTrace::handleFunctionInfo(JSContext *cx, JSStackFrame *fp, JSStackFrame *dfp, JSFunction *fun)
+Probes::handleFunctionReturn(JSContext *cx, JSFunction *fun)
 {
-    JAVASCRIPT_FUNCTION_INFO(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
-                             jsdtrace_fun_name(cx, fun), jsdtrace_fun_linenumber(cx, fun),
-                             jsdtrace_filename(dfp), jsdtrace_frame_linenumber(cx, dfp));
+    JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(FUN_SCRIPT(fun)), FunctionClassname(fun),
+                               FunctionName(cx, fun));
 }
 
-void
-DTrace::handleFunctionArgs(JSContext *cx, JSStackFrame *fp, const JSFunction *fun, jsuint argc,
-                           js::Value *argv)
-{
-    JAVASCRIPT_FUNCTION_ARGS(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
-                             jsdtrace_fun_name(cx, fun), argc, (void *)argv,
-                             (argc > 0) ? jsdtrace_jsvaltovoid(cx, argv[0]) : 0,
-                             (argc > 1) ? jsdtrace_jsvaltovoid(cx, argv[1]) : 0,
-                             (argc > 2) ? jsdtrace_jsvaltovoid(cx, argv[2]) : 0,
-                             (argc > 3) ? jsdtrace_jsvaltovoid(cx, argv[3]) : 0,
-                             (argc > 4) ? jsdtrace_jsvaltovoid(cx, argv[4]) : 0);
-}
-
-void
-DTrace::handleFunctionRval(JSContext *cx, JSStackFrame *fp, JSFunction *fun, const js::Value &rval)
-{
-    JAVASCRIPT_FUNCTION_RVAL(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
-                             jsdtrace_fun_name(cx, fun), jsdtrace_fun_linenumber(cx, fun),
-                             NULL, jsdtrace_jsvaltovoid(cx, rval));
-}
-
-void
-DTrace::handleFunctionReturn(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
-{
-    JAVASCRIPT_FUNCTION_RETURN(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
-                               jsdtrace_fun_name(cx, fun));
-}
-
-void
-DTrace::ObjectCreationScope::handleCreationStart()
-{
-    JAVASCRIPT_OBJECT_CREATE_START(jsdtrace_filename(fp), (char *)clasp->name);
-}
-
-void
-DTrace::ObjectCreationScope::handleCreationEnd()
-{
-    JAVASCRIPT_OBJECT_CREATE_DONE(jsdtrace_filename(fp), (char *)clasp->name);
-}
-
-void
-DTrace::ObjectCreationScope::handleCreationImpl(JSObject *obj)
-{
-    JAVASCRIPT_OBJECT_CREATE(jsdtrace_filename(fp), (char *)clasp->name, (uintptr_t)obj,
-                             jsdtrace_frame_linenumber(cx, fp));
-}
-
-void
-DTrace::finalizeObjectImpl(JSObject *obj)
-{
-    Class *clasp = obj->getClass();
-
-    /* the first arg is NULL - reserved for future use (filename?) */
-    JAVASCRIPT_OBJECT_FINALIZE(NULL, (char *)clasp->name, (uintptr_t)obj);
-}
-
-void
-DTrace::ExecutionScope::startExecution()
-{
-    JAVASCRIPT_EXECUTE_START(script->filename ? (char *)script->filename : dempty,
-                             script->lineno);
-}
-
-void
-DTrace::ExecutionScope::endExecution()
-{
-    JAVASCRIPT_EXECUTE_DONE(script->filename ? (char *)script->filename : dempty, script->lineno);
-}
+#endif

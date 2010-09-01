@@ -85,7 +85,7 @@
 #include "jsxml.h"
 #endif
 
-#include "jsdtracef.h"
+#include "jsprobes.h"
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 #include "jshashtable.h"
@@ -2351,7 +2351,7 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
     if (clasp->finalize)
         clasp->finalize(cx, obj);
 
-    DTrace::finalizeObject(obj);
+    Probes::finalizeObject(obj);
 
     obj->finish(cx);
 }
