@@ -106,12 +106,13 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-const DB_SCHEMA                       = 2;
+const DB_SCHEMA                       = 3;
 const REQ_VERSION                     = 2;
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
-                            "updateKey", "optionsURL", "aboutURL", "iconURL"]
+                            "updateKey", "optionsURL", "aboutURL", "iconURL",
+                            "icon64URL"]
 const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
@@ -2640,10 +2641,10 @@ var XPIProvider = {
 
 const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " +
                      "updateURL, updateKey, optionsURL, aboutURL, iconURL, " +
-                     "defaultLocale, visible, active, userDisabled, appDisabled, " +
-                     "pendingUninstall, descriptor, installDate, updateDate, " +
-                     "applyBackgroundUpdates, bootstrap, skinnable, size, " +
-                     "sourceURI, releaseNotesURI";
+                     "icon64URL, defaultLocale, visible, active, userDisabled, " +
+                     "appDisabled, pendingUninstall, descriptor, installDate, " +
+                     "updateDate, applyBackgroundUpdates, bootstrap, skinnable, " +
+                     "size, sourceURI, releaseNotesURI";
 
 /**
  * A helper function to log an SQL error.
@@ -2784,11 +2785,11 @@ var XPIDatabase = {
     addAddonMetadata_addon: "INSERT INTO addon VALUES (NULL, :id, :location, " +
                             ":version, :type, :internalName, :updateURL, " +
                             ":updateKey, :optionsURL, :aboutURL, :iconURL, " +
-                            ":locale, :visible, :active, :userDisabled, " +
-                            ":appDisabled, :pendingUninstall, :descriptor, " +
-                            ":installDate, :updateDate, :applyBackgroundUpdates, " +
-                            ":bootstrap, :skinnable, :size, :sourceURI, " +
-                            ":releaseNotesURI)",
+                            ":icon64URL, :locale, :visible, :active, " +
+                            ":userDisabled, :appDisabled, :pendingUninstall, " +
+                            ":descriptor, :installDate, :updateDate, " +
+                            ":applyBackgroundUpdates, :bootstrap, :skinnable, " +
+                            ":size, :sourceURI, :releaseNotesURI)",
     addAddonMetadata_addon_locale: "INSERT INTO addon_locale VALUES " +
                                    "(:internal_id, :name, :locale)",
     addAddonMetadata_locale: "INSERT INTO locale (name, description, creator, " +
@@ -3112,7 +3113,8 @@ var XPIDatabase = {
                                   "id TEXT, location TEXT, version TEXT, " +
                                   "type TEXT, internalName TEXT, updateURL TEXT, " +
                                   "updateKey TEXT, optionsURL TEXT, aboutURL TEXT, " +
-                                  "iconURL TEXT, defaultLocale INTEGER, " +
+                                  "iconURL TEXT, icon64URL TEXT, " +
+                                  "defaultLocale INTEGER, " +
                                   "visible INTEGER, active INTEGER, " +
                                   "userDisabled INTEGER, appDisabled INTEGER, " +
                                   "pendingUninstall INTEGER, descriptor TEXT, " +
@@ -5433,17 +5435,21 @@ function AddonWrapper(aAddon) {
     });
   }, this);
 
-  this.__defineGetter__("iconURL", function() {
-    if (aAddon.active && aAddon.iconURL)
-      return aAddon.iconURL;
+  // Maps iconURL and icon64URL to the properties of the same name or icon.png
+  // and icon64.png in the add-on's files.
+  ["icon", "icon64"].forEach(function(aProp) {
+    this.__defineGetter__(aProp + "URL", function() {
+      if (aAddon.active && aAddon[aProp + "URL"])
+        return aAddon[aProp + "URL"];
 
-    if (this.hasResource("icon.png"))
-      return this.getResourceURI("icon.png").spec;
+      if (this.hasResource(aProp + ".png"))
+        return this.getResourceURI(aProp + ".png").spec;
 
-    if (aAddon._repositoryAddon)
-      return aAddon._repositoryAddon.iconURL;
+      if (aAddon._repositoryAddon)
+        return aAddon._repositoryAddon[aProp + "URL"];
 
-    return null;
+      return null;
+    }, this);
   }, this);
 
   PROP_LOCALE_SINGLE.forEach(function(aProp) {

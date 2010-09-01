@@ -427,7 +427,8 @@ function writeInstallRDFToDir(aData, aDir) {
   rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
-   "optionsURL", "aboutURL", "iconURL", "skinnable"].forEach(function(aProp) {
+   "optionsURL", "aboutURL", "iconURL", "icon64URL",
+   "skinnable"].forEach(function(aProp) {
     if (aProp in aData)
       rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });
