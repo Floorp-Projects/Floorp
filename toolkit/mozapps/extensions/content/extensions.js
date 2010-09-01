@@ -51,6 +51,10 @@ Cu.import("resource://gre/modules/AddonRepository.jsm");
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_BACKGROUND_UPDATE = "extensions.update.enabled";
+const PREF_CHECK_COMPATIBILITY = "extensions.checkCompatibility";
+const PREF_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
+
+const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
 const LOADING_MSG_DELAY = 100;
 
@@ -142,6 +146,7 @@ function loadView(aViewId) {
 var gEventManager = {
   _listeners: {},
   _installListeners: [],
+  checkCompatibilityPref: "",
 
   initialize: function() {
     var self = this;
@@ -164,9 +169,20 @@ var gEventManager = {
     });
     AddonManager.addInstallListener(this);
     AddonManager.addAddonListener(this);
+    
+    var version = Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
+    this.checkCompatibilityPref = PREF_CHECK_COMPATIBILITY + "." + version;
+
+    Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
+    Services.prefs.addObserver(PREF_CHECK_UPDATE_SECURITY, this, false);
+
+    this.refreshGlobalWarning();
   },
 
   shutdown: function() {
+    Services.prefs.removeObserver(this.checkCompatibilityPref, this);
+    Services.prefs.removeObserver(PREF_CHECK_UPDATE_SECURITY, this);
+
     AddonManager.removeInstallListener(this);
     AddonManager.removeAddonListener(this);
   },
@@ -243,6 +259,49 @@ var gEventManager = {
         // this shouldn't be fatal
         Cu.reportError(e);
       }
+    }
+  },
+  
+  refreshGlobalWarning: function() {
+    var page = document.getElementById("addons-page");
+
+    if (Services.appinfo.inSafeMode) {
+      page.setAttribute("warning", "safemode");
+      return;
+    } 
+
+    var checkUpdateSecurity = true;
+    var checkUpdateSecurityDefault = true;
+    try {
+      checkUpdateSecurity = Services.prefs.getBoolPref(PREF_CHECK_UPDATE_SECURITY);
+    } catch(e) { }
+    try {
+      var defaultBranch = Services.prefs.getDefaultBranch("");
+      checkUpdateSecurityDefault = defaultBranch.getBoolPref(PREF_CHECK_UPDATE_SECURITY);
+    } catch(e) { }
+    if (checkUpdateSecurityDefault && !checkUpdateSecurity) {
+      page.setAttribute("warning", "updatesecurity");
+      return;
+    }
+
+    var checkCompatibility = true;
+    try {
+      checkCompatibility = Services.prefs.getBoolPref(this.checkCompatibilityPref);
+    } catch(e) { }
+    if (!checkCompatibility) {
+      page.setAttribute("warning", "checkcompatibility");
+      return;
+    }
+    
+    page.removeAttribute("warning");
+  },
+  
+  observe: function(aSubject, aTopic, aData) {
+    switch (aData) {
+    case this.checkCompatibilityPref:
+    case PREF_CHECK_UPDATE_SECURITY:
+      this.refreshGlobalWarning();
+      break;
     }
   }
 };
@@ -437,6 +496,20 @@ var gViewController = {
       isEnabled: function() true,
       doCommand: function() {
         Application.restart();
+      }
+    },
+
+    cmd_enableCheckCompatibility: {
+      isEnabled: function() true,
+      doCommand: function() {
+        Services.prefs.clearUserPref(gEventManager.checkCompatibilityPref);
+      }
+    },
+
+    cmd_enableUpdateSecurity: {
+      isEnabled: function() true,
+      doCommand: function() {
+        Services.prefs.clearUserPref(PREF_CHECK_UPDATE_SECURITY);
       }
     },
 

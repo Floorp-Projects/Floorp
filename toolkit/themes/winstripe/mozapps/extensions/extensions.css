@@ -63,6 +63,55 @@
   -moz-image-region: rect(0, 36px, 18px, 18px);
 }
 
+/*** global warnings ***/
+
+.global-warning {
+  -moz-box-align: center;
+  padding: 0 8px;
+  color: #916D15;
+  font-weight: bold;
+}
+
+.global-warning,
+.global-warning .button-link {
+  text-shadow: #FFFFFF 1px 1px 1px;
+}
+
+#addons-page[warning] .global-warning-container {
+  background-color: rgba(255, 255, 0, 0.1);
+  background-image: url("chrome://mozapps/skin/extensions/warning-stripes.png");
+  background-repeat: repeat-x;
+}
+
+#detail-view .global-warning {
+  padding: 4px 12px;
+  border-bottom: 1px solid #A8A8A8;  
+}
+
+/*** notification icons ***/
+
+.warning-icon {
+  list-style-image: url("chrome://global/skin/icons/warning-16.png");
+  width: 16px;
+  height: 16px;
+  margin: 3px 0;
+}
+
+.error-icon {
+  list-style-image: url("chrome://global/skin/icons/error-16.png");
+  width: 16px;
+  height: 16px;
+  margin: 3px 0;
+}
+
+.pending-icon,
+.info-icon {
+  list-style-image: url("chrome://global/skin/icons/information-16.png");
+  width: 16px;
+  height: 16px;
+  margin: 3px 0;
+}
+
 /*** category selector ***/
 
 #categories {
@@ -359,28 +408,6 @@
   color: #4F7939;
 }
 
-.warning-icon {
-  list-style-image: url("chrome://global/skin/icons/warning-16.png");
-  width: 16px;
-  height: 16px;
-  margin: 3px 0;
-}
-
-.error-icon {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
-  width: 16px;
-  height: 16px;
-  margin: 3px 0;
-}
-
-.pending-icon,
-.info-icon {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
-  width: 16px;
-  height: 16px;
-  margin: 3px 0;
-}
-
 .addon-view[notification="warning"] {
   background-image: -moz-linear-gradient(rgba(255, 255, 0, 0.2), rgba(255, 255, 0, 0.1));
 }
@@ -509,15 +536,15 @@
   opacity: 0.6;
 }
 
-#detail-view > .loading {
+#detail-view .loading {
   opacity: 0;
 }
 
-#detail-view:not([loading]) > .loading {
+#detail-view:not([loading]) .loading {
   visibility: collapse;
 }
 
-#detail-view[loading-extended] > .loading {
+#detail-view[loading-extended] .loading {
   -moz-box-align: center;
   -moz-box-pack: center;
   opacity: 1;
@@ -525,7 +552,7 @@
   -moz-transition-duration: 1s;
 }
 
-#detail-view > .loading > image {
+#detail-view .loading > image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 

@@ -123,3 +123,10 @@ xhtml|link {
 .view-pane:not(#updates-view) .addon .relnotes-toggle {
   display: none;
 }
+
+#addons-page:not([warning]) .global-warning,
+#addons-page:not([warning="safemode"]) .global-warning-safemode,
+#addons-page:not([warning="checkcompatibility"]) .global-warning-checkcompatibility,
+#addons-page:not([warning="updatesecurity"]) .global-warning-updatesecurity {
+  display: none;
+}
