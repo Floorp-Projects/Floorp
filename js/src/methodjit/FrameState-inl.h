@@ -86,11 +86,13 @@ inline JSC::MacroAssembler::RegisterID
 FrameState::allocReg()
 {
     RegisterID reg;
-    if (!freeRegs.empty())
+    if (!freeRegs.empty()) {
         reg = freeRegs.takeAnyReg();
-    else
+    } else {
         reg = evictSomeReg();
-    regstate[reg].fe = NULL;
+        regstate[reg].forget();
+    }
+
     return reg;
 }
 
@@ -98,11 +100,13 @@ inline JSC::MacroAssembler::RegisterID
 FrameState::allocReg(uint32 mask)
 {
     RegisterID reg;
-    if (freeRegs.hasRegInMask(mask))
+    if (freeRegs.hasRegInMask(mask)) {
         reg = freeRegs.takeRegInMask(mask);
-    else
+    } else {
         reg = evictSomeReg(mask);
-    regstate[reg].fe = NULL;
+        regstate[reg].forget();
+    }
+
     return reg;
 }
 
@@ -110,11 +114,15 @@ inline JSC::MacroAssembler::RegisterID
 FrameState::allocReg(FrameEntry *fe, RematInfo::RematType type)
 {
     RegisterID reg;
-    if (!freeRegs.empty())
+    if (!freeRegs.empty()) {
         reg = freeRegs.takeAnyReg();
-    else
+    } else {
         reg = evictSomeReg();
-    regstate[reg] = RegisterState(fe, type);
+        regstate[reg].forget();
+    }
+
+    regstate[reg].associate(fe, type);
+
     return reg;
 }
 
@@ -169,7 +177,8 @@ FrameState::pop()
 inline void
 FrameState::freeReg(RegisterID reg)
 {
-    JS_ASSERT(regstate[reg].fe == NULL);
+    JS_ASSERT(!regstate[reg].usedBy());
+
     freeRegs.putReg(reg);
 }
 
@@ -180,14 +189,18 @@ FrameState::forgetReg(RegisterID reg)
      * Important: Do not touch the fe here. We can peephole optimize away
      * loads and stores by re-using the contents of old FEs.
      */
-    JS_ASSERT_IF(regstate[reg].fe, !regstate[reg].fe->isCopy());
-    freeRegs.putReg(reg);
+    JS_ASSERT_IF(regstate[reg].fe(), !regstate[reg].fe()->isCopy());
+
+    if (!regstate[reg].isPinned()) {
+        regstate[reg].forget();
+        freeRegs.putReg(reg);
+    }
 }
 
 inline void
-FrameState::forgetEverything(uint32 newStackDepth)
+FrameState::syncAndForgetEverything(uint32 newStackDepth)
 {
-    forgetEverything();
+    syncAndForgetEverything();
     sp = spBase + newStackDepth;
 }
 
@@ -236,7 +249,7 @@ FrameState::pushSynced(JSValueType type, RegisterID reg)
     fe->data.sync();
     fe->setType(type);
     fe->data.setRegister(reg);
-    regstate[reg] = RegisterState(fe, RematInfo::DATA);
+    regstate[reg].associate(fe, RematInfo::DATA);
 }
 
 inline void
@@ -275,8 +288,8 @@ FrameState::pushRegs(RegisterID type, RegisterID data)
     fe->resetUnsynced();
     fe->type.setRegister(type);
     fe->data.setRegister(data);
-    regstate[type] = RegisterState(fe, RematInfo::TYPE);
-    regstate[data] = RegisterState(fe, RematInfo::DATA);
+    regstate[type].associate(fe, RematInfo::TYPE);
+    regstate[data].associate(fe, RematInfo::DATA);
 }
 
 inline void
@@ -289,7 +302,7 @@ FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
     fe->resetUnsynced();
     fe->setType(type);
     fe->data.setRegister(payload);
-    regstate[payload] = RegisterState(fe, RematInfo::DATA);
+    regstate[payload].associate(fe, RematInfo::DATA);
 }
 
 inline void
@@ -314,7 +327,7 @@ FrameState::pushNumber(MaybeRegisterID payload, bool asInt32)
     if (payload.isSet()) {
         fe->data.unsync();
         fe->data.setRegister(payload.reg());
-        regstate[payload.reg()] = RegisterState(fe, RematInfo::DATA);
+        regstate[payload.reg()].associate(fe, RematInfo::DATA);
     } else {
         fe->data.setMemory();
     }
@@ -333,7 +346,7 @@ FrameState::pushInt32(RegisterID payload)
     fe->isNumber = true;
     fe->data.unsync();
     fe->data.setRegister(payload);
-    regstate[payload] = RegisterState(fe, RematInfo::DATA);
+    regstate[payload].associate(fe, RematInfo::DATA);
 }
 
 inline void
@@ -356,13 +369,13 @@ FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
     fe->setNotCopied();
     fe->setCopyOf(NULL);
     fe->data.setRegister(payload);
-    regstate[payload] = RegisterState(fe, RematInfo::DATA);
+    regstate[payload].associate(fe, RematInfo::DATA);
 }
 
 inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForType(FrameEntry *fe, RegisterID fallback)
 {
-    JS_ASSERT(regstate[fallback].fe == NULL);
+    JS_ASSERT(!regstate[fallback].fe());
     if (fe->isCopy())
         fe = fe->copyOf();
 
@@ -429,7 +442,7 @@ FrameState::tempRegInMaskForData(FrameEntry *fe, uint32 mask)
             return old;
 
         /* Keep the old register pinned. */
-        regstate[old].fe = NULL;
+        regstate[old].forget();
         reg = allocReg(mask);
         masm.move(old, reg);
         freeReg(old);
@@ -437,7 +450,7 @@ FrameState::tempRegInMaskForData(FrameEntry *fe, uint32 mask)
         reg = allocReg(mask);
         masm.loadPayload(addressOf(fe), reg);
     }
-    regstate[reg] = RegisterState(fe, RematInfo::DATA);
+    regstate[reg].associate(fe, RematInfo::DATA);
     fe->data.setRegister(reg);
     return reg;
 }
@@ -623,16 +636,20 @@ FrameState::getLocal(uint32 slot)
 inline void
 FrameState::pinReg(RegisterID reg)
 {
-    JS_ASSERT(regstate[reg].fe);
-    regstate[reg].save = regstate[reg].fe;
-    regstate[reg].fe = NULL;
+    regstate[reg].pin();
 }
 
 inline void
 FrameState::unpinReg(RegisterID reg)
 {
-    JS_ASSERT(!regstate[reg].fe);
-    regstate[reg].fe = regstate[reg].save;
+    regstate[reg].unpin();
+}
+
+inline void
+FrameState::unpinKilledReg(RegisterID reg)
+{
+    regstate[reg].unpinUnsafe();
+    freeRegs.putReg(reg);
 }
 
 inline void
