@@ -1,4 +1,6 @@
-/****************************************************************************\
+Files in src/compiler/preprocessor are provided under the following license:
+
+****************************************************************************
 Copyright (c) 2002, NVIDIA Corporation.
 
 NVIDIA Corporation("NVIDIA") supplies this software to you in
@@ -40,12 +42,4 @@ OUT OF THE USE, REPRODUCTION, MODIFICATION AND/OR DISTRIBUTION OF THE
 NVIDIA SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT,
 TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF
 NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-\****************************************************************************/
-
-# include "compiler/preprocessor/slglobals.h"
-extern CPPStruct *cpp;
-int InitCPPStruct(void);
-int InitScanner(CPPStruct *cpp);
-int InitAtomTable(AtomTable *atable, int htsize);
-int ScanFromString(char *s);
-char* GetStringOfAtom(AtomTable *atable, int atom);
+****************************************************************************
