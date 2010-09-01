@@ -140,7 +140,7 @@ namespace places {
                            testSourceItr(sourceStart);
 
       // Keep trying to match the token one by one until it doesn't match.
-      while (!caseInsensitiveCompare(*testTokenItr, *testSourceItr)) {
+      while (!caseInsensitiveCompare(testTokenItr, testSourceItr, 1, 1)) {
         // We matched something, so move down one.
         testTokenItr++;
         testSourceItr++;

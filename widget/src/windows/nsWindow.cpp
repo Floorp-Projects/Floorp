@@ -6437,7 +6437,7 @@ StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
     return PR_FALSE;
 
   nsCaseInsensitiveStringComparator comp;
-  return comp(aChars1, aChars2, aNumChars1) == 0;
+  return comp(aChars1, aChars2, aNumChars1, aNumChars2) == 0;
 }
 
 UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
