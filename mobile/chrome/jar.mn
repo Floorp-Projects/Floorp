@@ -39,7 +39,6 @@ chrome.jar:
   content/checkerboard.png             (content/checkerboard.png)
 % content branding %content/branding/
   content/sanitize.js                  (content/sanitize.js)
-* content/BrowserView.js               (content/BrowserView.js)
 * content/InputHandler.js              (content/InputHandler.js)
 * content/Util.js                      (content/Util.js)
   content/forms.js                     (content/forms.js)
