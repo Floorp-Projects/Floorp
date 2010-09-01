@@ -167,7 +167,7 @@ public:
 protected:
   nsIntSize GetWidthHeight();
 
-  nsresult UpdateContext(nsIPropertyBag *aNewContextOptions = nsnull);
+  nsresult UpdateContext();
   nsresult ToDataURLImpl(const nsAString& aMimeType,
                          const nsAString& aEncoderOptions,
                          nsAString& aDataURL);

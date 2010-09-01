@@ -67,7 +67,6 @@
 #define CONTEXT_LOST_WEBGL             0x9242
 
 class nsIDocShell;
-class nsIPropertyBag;
 
 namespace mozilla {
 
@@ -267,39 +266,6 @@ struct WebGLVertexAttribData {
     }
 };
 
-struct WebGLContextOptions {
-    // these are defaults
-    WebGLContextOptions()
-        : alpha(true), depth(true), stencil(false),
-          premultipliedAlpha(false), antialiasHint(false)
-    { }
-
-    bool operator==(const WebGLContextOptions& other) const {
-        return
-            alpha == other.alpha &&
-            depth == other.depth &&
-            stencil == other.stencil &&
-            premultipliedAlpha == other.premultipliedAlpha &&
-            antialiasHint == other.antialiasHint;
-    }
-
-    bool operator!=(const WebGLContextOptions& other) const {
-        return
-            alpha != other.alpha ||
-            depth != other.depth ||
-            stencil != other.stencil ||
-            premultipliedAlpha != other.premultipliedAlpha ||
-            antialiasHint != other.antialiasHint;
-    }
-
-    bool alpha;
-    bool depth;
-    bool stencil;
-
-    bool premultipliedAlpha;
-    bool antialiasHint;
-};
-
 class WebGLContext :
     public nsICanvasRenderingContextWebGL,
     public nsICanvasRenderingContextInternal,
@@ -328,8 +294,6 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
-    NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions);
-
     NS_IMETHOD SetIsIPC(PRBool b) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
@@ -382,11 +346,8 @@ protected:
     PRInt32 mWidth, mHeight;
     CheckedUint32 mGeneration;
 
-    WebGLContextOptions mOptions;
-
     PRPackedBool mInvalidated;
     PRPackedBool mResetLayer;
-    PRPackedBool mOptionsFrozen;
 
     WebGLuint mActiveTexture;
     WebGLenum mSynthesizedGLError;
