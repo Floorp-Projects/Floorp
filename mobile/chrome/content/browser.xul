@@ -547,6 +547,9 @@
           <richlistitem class="context-command" id="context-openinnewtab" type="link-saveable" onclick="ContextCommands.openInNewTab();">
             <label value="&contextOpenInNewTab.label;"/>
           </richlistitem>
+          <richlistitem class="context-command" id="context-savelink" type="link-saveable" onclick="ContextCommands.saveLink();">
+            <label value="&contextSaveLink.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveImage.label;"/>
           </richlistitem>

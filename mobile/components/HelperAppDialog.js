@@ -54,69 +54,12 @@ HelperAppLauncherDialog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
   show: function hald_show(aLauncher, aContext, aReason) {
-    const NS_BINDING_ABORTED = 0x804b0002;
- 
-    let window = aContext.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowInternal);
-
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-
-    let flags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
-
-    let title = bundle.GetStringFromName("helperApp.title");
-    let message = bundle.GetStringFromName("helperApp.prompt");
-    message += "\n  " + aLauncher.suggestedFileName;
-    
-    let type = aLauncher.MIMEInfo.description;
-    if (type == "") {
-      try {
-        type = aLauncher.MIMEInfo.primaryExtension.toUpperCase();
-      } catch (e) {
-        type = aLauncher.MIMEInfo.MIMEType;
-      }
-    }
-    message += "\n  " + type;
-
-    let open = bundle.GetStringFromName("helperApp.open");
-    let save = bundle.GetStringFromName("helperApp.save");
-    let nothing = bundle.GetStringFromName("helperApp.nothing");
-
     // Check to see if we can open this file or not
     if (aLauncher.MIMEInfo.hasDefaultHandler) {
-      flags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
-
-      let choice = Services.prompt.confirmEx(window,
-                                             title, message,
-                                             flags, save, open, nothing,
-                                             null, {});
-
-      if (choice == 0) {
-        aLauncher.saveToDisk(null, false);
-      }
-      else if (choice == 1) {
-        aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
-        aLauncher.launchWithApplication(null, false);
-      }
-      else {
-        try {
-          aLauncher.cancel(NS_BINDING_ABORTED);
-        } catch(e) {} 
-      }
+      aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
+      aLauncher.launchWithApplication(null, false);
     } else {
-      let choice = Services.prompt.confirmEx(window,
-                                             title, message,
-                                             flags, save, nothing, null,
-                                             null, {});
-
-      if (choice == 0) {
-        aLauncher.saveToDisk(null, false);
-      }
-      else {
-        try {
-          aLauncher.cancel(NS_BINDING_ABORTED);
-        } catch(e) {} 
-      }
+      aLauncher.saveToDisk(null, false);
     }
   },
 
