@@ -737,8 +737,8 @@
                     label="&addon.restartNow.label;"
                     oncommand="document.getBindingParent(this).restart();"/>
         <xul:button anonid="undo" class="button-link"
-                    label="&addon.undo.label;"
-                    tooltipText="&addon.undo.tooltip;"
+                    label="&addon.undoAction.label;"
+                    tooltipText="&addon.undoAction.tooltip;"
                     oncommand="document.getBindingParent(this).undo();"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
@@ -1417,8 +1417,8 @@
                     label="&addon.restartNow.label;"
                     command="cmd_restartApp"/>
         <xul:button anonid="undo-btn" class="button-link"
-                    label="&addon.undoUninstall.label;"
-                    tooltiptext="&addon.undoUninstall.tooltip;"
+                    label="&addon.undoRemove.label;"
+                    tooltiptext="&addon.undoRemove.tooltip;"
                     oncommand="document.getBindingParent(this).cancelUninstall();"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
