@@ -126,7 +126,7 @@ function makeIFrames() {
   for each (var filename in parserDatFiles) {
     var datFrame = document.createElement("iframe");
     datFrame.onload = frameLoaded;
-    datFrame.src = filename;
+    datFrame.src = "html5lib_tree_construction/" + filename;
     $("display").appendChild(datFrame);
   }
   appendChildNodes($("display"), BR(), "Results: ", HR());
