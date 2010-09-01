@@ -2289,23 +2289,7 @@ var MenuListHelperUI = {
   },
 
   sizeToContent: function sizeToContent() {
-    // Make sure the container is at least sized to the content
-    let popup = this._popup;
-    let preferredHeight = 0;
-    for (let i=0; i<popup.childElementCount; i++) {
-      preferredHeight += popup.children[i].getBoundingClientRect().height;
-    }
-
-    // Ensure to reset the assigned width/height to have the default's one set
-    // by the content
-    popup.width = popup.height = "";
-
-    let rect = popup.getBoundingClientRect();
-    let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
-    let width = Math.min(rect.width, 0.75 * window.innerWidth);
-
-    popup.height = height;
-    popup.width = width;
+    this._popup.maxWidth = window.innerWidth * 0.75;
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -2381,23 +2365,7 @@ var ContextHelper = {
   },
 
   sizeToContent: function sizeToContent() {
-    // Make sure the container is at least sized to the content
-    let popup = this._popup;
-    let preferredHeight = 0;
-    for (let i=0; i<popup.childElementCount; i++) {
-      preferredHeight += popup.children[i].getBoundingClientRect().height;
-    }
-
-    // Ensure to reset the assigned width/height to have the default's one set
-    // by the content
-    popup.width = popup.height = "";
-
-    let rect = popup.getBoundingClientRect();
-    let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
-    let width = Math.min(rect.width, 0.75 * window.innerWidth);
-
-    popup.height = height;
-    popup.width = width;
+    this._popup.maxWidth = window.innerWidth * 0.75;
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -2408,6 +2376,11 @@ var ContextHelper = {
 var ContextCommands = {
   openInNewTab: function cc_openInNewTab() {
     Browser.addTab(ContextHelper.popupState.linkURL, false, Browser.selectedTab);
+  },
+
+  saveLink: function cc_saveLink() {
+    let browser = ContextHelper.popupState.target;
+    saveURL(ContextHelper.popupState.linkURL, null, "SaveLinkTitle", false, false, browser.documentURI);
   },
 
   saveImage: function cc_saveImage() {
