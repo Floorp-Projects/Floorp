@@ -157,9 +157,10 @@ var Browser = {
     // XXX change
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
-    container.customClicker = new ContentCustomClicker();
-    container.customKeySender = new ContentCustomKeySender();
-    container.customDragger = new Browser.MainDragger();
+    let inputHandlerOverlay = document.getElementById("inputhandler-overlay");
+    inputHandlerOverlay.customClicker = new ContentCustomClicker();
+    inputHandlerOverlay.customKeySender = new ContentCustomKeySender();
+    inputHandlerOverlay.customDragger = new Browser.MainDragger();
 
     // Warning, total hack ahead. All of the real-browser related scrolling code
     // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
@@ -254,7 +255,7 @@ var Browser = {
     BrowserUI.init();
 
     // initialize input handling
-    ih = new InputHandler(container);
+    ih = new InputHandler(inputHandlerOverlay);
 
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
@@ -1051,7 +1052,7 @@ Browser.MainDragger = function MainDragger() {
 
 Browser.MainDragger.prototype = {
   isDraggable: function isDraggable(target, scroller) {
-    return { xDraggable: true, yDraggable: true };
+    return { x: true, y: true };
   },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
