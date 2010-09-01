@@ -175,6 +175,8 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug421602.html \
 		test_bug422537.html \
 		test_bug424359-1.html \
+		test_bug499656.html \
+		test_bug499656.xhtml \
 		file_htmlserializer_1.html \
 		file_htmlserializer_1_bodyonly.html \
 		file_htmlserializer_1_format.html \
