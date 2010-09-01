@@ -2,7 +2,7 @@
 %include browser.css
 %undef WINSTRIPE_AERO
 
-%define customToolbarColor rgb(227,237,246)
+%define customToolbarColor hsl(214,44%,87%)
 
 @media all and (-moz-windows-default-theme) {
   #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
@@ -10,7 +10,7 @@
   }
 
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(rgba(255,255,255,.7), @toolbarHighlight@ 30%),
+    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 }
@@ -71,12 +71,10 @@
     color: black;
   }
 
-  /*XXX :-moz-placeholder isn't implemented yet (bug 457801)
   #urlbar > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
   .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
     color: #777;
   }
-  */
 
   #urlbar:hover,
   .searchbar-textbox:hover {

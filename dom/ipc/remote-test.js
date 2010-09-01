@@ -1,6 +1,15 @@
 dump("Loading remote script!\n");
 dump(content + "\n");
 
+var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
+                            .getService(Components.interfaces.nsISyncMessageSender);
+cpm.addMessageListener("cpm-async",
+  function(m) {
+    cpm.sendSyncMessage("ppm-sync");
+    dump(content.document.documentElement);
+    cpm.sendAsyncMessage("ppm-async");
+  });
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var dshell = content.QueryInterface(Ci.nsIInterfaceRequestor)

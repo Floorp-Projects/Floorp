@@ -164,6 +164,10 @@ private:
 
     virtual bool RecvLoadURIExternal(const IPC::URI& uri);
 
+    virtual bool RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
+                                 nsTArray<nsString>* aRetvals);
+    virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;

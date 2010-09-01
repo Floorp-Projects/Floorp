@@ -22,18 +22,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482260
 /** Test for Bug  **/
 
 SimpleTest.waitForExplicitFinish();
+resume_geolocationProvider();
+force_prompt(true);
 
 start_sending_garbage();
 
 function successCallback(pos){
   ok(false, "success should have never been called.");
   stop_sending_garbage();
+  reset_prompt();
   SimpleTest.finish();
 }
 
 function errorCallback(err) {
   ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
   stop_sending_garbage();
+  reset_prompt();
   SimpleTest.finish();
 }
 
@@ -46,8 +50,6 @@ var options = {
 navigator.geolocation.watchPosition(successCallback,
                                     errorCallback,
                                     options);
-
-setTimeout(clickNotificationButton, 10, kAcceptButton);
 
 </script>
 </pre>

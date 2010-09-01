@@ -5828,7 +5828,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_margin_right_value: // for internal use
   case eCSSProperty_margin_start_value: // for internal use
   case eCSSProperty_margin_top:
-    return ParseVariant(aValue, VARIANT_AHLP, nsnull);
+    return ParseVariant(aValue, VARIANT_AHLP | VARIANT_CALC, nsnull);
   case eCSSProperty_marker_offset:
     return ParseVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty_marks:
@@ -5871,7 +5871,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_padding_right_value: // for internal use
   case eCSSProperty_padding_start_value: // for internal use
   case eCSSProperty_padding_top:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLP, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
   case eCSSProperty_page:
     return ParseVariant(aValue, VARIANT_AUTO | VARIANT_IDENTIFIER, nsnull);
   case eCSSProperty_page_break_after:
@@ -5939,7 +5939,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_text_decoration:
     return ParseTextDecoration(aValue);
   case eCSSProperty_text_indent:
-    return ParseVariant(aValue, VARIANT_HLP, nsnull);
+    return ParseVariant(aValue, VARIANT_HLP | VARIANT_CALC, nsnull);
   case eCSSProperty_text_transform:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kTextTransformKTable);
@@ -5959,7 +5959,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kUserSelectKTable);
   case eCSSProperty_vertical_align:
-    return ParseVariant(aValue, VARIANT_HKLP,
+    return ParseVariant(aValue, VARIANT_HKLP | VARIANT_CALC,
                         nsCSSProps::kVerticalAlignKTable);
   case eCSSProperty_visibility:
     return ParseVariant(aValue, VARIANT_HK,

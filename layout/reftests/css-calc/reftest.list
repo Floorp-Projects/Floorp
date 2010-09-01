@@ -1,5 +1,6 @@
 == height-block-1.html height-block-1-ref.html
 == height-table-1.html height-table-1-ref.html
+== margin-block-1.html margin-block-1-ref.html
 == max-height-block-1.html max-height-block-1-ref.html
 == max-width-block-1.html width-block-1-ref.html
 == max-width-block-intrinsic-1.html max-width-block-intrinsic-1-ref.html
@@ -14,6 +15,10 @@
 == offsets-relative-left-1.html offsets-relative-left-1-ref.html
 == offsets-relative-right-1.html offsets-relative-left-1-ref.html
 == offsets-relative-top-1.html offsets-relative-top-1-ref.html
+== padding-block-1.html padding-block-1-ref.html
+== text-indent-1.html text-indent-1-ref.html
+== text-indent-intrinsic-1.html text-indent-intrinsic-1-ref.html
+== vertical-align-1.html vertical-align-1-ref.html
 == width-block-1.html width-block-1-ref.html
 == width-block-intrinsic-1.html width-block-intrinsic-1-ref.html
 == width-table-auto-1.html width-table-auto-1-ref.html

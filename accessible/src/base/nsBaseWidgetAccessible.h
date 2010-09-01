@@ -96,15 +96,15 @@ public:
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
 
-  // nsIAccessibleHyperLink
-  NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
-
   // nsAccessNode
   virtual PRBool Init();
   virtual void Shutdown();
 
   // nsAccessible
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // HyperLinkAccessible
+  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
 
 protected:
   /**

@@ -1,7 +1,0 @@
-comm.jar:
-        content/navigator/miniNav.xul        (miniNav.xul)
-        content/navigator/miniXul.xul        (miniXul.xul)
-        content/navigator/quit.html          (quit.html)
-        content/navigator/openNav.html       (openNav.html)
-        content/navigator/open10Windows.html (open10Windows.html)
-        content/navigator/open10Windows.xul  (open10Windows.xul)

@@ -44,15 +44,8 @@
 #include "AccessibleHyperlink.h"
 #include "AccessibleHyperlink_i.c"
 
-#include "nsIAccessible.h"
-#include "nsIAccessibleHyperlink.h"
+#include "nsAccessible.h"
 #include "nsIWinAccessNode.h"
-#include "nsAccessNodeWrap.h"
-
-#include "nsCOMPtr.h"
-#include "nsString.h"
-
-#include "nsIURI.h"
 
 // IUnknown
 
@@ -62,8 +55,8 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleHyperlink == iid) {
-    nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
-    if (!acc)
+    nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+    if (!thisObj->IsHyperLink())
       return E_NOINTERFACE;
 
     *ppv = static_cast<IAccessibleHyperlink*>(this);
@@ -82,21 +75,23 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
 __try {
   VariantInit(aAnchor);
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
-  if (!acc)
+  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
     return E_FAIL;
 
-  nsCOMPtr<nsIAccessible> anchor;
-  nsresult rv = acc->GetAnchor(aIndex, getter_AddRefs(anchor));
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
+    return E_INVALIDARG;
 
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(anchor));
+  nsAccessible* anchor = thisObj->GetAnchor(aIndex);
+  if (!anchor)
+    return S_FALSE;
+
+  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(anchor));
   if (!winAccessNode)
     return E_FAIL;
 
   void *instancePtr = NULL;
-  rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
+  nsresult rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
   if (NS_FAILED(rv))
     return E_FAIL;
 
@@ -115,17 +110,19 @@ CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
 __try {
   VariantInit(aAnchorTarget);
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
-  if (!acc)
+  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
     return E_FAIL;
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = acc->GetURI(aIndex, getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri)
-    return GetHRESULT(rv);
+  if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
+    return E_INVALIDARG;
+
+  nsCOMPtr<nsIURI> uri = thisObj->GetAnchorURI(aIndex);
+  if (!uri)
+    return S_FALSE;
 
   nsCAutoString prePath;
-  rv = uri->GetPrePath(prePath);
+  nsresult rv = uri->GetPrePath(prePath);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
@@ -153,16 +150,11 @@ CAccessibleHyperlink::get_startIndex(long *aIndex)
 __try {
   *aIndex = 0;
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
-  if (!acc)
+  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
     return E_FAIL;
 
-  PRInt32 index = 0;
-  nsresult rv = acc->GetStartIndex(&index);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aIndex = index;
+  *aIndex = thisObj->StartOffset();
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -175,16 +167,11 @@ CAccessibleHyperlink::get_endIndex(long *aIndex)
 __try {
   *aIndex = 0;
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
-  if (!acc)
+  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
     return E_FAIL;
 
-  PRInt32 index = 0;
-  nsresult rv = acc->GetEndIndex(&index);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aIndex = index;
+  *aIndex = thisObj->EndOffset();
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -197,16 +184,11 @@ CAccessibleHyperlink::get_valid(boolean *aValid)
 __try {
   *aValid = false;
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
-  if (!acc)
+  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
     return E_FAIL;
 
-  PRBool isValid = PR_FALSE;
-  nsresult rv = acc->GetValid(&isValid);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aValid = isValid;
+  *aValid = thisObj->IsValid();
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

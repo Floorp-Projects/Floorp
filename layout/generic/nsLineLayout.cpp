@@ -231,21 +231,17 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   // property amounts to anything.
 
   if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowState->frame)) {
-    nscoord indent = 0;
-    nsStyleUnit unit = mStyleText->mTextIndent.GetUnit();
-    if (eStyleUnit_Coord == unit) {
-      indent = mStyleText->mTextIndent.GetCoordValue();
-    }
-    else if (eStyleUnit_Percent == unit) {
-      nscoord width =
+    const nsStyleCoord &textIndent = mStyleText->mTextIndent;
+    nscoord pctBasis = 0;
+    if (textIndent.HasPercent()) {
+      pctBasis =
         nsHTMLReflowState::GetContainingBlockContentWidth(mBlockReflowState);
-      if ((0 != width) && (NS_UNCONSTRAINEDSIZE != width)) {
-        indent = nscoord(mStyleText->mTextIndent.GetPercentValue() * width);
-      }
+
       if (GetFlag(LL_GOTLINEBOX)) {
         mLineBox->DisableResizeReflowOptimization();
       }
     }
+    nscoord indent = nsRuleNode::ComputeCoordPercentCalc(textIndent, pctBasis);
 
     mTextIndent = indent;
 
@@ -648,7 +644,7 @@ static PRBool
 HasPercentageUnitSide(const nsStyleSides& aSides)
 {
   NS_FOR_CSS_SIDES(side) {
-    if (eStyleUnit_Percent == aSides.GetUnit(side))
+    if (aSides.Get(side).HasPercent())
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -1783,176 +1779,174 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     }
 
     // Get vertical-align property
-    const nsStyleTextReset* textStyle = frame->GetStyleTextReset();
-    nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
+    const nsStyleCoord& verticalAlign =
+      frame->GetStyleTextReset()->mVerticalAlign;
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  [frame]");
     nsFrame::ListTag(stdout, frame);
     printf(": verticalAlignUnit=%d (enum == %d)\n",
            verticalAlignUnit,
-           ((eStyleUnit_Enumerated == verticalAlignUnit)
-            ? textStyle->mVerticalAlign.GetIntValue()
+           ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
+            ? verticalAlign.GetIntValue()
             : -1));
 #endif
 
-    PRUint8 verticalAlignEnum;
-    nscoord parentAscent, parentDescent, parentXHeight;
-    nscoord parentSuperscript, parentSubscript;
-    nscoord coordOffset, percentOffset, elementLineHeight;
-    nscoord revisedBaselineY;
-    switch (verticalAlignUnit) {
-      case eStyleUnit_Enumerated:
-      default:
-        if (eStyleUnit_Enumerated == verticalAlignUnit) {
-          verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
+    if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+      switch (verticalAlign.GetIntValue()) {
+        default:
+        case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+        {
+          // The element's baseline is aligned with the baseline of
+          // the parent.
+          pfd->mBounds.y = baselineY - pfd->mAscent;
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
         }
-        else {
-          verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+
+        case NS_STYLE_VERTICAL_ALIGN_SUB:
+        {
+          // Lower the baseline of the box to the subscript offset
+          // of the parent's box. This is identical to the baseline
+          // alignment except for the addition of the subscript
+          // offset to the baseline Y.
+          nscoord parentSubscript;
+          fm->GetSubscriptOffset(parentSubscript);
+          nscoord revisedBaselineY = baselineY + parentSubscript;
+          pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
         }
-        switch (verticalAlignEnum) {
-          default:
-          case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-            // The elements baseline is aligned with the baseline of
-            // the parent.
-            pfd->mBounds.y = baselineY - pfd->mAscent;
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break;
 
-          case NS_STYLE_VERTICAL_ALIGN_SUB:
-            // Lower the baseline of the box to the subscript offset
-            // of the parent's box. This is identical to the baseline
-            // alignment except for the addition of the subscript
-            // offset to the baseline Y.
-            fm->GetSubscriptOffset(parentSubscript);
-            revisedBaselineY = baselineY + parentSubscript;
-            pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break;
+        case NS_STYLE_VERTICAL_ALIGN_SUPER:
+        {
+          // Raise the baseline of the box to the superscript offset
+          // of the parent's box. This is identical to the baseline
+          // alignment except for the subtraction of the superscript
+          // offset to the baseline Y.
+          nscoord parentSuperscript;
+          fm->GetSuperscriptOffset(parentSuperscript);
+          nscoord revisedBaselineY = baselineY - parentSuperscript;
+          pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
+        }
 
-          case NS_STYLE_VERTICAL_ALIGN_SUPER:
-            // Raise the baseline of the box to the superscript offset
-            // of the parent's box. This is identical to the baseline
-            // alignment except for the subtraction of the superscript
-            // offset to the baseline Y.
-            fm->GetSuperscriptOffset(parentSuperscript);
-            revisedBaselineY = baselineY - parentSuperscript;
-            pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break;
-
-          case NS_STYLE_VERTICAL_ALIGN_TOP:
-          {
-            pfd->mVerticalAlign = VALIGN_TOP;
-            nscoord subtreeHeight = logicalHeight;
-            if (frameSpan) {
-              subtreeHeight = frameSpan->mMaxY - frameSpan->mMinY;
-              NS_ASSERTION(subtreeHeight >= logicalHeight,
-                           "unexpected subtree height");
-            }
-            if (subtreeHeight > maxTopBoxHeight) {
-              maxTopBoxHeight = subtreeHeight;
-            }
-            break;
+        case NS_STYLE_VERTICAL_ALIGN_TOP:
+        {
+          pfd->mVerticalAlign = VALIGN_TOP;
+          nscoord subtreeHeight = logicalHeight;
+          if (frameSpan) {
+            subtreeHeight = frameSpan->mMaxY - frameSpan->mMinY;
+            NS_ASSERTION(subtreeHeight >= logicalHeight,
+                         "unexpected subtree height");
           }
-
-          case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-          {
-            pfd->mVerticalAlign = VALIGN_BOTTOM;
-            nscoord subtreeHeight = logicalHeight;
-            if (frameSpan) {
-              subtreeHeight = frameSpan->mMaxY - frameSpan->mMinY;
-              NS_ASSERTION(subtreeHeight >= logicalHeight,
-                           "unexpected subtree height");
-            }
-            if (subtreeHeight > maxBottomBoxHeight) {
-              maxBottomBoxHeight = subtreeHeight;
-            }
-            break;
+          if (subtreeHeight > maxTopBoxHeight) {
+            maxTopBoxHeight = subtreeHeight;
           }
-
-          case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-            // Align the midpoint of the frame with 1/2 the parents
-            // x-height above the baseline.
-            fm->GetXHeight(parentXHeight);
-            if (frameSpan) {
-              pfd->mBounds.y = baselineY -
-                (parentXHeight + pfd->mBounds.height)/2;
-            }
-            else {
-              pfd->mBounds.y = baselineY - (parentXHeight + logicalHeight)/2 +
-                pfd->mMargin.top;
-            }
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break;
-
-          case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
-            // The top of the logical box is aligned with the top of
-            // the parent elements text.
-            fm->GetMaxAscent(parentAscent);
-            if (frameSpan) {
-              pfd->mBounds.y = baselineY - parentAscent -
-                pfd->mBorderPadding.top + frameSpan->mTopLeading;
-            }
-            else {
-              pfd->mBounds.y = baselineY - parentAscent + pfd->mMargin.top;
-            }
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break;
-
-          case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
-            // The bottom of the logical box is aligned with the
-            // bottom of the parent elements text.
-            fm->GetMaxDescent(parentDescent);
-            if (frameSpan) {
-              pfd->mBounds.y = baselineY + parentDescent -
-                pfd->mBounds.height + pfd->mBorderPadding.bottom -
-                frameSpan->mBottomLeading;
-            }
-            else {
-              pfd->mBounds.y = baselineY + parentDescent -
-                pfd->mBounds.height - pfd->mMargin.bottom;
-            }
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break;
-
-          case NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE:
-            // Align the midpoint of the frame with the baseline of the parent.
-            if (frameSpan) {
-              pfd->mBounds.y = baselineY - pfd->mBounds.height/2;
-            }
-            else {
-              pfd->mBounds.y = baselineY - logicalHeight/2 + pfd->mMargin.top;
-            }
-            pfd->mVerticalAlign = VALIGN_OTHER;
-            break; 	    
+          break;
         }
-        break;
 
-      case eStyleUnit_Coord:
-        // According to the CSS2 spec (10.8.1), a positive value
-        // "raises" the box by the given distance while a negative value
-        // "lowers" the box by the given distance (with zero being the
-        // baseline). Since Y coordinates increase towards the bottom of
-        // the screen we reverse the sign.
-        coordOffset = textStyle->mVerticalAlign.GetCoordValue();
-        revisedBaselineY = baselineY - coordOffset;
-        pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-        pfd->mVerticalAlign = VALIGN_OTHER;
-        break;
+        case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        {
+          pfd->mVerticalAlign = VALIGN_BOTTOM;
+          nscoord subtreeHeight = logicalHeight;
+          if (frameSpan) {
+            subtreeHeight = frameSpan->mMaxY - frameSpan->mMinY;
+            NS_ASSERTION(subtreeHeight >= logicalHeight,
+                         "unexpected subtree height");
+          }
+          if (subtreeHeight > maxBottomBoxHeight) {
+            maxBottomBoxHeight = subtreeHeight;
+          }
+          break;
+        }
 
-      case eStyleUnit_Percent:
-        // Similar to a length value (eStyleUnit_Coord) except that the
-        // percentage is a function of the elements line-height value.
-        elementLineHeight = nsHTMLReflowState::
-          CalcLineHeight(frame->GetStyleContext(),
-                         mBlockReflowState->ComputedHeight());
-        percentOffset = nscoord(
-          textStyle->mVerticalAlign.GetPercentValue() * elementLineHeight
-          );
-        revisedBaselineY = baselineY - percentOffset;
-        pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
-        pfd->mVerticalAlign = VALIGN_OTHER;
-        break;
+        case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+        {
+          // Align the midpoint of the frame with 1/2 the parents
+          // x-height above the baseline.
+          nscoord parentXHeight;
+          fm->GetXHeight(parentXHeight);
+          if (frameSpan) {
+            pfd->mBounds.y = baselineY -
+              (parentXHeight + pfd->mBounds.height)/2;
+          }
+          else {
+            pfd->mBounds.y = baselineY - (parentXHeight + logicalHeight)/2 +
+              pfd->mMargin.top;
+          }
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
+        }
+
+        case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
+        {
+          // The top of the logical box is aligned with the top of
+          // the parent element's text.
+          nscoord parentAscent;
+          fm->GetMaxAscent(parentAscent);
+          if (frameSpan) {
+            pfd->mBounds.y = baselineY - parentAscent -
+              pfd->mBorderPadding.top + frameSpan->mTopLeading;
+          }
+          else {
+            pfd->mBounds.y = baselineY - parentAscent + pfd->mMargin.top;
+          }
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
+        }
+
+        case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
+        {
+          // The bottom of the logical box is aligned with the
+          // bottom of the parent elements text.
+          nscoord parentDescent;
+          fm->GetMaxDescent(parentDescent);
+          if (frameSpan) {
+            pfd->mBounds.y = baselineY + parentDescent -
+              pfd->mBounds.height + pfd->mBorderPadding.bottom -
+              frameSpan->mBottomLeading;
+          }
+          else {
+            pfd->mBounds.y = baselineY + parentDescent -
+              pfd->mBounds.height - pfd->mMargin.bottom;
+          }
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
+        }
+
+        case NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE:
+        {
+          // Align the midpoint of the frame with the baseline of the parent.
+          if (frameSpan) {
+            pfd->mBounds.y = baselineY - pfd->mBounds.height/2;
+          }
+          else {
+            pfd->mBounds.y = baselineY - logicalHeight/2 + pfd->mMargin.top;
+          }
+          pfd->mVerticalAlign = VALIGN_OTHER;
+          break;
+        }
+      }
+    } else {
+      // We have either a coord, a percent, or a calc().
+      nscoord pctBasis = 0;
+      if (verticalAlign.HasPercent()) {
+        // Percentages are like lengths, except treated as a percentage
+        // of the elements line-height value.
+        pctBasis = nsHTMLReflowState::CalcLineHeight(
+          frame->GetStyleContext(), mBlockReflowState->ComputedHeight());
+      }
+      nscoord offset =
+        nsRuleNode::ComputeCoordPercentCalc(verticalAlign, pctBasis);
+      // According to the CSS2 spec (10.8.1), a positive value
+      // "raises" the box by the given distance while a negative value
+      // "lowers" the box by the given distance (with zero being the
+      // baseline). Since Y coordinates increase towards the bottom of
+      // the screen we reverse the sign.
+      nscoord revisedBaselineY = baselineY - offset;
+      pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
+      pfd->mVerticalAlign = VALIGN_OTHER;
     }
 
     // Update minY/maxY for frames that we just placed. Do not factor

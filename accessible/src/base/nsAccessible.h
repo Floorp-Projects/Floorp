@@ -327,6 +327,49 @@ public:
    */
   void TestChildCache(nsAccessible *aCachedChild);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // HyperLinkAccessible
+
+  /**
+   * Return true if the accessible is hyper link accessible.
+   */
+  virtual bool IsHyperLink();
+
+  /**
+   * Return the start offset of the link within the parent accessible.
+   */
+  virtual PRUint32 StartOffset();
+
+  /**
+   * Return the end offset of the link within the parent accessible.
+   */
+  virtual PRUint32 EndOffset();
+
+  /**
+   * Return true if the link is valid (e. g. points to a valid URL).
+   */
+  virtual bool IsValid();
+
+  /**
+   * Return true if the link currently has the focus.
+   */
+  virtual bool IsSelected();
+
+  /**
+   * Return the number of anchors within the link.
+   */
+  virtual PRUint32 AnchorCount();
+
+  /**
+   * Returns an anchor accessible at the given index.
+   */
+  virtual nsAccessible* GetAnchor(PRUint32 aAnchorIndex);
+
+  /**
+   * Returns an anchor URI at the given index.
+   */
+  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -382,9 +425,6 @@ protected:
    * @return              the resulting accessible
    */
   nsAccessible *GetFirstAvailableAccessible(nsINode *aStartNode) const;
-
-  // Hyperlink helpers
-  virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
 
   //////////////////////////////////////////////////////////////////////////////
   // Action helpers
