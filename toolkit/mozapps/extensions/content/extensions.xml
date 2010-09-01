@@ -1081,6 +1081,15 @@
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.softblocked.link");
               this._warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
               this._warningLink.hidden = false;
+            } else if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.outdated",
+                [this.mAddon.name], 1
+              );
+              this._warningLink.value = gStrings.ext.GetStringFromName("notification.outdated.link");
+              this._warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
+              this._warningLink.hidden = false;
             } else {
               this.removeAttribute("notification");
             }
