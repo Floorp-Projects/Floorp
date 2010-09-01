@@ -135,6 +135,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 nsSVGScriptElement::nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                        PRUint32 aFromParser)
   : nsSVGScriptElementBase(aNodeInfo)
+  , nsScriptElement(aFromParser)
 {
   mDoneAddingChildren = !aFromParser;
   AddMutationObserver(this);
@@ -160,7 +161,7 @@ nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The clone should be marked evaluated if we are.
-  it->mIsEvaluated = mIsEvaluated;
+  it->mAlreadyStarted = mAlreadyStarted;
   it->mLineNumber = mLineNumber;
   it->mMalformed = mMalformed;
 
@@ -278,11 +279,10 @@ nsSVGScriptElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mDoneAddingChildren = PR_TRUE;
   nsresult rv = MaybeProcessScript();
-  if (!mIsEvaluated) {
-    // Need to thaw the script uri here to allow another script to cause
+  if (!mAlreadyStarted) {
+    // Need to lose parser-insertedness here to allow another script to cause
     // execution later.
-    mFrozen = PR_FALSE;
-    mUri = nsnull;
+    LoseParserInsertedness();
   }
   return rv;
 }
