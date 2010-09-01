@@ -2331,8 +2331,8 @@ HUD_SERVICE.prototype =
       hudId: hudId,
     };
 
-    var lineColSubs = [aActivityObject.columnNumber,
-                       aActivityObject.lineNumber];
+    var lineColSubs = [aActivityObject.lineNumber,
+                       aActivityObject.columnNumber];
     var lineCol = this.getFormatStr("errLineCol", lineColSubs);
 
     var errFileSubs = [aActivityObject.sourceName];
