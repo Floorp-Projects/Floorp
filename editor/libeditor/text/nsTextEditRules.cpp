@@ -267,6 +267,9 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     // insure trailing br node
     res = CreateTrailingBRIfNeeded();
     NS_ENSURE_SUCCESS(res, res);
+
+    // collapse the selection to the trailing BR if it's at the end of our text node
+    CollapseSelectionToTrailingBRIfNeeded(selection);
     
     /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
      * This is difficult, because we cannot know what the level is until after the Bidi algorithm
@@ -455,6 +458,12 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
 
 nsresult
 nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTextEditRules::CollapseSelectionToTrailingBRIfNeeded(nsISelection* aSelection)
 {
   // we only need to execute the stuff below if we are a plaintext editor.
   // html editors have a different mechanism for putting in mozBR's

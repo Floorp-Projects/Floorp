@@ -233,6 +233,8 @@ protected:
 
   nsresult HideLastPWInput();
 
+  nsresult CollapseSelectionToTrailingBRIfNeeded(nsISelection *aSelection);
+
   PRBool IsPasswordEditor() const
   {
     return mEditor ? mEditor->IsPasswordEditor() : PR_FALSE;
