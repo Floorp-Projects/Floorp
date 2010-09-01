@@ -11,8 +11,8 @@ const MAX_INSTALL_TIME = 10000;
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-// install.rdf size, icon.png size
-const ADDON1_SIZE = 705 + 16;
+// install.rdf size, icon.png, icon64.png size
+const ADDON1_SIZE = 705 + 16 + 16;
 
 do_load_httpd_js();
 var testserver;
@@ -73,6 +73,7 @@ function run_test_1() {
     let uri = Services.io.newFileURI(file).spec;
     do_check_eq(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");
     do_check_eq(install.addon.iconURL, "jar:" + uri + "!/icon.png");
+    do_check_eq(install.addon.icon64URL, "jar:" + uri + "!/icon64.png");
     do_check_eq(install.iconURL, null);
 
     do_check_eq(install.sourceURI.spec, uri);
@@ -147,9 +148,10 @@ function check_test_1() {
 
           let dir = profileDir.clone();
           dir.append("addon1@tests.mozilla.org");
-          dir.append("install.rdf");
           let uri = Services.io.newFileURI(dir).spec;
-          do_check_eq(a1.getResourceURI("install.rdf").spec, uri);
+          do_check_eq(a1.getResourceURI("install.rdf").spec, uri + "install.rdf");
+          do_check_eq(a1.iconURL, uri + "icon.png");
+          do_check_eq(a1.icon64URL, uri + "icon64.png");
 
           a1.uninstall();
           restartManager();

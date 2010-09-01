@@ -19,6 +19,7 @@ function run_test() {
     optionsURL: "chrome://test/content/options.xul",
     aboutURL: "chrome://test/content/about.xul",
     iconURL: "chrome://test/skin/icon.png",
+    icon64URL: "chrome://test/skin/icon64.png",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -280,6 +281,7 @@ function run_test() {
     do_check_eq(a1.optionsURL, "chrome://test/content/options.xul");
     do_check_eq(a1.aboutURL, "chrome://test/content/about.xul");
     do_check_eq(a1.iconURL, "chrome://test/skin/icon.png");
+    do_check_eq(a1.icon64URL, "chrome://test/skin/icon64.png");
     do_check_eq(a1.name, "Test Addon 1");
     do_check_eq(a1.description, "Test Description");
     do_check_eq(a1.creator, "Test Creator");
