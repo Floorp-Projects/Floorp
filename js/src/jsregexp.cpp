@@ -932,14 +932,14 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     return ok;
 }
 
-static JSBool
-regexp_exec(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
     return regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_FALSE, vp);
 }
 
-static JSBool
-regexp_test(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
     if (!regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_TRUE, vp))
         return false;
@@ -954,8 +954,8 @@ static JSFunctionSpec regexp_methods[] = {
 #endif
     JS_FN(js_toString_str,  regexp_toString,    0,0),
     JS_FN("compile",        regexp_compile,     2,0),
-    JS_FN("exec",           regexp_exec,        1,0),
-    JS_FN("test",           regexp_test,        1,0),
+    JS_FN("exec",           js_regexp_exec,     1,0),
+    JS_FN("test",           js_regexp_test,     1,0),
     JS_FS_END
 };
 
