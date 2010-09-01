@@ -162,9 +162,6 @@ _BROWSER_FILES = \
                  browser_inspector_scrolling.js \
                  browser_inspector_store.js \
                  browser_inspector_tab_switch.js \
-                 browser_inspector_treePanel_output.js \
-                 browser_inspector_treePanel_input.html \
-                 browser_inspector_treePanel_result.html \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
@@ -186,7 +183,6 @@ _BROWSER_FILES = \
                  browser_visibleTabs_bookmarkAllTabs.js \
                  browser_visibleTabs_tabPreview.js \
                  discovery.html \
-                 domplate_test.js \
                  moz.png \
                  test_bug435035.html \
                  test_bug462673.html \
@@ -202,7 +198,7 @@ _BROWSER_FILES = \
                  browser_tabMatchesInAwesomebar.js \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
-                 $(NULL)
+    $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \

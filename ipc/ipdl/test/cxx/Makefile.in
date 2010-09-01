@@ -71,6 +71,7 @@ IPDLTESTS = \
   TestRPCErrorCleanup \
   TestRPCRaces \
   TestRPCShutdownRace \
+  TestRacyReentry  \
   TestRacyRPCReplies  \
   TestSanity  \
   TestSelfManageRoot \
