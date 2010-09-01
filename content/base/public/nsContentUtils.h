@@ -1046,6 +1046,11 @@ public:
    * Creates a DocumentFragment from text using a context node to resolve
    * namespaces.
    *
+   * Note! In the HTML case with the HTML5 parser enabled, this is only called
+   * from Range.createContextualFragment() and the implementation here is
+   * quirky accordingly (html context node behaves like a body context node).
+   * If you don't want that quirky behavior, don't use this method as-is!
+   *
    * @param aContextNode the node which is used to resolve namespaces
    * @param aFragment the string which is parsed to a DocumentFragment
    * @param aWillOwnFragment is PR_TRUE if ownership of the fragment should be
