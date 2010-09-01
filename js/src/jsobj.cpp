@@ -94,7 +94,7 @@
 #include "jsxdrapi.h"
 #endif
 
-#include "jsdtracef.h"
+#include "jsprobes.h"
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

@@ -524,6 +524,9 @@ struct JSObject {
         return dslots ? dslots[-1].toPrivateUint32() : uint32(JS_INITIAL_NSLOTS);
     }
 
+    size_t slotsAndStructSize(uint32 nslots) const;
+    size_t slotsAndStructSize() const { return slotsAndStructSize(numSlots()); }
+
   private:
     static size_t slotsToDynamicWords(size_t nslots) {
         JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
