@@ -67,8 +67,8 @@ function run_test_1() {
     do_check_true(install.addon.hasResource("install.rdf"));
     do_check_eq(install.addon.install, install);
     do_check_eq(install.addon.size, ADDON1_SIZE);
-    do_check_neq(install.addon.operationsRequiringRestart &
-                 AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
+    do_check_true(hasFlag(install.addon.operationsRequiringRestart,
+                          AddonManager.OP_NEEDS_RESTART_INSTALL));
     let file = do_get_addon("test_install1");
     let uri = Services.io.newFileURI(file).spec;
     do_check_eq(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");
@@ -204,6 +204,8 @@ function check_test_2(install) {
   do_check_eq(install.name, "Real Test 2");
   do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
   do_check_eq(install.addon.install, install);
+  do_check_true(hasFlag(install.addon.operationsRequiringRestart,
+                        AddonManager.OP_NEEDS_RESTART_INSTALL));
   do_check_eq(install.iconURL, null);
 
   // Pause the install here and start it again in run_test_3
@@ -298,6 +300,8 @@ function check_test_4(install) {
   do_check_neq(install.existingAddon);
   do_check_eq(install.existingAddon.id, "addon2@tests.mozilla.org");
   do_check_eq(install.addon.install, install);
+  do_check_true(hasFlag(install.addon.operationsRequiringRestart,
+                        AddonManager.OP_NEEDS_RESTART_INSTALL));
 
   run_test_5();
   // Installation will continue when there is nothing returned.
@@ -610,6 +614,8 @@ function run_test_11() {
     do_check_eq(installs[0].version, "1.0");
     do_check_eq(installs[0].name, "Multi Test 1");
     do_check_eq(installs[0].state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(hasFlag(installs[0].addon.operationsRequiringRestart,
+                          AddonManager.OP_NEEDS_RESTART_INSTALL));
 
     // Comes from addon5.jar and is compatible by default
     do_check_eq(installs[1].sourceURI, install.sourceURI);
@@ -618,6 +624,8 @@ function run_test_11() {
     do_check_eq(installs[1].version, "3.0");
     do_check_eq(installs[1].name, "Multi Test 2");
     do_check_eq(installs[1].state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(hasFlag(installs[1].addon.operationsRequiringRestart,
+                          AddonManager.OP_NEEDS_RESTART_INSTALL));
 
     // Comes from addon6.xpi and is incompatible
     do_check_eq(installs[2].sourceURI, install.sourceURI);
@@ -626,6 +634,8 @@ function run_test_11() {
     do_check_eq(installs[2].version, "2.0");
     do_check_eq(installs[2].name, "Multi Test 3");
     do_check_eq(installs[2].state, AddonManager.STATE_DOWNLOADED);
+    do_check_false(hasFlag(installs[2].addon.operationsRequiringRestart,
+                           AddonManager.OP_NEEDS_RESTART_INSTALL));
 
     // Comes from addon7.jar and is made compatible by an update check
     do_check_eq(installs[3].sourceURI, install.sourceURI);
@@ -634,6 +644,8 @@ function run_test_11() {
     do_check_eq(installs[3].version, "5.0");
     do_check_eq(installs[3].name, "Multi Test 4");
     do_check_eq(installs[3].state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(hasFlag(installs[3].addon.operationsRequiringRestart,
+                          AddonManager.OP_NEEDS_RESTART_INSTALL));
 
     AddonManager.getAllInstalls(function(aInstalls) {
       do_check_eq(aInstalls.length, 4);
@@ -646,7 +658,8 @@ function run_test_11() {
           "onInstalling"
         ],
         "addon6@tests.mozilla.org": [
-          "onInstalling"
+          ["onInstalling", false],
+          "onInstalled"
         ],
         "addon7@tests.mozilla.org": [
           "onInstalling"
@@ -664,8 +677,13 @@ function run_test_11() {
 
       installs[0].install();
       installs[1].install();
-      installs[2].install();
       installs[3].install();
+
+      // Note that we install addon6 last. Since it doesn't need a restart to
+      // install it completes asynchronously which would otherwise make the
+      // onInstallStarted/onInstallEnded events go out of sequence unless this
+      // is the last install operation
+      installs[2].install();
     });
   });
 }
@@ -717,7 +735,8 @@ function run_test_12() {
         "onInstalling"
       ],
       "addon6@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled"
       ],
       "addon7@tests.mozilla.org": [
         "onInstalling"
@@ -865,7 +884,8 @@ function check_test_13(install) {
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
     do_check_eq(olda2.pendingUpgrade, install.addon);
 
-    do_check_true(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+    do_check_true(hasFlag(install.addon.pendingOperations,
+                          AddonManager.PENDING_INSTALL));
 
     prepare_test({
       "addon2@tests.mozilla.org": [
