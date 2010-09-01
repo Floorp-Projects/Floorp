@@ -1294,11 +1294,6 @@
 
           this._model = null;
           this._spacer.hidden = true;
-
-          // give the form spacer area back to the content
-          // XXX this should probably be removed with layers
-          Browser.forceChromeReflow();
-          Browser.contentScrollboxScroller.scrollBy(0, 0);
         ]]></body>
       </method>
     </implementation>
