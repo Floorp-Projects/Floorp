@@ -1823,6 +1823,16 @@ var gDetailView = {
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.softblocked.link");
         warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
         warningLink.hidden = false;
+      } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
+        this.node.setAttribute("notification", "warning");
+        document.getElementById("detail-warning").textContent = gStrings.ext.formatStringFromName(
+          "details.notification.outdated",
+          [this._addon.name], 1
+        );
+        var warningLink = document.getElementById("detail-warning-link");
+        warningLink.value = gStrings.ext.GetStringFromName("details.notification.outdated.link");
+        warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
+        warningLink.hidden = false;
       } else {
         this.node.removeAttribute("notification");
       }

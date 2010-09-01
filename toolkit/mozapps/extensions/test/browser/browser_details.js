@@ -13,6 +13,7 @@ var gCategoryUtilities;
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
 var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 1);
 
 function open_details(aId, aType, aCallback) {
@@ -111,6 +112,10 @@ function test() {
     name: "Test add-on 7",
     _userDisabled: true,
     isActive: false
+  }, {
+    id: "addon8@tests.mozilla.org",
+    name: "Test add-on 8",
+    blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED
   }]);
 
   open_manager(null, function(aWindow) {
@@ -532,6 +537,74 @@ add_test(function() {
 
       is_element_hidden(get("detail-warning"), "Warning message should be hidden");
       is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+      is_element_hidden(get("detail-error"), "Error message should be hidden");
+      is_element_hidden(get("detail-error-link"), "Error link should be hidden");
+      is_element_hidden(get("detail-pending"), "Pending message should be hidden");
+
+      run_next_test();
+    });
+  });
+});
+
+// Opens and tests the details view for add-on 8
+add_test(function() {
+  open_details("addon8@tests.mozilla.org", "extension", function() {
+    is(get("detail-name").value, "Test add-on 8", "Name should be correct");
+
+    is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
+    is_element_hidden(get("detail-enable"), "Enable button should be hidden");
+    is_element_visible(get("detail-disable"), "Disable button should be visible");
+    is_element_visible(get("detail-uninstall"), "Remove button should be visible");
+
+    is_element_visible(get("detail-warning"), "Warning message should be visible");
+    is(get("detail-warning").textContent, "An important update is available for Test add-on 8.", "Warning message should be correct");
+    is_element_visible(get("detail-warning-link"), "Warning link should be visible");
+    is(get("detail-warning-link").value, "Update Now", "Warning link text should be correct");
+    is(get("detail-warning-link").href, gPluginURL, "Warning link should be correct");
+    is_element_hidden(get("detail-error"), "Error message should be hidden");
+    is_element_hidden(get("detail-error-link"), "Error link should be hidden");
+    is_element_hidden(get("detail-pending"), "Pending message should be hidden");
+
+    // Disable it
+    EventUtils.synthesizeMouse(get("detail-disable"), 2, 2, {}, gManagerWindow);
+    is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
+    is_element_visible(get("detail-enable"), "Enable button should be visible");
+    is_element_hidden(get("detail-disable"), "Disable button should be hidden");
+    is_element_visible(get("detail-uninstall"), "Remove button should be visible");
+
+    is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+    is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+    is_element_hidden(get("detail-error"), "Error message should be hidden");
+    is_element_hidden(get("detail-error-link"), "Error link should be hidden");
+    is_element_visible(get("detail-pending"), "Pending message should be visible");
+    is(get("detail-pending").textContent, "Test add-on 8 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
+
+    // Reopen it
+    open_details("addon8@tests.mozilla.org", "extension", function() {
+      is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
+      is_element_visible(get("detail-enable"), "Enable button should be visible");
+      is_element_hidden(get("detail-disable"), "Disable button should be hidden");
+      is_element_visible(get("detail-uninstall"), "Remove button should be visible");
+
+      is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+      is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+      is_element_hidden(get("detail-error"), "Error message should be hidden");
+      is_element_hidden(get("detail-error-link"), "Error link should be hidden");
+      is_element_visible(get("detail-pending"), "Pending message should be visible");
+      is(get("detail-pending").textContent, "Test add-on 8 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
+
+      // Undo disabling
+      EventUtils.synthesizeMouse(get("detail-undo"), 2, 2, {}, gManagerWindow);
+      is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
+      is_element_hidden(get("detail-enable"), "Enable button should be hidden");
+      is_element_visible(get("detail-disable"), "Disable button should be visible");
+      is_element_visible(get("detail-uninstall"), "Remove button should be visible");
+
+      is_element_visible(get("detail-warning"), "Warning message should be visible");
+      is(get("detail-warning").textContent, "An important update is available for Test add-on 8.", "Warning message should be correct");
+      is_element_visible(get("detail-warning-link"), "Warning link should be visible");
+      is(get("detail-warning-link").value, "Update Now", "Warning link text should be correct");
+      is(get("detail-warning-link").href, gPluginURL, "Warning link should be correct");
       is_element_hidden(get("detail-error"), "Error message should be hidden");
       is_element_hidden(get("detail-error-link"), "Error link should be hidden");
       is_element_hidden(get("detail-pending"), "Pending message should be hidden");
