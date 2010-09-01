@@ -280,12 +280,16 @@ var ExtensionsView = {
 
     let self = this;
     AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(items) {
+      let anyUpdateable = false;
       for (let i = 0; i < items.length; i++) {
         let addon = items[i];
         let appManaged = (addon.scope == AddonManager.SCOPE_APPLICATION);
         let opType = self._getOpTypeForOperations(addon.pendingOperations);
-        let updateable = (addon.permissions & AddonManager.PERM_CAN_UPDATE) > 0;
+        let updateable = (addon.permissions & AddonManager.PERM_CAN_UPGRADE) > 0;
         let uninstallable = (addon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
+
+        if (updateable)
+          anyUpdateable = true;
 
         let listitem = self._createItem(addon, "local");
         listitem.setAttribute("isDisabled", !addon.isActive);
@@ -330,10 +334,11 @@ var ExtensionsView = {
         self._list.insertBefore(listitem, self._repoItem);
       }
 
-      if (engines.length + items.length == 0) {
+      if (engines.length + items.length == 0)
         self.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
+
+      if (!anyUpdateable)
         document.getElementById("addons-update-all").disabled = true;
-      }
     });
   },
 
@@ -599,12 +604,14 @@ var ExtensionsView = {
       return;
 
     let json = aSubject.QueryInterface(Ci.nsISupportsString).data;
-    let addon = JSON.parse(json);
+    let update = JSON.parse(json);
 
     let strings = Elements.browserBundle;
-    let element = this.getElementForAddon(addon.id);
+    let element = this.getElementForAddon(update.id);
     if (!element)
       return;
+
+    let addon = element.addon;
 
     switch (aTopic) {
       case "addon-update-started":
@@ -615,11 +622,13 @@ var ExtensionsView = {
         let statusMsg = null;
         switch (aData) {
           case "update":
-            statusMsg = strings.getFormattedString("addonUpdate.updating", [addon.version]);
+            statusMsg = strings.getFormattedString("addonUpdate.updating", [update.version]);
             updateable = true;
             break;
           case "compatibility":
             statusMsg = strings.getString("addonUpdate.compatibility");
+            if (addon.pendingOperations & AddonManager.PENDING_INSTALL || addon.pendingOperations & AddonManager.PENDING_UPGRADE)
+              updateable = true;
             break;
           case "error":
             statusMsg = strings.getString("addonUpdate.error");
