@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = head.js \
                  browser_unsigned_url.js \
                  browser_unsigned_trigger.js \
+                 browser_unsigned_trigger_iframe.js \
                  browser_whitelist.js \
                  browser_whitelist2.js \
                  browser_whitelist3.js \
@@ -100,6 +101,7 @@ _BROWSER_FILES = head.js \
                  multipackage.xpi \
                  enabled.html \
                  installtrigger.html \
+                 installtrigger_frame.html \
                  startsoftwareupdate.html \
                  installchrome.html \
                  triggerredirect.html \
