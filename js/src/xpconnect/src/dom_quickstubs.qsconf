@@ -482,7 +482,6 @@ irregularFilenames = {
     'nsIDOMHTMLTableSectionElement': 'nsIDOMHTMLTableSectionElem',
 
     # stowaways
-    'nsIDOMHTMLCanvasContextOptions': 'nsIDOMHTMLCanvasElement',
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
