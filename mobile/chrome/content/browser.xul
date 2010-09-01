@@ -275,6 +275,7 @@
                 <html:div id="browsers"/>
                 <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;">
                 </html:canvas>
+                <html:div id="inputhandler-overlay" style="z-index: 1000; left: 0; top: 0" tabindex="-1"/>
               </stack>
               <box id="content-navigator-spacer" hidden="true"/>
             </vbox>
