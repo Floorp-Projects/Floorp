@@ -271,27 +271,6 @@ Section "-Application" APP_IDX
   ${LogUninstall} "File: \install_wizard.log"
   ${LogUninstall} "File: \updates.xml"
 
-  ; Check if QuickTime is installed and copy the nsIQTScriptablePlugin.xpt from
-  ; its plugins directory into the app's components directory.
-  ClearErrors
-  ReadRegStr $R0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
-  ${Unless} ${Errors}
-    ${GetLongPath} "$R0" $R0
-    ${Unless} "$R0" == ""
-      ClearErrors
-      GetFullPathName $R0 "$R0\Plugins\nsIQTScriptablePlugin.xpt"
-      ${Unless} ${Errors}
-        ${LogHeader} "Copying QuickTime Scriptable Component"
-        CopyFiles /SILENT "$R0" "$INSTDIR\components"
-        ${If} ${Errors}
-          ${LogMsg} "** ERROR Installing File: $INSTDIR\components\nsIQTScriptablePlugin.xpt **"
-        ${Else}
-          ${LogMsg} "Installed File: $INSTDIR\components\nsIQTScriptablePlugin.xpt"
-          ${LogUninstall} "File: \components\nsIQTScriptablePlugin.xpt"
-        ${EndIf}
-      ${EndUnless}
-    ${EndUnless}
-  ${EndUnless}
   ClearErrors
 
   ; Default for creating Start Menu folder and shortcuts
