@@ -56,6 +56,8 @@
 <!ENTITY cmd.enableAddon.accesskey            "E">
 <!ENTITY cmd.disableAddon.label               "Disable">
 <!ENTITY cmd.disableAddon.accesskey           "D">
+<!ENTITY cmd.installAddon.label               "Install">
+<!ENTITY cmd.installAddon.accesskey           "I">
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
 <!ENTITY cmd.showPreferencesWin.label         "Options">
@@ -73,14 +75,22 @@
 
 <!-- detail view -->
 <!ENTITY detail.version.label                 "Version">
-<!ENTITY detail.updated.label                 "Updated">
+<!ENTITY detail.lastupdated.label             "Last Updated">
 <!ENTITY detail.creator.label                 "Developer">
 <!ENTITY detail.homepage.label                "Homepage">
 <!ENTITY detail.numberOfDownloads.label       "Downloads">
 
-<!ENTITY detail.updateAutomatically.label     "Update automatically">
-<!ENTITY detail.updateAutomatically.accesskey "U">
-<!ENTITY detail.updateAutomatically.tooltip   "Update this add-on automatically whenever there is an update available">
+<!ENTITY detail.contributions.description     "The developer of this add-on asks that you help support its continued development by making a small contribution.">
+
+<!ENTITY detail.updateType                    "Automatic Updates">
+<!ENTITY detail.updateAutomatic.label         "On">
+<!ENTITY detail.updateAutomatic.tooltip       "Automatically install updates">
+<!ENTITY detail.updateManual.label            "Off">
+<!ENTITY detail.updateManual.tooltip          "Don't automaticall install updates">
+<!ENTITY detail.home                          "Homepage">
+<!ENTITY detail.repository                    "Add-on Profile">
+<!ENTITY detail.size                          "Size">
+
 <!ENTITY detail.checkForUpdates.label         "Check for updates">
 <!ENTITY detail.checkForUpdates.accesskey     "F">
 <!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
