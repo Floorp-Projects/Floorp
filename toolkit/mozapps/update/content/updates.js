@@ -524,6 +524,7 @@ var gUpdates = {
         if (addon.type != "plugin" &&
             !addon.appDisabled && !addon.userDisabled &&
             addon.scope != AddonManager.SCOPE_APPLICATION &&
+            addon.isCompatible &&
             !addon.isCompatibleWith(self.update.appVersion,
                                     self.update.platformVersion))
           self.addons.push(addon);
