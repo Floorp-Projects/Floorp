@@ -339,7 +339,7 @@ endif
 
 endif
 
-ifeq ($(TARGET_CPU), powerpc)
+ifeq (,$(filter-out powerpc sparc,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
