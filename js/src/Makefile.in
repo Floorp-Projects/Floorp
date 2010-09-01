@@ -97,12 +97,7 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO4
 endif
 ifeq ($(OS_ARCH),WINNT)
-ifdef WINCE
-# -GL is not supported on windows mobile while we are using the arm-wince-link command
 MODULE_OPTIMIZE_FLAGS = -O2
-else
-MODULE_OPTIMIZE_FLAGS = -O2 -GL
-endif
 endif
 endif
 
