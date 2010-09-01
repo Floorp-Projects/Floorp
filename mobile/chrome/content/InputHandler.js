@@ -771,7 +771,7 @@ MouseModule.prototype = {
                        traversing until we find something more well-behaved, as we
                        prefer default behaviour to whiny scrollers. */ }
     }
-    return [scrollbox, qinterface, elem.customDragger || this._defaultDragger];
+    return [scrollbox, qinterface, (elem ? (elem.customDragger || this._defaultDragger) : null)];
   },
 
   /**
