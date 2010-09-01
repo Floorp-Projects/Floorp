@@ -450,7 +450,14 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
     // Race detection: see the long comment near
     // mRemoteStackDepthGuess in RPCChannel.h.  "Remote" stack depth
     // means our side, and "local" means other side.
-    if (call.rpc_remote_stack_depth_guess() != stackDepth) {
+    //
+    // We compare the remote stack depth guess against the "remote
+    // view of stack depth" because of out-of-turn replies.  When we
+    // receive one, our actual RPC stack depth doesn't decrease, but
+    // the other side (that sent the reply) thinks it has.  So, just
+    // adjust down by the number of out-of-turn replies.
+    size_t remoteViewOfStackDepth = (stackDepth - mOutOfTurnReplies.size());
+    if (call.rpc_remote_stack_depth_guess() != remoteViewOfStackDepth) {
         // RPC in-calls have raced.
         // the "winner", if there is one, gets to defer processing of
         // the other side's in-call
