@@ -1540,7 +1540,8 @@ pageaction:hover:active > vbox > .pageaction-desc {
   -moz-border-radius-topright: 0px;
 }
 
-.menulist-command {
+.menulist-command,
+.menulist-command[selected] {
   -moz-box-align: center;
   background-color: rgb(245,245,245);
   min-width: 200px; /* keep the command from being too narrow */
@@ -1553,6 +1554,9 @@ pageaction:hover:active > vbox > .pageaction-desc {
 
 .menulist-command:first-child {
   background: -moz-linear-gradient(top, rgb(255,255,255), rgb(245,245,245));
+}
+
+#menulist-popup > #menulist-title[value=""] + #menulist-commands > .menulist-command:first-child {
   -moz-border-radius: 8px 8px 0 0;
 }
 

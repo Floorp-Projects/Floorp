@@ -358,7 +358,7 @@
       </handler>
       <handler event="contextmenu" phase="capturing">
         <![CDATA[
-          if (!this.uri)
+          if (!this.uri || this._isEditing)
             return;
 
           let data = {

@@ -537,9 +537,12 @@
         <hbox id="context-header">
           <label id="context-hint" crop="center" flex="1"/>
         </hbox>
-        <richlistbox id="context-commands" onclick="ContextHelper.hide();">
+        <richlistbox id="context-commands" onclick="ContextHelper.hide();" flex="1">
           <richlistitem class="context-command" id="context-openinnewtab" type="link-saveable" onclick="ContextCommands.openInNewTab();">
             <label value="&contextOpenInNewTab.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-savelink" type="link-saveable" onclick="ContextCommands.saveLink();">
+            <label value="&contextSaveLink.label;"/>
           </richlistitem>
           <richlistitem class="context-command" id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveImage.label;"/>
