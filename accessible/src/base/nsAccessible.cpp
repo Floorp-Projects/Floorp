@@ -180,10 +180,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                       
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperLink))) {
-    // Every embedded accessible within hypertext accessible implements
-    // hyperlink interface.
-    nsCOMPtr<nsIAccessibleHyperText> hyperTextParent = do_QueryObject(GetParent());
-    if (hyperTextParent && nsAccUtils::IsEmbeddedObject(this)) {
+    if (IsHyperLink()) {
       *aInstancePtr = static_cast<nsIAccessibleHyperLink*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
@@ -2525,7 +2522,12 @@ NS_IMETHODIMP
 nsAccessible::GetAnchorCount(PRInt32 *aAnchorCount)
 {
   NS_ENSURE_ARG_POINTER(aAnchorCount);
-  *aAnchorCount = 1;
+  *aAnchorCount = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  *aAnchorCount = AnchorCount();
   return NS_OK;
 }
 
@@ -2539,8 +2541,8 @@ nsAccessible::GetStartIndex(PRInt32 *aStartIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 endIndex;
-  return GetLinkOffset(aStartIndex, &endIndex);
+  *aStartIndex = StartOffset();
+  return NS_OK;
 }
 
 // readonly attribute long nsIAccessibleHyperLink::endIndex
@@ -2553,47 +2555,39 @@ nsAccessible::GetEndIndex(PRInt32 *aEndIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 startIndex;
-  return GetLinkOffset(&startIndex, aEndIndex);
+  *aEndIndex = EndOffset();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-  *aURI = nsnull;
 
-  if (aIndex != 0)
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  if (aIndex < 0 || aIndex >= static_cast<PRInt32>(AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  // Check if it's a simple xlink.
-  if (nsCoreUtils::IsXLink(mContent)) {
-    nsAutoString href;
-    mContent->GetAttr(kNameSpaceID_XLink, nsAccessibilityAtoms::href, href);
-
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-    nsCOMPtr<nsIDocument> document = mContent->GetOwnerDoc();
-    return NS_NewURI(aURI, href,
-                     document ? document->GetDocumentCharacterSet().get() : nsnull,
-                     baseURI);
-  }
-
+  *aURI = GetAnchorURI(aIndex).get();
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsAccessible::GetAnchor(PRInt32 aIndex,
-                        nsIAccessible **aAccessible)
+nsAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible** aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
 
-  if (aIndex != 0)
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  if (aIndex < 0 || aIndex >= static_cast<PRInt32>(AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  *aAccessible = this;
-  NS_ADDREF_THIS();
+  NS_IF_ADDREF(*aAccessible = GetAnchor(aIndex));
   return NS_OK;
 }
 
@@ -2602,12 +2596,12 @@ NS_IMETHODIMP
 nsAccessible::GetValid(PRBool *aValid)
 {
   NS_ENSURE_ARG_POINTER(aValid);
-  PRUint32 state = nsAccUtils::State(this);
-  *aValid = (0 == (state & nsIAccessibleStates::STATE_INVALID));
-  // XXX In order to implement this we would need to follow every link
-  // Perhaps we can get information about invalid links from the cache
-  // In the mean time authors can use role="link" aria-invalid="true"
-  // to force it for links they internally know to be invalid
+  *aValid = PR_FALSE;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  *aValid = IsValid();
   return NS_OK;
 }
 
@@ -2616,33 +2610,14 @@ NS_IMETHODIMP
 nsAccessible::GetSelected(PRBool *aSelected)
 {
   NS_ENSURE_ARG_POINTER(aSelected);
+  *aSelected = PR_FALSE;
 
-  *aSelected = (gLastFocusedNode == GetNode());
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  *aSelected = IsSelected();
   return NS_OK;
-}
 
-nsresult
-nsAccessible::GetLinkOffset(PRInt32 *aStartOffset, PRInt32 *aEndOffset)
-{
-  nsAccessible *parent = GetParent();
-  NS_ENSURE_STATE(parent);
-
-  PRUint32 characterCount = 0;
-
-  PRInt32 childCount = parent->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *sibling = parent->GetChildAt(childIdx);
-
-    if (sibling == this) {
-      *aStartOffset = characterCount;
-      *aEndOffset = characterCount + 1;
-      return NS_OK;
-    }
-
-    characterCount += nsAccUtils::TextLength(sibling);
-  }
-
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2968,6 +2943,95 @@ nsAccessible::IsInCache()
 }
 #endif
 
+
+////////////////////////////////////////////////////////////////////////////////
+// HyperLinkAccessible methods
+
+bool
+nsAccessible::IsHyperLink()
+{
+  // Every embedded accessible within hypertext accessible implements
+  // hyperlink interface.
+  nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(GetParent());
+  return hyperText && nsAccUtils::IsEmbeddedObject(this);
+}
+
+PRUint32
+nsAccessible::StartOffset()
+{
+  NS_PRECONDITION(IsHyperLink(), "StartOffset is called not on hyper link!");
+
+  nsRefPtr<nsHyperTextAccessible> hyperText(do_QueryObject(GetParent()));
+  return hyperText ? hyperText->GetChildOffset(this) : 0;
+}
+
+PRUint32
+nsAccessible::EndOffset()
+{
+  NS_PRECONDITION(IsHyperLink(), "EndOffset is called on not hyper link!");
+
+  nsRefPtr<nsHyperTextAccessible> hyperText(do_QueryObject(GetParent()));
+  return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
+}
+
+bool
+nsAccessible::IsValid()
+{
+  NS_PRECONDITION(IsHyperLink(), "IsValid is called on not hyper link!");
+
+  PRUint32 state = nsAccUtils::State(this);
+  return (0 == (state & nsIAccessibleStates::STATE_INVALID));
+  // XXX In order to implement this we would need to follow every link
+  // Perhaps we can get information about invalid links from the cache
+  // In the mean time authors can use role="link" aria-invalid="true"
+  // to force it for links they internally know to be invalid
+}
+
+bool
+nsAccessible::IsSelected()
+{
+  NS_PRECONDITION(IsHyperLink(), "IsSelected is called on not hyper link!");
+  return (gLastFocusedNode == GetNode());
+}
+
+PRUint32
+nsAccessible::AnchorCount()
+{
+  NS_PRECONDITION(IsHyperLink(), "AnchorCount is called on not hyper link!");
+  return 1;
+}
+
+nsAccessible*
+nsAccessible::GetAnchor(PRUint32 aAnchorIndex)
+{
+  NS_PRECONDITION(IsHyperLink(), "GetAnchor is called on not hyper link!");
+  return aAnchorIndex == 0 ? this : nsnull;
+}
+
+already_AddRefed<nsIURI>
+nsAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
+{
+  NS_PRECONDITION(IsHyperLink(), "GetAnchorURI is called on not hyper link!");
+
+  if (aAnchorIndex != 0)
+    return nsnull;
+
+  // Check if it's a simple xlink.
+  if (nsCoreUtils::IsXLink(mContent)) {
+    nsAutoString href;
+    mContent->GetAttr(kNameSpaceID_XLink, nsAccessibilityAtoms::href, href);
+
+    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+    nsCOMPtr<nsIDocument> document = mContent->GetOwnerDoc();
+    nsIURI* anchorURI = nsnull;
+    NS_NewURI(&anchorURI, href,
+              document ? document->GetDocumentCharacterSet().get() : nsnull,
+              baseURI);
+    return anchorURI;
+  }
+
+  return nsnull;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible protected methods

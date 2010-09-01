@@ -10,12 +10,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="runTests();">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=36619">Mozilla Bug 36619</a>
 <p id="display"></p>
-<div id="content">
+<div id="content" style="display:none;">
   <input id='a' type='file'>
 </div>
+<button id='b' onclick="document.getElementById('a').click();">Show Filepicker</button>
 <pre id="test">
 <script type="application/javascript">
 
@@ -88,8 +89,7 @@ var shown = false;
 function checkFirst()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  todo(shown,
-     "File picker show method should have been called");
+  ok(shown, "File picker show method should have been called");
   shown = false;
   document.getElementById("a").click();
   setTimeout(finishTest, 1000);
@@ -98,21 +98,21 @@ function checkFirst()
 function finishTest()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(!shown,
-    "File picker show method should not have been called");
-    
+  ok(!shown, "File picker show method should not have been called");
+
   mockFilePickerRegisterer.unregister();
-                                 
+
   pbi.setBoolPref("dom.disable_open_during_load", oldAllow);
   pbi.setBoolPref("privacy.popups.showBrowserMessage", oldShowBar);
   SimpleTest.finish();
 }
-  
-function runTests()
-{
-  document.getElementById("a").click();
+
+SimpleTest.waitForFocus(function() {
+  var b = document.getElementById('b');
+  b.focus(); // Be sure the element is visible.
+  synthesizeMouse(b, 2, 2, {});
   SimpleTest.executeSoon(checkFirst);
-}
+});
 
 </script>
 </pre>

@@ -1002,8 +1002,9 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // never render within the border-rect (unless there's a border radius).
   nscoord twipsRadii[8];
   PRBool hasBorderRadii =
-     nsCSSRendering::GetBorderRadiusTwips(mFrame->GetStyleBorder()->mBorderRadius,
-                                          frameRect.width,
+     nsCSSRendering::GetBorderRadiusTwips(mFrame->GetStyleBorder()->
+                                          mBorderRadius,
+                                          frameRect.width, frameRect.height,
                                           twipsRadii);
   if (!hasBorderRadii)
     return PR_FALSE;

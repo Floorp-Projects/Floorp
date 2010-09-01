@@ -437,10 +437,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
 #endif
 
-#if defined(HEAP_DUMP_EVENT)
-    InitHeapDump();
-#endif
-
 #if !defined(WINCE)
     InitTrackPointHack();
 #endif
@@ -5398,12 +5394,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         nsTextStore::OnTextChangeMsg();
       }
 #endif //NS_ENABLE_TSF
-#if defined(HEAP_DUMP_EVENT)
-      if (msg == GetHeapMsg()) {
-        HeapDump(msg, wParam, lParam);
-        result = PR_TRUE;
-      }
-#endif
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
       if (msg == nsAppShell::GetTaskbarButtonCreatedMessage())
         SetHasTaskbarIconBeenCreated();

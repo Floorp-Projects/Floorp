@@ -97,6 +97,13 @@ parent:
     NotifyIME(int aType, int aState);
     NotifyIMEChange(nsString aText, PRUint32 aTextLen,
                     int aStart, int aEnd, int aNewEnd);
+
+    sync SyncMessage(nsString aMessage, nsString aJSON)
+      returns (nsString[] retval);
+
+both:
+     AsyncMessage(nsString aMessage, nsString aJSON);
+
 };
 
 }

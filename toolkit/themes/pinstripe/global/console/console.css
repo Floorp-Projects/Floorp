@@ -169,7 +169,7 @@
   margin: 0 4px;
   padding: 1px 10px;
   -moz-appearance: none;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   border: @roundButtonBorder@;
   background: @roundButtonBackground@;
   -moz-box-shadow: @roundButtonShadow@;

@@ -24,3 +24,4 @@ HTTP(..) == CSS21-t100301.xhtml CSS21-t100301-ref.xhtml
 == CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align-ref.xhtml
 == clip-auto.html clip-auto-ref.html
 == clip-rect-auto.html clip-rect-auto-ref.html
+== width-rounding.html width-rounding-ref.html
