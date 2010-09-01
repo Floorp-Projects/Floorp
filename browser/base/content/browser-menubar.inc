@@ -615,6 +615,7 @@
               <menuitem id="menu_openAddons"
                         label="&addons.label;"
                         accesskey="&addons.accesskey;"
+                        key="key_openAddons"
                         command="Tools:Addons"/>
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup or sync-menu will be showing at once -->
