@@ -131,10 +131,10 @@
 <!ENTITY addon.disabled.postfix               "(disabled)">
 <!-- LOCALIZATION NOTE (addon.update.postfix): This is used to signify that an item is an update, in the form "Addon v1.0 Update" -->
 <!ENTITY addon.update.postfix                 "Update">
-<!ENTITY addon.undo.label                     "Undo?">
-<!ENTITY addon.undo.tooltip                   "Undo this action">
-<!ENTITY addon.undoUninstall.label            "Undo?">
-<!ENTITY addon.undoUninstall.tooltip          "Keep this add-on installed">
+<!ENTITY addon.undoAction.label               "Undo">
+<!ENTITY addon.undoAction.tooltip             "Undo this action">
+<!ENTITY addon.undoRemove.label               "Undo">
+<!ENTITY addon.undoRemove.tooltip             "Keep this add-on installed">
 <!ENTITY addon.restartNow.label               "Restart now">
 <!ENTITY addon.install.label                  "Install">
 <!ENTITY addon.install.tooltip                "Install this add-on">
