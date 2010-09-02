@@ -90,6 +90,8 @@ endif
 # back to the clear recent history dialog (santize.xul), if it ever is (bug
 # 480169)
 
+# browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
+
 _BROWSER_FILES = \
                  browser_typeAheadFind.js \
                  browser_NetworkPrioritizer.js \
@@ -136,6 +138,7 @@ _BROWSER_FILES = \
                  browser_bug555224.js \
                  browser_bug555767.js \
                  browser_bug556061.js \
+                 browser_bug559991.js \
                  browser_bug561623.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
@@ -148,7 +151,6 @@ _BROWSER_FILES = \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
-                 browser_drag.js \
                  browser_duplicateIDs.js \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
