@@ -595,11 +595,15 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   -moz-appearance: toolbarbutton;
 %ifdef WINSTRIPE_AERO
-  margin: -1px 0;
+  margin: -2px 0 -1px;
+  padding-top: 1px;
 %else
   margin: 0;
+  padding-top: 0;
 %endif
-  padding: 0 3px;
+  padding-bottom: 0;
+  padding-left: 3px;
+  padding-right: 3px;
   border: none !important;
   color: inherit !important;
   background: transparent !important;
@@ -650,7 +654,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 toolbar:not([iconsize="small"])[mode="icons"] #back-button {
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   padding: 0;
   width: 30px;
   height: 30px;
@@ -920,12 +924,10 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   color: black;
 }
 
-/*
 #urlbar:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
 .searchbar-textbox:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #777;
 }
-*/
 
 #urlbar:-moz-lwtheme[focused="true"],
 .searchbar-textbox:-moz-lwtheme[focused="true"] {
@@ -1477,11 +1479,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-image-region: rect(0, 15px, 17px, 0);
 %ifdef WINSTRIPE_AERO
-  margin: -1px 0;
+  margin: -2px 0 -1px;
+  padding-top: 1px;
 %else
   margin: 0;
-%endif
   padding-top: 0;
+%endif
   padding-bottom: 0;
 }
 

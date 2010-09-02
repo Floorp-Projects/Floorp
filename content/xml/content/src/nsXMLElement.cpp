@@ -79,10 +79,15 @@ nsXMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     RemoveFromIdTable();
     isId = PR_TRUE;
   }
-  
+
+  nsMutationGuard guard;
+
   nsresult rv = nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
-  
-  if (isId) {
+
+  if (isId &&
+      (!guard.Mutated(0) ||
+       !mNodeInfo->GetIDAttributeAtom() ||
+       !HasAttr(kNameSpaceID_None, GetIDAttributeName()))) {
     UnsetFlags(NODE_HAS_ID);
   }
   
@@ -100,29 +105,46 @@ nsXMLElement::DoGetID() const
 {
   NS_ASSERTION(HasFlag(NODE_HAS_ID), "Unexpected call");
 
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(GetIDAttributeName());
+  return attrVal ? attrVal->GetAtomValue() : nsnull;
+}
+
+void
+nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
+{
+  NS_ASSERTION(!IsInDoc() ||
+               aOldNodeInfo->GetDocument() == mNodeInfo->GetDocument(),
+               "Can only change document if we're not inside one");
+  nsIDocument* doc = GetCurrentDoc();
+
+  if (HasFlag(NODE_HAS_ID) && doc) {
+    const nsAttrValue* attrVal =
+      mAttrsAndChildren.GetAttr(aOldNodeInfo->GetIDAttributeAtom());
+    if (attrVal) {
+      doc->RemoveFromIdTable(this, attrVal->GetAtomValue());
+    }
+  }
+  
+  UnsetFlags(NODE_HAS_ID);
+
   nsIAtom* IDName = GetIDAttributeName();
   if (IDName) {
     const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(IDName);
     if (attrVal) {
-      if (attrVal->Type() == nsAttrValue::eAtom) {
-        return attrVal->GetAtomValue();
-      }
-      if (attrVal->IsEmptyString()) {
-        return nsnull;
-      }
-      // Check if the ID has been stored as a string.
-      // This would occur if the ID attribute name changed after 
-      // the ID was parsed. 
+      SetFlags(NODE_HAS_ID);
       if (attrVal->Type() == nsAttrValue::eString) {
-        nsAutoString idVal(attrVal->GetStringValue());
+        nsString idVal(attrVal->GetStringValue());
 
         // Create an atom from the value and set it into the attribute list. 
         const_cast<nsAttrValue*>(attrVal)->ParseAtom(idVal);
-        return attrVal->GetAtomValue();
+      }
+      NS_ASSERTION(attrVal->Type() == nsAttrValue::eAtom,
+                   "Should be atom by now");
+      if (doc) {
+        doc->AddToIdTable(this, attrVal->GetAtomValue());
       }
     }
   }
-  return nsnull;
 }
 
 PRBool

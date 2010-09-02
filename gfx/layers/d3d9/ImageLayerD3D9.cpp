@@ -172,8 +172,8 @@ ImageLayerD3D9::RenderLayer()
      * beyond all edges.
      */
     memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)yuvImage->mSize.width + 0.5f;
-    quadTransform[1][1] = (float)yuvImage->mSize.height + 0.5f;
+    quadTransform[0][0] = (float)yuvImage->mSize.width;
+    quadTransform[1][1] = (float)yuvImage->mSize.height;
     quadTransform[2][2] = 1.0f;
     quadTransform[3][3] = 1.0f;
 
@@ -226,8 +226,8 @@ ImageLayerD3D9::RenderLayer()
      * beyond all edges.
      */
     memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)cairoImage->mSize.width + 0.5f;
-    quadTransform[1][1] = (float)cairoImage->mSize.height + 0.5f;
+    quadTransform[0][0] = (float)cairoImage->mSize.width;
+    quadTransform[1][1] = (float)cairoImage->mSize.height;
     quadTransform[2][2] = 1.0f;
     quadTransform[3][3] = 1.0f;
 

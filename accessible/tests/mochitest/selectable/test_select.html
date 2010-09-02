@@ -14,22 +14,170 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../selectable.js"></script>
 
   <script type="application/javascript">
 
     function doTest()
     {
-      var combobox = getAccessible("combobox");
+      //////////////////////////////////////////////////////////////////////////
+      // select@size="1" aka combobox
+
+      var id = "combobox";
+      var combobox = getAccessible(id);
       var comboboxList = combobox.firstChild;
       ok(isAccessible(comboboxList, [nsIAccessibleSelectable]),
          "No selectable accessible for list of " + id);
 
+      var select = getAccessible(comboboxList, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ "cb1_item1" ]);
+
+      // select 2nd item
+      select.addChildToSelection(1);
+      testSelectableSelection(select, [ "cb1_item2" ], "addChildToSelect(1): ");
+
+      // unselect 2nd item, 1st item gets selected automatically
+      select.removeChildFromSelection(1);
+      testSelectableSelection(select, [ "cb1_item1" ],
+                              "removeChildFromSelection(1): ");
+
+      // doesn't change selection
+      is(select.selectAllSelection(), false,
+         "No way to select all items in combobox '" + id + "'");
+      testSelectableSelection(select, [ "cb1_item1" ], "selectAllSelection: ");
+
+      // doesn't change selection
+      select.clearSelection();
+      testSelectableSelection(select, [ "cb1_item1" ], "clearSelection: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // select@size="1" with optgroups
+
+      id = "combobox2";
+      combobox = getAccessible(id);
+      comboboxList = combobox.firstChild;
+      ok(isAccessible(comboboxList, [nsIAccessibleSelectable]),
+         "No selectable accessible for list of " + id);
+
+      select = getAccessible(comboboxList, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ "cb2_item1" ]);
+
+      select.addChildToSelection(1);
+      testSelectableSelection(select, [ "cb2_item2" ]);
+
+      select.removeChildFromSelection(1);
+      testSelectableSelection(select, [ "cb2_item1" ]);
+
+      is(select.selectAllSelection(), false,
+         "No way to select all items in combobox " + id + "'");
+      testSelectableSelection(select, [ "cb2_item1" ]);
+
+      select.clearSelection();
+      testSelectableSelection(select, [ "cb2_item1" ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // select@size="4" aka single selectable listbox
+
       var id = "listbox";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      // select 2nd item
+      select.addChildToSelection(1);
+      testSelectableSelection(select, [ "lb1_item2" ], "addChildToSelect(1): ");
+
+      // unselect 2nd item, 1st item gets selected automatically
+      select.removeChildFromSelection(1);
+      testSelectableSelection(select, [ ],
+                              "removeChildFromSelection(1): ");
+
+      // doesn't change selection
+      is(select.selectAllSelection(), false,
+         "No way to select all items in single selectable listbox '" + id + "'");
+      testSelectableSelection(select, [ ], "selectAllSelection: ");
+
+      // doesn't change selection
+      select.clearSelection();
+      testSelectableSelection(select, [ ], "clearSelection: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // select@size="4" with optgroups, single selectable
+
+      id = "listbox2";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      select.addChildToSelection(1);
+      testSelectableSelection(select, [ "lb2_item2" ]);
+
+      select.removeChildFromSelection(1);
+      testSelectableSelection(select, [ ]);
+
+      is(select.selectAllSelection(), false,
+         "No way to select all items in single selectable listbox " + id + "'");
+      testSelectableSelection(select, [ ]);
+
+      select.clearSelection();
+      testSelectableSelection(select, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // select@size="4" multiselect aka listbox
+
+      id = "listbox3";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      select.addChildToSelection(0);
+      testSelectableSelection(select, [ "lb3_item1" ], "addChildToSelection: ");
+
+      select.removeChildFromSelection(0);
+      testSelectableSelection(select, [ ], "removeChildFromSelection: ");
+
+      is(select.selectAllSelection(), true,
+         "All items in listbox '" + id + "' should be selected");
+      testSelectableSelection(select, [ "lb3_item1", "lb3_item2"],
+                              "selectAllSelection: ");
+
+      select.clearSelection();
+      testSelectableSelection(select, [ ], "clearSelection: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // select@size="4" multiselect with optgroups
+
+      var id = "listbox4";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      select.addChildToSelection(0);
+      testSelectableSelection(select, [ "lb4_item1" ]);
+
+      select.removeChildFromSelection(0);
+      testSelectableSelection(select, [ ]);
+
+      is(select.selectAllSelection(), true,
+         "All items in listbox '" + id + "' should be selected");
+      testSelectableSelection(select, [ "lb4_item1", "lb4_item2"]);
+
+      select.clearSelection();
+      testSelectableSelection(select, [ ]);
 
       SimpleTest.finish();
     }
@@ -47,19 +195,50 @@
      title="ARIA single selectable widget should implement nsIAccessibleSelectable">
     Mozilla Bug 530014
   </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=590176"
+     title="add pseudo SelectAccessible interface">
+    Mozilla Bug 590176
+  </a><br>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
   <select id="combobox">
-    <option>option</option>
-    <option>option</option>
+    <option id="cb1_item1">option1</option>
+    <option id="cb1_item2">option2</option>
+  </select>
+
+  <select id="combobox2">
+    <option id="cb2_item1">option1</option>
+    <optgroup>optgroup
+      <option id="cb2_item2">option2</option>
+    </optgroup>
   </select>
 
   <select id="listbox" size="4">
-    <option>option</option>
-    <option>option</option>
+    <option id="lb1_item1">option1</option>
+    <option id="lb1_item2">option2</option>
+  </select>
+
+  <select id="listbox2" size="4">
+    <option id="lb2_item1">option1</option>
+    <optgroup>optgroup>
+      <option id="lb2_item2">option2</option>
+    </optgroup>
+  </select>
+
+  <select id="listbox3" size="4" multiple="true">
+    <option id="lb3_item1">option1</option>
+    <option id="lb3_item2">option2</option>
+  </select>
+
+  <select id="listbox4" size="4" multiple="true">
+    <option id="lb4_item1">option1</option>
+    <optgroup>optgroup>
+      <option id="lb4_item2">option2</option>
+    </optgroup>
   </select>
 
 </body>

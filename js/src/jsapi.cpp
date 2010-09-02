@@ -792,31 +792,15 @@ JS_SetRuntimePrivate(JSRuntime *rt, void *data)
     rt->data = data;
 }
 
-JS_PUBLIC_API(void)
-JS_BeginRequest(JSContext *cx)
-{
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    JS_ASSERT(cx->requestDepth <= cx->outstandingRequests);
-    if (cx->requestDepth) {
-        JS_ASSERT(cx->thread->requestContext == cx);
-        cx->requestDepth++;
-        cx->outstandingRequests++;
-    } else if (JSContext *old = cx->thread->requestContext) {
-        JS_ASSERT(!cx->prevRequestContext);
-        JS_ASSERT(cx->prevRequestDepth == 0);
-        JS_ASSERT(old != cx);
-        JS_ASSERT(old->requestDepth != 0);
-        JS_ASSERT(old->requestDepth <= old->outstandingRequests);
-
-        /* Serialize access to JSContext::requestDepth from other threads. */
-        AutoLockGC lock(cx->runtime);
-        cx->prevRequestContext = old;
-        cx->prevRequestDepth = old->requestDepth;
-        cx->requestDepth = 1;
-        cx->outstandingRequests++;
-        old->requestDepth = 0;
-        cx->thread->requestContext = cx;
+static void
+StartRequest(JSContext *cx)
+{
+    JSThread *t = cx->thread;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
+   
+    if (t->requestDepth) {
+        t->requestDepth++;
     } else {
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
@@ -828,55 +812,32 @@ JS_BeginRequest(JSContext *cx)
         }
 
         /* Indicate that a request is running. */
-        cx->requestDepth = 1;
-        cx->outstandingRequests++;
-        cx->thread->requestContext = cx;
         rt->requestCount++;
+        t->requestDepth = 1;
 
         if (rt->requestCount == 1 && rt->activityCallback)
             rt->activityCallback(rt->activityCallbackArg, true);
     }
-#endif
 }
 
-#ifdef JS_THREADSAFE
 static void
 StopRequest(JSContext *cx)
 {
-    JSRuntime *rt;
-
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    JS_ASSERT(cx->requestDepth > 0);
-    JS_ASSERT(cx->outstandingRequests >= cx->requestDepth);
-    JS_ASSERT(cx->thread->requestContext == cx);
-    if (cx->requestDepth >= 2) {
-        cx->requestDepth--;
-        cx->outstandingRequests--;
-    } else if (JSContext *old = cx->prevRequestContext) {
-        JS_ASSERT(cx != old);
-        JS_ASSERT(old->requestDepth == 0);
-        JS_ASSERT(old->outstandingRequests >= cx->prevRequestDepth);
-        
-        /* Serialize access to JSContext::requestDepth from other threads. */
-        AutoLockGC lock(cx->runtime);
-        
-        cx->outstandingRequests--;
-        cx->requestDepth = 0;
-        old->requestDepth = cx->prevRequestDepth;
-        cx->prevRequestContext = NULL;
-        cx->prevRequestDepth = 0;
-        cx->thread->requestContext = old;
+    JSThread *t = cx->thread;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
+    JS_ASSERT(t->requestDepth != 0);
+    if (t->requestDepth != 1) {
+        t->requestDepth--;
     } else {
-        JS_ASSERT(cx->prevRequestDepth == 0);
         LeaveTrace(cx);  /* for GC safety */
 
+        t->data.conservativeGC.updateForRequestEnd(t->suspendCount);
+
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
-        rt = cx->runtime;
+        JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
 
-        cx->requestDepth = 0;
-        cx->outstandingRequests--;
-        cx->thread->requestContext = NULL;
+        t->requestDepth = 0;
 
         js_ShareWaitingTitles(cx);
 
@@ -890,19 +851,23 @@ StopRequest(JSContext *cx)
         }
     }
 }
+#endif /* JS_THREADSAFE */
+
+JS_PUBLIC_API(void)
+JS_BeginRequest(JSContext *cx)
+{
+#ifdef JS_THREADSAFE
+    cx->outstandingRequests++;
+    StartRequest(cx);
 #endif
+}
 
 JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    /*
-     * We do not allow to use JS_EndRequest to exit the request when there are
-     * native frames on the stack that insist that the request must be on. But
-     * we do allow to call the API if the request was suspended.
-     */
-    JS_ASSERT_IF(cx->requestDepth == 1 && cx->outstandingRequests == 1,
-                 cx->checkRequestDepth == 0);
+    JS_ASSERT(cx->outstandingRequests != 0);
+    cx->outstandingRequests--;
     StopRequest(cx);
 #endif
 }
@@ -912,11 +877,7 @@ JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread);
     CHECK_REQUEST(cx);
-    cx = cx->thread->requestContext;
-    if (!cx)
-        return;
     JS_ResumeRequest(cx, JS_SuspendRequest(cx));
 #endif
 }
@@ -925,16 +886,16 @@ JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    jsrefcount saveDepth = cx->requestDepth;
-    if (saveDepth == 0)
+    JSThread *t = cx->thread;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
+
+    jsrefcount saveDepth = t->requestDepth;
+    if (!saveDepth)
         return 0;
 
-    JS_THREAD_DATA(cx)->conservativeGC.enable();
-    do {
-        cx->outstandingRequests++;  /* compensate for StopRequest */
-        StopRequest(cx);
-    } while (cx->requestDepth);
-
+    t->suspendCount++;
+    t->requestDepth = 1;
+    StopRequest(cx);
     return saveDepth;
 #else
     return 0;
@@ -945,15 +906,16 @@ JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
 #ifdef JS_THREADSAFE
+    JSThread *t = cx->thread;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
     if (saveDepth == 0)
         return;
-
-    JS_ASSERT(cx->outstandingRequests != 0);
-    do {
-        JS_BeginRequest(cx);
-        cx->outstandingRequests--;  /* compensate for JS_BeginRequest */
-    } while (--saveDepth != 0);
-    JS_THREAD_DATA(cx)->conservativeGC.disable();
+    JS_ASSERT(saveDepth >= 1);
+    JS_ASSERT(!t->requestDepth);
+    JS_ASSERT(t->suspendCount);
+    StartRequest(cx);
+    t->requestDepth = saveDepth;
+    t->suspendCount--;
 #endif
 }
 
@@ -2055,8 +2017,7 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
-    LeaveTrace(trc->context);
-    js_TraceRuntime(trc);
+    TraceRuntime(trc);
 }
 
 JS_PUBLIC_API(void)
@@ -2371,7 +2332,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
     dtrc.lastNodep = &node;
     if (!startThing) {
         JS_ASSERT(startKind == 0);
-        JS_TraceRuntime(&dtrc.base);
+        TraceRuntime(&dtrc.base);
     } else {
         JS_TraceChildren(&dtrc.base, startThing, startKind);
     }
@@ -2966,6 +2927,15 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, *vp);
+
+    return js_NewInstance(cx, JSVAL_TO_OBJECT(*vp));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4187,14 +4157,14 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
+js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs;
     JSObject *tmp;
-    FastNative native;
+    Native native;
 
     fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
-    JS_ASSERT((~fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) == 0);
+    JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
         js_ReportMissingArg(cx, *vp, 0);
@@ -4232,60 +4202,11 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     native =
 #ifdef JS_TRACER
              (fs->flags & JSFUN_TRCINFO)
-             ? (FastNative) JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
+             ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
              :
 #endif
-               (FastNative) fs->call;
+               Valueify(fs->call);
     return native(cx, argc, vp);
-}
-
-static JSBool
-js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
-                                    uintN argc, Value *argv, Value *rval)
-{
-    JSFunctionSpec *fs;
-    JSObject *tmp;
-
-    fs = (JSFunctionSpec *) argv[-2].toObject().getReservedSlot(0).toPrivate();
-    JS_ASSERT((fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) ==
-              JSFUN_GENERIC_NATIVE);
-
-    if (argc < 1) {
-        js_ReportMissingArg(cx, *(argv - 2), 0);
-        return JS_FALSE;
-    }
-
-    if (argv[0].isPrimitive()) {
-        /*
-         * Make sure that this is an object or null, as required by the generic
-         * functions.
-         */
-        if (!js_ValueToObjectOrNull(cx, argv[0], &tmp))
-            return JS_FALSE;
-        argv[0].setObjectOrNull(tmp);
-    }
-
-    /*
-     * Copy all actual (argc) arguments down over our |this| parameter,
-     * argv[-1], which is almost always the class constructor object, e.g.
-     * Array.  Then call the corresponding prototype native method with our
-     * first argument passed as |this|.
-     */
-    memmove(argv - 1, argv, argc * sizeof(jsval));
-
-    /*
-     * Follow Function.prototype.apply and .call by using the global object as
-     * the 'this' param if no args.
-     */
-    if (!ComputeThisFromArgv(cx, argv))
-        return JS_FALSE;
-    js_GetTopStackFrame(cx)->setThisValue(argv[-1]);
-    JS_ASSERT(cx->fp()->argv == argv);
-
-    /* Clear the last parameter in case too few arguments were passed. */
-    argv[--argc].setUndefined();
-
-    return fs->call(cx, &argv[-1].toObject(), argc, Jsvalify(argv), Jsvalify(rval));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4314,14 +4235,11 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             fun = JS_DefineFunction(cx, ctor, fs->name,
-                                    (flags & JSFUN_FAST_NATIVE)
-                                    ? (JSNative) js_generic_fast_native_method_dispatcher
-                                    : Jsvalify(js_generic_native_method_dispatcher),
+                                    Jsvalify(js_generic_native_method_dispatcher),
                                     fs->nargs + 1,
                                     flags & ~JSFUN_TRCINFO);
             if (!fun)
                 return JS_FALSE;
-            fun->u.n.extra = (uint16)fs->extra;
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long
@@ -4332,12 +4250,9 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                 return JS_FALSE;
         }
 
-        JS_ASSERT(!(flags & JSFUN_FAST_NATIVE) ||
-                  (uint16)(fs->extra >> 16) <= fs->nargs);
         fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
-        fun->u.n.extra = (uint16)fs->extra;
     }
     return JS_TRUE;
 }
@@ -4810,7 +4725,7 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fun, JSValueArray(argv, argc));
-    ok = InternalCall(cx, obj, ObjectValue(*fun), argc, Valueify(argv), Valueify(rval));
+    ok = ExternalInvoke(cx, obj, ObjectValue(*fun), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4826,7 +4741,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc, 
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
     JSBool ok = atom &&
                 js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
-                InternalCall(cx, obj, tvr.value(), argc, Valueify(argv), Valueify(rval));
+                ExternalInvoke(cx, obj, tvr.value(), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4839,7 +4754,7 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fval, JSValueArray(argv, argc));
-    ok = InternalCall(cx, obj, Valueify(fval), argc, Valueify(argv), Valueify(rval));
+    ok = ExternalInvoke(cx, obj, Valueify(fval), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4930,12 +4845,6 @@ JS_IsRunning(JSContext *cx)
     while (fp && fp->isDummyFrame())
         fp = fp->down;
     return fp != NULL;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_IsConstructing(JSContext *cx)
-{
-    return cx->isConstructing();
 }
 
 JS_PUBLIC_API(JSStackFrame *)
@@ -5618,7 +5527,7 @@ JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->requestDepth == 0);
+    JS_ASSERT(!cx->outstandingRequests);
     if (cx->thread) {
         JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
         return reinterpret_cast<jsword>(cx->thread->id);
@@ -5640,15 +5549,15 @@ JS_ClearContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     /*
-     * This must be called outside a request and, if cx is associated with a
-     * thread, this must be called only from that thread.  If not, this is a
-     * harmless no-op.
+     * cx must have exited all requests it entered and, if cx is associated
+     * with a thread, this must be called only from that thread.  If not, this
+     * is a harmless no-op.
      */
-    JS_ASSERT(cx->requestDepth == 0);
-    if (!cx->thread)
+    JS_ASSERT(cx->outstandingRequests == 0);
+    JSThread *t = cx->thread;
+    if (!t)
         return 0;
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    void *old = cx->thread->id;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
     /*
      * We must not race with a GC that accesses cx->thread for all threads,
@@ -5658,7 +5567,13 @@ JS_ClearContextThread(JSContext *cx)
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
-    return reinterpret_cast<jsword>(old);
+    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->requestDepth);
+   
+    /*
+     * We can access t->id as long as the GC lock is held and we cannot race
+     * with the GC that may delete t.
+     */
+    return reinterpret_cast<jsword>(t->id);
 #else
     return 0;
 #endif

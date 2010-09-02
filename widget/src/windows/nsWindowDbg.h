@@ -51,9 +51,6 @@
 // Enables debug output for popup rollup hooks
 //#define POPUP_ROLLUP_DEBUG_OUTPUT
 
-// Enable heap debug dump message handling
-//#define HEAP_DUMP_EVENT
-
 // Enable window size and state debug output
 //#define WINSTATE_DEBUG_OUTPUT
 
@@ -84,12 +81,6 @@ typedef struct {
 #else
 #define DISPLAY_NMM_PRT(_arg)
 #endif // defined(POPUP_ROLLUP_DEBUG_OUTPUT)
-
-#if defined(HEAP_DUMP_EVENT)
-void InitHeapDump();
-nsresult HeapDump(UINT msg, WPARAM wParam, LPARAM lParam);
-UINT GetHeapMsg();
-#endif // defined(HEAP_DUMP_EVENT)
 
 #if defined(DEBUG)
 void DDError(const char *msg, HRESULT hr);

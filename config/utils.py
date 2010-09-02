@@ -91,8 +91,7 @@ def lockFile(lockfile, max_wait = 600):
       f = open(lockfile, "r")
       s = os.stat(lockfile)
     except EnvironmentError, e:
-      if e.errno == errno.ENOENT or \
-         (sys.platform == "win32" and e.errno == errno.EACCES):
+      if e.errno == errno.ENOENT or e.errno == errno.EACCES:
         # we didn't create the lockfile, so it did exist, but it's
         # gone now. Just try again
         continue

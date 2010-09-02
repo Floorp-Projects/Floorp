@@ -215,7 +215,7 @@ Shape::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp) const
     if (hasGetterValue()) {
         JS_ASSERT(!isMethod());
         js::Value fval = getterValue();
-        return js::InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
+        return js::ExternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
     }
 
     if (isMethod()) {
@@ -239,7 +239,7 @@ Shape::set(JSContext* cx, JSObject* obj, js::Value* vp) const
 
     if (attrs & JSPROP_SETTER) {
         js::Value fval = setterValue();
-        return js::InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
+        return js::ExternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
     }
 
     if (attrs & JSPROP_GETTER)

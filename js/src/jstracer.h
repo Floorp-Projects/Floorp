@@ -414,24 +414,6 @@ struct VMSideExit : public nanojit::SideExit
     uintN lookupFlags;
     unsigned hitcount;
 
-    /*
-     * Ordinarily 0.  If a slow native function is atop the stack, the 1 bit is
-     * set if constructing and the other bits are a pointer to the funobj.
-     */
-    uintptr_t nativeCalleeWord;
-
-    JSObject * nativeCallee() {
-        return (JSObject *) (nativeCalleeWord & ~1);
-    }
-
-    bool constructing() {
-        return bool(nativeCalleeWord & 1);
-    }
-
-    void setNativeCallee(JSObject *callee, bool constructing) {
-        nativeCalleeWord = uintptr_t(callee) | (constructing ? 1 : 0);
-    }
-
     inline JSValueType* stackTypeMap() {
         return (JSValueType*)(this + 1);
     }
@@ -687,15 +669,23 @@ VMFragment::toTreeFragment()
     return static_cast<TreeFragment*>(this);
 }
 
+/*
+ * BUILTIN_NO_FIXUP_NEEDED indicates that after the initial LeaveTree of a deep
+ * bail, the builtin call needs no further fixup when the trace exits and calls
+ * LeaveTree the second time.
+ */
 typedef enum BuiltinStatus {
     BUILTIN_BAILED = 1,
-    BUILTIN_ERROR = 2
+    BUILTIN_ERROR = 2,
+    BUILTIN_NO_FIXUP_NEEDED = 4,
+
+    BUILTIN_ERROR_NO_FIXUP_NEEDED = BUILTIN_ERROR | BUILTIN_NO_FIXUP_NEEDED
 } BuiltinStatus;
 
 static JS_INLINE void
-SetBuiltinError(JSContext *cx)
+SetBuiltinError(JSContext *cx, BuiltinStatus status = BUILTIN_ERROR)
 {
-    cx->tracerState->builtinStatus |= BUILTIN_ERROR;
+    cx->tracerState->builtinStatus |= status;
 }
 
 #ifdef DEBUG_RECORDING_STATUS_NOT_BOOL
@@ -887,9 +877,6 @@ class TraceRecorder
     /* If |outer|, the argc to use when looking up |outer| in the fragments table. */
     uint32 const                    outerArgc;
 
-    /* The current frame's lexical block when recording started. */
-    JSObject* const                 lexicalBlock;
-
     /* If non-null, the side exit from which we are growing. */
     VMSideExit* const               anchor;
 
@@ -1071,7 +1058,16 @@ class TraceRecorder
     JS_REQUIRES_STACK bool knownImpl(const void* p);
     JS_REQUIRES_STACK bool known(const Value* p);
     JS_REQUIRES_STACK bool known(JSObject** p);
-    JS_REQUIRES_STACK void checkForGlobalObjectReallocation();
+    /*
+     * The dslots of the global object are sometimes reallocated by the
+     * interpreter.  This function checks for that condition and re-maps the
+     * entries of the tracker accordingly.
+     */
+    JS_REQUIRES_STACK void checkForGlobalObjectReallocation() {
+        if (global_dslots != globalObj->dslots)
+            checkForGlobalObjectReallocationHelper();
+    }
+    JS_REQUIRES_STACK void checkForGlobalObjectReallocationHelper();
 
     JS_REQUIRES_STACK TypeConsensus selfTypeStability(SlotMap& smap);
     JS_REQUIRES_STACK TypeConsensus peerTypeStability(SlotMap& smap, const void* ip,

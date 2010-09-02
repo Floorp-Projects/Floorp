@@ -329,14 +329,6 @@ typedef JSBool
 (* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 /*
- * The type of ops->call. Same argument types as JSFastNative, but a different
- * contract. A JSCallOp expects a dummy stack frame with the caller's
- * scopeChain.
- */
-typedef JSBool
-(* JSCallOp)(JSContext *cx, uintN argc, jsval *vp);
-
-/*
  * A generic type for functions mapping an object to another object, or null
  * if an error or exception was thrown on cx.
  */

@@ -524,6 +524,9 @@ struct JSObject {
         return dslots ? dslots[-1].toPrivateUint32() : uint32(JS_INITIAL_NSLOTS);
     }
 
+    size_t slotsAndStructSize(uint32 nslots) const;
+    size_t slotsAndStructSize() const { return slotsAndStructSize(numSlots()); }
+
   private:
     static size_t slotsToDynamicWords(size_t nslots) {
         JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
@@ -1350,6 +1353,9 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key,
 extern JSObject *
 js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, js::Value *argv);
+
+extern JSObject *
+js_NewInstance(JSContext *cx, JSObject *callee);
 
 extern jsid
 js_CheckForStringIndex(jsid id);
