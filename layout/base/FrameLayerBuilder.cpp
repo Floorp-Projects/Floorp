@@ -839,7 +839,8 @@ ContainerState::PopThebesLayerData()
     }
     userData->mForcedBackgroundColor = backgroundColor;
   }
-  layer->SetIsOpaqueContent(isOpaque);
+  PRUint32 flags = isOpaque ? Layer::CONTENT_OPAQUE : 0;
+  layer->SetContentFlags(flags);
 
   if (lastIndex > 0) {
     // Since we're going to pop off the last ThebesLayerData, the
@@ -1361,7 +1362,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   state.ProcessDisplayItems(aChildren, nsnull);
   state.Finish();
 
-  containerLayer->SetIsOpaqueContent(aChildren.IsOpaque());
+  PRUint32 flags = aChildren.IsOpaque() ? Layer::CONTENT_OPAQUE : 0;
+  containerLayer->SetContentFlags(flags);
   return containerLayer.forget();
 }
 
