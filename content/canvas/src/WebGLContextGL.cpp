@@ -223,7 +223,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
     WebGLFramebuffer *wfb;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidOperation("BindFramebuffer: target must be GL_FRAMEBUFFER");
+        return ErrorInvalidEnum("BindFramebuffer: target must be GL_FRAMEBUFFER");
 
     if (!GetConcreteObjectAndGLName("bindFramebuffer", fbobj, &wfb, &framebuffername, &isNull))
         return NS_OK;
@@ -1751,7 +1751,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
                 break;
 
             default:
-                return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid parameter");
+                return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
         }
     } else if (atype == LOCAL_GL_TEXTURE) {
         switch (pname) {
@@ -1777,10 +1777,18 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
                 break;
 
             default:
-                return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid parameter");
+                return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
         }
-    } else {
-        NS_WARNING("Unknown framebuffer attachment type?");
+    } else if (atype == LOCAL_GL_NONE) {
+        switch (pname) {
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+                wrval->SetAsInt32(atype);
+                break;
+
+            default:
+                return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
+        }
+    } else { // GL bug? should never happen
         return NS_ERROR_FAILURE;
     }
 
@@ -3282,23 +3290,32 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
 
 NS_IMETHODIMP
 WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type,
-                                  WebGLboolean normalized, WebGLuint stride,
-                                  WebGLuint byteOffset)
+                                  WebGLboolean normalized, WebGLsizei stride,
+                                  WebGLsizeiptr byteOffset)
 {
     if (mBoundArrayBuffer == nsnull)
         return ErrorInvalidOperation("VertexAttribPointer: must have valid GL_ARRAY_BUFFER binding");
 
+    WebGLsizei requiredAlignment = 1;
     switch (type) {
       case LOCAL_GL_BYTE:
       case LOCAL_GL_UNSIGNED_BYTE:
+          requiredAlignment = 1;
+          break;
       case LOCAL_GL_SHORT:
       case LOCAL_GL_UNSIGNED_SHORT:
+          requiredAlignment = 2;
+          break;
       // XXX case LOCAL_GL_FIXED:
       case LOCAL_GL_FLOAT:
+          requiredAlignment = 4;
           break;
       default:
           return ErrorInvalidEnumInfo("VertexAttribPointer: type", type);
     }
+
+    // requiredAlignment should always be a power of two.
+    WebGLsizei requiredAlignmentMask = requiredAlignment - 1;
 
     if (index >= mAttribBuffers.Length())
         return ErrorInvalidValue("VertexAttribPointer: index out of range - %d >= %d", index, mAttribBuffers.Length());
@@ -3306,14 +3323,27 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
     if (size < 1 || size > 4)
         return ErrorInvalidValue("VertexAttribPointer: invalid element size");
 
+    if (stride < 0 || stride > 255) // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
+        return ErrorInvalidValue("VertexAttribPointer: negative stride");
+
+    if (byteOffset < 0)
+        return ErrorInvalidValue("VertexAttribPointer: negative offset");
+
+    if (stride & requiredAlignmentMask) {
+        return ErrorInvalidValue("VertexAttribPointer: stride doesn't satisfy the alignment "
+                                 "requirement of given type");
+    }
+
+    if (byteOffset & requiredAlignmentMask) {
+        return ErrorInvalidValue("VertexAttribPointer: byteOffset doesn't satisfy the alignment "
+                                 "requirement of given type");
+
+    }
+    
     /* XXX make work with bufferSubData & heterogeneous types 
     if (type != mBoundArrayBuffer->GLType())
         return ErrorInvalidOperation("VertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
     */
-
-    // XXX 0 stride?
-    //if (stride < (GLuint) size)
-    //    return ErrorInvalidOperation("VertexAttribPointer: stride must be >= size!");
 
     WebGLVertexAttribData &vd = mAttribBuffers[index];
 

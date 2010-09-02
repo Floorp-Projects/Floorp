@@ -49,6 +49,7 @@ typedef boolean        WebGLboolean;
 typedef unsigned long  WebGLbitfield;
 typedef long           WebGLint;
 typedef long           WebGLsizei;
+typedef long           WebGLsizeiptr;
 typedef unsigned long  WebGLuint;
 typedef float          WebGLfloat;
 typedef float          WebGLclampf;
@@ -830,7 +831,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   [noscript] void vertexAttrib4fv_array(in WebGLuint indx, in WebGLArrayPtr values);
 
   // size is number of elements per attrib; offset, stride are in bytes
-  void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLuint stride, in WebGLuint offset);
+  void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLsizei stride, in WebGLsizeiptr offset);
 
   void viewport(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
 };
