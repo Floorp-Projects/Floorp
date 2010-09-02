@@ -3916,20 +3916,23 @@ TraceRecorder::known(JSObject** p)
  * accordingly.
  */
 JS_REQUIRES_STACK void
-TraceRecorder::checkForGlobalObjectReallocationHelper()
+TraceRecorder::checkForGlobalObjectReallocation()
 {
-    debug_only_print0(LC_TMTracer, "globalObj->dslots relocated, updating tracker\n");
-    Value* src = global_dslots;
-    Value* dst = globalObj->dslots;
-    jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
-    LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
-    for (jsuint n = 0; n < length; ++n) {
-        map[n] = tracker.get(src);
-        tracker.set(src++, NULL);
+    if (global_dslots != globalObj->dslots) {
+        debug_only_print0(LC_TMTracer,
+                          "globalObj->dslots relocated, updating tracker\n");
+        Value* src = global_dslots;
+        Value* dst = globalObj->dslots;
+        jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
+        LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
+        for (jsuint n = 0; n < length; ++n) {
+            map[n] = tracker.get(src);
+            tracker.set(src++, NULL);
+        }
+        for (jsuint n = 0; n < length; ++n)
+            tracker.set(dst++, map[n]);
+        global_dslots = globalObj->dslots;
     }
-    for (jsuint n = 0; n < length; ++n)
-        tracker.set(dst++, map[n]);
-    global_dslots = globalObj->dslots;
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
@@ -9909,20 +9912,20 @@ TraceRecorder::getThis(LIns*& this_ins)
         // object, which we can burn into the trace.
 
         JS_ASSERT(!fp->argv);
-        JS_ASSERT(!fp->getThisValue().isPrimitive());
+        JS_ASSERT(fp->getThisValue().isObject());
 
 #ifdef DEBUG
         JSObject *obj = globalObj->thisObject(cx);
         if (!obj)
             RETURN_ERROR("thisObject hook failed");
-        JS_ASSERT(fp->getThisValue().toObjectOrNull() == obj);
+        JS_ASSERT(&fp->getThisValue().toObject() == obj);
 #endif
 
-        this_ins = INS_CONSTOBJ(fp->getThisValue().toObjectOrNull());
+        this_ins = INS_CONSTOBJ(&fp->getThisValue().toObject());
         return RECORD_CONTINUE;
     }
 
-    Value& thisv = fp->argv[-1];
+    const Value& thisv = fp->argv[-1];
     JS_ASSERT(thisv == fp->getThisValue() || fp->getThisValue().isNull());
 
     JS_ASSERT(fp->callee()->getGlobal() == globalObj);
@@ -9945,7 +9948,7 @@ TraceRecorder::getThis(LIns*& this_ins)
     JSObject *obj = fp->getThisObject(cx);
     if (!obj)
         RETURN_ERROR("getThisObject failed");
-    JS_ASSERT(fp->argv[-1] == ObjectOrNullValue(obj));
+    JS_ASSERT(fp->argv[-1] == ObjectValue(*obj));
     this_ins = INS_CONSTOBJ(obj);
     set(&fp->argv[-1], this_ins);
     return RECORD_CONTINUE;
