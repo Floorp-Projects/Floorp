@@ -159,7 +159,8 @@ protected:
   public:
     ThebesLayerData() :
       mActiveScrolledRoot(nsnull), mLayer(nsnull),
-      mIsSolidColorInVisibleRegion(PR_FALSE) {}
+      mIsSolidColorInVisibleRegion(PR_FALSE),
+      mHasText(PR_FALSE), mHasTextOverTransparent(PR_FALSE) {}
     /**
      * Record that an item has been added to the ThebesLayer, so we
      * need to update our regions.
@@ -228,6 +229,15 @@ protected:
      * True if every pixel in mVisibleRegion will have color mSolidColor.
      */
     PRPackedBool mIsSolidColorInVisibleRegion;
+    /**
+     * True if there is any text visible in the layer.
+     */
+    PRPackedBool mHasText;
+    /**
+     * True if there is any text visible in the layer that's over
+     * transparent pixels in the layer.
+     */
+    PRPackedBool mHasTextOverTransparent;
   };
 
   /**
@@ -839,7 +849,10 @@ ContainerState::PopThebesLayerData()
     }
     userData->mForcedBackgroundColor = backgroundColor;
   }
-  PRUint32 flags = isOpaque ? Layer::CONTENT_OPAQUE : 0;
+  PRUint32 flags =
+    (isOpaque ? Layer::CONTENT_OPAQUE : 0) |
+    (data->mHasText ? 0 : Layer::CONTENT_NO_TEXT) |
+    (data->mHasTextOverTransparent ? 0 : Layer::CONTENT_NO_TEXT_OVER_TRANSPARENT);
   layer->SetContentFlags(flags);
 
   if (lastIndex > 0) {
@@ -858,6 +871,22 @@ ContainerState::PopThebesLayerData()
   }
 
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
+}
+
+static PRBool
+IsText(nsDisplayItem* aItem) {
+  switch (aItem->GetType()) {
+  case nsDisplayItem::TYPE_TEXT:
+  case nsDisplayItem::TYPE_BULLET:
+  case nsDisplayItem::TYPE_HEADER_FOOTER:
+  case nsDisplayItem::TYPE_MATHML_CHAR_FOREGROUND:
+#ifdef MOZ_XUL
+  case nsDisplayItem::TYPE_XUL_TEXT_BOX:
+#endif
+    return PR_TRUE;
+  default:
+    return PR_FALSE;
+  }
 }
 
 void
@@ -898,6 +927,11 @@ ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
     tmp.Or(mOpaqueRegion, aDrawRect);
     if (tmp.GetNumRects() <= 4) {
       mOpaqueRegion = tmp;
+    }
+  } else if (IsText(aItem)) {
+    mHasText = PR_TRUE;
+    if (!mOpaqueRegion.Contains(aVisibleRect)) {
+      mHasTextOverTransparent = PR_TRUE;
     }
   }
 }
