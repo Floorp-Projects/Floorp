@@ -1037,13 +1037,15 @@ var TapHighlightHelper = {
   },
 
   show: function show(aRects) {
-    return;
+    let scrollX = {}, scrollY = {};
+    getBrowser().getPosition(scrollX, scrollY);
 
     let union = aRects.reduce(function(a, b) {
       return a.expandToContain(b);
-    }, new Rect(0, 0, 0, 0)).map(bv.browserToViewport);
+    }, new Rect(0, 0, 0, 0)).map(function(val) { return val * getBrowser().scale; })
+                            .translate(-scrollX.value, -scrollY.value);
 
-    let vis = Browser.getVisibleRect();
+    let vis = Rect.fromRect(getBrowser().getBoundingClientRect());
     let canvasArea = vis.intersect(union);
 
     let overlay = this._overlay;
@@ -1055,14 +1057,14 @@ var TapHighlightHelper = {
     let ctx = overlay.getContext("2d");
     ctx.save();
     ctx.translate(-canvasArea.left, -canvasArea.top);
-    bv.browserToViewportCanvasContext(ctx);
+    ctx.scale(getBrowser().scale, getBrowser().scale);
 
     overlay.style.left = canvasArea.left + "px";
     overlay.style.top = canvasArea.top + "px";
     ctx.fillStyle = "rgba(0, 145, 255, .5)";
     for (let i = aRects.length - 1; i >= 0; i--) {
       let rect = aRects[i];
-      ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+      ctx.fillRect(rect.left - scrollX.value / getBrowser().scale, rect.top - scrollY.value / getBrowser().scale, rect.width, rect.height);
     }
     ctx.restore();
     overlay.style.display = "block";

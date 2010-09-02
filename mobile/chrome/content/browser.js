@@ -767,8 +767,8 @@ var Browser = {
     if (leftbarCBR.left > ritebarCBR.left)
       [ritebarCBR, leftbarCBR] = [leftbarCBR, ritebarCBR]; // switch in RTL case
 
-    let leftbar = new Rect(Math.round(leftbarCBR.left) - dx, 0, Math.round(leftbarCBR.width), 1);
-    let ritebar = new Rect(Math.round(ritebarCBR.left) - dx, 0, Math.round(ritebarCBR.width), 1);
+    let leftbar = new Rect(Math.round(leftbarCBR.left) - Math.round(dx), 0, Math.round(leftbarCBR.width), 1);
+    let ritebar = new Rect(Math.round(ritebarCBR.left) - Math.round(dx), 0, Math.round(ritebarCBR.width), 1);
     let leftw = leftbar.width;
     let ritew = ritebar.width;
 
@@ -1056,17 +1056,12 @@ Browser.MainDragger.prototype = {
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
-    this.draggedFrame = null;
     this.dragMove(Browser.snapSidebars(), 0, scroller);
     Browser.tryUnfloatToolbar();
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
     let doffset = new Point(dx, dy);
-
-    if (!this._dragMoved) {
-      this._dragMoved = true;
-    }
 
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);
