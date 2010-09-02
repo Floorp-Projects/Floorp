@@ -84,9 +84,15 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             wrapper = &XrayWrapperWaivedWrapper;
         } else {
             // Native objects must be wrapped into an X-ray wrapper.
-            wrapper = IS_WN_WRAPPER_OBJECT(obj)
-                      ? &XrayWrapper<JSCrossCompartmentWrapper>::singleton
-                      : &JSCrossCompartmentWrapper::singleton;
+            if (!obj->getGlobal()->isSystem() &&
+                (IS_WN_WRAPPER(obj) || obj->getClass()->ext.innerObject)) {
+                typedef XrayWrapper<JSCrossCompartmentWrapper> Xray;
+
+                wrapper = &Xray::singleton;
+                obj = Xray::createHolder(cx, parent, obj);
+            } else {
+                wrapper = &JSCrossCompartmentWrapper::singleton;
+            }
         }
     } else if (AccessCheck::isChrome(origin)) {
         // If an object that needs a system only wrapper crosses into content
@@ -108,8 +114,15 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         // a predefined set of properties. XrayWrapper adds a property
         // (.wrappedJSObject) which allows bypassing the XrayWrapper, but
         // we filter out access to that property.
-        wrapper = &FilteringWrapper<XrayWrapper<CrossOriginWrapper>,
-                                    CrossOriginAccessiblePropertiesOnly>::singleton;
+        if (!IS_WN_WRAPPER(obj)) {
+            wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
+                                        CrossOriginAccessiblePropertiesOnly>::singleton;
+        } else {
+            typedef XrayWrapper<CrossOriginWrapper> Xray;
+            wrapper = &FilteringWrapper<XrayWrapper<CrossOriginWrapper>,
+                                        CrossOriginAccessiblePropertiesOnly>::singleton;
+            obj = Xray::createHolder(cx, parent, obj);
+        }
     }
     return JSWrapper::New(cx, obj, wrappedProto, NULL, wrapper);
 }

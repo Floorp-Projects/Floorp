@@ -174,6 +174,8 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     js::Class *clasp = obj->getClass();
     if (clasp->ext.innerObject)
         name = "Window";
+    else if (Jsvalify(clasp) == &HolderClass)
+        name = XrayWrapper<JSCrossCompartmentWrapper>::unwrapHolder(cx, obj)->getClass()->name;
     else
         name = clasp->name;
 

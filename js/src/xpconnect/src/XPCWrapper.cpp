@@ -44,6 +44,7 @@
 #include "XPCNativeWrapper.h"
 #include "nsPIDOMWindow.h"
 #include "jswrapper.h"
+#include "XrayWrapper.h"
 
 namespace XPCWrapper {
 
@@ -67,7 +68,13 @@ Unwrap(JSContext *cx, JSObject *wrapper)
       // XXX Security check!
     }
 
-    return wrapper->unwrap();
+    JSObject *wrappedObj = wrapper->unwrap();
+    if (wrappedObj->getJSClass() == &xpc::HolderClass) {
+      typedef xpc::XrayWrapper<JSCrossCompartmentWrapper> Xray;
+      wrappedObj = Xray::unwrapHolder(cx, wrappedObj);
+    }
+
+    return wrappedObj;
   }
 
   js::Class *clasp = wrapper->getClass();
