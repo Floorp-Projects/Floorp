@@ -8,7 +8,6 @@ conformance/context-attributes-alpha-depth-stencil-antialias.html
 conformance/context-attributes.html
 conformance/context-type-test.html
 conformance/framebuffer-object-attachment.html
-conformance/framebuffer-test.html
 conformance/get-active-test.html
 conformance/gl-bind-attrib-location-test.html
 conformance/gl-enum-tests.html
@@ -58,7 +57,5 @@ more/functions/texSubImage2DHTMLBadArgs.html
 more/functions/uniformfBadArgs.html
 more/functions/uniformiBadArgs.html
 more/functions/uniformMatrixBadArgs.html
-more/functions/vertexAttribPointer.html
-more/functions/vertexAttribPointerBadArgs.html
 more/glsl/arrayOutOfBounds.html
 conformance/renderbuffer-initialization.html
