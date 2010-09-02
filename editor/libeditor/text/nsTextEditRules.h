@@ -160,8 +160,7 @@ protected:
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
-  nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel,
-                           PRBool *aHandled, PRInt32 aMaxLength);
+  nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
 
   nsresult WillInsert(nsISelection *aSelection, PRBool *aCancel);
@@ -219,8 +218,7 @@ protected:
   nsresult TruncateInsertionIfNeeded(nsISelection             *aSelection, 
                                      const nsAString          *aInString,
                                      nsAString                *aOutString,
-                                     PRInt32                   aMaxLength,
-                                     PRBool                   *aTruncated);
+                                     PRInt32                   aMaxLength);
 
   /** Remove IME composition text from password buffer */
   nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
@@ -234,8 +232,6 @@ protected:
                                      PRBool               *aCancel);
 
   nsresult HideLastPWInput();
-
-  nsresult CollapseSelectionToTrailingBRIfNeeded(nsISelection *aSelection);
 
   PRBool IsPasswordEditor() const
   {
