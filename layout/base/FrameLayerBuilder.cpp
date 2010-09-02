@@ -173,10 +173,10 @@ protected:
      * @param aSolidColor if non-null, the visible area of the item is
      * a constant color given by *aSolidColor
      */
-    void Accumulate(const nsIntRect& aVisibleRect,
-                    const nsIntRect& aDrawRect,
-                    const nsIntRect* aOpaqueRect,
-                    nscolor* aSolidColor);
+    void Accumulate(nsDisplayListBuilder* aBuilder,
+                    nsDisplayItem* aItem,
+                    const nsIntRect& aVisibleRect,
+                    const nsIntRect& aDrawRect);
     nsIFrame* GetActiveScrolledRoot() { return mActiveScrolledRoot; }
 
     /**
@@ -282,11 +282,10 @@ protected:
    * @param aSolidColor if non-null, indicates that every pixel in aVisibleRect
    * will be painted with aSolidColor by the item
    */
-  already_AddRefed<ThebesLayer> FindThebesLayerFor(const nsIntRect& aVisibleRect,
+  already_AddRefed<ThebesLayer> FindThebesLayerFor(nsDisplayItem* aItem,
+                                                   const nsIntRect& aVisibleRect,
                                                    const nsIntRect& aDrawRect,
-                                                   nsIFrame* aActiveScrolledRoot,
-                                                   const nsIntRect* aOpaqueRect,
-                                                   nscolor* aSolidColor);
+                                                   nsIFrame* aActiveScrolledRoot);
   ThebesLayerData* GetTopThebesLayerData()
   {
     return mThebesLayerDataStack.IsEmpty() ? nsnull
@@ -861,20 +860,21 @@ ContainerState::PopThebesLayerData()
 }
 
 void
-ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aVisibleRect,
-                                            const nsIntRect& aDrawRect,
-                                            const nsIntRect* aOpaqueRect,
-                                            nscolor* aSolidColor)
+ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
+                                            nsDisplayItem* aItem,
+                                            const nsIntRect& aVisibleRect,
+                                            const nsIntRect& aDrawRect)
 {
-  if (aSolidColor) {
+  nscolor uniformColor;
+  if (aItem->IsUniform(aBuilder, &uniformColor)) {
     if (mVisibleRegion.IsEmpty()) {
       // This color is all we have
-      mSolidColor = *aSolidColor;
+      mSolidColor = uniformColor;
       mIsSolidColorInVisibleRegion = PR_TRUE;
     } else if (mIsSolidColorInVisibleRegion &&
                mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
       // we can just blend the colors together
-      mSolidColor = NS_ComposeColors(mSolidColor, *aSolidColor);
+      mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
     } else {
       mIsSolidColorInVisibleRegion = PR_FALSE;
     }
@@ -886,14 +886,15 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aVisibleRect,
   mVisibleRegion.SimplifyOutward(4);
   mDrawRegion.Or(mDrawRegion, aDrawRect);
   mDrawRegion.SimplifyOutward(4);
-  if (aOpaqueRect) {
+
+  if (aItem->IsOpaque(aBuilder)) {
     // We don't use SimplifyInward here since it's not defined exactly
     // what it will discard. For our purposes the most important case
     // is a large opaque background at the bottom of z-order (e.g.,
     // a canvas background), so we need to make sure that the first rect
     // we see doesn't get discarded.
     nsIntRegion tmp;
-    tmp.Or(mOpaqueRegion, *aOpaqueRect);
+    tmp.Or(mOpaqueRegion, aDrawRect);
     if (tmp.GetNumRects() <= 4) {
       mOpaqueRegion = tmp;
     }
@@ -901,11 +902,10 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aVisibleRect,
 }
 
 already_AddRefed<ThebesLayer>
-ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
+ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
+                                   const nsIntRect& aVisibleRect,
                                    const nsIntRect& aDrawRect,
-                                   nsIFrame* aActiveScrolledRoot,
-                                   const nsIntRect* aOpaqueRect,
-                                   nscolor* aSolidColor)
+                                   nsIFrame* aActiveScrolledRoot)
 {
   PRInt32 i;
   PRInt32 lowestUsableLayerWithScrolledRoot = -1;
@@ -959,7 +959,7 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
     layer = thebesLayerData->mLayer;
   }
 
-  thebesLayerData->Accumulate(aVisibleRect, aDrawRect, aOpaqueRect, aSolidColor);
+  thebesLayerData->Accumulate(mBuilder, aItem, aVisibleRect, aDrawRect);
   return layer.forget();
 }
 
@@ -1105,17 +1105,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
           nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, mBuilder->ReferenceFrame());
       }
 
-      nscolor uniformColor;
-      PRBool isUniform = item->IsUniform(mBuilder, &uniformColor);
-      PRBool isOpaque = item->IsOpaque(mBuilder);
-      nsIntRect opaqueRect;
-      if (isOpaque) {
-        opaqueRect = item->GetBounds(mBuilder).ToNearestPixels(appUnitsPerDevPixel);
-      }
       nsRefPtr<ThebesLayer> thebesLayer =
-        FindThebesLayerFor(itemVisibleRect, itemDrawRect, activeScrolledRoot,
-                           isOpaque ? &opaqueRect : nsnull,
-                           isUniform ? &uniformColor : nsnull);
+        FindThebesLayerFor(item, itemVisibleRect, itemDrawRect,
+                           activeScrolledRoot);
 
       InvalidateForLayerChange(item, thebesLayer);
 
