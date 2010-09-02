@@ -239,8 +239,8 @@ ContainerLayerD3D9::RenderLayer()
     quadTransform[0][0] = (float)visibleRect.width;
     quadTransform[1][1] = (float)visibleRect.height;
     quadTransform[2][2] = 1.0f;
-    quadTransform[3][0] = (float)visibleRect.x - 0.5f;
-    quadTransform[3][1] = (float)visibleRect.y - 0.5f;
+    quadTransform[3][0] = (float)visibleRect.x;
+    quadTransform[3][1] = (float)visibleRect.y;
     quadTransform[3][3] = 1.0f;
 
     device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);

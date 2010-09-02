@@ -1,5 +1,5 @@
 
-#line 3 "glslang.cpp"
+#line 3 "generated/glslang.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -2681,7 +2681,7 @@ int PaParseStrings(char* argv[], int strLen[], int argc, TParseContext& parseCon
    
     if (*cpp->PaStrLen >= 0) {    
         int ret = yyparse((void*)(&parseContextLocal));
-        if (cpp->CompileError == 1 || parseContextLocal.recoveredFromError || parseContextLocal.numErrors > 0)
+        if (ret || cpp->CompileError == 1 || parseContextLocal.recoveredFromError || parseContextLocal.numErrors > 0)
              return 1;
         else
              return 0;
@@ -2690,7 +2690,7 @@ int PaParseStrings(char* argv[], int strLen[], int argc, TParseContext& parseCon
         return 0;
 }
 
-void yyerror(char *s) 
+void yyerror(const char *s) 
 {
     if (((TParseContext *)cpp->pC)->AfterEOF) {
         if (cpp->tokensBeforeEOF == 1) {

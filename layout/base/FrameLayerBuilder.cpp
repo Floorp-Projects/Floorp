@@ -472,6 +472,8 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
   if (newDisplayItems->HasContainerLayer()) {
     // Reset or create the invalid region now so we can start collecting
     // new dirty areas.
+    // Note that the NS_FRAME_HAS_CONTAINER_LAYER bit is set in
+    // BuildContainerLayerFor, so we don't need to set it here.
     nsRegion* invalidRegion = static_cast<nsRegion*>
       (props.Get(ThebesLayerInvalidRegionProperty()));
     if (invalidRegion) {
@@ -505,11 +507,12 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
 {
   LayerManagerData* data = static_cast<LayerManagerData*>(aUserArg);
   nsIFrame* f = aEntry->GetKey();
+  FrameProperties props = f->Properties();
   // Remember that this frame has display items in retained layers
   NS_ASSERTION(!data->mFramesWithLayers.GetEntry(f),
                "We shouldn't get here if we're already in mFramesWithLayers");
   data->mFramesWithLayers.PutEntry(f);
-  NS_ASSERTION(!f->Properties().Get(DisplayItemDataProperty()),
+  NS_ASSERTION(!props.Get(DisplayItemDataProperty()),
                "mFramesWithLayers out of sync");
 
   void* propValue;
@@ -518,8 +521,11 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
   // Steal the list of display item layers
   array->SwapElements(aEntry->mData);
   // Save it
-  f->Properties().Set(DisplayItemDataProperty(), propValue);
+  props.Set(DisplayItemDataProperty(), propValue);
 
+  if (f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
+    props.Set(ThebesLayerInvalidRegionProperty(), new nsRegion());
+  }
   return PL_DHASH_REMOVE;
 }
 
@@ -651,7 +657,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
  * have a frame because only nsDisplayClip items don't have a frame,
  * and those items are flattened away by ProcessDisplayItems.
  */
-static PRUint32
+static PRInt32
 AppUnitsPerDevPixel(nsDisplayItem* aItem)
 {
   // The underlying frame for zoom items is the root frame of the subdocument.
@@ -1419,7 +1425,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsIntPoint offset(PRInt32(transform.x0), PRInt32(transform.y0));
 
   nsPresContext* presContext = containerLayerFrame->PresContext();
-  nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsRect r = (aRegionToInvalidate.GetBounds() + offset).
     ToAppUnits(appUnitsPerDevPixel);
   containerLayerFrame->InvalidateWithFlags(r,

@@ -1,13 +1,11 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r367
+Current revision: r385
 
 Local patches:
     angle-nspr.patch - use NSPR for TLS
 
     angle-shared.patch - add declspec dllexport/dllimport support on win32
-
-    angle-sunstudio.patch - Fix compilation with Sun Studio on Solaris
 
     fix-compile.patch - Remove some trailing commas
 

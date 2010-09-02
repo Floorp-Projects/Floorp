@@ -1409,6 +1409,7 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     {
         device->SetRenderTarget(0, renderTarget);
         mAppliedRenderTargetSerial = renderTargetSerial;
+        mScissorStateDirty = true; // Scissor area must be clamped to render target's size-- this is different for different render targets.
     }
 
     unsigned int depthbufferSerial = 0;
@@ -1470,7 +1471,8 @@ bool Context::applyRenderTarget(bool ignoreViewport)
                          mState.scissorY,
                          mState.scissorX + mState.scissorWidth,
                          mState.scissorY + mState.scissorHeight};
-
+            rect.right = std::min(static_cast<UINT>(rect.right), desc.Width);
+            rect.bottom = std::min(static_cast<UINT>(rect.bottom), desc.Height);
             device->SetScissorRect(&rect);
             device->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
         }
@@ -1478,7 +1480,7 @@ bool Context::applyRenderTarget(bool ignoreViewport)
         {
             device->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
         }
-        
+
         mScissorStateDirty = false;
     }
 
@@ -1943,6 +1945,19 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
 
     for (int j = 0; j < rect.bottom - rect.top; j++)
     {
+        if (desc.Format == D3DFMT_A8R8G8B8 &&
+            format == GL_BGRA_EXT &&
+            type == GL_UNSIGNED_BYTE)
+        {
+            // Fast path for EXT_read_format_bgra, given
+            // an RGBA source buffer.  Note that buffers with no
+            // alpha go through the slow path below.
+            memcpy(dest + j * outputPitch,
+                   source + j * lock.Pitch,
+                   (rect.right - rect.left) * 4);
+            continue;
+        }
+
         for (int i = 0; i < rect.right - rect.left; i++)
         {
             float r;
@@ -2027,6 +2042,46 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                     dest[4 * i + j * outputPitch + 1] = (unsigned char)(255 * g + 0.5f);
                     dest[4 * i + j * outputPitch + 2] = (unsigned char)(255 * b + 0.5f);
                     dest[4 * i + j * outputPitch + 3] = (unsigned char)(255 * a + 0.5f);
+                    break;
+                  default: UNREACHABLE();
+                }
+                break;
+              case GL_BGRA_EXT:
+                switch (type)
+                {
+                  case GL_UNSIGNED_BYTE:
+                    dest[4 * i + j * outputPitch + 0] = (unsigned char)(255 * b + 0.5f);
+                    dest[4 * i + j * outputPitch + 1] = (unsigned char)(255 * g + 0.5f);
+                    dest[4 * i + j * outputPitch + 2] = (unsigned char)(255 * r + 0.5f);
+                    dest[4 * i + j * outputPitch + 3] = (unsigned char)(255 * a + 0.5f);
+                    break;
+                  case GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT:
+                    // According to the desktop GL spec in the "Transfer of Pixel Rectangles" section
+                    // this type is packed as follows:
+                    //   15   14   13   12   11   10    9    8    7    6    5    4    3    2    1    0
+                    //  --------------------------------------------------------------------------------
+                    // |       4th         |        3rd         |        2nd        |   1st component   |
+                    //  --------------------------------------------------------------------------------
+                    // in the case of BGRA_EXT, B is the first component, G the second, and so forth.
+                    dest16[i + j * outputPitch / sizeof(unsigned short)] =
+                        ((unsigned short)(15 * a + 0.5f) << 12)|
+                        ((unsigned short)(15 * r + 0.5f) << 8) |
+                        ((unsigned short)(15 * g + 0.5f) << 4) |
+                        ((unsigned short)(15 * b + 0.5f) << 0);
+                    break;
+                  case GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT:
+                    // According to the desktop GL spec in the "Transfer of Pixel Rectangles" section
+                    // this type is packed as follows:
+                    //   15   14   13   12   11   10    9    8    7    6    5    4    3    2    1    0
+                    //  --------------------------------------------------------------------------------
+                    // | 4th |          3rd           |           2nd          |      1st component     |
+                    //  --------------------------------------------------------------------------------
+                    // in the case of BGRA_EXT, B is the first component, G the second, and so forth.
+                    dest16[i + j * outputPitch / sizeof(unsigned short)] =
+                        ((unsigned short)(     a + 0.5f) << 15) |
+                        ((unsigned short)(31 * r + 0.5f) << 10) |
+                        ((unsigned short)(31 * g + 0.5f) << 5) |
+                        ((unsigned short)(31 * b + 0.5f) << 0);
                     break;
                   default: UNREACHABLE();
                 }
@@ -2728,6 +2783,8 @@ void Context::setVertexAttrib(GLuint index, const GLfloat *values)
 void Context::initExtensionString()
 {
     mExtensionString += "GL_OES_packed_depth_stencil ";
+    mExtensionString += "GL_EXT_texture_format_BGRA8888 ";
+    mExtensionString += "GL_EXT_read_format_bgra ";
 
     if (mBufferBackEnd->supportIntIndices())
     {
