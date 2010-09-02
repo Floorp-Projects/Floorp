@@ -208,6 +208,8 @@
 
 #define SHAPE_INVALID_SLOT              0xffffffff
 
+JS_STATIC_ASSERT(uint32(SHAPE_INVALID_SLOT + 1) == uint32(0));
+
 namespace js {
 
 /*
@@ -358,7 +360,58 @@ struct Shape : public JSObjectMap
 
     bool maybeHash(JSContext *cx);
 
-    void setTable(js::PropertyTable *t) const { table = t; }
+    void setTable(js::PropertyTable *t) const {
+        JS_ASSERT_IF(t && t->freeslot != SHAPE_INVALID_SLOT, t->freeslot < freeslot);
+        table = t;
+    }
+
+    /*
+     * Setter for parent. The challenge is to maintain JSObjectMap::freeslot in
+     * the face of arbitrary slot order.
+     *
+     * By induction, an empty shape has a freeslot member correctly computed as
+     * JSCLASS_FREE(clasp) -- see EmptyShape's constructor in jsscopeinlines.h.
+     * This is the basis case, where p is null.
+     *
+     * Any child shape, whether in a shape tree or in a dictionary list, must
+     * have a freeslot either one greater than its slot value (if the child's
+     * slot is SHAPE_INVALID_SLOT, this will yield 0; the static assertion just
+     * after the SHAPE_INVALID_SLOT definition enforces this), or equal to its
+     * parent p's freeslot, whichever is greater. This is the inductive step.
+     *
+     * If we maintained shape paths such that parent slot was always one less
+     * than child slot, possibly with an exception for SHAPE_INVALID_SLOT slot
+     * values where we would use another way of computing freeslot based on the
+     * PropertyTable (as JSC does), then we would not need to store freeslot in
+     * Shape (to be precise, in its base struct, JSobjectMap).
+     *
+     * But we currently scramble slots along shape paths due to resolve-based
+     * creation of shapes mapping reserved slots, and we do not have the needed
+     * PropertyTable machinery to use as an alternative when parent slot is not
+     * one less than child slot. This machinery is neither simple nor free, as
+     * it must involve creating a table for any slot-less transition and then
+     * pinning the table to its shape.
+     *
+     * Use of 'delete' can scramble slots along the shape lineage too, although
+     * it always switches the target object to dictionary mode, so the cost of
+     * a pinned table is less onerous.
+     *
+     * Note that allocating a uint32 freeslot member in JSObjectMap takes no
+     * net extra space on 64-bit targets (it packs with shape). And on 32-bit
+     * targets, adding freeslot to JSObjectMap takes no gross extra space,
+     * because Shape rounds up to an even number of 32-bit words (required for
+     * GC-thing and js::Value allocation in any event) on 32-bit targets.
+     *
+     * So in terms of space, we can afford to maintain both freeslot and slot,
+     * but it might be better if we eliminated freeslot using slot combined
+     * with an auxiliary mechanism based on table.
+     */
+    void setParent(js::Shape *p) {
+        if (p)
+            freeslot = JS_MAX(p->freeslot, slot + 1);
+        JS_ASSERT(freeslot < JSObject::NSLOTS_LIMIT);
+        parent = p;
+    }
 
     void insertFree(js::Shape **freep) {
         id = JSID_VOID;
@@ -436,8 +489,8 @@ struct Shape : public JSObjectMap
         FROZEN          = 0x10
     };
 
-    Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
-          uintN attrs, uintN flags, intN shortid);
+    Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot, uintN attrs,
+          uintN flags, intN shortid, uint32 shape = INVALID_SHAPE, uint32 freeslot = 0);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(JSContext *cx, Class *aclasp);
@@ -706,7 +759,7 @@ Shape::insertIntoDictionary(js::Shape **dictp)
     JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
     JS_ASSERT_IF(*dictp, !JSID_IS_VOID((*dictp)->id));
 
-    parent = *dictp;
+    setParent(*dictp);
     if (parent)
         parent->listp = &parent;
     listp = dictp;

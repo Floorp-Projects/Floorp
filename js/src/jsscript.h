@@ -102,7 +102,7 @@ class UpvarCookie
     bool isFree() const { return value == FREE_VALUE; }
     uint32 asInteger() const { return value; }
     /* isFree check should be performed before using these accessors. */
-    uint16 level() const { JS_ASSERT(!isFree()); return value >> 16; }
+    uint16 level() const { JS_ASSERT(!isFree()); return uint16(value >> 16); }
     uint16 slot() const { JS_ASSERT(!isFree()); return uint16(value); }
 
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
