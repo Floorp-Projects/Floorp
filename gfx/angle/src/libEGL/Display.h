@@ -65,9 +65,12 @@ class Display
     DISALLOW_COPY_AND_ASSIGN(Display);
     const HDC mDc;
 
+    HMODULE mD3d9Module;
+    
     UINT mAdapter;
     D3DDEVTYPE mDeviceType;
-    IDirect3D9 *mD3d9;
+    IDirect3D9 *mD3d9;  // Always valid after successful initialization.
+    IDirect3D9Ex *mD3d9ex;  // Might be null if D3D9Ex is not supported.
     IDirect3DDevice9 *mDevice;
     D3DCAPS9 mDeviceCaps;
     HWND mDeviceWindow;

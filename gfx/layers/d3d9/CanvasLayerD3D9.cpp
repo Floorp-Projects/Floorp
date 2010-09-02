@@ -218,13 +218,13 @@ CanvasLayerD3D9::RenderLayer()
   quadTransform[0][0] = (float)mBounds.width;
   if (mNeedsYFlip) {
     quadTransform[1][1] = (float)-mBounds.height;
-    quadTransform[3][1] = (float)mBounds.height - 0.5f;
+    quadTransform[3][1] = (float)mBounds.height;
   } else {
     quadTransform[1][1] = (float)mBounds.height;
-    quadTransform[3][1] = -0.5f;
+    quadTransform[3][1] = 0.0f;
   }
   quadTransform[2][2] = 1.0f;
-  quadTransform[3][0] = -0.5f;
+  quadTransform[3][0] = 0.0f;
   quadTransform[3][3] = 1.0f;
 
   device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);

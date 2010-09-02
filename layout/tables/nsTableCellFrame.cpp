@@ -556,21 +556,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   nscoord topInset = borderPadding.top;
   nscoord bottomInset = borderPadding.bottom;
 
-  // As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom',
-  // length and percentage values to 'baseline'
-  // XXX It seems that we don't get to see length and percentage values here
-  //     because the Style System has already fixed the error and mapped them
-  //     to whatever is inherited from the parent, i.e, 'middle' in most cases.
-  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
-  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-    if (verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_TOP &&
-        verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_MIDDLE &&
-        verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_BOTTOM)
-    {
-      verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
-    }
-  }
+  PRUint8 verticalAlignFlags = GetVerticalAlign();
 
   nscoord height = mRect.height;
   nsIFrame* firstKid = mFrames.FirstChild();
@@ -633,25 +619,21 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   }
 }
 
-// As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom',
-// length and percentage values to 'baseline'
-// XXX It seems that we don't get to see length and percentage values here
-//     because the Style System has already fixed the error and mapped them
-//     to whatever is inherited from the parent, i.e, 'middle' in most cases.
-PRBool
-nsTableCellFrame::HasVerticalAlignBaseline()
+// Per CSS 2.1, we map 'sub', 'super', 'text-top', 'text-bottom',
+// length, percentage, and calc() values to 'baseline'.
+PRUint8
+nsTableCellFrame::GetVerticalAlign() const
 {
-  const nsStyleTextReset* textStyle = GetStyleTextReset();
-  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    PRUint8 verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-    if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_TOP ||
-        verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_MIDDLE ||
-        verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_BOTTOM)
-    {
-      return PR_FALSE;
+  const nsStyleCoord& verticalAlign = GetStyleTextReset()->mVerticalAlign;
+  if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    PRUint8 value = verticalAlign.GetIntValue();
+    if (value == NS_STYLE_VERTICAL_ALIGN_TOP ||
+        value == NS_STYLE_VERTICAL_ALIGN_MIDDLE ||
+        value == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
+      return value;
     }
   }
-  return PR_TRUE;
+  return NS_STYLE_VERTICAL_ALIGN_BASELINE;
 }
 
 PRBool

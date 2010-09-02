@@ -1257,9 +1257,8 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_WIDGET_LAYERS) {
     builder.SetPaintingToWindow(PR_TRUE);
   }
-  if ((aFlags & PAINT_IGNORE_SUPPRESSION) && builder.IsBackgroundOnly()) {
-    builder.SetBackgroundOnly(PR_FALSE);
-    willFlushLayers = PR_TRUE;
+  if (aFlags & PAINT_IGNORE_SUPPRESSION) {
+    builder.IgnorePaintSuppression();
   }
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
   if (aFlags & PAINT_IGNORE_VIEWPORT_SCROLLING) {
@@ -1368,6 +1367,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   builder.LeavePresShell(aFrame, dirtyRect);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (builder.GetHadToIgnorePaintSuppression()) {
+    willFlushLayers = PR_TRUE;
+  }
 
 #ifdef DEBUG
   if (gDumpPaintList) {

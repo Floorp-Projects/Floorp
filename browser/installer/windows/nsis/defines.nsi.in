@@ -48,3 +48,16 @@
 !define ARCH "x86"
 !define MinSupportedVer "Microsoft Windows 2000"
 #endif
+
+# File details shared by both the installer and uninstaller
+VIProductVersion "1.0.0.0"
+VIAddVersionKey "ProductName"     "${BrandShortName}"
+VIAddVersionKey "CompanyName"     "${CompanyName}"
+#ifdef MOZ_OFFICIAL_BRANDING
+VIAddVersionKey "LegalTrademarks" "${BrandShortName} is a Trademark of The Mozilla Foundation."
+#endif
+VIAddVersionKey "LegalCopyright"  "${CompanyName}"
+VIAddVersionKey "FileVersion"     "${AppVersion}"
+VIAddVersionKey "ProductVersion"  "${AppVersion}"
+# Comments is not used but left below commented out for future reference
+# VIAddVersionKey "Comments"        "Comments"

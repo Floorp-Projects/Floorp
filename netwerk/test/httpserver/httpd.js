@@ -2602,6 +2602,10 @@ ServerHandler.prototype =
         {
           self._setObjectState(k, v);
         });
+        s.importFunction(function registerPathHandler(p, h)
+        {
+          self.registerPathHandler(p, h);
+        });
 
         // Make it possible for sjs files to access their location
         this._setState(path, "__LOCATION__", file.path);

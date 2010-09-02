@@ -72,10 +72,10 @@
 PR_STATIC_ASSERT((((1 << nsStyleStructID_Length) - 1) &
                   ~(NS_STYLE_INHERIT_MASK)) == 0);
 
-inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
+inline PRBool IsFixedUnit(const nsStyleCoord& aCoord, PRBool aEnumOK)
 {
-  return PRBool((aUnit == eStyleUnit_Coord) || 
-                (aEnumOK && (aUnit == eStyleUnit_Enumerated)));
+  return aCoord.ConvertsToLength() || 
+         (aEnumOK && aCoord.GetUnit() == eStyleUnit_Enumerated);
 }
 
 static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
@@ -224,7 +224,7 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
 static PRBool IsFixedData(const nsStyleSides& aSides, PRBool aEnumOK)
 {
   NS_FOR_CSS_SIDES(side) {
-    if (!IsFixedUnit(aSides.GetUnit(side), aEnumOK))
+    if (!IsFixedUnit(aSides.Get(side), aEnumOK))
       return PR_FALSE;
   }
   return PR_TRUE;
@@ -234,22 +234,17 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
                          const nscoord* aEnumTable, 
                          PRInt32 aNumEnums)
 {
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Coord:
-      return aCoord.GetCoordValue();
-    case eStyleUnit_Enumerated:
-      if (nsnull != aEnumTable) {
-        PRInt32 value = aCoord.GetIntValue();
-        if ((0 <= value) && (value < aNumEnums)) {
-          return aEnumTable[aCoord.GetIntValue()];
-        }
-      }
-      break;
-    default:
-      NS_ERROR("bad unit type");
-      break;
+  if (aCoord.GetUnit() == eStyleUnit_Enumerated) {
+    NS_ABORT_IF_FALSE(aEnumTable, "must have enum table");
+    PRInt32 value = aCoord.GetIntValue();
+    if (0 <= value && value < aNumEnums) {
+      return aEnumTable[aCoord.GetIntValue()];
+    }
+    NS_NOTREACHED("unexpected enum value");
+    return 0;
   }
-  return 0;
+  NS_ABORT_IF_FALSE(aCoord.ConvertsToLength(), "unexpected unit");
+  return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
 }
 
 nsStyleMargin::nsStyleMargin() {
@@ -589,7 +584,7 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
   if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
     mCachedOutlineWidth = 0;
     mHasCachedOutline = PR_TRUE;
-  } else if (IsFixedUnit(mOutlineWidth.GetUnit(), PR_TRUE)) {
+  } else if (IsFixedUnit(mOutlineWidth, PR_TRUE)) {
     mCachedOutlineWidth =
       CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3);
     mCachedOutlineWidth =

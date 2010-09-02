@@ -202,8 +202,14 @@ ResponseListener.prototype =
     this.receivedData += data;
     binaryOutputStream.writeBytes(data, aCount);
 
+    let newInputStream = storageStream.newInputStream(0);
+    try {
     this.originalListener.onDataAvailable(aRequest, aContext,
-      storageStream.newInputStream(0), aOffset, aCount);
+        newInputStream, aOffset, aCount);
+    }
+    catch(ex) {
+      aRequest.cancel(ex);
+    }
   },
 
   /**
@@ -215,7 +221,12 @@ ResponseListener.prototype =
    */
   onStartRequest: function RL_onStartRequest(aRequest, aContext)
   {
+    try {
     this.originalListener.onStartRequest(aRequest, aContext);
+    }
+    catch(ex) {
+      aRequest.cancel(ex);
+    }
   },
 
   /**
@@ -233,7 +244,10 @@ ResponseListener.prototype =
    */
   onStopRequest: function RL_onStopRequest(aRequest, aContext, aStatusCode)
   {
+    try {
     this.originalListener.onStopRequest(aRequest, aContext, aStatusCode);
+    }
+    catch (ex) { }
 
     this.setResponseHeader(aRequest);
     this.httpActivity.response.body = this.receivedData;
@@ -2317,8 +2331,8 @@ HUD_SERVICE.prototype =
       hudId: hudId,
     };
 
-    var lineColSubs = [aActivityObject.columnNumber,
-                       aActivityObject.lineNumber];
+    var lineColSubs = [aActivityObject.lineNumber,
+                       aActivityObject.columnNumber];
     var lineCol = this.getFormatStr("errLineCol", lineColSubs);
 
     var errFileSubs = [aActivityObject.sourceName];

@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/treeview.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL tree selectable tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../selectable.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "debug";
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // single selectable listbox
+
+      var id = "listbox";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for list of " + id);
+
+      var select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      select.addChildToSelection(1);
+      testSelectableSelection(select, [ "lb1_item2" ], "addChildToSelect(1): ");
+
+      select.removeChildFromSelection(1);
+      testSelectableSelection(select, [ ],
+                              "removeChildFromSelection(1): ");
+
+      todo(select.selectAllSelection() == false,
+           "No way to select all items in listbox '" + id + "'");
+      testSelectableSelection(select, [ "lb1_item1" ], "selectAllSelection: ");
+
+      select.addChildToSelection(1);
+      select.clearSelection();
+      testSelectableSelection(select, [ ], "clearSelection: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // multiple selectable listbox
+
+      var id = "listbox2";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for list of " + id);
+
+      var select = getAccessible(id, [nsIAccessibleSelectable]);
+      testSelectableSelection(select, [ ]);
+
+      select.addChildToSelection(1);
+      testSelectableSelection(select, [ "lb2_item2" ], "addChildToSelect(1): ");
+
+      select.removeChildFromSelection(1);
+      testSelectableSelection(select, [ ],
+                              "removeChildFromSelection(1): ");
+
+      is(select.selectAllSelection(), true,
+         "All items should be selected in listbox '" + id + "'");
+      testSelectableSelection(select, [ "lb2_item1", "lb2_item2" ],
+                              "selectAllSelection: ");
+
+      select.clearSelection();
+      testSelectableSelection(select, [ ], "clearSelection: ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // listbox with headers
+
+      // XXX: addChildToSelection/removeChildFromSelection don't work correctly
+      // on listboxes with headers because header is inserted into hierarchy
+      // and child indexes that are used in these methods are shifted (see bug
+      // 591939).
+      todo(false,
+           "Fix addChildToSelection/removeChildFromSelection on listboxes with headers.");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=590176"
+        title="add pseudo SelectAccessible interface">
+       Mozilla Bug 590176
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <listbox id="listbox">
+        <listcols>
+          <listcol flex="1"/>
+          <listcol flex="1"/>
+        </listcols>
+        <listitem id="lb1_item1">
+          <listcell label="cell0"/>
+          <listcell label="cell1"/>
+        </listitem>
+        <listitem id="lb1_item2">
+          <listcell label="cell3"/>
+          <listcell label="cell4"/>
+        </listitem>
+      </listbox>
+
+      <listbox id="listbox2" seltype="multiple">
+        <listcols>
+          <listcol flex="1"/>
+          <listcol flex="1"/>
+        </listcols>
+        <listitem id="lb2_item1">
+          <listcell label="cell0"/>
+          <listcell label="cell1"/>
+        </listitem>
+        <listitem id="lb2_item2">
+          <listcell label="cell3"/>
+          <listcell label="cell4"/>
+        </listitem>
+      </listbox>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>
+
