@@ -580,6 +580,12 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (level < 0)
         return ErrorInvalidValue("copyTexImage2D: level may not be negative");
 
+    if (level >= 1) {
+        if (!(is_pot_assuming_nonnegative(width) &&
+              is_pot_assuming_nonnegative(height)))
+            return ErrorInvalidValue("copyTexImage2D: with level > 0, width and height must be powers of two");
+    }
+
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
 
