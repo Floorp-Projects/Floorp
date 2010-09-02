@@ -378,8 +378,7 @@ mjit::Compiler::finishThisUp()
         memcpy(&script->pics[i].labels, &pics[i].labels, sizeof(PICLabels));
 # endif
 
-        if (pics[i].kind == ic::PICInfo::SET ||
-            pics[i].kind == ic::PICInfo::SETMETHOD) {
+        if (pics[i].kind == ic::PICInfo::SET) {
             script->pics[i].u.vr = pics[i].vr;
         } else if (pics[i].kind != ic::PICInfo::NAME) {
             if (pics[i].hasTypeCheck) {
@@ -2634,9 +2633,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         return;
     }
 
-    JSOp op = JSOp(*PC);
-
-    PICGenInfo pic(op == JSOP_SETMETHOD ? ic::PICInfo::SETMETHOD : ic::PICInfo::SET);
+    PICGenInfo pic(ic::PICInfo::SET);
     pic.atom = atom;
 
     /* Guard that the type is an object. */
