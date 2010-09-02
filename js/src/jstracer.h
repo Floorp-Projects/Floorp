@@ -877,9 +877,6 @@ class TraceRecorder
     /* If |outer|, the argc to use when looking up |outer| in the fragments table. */
     uint32 const                    outerArgc;
 
-    /* The current frame's lexical block when recording started. */
-    JSObject* const                 lexicalBlock;
-
     /* If non-null, the side exit from which we are growing. */
     VMSideExit* const               anchor;
 
