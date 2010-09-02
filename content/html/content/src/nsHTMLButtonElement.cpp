@@ -82,6 +82,8 @@ class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLButtonElement();
 
