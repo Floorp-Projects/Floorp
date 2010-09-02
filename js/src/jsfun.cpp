@@ -3081,7 +3081,7 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
      * We try to the print the code that produced vp if vp is a value in the
      * most recent interpreted stack frame. Note that additional values, not
      * directly produced by the script, may have been pushed onto the frame's
-     * expression stack (e.g. by InvokeFromEngine) thereby incrementing sp past
+     * expression stack (e.g. by pushInvokeArgs) thereby incrementing sp past
      * the depth simulated by ReconstructPCStack. Since we must pass an offset
      * from the top of the simulated stack to js_ReportValueError3, it is
      * important to do bounds checking using the simulated, rather than actual,
