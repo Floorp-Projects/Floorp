@@ -2225,7 +2225,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     globalObj(tree->globalObj),
     outer(outer),
     outerArgc(outerArgc),
-    lexicalBlock(cx->fp()->maybeBlockChain()),
     anchor(anchor),
     lir(NULL),
     cx_ins(NULL),
@@ -14915,6 +14914,9 @@ TraceRecorder::record_JSOP_LAMBDA()
         return ARECORD_CONTINUE;
     }
 
+    if (cx->fp()->hasBlockChain())
+        RETURN_STOP_A("Unable to trace creating lambda in let");
+
     LIns *proto_ins;
     CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
     LIns* scopeChain_ins = scopeChain();
@@ -14937,6 +14939,9 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 
     if (FUN_OBJECT(fun)->getParent() != globalObj)
         return ARECORD_STOP;
+
+    if (cx->fp()->hasBlockChain())
+        RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns* args[] = {
         scopeChain(),
@@ -15558,9 +15563,6 @@ TraceRecorder::record_JSOP_ENTERBLOCK()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
-    /* We mustn't exit the lexical block we began recording in. */
-    if (cx->fp()->getBlockChain() == lexicalBlock)
-        return ARECORD_STOP;
     return ARECORD_CONTINUE;
 }
 
