@@ -318,8 +318,8 @@
                             label="&addon.restartNow.label;"
                             command="cmd_restartApp"/>
                 <button id="detail-undo" class="button-link"
-                            label="&addon.undo.label;"
-                            tooltipText="&addon.undo.tooltip;"
+                            label="&addon.undoAction.label;"
+                            tooltipText="&addon.undoAction.tooltip;"
                             command="cmd_cancelOperation"/>
                 <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
               </hbox>

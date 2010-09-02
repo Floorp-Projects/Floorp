@@ -229,6 +229,22 @@
       </hbox>
     </vbox>
   </wizardpage>
+
+  <wizardpage id="errorcertcheck" pageid="errorcertcheck"
+              object="gErrorCertCheckPage"
+              onpageshow="gErrorCertCheckPage.onPageShow();">
+    <updateheader label="&error.title;"/>
+    <vbox class="update-content" flex="1">
+      <label id="errorCertAttrHasUpdateLabel"
+             hidden="true">&errorCertAttrHasUpdate.label;</label>
+      <label id="errorCertCheckNoUpdateLabel"
+             hidden="true">&errorCertAttrNoUpdate.label;</label>
+      <hbox>
+        <label id="errorCertAttrLinkLabel" class="text-link" hidden="true"
+               value="" onclick="openUpdateURL(event);"/>
+      </hbox>
+    </vbox>
+  </wizardpage>
   
   <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
               object="gErrorPatchingPage"

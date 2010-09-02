@@ -60,51 +60,34 @@ gboolean
 addSelectionCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return FALSE;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, FALSE);
-
-    return NS_SUCCEEDED(accSelection->AddChildToSelection(i));
+    return accWrap->AddItemToSelection(i);
 }
 
 gboolean
 clearSelectionCB(AtkSelection *aSelection)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return FALSE;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, FALSE);
-
-    return NS_SUCCEEDED(accSelection->ClearSelection());
+    return accWrap->UnselectAll();
 }
 
 AtkObject *
 refSelectionCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return nsnull;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, nsnull);
-
-    nsCOMPtr<nsIAccessible> accSelect;
-    accSelection->RefSelection(i, getter_AddRefs(accSelect));
-    if (!accSelect) {
+    nsAccessible* selectedItem = accWrap->GetSelectedItem(i);
+    if (!selectedItem)
         return nsnull;
-    }
 
-    AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accSelect);
+    AtkObject* atkObj = nsAccessibleWrap::GetAtkObject(selectedItem);
     if (atkObj) {
         g_object_ref(atkObj);
     }
@@ -115,65 +98,38 @@ gint
 getSelectionCountCB(AtkSelection *aSelection)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return -1;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, -1);
-
-    PRInt32 num = 0;
-    nsresult rv = accSelection->GetSelectionCount(&num);
-    return (NS_FAILED(rv)) ? -1 : num;
+    return accWrap->SelectedItemCount();
 }
 
 gboolean
 isChildSelectedCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return FALSE;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, FALSE);
-
-    PRBool result = FALSE;
-    nsresult rv = accSelection->IsChildSelected(i, &result);
-    return (NS_FAILED(rv)) ? FALSE : result;
+    return accWrap->IsItemSelected(i);
 }
 
 gboolean
 removeSelectionCB(AtkSelection *aSelection, gint i)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return FALSE;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, FALSE);
-
-    nsresult rv = accSelection->RemoveChildFromSelection(i);
-    return (NS_FAILED(rv)) ? FALSE : TRUE;
+    return accWrap->RemoveItemFromSelection(i);
 }
 
 gboolean
 selectAllSelectionCB(AtkSelection *aSelection)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-    if (!accWrap)
+    if (!accWrap || !accWrap->IsSelect())
         return FALSE;
 
-    nsCOMPtr<nsIAccessibleSelectable> accSelection;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                            getter_AddRefs(accSelection));
-    NS_ENSURE_TRUE(accSelection, FALSE);
-
-    PRBool result = FALSE;
-    nsresult rv = accSelection->SelectAllSelection(&result);
-    return (NS_FAILED(rv)) ? FALSE : result;
+    return accWrap->SelectAll();
 }

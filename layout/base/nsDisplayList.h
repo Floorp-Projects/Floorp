@@ -148,12 +148,11 @@ public:
    * @return PR_TRUE if "painting is suppressed" during page load and we
    * should paint only the background of the document.
    */
-  PRBool IsBackgroundOnly() { return mIsBackgroundOnly; }
-  /**
-   * Set to PR_TRUE if painting should be suppressed during page load.
-   * Set to PR_FALSE if painting should not be suppressed.
-   */
-  void SetBackgroundOnly(PRBool aIsBackgroundOnly) { mIsBackgroundOnly = aIsBackgroundOnly; }
+  PRBool IsBackgroundOnly() {
+    NS_ASSERTION(mPresShellStates.Length() > 0,
+                 "don't call this if we're not in a presshell");
+    return CurrentPresShellState()->mIsBackgroundOnly;
+  }
   /**
    * @return PR_TRUE if the currently active BuildDisplayList call is being
    * applied to a frame at the root of a pseudo stacking context. A pseudo
@@ -213,7 +212,12 @@ public:
    * Allows callers to selectively override the regular paint suppression checks,
    * so that methods like GetFrameForPoint work when painting is suppressed.
    */
-  void IgnorePaintSuppression() { mIsBackgroundOnly = PR_FALSE; }
+  void IgnorePaintSuppression() { mIgnoreSuppression = PR_TRUE; }
+  /**
+   * @return Returns if this builder had to ignore painting suppression on some
+   * document when building the display list.
+   */
+  PRBool GetHadToIgnorePaintSuppression() { return mHadToIgnoreSuppression; }
   /**
    * Call this if we're doing normal painting to the window.
    */
@@ -368,6 +372,7 @@ private:
     nsIPresShell* mPresShell;
     nsIFrame*     mCaretFrame;
     PRUint32      mFirstFrameMarkedForDisplay;
+    PRPackedBool  mIsBackgroundOnly;
   };
   PresShellState* CurrentPresShellState() {
     NS_ASSERTION(mPresShellStates.Length() > 0,
@@ -385,7 +390,8 @@ private:
   nsDisplayTableItem*            mCurrentTableItem;
   PRPackedBool                   mBuildCaret;
   PRPackedBool                   mEventDelivery;
-  PRPackedBool                   mIsBackgroundOnly;
+  PRPackedBool                   mIgnoreSuppression;
+  PRPackedBool                   mHadToIgnoreSuppression;
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;
   PRPackedBool                   mSelectedFramesOnly;
   PRPackedBool                   mAccurateVisibleRegions;

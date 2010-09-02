@@ -51,6 +51,7 @@ const CoR = Components.results;
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
+const PREF_APP_UPDATE_CERT_ERRORS        = "app.update.cert.errors";
 const PREF_APP_UPDATE_ENABLED            = "app.update.enabled";
 const PREF_APP_UPDATE_LOG                = "app.update.log";
 const PREF_APP_UPDATE_MANUAL_URL         = "app.update.url.manual";
@@ -71,6 +72,9 @@ const STATE_FAILED            = "failed";
 
 const SRCEVT_FOREGROUND       = 1;
 const SRCEVT_BACKGROUND       = 2;
+
+const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
+const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
 
 var gLogEnabled = false;
 var gUpdatesFoundPageId;
@@ -399,6 +403,12 @@ var gUpdates = {
         // user that the background checking found an update that requires
         // their permission to install, and it's ready for download.
         this.setUpdate(arg0);
+        if (this.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
+            this.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
+          aCallback("errorcertcheck");
+          return;
+        }
+
         var p = this.update.selectedPatch;
         if (p) {
           var state = p.state;
@@ -524,6 +534,7 @@ var gUpdates = {
         if (addon.type != "plugin" &&
             !addon.appDisabled && !addon.userDisabled &&
             addon.scope != AddonManager.SCOPE_APPLICATION &&
+            addon.isCompatible &&
             !addon.isCompatibleWith(self.update.appVersion,
                                     self.update.platformVersion))
           self.addons.push(addon);
@@ -653,7 +664,14 @@ var gCheckingPage = {
     onError: function(request, update) {
       LOG("gCheckingPage", "onError - proceeding to error page");
       gUpdates.setUpdate(update);
-      gUpdates.wiz.goTo("errors");
+      if (update.errorCode &&
+          (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
+           update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE )) {
+        gUpdates.wiz.goTo("errorcertcheck");
+      }
+      else {
+        gUpdates.wiz.goTo("errors");
+      }
     },
 
     /**
@@ -1588,6 +1606,34 @@ var gErrorsPage = {
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL;
     errorLinkLabel.setAttribute("url", manualURL);
+  }
+};
+
+/**
+ * The page shown when there is a certificate attribute check error.
+ */
+var gErrorCertCheckPage = {
+  /**
+   * Initialize
+   */
+  onPageShow: function() {
+    gUpdates.setButtons(null, null, "okButton", true);
+    gUpdates.wiz.getButton("finish").focus();
+
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS))
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
+
+    if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
+      document.getElementById("errorCertAttrHasUpdateLabel").hidden = false;
+    }
+    else {
+      document.getElementById("errorCertCheckNoUpdateLabel").hidden = false;
+      var manualURL = Services.urlFormatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
+      var errorLinkLabel = document.getElementById("errorCertAttrLinkLabel");
+      errorLinkLabel.value = manualURL;
+      errorLinkLabel.setAttribute("url", manualURL);
+      errorLinkLabel.hidden = false;
+    }
   }
 };
 

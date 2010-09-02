@@ -735,6 +735,9 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   rv = mStorageService->OpenDatabase(cookieFile, getter_AddRefs(mDBState->dbConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Grow cookie db in 512KB increments
+  mDBState->dbConn->SetGrowthIncrement(512 * 1024, EmptyCString());
+
   PRBool tableExists = PR_FALSE;
   mDBState->dbConn->TableExists(NS_LITERAL_CSTRING("moz_cookies"), &tableExists);
   if (!tableExists) {

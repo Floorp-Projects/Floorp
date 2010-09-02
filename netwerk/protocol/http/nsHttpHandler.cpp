@@ -283,6 +283,7 @@ nsHttpHandler::Init()
     if (mAppName.Length() == 0 && appInfo) {
         appInfo->GetName(mAppName);
         appInfo->GetVersion(mAppVersion);
+        mAppName.StripChars(" ()<>@,;:\\\"/[]?={}");
     } else {
         mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
