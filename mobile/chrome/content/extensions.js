@@ -280,6 +280,7 @@ var ExtensionsView = {
 
     let self = this;
     AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(items) {
+      let strings = Elements.browserBundle;
       let anyUpdateable = false;
       for (let i = 0; i < items.length; i++) {
         let addon = items[i];
@@ -287,6 +288,19 @@ var ExtensionsView = {
         let opType = self._getOpTypeForOperations(addon.pendingOperations);
         let updateable = (addon.permissions & AddonManager.PERM_CAN_UPGRADE) > 0;
         let uninstallable = (addon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
+
+        let blocked = "";
+        switch(addon.blocklistState) {
+          case Ci.nsIBlocklistService.STATE_BLOCKED:
+            blocked = strings.getString("addonBlocked.blocked")
+            break;
+          case Ci.nsIBlocklistService.STATE_SOFTBLOCKED:
+            blocked = strings.getString("addonBlocked.softBlocked");
+            break;
+          case Ci.nsIBlocklistService.STATE_OUTDATED:
+            blocked = srings.getString("addonBlocked.outdated");
+            break;
+        }            
 
         if (updateable)
           anyUpdateable = true;
@@ -300,6 +314,7 @@ var ExtensionsView = {
         listitem.setAttribute("opType", opType);
         listitem.setAttribute("updateable", updateable);
         listitem.setAttribute("isReadonly", !uninstallable);
+        listitem.setAttribute("blockedStatus", blocked);
         listitem.addon = addon;
         self._list.insertBefore(listitem, self._repoItem);
       }
@@ -309,7 +324,6 @@ var ExtensionsView = {
       function isDefault(aEngine)
         defaults.indexOf(aEngine.name) != -1
 
-      let strings = Elements.browserBundle;
       let defaultDescription = strings.getString("addonsSearchEngine.description");
 
       let engines = Services.search.getEngines({ });
@@ -702,12 +716,13 @@ function AddonInstallListener() {
 
 AddonInstallListener.prototype = {
   _updating: false,
+
   onInstallEnded: function(aInstall, aAddon) {
     // XXX fix updating stuff
     if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL)
       ExtensionsView.showRestart(this._updating ? "update" : "normal");
 
-    this._showAlert(true);
+    this._showInstallCompleteAlert(true);
 
     if (!ExtensionsView.visible)
       return;
@@ -731,7 +746,7 @@ AddonInstallListener.prototype = {
   },
 
   onInstallFailed: function(aInstall, aError) {
-    this._showAlert(false);
+    this._showInstallCompleteAlert(false);
 
     if (ExtensionsView.visible) {
       let element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
@@ -780,13 +795,44 @@ AddonInstallListener.prototype = {
     this.onInstallFailed(aInstall, aError);
   },
 
-  _showAlert: function xpidm_showAlert(aSucceeded) {
+  onDownloadCancelled: function(aInstall, aAddon) {
+    let strings = Elements.browserBundle;
+    let brandBundle = document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.host;
+    if (!host)
+      host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.host;
+
+    let error = (host || aInstall.error == 0) ? "addonError" : "addonLocalError";
+    if (aInstall.error != 0)
+      error += aInstall.error;
+    else if (aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+      error += "Blocklisted";
+    else
+      error += "Incompatible";
+
+    let messageString = strings.getString(error);
+    messageString = messageString.replace("#1", aInstall.name);
+    if (host)
+      messageString = messageString.replace("#2", host);
+    messageString = messageString.replace("#3", brandShortName);
+    messageString = messageString.replace("#4", Services.appinfo.version);
+    
+    this._showAlert(messageString);
+  },
+
+  _showInstallCompleteAlert: function xpidm_showAlert(aSucceeded) {
+    let strings = Elements.browserBundle;
+    let msg = aSucceeded ? strings.getString("alertAddonsInstalled") :
+                           strings.getString("alertAddonsFail");
+    this._showAlert(msg);
+  },
+  
+  _showAlert: function xpidm_showAlert(aMessage) {
     if (ExtensionsView.visible)
       return;
 
     let strings = Elements.browserBundle;
-    let message = aSucceeded ? strings.getString("alertAddonsInstalled") :
-                               strings.getString("alertAddonsFail");
 
     let observer = {
       observe: function (aSubject, aTopic, aData) {
@@ -797,6 +843,6 @@ AddonInstallListener.prototype = {
 
     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 message, true, "", observer, "addons");
+                                 aMessage, true, "", observer, "addons");
   }
 };
