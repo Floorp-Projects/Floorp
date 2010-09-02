@@ -416,17 +416,37 @@ public:
    */
   LayerManager* Manager() { return mManager; }
 
+  enum {
+    /**
+     * If this is set, the caller is promising that by the end of this
+     * transaction the entire visible region (as specified by
+     * SetVisibleRegion) will be filled with opaque content.
+     */
+    CONTENT_OPAQUE = 0x01,
+    /**
+     * ThebesLayers only!
+     * If this is set, the caller is promising that the visible region
+     * contains no text at all. If this is set,
+     * CONTENT_NO_TEXT_OVER_TRANSPARENT will also be set.
+     */
+    CONTENT_NO_TEXT = 0x02,
+    /**
+     * ThebesLayers only!
+     * If this is set, the caller is promising that the visible region
+     * contains no text over transparent pixels (any text, if present,
+     * is over fully opaque pixels).
+     */
+    CONTENT_NO_TEXT_OVER_TRANSPARENT = 0x04
+  };
   /**
    * CONSTRUCTION PHASE ONLY
-   * If this is called with aOpaque set to true, the caller is promising
-   * that by the end of this transaction the entire visible region
-   * (as specified by SetVisibleRegion) will be filled with opaque
-   * content. This enables some internal quality and performance
-   * optimizations.
+   * This lets layout make some promises about what will be drawn into the
+   * visible region of the ThebesLayer. This enables internal quality
+   * and performance optimizations.
    */
-  void SetIsOpaqueContent(PRBool aOpaque)
+  void SetContentFlags(PRUint32 aFlags)
   {
-    mIsOpaqueContent = aOpaque;
+    mContentFlags = aFlags;
     Mutated();
   }
   /**
@@ -509,7 +529,7 @@ public:
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nsnull; }
-  PRBool IsOpaqueContent() { return mIsOpaqueContent; }
+  PRUint32 GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
@@ -610,8 +630,8 @@ protected:
     mPrevSibling(nsnull),
     mImplData(aImplData),
     mOpacity(1.0),
-    mUseClipRect(PR_FALSE),
-    mIsOpaqueContent(PR_FALSE)
+    mContentFlags(0),
+    mUseClipRect(PR_FALSE)
     {}
 
   void Mutated() { mManager->Mutated(this); }
@@ -633,8 +653,8 @@ protected:
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
+  PRUint32 mContentFlags;
   PRPackedBool mUseClipRect;
-  PRPackedBool mIsOpaqueContent;
 };
 
 /**

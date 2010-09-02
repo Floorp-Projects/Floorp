@@ -63,6 +63,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gl;
+using namespace mozilla::layers;
 
 nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
 
@@ -548,7 +549,8 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
     data.mGLBufferIsPremultiplied = PR_FALSE;
 
     canvasLayer->Initialize(data);
-    canvasLayer->SetIsOpaqueContent(gl->CreationFormat().alpha == 0 ? PR_TRUE : PR_FALSE);
+    PRUint32 flags = gl->CreationFormat().alpha == 0 ? Layer::CONTENT_OPAQUE : 0;
+    canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
     mInvalidated = PR_FALSE;
