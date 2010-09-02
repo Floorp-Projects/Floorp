@@ -231,7 +231,8 @@ abstract public class GeckoApp
     public void onLowMemory()
     {
         Log.i("GeckoApp", "low memory");
-        // XXX TODO
+        if (GeckoAppShell.sGeckoRunning)
+            GeckoAppShell.onLowMemory();
         super.onLowMemory();
     }
 
@@ -293,10 +294,19 @@ abstract public class GeckoApp
             File componentsDir = new File("/data/data/org.mozilla." + getAppName() +"/components");
             componentsDir.mkdir();
             zip = new ZipFile(getApplication().getPackageResourcePath());
+        } catch (Exception e) {
+            Log.i("GeckoAppJava", e.toString());
+            return;
+        }
 
+        byte[] buf = new byte[8192];
+        unpackFile(zip, buf, null, "application.ini");
+        unpackFile(zip, buf, null, getContentProcessName());
+
+        try {
             ZipEntry componentsList = zip.getEntry("components/components.manifest");
             if (componentsList == null) {
-                Log.i("GeckoAppJava", "Can't find components.list !");
+                Log.i("GeckoAppJava", "Can't find components.manifest!");
                 return;
             }
 
@@ -305,8 +315,6 @@ abstract public class GeckoApp
             Log.i("GeckoAppJava", e.toString());
             return;
         }
-
-        byte[] buf = new byte[8192];
 
         StreamTokenizer tkn = new StreamTokenizer(new InputStreamReader(listStream));
         String line = "components/";
@@ -338,9 +346,6 @@ abstract public class GeckoApp
                 break;
             }
         } while (status != StreamTokenizer.TT_EOF);
-
-        unpackFile(zip, buf, null, "application.ini");
-        unpackFile(zip, buf, null, getContentProcessName());
     }
 
     private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry, String name)

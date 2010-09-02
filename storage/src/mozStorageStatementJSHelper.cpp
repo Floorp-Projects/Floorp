@@ -249,8 +249,8 @@ StatementJSHelper::NewResolve(nsIXPConnectWrappedNative *aWrapper,
 
   const char *name = ::JS_GetStringBytes(JSID_TO_STRING(aId));
   if (::strcmp(name, "step") == 0) {
-    *_retval = ::JS_DefineFunction(aCtx, aScopeObj, "step", (JSNative)stepFunc,
-                                   0, JSFUN_FAST_NATIVE) != nsnull;
+    *_retval = ::JS_DefineFunction(aCtx, aScopeObj, "step", stepFunc,
+                                   0, 0) != nsnull;
     *_objp = aScopeObj;
     return NS_OK;
   }

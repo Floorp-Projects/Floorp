@@ -39,6 +39,9 @@ Texture::Texture(GLuint id) : RefCountObject(id)
     mWrapS = GL_REPEAT;
     mWrapT = GL_REPEAT;
 
+    mWidth = 0;
+    mHeight = 0;
+
     mDirtyMetaData = true;
     mDirty = true;
     mIsRenderable = false;
@@ -195,6 +198,12 @@ void Texture::loadImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei
         const unsigned short *source16 = reinterpret_cast<const unsigned short*>(source);
         unsigned char *dest = static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * 4;
 
+        // fast path for EXT_texture_format_BGRA8888
+        if (format == GL_BGRA_EXT && type == GL_UNSIGNED_BYTE) {
+            memcpy(dest, source, width*4);
+            continue;
+        }
+
         for (int x = 0; x < width; x++)
         {
             unsigned char r;
@@ -337,9 +346,13 @@ void Texture::setImage(GLsizei width, GLsizei height, GLenum format, GLenum type
     mDirtyMetaData = true;
 }
 
-void Texture::subImage(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels, Image *img)
+bool Texture::subImage(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels, Image *img)
 {
-    if (width + xoffset > img->width || height + yoffset > img->height) return error(GL_INVALID_VALUE);
+    if (width + xoffset > img->width || height + yoffset > img->height)
+    {
+        error(GL_INVALID_VALUE);
+        return false;
+    }
 
     D3DLOCKED_RECT locked;
     HRESULT result = img->surface->LockRect(&locked, NULL, 0);
@@ -353,6 +366,7 @@ void Texture::subImage(GLint xoffset, GLint yoffset, GLsizei width, GLsizei heig
     }
 
     img->dirty = true;
+    return true;
 }
 
 IDirect3DBaseTexture9 *Texture::getTexture()
@@ -560,8 +574,10 @@ void Texture2D::commitRect(GLint level, GLint xoffset, GLint yoffset, GLsizei wi
 
 void Texture2D::subImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels)
 {
-    Texture::subImage(xoffset, yoffset, width, height, format, type, unpackAlignment, pixels, &mImageArray[level]);
-    commitRect(level, xoffset, yoffset, width, height);
+    if (Texture::subImage(xoffset, yoffset, width, height, format, type, unpackAlignment, pixels, &mImageArray[level]))
+    {
+        commitRect(level, xoffset, yoffset, width, height);
+    }
 }
 
 void Texture2D::copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source)
@@ -570,6 +586,10 @@ void Texture2D::copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, 
     {
         convertToRenderTarget();
         pushTexture(mTexture, true);
+    }
+    else
+    {
+        needRenderTarget();
     }
 
     if (width != 0 && height != 0 && level < levelCount())
@@ -996,8 +1016,10 @@ void TextureCubeMap::commitRect(GLenum faceTarget, GLint level, GLint xoffset, G
 
 void TextureCubeMap::subImage(GLenum face, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels)
 {
-    Texture::subImage(xoffset, yoffset, width, height, format, type, unpackAlignment, pixels, &mImageArray[faceIndex(face)][level]);
-    commitRect(face, level, xoffset, yoffset, width, height);
+    if (Texture::subImage(xoffset, yoffset, width, height, format, type, unpackAlignment, pixels, &mImageArray[faceIndex(face)][level]))
+    {
+        commitRect(face, level, xoffset, yoffset, width, height);
+    }
 }
 
 // Tests for GL texture object completeness. [OpenGL ES 2.0.24] section 3.7.10 page 81.
@@ -1289,6 +1311,10 @@ void TextureCubeMap::copyImage(GLenum face, GLint level, GLenum internalFormat, 
         convertToRenderTarget();
         pushTexture(mTexture, true);
     }
+    else
+    {
+        needRenderTarget();
+    }
 
     ASSERT(width == height);
 
@@ -1358,7 +1384,7 @@ void TextureCubeMap::copySubImage(GLenum face, GLint level, GLint xoffset, GLint
     }
     else
     {
-        getRenderTarget(face);
+        needRenderTarget();
     }
 
     if (level < levelCount())

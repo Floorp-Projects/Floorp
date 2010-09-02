@@ -466,6 +466,8 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_ATOM(atom)        INS_CONSTSTR(ATOM_TO_STRING(atom))
 #define INS_NULL()            INS_CONSTPTR(NULL)
 #define INS_UNDEFINED()       INS_CONST(0)
+#define INS_MAGIC_WHY(why)    INS_CONSTWORD((size_t)why)
+#define INS_MAGIC_NULL()      INS_NULL()
 
 static const size_t sPayloadOffset = offsetof(jsval_layout, s.payload);
 #if JS_BITS_PER_WORD == 32
@@ -2223,7 +2225,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     globalObj(tree->globalObj),
     outer(outer),
     outerArgc(outerArgc),
-    lexicalBlock(cx->fp()->maybeBlockChain()),
     anchor(anchor),
     lir(NULL),
     cx_ins(NULL),
@@ -3914,23 +3915,20 @@ TraceRecorder::known(JSObject** p)
  * accordingly.
  */
 JS_REQUIRES_STACK void
-TraceRecorder::checkForGlobalObjectReallocation()
+TraceRecorder::checkForGlobalObjectReallocationHelper()
 {
-    if (global_dslots != globalObj->dslots) {
-        debug_only_print0(LC_TMTracer,
-                          "globalObj->dslots relocated, updating tracker\n");
-        Value* src = global_dslots;
-        Value* dst = globalObj->dslots;
-        jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
-        LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
-        for (jsuint n = 0; n < length; ++n) {
-            map[n] = tracker.get(src);
-            tracker.set(src++, NULL);
-        }
-        for (jsuint n = 0; n < length; ++n)
-            tracker.set(dst++, map[n]);
-        global_dslots = globalObj->dslots;
+    debug_only_print0(LC_TMTracer, "globalObj->dslots relocated, updating tracker\n");
+    Value* src = global_dslots;
+    Value* dst = globalObj->dslots;
+    jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
+    LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
+    for (jsuint n = 0; n < length; ++n) {
+        map[n] = tracker.get(src);
+        tracker.set(src++, NULL);
     }
+    for (jsuint n = 0; n < length; ++n)
+        tracker.set(dst++, map[n]);
+    global_dslots = globalObj->dslots;
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
@@ -4283,7 +4281,6 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->imacpc = fp->maybeIMacroPC();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
-    exit->nativeCalleeWord = 0;
     exit->lookupFlags = js_InferFlags(cx, 0);
     memcpy(exit->fullTypeMap(), typemap, typemap_size);
 
@@ -5729,46 +5726,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
            newscript->nfixed + SPECIAL_FRAME_SLOTS;
 }
 
-JS_REQUIRES_STACK static void
-SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
-{
-    /*
-     * StackSpace::getInlineFrame calls js_ReportOutOfScriptQuota if there is
-     * no space (which will try to deep bail, which is bad), however we already
-     * check on entry to ExecuteTree that there is enough space.
-     */
-    StackSegment *seg;
-    JSStackFrame *fp;
-    cx->stack().getSynthesizedSlowNativeFrame(cx, seg, fp);
-
-#ifdef DEBUG
-    JSObject *callee = &state.nativeVp[0].toObject();
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, callee);
-    JS_ASSERT(!fun->isInterpreted() && !fun->isFastNative());
-    JS_ASSERT(fun->u.n.extra == 0);
-#endif
-
-    fp->setCallObj(NULL);
-    fp->setArgsObj(NULL);
-    fp->setScript(NULL);
-    fp->setThisValue(state.nativeVp[1]);
-    fp->setNumActualArgs(state.nativeVpLen - 2);
-    fp->argv = state.nativeVp + 2;
-    fp->setFunction(GET_FUNCTION_PRIVATE(cx, fp->callee()));
-    fp->clearReturnValue();
-    fp->setAnnotation(NULL);
-    fp->setScopeChain(cx->fp()->getScopeChain());
-    fp->setBlockChain(NULL);
-    fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
-    JS_ASSERT(!fp->hasIMacroPC());
-
-    state.bailedSlowNativeRegs.fp = fp;
-    state.bailedSlowNativeRegs.pc = NULL;
-    state.bailedSlowNativeRegs.sp = fp->slots();
-
-    cx->stack().pushSynthesizedSlowNativeFrame(cx, seg, state.bailedSlowNativeRegs);
-}
-
 static JS_REQUIRES_STACK bool
 RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
            uint32 outerArgc, SlotList* globalSlots)
@@ -6770,16 +6727,8 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
          * A _FAIL native already called LeaveTree. We already reconstructed
          * the interpreter stack, in pre-call state, with pc pointing to the
          * CALL/APPLY op, for correctness. Then we continued in native code.
-         *
-         * First, if we just returned from a slow native, pop its stack frame.
          */
-        if (!cx->fp()->hasScript()) {
-            JS_ASSERT(cx->regs == &state.bailedSlowNativeRegs);
-            cx->stack().popSynthesizedSlowNativeFrame(cx);
-        }
-        JS_ASSERT(cx->fp()->hasScript());
-
-        if (!(bs & BUILTIN_ERROR)) {
+        if (!(bs & (BUILTIN_ERROR | BUILTIN_NO_FIXUP_NEEDED))) {
             /*
              * The builtin or native deep-bailed but finished successfully
              * (no exception or error).
@@ -6999,9 +6948,6 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
                               innermost->stackTypeMap(),
                               stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
-
-    if (innermost->nativeCalleeWord)
-        SynthesizeSlowNativeFrame(state, cx, innermost);
 
     /* Write back interned globals. */
     JS_ASSERT(state.eos == state.stackBase + MAX_NATIVE_STACK_SLOTS);
@@ -9424,7 +9370,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // enough to share mutable objects on the scope or proto chain, but we
     // don't care about such insane embeddings. Anyway, the (scope, proto)
     // entry->vcap coordinates must reach obj2 from aobj at this point.
-    JS_ASSERT(cx->requestDepth);
+    JS_ASSERT(cx->thread->requestDepth);
 #endif
 
     return InjectStatus(guardPropertyCacheHit(obj_ins, aobj, obj2, entry, pcval));
@@ -9793,7 +9739,7 @@ TraceRecorder::unbox_non_double_object(LIns* v_ins, JSValueType type, VMSideExit
         unboxed_ins = INS_UNDEFINED();
     } else if (type == JSVAL_TYPE_NULL) {
         unboxed_ins = INS_NULL();
-    } else if (type >= JSVAL_LOWER_INCL_TYPE_OF_GCTHING_SET) {
+    } else if (type >= JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET) {
         unboxed_ins = unpack_ptr(v_ins);
     } else {
         JS_ASSERT(type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN || type == JSVAL_TYPE_MAGIC);
@@ -9889,7 +9835,7 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
     uint64 shiftedTag = ((uint64)tag) << JSVAL_TAG_SHIFT;
     LIns *shiftedTag_ins = INS_CONSTQWORD(shiftedTag);
 
-    if (v.isGCThing())
+    if (v.hasPtrPayload())
         return lir->ins2(LIR_orq, v_ins, shiftedTag_ins);
     return lir->ins2(LIR_orq, lir->ins1(LIR_ui2uq, v_ins), shiftedTag_ins);
 }
@@ -9962,20 +9908,20 @@ TraceRecorder::getThis(LIns*& this_ins)
         // object, which we can burn into the trace.
 
         JS_ASSERT(!fp->argv);
-        JS_ASSERT(!fp->getThisValue().isPrimitive());
+        JS_ASSERT(fp->getThisValue().isObject());
 
 #ifdef DEBUG
         JSObject *obj = globalObj->thisObject(cx);
         if (!obj)
             RETURN_ERROR("thisObject hook failed");
-        JS_ASSERT(fp->getThisValue().toObjectOrNull() == obj);
+        JS_ASSERT(&fp->getThisValue().toObject() == obj);
 #endif
 
-        this_ins = INS_CONSTOBJ(fp->getThisValue().toObjectOrNull());
+        this_ins = INS_CONSTOBJ(&fp->getThisValue().toObject());
         return RECORD_CONTINUE;
     }
 
-    Value& thisv = fp->argv[-1];
+    const Value& thisv = fp->argv[-1];
     JS_ASSERT(thisv == fp->getThisValue() || fp->getThisValue().isNull());
 
     JS_ASSERT(fp->callee()->getGlobal() == globalObj);
@@ -9998,7 +9944,7 @@ TraceRecorder::getThis(LIns*& this_ins)
     JSObject *obj = fp->getThisObject(cx);
     if (!obj)
         RETURN_ERROR("getThisObject failed");
-    JS_ASSERT(fp->argv[-1] == ObjectOrNullValue(obj));
+    JS_ASSERT(fp->argv[-1] == ObjectValue(*obj));
     this_ins = INS_CONSTOBJ(obj);
     set(&fp->argv[-1], this_ins);
     return RECORD_CONTINUE;
@@ -10174,12 +10120,9 @@ TraceRecorder::putActivationObjects()
 {
     JSStackFrame *fp = cx->fp();
 
-    bool have_args = fp->hasArgsObj() &&
-        !fp->getArgsObj()->isStrictArguments() &&
-        fp->numActualArgs() > 0;
-    bool have_call = fp->hasFunction() &&
-        JSFUN_HEAVYWEIGHT_TEST(fp->getFunction()->flags) &&
-        fp->getFunction()->countArgsAndVars();
+    bool have_args = fp->hasArgsObj() && !fp->getArgsObj()->isStrictArguments();
+    bool have_call = fp->hasCallObj();
+    JS_ASSERT(have_call == (fp->hasFunction() && fp->getFunction()->isHeavyweight()));
 
     if (!have_args && !have_call)
         return;
@@ -11013,22 +10956,13 @@ TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[], bool rooted)
 {
-    bool constructing = !!(sn->flags & JSTN_CONSTRUCTOR);
-
     if (JSTN_ERRTYPE(sn) == FAIL_STATUS) {
         // This needs to capture the pre-call state of the stack. So do not set
         // pendingSpecializedNative before taking this snapshot.
         JS_ASSERT(!pendingSpecializedNative);
 
         // Take snapshot for DeepBail and store it in cx->bailExit.
-        // If we are calling a slow native, add information to the side exit
-        // for SynthesizeSlowNativeFrame.
-        VMSideExit* exit = enterDeepBailCall();
-        JSObject* funobj = &stackval(0 - (2 + argc)).toObject();
-        if (FUN_SLOW_NATIVE(GET_FUNCTION_PRIVATE(cx, funobj))) {
-            exit->setNativeCallee(funobj, constructing);
-            tree->gcthings.addUnique(ObjectValue(*funobj));
-        }
+        enterDeepBailCall();
     }
 
     LIns* res_ins = lir->insCall(sn->builtin, args);
@@ -11187,7 +11121,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     Value* vp = &stackval(0 - (2 + argc));
     JSObject* funobj = &vp[0].toObject();
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    FastNative native = (FastNative)fun->u.n.native;
+    Native native = fun->u.n.native;
 
     switch (argc) {
       case 1:
@@ -11202,13 +11136,13 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             }
             if (vp[1].isString()) {
                 JSString *str = vp[1].toString();
-                if (native == (FastNative)js_str_charAt) {
+                if (native == js_str_charAt) {
                     LIns* str_ins = get(&vp[1]);
                     LIns* idx_ins = get(&vp[2]);
                     set(&vp[0], getCharAt(str, str_ins, idx_ins, mode));
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
-                } else if (native == (FastNative)js_str_charCodeAt) {
+                } else if (native == js_str_charCodeAt) {
                     jsdouble i = vp[2].toNumber();
                     if (i < 0 || i >= str->length())
                         RETURN_STOP("charCodeAt out of bounds");
@@ -11217,6 +11151,41 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                     set(&vp[0], getCharCodeAt(str, str_ins, idx_ins));
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
+                }
+            }
+        } else if (vp[2].isString() && mode == JSOP_CALL) {
+            if (native == js_regexp_exec) {
+                jsbytecode *pc = cx->regs->pc;
+                /*
+                 * If we see any of these sequences, the result is unused:
+                 * - call / pop
+                 * - call / trace / pop
+                 *
+                 * If we see any of these sequences, the result is only tested for nullness:
+                 * - call / ifeq
+                 * - call / trace / ifeq
+                 * - call / not / ifeq
+                 * - call / trace / not / ifeq
+                 *
+                 * In either case, we call RegExp.test() because "r.exec(s) !=
+                 * null" is equivalent to "r.test(s)".  This avoids building
+                 * the result array, which can be expensive.
+                 */
+                if (pc[0] == JSOP_CALL) {
+                    if ((pc[JSOP_CALL_LENGTH] == JSOP_POP) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_POP) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_IFEQ) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_IFEQ) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_NOT &&
+                         pc[JSOP_CALL_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ) ||
+                        (pc[JSOP_CALL_LENGTH] == JSOP_TRACE &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_NOT &&
+                         pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ))
+                    {
+                        fun->u.n.native = js_regexp_test;
+                    }
                 }
             }
         }
@@ -11245,7 +11214,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
     if (fun->flags & JSFUN_TRCINFO) {
         JSNativeTraceInfo *trcinfo = FUN_TRCINFO(fun);
-        JS_ASSERT(trcinfo && (JSFastNative)fun->u.n.native == trcinfo->native);
+        JS_ASSERT(trcinfo && fun->u.n.native == trcinfo->native);
 
         /* Try to call a type specialized version of the native. */
         if (trcinfo->specializations) {
@@ -11258,13 +11227,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     if (native == js_fun_apply || native == js_fun_call)
         RETURN_STOP("trying to call native apply or call");
 
-    if (fun->u.n.extra > 0)
-        RETURN_STOP("trying to trace slow native with fun->u.n.extra > 0");
-
     // Allocate the vp vector and emit code to root it.
-    uintN vplen = 2 + JS_MAX(argc, unsigned(FUN_MINARGS(fun)));
-    if (!(fun->flags & JSFUN_FAST_NATIVE))
-        vplen++; // slow native return value slot
+    uintN vplen = 2 + argc;
     LIns* invokevp_ins = lir->insAlloc(vplen * sizeof(Value));
 
     // vp[0] is the callee.
@@ -11288,9 +11252,9 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (!clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
-        if (fun->isFastConstructor()) {
-            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
-            newobj_ins = INS_CONST(JS_FAST_CONSTRUCTOR);
+        if (fun->isConstructor()) {
+            vp[1].setMagicWithObjectOrNullPayload(NULL);
+            newobj_ins = INS_MAGIC_NULL();
 
             /* Treat this as a regular call, the constructor will behave correctly. */
             mode = JSOP_CALL;
@@ -11298,7 +11262,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             args[0] = INS_CONSTOBJ(funobj);
             args[1] = INS_CONSTPTR(clasp);
             args[2] = cx_ins;
-            newobj_ins = lir->insCall(&js_NewInstance_ci, args);
+            newobj_ins = lir->insCall(&js_NewInstanceFromTrace_ci, args);
             guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
 
             /*
@@ -11315,31 +11279,6 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         this_ins = newobj_ins;
     } else {
         this_ins = get(&vp[1]);
-
-        /*
-         * For fast natives, 'null' or primitives are fine as as 'this' value.
-         * For slow natives we have to ensure the object is substituted for the
-         * appropriate global object or boxed object value. JSOP_NEW allocates its
-         * own object so it's guaranteed to have a valid 'this' value.
-         */
-        if (!(fun->flags & JSFUN_FAST_NATIVE)) {
-            if (vp[1].isNull()) {
-                JSObject* thisObj = ComputeThisFromVp(cx, vp);
-                if (!thisObj)
-                    RETURN_ERROR("error in js_ComputeGlobalThis");
-                this_ins = INS_CONSTOBJ(thisObj);
-            } else if (!vp[1].isObject()) {
-                RETURN_STOP("slow native(primitive, args)");
-            } else {
-                if (vp[1].toObject().hasClass(&js_WithClass))
-                    RETURN_STOP("can't trace slow native invocation on With object");
-                guardNotClass(this_ins, &js_WithClass, snapshot(MISMATCH_EXIT), LOAD_CONST);
-
-                this_ins = lir->insChoose(lir->insEqP_0(stobj_get_parent(this_ins)),
-                                           INS_CONSTOBJ(globalObj),
-                                           this_ins, avmplus::AvmCore::use_cmov());
-            }
-        }
     }
     set(&vp[1], this_ins);
     box_value_into(vp[1], this_ins, invokevp_ins, 1 * sizeof(Value), ACCSET_OTHER);
@@ -11363,26 +11302,13 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     }
 
     // Set up arguments for the JSNative or JSFastNative.
-    uint32 typesig;
-    if (fun->flags & JSFUN_FAST_NATIVE) {
-        if (mode == JSOP_NEW && !(fun->flags & JSFUN_FAST_NATIVE_CTOR))
-            RETURN_STOP("untraceable fast native constructor");
-        native_rval_ins = invokevp_ins;
-        args[0] = invokevp_ins;
-        args[1] = lir->insImmI(argc);
-        args[2] = cx_ins;
-        typesig = CallInfo::typeSig3(ARGTYPE_I, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P);
-    } else {
-        int32_t offset = (vplen - 1) * sizeof(Value);
-        native_rval_ins = lir->ins2(LIR_addp, invokevp_ins, INS_CONSTWORD(offset));
-        args[0] = native_rval_ins;
-        args[1] = lir->ins2(LIR_addp, invokevp_ins, INS_CONSTWORD(2 * sizeof(Value)));
-        args[2] = lir->insImmI(argc);
-        args[3] = this_ins;
-        args[4] = cx_ins;
-        typesig = CallInfo::typeSig5(ARGTYPE_I,
-                                     ARGTYPE_P, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P, ARGTYPE_P);
-    }
+    if (mode == JSOP_NEW)
+        RETURN_STOP("untraceable fast native constructor");
+    native_rval_ins = invokevp_ins;
+    args[0] = invokevp_ins;
+    args[1] = lir->insImmI(argc);
+    args[2] = cx_ins;
+    uint32 typesig = CallInfo::typeSig3(ARGTYPE_I, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P);
 
     // Generate CallInfo and a JSSpecializedNative structure on the fly.
     // Do not use JSTN_UNBOX_AFTER for mode JSOP_NEW because
@@ -11464,14 +11390,14 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
     if (FUN_INTERPRETED(fun)) {
         if (mode == JSOP_NEW) {
             LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_NewInstance_ci, args);
+            LIns* tv_ins = lir->insCall(&js_NewInstanceFromTrace_ci, args);
             guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
             set(&tval, tv_ins);
         }
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
     }
 
-    FastNative native = FUN_FAST_NATIVE(fun);
+    Native native = fun->maybeNative();
     Value* argv = &tval + 1;
     if (native == js_Array)
         return newArray(&fval.toObject(), argc, argv, &fval);
@@ -11803,11 +11729,11 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
 static JSBool FASTCALL
 MethodWriteBarrier(JSContext* cx, JSObject* obj, Shape* shape, JSObject* funobj)
 {
-    AutoObjectRooter tvr(cx, funobj);
-
-    return obj->methodWriteBarrier(cx, *shape, ObjectValue(*tvr.object()));
+    bool ok = obj->methodWriteBarrier(cx, *shape, ObjectValue(*funobj));
+    JS_ASSERT(cx->tracerState->builtinStatus == 0);
+    return ok;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
+JS_DEFINE_CALLINFO_4(static, BOOL_RETRY, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
                      0, ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK RecordingStatus
@@ -11863,14 +11789,21 @@ TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, const Shape* shape,
      * branded-ness is implied by the shape, which we've already guarded on.
      */
     if (obj2->brandedOrHasMethodBarrier() && IsFunctionObject(v) && entry->directHit()) {
+        /*
+         * This guarantees that generateOwnShape (possibly called by the
+         * methodWriteBarrier) will not leave trace.
+         */
         if (obj == globalObj)
             RETURN_STOP("can't trace function-valued property set in branded global scope");
 
-        enterDeepBailCall();
+        /*
+         * MethodWriteBarrier takes care not to deep bail, but it may reshape
+         * the given object, so forget anything we knew about obj's shape.
+         */
+        guardedShapeTable.remove(obj_ins);
         LIns* args[] = { v_ins, INS_CONSTSHAPE(shape), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
         guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
-        leaveDeepBailCall();
     }
 
     // Add a property to the object if necessary.
@@ -13315,8 +13248,8 @@ TraceRecorder::record_JSOP_APPLY()
     if (FUN_INTERPRETED(fun))
         return record_JSOP_CALL();
 
-    bool apply = (FastNative)fun->u.n.native == js_fun_apply;
-    if (!apply && (FastNative)fun->u.n.native != js_fun_call)
+    bool apply = fun->u.n.native == js_fun_apply;
+    if (!apply && fun->u.n.native != js_fun_call)
         return record_JSOP_CALL();
 
     /*
@@ -14219,13 +14152,14 @@ TraceRecorder::record_JSOP_ITER()
 static JSBool FASTCALL
 IteratorMore(JSContext *cx, JSObject *iterobj, Value *vp)
 {
-    AutoValueRooter tvr(cx);
-    if (!js_IteratorMore(cx, iterobj, tvr.addr())) {
-        SetBuiltinError(cx);
+    if (!js_IteratorMore(cx, iterobj, vp)) {
+        SetBuiltinError(cx, BUILTIN_ERROR_NO_FIXUP_NEEDED);
+        return false;
+    } else if (cx->tracerState->builtinStatus) {
+        SetBuiltinError(cx, BUILTIN_NO_FIXUP_NEEDED);
         return false;
     }
-    *vp = tvr.value();
-    return cx->tracerState->builtinStatus == 0;
+    return true;
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, IteratorMore, CONTEXT, OBJECT, VALUEPTR,
                      0, ACCSET_STORE_ANY)
@@ -14271,12 +14205,14 @@ TraceRecorder::record_JSOP_MOREITER()
         LIns* ok_ins = lir->insCall(&IteratorMore_ci, args);
 
         /*
-         * OOM_EXIT here is all sorts of wrong, but until we fix the deep bail situation for non-calls, its our best
-         * option. We will re-execute IteratorMore from the interpreter in case of a bail-out or an error. Note that
-         * we can't rely on pendingGuardCondition here, because monitorRecording will not be triggered in case we
-         * close the loop below with endLoop.
+         * We cannot use pendingGuardCondition since monitorRecording may not be
+         * triggered if we close the loop below with endLoop. Instead, we guard
+         * here with STATUS_EXIT. By default, STATUS_EXIT means "advance the pc
+         * and fixup the stack", so IteratorMore sets BUILTIN_NO_FIXUP_NEEDED.
+         * If IteratorMore fails, we will reexecute this op in the interpreter,
+         * but js_IteratoreMore is idempotent so this is ok.
          */
-        guard(true, ok_ins, OOM_EXIT);
+        guard(false, lir->insEqI_0(ok_ins), STATUS_EXIT);
 
         leaveDeepBailCall();
 
@@ -14341,8 +14277,8 @@ TraceRecorder::record_JSOP_ENDITER()
 JS_REQUIRES_STACK void
 TraceRecorder::storeMagic(JSWhyMagic why, nanojit::LIns *addr_ins, ptrdiff_t offset, AccSet accSet)
 {
-    lir->insStore(INS_CONSTU(why), addr_ins, offset + sPayloadOffset, accSet);
-    lir->insStore(INS_CONSTU(JSVAL_TAG_MAGIC), addr_ins, offset + sTagOffset, accSet);
+    lir->insStore(INS_MAGIC_WHY(why), addr_ins, offset + sPayloadOffset, accSet);
+    lir->insStore(INS_MAGIC_WHY(JSVAL_TAG_MAGIC), addr_ins, offset + sTagOffset, accSet);
 }
 #elif JS_BITS_PER_WORD == 64
 JS_REQUIRES_STACK void
@@ -14949,11 +14885,11 @@ TraceRecorder::record_JSOP_LAMBDA()
                 JSObject *callee;
 
                 if (IsFunctionObject(cref, &callee)) {
-                    JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
-                    FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+                    JSFunction *calleeFun = callee->getFunctionPrivate();
+                    Native native = calleeFun->maybeNative();
 
-                    if ((iargc == 1 && fastNative == array_sort) ||
-                        (iargc == 2 && fastNative == str_replace)) {
+                    if ((iargc == 1 && native == array_sort) ||
+                        (iargc == 2 && native == str_replace)) {
                         stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
                         return ARECORD_CONTINUE;
                     }
@@ -14978,6 +14914,9 @@ TraceRecorder::record_JSOP_LAMBDA()
         return ARECORD_CONTINUE;
     }
 
+    if (cx->fp()->hasBlockChain())
+        RETURN_STOP_A("Unable to trace creating lambda in let");
+
     LIns *proto_ins;
     CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
     LIns* scopeChain_ins = scopeChain();
@@ -15000,6 +14939,9 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 
     if (FUN_OBJECT(fun)->getParent() != globalObj)
         return ARECORD_STOP;
+
+    if (cx->fp()->hasBlockChain())
+        RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns* args[] = {
         scopeChain(),
@@ -15621,9 +15563,6 @@ TraceRecorder::record_JSOP_ENTERBLOCK()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
-    /* We mustn't exit the lexical block we began recording in. */
-    if (cx->fp()->getBlockChain() == lexicalBlock)
-        return ARECORD_STOP;
     return ARECORD_CONTINUE;
 }
 
@@ -15855,7 +15794,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, INS_CONST(JS_ARRAY_HOLE));
+    stack(0, INS_MAGIC_WHY(JS_ARRAY_HOLE));
     return ARECORD_CONTINUE;
 }
 

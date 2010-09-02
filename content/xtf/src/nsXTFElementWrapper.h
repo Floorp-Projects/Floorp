@@ -155,6 +155,10 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo() { return this; }
 
+  virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
+  {
+  }
+
 protected:
   virtual nsIXTFElement* GetXTFElement() const
   {

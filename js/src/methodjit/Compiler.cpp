@@ -2247,6 +2247,10 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
                                  inlineAtomOffsetLabel, ImmPtr(BOGUS_ATOM));
     DBGLABEL(dbgInlineAtomJump);
 
+    /*
+     * The state between these two exits is identical, so this safe. The
+     * GETELEM PIC repatches both jumps to the slowPathStart on reset.
+     */
     stubcc.linkExit(idGuard, Uses(2));
     pic.slowPathStart = stubcc.linkExit(jmpShapeGuard, Uses(2));
 

@@ -158,7 +158,7 @@ class NativeCallCompiler
     void finish(JSScript *script, uint8 *start, uint8 *fallthrough);
 };
 
-void CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun, bool isNew);
+void CallNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun, bool isNew);
 
 #endif /* JS_CPU_X86 */
 

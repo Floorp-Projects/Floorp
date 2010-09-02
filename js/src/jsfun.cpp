@@ -2162,8 +2162,6 @@ JS_PUBLIC_DATA(Class) js_FunctionClass = {
     JS_CLASS_TRACE(fun_trace)
 };
 
-namespace js {
-
 JSString *
 fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
 {
@@ -2182,8 +2180,6 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
         return NULL;
     return JS_DecompileFunction(cx, fun, indent);
 }
-
-}  /* namespace js */
 
 static JSBool
 fun_toString(JSContext *cx, uintN argc, Value *vp)
@@ -2393,11 +2389,6 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 }
 
 namespace {
-Native
-FastNativeToNative(FastNative fn)
-{
-    return reinterpret_cast<Native>(fn);
-}
 
 JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
@@ -2406,7 +2397,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
 bool
 JSFunction::isBound() const
 {
-    return isFastNative() && u.n.native == FastNativeToNative(CallOrConstructBoundFunction);
+    return isNative() && u.n.native == CallOrConstructBoundFunction;
 }
 
 inline bool
@@ -2480,7 +2471,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 
     LeaveTrace(cx);
 
-    bool constructing = vp[1].isMagic(JS_FAST_CONSTRUCTOR);
+    bool constructing = IsConstructing(vp);
 
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
     uintN argslen;
@@ -2574,8 +2565,8 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
 
     /* NB: Bound functions abuse |parent| to store their target. */
     JSObject *funobj =
-        js_NewFunction(cx, NULL, FastNativeToNative(CallOrConstructBoundFunction), length,
-                       JSFUN_FAST_NATIVE | JSFUN_FAST_NATIVE_CTOR, target, name);
+        js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
+                       JSFUN_CONSTRUCTOR, target, name);
     if (!funobj)
         return false;
 
@@ -2606,36 +2597,15 @@ static JSFunctionSpec function_methods[] = {
 };
 
 static JSBool
-Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+Function(JSContext *cx, uintN argc, Value *vp)
 {
-    JSFunction *fun;
-    JSObject *parent;
-    JSStackFrame *fp, *caller;
-    uintN i, n, lineno;
-    JSAtom *atom;
-    const char *filename;
-    JSBool ok;
-    JSString *str, *arg;
-    TokenStream ts(cx);
-    JSPrincipals *principals;
-    jschar *collected_args, *cp;
-    void *mark;
-    size_t arg_length, args_length, old_args_length;
-    TokenKind tt;
+    JSObject *obj = NewFunction(cx, NULL);
+    if (!obj)
+        return JS_FALSE;
 
-    if (!JS_IsConstructing(cx)) {
-        obj = NewFunction(cx, NULL);
-        if (!obj)
-            return JS_FALSE;
-        rval->setObject(*obj);
-    } else {
-        /*
-         * The constructor is called before the private slot is initialized so
-         * we must use getPrivate, not GET_FUNCTION_PRIVATE here.
-         */
-        if (obj->getPrivate())
-            return JS_TRUE;
-    }
+    /* N.B. overwriting callee with return value */
+    JSObject *parent = vp[0].toObject().getParent();
+    vp[0].setObject(*obj);
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
@@ -2647,11 +2617,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
      * its running context's globalObject, which might be different from the
      * top-level reachable from scopeChain (in HTML frames, e.g.).
      */
-    parent = argv[-2].toObject().getParent();
-
-    fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                         parent, cx->runtime->atomState.anonymousAtom);
-
+    JSFunction *fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                                     parent, cx->runtime->atomState.anonymousAtom);
     if (!fun)
         return JS_FALSE;
 
@@ -2662,12 +2629,13 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
      * are built for Function.prototype.call or .apply activations that invoke
      * Function indirectly from a script.
      */
-    fp = js_GetTopStackFrame(cx);
-    JS_ASSERT(!fp->hasScript() && fp->hasFunction() &&
-              fp->getFunction()->u.n.native == Function);
-    caller = js_GetScriptedCaller(cx, fp);
+    JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
+    uintN lineno;
+    const char *filename;
+    JSPrincipals *principals;
     if (caller) {
-        principals = JS_EvalFramePrincipals(cx, fp, caller);
+        JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+        principals = js_EvalFramePrincipals(cx, callee, caller);
         filename = js_ComputeFilename(cx, caller, principals, &lineno);
     } else {
         filename = NULL;
@@ -2691,7 +2659,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         return JS_FALSE;
     }
 
-    n = argc ? argc - 1 : 0;
+    Value *argv = vp + 2;
+    uintN n = argc ? argc - 1 : 0;
     if (n > 0) {
         enum { OK, BAD, BAD_FORMAL } state;
 
@@ -2706,10 +2675,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * code.  See ECMA 15.3.2.1.
          */
         state = BAD_FORMAL;
-        args_length = 0;
-        for (i = 0; i < n; i++) {
+        size_t args_length = 0;
+        for (uintN i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
-            arg = js_ValueToString(cx, argv[i]);
+            JSString *arg = js_ValueToString(cx, argv[i]);
             if (!arg)
                 return JS_FALSE;
             argv[i].setString(arg);
@@ -2718,7 +2687,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
              * Check for overflow.  The < test works because the maximum
              * JSString length fits in 2 fewer bits than size_t has.
              */
-            old_args_length = args_length;
+            size_t old_args_length = args_length;
             args_length = old_args_length + arg->length();
             if (args_length < old_args_length) {
                 js_ReportAllocationOverflow(cx);
@@ -2727,7 +2696,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         }
 
         /* Add 1 for each joining comma and check for overflow (two ways). */
-        old_args_length = args_length;
+        size_t old_args_length = args_length;
         args_length = old_args_length + n - 1;
         if (args_length < old_args_length ||
             args_length >= ~(size_t)0 / sizeof(jschar)) {
@@ -2740,21 +2709,22 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * for a terminating 0.  Mark cx->tempPool for later release, to free
          * collected_args and its tokenstream in one swoop.
          */
-        mark = JS_ARENA_MARK(&cx->tempPool);
+        void *mark = JS_ARENA_MARK(&cx->tempPool);
+        jschar *cp;
         JS_ARENA_ALLOCATE_CAST(cp, jschar *, &cx->tempPool,
                                (args_length+1) * sizeof(jschar));
         if (!cp) {
             js_ReportOutOfScriptQuota(cx);
             return JS_FALSE;
         }
-        collected_args = cp;
+        jschar *collected_args = cp;
 
         /*
          * Concatenate the arguments into the new string, separated by commas.
          */
-        for (i = 0; i < n; i++) {
-            arg = argv[i].toString();
-            arg_length = arg->length();
+        for (uintN i = 0; i < n; i++) {
+            JSString *arg = argv[i].toString();
+            size_t arg_length = arg->length();
             (void) js_strncpy(cp, arg->chars(), arg_length);
             cp += arg_length;
 
@@ -2763,13 +2733,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         }
 
         /* Initialize a tokenstream that reads from the given string. */
+        TokenStream ts(cx);
         if (!ts.init(collected_args, args_length, NULL, filename, lineno)) {
             JS_ARENA_RELEASE(&cx->tempPool, mark);
             return JS_FALSE;
         }
 
         /* The argument string may be empty or contain no tokens. */
-        tt = ts.getToken();
+        TokenKind tt = ts.getToken();
         if (tt != TOK_EOF) {
             for (;;) {
                 /*
@@ -2784,18 +2755,18 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
                  * stream; we're assured at this point that it's a valid
                  * identifier.
                  */
-                atom = ts.currentToken().t_atom;
+                JSAtom *atom = ts.currentToken().t_atom;
 
                 /* Check for a duplicate parameter name. */
                 if (fun->lookupLocal(cx, atom, NULL) != JSLOCAL_NONE) {
                     const char *name;
 
                     name = js_AtomToPrintableString(cx, atom);
-                    ok = name && ReportCompileErrorNumber(cx, &ts, NULL,
+                    if (!name && ReportCompileErrorNumber(cx, &ts, NULL,
                                                           JSREPORT_WARNING | JSREPORT_STRICT,
-                                                          JSMSG_DUPLICATE_FORMAL, name);
-                    if (!ok)
+                                                          JSMSG_DUPLICATE_FORMAL, name)) {
                         goto after_args;
+                    }
                 }
                 if (!fun->addLocal(cx, atom, JSLOCAL_ARG))
                     goto after_args;
@@ -2829,6 +2800,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
             return JS_FALSE;
     }
 
+    JSString *str;
     if (argc) {
         str = js_ValueToString(cx, argv[argc-1]);
         if (!str)
@@ -2872,7 +2844,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
         JSObject *throwTypeError =
             js_NewFunction(cx, NULL, reinterpret_cast<Native>(ThrowTypeError), 0,
-                           JSFUN_FAST_NATIVE, obj, NULL);
+                           0, obj, NULL);
         if (!throwTypeError)
             return NULL;
 
@@ -2902,8 +2874,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = uint16(nargs);
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK |
-                          JSFUN_TRCINFO | JSFUN_FAST_NATIVE_CTOR);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRCINFO);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2914,8 +2885,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         fun->u.i.script = NULL;
         fun->u.i.names = cx->runtime->emptyCallShape;
     } else {
-        fun->u.n.extra = 0;
-        fun->u.n.spare = 0;
         fun->u.n.clasp = NULL;
         if (flags & JSFUN_TRCINFO) {
 #ifdef JS_TRACER
@@ -3049,7 +3018,8 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
         gsop = NULL;
     }
     fun = js_NewFunction(cx, NULL, native, nargs,
-                         attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO), obj, atom);
+                         attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
+                         obj, atom);
     if (!fun)
         return NULL;
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectValue(*fun),
@@ -3111,7 +3081,7 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
      * We try to the print the code that produced vp if vp is a value in the
      * most recent interpreted stack frame. Note that additional values, not
      * directly produced by the script, may have been pushed onto the frame's
-     * expression stack (e.g. by InvokeFromEngine) thereby incrementing sp past
+     * expression stack (e.g. by pushInvokeArgs) thereby incrementing sp past
      * the depth simulated by ReconstructPCStack. Since we must pass an offset
      * from the top of the simulated stack to js_ReportValueError3, it is
      * important to do bounds checking using the simulated, rather than actual,

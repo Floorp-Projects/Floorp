@@ -1609,13 +1609,13 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
         JSObject *callee;
 
         if (IsFunctionObject(cref, &callee)) {
-            JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
-            FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+            JSFunction *calleeFun = callee->getFunctionPrivate();
+            Native native = calleeFun->maybeNative();
 
-            if (fastNative) {
-                if (iargc == 1 && fastNative == array_sort)
+            if (native) {
+                if (iargc == 1 && native == array_sort)
                     return obj;
-                if (iargc == 2 && fastNative == str_replace)
+                if (iargc == 2 && native == str_replace)
                     return obj;
             }
         }

@@ -79,8 +79,8 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsdtracef.h"
 #include "jsobjinlines.h"
+#include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -468,57 +468,69 @@ RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain
     return Interpret(cx, cx->fp());
 }
 
-static JS_REQUIRES_STACK bool
-CallJSNative(JSContext *cx, CallOp callOp, JSObject *thisp, uintN argc, Value *argv, Value *rval)
-{
-    Value *vp = argv - 2;
-    if (CallJSFastNative(cx, callOp, argc, vp)) {
-        *rval = JS_RVAL(cx, vp);
-        return true;
-    }
-    return false;
-}
-
-template <typename T>
-static JS_REQUIRES_STACK bool
-InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
-             const CallArgs &argsRef, uintN flags)
+/*
+ * Find a function reference and its 'this' value implicit first parameter
+ * under argc arguments on cx's stack, and call the function.  Push missing
+ * required arguments, allocate declared local variables, and pop everything
+ * when done.  Then push the return value.
+ */
+JS_REQUIRES_STACK bool
+Invoke(JSContext *cx, const CallArgs &argsRef, uintN flags)
 {
     CallArgs args = argsRef;
+    JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
 
-    if (native && fun && fun->isFastNative()) {
-#ifdef DEBUG_NOT_THROWING
-        JSBool alreadyThrowing = cx->throwing;
-#endif
-        JSBool ok = CallJSFastNative(cx, (FastNative) native, args.argc(), args.base());
-        JS_RUNTIME_METER(cx->runtime, nativeCalls);
-#ifdef DEBUG_NOT_THROWING
-        if (ok && !alreadyThrowing)
-            ASSERT_NOT_THROWING(cx);
-#endif
-        return ok;
+    if (args.callee().isPrimitive()) {
+        js_ReportIsNotFunction(cx, &args.callee(), flags & JSINVOKE_FUNFLAGS);
+        return false;
     }
+
+    JSObject *callee = &args.callee().toObject();
+    Class *clasp = callee->getClass();
+
+    /* Invoke non-functions. */
+    if (JS_UNLIKELY(clasp != &js_FunctionClass)) {
+#if JS_HAS_NO_SUCH_METHOD
+        if (JS_UNLIKELY(clasp == &js_NoSuchMethodClass))
+            return NoSuchMethod(cx, args.argc(), args.base(), 0);
+#endif
+        JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !clasp->construct);
+        if (!clasp->call) {
+            js_ReportIsNotFunction(cx, &args.callee(), flags);
+            return false;
+        }
+        return CallJSNative(cx, clasp->call, args.argc(), args.base());
+    }
+
+    /* Invoke native functions. */
+    JSFunction *fun = callee->getFunctionPrivate();
+    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !fun->isConstructor());
+    if (fun->isNative()) {
+        JS_ASSERT(args.thisv().isObjectOrNull() || PrimitiveThisTest(fun, args.thisv()));
+        return CallJSNative(cx, fun->u.n.native, args.argc(), args.base());
+    }
+
+    JS_ASSERT(fun->isInterpreted());
+    JSScript *script = fun->u.i.script;
+
+    /* Handle the empty-script special case. */
+    if (JS_UNLIKELY(script->isEmpty())) {
+        if (flags & JSINVOKE_CONSTRUCT) {
+            JS_ASSERT(args.thisv().isObject());
+            args.rval() = args.thisv();
+        } else {
+            args.rval().setUndefined();
+        }
+        return true;
+    }
+
+    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, args.thisv().isObject());
 
     /* Calculate slot usage. */
-    uintN nmissing;
-    uintN nvars;
-    if (fun) {
-        if (fun->isInterpreted()) {
-            uintN minargs = fun->nargs;
-            nmissing = minargs > args.argc() ? minargs - args.argc() : 0;
-            nvars = fun->u.i.nvars;
-        } else if (fun->isFastNative()) {
-            nvars = nmissing = 0;
-        } else {
-            uintN minargs = fun->nargs;
-            nmissing = (minargs > args.argc() ? minargs - args.argc() : 0) + fun->u.n.extra;
-            nvars = 0;
-        }
-    } else {
-        nvars = nmissing = 0;
-    }
-
-    uintN nfixed = script ? script->nslots : 0;
+    uintN minargs = fun->nargs;
+    uintN nmissing = minargs > args.argc() ? minargs - args.argc() : 0;
+    uintN nvars = fun->u.i.nvars;
+    uintN nfixed = script->nslots;
 
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
@@ -543,7 +555,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->setNumActualArgs(args.argc());
     fp->argv = args.argv();
     fp->setAnnotation(NULL);
-    fp->setScopeChain(NULL);
+    fp->setScopeChain(callee->getParent());
     fp->setBlockChain(NULL);
     fp->flags = flags;
     JS_ASSERT(!fp->hasIMacroPC());
@@ -555,33 +567,15 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
 
     /* Initialize regs. */
     JSFrameRegs &regs = frame.getRegs();
-    if (script) {
-        regs.pc = script->code;
-        regs.sp = fp->slots() + script->nfixed;
-    } else {
-        regs.pc = NULL;
-        regs.sp = fp->slots();
-    }
+    regs.pc = script->code;
+    regs.sp = fp->slots() + script->nfixed;
 
-    /* Officially push |fp|. |frame|'s destructor pops. */
+    /* Officially push fp. frame's destructor pops. */
     cx->stack().pushInvokeFrame(cx, args, frame);
 
     /* Now that the frame has been pushed, fix up the scope chain. */
-    JSObject *parent = args.callee().toObject().getParent();
-    if (native) {
-        /* Slow natives and call ops expect the caller's scopeChain as their scopeChain. */
-        if (JSStackFrame *down = fp->down)
-            fp->setScopeChain(down->maybeScopeChain());
-
-        /* Ensure that we have a scope chain. */
-        if (!fp->hasScopeChain())
-            fp->setScopeChain(parent);
-    } else {
-        /* Use parent scope so js_GetCallObject can find the right "Call". */
-        fp->setScopeChain(parent);
-        if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
-            return false;
-    }
+    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+        return false;
 
     /*
      * Compute |this|. Currently, this must happen after the frame is pushed
@@ -608,181 +602,34 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     }
     JS_ASSERT_IF(!args.thisv().isPrimitive(), IsSaneThisObject(args.thisv().toObject()));
 
-    /* Call the hook if present after we fully initialized the frame. */
     JSInterpreterHook hook = cx->debugHooks->callHook;
     void *hookData = NULL;
-    if (hook)
+    if (JS_UNLIKELY(hook != NULL))
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData);
 
-    DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
-
-    /* Call the function, either a native method or an interpreted script. */
     JSBool ok;
-    if (native) {
-#ifdef DEBUG_NOT_THROWING
-        JSBool alreadyThrowing = cx->throwing;
-#endif
-        /* Primitive |this| should not be passed to slow natives. */
-        JSObject *thisp = fun ? fp->getThisObject(cx) : fp->getThisValue().toObjectOrNull();
-        ok = CallJSNative(cx, native, thisp, fp->numActualArgs(), fp->argv,
-		                  fp->addressReturnValue());
-
-        JS_ASSERT(cx->fp() == fp);
-        JS_RUNTIME_METER(cx->runtime, nativeCalls);
-#ifdef DEBUG_NOT_THROWING
-        if (ok && !alreadyThrowing)
-            ASSERT_NOT_THROWING(cx);
-#endif
-    } else {
-        JS_ASSERT(script);
+    {
         AutoPreserveEnumerators preserve(cx);
+        Probes::enterJSFun(cx, fun);
         ok = RunScript(cx, script, fun, fp->getScopeChain());
+        Probes::exitJSFun(cx, fun);
     }
 
-    DTrace::exitJSFun(cx, fp, fun, fp->getReturnValue());
-
-    if (hookData) {
+    if (JS_UNLIKELY(hookData != NULL)) {
         hook = cx->debugHooks->callHook;
         if (hook)
             hook(cx, fp, JS_FALSE, &ok, hookData);
     }
 
     fp->putActivationObjects(cx);
+
     args.rval() = fp->getReturnValue();
     return ok;
 }
 
-static JSBool
-DoConstruct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
-{
-
-    Class *clasp = argv[-2].toObject().getClass();
-    if (!clasp->construct) {
-        js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
-        return JS_FALSE;
-    }
-    return clasp->construct(cx, obj, argc, argv, rval);
-}
-
-static JSBool
-DoSlowCall(JSContext *cx, uintN argc, Value *vp)
-{
-    JSStackFrame *fp = cx->fp();
-    JSObject *obj = fp->getThisObject(cx);
-    if (!obj)
-        return false;
-    JS_ASSERT(ObjectValue(*obj) == fp->getThisValue());
-
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    Class *clasp = callee->getClass();
-    JS_ASSERT(!(clasp->flags & Class::CALL_IS_FAST));
-    if (!clasp->call) {
-        js_ReportIsNotFunction(cx, &vp[0], 0);
-        return JS_FALSE;
-    }
-    AutoValueRooter rval(cx);
-    JSBool ok = clasp->call(cx, obj, argc, JS_ARGV(cx, vp), rval.addr());
-    if (ok)
-        JS_SET_RVAL(cx, vp, rval.value());
-    return ok;
-}
-
-/*
- * Find a function reference and its 'this' value implicit first parameter
- * under argc arguments on cx's stack, and call the function.  Push missing
- * required arguments, allocate declared local variables, and pop everything
- * when done.  Then push the return value.
- */
-JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const CallArgs &args, uintN flags)
-{
-    JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
-
-    if (args.callee().isPrimitive()) {
-        js_ReportIsNotFunction(cx, &args.callee(), flags & JSINVOKE_FUNFLAGS);
-        return false;
-    }
-
-    JSObject *funobj = &args.callee().toObject();
-    Class *clasp = funobj->getClass();
-
-    if (clasp == &js_FunctionClass) {
-        /* Get private data and set derived locals from it. */
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-        Native native;
-        JSScript *script;
-        if (FUN_INTERPRETED(fun)) {
-            native = NULL;
-            script = fun->u.i.script;
-            JS_ASSERT(script);
-
-            if (script->isEmpty()) {
-                if (flags & JSINVOKE_CONSTRUCT) {
-                    JS_ASSERT(args.thisv().isObject());
-                    args.rval() = args.thisv();
-                } else {
-                    args.rval().setUndefined();
-                }
-                return true;
-            }
-        } else {
-            native = fun->u.n.native;
-            script = NULL;
-        }
-
-        if (!args.thisv().isObjectOrNull()) {
-            JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PrimitiveThisTest(fun, args.thisv()))
-                return InvokeCommon(cx, fun, script, native, args, flags);
-        }
-
-        if (flags & JSINVOKE_CONSTRUCT) {
-            JS_ASSERT(args.thisv().isObject());
-        } else {
-            /*
-             * We must call js_ComputeThis in case we are not called from the
-             * interpreter, where a prior bytecode has computed an appropriate
-             * |this| already.
-             *
-             * But we need to compute |this| eagerly only for so-called "slow"
-             * (i.e., not fast) native functions. Fast natives must use either
-             * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
-             * the appropriate this-computing bytecode, e.g., JSOP_THIS.
-             */
-            if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-                if (!args.computeThis(cx))
-                    return false;
-            }
-        }
-        return InvokeCommon(cx, fun, script, native, args, flags);
-    }
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (clasp == &js_NoSuchMethodClass)
-        return NoSuchMethod(cx, args.argc(), args.base(), flags);
-#endif
-
-    /* Try a call or construct native object op. */
-    if (flags & JSINVOKE_CONSTRUCT) {
-        if (!args.thisv().isObjectOrNull()) {
-            if (!js_PrimitiveToObject(cx, &args.thisv()))
-                return false;
-        }
-        return InvokeCommon(cx, NULL, NULL, DoConstruct, args, flags);
-    }
-    CallOp callOp = (clasp->flags & Class::CALL_IS_FAST) ? (CallOp) clasp->call : DoSlowCall;
-    return InvokeCommon(cx, NULL, NULL, callOp, args, flags);
-}
-
-extern JS_REQUIRES_STACK JS_FRIEND_API(bool)
-InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
-{
-    return Invoke(cx, args, flags);
-}
-
-JSBool
-InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags,
-                  uintN argc, Value *argv, Value *rval)
+bool
+ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
+               uintN argc, Value *argv, Value *rval)
 {
     LeaveTrace(cx);
 
@@ -794,7 +641,7 @@ InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags
     args.thisv() = thisv;
     memcpy(args.argv(), argv, argc * sizeof(Value));
 
-    if (!Invoke(cx, args, flags))
+    if (!Invoke(cx, args, 0))
         return JS_FALSE;
 
     *rval = args.rval();
@@ -803,18 +650,18 @@ InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags
 }
 
 bool
-InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
+ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
                  JSAccessMode mode, uintN argc, Value *argv, Value *rval)
 {
     LeaveTrace(cx);
 
     /*
-     * InternalInvoke could result in another try to get or set the same id
+     * ExternalInvoke could result in another try to get or set the same id
      * again, see bug 355497.
      */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    return InternalCall(cx, obj, fval, argc, argv, rval);
+    return ExternalInvoke(cx, obj, fval, argc, argv, rval);
 }
 
 bool
@@ -829,7 +676,6 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     LeaveTrace(cx);
 
-    DTrace::ExecutionScope executionScope(cx, script);
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
      * code before pushExecuteFrame must not reenter the interpreter.
@@ -934,6 +780,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->setThisValue(ObjectValue(*thisp));
     }
 
+    Probes::startExecution(cx, script);
+
     void *hookData = NULL;
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
@@ -947,6 +795,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (JSInterpreterHook hook = cx->debugHooks->executeHook)
             hook(cx, fp, JS_FALSE, &ok, hookData);
     }
+
+    Probes::stopExecution(cx, script);
 
     return !!ok;
 }
@@ -1182,66 +1032,82 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
     JS_ASSERT(!js_FunctionClass.construct);
     CallArgs args = argsRef;
 
-    JSObject *obj2;
-    if (args.callee().isPrimitive() || !(obj2 = &args.callee().toObject())->getParent()) {
-        /* Use js_ValueToFunction to report an error. */
-        JS_ALWAYS_TRUE(!js_ValueToFunction(cx, &args.callee(), JSV2F_CONSTRUCT));
+    JSObject *callee;
+    if (args.callee().isPrimitive() || !(callee = &args.callee().toObject())->getParent()) {
+        js_ReportIsNotFunction(cx, &args.callee(), JSV2F_CONSTRUCT);
         return false;
     }
 
-    Class *clasp = &js_ObjectClass;
-
-    /*
-     * Call fast constructors without making the object first.
-     * The native will be able to make the right new object faster.
-     */
-    if (obj2->isFunction()) {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj2);
-        if (fun->isFastConstructor()) {
-            args.thisv().setMagic(JS_FAST_CONSTRUCTOR);
-
-            FastNative fn = (FastNative)fun->u.n.native;
-            if (!fn(cx, args.argc(), args.base()))
-                return JS_FALSE;
-            JS_ASSERT(!args.rval().isPrimitive());
-            return JS_TRUE;
+    /* Handle the fast-constructors cases before falling into the general case . */
+    Class *clasp = callee->getClass();
+    if (clasp == &js_FunctionClass) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        if (fun->isConstructor()) {
+            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+            return CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
         }
-
-        /* Get the class, for natives that aren't fast constructors. */
-        if (!fun->isInterpreted() && fun->u.n.clasp)
-            clasp = fun->u.n.clasp;
+    } else if (clasp->construct) {
+        args.thisv().setMagicWithObjectOrNullPayload(NULL);
+        return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
     }
 
-    Value protov;
-    if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
-        return false;
-
-    JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
-    JSObject *parent = obj2->getParent();
-
-    JSObject* obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
+    /* Construct 'this'. */
+    JSObject *obj = js_NewInstance(cx, callee);
     if (!obj)
-        return JS_FALSE;
-
-    /* Now we have an object with a constructor method; call it. */
+        return false;
     args.thisv().setObject(*obj);
+
     if (!Invoke(cx, args, JSINVOKE_CONSTRUCT))
-        return JS_FALSE;
+        return false;
 
     /* Check the return value and if it's primitive, force it to be obj. */
     if (args.rval().isPrimitive()) {
-        if (obj2->getClass() != &js_FunctionClass) {
+        if (callee->getClass() != &js_FunctionClass) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_NEW_RESULT,
                                  js_ValueToPrintableString(cx, args.rval()));
-            return JS_FALSE;
+            return false;
         }
         args.rval().setObject(*obj);
     }
 
     JS_RUNTIME_METER(cx->runtime, constructs);
-    return JS_TRUE;
+    return true;
+}
+
+bool
+InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
+                               uintN argc, Value *argv, Value *rval)
+{
+    LeaveTrace(cx);
+
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, args))
+        return JS_FALSE;
+
+    args.callee() = fval;
+    /* Initialize args.thisv on all paths below. */
+    memcpy(args.argv(), argv, argc * sizeof(Value));
+
+    /* Handle the fast-constructor cases before calling the general case. */
+    JSObject &callee = fval.toObject();
+    Class *clasp = callee.getClass();
+    JSFunction *fun;
+    bool ok;
+    if (clasp == &js_FunctionClass && (fun = callee.getFunctionPrivate())->isConstructor()) {
+        args.thisv().setMagicWithObjectOrNullPayload(thisobj);
+        ok = CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
+    } else if (clasp->construct) {
+        args.thisv().setMagicWithObjectOrNullPayload(thisobj);
+        ok = CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
+    } else {
+        args.thisv().setObjectOrNull(thisobj);
+        ok = Invoke(cx, args, JSINVOKE_CONSTRUCT);
+    }
+
+    *rval = args.rval();
+    return ok;
 }
 
 bool
@@ -1670,7 +1536,6 @@ namespace reprmeter {
         OBJECT_PLAIN,
         FUNCTION_INTERPRETED,
         FUNCTION_FASTNATIVE,
-        FUNCTION_SLOWNATIVE,
         ARRAY_SLOW,
         ARRAY_DENSE
     };
@@ -1698,9 +1563,7 @@ namespace reprmeter {
             JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
             if (FUN_INTERPRETED(fun))
                 return FUNCTION_INTERPRETED;
-            if (fun->flags & JSFUN_FAST_NATIVE)
-                return FUNCTION_FASTNATIVE;
-            return FUNCTION_SLOWNATIVE;
+            return FUNCTION_FASTNATIVE;
         }
         // This must come before the general array test, because that
         // one subsumes this one.
@@ -1715,7 +1578,7 @@ namespace reprmeter {
 
     static const char *reprName[] = { "invalid", "int", "double", "bool", "special",
                                       "string", "null", "object",
-                                      "fun:interp", "fun:fast", "fun:slow",
+                                      "fun:interp", "fun:native"
                                       "array:slow", "array:dense" };
 
     // Logically, a tuple of (JSOp, repr_1, ..., repr_n) where repr_i is
@@ -1874,20 +1737,6 @@ CanIncDecWithoutOverflow(int32_t i)
 {
     return (i > JSVAL_INT_MIN) && (i < JSVAL_INT_MAX);
 }
-
-/*
- * Conditional assert to detect failure to clear a pending exception that is
- * suppressed (or unintentional suppression of a wanted exception).
- */
-#if defined DEBUG_brendan || defined DEBUG_mrbkap || defined DEBUG_shaver
-# define DEBUG_NOT_THROWING 1
-#endif
-
-#ifdef DEBUG_NOT_THROWING
-# define ASSERT_NOT_THROWING(cx) JS_ASSERT(!(cx)->throwing)
-#else
-# define ASSERT_NOT_THROWING(cx) /* nothing */
-#endif
 
 /*
  * Define JS_OPMETER to instrument bytecode succession, generating a .dot file
@@ -2449,15 +2298,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
          * To support generator_throw and to catch ignored exceptions,
          * fail if cx->throwing is set.
          */
-        if (cx->throwing) {
-#ifdef DEBUG_NOT_THROWING
-            if (cx->exception != JSVAL_ARETURN) {
-                printf("JS INTERPRETER CALLED WITH PENDING EXCEPTION %lx\n",
-                       (unsigned long) cx->exception);
-            }
-#endif
+        if (cx->throwing)
             goto error;
-        }
     }
 #endif
 
@@ -2662,7 +2504,6 @@ END_CASE(JSOP_POPN)
 
 BEGIN_CASE(JSOP_SETRVAL)
 BEGIN_CASE(JSOP_POPV)
-    ASSERT_NOT_THROWING(cx);
     POP_RETURN_VALUE();
 END_CASE(JSOP_POPV)
 
@@ -2699,7 +2540,6 @@ BEGIN_CASE(JSOP_STOP)
      * When the inlined frame exits with an exception or an error, ok will be
      * false after the inline_return label.
      */
-    ASSERT_NOT_THROWING(cx);
     CHECK_BRANCH();
 
 #ifdef JS_TRACER
@@ -2757,7 +2597,7 @@ BEGIN_CASE(JSOP_STOP)
          */
         fp->putActivationObjects(cx);
 
-        DTrace::exitJSFun(cx, fp, fp->getFunction(), fp->getReturnValue());
+        Probes::exitJSFun(cx, fp->maybeFunction());
 
         /* Restore context version only if callee hasn't set version. */
         if (JS_LIKELY(cx->version == currentVersion)) {
@@ -4739,7 +4579,7 @@ BEGIN_CASE(JSOP_APPLY)
             inlineCallCount++;
             JS_RUNTIME_METER(rt, inlineCalls);
 
-            DTrace::enterJSFun(cx, fp, fun, fp->down, fp->numActualArgs(), fp->argv);
+            Probes::enterJSFun(cx, fun);
 
             TRACE_0(EnterFrame);
 
@@ -4764,19 +4604,16 @@ BEGIN_CASE(JSOP_APPLY)
             DO_OP();
         }
 
-        if (fun->flags & JSFUN_FAST_NATIVE) {
-            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, vp);
+        JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(fun, vp[1]));
 
-            JS_ASSERT(fun->u.n.extra == 0);
-            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(fun, vp[1]));
-            JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
-            DTrace::exitJSFun(cx, NULL, fun, *vp, vp);
-            regs.sp = vp + 1;
-            if (!ok)
-                goto error;
-            TRACE_0(NativeCallComplete);
-            goto end_call;
-        }
+        Probes::enterJSFun(cx, fun);
+        JSBool ok = fun->u.n.native(cx, argc, vp);
+        Probes::exitJSFun(cx, fun);
+        regs.sp = vp + 1;
+        if (!ok)
+            goto error;
+        TRACE_0(NativeCallComplete);
+        goto end_call;
     }
 
     bool ok;
@@ -5750,14 +5587,12 @@ BEGIN_CASE(JSOP_LAMBDA)
 
                         if (IsFunctionObject(cref, &callee)) {
                             JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
-                            FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
-
-                            if (fastNative) {
-                                if (iargc == 1 && fastNative == array_sort) {
+                            if (Native native = calleeFun->maybeNative()) {
+                                if (iargc == 1 && native == array_sort) {
                                     JS_FUNCTION_METER(cx, joinedsort);
                                     break;
                                 }
-                                if (iargc == 2 && fastNative == str_replace) {
+                                if (iargc == 2 && native == str_replace) {
                                     JS_FUNCTION_METER(cx, joinedreplace);
                                     break;
                                 }
@@ -6357,10 +6192,9 @@ END_CASE(JSOP_DEBUGGER)
 #if JS_HAS_XML_SUPPORT
 BEGIN_CASE(JSOP_DEFXMLNS)
 {
-    Value rval;
-    POP_COPY_TO(rval);
-    if (!js_SetDefaultXMLNamespace(cx, rval))
+    if (!js_SetDefaultXMLNamespace(cx, regs.sp[-1]))
         goto error;
+    regs.sp--;
 }
 END_CASE(JSOP_DEFXMLNS)
 
@@ -6723,7 +6557,7 @@ END_CASE(JSOP_LEAVEBLOCK)
 #if JS_HAS_GENERATORS
 BEGIN_CASE(JSOP_GENERATOR)
 {
-    ASSERT_NOT_THROWING(cx);
+    JS_ASSERT(!cx->throwing);
     regs.pc += JSOP_GENERATOR_LENGTH;
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
@@ -6737,7 +6571,7 @@ BEGIN_CASE(JSOP_GENERATOR)
 }
 
 BEGIN_CASE(JSOP_YIELD)
-    ASSERT_NOT_THROWING(cx);
+    JS_ASSERT(!cx->throwing);
     if (cx->generatorFor(fp)->state == JSGEN_CLOSING) {
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
                             JSDVG_SEARCH_STACK, fp->argv[-2], NULL);

@@ -106,12 +106,13 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-const DB_SCHEMA                       = 2;
+const DB_SCHEMA                       = 3;
 const REQ_VERSION                     = 2;
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
-                            "updateKey", "optionsURL", "aboutURL", "iconURL"]
+                            "updateKey", "optionsURL", "aboutURL", "iconURL",
+                            "icon64URL"]
 const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
@@ -2263,11 +2264,21 @@ var XPIProvider = {
     if (!this.extensionsActive)
       return false;
 
-    // If the theme we're enabling is the skin currently selected then it doesn't
-    // require a restart to enable it.
-    if (aAddon.type == "theme")
-      return aAddon.internalName != this.currentSkin &&
-             !Prefs.getBoolPref(PREF_EM_DSS_ENABLED);
+    // Anything that is active is already enabled
+    if (aAddon.active)
+      return false;
+
+    if (aAddon.type == "theme") {
+      // If dynamic theme switching is enabled then switching themes does not
+      // require a restart
+      if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED))
+        return false;
+
+      // If the theme is already the theme in use then no restart is necessary.
+      // This covers the case where the default theme is in use but a
+      // lightweight theme is considered active.
+      return aAddon.internalName != this.currentSkin;
+    }
 
     return !aAddon.bootstrap;
   },
@@ -2285,13 +2296,30 @@ var XPIProvider = {
     if (!this.extensionsActive)
       return false;
 
-    // This sounds odd but it is correct. Themes are only ever asked to disable
-    // after another theme has been enabled. Disabling the theme only requires
-    // a restart if enabling the other theme does too. If the selected skin doesn't
-    // match the current skin then a restart is necessary.
-    if (aAddon.type == "theme")
-      return this.selectedSkin != this.currentSkin &&
-             !Prefs.getBoolPref(PREF_EM_DSS_ENABLED);
+    // Anything that isn't active is already disabled
+    if (!aAddon.active)
+      return false;
+
+    if (aAddon.type == "theme") {
+      // If dynamic theme switching is enabled then switching themes does not
+      // require a restart
+      if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED))
+        return false;
+
+      // Non-default themes always require a restart to disable since it will
+      // be switching from one theme to another or to the default theme and a
+      // lightweight theme.
+      if (aAddon.internalName != this.defaultSkin)
+        return true;
+
+      // The default theme requires a restart to disable if we are in the
+      // process of switching to a different theme. Note that this makes the
+      // disabled flag of operationsRequiringRestart incorrect for the default
+      // theme (it will be false most of the time). Bug 520124 would be required
+      // to fix it. For the UI this isn't a problem since we never try to
+      // disable or uninstall the default theme.
+      return this.selectedSkin != this.currentSkin;
+    }
 
     return !aAddon.bootstrap;
   },
@@ -2309,12 +2337,33 @@ var XPIProvider = {
     if (!this.extensionsActive)
       return false;
 
-    // Themes not currently in use can be installed immediately
-    if (aAddon.type == "theme")
-      return aAddon.internalName == this.currentSkin ||
-             Prefs.getBoolPref(PREF_EM_DSS_ENABLED);
+    // Add-ons that are already installed don't require a restart to install.
+    // This wouldn't normally be called for an already installed add-on (except
+    // for forming the operationsRequiringRestart flags) so is really here as
+    // a safety measure.
+    if (aAddon instanceof DBAddonInternal)
+      return false;
 
-    return !aAddon.bootstrap;
+    // If we have an AddonInstall for this add-on then we can see if there is
+    // an existing installed add-on with the same ID
+    if ("_install" in aAddon && aAddon._install) {
+      // If there is an existing installed add-on and uninstalling it would
+      // require a restart then installing the update will also require a
+      // restart
+      let existingAddon = aAddon._install.existingAddon;
+      if (existingAddon && this.uninstallRequiresRestart(existingAddon))
+        return true;
+    }
+
+    // If the add-on is not going to be active after installation then it
+    // doesn't require a restart to install.
+    if (aAddon.userDisabled || aAddon.appDisabled)
+      return false;
+
+    // Themes will require a restart (even if dynamic switching is enabled due
+    // to some caching issues) and non-bootstrapped add-ons will require a
+    // restart
+    return aAddon.type == "theme" || !aAddon.bootstrap;
   },
 
   /**
@@ -2330,12 +2379,9 @@ var XPIProvider = {
     if (!this.extensionsActive)
       return false;
 
-    // Themes not currently in use can be uninstalled immediately
-    if (aAddon.type == "theme")
-      return aAddon.internalName == this.currentSkin ||
-             Prefs.getBoolPref(PREF_EM_DSS_ENABLED);
-
-    return !aAddon.bootstrap;
+    // If the add-on can be disabled without a restart then it can also be
+    // uninstalled without a restart
+    return this.disableRequiresRestart(aAddon);
   },
 
   /**
@@ -2558,7 +2604,7 @@ var XPIProvider = {
       throw new Error("Cannot uninstall addons from locked install locations");
 
     // Inactive add-ons don't require a restart to uninstall
-    let requiresRestart = aAddon.active && this.uninstallRequiresRestart(aAddon);
+    let requiresRestart = this.uninstallRequiresRestart(aAddon);
 
     if (requiresRestart) {
       // We create an empty directory in the staging directory to indicate that
@@ -2640,10 +2686,10 @@ var XPIProvider = {
 
 const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " +
                      "updateURL, updateKey, optionsURL, aboutURL, iconURL, " +
-                     "defaultLocale, visible, active, userDisabled, appDisabled, " +
-                     "pendingUninstall, descriptor, installDate, updateDate, " +
-                     "applyBackgroundUpdates, bootstrap, skinnable, size, " +
-                     "sourceURI, releaseNotesURI";
+                     "icon64URL, defaultLocale, visible, active, userDisabled, " +
+                     "appDisabled, pendingUninstall, descriptor, installDate, " +
+                     "updateDate, applyBackgroundUpdates, bootstrap, skinnable, " +
+                     "size, sourceURI, releaseNotesURI";
 
 /**
  * A helper function to log an SQL error.
@@ -2784,11 +2830,11 @@ var XPIDatabase = {
     addAddonMetadata_addon: "INSERT INTO addon VALUES (NULL, :id, :location, " +
                             ":version, :type, :internalName, :updateURL, " +
                             ":updateKey, :optionsURL, :aboutURL, :iconURL, " +
-                            ":locale, :visible, :active, :userDisabled, " +
-                            ":appDisabled, :pendingUninstall, :descriptor, " +
-                            ":installDate, :updateDate, :applyBackgroundUpdates, " +
-                            ":bootstrap, :skinnable, :size, :sourceURI, " +
-                            ":releaseNotesURI)",
+                            ":icon64URL, :locale, :visible, :active, " +
+                            ":userDisabled, :appDisabled, :pendingUninstall, " +
+                            ":descriptor, :installDate, :updateDate, " +
+                            ":applyBackgroundUpdates, :bootstrap, :skinnable, " +
+                            ":size, :sourceURI, :releaseNotesURI)",
     addAddonMetadata_addon_locale: "INSERT INTO addon_locale VALUES " +
                                    "(:internal_id, :name, :locale)",
     addAddonMetadata_locale: "INSERT INTO locale (name, description, creator, " +
@@ -3112,7 +3158,8 @@ var XPIDatabase = {
                                   "id TEXT, location TEXT, version TEXT, " +
                                   "type TEXT, internalName TEXT, updateURL TEXT, " +
                                   "updateKey TEXT, optionsURL TEXT, aboutURL TEXT, " +
-                                  "iconURL TEXT, defaultLocale INTEGER, " +
+                                  "iconURL TEXT, icon64URL TEXT, " +
+                                  "defaultLocale INTEGER, " +
                                   "visible INTEGER, active INTEGER, " +
                                   "userDisabled INTEGER, appDisabled INTEGER, " +
                                   "pendingUninstall INTEGER, descriptor TEXT, " +
@@ -4734,12 +4781,6 @@ AddonInstall.prototype = {
     let isUpgrade = this.existingAddon &&
                     this.existingAddon._installLocation == this.installLocation;
     let requiresRestart = XPIProvider.installRequiresRestart(this.addon);
-    // Restarts is required if the existing add-on is active and disabling it
-    // requires a restart
-    if (!requiresRestart && this.existingAddon) {
-      requiresRestart = this.existingAddon.active &&
-                        XPIProvider.disableRequiresRestart(this.existingAddon);
-    }
 
     LOG("Starting install of " + this.sourceURI.spec);
     AddonManagerPrivate.callAddonListeners("onInstalling",
@@ -5433,17 +5474,21 @@ function AddonWrapper(aAddon) {
     });
   }, this);
 
-  this.__defineGetter__("iconURL", function() {
-    if (aAddon.active && aAddon.iconURL)
-      return aAddon.iconURL;
+  // Maps iconURL and icon64URL to the properties of the same name or icon.png
+  // and icon64.png in the add-on's files.
+  ["icon", "icon64"].forEach(function(aProp) {
+    this.__defineGetter__(aProp + "URL", function() {
+      if (aAddon.active && aAddon[aProp + "URL"])
+        return aAddon[aProp + "URL"];
 
-    if (this.hasResource("icon.png"))
-      return this.getResourceURI("icon.png").spec;
+      if (this.hasResource(aProp + ".png"))
+        return this.getResourceURI(aProp + ".png").spec;
 
-    if (aAddon._repositoryAddon)
-      return aAddon._repositoryAddon.iconURL;
+      if (aAddon._repositoryAddon)
+        return aAddon._repositoryAddon[aProp + "URL"];
 
-    return null;
+      return null;
+    }, this);
   }, this);
 
   PROP_LOCALE_SINGLE.forEach(function(aProp) {

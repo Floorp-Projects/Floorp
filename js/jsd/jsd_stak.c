@@ -65,7 +65,7 @@ _addNewFrame(JSDContext*        jsdc,
     JSDStackFrameInfo* jsdframe;
     JSDScript*         jsdscript = NULL;
 
-    if (!JS_IsNativeFrame(jsdthreadstate->context, fp))
+    if (JS_IsScriptFrame(jsdthreadstate->context, fp))
     {
         JSD_LOCK_SCRIPTS(jsdc);
         jsdscript = jsd_FindJSDScript(jsdc, script);
@@ -133,7 +133,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
          */
         if (JS_GetFrameThis(cx, fp) &&
             ((jsdc->flags & JSD_INCLUDE_NATIVE_FRAMES) ||
-             !JS_IsNativeFrame(cx, fp)))
+             JS_IsScriptFrame(cx, fp)))
         {
             JSDStackFrameInfo *frame;
 
@@ -370,28 +370,6 @@ jsd_GetNameForStackFrame(JSDContext* jsdc,
             rv = JS_GetFunctionName (fun);
     }
     
-    JSD_UNLOCK_THREADSTATES(jsdc);
-    return rv;
-}
-
-JSBool
-jsd_IsStackFrameNative(JSDContext* jsdc, 
-                       JSDThreadState* jsdthreadstate,
-                       JSDStackFrameInfo* jsdframe)
-{
-    JSBool rv;
-    
-    JSD_LOCK_THREADSTATES(jsdc);
-
-    if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
-    {
-        rv = JS_IsNativeFrame(jsdthreadstate->context, jsdframe->fp);
-    }
-    else
-    {
-        rv = JS_FALSE;
-    }
-
     JSD_UNLOCK_THREADSTATES(jsdc);
     return rv;
 }

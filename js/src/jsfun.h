@@ -86,17 +86,6 @@
                                        appear to call itself via its own name
                                        or arguments.callee */
 
-#define JSFUN_FAST_NATIVE_CTOR 0x0002 /* JSFastNative directly invokable
-                                       * during construction. */
-
-/*
- * Extra JSCLASS flag indicating the native passed to JS_InitClass is
- * a fast native constructor.  This is internal for now as the 'this' value passed
- * to such a constructor is a magic value, and there is no way to query this
- * in the API.  See bug 581263.
- */
-#define JSCLASS_FAST_CONSTRUCTOR (1<<4)
-
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
                                        JSFunctionSpec::call points to a
@@ -113,15 +102,7 @@
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
 #define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
 #define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
-#define FUN_SLOW_NATIVE(fun) (!FUN_INTERPRETED(fun) && !((fun)->flags & JSFUN_FAST_NATIVE))
 #define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
-#define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
-#define FUN_FAST_NATIVE(fun) (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? (js::FastNative) (fun)->u.n.native            \
-                              : NULL)
-#define FUN_MINARGS(fun)     (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? 0                                             \
-                              : (fun)->nargs)
 #define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               fun->u.n.clasp)
 #define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
@@ -158,8 +139,6 @@ struct JSFunction : public JSObject
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union U {
         struct {
-            uint16      extra;    /* number of arg slots for local GC roots */
-            uint16      spare;    /* reserved for future use */
             js::Native  native;   /* native method pointer or null */
             js::Class   *clasp;   /* class of objects constructed
                                      by this function */
@@ -187,10 +166,10 @@ struct JSFunction : public JSObject
     bool optimizedClosure()  const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()      const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
     bool isInterpreted()     const { return FUN_INTERPRETED(this); }
-    bool isFastNative()      const { return !!(flags & JSFUN_FAST_NATIVE); }
-    bool isFastConstructor() const { return !!(flags & JSFUN_FAST_NATIVE_CTOR); }
+    bool isNative()          const { return !FUN_INTERPRETED(this); }
+    bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
-    unsigned minArgs()       const { return FUN_MINARGS(this); }
+    unsigned minArgs()       const { return isInterpreted() ? nargs : 0; }
 
     inline bool inStrictMode() const;
 
@@ -309,6 +288,10 @@ struct JSFunction : public JSObject
         fslots[METHOD_ATOM_SLOT].setString(ATOM_TO_STRING(atom));
     }
 
+    js::Native maybeNative() const {
+        return isInterpreted() ? NULL : u.n.native;
+    }
+
     /* Number of extra fixed function object slots besides JSSLOT_PRIVATE. */
     static const uint32 CLASS_RESERVED_SLOTS = JSObject::FUN_CLASS_RESERVED_SLOTS;
     static const uint32 FIRST_FREE_SLOT = JSSLOT_PRIVATE + CLASS_RESERVED_SLOTS + 1;
@@ -324,8 +307,8 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
 #ifdef JS_TRACER
 /* MSVC demands the intermediate (void *) cast here. */
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
-    JS_FN(name, JS_DATA_TO_FUNC_PTR(JSNative, trcinfo), nargs,                \
-          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRCINFO)
+    JS_FN(name, JS_DATA_TO_FUNC_PTR(Native, trcinfo), nargs,                  \
+          (flags) | JSFUN_STUB_GSOPS | JSFUN_TRCINFO)
 #else
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
     JS_FN(name, fastcall, nargs, flags)
@@ -395,6 +378,15 @@ JSObject::isFunction() const
     return getClass() == &js_FunctionClass;
 }
 
+inline JSFunction *
+JSObject::getFunctionPrivate() const
+{
+    JS_ASSERT(isFunction());
+    return reinterpret_cast<JSFunction *>(getPrivate());
+}
+
+namespace js {
+
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
@@ -413,6 +405,16 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
     return v.isObject() && (*funobj = &v.toObject())->isFunction();
 }
 
+static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v, JSFunction **fun)
+{
+    JSObject *funobj;
+    bool b = IsFunctionObject(v, &funobj);
+    if (b)
+        *fun = funobj->getFunctionPrivate();
+    return b;
+}
+
 /*
  * Macro to access the private slot of the function object after the slot is
  * initialized.
@@ -420,12 +422,6 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
     (JS_ASSERT((funobj)->isFunction()),                                       \
      (JSFunction *) (funobj)->getPrivate())
-
-extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom);
-
-namespace js {
 
 /*
  * Return true if this is a compiler-created internal function accessed by
@@ -440,10 +436,48 @@ IsInternalFunctionObject(JSObject *funobj)
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }
     
+/* Valueified JS_IsConstructing. */
+static JS_ALWAYS_INLINE bool
+IsConstructing(const Value *vp)
+{
+#ifdef DEBUG
+    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+    if (callee->isFunction()) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(callee->getClass()->construct != NULL);
+    }
+#endif
+    return vp[1].isMagic();
+}
+
+static JS_ALWAYS_INLINE bool
+IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
+{
+#ifdef DEBUG
+    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+    if (callee->isFunction()) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(callee->getClass()->construct != NULL);
+    }
+#endif
+    bool isCtor = vp[1].isMagic();
+    if (isCtor)
+        *ctorThis = vp[1].getMagicObjectOrNullPayload();
+    return isCtor;
+}
+
+} /* namespace js */
+
 extern JSString *
 fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
 
-} /* namespace js */
+extern JSFunction *
+js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
+               uintN flags, JSObject *parent, JSAtom *atom);
 
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);

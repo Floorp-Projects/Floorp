@@ -142,8 +142,7 @@ extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
-                     js::Value *rval);
+js_watch_set_wrapper(JSContext *cx, uintN argc, js::Value *vp);
 
 extern js::PropertyOp
 js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, js::PropertyOp setter);
@@ -189,9 +188,6 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun);
 extern JS_PUBLIC_API(JSNative)
 JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
 
-extern JS_PUBLIC_API(JSFastNative)
-JS_GetFunctionFastNative(JSContext *cx, JSFunction *fun);
-
 extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
 
@@ -221,22 +217,8 @@ JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
  * Return a weak reference to fp's principals.  A null return does not denote
  * an error, it means there are no principals.
  */
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
-
-/*
- * This API is like JS_StackFramePrincipals(cx, caller), except that if
- * cx->runtime->findObjectPrincipals is non-null, it returns the weaker of
- * the caller's principals and the object principals of fp's callee function
- * object (fp->argv[-2]), which is eval, Function, or a similar eval-like
- * method.  The caller parameter should be JS_GetScriptedCaller(cx, fp).
- *
- * All eval-like methods must use JS_EvalFramePrincipals to acquire a weak
- * reference to the correct principals for the eval call to be secure, given
- * an embedding that calls JS_SetObjectPrincipalsFinder (see jsapi.h).
- */
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller);
+extern JSPrincipals *
+js_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
 
 JSPrincipals *
 js_EvalFramePrincipals(JSContext *cx, JSObject *callee, JSStackFrame *caller);
@@ -251,7 +233,7 @@ extern JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp);
+JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp);
 
 /* this is deprecated, use JS_GetFrameScopeChain instead */
 extern JS_PUBLIC_API(JSObject *)
@@ -535,36 +517,29 @@ extern JS_PUBLIC_API(JSBool)
 JS_DisconnectShark();
 
 extern JS_FRIEND_API(JSBool)
-js_StopShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval);
+js_StopShark(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_StartShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_StartShark(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_ConnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                jsval *rval);
+js_ConnectShark(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_DisconnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval);
+js_DisconnectShark(JSContext *cx, uintN argc, jsval *vp);
 
 #endif /* MOZ_SHARK */
 
 #ifdef MOZ_CALLGRIND
 
 extern JS_FRIEND_API(JSBool)
-js_StopCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval);
+js_StopCallgrind(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_StartCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                  jsval *rval);
+js_StartCallgrind(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_DumpCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval);
+js_DumpCallgrind(JSContext *cx, uintN argc, jsval *vp);
 
 #endif /* MOZ_CALLGRIND */
 
