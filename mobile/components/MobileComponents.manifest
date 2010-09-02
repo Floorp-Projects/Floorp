@@ -90,3 +90,7 @@ contract @mozilla.org/satchel/form-autocomplete;1 {cccd414c-3ec2-4cc5-9dc4-36c87
 # LoginManager.js
 component {f9a0edde-2a8d-4bfd-a08c-3f9333213a85} LoginManager.js
 contract @mozilla.org/login-manager;1 {f9a0edde-2a8d-4bfd-a08c-3f9333213a85}
+
+# BlocklistPrompt.js
+component {4e6ea350-b09a-11df-94e2-0800200c9a66} BlocklistPrompt.js
+contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200c9a66}
