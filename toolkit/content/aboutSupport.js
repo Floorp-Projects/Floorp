@@ -90,6 +90,7 @@ window.onload = function () {
   // Update the application basics section.
   document.getElementById("application-box").textContent = Application.name;
   document.getElementById("version-box").textContent = Application.version;
+  document.getElementById("useragent-box").textContent = navigator.userAgent;
   document.getElementById("supportLink").href = supportUrl;
 
   // Update the other sections.

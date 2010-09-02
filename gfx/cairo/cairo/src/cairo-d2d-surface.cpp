@@ -3628,8 +3628,6 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
-    _d2d_clear_surface(newSurf);
-
     newSurf->device = d2d_device;
     cairo_addref_device(device);
 

@@ -118,6 +118,8 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                      PRUint32 aFromParser);
   virtual ~nsHTMLInputElement();

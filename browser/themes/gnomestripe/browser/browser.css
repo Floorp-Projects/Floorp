@@ -1027,6 +1027,11 @@ toolbar[iconsize="small"] #fullscreen-button {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 
+.geolocation-text-link {
+  -moz-padding-start: 13px;
+  padding-top: 10px;
+}
+
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
@@ -1228,6 +1233,10 @@ statusbarpanel#statusbar-display {
 
 .tabbrowser-tab[pinned] + .tabbrowser-tab:not([pinned]) {
   -moz-margin-start: 0;
+}
+
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  -moz-box-shadow: 0 0 0 1em rgba(255,0,0,.5) inset;
 }
 
 .tab-icon-image {
