@@ -283,7 +283,7 @@
   font: icon;
   font-weight: bold;
   color: #2D2D2D;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   padding: 0 10px 1px;
   margin: 1px;
   font-weight: bold;
@@ -336,7 +336,7 @@
   margin: 0 4px;
   padding: 0 10px;
   -moz-appearance: none;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   border: @roundButtonBorder@;
   text-shadow: @loweredShadow@;
   background: @roundButtonBackground@;

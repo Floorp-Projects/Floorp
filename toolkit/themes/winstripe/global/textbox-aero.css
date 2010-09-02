@@ -1,11 +1,6 @@
 %include textbox.css
 
-/*
- * Make sure to uncomment the corresponsing code in layout/reftests/editor/xul/input.css
- * when removing this comment.
- */
-/*
 textbox html|*.textbox-input:-moz-placeholder:-moz-system-metric(windows-default-theme) {
   font-style: italic;
 }
-*/
+

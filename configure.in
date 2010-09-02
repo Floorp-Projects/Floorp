@@ -2358,6 +2358,7 @@ ia64*-hpux*)
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
+        PKG_SKIP_STRIP=1
         XARGS=xargs
         ZIP=zip
         UNZIP=unzip
@@ -5319,6 +5320,16 @@ then
 incorrect])
     fi
     MOC=$HOST_MOC
+
+    MOZ_ENABLE_QTNETWORK=
+    PKG_CHECK_MODULES(_QTNETWORK, QtNetwork >= 4.7,
+                      MOZ_ENABLE_QTNETWORK=1,
+                      MOZ_ENABLE_QTNETWORK=)
+
+    if test "$MOZ_ENABLE_QTNETWORK"; then
+      MOZ_ENABLE_QTNETWORK=1
+      AC_DEFINE(MOZ_ENABLE_QTNETWORK)
+    fi
 fi
 
 AC_SUBST(GTK_CONFIG)
@@ -5328,6 +5339,7 @@ AC_SUBST(TK_LIBS)
 AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_QT)
+AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
@@ -5865,8 +5877,20 @@ if test -n "$MOZ_NO_FAST_LOAD"; then
     AC_DEFINE(MOZ_NO_FAST_LOAD)
 fi
 
+dnl ========================================================
+dnl = Disable Raw Codecs
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(raw,
+[  --disable-raw           Disable support for RAW media],
+    MOZ_RAW=,
+    MOZ_RAW=1)
+
+if test -n "$MOZ_RAW"; then
+    AC_DEFINE(MOZ_RAW)
+    MOZ_MEDIA=1
+fi
+
 AC_SUBST(MOZ_RAW)
-AC_DEFINE(MOZ_RAW)
 
 dnl ========================================================
 dnl = Disable Ogg Codecs
@@ -6799,9 +6823,17 @@ MOZ_ARG_DISABLE_BOOL(zipwriter,
 AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
-dnl = Disable libconic
+dnl = libconic
 dnl ========================================================
+dnl superseded by QtNetwork starting from 4.7
 MOZ_ENABLE_LIBCONIC=1
+
+if test -n "$MOZ_ENABLE_QT"; then
+  if test "$MOZ_ENABLE_QTNETWORK"; then
+    MOZ_ENABLE_LIBCONIC=
+  fi
+fi
+
 MOZ_ARG_DISABLE_BOOL(libconic,
 [  --disable-libconic      Disable libconic],
     MOZ_ENABLE_LIBCONIC=,

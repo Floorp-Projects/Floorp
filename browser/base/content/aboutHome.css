@@ -54,7 +54,7 @@ html {
 
 #brandStart {
   background: -moz-linear-gradient(top, #42607C, #1E4262 30%, #1E4262 80%, #143552 98%, #244665);
-  -moz-border-radius: 1%;
+  -moz-border-radius: 5.6px;
   padding-bottom: 0.2em;
   -moz-padding-start: 0.5em;
   font-size: 250%;
@@ -80,7 +80,7 @@ body[dir="rtl"] #brandLogo {
 
 #searchContainer {
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 1%;
+  -moz-border-radius: 5.6px;
   padding: 3em;
 }
 #searchEngineLinks {

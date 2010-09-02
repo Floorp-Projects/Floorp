@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test click event on input</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display">
+<input id="input"
+  style="position: absolute; top: 5px; left: 5px; border: solid 15px blue; width: 100px; height: 20px;"
+  onclick="gClickCount++;">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var gClickCount = 0;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests()
+{
+  var input = document.getElementById("input");
+  // click on border of input
+  synthesizeMouse(input, 5, 5, { });
+  is(gClickCount, 1, "click event doesn't fired on input element");
+
+  gClickCount = 0;
+  // down on border
+  synthesizeMouse(input, 5, 5, { type: "mousedown" });
+  // up on anonymous div of input
+  synthesizeMouse(input, 20, 20, { type: "mouseup" });
+  is(gClickCount, 1, "click event doesn't fired on input element");
+
+  gClickCount = 0;
+  // down on anonymous div of input
+  synthesizeMouse(input, 20, 20, { type: "mousedown" });
+  // up on border
+  synthesizeMouse(input, 5, 5, { type: "mouseup" });
+  is(gClickCount, 1, "click event doesn't fired on input element");
+
+  input.style.display = "none";
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

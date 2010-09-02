@@ -327,6 +327,98 @@ public:
    */
   void TestChildCache(nsAccessible *aCachedChild);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // HyperLinkAccessible
+
+  /**
+   * Return true if the accessible is hyper link accessible.
+   */
+  virtual bool IsHyperLink();
+
+  /**
+   * Return the start offset of the link within the parent accessible.
+   */
+  virtual PRUint32 StartOffset();
+
+  /**
+   * Return the end offset of the link within the parent accessible.
+   */
+  virtual PRUint32 EndOffset();
+
+  /**
+   * Return true if the link is valid (e. g. points to a valid URL).
+   */
+  virtual bool IsValid();
+
+  /**
+   * Return true if the link currently has the focus.
+   */
+  virtual bool IsSelected();
+
+  /**
+   * Return the number of anchors within the link.
+   */
+  virtual PRUint32 AnchorCount();
+
+  /**
+   * Returns an anchor accessible at the given index.
+   */
+  virtual nsAccessible* GetAnchor(PRUint32 aAnchorIndex);
+
+  /**
+   * Returns an anchor URI at the given index.
+   */
+  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // SelectAccessible
+
+  /**
+   * Return true if the accessible is a select control containing selectable
+   * items.
+   */
+  virtual bool IsSelect();
+
+  /**
+   * Return an array of selected items.
+   */
+  virtual already_AddRefed<nsIArray> SelectedItems();
+
+  /**
+   * Return the number of selected items.
+   */
+  virtual PRUint32 SelectedItemCount();
+
+  /**
+   * Return selected item at the given index.
+   */
+  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+
+  /**
+   * Determine if item at the given index is selected.
+   */
+  virtual bool IsItemSelected(PRUint32 aIndex);
+
+  /**
+   * Add item at the given index the selection. Return true if success.
+   */
+  virtual bool AddItemToSelection(PRUint32 aIndex);
+
+  /**
+   * Remove item at the given index from the selection. Return if success.
+   */
+  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+
+  /**
+   * Select all items. Return true if success.
+   */
+  virtual bool SelectAll();
+
+  /**
+   * Unselect all items. Return true if success.
+   */
+  virtual bool UnselectAll();
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -382,9 +474,6 @@ protected:
    * @return              the resulting accessible
    */
   nsAccessible *GetFirstAvailableAccessible(nsINode *aStartNode) const;
-
-  // Hyperlink helpers
-  virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
 
   //////////////////////////////////////////////////////////////////////////////
   // Action helpers

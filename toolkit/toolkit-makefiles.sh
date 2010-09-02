@@ -726,10 +726,6 @@ MAKEFILES_libpr0n="
   modules/libpr0n/public/Makefile
   modules/libpr0n/src/Makefile
   modules/libpr0n/decoders/Makefile
-  modules/libpr0n/decoders/gif/Makefile
-  modules/libpr0n/decoders/png/Makefile
-  modules/libpr0n/decoders/jpeg/Makefile
-  modules/libpr0n/decoders/bmp/Makefile
   modules/libpr0n/decoders/icon/Makefile
   modules/libpr0n/decoders/icon/mac/Makefile
   modules/libpr0n/decoders/icon/win/Makefile
@@ -931,7 +927,7 @@ if [ "$ENABLE_TESTS" ]; then
     parser/htmlparser/tests/mochitest/Makefile
     parser/xml/test/Makefile
     rdf/tests/triplescat/Makefile
-    startupcache/tests/Makefile
+    startupcache/test/Makefile
     testing/mochitest/Makefile
     testing/mochitest/MochiKit/Makefile
     testing/mochitest/chrome/Makefile
