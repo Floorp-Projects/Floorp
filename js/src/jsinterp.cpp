@@ -6192,10 +6192,9 @@ END_CASE(JSOP_DEBUGGER)
 #if JS_HAS_XML_SUPPORT
 BEGIN_CASE(JSOP_DEFXMLNS)
 {
-    Value rval;
-    POP_COPY_TO(rval);
-    if (!js_SetDefaultXMLNamespace(cx, rval))
+    if (!js_SetDefaultXMLNamespace(cx, regs.sp[-1]))
         goto error;
+    regs.sp--;
 }
 END_CASE(JSOP_DEFXMLNS)
 
