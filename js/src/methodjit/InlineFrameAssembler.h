@@ -108,7 +108,7 @@ class InlineFrameAssembler {
         tempRegs.takeReg(funObjReg);
     }
 
-    inline void assemble()
+    void assemble()
     {
         struct AdjustedFrame {
             AdjustedFrame(uint32 baseOffset)
