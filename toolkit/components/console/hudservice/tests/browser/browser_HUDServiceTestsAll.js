@@ -1209,12 +1209,18 @@ function testErrorOnPageReload() {
       const successMsg = "Found the error message after page reload";
       const errMsg = "Could not get the error message after page reload";
 
+      const successMsgErrorLine = "Error line is correct";
+      const errMsgErrorLine = "Error line is incorrect";
+
       var display = HUDService.getDisplayByURISpec(content.location.href);
       var outputNode = display.querySelectorAll(".hud-output-node")[0];
 
       executeSoon(function () {
         testLogEntry(outputNode, "fooBazBaz",
           { success: successMsg, err: errMsg });
+
+        testLogEntry(outputNode, "Line: 14, Column: 0",
+          { success: successMsgErrorLine, err: errMsgErrorLine });
 
         testDuplicateError();
       });

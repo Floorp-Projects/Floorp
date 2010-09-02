@@ -136,10 +136,6 @@
         </menupopup>
       </menu>
       <menuseparator/>
-      <menuitem id="context_bookmarkTab"
-                label="&bookmarkThisTab.label;"
-                accesskey="&bookmarkThisTab.accesskey;"
-                oncommand="BookmarkThisTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
@@ -488,7 +484,7 @@
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"/>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <hbox class="split-menuitem">
             <menuitem id="appmenu-edit-menuitem"
                       label="&editMenu.label;"
@@ -512,7 +508,7 @@
           <menuitem id="appmenu_find"
                     label="&appMenuFind.label;"
                     command="cmd_find"/>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_savePage"
                     label="&savePageCmd.label;"
                     command="Browser:SavePage"/>
@@ -541,7 +537,7 @@
               </menupopup>
             </menu>
           </hbox>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menu id="appmenu_developer"
                 label="&developerMenu.label;">
             <menupopup id="appmenu_developer_popup">
@@ -563,7 +559,7 @@
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
           </menu>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_fullScreen"
                     label="&fullScreenCmd.label;"
                     type="checkbox"

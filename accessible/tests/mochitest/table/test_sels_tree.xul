@@ -12,14 +12,14 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/treeview.js" />
+          src="../treeview.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js" />
+          src="../common.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/states.js" />
+          src="../states.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/table.js" />
+          src="../table.js" />
 
   <script type="application/javascript">
   <![CDATA[

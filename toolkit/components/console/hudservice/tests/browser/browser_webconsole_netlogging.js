@@ -75,14 +75,8 @@ function testNetworkLogging()
       "Logged network entry is page load");
     is(httpActivity.method, "GET", "Method is correct");
     is(httpActivity.request.body, undefined, "No request body sent");
-
-    // TODO: Figure out why the following test is failing on linux (bug 588533).
-    //
-    // If not linux, then run the test. On Linux it always fails.
-    if (navigator.platform.indexOf("Linux") != 0) {
       ok(httpActivity.response.body.indexOf("<!DOCTYPE HTML>") == 0,
         "Response body's beginning is okay");
-    }
 
     // Start xhr-get test.
     browser.contentWindow.wrappedJSObject.testXhrGet(loggingGen);
