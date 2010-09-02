@@ -5062,13 +5062,6 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
     // intrinsic widths.
     selectedOffset =
         provider.GetStart().GetOriginalOffset() + provider.GetOriginalLength();
-    // If we're at the end of a preformatted line which has a terminating
-    // linefeed, we want to reduce the offset by one to make sure that the
-    // selection is placed before the linefeed character.
-    if (GetStyleText()->NewlineIsSignificant() &&
-        HasTerminalNewline()) {
-      --selectedOffset;
-    }
   }
 
   offsets.content = GetContent();
@@ -5432,7 +5425,8 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter, gfxTextRun* aTextRu
   PRUint32 index = aIter.GetSkippedOffset();
   if (!aTextRun->IsClusterStart(index))
     return PR_FALSE;
-  return PR_TRUE;
+  return !(aFrame->GetStyleText()->NewlineIsSignificant() &&
+           aTextRun->GetChar(index) == '\n');
 }
 
 PRBool
@@ -5457,8 +5451,8 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   PRInt32 startOffset = GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);
 
   if (!aForward) {
-    // If at the beginning of the line, look at the previous continuation
-    for (PRInt32 i = NS_MIN(trimmed.GetEnd(), startOffset) - 1;
+    PRInt32 i;
+    for (i = NS_MIN(trimmed.GetEnd(), startOffset) - 1;
          i >= trimmed.mStart; --i) {
       iter.SetOriginalOffset(i);
       if (IsAcceptableCaretPosition(iter, mTextRun, this)) {
@@ -5468,19 +5462,16 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
     }
     *aOffset = 0;
   } else {
-    // If we're at the end of a line, look at the next continuation
-    iter.SetOriginalOffset(startOffset);
-    if (iter.GetSkippedOffset() <= PRUint32(trimmed.GetEnd()) &&
-        !(iter.GetSkippedOffset() < PRUint32(trimmed.GetEnd()) &&
-          GetStyleText()->NewlineIsSignificant() &&
-          mTextRun->GetChar(iter.GetSkippedOffset()) == '\n')) {
-      for (PRInt32 i = startOffset + 1; i <= trimmed.GetEnd(); ++i) {
-        iter.SetOriginalOffset(i);
-        if (i == trimmed.GetEnd() ||
-            IsAcceptableCaretPosition(iter, mTextRun, this)) {
-          *aOffset = i - mContentOffset;
-          return PR_TRUE;
-        }
+    PRInt32 i;
+    for (i = startOffset + 1; i <= trimmed.GetEnd(); ++i) {
+      iter.SetOriginalOffset(i);
+      // XXX we can't necessarily stop at the end of this frame,
+      // but we really have no choice right now. We need to do a deeper
+      // fix/restructuring of PeekOffsetCharacter
+      if (i == trimmed.GetEnd() ||
+          IsAcceptableCaretPosition(iter, mTextRun, this)) {
+        *aOffset = i - mContentOffset;
+        return PR_TRUE;
       }
     }
     *aOffset = contentLength;
@@ -7130,15 +7121,4 @@ PRBool
 nsTextFrame::IsAtEndOfLine() const
 {
   return (GetStateBits() & TEXT_END_OF_LINE) != 0;
-}
-
-PRBool
-nsTextFrame::HasAnyNoncollapsedCharacters()
-{
-  gfxSkipCharsIterator iter = EnsureTextRun();
-  PRInt32 offset = GetContentOffset(),
-          offsetEnd = GetContentEnd();
-  PRInt32 skippedOffset = iter.ConvertOriginalToSkipped(offset);
-  PRInt32 skippedOffsetEnd = iter.ConvertOriginalToSkipped(offsetEnd);
-  return skippedOffset != skippedOffsetEnd;
 }
