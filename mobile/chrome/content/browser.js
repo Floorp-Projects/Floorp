@@ -917,11 +917,8 @@ var Browser = {
     this.hideSidebars();
     this.hideTitlebar();
 
-    getBrowser().setScale(zoomLevel);
-    // XXX
-    setTimeout(function() {
-      getBrowser().scrollTo(scrollX, scrollY);
-    }, 500);
+    getBrowser().setScale(this.selectedTab.clampZoomLevel(zoomLevel));
+    getBrowser().scrollTo(scrollX, scrollY);
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {

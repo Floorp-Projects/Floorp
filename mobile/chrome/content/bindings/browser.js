@@ -361,13 +361,6 @@ let ContentScroll =  {
         content.scrollBy(json.dx, json.dy);
         break;
 
-      case "Content:SetResolution": {
-        let cwu = Util.getWindowUtils(content);
-        cwu.setResolution(json.zoomLevel, json.zoomLevel);
-        sendAsyncMessage("Content:SetResolution:Return", { zoomLevel: json.zoomLevel });
-        break;
-      }
-
       case "Content:SetCacheViewport": {
         let displayport = new Rect(json.x, json.y, json.w, json.h);
         if (displayport.isEmpty())
@@ -375,6 +368,7 @@ let ContentScroll =  {
 
         let cwu = Util.getWindowUtils(content);
         cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
+        cwu.setResolution(json.zoomLevel, json.zoomLevel);
         break;
       }
 
