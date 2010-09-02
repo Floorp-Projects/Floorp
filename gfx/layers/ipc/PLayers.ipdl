@@ -93,7 +93,7 @@ struct OpCreateImageBuffer {
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
   gfx3DMatrix transform;
-  PRUint32 contentFlags;
+  bool isOpaqueContent;
   float opacity;
   bool useClipRect;
   nsIntRect clipRect;

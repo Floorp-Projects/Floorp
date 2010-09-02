@@ -4154,7 +4154,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
         return nsnull;
 
     if (!mResetLayer && aOldLayer &&
-        aOldLayer->HasUserData(&g2DContextLayerUserData)) {
+        aOldLayer->GetUserData() == &g2DContextLayerUserData) {
         NS_ADDREF(aOldLayer);
         // XXX Need to just update the changed area here
         aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
@@ -4166,7 +4166,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
-    canvasLayer->SetUserData(&g2DContextLayerUserData, nsnull);
+    canvasLayer->SetUserData(&g2DContextLayerUserData);
 
     CanvasLayer::Data data;
 
@@ -4174,8 +4174,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
     data.mSize = nsIntSize(mWidth, mHeight);
 
     canvasLayer->Initialize(data);
-    PRUint32 flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
-    canvasLayer->SetContentFlags(flags);
+    canvasLayer->SetIsOpaqueContent(mOpaque);
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
     mResetLayer = PR_FALSE;

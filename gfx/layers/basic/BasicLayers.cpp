@@ -367,23 +367,6 @@ InheritContextFlags(gfxContext* aSource, gfxContext* aDest)
   }
 }
 
-static PRBool
-ShouldRetainTransparentSurface(PRUint32 aContentFlags,
-                               gfxASurface* aTargetSurface)
-{
-  if (aContentFlags & Layer::CONTENT_NO_TEXT)
-    return PR_TRUE;
-
-  switch (aTargetSurface->GetTextQualityInTransparentSurfaces()) {
-  case gfxASurface::TEXT_QUALITY_OK:
-    return PR_TRUE;
-  case gfxASurface::TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS:
-    return (aContentFlags & Layer::CONTENT_NO_TEXT_OVER_TRANSPARENT) != 0;
-  default:
-    return PR_FALSE;
-  }
-}
-
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
@@ -394,20 +377,15 @@ BasicThebesLayer::Paint(gfxContext* aContext,
                "Can only draw in drawing phase");
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
-  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
-  PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
-  if (!BasicManager()->IsRetained() ||
-      (aOpacity == 1.0 && !canUseOpaqueSurface &&
-       !ShouldRetainTransparentSurface(mContentFlags, targetSurface))) {
-    mValidRegion.SetEmpty();
-    mBuffer.Clear();
-
+  if (!BasicManager()->IsRetained()) {
     if (aOpacity != 1.0) {
       target->Save();
       ClipToContain(target, mVisibleRegion.GetBounds());
       target->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     }
+    mValidRegion.SetEmpty();
+    mBuffer.Clear();
     aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
     if (aOpacity != 1.0) {
       target->PopGroupToSource();
@@ -417,12 +395,15 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     return;
   }
 
+  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
+  PRBool isOpaqueContent =
+    (targetSurface->AreSimilarSurfacesSensitiveToContentType() &&
+     aOpacity == 1.0 &&
+     CanUseOpaqueSurface());
   {
-    PRBool opaqueBuffer = canUseOpaqueSurface &&
-      targetSurface->AreSimilarSurfacesSensitiveToContentType();
     Buffer::ContentType contentType =
-      opaqueBuffer ? gfxASurface::CONTENT_COLOR :
-                     gfxASurface::CONTENT_COLOR_ALPHA;
+      isOpaqueContent ? gfxASurface::CONTENT_COLOR :
+                        gfxASurface::CONTENT_COLOR_ALPHA;
     Buffer::PaintState state = mBuffer.BeginPaint(this, contentType);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
@@ -444,7 +425,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, canUseOpaqueSurface, target, aOpacity);
+  mBuffer.DrawTo(this, isOpaqueContent, target, aOpacity);
 }
 
 void
@@ -701,7 +682,7 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
   if (mGLContext) {
     nsRefPtr<gfxImageSurface> isurf =
       new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                          (GetContentFlags() & CONTENT_OPAQUE)
+                          IsOpaqueContent()
                             ? gfxASurface::ImageFormatRGB24
                             : gfxASurface::ImageFormatARGB32);
     if (!isurf || isurf->CairoStatus() != 0) {
@@ -812,7 +793,7 @@ MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
                                       const nsIntRect& aBounds,
                                       nsIntRegion* aDirtyVisibleRegionInContainer)
 {
-  if (!(aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
+  if (!aLayer->IsOpaqueContent()) {
     return PR_TRUE;
   }
 

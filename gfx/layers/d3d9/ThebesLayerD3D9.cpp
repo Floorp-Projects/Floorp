@@ -46,6 +46,27 @@
 namespace mozilla {
 namespace layers {
 
+// Returns true if it's OK to save the contents of aLayer in an
+// opaque surface (a surface without an alpha channel).
+// If we can use a surface without an alpha channel, we should, because
+// it will often make painting of antialiased text faster and higher
+// quality.
+static PRBool
+UseOpaqueSurface(Layer* aLayer)
+{
+  // If the visible content in the layer is opaque, there is no need
+  // for an alpha channel.
+  if (aLayer->IsOpaqueContent())
+    return PR_TRUE;
+  // Also, if this layer is the bottommost layer in a container which
+  // doesn't need an alpha channel, we can use an opaque surface for this
+  // layer too. Any transparent areas must be covered by something else
+  // in the container.
+  ContainerLayer* parent = aLayer->GetParent();
+  return parent && parent->GetFirstChild() == aLayer &&
+         UseOpaqueSurface(parent);
+}
+
 ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   : ThebesLayer(aManager, NULL)
   , LayerD3D9(aManager)
@@ -83,7 +104,7 @@ ThebesLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
     return;
   }
 
-  D3DFORMAT fmt = (CanUseOpaqueSurface() && !mD2DSurface) ?
+  D3DFORMAT fmt = (UseOpaqueSurface(this) && !mD2DSurface) ?
                     D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
 
   D3DSURFACE_DESC desc;
@@ -177,7 +198,7 @@ ThebesLayerD3D9::RenderLayer()
 
   // We differentiate between these formats since D3D9 will only allow us to
   // call GetDC on an opaque surface.
-  D3DFORMAT fmt = (CanUseOpaqueSurface() && !mD2DSurface) ?
+  D3DFORMAT fmt = (UseOpaqueSurface(this) && !mD2DSurface) ?
                     D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
 
   if (mTexture) {
@@ -293,7 +314,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   }
 #endif
 
-  D3DFORMAT fmt = CanUseOpaqueSurface() ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
+  D3DFORMAT fmt = UseOpaqueSurface(this) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
   nsIntRect bounds = aRegion.GetBounds();
 
   gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatARGB32;
@@ -306,7 +327,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
 
   nsRefPtr<IDirect3DSurface9> surf;
   HDC dc;
-  if (CanUseOpaqueSurface()) {
+  if (UseOpaqueSurface(this)) {
     hr = tmpTexture->GetSurfaceLevel(0, getter_AddRefs(surf));
 
     if (FAILED(hr)) {
@@ -339,7 +360,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
   cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
 
-  if (CanUseOpaqueSurface()) {
+  if (UseOpaqueSurface(this)) {
     surf->ReleaseDC(dc);
   } else {
     D3DLOCKED_RECT r;
@@ -402,7 +423,7 @@ ThebesLayerD3D9::CreateNewTexture(const gfxIntSize &aSize)
                                   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                                   D3DPOOL_DEFAULT, getter_AddRefs(mTexture), &sharedHandle);
 
-          mD2DSurface = new gfxD2DSurface(sharedHandle, CanUseOpaqueSurface() ?
+          mD2DSurface = new gfxD2DSurface(sharedHandle, UseOpaqueSurface(this) ?
             gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
 
           // If there's an error, go on and do what we always do.
@@ -415,7 +436,7 @@ ThebesLayerD3D9::CreateNewTexture(const gfxIntSize &aSize)
 #endif
   if (!mTexture) {
     device()->CreateTexture(aSize.width, aSize.height, 1,
-                            D3DUSAGE_RENDERTARGET, CanUseOpaqueSurface() ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
+                            D3DUSAGE_RENDERTARGET, UseOpaqueSurface(this) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
   }
 }
