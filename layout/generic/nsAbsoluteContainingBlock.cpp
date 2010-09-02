@@ -494,14 +494,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
 
   if (oldRect.TopLeft() != rect.TopLeft() || 
-      (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
-      (kidDesiredSize.mOverflowArea + rect.TopLeft() != oldOverflowRect &&
-        (kidDesiredSize.mOverflowArea + rect.TopLeft() != rect || oldRect != oldOverflowRect))) {
-    // The frame moved; we have to invalidate the whole frame
-    // because the children may have moved after they were reflowed
-    // We also have to invalidate when we have overflow and the overflow
-    // changes because the change might be caused by clipping
-    // XXX This could be optimized in some cases, especially clipping changes
+      (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // The frame moved
     aKidFrame->GetParent()->Invalidate(oldOverflowRect);
     aKidFrame->GetParent()->Invalidate(kidDesiredSize.mOverflowArea +
                                        rect.TopLeft());

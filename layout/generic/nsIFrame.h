@@ -266,6 +266,9 @@ typedef PRUint64 nsFrameState;
 // NS_FRAME_HAS_CONTAINER_LAYER bit.
 #define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
 
+// Frame's overflow area was clipped by the 'clip' property.
+#define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
@@ -2518,13 +2521,6 @@ protected:
    * comboboxes, menupoups) this function will invalidate the window.
    */
   void InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags);
-
-  /**
-   * Gets the overflow area for any properties that are common to all types of frames
-   * e.g. outlines.
-   */
-  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize,
-                               PRBool* aHasOutlineOrEffects);
 
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
