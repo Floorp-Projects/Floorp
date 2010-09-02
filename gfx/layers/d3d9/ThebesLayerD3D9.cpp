@@ -70,6 +70,7 @@ UseOpaqueSurface(Layer* aLayer)
 ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   : ThebesLayer(aManager, NULL)
   , LayerD3D9(aManager)
+  , mD2DSurfaceInitialized(false)
 {
   mImplData = static_cast<LayerD3D9*>(this);
   aManager->deviceManager()->mThebesLayers.AppendElement(this);
@@ -289,6 +290,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   if (mD2DSurface) {
     context = new gfxContext(mD2DSurface);
     nsIntRegionRectIterator iter(aRegion);
+
     context->Translate(gfxPoint(-visibleRect.x, -visibleRect.y));
     context->NewPath();
     const nsIntRect *iterRect;
@@ -296,11 +298,14 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
       context->Rectangle(gfxRect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));      
     }
     context->Clip();
-    if (mD2DSurface->GetContentType() != gfxASurface::CONTENT_COLOR) {
+    if (!mD2DSurfaceInitialized || 
+        mD2DSurface->GetContentType() != gfxASurface::CONTENT_COLOR) {
       context->SetOperator(gfxContext::OPERATOR_CLEAR);
       context->Paint();
       context->SetOperator(gfxContext::OPERATOR_OVER);
+      mD2DSurfaceInitialized = true;
     }
+
     LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
     cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
     mD2DSurface->Flush();
@@ -423,6 +428,7 @@ ThebesLayerD3D9::CreateNewTexture(const gfxIntSize &aSize)
                                   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                                   D3DPOOL_DEFAULT, getter_AddRefs(mTexture), &sharedHandle);
 
+          mD2DSurfaceInitialized = false;
           mD2DSurface = new gfxD2DSurface(sharedHandle, UseOpaqueSurface(this) ?
             gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
 
