@@ -243,6 +243,26 @@ public:
    */
   Layer* GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
 
+  /**
+   * A useful hashtable iteration function that removes the
+   * DisplayItemData property for the frame, clears its
+   * NS_FRAME_HAS_CONTAINER_LAYER bit and returns PL_DHASH_REMOVE.
+   * aClosure is ignored.
+   */
+  static PLDHashOperator RemoveDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
+                                                       void* aClosure)
+  {
+    return UpdateDisplayItemDataForFrame(aEntry, nsnull);
+  }
+
+  /**
+   * Try to determine whether the ThebesLayer aLayer paints an opaque
+   * single color everywhere it's visible in aRect.
+   * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
+   */
+  nscolor FindOpaqueColorCovering(nsDisplayListBuilder* aBuilder,
+                                  ThebesLayer* aLayer, const nsRect& aRect);
+
 protected:
   /**
    * We store an array of these for each frame that is associated with
