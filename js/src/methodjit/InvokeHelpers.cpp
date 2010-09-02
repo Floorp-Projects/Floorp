@@ -367,11 +367,10 @@ stubs::CompileFunction(VMFrame &f)
     /* Empty script does nothing. */
     if (script->isEmpty()) {
         RemovePartialFrame(f);
-        Value *vp = &f.regs.sp[-int32(argc)];
         if (callingNew)
-            vp[-2] = vp[-1];
+            f.regs.sp[argc - 2] = f.regs.sp[argc - 1];
         else
-            vp[-2].setUndefined();
+            f.regs.sp[argc - 2].setUndefined();
         return NULL;
     }
 
