@@ -370,6 +370,55 @@ public:
    */
   virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // SelectAccessible
+
+  /**
+   * Return true if the accessible is a select control containing selectable
+   * items.
+   */
+  virtual bool IsSelect();
+
+  /**
+   * Return an array of selected items.
+   */
+  virtual already_AddRefed<nsIArray> SelectedItems();
+
+  /**
+   * Return the number of selected items.
+   */
+  virtual PRUint32 SelectedItemCount();
+
+  /**
+   * Return selected item at the given index.
+   */
+  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+
+  /**
+   * Determine if item at the given index is selected.
+   */
+  virtual bool IsItemSelected(PRUint32 aIndex);
+
+  /**
+   * Add item at the given index the selection. Return true if success.
+   */
+  virtual bool AddItemToSelection(PRUint32 aIndex);
+
+  /**
+   * Remove item at the given index from the selection. Return if success.
+   */
+  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+
+  /**
+   * Select all items. Return true if success.
+   */
+  virtual bool SelectAll();
+
+  /**
+   * Unselect all items. Return true if success.
+   */
+  virtual bool UnselectAll();
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
