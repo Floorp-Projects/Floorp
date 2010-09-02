@@ -163,11 +163,6 @@
               this._viewportHeightInCSSPx = aMessage.json.viewportHeight;
               this._updateCacheViewport();
               break;
-
-            case "Content:SetResolution:Return":
-              this._zoomLevel = aMessage.json.zoomLevel;
-              this._updateCacheViewport();
-              break;
          }
         ]]></body>
       </method>
@@ -450,7 +445,8 @@
               x: (frameLoader.viewportScrollX - offscreenX) / this._zoomLevel,
               y: (frameLoader.viewportScrollY - offscreenY) / this._zoomLevel,
               w: (this._viewportWidthInCSSPx + offscreenX * 2) / this._zoomLevel,
-              h: (this._viewportHeightInCSSPx + offscreenY * 2) / this._zoomLevel
+              h: (this._viewportHeightInCSSPx + offscreenY * 2) / this._zoomLevel,
+              zoomLevel: this._zoomLevel
             });
 
             this._pendingPixelsX = 0;
@@ -479,8 +475,9 @@
           <![CDATA[
             if (zl <= 0) throw "Bad zoom level given.";
 
+            this._zoomLevel = zl;
             this._frameLoader.setViewportScale(zl, zl);
-            this.messageManager.sendAsyncMessage("Content:SetResolution", { zoomLevel: zl });
+            this._updateCacheViewport();
           ]]>
         </body>
       </method>
@@ -561,8 +558,6 @@
           }, this);
 
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this);
-          this.messageManager.addMessageListener("Content:SetDisplayportArea:Return", this);
-          this.messageManager.addMessageListener("Content:SetResolution:Return", this);
 
           this._webProgress._init();
         ]]>

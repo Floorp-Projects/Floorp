@@ -373,7 +373,6 @@ pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
 pref("browser.ui.zoom.pageFitGranularity", 9); // don't zoom to fit by less than 1/9
-pref("browser.ui.zoom.animationFps", 60);
 pref("browser.ui.zoom.animationDuration", 350); // ms duration of double-tap zoom animation
 
 // pinch gesture
