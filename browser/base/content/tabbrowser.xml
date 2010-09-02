@@ -2773,7 +2773,16 @@
       <method name="_getDragTargetTab">
         <parameter name="event"/>
         <body><![CDATA[
-          return event.target.localName == "tab" ? event.target : null;
+          let tab = event.target.localName == "tab" ? event.target : null;
+          if (tab &&
+              (event.type == "drop" || event.type == "dragover") &&
+              event.dataTransfer.dropEffect == "link") {
+            let boxObject = tab.boxObject;
+            if (event.screenX < boxObject.screenX + boxObject.width * .25 ||
+                event.screenX > boxObject.screenX + boxObject.width * .75)
+              return null;
+          }
+          return tab;
         ]]></body>
       </method>
 
@@ -3022,6 +3031,7 @@
               this._dragTime = Date.now();
             if (Date.now() >= this._dragTime + this._dragOverDelay)
               this.selectedItem = tab;
+            ind.collapsed = true;
             return;
           }
         }
