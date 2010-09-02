@@ -181,8 +181,10 @@ struct JSObjectMap {
     static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
 
     uint32 shape;       /* shape identifier */
+    uint32 freeslot;    /* first free object slot */
 
-    explicit JSObjectMap(uint32 shape) : shape(shape) {}
+    explicit JSObjectMap(uint32 shape) : shape(shape), freeslot(0) {}
+    JSObjectMap(uint32 shape, uint32 freeslot) : shape(shape), freeslot(freeslot) {}
 
     enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
 
@@ -325,13 +327,16 @@ struct JSObject {
         OWN_SHAPE       = 0x80
     };
 
+    /*
+     * Impose a sane upper bound, originally checked only for dense arrays, on
+     * number of slots in an object.
+     */
     enum {
-        JS_NSLOTS_BITS  = 24,
-        JS_NSLOTS_LIMIT = JS_BIT(JS_NSLOTS_BITS)
+        NSLOTS_BITS     = 29,
+        NSLOTS_LIMIT    = JS_BIT(NSLOTS_BITS)
     };
 
-    uint32      flags: 32-JS_NSLOTS_BITS,   /* flags */
-                freeslot: JS_NSLOTS_BITS;   /* next free slot in abstract slot space */
+    uint32      flags;                      /* flags */
     uint32      objShape;                   /* copy of lastProp->shape, or override if different */
 
     JSObject    *proto;                     /* object's prototype */
@@ -370,9 +375,6 @@ struct JSObject {
     }
 
     inline void trace(JSTracer *trc);
-
-    static size_t flagsOffset();
-    uint32 flagsAndFreeslot();
 
     uint32 shape() const {
         JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
@@ -571,7 +573,9 @@ struct JSObject {
 
     inline bool ensureClassReservedSlots(JSContext *cx);
 
-    bool containsSlot(uint32 slot) const { return slot < freeslot; }
+    uint32 freeslot() const { return map->freeslot; }
+
+    bool containsSlot(uint32 slot) const { return slot < freeslot(); }
 
     js::Value& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)
@@ -1061,6 +1065,8 @@ struct JSObject {
 
     inline JSObject *getThrowTypeError() const;
 
+    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
+
     void swap(JSObject *obj);
 
     inline bool canHaveMethodBarrier() const;
@@ -1080,6 +1086,8 @@ struct JSObject {
     inline bool isObject() const;
     inline bool isWith() const;
     inline bool isBlock() const;
+    inline bool isStaticBlock() const;
+    inline bool isClonedBlock() const;
     inline bool isCall() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
@@ -1115,7 +1123,7 @@ JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 #define MAX_DSLOTS_LENGTH   (~size_t(0) / sizeof(js::Value) - 1)
 #define MAX_DSLOTS_LENGTH32 (~uint32(0) / sizeof(js::Value) - 1)
 
-#define OBJ_CHECK_SLOT(obj,slot) (JS_ASSERT(slot < (obj)->freeslot))
+#define OBJ_CHECK_SLOT(obj,slot) JS_ASSERT((obj)->containsSlot(slot))
 
 #ifdef JS_THREADSAFE
 
@@ -1187,23 +1195,26 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
  */
 static const uint32 JSSLOT_BLOCK_DEPTH = JSSLOT_PRIVATE + 1;
 
-static inline bool
-OBJ_IS_CLONED_BLOCK(JSObject *obj)
+inline bool
+JSObject::isStaticBlock() const
 {
-    return obj->getProto() != NULL;
+    return isBlock() && !getProto();
+}
+
+inline bool
+JSObject::isClonedBlock() const
+{
+    return isBlock() && !!getProto();
 }
 
 static const uint32 JSSLOT_WITH_THIS = JSSLOT_PRIVATE + 2;
 
-extern JSBool
-js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
-
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
-    ((OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->propertyCount())
+    (obj)->propertyCount()
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
+    (obj)->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
+    (obj)->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to
