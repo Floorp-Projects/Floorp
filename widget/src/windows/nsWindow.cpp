@@ -553,13 +553,10 @@ nsWindow::Create(nsIWidget *aParent,
 
   mPopupType = aInitData->mPopupHint;
   mContentType = aInitData->mContentType;
+  mIsRTL = aInitData->mRTL;
 
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
-
-  if (aInitData->mRTL) {
-    extendedStyle |= WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
-  }
 
   if (mWindowType == eWindowType_popup) {
     if (!aParent)
