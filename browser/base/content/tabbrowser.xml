@@ -808,6 +808,8 @@
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
               this.updateTitlebar();
+
+              this.mCurrentTab.removeAttribute("titlechanged");
             }
 
             // If the new tab is busy, and our current state is not busy, then
@@ -2449,6 +2451,8 @@
           this.setTabTitle(tab);
           if (tab == this.mCurrentTab)
             this.updateTitlebar();
+          else if (!tab.hasAttribute("busy"))
+            tab.setAttribute("titlechanged", "true");
         ]]>
       </handler>
     </handlers>
