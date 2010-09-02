@@ -102,6 +102,12 @@ WebGLContext::WebGLContext()
 
     mBlackTexturesAreInitialized = PR_FALSE;
     mFakeBlackStatus = DoNotNeedFakeBlack;
+
+    mFakeVertexAttrib0Array = nsnull;
+    mVertexAttrib0Vector[0] = 0;
+    mVertexAttrib0Vector[1] = 0;
+    mVertexAttrib0Vector[2] = 0;
+    mVertexAttrib0Vector[3] = 1;
 }
 
 WebGLContext::~WebGLContext()
