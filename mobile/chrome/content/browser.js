@@ -911,8 +911,7 @@ var Browser = {
   },
 
   animatedZoomTo: function animatedZoomTo(rect) {
-    let zoom = new AnimatedZoom();
-    zoom.animateTo(rect);
+    animatedZoom.animateTo(rect);
   },
 
   setVisibleRect: function setVisibleRect(rect) {
