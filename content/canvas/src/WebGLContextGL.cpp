@@ -1254,8 +1254,12 @@ WebGLContext::GenerateMipmap(WebGLenum target)
     if (!tex)
         return ErrorInvalidOperation("generateMipmap: no texture is bound to this target");
 
-    if (!tex->IsGenerateMipmapAllowed()) {
-        return ErrorInvalidOperation("generateMipmap: texture does not satisfy requirements for generateMipmap");
+    if (!tex->IsFirstImagePowerOfTwo()) {
+        return ErrorInvalidOperation("generateMipmap: the width or height of this texture is not a power of two");
+    }
+
+    if (!tex->AreAllLevel0ImageInfosEqual()) {
+        return ErrorInvalidOperation("generateMipmap: the six faces of this cube map have different dimensions, format, or type.");
     }
 
     tex->SetGeneratedMipmap();
