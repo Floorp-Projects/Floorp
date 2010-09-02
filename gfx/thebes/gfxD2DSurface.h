@@ -57,6 +57,12 @@ public:
 
     virtual ~gfxD2DSurface();
 
+    virtual TextQuality GetTextQualityInTransparentSurfaces()
+    {
+      // D2D always draws text in transparent surfaces with grayscale-AA,
+      // even if the text is over opaque pixels.
+      return TEXT_QUALITY_BAD;
+    }
 
     void Present();
     void Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip);
