@@ -6258,13 +6258,15 @@ js_DumpObject(JSObject *obj)
     if (flags & JSObject::INDEXED) fprintf(stderr, " indexed");
     if (flags & JSObject::OWN_SHAPE) fprintf(stderr, " own_shape");
     bool anyFlags = flags != 0;
-    if (obj->inDictionaryMode()) {
-        fprintf(stderr, " inDictionaryMode");
-        anyFlags = true;
-    }
-    if (obj->hasPropertyTable()) {
-        fprintf(stderr, " hasPropertyTable");
-        anyFlags = true;
+    if (obj->isNative()) {
+        if (obj->inDictionaryMode()) {
+            fprintf(stderr, " inDictionaryMode");
+            anyFlags = true;
+        }
+        if (obj->hasPropertyTable()) {
+            fprintf(stderr, " hasPropertyTable");
+            anyFlags = true;
+        }
     }
     if (!anyFlags)
         fprintf(stderr, " none");
