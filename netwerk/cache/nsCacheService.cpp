@@ -1298,6 +1298,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
     CACHE_LOG_DEBUG(("Created request %p\n", request));
 
+#if 0 // Disabled because of bug 589296
     // Process the request on the background thread if we are on the main thread
     // and the the request is asynchronous
     if (NS_IsMainThread() && listener && gService->mCacheIOThread) {
@@ -1313,7 +1314,9 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
         if (NS_FAILED(rv))
             delete request;
     }
-    else {
+    else 
+#endif
+    {
         rv = gService->ProcessRequest(request, PR_TRUE, result);
 
         // delete requests that have completed
