@@ -1230,6 +1230,10 @@ statusbarpanel#statusbar-display {
   -moz-margin-start: 0;
 }
 
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  -moz-box-shadow: 0 0 0 1em rgba(255,0,0,.5) inset;
+}
+
 .tab-icon-image {
   width: 16px;
   height: 16px;

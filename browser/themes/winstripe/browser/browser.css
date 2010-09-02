@@ -1367,6 +1367,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(hsla(0,0%,80%,.5), hsla(0,0%,60%,.5) 50%);
 }
 
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  background-image: -moz-linear-gradient(rgba(255,0,0,.5), rgba(255,0,0,.5)) !important;
+}
+
 .tabbrowser-tab[busy] > .tab-icon-image {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
   -moz-image-region: rect(0, 16px, 16px, 0);
