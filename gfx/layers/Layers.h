@@ -630,7 +630,6 @@ protected:
     mPrevSibling(nsnull),
     mImplData(aImplData),
     mOpacity(1.0),
-    mUseClipRect(PR_FALSE),
     mContentFlags(0),
     mUseClipRect(PR_FALSE)
     {}
