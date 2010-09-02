@@ -1,7 +1,0 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
-
-<!DOCTYPE window>
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="miniXul">
-</window>

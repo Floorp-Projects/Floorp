@@ -92,8 +92,34 @@
     }
 
     function initRemoteFrameScript() {
-      // 1. Test that loading a script works
+      // 1. Test that loading a script works, and that accessing process level mm and
+      //     global mm works.
+      var ppm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"]
+                          .getService(Components.interfaces.nsIFrameMessageManager);
+      var gm = Components.classes["@mozilla.org/globalmessagemanager;1"]
+                         .getService(Components.interfaces.nsIChromeFrameMessageManager);
+      var didThrow = false;
+      try {
+        var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
+                            .getService(Components.interfaces.nsISyncMessageSender);  
+      } catch (ex) {
+        didThrow = true;
+      }
+      if (!didThrow) {
+        alert("One shouldn't be able to create content process message manager in chrome process!");
+      }
+      ppm.addMessageListener("ppm-sync",
+        function(m) {
+          document.getElementById("messageLog").value += "[SYNC PPM]"; 
+        }
+      );
+      ppm.addMessageListener("ppm-async",
+        function(m) {
+          document.getElementById("messageLog").value += "[ASYNC PPM]"; 
+        }
+      );
       messageManager.loadFrameScript("chrome://global/content/remote-test-ipc.js", true);
+      ppm.sendAsyncMessage("cpm-async");
 
       // 2. Test that adding message listener works, and that receiving a sync message works.
       messageManager.addMessageListener("linkclick",

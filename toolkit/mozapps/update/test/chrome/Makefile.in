@@ -85,8 +85,13 @@ _CHROME_FILES = \
   test_0111_neverButton_basic.xul \
   test_0112_neverButton_billboard.xul \
   test_0113_showNeverForVersionRemovedWithPref.xul \
-  test_0120_cert_valid_attributes_not_builtin.xul \
-  test_0121_cert_invalid_attribute_name.xul \
+  test_0121_check_requireBuiltinCert.xul \
+  test_0122_check_allowNonBuiltinCert_validCertAttrs.xul \
+  test_0123_check_allowNonBuiltinCert_noCertAttrsCheck.xul \
+  test_0131_check_invalidCertAttrs_noUpdate.xul \
+  test_0132_check_invalidCertAttrs_hasUpdate.xul \
+  test_0141_notify_invalidCertAttrs_noUpdate.xul \
+  test_0142_notify_invalidCertAttrs_hasUpdate.xul \
   test_9999_cleanup.xul \
   $(NULL)
 

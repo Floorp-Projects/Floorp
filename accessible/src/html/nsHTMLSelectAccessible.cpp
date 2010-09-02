@@ -57,251 +57,12 @@
 #include "nsIMutableArray.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLSelectableAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLSelectableAccessible::iterator
-
-nsHTMLSelectableAccessible::iterator::iterator(nsHTMLSelectableAccessible *aParent, nsIWeakReference *aWeakShell): 
-  mWeakShell(aWeakShell), mParentSelect(aParent)
-{
-  mLength = mIndex = 0;
-  mSelCount = 0;
-
-  nsCOMPtr<nsIDOMHTMLSelectElement> htmlSelect =
-    do_QueryInterface(mParentSelect->mContent);
-  if (htmlSelect) {
-    htmlSelect->GetOptions(getter_AddRefs(mOptions));
-    if (mOptions)
-      mOptions->GetLength(&mLength);
-  }
-}
-
-PRBool nsHTMLSelectableAccessible::iterator::Advance() 
-{
-  if (mIndex < mLength) {
-    nsCOMPtr<nsIDOMNode> tempNode;
-    if (mOptions) {
-      mOptions->Item(mIndex, getter_AddRefs(tempNode));
-      mOption = do_QueryInterface(tempNode);
-    }
-    mIndex++;
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-void nsHTMLSelectableAccessible::iterator::CalcSelectionCount(PRInt32 *aSelectionCount)
-{
-  PRBool isSelected = PR_FALSE;
-
-  if (mOption)
-    mOption->GetSelected(&isSelected);
-
-  if (isSelected)
-    (*aSelectionCount)++;
-}
-
-void
-nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIMutableArray *aSelectedAccessibles, 
-                                                              nsPresContext *aContext)
-{
-  PRBool isSelected = PR_FALSE;
-  nsAccessible *optionAcc = nsnull;
-
-  if (mOption) {
-    mOption->GetSelected(&isSelected);
-    if (isSelected) {
-      nsCOMPtr<nsIContent> optionContent(do_QueryInterface(mOption));
-      optionAcc = GetAccService()->GetAccessibleInWeakShell(optionContent,
-                                                            mWeakShell);
-    }
-  }
-
-  if (optionAcc)
-    aSelectedAccessibles->AppendElement(static_cast<nsIAccessible*>(optionAcc),
-                                        PR_FALSE);
-}
-
-PRBool
-nsHTMLSelectableAccessible::iterator::GetAccessibleIfSelected(PRInt32 aIndex,
-                                                              nsPresContext *aContext, 
-                                                              nsIAccessible **aAccessible)
-{
-  PRBool isSelected = PR_FALSE;
-
-  *aAccessible = nsnull;
-
-  if (mOption) {
-    mOption->GetSelected(&isSelected);
-    if (isSelected) {
-      if (mSelCount == aIndex) {
-        nsCOMPtr<nsIContent> optionContent(do_QueryInterface(mOption));
-        nsAccessible *accessible =
-          GetAccService()->GetAccessibleInWeakShell(optionContent, mWeakShell);
-        NS_IF_ADDREF(*aAccessible = accessible);
-
-        return PR_TRUE;
-      }
-      mSelCount++;
-    }
-  }
-
-  return PR_FALSE;
-}
-
-void nsHTMLSelectableAccessible::iterator::Select(PRBool aSelect)
-{
-  if (mOption)
-    mOption->SetSelected(aSelect);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLSelectableAccessible
-
-nsHTMLSelectableAccessible::
-  nsHTMLSelectableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLSelectableAccessible, nsAccessible, nsIAccessibleSelectable)
-
-// Helper methods
-NS_IMETHODIMP nsHTMLSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
-{
-  *aSelState = PR_FALSE;
-
-  nsCOMPtr<nsIDOMHTMLSelectElement> htmlSelect(do_QueryInterface(mContent));
-  if (!htmlSelect)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-  htmlSelect->GetOptions(getter_AddRefs(options));
-  if (!options)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNode> tempNode;
-  options->Item(aIndex, getter_AddRefs(tempNode));
-  nsCOMPtr<nsIDOMHTMLOptionElement> tempOption(do_QueryInterface(tempNode));
-  if (!tempOption)
-    return NS_ERROR_FAILURE;
-
-  tempOption->GetSelected(aSelState);
-  nsresult rv = NS_OK;
-  if (eSelection_Add == aMethod && !(*aSelState))
-    rv = tempOption->SetSelected(PR_TRUE);
-  else if (eSelection_Remove == aMethod && (*aSelState))
-    rv = tempOption->SetSelected(PR_FALSE);
-  return rv;
-}
-
-// Interface methods
-NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsIArray **_retval)
-{
-  *_retval = nsnull;
-
-  nsCOMPtr<nsIMutableArray> selectedAccessibles =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-  NS_ENSURE_STATE(selectedAccessibles);
-  
-  nsPresContext *context = GetPresContext();
-  if (!context)
-    return NS_ERROR_FAILURE;
-
-  nsHTMLSelectableAccessible::iterator iter(this, mWeakShell);
-  while (iter.Advance())
-    iter.AddAccessibleIfSelected(selectedAccessibles, context);
-
-  PRUint32 uLength = 0;
-  selectedAccessibles->GetLength(&uLength); 
-  if (uLength != 0) { // length of nsIArray containing selected options
-    *_retval = selectedAccessibles;
-    NS_ADDREF(*_retval);
-  }
-  return NS_OK;
-}
-
-// return the nth selected child's nsIAccessible object
-NS_IMETHODIMP nsHTMLSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-
-  nsPresContext *context = GetPresContext();
-  if (!context)
-    return NS_ERROR_FAILURE;
-
-  nsHTMLSelectableAccessible::iterator iter(this, mWeakShell);
-  while (iter.Advance())
-    if (iter.GetAccessibleIfSelected(aIndex, context, _retval))
-      return NS_OK;
-  
-  // No matched item found
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
-{
-  *aSelectionCount = 0;
-
-  nsHTMLSelectableAccessible::iterator iter(this, mWeakShell);
-  while (iter.Advance())
-    iter.CalcSelectionCount(aSelectionCount);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLSelectableAccessible::AddChildToSelection(PRInt32 aIndex)
-{
-  PRBool isSelected;
-  return ChangeSelection(aIndex, eSelection_Add, &isSelected);
-}
-
-NS_IMETHODIMP nsHTMLSelectableAccessible::RemoveChildFromSelection(PRInt32 aIndex)
-{
-  PRBool isSelected;
-  return ChangeSelection(aIndex, eSelection_Remove, &isSelected);
-}
-
-NS_IMETHODIMP nsHTMLSelectableAccessible::IsChildSelected(PRInt32 aIndex, PRBool *_retval)
-{
-  *_retval = PR_FALSE;
-  return ChangeSelection(aIndex, eSelection_GetState, _retval);
-}
-
-NS_IMETHODIMP nsHTMLSelectableAccessible::ClearSelection()
-{
-  nsHTMLSelectableAccessible::iterator iter(this, mWeakShell);
-  while (iter.Advance())
-    iter.Select(PR_FALSE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLSelectableAccessible::SelectAllSelection(PRBool *_retval)
-{
-  *_retval = PR_FALSE;
-  
-  nsCOMPtr<nsIDOMHTMLSelectElement> htmlSelect(do_QueryInterface(mContent));
-  if (!htmlSelect)
-    return NS_ERROR_FAILURE;
-
-  htmlSelect->GetMultiple(_retval);
-  if (*_retval) {
-    nsHTMLSelectableAccessible::iterator iter(this, mWeakShell);
-    while (iter.Advance())
-      iter.Select(PR_TRUE);
-  }
-  return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectListAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLSelectListAccessible::
   nsHTMLSelectListAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsHTMLSelectableAccessible(aContent, aShell)
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -312,8 +73,7 @@ nsresult
 nsHTMLSelectListAccessible::GetStateInternal(PRUint32 *aState,
                                              PRUint32 *aExtraState)
 {
-  nsresult rv = nsHTMLSelectableAccessible::GetStateInternal(aState,
-                                                             aExtraState);
+  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // As a nsHTMLSelectListAccessible we can have the following states:
@@ -350,6 +110,33 @@ nsHTMLSelectListAccessible::GetRoleInternal(PRUint32 *aRole)
     *aRole = nsIAccessibleRole::ROLE_LISTBOX;
 
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLSelectListAccessible: SelectAccessible
+
+bool
+nsHTMLSelectListAccessible::IsSelect()
+{
+  return true;
+}
+
+bool
+nsHTMLSelectListAccessible::SelectAll()
+{
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElm(do_QueryInterface(mContent));
+  PRBool isMultiple = PR_FALSE;
+  selectElm->GetMultiple(&isMultiple);
+  return isMultiple ? nsAccessibleWrap::SelectAll() : false;
+}
+
+bool
+nsHTMLSelectListAccessible::UnselectAll()
+{
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElm(do_QueryInterface(mContent));
+  PRBool isMultiple = PR_FALSE;
+  selectElm->GetMultiple(&isMultiple);
+  return isMultiple ? nsAccessibleWrap::UnselectAll() : false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -674,6 +461,16 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
   }
 
   return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectOptionAccessible::SetSelected(PRBool aSelect)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMHTMLOptionElement> optionElm(do_QueryInterface(mContent));
+  return optionElm->SetSelected(aSelect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

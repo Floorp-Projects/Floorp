@@ -4035,6 +4035,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIFrameMessageManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsISyncMessageSender)
     DOM_CLASSINFO_MAP_ENTRY(nsIContentFrameMessageManager)
   DOM_CLASSINFO_MAP_END
 

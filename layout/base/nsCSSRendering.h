@@ -79,7 +79,8 @@ struct nsCSSRendering {
    * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
    */
   static PRBool GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
-                                     const nscoord& aFrameWidth,
+                                     const nscoord aFrameWidth,
+                                     const nscoord aFrameHeight,
                                      nscoord aRadii[8]);
 
   /**
