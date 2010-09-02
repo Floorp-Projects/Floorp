@@ -147,7 +147,7 @@ Layer::CanUseOpaqueSurface()
 {
   // If the visible content in the layer is opaque, there is no need
   // for an alpha channel.
-  if (GetContentFlags() & CONTENT_OPAQUE)
+  if (IsOpaqueContent())
     return PR_TRUE;
   // Also, if this layer is the bottommost layer in a container which
   // doesn't need an alpha channel, we can use an opaque surface for this
@@ -221,24 +221,14 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (mUseClipRect) {
     AppendToString(aTo, mClipRect, " [clip=", "]");
   }
-  if (!mTransform.IsIdentity()) {
+  if (!mTransform.IsIdentity())
     AppendToString(aTo, mTransform, " [transform=", "]");
-  }
-  if (!mVisibleRegion.IsEmpty()) {
+  if (!mVisibleRegion.IsEmpty())
     AppendToString(aTo, mVisibleRegion, " [visible=", "]");
-  }
-  if (1.0 != mOpacity) {
+  if (1.0 != mOpacity)
     aTo.AppendPrintf(" [opacity=%g]", mOpacity);
-  }
-  if (GetContentFlags() & CONTENT_OPAQUE) {
+  if (IsOpaqueContent())
     aTo += " [opaqueContent]";
-  }
-  if (GetContentFlags() & CONTENT_NO_TEXT) {
-    aTo += " [noText]";
-  }
-  if (GetContentFlags() & CONTENT_NO_TEXT_OVER_TRANSPARENT) {
-    aTo += " [noTextOverTransparent]";
-  }
 
   return aTo;
 }
