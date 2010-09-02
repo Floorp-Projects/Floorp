@@ -554,7 +554,7 @@
 
           // Prompt remoting
           ["Alert", "Confirm", "Prompt"].forEach(function(name) {
-            this.messageManager.addMessageListener("Prompt:" + name, this);
+            this.messageManager.addMessageListener("Prompt:Alert" + name, this);
           }, this);
 
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this);
