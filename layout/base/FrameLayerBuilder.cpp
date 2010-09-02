@@ -57,13 +57,18 @@ namespace {
 /**
  * This is the userdata we associate with a layer manager.
  */
-class LayerManagerData {
+class LayerManagerData : public LayerUserData {
 public:
   LayerManagerData() :
     mInvalidateAllThebesContent(PR_FALSE),
     mInvalidateAllLayers(PR_FALSE)
   {
+    MOZ_COUNT_CTOR(LayerManagerData);
+
     mFramesWithLayers.Init();
+  }
+  ~LayerManagerData() {
+    MOZ_COUNT_DTOR(LayerManagerData);
   }
 
   /**
@@ -304,18 +309,26 @@ protected:
 
 /**
  * The address of gThebesDisplayItemLayerUserData is used as the user
- * data pointer for ThebesLayers created by FrameLayerBuilder.
+ * data key for ThebesLayers created by FrameLayerBuilder.
  * It identifies ThebesLayers used to draw non-layer content, which are
  * therefore eligible for recycling. We want display items to be able to
  * create their own dedicated ThebesLayers in BuildLayer, if necessary,
  * and we wouldn't want to accidentally recycle those.
+ * The user data is null.
  */
-static PRUint8 gThebesDisplayItemLayerUserData;
+PRUint8 gThebesDisplayItemLayerUserData;
 /**
  * The address of gColorLayerUserData is used as the user
- * data pointer for ColorLayers
+ * data key for ColorLayers created by FrameLayerBuilder.
+ * The user data is null.
  */
-static PRUint8 gColorLayerUserData;
+PRUint8 gColorLayerUserData;
+/**
+ * The address of gLayerManagerUserData is used as the user
+ * data key for retained LayerManagers managed by FrameLayerBuilder.
+ * The user data is a LayerManagerData.
+ */
+PRUint8 gLayerManagerUserData;
 
 } // anonymous namespace
 
@@ -342,12 +355,11 @@ FrameLayerBuilder::InternalDestroyDisplayItemData(nsIFrame* aFrame,
   if (aRemoveFromFramesWithLayers) {
     LayerManager* manager = array->ElementAt(0).mLayer->Manager();
     LayerManagerData* data = static_cast<LayerManagerData*>
-      (manager->GetUserData());
+      (manager->GetUserData(&gLayerManagerUserData));
     NS_ASSERTION(data, "Frame with layer should have been recorded");
     data->mFramesWithLayers.RemoveEntry(aFrame);
     if (data->mFramesWithLayers.Count() == 0) {
-      delete data;
-      manager->SetUserData(nsnull);
+      manager->RemoveUserData(&gLayerManagerUserData);
       // Consume the reference we added when we set the user data
       // in DidEndTransaction. But don't actually release until we've
       // released all the layers in the DisplayItemData array below!
@@ -371,7 +383,7 @@ FrameLayerBuilder::WillBeginRetainedLayerTransaction(LayerManager* aManager)
 {
   mRetainingManager = aManager;
   LayerManagerData* data = static_cast<LayerManagerData*>
-    (aManager->GetUserData());
+    (aManager->GetUserData(&gLayerManagerUserData));
   if (data) {
     mInvalidateAllThebesContent = data->mInvalidateAllThebesContent;
     mInvalidateAllLayers = data->mInvalidateAllLayers;
@@ -420,13 +432,13 @@ FrameLayerBuilder::WillEndTransaction(LayerManager* aManager)
   // correctly and the NS_FRAME_HAS_CONTAINER_LAYER bits will be set
   // correctly.
   LayerManagerData* data = static_cast<LayerManagerData*>
-    (mRetainingManager->GetUserData());
+    (mRetainingManager->GetUserData(&gLayerManagerUserData));
   if (data) {
     // Update all the frames that used to have layers.
     data->mFramesWithLayers.EnumerateEntries(UpdateDisplayItemDataForFrame, this);
   } else {
     data = new LayerManagerData();
-    mRetainingManager->SetUserData(data);
+    mRetainingManager->SetUserData(&gLayerManagerUserData, data);
     // Addref mRetainingManager. We'll release it when 'data' is
     // removed.
     NS_ADDREF(mRetainingManager);
@@ -595,7 +607,7 @@ ContainerState::CreateOrRecycleColorLayer()
     if (!layer)
       return nsnull;
     // Mark this layer as being used for Thebes-painting display items
-    layer->SetUserData(&gColorLayerUserData);
+    layer->SetUserData(&gColorLayerUserData, nsnull);
   }
   return layer.forget();
 }
@@ -637,7 +649,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
     if (!layer)
       return nsnull;
     // Mark this layer as being used for Thebes-painting display items
-    layer->SetUserData(&gThebesDisplayItemLayerUserData);
+    layer->SetUserData(&gThebesDisplayItemLayerUserData, nsnull);
   }
 
   // Set up transform so that 0,0 in the Thebes layer corresponds to the
@@ -965,7 +977,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
       // Update that layer's clip and visible rects.
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
-      NS_ASSERTION(ownLayer->GetUserData() != &gThebesDisplayItemLayerUserData,
+      NS_ASSERTION(!ownLayer->HasUserData(&gLayerManagerUserData),
                    "We shouldn't have a FrameLayerBuilder-managed layer here!");
       // It has its own layer. Update that layer's clip and visible rects.
       if (aClipRect) {
@@ -1119,10 +1131,9 @@ ContainerState::CollectOldLayers()
 {
   for (Layer* layer = mContainerLayer->GetFirstChild(); layer;
        layer = layer->GetNextSibling()) {
-    void* data = layer->GetUserData();
-    if (data == &gColorLayerUserData) {
+    if (layer->HasUserData(&gColorLayerUserData)) {
       mRecycledColorLayers.AppendElement(static_cast<ColorLayer*>(layer));
-    } else if (data == &gThebesDisplayItemLayerUserData) {
+    } else if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsThebesLayer(), "Wrong layer type");
       mRecycledThebesLayers.AppendElement(static_cast<ThebesLayer*>(layer));
     }
@@ -1203,7 +1214,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     Layer* oldLayer = GetOldLayerFor(aContainerFrame, containerDisplayItemKey);
     if (oldLayer) {
       NS_ASSERTION(oldLayer->Manager() == aManager, "Wrong manager");
-      if (oldLayer->GetUserData() == &gThebesDisplayItemLayerUserData) {
+      if (oldLayer->HasUserData(&gThebesDisplayItemLayerUserData)) {
         // The old layer for this item is actually our ThebesLayer
         // because we rendered its layer into that ThebesLayer. So we
         // don't actually have a retained container layer.
@@ -1276,7 +1287,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
   Layer* layer = GetOldLayerFor(f, aItem->GetPerFrameKey());
   if (!layer)
     return nsnull;
-  if (layer->GetUserData() == &gThebesDisplayItemLayerUserData) {
+  if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
     // This layer was created to render Thebes-rendered content for this
     // display item. The display item should not use it for its own
     // layer rendering.
@@ -1352,7 +1363,7 @@ FrameLayerBuilder::InvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 FrameLayerBuilder::InvalidateAllThebesLayerContents(LayerManager* aManager)
 {
   LayerManagerData* data = static_cast<LayerManagerData*>
-    (aManager->GetUserData());
+    (aManager->GetUserData(&gLayerManagerUserData));
   if (data) {
     data->mInvalidateAllThebesContent = PR_TRUE;
   }
@@ -1362,7 +1373,7 @@ FrameLayerBuilder::InvalidateAllThebesLayerContents(LayerManager* aManager)
 FrameLayerBuilder::InvalidateAllLayers(LayerManager* aManager)
 {
   LayerManagerData* data = static_cast<LayerManagerData*>
-    (aManager->GetUserData());
+    (aManager->GetUserData(&gLayerManagerUserData));
   if (data) {
     data->mInvalidateAllLayers = PR_TRUE;
   }
@@ -1380,9 +1391,9 @@ FrameLayerBuilder::HasDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
     (reinterpret_cast<nsTArray<DisplayItemData>*>(&propValue));
   for (PRUint32 i = 0; i < array->Length(); ++i) {
     if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
-      void* layerUserData = array->ElementAt(i).mLayer->GetUserData();
-      if (layerUserData != &gColorLayerUserData &&
-          layerUserData != &gThebesDisplayItemLayerUserData)
+      Layer* layer = array->ElementAt(i).mLayer;
+      if (!layer->HasUserData(&gColorLayerUserData) &&
+          !layer->HasUserData(&gThebesDisplayItemLayerUserData))
         return PR_TRUE;
     }
   }
