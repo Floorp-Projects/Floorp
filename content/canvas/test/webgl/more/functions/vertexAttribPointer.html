@@ -65,7 +65,6 @@ Tests.endUnit = function(gl, prog, v,n,t) {
 }
 
 Tests.testVertexAttribPointerVBO = function(gl, prog, v,n,t) {
-console.log(v);
   var vbo = gl.createBuffer();
   var vertsArr = new Float32Array(verts);
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
