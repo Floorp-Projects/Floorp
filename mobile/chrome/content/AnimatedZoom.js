@@ -46,26 +46,61 @@ let Cu = Components.utils;
 /**
  * Responsible for zooming in to a given view rectangle
  */
-function AnimatedZoom() {
-  // Render a snapshot of the viewport contents around the visible rect
-  this.animationDuration = Services.prefs.getIntPref("browser.ui.zoom.animationDuration");
-}
+const animatedZoom = {
+  /** Starts an animated zoom to zoomRect. */
+  animateTo: function(aZoomRect) {
+    if (!aZoomRect)
+      return;
 
-AnimatedZoom.prototype = {
-  startTimer: function() {
-    if (this.zoomTo && !this.beginTime) {
-      Browser.hideSidebars();
-      Browser.hideTitlebar();
-      Browser.forceChromeReflow();
+    this.zoomTo = aZoomRect.clone();
 
+    if (this.animationDuration === undefined)
+      this.animationDuration = Services.prefs.getIntPref("browser.ui.zoom.animationDuration");
+
+    Browser.hideSidebars();
+    Browser.hideTitlebar();
+    Browser.forceChromeReflow();
+
+    this.beginTime = Date.now();
+
+    // Check if zooming animations were occuring before.
+    if (this.zoomFrom) {
+      this.zoomFrom = this.zoomRect;
+    }
+    else {
       let browserRect = Rect.fromRect(getBrowser().getBoundingClientRect());
-      this.zoomFrom = browserRect.translate(getBrowser()._frameLoader.viewportScrollX, getBrowser()._frameLoader.viewportScrollY);
-
+      let scrollX = {}, scrollY = {};
+      getBrowser().getPosition(scrollX, scrollY);
+      this.zoomFrom = browserRect.translate(scrollX.value, scrollY.value);
       this.updateTo(this.zoomFrom);
-      this.beginTime = Date.now();
+
       window.addEventListener("MozBeforePaint", this, false);
       mozRequestAnimationFrame();
     }
+  },
+
+  /** Updates the zoom to new rect. */
+  updateTo: function(nextRect) {
+    let zoomRatio = window.innerWidth / nextRect.width;
+    let zoomLevel = getBrowser().scale * zoomRatio;
+    // XXX using the underlying frameLoader APIs is undesirable and is not a
+    // pattern to propagate. The browser binding should be taking care of this!
+    // There is some bug that I have not yet discovered that make browser.scrollTo
+    // not behave correctly and there is no intelligence in browser.scale to keep
+    // the actual resolution changes small.
+    getBrowser()._frameLoader.setViewportScale(zoomLevel, zoomLevel);
+    getBrowser()._frameLoader.scrollViewportTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
+    this.zoomRect = nextRect;
+  },
+
+  /** Stop animation, zoom to point, and clean up. */
+  finish: function() {
+    window.removeEventListener("MozBeforePaint", this, false);
+    Browser.setVisibleRect(this.zoomTo);
+    this.beginTime = null;
+    this.zoomTo = null;
+    this.zoomFrom = null;
+    this.zoomRect = null;
   },
 
   handleEvent: function(aEvent) {
@@ -87,32 +122,5 @@ AnimatedZoom.prototype = {
       this.finish();
       throw e;
     }
-  },
-
-  /** Updates the zoom to new rect. */
-  updateTo: function(nextRect) {
-    let zoomRatio = window.innerWidth / nextRect.width;
-    let zoomLevel = getBrowser().scale * zoomRatio;
-    // XXX using the underlying frameLoader APIs is undesirable and is not a
-    // pattern to propagate. The browser binding should be taking care of this!
-    // There is some bug that I have not yet discovered that make browser.scrollTo
-    // not behave correctly and there is no intelligence in browser.scale to keep
-    // the actual resolution changes small.
-    getBrowser()._frameLoader.setViewportScale(zoomLevel, zoomLevel);
-    getBrowser()._frameLoader.scrollViewportTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
-  },
-
-  /** Starts an animated zoom to zoomRect. */
-  animateTo: function(aZoomRect) {
-    this.zoomTo = aZoomRect.clone();
-    this.startTimer();
-  },
-
-  /** Stop animation, zoom to point, and clean up. */
-  finish: function() {
-    window.removeEventListener("MozBeforePaint", this, false);
-    Browser.setVisibleRect(this.zoomTo);
-    this.beginTime = null;
-    this.zoomTo = null;
   }
 };
