@@ -848,7 +848,9 @@ var Browser = {
     if (!tab.allowZoom)
       return;
 
-    let zoomLevel = getBrowser().scale;
+    let oldZoomLevel = tab.browser.scale;
+    let zoomLevel = oldZoomLevel;
+
     let zoomValues = ZoomManager.zoomValues;
     let i = zoomValues.indexOf(ZoomManager.snap(zoomLevel)) + (aDirection < 0 ? 1 : -1);
     if (i >= 0 && i < zoomValues.length)
@@ -856,9 +858,14 @@ var Browser = {
 
     zoomLevel = tab.clampZoomLevel(zoomLevel);
 
-    let centerX = getBrowser().viewportScrollX + window.innerWidth / 2;
-    let centerY = getBrowser().viewportScrollY + window.innerHeight / 2;
-    this.animatedZoomTo(this._getZoomRectForPoint(centerX, centerY, zoomLevel));
+    let scrollX = {}, scrollY = {};
+    tab.browser.getPosition(scrollX, scrollY);
+
+    let centerX = (scrollX.value + window.innerWidth / 2) / oldZoomLevel;
+    let centerY = (scrollY.value + window.innerHeight / 2) / oldZoomLevel;
+
+    let rect = this._getZoomRectForPoint(centerX, centerY, zoomLevel);
+    this.animatedZoomTo(rect);
   },
 
   /** Rect should be in browser coordinates. */
