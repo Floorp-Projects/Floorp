@@ -657,7 +657,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
  * have a frame because only nsDisplayClip items don't have a frame,
  * and those items are flattened away by ProcessDisplayItems.
  */
-static PRUint32
+static PRInt32
 AppUnitsPerDevPixel(nsDisplayItem* aItem)
 {
   // The underlying frame for zoom items is the root frame of the subdocument.
@@ -1425,7 +1425,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsIntPoint offset(PRInt32(transform.x0), PRInt32(transform.y0));
 
   nsPresContext* presContext = containerLayerFrame->PresContext();
-  nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsRect r = (aRegionToInvalidate.GetBounds() + offset).
     ToAppUnits(appUnitsPerDevPixel);
   containerLayerFrame->InvalidateWithFlags(r,
