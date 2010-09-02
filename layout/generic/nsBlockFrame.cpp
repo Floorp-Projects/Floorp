@@ -520,17 +520,21 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
                                  PRUint32 aFlags)
 {
   // Optimize by suppressing invalidation of areas that are clipped out
-  // with CSS 'clip'.
-  const nsStyleDisplay* disp = GetStyleDisplay();
-  nsRect absPosClipRect;
-  if (GetAbsPosClipRect(disp, &absPosClipRect, GetSize())) {
-    // Restrict the invalidated area to abs-pos clip rect
-    // abs-pos clipping clips everything in the frame
-    nsRect r;
-    if (r.IntersectRect(aDamageRect, absPosClipRect - nsPoint(aX, aY))) {
-      nsBlockFrameSuper::InvalidateInternal(r, aX, aY, this, aFlags);
+  // with CSS 'clip'. Don't suppress invalidation of *this* frame directly,
+  // because when 'clip' shrinks we need to invalidate this frame and
+  // be able to invalidate areas outside the 'clip'.
+  if (aForChild) {
+    const nsStyleDisplay* disp = GetStyleDisplay();
+    nsRect absPosClipRect;
+    if (GetAbsPosClipRect(disp, &absPosClipRect, GetSize())) {
+      // Restrict the invalidated area to abs-pos clip rect
+      // abs-pos clipping clips everything in the frame
+      nsRect r;
+      if (r.IntersectRect(aDamageRect, absPosClipRect - nsPoint(aX, aY))) {
+        nsBlockFrameSuper::InvalidateInternal(r, aX, aY, this, aFlags);
+      }
+      return;
     }
-    return;
   }
 
   nsBlockFrameSuper::InvalidateInternal(aDamageRect, aX, aY, this, aFlags);

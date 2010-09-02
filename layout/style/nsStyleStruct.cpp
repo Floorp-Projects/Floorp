@@ -1983,16 +1983,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
                                       nsChangeHint_NeedDirtyReflow)));
   }
 
-  if (mClipFlags != aOther.mClipFlags || mClip != aOther.mClip) {
-    // FIXME: Bug 507764.  Could we use a more precise hint here?
-    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
-  }
   // XXX the following is conservative, for now: changing float breaking shouldn't
   // necessarily require a repaint, reflow should suffice.
   if (mBreakType != aOther.mBreakType
       || mBreakBefore != aOther.mBreakBefore
       || mBreakAfter != aOther.mBreakAfter
-      || mAppearance != aOther.mAppearance)
+      || mAppearance != aOther.mAppearance
+      || mClipFlags != aOther.mClipFlags || mClip != aOther.mClip)
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame));
 
   if (mOpacity != aOther.mOpacity) {
