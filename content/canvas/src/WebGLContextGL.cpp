@@ -2556,6 +2556,9 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     MakeContextCurrent();
     gl->fRenderbufferStorage(target, internalformat, width, height);
 
+    // now we need to initialize the renderbuffer to 0 as per the thread "about RenderBufferStorage"
+    // on the public_webgl list
+
     return NS_OK;
 }
 
