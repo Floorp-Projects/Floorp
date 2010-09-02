@@ -165,13 +165,22 @@ ResponseListener.prototype =
     let httpActivity = this.httpActivity;
     // Check if the header isn't set yet.
     if (!httpActivity.response.header) {
-      httpActivity.response.header = {};
       if (aRequest instanceof Ci.nsIHttpChannel) {
+      httpActivity.response.header = {};
+        try {
         aRequest.visitResponseHeaders({
           visitHeader: function(aName, aValue) {
             httpActivity.response.header[aName] = aValue;
           }
         });
+      }
+        // Accessing the response header can throw an NS_ERROR_NOT_AVAILABLE
+        // exception. Catch it and stop it to make it not show up in the.
+        // This can happen if the response is not finished yet and the user
+        // reloades the page.
+        catch (ex) {
+          delete httpActivity.response.header;
+        }
       }
     }
   },
