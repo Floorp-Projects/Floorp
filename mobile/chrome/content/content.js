@@ -414,13 +414,12 @@ Content.prototype = {
         if (!element)
           return;
 
-// XXX somehow this always take up the entire screen
-/*        if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
+        if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
           this._overlayTimeout.once(kTapOverlayTimeout, function() {
             let rects = getContentClientRects(element);
             sendAsyncMessage("Browser:Highlight", { rects: rects });
           });
-        } */
+        }
 
         // We add a few milliseconds because of how the InputHandler wait before
         // dispatching a single click (default: 500)
