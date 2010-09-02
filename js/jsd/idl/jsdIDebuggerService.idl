@@ -793,10 +793,6 @@ interface jsdIStackFrame : jsdIEphemeral
     [noscript] readonly attribute JSDStackFrameInfo JSDStackFrameInfo;
    
     /**
-     * True if stack frame represents a native frame.
-     */
-    readonly attribute boolean isNative;
-    /**
      * True if stack frame represents a frame created as a result of a debugger
      * evaluation.
      */

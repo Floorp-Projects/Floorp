@@ -832,8 +832,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 Class js_StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String) |
-    JSCLASS_FAST_CONSTRUCTOR,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     str_getProperty,
@@ -3264,27 +3263,27 @@ const char JSString::deflatedUnitStringTable[] = {
 JSBool
 js_String(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
+    Value *argv = vp + 2;
 
+    JSString *str;
     if (argc > 0) {
-        str = js_ValueToString(cx, vp[2]);
+        str = js_ValueToString(cx, argv[0]);
         if (!str)
-            return JS_FALSE;
-        vp[2].setString(str);
+            return false;
     } else {
         str = cx->runtime->emptyString;
     }
 
-    if (vp[1].isMagic(JS_FAST_CONSTRUCTOR)) {
+    if (IsConstructing(vp)) {
         JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
         if (!obj)
-            return JS_FALSE;
+            return false;
         obj->setPrimitiveThis(StringValue(str));
         vp->setObject(*obj);
     } else {
         vp->setString(str);
     }
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef JS_TRACER
@@ -3373,7 +3372,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, obj, string_functions))
         return NULL;
 
-    proto = js_InitClass(cx, obj, NULL, &js_StringClass, (Native) js_String, 1,
+    proto = js_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
                          NULL, string_methods,
                          NULL, string_static_methods);
     if (!proto)

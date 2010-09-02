@@ -397,15 +397,14 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
             return ret;
         }
 
-        if (fun->isFastNative()) {
+        if (fun->isNative()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp()->getScript(), mic, fun, false);
+            ic::CallNative(cx, f.fp()->getScript(), mic, fun, false);
 #endif
 #endif
 
-            FastNative fn = (FastNative)fun->u.n.native;
-            if (!fn(cx, argc, vp))
+            if (!fun->u.n.native(cx, argc, vp))
                 THROWV(NULL);
             return NULL;
         }
@@ -452,17 +451,16 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
             return ret;
         }
 
-        if (fun->isFastConstructor()) {
+        if (fun->isConstructor()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp()->getScript(), mic, fun, true);
+            ic::CallNative(cx, f.fp()->getScript(), mic, fun, true);
 #endif
 #endif
 
-            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+            vp[1].setMagicWithObjectOrNullPayload(NULL);
 
-            FastNative fn = (FastNative)fun->u.n.native;
-            if (!fn(cx, argc, vp))
+            if (!fun->u.n.native(cx, argc, vp))
                 THROWV(NULL);
             JS_ASSERT(!vp->isPrimitive());
 

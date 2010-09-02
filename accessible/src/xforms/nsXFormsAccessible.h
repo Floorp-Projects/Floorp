@@ -162,12 +162,21 @@ class nsXFormsSelectableAccessible : public nsXFormsEditableAccessible
 public:
   nsXFormsSelectableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLESELECTABLE
+  // SelectAccessible
+  virtual bool IsSelect();
+  virtual already_AddRefed<nsIArray> SelectedItems();
+  virtual PRUint32 SelectedItemCount();
+  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+  virtual bool IsItemSelected(PRUint32 aIndex);
+  virtual bool AddItemToSelection(PRUint32 aIndex);
+  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual bool SelectAll();
+  virtual bool UnselectAll();
 
 protected:
-  already_AddRefed<nsIDOMNode> GetItemByIndex(PRInt32 *aIndex,
-                                              nsIAccessible *aAccessible = nsnull);
+  nsIContent* GetItemByIndex(PRUint32* aIndex,
+                             nsAccessible* aAccessible = nsnull);
+
   PRBool mIsSelect1Element;
 };
 

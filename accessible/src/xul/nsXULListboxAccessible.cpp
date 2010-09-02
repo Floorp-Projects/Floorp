@@ -879,7 +879,6 @@ nsXULListitemAccessible::
                                       eCaseMatters);
 }
 
-/** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
 NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsAccessible)
 
 nsAccessible *

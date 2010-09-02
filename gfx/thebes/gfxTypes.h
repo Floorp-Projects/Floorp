@@ -39,6 +39,7 @@
 #define GFX_TYPES_H
 
 #include "prtypes.h"
+#include "nsAtomicRefcnt.h"
 
 /**
  * Currently needs to be 'double' for Cairo compatibility. Could
@@ -94,13 +95,13 @@ enum gfxBreakPriority {
 public:                                                                       \
     nsrefcnt AddRef(void) {                                                   \
         NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");             \
-        nsrefcnt count = PR_AtomicIncrement((PRInt32*)&mRefCnt);              \
+        nsrefcnt count = NS_AtomicIncrementRefcnt(mRefCnt);                   \
         NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                   \
         return count;                                                         \
     }                                                                         \
     nsrefcnt Release(void) {                                                  \
         NS_PRECONDITION(0 != mRefCnt, "dup release");                         \
-        nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);             \
+        nsrefcnt count = NS_AtomicDecrementRefcnt(mRefCnt);                   \
         NS_LOG_RELEASE(this, count, #_class);                                 \
         if (count == 0) {                                                     \
             mRefCnt = 1; /* stabilize */                                      \

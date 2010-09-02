@@ -751,7 +751,7 @@
   <hbox id="titlebar-buttonbox">
     <toolbarbutton id="titlebar-min" oncommand="window.minimize();"/>
     <toolbarbutton id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-    <toolbarbutton id="titlebar-close" oncommand="window.close();"/>
+    <toolbarbutton id="titlebar-close" command="cmd_closeWindow"/>
   </hbox>
   </hbox>
   </vbox>

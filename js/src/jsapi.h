@@ -484,6 +484,8 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
                                            if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
+#define JSFUN_CONSTRUCTOR       0x02    /* native that can be called as a ctor
+                                           without creating a this object */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
@@ -497,9 +499,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 #define JSFUN_THISP_BOOLEAN   0x0400    /* |this| may be a primitive boolean */
 #define JSFUN_THISP_PRIMITIVE 0x0700    /* |this| may be any primitive value */
 
-#define JSFUN_FAST_NATIVE     0x0800    /* JSFastNative needs no JSStackFrame */
-
-#define JSFUN_FLAGS_MASK      0x0ff8    /* overlay JSFUN_* attributes --
+#define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
                                            flag interpreted functions */
 
@@ -1078,9 +1078,11 @@ JS_InitCTypesClass(JSContext *cx, JSObject *global);
  * WARNING: These are not (yet) mandatory macros, but new code outside of the
  * engine should use them. In the Mozilla 2.0 milestone their definitions may
  * change incompatibly.
+ *
+ * N.B. constructors must not use JS_THIS, as no 'this' object has been created.
  */
+
 #define JS_CALLEE(cx,vp)        ((vp)[0])
-#define JS_ARGV_CALLEE(argv)    ((argv)[-2])
 #define JS_THIS(cx,vp)          JS_ComputeThis(cx, vp)
 #define JS_THIS_OBJECT(cx,vp)   (JSVAL_TO_OBJECT(JS_THIS(cx,vp)))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
@@ -1665,7 +1667,6 @@ struct JSClass {
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
-/* (1<<4) was JSCLASS_SHARE_ALL_PROPERTIES, now obsolete. See bug 527805. */
 #define JSCLASS_NEW_RESOLVE_GETS_START  (1<<5)  /* JSNewResolveOp gets starting
                                                    object in prototype chain
                                                    passed in via *objp in/out
@@ -1798,38 +1799,23 @@ struct JSFunctionSpec {
     JSNative        call;
     uint16          nargs;
     uint16          flags;
-
-    /*
-     * extra & 0xFFFF:  Number of extra argument slots for local GC roots.
-     *                  If fast native, must be zero.
-     * extra >> 16:     Reserved for future use (must be 0).
-     */
-    uint32          extra;
 };
 
 /*
  * Terminating sentinel initializer to put at the end of a JSFunctionSpec array
  * that's passed to JS_DefineFunctions or JS_InitClass.
  */
-#define JS_FS_END JS_FS(NULL,NULL,0,0,0)
+#define JS_FS_END JS_FS(NULL,NULL,0,0)
 
 /*
- * Initializer macro for a JSFunctionSpec array element. This is the original
- * kind of native function specifier initializer. Use JS_FN ("fast native", see
- * JSFastNative in jspubtd.h) for all functions that do not need a stack frame
- * when activated.
+ * Initializer macros for a JSFunctionSpec array element. JS_FN (whose name
+ * pays homage to the old JSNative/JSFastNative split) simply adds the flag
+ * JSFUN_STUB_GSOPS.
  */
-#define JS_FS(name,call,nargs,flags,extra)                                    \
-    {name, call, nargs, flags, extra}
-
-/*
- * "Fast native" initializer macro for a JSFunctionSpec array element. Use this
- * in preference to JS_FS if the native in question does not need its own stack
- * frame when activated.
- */
-#define JS_FN(name,fastcall,nargs,flags)                                      \
-    JS_FS(name, (JSNative)(fastcall), nargs,                                  \
-          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS, 0)
+#define JS_FS(name,call,nargs,flags)                                          \
+    {name, call, nargs, flags}
+#define JS_FN(name,call,nargs,flags)                                          \
+    {name, call, nargs, (flags) | JSFUN_STUB_GSOPS}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
@@ -2586,9 +2572,6 @@ JS_TriggerAllOperationCallbacks(JSRuntime *rt);
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
 
-extern JS_PUBLIC_API(JSBool)
-JS_IsConstructing(JSContext *cx);
-
 /*
  * Saving and restoring frame chains.
  *
@@ -3061,6 +3044,87 @@ JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
 extern JS_PUBLIC_API(JSFunctionCallback)
 JS_GetFunctionCallback(JSContext *cx);
 #endif
+
+/************************************************************************/
+
+/*
+ * JS_IsConstructing must be called from within a native given the
+ * native's original cx and vp arguments. If JS_IsConstructing is true,
+ * JS_THIS must not be used; the constructor should construct and return a
+ * new object. Otherwise, the native is called as an ordinary function and
+ * JS_THIS may be used.
+ */
+static JS_ALWAYS_INLINE JSBool
+JS_IsConstructing(JSContext *cx, const jsval *vp)
+{
+    jsval_layout l;
+
+#ifdef DEBUG
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if (JS_ObjectIsFunction(cx, callee)) {
+        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
+        JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
+    }
+#endif
+
+    l.asBits = JSVAL_BITS(vp[1]);
+    return JSVAL_IS_MAGIC_IMPL(l);
+}
+
+/*
+ * In the case of a constructor called from JS_ConstructObject and
+ * JS_InitClass where the class has the JSCLASS_CONSTRUCT_PROTOTYPE flag set,
+ * the JS engine passes the constructor a non-standard 'this' object. In such
+ * cases, the following query provides the additional information of whether a
+ * special 'this' was supplied. E.g.:
+ *
+ *   JSBool foo_native(JSContext *cx, uintN argc, jsval *vp) {
+ *     JSObject *maybeThis;
+ *     if (JS_IsConstructing_PossiblyWithGivenThisObject(cx, vp, &maybeThis)) {
+ *       // native called as a constructor
+ *       if (maybeThis)
+ *         // native called as a constructor with maybeThis as 'this'
+ *     } else {
+ *       // native called as function, maybeThis is still uninitialized
+ *     }
+ *   }
+ *
+ * Note that embeddings do not need to use this query unless they use the
+ * aforementioned API/flags.
+ */
+static JS_ALWAYS_INLINE JSBool
+JS_IsConstructing_PossiblyWithGivenThisObject(JSContext *cx, const jsval *vp,
+                                              JSObject **maybeThis)
+{
+    jsval_layout l;
+    JSBool isCtor;
+
+#ifdef DEBUG
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if (JS_ObjectIsFunction(cx, callee)) {
+        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
+        JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
+    }
+#endif
+
+    l.asBits = JSVAL_BITS(vp[1]);
+    isCtor = JSVAL_IS_MAGIC_IMPL(l);
+    if (isCtor)
+        *maybeThis = MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(l);
+    return isCtor;
+}
+
+/*
+ * If a constructor does not have any static knowledge about the type of
+ * object to create, it can request that the JS engine create a default new
+ * 'this' object, as is done for non-constructor natives when called with new.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
 
 /************************************************************************/
 

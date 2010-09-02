@@ -97,12 +97,7 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO4
 endif
 ifeq ($(OS_ARCH),WINNT)
-ifdef WINCE
-# -GL is not supported on windows mobile while we are using the arm-wince-link command
 MODULE_OPTIMIZE_FLAGS = -O2
-else
-MODULE_OPTIMIZE_FLAGS = -O2 -GL
-endif
 endif
 endif
 
@@ -155,6 +150,7 @@ CPPSRCS		= \
 		jsparse.cpp \
 		jsproxy.cpp \
 		jsprf.cpp \
+		jsprobes.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
@@ -171,11 +167,6 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		$(NULL)
-
-ifdef HAVE_DTRACE
-CPPSRCS 	+= \
-		jsdtracef.cpp
-endif
 
 INSTALLED_HEADERS = \
 		js-config.h \
@@ -216,6 +207,7 @@ INSTALLED_HEADERS = \
 		jsparse.h \
 		jsproxy.h \
 		jsprf.h \
+		jsprobes.h \
 		jspropertycache.h \
 		jspropertycacheinlines.h \
 		jspropertytree.h \
@@ -341,7 +333,7 @@ endif
 
 endif
 
-ifeq ($(TARGET_CPU), powerpc)
+ifeq (,$(filter-out powerpc sparc,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
@@ -430,7 +422,6 @@ endif # JS_HAS_CTYPES
 
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
-		jsdtracef.h \
 		$(CURDIR)/javascript-trace.h \
 		$(NULL)
 endif
@@ -834,7 +825,7 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 
 # We can't automatically generate dependencies on auto-generated headers;
 # we have to list them explicitly.
-$(addsuffix .$(OBJ_SUFFIX),jsdtracef jsinterp jsobj): $(CURDIR)/javascript-trace.h
+$(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
 ifdef ENABLE_TRACEJIT
