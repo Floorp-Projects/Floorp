@@ -3356,7 +3356,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
      }
      flagFile = do_QueryInterface(fFlagFile);
      if (flagFile) {
-       flagFile->SetNativeLeafName(FILE_INVALIDATE_CACHES);
+       flagFile->AppendNative(FILE_INVALIDATE_CACHES);
      }
  #endif
     PRBool cachesOK;
