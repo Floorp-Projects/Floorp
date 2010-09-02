@@ -64,10 +64,13 @@ public:
     mInvalidateAllLayers(PR_FALSE)
   {
     MOZ_COUNT_CTOR(LayerManagerData);
-
     mFramesWithLayers.Init();
   }
   ~LayerManagerData() {
+    // Remove display item data properties now, since we won't be able
+    // to find these frames again without mFramesWithLayers.
+    mFramesWithLayers.EnumerateEntries(
+        FrameLayerBuilder::RemoveDisplayItemDataForFrame, nsnull);
     MOZ_COUNT_DTOR(LayerManagerData);
   }
 
@@ -251,6 +254,12 @@ protected:
    */
   void InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer);
   /**
+   * Try to determine whether the ThebesLayer at aThebesLayerIndex
+   * has an opaque single color covering the visible area behind it.
+   * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
+   */
+  nscolor FindOpaqueBackgroundColorFor(PRInt32 aThebesLayerIndex);
+  /**
    * Indicate that we are done adding items to the ThebesLayer at the top of
    * mThebesLayerDataStack. Set the final visible region and opaque-content
    * flag, and pop it off the stack.
@@ -307,6 +316,15 @@ protected:
   PRPackedBool                     mInvalidateAllThebesContent;
 };
 
+class ThebesDisplayItemLayerUserData : public LayerUserData
+{
+public:
+  ThebesDisplayItemLayerUserData() :
+    mForcedBackgroundColor(NS_RGBA(0,0,0,0)) {}
+
+  nscolor mForcedBackgroundColor;
+};
+
 /**
  * The address of gThebesDisplayItemLayerUserData is used as the user
  * data key for ThebesLayers created by FrameLayerBuilder.
@@ -314,7 +332,7 @@ protected:
  * therefore eligible for recycling. We want display items to be able to
  * create their own dedicated ThebesLayers in BuildLayer, if necessary,
  * and we wouldn't want to accidentally recycle those.
- * The user data is null.
+ * The user data is a ThebesDisplayItemLayerUserData.
  */
 PRUint8 gThebesDisplayItemLayerUserData;
 /**
@@ -462,7 +480,7 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
   nsIFrame* f = aEntry->GetKey();
   FrameProperties props = f->Properties();
   DisplayItemDataEntry* newDisplayItems =
-    builder->mNewDisplayItemData.GetEntry(f);
+    builder ? builder->mNewDisplayItemData.GetEntry(f) : nsnull;
   if (!newDisplayItems) {
     // This frame was visible, but isn't anymore.
     PRBool found;
@@ -649,7 +667,8 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
     if (!layer)
       return nsnull;
     // Mark this layer as being used for Thebes-painting display items
-    layer->SetUserData(&gThebesDisplayItemLayerUserData, nsnull);
+    layer->SetUserData(&gThebesDisplayItemLayerUserData,
+        new ThebesDisplayItemLayerUserData());
   }
 
   // Set up transform so that 0,0 in the Thebes layer corresponds to the
@@ -709,6 +728,39 @@ SetVisibleRectForLayer(Layer* aLayer, const nsIntRect& aRect)
   }
 }
 
+nscolor
+ContainerState::FindOpaqueBackgroundColorFor(PRInt32 aThebesLayerIndex)
+{
+  ThebesLayerData* target = mThebesLayerDataStack[aThebesLayerIndex];
+  for (PRInt32 i = aThebesLayerIndex - 1; i >= 0; --i) {
+    ThebesLayerData* candidate = mThebesLayerDataStack[i];
+    nsIntRegion visibleAboveIntersection;
+    visibleAboveIntersection.And(candidate->mVisibleAboveRegion, target->mVisibleRegion);
+    if (!visibleAboveIntersection.IsEmpty()) {
+      // Some non-Thebes content between target and candidate; this is
+      // hopeless
+      break;
+    }
+
+    nsIntRegion intersection;
+    intersection.And(candidate->mVisibleRegion, target->mVisibleRegion);
+    if (intersection.IsEmpty()) {
+      // The layer doesn't intersect our target, ignore it and move on
+      continue;
+    }
+ 
+    // The candidate intersects our target. If any layer has a solid-color
+    // area behind our target, this must be it. Scan its display items.
+    nsPresContext* presContext = mContainerFrame->PresContext();
+    nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+    nsRect rect =
+      target->mVisibleRegion.GetBounds().ToAppUnits(appUnitsPerDevPixel);
+    return mBuilder->LayerBuilder()->
+      FindOpaqueColorCovering(mBuilder, candidate->mLayer, rect);
+  }
+  return NS_RGBA(0,0,0,0);
+}
+
 void
 ContainerState::PopThebesLayerData()
 {
@@ -716,21 +768,6 @@ ContainerState::PopThebesLayerData()
 
   PRInt32 lastIndex = mThebesLayerDataStack.Length() - 1;
   ThebesLayerData* data = mThebesLayerDataStack[lastIndex];
-
-  if (lastIndex > 0) {
-    // Since we're going to pop off the last ThebesLayerData, the
-    // mVisibleAboveRegion of the second-to-last item will need to include
-    // the regions of the last item.
-    ThebesLayerData* nextData = mThebesLayerDataStack[lastIndex - 1];
-    nextData->mVisibleAboveRegion.Or(nextData->mVisibleAboveRegion,
-                                     data->mVisibleAboveRegion);
-    nextData->mVisibleAboveRegion.Or(nextData->mVisibleAboveRegion,
-                                     data->mVisibleRegion);
-    nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
-                                     data->mDrawAboveRegion);
-    nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
-                                     data->mDrawRegion);
-  }
 
   Layer* layer;
   if (data->mIsSolidColorInVisibleRegion) {
@@ -778,7 +815,47 @@ ContainerState::PopThebesLayerData()
 
   nsIntRegion transparentRegion;
   transparentRegion.Sub(data->mVisibleRegion, data->mOpaqueRegion);
-  layer->SetIsOpaqueContent(transparentRegion.IsEmpty());
+  PRBool isOpaque = transparentRegion.IsEmpty();
+  // For translucent ThebesLayers, try to find an opaque background
+  // color that covers the entire area beneath it so we can pull that
+  // color into this layer to make it opaque.
+  if (layer == data->mLayer) {
+    nscolor backgroundColor = NS_RGBA(0,0,0,0);
+    if (!isOpaque) {
+      backgroundColor = FindOpaqueBackgroundColorFor(lastIndex);
+      if (NS_GET_A(backgroundColor) == 255) {
+        isOpaque = PR_TRUE;
+      }
+    }
+
+    // Store the background color
+    ThebesDisplayItemLayerUserData* userData =
+      static_cast<ThebesDisplayItemLayerUserData*>
+        (data->mLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+    NS_ASSERTION(userData, "where did our user data go?");
+    if (userData->mForcedBackgroundColor != backgroundColor) {
+      // Invalidate the entire target ThebesLayer since we're changing
+      // the background color
+      data->mLayer->InvalidateRegion(data->mLayer->GetValidRegion());
+    }
+    userData->mForcedBackgroundColor = backgroundColor;
+  }
+  layer->SetIsOpaqueContent(isOpaque);
+
+  if (lastIndex > 0) {
+    // Since we're going to pop off the last ThebesLayerData, the
+    // mVisibleAboveRegion of the second-to-last item will need to include
+    // the regions of the last item.
+    ThebesLayerData* nextData = mThebesLayerDataStack[lastIndex - 1];
+    nextData->mVisibleAboveRegion.Or(nextData->mVisibleAboveRegion,
+                                     data->mVisibleAboveRegion);
+    nextData->mVisibleAboveRegion.Or(nextData->mVisibleAboveRegion,
+                                     data->mVisibleRegion);
+    nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
+                                     data->mDrawAboveRegion);
+    nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
+                                     data->mDrawRegion);
+  }
 
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
 }
@@ -1126,6 +1203,28 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
   }
 }
 
+nscolor
+FrameLayerBuilder::FindOpaqueColorCovering(nsDisplayListBuilder* aBuilder,
+                                           ThebesLayer* aLayer,
+                                           const nsRect& aRect)
+{
+  ThebesLayerItemsEntry* entry = mThebesLayerItems.GetEntry(aLayer);
+  NS_ASSERTION(entry, "Must know about this layer!");
+  for (PRInt32 i = entry->mItems.Length() - 1; i >= 0; --i) {
+    nsDisplayItem* item = entry->mItems[i].mItem;
+    const nsRect& visible = item->GetVisibleRect();
+    if (!visible.Intersects(aRect))
+      continue;
+
+    nscolor color;
+    if (visible.Contains(aRect) && item->IsUniform(aBuilder, &color) &&
+        NS_GET_A(color) == 255)
+      return color;
+    break;
+  }
+  return NS_RGBA(0,0,0,0);
+}
+
 void
 ContainerState::CollectOldLayers()
 {
@@ -1420,6 +1519,15 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     // Later after this point, due to calls to DidEndTransaction
     // for temporary layer managers, mThebesLayerItems can change,
     // so 'entry' could become invalid.
+  }
+
+  ThebesDisplayItemLayerUserData* userData =
+    static_cast<ThebesDisplayItemLayerUserData*>
+      (aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  NS_ASSERTION(userData, "where did our user data go?");
+  if (NS_GET_A(userData->mForcedBackgroundColor) > 0) {
+    aContext->SetColor(gfxRGBA(userData->mForcedBackgroundColor));
+    aContext->Paint();
   }
 
   gfxMatrix transform;
