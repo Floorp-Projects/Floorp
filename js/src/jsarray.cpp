@@ -116,11 +116,14 @@ using namespace js;
 /* Small arrays are dense, no matter what. */
 #define MIN_SPARSE_INDEX 256
 
-/* Iteration depends on all indexes of a dense array to fit into a JSVAL-sized int. */
+/*
+ * Use the limit on number of object slots for sanity and consistency (see the
+ * assertion in JSObject::makeDenseArraySlow).
+ */
 static inline bool
 INDEX_TOO_BIG(jsuint index)
 {
-    return index > JS_BIT(29) - 1;
+    return index >= JSObject::NSLOTS_LIMIT;
 }
 
 static inline  bool
@@ -1058,15 +1061,6 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         capacity = 0;
     }
 
-    uint32 nslots = numSlots();
-    if (nslots >= JS_NSLOTS_LIMIT) {
-        setMap(oldMap);
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    freeslot = nslots;
-
     /* Begin with the length property to share more of the property tree. */
     if (!addProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                      array_length_getter, array_length_setter,
@@ -1087,6 +1081,9 @@ JSObject::makeDenseArraySlow(JSContext *cx)
             setDenseArrayElement(i, UndefinedValue());
             continue;
         }
+
+        /* Assert that the length covering i fits in the alloted bits. */
+        JS_ASSERT(JS_INITIAL_NSLOTS + i + 1 < NSLOTS_LIMIT);
 
         if (!addDataProperty(cx, id, JS_INITIAL_NSLOTS + i, JSPROP_ENUMERATE)) {
             setMap(oldMap);

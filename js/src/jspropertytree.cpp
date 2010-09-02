@@ -151,7 +151,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     JS_ASSERT(!JSID_IS_VOID(parent->id));
     JS_ASSERT(!JSID_IS_VOID(child->id));
 
-    child->parent = parent;
+    child->setParent(parent);
 
     KidsPointer *kidp = &parent->kids;
     if (kidp->isNull()) {
@@ -427,8 +427,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
         return NULL;
 
     new (shape) Shape(child.id, child.rawGetter, child.rawSetter, child.slot, child.attrs,
-                      child.flags, child.shortid);
-    shape->shape = js_GenerateShape(cx, true);
+                      child.flags, child.shortid, js_GenerateShape(cx, true));
 
     if (!insertChild(cx, parent, shape))
         return NULL;

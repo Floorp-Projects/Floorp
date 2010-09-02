@@ -1269,15 +1269,13 @@ mjit::Compiler::jsop_setelem()
         /*
          * Check if the object has a prototype with indexed properties,
          * in which case it might have a setter for this element. For dense
-         * arrays we only need to check Array.prototype and Object.prototype.
+         * arrays we need to check only Array.prototype and Object.prototype.
+         * Indexed properties are indicated by the JSObject::INDEXED flag.
          */
 
-        /*
-         * Test for indexed properties in Array.prototype. flags is a one byte
-         * quantity, but will be aligned on 4 bytes.
-         */
+        /* Test for indexed properties in Array.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, JSObject::flagsOffset()), T1);
+        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
         stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
         Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
         extendedArray.linkTo(syncTarget, &stubcc.masm);
@@ -1285,7 +1283,7 @@ mjit::Compiler::jsop_setelem()
         /* Test for indexed properties in Object.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, JSObject::flagsOffset()), T1);
+        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
         stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
         Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
         extendedObject.linkTo(syncTarget, &stubcc.masm);

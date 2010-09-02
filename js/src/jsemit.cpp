@@ -234,7 +234,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         JS_ASSERT(op == JSOP_ENTERBLOCK);
         JS_ASSERT(nuses == 0);
         blockObj = cg->objectList.lastbox->object;
-        JS_ASSERT(blockObj->getClass() == &js_BlockClass);
+        JS_ASSERT(blockObj->isStaticBlock());
         JS_ASSERT(blockObj->fslots[JSSLOT_BLOCK_DEPTH].isUndefined());
 
         OBJ_SET_BLOCK_DEPTH(cx, blockObj, cg->stackDepth);
@@ -1592,7 +1592,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
             continue;
 
         JSObject *obj = stmt->blockObj;
-        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        JS_ASSERT(obj->isStaticBlock());
 
         const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
         if (shape) {
@@ -1867,9 +1867,12 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 #endif
     }
 
-    if (!blockObj->growSlots(cx, base))
-        return false;
-    blockObj->freeslot = base;
+    /*
+     * Shrink slots to free blockObj->dslots and ensure a prompt safe crash if
+     * by accident some code tries to get a slot from a compiler-created Block
+     * prototype instead of from a clone.
+     */
+    blockObj->shrinkSlots(cx, base);
     return true;
 }
 
