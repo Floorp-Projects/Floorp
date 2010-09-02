@@ -1719,8 +1719,6 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
         enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
 
-      mPrefBranch->GetBoolPref("security.ssl.enable_compression", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_DEFLATE, enabled);
 #ifdef SSL_ENABLE_FALSE_START // Requires NSS 3.12.8
       mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
@@ -2253,10 +2251,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       PRInt32 warnLevel = 1;
       mPrefBranch->GetIntPref("security.ssl.warn_missing_rfc5746", &warnLevel);
       nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(warnLevel);
-    } else if (prefName.Equals("security.ssl.enable_compression")) {
-      mPrefBranch->GetBoolPref("security.ssl.enable_compression", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_DEFLATE, enabled);
-      clearSessionCache = PR_TRUE;
 #ifdef SSL_ENABLE_FALSE_START // Requires NSS 3.12.8
     } else if (prefName.Equals("security.ssl.enable_false_start")) {
       mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);

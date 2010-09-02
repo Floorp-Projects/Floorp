@@ -553,13 +553,10 @@ nsWindow::Create(nsIWidget *aParent,
 
   mPopupType = aInitData->mPopupHint;
   mContentType = aInitData->mContentType;
+  mIsRTL = aInitData->mRTL;
 
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
-
-  if (aInitData->mRTL) {
-    extendedStyle |= WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
-  }
 
   if (mWindowType == eWindowType_popup) {
     if (!aParent)
@@ -4897,8 +4894,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_MBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      break;
+
+    case WM_NCMBUTTONDOWN:
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0, lParamToClient(lParam), PR_FALSE,
+                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
+    case WM_NCMBUTTONUP:
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam), PR_FALSE,
+                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
+    case WM_NCMBUTTONDBLCLK:
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam), PR_FALSE,
+                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
       break;
 
     case WM_RBUTTONDOWN:
