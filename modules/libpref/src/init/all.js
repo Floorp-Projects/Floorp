@@ -183,11 +183,7 @@ pref("gfx.3d_video.enabled", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
 
-#ifdef XP_MACOSX
 pref("gfx.font_rendering.harfbuzz.level", 1);
-#else
-pref("gfx.font_rendering.harfbuzz.level", 0);
-#endif
 
 #ifdef XP_WIN
 #ifndef WINCE
