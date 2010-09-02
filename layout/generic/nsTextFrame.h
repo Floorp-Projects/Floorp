@@ -460,8 +460,6 @@ protected:
                    PRBool aForInsertionPoint);
 
   void ClearFrameOffsetCache();
-
-  virtual PRBool HasAnyNoncollapsedCharacters();
 };
 
 #endif
