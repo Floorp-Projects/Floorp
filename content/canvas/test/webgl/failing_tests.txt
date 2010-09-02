@@ -19,7 +19,6 @@ conformance/gl-scissor-test.html
 conformance/gl-teximage.html
 conformance/gl-uniform-arrays.html
 conformance/gl-unknown-uniform.html
-conformance/gl-vertex-attrib.html
 conformance/glsl-2types-of-textures-on-same-unit.html
 conformance/glsl-conformance.html
 conformance/invalid-passed-params.html

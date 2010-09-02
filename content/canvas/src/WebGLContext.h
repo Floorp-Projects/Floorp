@@ -226,7 +226,7 @@ class WebGLBuffer;
 
 struct WebGLVertexAttribData {
     WebGLVertexAttribData()
-        : buf(0), stride(0), size(0), byteOffset(0), type(0), enabled(PR_FALSE)
+        : buf(0), stride(0), size(0), byteOffset(0), type(0), enabled(PR_FALSE), normalized(PR_FALSE)
     { }
 
     WebGLObjectRefPtr<WebGLBuffer> buf;
@@ -235,6 +235,7 @@ struct WebGLVertexAttribData {
     GLuint byteOffset;
     GLenum type;
     PRBool enabled;
+    PRBool normalized;
 
     GLuint componentSize() const {
         switch(type) {
@@ -331,9 +332,12 @@ public:
     }
 
     PRBool NeedFakeBlack();
-
     void BindFakeBlackTextures();
     void UnbindFakeBlackTextures();
+
+    PRBool NeedFakeVertexAttrib0();
+    void DoFakeVertexAttrib0(WebGLuint vertexCount);
+    void UndoFakeVertexAttrib0();
 
 protected:
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
@@ -474,6 +478,9 @@ protected:
 
     WebGLuint mBlackTexture2D, mBlackTextureCubeMap;
     PRBool mBlackTexturesAreInitialized;
+
+    WebGLfloat mVertexAttrib0Vector[4];
+    nsAutoArrayPtr<WebGLfloat> mFakeVertexAttrib0Array;
 
 public:
     // console logging helpers
@@ -1341,7 +1348,6 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
-
 
 /**
  ** Template implementations
