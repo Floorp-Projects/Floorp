@@ -3916,23 +3916,20 @@ TraceRecorder::known(JSObject** p)
  * accordingly.
  */
 JS_REQUIRES_STACK void
-TraceRecorder::checkForGlobalObjectReallocation()
+TraceRecorder::checkForGlobalObjectReallocationHelper()
 {
-    if (global_dslots != globalObj->dslots) {
-        debug_only_print0(LC_TMTracer,
-                          "globalObj->dslots relocated, updating tracker\n");
-        Value* src = global_dslots;
-        Value* dst = globalObj->dslots;
-        jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
-        LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
-        for (jsuint n = 0; n < length; ++n) {
-            map[n] = tracker.get(src);
-            tracker.set(src++, NULL);
-        }
-        for (jsuint n = 0; n < length; ++n)
-            tracker.set(dst++, map[n]);
-        global_dslots = globalObj->dslots;
+    debug_only_print0(LC_TMTracer, "globalObj->dslots relocated, updating tracker\n");
+    Value* src = global_dslots;
+    Value* dst = globalObj->dslots;
+    jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
+    LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
+    for (jsuint n = 0; n < length; ++n) {
+        map[n] = tracker.get(src);
+        tracker.set(src++, NULL);
     }
+    for (jsuint n = 0; n < length; ++n)
+        tracker.set(dst++, map[n]);
+    global_dslots = globalObj->dslots;
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
