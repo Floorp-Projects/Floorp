@@ -83,14 +83,6 @@ class SpecificLayerAttributes;
   virtual const char* Name() const { return n; }            \
   virtual LayerType GetType() const { return e; }
 
-/**
- * Base class for userdata objects attached to layers and layer managers.
- */
-class THEBES_API LayerUserData {
-public:
-  virtual ~LayerUserData() {}
-};
-
 /*
  * Motivation: For truly smooth animation and video playback, we need to
  * be able to compose frames and render them on a dedicated thread (i.e.
@@ -116,52 +108,6 @@ public:
  * efficient implementation in an "immediate mode" style. See the
  * BasicLayerManager for such an implementation.
  */
-
-/**
- * Helper class to manage user data for layers and LayerManagers.
- */
-class THEBES_API LayerUserDataSet {
-public:
-  LayerUserDataSet() : mKey(nsnull) {}
-
-  void Set(void* aKey, LayerUserData* aValue)
-  {
-    NS_ASSERTION(!mKey || mKey == aKey,
-                 "Multiple LayerUserData objects not supported");
-    mKey = aKey;
-    mValue = aValue;
-  }
-  /**
-   * This can be used anytime. Ownership passes to the caller!
-   */
-  LayerUserData* Remove(void* aKey)
-  {
-    if (mKey == aKey) {
-      mKey = nsnull;
-      LayerUserData* d = mValue.forget();
-      return d;
-    }
-    return nsnull;
-  }
-  /**
-   * This getter can be used anytime.
-   */
-  PRBool Has(void* aKey)
-  {
-    return mKey == aKey;
-  }
-  /**
-   * This getter can be used anytime. Ownership is retained by this object.
-   */
-  LayerUserData* Get(void* aKey)
-  {
-    return mKey == aKey ? mValue.get() : nsnull;
-  }
-
-private:
-  void* mKey;
-  nsAutoPtr<LayerUserData> mValue;
-};
 
 /**
  * A LayerManager controls a tree of layers. All layers in the tree
@@ -196,7 +142,7 @@ public:
     LAYERS_D3D9
   };
 
-  LayerManager() : mDestroyed(PR_FALSE)
+  LayerManager() : mUserData(nsnull), mDestroyed(PR_FALSE)
   {
     InitLog();
   }
@@ -321,28 +267,10 @@ public:
    */
   virtual LayersBackend GetBackendType() = 0;
 
-  /**
-   * This setter can be used anytime. The user data for all keys is
-   * initially null. Ownership pases to the layer manager.
-   */
-  void SetUserData(void* aKey, LayerUserData* aData)
-  { mUserData.Set(aKey, aData); }
-  /**
-   * This can be used anytime. Ownership passes to the caller!
-   */
-  nsAutoPtr<LayerUserData> RemoveUserData(void* aKey)
-  { nsAutoPtr<LayerUserData> d(mUserData.Remove(aKey)); return d; }
-  /**
-   * This getter can be used anytime.
-   */
-  PRBool HasUserData(void* aKey)
-  { return mUserData.Has(aKey); }
-  /**
-   * This getter can be used anytime. Ownership is retained by the layer
-   * manager.
-   */
-  LayerUserData* GetUserData(void* aKey)
-  { return mUserData.Get(aKey); }
+  // This setter and getter can be used anytime. The user data is initially
+  // null.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
 
   // We always declare the following logging symbols, because it's
   // extremely tricky to conditionally declare them.  However, for
@@ -377,7 +305,7 @@ public:
 
 protected:
   nsRefPtr<Layer> mRoot;
-  LayerUserDataSet mUserData;
+  void* mUserData;
   PRPackedBool mDestroyed;
 
   // Print interesting information about this into aTo.  Internally
@@ -416,37 +344,17 @@ public:
    */
   LayerManager* Manager() { return mManager; }
 
-  enum {
-    /**
-     * If this is set, the caller is promising that by the end of this
-     * transaction the entire visible region (as specified by
-     * SetVisibleRegion) will be filled with opaque content.
-     */
-    CONTENT_OPAQUE = 0x01,
-    /**
-     * ThebesLayers only!
-     * If this is set, the caller is promising that the visible region
-     * contains no text at all. If this is set,
-     * CONTENT_NO_TEXT_OVER_TRANSPARENT will also be set.
-     */
-    CONTENT_NO_TEXT = 0x02,
-    /**
-     * ThebesLayers only!
-     * If this is set, the caller is promising that the visible region
-     * contains no text over transparent pixels (any text, if present,
-     * is over fully opaque pixels).
-     */
-    CONTENT_NO_TEXT_OVER_TRANSPARENT = 0x04
-  };
   /**
    * CONSTRUCTION PHASE ONLY
-   * This lets layout make some promises about what will be drawn into the
-   * visible region of the ThebesLayer. This enables internal quality
-   * and performance optimizations.
+   * If this is called with aOpaque set to true, the caller is promising
+   * that by the end of this transaction the entire visible region
+   * (as specified by SetVisibleRegion) will be filled with opaque
+   * content. This enables some internal quality and performance
+   * optimizations.
    */
-  void SetContentFlags(PRUint32 aFlags)
+  void SetIsOpaqueContent(PRBool aOpaque)
   {
-    mContentFlags = aFlags;
+    mIsOpaqueContent = aOpaque;
     Mutated();
   }
   /**
@@ -529,7 +437,7 @@ public:
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nsnull; }
-  PRUint32 GetContentFlags() { return mContentFlags; }
+  PRBool IsOpaqueContent() { return mIsOpaqueContent; }
   const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
@@ -552,28 +460,10 @@ public:
   // quality.
   PRBool CanUseOpaqueSurface();
 
-  /**
-   * This setter can be used anytime. The user data for all keys is
-   * initially null. Ownership pases to the layer manager.
-   */
-  void SetUserData(void* aKey, LayerUserData* aData)
-  { mUserData.Set(aKey, aData); }
-  /**
-   * This can be used anytime. Ownership passes to the caller!
-   */
-  nsAutoPtr<LayerUserData> RemoveUserData(void* aKey)
-  { nsAutoPtr<LayerUserData> d(mUserData.Remove(aKey)); return d; }
-  /**
-   * This getter can be used anytime.
-   */
-  PRBool HasUserData(void* aKey)
-  { return mUserData.Has(aKey); }
-  /**
-   * This getter can be used anytime. Ownership is retained by the layer
-   * manager.
-   */
-  LayerUserData* GetUserData(void* aKey)
-  { return mUserData.Get(aKey); }
+  // This setter and getter can be used anytime. The user data is initially
+  // null.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
 
   /**
    * Dynamic downcast to a Thebes layer. Returns null if this is not
@@ -629,9 +519,10 @@ protected:
     mNextSibling(nsnull),
     mPrevSibling(nsnull),
     mImplData(aImplData),
+    mUserData(nsnull),
     mOpacity(1.0),
-    mContentFlags(0),
-    mUseClipRect(PR_FALSE)
+    mUseClipRect(PR_FALSE),
+    mIsOpaqueContent(PR_FALSE)
     {}
 
   void Mutated() { mManager->Mutated(this); }
@@ -648,13 +539,13 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
-  LayerUserDataSet mUserData;
+  void* mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
-  PRUint32 mContentFlags;
   PRPackedBool mUseClipRect;
+  PRPackedBool mIsOpaqueContent;
 };
 
 /**
