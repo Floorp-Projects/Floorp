@@ -1105,5 +1105,15 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler **_oldHandler)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseName)
+{
+  (void)::sqlite3_file_control(mDBConn,
+                               aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get() : NULL,
+                               SQLITE_FCNTL_CHUNK_SIZE,
+                               &aChunkSize);
+  return NS_OK;
+}
+
 } // namespace storage
 } // namespace mozilla
