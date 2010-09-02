@@ -326,8 +326,12 @@ class SetPropCompiler : public PICStubCompiler
         }
     }
 
-    bool generateStub(const Shape *shape)
+    bool generateStub(uint32 initialShape, uint32 initialFlagsAndFreeslot,
+                      const Shape *shape, bool adding)
     {
+        /* Exits to the slow path. */
+        Vector<Jump, 8> slowExits(f.cx);
+
         Assembler masm;
 
         // Shape guard.
@@ -337,8 +341,10 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         Label start = masm.label();
-        Jump shapeMismatch = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
-                                                   Imm32(obj->shape()));
+        Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
+                                                Imm32(initialShape));
+        if (!slowExits.append(shapeGuard))
+            return false;
 
 #if defined JS_NUNBOX32
         DBGLABEL(dbgStubShapeJump);
@@ -351,7 +357,77 @@ class SetPropCompiler : public PICStubCompiler
 
         Jump rebrand;
         Jump skipOver;
-        if (shape->hasDefaultSetter()) {
+
+        if (adding) {
+            JS_ASSERT(shape->hasSlot());
+            pic.shapeRegHasBaseShape = false;
+
+            Address flagsAndFreeslot(pic.objReg, JSObject::flagsOffset());
+
+            /*
+             * We need to always check the flags match as some object flags can
+             * vary between objects of the same shape (DELEGATE, SYSTEM).
+             * It would be nice if these bits did not vary, so that just the
+             * shape check is sufficient.
+             */
+            Jump flagsMismatch = masm.branch32(Assembler::NotEqual, flagsAndFreeslot,
+                                               Imm32(initialFlagsAndFreeslot));
+            if (!slowExits.append(flagsMismatch))
+                return false;
+
+            /* Emit shape guards for the object's prototype chain. */
+            size_t chainLength = 0;
+            JSObject *proto = obj->getProto();
+            while (proto) {
+                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, proto)), pic.shapeReg);
+                for (size_t i = 0; i < chainLength; i++)
+                    masm.loadPtr(Address(pic.shapeReg, offsetof(JSObject, proto)), pic.shapeReg);
+                masm.loadShape(pic.shapeReg, pic.shapeReg);
+
+                Jump protoGuard = masm.branch32(Assembler::NotEqual, pic.shapeReg,
+                                                Imm32(proto->shape()));
+                if (!slowExits.append(protoGuard))
+                    return false;
+
+                proto = proto->getProto();
+                chainLength++;
+            }
+
+            if (shape->slot < JS_INITIAL_NSLOTS) {
+                Address address(pic.objReg,
+                                offsetof(JSObject, fslots) + shape->slot * sizeof(Value));
+                emitStore(masm, address);
+            } else {
+                /* Check dslots non-zero. */
+                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.shapeReg);
+                Jump emptyDslots = masm.branchPtr(Assembler::Equal, pic.shapeReg, ImmPtr(0));
+                if (!slowExits.append(emptyDslots))
+                    return false;
+
+                /* Check capacity. */
+                Address capacity(pic.shapeReg, -sizeof(Value));
+                masm.load32(masm.payloadOf(capacity), pic.shapeReg);
+                Jump overCapacity = masm.branch32(Assembler::LessThanOrEqual, pic.shapeReg,
+                                                  Imm32(shape->slot));
+                if (!slowExits.append(overCapacity))
+                    return false;
+
+                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.shapeReg);
+                Address address(pic.shapeReg,
+                                (shape->slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+                emitStore(masm, address);
+            }
+
+            uint32 newShape = obj->shape();
+            JS_ASSERT(newShape != initialShape);
+
+            /* Write the object's new shape. */
+            masm.storePtr(ImmPtr(shape), Address(pic.objReg, offsetof(JSObject, lastProp)));
+            masm.store32(Imm32(newShape), Address(pic.objReg, offsetof(JSObject, objShape)));
+
+            /* Write both the object's flags and new freeslot. */
+            masm.store32(Imm32(obj->flagsAndFreeslot), flagsAndFreeslot);
+        } else if (shape->hasDefaultSetter()) {
             Address address(pic.objReg, offsetof(JSObject, fslots) + shape->slot * sizeof(Value));
             if (shape->slot >= JS_INITIAL_NSLOTS) {
                 masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.objReg);
@@ -413,16 +489,17 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         JSC::LinkBuffer buffer(&masm, ep);
-        buffer.link(shapeMismatch, pic.slowPathStart);
+        for (Jump *pj = slowExits.begin(); pj != slowExits.end(); ++pj)
+            buffer.link(*pj, pic.slowPathStart);
         buffer.link(done, pic.storeBack);
-        if (shape->hasDefaultSetter() && (obj->brandedOrHasMethodBarrier()))
+        if (!adding && shape->hasDefaultSetter() && (obj->brandedOrHasMethodBarrier()))
             buffer.link(rebrand, pic.slowPathStart);
         if (!shape->hasDefaultSetter())
             buffer.link(skipOver, pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %d %d at %p\n",
                    (void*)&pic,
-                   obj->shape(),
+                   initialShape,
                    pic.stubsGenerated,
                    cs.executableAddress());
 
@@ -455,26 +532,105 @@ class SetPropCompiler : public PICStubCompiler
             return true;
         }
 
-        JSObject *aobj = js_GetProtoIfDenseArray(obj);
-        if (!aobj->isNative())
+        if (obj->isDenseArray())
+            return disable("dense array");
+        if (!obj->isNative())
             return disable("non-native");
+        if (obj->sealed())
+            return disable("sealed");
+
+        jsid id = ATOM_TO_JSID(atom);
 
         JSObject *holder;
         JSProperty *prop = NULL;
-        if (!aobj->lookupProperty(f.cx, ATOM_TO_JSID(atom), &holder, &prop))
+        if (!obj->lookupProperty(f.cx, id, &holder, &prop))
             return false;
-        if (!prop)
-            return disable("property not found");
+
+        /* If the property exists but is on a prototype, treat as addprop. */
+        if (prop && holder != obj) {
+            AutoPropertyDropper dropper(f.cx, holder, prop);
+            const Shape *shape = (const Shape *) prop;
+
+            if (!holder->isNative())
+                return disable("non-native holder");
+            if (holder->sealed())
+                return disable("sealed holder");
+
+            if (!shape->writable())
+                return disable("readonly");
+            if (!shape->hasDefaultSetter() || !shape->hasDefaultGetter())
+                return disable("getter/setter in prototype");
+            if (shape->hasShortID())
+                return disable("short ID in prototype");
+            if (!shape->hasSlot())
+                return disable("missing slot");
+
+            prop = NULL;
+        }
+
+        if (!prop) {
+            /* Adding a property to the object. */
+            if (obj->isDelegate())
+                return disable("delegate");
+
+            Class *clasp = obj->getClass();
+
+            uint32 index;
+            if (js_IdIsIndex(id, &index))
+                return disable("index");
+
+            uint32 initialShape = obj->shape();
+            uint32 initialFlagsAndFreeslot = obj->flagsAndFreeslot;
+
+            if (!obj->ensureClassReservedSlots(f.cx))
+                return false;
+
+            uint32 slots = obj->numSlots();
+            uintN flags = 0;
+            PropertyOp getter = clasp->getProperty;
+
+            if (pic.kind == ic::PICInfo::SETMETHOD) {
+                if (!obj->canHaveMethodBarrier())
+                    return disable("can't have method barrier");
+
+                JSObject *funobj = &f.regs.sp[-1].toObject();
+                JS_ASSERT(funobj == GET_FUNCTION_PRIVATE(cx, funobj));
+
+                flags |= Shape::METHOD;
+                getter = CastAsPropertyOp(funobj);
+            }
+
+            const Shape *shape =
+                obj->putProperty(f.cx, id, getter, clasp->setProperty,
+                                 SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
+            if (!shape)
+                return false;
+
+            /*
+             * Watch for cases where the object reallocated its slots when
+             * adding the property, and disable the PIC.  Otherwise we will
+             * keep generating identical PICs as side exits are taken on the
+             * capacity checks.  Alternatively, we could avoid the disable
+             * and just not generate a stub in case there are multiple shapes
+             * that can flow here which don't all require reallocation.
+             * Doing this would cause us to walk down this same update path
+             * every time a reallocation is needed, however, which will
+             * usually be a slowdown even if there *are* other shapes that
+             * don't realloc.
+             */
+            if (obj->numSlots() != slots)
+                return disable("insufficient slot capacity");
+
+            return generateStub(initialShape, initialFlagsAndFreeslot, shape, true);
+        }
 
         AutoPropertyDropper dropper(f.cx, holder, prop);
-        if (holder != obj)
-            return disable("property not on object");
 
         const Shape *shape = (const Shape *) prop;
+        if (pic.kind == ic::PICInfo::SETMETHOD && !shape->isMethod())
+            return disable("set method on non-method shape");
         if (!shape->writable())
             return disable("readonly");
-        if (obj->sealed() && !shape->hasSlot())
-            return disable("what does this even mean");
 
         if (shape->hasDefaultSetter()) {
             if (!shape->hasSlot())
@@ -496,7 +652,7 @@ class SetPropCompiler : public PICStubCompiler
             return patchInline(shape);
         } 
 
-        return generateStub(shape);
+        return generateStub(obj->shape(), 0, shape, false);
     }
 };
 
@@ -1906,7 +2062,7 @@ ic::SetPropDumb(VMFrame &f, uint32 index)
 {
     JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
-    JS_ASSERT(pic.kind == ic::PICInfo::SET);
+    JS_ASSERT(pic.isSet());
     JSAtom *atom = pic.atom;
 
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
@@ -1923,7 +2079,7 @@ SetPropSlow(VMFrame &f, uint32 index)
 {
     JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
-    JS_ASSERT(pic.kind == ic::PICInfo::SET);
+    JS_ASSERT(pic.isSet());
 
     JSAtom *atom = pic.atom;
     stubs::SetName(f, atom);
@@ -1939,7 +2095,7 @@ ic::SetProp(VMFrame &f, uint32 index)
     JSScript *script = f.fp()->getScript();
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
-    JS_ASSERT(pic.kind == ic::PICInfo::SET);
+    JS_ASSERT(pic.isSet());
 
     //
     // Important: We update the PIC before looking up the property so that the
@@ -2200,6 +2356,7 @@ ic::PurgePICs(JSContext *cx, JSScript *script)
         ic::PICInfo &pic = script->pics[i];
         switch (pic.kind) {
           case ic::PICInfo::SET:
+          case ic::PICInfo::SETMETHOD:
             SetPropCompiler::reset(pic);
             break;
           case ic::PICInfo::NAME:
