@@ -682,7 +682,7 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
   if (mGLContext) {
     nsRefPtr<gfxImageSurface> isurf =
       new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                          IsOpaqueContent()
+                          (GetContentFlags() & CONTENT_OPAQUE)
                             ? gfxASurface::ImageFormatRGB24
                             : gfxASurface::ImageFormatARGB32);
     if (!isurf || isurf->CairoStatus() != 0) {
@@ -793,7 +793,7 @@ MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
                                       const nsIntRect& aBounds,
                                       nsIntRegion* aDirtyVisibleRegionInContainer)
 {
-  if (!aLayer->IsOpaqueContent()) {
+  if (!(aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     return PR_TRUE;
   }
 
