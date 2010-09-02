@@ -46,6 +46,8 @@ include $(topsrcdir)/config/rules.mk
 
 # Disabled due to timeouts.
 # 		test_bug563329.html
+# Disabled due to lack of present support for JSD in JM
+#		test_bug448602.html
 _TEST_FILES = \
 		test_bug226361.xhtml \
 		     bug226361_iframe.xhtml \
@@ -72,7 +74,6 @@ _TEST_FILES = \
 		test_bug426082.html \
 		test_bug443985.html \
 		test_bug447736.html \
-		test_bug448602.html \
 		test_bug450876.html \
 		test_bug456273.html \
 		test_bug457672.html \
