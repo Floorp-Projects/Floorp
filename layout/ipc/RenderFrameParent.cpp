@@ -200,9 +200,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   if (mContainer) {
-    mContainer->SetClipRect(shadowRoot->GetClipRect());
-    mContainer->SetVisibleRegion(shadowRoot->GetVisibleRegion());
     SetTransformFor(mContainer, aFrame, aBuilder);
+    mContainer->SetClipRect(nsnull);
   }
 
   AssertValidContainerOfShadowTree(mContainer, shadowRoot);
