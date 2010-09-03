@@ -89,8 +89,9 @@ var gTests = [
         addSource(src, type);
       },
     expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
-  }, {
-    // Test 2: video with multiple source, the first of which are bad, we should load the last.
+  },{
+    // Test 2: video with multiple source, the first of which are bad, we should load the last,
+    // and receive error events for failed loads on the source children.
     create:
       function(src, type) {
         document.body.appendChild(gMedia);
@@ -98,7 +99,7 @@ var gTests = [
         addSource("404b", type);
         addSource(src, type);
       },
-    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
+    expectedEvents: ['loadstart', 'error', 'error', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 3:  video with bad src, good <source>, ensure that <source> aren't used.
     create:
@@ -123,7 +124,7 @@ var gTests = [
           false);
         document.body.appendChild(gMedia);
       },
-    expectedEvents: ['loadstart', 'error', 'durationchange', 'loadedmetadata', 'loadeddata']
+    expectedEvents: ['loadstart', 'error', 'error', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 5: video with only 1 bad source, let it fail to load, then prepend
     // a good <source> to the video, it shouldn't be selected, because the

@@ -324,7 +324,27 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
     thr->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
   }
 
+  // We're about to run an event, so we're in a stable state. 
+  RunSyncSections();
+
   return NS_OK;
+}
+
+void
+nsBaseAppShell::RunSyncSections()
+{
+  if (mSyncSections.Count() == 0) {
+    return;
+  }
+  // We've got synchronous sections awaiting a stable state. Run
+  // all the synchronous sections. Note that a synchronous section could
+  // add another synchronous section, so we don't remove elements from
+  // mSyncSections until all sections have been run, else we'll screw up
+  // our iteration.
+  for (PRUint32 i=0; i<mSyncSections.Count(); i++) {
+    mSyncSections[i]->Run();
+  }
+  mSyncSections.Clear();
 }
 
 // Called from the main thread
@@ -332,6 +352,8 @@ NS_IMETHODIMP
 nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
                                       PRUint32 recursionDepth)
 {
+  // We've just finished running an event, so we're in a stable state. 
+  RunSyncSections();
   return NS_OK;
 }
 
@@ -341,5 +363,20 @@ nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
 {
   NS_ASSERTION(!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID), "oops");
   Exit();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseAppShell::RunInStableState(nsIRunnable* aRunnable)
+{
+  if (!mRunning) {
+    // We're not running a "task"/event, so we're already in a "stable state",
+    // so we can run the synchronous section immediately.
+    aRunnable->Run();
+    return NS_OK;
+  }
+  // Else we're running a "task"/event, record the synchronous section, and
+  // run it with any others once we reach a stable state.
+  mSyncSections.AppendObject(aRunnable);
   return NS_OK;
 }
