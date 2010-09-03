@@ -836,7 +836,7 @@
                      ondragleave="homeButtonObserver.onDragLeave(event)"
                      onclick="BrowserGoHome(event);"/>
 
-      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
+      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
                  placeholder="&urlbar.placeholder;"
