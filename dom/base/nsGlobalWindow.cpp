@@ -1956,6 +1956,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         NS_ERROR("can't set prototype");
         return NS_ERROR_FAILURE;
       }
+    } else {
+      if (!JS_DefineProperty(cx, newInnerWindow->mJSObject, "window",
+                             OBJECT_TO_JSVAL(mJSObject),
+                             JS_PropertyStub, JS_PropertyStub,
+                             JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
+        NS_ERROR("can't create the 'window' property");
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 

@@ -1581,7 +1581,6 @@ jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
 jsid nsDOMClassInfo::sEnumerate_id       = JSID_VOID;
 jsid nsDOMClassInfo::sNavigator_id       = JSID_VOID;
 jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
-jsid nsDOMClassInfo::sWindow_id          = JSID_VOID;
 jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
 jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
 jsid nsDOMClassInfo::sOpener_id          = JSID_VOID;
@@ -1806,7 +1805,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sEnumerate_id,       cx, "enumerateProperties");
   SET_JSID_TO_STRING(sNavigator_id,       cx, "navigator");
   SET_JSID_TO_STRING(sDocument_id,        cx, "document");
-  SET_JSID_TO_STRING(sWindow_id,          cx, "window");
   SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSID_TO_STRING(sSelf_id,            cx, "self");
   SET_JSID_TO_STRING(sOpener_id,          cx, "opener");
@@ -4843,7 +4841,6 @@ nsDOMClassInfo::ShutDown()
   sEnumerate_id       = JSID_VOID;
   sNavigator_id       = JSID_VOID;
   sDocument_id        = JSID_VOID;
-  sWindow_id          = JSID_VOID;
   sFrames_id          = JSID_VOID;
   sSelf_id            = JSID_VOID;
   sOpener_id          = JSID_VOID;
@@ -6795,29 +6792,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           return NS_ERROR_UNEXPECTED;
         }
       }
-
-      return NS_OK;
-    }
-
-    if (id == sWindow_id) {
-      // window should *always* be the outer window object.
-      win = win->GetOuterWindowInternal();
-      NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
-
-      jsval winVal;
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, obj, nsGlobalWindow::ToSupports(win), PR_TRUE,
-                      &winVal, getter_AddRefs(holder));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      PRBool ok =
-        ::JS_DefinePropertyById(cx, obj, id, winVal, JS_PropertyStub, JS_PropertyStub,
-                                JSPROP_READONLY | JSPROP_ENUMERATE);
-
-      if (!ok) {
-        return NS_ERROR_FAILURE;
-      }
-      *objp = obj;
 
       return NS_OK;
     }
