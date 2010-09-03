@@ -280,13 +280,19 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       case Specific::Tnull_t:
         break;
 
-      case Specific::TThebesLayerAttributes:
+      case Specific::TThebesLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   thebes layer"));
 
-        static_cast<ShadowThebesLayer*>(layer)->SetValidRegion(
-          specific.get_ThebesLayerAttributes().validRegion());
-        break;
+        ShadowThebesLayer* thebesLayer =
+          static_cast<ShadowThebesLayer*>(layer);
+        const ThebesLayerAttributes& attrs =
+          specific.get_ThebesLayerAttributes();
 
+        thebesLayer->SetValidRegion(attrs.validRegion());
+        thebesLayer->SetResolution(attrs.xResolution(), attrs.yResolution());
+
+        break;
+      }
       case Specific::TContainerLayerAttributes:
         MOZ_LAYERS_LOG(("[ParentSide]   container layer"));
 
