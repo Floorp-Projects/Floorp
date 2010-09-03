@@ -724,13 +724,11 @@ window.Item.prototype = {
   droppable: function(value) {
     try {
       var $container = iQ(this.container);
-      if (value)
-        $container.addClass('iq-droppable');
-      else {
+      if (value) {
         Utils.assert(this.dropOptions, 'dropOptions');
-
+        $container.addClass('iq-droppable');
+      } else
         $container.removeClass('iq-droppable');
-      }
     } catch(e) {
       Utils.log(e);
     }
