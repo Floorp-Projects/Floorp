@@ -79,6 +79,8 @@
                       xbl:inherits="open,enablehistory,parentfocused=focused"/>
 
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
+
+      <children includes="toolbarbutton"/>
     </content>
 
     <implementation implements="nsIAccessibleProvider, nsIAutoCompleteInput, nsIDOMXULMenuListElement">

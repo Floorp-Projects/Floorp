@@ -1181,11 +1181,70 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #go-button {
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 #go-button:hover {
-  -moz-image-region: rect(16px 16px 32px 0px);
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+
+/* combined go/reload/stop button in location bar */
+
+#urlbar > toolbarbutton {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  margin: -2px;
+  -moz-margin-start: 0;
+  padding: 0 3px;
+  background-origin: border-box;
+  border: none;
+  border-left: 1px solid rgba(0,0,0,.25);
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-bottomright: 2px;
+}
+
+#urlbar > toolbarbutton:active:hover {
+  padding-left: 4px;
+  border-left: none;
+  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
+                   0 0 3px rgba(0,0,0,.4) inset;
+}
+
+#urlbar-go-button {
+  -moz-image-region: rect(0px, 56px, 14px, 42px);
+  background-image: -moz-linear-gradient(rgb(115,213,115), rgb(96,190,96) 49%, rgb(82,174,82) 51%, rgb(79,155,79));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 1px rgba(255,255,255,.25) inset;
+}
+
+#urlbar-go-button:hover {
+  background-image: -moz-linear-gradient(rgb(96,221,96), rgb(71,191,71) 49%, rgb(54,171,54) 51%, rgb(50,147,50));
+}
+
+#urlbar-reload-button {
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
+}
+
+#urlbar-reload-button:hover {
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
+  background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 1px rgba(255,255,255,.25) inset;
+}
+
+#urlbar-stop-button {
+  -moz-image-region: rect(0px, 42px, 14px, 28px);
+  background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 1px rgba(255,255,255,.25) inset;
+}
+
+#urlbar-stop-button:hover {
+  background-image: -moz-linear-gradient(rgb(244,156,128), rgb(215,101,77) 49%, rgb(194,66,48) 51%, rgb(170,41,23));
+}
+
+#urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: .5;
 }
 
 /* star button */
