@@ -247,6 +247,9 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug456262.html \
 		test_bug590870.html \
 		file_bug590870.html \
+		test_bug590812.html \
+		file_bug590812.xml \
+		file_bug590812-ref.xhtml \
 		test_bug368972.html \
 		test_bug448993.html \
 		test_bug450160.html \
