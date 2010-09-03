@@ -352,7 +352,7 @@
       <label/>
     </vbox>
 
-    <vbox id="bookmark-popup" hidden="true" class="dialog-dark" align="center" left="0">
+    <vbox id="bookmark-popup" hidden="true" class="dialog-dark" align="center">
       <label value="&bookmarkPopup.label;"/>
       <separator class="thin"/>
       <vbox>

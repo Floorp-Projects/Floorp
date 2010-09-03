@@ -39,16 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let Ci = Components.interfaces;
-
-// Blindly copied from Safari documentation for now.
-const kViewportMinScale  = 0;
-const kViewportMaxScale  = 10;
-const kViewportMinWidth  = 200;
-const kViewportMaxWidth  = 10000;
-const kViewportMinHeight = 223;
-const kViewportMaxHeight = 10000;
-
 // -----------------------------------------------------------
 // General util/convenience tools
 //
@@ -71,8 +61,8 @@ let Util = {
 
   /** printf-like dump function */
   dumpf: function dumpf(str) {
-    var args = arguments;
-    var i = 1;
+    let args = arguments;
+    let i = 1;
     dump(str.replace(/%s/g, function() {
       if (i >= args.length) {
         throw "dumps received too many placeholders and not enough arguments";
@@ -83,7 +73,8 @@ let Util = {
 
   /** Like dump, but each arg is handled and there's an automatic newline */
   dumpLn: function dumpLn() {
-    for (var i = 0; i < arguments.length; i++) { dump(arguments[i] + " "); }
+    for (let i = 0; i < arguments.length; i++)
+      dump(arguments[i] + " ");
     dump("\n");
   },
 
@@ -92,9 +83,9 @@ let Util = {
   },
 
   getScrollOffset: function getScrollOffset(aWindow) {
-    var cwu = Util.getWindowUtils(aWindow);
-    var scrollX = {};
-    var scrollY = {};
+    let cwu = Util.getWindowUtils(aWindow);
+    let scrollX = {};
+    let scrollY = {};
     cwu.getScrollXY(false, scrollX, scrollY);
     return new Point(scrollX.value, scrollY.value);
   },
@@ -208,16 +199,11 @@ let Util = {
   // Put the Mozilla networking code into a state that will kick the auto-connection
   // process.
   forceOnline: function forceOnline() {
-#ifdef MOZ_ENABLE_LIBCONIC
+#ifdef MOZ_PLATFORM_MAEMO
     Services.io.offline = false;
 #endif
   },
 
-  /** Capitalize first letter of a string. */
-  capitalize: function(str) {
-    return str.charAt(0).toUpperCase() + str.substring(1);
-  },
-  
   isPortrait: function isPortrait() {
     return (window.innerWidth < 500);
   }
@@ -290,28 +276,3 @@ Util.Timeout.prototype = {
   }
 };
 
-
-
-/**
- * Cache of commonly used elements.
- */
-let Elements = {};
-
-[
-  ["browserBundle",      "bundle_browser"],
-  ["contentShowing",     "bcast_contentShowing"],
-  ["urlbarState",        "bcast_urlbarState"],
-  ["stack",              "stack"],
-  ["panelUI",            "panel-container"],
-  ["viewBuffer",         "view-buffer"],
-  ["toolbarContainer",   "toolbar-container"],
-].forEach(function (elementGlobal) {
-  let [name, id] = elementGlobal;
-  Elements.__defineGetter__(name, function () {
-    let element = document.getElementById(id);
-    if (!element)
-      return null;
-    delete Elements[name];
-    return Elements[name] = element;
-  });
-});

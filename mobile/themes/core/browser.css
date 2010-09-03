@@ -875,7 +875,7 @@ autocompleteresult.noresults > .autocomplete-item-label {
 }
 
 #awesome-header > toolbarbutton:last-child {
-  border-right-width: 0;
+  -moz-border-end-width: 0;
 }
 
 #awesome-header > toolbarbutton:hover:active,
@@ -907,6 +907,10 @@ autocompleteresult.noresults > .autocomplete-item-label {
   text-align: left;
 }
 
+#awesome-header > toolbarbutton .toolbarbutton-text:-moz-locale-dir(rtl) {
+  text-align: right;
+}
+
 #awesome-header > toolbarbutton.choice-bookmarks {
   list-style-image: url(chrome://browser/skin/images/bookmarks-48.png);
 }
@@ -918,6 +922,7 @@ autocompleteresult.noresults > .autocomplete-item-label {
 #awesome-header > toolbarbutton.choice-remotetabs {
   list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
 }
+
 #awesome-header > toolbarbutton:hover:active,
 #awesome-header > toolbarbutton[checked="true"] {
   border-color: #36373b !important;
@@ -986,6 +991,7 @@ box[type="documenttab"] {
   /* display:block allow us to change the line-height, it won't work otherwise */
   display: block;
   width: 128px;
+  -moz-margin-start: 8px; /* core spacing */
   line-height: 0;
 }
 
@@ -1002,6 +1008,10 @@ box[type="documenttab"] {
   -moz-border-right-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
   -moz-border-bottom-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
   -moz-border-left-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+}
+
+.documenttab-close-container {
+  -moz-margin-end: 65px;
 }
 
 .documenttab-close {
@@ -1195,6 +1205,16 @@ pageaction {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomright: 8px;
   }
+
+  .prompt-button:nth-last-child(2):not(:nth-child(even)):-moz-locale-dir(rtl) {
+    -moz-border-radius-bottomleft: 0;
+    -moz-border-radius-bottomright: 8px;
+  }
+
+  .prompt-button:last-child:not(:nth-child(odd)):-moz-locale-dir(rtl) {
+    -moz-border-radius-bottomright: 0;
+    -moz-border-radius-bottomleft: 8px;
+  }
 }
 
 @media (max-width: 499px) {
@@ -1215,8 +1235,8 @@ pageaction[selector="first-child"] {
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
-.prompt-button:hover:active,
-pageaction:hover:active {
+.prompt-button:not([disabled]):hover:active,
+pageaction:not([disabled]):hover:active {
   background-image: none !important;
   background-color: #8db8d8 !important;
 }
@@ -1305,6 +1325,10 @@ pageaction:hover:active > vbox > .pageaction-desc {
   -moz-transition-duration: 0.5s;
   margin-bottom: 20px;
   -moz-margin-end: 20px;
+}
+
+#alerts-container:-moz-locale-dir(rtl) {
+  -moz-transform: translatex(-100%);
 }
 
 #alerts-container.showing {
