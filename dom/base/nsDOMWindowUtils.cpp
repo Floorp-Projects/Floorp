@@ -255,6 +255,30 @@ nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
+                                 float aWidthPx, float aHeightPx)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  } 
+
+  nsRect displayport(nsPresContext::CSSPixelsToAppUnits(aXPx),
+                     nsPresContext::CSSPixelsToAppUnits(aYPx),
+                     nsPresContext::CSSPixelsToAppUnits(aWidthPx),
+                     nsPresContext::CSSPixelsToAppUnits(aHeightPx));
+  presShell->SetDisplayPort(displayport);
+
+  presShell->SetIgnoreViewportScrolling(PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  float aX,
                                  float aY,

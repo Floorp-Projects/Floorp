@@ -63,6 +63,7 @@
 #include "nsEvent.h"
 #include "nsCompatibility.h"
 #include "nsFrameManagerBase.h"
+#include "nsRect.h"
 #include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
@@ -99,7 +100,6 @@ class nsDisplayListBuilder;
 class nsPIDOMWindow;
 struct nsPoint;
 struct nsIntPoint;
-struct nsRect;
 struct nsIntRect;
 class nsRefreshDriver;
 class nsARefreshObserver;
@@ -139,8 +139,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe63a350c, 0x4e04, 0x4056, \
-    { 0x8d, 0xa0, 0x51, 0xcc, 0x55, 0x68, 0x68, 0x42 } }
+ { 0x34f80395, 0xff82, 0x49fa, \
+    { 0x9c, 0x83, 0xa6, 0xba, 0x49, 0xa8, 0x55, 0x4a } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -195,6 +195,11 @@ class nsIPresShell : public nsIPresShell_base
 {
 protected:
   typedef mozilla::layers::LayerManager LayerManager;
+
+  enum {
+    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
+    STATE_USING_DISPLAYPORT = 0x2
+  };
 
 public:
   virtual NS_HIDDEN_(nsresult) Init(nsIDocument* aDocument,
@@ -1057,6 +1062,34 @@ public:
   virtual LayerManager* GetLayerManager() = 0;
 
   /**
+   * Track whether we're ignoring viewport scrolling for the purposes
+   * of painting.  If we are ignoring, then layers aren't clipped to
+   * the CSS viewport and scrollbars aren't drawn.
+   */
+  virtual void SetIgnoreViewportScrolling(PRBool aIgnore) = 0;
+  PRBool IgnoringViewportScrolling() const
+  { return mRenderFlags & STATE_IGNORING_VIEWPORT_SCROLLING; }
+
+  /**
+   * Set up a "displayport", which overrides what everything else thinks
+   * is the visible region of this document with the specified
+   * displayport rect.
+   */
+  virtual void SetDisplayPort(const nsRect& aDisplayPort) = 0;
+  PRBool UsingDisplayPort() const
+  { return mRenderFlags & STATE_USING_DISPLAYPORT; }
+
+  /**
+   * Return the displayport being used.  |UsingDisplayPort()| must be
+   * true.
+   */
+  nsRect GetDisplayPort()
+  {
+    NS_ABORT_IF_FALSE(UsingDisplayPort(), "no displayport defined!");
+    return mDisplayPort;
+  }
+
+  /**
    * Refresh observer management.
    */
 protected:
@@ -1156,6 +1189,17 @@ protected:
 
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;
+
+  // Flags controlling how our document is rendered.  These persist
+  // between paints and so are tied with retained layer pixels.
+  // PresShell flushes retained layers when the rendering state
+  // changes in a way that prevents us from being able to (usefully)
+  // re-use old pixels.
+  PRUint32                  mRenderFlags;
+  // If displayport rendering has been requested, |UsingDisplayPort()|
+  // is true and |mDisplayPort| defines the "visible rect" we
+  // maintain.
+  nsRect                    mDisplayPort;
 
   // Live pres shells, for memory and other tracking
   typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;

@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(46df9178-2b24-45a3-9c37-f00e999e9887)]
+[scriptable, uuid(b6628355-e72f-4d1d-9b83-ffc2740536b5)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -109,6 +109,35 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    */
   void setCSSViewport(in float aWidthPx, in float aHeightPx);
+
+  /**
+   * Set the "displayport" to be <xPx, yPx, widthPx, heightPx> in
+   * units of CSS pixels, regardless of the size of the enclosing
+   * widget/view.  This will *not* trigger reflow.
+   *
+   * <x, y> is relative to the top-left of the CSS viewport.  This
+   * means that the pixels rendered to the displayport take scrolling
+   * into account, for example.
+   *
+   * The displayport will be used as the window's visible region for
+   * the purposes of invalidation and painting.  The displayport can
+   * approximately be thought of as a "persistent" drawWindow()
+   * (albeit with coordinates relative to the CSS viewport): the
+   * bounds are remembered by the platform, and layer pixels are
+   * retained and updated inside the viewport bounds.
+   *
+   * It's legal to set a displayport that extends beyond the CSS
+   * viewport in any direction (left/right/top/bottom).
+   * 
+   * It's also legal to set a displayport that extends beyond the
+   * document's bounds.  The value of the pixels rendered outside the
+   * document bounds is not yet defined.
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
+   */
+  void setDisplayPort(in float aXPx, in float aYPx,
+                      in float aWidthPx, in float aHeightPx);
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
