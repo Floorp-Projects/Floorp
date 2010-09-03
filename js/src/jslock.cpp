@@ -507,7 +507,7 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
 
     JSObject *obj = TITLE_TO_OBJECT(title);
     if (obj) {
-        uint32 nslots = obj->freeslot();
+        uint32 nslots = obj->slotSpan();
         JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
         for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
             Value v = obj->getSlot(i);

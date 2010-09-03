@@ -3866,7 +3866,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
 bool
 JSObject::allocSlot(JSContext *cx, uint32 *slotp)
 {
-    uint32 slot = freeslot();
+    uint32 slot = slotSpan();
     JS_ASSERT(slot >= JSSLOT_FREE(clasp));
 
     /*
@@ -3874,7 +3874,7 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
      * pull a free slot from the property table's slot-number freelist.
      */
     if (inDictionaryMode() && lastProp->table) {
-        uint32 &last = lastProp->table->freeslot;
+        uint32 &last = lastProp->table->freelist;
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
             JS_ASSERT(last < slot);
@@ -3903,12 +3903,12 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
 void
 JSObject::freeSlot(JSContext *cx, uint32 slot)
 {
-    uint32 limit = freeslot();
+    uint32 limit = slotSpan();
     JS_ASSERT(slot < limit);
 
     Value &vref = getSlotRef(slot);
     if (inDictionaryMode() && lastProp->table) {
-        uint32 &last = lastProp->table->freeslot;
+        uint32 &last = lastProp->table->freelist;
 
         /* Can't afford to check the whole freelist, but let's check the head. */
         JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < limit && last != slot);
@@ -3920,7 +3920,7 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
          * js_TraceObject.
          */
         if (slot + 1 < limit) {
-            JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < freeslot());
+            JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
             vref.setPrivateUint32(last);
             last = slot;
             return;
@@ -5921,7 +5921,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
          * The !obj->nativeEmpty() guard above is due to the bug described by
          * the FIXME comment below.
          */
-        size_t slots = obj->freeslot();
+        size_t slots = obj->slotSpan();
         if (obj->numSlots() != slots)
             obj->shrinkSlots(cx, slots);
     }
@@ -5953,14 +5953,14 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * want to be defensive), leave this code here -- don't move it up and
      * unify it with the |if (!traceScope)| section above.
      *
-     * FIXME: We minimize nslots against obj->freeslot because native objects
-     * such as Date instances may have failed to advance freeslot to cover all
+     * FIXME: We minimize nslots against obj->slotSpan because native objects
+     * such as Date instances may have failed to advance slotSpan to cover all
      * reserved slots (this Date issue may be a bug in JSObject::growSlots, but
      * the general problem occurs in other built-in class implementations).
      */
     uint32 nslots = obj->numSlots();
-    if (!obj->nativeEmpty() && obj->freeslot() < nslots)
-        nslots = obj->freeslot();
+    if (!obj->nativeEmpty() && obj->slotSpan() < nslots)
+        nslots = obj->slotSpan();
     JS_ASSERT(nslots >= JSSLOT_START(clasp));
 
     for (uint32 i = JSSLOT_START(clasp); i != nslots; ++i) {
@@ -5982,7 +5982,7 @@ js_ClearNative(JSContext *cx, JSObject *obj)
         /* Now that we're done using real properties, clear obj. */
         obj->clear(cx);
 
-        /* Clear slot values and reset freeslot so we're consistent. */
+        /* Clear slot values since obj->clear reset our shape to empty. */
         uint32 freeslot = JSSLOT_FREE(obj->getClass());
         uint32 n = obj->numSlots();
         for (uint32 i = freeslot; i < n; ++i)
@@ -6332,7 +6332,7 @@ js_DumpObject(JSObject *obj)
 
     fprintf(stderr, "slots:\n");
     reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
-    slots = obj->freeslot();
+    slots = obj->slotSpan();
     for (; i < slots; i++) {
         fprintf(stderr, " %3d ", i);
         if (i < reservedEnd)
