@@ -325,7 +325,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpSetRoot: {
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
-      mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsLayer();
+      mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsContainer();
       break;
     }
     case Edit::TOpInsertAfter: {

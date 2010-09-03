@@ -90,6 +90,7 @@ enum LayerState {
  */
 class FrameLayerBuilder {
 public:
+  typedef layers::ContainerLayer ContainerLayer; 
   typedef layers::Layer Layer; 
   typedef layers::ThebesLayer ThebesLayer;
   typedef layers::LayerManager LayerManager;
@@ -138,11 +139,12 @@ public:
    * caller's responsibility to add any clip rect and set the visible
    * region.
    */
-  already_AddRefed<Layer> BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
-                                                 LayerManager* aManager,
-                                                 nsIFrame* aContainerFrame,
-                                                 nsDisplayItem* aContainerItem,
-                                                 const nsDisplayList& aChildren);
+  already_AddRefed<ContainerLayer>
+  BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
+                         LayerManager* aManager,
+                         nsIFrame* aContainerFrame,
+                         nsDisplayItem* aContainerItem,
+                         const nsDisplayList& aChildren);
 
   /**
    * Get a retained layer for a display item that needs to create its own
