@@ -208,7 +208,7 @@ let Util = {
   // Put the Mozilla networking code into a state that will kick the auto-connection
   // process.
   forceOnline: function forceOnline() {
-#ifdef MOZ_ENABLE_LIBCONIC
+#ifdef MOZ_PLATFORM_MAEMO
     Services.io.offline = false;
 #endif
   },
