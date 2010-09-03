@@ -39,8 +39,11 @@
 
 #include "IDBTransaction.h"
 
+#include "nsIScriptContext.h"
+
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
+#include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
@@ -72,7 +75,8 @@ DoomCachedStatements(const nsACString& aQuery,
 
 // static
 already_AddRefed<IDBTransaction>
-IDBTransaction::Create(IDBDatabase* aDatabase,
+IDBTransaction::Create(JSContext* aCx,
+                       IDBDatabase* aDatabase,
                        nsTArray<nsString>& aObjectStoreNames,
                        PRUint16 aMode,
                        PRUint32 aTimeout)
@@ -92,6 +96,21 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   if (!transaction->mCachedStatements.Init()) {
     NS_ERROR("Failed to initialize hash!");
+    return nsnull;
+  }
+
+  nsIScriptContext* context = GetScriptContextFromJSContext(aCx);
+  if (context) {
+    transaction->mScriptContext = context;
+    nsCOMPtr<nsPIDOMWindow> window =
+      do_QueryInterface(context->GetGlobalObject());
+    if (window) {
+      transaction->mOwner = window->GetCurrentInnerWindow();
+    }
+  }
+
+  if (!transaction->mOwner) {
+    NS_ERROR("Couldn't get script context and owner!");
     return nsnull;
   }
 
@@ -264,7 +283,7 @@ IDBTransaction::AddStatement(bool aCreate,
     if (aCreate) {
       if (aOverwrite) {
         return GetCachedStatement(
-          "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
+          "INSERT OR FAIL INTO ai_object_data (object_store_id, id, data) "
           "VALUES (:osid, :key_value, :data)"
         );
       }
@@ -283,7 +302,7 @@ IDBTransaction::AddStatement(bool aCreate,
   if (aCreate) {
     if (aOverwrite) {
       return GetCachedStatement(
-        "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data) "
+        "INSERT OR FAIL INTO object_data (object_store_id, key_value, data) "
         "VALUES (:osid, :key_value, :data)"
       );
     }

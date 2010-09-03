@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<title>Test of margin-*: -moz-calc()</title>
+<style>
+
+div { border: medium solid green; width: 500px }
+p { background: yellow }
+
+</style>
+
+<div><p style="margin: -moz-calc(10px + 1%) 0 0 0">paragraph with margin</p></div>
+<div><p style="margin: 0 -moz-calc(10px + 1%) 0 0">paragraph with margin</p></div>
+<div><p style="margin: 0 0 -moz-calc(10px + 1%) 0">paragraph with margin</p></div>
+<div><p style="margin: 0 0 0 -moz-calc(10px + 1%)">paragraph with margin</p></div>
+<div><p style="margin: -moz-calc(30px - 1%)">paragraph with margin</p></div>
+<div><p style="margin: -moz-min(20px,3%) -moz-min(20px,5%) -moz-max(20px,3%) -moz-max(20px,5%)">paragraph with margin</p></div>

@@ -142,9 +142,14 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include <locale.h>
 #include "mozilla/Services.h"
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Omnijar.h"
 
 #include "nsChromeRegistry.h"
 #include "nsChromeProtocolHandler.h"
+
+#ifdef MOZ_ENABLE_LIBXUL
+#include "mozilla/scache/StartupCache.h"
+#endif
 
 #ifdef MOZ_IPC
 #include "base/at_exit.h"
@@ -419,6 +424,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     NS_StartupNativeCharsetUtils();
 #endif
+
     NS_TIME_FUNCTION_MARK("Next: startup local file");
 
     NS_StartupLocalFile();
@@ -456,6 +462,26 @@ NS_InitXPCOM2(nsIServiceManager* *result,
         rv = nsDirectoryService::gService->RegisterProvider(appFileLocationProvider);
         if (NS_FAILED(rv)) return rv;
     }
+
+#ifdef MOZ_OMNIJAR
+    NS_TIME_FUNCTION_MARK("Next: Omnijar init");
+
+    if (!mozilla::OmnijarPath()) {
+        nsCOMPtr<nsILocalFile> omnijar;
+        nsCOMPtr<nsIFile> file;
+
+        rv = NS_ERROR_FAILURE;
+        nsDirectoryService::gService->Get(NS_GRE_DIR,
+                                          NS_GET_IID(nsIFile),
+                                          getter_AddRefs(file));
+        if (file)
+            rv = file->Append(NS_LITERAL_STRING("omni.jar"));
+        if (NS_SUCCEEDED(rv))
+            omnijar = do_QueryInterface(file);
+        if (NS_SUCCEEDED(rv))
+            mozilla::SetOmnijar(omnijar);
+    }
+#endif
 
 #ifdef MOZ_IPC
     if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
@@ -520,6 +546,9 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // to the directory service.
     nsDirectoryService::gService->RegisterCategoryProviders();
 
+#ifdef MOZ_ENABLE_LIBXUL
+    mozilla::scache::StartupCache::GetSingleton();
+#endif
     NS_TIME_FUNCTION_MARK("Next: create services from category");
 
     // Notify observers of xpcom autoregistration start
@@ -597,7 +626,9 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         }
 
         NS_ProcessPendingEvents(thread);
-
+#ifdef MOZ_ENABLE_LIBXUL
+        mozilla::scache::StartupCache::DeleteSingleton();
+#endif
         if (observerService)
             (void) observerService->
                 NotifyObservers(nsnull, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
@@ -732,6 +763,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         delete sExitManager;
         sExitManager = nsnull;
     }
+#endif
+
+#ifdef MOZ_OMNIJAR
+    mozilla::SetOmnijar(nsnull);
 #endif
 
     NS_LogTerm();

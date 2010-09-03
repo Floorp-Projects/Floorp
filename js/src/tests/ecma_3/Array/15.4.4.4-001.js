@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.4.4.4-001.js';
 var UBound = 0;
 var BUGNUMBER = 169795;
 var summary = 'Testing Array.prototype.concat()';

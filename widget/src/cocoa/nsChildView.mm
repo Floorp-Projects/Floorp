@@ -119,6 +119,9 @@ extern "C" {
   extern CGError CGSGetWindowLevel(const CGSConnection cid, CGSWindow wid, CGWindowLevel *level);
 }
 
+// defined in nsMenuBarX.mm
+extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
+
 // these are defined in nsCocoaWindow.mm
 extern PRBool gConsumeRollupEvent;
 
@@ -178,8 +181,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 - (void)processPendingRedraws;
-
-- (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv;
 
 - (void)maybeInitContextMenuTracking;
 
@@ -470,6 +471,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mDrawing(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
+, mIsDispatchPaint(PR_FALSE)
 , mPluginInstanceOwner(nsnull)
 {
 #ifdef PR_LOGGING
@@ -963,13 +965,22 @@ nsChildView::GetParent()
   return mParentWidget;
 }
 
+float
+nsChildView::GetDPI()
+{
+  NSWindow* window = [mView window];
+  if (window && [window isKindOfClass:[BaseWindow class]]) {
+    return [(BaseWindow*)window getDPI];
+  }
+
+  return 96.0;
+}
+
 LayerManager*
 nsChildView::GetLayerManager()
 {
   nsCocoaWindow* window = GetXULWindowWidget();
-  if (!window)
-    return nsnull;
-  if (window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
+  if (window && window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
     mLayerManager = NULL;
     mUseAcceleratedRendering = window->GetAcceleratedRendering();
   }
@@ -1252,7 +1263,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // without regressing bug 409615.  See bug 435041.  (StartDrawPlugin() and
   // EndDrawPlugin() wrap every call to nsIPluginInstance::HandleEvent() --
   // not just calls that "draw" or paint.)
-  if (!mPluginIsCG || (mView != [NSView focusView])) {
+  if (!mPluginIsCG || mIsDispatchPaint) {
     if (mPluginDrawing)
       return NS_ERROR_FAILURE;
   }
@@ -1671,116 +1682,6 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
   return NS_OK;
 }  
 
-static PRInt32
-PickValueForSign(PRInt32 aSign, PRInt32 aLessThanZero, PRInt32 aZero,
-                 PRInt32 aGreaterThanZero)
-{
-  if (aSign < 0) {
-    return aLessThanZero;
-  }
-  if (aSign > 0) {
-    return aGreaterThanZero;
-  }
-  return aZero;
-}
-
-void nsChildView::Scroll(const nsIntPoint& aDelta,
-                         const nsTArray<nsIntRect>& aDestRects,
-                         const nsTArray<Configuration>& aConfigurations)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NS_ASSERTION(mParentView, "Attempting to scroll a view that does not have a parent");
-  if (!mParentView)
-    return;
-
-  BOOL viewWasDirty = mVisible && [mView needsDisplay];
-  if (mVisible && !aDestRects.IsEmpty()) {
-    // Union of all source and destination rects
-    nsIntRegion destRegion;
-    NSSize scrollVector = {aDelta.x, aDelta.y};
-    nsIntRect destRect; // keep the last rect
-    for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
-      destRect = iter.Rect();
-      NSRect rect;
-      GeckoRectToNSRect(destRect - aDelta, rect);
-      [mView scrollRect:rect by:scrollVector];
-      destRegion.Or(destRegion, destRect);
-    }
-
-    if (viewWasDirty) {
-      nsIntRect allRects = destRegion.GetBounds();
-      allRects.UnionRect(allRects, allRects - aDelta);
-      NSRect all;
-      GeckoRectToNSRect(allRects, all);
-      [mView translateRectsNeedingDisplayInRect:all by:scrollVector];
-
-      // Areas that could be affected by the
-      // translateRectsNeedingDisplayInRect but aren't in any destination
-      // may have had their invalidation moved incorrectly. So just
-      // invalidate them now. Unfortunately Apple hasn't given us an API
-      // to do exactly what we need here.
-      nsIntRegion needsInvalidation;
-      needsInvalidation.Sub(allRects, destRegion);
-      const nsIntRect* invalidate;
-      for (nsIntRegionRectIterator iter(needsInvalidation);
-           (invalidate = iter.Next()) != nsnull;) {
-        NSRect rect;
-        GeckoRectToNSRect(*invalidate, rect);
-        [mView setNeedsDisplayInRect:rect];
-      }
-    }
-
-    // Invalidate the area that was scrolled into view from outside the window
-    // First, compute the destination region whose source was outside the
-    // window. We do this by subtracting from destRegion the window bounds,
-    // translated by the scroll amount.
-    NSView* rootView = [[mView window] contentView];
-    NSRect rootViewRect = [mView convertRect:[rootView bounds] fromView: rootView];
-    nsIntRect windowBounds;
-    NSRectToGeckoRect(rootViewRect, windowBounds);
-    destRegion.Sub(destRegion, windowBounds + aDelta);
-    nsIntRegionRectIterator iter(destRegion);
-    const nsIntRect* invalidate;
-    while ((invalidate = iter.Next()) != nsnull) {
-      NSRect rect;
-      GeckoRectToNSRect(*invalidate, rect);
-      [mView setNeedsDisplayInRect:rect];
-    }
-
-    // Leopard, at least, has a nasty bug where calling scrollRect:by: doesn't
-    // actually trigger a window update. A window update is only triggered
-    // if you actually paint something. In some cases Gecko might optimize
-    // scrolling in such a way that nothing actually gets repainted.
-    // So let's invalidate one pixel. We'll pick a pixel on the trailing edge
-    // of the last destination rectangle, since in most situations that's going
-    // to be invalidated anyway.
-    nsIntRect lastRect = destRect + aDelta;
-    nsIntPoint pointToInvalidate(
-      PickValueForSign(aDelta.x, lastRect.XMost(), lastRect.x, lastRect.x - 1),
-      PickValueForSign(aDelta.y, lastRect.YMost(), lastRect.y, lastRect.y - 1));
-    if (!nsIntRect(0,0,mBounds.width,mBounds.height).Contains(pointToInvalidate)) {
-      pointToInvalidate = nsIntPoint(0, 0);
-    }
-    Invalidate(nsIntRect(pointToInvalidate, nsIntSize(1,1)), PR_FALSE);
-  }
-
-  // Don't force invalidation of the child if it's moving by the scroll
-  // amount and not changing size
-  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-    const Configuration& configuration = aConfigurations[i];
-    nsIntRect oldBounds;
-    configuration.mChild->GetBounds(oldBounds);
-    ApplyConfiguration(this, aConfigurations[i],
-                       oldBounds + aDelta != configuration.mBounds);
-  }
-
-  if (mOnDestroyCalled)
-    return;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 // Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -1788,7 +1689,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   debug_DumpEvent(stdout, event->widget, event, nsCAutoString("something"), 0);
 #endif
 
-  NS_ASSERTION(!(IME_IsComposing() && NS_IS_KEY_EVENT(event)),
+  NS_ASSERTION(!(mTextInputHandler.IsIMEComposing() && NS_IS_KEY_EVENT(event)),
     "Any key events should not be fired during IME composing");
 
   aStatus = nsEventStatus_eIgnore;
@@ -1807,8 +1708,13 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     }
   }
 
+  PRBool restoreIsDispatchPaint = mIsDispatchPaint;
+  mIsDispatchPaint = mIsDispatchPaint || event->eventStructType == NS_PAINT_EVENT;
+
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
+
+  mIsDispatchPaint = restoreIsDispatchPaint;
 
   return NS_OK;
 }
@@ -1961,7 +1867,7 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   NSLog(@"**** ResetInputState");
 #endif
 
-  IME_CommitComposition();
+  mTextInputHandler.CommitIMEComposition();
   return NS_OK;
 }
 
@@ -1972,7 +1878,7 @@ NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
   NSLog(@"**** SetIMEOpenState aState = %d", aState);
 #endif
 
-  IME_SetOpenState(aState);
+  mTextInputHandler.SetIMEOpenState(aState);
   return NS_OK;
 }
 
@@ -1983,7 +1889,7 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
   NSLog(@"**** GetIMEOpenState");
 #endif
 
-  *aState = IME_IsOpened();
+  *aState = mTextInputHandler.IsIMEOpened();
   return NS_OK;
 }
 
@@ -1996,16 +1902,16 @@ NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
   switch (aState) {
     case nsIWidget::IME_STATUS_ENABLED:
     case nsIWidget::IME_STATUS_PLUGIN:
-      IME_SetASCIICapableOnly(PR_FALSE);
-      IME_Enable(PR_TRUE);
+      mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
+      mTextInputHandler.EnableIME(PR_TRUE);
       break;
     case nsIWidget::IME_STATUS_DISABLED:
-      IME_SetASCIICapableOnly(PR_FALSE);
-      IME_Enable(PR_FALSE);
+      mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
+      mTextInputHandler.EnableIME(PR_FALSE);
       break;
     case nsIWidget::IME_STATUS_PASSWORD:
-      IME_SetASCIICapableOnly(PR_TRUE);
-      IME_Enable(PR_FALSE);
+      mTextInputHandler.SetASCIICapableOnly(PR_TRUE);
+      mTextInputHandler.EnableIME(PR_FALSE);
       break;
     default:
       NS_ERROR("not implemented!");
@@ -2019,12 +1925,13 @@ NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
   NSLog(@"**** GetIMEEnabled");
 #endif
 
-  if (IME_IsEnabled())
+  if (mTextInputHandler.IsIMEEnabled()) {
     *aState = nsIWidget::IME_STATUS_ENABLED;
-  else if (IME_IsASCIICapableOnly())
+  } else if (mTextInputHandler.IsASCIICapableOnly()) {
     *aState = nsIWidget::IME_STATUS_PASSWORD;
-  else
+  } else {
     *aState = nsIWidget::IME_STATUS_DISABLED;
+  }
   return NS_OK;
 }
 
@@ -2035,7 +1942,7 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   NSLog(@"**** CancelIMEComposition");
 #endif
 
-  IME_CancelComposition();
+  mTextInputHandler.CancelIMEComposition();
   return NS_OK;
 }
 
@@ -2343,7 +2250,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)widgetDestroyed
 {
-  mGeckoChild->IME_OnDestroyView(self);
+  mGeckoChild->TextInputHandler()->OnDestroyView(self);
   mGeckoChild = nsnull;
 
   // Just in case we're destroyed abruptly and missed the draggingExited
@@ -4164,14 +4071,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 {
   // this is not character inputting event, simply.
-  if (!aEvent.isChar || !aEvent.charCode)
+  if (!aEvent.isChar || !aEvent.charCode || aEvent.isMeta)
     return PR_FALSE;
   // if this is unicode char inputting event, we don't need to check
   // ctrl/alt/command keys
   if (aEvent.charCode > 0x7F)
     return PR_TRUE;
   // ASCII chars should be inputted without ctrl/alt/command keys
-  return !aEvent.isControl && !aEvent.isAlt && !aEvent.isMeta;
+  return !aEvent.isControl && !aEvent.isAlt;
 }
 
 // Basic conversion for cocoa to gecko events, common to all conversions.
@@ -4682,14 +4589,14 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
-  if (!mGeckoChild->IME_IsComposing() && len == 0)
+  if (!mGeckoChild->TextInputHandler()->IsIMEComposing() && len == 0)
     return; // nothing to do
   PRUnichar buffer[MAX_BUFFER_SIZE];
   PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters:bufPtr];
   bufPtr[len] = PRUnichar('\0');
 
-  if (len == 1 && !mGeckoChild->IME_IsComposing()) {
+  if (len == 1 && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     // don't let the same event be fired twice when hitting
     // enter/return! (Bug 420502)
     if (mKeyPressSent)
@@ -4748,16 +4655,16 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     }
   }
   else {
-    if (!mGeckoChild->IME_IsComposing()) {
+    if (!mGeckoChild->TextInputHandler()->IsIMEComposing()) {
       [self sendCompositionEvent:NS_COMPOSITION_START];
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
       if (mGeckoChild) {
-        mGeckoChild->IME_OnStartComposition(self);
+        mGeckoChild->TextInputHandler()->OnStartIMEComposition(self);
         // Note: mGeckoChild might have become null here. Don't count on it from here on.
       }
     }
 
-    if (mGeckoChild && mGeckoChild->IME_IgnoreCommit()) {
+    if (mGeckoChild && mGeckoChild->TextInputHandler()->IgnoreIMECommit()) {
       tmpStr = [tmpStr init];
       len = 0;
       bufPtr[0] = PRUnichar('\0');
@@ -4773,7 +4680,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     [self sendCompositionEvent:NS_COMPOSITION_END];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     if (mGeckoChild) {
-      mGeckoChild->IME_OnEndComposition();
+      mGeckoChild->TextInputHandler()->OnEndIMEComposition();
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
     }
     mMarkedRange = NSMakeRange(NSNotFound, 0);
@@ -4844,20 +4751,20 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   mMarkedRange.length = len;
 
-  if (!mGeckoChild->IME_IsComposing() && len > 0) {
+  if (!mGeckoChild->TextInputHandler()->IsIMEComposing() && len > 0) {
     nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(selection);
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
     [self sendCompositionEvent:NS_COMPOSITION_START];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     if (mGeckoChild) {
-      mGeckoChild->IME_OnStartComposition(self);
+      mGeckoChild->TextInputHandler()->OnStartIMEComposition(self);
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
     }
   }
 
-  if (mGeckoChild->IME_IsComposing()) {
-    mGeckoChild->IME_OnUpdateComposition(tmpStr);
+  if (mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+    mGeckoChild->TextInputHandler()->OnUpdateIMEComposition(tmpStr);
 
     BOOL commit = len == 0;
     [self sendTextEvent:bufPtr attributedString:aString
@@ -4870,7 +4777,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       [self sendCompositionEvent:NS_COMPOSITION_END];
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
       if (mGeckoChild) {
-        mGeckoChild->IME_OnEndComposition();
+        mGeckoChild->TextInputHandler()->OnEndIMEComposition();
         // Note: mGeckoChild might have become null here. Don't count on it from here on.
       }
     }
@@ -4889,7 +4796,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   if (mGeckoChild)
-    mGeckoChild->IME_CommitComposition();
+    mGeckoChild->TextInputHandler()->CommitIMEComposition();
 }
 
 - (BOOL) hasMarkedText
@@ -5115,7 +5022,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 // We only send Carbon plugin events with NS_KEY_DOWN gecko events, and only send
 // Cocoa plugin events with NS_KEY_PRESS gecko events. This is because we want to
 // send repeat key down events to Cocoa plugins but not Carbon plugins.
-- (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv
+- (PRBool)processKeyDownEvent:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -5137,7 +5044,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   mCurKeyEvent = theEvent;
 
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
-  if (nonDeadKeyPress && !mGeckoChild->IME_IsComposing()) {
+  if (nonDeadKeyPress && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     if (![theEvent isARepeat]) {
       NSResponder* firstResponder = [[self window] firstResponder];
 
@@ -5188,7 +5095,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
     if ((!geckoEvent.isChar || geckoEvent.isControl) &&
-        !mGeckoChild->IME_IsComposing()) {
+        !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
       if (mKeyDownHandled)
         geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5198,22 +5105,21 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     }
   }
 
-  // Let Cocoa interpret the key events, caching IsComposing first.
-  // We don't do it if this came from performKeyEquivalent because
-  // interpretKeyEvents isn't set up to handle those key combinations.
-  PRBool wasComposing = mGeckoChild->IME_IsComposing();
+  // Let Cocoa interpret the key events, caching IsIMEComposing first.
+  PRBool wasComposing = mGeckoChild->TextInputHandler()->IsIMEComposing();
   PRBool interpretKeyEventsCalled = PR_FALSE;
-  if (!isKeyEquiv &&
-      (mGeckoChild->IME_IsEnabled() || mGeckoChild->IME_IsASCIICapableOnly())) {
+  if (mGeckoChild->TextInputHandler()->IsIMEEnabled() ||
+      mGeckoChild->TextInputHandler()->IsASCIICapableOnly()) {
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     interpretKeyEventsCalled = PR_TRUE;
   }
 
-  if (!mGeckoChild)
-    return (mKeyDownHandled || mKeyPressHandled);;
+  if (!mGeckoChild) {
+    return (mKeyDownHandled || mKeyPressHandled);
+  }
 
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing &&
-      !mGeckoChild->IME_IsComposing()) {
+      !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
@@ -5284,6 +5190,15 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 }
 #endif // NP_NO_CARBON
 
+// This is a private API that Cocoa uses.
+// Cocoa will call this after the menu system returns "NO" for "performKeyEquivalent:".
+// We want all they key events we can get so just return YES. In particular, this fixes
+// ctrl-tab - we don't get a "keyDown:" call for that without this.
+- (BOOL)_wantsKeyDownForEvent:(NSEvent*)event
+{
+  return YES;
+}
+
 - (void)keyDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -5348,7 +5263,13 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 #endif
   }
 
-  [self processKeyDownEvent:theEvent keyEquiv:NO];
+  PRBool handled = [self processKeyDownEvent:theEvent];
+  
+  // We always allow keyboard events to propagate to keyDown: but if they are not
+  // handled we give special Application menu items a chance to act.
+  if (!handled && sApplicationMenu) {
+    [sApplicationMenu performKeyEquivalent:theEvent];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -5418,8 +5339,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   }
 
   // if we don't have any characters we can't generate a keyUp event
-  if ([[theEvent characters] length] == 0 || mGeckoChild->IME_IsComposing())
+  if ([[theEvent characters] length] == 0 ||
+      mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     return;
+  }
 
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -5427,153 +5350,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (BOOL)performKeyEquivalent:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  // don't do anything if we don't have a gecko widget
-  if (!mGeckoChild)
-    return NO;
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-
-  // If we're not the first responder and the first responder is an NSView
-  // object, pass the event on.  Otherwise (if, for example, the first
-  // responder is an NSWindow object) we should trust the OS to have called
-  // us correctly.
-  id firstResponder = [[self window] firstResponder];
-  if (firstResponder != self) {
-    // Special handling if the other first responder is a ChildView.
-    if ([firstResponder isKindOfClass:[ChildView class]])
-      return [(ChildView *)firstResponder performKeyEquivalent:theEvent];
-    if ([firstResponder isKindOfClass:[NSView class]])
-      return [super performKeyEquivalent:theEvent];
-  }
-
-  // don't process if we're composing, but don't consume the event
-  if (mGeckoChild->IME_IsComposing())
-    return NO;
-
-  UInt32 modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-
-  // Set to true if embedding menus handled the event when a plugin has focus.
-  // We give menus a crack at handling commands before Gecko in the plugin case.
-  BOOL handledByEmbedding = NO;
-
-  // Perform native menu UI feedback even if we stop the event from propagating to it normally.
-  // Recall that the menu system won't actually execute any commands for keyboard command invocations.
-  //
-  // If this is a plugin, we do actually perform the action on keyboard commands. See bug 428047.
-  // If the action on plugins here changes the first responder, don't continue.
-  NSMenu* mainMenu = [NSApp mainMenu];
-  if (mIsPluginView) {
-    if ([mainMenu isKindOfClass:[GeckoNSMenu class]]) {
-      // Maintain a list of cmd+key combinations that we never act on (in the
-      // browser) when the keyboard focus is in a plugin.  What a particular
-      // cmd+key combo means here (to the browser) is governed by browser.dtd,
-      // which "contains the browser main menu items".
-      PRBool dontActOnKeyEquivalent = PR_FALSE;
-      if (modifierFlags == NSCommandKeyMask) {
-        NSString *unmodchars = [theEvent charactersIgnoringModifiers];
-        if ([unmodchars length] == 1) {
-          if ([unmodchars characterAtIndex:0] ==
-              nsMenuBarX::GetLocalizedAccelKey("key_selectAll"))
-            dontActOnKeyEquivalent = PR_TRUE;
-        }
-      }
-      if (dontActOnKeyEquivalent) {
-        [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
-      } else {
-        [(GeckoNSMenu*)mainMenu actOnKeyEquivalent:theEvent];
-      }
-    }
-    else {
-      // This is probably an embedding situation. If the native menu handle the event
-      // then return YES from pKE no matter what Gecko or the plugin does.
-      handledByEmbedding = [mainMenu performKeyEquivalent:theEvent];
-    }
-    if ([[self window] firstResponder] != self)
-      return YES;
-  }
-  else {
-    if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
-      [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
-  }
-
-  // With Cmd key or Ctrl+Tab or Ctrl+Esc, keyDown will be never called.
-  // Therefore, we need to call processKeyDownEvent from performKeyEquivalent.
-  UInt32 keyCode = [theEvent keyCode];
-  PRBool keyDownNeverFiredEvent = (modifierFlags & NSCommandKeyMask) ||
-           ((modifierFlags & NSControlKeyMask) &&
-            (keyCode == kEscapeKeyCode || keyCode == kTabKeyCode));
-
-  // don't handle this if certain modifiers are down - those should
-  // be sent as normal key up/down events and cocoa will do so automatically
-  // if we reject here
-  if (!keyDownNeverFiredEvent &&
-      (modifierFlags & (NSFunctionKeyMask| NSNumericPadKeyMask)))
-    return handledByEmbedding;
-
-  // Control and option modifiers are used when changing input sources in the
-  // input menu. We need to send such key events via "keyDown:", which will
-  // happen if we return NO here. This only applies to Mac OS X 10.5 and higher,
-  // previous OS versions just call "keyDown:" and not "performKeyEquivalent:"
-  // for such events.
-  if (!keyDownNeverFiredEvent &&
-      (modifierFlags & (NSControlKeyMask | NSAlternateKeyMask)))
-    return handledByEmbedding;
-
-  // At this point we're about to hand the event off to "processKeyDownEvent:keyEquiv:".
-  // Don't bother if this is a Cocoa plugin event, just handle it directly.
-  if (mGeckoChild && mIsPluginView && mPluginEventModel == NPEventModelCocoa) {
-    // Reset complex text input request.
-    mPluginComplexTextInputRequested = NO;
-
-    // Send key down event.
-    nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
-    NPCocoaEvent cocoaEvent;
-    ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-    pluginEvent.pluginEvent = &cocoaEvent;
-    mGeckoChild->DispatchWindowEvent(pluginEvent);
-    if (!mGeckoChild)
-      return YES;
-
-    if (!mPluginComplexTextInputRequested) {
-      // Ideally we'd cancel any TSM composition here.
-      return YES;
-    }
-
-    // We send these events to Carbon TSM but not to the ComplexTextInputPanel.
-    // We assume that events coming in through pKE: are only relevant to TSM.
-#ifndef NP_NO_CARBON
-    [self activatePluginTSMDoc];
-    // We use the active TSM document to pass a pointer to ourselves (the
-    // currently focused ChildView) to PluginKeyEventsHandler().  Because this
-    // pointer is weak, we should retain and release ourselves around the call
-    // to TSMProcessRawKeyEvent().
-    nsAutoRetainCocoaObject kungFuDeathGrip(self);
-    ::TSMSetDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag,
-                             sizeof(ChildView *), &self);
-    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
-    ::TSMRemoveDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag);
-#endif
-
-    return YES;
-  }
-
-  if ([theEvent type] == NSKeyDown) {
-    // We trust the Gecko handled status for cmd key events. See bug 417466 for more info.
-    if (modifierFlags & NSCommandKeyMask)
-      return ([self processKeyDownEvent:theEvent keyEquiv:YES] || handledByEmbedding);
-    else
-      [self processKeyDownEvent:theEvent keyEquiv:YES];
-  }
-
-  return YES;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 - (void)flagsChanged:(NSEvent*)theEvent
@@ -5651,8 +5427,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mGeckoChild || [theEvent type] != NSFlagsChanged ||
-      mGeckoChild->IME_IsComposing())
+      mGeckoChild->TextInputHandler()->IsIMEComposing()) {
     return;
+  }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -5683,6 +5460,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent
 {
+  // If we're being destroyed assume the default -- return YES.
+  if (!mGeckoChild)
+    return YES;
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_ACTIVATE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -6400,6 +6181,9 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
     return nil;
 
   ChildView* childView = (ChildView*)view;
+  // If childView is being destroyed return nil.
+  if (![childView widget])
+    return nil;
   return WindowAcceptsEvent(window, aEvent, childView) ? childView : nil;
 }
 
@@ -6439,21 +6223,16 @@ static BOOL WindowNumberIsUnderPoint(NSInteger aWindowNumber, NSPoint aPoint) {
   return CGRectContainsPoint(rect, point);
 }
 
-@interface NSWindow(SnowLeopardWindowUnderPointAPI)
-+ (NSInteger)windowNumberAtPoint:(NSPoint)point belowWindowWithWindowNumber:(NSInteger)windowNumber;
-@end
-
 // Find the window number of the window under the given point, regardless of
 // which app the window belongs to. Returns 0 if no window was found.
 static NSInteger WindowNumberAtPoint(NSPoint aPoint) {
-  // Use the awesome new API on 10.6+.
-  if ([NSWindow respondsToSelector:@selector(windowNumberAtPoint:belowWindowWithWindowNumber:)])
-    return [NSWindow windowNumberAtPoint:aPoint belowWindowWithWindowNumber:0];
-
-  // windowNumberAtPoint is not supported, so we'll have to find the right
-  // window manually by iterating over all windows on the screen and testing
-  // whether the mouse is inside the window's rect. We do this using private CGS
-  // functions.
+  // We'd like to use the new windowNumberAtPoint API on 10.6 but we can't rely
+  // on it being up-to-date. For example, if we've just opened a window,
+  // windowNumberAtPoint might not know about it yet, so we'd send events to the
+  // wrong window. See bug 557986.
+  // So we'll have to find the right window manually by iterating over all
+  // windows on the screen and testing whether the mouse is inside the window's
+  // rect. We do this using private CGS functions.
   // Another way of doing it would be to use tracking rects, but those are
   // view-controlled, so they need to be reset whenever an NSView changes its
   // size or position, which is expensive. See bug 300904 comment 20.

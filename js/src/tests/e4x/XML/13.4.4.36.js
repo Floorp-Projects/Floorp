@@ -41,7 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.4.4.36.js';
 
 START("13.4.4.36 - setNamespace");
 

@@ -56,7 +56,6 @@
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -411,27 +410,24 @@ nsFormFillController::SetTextValue(const nsAString & aTextValue)
 NS_IMETHODIMP
 nsFormFillController::GetSelectionStart(PRInt32 *aSelectionStart)
 {
-  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(mFocusedInput);
-  if (input)
-    input->GetSelectionStart(aSelectionStart);
+  if (mFocusedInput)
+    mFocusedInput->GetSelectionStart(aSelectionStart);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormFillController::GetSelectionEnd(PRInt32 *aSelectionEnd)
 {
-  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(mFocusedInput);
-  if (input)
-    input->GetSelectionEnd(aSelectionEnd);
+  if (mFocusedInput)
+    mFocusedInput->GetSelectionEnd(aSelectionEnd);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormFillController::SelectTextRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
 {
-  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(mFocusedInput);
-  if (input)
-    input->SetSelectionRange(aStartIndex, aEndIndex);
+ if (mFocusedInput)
+    mFocusedInput->SetSelectionRange(aStartIndex, aEndIndex);
   return NS_OK;
 }
 

@@ -48,7 +48,6 @@
  * 4) We should catch the error!
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-49286.js';
 var UBound = 0;
 var BUGNUMBER = 49286;
 var summary = 'Invoking try...catch through Function.call';

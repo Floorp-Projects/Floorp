@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'switch2.js';
 
 /**
    Filename:     switch2.js

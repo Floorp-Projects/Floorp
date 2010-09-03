@@ -1,0 +1,16 @@
+<html>
+<head>
+<script>
+  function audioAvailable(e) {
+    document.getElementById("wasAudioAvailableCalled").checked = true;
+  }
+</script>
+</head>
+<body>
+<audio id="a1" src="sound.ogg" controls></audio>
+<script>
+  document.getElementById("a1").addEventListener("MozAudioAvailable", audioAvailable, false);
+</script>
+<input id="wasAudioAvailableCalled" type="checkbox" readonly />
+</body>
+</html>

@@ -165,19 +165,17 @@ protected:
  */
 class nsDisplayCanvasBackground : public nsDisplayBackground {
 public:
-  nsDisplayCanvasBackground(nsIFrame *aFrame)
-    : nsDisplayBackground(aFrame)
+  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame)
+    : nsDisplayBackground(aBuilder, aFrame)
   {
     mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }
 
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   nsRegion* aVisibleRegionBeforeMove)
+                                   nsRegion* aVisibleRegion)
   {
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
-           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
-                                                  aVisibleRegionBeforeMove);
+           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion);
   }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder)
   {
@@ -198,7 +196,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
+    return frame->CanvasArea() + ToReferenceFrame();
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,

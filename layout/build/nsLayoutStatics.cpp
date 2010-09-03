@@ -88,7 +88,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameList.h"
 #include "nsListControlFrame.h"
-#include "nsFileControlFrame.h"
+#include "nsHTMLInputElement.h"
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
 #endif
@@ -100,9 +100,7 @@
 #include "nsXULPrototypeCache.h"
 #include "nsXULTooltipListener.h"
 
-#ifndef MOZ_NO_INSPECTOR_APIS
 #include "inDOMView.h"
-#endif
 #endif
 
 #ifdef MOZ_MATHML
@@ -133,6 +131,7 @@ PRBool NS_SVGEnabled();
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
 #include "nsContentSink.h"
+#include "nsFrameMessageManager.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -215,9 +214,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-#ifndef MOZ_NO_INSPECTOR_APIS
   inDOMView::InitAtoms();
-#endif
 
 #endif
 
@@ -297,6 +294,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
 #ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
@@ -317,10 +315,6 @@ nsLayoutStatics::Shutdown()
 #endif
   nsCellMap::Shutdown();
   nsFrame::ShutdownLayerActivityTimer();
-
-#ifdef MOZ_SVG
-  nsSVGUtils::Shutdown();
-#endif
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();
@@ -389,5 +383,5 @@ nsLayoutStatics::Shutdown()
 
   nsFrameList::Shutdown();
 
-  nsFileControlFrame::DestroyUploadLastDir();
+  nsHTMLInputElement::DestroyUploadLastDir();
 }

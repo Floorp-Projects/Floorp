@@ -15,14 +15,24 @@ const CHROMEROOT = "chrome://mochikit/content/" + RELATIVE_DIR;
 const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
+const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
 
 var gPendingTests = [];
 var gTestsRun = 0;
 
+var gUseInContentUI = ("switchToTabHavingURI" in window);
+
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
+// Turn off remote results in searches
+Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 0);
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+  try {
+    Services.prefs.clearUserPref(PREF_SEARCH_MAXRESULTS);
+  }
+  catch (e) {
+  }
 });
 
 function add_test(test) {
@@ -42,14 +52,72 @@ function run_next_test() {
 }
 
 function get_addon_file_url(aFilename) {
-  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-           getService(Ci.nsIChromeRegistry);
-  var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
-  return fileurl.QueryInterface(Ci.nsIFileURL);
+  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                         .getService(Ci.mozIJSSubScriptLoader);
+  loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
+
+  var jar = getJar(CHROMEROOT + "addons/" + aFilename);
+
+  if (jar == null) {
+    var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+             getService(Ci.nsIChromeRegistry);
+    var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
+    return fileurl.QueryInterface(Ci.nsIFileURL);
+  } else {
+    var ios = Cc["@mozilla.org/network/io-service;1"].  
+                getService(Ci.nsIIOService);
+
+    var tmpDir = extractJarToTmp(jar);
+    tmpDir.append(aFilename);
+    return ios.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
+  }
 }
 
-function wait_for_view_load(aManagerWindow, aCallback) {
-  if (!aManagerWindow.gViewController.isLoading) {
+function check_all_in_list(aManager, aIds, aIgnoreExtras) {
+  var doc = aManager.document;
+  var view = doc.getElementById("view-port").selectedPanel;
+  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var list = doc.getElementById(listid);
+
+  var inlist = [];
+  var node = list.firstChild;
+  while (node) {
+    if (node.value)
+      inlist.push(node.value);
+    node = node.nextSibling;
+  }
+
+  for (var i = 0; i < aIds.length; i++) {
+    if (inlist.indexOf(aIds[i]) == -1)
+      ok(false, "Should find " + aIds[i] + " in the list");
+  }
+
+  if (aIgnoreExtras)
+    return;
+
+  for (i = 0; i < inlist.length; i++) {
+    if (aIds.indexOf(inlist[i]) == -1)
+      ok(false, "Shouldn't have seen " + inlist[i] + " in the list");
+  }
+}
+
+function get_addon_element(aManager, aId) {
+  var doc = aManager.document;
+  var view = doc.getElementById("view-port").selectedPanel;
+  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var list = doc.getElementById(listid);
+
+  var node = list.firstChild;
+  while (node) {
+    if (node.value == aId)
+      return node;
+    node = node.nextSibling;
+  }
+  return null;
+}
+
+function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
+  if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
     aCallback(aManagerWindow);
     return;
   }
@@ -66,14 +134,18 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
     return;
   }
 
+  info("Waiting for initialization");
   aManagerWindow.document.addEventListener("Initialized", function() {
     aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
     aCallback(aManagerWindow);
   }, false);
 }
 
-function open_manager(aView, aCallback) {
+function open_manager(aView, aCallback, aLoadCallback) {
   function setup_manager(aManagerWindow) {
+    if (aLoadCallback)
+      aLoadCallback(aManagerWindow);
+
     if (aView)
       aManagerWindow.loadView(aView);
 
@@ -85,7 +157,8 @@ function open_manager(aView, aCallback) {
     });
   }
 
-  if ("switchToTabHavingURI" in window) {
+  if (gUseInContentUI) {
+    gBrowser.selectedTab = gBrowser.addTab();
     switchToTabHavingURI(MANAGER_URI, true, function(aBrowser) {
       setup_manager(aBrowser.contentWindow.wrappedJSObject);
     });
@@ -110,8 +183,39 @@ function close_manager(aManagerWindow, aCallback) {
   aManagerWindow.close();
 }
 
-function restart_manager(aManagerWindow, aView, aCallback) {
-  close_manager(aManagerWindow, function() { open_manager(aView, aCallback); });
+function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
+  if (!aManagerWindow) {
+    open_manager(aView, aCallback, aLoadCallback);
+    return;
+  }
+
+  close_manager(aManagerWindow, function() {
+    open_manager(aView, aCallback, aLoadCallback);
+  });
+}
+
+function is_hidden(aElement) {
+  var style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, "");
+  if (style.display == "none")
+    return true;
+  if (style.visibility != "visible")
+    return true;
+
+  // Hiding a parent element will hide all its children
+  if (aElement.parentNode != aElement.ownerDocument)
+    return is_hidden(aElement.parentNode);
+
+  return false;
+}
+
+function is_element_visible(aElement, aMsg) {
+  isnot(aElement, null, "Element should not be null, when checking visibility");
+  ok(!is_hidden(aElement), aMsg);
+}
+
+function is_element_hidden(aElement, aMsg) {
+  isnot(aElement, null, "Element should not be null, when checking visibility");
+  ok(is_hidden(aElement), aMsg);
 }
 
 function CategoryUtilities(aManagerWindow) {
@@ -119,7 +223,7 @@ function CategoryUtilities(aManagerWindow) {
 
   var self = this;
   this.window.addEventListener("unload", function() {
-    self.removeEventListener("unload", arguments.callee, false);
+    self.window.removeEventListener("unload", arguments.callee, false);
     self.window = null;
   }, false);
 }
@@ -164,8 +268,7 @@ CategoryUtilities.prototype = {
         aCategory.getAttribute("disabled") == "true")
       return false;
 
-    var style = this.window.document.defaultView.getComputedStyle(aCategory, "");
-    return style.display != "none" && style.visibility == "visible";
+    return !is_hidden(aCategory);
   },
 
   isTypeVisible: function(aCategoryType) {
@@ -346,6 +449,10 @@ MockProvider.prototype = {
       for (var prop in aAddonProp) {
         if (prop == "id")
           continue;
+        if (prop == "applyBackgroundUpdates") {
+          addon._applyBackgroundUpdates = aAddonProp[prop];
+          continue;
+        }
         addon[prop] = aAddonProp[prop];
       }
       this.addAddon(addon);
@@ -612,14 +719,15 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this.blocklistState = 0;
   this.appDisabled = false;
   this._userDisabled = false;
+  this._applyBackgroundUpdates = true;
   this.scope = AddonManager.SCOPE_PROFILE;
   this.isActive = true;
   this.creator = "";
   this.pendingOperations = 0;
-  this.permissions = AddonManager.PERM_CAN_UNINSTALL |
-                     AddonManager.PERM_CAN_ENABLE |
-                     AddonManager.PERM_CAN_DISABLE |
-                     AddonManager.PERM_CAN_UPGRADE;
+  this._permissions = AddonManager.PERM_CAN_UNINSTALL |
+                      AddonManager.PERM_CAN_ENABLE |
+                      AddonManager.PERM_CAN_DISABLE |
+                      AddonManager.PERM_CAN_UPGRADE;
   this.operationsRequiringRestart = aOperationsRequiringRestart ||
     (AddonManager.OP_NEEDS_RESTART_INSTALL |
      AddonManager.OP_NEEDS_RESTART_UNINSTALL |
@@ -646,6 +754,28 @@ MockAddon.prototype = {
     this._updateActiveState(currentActive, newActive);
 
     return val;
+  },
+
+  get permissions() {
+    let permissions = this._permissions;
+    if (this.appDisabled || !this._userDisabled)
+      permissions &= ~AddonManager.PERM_CAN_ENABLE;
+    if (this.appDisabled || this._userDisabled)
+      permissions &= ~AddonManager.PERM_CAN_DISABLE;
+    return permissions;
+  },
+
+  set permissions(val) {
+    return this._permissions = val;
+  },
+
+  get applyBackgroundUpdates() {
+    return this._applyBackgroundUpdates;
+  },
+  
+  set applyBackgroundUpdates(val) {
+    this._applyBackgroundUpdates = val;
+    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
   },
 
   isCompatibleWith: function(aAppVersion, aPlatformVersion) {
@@ -682,6 +812,7 @@ MockAddon.prototype = {
       return;
 
     if (newActive == this.isActive) {
+      this.pendingOperations -= (newActive ? AddonManager.PENDING_DISABLE : AddonManager.PENDING_ENABLE);
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
     }
     else if (newActive) {

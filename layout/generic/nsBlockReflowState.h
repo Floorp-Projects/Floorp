@@ -62,7 +62,7 @@
 // the current line
 #define BRS_LINE_LAYOUT_EMPTY     0x00000080
 #define BRS_ISOVERFLOWCONTAINER   0x00000100
-// Our mFloatContinuations list is stored on the blocks' proptable
+// Our mPushedFloats list is stored on the blocks' proptable
 #define BRS_PROPTABLE_FLOATCLIST  0x00000200
 #define BRS_LASTFLAG              BRS_PROPTABLE_FLOATCLIST
 
@@ -75,8 +75,6 @@ public:
                      PRBool aTopMarginRoot, PRBool aBottomMarginRoot,
                      PRBool aBlockNeedsFloatManager);
 
-  ~nsBlockReflowState();
-
   /**
    * Get the available reflow space (the area not occupied by floats)
    * for the current y coordinate. The available space is relative to
@@ -87,13 +85,11 @@ public:
    * coordinate and within the width of the content rect.
    */
   nsFlowAreaRect GetFloatAvailableSpace() const
-    { return GetFloatAvailableSpace(mY, PR_FALSE); }
-  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY,
-                                        PRBool aRelaxHeightConstraint) const
-    { return GetFloatAvailableSpaceWithState(aY, aRelaxHeightConstraint,
-                                             nsnull); }
+    { return GetFloatAvailableSpace(mY); }
+  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY) const
+    { return GetFloatAvailableSpaceWithState(aY, nsnull); }
   nsFlowAreaRect
-    GetFloatAvailableSpaceWithState(nscoord aY, PRBool aRelaxHeightConstraint,
+    GetFloatAvailableSpaceWithState(nscoord aY,
                                     nsFloatManager::SavedState *aState) const;
   nsFlowAreaRect
     GetFloatAvailableSpaceForHeight(nscoord aY, nscoord aHeight,
@@ -103,26 +99,29 @@ public:
    * The following functions all return PR_TRUE if they were able to
    * place the float, PR_FALSE if the float did not fit in available
    * space.
-   * aLineLayout is null when we are reflowing float continuations (because
+   * aLineLayout is null when we are reflowing pushed floats (because
    * they are not associated with a line box).
    */
   PRBool AddFloat(nsLineLayout*       aLineLayout,
                   nsIFrame*           aFloat,
-                  nscoord             aAvailableWidth,
-                  nsReflowStatus&     aReflowStatus);
-  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
-                       const nsFlowAreaRect& aFloatAvailableSpace,
-                       PRBool aForceFit);
-  PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
-                           nsReflowStatus& aReflowStatus,
-                           PRBool          aForceFit);
-  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);
+                  nscoord             aAvailableWidth);
+private:
+  PRBool CanPlaceFloat(nscoord aFloatWidth,
+                       const nsFlowAreaRect& aFloatAvailableSpace);
+public:
+  PRBool FlowAndPlaceFloat(nsIFrame* aFloat);
+private:
+  void PushFloatPastBreak(nsIFrame* aFloat);
+public:
+  void PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats,
+                                   nsLineBox* aLine);
 
   // Returns the first coordinate >= aY that clears the
   // floats indicated by aBreakType and has enough width between floats
   // (or no floats remaining) to accomodate aReplacedBlock.
   nscoord ClearFloats(nscoord aY, PRUint8 aBreakType,
-                      nsIFrame *aReplacedBlock = nsnull);
+                      nsIFrame *aReplacedBlock = nsnull,
+                      PRUint32 aFlags = 0);
 
   PRBool IsAdjacentWithTop() const {
     return mY ==
@@ -219,24 +218,28 @@ public:
 
   nscoord mBottomEdge;
 
-  // The content area to reflow child frames within. The x/y
-  // coordinates are known to be mBorderPadding.left and
-  // mBorderPadding.top. The width/height may be NS_UNCONSTRAINEDSIZE
-  // if the container reflowing this frame has given the frame an
-  // unconstrained area.
-  nsSize mContentArea;
+  // The content area to reflow child frames within.  This is within
+  // this frame's coordinate system, which means mContentArea.x ==
+  // BorderPadding().left and mContentArea.y == BorderPadding().top.
+  // The height may be NS_UNCONSTRAINEDSIZE, which indicates that there
+  // is no page/column boundary below (the common case).
+  // mContentArea.YMost() should only be called after checking that
+  // mContentArea.height is not NS_UNCONSTRAINEDSIZE; otherwise
+  // coordinate overflow may occur.
+  nsRect mContentArea;
 
   // Continuation out-of-flow float frames that need to move to our
-  // next in flow are placed here during reflow. At the end of reflow
-  // they move to the end of the mFloats list.
-  nsFrameList mFloatContinuations;
-  // This method makes sure float continuations are accessible to
-  // StealFrame. Call it before adding any frames to mFloatContinuations.
-  void SetupFloatContinuationList();
-  // Use this method to append to mFloatContinuations.
-  void AppendFloatContinuation(nsIFrame* aFloatCont) {
-    SetupFloatContinuationList();
-    mFloatContinuations.AppendFrame(mBlock, aFloatCont);
+  // next in flow are placed here during reflow.  It's a pointer to
+  // a frame list stored in the block's property table.
+  nsFrameList *mPushedFloats;
+  // This method makes sure pushed floats are accessible to
+  // StealFrame. Call it before adding any frames to mPushedFloats.
+  void SetupPushedFloatList();
+  // Use this method to append to mPushedFloats.
+  void AppendPushedFloat(nsIFrame* aFloatCont) {
+    SetupPushedFloatList();
+    aFloatCont->AddStateBits(NS_FRAME_IS_PUSHED_FLOAT);
+    mPushedFloats->AppendFrame(mBlock, aFloatCont);
   }
 
   // Track child overflow continuations.

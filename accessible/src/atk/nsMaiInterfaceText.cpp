@@ -319,9 +319,12 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
     else
         geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
-    nsresult rv = accText->GetCharacterExtents(aOffset, &extX, &extY,
-                                               &extWidth, &extHeight,
-                                               geckoCoordType);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    accText->GetCharacterExtents(aOffset, &extX, &extY,
+                                 &extWidth, &extHeight,
+                                 geckoCoordType);
     *aX = extX;
     *aY = extY;
     *aWidth = extWidth;
@@ -353,10 +356,13 @@ getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
     else
         geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
-    nsresult rv = accText->GetRangeExtents(aStartOffset, aEndOffset,
-                                           &extX, &extY,
-                                           &extWidth, &extHeight,
-                                           geckoCoordType);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    accText->GetRangeExtents(aStartOffset, aEndOffset,
+                             &extX, &extY,
+                             &extWidth, &extHeight,
+                             geckoCoordType);
     aRect->x = extX;
     aRect->y = extY;
     aRect->width = extWidth;

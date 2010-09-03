@@ -84,8 +84,8 @@ var observer =
   },
   onBeforeItemRemoved: function(){},
   onItemRemoved: function() {},
-  onItemChanged: function() {}
-  onItemVisited: function() {}
+  onItemChanged: function() {},
+  onItemVisited: function() {},
   onItemMoved: function() {}
 };
 bmsvc.addObserver(observer, false);

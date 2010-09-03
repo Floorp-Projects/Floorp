@@ -89,7 +89,7 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   // extra spacing after sup/subscript
-  nscoord scriptSpace = PresContext()->PointsToAppUnits(0.5f); // 0.5pt as in plain TeX
+  nscoord scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f); // 0.5pt as in plain TeX
 
   // check if the subscriptshift attribute is there
   nscoord subScriptShift = 0;

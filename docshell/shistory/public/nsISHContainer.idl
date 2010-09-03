@@ -58,7 +58,7 @@ interface nsISHContainer : nsISupports
 	readonly attribute long childCount;
 
 	/**
-	 * Add a new child SHEntry.  Adds to the end of the list.
+	 * Add a new child SHEntry.  If offset is -1 adds to the end of the list.
 	 */
 	void AddChild(in nsISHEntry child, in long offset);
 

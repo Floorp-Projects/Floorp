@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352026.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352026;
 var summary = 'decompilation of yield in argument lists';

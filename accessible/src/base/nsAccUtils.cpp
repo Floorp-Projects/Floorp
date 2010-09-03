@@ -376,16 +376,11 @@ nsAccUtils::GetSelectableContainer(nsAccessible *aAccessible, PRUint32 aState)
   if (!(aState & nsIAccessibleStates::STATE_SELECTABLE))
     return nsnull;
 
-  nsCOMPtr<nsIAccessibleSelectable> container;
-  nsAccessible *parent = aAccessible;
-  while (!container) {
-    parent = parent->GetParent();
-    if (!parent || Role(parent) == nsIAccessibleRole::ROLE_PANE)
+  nsAccessible* parent = aAccessible;
+  while ((parent = parent->GetParent()) && !parent->IsSelect()) {
+    if (Role(parent) == nsIAccessibleRole::ROLE_PANE)
       return nsnull;
-
-    container = do_QueryObject(parent);
   }
-
   return parent;
 }
 
@@ -744,6 +739,9 @@ nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
 
     nsCOMPtr<nsIAccessibleTableCell> tableCellAcc =
       do_QueryInterface(cell);
+
+    // GetCellAt should always return an nsIAccessibleTableCell (XXX Bug 587529)
+    NS_ENSURE_STATE(tableCellAcc);
 
     PRInt32 origIdx = 1;
     if (moveToLeft)

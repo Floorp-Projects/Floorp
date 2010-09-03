@@ -73,8 +73,6 @@
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 
-namespace css = mozilla::css;
-
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 /* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
 /* virtual */ void _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { super::SetStyleSheet(aSheet); }  \
@@ -208,7 +206,7 @@ public:
 
   // nsICSSRule methods
   virtual PRInt32 GetType() const;
-  virtual nsresult Clone(nsICSSRule*& aClone) const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -273,16 +271,11 @@ CSSCharsetRuleImpl::GetType() const
   return nsICSSRule::CHARSET_RULE;
 }
 
-/* virtual */ nsresult
-CSSCharsetRuleImpl::Clone(nsICSSRule*& aClone) const
+/* virtual */ already_AddRefed<nsICSSRule>
+CSSCharsetRuleImpl::Clone() const
 {
-  CSSCharsetRuleImpl* clone = new CSSCharsetRuleImpl(*this);
-  if (clone) {
-    NS_ADDREF(aClone = clone);
-    return NS_OK;
-  }
-  aClone = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsICSSRule> clone = new CSSCharsetRuleImpl(*this);
+  return clone.forget();
 }
 
 NS_IMETHODIMP
@@ -383,7 +376,7 @@ public:
 
   // nsICSSRule methods
   virtual PRInt32 GetType() const;
-  virtual nsresult Clone(nsICSSRule*& aClone) const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
 
   // nsICSSImportRule methods
   NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
@@ -477,16 +470,11 @@ CSSImportRuleImpl::GetType() const
   return nsICSSRule::IMPORT_RULE;
 }
 
-/* virtual */ nsresult
-CSSImportRuleImpl::Clone(nsICSSRule*& aClone) const
+/* virtual */ already_AddRefed<nsICSSRule>
+CSSImportRuleImpl::Clone() const
 {
-  CSSImportRuleImpl* clone = new CSSImportRuleImpl(*this);
-  if (clone) {
-    NS_ADDREF(aClone = clone);
-    return NS_OK;
-  }
-  aClone = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsICSSRule> clone = new CSSImportRuleImpl(*this);
+  return clone.forget();
 }
 
 NS_IMETHODIMP
@@ -646,12 +634,8 @@ nsCSSGroupRule::nsCSSGroupRule()
 static PRBool
 CloneRuleInto(nsICSSRule* aRule, void* aArray)
 {
-  nsICSSRule* clone = nsnull;
-  aRule->Clone(clone);
-  if (clone) {
-    static_cast<nsCOMArray<nsICSSRule>*>(aArray)->AppendObject(clone);
-    NS_RELEASE(clone);
-  }
+  nsCOMPtr<nsICSSRule> clone = aRule->Clone();
+  static_cast<nsCOMArray<nsICSSRule>*>(aArray)->AppendObject(clone);
   return PR_TRUE;
 }
 
@@ -957,16 +941,11 @@ nsCSSMediaRule::GetType() const
   return nsICSSRule::MEDIA_RULE;
 }
 
-/* virtual */ nsresult
-nsCSSMediaRule::Clone(nsICSSRule*& aClone) const
+/* virtual */ already_AddRefed<nsICSSRule>
+nsCSSMediaRule::Clone() const
 {
-  nsCSSMediaRule* clone = new nsCSSMediaRule(*this);
-  if (clone) {
-    NS_ADDREF(aClone = clone);
-    return NS_OK;
-  }
-  aClone = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsICSSRule> clone = new nsCSSMediaRule(*this);
+  return clone.forget();
 }
 
 nsresult
@@ -1125,16 +1104,11 @@ nsCSSDocumentRule::GetType() const
   return nsICSSRule::DOCUMENT_RULE;
 }
 
-/* virtual */ nsresult
-nsCSSDocumentRule::Clone(nsICSSRule*& aClone) const
+/* virtual */ already_AddRefed<nsICSSRule>
+nsCSSDocumentRule::Clone() const
 {
-  nsCSSDocumentRule* clone = new nsCSSDocumentRule(*this);
-  if (clone) {
-    NS_ADDREF(aClone = clone);
-    return NS_OK;
-  }
-  aClone = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsICSSRule> clone = new nsCSSDocumentRule(*this);
+  return clone.forget();
 }
 
 // nsIDOMCSSRule methods
@@ -1275,7 +1249,7 @@ public:
 
   // nsICSSRule methods
   virtual PRInt32 GetType() const;
-  virtual nsresult Clone(nsICSSRule*& aClone) const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
 
   // nsICSSNameSpaceRule methods
   NS_IMETHOD GetPrefix(nsIAtom*& aPrefix) const;
@@ -1357,16 +1331,11 @@ CSSNameSpaceRuleImpl::GetType() const
   return nsICSSRule::NAMESPACE_RULE;
 }
 
-/* virtual */ nsresult
-CSSNameSpaceRuleImpl::Clone(nsICSSRule*& aClone) const
+/* virtual */ already_AddRefed<nsICSSRule>
+CSSNameSpaceRuleImpl::Clone() const
 {
-  CSSNameSpaceRuleImpl* clone = new CSSNameSpaceRuleImpl(*this);
-  if (clone) {
-    NS_ADDREF(aClone = clone);
-    return NS_OK;
-  }
-  aClone = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsICSSRule> clone = new CSSNameSpaceRuleImpl(*this);
+  return clone.forget();
 }
 
 NS_IMETHODIMP
@@ -1614,7 +1583,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 
   switch (aFontDescID) {
   case eCSSFontDesc_Family: {
-      // we don't use AppendCSSValueToString here because it doesn't
+      // we don't use nsCSSValue::AppendToString here because it doesn't
       // canonicalize the way we want, and anyway it's overkill when
       // we know we have eCSSUnit_String
       NS_ASSERTION(val.GetUnit() == eCSSUnit_String, "unexpected unit");
@@ -1624,18 +1593,23 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     }
 
   case eCSSFontDesc_Style:
-    css::Declaration::AppendCSSValueToString(eCSSProperty_font_style, val,
-                                             aResult);
+    val.AppendToString(eCSSProperty_font_style, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Weight:
-    css::Declaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
-                                             aResult);
+    val.AppendToString(eCSSProperty_font_weight, aResult);
     return NS_OK;
-    
+
   case eCSSFontDesc_Stretch:
-    css::Declaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
-                                             aResult);
+    val.AppendToString(eCSSProperty_font_stretch, aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_FontFeatureSettings:
+    val.AppendToString(eCSSProperty_font_feature_settings, aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_FontLanguageOverride:
+    val.AppendToString(eCSSProperty_font_language_override, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Src:
@@ -1792,16 +1766,11 @@ nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
 // nsCSSFontFaceRule
 // 
 
-/* virtual */ nsresult
-nsCSSFontFaceRule::Clone(nsICSSRule*& aClone) const
+/* virtual */ already_AddRefed<nsICSSRule>
+nsCSSFontFaceRule::Clone() const
 {
-  nsCSSFontFaceRule* clone = new nsCSSFontFaceRule(*this);
-  if (clone) {
-    NS_ADDREF(aClone = clone);
-    return NS_OK;
-  }
-  aClone = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsICSSRule> clone = new nsCSSFontFaceRule(*this);
+  return clone.forget();
 }
 
 NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, nsCSSRule)

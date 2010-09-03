@@ -272,7 +272,7 @@ nsPluginFile::~nsPluginFile()
 {
 }
 
-nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
+nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 {
     PRLibSpec libSpec;
     libSpec.type = PR_LibSpec_Pathname;
@@ -305,20 +305,26 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 
 #if defined(SOLARIS) || defined(HPUX)
     // Acrobat/libXm: Lazy resolving might cause crash later (bug 211587)
-    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
+    *outLibrary = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
+    pLibrary = *outLibrary;
 #else
     // Some dlopen() doesn't recover from a failed PR_LD_NOW (bug 223744)
-    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+    *outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+    pLibrary = *outLibrary;
 #endif
     if (!pLibrary) {
         LoadExtraSharedLibs();
         // try reload plugin once more
-        pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
-        if (!pLibrary)
+        *outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+        pLibrary = *outLibrary;
+        if (!pLibrary) {
             DisplayPR_LoadLibraryErrorMessage(libSpec.value.pathname);
+            return NS_ERROR_FAILURE;
+        }
     }
 #else
-    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+    *outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+    pLibrary = *outLibrary;
 #endif  // MOZ_WIDGET_GTK2
 
 #ifdef NS_DEBUG
@@ -329,53 +335,72 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     return NS_OK;
 }
 
-nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
+nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 {
+    *outLibrary = nsnull;
+
     info.fVersion = nsnull;
 
-    // Passing NULL for a file path will prevent a call to NP_Initialize.
-    nsCOMPtr<nsIPlugin> plugin;
-    nsresult rv = nsNPAPIPlugin::CreatePlugin(NULL, pLibrary, getter_AddRefs(plugin));
+    // Sadly we have to load the library for this to work.
+    nsresult rv = LoadPlugin(outLibrary);
     if (NS_FAILED(rv))
-      return rv;
+        return rv;
+  
+    const char* (*npGetPluginVersion)() =
+        (const char* (*)()) PR_FindFunctionSymbol(pLibrary, "NP_GetPluginVersion");
+    if (npGetPluginVersion) {
+        info.fVersion = PL_strdup(npGetPluginVersion());
+    }
 
-    if (plugin) {
-        const char* (*npGetPluginVersion)() =
-          (const char* (*)()) PR_FindFunctionSymbol(pLibrary, "NP_GetPluginVersion");
-        if (npGetPluginVersion)
-            info.fVersion = PL_strdup(npGetPluginVersion());
+    const char* (*npGetMIMEDescription)() =
+        (const char* (*)()) PR_FindFunctionSymbol(pLibrary, "NP_GetMIMEDescription");
+    if (!npGetMIMEDescription) {
+        return NS_ERROR_FAILURE;
+    }
 
-        const char *mimedescr = NULL;
-        plugin->GetMIMEDescription(&mimedescr);
-#ifdef NS_DEBUG
-        printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
-#endif
-        if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
-            return rv;
+    const char* mimedescr = npGetMIMEDescription();
+    if (!mimedescr) {
+        return NS_ERROR_FAILURE;
+    }
 
-        nsCAutoString path;
-        if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
-            return rv;
-        info.fFullPath = PL_strdup(path.get());
+    rv = ParsePluginMimeDescription(mimedescr, info);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
-        nsCAutoString fileName;
-        if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
-          return rv;
-        info.fFileName = PL_strdup(fileName.get());
+    nsCAutoString path;
+    if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
+        return rv;
+    info.fFullPath = PL_strdup(path.get());
 
-        const char *name = NULL;
-        plugin->GetValue(NPPVpluginNameString, &name);
-        if (name)
-          info.fName = PL_strdup(name);
-        else
-          info.fName = PL_strdup(fileName.get());
+    nsCAutoString fileName;
+    if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+        return rv;
+    info.fFileName = PL_strdup(fileName.get());
 
-        const char *description = NULL;
-        plugin->GetValue(NPPVpluginDescriptionString, &description);
-        if (!description)
-            description = "";
+    NP_GetValueFunc npGetValue = (NP_GetValueFunc)PR_FindFunctionSymbol(pLibrary, "NP_GetValue");
+    if (!npGetValue) {
+        return NS_ERROR_FAILURE;
+    }
+
+    const char *name = NULL;
+    NPError nperr = npGetValue(NULL, NPPVpluginNameString, &name);
+    if (name) {
+        info.fName = PL_strdup(name);
+    }
+    else {
+        info.fName = PL_strdup(fileName.get());
+    }
+
+    const char *description = NULL;
+    nperr = npGetValue(NULL, NPPVpluginDescriptionString, &description);
+    if (description) {
         info.fDescription = PL_strdup(description);
     }
+    else {
+        info.fDescription = PL_strdup("");
+    }
+
     return NS_OK;
 }
 

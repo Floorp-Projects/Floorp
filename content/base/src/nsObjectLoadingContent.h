@@ -134,6 +134,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     PRInt32 ObjectState() const;
 
+    void SetIsNetworkCreated(PRBool aNetworkCreated)
+    {
+      mNetworkCreated = aNetworkCreated;
+    }
   protected:
     /**
      * Load the object from the given URI.
@@ -399,6 +403,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Blocking status from content policy
     PRPackedBool                mUserDisabled  : 1;
     PRPackedBool                mSuppressed    : 1;
+
+    // True when the object is created for an element which the parser has
+    // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
+    // it may lose the flag.
+    PRPackedBool                mNetworkCreated : 1;
+
     // A specific state that caused us to fallback
     PluginSupportState          mFallbackReason;
 

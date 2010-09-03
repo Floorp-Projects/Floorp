@@ -394,48 +394,15 @@ private:
     PRPackedBool mFontSelected;
 };
 
-#define MAX_ITEM_LENGTH 32768
-
-static PRUint32 FindNextItemStart(int aOffset, int aLimit,
-                                  nsTArray<SCRIPT_LOGATTR> &aLogAttr,
-                                  const PRUnichar *aString)
-{
-    if (aOffset + MAX_ITEM_LENGTH >= aLimit) {
-        // The item starting at aOffset can't be longer than the max length,
-        // so starting the next item at aLimit won't cause ScriptShape() to fail.
-        return aLimit;
-    }
-
-    // Try to start the next item before or after a space, since spaces
-    // don't kern or ligate.
-    PRUint32 off;
-    int boundary = -1;
-    for (off = MAX_ITEM_LENGTH; off > 1; --off) {
-      if (aLogAttr[off].fCharStop) {
-          if (off > boundary) {
-              boundary = off;
-          }
-          if (aString[aOffset+off] == ' ' || aString[aOffset+off - 1] == ' ')
-            return aOffset+off;
-      }
-    }
-
-    // Try to start the next item at the last cluster boundary in the range.
-    if (boundary > 0) {
-      return aOffset+boundary;
-    }
-
-    // No nice cluster boundaries inside MAX_ITEM_LENGTH characters, break
-    // on the size limit. It won't be visually plesaing, but at least it
-    // won't cause ScriptShape() to fail.
-    return aOffset + MAX_ITEM_LENGTH;
-}
+#define MAX_ITEM_LENGTH 16384
 
 class Uniscribe
 {
 public:
-    Uniscribe(const PRUnichar *aString, PRUint32 aLength, PRBool aIsRTL) :
-        mString(aString), mLength(aLength), mIsRTL(aIsRTL)
+    Uniscribe(const PRUnichar *aString,
+              PRUint32 aLength,
+              gfxTextRun *aTextRun):
+        mString(aString), mLength(aLength), mTextRun(aTextRun)
     {
     }
     ~Uniscribe() {
@@ -446,42 +413,77 @@ public:
         memset(&mState, 0, sizeof(SCRIPT_STATE));
         // Lock the direction. Don't allow the itemizer to change directions
         // based on character type.
-        mState.uBidiLevel = mIsRTL;
+        mState.uBidiLevel = mTextRun->IsRightToLeft() ? 1 : 0;
         mState.fOverrideDirection = PR_TRUE;
     }
 
 private:
 
+// We try to avoid calling Uniscribe with text runs that may generate
+// more than this many glyphs, because of the possibility of arithmetic
+// overflow of 16-bit variables. If long runs need to be split because
+// of this, we'll look for whitespace to break on so that shaping needed
+// (e.g. for complex scripts) should be unaffected.
+#define MAX_UNISCRIBE_GLYPHS 32767
+
     // Append mItems[aIndex] to aDest, adding extra items to aDest to ensure
     // that no item is too long for ScriptShape() to handle. See bug 366643.
     nsresult CopyItemSplitOversize(int aIndex, nsTArray<SCRIPT_ITEM> &aDest) {
         aDest.AppendElement(mItems[aIndex]);
-        const int itemLength = mItems[aIndex+1].iCharPos - mItems[aIndex].iCharPos;
-        if (ESTIMATE_MAX_GLYPHS(itemLength) > 65535) {
-            // This items length would cause ScriptShape() to fail. We need to
-            // add extra items here so that no item's length could cause the fail.
+        const int itemLength =
+            mItems[aIndex+1].iCharPos - mItems[aIndex].iCharPos;
+        if (ESTIMATE_MAX_GLYPHS(itemLength) > MAX_UNISCRIBE_GLYPHS) {
+            // This item's length would cause ScriptShape() to fail.
+            // We need to add extra items here so that no item's length
+            // could cause the fail.
 
-            // Get cluster boundaries, so we can break cleanly if possible.
-            nsTArray<SCRIPT_LOGATTR> logAttr;
-            if (!logAttr.SetLength(itemLength))
-                return NS_ERROR_FAILURE;
-            HRESULT rv = ScriptBreak(mString+mItems[aIndex].iCharPos, itemLength,
-                                     &mItems[aIndex].a, logAttr.Elements());
-            if (FAILED(rv))
-                return NS_ERROR_FAILURE;
-
+            // We break on whitespace or cluster boundaries if possible.
             const int nextItemStart = mItems[aIndex+1].iCharPos;
             int start = FindNextItemStart(mItems[aIndex].iCharPos,
-                                          nextItemStart, logAttr, mString);
+                                          nextItemStart);
 
             while (start < nextItemStart) {
                 SCRIPT_ITEM item = mItems[aIndex];
                 item.iCharPos = start;
                 aDest.AppendElement(item);
-                start = FindNextItemStart(start, nextItemStart, logAttr, mString);
+                start = FindNextItemStart(start, nextItemStart);
             }
         } 
         return NS_OK;
+    }
+
+    PRUint32 FindNextItemStart(int aOffset, int aLimit) {
+        if (aOffset + MAX_ITEM_LENGTH >= aLimit) {
+            // The item starting at aOffset can't be longer than max length,
+            // so starting the next item at aLimit won't cause ScriptShape()
+            // to fail.
+            return aLimit;
+        }
+        // Try to start the next item before or after a space, since spaces
+        // don't kern or ligate.
+        PRInt32 off;
+        int boundary = -1;
+        for (off = MAX_ITEM_LENGTH; off > 1; --off) {
+            if (mTextRun->IsClusterStart(off)) {
+                if (off > boundary) {
+                    boundary = off;
+                }
+                if (mString[aOffset+off] == ' ' ||
+                    mString[aOffset+off - 1] == ' ') {
+                    return aOffset+off;
+                }
+            }
+        }
+
+        // Try to start the next item at last cluster boundary in the range.
+        if (boundary > 0) {
+            return aOffset+boundary;
+        }
+
+        // No nice cluster boundaries inside MAX_ITEM_LENGTH characters, break
+        // on the size limit. It won't be visually pleasing, but at least it
+        // won't cause ScriptShape() to fail.
+        return aOffset + MAX_ITEM_LENGTH;
     }
 
 public:
@@ -537,7 +539,7 @@ public:
 private:
     const PRUnichar *mString;
     const PRUint32 mLength;
-    const PRBool mIsRTL;
+    gfxTextRun *mTextRun;
 
     SCRIPT_CONTROL mControl;
     SCRIPT_STATE   mState;
@@ -556,15 +558,13 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
 {
     DCFromContext aDC(aContext);
  
-    const PRBool isRTL = aTextRun->IsRightToLeft();
-
     PRBool result = PR_TRUE;
     HRESULT rv;
 
     gfxGDIFont *font = static_cast<gfxGDIFont*>(mFont);
     AutoSelectFont fs(aDC, font->GetHFONT());
 
-    Uniscribe us(aString + aRunStart, aRunLength, isRTL);
+    Uniscribe us(aString + aRunStart, aRunLength, aTextRun);
 
     /* itemize the string */
     int numItems = us.Itemize();
@@ -633,10 +633,9 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
         }
 
         if (FAILED(rv)) {
-            aTextRun->ResetGlyphRuns();
             // Uniscribe doesn't like this font for some reason.
-            // Returning FALSE will make the gfxGDIFont discard this
-            // shaper and replace it with a "dumb" GDI one.
+            // Returning FALSE will make the gfxGDIFont retry with the
+            // "dumb" GDI one, unless useUniscribeOnly was set.
             result = PR_FALSE;
             break;
         }

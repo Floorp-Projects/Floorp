@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-154338.js';
 var UBound = 0;
 var BUGNUMBER = 154338;
 var summary = 'Test array.join() when separator is a variable, not a literal';

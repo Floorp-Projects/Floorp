@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'replace-001.js';
 
 /**
  *  File Name:          String/replace-001.js

@@ -148,6 +148,7 @@ const char *const js_common_atom_names[] = {
     js_ignoreCase_str,          /* ignoreCaseAtom               */
     js_index_str,               /* indexAtom                    */
     js_input_str,               /* inputAtom                    */
+    "toISOString",              /* toISOStringAtom              */
     js_iterator_str,            /* iteratorAtom                 */
     js_join_str,                /* joinAtom                     */
     js_lastIndex_str,           /* lastIndexAtom                */
@@ -553,7 +554,6 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
     JS_ASSERT(key->isAtomized());
     JSAtom *atom = STRING_TO_ATOM(key);
-    cx->weakRoots.lastAtom = atom;
     JS_UNLOCK(cx, &state->lock);
     return atom;
 }
@@ -637,7 +637,7 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
     JSAtomState *state = &cx->runtime->atomState;
 
     fprintf(fp, "atoms table contents:\n");
-    unsigned number;
+    unsigned number = 0;
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
         AtomEntryType entry = r.front();
         fprintf(fp, "%3u ", number++);

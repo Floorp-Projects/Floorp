@@ -47,7 +47,6 @@
  * or undefined if o.p has no getter.  Users can wrap and layer."
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'getset-006.js';
 var UBound = 0;
 var BUGNUMBER = 71992;
 var summary = 'Testing  obj.__lookupGetter__(), obj.__lookupSetter__()';

@@ -4,13 +4,13 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/javascript"
-        src="chrome://mochikit/content/MochiKit/packed.js"></script>
+        src="/MochiKit/packed.js"></script>
 <script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+        src="/tests/SimpleTest/SimpleTest.js"></script>
 <script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+        src="/tests/SimpleTest/EventUtils.js"></script>
 <script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+        src="/tests/SimpleTest/WindowSnapshot.js"></script>
 
 <html:style xmlns:html="http://www.w3.org/1999/xhtml" type="text/css">
 * { outline: none; }
@@ -79,7 +79,19 @@ function runTest()
   // the test regardless of which user input last occurred.
   $("l1").focus();
   var expectedVisible = (!isWin || getComputedStyle($("l1"), "").outlineWidth == "2px");
-  testHTMLElements(isMac, isWin && !expectedVisible);
+  testHTMLElements(htmlElements, isMac, isWin && !expectedVisible);
+
+  if (isMac) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch);
+    prefs.setBoolPref("accessibility.mouse_focuses_formcontrol", true);
+
+    testHTMLElements(htmlElementsMacPrefSet, true, false);
+
+    prefs.setBoolPref("accessibility.mouse_focuses_formcontrol", false);
+  }
 
   $("l1").focus();
   checkFocus($("l1"), expectedVisible, "appearance on list after focus() with :moz-focusring");
@@ -117,6 +129,7 @@ var htmlElements = [
   "<input id='elem' class='canfocus'>",
   "<input id='elem' type='password' class='canfocus'>",
   "<input id='elem' type='button'>",
+  "<input id='elem' type='checkbox'>",
   "<textarea id='elem' class='canfocus'></textarea>",
   "<select id='elem' class='canfocus'><option>One</select>",
   "<select id='elem' rows='5' class='canfocus'><option>One</select>",
@@ -124,13 +137,20 @@ var htmlElements = [
   "<a href='about:blank' class='canfocus' onclick='return false;'>about:blank</a>",
 ];
 
-function testHTMLElements(isMac, expectedNoRingsOnWin)
+var htmlElementsMacPrefSet = [
+  "<button id='elem' class='canfocus'>Button</button>",
+  "<input id='elem' class='canfocus'>",
+  "<input id='elem' type='button' class='canfocus'>",
+  "<input id='elem' type='checkbox' class='canfocus'>",
+];
+
+function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 {
   var childwin = frames[0];
   var childdoc = childwin.document;
   var container = childdoc.getElementById("container");
-  for (var e = 0; e < htmlElements.length; e++) {
-    container.innerHTML = htmlElements[e];
+  for (var e = 0; e < list.length; e++) {
+    container.innerHTML = list[e];
 
     var elem = container.firstChild;
 
@@ -140,8 +160,8 @@ function testHTMLElements(isMac, expectedNoRingsOnWin)
       ringSize = "0px";
 
     synthesizeMouse(elem, 8, 8, { }, childwin);
-    is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + htmlElements[e]);
-    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize, "mouse click on " + htmlElements[e] + " ring");
+    is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + list[e]);
+    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize, "mouse click on " + list[e] + " ring");
 
     if (childdoc.activeElement)
       childdoc.activeElement.blur();
@@ -149,9 +169,9 @@ function testHTMLElements(isMac, expectedNoRingsOnWin)
     ringSize = (elem.localName == "a" ? "0" : (expectedNoRingsOnWin ? 2 : 1)) + "px";
 
     elem.focus();
-    is(childdoc.activeElement, elem, "focus() on " + htmlElements[e]);
+    is(childdoc.activeElement, elem, "focus() on " + list[e]);
     is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize,
-       "focus() on " + htmlElements[e] + " ring");
+       "focus() on " + list[e] + " ring");
 
     childdoc.activeElement.blur();
   }

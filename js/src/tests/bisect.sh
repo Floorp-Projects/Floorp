@@ -155,7 +155,7 @@ PYTHON=$savepython
 
 # TEST_JSDIR must be set after set-build-env.sh is called
 # on Windows since TEST_DIR can be modified in set-build-env.sh
-# from the pure cygwin path /work/... to a the cygwin windows path
+# from the pure cygwin path /work/... to the cygwin windows path
 # /c/work/...
 TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
 

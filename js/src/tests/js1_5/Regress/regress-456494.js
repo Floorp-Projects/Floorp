@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-456494.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 456494;
 var summary = 'Do not crash with apply and argc > nargs';

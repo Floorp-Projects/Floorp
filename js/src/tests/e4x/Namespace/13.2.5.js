@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.2.5.js';
 
 START("13.2.5 - Properties of Namespace Instances");
 

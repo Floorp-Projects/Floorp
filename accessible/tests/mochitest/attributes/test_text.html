@@ -10,11 +10,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+          src="../attributes.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+          src="../events.js"></script>
 
   <script type="application/javascript">
 
@@ -428,8 +428,12 @@
 
       ID = "area14";
       defAttrs = buildDefaultTextAttrs(ID, kInputFontSize);
-      attrs = { };
-      testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
+
+      // XXX: While we expose text leaf accessibles for placeholder we grab its
+      // style, bug 545817.
+      // attrs = { color: "rgb(109, 109, 109)" };
+      //testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
+      todo(false, "enable commented tests when bug 545817 is fixed");
 
       //////////////////////////////////////////////////////////////////////////
       // area15, embed char tests, "*plain*plain**bold*bold*"

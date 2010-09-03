@@ -12,9 +12,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/name.js"></script>
+          src="name.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -61,10 +61,9 @@
   <pre id="test">
   </pre>
 
-  <!-- aria-label, preferred to aria-labelledby -->
+  <!-- aria-label -->
   <a id="aria_label" href="mozilla.org"
-     aria-label="anchor label"
-     aria-labelledby="text">1</a>
+     aria-label="anchor label">1</a>
   <br/>
 
   <!-- aria-labelledby, preferred to html:label -->

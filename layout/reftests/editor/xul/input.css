@@ -41,11 +41,9 @@ html|input.empty {
   color: graytext;
 }
 
-/*
 html|input.empty:-moz-system-metric(windows-default-theme) {
   font-style: italic;
 }
-*/
 
 html|input.num {
   text-align: end;

@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=575672
+-->
+<head>
+  <title>Test for Bug 575672</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <style type="text/css" id="style"></style>
+  <style type="text/css">
+    #display { position: relative }
+  </style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=575672">Mozilla Bug 575672</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for unclosed parentheses in CSS values. **/
+
+// Each of the following declarations should have a single missing ')'
+// in the value.
+var declarations = [
+  "content: url(",
+  "content: url( ",
+  "content: url(http://www.foo.com",
+  "content: url('http://www.foo.com'",
+  "background-image: -moz-linear-gradient(",
+  "background-image: -moz-linear-gradient( ",
+  "background-image: -moz-linear-gradient(red, blue",
+  "background-image: -moz-linear-gradient(red, yellow, blue",
+  "background-image: -moz-linear-gradient(red 1px, yellow 5px, blue 10px",
+  "background-image: -moz-linear-gradient(red, yellow, rgb(0, 0, 255)",
+  "background-image: -moz-repeating-linear-gradient(top left, red, blue",
+  "background-image: -moz-linear-gradient(top left, red, yellow, blue",
+  "background-image: -moz-linear-gradient(top left, red 1px, yellow 5px, blue 10px",
+  "background-image: -moz-linear-gradient(top left, red, yellow, rgb(0, 0, 255)",
+  "background-image: -moz-radial-gradient(",
+  "background-image: -moz-radial-gradient( ",
+  "background-image: -moz-radial-gradient(top left 45deg, red, blue",
+  "background-image: -moz-radial-gradient(cover, red, blue",
+  "background-image: -moz-repeating-radial-gradient(circle, red, blue",
+  "background-image: -moz-radial-gradient(ellipse closest-corner, red, hsl(240, 50%, 50%)",
+  "background-image: -moz-radial-gradient(farthest-side circle, red, blue",
+  "background-image: -moz-image-rect(",
+  "background-image: -moz-image-rect( ",
+  "background-image: -moz-image-rect(url(foo.jpg)",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10 ",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10,",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, ",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10 ",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10,",
+  "background-image: -moz-image-rect(url(foo.jpg), 2, 10, 10, 10, ",
+  "color: rgb(",
+  "color: rgb( ",
+  "color: rgb(128, 0",
+  "color: rgb(128, 0, 128",
+  "color: rgb(128, 0, 128, 128",
+  "color: rgba(",
+  "color: rgba( ",
+  "color: rgba(128, 0",
+  "color: rgba(128, 0, 128",
+  "color: rgba(128, 0, 128, 1",
+  "color: rgba(128, 0, 128, 1, 1",
+  "color: hsl(",
+  "color: hsl( ",
+  "color: hsl(240, 50%",
+  "color: hsl(240, 50%, 50%",
+  "color: hsl(240, 50%, 50%, 50%",
+  "color: hsla(",
+  "color: hsla( ",
+  "color: hsla(240, 50%",
+  "color: hsla(240, 50%, 50%",
+  "color: hsla(240, 50%, 50%, 1",
+  "color: hsla(240, 50%, 50%, 1, 1",
+  "content: counter(",
+  "content: counter( ",
+  "content: counter(foo",
+  "content: counter(foo ",
+  "content: counter(foo,",
+  "content: counter(foo, ",
+  "content: counter(foo, upper-roman",
+  "content: counter(foo, upper-roman ",
+  "content: counter(foo, upper-roman,",
+  "content: counter(foo, upper-roman, ",
+  "content: counters(",
+  "content: counters( ",
+  "content: counters(foo, ','",
+  "content: counters(foo, ',' ",
+  "content: counters(foo, ',',",
+  "content: counters(foo, ',', ",
+  "content: counters(foo, ',', upper-roman",
+  "content: counters(foo, ',', upper-roman ",
+  "content: counters(foo, ',', upper-roman,",
+  "content: counters(foo, ',', upper-roman, ",
+  "content: attr(",
+  "content: attr( ",
+  "content: attr(href",
+  "content: attr(href ",
+  "content: attr(html",
+  "content: attr(html ",
+  "content: attr(html|",
+  "content: attr(html| ",
+  "content: attr(html|href",
+  "content: attr(html|href ",
+  "content: attr(|",
+  "content: attr(| ",
+  "content: attr(|href",
+  "content: attr(|href ",
+  "-moz-transition-timing-function: cubic-bezier(",
+  "-moz-transition-timing-function: cubic-bezier( ",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1 ",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1,",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1, ",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1, 1",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1, 1 ",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1, 1,",
+  "-moz-transition-timing-function: cubic-bezier(0, 0, 1, 1, ",
+  "border-top-width: -moz-calc(",
+  "border-top-width: -moz-calc( ",
+  "border-top-width: -moz-calc(2em",
+  "border-top-width: -moz-calc(2em ",
+  "border-top-width: -moz-calc(2em +",
+  "border-top-width: -moz-calc(2em + ",
+  "border-top-width: -moz-calc(2em *",
+  "border-top-width: -moz-calc(2em * ",
+  "border-top-width: -moz-calc((2em)",
+  "border-top-width: -moz-calc((2em) ",
+];
+
+var selectors = [
+  ":not(",
+  ":not( ",
+  ":not(-",
+  ":not(- ",
+  ":not(>",
+  ":not(> ",
+  ":not(div p",
+  ":not(div p ",
+  ":not(div >",
+  ":not(div > ",
+];
+
+var textNode = document.createTextNode("");
+document.getElementById("style").appendChild(textNode);
+var cs = getComputedStyle(document.getElementById("display"), "");
+
+for (var i = 0; i < declarations.length; ++i) {
+  var sheet = "@namespace html url(http://www.w3.org/1999/xhtml);\n" +
+              "#display { color: green; " + declarations[i] +
+              " x x x x x x x ; color: red; ) ; z-index: " + (i + 1) + " }";
+  textNode.data = sheet;
+  is(cs.color, "rgb(0, 128, 0)",
+     "color for declaration '" + declarations[i] + "'");
+  is(cs.zIndex, i+1,
+     "z-index for declaration '" + declarations[i] + "'");
+}
+
+for (var i = 0; i < selectors.length; ++i) {
+  var sheet = "@namespace html url(http://www.w3.org/1999/xhtml);\n" +
+              "#display { color: green } " +
+              selectors[i] + " x x x x x x x , #display { color: red } #display { color: red } ) , #display { color: red } " +
+              "#display { z-index: " + (i + 1) + " }";
+  textNode.data = sheet;
+  is(cs.color, "rgb(0, 128, 0)",
+     "color for selector '" + selectors[i] + "'");
+  is(cs.zIndex, i+1,
+     "z-index for selector '" + selectors[i] + "'");
+}
+
+</script>
+</pre>
+</body>
+</html>

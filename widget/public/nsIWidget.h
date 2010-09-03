@@ -111,8 +111,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x34b6123e, 0x78d7, 0x4275, \
-  { 0xa2, 0xbf, 0x07, 0xd4, 0xbf, 0x3a, 0x34, 0x45 } }
+  { 0xe1dda370, 0xdf16, 0x4c92, \
+    { 0x9b, 0x86, 0x4b, 0xd9, 0xcf, 0xff, 0x4e, 0xb1 } }
 
 /*
  * Window shadow styles
@@ -238,6 +238,31 @@ class nsIWidget : public nsISupports {
                       nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
+     * Allocate, initialize, and return a widget that is a child of
+     * |this|.  The returned widget (if nonnull) has gone through the
+     * equivalent of CreateInstance(widgetCID) + Create(...).
+     *
+     * |CreateChild()| lets widget backends decide whether to parent
+     * the new child widget to this, nonnatively parent it, or both.
+     * This interface exists to support the PuppetWidget backend,
+     * which is entirely non-native.  All other params are the same as
+     * for |Create()|.
+     *
+     * |aForceUseIWidgetParent| forces |CreateChild()| to only use the
+     * |nsIWidget*| this, not its native widget (if it exists), when
+     * calling |Create()|.  This is a timid hack around poorly
+     * understood code, and shouldn't be used in new code.
+     */
+    virtual already_AddRefed<nsIWidget>
+    CreateChild(const nsIntRect  &aRect,
+                EVENT_CALLBACK   aHandleEventFunction,
+                nsIDeviceContext *aContext,
+                nsIAppShell      *aAppShell = nsnull,
+                nsIToolkit       *aToolkit = nsnull,
+                nsWidgetInitData *aInitData = nsnull,
+                PRBool           aForceUseIWidgetParent = PR_FALSE) = 0;
+
+    /**
      * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
@@ -285,6 +310,8 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
 
+    NS_IMETHOD RegisterTouchWindow() = 0;
+    NS_IMETHOD UnregisterTouchWindow() = 0;
 
     /**
      * Return the parent Widget of this Widget or nsnull if this is a 
@@ -311,6 +338,20 @@ class nsIWidget : public nsISupports {
      *
      */
     virtual nsIWidget* GetSheetWindowParent(void) = 0;
+
+    /**
+     * Return the physical DPI of the screen containing the window ...
+     * the number of device pixels per inch.
+     */
+    virtual float GetDPI() = 0;
+
+    /**
+     * Return the default scale factor for the window. This is the
+     * default number of device pixels per CSS pixel to use. This should
+     * depend on OS/platform settings such as the Mac's "UI scale factor"
+     * or Windows' "font DPI".
+     */
+    virtual double GetDefaultScale() = 0;
 
     /**
      * Return the first child of this widget.  Will return null if
@@ -768,31 +809,6 @@ class nsIWidget : public nsISupports {
      */
     virtual LayerManager* GetLayerManager() = 0;
 
-    /**
-     * Scroll a set of rectangles in this widget and (as simultaneously as
-     * possible) modify the specified child widgets.
-     * 
-     * This will invalidate areas of the children that have changed, unless
-     * they have just moved by the scroll amount, but does not need to
-     * invalidate any part of this widget, except where the scroll
-     * operation fails to blit because part of the window is unavailable
-     * (e.g. partially offscreen).
-     * 
-     * The caller guarantees that the rectangles in aDestRects are
-     * non-intersecting.
-     *
-     * @param aDelta amount to scroll (device pixels)
-     * @param aDestRects rectangles to copy into
-     * (device pixels relative to this widget)
-     * @param aReconfigureChildren commands to set the bounds and clip
-     * region of a subset of the children of this widget; these should
-     * be performed simultaneously with the scrolling, as far as possible,
-     * to avoid visual artifacts.
-     */
-    virtual void Scroll(const nsIntPoint& aDelta,
-                        const nsTArray<nsIntRect>& aDestRects,
-                        const nsTArray<Configuration>& aReconfigureChildren) = 0;
-
     /** 
      * Internal methods
      */
@@ -1220,6 +1236,8 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
                                               PRBool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
+
+    
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

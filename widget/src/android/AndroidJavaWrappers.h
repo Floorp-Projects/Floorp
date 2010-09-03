@@ -382,8 +382,12 @@ public:
     int MetaState() { return mMetaState; }
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
+    int Offset() { return mOffset; }
     int Count() { return mCount; }
-    int Count2() { return mCount2; }
+    int RangeType() { return mRangeType; }
+    int RangeStyles() { return mRangeStyles; }
+    int RangeForeColor() { return mRangeForeColor; }
+    int RangeBackColor() { return mRangeBackColor; }
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
 
 protected:
@@ -396,7 +400,9 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     int mKeyCode, mUnicodeChar;
-    int mCount, mCount2;
+    int mOffset, mCount;
+    int mRangeType, mRangeStyles;
+    int mRangeForeColor, mRangeBackColor;
     float mX, mY, mZ;
     nsString mCharacters;
     nsRefPtr<nsGeoPosition> mGeoPosition;
@@ -422,9 +428,13 @@ protected:
     static jfieldID jKeyCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jFlagsField;
+    static jfieldID jOffsetField;
     static jfieldID jCountField;
-    static jfieldID jCount2Field;
     static jfieldID jUnicodeCharField;
+    static jfieldID jRangeTypeField;
+    static jfieldID jRangeStylesField;
+    static jfieldID jRangeForeColorField;
+    static jfieldID jRangeBackColorField;
     static jfieldID jLocationField;
 
 public:
@@ -444,18 +454,21 @@ public:
     };
 
     enum {
-        IME_BATCH_END = 0,
-        IME_BATCH_BEGIN = 1,
+        IME_COMPOSITION_END = 0,
+        IME_COMPOSITION_BEGIN = 1,
         IME_SET_TEXT = 2,
         IME_GET_TEXT = 3,
-        IME_DELETE_TEXT = 4
+        IME_DELETE_TEXT = 4,
+        IME_SET_SELECTION = 5,
+        IME_GET_SELECTION = 6,
+        IME_ADD_RANGE = 7
     };
 };
 
 class nsJNIString : public nsString
 {
 public:
-    nsJNIString(jstring jstr);
+    nsJNIString(jstring jstr, JNIEnv *jenv = NULL);
 };
 
 }

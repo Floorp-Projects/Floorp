@@ -124,7 +124,8 @@ public:
   }
 
   virtual nsresult ReadMetadata();
-  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime);
+  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime);
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
 
 private:
   // Value passed to NextPacket to determine if we are reading a video or an
@@ -182,6 +183,12 @@ private:
   // Index of video and audio track to play
   PRUint32 mVideoTrack;
   PRUint32 mAudioTrack;
+
+  // Time in ms of the start of the first audio sample we've decoded.
+  PRInt64 mAudioStartMs;
+
+  // Number of samples we've decoded since decoding began at mAudioStartMs.
+  PRUint64 mAudioSamples;
 
   // Booleans to indicate if we have audio and/or video data
   PRPackedBool mHasVideo;

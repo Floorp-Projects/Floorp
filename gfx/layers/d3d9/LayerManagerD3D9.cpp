@@ -42,28 +42,16 @@
 #include "ImageLayerD3D9.h"
 #include "ColorLayerD3D9.h"
 #include "CanvasLayerD3D9.h"
-
-#include "LayerManagerD3D9Shaders.h"
-
 #include "nsIServiceManager.h"
-#include "nsIConsoleService.h"
-#include "nsPrintfCString.h"
+#include "nsIPrefService.h"
 
 namespace mozilla {
 namespace layers {
 
-struct vertex {
-  float x, y;
-};
-
-IDirect3D9 *LayerManagerD3D9::mD3D9 = NULL;
-
-typedef IDirect3D9* (WINAPI*Direct3DCreate9Func)(
-  UINT SDKVersion
-);
-
+DeviceManagerD3D9 *LayerManagerD3D9::mDeviceManager = nsnull;
 
 LayerManagerD3D9::LayerManagerD3D9(nsIWidget *aWidget)
+  : mIs3DEnabled(PR_FALSE)
 {
     mWidget = aWidget;
     mCurrentCallbackInfo.Callback = NULL;
@@ -72,143 +60,39 @@ LayerManagerD3D9::LayerManagerD3D9(nsIWidget *aWidget)
 
 LayerManagerD3D9::~LayerManagerD3D9()
 {
-}
+  /* Important to release this first since it also holds a reference to the
+   * device manager
+   */
+  mSwapChain = nsnull;
 
-#define HAS_CAP(a, b) (((a) & (b)) == (b))
-#define LACKS_CAP(a, b) !(((a) & (b)) == (b))
+  if (mDeviceManager) {
+    mDeviceManager->Release();
+  }
+}
 
 PRBool
 LayerManagerD3D9::Initialize()
 {
-  if (!mD3D9) {
-    Direct3DCreate9Func d3d9create = (Direct3DCreate9Func)
-      GetProcAddress(LoadLibraryW(L"d3d9.dll"), "Direct3DCreate9");
-    if (!d3d9create) {
+  /* Check the user preference for whether 3d video is enabled or not */ 
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID); 
+  prefs->GetBoolPref("gfx.3d_video.enabled", &mIs3DEnabled); 
+
+  if (!mDeviceManager) {
+    mDeviceManager = new DeviceManagerD3D9;
+
+    if (!mDeviceManager->Init()) {
+      mDeviceManager = nsnull;
       return PR_FALSE;
     }
-
-    mD3D9 = d3d9create(D3D_SDK_VERSION);
-    if (!mD3D9) {
-      return PR_FALSE;
-    }
   }
 
-  D3DPRESENT_PARAMETERS pp;
-  memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
+  mDeviceManager->AddRef();
 
-  pp.BackBufferFormat = D3DFMT_A8R8G8B8;
-  pp.SwapEffect = D3DSWAPEFFECT_COPY;
-  pp.Windowed = TRUE;
-  pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-  pp.hDeviceWindow = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
+  mSwapChain = mDeviceManager->
+    CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
 
-  HRESULT hr = mD3D9->CreateDevice(D3DADAPTER_DEFAULT,
-                                   D3DDEVTYPE_HAL,
-                                   NULL,
-                                   D3DCREATE_FPU_PRESERVE |
-                                   D3DCREATE_MULTITHREADED |
-                                   D3DCREATE_MIXED_VERTEXPROCESSING,
-                                   &pp,
-                                   getter_AddRefs(mDevice));
-
-  if (FAILED(hr)) {
+  if (!mSwapChain) {
     return PR_FALSE;
-  }
-
-  if (!VerifyCaps()) {
-    return PR_FALSE;
-  }
-
-  hr = mDevice->CreateVertexShader((DWORD*)LayerQuadVS,
-                                   getter_AddRefs(mLayerVS));
-
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  hr = mDevice->CreatePixelShader((DWORD*)RGBShaderPS,
-                                  getter_AddRefs(mRGBPS));
-
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  hr = mDevice->CreatePixelShader((DWORD*)YCbCrShaderPS,
-                                  getter_AddRefs(mYCbCrPS));
-
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  hr = mDevice->CreatePixelShader((DWORD*)SolidColorShaderPS,
-                                  getter_AddRefs(mSolidColorPS));
-
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  hr = mDevice->CreateVertexBuffer(sizeof(vertex) * 4,
-                                   0,
-                                   0,
-                                   D3DPOOL_MANAGED,
-                                   getter_AddRefs(mVB),
-                                   NULL);
-
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  vertex *vertices;
-  hr = mVB->Lock(0, 0, (void**)&vertices, 0);
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  vertices[0].x = vertices[0].y = 0;
-  vertices[1].x = 1; vertices[1].y = 0;
-  vertices[2].x = 0; vertices[2].y = 1;
-  vertices[3].x = 1; vertices[3].y = 1;
-
-  mVB->Unlock();
-
-  hr = mDevice->SetStreamSource(0, mVB, 0, sizeof(vertex));
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  D3DVERTEXELEMENT9 elements[] = {
-    { 0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT,
-      D3DDECLUSAGE_POSITION, 0 },
-    D3DDECL_END()
-  };
-
-  mDevice->CreateVertexDeclaration(elements, getter_AddRefs(mVD));
-
-  SetupRenderState();
-
-  nsCOMPtr<nsIConsoleService>
-    console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-
-  D3DADAPTER_IDENTIFIER9 identifier;
-  mD3D9->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &identifier);
-
-  if (console) {
-    nsString msg;
-    msg +=
-      NS_LITERAL_STRING("Direct3D 9 LayerManager Initialized Succesfully.\nDriver: ");
-    msg += NS_ConvertUTF8toUTF16(
-      nsDependentCString((const char*)identifier.Driver));
-    msg += NS_LITERAL_STRING("\nDescription: ");
-    msg += NS_ConvertUTF8toUTF16(
-      nsDependentCString((const char*)identifier.Description));
-    msg += NS_LITERAL_STRING("\nVersion: ");
-    msg += NS_ConvertUTF8toUTF16(
-      nsPrintfCString("%d.%d.%d.%d",
-                      HIWORD(identifier.DriverVersion.HighPart),
-                      LOWORD(identifier.DriverVersion.HighPart),
-                      HIWORD(identifier.DriverVersion.LowPart),
-                      LOWORD(identifier.DriverVersion.LowPart)));
-    console->LogStringMessage(msg.get());
   }
 
   return PR_TRUE;
@@ -253,7 +137,7 @@ LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
 void
 LayerManagerD3D9::SetRoot(Layer *aLayer)
 {
-  mRootLayer = static_cast<LayerD3D9*>(aLayer->ImplData());
+  mRoot = aLayer;
 }
 
 already_AddRefed<ThebesLayer>
@@ -299,40 +183,23 @@ LayerManagerD3D9::CreateImageContainer()
 }
 
 void
-LayerManagerD3D9::SetShaderMode(ShaderMode aMode)
-{
-  switch (aMode) {
-    case RGBLAYER:
-      mDevice->SetVertexShader(mLayerVS);
-      mDevice->SetPixelShader(mRGBPS);
-      break;
-    case YCBCRLAYER:
-      mDevice->SetVertexShader(mLayerVS);
-      mDevice->SetPixelShader(mYCbCrPS);
-      break;
-    case SOLIDCOLORLAYER:
-      mDevice->SetVertexShader(mLayerVS);
-      mDevice->SetPixelShader(mSolidColorPS);
-      break;
-  }
-}
-
-void
 LayerManagerD3D9::Render()
 {
-  if (!SetupBackBuffer()) {
+  if (!mSwapChain->PrepareForRendering()) {
     return;
   }
+  deviceManager()->SetupRenderState();
+
   SetupPipeline();
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  mDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0xffffffff, 0, 0);
+  device()->Clear(0, NULL, D3DCLEAR_TARGET, 0x00000000, 0, 0);
 
-  mDevice->BeginScene();
+  device()->BeginScene();
 
-  if (mRootLayer) {
-    const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
+  if (mRoot) {
+    const nsIntRect *clipRect = mRoot->GetClipRect();
     RECT r;
     if (clipRect) {
       r.left = (LONG)clipRect->x;
@@ -344,24 +211,18 @@ LayerManagerD3D9::Render()
       r.right = rect.width;
       r.bottom = rect.height;
     }
-    mDevice->SetScissorRect(&r);
+    device()->SetScissorRect(&r);
 
-    mRootLayer->RenderLayer();
+    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
   }
 
-  mDevice->EndScene();
+  device()->EndScene();
 
   if (!mTarget) {
     const nsIntRect *r;
     for (nsIntRegionRectIterator iter(mClippingRegion);
          (r = iter.Next()) != nsnull;) {
-      RECT rect;
-      rect.left = r->x;
-      rect.top = r->y;
-      rect.right = r->XMost();
-      rect.bottom = r->YMost();
-
-      mDevice->Present(&rect, &rect, NULL, NULL);
+      mSwapChain->Present(*r);
     }
   } else {
     PaintToTarget();
@@ -387,68 +248,11 @@ LayerManagerD3D9::SetupPipeline()
   viewMatrix[3][1] = 1.0f;
   viewMatrix[3][3] = 1.0f;
 
-  HRESULT hr = mDevice->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
+  HRESULT hr = device()->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to set projection shader constant!");
   }
-}
-
-PRBool
-LayerManagerD3D9::SetupBackBuffer()
-{
-  nsRefPtr<IDirect3DSurface9> backBuffer;
-  mDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO,
-                         getter_AddRefs(backBuffer));
-
-  D3DSURFACE_DESC desc;
-  nsIntRect rect;
-  mWidget->GetClientBounds(rect);
-  backBuffer->GetDesc(&desc);
-
-  HRESULT hr = mDevice->TestCooperativeLevel();
-
-  /* The device is lost or something else is wrong, failure */
-  if (FAILED(hr) && hr != D3DERR_DEVICENOTRESET) {
-    return PR_FALSE;
-  }
-
-  /*
-   * If the backbuffer is the right size, and the device is not lost, we can
-   * safely render without doing anything.
-   */
-  if ((desc.Width == rect.width && desc.Height == rect.height) &&
-      SUCCEEDED(hr)) {
-    return PR_TRUE;
-  }
-
-  /*
-   * Our device is lost or our backbuffer needs resizing, start by clearing
-   * out all D3DPOOL_DEFAULT surfaces.
-   */
-  for(unsigned int i = 0; i < mThebesLayers.Length(); i++) {
-    mThebesLayers[i]->CleanResources();
-  }
-
-  backBuffer = NULL;
-
-  D3DPRESENT_PARAMETERS pp;
-  memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
-
-  pp.BackBufferFormat = D3DFMT_A8R8G8B8;
-  pp.SwapEffect = D3DSWAPEFFECT_COPY;
-  pp.Windowed = TRUE;
-  pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-  pp.hDeviceWindow = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
-
-  hr = mDevice->Reset(&pp);
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  SetupRenderState();
-
-  return PR_TRUE;
 }
 
 void
@@ -456,17 +260,16 @@ LayerManagerD3D9::PaintToTarget()
 {
   nsRefPtr<IDirect3DSurface9> backBuff;
   nsRefPtr<IDirect3DSurface9> destSurf;
-  mDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO,
-                         getter_AddRefs(backBuff));
+  device()->GetRenderTarget(0, getter_AddRefs(backBuff));
 
   D3DSURFACE_DESC desc;
   backBuff->GetDesc(&desc);
 
-  mDevice->CreateOffscreenPlainSurface(desc.Width, desc.Height,
+  device()->CreateOffscreenPlainSurface(desc.Width, desc.Height,
                                        D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM,
                                        getter_AddRefs(destSurf), NULL);
 
-  mDevice->GetRenderTargetData(backBuff, destSurf);
+  device()->GetRenderTargetData(backBuff, destSurf);
 
   D3DLOCKED_RECT rect;
   destSurf->LockRect(&rect, NULL, D3DLOCK_READONLY);
@@ -481,81 +284,6 @@ LayerManagerD3D9::PaintToTarget()
   mTarget->SetOperator(gfxContext::OPERATOR_OVER);
   mTarget->Paint();
   destSurf->UnlockRect();
-}
-
-void
-LayerManagerD3D9::SetupRenderState()
-{
-  mDevice->SetStreamSource(0, mVB, 0, sizeof(vertex));
-  mDevice->SetVertexDeclaration(mVD);
-  mDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-  mDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-  mDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-  mDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-  mDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-  mDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
-  mDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-  mDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-  mDevice->SetSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-  mDevice->SetSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-  mDevice->SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-  mDevice->SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-}
-
-PRBool
-LayerManagerD3D9::VerifyCaps()
-{
-  D3DCAPS9 caps;
-  HRESULT hr = mDevice->GetDeviceCaps(&caps);
-
-  if (FAILED(hr)) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.DevCaps, D3DDEVCAPS_TEXTUREVIDEOMEMORY)) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.PrimitiveMiscCaps, D3DPMISCCAPS_CULLNONE)) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.SrcBlendCaps, D3DPBLENDCAPS_ONE) ||
-      LACKS_CAP(caps.SrcBlendCaps, D3DBLEND_SRCALPHA) ||
-      LACKS_CAP(caps.DestBlendCaps, D3DPBLENDCAPS_INVSRCALPHA)) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.RasterCaps, D3DPRASTERCAPS_SCISSORTEST)) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.TextureCaps, D3DPTEXTURECAPS_ALPHA) ||
-      HAS_CAP(caps.TextureCaps, D3DPTEXTURECAPS_SQUAREONLY) ||
-      (HAS_CAP(caps.TextureCaps, D3DPTEXTURECAPS_POW2) &&
-       LACKS_CAP(caps.TextureCaps, D3DPTEXTURECAPS_NONPOW2CONDITIONAL))) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.TextureFilterCaps, D3DPTFILTERCAPS_MAGFLINEAR) ||
-      LACKS_CAP(caps.TextureFilterCaps, D3DPTFILTERCAPS_MINFLINEAR)) {
-    return PR_FALSE;
-  }
-
-  if (LACKS_CAP(caps.TextureAddressCaps, D3DPTADDRESSCAPS_CLAMP)) {
-    return PR_FALSE;
-  }
-
-  if (caps.MaxTextureHeight < 4096 ||
-      caps.MaxTextureWidth < 4096) {
-    return PR_FALSE;
-  }
-
-  if ((caps.PixelShaderVersion & 0xffff) < 0x200 ||
-      (caps.VertexShaderVersion & 0xffff) < 0x200) {
-    return PR_FALSE;
-  }
-  return PR_TRUE;
 }
 
 LayerD3D9::LayerD3D9(LayerManagerD3D9 *aManager)

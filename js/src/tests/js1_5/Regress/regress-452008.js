@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452008.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452008;
 var summary = 'Bad math with JIT';

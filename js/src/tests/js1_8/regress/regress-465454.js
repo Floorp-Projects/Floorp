@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465454.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465454;
 var summary = 'TM: do not crash with type-unstable loop';

@@ -43,6 +43,7 @@ const CR = Components.results;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
+const NS_GFXINFO_CONTRACTID = "@mozilla.org/gfx/info;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
@@ -334,10 +335,19 @@ function BuildConditionSandbox(aURL) {
     } catch(e) {
       sandbox.xulRuntime.XPCOMABI = "";
     }
+  
+    try {
+      // nsIGfxInfo is currently only implemented on Windows
+      sandbox.d2d = CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo).D2DEnabled;
+    } catch(e) {
+      sandbox.d2d = false;
+    }
 
-    // Backwards compatibility from when we preprocessed autoconf.mk.
-    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
-
+    if (gWindowUtils && gWindowUtils.layerManagerType == "Basic")
+      sandbox.layersGPUAccelerated = true;
+    else
+      sandbox.layersGPUAccelerated = false;
+ 
     // Shortcuts for widget toolkits.
     sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
     sandbox.gtk2Widget = xr.widgetToolkit == "gtk2";
@@ -348,8 +358,8 @@ function BuildConditionSandbox(aURL) {
                  getService(CI.nsIHttpProtocolHandler);
     sandbox.http = {};
     for each (var prop in [ "userAgent", "appName", "appVersion",
-                            "vendor", "vendorSub", "vendorComment",
-                            "product", "productSub", "productComment",
+                            "vendor", "vendorSub",
+                            "product", "productSub",
                             "platform", "oscpu", "language", "misc" ])
         sandbox.http[prop] = hh[prop];
     // see if we have the test plugin available,
@@ -854,8 +864,17 @@ function OnDocumentLoad(event)
             .getInterface(CI.nsIDOMWindowUtils);
 
         function FlushRendering() {
+            function flushWindow(win) {
+                try {
+                    win.document.documentElement.getBoundingClientRect();
+                } catch (e) {}
+                for (var i = 0; i < win.frames.length; ++i) {
+                    flushWindow(win.frames[i]);
+                }
+            }
+                
             // Flush pending restyles and reflows
-            contentRootElement.getBoundingClientRect();
+            flushWindow(contentRootElement.ownerDocument.defaultView);
             // Flush out invalidation
             utils.processUpdates();
         }

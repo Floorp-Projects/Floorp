@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-311580.js';
 
 var summary = "Regression - properly root stack in toXMLString";
 var BUGNUMBER = 311580;

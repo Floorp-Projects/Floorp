@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-354541-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 354541;
 var summary = 'Regression to standard class constructors in case labels';

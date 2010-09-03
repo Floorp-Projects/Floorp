@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452336.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452336;
 var summary = 'Do not assert with JIT: (slot) < (uint32)(obj)->dslots[-1]';

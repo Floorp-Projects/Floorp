@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-375794.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 375794;
 var summary = 'Decompilation of array comprehension with catch guard';

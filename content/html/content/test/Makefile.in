@@ -35,16 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = content/html/content/test
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = content/html/content/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug589.html \
+_TEST_FILES = \
+		test_hidden.html \
+		test_bug589.html \
 		test_bug691.html \
 		nnc_lockup.gif \
 		test_bug694.html \
@@ -177,8 +179,9 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug546995-5.html \
 		file_bug546995.html \
 		test_bug377624.html \
-		test_bug562932.html \
 		test_bug551846.html \
+		test_bug562932.html \
+		test_bug564001.html \
 		test_bug566046.html \
 		test_bug567938-1.html \
 		test_bug567938-2.html \
@@ -187,6 +190,25 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug569955.html \
 		test_bug573969.html \
 		test_bug549475.html \
+		test_bug585508.html \
+		test_bug345624-1.html \
+		test_bug345624-2.html \
+		test_bug561640.html \
+		test_bug345822.html \
+		test_bug555559.html \
+		test_bug344615.html \
+		test_bug345512.html \
+		test_bug566064.html \
+		test_bug566160.html \
+		test_bug582412-1.html \
+		test_bug582412-2.html \
+		test_bug558788-1.html \
+		test_bug558788-2.html \
+		test_bug561634.html \
+		test_bug588683-1.html \
+		test_bug588683-2.html \
+		test_bug588683-3.html \
+		test_bug588683-4.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

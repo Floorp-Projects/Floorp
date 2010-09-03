@@ -949,58 +949,6 @@ private:
     JSStackFrame *mFrame;
 };
 
-/*
- * Initialize WebGL type name aliases.  These types exist in the JS engine
- * as generic names, e.g. "Uint8Array", but WebGL has specific names for these
- * for now.  So we set up the aliases here, because we don't have a good place
- * to do lazy resolution of these.
- */
-static PRBool
-InitWebGLTypes(JSContext *aJSContext, JSObject *aGlobalJSObj)
-{
-    // this is unrooted, but it's a property on aGlobalJSObj so won't go away
-    jsval v;
-
-    // Alias WebGLArrayBuffer -> ArrayBuffer
-    if(!JS_GetProperty(aJSContext, aGlobalJSObj, "ArrayBuffer", &v) ||
-       !JS_DefineProperty(aJSContext, aGlobalJSObj, "WebGLArrayBuffer", v,
-                          NULL, NULL, JSPROP_PERMANENT))
-        return PR_FALSE;
-
-    const int webglTypes[] = {
-        js::TypedArray::TYPE_INT8,
-        js::TypedArray::TYPE_UINT8,
-        js::TypedArray::TYPE_INT16,
-        js::TypedArray::TYPE_UINT16,
-        js::TypedArray::TYPE_INT32,
-        js::TypedArray::TYPE_UINT32,
-        js::TypedArray::TYPE_FLOAT32
-    };
-
-    const char *webglNames[] = {
-        "WebGLByteArray",
-        "WebGLUnsignedByteArray",
-        "WebGLShortArray",
-        "WebGLUnsignedShortArray",
-        "WebGLIntArray",
-        "WebGLUnsignedIntArray",
-        "WebGLFloatArray"
-    };
-
-    for(size_t i = 0;
-        i < NS_ARRAY_LENGTH(webglTypes);
-        ++i)
-    {
-        if(!JS_GetProperty(aJSContext, aGlobalJSObj, js::TypedArray::slowClasses[webglTypes[i]].name, &v) ||
-           !JS_DefineProperty(aJSContext, aGlobalJSObj, webglNames[i], v,
-                              NULL, NULL, JSPROP_PERMANENT))
-            return PR_FALSE;
-    }
-
-    return PR_TRUE;
-}
-
-
 /* void initClasses (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
 NS_IMETHODIMP
 nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
@@ -1036,28 +984,6 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
             return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 
-    if (!InitWebGLTypes(ccx, aGlobalJSObj))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    return NS_OK;
-}
-
-/* void initClassesForOuterObject (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
-NS_IMETHODIMP nsXPConnect::InitClassesForOuterObject(JSContext * aJSContext, JSObject * aGlobalJSObj)
-{
-    // Nest frame chain save/restore in request created by XPCCallContext.
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if(!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    SaveFrame sf(aJSContext);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
-
-    if(!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    scope->RemoveWrappedNativeProtos();
     return NS_OK;
 }
 
@@ -1168,11 +1094,13 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
+        nsresult rv;
+        xpcObjectHelper helper(aCOMObj);
         if(!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                  getter_AddRefs(holder),
-                                                 aCOMObj, &aIID, nsnull,
-                                                 nsnull, tempGlobal,
-                                                 PR_FALSE, OBJ_IS_GLOBAL, &rv))
+                                                 helper, &aIID, nsnull,
+                                                 tempGlobal, PR_FALSE,
+                                                 OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1233,9 +1161,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         }
     }
 
-    if (!InitWebGLTypes(ccx, globalJSObj))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
     NS_ADDREF(*_retval = holder);
 
     return NS_OK;
@@ -1252,10 +1177,10 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
     nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, aCOMObj, aIID,
-                                             nsnull, aCache, aScope,
-                                             aAllowWrapping, OBJ_IS_NOT_GLOBAL,
-                                             &rv))
+    xpcObjectHelper helper(aCOMObj, aCache);
+    if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
+                                             nsnull, aScope, aAllowWrapping,
+                                             OBJ_IS_NOT_GLOBAL, &rv))
         return rv;
 
 #ifdef DEBUG
@@ -2784,6 +2709,19 @@ nsXPConnect::GetNativeWrapperGetPropertyOp(JSPropertyOp *getPropertyPtr)
                  "Call and NoCall XPCNativeWrapper Class must use the same "
                  "getProperty hook.");
     *getPropertyPtr = XPCNativeWrapper::GetJSClass(true)->getProperty;
+}
+
+NS_IMETHODIMP
+nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObject,
+                        nsIXPConnectJSObjectHolder **aHolder)
+{
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(ccx, aObject);
+    if(!objHolder)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aHolder = objHolder);
+    return NS_OK;
 }
 
 /* These are here to be callable from a debugger */

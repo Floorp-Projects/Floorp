@@ -324,6 +324,12 @@ WrapObject(JSContext *cx, JSObject *scope, jsval v, jsval *vp)
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
+  XPCWrappedNative *wn =
+    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, objToWrap);
+  if (wn) {
+    CheckWindow(wn);
+  }
+
   JSObject *wrapperObj =
     JS_NewObjectWithGivenProto(cx, js::Jsvalify(&SJOWClass), nsnull, scope);
 
@@ -400,38 +406,13 @@ GetUnsafeObject(JSContext *cx, JSObject *obj)
 
 } // namespace XPCSafeJSObjectWrapper
 
-static JSBool
-DummyNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  return JS_TRUE;
-}
-
 static JSObject *
-GetScopeFunction(JSContext *cx, JSObject *outerObj)
+GetScopeChainForSafeCall(JSContext *cx, JSObject *outerObj)
 {
-  jsval v;
-  if (!JS_GetReservedSlot(cx, outerObj, sScopeFunSlot, &v)) {
-    return nsnull;
-  }
-
-  if (JSVAL_IS_OBJECT(v)) {
-    return JSVAL_TO_OBJECT(v);
-  }
-
   JSObject *unsafeObj = GetUnsafeObject(cx, outerObj);
-  JSFunction *fun = JS_NewFunction(cx, DummyNative, 0, 0,
-                                   JS_GetGlobalForObject(cx, unsafeObj),
-                                   "SJOWContentBoundary");
-  if (!fun) {
-    return nsnull;
-  }
-
-  JSObject *funobj = JS_GetFunctionObject(fun);
-  if (!JS_SetReservedSlot(cx, outerObj, sScopeFunSlot, OBJECT_TO_JSVAL(funobj))) {
-    return nsnull;
-  }
-
-  return funobj;
+  JSObject *scopeobj = JS_GetGlobalForObject(cx, unsafeObj);
+  OBJ_TO_INNER_OBJECT(cx, scopeobj);
+  return scopeobj;
 }
 
 // Wrap a JS value in a safe wrapper of a function wrapper if
@@ -619,7 +600,7 @@ public:
 
 private:
   JSContext *cx;
-  JSRegExpStatics statics;
+  js::RegExpStatics statics;
   js::AutoStringRooter tvr;
   uint32 options;
   JSStackFrame *fp;
@@ -648,8 +629,8 @@ XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     return JS_FALSE;
   }
 
-  JSObject *scopeFun = GetScopeFunction(cx, obj);
-  if (!scopeFun) {
+  JSObject *scopeChain = GetScopeChainForSafeCall(cx, obj);
+  if (!scopeChain) {
     return JS_FALSE;
   }
 
@@ -667,8 +648,8 @@ XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     }
 
     JSBool ok = aIsSet
-                ? js_SetPropertyByIdWithFakeFrame(cx, unsafeObj, scopeFun, id, vp)
-                : js_GetPropertyByIdWithFakeFrame(cx, unsafeObj, scopeFun, id, vp);
+                ? js_SetPropertyByIdWithFakeFrame(cx, unsafeObj, scopeChain, id, vp)
+                : js_GetPropertyByIdWithFakeFrame(cx, unsafeObj, scopeChain, id, vp);
     if (!ok) {
       return JS_FALSE;
     }
@@ -867,8 +848,8 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  JSObject *scopeFun = GetScopeFunction(cx, safeObj);
-  if (!scopeFun) {
+  JSObject *scopeChain = GetScopeChainForSafeCall(cx, safeObj);
+  if (!scopeChain) {
     return JS_FALSE;
   }
 
@@ -889,7 +870,7 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-    if (!js_CallFunctionValueWithFakeFrame(cx, JSVAL_TO_OBJECT(v), scopeFun,
+    if (!js_CallFunctionValueWithFakeFrame(cx, JSVAL_TO_OBJECT(v), scopeChain,
                                            OBJECT_TO_JSVAL(funToCall),
                                            argc, argv, rval)) {
       return JS_FALSE;
@@ -950,8 +931,8 @@ XPC_SJOW_Create(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  JSObject *scopeFun = GetScopeFunction(cx, callee);
-  if (!scopeFun) {
+  JSObject *scopeChain = GetScopeChainForSafeCall(cx, callee);
+  if (!scopeChain) {
     return JS_FALSE;
   }
 
@@ -975,7 +956,7 @@ XPC_SJOW_Create(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-    if (!js_CallFunctionValueWithFakeFrame(cx, JSVAL_TO_OBJECT(v), scopeFun,
+    if (!js_CallFunctionValueWithFakeFrame(cx, JSVAL_TO_OBJECT(v), scopeChain,
                                            OBJECT_TO_JSVAL(unsafeObj),
                                            argc, argv, rval)) {
       return JS_FALSE;

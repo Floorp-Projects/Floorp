@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'tostring-001.js';
 
 test();
 

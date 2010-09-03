@@ -187,6 +187,7 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
 
   let engine = makeSteamEngine();
@@ -222,7 +223,7 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     do_check_eq(engine._tracker.changedIDs["rekolok"], 0);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -258,6 +259,7 @@ function test_syncStartup_metaGet404() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
 
   try {
@@ -281,7 +283,7 @@ function test_syncStartup_metaGet404() {
     do_check_eq(key.hmac, "fake-symmetric-key-0                                            ");
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -300,6 +302,7 @@ function test_syncStartup_failedMetaGet() {
       response.bodyOutputStream.write("Fail!", 5);
     }
   });
+  do_test_pending();
 
   let engine = makeSteamEngine();
   try {
@@ -314,7 +317,7 @@ function test_syncStartup_failedMetaGet() {
     do_check_eq(error.failureCode, ENGINE_METARECORD_DOWNLOAD_FAIL);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -330,6 +333,7 @@ function test_syncStartup_serverHasNewerVersion() {
   let server = httpd_setup({
       "/1.0/foo/storage/meta/global": global.handler()
   });
+  do_test_pending();
 
   let engine = makeSteamEngine();
   try {
@@ -345,7 +349,7 @@ function test_syncStartup_serverHasNewerVersion() {
     do_check_eq(error.failureCode, VERSION_OUT_OF_DATE);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -362,6 +366,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
   let server = sync_httpd_setup({
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler()
   });
+  do_test_pending();
 
   // global record with a different syncID than our engine has
   let engine = makeSteamEngine();
@@ -389,7 +394,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
     do_check_eq(engine.lastSync, 0);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -434,6 +439,7 @@ function test_syncStartup_badKeyWipesServerData() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
 
   try {
@@ -459,7 +465,7 @@ function test_syncStartup_badKeyWipesServerData() {
     do_check_eq(key.hmac, "fake-symmetric-key-1                                            ");
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -480,6 +486,7 @@ function test_processIncoming_emptyServer() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
 
   let engine = makeSteamEngine();
@@ -491,7 +498,7 @@ function test_processIncoming_emptyServer() {
     do_check_eq(engine.toFetch.length, 0);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -522,6 +529,7 @@ function test_processIncoming_createFromServer() {
       "/1.0/foo/storage/steam/flying": collection.wbos.flying.handler(),
       "/1.0/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
@@ -545,7 +553,7 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine._store.items.scotsman, "Flying Scotsman");
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -611,6 +619,7 @@ function test_processIncoming_reconcile() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
@@ -667,7 +676,7 @@ function test_processIncoming_reconcile() {
     do_check_eq(engine._store.items.nukeme, undefined);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -699,6 +708,7 @@ function test_processIncoming_fetchNum() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
@@ -773,7 +783,7 @@ function test_processIncoming_fetchNum() {
     do_check_true('record-no-233' in engine._store.items);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -798,6 +808,7 @@ function test_uploadOutgoing_toEmptyServer() {
       "/1.0/foo/storage/steam/flying": collection.wbos.flying.handler(),
       "/1.0/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
@@ -828,7 +839,67 @@ function test_uploadOutgoing_toEmptyServer() {
     do_check_eq(collection.wbos.flying.payload, undefined);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    CryptoMetas.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
+function test_uploadOutgoing_failed() {
+  _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
+
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+  let crypto_steam = new ServerWBO('steam');
+  let collection = new ServerCollection();
+  // We only define the "flying" WBO on the server, not the "scotsman"
+  // and "peppercorn" ones.
+  collection.wbos.flying = new ServerWBO('flying');
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+  createAndUploadKeypair();
+  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+
+  let engine = makeSteamEngine();
+  engine._store.items = {flying: "LNER Class A3 4472",
+                         scotsman: "Flying Scotsman",
+                         peppercorn: "Peppercorn Class"};
+  // Mark one of these records as changed 
+  const FLYING_CHANGED = 12345;
+  const SCOTSMAN_CHANGED = 23456;
+  const PEPPERCORN_CHANGED = 34567;
+  engine._tracker.addChangedID('flying', FLYING_CHANGED);
+  engine._tracker.addChangedID('scotsman', SCOTSMAN_CHANGED);
+  engine._tracker.addChangedID('peppercorn', PEPPERCORN_CHANGED);
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+
+    engine._uploadOutgoing();
+
+    // Ensure the 'flying' record has been uploaded and is no longer marked.
+    do_check_true(!!collection.wbos.flying.payload);
+    do_check_eq(engine._tracker.changedIDs['flying'], undefined);
+
+    // The 'scotsman' and 'peppercorn' records couldn't be uploaded so
+    // they weren't cleared from the tracker.
+    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+
+  } finally {
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -867,6 +938,7 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
   createAndUploadKeypair();
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
@@ -886,7 +958,7 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     do_check_eq(noOfUploads, Math.ceil(234/MAX_UPLOAD_RECORDS));
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     CryptoMetas.clearCache();
@@ -926,6 +998,7 @@ function test_syncFinish_deleteByIds() {
   let server = httpd_setup({
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
 
   let engine = makeSteamEngine();
   try {
@@ -942,7 +1015,7 @@ function test_syncFinish_deleteByIds() {
     do_check_eq(engine._delete.ids, undefined);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -979,6 +1052,7 @@ function test_syncFinish_deleteLotsInBatches() {
   let server = httpd_setup({
       "/1.0/foo/storage/steam": collection.handler()
   });
+  do_test_pending();
 
   let engine = makeSteamEngine();
   try {
@@ -1015,7 +1089,7 @@ function test_syncFinish_deleteLotsInBatches() {
     do_check_eq(engine._delete.ids, undefined);
 
   } finally {
-    server.stop(function() {});
+    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
@@ -1034,6 +1108,7 @@ function run_test() {
   test_processIncoming_reconcile();
   test_processIncoming_fetchNum();
   test_uploadOutgoing_toEmptyServer();
+  test_uploadOutgoing_failed();
   test_uploadOutgoing_MAX_UPLOAD_RECORDS();
   test_syncFinish_noDelete();
   test_syncFinish_deleteByIds();

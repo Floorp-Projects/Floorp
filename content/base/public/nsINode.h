@@ -320,7 +320,8 @@ public:
     mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS),
     mNextSibling(nsnull),
     mPreviousSibling(nsnull),
-    mFirstChild(nsnull)
+    mFirstChild(nsnull),
+    mNodeHasRenderingObservers(false)
   {
   }
 
@@ -1147,7 +1148,11 @@ public:
     NS_NOTREACHED("How did we get here?");
   }
 
-  // Optimized way to get classinfo. May return null.
+  bool HasRenderingObservers() { return mNodeHasRenderingObservers; }
+  void SetHasRenderingObservers(bool aValue)
+    { mNodeHasRenderingObservers = aValue; }
+
+  // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
 protected:
 
@@ -1279,6 +1284,9 @@ protected:
   nsIContent* mNextSibling;
   nsIContent* mPreviousSibling;
   nsIContent* mFirstChild;
+
+  // More flags
+  bool mNodeHasRenderingObservers : 1;
 };
 
 

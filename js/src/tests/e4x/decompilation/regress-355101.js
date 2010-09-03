@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-355101.js';
 
 var BUGNUMBER = 355101;
 var summary = 'XML Filtering predicate operator';

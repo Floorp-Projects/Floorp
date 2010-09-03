@@ -80,7 +80,6 @@
  * will NOT be 'b c', but rather 'c d'. Similarly, 'd e' won't be matched.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.10.6.2-1.js';
 var i = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing regexps with the global flag set';

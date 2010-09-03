@@ -43,6 +43,7 @@
 #include "nsTArray.h"
 #include "nsRegion.h"
 #include "nsIFrame.h"
+#include "Layers.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
@@ -50,12 +51,6 @@ class nsDisplayItem;
 class gfxContext;
 
 namespace mozilla {
-
-namespace layers {
-class Layer;
-class ThebesLayer;
-class LayerManager;
-}
 
 enum LayerState {
   LAYER_NONE,
@@ -173,6 +168,14 @@ public:
                                             const nsRect& aRect);
 
   /**
+   * For any descendant frame of aFrame (including across documents) that
+   * has an associated container layer, invalidate all the contents of
+   * all ThebesLayer children of the container. Useful when aFrame is
+   * being moved and we need to invalidate everything in aFrame's subtree.
+   */
+  static void InvalidateThebesLayersInSubtree(nsIFrame* aFrame);
+
+  /**
    * Call this to force *all* retained layer contents to be discarded at
    * the next paint.
    */
@@ -225,11 +228,11 @@ public:
    * aItem must have an underlying frame.
    */
   void AddThebesDisplayItem(ThebesLayer* aLayer,
-                            nsDisplayListBuilder* aBuilder,
                             nsDisplayItem* aItem,
                             const nsRect* aClipRect,
                             nsIFrame* aContainerLayerFrame,
-                            LayerState aLayerState);
+                            LayerState aLayerState,
+                            LayerManager* aTempManager);
 
   /**
    * Given a frame and a display item key that uniquely identifies a
@@ -239,6 +242,26 @@ public:
    * that renders many display items.
    */
   Layer* GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+
+  /**
+   * A useful hashtable iteration function that removes the
+   * DisplayItemData property for the frame, clears its
+   * NS_FRAME_HAS_CONTAINER_LAYER bit and returns PL_DHASH_REMOVE.
+   * aClosure is ignored.
+   */
+  static PLDHashOperator RemoveDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
+                                                       void* aClosure)
+  {
+    return UpdateDisplayItemDataForFrame(aEntry, nsnull);
+  }
+
+  /**
+   * Try to determine whether the ThebesLayer aLayer paints an opaque
+   * single color everywhere it's visible in aRect.
+   * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
+   */
+  nscolor FindOpaqueColorCovering(nsDisplayListBuilder* aBuilder,
+                                  ThebesLayer* aLayer, const nsRect& aRect);
 
 protected:
   /**

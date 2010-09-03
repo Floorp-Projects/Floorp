@@ -220,7 +220,7 @@ nsPluginFile::nsPluginFile(nsIFile *spec)
 
 nsPluginFile::~nsPluginFile() {}
 
-nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
+nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 {
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
@@ -261,9 +261,9 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
   const char *executablePath = bundlePath.get();
 #endif
 
-  outLibrary = PR_LoadLibrary(executablePath);
-  pLibrary = outLibrary;
-  if (!outLibrary) {
+  *outLibrary = PR_LoadLibrary(executablePath);
+  pLibrary = *outLibrary;
+  if (!pLibrary) {
     return NS_ERROR_FAILURE;
   }
 #ifdef DEBUG
@@ -350,17 +350,17 @@ private:
 /**
  * Obtains all of the information currently available for this plugin.
  */
-nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
+nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 {
+  *outLibrary = nsnull;
+
   nsresult rv = NS_OK;
 
   // clear out the info, except for the first field.
   memset(&info, 0, sizeof(info));
 
-  // First open up resource we can use to get plugin info.
-
 #ifndef __LP64__
-  // Try to open a resource fork.
+  // Try to open a resource fork in case we have to use it.
   nsAutoCloseResourceObject resourceObject(mPlugin);
   bool resourceOpened = resourceObject.ResourceOpened();
 #endif
@@ -428,13 +428,18 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     ParsePlistPluginInfo(info, bundle);
     ::CFRelease(bundle);
     if (info.fVariantCount > 0)
-      return NS_OK;    
+      return NS_OK;
   }
 
   // It's possible that our plugin has 2 entry points that'll give us mime type
   // info. Quicktime does this to get around the need of having admin rights to
   // change mime info in the resource fork. We need to use this info instead of
   // the resource. See bug 113464.
+
+  // Sadly we have to load the library for this to work.
+  rv = LoadPlugin(outLibrary);
+  if (NS_FAILED(rv))
+    return rv;
 
   // Try to get data from NP_GetMIMEDescription
   if (pLibrary) {

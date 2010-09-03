@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'label-001.js';
 
 /**
  *  File Name:          label-001.js

@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '10.3.js';
 
 START("10.3 - toXML");
 

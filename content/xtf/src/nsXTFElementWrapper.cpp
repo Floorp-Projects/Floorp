@@ -124,8 +124,14 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   NS_IMPL_QUERY_CYCLE_COLLECTION(nsXTFElementWrapper)
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||
+      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {
     *aInstancePtr = static_cast<nsIClassInfo*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIXPCScriptable))) {
+    *aInstancePtr = static_cast<nsIXPCScriptable*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -681,8 +687,7 @@ nsXTFElementWrapper::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
   PRUint32 xtfCount = 0;
   nsIID** xtfArray = nsnull;
 
-  nsCOMPtr<nsIClassInfo> baseCi =
-    NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
+  nsCOMPtr<nsIClassInfo> baseCi = GetBaseXPCClassInfo();
   if (baseCi) {
     baseCi->GetInterfaces(&baseCount, &baseArray);
   }
@@ -740,8 +745,7 @@ nsXTFElementWrapper::GetHelperForLanguage(PRUint32 language,
                                           nsISupports** aHelper)
 {
   *aHelper = nsnull;
-  nsCOMPtr<nsIClassInfo> ci = 
-    NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
+  nsCOMPtr<nsIClassInfo> ci = GetBaseXPCClassInfo();
   return
     ci ? ci->GetHelperForLanguage(language, aHelper) : NS_ERROR_NOT_AVAILABLE;
 }

@@ -4,8 +4,8 @@
                  type="text/css"?>
 <window onload="runTests()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<iframe height="200" width="600"></iframe>
-<iframe height="200" width="600"></iframe>
+<iframe height="200" width="600" type="content"></iframe>
+<iframe height="200" width="600" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
 var is = window.opener.wrappedJSObject.is;

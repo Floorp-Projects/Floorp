@@ -267,7 +267,7 @@ gfxASurface::GetDeviceOffset() const
 }
 
 void
-gfxASurface::Flush()
+gfxASurface::Flush() const
 {
     cairo_surface_flush(mSurface);
 }
@@ -310,6 +310,10 @@ already_AddRefed<gfxASurface>
 gfxASurface::CreateSimilarSurface(gfxContentType aContent,
                                   const gfxIntSize& aSize)
 {
+    if (!mSurface || !mSurfaceValid) {
+      return nsnull;
+    }
+    
     cairo_surface_t *surface =
         cairo_surface_create_similar(mSurface, cairo_content_t(aContent),
                                      aSize.width, aSize.height);

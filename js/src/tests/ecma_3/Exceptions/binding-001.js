@@ -52,7 +52,6 @@
  */
 
 //-----------------------------------------------------------------------------
-var gTestfile = 'binding-001.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing binding of function names';

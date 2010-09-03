@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'sequential-yields.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = "(none)";
 var summary = "Sequential yields";

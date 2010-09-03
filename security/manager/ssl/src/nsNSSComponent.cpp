@@ -120,6 +120,10 @@
 #include "secerr.h"
 #include "sslerr.h"
 
+#ifdef MOZ_IPC
+#include "nsXULAppAPI.h"
+#endif
+
 #ifdef XP_WIN
 #include "nsILocalFileWin.h"
 #endif
@@ -283,6 +287,13 @@ nsTokenEventRunnable::Run()
 // creating any other components.
 PRBool EnsureNSSInitialized(EnsureNSSOperator op)
 {
+#ifdef MOZ_IPC
+  if (GeckoProcessType_Default != XRE_GetProcessType()) {
+    NS_ERROR("Trying to initialize PSM/NSS in a non-chrome process!");
+    return PR_FALSE;
+  }
+#endif
+
   static PRBool loading = PR_FALSE;
   static PRInt32 haveLoaded = 0;
 
@@ -1708,6 +1719,11 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
         enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
 
+#ifdef SSL_ENABLE_FALSE_START // Requires NSS 3.12.8
+      mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
+#endif
+
       // Disable any ciphers that NSS might have enabled by default
       for (PRUint16 i = 0; i < SSL_NumImplementedCiphers; ++i)
       {
@@ -2235,6 +2251,11 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       PRInt32 warnLevel = 1;
       mPrefBranch->GetIntPref("security.ssl.warn_missing_rfc5746", &warnLevel);
       nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(warnLevel);
+#ifdef SSL_ENABLE_FALSE_START // Requires NSS 3.12.8
+    } else if (prefName.Equals("security.ssl.enable_false_start")) {
+      mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
+#endif
     } else if (prefName.Equals("security.OCSP.enabled")
                || prefName.Equals("security.OCSP.require")) {
       setOCSPOptions(mPrefBranch);

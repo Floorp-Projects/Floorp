@@ -173,8 +173,6 @@ members = [
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMCSS2Properties.*',
-    'nsIDOMSVGCSS2Properties.*',
-    'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.*',
     'nsIDOMViewCSS.getComputedStyle',
     'nsIDOMCSSStyleDeclaration.*',
@@ -214,6 +212,9 @@ members = [
     'nsIDOMHTMLAnchorElement.rel',
     'nsIDOMHTMLAnchorElement.target',
     'nsIDOMHTMLAnchorElement.name',
+    'nsIDOMHTMLAnchorElement.text',
+    'nsIDOMHTMLAnchorElement.search',
+    'nsIDOMHTMLAnchorElement.hash',
     'nsIDOMHTMLBaseElement.href',
     'nsIDOMHTMLBaseElement.target',
     'nsIDOMHTMLButtonElement.name',
@@ -237,9 +238,7 @@ members = [
     'nsIDOMHTMLDocument.images',
     'nsIDOMHTMLDocument.write',
     'nsIDOMHTMLDocument.writeln',
-    'nsIDOMHTMLElement.className',
-    'nsIDOMHTMLElement.id',
-    'nsIDOMHTMLElement.title',
+    'nsIDOMHTMLElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
     'nsIDOMHTMLFormElement.submit',
@@ -257,6 +256,7 @@ members = [
     'nsIDOMHTMLImageElement.name',
     'nsIDOMHTMLImageElement.height',
     'nsIDOMHTMLImageElement.width',
+    'nsIDOMHTMLImageElement.complete',
     'nsIDOMHTMLInputElement.defaultChecked',
     'nsIDOMHTMLInputElement.disabled',
     'nsIDOMHTMLInputElement.select',
@@ -266,6 +266,11 @@ members = [
     'nsIDOMHTMLInputElement.src',
     'nsIDOMHTMLInputElement.name',
     'nsIDOMHTMLInputElement.value',
+    'nsIDOMHTMLInputElement.files',
+    'nsIDOMHTMLInputElement.textLength',
+    'nsIDOMHTMLInputElement.selectionStart',
+    'nsIDOMHTMLInputElement.selectionEnd',
+    'nsIDOMHTMLInputElement.setSelectionRange',
     'nsIDOMHTMLLinkElement.disabled',
     'nsIDOMHTMLOptionElement.index',
     'nsIDOMHTMLOptionElement.selected',
@@ -325,9 +330,6 @@ members = [
     'nsIDOMHTMLCanvasElement.height',
     'nsIDOMHTMLCanvasElement.getContext',
     'nsIDOMHTMLCanvasElement.toDataURL',
-    'nsIDOMNSHTMLAnchorElement.text',
-    'nsIDOMNSHTMLAnchorElement.search',
-    'nsIDOMNSHTMLAnchorElement.hash',
     'nsIDOMNSHTMLDocument.width',
     'nsIDOMNSHTMLDocument.height',
     'nsIDOMNSHTMLDocument.domain',
@@ -343,12 +345,6 @@ members = [
     'nsIDOMNSHTMLElement.offsetWidth',
     'nsIDOMNSHTMLElement.scrollIntoView',
     'nsIDOMNSHTMLFrameElement.contentWindow',
-    'nsIDOMNSHTMLImageElement.complete',
-    'nsIDOMNSHTMLInputElement.files',
-    'nsIDOMNSHTMLInputElement.textLength',
-    'nsIDOMNSHTMLInputElement.selectionStart',
-    'nsIDOMNSHTMLInputElement.selectionEnd',
-    'nsIDOMNSHTMLInputElement.setSelectionRange',
     'nsIDOMNSHTMLOptionCollection.selectedIndex',
     'nsIDOMNSHTMLOptionCollection.add',
     'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
@@ -385,6 +381,7 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
+    'nsIDOMSVGStylable.*',
 
     # dom/interfaces/threads - None.
 
@@ -448,11 +445,14 @@ members = [
     '-nsICanvasRenderingContextWebGL.getFramebufferAttachmentParameter',
     '-nsICanvasRenderingContextWebGL.getRenderbufferParameter',
     '-nsICanvasRenderingContextWebGL.getProgramParameter',
-    '-nsICanvasRenderingContextWebGL.texParameterf',
-    '-nsICanvasRenderingContextWebGL.texParameteri',
     '-nsICanvasRenderingContextWebGL.getUniform',
     '-nsICanvasRenderingContextWebGL.getVertexAttrib',
     '-nsICanvasRenderingContextWebGL.getShaderParameter',
+
+    # Audio
+    'nsIDOMNotifyAudioAvailableEvent.frameBuffer',
+    'nsIDOMNotifyAudioAvailableEvent.time',
+    'nsIDOMHTMLAudioElement.mozWriteAudio',
 
     # dom/indexedDB
     'nsIIDBCursor.*',
@@ -508,6 +508,7 @@ customIncludes = [
     'nsGenericDOMDataNode.h',
     'nsGenericElement.h',
     'nsGenericHTMLElement.h',
+    'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
     ]
@@ -547,16 +548,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
     if (NS_SUCCEEDED(rv))
         JS_ClearScope(cx, obj);
 """
-
-CSS2Properties_ = {
-    'thisType': 'nsICSSDeclaration',
-    'additionalArguments': 'const nsCSSProperty prop',
-    'additionalArgumentValues': 'QS_CSS_PROP_%s',
-    'getter_code': '    nsString result;\n' + 
-                   '    rv = self->GetPropertyValue(prop, result);',
-    'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
-    'canFail': True
-}
 
 CUSTOM_QS = {
     'skipgen': True,
@@ -675,8 +666,15 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_StrokeStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
-    'nsIDOMCSS2Properties_': CSS2Properties_,
-    'nsIDOMNSCSS2Properties_': CSS2Properties_,
+    'nsIDOMCSS2Properties_': {
+        'thisType': 'nsICSSDeclaration',
+        'additionalArguments': 'const nsCSSProperty prop',
+        'additionalArgumentValues': 'QS_CSS_PROP_%s',
+        'getter_code': '    nsString result;\n' + 
+                       '    rv = self->GetPropertyValue(prop, result);',
+        'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
+        'canFail': True
+        },
     'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
@@ -844,6 +842,22 @@ customMethodCalls = {
         },
     'nsIDOMNSHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMHTMLElement_': {
+        'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMElementCSSInlineStyle_': {
+        'thisType': 'nsStyledElement'
+        },
+    'nsIDOMElementCSSInlineStyle_GetStyle': {
+        'thisType': 'nsStyledElement',
+        'code': '    nsIDOMCSSStyleDeclaration* result = '
+                'self->GetStyle(&rv);'
+        },
+    'nsIDOMSVGStylable_GetStyle': {
+        'thisType': 'nsSVGStylableElement',
+        'code': '    nsIDOMCSSStyleDeclaration* result = '
+                'self->GetStyle(&rv);'
         },
     'nsIDOMDocument_': {
         'thisType': 'nsDocument'

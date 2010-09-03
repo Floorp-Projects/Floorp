@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-382509.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 382509;
 var summary = 'Disallow non-global indirect eval';

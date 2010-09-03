@@ -14,11 +14,13 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+          src="../role.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/selectable.js"></script>
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../selectable.js"></script>
 
   <script type="application/javascript">
     function testSelectable(aID, aSelectableChildren)
@@ -36,32 +38,88 @@
 
     function doTest()
     {
+      //////////////////////////////////////////////////////////////////////////
+      // role="list"
+
       var id = "list1";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
+
+      testSelectableSelection(id, [ ]);
+
+      var select = getAccessible(id, [nsIAccessibleSelectable]);
+      select.addChildToSelection(0);
+      testSelectableSelection(id, [ ]);
+      select.removeChildFromSelection(0);
+      testSelectableSelection(id, [ ]);
+      select.selectAllSelection();
+      testSelectableSelection(id, [ ]);
+      select.clearSelection();
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // role="listbox"
 
       id = "listbox1";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
 
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // role="listbox" aria-multiselectable
+
       id = "listbox2";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
+
+      testSelectableSelection(id, [ ]);
+
+      select = getAccessible(id, [nsIAccessibleSelectable]);
+      select.addChildToSelection(0);
+      testSelectableSelection(id, [ "listbox2_item1" ]);
+      select.removeChildFromSelection(0);
+      testSelectableSelection(id, [ ]);
+      select.selectAllSelection();
+      testSelectableSelection(id, [ "listbox2_item1", "listbox2_item2" ]);
+      select.clearSelection();
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // role="grid"
 
       id = "grid1";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
 
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // role="tree"
+
       id = "tree1";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
+
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // role="treegrid"
 
       id = "treegrid1";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for " + id);
 
-      // Test selection methods for selectable children in subtree.
-      testSelectable("grid2",
+      testSelectableSelection(id, [ ]);
+
+      //////////////////////////////////////////////////////////////////////////
+      // role="grid" aria-multiselectable, selectable children in subtree
+
+      id = "grid2";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      testSelectable(id,
                      ["grid2_colhead1", "grid2_colhead2", "grid2_colhead3",
                       "grid2_rowhead", "grid2_cell1", "grid2_cell2"]);
 
@@ -86,6 +144,11 @@
      title="ARIA grid and accessible selectable methods shouldn't use GetNextSibling">
     Mozilla Bug 566551
   </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=590176"
+     title="add pseudo SelectAccessible interface">
+    Mozilla Bug 590176
+  </a><br>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -102,8 +165,8 @@
   </div>
 
   <div role="listbox" id="listbox2" aria-multiselectable="true">
-    <div role="listitem">item1</div>
-    <div role="listitem">item2</div>
+    <div role="listitem" id="listbox2_item1">item1</div>
+    <div role="listitem" id="listbox2_item2">item2</div>
   </div>
 
   <div role="grid" id="grid1">

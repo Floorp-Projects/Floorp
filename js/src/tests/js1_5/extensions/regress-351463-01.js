@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351463-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351463;
 var summary = 'Treat hyphens as not special adjacent to CharacterClassEscapes in character classes';

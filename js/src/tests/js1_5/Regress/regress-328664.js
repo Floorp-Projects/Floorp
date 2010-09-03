@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-328664.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 328664;
 var summary = 'Correct error message for funccall(undefined, undefined.prop)';

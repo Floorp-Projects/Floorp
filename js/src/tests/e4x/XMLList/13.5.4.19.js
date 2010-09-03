@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.5.4.19.js';
 
 START("13.5.4.19 - XMLList text()");
 

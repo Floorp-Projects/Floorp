@@ -70,6 +70,9 @@ nsUXThemeData::sIsVistaOrLater = PR_FALSE;
 PRPackedBool
 nsUXThemeData::sHaveCompositor = PR_FALSE;
 
+PRBool nsUXThemeData::sTitlebarInfoPopulated = PR_FALSE;
+SIZE nsUXThemeData::sCommandButtons[3];
+
 nsUXThemeData::OpenThemeDataPtr nsUXThemeData::openTheme = NULL;
 nsUXThemeData::CloseThemeDataPtr nsUXThemeData::closeTheme = NULL;
 nsUXThemeData::DrawThemeBackgroundPtr nsUXThemeData::drawThemeBG = NULL;
@@ -90,6 +93,7 @@ nsUXThemeData::DwmExtendFrameIntoClientAreaProc nsUXThemeData::dwmExtendFrameInt
 nsUXThemeData::DwmIsCompositionEnabledProc nsUXThemeData::dwmIsCompositionEnabledPtr = NULL;
 nsUXThemeData::DwmSetIconicThumbnailProc nsUXThemeData::dwmSetIconicThumbnailPtr = NULL;
 nsUXThemeData::DwmSetIconicLivePreviewBitmapProc nsUXThemeData::dwmSetIconicLivePreviewBitmapPtr = NULL;
+nsUXThemeData::DwmGetWindowAttributeProc nsUXThemeData::dwmGetWindowAttributePtr = NULL;
 nsUXThemeData::DwmSetWindowAttributeProc nsUXThemeData::dwmSetWindowAttributePtr = NULL;
 nsUXThemeData::DwmInvalidateIconicBitmapsProc nsUXThemeData::dwmInvalidateIconicBitmapsPtr = NULL;
 nsUXThemeData::DwmDefWindowProcProc nsUXThemeData::dwmDwmDefWindowProcPtr = NULL;
@@ -111,8 +115,12 @@ nsUXThemeData::Initialize()
 {
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
-  sThemeDLL = ::LoadLibraryW(kThemeLibraryName);
-  if (sThemeDLL) {
+
+  PRInt32 version = nsWindow::GetWindowsVersion();
+  sIsXPOrLater = version >= WINXP_VERSION;
+  sIsVistaOrLater = version >= VISTA_VERSION;
+
+  if (GetThemeDLL()) {
     openTheme = (OpenThemeDataPtr)GetProcAddress(sThemeDLL, "OpenThemeData");
     closeTheme = (CloseThemeDataPtr)GetProcAddress(sThemeDLL, "CloseThemeData");
     drawThemeBG = (DrawThemeBackgroundPtr)GetProcAddress(sThemeDLL, "DrawThemeBackground");
@@ -129,22 +137,19 @@ nsUXThemeData::Initialize()
     isThemeBackgroundPartiallyTransparent = (IsThemeBackgroundPartiallyTransparentPtr)GetProcAddress(sThemeDLL, "IsThemeBackgroundPartiallyTransparent");
   }
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-   sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
-   if(sDwmDLL) {
-     dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
-     dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDLL, "DwmIsCompositionEnabled");
-     dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDLL, "DwmSetIconicThumbnail");
-     dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDLL, "DwmSetIconicLivePreviewBitmap");
-     dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmSetWindowAttribute");
-     dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDLL, "DwmInvalidateIconicBitmaps");
-     dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDLL, "DwmDefWindowProc");
-     CheckForCompositor();
-   }
+  if (GetDwmDLL()) {
+    dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
+    dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDLL, "DwmIsCompositionEnabled");
+    dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDLL, "DwmSetIconicThumbnail");
+    dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDLL, "DwmSetIconicLivePreviewBitmap");
+    dwmGetWindowAttributePtr = (DwmGetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmGetWindowAttribute");
+    dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmSetWindowAttribute");
+    dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDLL, "DwmInvalidateIconicBitmaps");
+    dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDLL, "DwmDefWindowProc");
+    CheckForCompositor();
+  }
 #endif
 
-  PRInt32 version = nsWindow::GetWindowsVersion();
-  sIsXPOrLater = version >= WINXP_VERSION;
-  sIsVistaOrLater = version >= VISTA_VERSION;
   Invalidate();
 }
 
@@ -167,6 +172,8 @@ nsUXThemeData::Invalidate() {
     // shall give WIN2K special treatment
     sFlatMenus = PR_FALSE;
   }
+  // Refresh titlebar button info
+  sTitlebarInfoPopulated = PR_FALSE;
 }
 
 HANDLE
@@ -180,6 +187,22 @@ nsUXThemeData::GetTheme(nsUXThemeClass cls) {
   }
   return sThemes[cls];
 }
+
+HMODULE
+nsUXThemeData::GetThemeDLL() {
+  if (!sThemeDLL && sIsXPOrLater)
+    sThemeDLL = ::LoadLibraryW(kThemeLibraryName);
+  return sThemeDLL;
+}
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+HMODULE
+nsUXThemeData::GetDwmDLL() {
+  if (!sDwmDLL && sIsVistaOrLater)
+    sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
+  return sDwmDLL;
+}
+#endif
 
 const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
   switch(cls) {
@@ -223,8 +246,93 @@ const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
       return L"Listview";
     case eUXMenu:
       return L"Menu";
+    case eUXWindowFrame:
+      return L"Window";
     default:
       NS_NOTREACHED("unknown uxtheme class");
       return L"";
   }
+}
+
+// static
+void
+nsUXThemeData::InitTitlebarInfo()
+{
+  // Pre-populate with generic metrics. These likley will not match
+  // the current theme, but they insure the buttons at least show up.
+  sCommandButtons[0].cx = GetSystemMetrics(SM_CXSIZE);
+  sCommandButtons[0].cy = GetSystemMetrics(SM_CYSIZE);
+  sCommandButtons[1].cx = sCommandButtons[2].cx = sCommandButtons[0].cx;
+  sCommandButtons[1].cy = sCommandButtons[2].cy = sCommandButtons[0].cy;
+
+  // Use system metrics for pre-vista
+  if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
+    sTitlebarInfoPopulated = PR_TRUE;
+}
+
+// static
+void
+nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
+{
+  if (sTitlebarInfoPopulated || !aWnd)
+    return;
+
+  // Compositor enabled, we won't use these.
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  if (nsUXThemeData::CheckForCompositor()) {
+    sTitlebarInfoPopulated = PR_TRUE;
+    return;
+  }
+#endif
+
+  // Query a temporary, visible window with command buttons to get
+  // the right metrics. 
+  WNDCLASSW wc;
+  wc.style         = 0;
+  wc.lpfnWndProc   = ::DefWindowProcW;
+  wc.cbClsExtra    = 0;
+  wc.cbWndExtra    = 0;
+  wc.hInstance     = nsToolkit::mDllInstance;
+  wc.hIcon         = NULL;
+  wc.hCursor       = NULL;
+  wc.hbrBackground = NULL;
+  wc.lpszMenuName  = NULL;
+  wc.lpszClassName = kClassNameTemp;
+  ::RegisterClassW(&wc);
+
+  // Create a transparent, descendent of the window passed in. This
+  // keeps the window from showing up on the desktop or the taskbar.
+  // Note the parent (browser) window is usually still hidden, we
+  // don't want to display it, so we can't query it directly.
+  HWND hWnd = CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_LAYERED,
+                              kClassNameTemp, L"",
+                              WS_OVERLAPPEDWINDOW,
+                              0, 0, 0, 0, aWnd, NULL,
+                              nsToolkit::mDllInstance, NULL);
+  NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
+
+  ShowWindow(hWnd, SW_SHOW);
+  TITLEBARINFOEX info = {0};
+  info.cbSize = sizeof(TITLEBARINFOEX);
+  SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
+  DestroyWindow(hWnd);
+
+  // Only set if we have valid data for all three buttons we use.
+  if ((info.rgrect[2].right - info.rgrect[2].left) == 0 ||
+      (info.rgrect[3].right - info.rgrect[3].left) == 0 ||
+      (info.rgrect[5].right - info.rgrect[5].left) == 0) {
+    NS_WARNING("WM_GETTITLEBARINFOEX query failed to find usable metrics.");
+    return;
+  }
+  // minimize
+  sCommandButtons[0].cx = info.rgrect[2].right - info.rgrect[2].left;
+  sCommandButtons[0].cy = info.rgrect[2].bottom - info.rgrect[2].top;
+  // maximize/restore
+  sCommandButtons[1].cx = info.rgrect[3].right - info.rgrect[3].left;
+  sCommandButtons[1].cy = info.rgrect[3].bottom - info.rgrect[3].top;
+  // close
+  sCommandButtons[2].cx = info.rgrect[5].right - info.rgrect[5].left;
+  sCommandButtons[2].cy = info.rgrect[5].bottom - info.rgrect[5].top;
+
+  sTitlebarInfoPopulated = PR_TRUE;
 }

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'splice2.js';
 
 /**
    Filename:     splice2.js

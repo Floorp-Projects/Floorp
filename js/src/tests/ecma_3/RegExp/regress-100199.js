@@ -50,7 +50,6 @@
  * Neither one of these conditions should cause syntax errors in a RegExp.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-100199.js';
 var i = 0;
 var BUGNUMBER = 100199;
 var summary = '[], [^] are valid RegExp conditions. Should not cause errors -';

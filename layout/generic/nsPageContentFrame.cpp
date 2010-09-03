@@ -88,6 +88,11 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Set our size up front, since some parts of reflow depend on it
+  // being already set.  Note that the computed height may be
+  // unconstrained; that's ok.  Consumers should watch out for that.
+  SetSize(nsSize(aReflowState.availableWidth, aReflowState.availableHeight));
+ 
   // A PageContentFrame must always have one child: the canvas frame.
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
@@ -143,6 +148,8 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
     aDesiredSize.height = aReflowState.availableHeight;
   }
+
+  FinishAndStoreOverflow(&aDesiredSize);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

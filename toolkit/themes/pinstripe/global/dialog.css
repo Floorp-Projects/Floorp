@@ -60,12 +60,12 @@ dialog {
 /* ::::: dialog header ::::: */
 
 dialogheader {
-  margin: 0px 5px 5px 5px;
+  margin: 0 5px 5px;
   padding: 5px 8px;
 }
 
 .dialogheader-title {
-  margin: 0px !important;
+  margin: 0 !important;
   font-size: larger;
   font-weight: bold;
   display: none;
@@ -76,7 +76,9 @@ dialogheader {
 .header-large {
   -moz-box-orient: vertical;
   margin: -14px -14px 0;
-  padding: 12px 5px 12px 25px;
+  padding: 12px;
+  -moz-padding-end: 5px;
+  -moz-padding-start: 25px;
 }
 
 .header-large > .dialogheader-title {
@@ -89,19 +91,21 @@ dialogheader {
 }
 
 .dialogheader-description {
-	font-weight: bold !important;
+  font-weight: bold !important;
 }
 
 .dialogheader-title {
-	font-weight: bold !important;
+  font-weight: bold !important;
 }
 
 /*XXX - belongs to toolkit/content/finddialog.xul: */
 
-#findDialog, #findDialog > menu, #findDialog > groupbox {
-	font: menu !important;
+#findDialog,
+#findDialog > menu,
+#findDialog > groupbox {
+  font: menu !important;
 }
 
 #dialog\.caseSensitive {
-	margin-top: 8px;
+  margin-top: 8px;
 }

@@ -50,7 +50,7 @@ namespace layers {
 class ThebesLayerBufferOGL;
 
 class ThebesLayerOGL : public ThebesLayer, 
-                         public LayerOGL
+                       public LayerOGL
 {
   typedef ThebesLayerBufferOGL Buffer;
 
@@ -65,6 +65,7 @@ public:
   void InvalidateRegion(const nsIntRegion& aRegion);
 
   /** LayerOGL implementation */
+  void Destroy();
   Layer* GetLayer();
   virtual PRBool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,

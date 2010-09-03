@@ -40,6 +40,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = browser/base/content/test
 
+DIRS += tabview
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -68,7 +70,6 @@ _TEST_FILES = \
 		gZipOfflineChild.html^headers^ \
 		gZipOfflineChild.cacheManifest \
 		gZipOfflineChild.cacheManifest^headers^ \
-		test_bug452451.html \
 		$(NULL)
 
 ifeq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
@@ -89,6 +90,8 @@ endif
 # back to the clear recent history dialog (santize.xul), if it ever is (bug
 # 480169)
 
+# browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
+
 _BROWSER_FILES = \
                  browser_typeAheadFind.js \
                  browser_NetworkPrioritizer.js \
@@ -99,6 +102,7 @@ _BROWSER_FILES = \
                  title_test.svg \
                  browser_bug329212.js \
                  browser_bug356571.js \
+                 browser_bug380960.js \
                  browser_bug386835.js \
                  browser_bug405137.js \
                  browser_bug406216.js \
@@ -134,21 +138,35 @@ _BROWSER_FILES = \
                  browser_bug555224.js \
                  browser_bug555767.js \
                  browser_bug556061.js \
+                 browser_bug559991.js \
+                 browser_bug561623.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug577121.js \
+                 browser_bug579872.js \
                  browser_bug580956.js \
+                 browser_bug581242.js \
+                 browser_bug581947.js \
+                 browser_bug585830.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
-                 browser_drag.js \
+                 browser_duplicateIDs.js \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
+                 browser_hide_removing.js \
                  browser_inspector_initialization.js \
                  browser_inspector_treeSelection.js \
                  browser_inspector_highlighter.js \
                  browser_inspector_stylePanel.js \
+                 browser_inspector_domPanel.js \
                  browser_inspector_iframeTest.js \
+                 browser_inspector_scrolling.js \
+                 browser_inspector_store.js \
+                 browser_inspector_tab_switch.js \
+                 browser_inspector_treePanel_output.js \
+                 browser_inspector_treePanel_input.html \
+                 browser_inspector_treePanel_result.html \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
@@ -164,7 +182,13 @@ _BROWSER_FILES = \
                  browser_selectTabAtIndex.js \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
+                 browser_visibleTabs.js \
+                 browser_visibleTabs_contextMenu.js \
+                 browser_visibleTabs_bookmarkAllPages.js \
+                 browser_visibleTabs_bookmarkAllTabs.js \
+                 browser_visibleTabs_tabPreview.js \
                  discovery.html \
+                 domplate_test.js \
                  moz.png \
                  test_bug435035.html \
                  test_bug462673.html \
@@ -180,7 +204,7 @@ _BROWSER_FILES = \
                  browser_tabMatchesInAwesomebar.js \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
-    $(NULL)
+                 $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \

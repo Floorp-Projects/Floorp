@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-412926.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 412926;
 var summary = 'JS_ValueToId(cx, JSVAL_NULL) should return atom for "null" string';

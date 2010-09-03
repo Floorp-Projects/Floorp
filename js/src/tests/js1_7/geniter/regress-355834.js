@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355834.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355834;
 var summary = 'new Function("yield")';

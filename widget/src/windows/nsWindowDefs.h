@@ -110,6 +110,14 @@
 
 #define FAPPCOMMAND_MASK                  0xF000
 
+#ifndef WM_GETTITLEBARINFOEX
+#define WM_GETTITLEBARINFOEX              0x033F
+#endif
+
+#ifndef CCHILDREN_TITLEBAR
+#define CCHILDREN_TITLEBAR                5
+#endif
+
 #ifndef APPCOMMAND_BROWSER_BACKWARD
   #define APPCOMMAND_BROWSER_BACKWARD       1
   #define APPCOMMAND_BROWSER_FORWARD        2
@@ -172,8 +180,6 @@
 #define MOUSE_INPUT_SOURCE() nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE
 #endif
 
-
-
 /**************************************************************
  *
  * SECTION: enums
@@ -211,6 +217,7 @@ const LPCWSTR kClassNameContentFrame = L"MozillaContentFrameWindowClass";
 const LPCWSTR kClassNameGeneral      = L"MozillaWindowClass";
 const LPCWSTR kClassNameDialog       = L"MozillaDialogClass";
 const LPCWSTR kClassNameDropShadow   = L"MozillaDropShadowWindowClass";
+const LPCWSTR kClassNameTemp         = L"MozillaTempWindowClass";
 
 static const PRUint32 sModifierKeyMap[][3] = {
   { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },
@@ -258,6 +265,16 @@ struct KeyPair {
   KeyPair(PRUint32 aGeneral, PRUint32 aSpecific)
     : mGeneral(PRUint8(aGeneral)), mSpecific(PRUint8(aSpecific)) {}
 };
+
+#ifndef TITLEBARINFOEX
+struct TITLEBARINFOEX
+{
+    DWORD cbSize;
+    RECT rcTitleBar;
+    DWORD rgstate[CCHILDREN_TITLEBAR + 1];
+    RECT rgrect[CCHILDREN_TITLEBAR + 1];
+};
+#endif
 
 /**************************************************************
  *

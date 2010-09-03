@@ -46,7 +46,6 @@
  * See ECMA3  Section 12.11,  "The switch Statement"
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-74474-002.js';
 var UBound = 0;
 var BUGNUMBER = 74474;
 var summary = 'Test of switch statement that overflows the stack-allocated bitmap';

@@ -1,23 +1,23 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 wizard {
-	padding: 14px;
+  padding: 14px;
 }
 
 #header { 
-	display: inline !important;
+  display: inline !important;
 }
 
 .wizard-header {
-	-moz-appearance: dialog;
+  -moz-appearance: dialog;
 }
 
 .wizard-header-box-1 {
-  color: #000000;
+  color: #000;
 }
 
 .wizard-header-box-text {
-  padding: 6px 10px 6px 10px;
+  padding: 6px 10px;
   font: menu;
   font-weight: bold;
 }
@@ -28,7 +28,10 @@ wizard {
 }
 
 .wizard-header-box-icon {
-  margin: 3px 20px 0 3px;
+  margin-top: 3px;
+  -moz-margin-end: 20px
+  margin-bottom: 0;
+  -moz-margin-start: 3px;
 }
 
 wizard[branded="true"] .wizard-header-icon {
@@ -37,16 +40,16 @@ wizard[branded="true"] .wizard-header-icon {
 
 .wizard-page-box {
   padding: 15px 23px;
-    -moz-appearance: dialog;
+  -moz-appearance: dialog;
 }
 
 .wizard-buttons-separator {
   margin: 0 !important;
-  border-bottom: 1px solid #FFFFFF !important;
+  border-bottom: 1px solid #fff !important;
 }
 
 .wizard-buttons-btm {
-  padding: 3px 6px 6px 6px;
+  padding: 3px 6px 6px;
 }
 
 .wizard-button {

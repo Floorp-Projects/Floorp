@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-507424.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 507424;
 var summary = 'TM: assert with regexp literal inside closure'

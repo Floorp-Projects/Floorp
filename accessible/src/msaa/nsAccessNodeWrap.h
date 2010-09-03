@@ -71,7 +71,7 @@
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
 
-class nsAccTextChangeEvent;
+class AccTextChangeEvent;
 
 class nsAccessNodeWrap :  public nsAccessNode,
                           public nsIWinAccessNode,
@@ -187,7 +187,7 @@ protected:
      * It is used in nsHyperTextAccessibleWrap for IA2::newText/oldText
      * implementation.
      */
-    static nsAccTextChangeEvent *gTextEvent;
+    static AccTextChangeEvent* gTextEvent;
 };
 
 /**

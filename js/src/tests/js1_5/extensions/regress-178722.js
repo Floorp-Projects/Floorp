@@ -60,7 +60,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-178722.js';
 var UBound = 0;
 var BUGNUMBER = 178722;
 var summary = 'arr.sort() should not output |undefined| when |arr| is empty';

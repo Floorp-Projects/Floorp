@@ -42,7 +42,7 @@ found in the LICENSE file.
             function checkDrawElements(mode, count, type, expect, msg) {
               gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
               gl.drawElements(mode, count, type, 0);
-              assertMsg(gl.getError() == expect, msg);
+              glErrorShouldBe(gl, expect, msg);
             }
 
             gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 1);

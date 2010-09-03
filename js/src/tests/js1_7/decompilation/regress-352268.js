@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352268.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352268;
 var summary = 'decompilation should not change scope of |let| in |else|...|if|';

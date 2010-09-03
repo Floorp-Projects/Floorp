@@ -221,22 +221,3 @@ gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
     mCodepointsWithNoFonts.set(aCh);
     return nsnull;
 }
-
-void
-gfxOS2Platform::InitDisplayCaps()
-{
-    // create DC compatible with the screen
-    HDC dc = DevOpenDC((HAB)1, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
-    if (dc > 0) {
-        // we do have a DC and we can query the DPI setting from it
-        LONG lDPI;
-        if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
-            gfxPlatform::sDPI = lDPI;
-        DevCloseDC(dc);
-    }
-
-    if (gfxPlatform::sDPI <= 0) {
-        // Fall back to something sane
-        gfxPlatform::sDPI = 96;
-    }
-}

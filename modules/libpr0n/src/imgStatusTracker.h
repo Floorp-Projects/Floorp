@@ -45,7 +45,16 @@ class imgIContainer;
 class imgRequest;
 class imgRequestProxy;
 class imgStatusNotifyRunnable;
+class imgRequestNotifyRunnable;
+namespace mozilla {
+namespace imagelib {
+class Image;
+} // namespace imagelib
+} // namespace mozilla
 
+
+#include "nsCOMPtr.h"
+#include "nsIRunnable.h"
 #include "prtypes.h"
 #include "nscore.h"
 
@@ -60,9 +69,9 @@ enum {
 
 /*
  * The image status tracker is a class that encapsulates all the loading and
- * decoding status about an image (imgContainer), and makes it possible to send
- * notifications to imgRequestProxys, both synchronously (i.e., the status now)
- * and asynchronously (the status later).
+ * decoding status about an Image, and makes it possible to send notifications
+ * to imgRequestProxys, both synchronously (i.e., the status now) and
+ * asynchronously (the status later).
  *
  * When a new proxy needs to be notified of the current state of an image, call
  * the Notify() method on this class with the relevant proxy as its argument,
@@ -75,7 +84,14 @@ public:
   // aImage is the image that this status tracker will pass to the
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
-  imgStatusTracker(imgIContainer* aImage);
+  imgStatusTracker(mozilla::imagelib::Image* aImage);
+  imgStatusTracker(const imgStatusTracker& aOther);
+
+  // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
+  // are created before their Image is created.  This method should only
+  // be called once, and only on an imgStatusTracker that was initialized
+  // without an image.
+  void SetImage(mozilla::imagelib::Image* aImage);
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
@@ -145,8 +161,10 @@ public:
   void SendDiscard(imgRequestProxy* aProxy);
 
   /* non-virtual imgIContainerObserver methods */
-  void RecordFrameChanged(imgIContainer* aContainer, nsIntRect* aDirtyRect);
-  void SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer, nsIntRect* aDirtyRect);
+  void RecordFrameChanged(imgIContainer* aContainer,
+                          const nsIntRect* aDirtyRect);
+  void SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer,
+                        const nsIntRect* aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void RecordStartRequest();
@@ -156,10 +174,13 @@ public:
 
 private:
   friend class imgStatusNotifyRunnable;
+  friend class imgRequestNotifyRunnable;
 
-  // A weak pointer to the imgIContainer, because the container owns us, and we
+  nsCOMPtr<nsIRunnable> mRequestRunnable;
+
+  // A weak pointer to the Image, because it owns us, and we
   // can't create a cycle.
-  imgIContainer* mImage;
+  mozilla::imagelib::Image* mImage;
   PRUint32 mState;
   nsresult mImageStatus;
   PRPackedBool mHadLastPart;

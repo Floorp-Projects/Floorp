@@ -446,9 +446,20 @@ class nsTFixedString_CharT : public nsTString_CharT
          *        the length of the string already contained in the buffer
          */
 
-      NS_COM nsTFixedString_CharT( char_type* data, size_type storageSize );
+      nsTFixedString_CharT( char_type* data, size_type storageSize )
+        : string_type(data, PRUint32(char_traits::length(data)), F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+        , mFixedCapacity(storageSize - 1)
+        , mFixedBuf(data)
+        {}
 
-      NS_COM nsTFixedString_CharT( char_type* data, size_type storageSize, size_type length );
+      nsTFixedString_CharT( char_type* data, size_type storageSize, size_type length )
+        : string_type(data, length, F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+        , mFixedCapacity(storageSize - 1)
+        , mFixedBuf(data)
+        {
+          // null-terminate
+          mFixedBuf[length] = char_type(0);
+        }
 
         // |operator=| does not inherit, so we must define our own
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }

@@ -1,13 +1,13 @@
 .begin a
 ptr = allocp 8
 a = immi 65
-sti a ptr 0
+sti2c a ptr 0
 b = immi 66
-sti b ptr 1
+sti2c b ptr 1
 c = immi 67
-sti c ptr 2
+sti2c c ptr 2
 zero = immi 0
-sti zero ptr 3
+sti2c zero ptr 3
 ss = calli puts cdecl ptr
 nn = gei ss zero
 reti nn

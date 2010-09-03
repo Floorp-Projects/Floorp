@@ -69,7 +69,7 @@ Notification.prototype = {
   get anchorElement() {
     let anchorElement = null;
     if (this.anchorID)
-      anchorElement = this.owner.window.document.getElementById(this.anchorID);
+      anchorElement = this.owner.iconBox.querySelector("#"+this.anchorID);
 
     if (!anchorElement)
       anchorElement = this.owner.iconBox;
@@ -89,17 +89,32 @@ Notification.prototype = {
  *        populated with <popupnotification> children and displayed it as
  *        needed.
  * @param iconBox
- *        Optional reference to a container element that should be hidden or
- *        unhidden when notifications are hidden or shown. Used as a fallback
- *        popup anchor if notifications do not specify anchor IDs.
+ *        Reference to a container element that should be hidden or
+ *        unhidden when notifications are hidden or shown. It should be the
+ *        parent of anchor elements whose IDs are passed to show().
+ *        It is used as a fallback popup anchor if notifications specify
+ *        invalid or non-existent anchor IDs.
  */
 function PopupNotifications(tabbrowser, panel, iconBox) {
+  if (!(tabbrowser instanceof Ci.nsIDOMXULElement))
+    throw "Invalid tabbrowser";
+  if (!(iconBox instanceof Ci.nsIDOMXULElement))
+    throw "Invalid iconBox";
+  if (!(panel instanceof Ci.nsIDOMXULElement))
+    throw "Invalid panel";
+
   this.window = tabbrowser.ownerDocument.defaultView;
   this.panel = panel;
   this.iconBox = iconBox;
   this.tabbrowser = tabbrowser;
 
   let self = this;
+  this.iconBox.addEventListener("click", function (event) {
+    self._onIconBoxCommand(event);
+  }, false);
+  this.iconBox.addEventListener("keypress", function (event) {
+    self._onIconBoxCommand(event);
+  }, false);
   this.panel.addEventListener("popuphidden", function (event) {
     self._onPopupHidden(event);
   }, true);
@@ -171,6 +186,11 @@ PopupNotifications.prototype = {
    *                     dismiss for this many page loads.
    *        timeout:     A time in milliseconds. The notification will not
    *                     automatically dismiss before this time.
+   *        dismissed:   Whether the notification should be added as a dismissed
+   *                     notification. Dismissed notifications can be activated
+   *                     by clicking on their anchorElement.
+   *        neverShow:   Indicate that no popup should be shown for this
+   *                     notification. Useful for just showing the anchor icon.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -183,8 +203,6 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_show: invalid browser";
     if (!id)
       throw "PopupNotifications_show: invalid ID";
-    if (!message)
-      throw "PopupNotifications_show: invalid message";
     if (mainAction && isInvalidAction(mainAction))
       throw "PopupNotifications_show: invalid mainAction";
     if (secondaryActions && secondaryActions.some(isInvalidAction))
@@ -193,6 +211,8 @@ PopupNotifications.prototype = {
     let notification = new Notification(id, message, anchorID, mainAction,
                                         secondaryActions, browser, this, options);
 
+    if (options && options.dismissed)
+      notification.dismissed = true;
 
     let existingNotification = this.getNotification(id, browser);
     if (existingNotification)
@@ -316,7 +336,10 @@ PopupNotifications.prototype = {
       let doc = this.window.document;
       let popupnotification = doc.createElementNS(XUL_NS, "popupnotification");
       popupnotification.setAttribute("label", n.message);
-      popupnotification.setAttribute("id", n.id);
+      // Append "-notification" to the ID to try to avoid ID conflicts with other stuff
+      // in the document.
+      popupnotification.setAttribute("id", n.id + "-notification");
+      popupnotification.setAttribute("popupid", n.id);
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
@@ -366,19 +389,20 @@ PopupNotifications.prototype = {
    */
   _update: function PopupNotifications_update(anchor) {
     let anchorElement, notificationsToShow = [];
-    if (this._currentNotifications.length > 0) {
+    let haveNotifications = this._currentNotifications.length > 0;
+    if (haveNotifications) {
       // Only show the notifications that have the passed-in anchor (or the
       // first notification's anchor, if none was passed in). Other
       // notifications will be shown once these are dismissed.
       anchorElement = anchor || this._currentNotifications[0].anchorElement;
 
-      if (this.iconBox) {
-        this.iconBox.hidden = false;
-        this.iconBox.setAttribute("anchorid", anchorElement.id);
-      }
+      this.iconBox.hidden = false;
+      this.iconBox.setAttribute("anchorid", anchorElement.id);
 
+      // Also filter out notifications that have been dismissed.
       notificationsToShow = this._currentNotifications.filter(function (n) {
-        return n.anchorElement == anchorElement;
+        return !n.dismissed && n.anchorElement == anchorElement &&
+               !n.options.neverShow;
       });
     }
 
@@ -390,7 +414,9 @@ PopupNotifications.prototype = {
 
       this._hidePanel();
 
-      if (this.iconBox)
+      // Only hide the iconBox if we actually have no notifications (as opposed
+      // to not having any showable notifications)
+      if (this.iconBox && !haveNotifications)
         this.iconBox.hidden = true;
     }
   },
@@ -402,14 +428,43 @@ PopupNotifications.prototype = {
     return browser.popupNotifications = [];
   },
 
+  _onIconBoxCommand: function PopupNotifications_onIconBoxCommand(event) {
+    // Left click, space or enter only
+    let type = event.type;
+    if (type == "click" && event.button != 0)
+      return;
+
+    if (type == "keypress" &&
+        !(event.charCode == Ci.nsIDOMKeyEvent.DOM_VK_SPACE ||
+          event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN))
+      return;
+
+    if (this._currentNotifications.length == 0)
+      return;
+
+    // Get the anchor that is the immediate child of the icon box
+    let anchor = event.target;
+    while (anchor && anchor.parentNode != this.iconBox)
+      anchor = anchor.parentNode;
+
+    // Mark notifications anchored to this anchor as un-dismissed
+    this._currentNotifications.forEach(function (n) {
+      if (n.anchorElement == anchor)
+        n.dismissed = false;
+    });
+
+    // ...and then show them.
+    this._update(anchor);
+  },
+
   _onPopupHidden: function PopupNotifications_onPopupHidden(event) {
     if (event.target != this.panel || this._ignoreDismissal)
       return;
 
-    // Remove notifications being dismissed
+    // Mark notifications as dismissed
     Array.forEach(this.panel.childNodes, function (nEl) {
       let notificationObj = nEl.notification;
-      this._remove(notificationObj);
+      notificationObj.dismissed = true;
     }, this);
 
     this._update();

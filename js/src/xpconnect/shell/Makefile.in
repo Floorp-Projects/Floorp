@@ -56,9 +56,14 @@ endif
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(LIBXUL_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NSPR_LIBS) \
+		$(XPCOM_LIBS) \
 		$(NULL)
+
+ifdef JS_SHARED_LIBRARY
+LIBS +=	$(MOZ_JS_LIBS)
+endif
+
+LIBS +=	$(NSPR_LIBS)
 
 NSDISTMODE = copy
 
@@ -66,6 +71,10 @@ ifdef _MSC_VER
 ifdef WINCE
 WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre/
+endif
+ifeq ($(OS_TEST),x86_64)
+# set stack to 2MB on x64 build.  See bug 582910
+WIN32_EXE_LDFLAGS += -STACK:2097152
 endif
 endif
 

@@ -39,9 +39,12 @@
 
 #include "WebGLContext.h"
 
+#include "nsIPrefService.h"
+#include "nsServiceManagerUtils.h"
+
 #include "CheckedInt.h"
 
-#if !defined(USE_GLES2) && defined(USE_ANGLE)
+#if defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
 #endif
 
@@ -381,6 +384,11 @@ WebGLContext::InitAndValidateGL()
 
     MakeContextCurrent();
 
+    // on desktop OpenGL, we always keep vertex attrib 0 array enabled
+    if (!gl->IsGLES2()) {
+        gl->fEnableVertexAttribArray(0);
+    }
+
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, (GLint*) &mGLMaxVertexAttribs);
     if (mGLMaxVertexAttribs < 8) {
         LogMessage("GL_MAX_VERTEX_ATTRIBS: %d is < 8!", mGLMaxVertexAttribs);
@@ -444,15 +452,19 @@ WebGLContext::InitAndValidateGL()
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
     }
 
-#if !defined(USE_GLES2) && defined(USE_ANGLE)
+    // Check the shader validator pref
+    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
+
+    prefService->GetBoolPref("webgl.shader_validator", &mShaderValidation);
+
+#if defined(USE_ANGLE)
     // initialize shader translator
-    static bool didTranslatorInit = false;
-    if (!didTranslatorInit && mShaderValidation) {
+    if (mShaderValidation) {
         if (!ShInitialize()) {
             LogMessage("GLSL translator initialization failed!");
             return PR_FALSE;
         }
-        didTranslatorInit = true;
     }
 #endif
 

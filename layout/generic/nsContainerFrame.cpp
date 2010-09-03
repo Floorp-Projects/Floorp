@@ -590,9 +590,10 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 
 static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 {
-  return aCoord.GetUnit() == eStyleUnit_Coord
-           ? aCoord.GetCoordValue()
-           : aIfNotCoord;
+  if (aCoord.ConvertsToLength()) {
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
+  }
+  return aIfNotCoord;
 }
 
 void
@@ -724,7 +725,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
     if ((aFlags & NS_FRAME_INVALIDATE_ON_MOVE) &&
         !(aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
         aKidFrame->GetPosition() != nsPoint(aX, aY)) {
-      aKidFrame->InvalidateOverflowRect();
+      aKidFrame->InvalidateFrameSubtree();
     }
     aKidFrame->SetPosition(nsPoint(aX, aY));
   }
@@ -1038,7 +1039,7 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
       if (frameList) {
         removed = frameList->RemoveFrameIfPresent(aChild);
         if (frameList->IsEmpty()) {
-          DestroyOverflowList(aPresContext);
+          DestroyOverflowList(aPresContext, nsnull);
         }
       }
     }
@@ -1091,8 +1092,12 @@ nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext,
 {
   nsFrameList* list =
     RemovePropTableFrames(aPresContext, OverflowProperty());
-  if (list)
-    list->DestroyFrom(aDestructRoot);
+  if (list) {
+    if (aDestructRoot)
+      list->DestroyFrom(aDestructRoot);
+    else
+      list->Destroy();
+  }
 }
 
 /**
@@ -1126,7 +1131,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     }
   }
 
-  aNextInFlow->InvalidateOverflowRect();
+  aNextInFlow->InvalidateFrameSubtree();
 
   // Take the next-in-flow out of the parent's child list
 #ifdef DEBUG

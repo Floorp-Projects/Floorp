@@ -691,7 +691,7 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
     // the null termination. Because it's UTF8, we're guaranteed the header is ascii (yay!).
     float vers = 0.0;
     PRUint32 startOfData = 0;
-    sscanf((char*)*outData, "Version:%f\nStartHTML:%d\nEndHTML:%d", &vers, &startOfData, outDataLen);
+    sscanf((char*)*outData, "Version:%f\nStartHTML:%u\nEndHTML:%u", &vers, &startOfData, outDataLen);
     NS_ASSERTION(startOfData && *outDataLen, "Couldn't parse CF_HTML description header");
  
     if ( *outDataLen )

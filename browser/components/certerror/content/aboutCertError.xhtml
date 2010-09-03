@@ -122,6 +122,13 @@
           toggle('technicalContent');
           toggle('expertContent');
         }
+
+        // if this is a Strict-Transport-Security host and the cert
+        // is bad, don't allow overrides (STS Spec section 7.3).
+        if (getCSSClass() == "badStsCert") {
+          var ec = document.getElementById('expertContent');
+          document.getElementById('errorLongContent').removeChild(ec);
+        }
         
         var tech = document.getElementById("technicalContentText");
         if (tech)
@@ -246,7 +253,7 @@
           <h2>&certerror.whatShouldIDo.heading;</h2>
           <div id="whatShouldIDoContentText">
             <p>&certerror.whatShouldIDo.content;</p>
-            <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' id='getMeOutOfHereButton' label='&certerror.getMeOutOfHere.label;'/>
+            <button id='getMeOutOfHereButton'>&certerror.getMeOutOfHere.label;</button>
           </div>
         </div>
         
@@ -262,7 +269,7 @@
           <div>
             <p>&certerror.expert.content;</p>
             <p>&certerror.expert.contentPara2;</p>
-            <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' id='exceptionDialogButton' label='&certerror.addException.label;'/>
+            <button id='exceptionDialogButton'>&certerror.addException.label;</button>
           </div>
         </div>
       </div>

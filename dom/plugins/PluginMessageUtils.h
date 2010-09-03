@@ -271,6 +271,11 @@ struct DeletingObjectEntry : public nsPtrHashKey<NPObject>
   bool mDeleted;
 };
 
+#ifdef XP_WIN
+// The private event used for double-pass widgetless plugin rendering.
+UINT DoublePassRenderingEvent();
+#endif
+
 } /* namespace plugins */
 
 } /* namespace mozilla */
@@ -467,6 +472,13 @@ struct ParamTraits<NPNSString*>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     CFStringRef cfString = (CFStringRef)aParam;
+
+    // Write true if we have a string, false represents NULL.
+    aMsg->WriteBool(!!cfString);
+    if (!cfString) {
+      return;
+    }
+
     long length = ::CFStringGetLength(cfString);
     WriteParam(aMsg, length);
     if (length == 0) {
@@ -486,6 +498,15 @@ struct ParamTraits<NPNSString*>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    bool haveString = false;
+    if (!aMsg->ReadBool(aIter, &haveString)) {
+      return false;
+    }
+    if (!haveString) {
+      *aResult = NULL;
+      return true;
+    }
+
     long length;
     if (!ReadParam(aMsg, aIter, &length)) {
       return false;

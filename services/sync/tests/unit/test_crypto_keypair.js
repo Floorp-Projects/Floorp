@@ -24,7 +24,7 @@ function run_test() {
   do_check_true(!!pubKey);
   do_check_true(!!privKey);
   do_check_eq(pubKey.length, 392);
-  do_check_eq(privKey.length, 1644);
+  do_check_true(privKey.length == 1624 || privKey.length == 1644);
 
   // do some key wrapping
   var wrappedKey = cryptoSvc.wrapSymmetricKey(symKey, pubKey);

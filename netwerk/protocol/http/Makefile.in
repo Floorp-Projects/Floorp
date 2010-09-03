@@ -114,6 +114,7 @@ ifdef MOZ_IPC
 CPPSRCS += \
   HttpChannelParent.cpp \
   HttpChannelChild.cpp \
+  HttpChannelParentListener.cpp \
   $(NULL)
 endif
 

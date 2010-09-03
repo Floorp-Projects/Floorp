@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-352649.js';
 
 var BUGNUMBER = 352649;
 var summary = 'decompilation of e4x literal after |if| block';

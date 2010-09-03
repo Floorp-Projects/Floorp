@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-421325.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 421325;
 var summary = 'Dense Arrays and holes';

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'alphanumeric.js';
 
 /**
    Filename:     alphanumeric.js

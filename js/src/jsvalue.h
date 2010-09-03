@@ -598,7 +598,7 @@ class Value
      *
      * Private setters/getters allow the caller to read/write arbitrary types
      * that fit in the 64-bit payload. It is the caller's responsibility, after
-     * storing to a value with setPrivateX to only read with getPrivateX.
+     * storing to a value with setPrivateX to read only using getPrivateX.
      * Privates values are given a type type which ensures they are not marked.
      */
 
@@ -969,6 +969,59 @@ ValueArgToConstRef(const Value &v)
     return v;
 }
 #endif
+
+/******************************************************************************/
+
+static JS_ALWAYS_INLINE void
+MakeValueRangeGCSafe(Value *vec, size_t len)
+{
+    PodZero(vec, len);
+}
+
+static JS_ALWAYS_INLINE void
+MakeValueRangeGCSafe(Value *beg, Value *end)
+{
+    PodZero(beg, end - beg);
+}
+
+static JS_ALWAYS_INLINE void
+MakeIdRangeGCSafe(jsid *beg, jsid *end)
+{
+    for (jsid *id = beg; id != end; ++id)
+        *id = INT_TO_JSID(0);
+}
+
+static JS_ALWAYS_INLINE void
+MakeIdRangeGCSafe(jsid *vec, size_t len)
+{
+    MakeIdRangeGCSafe(vec, vec + len);
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToUndefined(Value *beg, Value *end)
+{
+    for (Value *v = beg; v != end; ++v)
+        v->setUndefined();
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToUndefined(Value *vec, size_t len)
+{
+    return SetValueRangeToUndefined(vec, vec + len);
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToNull(Value *beg, Value *end)
+{
+    for (Value *v = beg; v != end; ++v)
+        v->setNull();
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToNull(Value *vec, size_t len)
+{
+    return SetValueRangeToNull(vec, vec + len);
+}
 
 }      /* namespace js */
 #endif /* jsvalue_h__ */

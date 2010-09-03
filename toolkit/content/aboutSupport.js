@@ -64,7 +64,9 @@ const PREFS_WHITELIST = [
   "extensions.lastAppVersion",
   "font.",
   "general.useragent.",
-  "gfx.color_management.mode",
+  "gfx.",
+  "mozilla.widget.render-mode",
+  "layers.",
   "javascript.",
   "keyword.",
   "layout.css.dpi",
@@ -90,11 +92,13 @@ window.onload = function () {
   // Update the application basics section.
   document.getElementById("application-box").textContent = Application.name;
   document.getElementById("version-box").textContent = Application.version;
+  document.getElementById("useragent-box").textContent = navigator.userAgent;
   document.getElementById("supportLink").href = supportUrl;
 
   // Update the other sections.
   populatePreferencesSection();
   populateExtensionsSection();
+  populateGraphicsSection();
 }
 
 function populateExtensionsSection() {
@@ -138,6 +142,93 @@ function populatePreferencesSection() {
 
   appendChildren(document.getElementById("prefs-tbody"), trPrefs);
 }
+
+function populateGraphicsSection() {
+  function createHeader(name)
+  {
+    let elem = createElement("th", name);
+    elem.className = "column";
+    return elem;
+  }
+  
+  let SBS = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+  let bundle = SBS.createBundle("chrome://global/locale/aboutSupport.properties");
+  let graphics_tbody = document.getElementById("graphics-tbody");
+
+  try {
+    // nsIGfxInfo is currently only implemented on Windows
+    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    let trGraphics = [];
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterDescription")),
+      createElement("td", gfxInfo.adapterDescription),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterVendorID")),
+      // pad with zeros. (printf would be nicer)
+      createElement("td", String('0000'+gfxInfo.adapterVendorID.toString(16)).slice(-4)),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterDeviceID")),
+      // pad with zeros. (printf would be nicer)
+      createElement("td", String('0000'+gfxInfo.adapterDeviceID.toString(16)).slice(-4)),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterRAM")),
+      createElement("td", gfxInfo.adapterRAM),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("adapterDrivers")),
+      createElement("td", gfxInfo.adapterDriver),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("driverVersion")),
+      createElement("td", gfxInfo.adapterDriverVersion),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("driverDate")),
+      createElement("td", gfxInfo.adapterDriverDate),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("direct2DEnabled")),
+      createElement("td", gfxInfo.D2DEnabled),
+    ]));
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("directWriteEnabled")),
+      createElement("td", gfxInfo.DWriteEnabled),
+    ]));
+
+    appendChildren(graphics_tbody, trGraphics);
+
+  } catch (e) {
+  }
+
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+    .getService(Ci.nsIWindowWatcher);
+  let windows = ww.getWindowEnumerator();
+  let acceleratedWindows = 0;
+  let totalWindows = 0;
+  let mgrType;
+  while (windows.hasMoreElements()) {
+    totalWindows++;
+
+    let awindow = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor);
+    let windowutils = awindow.getInterface(Ci.nsIDOMWindowUtils);
+    if (windowutils.layerManagerType != "Basic") {
+      acceleratedWindows++;
+      mgrType = windowutils.layerManagerType;
+    }
+  }
+
+  let msg = acceleratedWindows + "/" + totalWindows;
+  if (acceleratedWindows)
+    msg += " " + mgrType;
+
+  let header = createHeader(bundle.GetStringFromName("acceleratedLayersEnabled"));
+
+  appendChildren(graphics_tbody, [ header, createElement("td", msg) ]);
+}
+
 
 function formatPrefValue(prefValue) {
   // Some pref values are really long and don't have spaces.  This can cause

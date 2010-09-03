@@ -153,6 +153,7 @@ JSVAL_TO_DOUBLE(jsval v)
 static JS_ALWAYS_INLINE jsval
 DOUBLE_TO_JSVAL(jsdouble d)
 {
+    d = JS_CANONICALIZE_NAN(d);
     return IMPL_TO_JSVAL(DOUBLE_TO_JSVAL_IMPL(d));
 }
 
@@ -472,12 +473,8 @@ extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
-#define JSFUN_BOUND_METHOD      0x40    /* bind this to fun->object's parent */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
-#define JSFUN_DISJOINT_FLAGS(f) ((f) & 0x0f)
-
-#define JSFUN_BOUND_METHOD_TEST(f) ((f) & JSFUN_BOUND_METHOD)
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_THISP_FLAGS(f)  (f)
@@ -940,6 +937,12 @@ JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data);
 extern JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
 
+extern JS_PUBLIC_API(JSBool)
+JS_RewrapObject(JSContext *cx, JSObject **objp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RewrapValue(JSContext *cx, jsval *p);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -1178,10 +1181,8 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
  */
 #define JS_TYPED_ROOTING_API
 
-extern JS_PUBLIC_API(void)
-JS_ClearNewbornRoots(JSContext *cx);
-
 /* Obsolete rooting APIs. */
+#define JS_ClearNewbornRoots(cx) ((void) 0)
 #define JS_EnterLocalRootScope(cx) (JS_TRUE)
 #define JS_LeaveLocalRootScope(cx) ((void) 0)
 #define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
@@ -1663,6 +1664,12 @@ struct JSClass {
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
+/* Additional global reserved slots, beyond those for standard prototypes. */
+#define JSRESERVED_GLOBAL_SLOTS_COUNT     3
+#define JSRESERVED_GLOBAL_COMPARTMENT     (JSProto_LIMIT * 3)
+#define JSRESERVED_GLOBAL_THIS            (JSRESERVED_GLOBAL_COMPARTMENT + 1)
+#define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
+
 /*
  * ECMA-262 requires that most constructors used internally create objects
  * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)
@@ -1674,11 +1681,9 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
-#define JSCLASS_GLOBAL_FLAGS \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + 2))
-
-#define JSRESERVED_GLOBAL_COMPARTMENT (JSProto_LIMIT * 3)
-#define JSRESERVED_GLOBAL_THIS        (JSRESERVED_GLOBAL_COMPARTMENT + 1)
+#define JSCLASS_GLOBAL_FLAGS                                                  \
+    (JSCLASS_IS_GLOBAL |                                                      \
+     JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + JSRESERVED_GLOBAL_SLOTS_COUNT))
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -2924,7 +2929,11 @@ JS_ClearRegExpStatics(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx);
 
-/* TODO: compile, exec, get/set other statics... */
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+                 size_t *indexp, JSBool test, jsval *rval);
+
+/* TODO: compile, get/set other statics... */
 
 /************************************************************************/
 
@@ -3004,6 +3013,19 @@ JS_SetContextThread(JSContext *cx);
 
 extern JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx);
+
+#ifdef MOZ_TRACE_JSCALLS
+typedef void (*JSFunctionCallback)(const JSFunction *fun,
+                                   const JSScript *scr,
+                                   const JSContext *cx,
+                                   JSBool entering);
+
+extern JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
+
+extern JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx);
+#endif
 
 /************************************************************************/
 

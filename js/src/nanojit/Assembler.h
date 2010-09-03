@@ -174,7 +174,7 @@ namespace nanojit
     }
 
     #ifndef AVMPLUS_ALIGN16
-        #ifdef AVMPLUS_WIN32
+        #ifdef _MSC_VER
             #define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
         #else
             #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
@@ -196,7 +196,7 @@ namespace nanojit
     typedef HashMap<uint64_t, uint64_t*> ImmDPoolMap;
 #endif
 
-#ifdef VTUNE
+#ifdef VMCFG_VTUNE
     class avmplus::CodegenLIR;
 #endif
 
@@ -271,8 +271,8 @@ namespace nanojit
             #endif // NJ_VERBOSE
 
         public:
-            #ifdef VTUNE
-            avmplus::CodegenLIR *cgen;
+            #ifdef VMCFG_VTUNE
+            void* vtuneHandle;
             #endif
 
             Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
@@ -315,7 +315,11 @@ namespace nanojit
             Register    registerAlloc(LIns* ins, RegisterMask allow, RegisterMask prefer);
             Register    registerAllocTmp(RegisterMask allow);
             void        registerResetAll();
-            void        evictAllActiveRegs();
+            void        evictAllActiveRegs() {
+                // The evicted set will be be intersected with activeSet(),
+                // so use an all-1s mask to avoid an extra load or call.
+                evictSomeActiveRegs(~RegisterMask(0));
+            }
             void        evictSomeActiveRegs(RegisterMask regs);
             void        evictScratchRegsExcept(RegisterMask ignore);
             void        intersectRegisterState(RegAlloc& saved);
@@ -425,8 +429,12 @@ namespace nanojit
             // Otherwise, register allocation decisions will be suboptimal.
             void        asm_restore(LIns*, Register);
 
-            void        asm_maybe_spill(LIns* ins, bool pop);
-            void        asm_spill(Register rr, int d, bool pop, bool quad);
+            bool        asm_maybe_spill(LIns* ins, bool pop);
+#ifdef NANOJIT_IA32
+            void        asm_spill(Register rr, int d, bool pop);
+#else
+            void        asm_spill(Register rr, int d, bool quad);
+#endif
             void        asm_load64(LIns* ins);
             void        asm_ret(LIns* ins);
 #ifdef NANOJIT_64BIT
@@ -478,7 +486,7 @@ namespace nanojit
             static void nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
-            RegisterMask nHints[LIR_sentinel];
+            static RegisterMask nHints[LIR_sentinel+1];
             RegisterMask nHint(LIns* ins);
 
             // A special entry for hints[];  if an opcode has this value, we call
@@ -498,10 +506,10 @@ namespace nanojit
 
             // since we generate backwards the depth is negative
             inline void fpu_push() {
-                debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
+                debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth <= 0); )
             }
             inline void fpu_pop() {
-                debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
+                debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth >= -7); )
             }
 #endif
             const Config& _config;

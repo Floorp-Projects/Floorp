@@ -80,10 +80,10 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(nsICSSStyleRule* aValue)
+nsAttrValue::nsAttrValue(nsICSSStyleRule* aValue, const nsAString* aSerialized)
     : mBits(0)
 {
-  SetTo(aValue);
+  SetTo(aValue, aSerialized);
 }
 
 #ifdef MOZ_SVG
@@ -249,7 +249,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
     case eAtomArray:
     {
       if (!EnsureEmptyAtomArray() ||
-          !GetAtomArrayValue()->AppendObjects(*otherCont->mAtomArray)) {
+          !GetAtomArrayValue()->AppendElements(*otherCont->mAtomArray)) {
         Reset();
         return;
       }
@@ -313,12 +313,13 @@ nsAttrValue::SetTo(PRInt16 aInt)
 }
 
 void
-nsAttrValue::SetTo(nsICSSStyleRule* aValue)
+nsAttrValue::SetTo(nsICSSStyleRule* aValue, const nsAString* aSerialized)
 {
   if (EnsureEmptyMiscContainer()) {
     MiscContainer* cont = GetMiscContainer();
     NS_ADDREF(cont->mCSSStyleRule = aValue);
     cont->mType = eCSSStyleRule;
+    SetMiscAtomOrString(aSerialized);
   }
 }
 
@@ -431,6 +432,7 @@ nsAttrValue::ToString(nsAString& aResult) const
       if (decl) {
         decl->ToString(aResult);
       }
+      const_cast<nsAttrValue*>(this)->SetMiscAtomOrString(&aResult);
 
       break;
     }
@@ -503,7 +505,7 @@ nsAttrValue::GetEnumString(nsAString& aResult, PRBool aRealTag) const
   NS_NOTREACHED("couldn't find value in EnumTable");
 }
 
-PRInt32
+PRUint32
 nsAttrValue::GetAtomCount() const
 {
   ValueType type = Type();
@@ -513,7 +515,7 @@ nsAttrValue::GetAtomCount() const
   }
 
   if (type == eAtomArray) {
-    return GetAtomArrayValue()->Count();
+    return GetAtomArrayValue()->Length();
   }
 
   return 0;
@@ -523,7 +525,7 @@ nsIAtom*
 nsAttrValue::AtomAt(PRInt32 aIndex) const
 {
   NS_PRECONDITION(aIndex >= 0, "Index must not be negative");
-  NS_PRECONDITION(GetAtomCount() > aIndex, "aIndex out of range");
+  NS_PRECONDITION(GetAtomCount() > PRUint32(aIndex), "aIndex out of range");
   
   if (BaseType() == eAtomBase) {
     return GetAtomValue();
@@ -531,7 +533,7 @@ nsAttrValue::AtomAt(PRInt32 aIndex) const
 
   NS_ASSERTION(Type() == eAtomArray, "GetAtomCount must be confused");
   
-  return GetAtomArrayValue()->ObjectAt(aIndex);
+  return GetAtomArrayValue()->ElementAt(aIndex);
 }
 
 PRUint32
@@ -592,9 +594,11 @@ nsAttrValue::HashValue() const
     case eAtomArray:
     {
       PRUint32 retval = 0;
-      PRInt32 i, count = cont->mAtomArray->Count();
-      for (i = 0; i < count; ++i) {
-        retval ^= NS_PTR_TO_INT32(cont->mAtomArray->ObjectAt(i));
+      PRUint32 count = cont->mAtomArray->Length();
+      for (nsCOMPtr<nsIAtom> *cur = cont->mAtomArray->Elements(),
+                             *end = cur + count;
+           cur != end; ++cur) {
+        retval ^= NS_PTR_TO_INT32(cur->get());
       }
       return retval;
     }
@@ -690,18 +694,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       // For classlists we could be insensitive to order, however
       // classlists are never mapped attributes so they are never compared.
 
-      PRInt32 count = thisCont->mAtomArray->Count();
-      if (count != otherCont->mAtomArray->Count()) {
+      if (!(*thisCont->mAtomArray == *otherCont->mAtomArray)) {
         return PR_FALSE;
       }
 
-      PRInt32 i;
-      for (i = 0; i < count; ++i) {
-        if (thisCont->mAtomArray->ObjectAt(i) !=
-            otherCont->mAtomArray->ObjectAt(i)) {
-          return PR_FALSE;
-        }
-      }
       needsStringComparison = PR_TRUE;
       break;
     }
@@ -827,19 +823,21 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
     default:
     {
       if (Type() == eAtomArray) {
-        nsCOMArray<nsIAtom>* array = GetAtomArrayValue();
+        AtomArray* array = GetAtomArrayValue();
         if (aCaseSensitive == eCaseMatters) {
-          return array->IndexOf(aValue) >= 0;
+          return array->IndexOf(aValue) != AtomArray::NoIndex;
         }
 
         nsDependentAtomString val1(aValue);
 
-        for (PRInt32 i = 0, count = array->Count(); i < count; ++i) {
+        for (nsCOMPtr<nsIAtom> *cur = array->Elements(),
+                               *end = cur + array->Length();
+             cur != end; ++cur) {
           // For performance reasons, don't do a full on unicode case
           // insensitive string comparison. This is only used for quirks mode
           // anyway.
           if (nsContentUtils::EqualsIgnoreASCIICase(val1,
-                nsDependentAtomString(array->ObjectAt(i)))) {
+                nsDependentAtomString(*cur))) {
             return PR_TRUE;
           }
         }
@@ -913,9 +911,9 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     return;
   }
 
-  nsCOMArray<nsIAtom>* array = GetAtomArrayValue();
+  AtomArray* array = GetAtomArrayValue();
   
-  if (!array->AppendObject(classAtom)) {
+  if (!array->AppendElement(classAtom)) {
     Reset();
     return;
   }
@@ -930,7 +928,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
     classAtom = do_GetAtom(Substring(start, iter));
 
-    if (!array->AppendObject(classAtom)) {
+    if (!array->AppendElement(classAtom)) {
       Reset();
       return;
     }
@@ -1264,7 +1262,10 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                "Trying to re-set atom or string!");
   if (aValue) {
     PRUint32 len = aValue->Length();
-    NS_ASSERTION(len, "Empty string?");
+    // We're allowing eCSSStyleRule attributes to store empty strings as it
+    // can be beneficial to store an empty style attribute as a parsed rule.
+    // Add other types as needed.
+    NS_ASSERTION(len || Type() == eCSSStyleRule, "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
       nsIAtom* atom = NS_NewAtom(*aValue);
@@ -1362,7 +1363,7 @@ nsAttrValue::EnsureEmptyAtomArray()
     return PR_FALSE;
   }
 
-  nsCOMArray<nsIAtom>* array = new nsCOMArray<nsIAtom>;
+  AtomArray* array = new AtomArray;
   if (!array) {
     Reset();
     return PR_FALSE;

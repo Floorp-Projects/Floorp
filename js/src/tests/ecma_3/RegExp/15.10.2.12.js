@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.10.2.12.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 378738;
 var summary = '15.10.2.12 - CharacterClassEscape \d';

@@ -52,6 +52,18 @@ function test_openSpecialDatabase_invalid_arg()
   }
 }
 
+function test_openDatabase_null_file()
+{
+  try {
+    getService().openDatabase(null);
+    do_throw("We should not get here!");
+  } catch (e) {
+    print(e);
+    print("e.result is " + e.result);
+    do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
+  }
+}
+
 function test_openDatabase_file_DNE()
 {
   // the file should be created after calling
@@ -118,7 +130,8 @@ function test_backup_new_folder()
 
 var tests = [
   test_openSpecialDatabase_invalid_arg,
-  test_openDatabase_file_DNE, 
+  test_openDatabase_null_file,
+  test_openDatabase_file_DNE,
   test_openDatabase_file_exists,
   test_corrupt_db_throws_with_openDatabase,
   test_backup_not_new_filename,

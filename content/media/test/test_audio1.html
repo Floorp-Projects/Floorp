@@ -10,15 +10,23 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-for (var i = 0; i < gAudioTests.length; ++i) {
-  var test = gAudioTests[i];
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
   var a1 = new Audio();
   if (!a1.canPlayType(test.type))
-    continue;
-
-  is(a1.getAttribute("autobuffer"), "autobuffer", "Autobuffer automatically set");
+    return;
+  manager.started(token);
+  
+  is(a1.getAttribute("preload"), "auto", "preload:auto automatically set");
   is(a1.src, "", "Src set?");
+  a1 = null;
+  manager.finished(token);
 }
+
+manager.runTests(gAudioTests, startTest);
+
 </script>
 </pre>
 </body>

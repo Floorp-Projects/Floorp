@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/ExternalHelperAppParent.h"
 #include "TabParent.h"
 
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -52,6 +53,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
+#include "nsIIdentityInfo.h"
 #include "nsPIDOMWindow.h"
 #include "TabChild.h"
 #include "nsIDOMEvent.h"
@@ -65,10 +67,15 @@
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIDialogCreator.h"
 #include "nsThreadUtils.h"
+#include "nsSerializationHelper.h"
 #include "nsIPromptFactory.h"
 #include "nsIContent.h"
-
 #include "mozilla/unused.h"
+
+#ifdef ANDROID
+#include "AndroidBridge.h"
+using namespace mozilla;
+#endif
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
@@ -82,9 +89,10 @@ using mozilla::dom::ContentParent;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIWebProgress, nsIAuthPromptProvider)
+NS_IMPL_ISUPPORTS5(TabParent, nsITabParent, nsIWebProgress, nsIAuthPromptProvider, nsISSLStatusProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
+  : mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
 {
 }
 
@@ -95,12 +103,9 @@ TabParent::~TabParent()
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
-  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
-  if (frameLoaderOwner) {
-    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
-    if (frameLoader) {
-      frameLoader->DestroyChild();
-    }
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (frameLoader) {
+    frameLoader->DestroyChild();
   }
 }
 
@@ -286,7 +291,10 @@ TabParent::RecvNotifyStatusChange(const nsresult& status,
 }
 
 bool
-TabParent::RecvNotifySecurityChange(const PRUint32& aState)
+TabParent::RecvNotifySecurityChange(const PRUint32& aState,
+                                    const PRBool& aUseSSLStatusObject,
+                                    const nsString& aTooltip,
+                                    const nsCString& aSecInfoAsString)
 {
   /*                                                                           
    * First notify any listeners of the new state info...
@@ -294,6 +302,32 @@ TabParent::RecvNotifySecurityChange(const PRUint32& aState)
    * Operate the elements from back to front so that if items get
    * get removed from the list it won't affect our iteration
    */
+
+  mSecurityState = aState;
+  mSecurityTooltipText = aTooltip;
+
+  if (!aSecInfoAsString.IsEmpty()) {
+    nsCOMPtr<nsISupports> secInfoSupports;
+    nsresult rv = NS_DeserializeObject(aSecInfoAsString, getter_AddRefs(secInfoSupports));
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIIdentityInfo> idInfo = do_QueryInterface(secInfoSupports);
+      if (idInfo) {
+        PRBool isEV;
+        if (NS_SUCCEEDED(idInfo->GetIsExtendedValidation(&isEV)) && isEV)
+          mSecurityState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
+      }
+    }
+
+    mSecurityStatusObject = nsnull;
+    if (aUseSSLStatusObject)
+    {
+      nsCOMPtr<nsISSLStatusProvider> sslStatusProvider =
+        do_QueryInterface(secInfoSupports);
+      if (sslStatusProvider)
+        sslStatusProvider->GetSSLStatus(getter_AddRefs(mSecurityStatusObject));
+    }
+  }
 
   nsCOMPtr<nsIWebProgressListener> listener;
   PRUint32 count = mListenerInfoList.Length();
@@ -311,7 +345,7 @@ TabParent::RecvNotifySecurityChange(const PRUint32& aState)
       continue;
     }
 
-    listener->OnSecurityChange(this, nsnull, aState);
+    listener->OnSecurityChange(this, nsnull, mSecurityState);
   }
 
   return true;
@@ -414,6 +448,35 @@ TabParent::Activate()
     unused << SendActivate();
 }
 
+NS_IMETHODIMP
+TabParent::Init(nsIDOMWindow *window)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::GetState(PRUint32 *aState)
+{
+  NS_ENSURE_ARG(aState);
+  *aState = mSecurityState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::GetTooltipText(nsAString & aTooltipText)
+{
+  aTooltipText = mSecurityTooltipText;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::GetSSLStatus(nsISupports ** aStatus)
+{
+  NS_IF_ADDREF(*aStatus = mSecurityStatusObject);
+  return NS_OK;
+}
+
+
 mozilla::ipc::PDocumentRendererParent*
 TabParent::AllocPDocumentRenderer(const PRInt32& x,
         const PRInt32& y, const PRInt32& w, const PRInt32& h, const nsString& bgcolor,
@@ -511,34 +574,56 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 }
 
 bool
+TabParent::RecvQueryContentResult(const nsQueryContentEvent& event)
+{
+#ifdef ANDROID
+  if (!event.mSucceeded) {
+    AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
+    return true;
+  }
+
+  switch (event.message) {
+  case NS_QUERY_TEXT_CONTENT:
+    AndroidBridge::Bridge()->ReturnIMEQueryResult(
+        event.mReply.mString.get(), event.mReply.mString.Length(), 0, 0);
+    break;
+  case NS_QUERY_SELECTED_TEXT:
+    AndroidBridge::Bridge()->ReturnIMEQueryResult(
+        event.mReply.mString.get(),
+        event.mReply.mString.Length(),
+        event.GetSelectionStart(),
+        event.GetSelectionEnd() - event.GetSelectionStart());
+    break;
+  }
+#endif
+  return true;
+}
+
+bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           PRBool aSync,
                           const nsString& aJSON,
                           nsTArray<nsString>* aJSONRetVal)
 {
-  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
-    do_QueryInterface(mFrameElement);
-  if (frameLoaderOwner) {
-    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
-    if (frameLoader && frameLoader->GetFrameMessageManager()) {
-      nsFrameMessageManager* manager = frameLoader->GetFrameMessageManager();
-      JSContext* ctx = manager->GetJSContext();
-      JSAutoRequest ar(ctx);
-      PRUint32 len = 0; //TODO: obtain a real value in bug 572685
-      // Because we want JS messages to have always the same properties,
-      // create array even if len == 0.
-      JSObject* objectsArray = JS_NewArrayObject(ctx, len, NULL);
-      if (!objectsArray) {
-        return false;
-      }
-
-      manager->ReceiveMessage(mFrameElement,
-                              aMessage,
-                              aSync,
-                              aJSON,
-                              objectsArray,
-                              aJSONRetVal);
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (frameLoader && frameLoader->GetFrameMessageManager()) {
+    nsFrameMessageManager* manager = frameLoader->GetFrameMessageManager();
+    JSContext* ctx = manager->GetJSContext();
+    JSAutoRequest ar(ctx);
+    PRUint32 len = 0; //TODO: obtain a real value in bug 572685
+    // Because we want JS messages to have always the same properties,
+    // create array even if len == 0.
+    JSObject* objectsArray = JS_NewArrayObject(ctx, len, NULL);
+    if (!objectsArray) {
+      return false;
     }
+
+    manager->ReceiveMessage(mFrameElement,
+                            aMessage,
+                            aSync,
+                            aJSON,
+                            objectsArray,
+                            aJSONRetVal);
   }
   return true;
 }
@@ -709,13 +794,38 @@ TabParent::HandleDelayedDialogs()
 PRBool
 TabParent::ShouldDelayDialogs()
 {
-  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
-  NS_ENSURE_TRUE(frameLoaderOwner, PR_TRUE);
-  nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE(frameLoader, PR_TRUE);
   PRBool delay = PR_FALSE;
   frameLoader->GetDelayRemoteDialogs(&delay);
   return delay;
+}
+
+already_AddRefed<nsFrameLoader>
+TabParent::GetFrameLoader() const
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
+  return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nsnull;
+}
+
+PExternalHelperAppParent*
+TabParent::AllocPExternalHelperApp(const IPC::URI& uri,
+                                   const nsCString& aMimeContentType,
+                                   const bool& aForceSave,
+                                   const PRInt64& aContentLength)
+{
+  ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
+  parent->AddRef();
+  parent->Init(this, aMimeContentType, aForceSave);
+  return parent;
+}
+
+bool
+TabParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
+{
+  ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
+  parent->Release();
+  return true;
 }
 
 } // namespace tabs

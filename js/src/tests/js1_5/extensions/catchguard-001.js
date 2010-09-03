@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'catchguard-001.js';
 
 test();
 

@@ -171,6 +171,7 @@ public:
                                nsWidgetInitData* aInitData = nsnull);
   NS_IMETHOD            Destroy();
   virtual nsIWidget*    GetParent();
+  virtual float         GetDPI();
   NS_IMETHOD            Enable(PRBool aState);
   NS_IMETHOD            IsEnabled(PRBool* aState);
   NS_IMETHOD            Show(PRBool aState);
@@ -184,9 +185,6 @@ public:
   virtual void          FreeNativeData(void* aDatum, PRUint32 aDataType);
   NS_IMETHOD            CaptureMouse(PRBool aCapture);
   virtual PRBool        HasPendingInputEvent();
-  virtual void          Scroll(const nsIntPoint& aDelta,
-                               const nsTArray<nsIntRect>& aDestRects,
-                               const nsTArray<Configuration>& aReconfigureChildren);
   NS_IMETHOD            GetBounds(nsIntRect& aRect);
   NS_IMETHOD            GetClientBounds(nsIntRect& aRect);
   virtual nsIntPoint    WidgetToScreenOffset();
@@ -230,6 +228,7 @@ protected:
                                      HWND aParentWnd,
                                      const nsIntRect& aRect,
                                      nsWidgetInitData* aInitData);
+  gfxASurface*          ConfirmThebesSurface();
   HWND                  GetMainWindow();
   static nsWindow*      GetNSWindowPtr(HWND aWnd);
   static PRBool         SetNSWindowPtr(HWND aWnd, nsWindow* aPtr);
@@ -288,6 +287,7 @@ protected:
   PRInt32       mWindowState;       // current nsWindowState_* value
   PRBool        mIsDestroying;      // in destructor
   PRBool        mInSetFocus;        // prevent recursive calls
+  PRBool        mNoPaint;           // true if window is never visible
   HPS           mDragHps;           // retrieved by DrgGetPS() during a drag
   PRUint32      mDragStatus;        // set when object is being dragged over
   HWND          mClipWnd;           // used to clip plugin windows

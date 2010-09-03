@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,11 +88,17 @@ void NeckoChild::DestroyNeckoChild()
 }
 
 PHttpChannelChild* 
-NeckoChild::AllocPHttpChannel(PBrowserChild* iframeEmbedding)
+NeckoChild::AllocPHttpChannel(PBrowserChild* browser)
 {
-  // We don't allocate here: see HttpChannelChild::AsyncOpen()
-  NS_RUNTIMEABORT("AllocPHttpChannel should not be called");
-  return nsnull;
+  // This constructor is only used when PHttpChannel is constructed by
+  // the parent process, e.g. during a redirect.  (Normally HttpChannelChild is
+  // created by nsHttpHandler::NewProxiedChannel(), and then creates the
+  // PHttpChannel in HttpChannelChild::AsyncOpen().)
+
+  // No need to store PBrowser. It is only needed by the parent.
+  HttpChannelChild* httpChannel = new HttpChannelChild();
+  httpChannel->AddIPDLReference();
+  return httpChannel;
 }
 
 bool 

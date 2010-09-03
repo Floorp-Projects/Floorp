@@ -20,30 +20,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+SimpleTest.waitForExplicitFinish();
+resume_geolocationProvider();
+force_prompt(true);
+
 var watchID;
-var hasAccepted = false;
 
 function successCallback(position) {
-  ok(hasAccepted, "Ensure that accept was pressed");
   check_geolocation(position);
-
   navigator.geolocation.clearWatch(watchID);
-
+  reset_prompt();
   SimpleTest.finish();
 }
 
-function accept() {
-  hasAccepted = true;
-  clickNotificationButton(kAcceptButton);
-}
-
-/** Test for Bug  **/
-
-SimpleTest.waitForExplicitFinish();
-
 watchID = navigator.geolocation.watchPosition(successCallback, null, null);
-
-setTimeout(accept, 50);
 
 </script>
 </pre>

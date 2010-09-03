@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-254974.js';
 //-----------------------------------------------------------------------------
 // this test originally was only seen if typed into the js shell.
 // loading as a script file did not exhibit the problem.

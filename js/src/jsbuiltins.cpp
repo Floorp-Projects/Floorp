@@ -335,23 +335,23 @@ JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT,
 JS_REQUIRES_STACK JSBool FASTCALL
 js_PopInterpFrame(JSContext* cx, TracerState* state)
 {
-    JS_ASSERT(cx->fp && cx->fp->down);
-    JSStackFrame* const fp = cx->fp;
+    JS_ASSERT(cx->hasfp() && cx->fp()->down);
+    JSStackFrame* const fp = cx->fp();
 
     /*
      * Mirror frame popping code from inline_return in js_Interpret. There are
      * some things we just don't want to handle. In those cases, the trace will
      * MISMATCH_EXIT.
      */
-    if (fp->hookData)
+    if (fp->hasHookData())
         return JS_FALSE;
-    if (cx->version != fp->callerVersion)
+    if (cx->version != fp->getCallerVersion())
         return JS_FALSE;
     if (fp->flags & JSFRAME_CONSTRUCTING)
         return JS_FALSE;
-    if (fp->imacpc)
+    if (fp->hasIMacroPC())
         return JS_FALSE;
-    if (fp->blockChain)
+    if (fp->hasBlockChain())
         return JS_FALSE;
 
     fp->putActivationObjects(cx);
@@ -364,42 +364,3 @@ js_PopInterpFrame(JSContext* cx, TracerState* state)
     return JS_TRUE;
 }
 JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, TRACERSTATE, 0, ACCSET_STORE_ANY)
-
-JSString* FASTCALL
-js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)
-{
-    /* Calculate total size. */
-    size_t numChar = 1;
-    for (uint32 i = 0; i < size; ++i) {
-        size_t before = numChar;
-        numChar += strArray[i]->length();
-        if (numChar < before)
-            return NULL;
-    }
-
-
-    /* Allocate buffer. */
-    if (numChar & js::tl::MulOverflowMask<sizeof(jschar)>::result)
-        return NULL;
-    jschar *buf = (jschar *)cx->malloc(numChar * sizeof(jschar));
-    if (!buf)
-        return NULL;
-
-    /* Fill buffer. */
-    jschar *ptr = buf;
-    for (uint32 i = 0; i < size; ++i) {
-        const jschar *chars;
-        size_t length;
-        strArray[i]->getCharsAndLength(chars, length);
-        js_strncpy(ptr, chars, length);
-        ptr += length;
-    }
-    *ptr = '\0';
-
-    /* Create string. */
-    JSString *str = js_NewString(cx, buf, numChar - 1);
-    if (!str)
-        cx->free(buf);
-    return str;
-}
-JS_DEFINE_CALLINFO_3(extern, STRING, js_ConcatN, CONTEXT, STRINGPTR, UINT32, 0, ACCSET_STORE_ANY)

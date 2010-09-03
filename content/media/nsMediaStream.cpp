@@ -56,6 +56,7 @@
 #include "nsDOMError.h"
 #include "nsICachingChannel.h"
 #include "nsURILoader.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 #define HTTP_OK_CODE 200
 #define HTTP_PARTIAL_RESPONSE_CODE 206
@@ -126,13 +127,20 @@ nsMediaChannelStream::Listener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult
-nsMediaChannelStream::Listener::OnChannelRedirect(nsIChannel* aOldChannel,
-                                                  nsIChannel* aNewChannel,
-                                                  PRUint32 aFlags)
+nsMediaChannelStream::Listener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                                       nsIChannel* aNewChannel,
+                                                       PRUint32 aFlags,
+                                                       nsIAsyncVerifyRedirectCallback* cb)
 {
-  if (!mStream)
-    return NS_OK;
-  return mStream->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+  nsresult rv = NS_OK;
+  if (mStream)
+    rv = mStream->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  cb->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
 }
 
 nsresult
@@ -548,7 +556,16 @@ void nsMediaChannelStream::CloseChannel()
   }
 }
 
-nsresult nsMediaChannelStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
+nsresult nsMediaChannelStream::ReadFromCache(char* aBuffer,
+                                             PRInt64 aOffset,
+                                             PRUint32 aCount)
+{
+  return mCacheStream.ReadFromCache(aBuffer, aOffset, aCount);
+}
+
+nsresult nsMediaChannelStream::Read(char* aBuffer,
+                                    PRUint32 aCount,
+                                    PRUint32* aBytes)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
@@ -787,6 +804,13 @@ nsMediaChannelStream::IsSuspendedByCache()
   return mCacheSuspendCount > 0;
 }
 
+PRBool
+nsMediaChannelStream::IsSuspended()
+{
+  nsAutoLock lock(mLock);
+  return mSuspendCount > 0;
+}
+
 void
 nsMediaChannelStream::SetReadMode(nsMediaCacheStream::ReadMode aMode)
 {
@@ -846,6 +870,7 @@ public:
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
+  virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
 
   // These methods are called off the main thread.
 
@@ -873,6 +898,7 @@ public:
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) { return PR_MAX(aOffset, mSize); }
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset) { return PR_TRUE; }
   virtual PRBool  IsSuspendedByCache() { return PR_FALSE; }
+  virtual PRBool  IsSuspended() { return PR_FALSE; }
 
 private:
   // The file size, or -1 if not known. Immutable after Open().
@@ -1022,6 +1048,35 @@ nsMediaStream* nsMediaFileStream::CloneData(nsMediaDecoder* aDecoder)
     return nsnull;
 
   return new nsMediaFileStream(aDecoder, channel, mURI);
+}
+
+nsresult nsMediaFileStream::ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount)
+{
+  nsAutoLock lock(mLock);
+  if (!mInput || !mSeekable)
+    return NS_ERROR_FAILURE;
+  PRInt64 offset = 0;
+  nsresult res = mSeekable->Tell(&offset);
+  NS_ENSURE_SUCCESS(res,res);
+  res = mSeekable->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  NS_ENSURE_SUCCESS(res,res);
+  PRUint32 bytesRead = 0;
+  do {
+    PRUint32 x = 0;
+    PRUint32 bytesToRead = aCount - bytesRead;
+    res = mInput->Read(aBuffer, bytesToRead, &x);
+    bytesRead += x;
+  } while (bytesRead != aCount && res == NS_OK);
+
+  // Reset read head to original position so we don't disturb any other
+  // reading thread.
+  nsresult seekres = mSeekable->Seek(nsISeekableStream::NS_SEEK_SET, offset);
+
+  // If a read failed in the loop above, we want to return its failure code.
+  NS_ENSURE_SUCCESS(res,res);
+
+  // Else we succeed if the reset-seek succeeds.
+  return seekres;
 }
 
 nsresult nsMediaFileStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)

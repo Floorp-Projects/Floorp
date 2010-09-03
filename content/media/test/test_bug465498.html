@@ -12,7 +12,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var videos = [];
+var manager = new MediaTestManager;
 
 function startTest(e) {
   e.target.play();
@@ -39,17 +39,17 @@ function seekEnded(e) {
      v.currentTime  + " for " + v._name);
   ok(!v.ended, "Checking ended is false for " + v._name);
   v._finished = true;
-  if (AllFinished(videos))
-    SimpleTest.finish();
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
 }
 
-for (var i=0; i<gSmallTests.length; ++i) {
-  var test = gSmallTests[i];
+function initTest(test, token) {
   var type = /^video/.test(test.type) ? "video" : "audio";
   var v = document.createElement(type);
-  var test = gSmallTests[i];
   if (!v.canPlayType(test.type))
-    continue;
+    return;
+  v.token = token;
+  manager.started(token);
   v._name = test.name;
   
   var s = document.createElement("source");
@@ -63,14 +63,9 @@ for (var i=0; i<gSmallTests.length; ++i) {
   v.addEventListener("ended", playbackEnded, false);
   v.addEventListener("seeked", seekEnded, false);
   document.body.appendChild(v);
-  videos.push(v);
 }
 
-if (videos.length == 0) {
-  todo(false, "No types supported");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gSmallTests, initTest);
 
 </script>
 </pre>

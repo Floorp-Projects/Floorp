@@ -163,7 +163,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // then call RemoveFrame on it here.
     // Also destroy it here if it's a popup frame. (Bug 96291)
     if (shell->FrameManager() &&
-        ((GetStateBits() & PLACEHOLDER_FOR_FLOAT) ||
+        ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
          !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof))) {
       nsIAtom* listName = nsLayoutUtils::GetChildListNameFor(oof);
       shell->FrameManager()->RemoveFrame(listName, oof);
@@ -237,7 +237,7 @@ nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
   
   return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, PaintDebugPlaceholder, "DebugPlaceholder",
+      nsDisplayGeneric(aBuilder, this, PaintDebugPlaceholder, "DebugPlaceholder",
                        nsDisplayItem::TYPE_DEBUG_PLACEHOLDER));
 #else // DEBUG
   return NS_OK;

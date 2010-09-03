@@ -41,12 +41,16 @@
 #include "nsStyleConsts.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
+#include "nsIConstraintValidation.h"
 
 
 class nsHTMLFieldSetElement : public nsGenericHTMLFormElement,
-                              public nsIDOMHTMLFieldSetElement
+                              public nsIDOMHTMLFieldSetElement,
+                              public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLFieldSetElement();
 
@@ -68,10 +72,12 @@ public:
   // nsIFormControl
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement);
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // nsIConstraintValidation
+  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; };
 };
 
 // construction, destruction
@@ -98,8 +104,9 @@ DOMCI_NODE_DATA(HTMLFieldSetElement, nsHTMLFieldSetElement)
 
 // QueryInterface implementation for nsHTMLFieldSetElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFieldSetElement,
-                                   nsIDOMHTMLFieldSetElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLFieldSetElement,
+                                   nsIDOMHTMLFieldSetElement,
+                                   nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFieldSetElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)
@@ -107,6 +114,8 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)
 
 // nsIDOMHTMLFieldSetElement
 
+// nsIConstraintValidation
+NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLFieldSetElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLFieldSetElement)
 
@@ -128,8 +137,7 @@ nsHTMLFieldSetElement::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                                         nsIContent* aSubmitElement)
+nsHTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   return NS_OK;
 }

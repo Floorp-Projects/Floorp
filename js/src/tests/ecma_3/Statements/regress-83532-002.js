@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-83532-002.js';
 var BUGNUMBER = 83532;
 var summary = "Testing that we don't crash on switch case -1";
 var sToEval = '';

@@ -167,14 +167,38 @@ struct FFEArguments
 };
 PLDHashOperator
 findFunctionEnumerator(const nsACString &aKey,
-                       nsISupports *aData,
+                       Connection::FunctionInfo aData,
                        void *aUserArg)
 {
   FFEArguments *args = static_cast<FFEArguments *>(aUserArg);
-  if (aData == args->target) {
-    args->found = PR_TRUE;
+  if (aData.function == args->target) {
+    args->found = true;
     return PL_DHASH_STOP;
   }
+  return PL_DHASH_NEXT;
+}
+
+PLDHashOperator
+copyFunctionEnumerator(const nsACString &aKey,
+                       Connection::FunctionInfo aData,
+                       void *aUserArg)
+{
+  NS_PRECONDITION(aData.type == Connection::FunctionInfo::SIMPLE ||
+                  aData.type == Connection::FunctionInfo::AGGREGATE,
+                  "Invalid function type!");
+
+  Connection *connection = static_cast<Connection *>(aUserArg);
+  if (aData.type == Connection::FunctionInfo::SIMPLE) {
+    mozIStorageFunction *function =
+      static_cast<mozIStorageFunction *>(aData.function.get());
+    (void)connection->CreateFunction(aKey, aData.numArgs, function);
+  }
+  else {
+    mozIStorageAggregateFunction *function =
+      static_cast<mozIStorageAggregateFunction *>(aData.function.get());
+    (void)connection->CreateAggregateFunction(aKey, aData.numArgs, function);
+  }
+
   return PL_DHASH_NEXT;
 }
 
@@ -308,7 +332,8 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// Connection
 
-Connection::Connection(Service *aService)
+Connection::Connection(Service *aService,
+                       int aFlags)
 : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
 , sharedDBMutex("Connection::sharedDBMutex")
 , threadOpenedOn(do_GetCurrentThread())
@@ -316,6 +341,7 @@ Connection::Connection(Service *aService)
 , mAsyncExecutionThreadShuttingDown(false)
 , mTransactionInProgress(PR_FALSE)
 , mProgressHandler(nsnull)
+, mFlags(aFlags)
 , mStorageService(aService)
 {
   mFunctions.Init();
@@ -353,7 +379,8 @@ Connection::getAsyncExecutionTarget()
 }
 
 nsresult
-Connection::initialize(nsIFile *aDatabaseFile)
+Connection::initialize(nsIFile *aDatabaseFile,
+                       const char* aVFSName)
 {
   NS_ASSERTION (!mDBConn, "Initialize called on already opened database!");
 
@@ -367,11 +394,12 @@ Connection::initialize(nsIFile *aDatabaseFile)
     rv = aDatabaseFile->GetPath(path);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    srv = ::sqlite3_open(NS_ConvertUTF16toUTF8(path).get(), &mDBConn);
+    srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
+                            aVFSName);
   }
   else {
     // in memory database requested, sqlite uses a magic file name
-    srv = ::sqlite3_open(":memory:", &mDBConn);
+    srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, aVFSName);
   }
   if (srv != SQLITE_OK) {
     mDBConn = nsnull;
@@ -508,7 +536,7 @@ Connection::findFunctionByInstance(nsISupports *aInstance)
 {
   sharedDBMutex.assertCurrentThreadOwns();
   FFEArguments args = { aInstance, false };
-  mFunctions.EnumerateRead(findFunctionEnumerator, &args);
+  (void)mFunctions.EnumerateRead(findFunctionEnumerator, &args);
   return args.found;
 }
 
@@ -663,6 +691,34 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Connection::Clone(PRBool aReadOnly,
+                  mozIStorageConnection **_connection)
+{
+  if (!mDBConn)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!mDatabaseFile)
+    return NS_ERROR_UNEXPECTED;
+
+  int flags = mFlags;
+  if (aReadOnly) {
+    // Turn off SQLITE_OPEN_READWRITE, and set SQLITE_OPEN_READONLY.
+    flags = (~SQLITE_OPEN_READWRITE & flags) | SQLITE_OPEN_READONLY;
+    // Turn off SQLITE_OPEN_CREATE.
+    flags = (~SQLITE_OPEN_CREATE & flags);
+  }
+  nsRefPtr<Connection> clone = new Connection(mStorageService, flags);
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = clone->initialize(mDatabaseFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Copy any functions that have been added to this connection.
+  (void)mFunctions.EnumerateRead(copyFunctionEnumerator, clone);
+
+  NS_ADDREF(*_connection = clone);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 Connection::GetConnectionReady(PRBool *_ready)
@@ -945,7 +1001,10 @@ Connection::CreateFunction(const nsACString &aFunctionName,
   if (srv != SQLITE_OK)
     return convertResultCode(srv);
 
-  NS_ENSURE_TRUE(mFunctions.Put(aFunctionName, aFunction),
+  FunctionInfo info = { aFunction,
+                        Connection::FunctionInfo::SIMPLE,
+                        aNumArguments };
+  NS_ENSURE_TRUE(mFunctions.Put(aFunctionName, info),
                  NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -978,7 +1037,10 @@ Connection::CreateAggregateFunction(const nsACString &aFunctionName,
   if (srv != SQLITE_OK)
     return convertResultCode(srv);
 
-  NS_ENSURE_TRUE(mFunctions.Put(aFunctionName, aFunction),
+  FunctionInfo info = { aFunction,
+                        Connection::FunctionInfo::AGGREGATE,
+                        aNumArguments };
+  NS_ENSURE_TRUE(mFunctions.Put(aFunctionName, info),
                  NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -1041,6 +1103,16 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler **_oldHandler)
   mProgressHandler = nsnull;
   ::sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseName)
+{
+  (void)::sqlite3_file_control(mDBConn,
+                               aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get() : NULL,
+                               SQLITE_FCNTL_CHUNK_SIZE,
+                               &aChunkSize);
   return NS_OK;
 }
 

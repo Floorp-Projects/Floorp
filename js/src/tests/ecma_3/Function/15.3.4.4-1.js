@@ -46,7 +46,6 @@
  * See ECMA-262 Edition 3 Final, Section 15.3.4.4
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.3.4.4-1.js';
 var UBound = 0;
 var BUGNUMBER = 145791;
 var summary = 'Testing ECMA conformance of Function.prototype.call';

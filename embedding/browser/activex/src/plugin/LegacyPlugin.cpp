@@ -359,7 +359,7 @@ MozAxAutoPushJSContext::MozAxAutoPushJSContext(JSContext *cx,
     // See if there are any scripts on the stack.
     // If not, we need to add a dummy frame with a principal.
     PRBool hasScript = PR_FALSE;
-    JSStackFrame* tempFP = cx->fp;
+    JSStackFrame* tempFP = cx->fp();
     while (tempFP)
     {
         if (tempFP->script)

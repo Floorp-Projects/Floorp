@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351515.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351515;
 var summary = 'js17 features must be enabled by version request';

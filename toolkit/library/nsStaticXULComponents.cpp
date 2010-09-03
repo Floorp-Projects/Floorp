@@ -241,6 +241,7 @@
     AUTH_MODULE                              \
     MODULE(nsJarModule)                      \
     ZIPWRITER_MODULE                         \
+    MODULE(StartupCacheModule)               \
     MODULE(nsPrefModule)                     \
     RDF_MODULES                              \
     MODULE(nsParserModule)                   \
@@ -265,7 +266,6 @@
     STORAGE_MODULE                           \
     PLACES_MODULES                           \
     XULENABLED_MODULES                       \
-    MODULE(AddonsModule)                     \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
     JSDEBUGGER_MODULES                       \

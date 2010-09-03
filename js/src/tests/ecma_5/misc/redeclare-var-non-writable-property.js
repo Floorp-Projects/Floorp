@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = 'redeclare-var-non-writable-property.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 539488;
 var summary =

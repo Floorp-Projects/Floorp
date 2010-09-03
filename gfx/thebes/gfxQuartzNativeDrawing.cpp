@@ -54,6 +54,7 @@ gfxQuartzNativeDrawing::gfxQuartzNativeDrawing(gfxContext* ctx,
                                                const gfxRect& nativeRect)
     : mContext(ctx), mNativeRect(nativeRect)
 {
+    mNativeRect.RoundOut();
 }
 
 CGContextRef
@@ -73,44 +74,49 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
     if (surf->GetType() == gfxASurface::SurfaceTypeQuartz &&
         (surf->GetContentType() == gfxASurface::CONTENT_COLOR ||
          (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA))) {
-        mQuartzSurface = static_cast<gfxQuartzSurface*>(static_cast<gfxASurface*>(surf.get()));
+        mQuartzSurface = static_cast<gfxQuartzSurface*>(surf.get());
+        mSurfaceContext = mContext;
+
+        // grab the CGContextRef
+        mCGContext = cairo_quartz_get_cg_context_with_clip(mSurfaceContext->GetCairo());
+        if (!mCGContext)
+            return nsnull;
+
+        gfxMatrix m = mContext->CurrentMatrix();
+        CGContextTranslateCTM(mCGContext, deviceOffset.x, deviceOffset.y);
+
+        // I -think- that this context will always have an identity
+        // transform (since we don't maintain a transform on it in
+        // cairo-land, and instead push/pop as needed)
+
+        gfxFloat x0 = m.x0;
+        gfxFloat y0 = m.y0;
+
+        // We round x0/y0 if we don't have a scale, because otherwise things get
+        // rendered badly
+        // XXX how should we be rounding x0/y0?
+        if (!m.HasNonTranslationOrFlip()) {
+            x0 = floor(x0 + 0.5);
+            y0 = floor(y0 + 0.5);
+        }
+
+        CGContextConcatCTM(mCGContext, CGAffineTransformMake(m.xx, m.yx,
+                                                             m.xy, m.yy,
+                                                             x0, y0));
+
+        // bug 382049 - need to explicity set the composite operation to sourceOver
+        CGContextSetCompositeOperation(mCGContext, kPrivateCGCompositeSourceOver);
     } else {
-        // XXXkinetik we could create and use a temp surface here and draw
-        // it back to the gfxContext in EndNativeDrawing like the Windows
-        // version of this class
-        NS_WARNING("unhandled surface type");
-        return nsnull;
+        mQuartzSurface = new gfxQuartzSurface(mNativeRect.size,
+                                              gfxASurface::ImageFormatARGB32);
+        if (mQuartzSurface->CairoStatus())
+            return nsnull;
+        mSurfaceContext = new gfxContext(mQuartzSurface);
+
+        // grab the CGContextRef
+        mCGContext = cairo_quartz_get_cg_context_with_clip(mSurfaceContext->GetCairo());
+        CGContextTranslateCTM(mCGContext, -mNativeRect.X(), -mNativeRect.Y());
     }
-
-    // grab the CGContextRef
-    mCGContext = cairo_quartz_get_cg_context_with_clip(mContext->GetCairo());
-    if (!mCGContext)
-        return nsnull;
-
-    gfxMatrix m = mContext->CurrentMatrix();
-    CGContextTranslateCTM(mCGContext, deviceOffset.x, deviceOffset.y);
-
-    // I -think- that this context will always have an identity
-    // transform (since we don't maintain a transform on it in
-    // cairo-land, and instead push/pop as needed)
-
-    gfxFloat x0 = m.x0;
-    gfxFloat y0 = m.y0;
-
-    // We round x0/y0 if we don't have a scale, because otherwise things get
-    // rendered badly
-    // XXX how should we be rounding x0/y0?
-    if (!m.HasNonTranslationOrFlip()) {
-        x0 = floor(x0 + 0.5);
-        y0 = floor(y0 + 0.5);
-    }
-
-    CGContextConcatCTM(mCGContext, CGAffineTransformMake(m.xx, m.yx,
-                                                         m.xy, m.yy,
-                                                         x0, y0));
-
-    // bug 382049 - need to explicity set the composite operation to sourceOver
-    CGContextSetCompositeOperation(mCGContext, kPrivateCGCompositeSourceOver);
 
     return mCGContext;
 }
@@ -120,7 +126,13 @@ gfxQuartzNativeDrawing::EndNativeDrawing()
 {
     NS_ASSERTION(mQuartzSurface, "EndNativeDrawing called without BeginNativeDrawing");
 
-    cairo_quartz_finish_cg_context_with_clip(mContext->GetCairo());
+    cairo_quartz_finish_cg_context_with_clip(mSurfaceContext->GetCairo());
     mQuartzSurface->MarkDirty();
-    mQuartzSurface = nsnull;
+    if (mSurfaceContext != mContext) {
+        gfxContextMatrixAutoSaveRestore save(mContext);
+
+        // Copy back to destination
+        mContext->Translate(mNativeRect.TopLeft());
+        mContext->DrawSurface(mQuartzSurface, mNativeRect.size);
+    }
 }

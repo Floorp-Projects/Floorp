@@ -1,18 +1,14 @@
 import sys, os
 
-manifestsdir, distdir = sys.argv[1:]
+outmanifest = sys.argv[1]
+manifestdirs = sys.argv[2:]
 
-if not os.path.exists(manifestsdir):
-    print >>sys.stderr, "Warning: %s does not exist." % manifestsdir
-    sys.exit(0)
+outfd = open(outmanifest, 'w')
 
-for name in os.listdir(manifestsdir):
-    manifestdir = os.path.join(manifestsdir, name)
+for manifestdir in manifestdirs:
     if not os.path.isdir(manifestdir):
+        print >>sys.stderr, "Warning: trying to link manifests in missing directory '%s'" % manifestdir
         continue
-
-    manifestfile = os.path.join(distdir, 'components', name + '.manifest')
-    outfd = open(manifestfile, 'a')
 
     for name in os.listdir(manifestdir):
         infd = open(os.path.join(manifestdir, name))
@@ -21,4 +17,4 @@ for name in os.listdir(manifestsdir):
         print >>outfd
         infd.close()
 
-    outfd.close()
+outfd.close()

@@ -119,9 +119,6 @@ public:
     NS_IMETHOD Invalidate(const nsIntRect &aRect,
                           PRBool aIsSynchronous);
     NS_IMETHOD Update();
-    void Scroll(const nsIntPoint&,
-                const nsTArray<nsIntRect>&,
-                const nsTArray<nsIWidget::Configuration>&);
     NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE);
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect);
     virtual nsIntPoint WidgetToScreenOffset();
@@ -154,8 +151,14 @@ public:
     NS_IMETHOD GetAttention(PRInt32 aCycleCount) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
 
+    NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEEnabled(PRUint32 aState);
     NS_IMETHOD GetIMEEnabled(PRUint32* aState);
+    NS_IMETHOD CancelIMEComposition();
+
+    NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
+    NS_IMETHOD OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
+    NS_IMETHOD OnIMESelectionChange(void);
 
     gfxASurface* GetThebesSurface();
 
@@ -164,8 +167,7 @@ protected:
     nsWindow *FindTopLevel();
     PRBool DrawTo(gfxASurface *targetSurface);
     PRBool IsTopLevel();
-    nsresult GetCurrentOffset(PRUint32 &aOffset, PRUint32 &aLength);
-    nsresult DeleteRange(int aOffset, int aLen);
+    void OnIMEAddRange(mozilla::AndroidGeckoEvent *ae);
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
@@ -174,8 +176,18 @@ protected:
     PRPackedBool mIsVisible;
     nsTArray<nsWindow*> mChildren;
     nsWindow* mParent;
+
+    bool mGestureFinished;
     double mStartDist;
+    double mLastDist;
+    nsAutoPtr<nsIntPoint> mStartPoint;
+
     nsCOMPtr<nsIdleService> mIdleService;
+
+    PRUint32 mIMEEnabled;
+    PRBool mIMEComposing;
+    nsString mIMEComposingText;
+    nsAutoTArray<nsTextRange, 4> mIMERanges;
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);
@@ -183,6 +195,9 @@ protected:
 
 private:
     void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key);
+    void DispatchGestureEvent(mozilla::AndroidGeckoEvent *ae);
+    void DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
+                               const nsIntPoint &refPoint, PRUint64 time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
 };
 

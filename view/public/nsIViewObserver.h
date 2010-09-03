@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xc5dfb460, 0x50fb, 0x483e, \
-    { 0xb4, 0x22, 0x19, 0xb7, 0x20, 0x4f, 0xe2, 0xdc } }
+  { 0x6af699da, 0x8bfe, 0x43c9, \
+    { 0xae, 0xc1, 0x76, 0x1b, 0x03, 0x62, 0x8d, 0x64 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -112,6 +112,13 @@ public:
    * of having the view trees linked.
    */
   NS_IMETHOD_(PRBool) IsVisible() = 0;
+
+  /**
+   * Returns true if the view observer wants to drop all invalidation right now
+   * because painting is suppressed. It will invalidate everything when it
+   * unsuppresses.
+   */
+  NS_IMETHOD_(PRBool) ShouldIgnoreInvalidation() = 0;
 
   /**
    * Notify the observer that we're about to start painting.  This

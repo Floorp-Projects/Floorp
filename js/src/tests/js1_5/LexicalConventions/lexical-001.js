@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'lexical-001.js';
 
 /*
  * Date: 26 November 2000

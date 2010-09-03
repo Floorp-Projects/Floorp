@@ -42,6 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef BUILD_STATIC_LIBS
 ifndef MOZ_ENABLE_LIBXUL
 LOCAL_INCLUDES =  -I$(srcdir)/../   \
                   -I$(srcdir)/../../xpwidgets \
@@ -50,14 +51,19 @@ LOCAL_INCLUDES =  -I$(srcdir)/../   \
 LIBS = ../$(LIB_PREFIX)widget_windows.$(LIB_SUFFIX) \
        ../../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
        $(DIST)/lib/$(LIB_PREFIX)thebes.$(LIB_SUFFIX) \
+       $(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
        $(XPCOM_LIBS) \
        $(MOZ_UNICHARUTIL_LIBS) \
+		   $(QCMS_LIBS) \
        $(NULL)
 
-OS_LIBS += $(call EXPAND_LIBNAME,ole32 shell32)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR)
+
+OS_LIBS += $(call EXPAND_LIBNAME,ole32 oleaut32 shell32 comctl32 comdlg32 imm32 shlwapi winspool msimg32)
 
 CPP_UNIT_TESTS = TestWinDND.cpp \
                  $(NULL)
-endif 
+endif
+endif
 
 include $(topsrcdir)/config/rules.mk

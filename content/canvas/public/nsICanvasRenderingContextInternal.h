@@ -43,10 +43,9 @@
 #include "nsIDocShell.h"
 #include "gfxPattern.h"
 
-// {b96168fd-6f13-4ca7-b820-e96f22e71fe5}
+// {EC90F32E-7848-4819-A1E3-02E64C682A72}
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0xb96168fd, 0x6f13, 0x4ca7, \
-  { 0xb8, 0x20, 0xe9, 0x6f, 0x22, 0xe7, 0x1f, 0xe5 } }
+{ 0xec90f32e, 0x7848, 0x4819, { 0xa1, 0xe3, 0x2, 0xe6, 0x4c, 0x68, 0x2a, 0x72 } }
 
 class nsHTMLCanvasElement;
 class gfxContext;
@@ -101,6 +100,10 @@ public:
   // dst alpha is always 1.0.  If this is never called, the context
   // defaults to false (not opaque).
   NS_IMETHOD SetIsOpaque(PRBool isOpaque) = 0;
+
+  // Invalidate this context and release any held resources, in preperation
+  // for possibly reinitializing with SetDimensions/InitializeWithSurface.
+  NS_IMETHOD Reset() = 0;
 
   // Return the CanvasLayer for this context, creating
   // one for the given layer manager if not available.

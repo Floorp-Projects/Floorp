@@ -22,6 +22,8 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
+copyToProfile('animals.sqlite');
+
 var testid ="storage listbox with multiqueries";
 var queryType = "storage";
 var isTreeBuilder = false;
@@ -31,14 +33,14 @@ var notWorkingYetDynamic = false;
 var expectedOutput =
 <output>
     <listitem anyid="true" label="Mammal: African Elephant"/>
-    <listitem anyid="true" label="Mammal: Gorilla" style="font-weight: bold;"/>
+    <listitem anyid="true" label="Mammal: Gorilla" style="font-weight:bold"/>
     <listitem anyid="true" label="Mammal: HIPPOPOTAMUS"/>
     <listitem anyid="true" label="Mammal: LAMA"/>
     <listitem anyid="true" label="Mammal: Lion"/>
-    <listitem anyid="true" label="Mammal: Nine-banded Armadillo" style="font-weight: bold;"/>
+    <listitem anyid="true" label="Mammal: Nine-banded Armadillo" style="font-weight:bold"/>
     <listitem anyid="true" label="Mammal: Polar Bear"/>
     <listitem anyid="true" label="Mammal: aardvark"/>
-    <listitem anyid="true" label="Bird: Barn Owl" style="font-style: italic;"/>
+    <listitem anyid="true" label="Bird: Barn Owl" style="font-style:italic"/>
     <listitem anyid="true" label="Bird: Emu"/>
     <listitem anyid="true" label="Bird: Raven"/>
 </output>;
@@ -48,7 +50,7 @@ var changes = [];
 </script>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
-              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
     <template>
         <queryset>
             <query>SELECT * FROM animals WHERE species_id = 5 ORDER BY name</query>

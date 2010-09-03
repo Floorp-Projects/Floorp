@@ -40,7 +40,6 @@
 
 // See https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Processing_XML_with_E4X#section_7
 
-gTestfile = 'regress-496113.js';
 
 var summary = 'simple filter';
 var BUGNUMBER = 496113;

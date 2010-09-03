@@ -57,6 +57,7 @@
 #include "WinTaskbar.h"
 #include "JumpListBuilder.h"
 #include "JumpListItem.h"
+#include "GfxInfo.h"
 
 // Drag & Drop, Clipboard
 
@@ -78,6 +79,8 @@
 #include "nsPrintSession.h"
 #endif
 
+using namespace mozilla::widget;
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -90,7 +93,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
-using namespace mozilla::widget;
 NS_GENERIC_FACTORY_CONSTRUCTOR(WinTaskbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListBuilder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListItem)
@@ -98,6 +100,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListSeparator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListLink)
 NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListShortcut)
 #endif
+
+namespace mozilla {
+namespace widget {
+NS_GENERIC_FACTORY_CONSTRUCTOR(GfxInfo)
+}
+}
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -119,6 +127,7 @@ NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 NS_DEFINE_NAMED_CID(NS_LOOKANDFEEL_CID);
 NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
@@ -154,6 +163,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
   { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
   { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerWinConstructor },
+  { &kNS_GFXINFO_CID, false, NULL, GfxInfoConstructor },
   { &kNS_LOOKANDFEEL_CID, false, NULL, nsLookAndFeelConstructor },
   { &kNS_THEMERENDERER_CID, false, NULL, NS_NewNativeTheme },
   { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceWinConstructor },
@@ -190,6 +200,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID },
   { "@mozilla.org/widget/toolkit/win;1", &kNS_TOOLKIT_CID },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
+  { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
   { "@mozilla.org/widget/lookandfeel;1", &kNS_LOOKANDFEEL_CID },
   { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
   { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },

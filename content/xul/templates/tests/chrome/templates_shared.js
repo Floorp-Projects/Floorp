@@ -435,3 +435,37 @@ function compareConsoleMessages()
      is(messages[m].message, expectedConsoleMessages.shift(), "logged message " + (m + 1));
    }
 }
+
+function copyToProfile(filename)
+{
+  if (Cc === undefined) {
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+  }
+
+  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                         .getService(Ci.mozIJSSubScriptLoader);
+  loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
+
+  var file = Cc["@mozilla.org/file/directory_service;1"]
+                       .getService(Ci.nsIProperties)
+                       .get("ProfD", Ci.nsIFile);
+  file.append(filename);
+
+  var parentURI = getResolvedURI(getRootDirectory(window.location.href));
+  if (parentURI.JARFile) {
+    parentURI = extractJarToTmp(parentURI);
+  } else {
+    var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
+                      getService(Ci.nsIFileProtocolHandler);
+    parentURI = fileHandler.getFileFromURLSpec(parentURI.spec);
+  }
+
+  parentURI = parentURI.QueryInterface(Ci.nsILocalFile);
+  parentURI.append(filename);
+  try {
+    var retVal = parentURI.copyToFollowingLinks(file.parent, filename);
+  } catch (ex) {
+    //ignore this error as the file could exist already
+  }
+}

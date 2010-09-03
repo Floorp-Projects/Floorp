@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-274888.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 274888;
 var summary = 'Negative lookahead should match at positions > approx. 64k';

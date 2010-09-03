@@ -1,4 +1,4 @@
-resource foo resource://foo/foo-resource/
+resource foo .
 content foo resource://foo/foo-content/
 locale foo foo resource://foo/foo-locale/
 skin foo foo resource://foo/foo-skin/

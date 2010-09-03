@@ -137,6 +137,17 @@ Installer.prototype = {
           failed.push(install);
         else
           installs.push(install);
+
+        if (install.linkedInstalls) {
+          install.linkedInstalls.forEach(function(aInstall) {
+            aInstall.addListener(this);
+            // App disabled items are not compatible and so fail to install
+            if (aInstall.addon.appDisabled)
+              failed.push(aInstall);
+            else
+              installs.push(aInstall);
+          }, this);
+        }
         break;
       default:
         WARN("Download of " + install.sourceURI + " in unexpected state " +
@@ -242,6 +253,14 @@ Installer.prototype = {
   onInstallEnded: function(aInstall) {
     aInstall.removeListener(this);
     this.installed.push(aInstall);
+
+    // If installing a theme that is disabled and can be enabled then enable it
+    if (aInstall.addon.type == "theme" &&
+        aInstall.addon.userDisabled == true &&
+        aInstall.addon.appDisabled == false) {
+      aInstall.addon.userDisabled = false;
+    }
+
     this.checkAllInstalled();
   }
 };

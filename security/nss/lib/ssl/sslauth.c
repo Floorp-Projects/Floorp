@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslauth.c,v 1.16 2006/04/20 00:20:45 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslauth.c,v 1.16.66.1 2010/08/03 18:52:13 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "ssl.h"
@@ -92,6 +92,7 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
     sslSocket *ss;
     const char *cipherName;
     PRBool isDes = PR_FALSE;
+    PRBool enoughFirstHsDone = PR_FALSE;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -109,8 +110,14 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	*op = SSL_SECURITY_STATUS_OFF;
     }
 
-    if (ss->opt.useSecurity && ss->firstHsDone) {
+    if (ss->firstHsDone) {
+	enoughFirstHsDone = PR_TRUE;
+    } else if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
+	       ssl3_CanFalseStart(ss)) {
+	enoughFirstHsDone = PR_TRUE;
+    }
 
+    if (ss->opt.useSecurity && enoughFirstHsDone) {
 	if (ss->version < SSL_LIBRARY_VERSION_3_0) {
 	    cipherName = ssl_cipherName[ss->sec.cipherType];
 	} else {

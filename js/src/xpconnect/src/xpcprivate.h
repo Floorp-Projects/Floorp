@@ -113,6 +113,7 @@
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsWrapperCache.h"
+#include "nsStringBuffer.h"
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 
@@ -148,7 +149,7 @@ static FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName);
 #undef GetClassName
 #endif
 
-class qsObjectHelper;
+#include "nsINode.h"
 
 /***************************************************************************/
 // Compile time switches for instrumentation and stuff....
@@ -208,13 +209,6 @@ void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
 void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 #else
 #define DEBUG_CheckWrapperThreadSafety(w) ((void)0)
-#endif
-
-/***************************************************************************/
-
-// Defeat possible Windows macro-mangling of the name
-#ifdef GetClassInfo
-#undef GetClassInfo
 #endif
 
 /***************************************************************************/
@@ -719,6 +713,8 @@ public:
     void AddGCCallback(JSGCCallback cb);
     void RemoveGCCallback(JSGCCallback cb);
 
+    static void ActivityCallback(void *arg, PRBool active);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -757,6 +753,8 @@ private:
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
     nsTArray<JSGCCallback> extraGCCallbacks;
+    PRBool mWatchdogHibernating;
+    PRTime mLastActiveTime; // -1 if active NOW
 };
 
 /***************************************************************************/
@@ -2282,11 +2280,9 @@ private:
     QITableEntry*            mOffsets;
 };
 
-
+class xpcObjectHelper;
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
-                                   nsISupports *p,
-                                   qsObjectHelper* aHelper,
-                                   nsWrapperCache* aCache,
+                                   xpcObjectHelper &aHelper,
                                    XPCWrappedNativeScope* xpcScope,
                                    jsval *rval);
 extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
@@ -2509,16 +2505,11 @@ public:
     GetRuntime() const {XPCWrappedNativeScope* scope = GetScope();
                         return scope ? scope->GetRuntime() : nsnull;}
 
-    /**
-     * If Object has a nsWrapperCache it should be passed in. If a cache is
-     * passed in then cache->GetWrapper() must be null.
-     */
     static nsresult
     GetNewOrUsed(XPCCallContext& ccx,
-                 nsISupports* Object,
+                 xpcObjectHelper& helper,
                  XPCWrappedNativeScope* Scope,
                  XPCNativeInterface* Interface,
-                 nsWrapperCache* cache,
                  JSBool isGlobal,
                  XPCWrappedNative** wrapper);
 
@@ -3060,6 +3051,105 @@ private:
 /***************************************************************************/
 // data conversion
 
+class xpcObjectHelper
+{
+public:
+    xpcObjectHelper(nsISupports *aObject, nsWrapperCache *aCache = nsnull)
+    : mCanonical(nsnull),
+      mObject(aObject),
+      mCache(aCache),
+      mIsNode(PR_FALSE)
+    {
+        if(!mCache)
+        {
+            if(aObject)
+                CallQueryInterface(aObject, &mCache);
+            else
+                mCache = nsnull;
+        }
+    }
+
+    nsISupports* Object()
+    {
+        return mObject;
+    }
+
+    nsISupports* GetCanonical()
+    {
+        if (!mCanonical) {
+            mCanonicalStrong = do_QueryInterface(mObject);
+            mCanonical = mCanonicalStrong;
+        } 
+        return mCanonical;
+    }
+
+    already_AddRefed<nsISupports> forgetCanonical()
+    {
+        NS_ASSERTION(mCanonical, "Huh, no canonical to forget?");
+
+        if (!mCanonicalStrong)
+            mCanonicalStrong = mCanonical;
+        mCanonical = nsnull;
+        return mCanonicalStrong.forget();
+    }
+
+    nsIClassInfo *GetClassInfo()
+    {
+        if(mXPCClassInfo)
+          return mXPCClassInfo;
+        if(!mClassInfo)
+            mClassInfo = do_QueryInterface(mObject);
+        return mClassInfo;
+    }
+    nsXPCClassInfo *GetXPCClassInfo()
+    {
+        if(!mXPCClassInfo)
+        {
+            if(mIsNode)
+                mXPCClassInfo = static_cast<nsINode*>(GetCanonical())->GetClassInfo();
+            else
+                CallQueryInterface(mObject, getter_AddRefs(mXPCClassInfo));
+        }
+        return mXPCClassInfo;
+    }
+
+    already_AddRefed<nsXPCClassInfo> forgetXPCClassInfo()
+    {
+        GetXPCClassInfo();
+
+        return mXPCClassInfo.forget();
+    }
+
+    nsWrapperCache *GetWrapperCache()
+    {
+        return mCache;
+    }
+
+protected:
+    xpcObjectHelper(nsISupports *aObject, nsISupports *aCanonical,
+                    nsWrapperCache *aCache, PRBool aIsNode)
+    : mCanonical(aCanonical),
+      mObject(aObject),
+      mCache(aCache),
+      mIsNode(aIsNode)
+    {
+        if(!mCache && aObject)
+            CallQueryInterface(aObject, &mCache);
+    }
+
+    nsCOMPtr<nsISupports>    mCanonicalStrong;
+    nsISupports*             mCanonical;
+
+private:
+    xpcObjectHelper(xpcObjectHelper& aOther);
+
+    nsISupports*             mObject;
+    nsWrapperCache*          mCache;
+    nsCOMPtr<nsIClassInfo>   mClassInfo;
+    nsRefPtr<nsXPCClassInfo> mXPCClassInfo;
+    PRBool                   mIsNode;
+};
+
 // class here just for static methods
 class XPCConvert
 {
@@ -3116,33 +3206,29 @@ public:
     static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
                                            jsval* d,
                                            nsIXPConnectJSObjectHolder** dest,
-                                           nsISupports* src,
+                                           xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           nsWrapperCache *cache,
                                            JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
-                                           nsresult* pErr,
-                                           qsObjectHelper* aHelper = nsnull)
+                                           nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
-        return NativeInterface2JSObject(lccx, d, dest, src, iid, Interface,
-                                        cache, scope, allowNativeWrapper,
-                                        isGlobal, pErr, aHelper);
+        return NativeInterface2JSObject(lccx, d, dest, aHelper, iid, Interface,
+                                        scope, allowNativeWrapper, isGlobal,
+                                        pErr);
     }
     static JSBool NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                            jsval* d,
                                            nsIXPConnectJSObjectHolder** dest,
-                                           nsISupports* src,
+                                           xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           nsWrapperCache *cache,
                                            JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
-                                           nsresult* pErr,
-                                           qsObjectHelper* aHelper = nsnull);
+                                           nsresult* pErr);
 
     static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
                                                  void** dest, JSObject* src,
@@ -3226,9 +3312,11 @@ class XPCStringConvert
 {
 public:
 
+    // If the string shares the readable's buffer, that buffer will
+    // get assigned to *sharedBuffer.  Otherwise null will be
+    // assigned.
     static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable,
-                                 PRBool dontAddrefShared = PR_FALSE,
-                                 PRBool* sharedBuffer = nsnull);
+                                 nsStringBuffer** sharedBuffer);
 
     static XPCReadableJSStringWrapper *JSStringToReadable(XPCCallContext& ccx,
                                                           JSString *str);

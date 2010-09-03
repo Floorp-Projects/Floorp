@@ -285,6 +285,11 @@ var messages = [
     exception: true
   },
   {
+    type: "object",
+    value: { p: ArrayBuffer.prototype },
+    exception: true
+  },
+  {
     type: "string",
     shouldEqual: true,
     value: "testFinished"

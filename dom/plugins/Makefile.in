@@ -133,6 +133,7 @@ endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS   += \
     PluginUtilsOSX.mm \
+    PluginInterposeOSX.mm \
     $(NULL)
 endif
 

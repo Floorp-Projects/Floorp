@@ -50,7 +50,7 @@ public:
     enum {
         FLAG_TAKE_DC = (1 << 0),
         FLAG_FOR_PRINTING = (1 << 1),
-        FLAG_IS_TRANSPARENT = (1 << 2),
+        FLAG_IS_TRANSPARENT = (1 << 2)
     };
 
     gfxWindowsSurface(HWND wnd, PRUint32 flags = 0);
@@ -80,6 +80,11 @@ public:
     already_AddRefed<gfxWindowsSurface> OptimizeToDDB(HDC dc,
                                                       const gfxIntSize& size,
                                                       gfxImageFormat format);
+
+    virtual TextQuality GetTextQualityInTransparentSurfaces()
+    {
+      return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
+    }
 
     nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
     nsresult EndPrinting();

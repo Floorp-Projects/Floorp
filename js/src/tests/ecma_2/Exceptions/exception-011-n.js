@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'exception-011-n.js';
 
 var SECTION = "exception-011";
 var VERSION = "ECMA_2";

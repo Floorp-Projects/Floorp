@@ -46,7 +46,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=69989
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-67773.js';
 var i = 0;
 var BUGNUMBER = 67773;
 var summary = 'Testing regular subexpressions followed by ? or +\n';

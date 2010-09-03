@@ -5,7 +5,6 @@
  * Contributor: Jason Orendorff
  */
 
-var gTestfile = 'regress-469625-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469625;
 var summary = 'group assignment with rhs containing holes';

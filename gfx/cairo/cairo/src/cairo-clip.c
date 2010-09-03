@@ -408,7 +408,7 @@ _cairo_clip_rectangle (cairo_clip_t       *clip,
     /* if a smaller clip has already been set, ignore the new path */
     if (clip->path != NULL) {
 	if (rectangle->x <= clip->path->extents.x &&
-	    rectangle->y <= clip->path->extents.x &&
+	    rectangle->y <= clip->path->extents.y &&
 	    rectangle->x + rectangle->width >= clip->path->extents.x + clip->path->extents.width &&
 	    rectangle->y + rectangle->height >= clip->path->extents.y + clip->path->extents.height)
 	{

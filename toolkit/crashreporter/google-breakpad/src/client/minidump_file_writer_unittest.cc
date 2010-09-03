@@ -144,22 +144,23 @@ static bool CompareFile(const char *path) {
     0x0000000a, 0x000a1c09, 0x0000000b, 0x00000000,
 #endif
   };
-  unsigned int expected_byte_count = sizeof(expected);
+  size_t expected_byte_count = sizeof(expected);
   int fd = open(path, O_RDONLY, 0600);
   void *buffer = malloc(expected_byte_count);
   ASSERT_NE(fd, -1);
   ASSERT_TRUE(buffer);
-  ASSERT_EQ(read(fd, buffer, expected_byte_count), expected_byte_count);
+  ASSERT_EQ(read(fd, buffer, expected_byte_count), 
+            static_cast<ssize_t>(expected_byte_count));
 
   char *b1, *b2;
-  b1 = (char*)buffer;
-  b2 = (char*)expected;
+  b1 = reinterpret_cast<char*>(buffer);
+  b2 = reinterpret_cast<char*>(expected);
   while (*b1 == *b2) {
     b1++;
     b2++;
   }
 
-  printf("%d\n",b1 - (char*)buffer);
+  printf("%p\n", reinterpret_cast<void*>(b1 - (char*)buffer));
 
   ASSERT_EQ(memcmp(buffer, expected, expected_byte_count), 0);
   return true;

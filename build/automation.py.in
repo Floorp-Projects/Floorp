@@ -51,6 +51,7 @@ import sys
 import threading
 import tempfile
 import zipfile
+import sqlite3
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -158,6 +159,7 @@ class Automation(object):
   def __init__(self):
     self.log = _log
     self.lastTestSeen = "automation.py"
+    self.haveDumpedScreen = False
 
   def setServerInfo(self, 
                     webServer = _DEFAULT_WEB_SERVER, 
@@ -289,6 +291,31 @@ class Automation(object):
 
     return locations
 
+  def setupPermissionsDatabase(self, profileDir, permissions):
+    # Open database and create table
+    permDB = sqlite3.connect(os.path.join(profileDir, "permissions.sqlite"))
+    cursor = permDB.cursor();
+    # SQL copied from nsPermissionManager.cpp
+    cursor.execute("""CREATE TABLE moz_hosts (
+       id INTEGER PRIMARY KEY,
+       host TEXT,
+       type TEXT,
+       permission INTEGER,
+       expireType INTEGER,
+       expireTime INTEGER)""")
+
+    # Insert desired permissions
+    c = 0
+    for perm in permissions.keys():
+      for host in permissions[perm]:
+        c += 1
+        cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, 1, 0, 0)",
+                       (c, host, perm))
+
+    # Commit and close
+    permDB.commit()
+    cursor.close()
+
   def initializeProfile(self, profileDir, extraPrefs = [], useServerLocations = False):
     " Sets up the standard testing profile."
 
@@ -296,6 +323,11 @@ class Automation(object):
     # Start with a clean slate.
     shutil.rmtree(profileDir, True)
     os.mkdir(profileDir)
+
+    # Set up permissions database
+    locations = self.readLocations()
+    self.setupPermissionsDatabase(profileDir,
+      {'allowXULXBL':map(lambda l: l.host, locations)});
 
     part = """\
 user_pref("browser.dom.window.dump.enabled", true);
@@ -321,6 +353,7 @@ user_pref("security.default_personal_cert", "Select Automatically"); // Need to 
 user_pref("network.http.prompt-temp-redirect", false);
 user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
+user_pref("app.update.enabled", false);
 
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
@@ -330,6 +363,7 @@ user_pref("extensions.testpilot.runStudies", false);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
+user_pref("geo.ignore.location_filter", true);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 
@@ -353,8 +387,6 @@ user_pref("capability.principal.codebase.p1.subjectName", "");
 """  % { "origin": "http://" + self.webServer + ":" + str(self.httpPort) }
       prefs.append(part)
     else:
-      locations = self.readLocations()
-
       # Grant God-power to all the privileged servers on which tests run.
       privileged = filter(lambda loc: "privileged" in loc.options, locations)
       for (i, l) in itertools.izip(itertools.count(1), privileged):
@@ -625,8 +657,34 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     def killPid(self, pid):
       os.kill(pid, signal.SIGKILL)
 
+  if UNIXISH:
+    def dumpScreen(self, utilityPath):
+      self.haveDumpedScreen = True;
+
+      screentopng = os.path.join(utilityPath, "screentopng")
+      try:
+        dumper = self.Process([screentopng], bufsize=-1,
+                              stdout=subprocess.PIPE, close_fds=True)
+      except OSError, err:
+        self.log.info("Failed to start %s for screenshot: %s",
+                      screentopng, err.strerror)
+        return
+
+      image = dumper.stdout.read()
+      status = dumper.wait()
+      if status != 0:
+        self.log.info("screentopng exited with code %d", status)
+        return
+
+      import base64
+      encoded = base64.b64encode(image)
+      self.log.info("SCREENSHOT: data:image/png;base64,%s", encoded)
+
   def killAndGetStack(self, proc, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
+    if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen:
+      self.dumpScreen(utilityPath)
+
     if self.CRASHREPORTER and not debuggerInfo:
       if self.UNIXISH:
         # ABRT will get picked up by Breakpad's signal handler
@@ -680,6 +738,9 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if stackFixerFunction:
           line = stackFixerFunction(line)
         self.log.info(line.rstrip())
+        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out." in line:
+          self.dumpScreen(utilityPath)
+
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
           # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().

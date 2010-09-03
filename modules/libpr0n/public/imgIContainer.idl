@@ -71,7 +71,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(e6984403-1253-48fa-8a16-a350f76ab6c9)]
+[scriptable, uuid(362e5b5f-f677-49e0-9a3c-03249c794624)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -83,6 +83,25 @@ interface imgIContainer : nsISupports
    * The height of the container rectangle.
    */
   readonly attribute PRInt32 height;
+
+  /**
+    * Enumerated values for the 'type' attribute (below).
+    */
+  const unsigned short TYPE_RASTER = 0;
+  const unsigned short TYPE_VECTOR = 1;
+
+  /**
+   * The type of this image (one of the TYPE_* values above).
+   */
+  readonly attribute unsigned short type;
+
+  /**
+   * Direct C++ accessor for 'type' attribute, for convenience.
+   */
+%{C++
+  virtual PRUint16 GetType() = 0;
+%}
+
 
   /**
    * Whether this image is animated. You can only be guaranteed that querying
@@ -210,64 +229,6 @@ interface imgIContainer : nsISupports
     */
   void unlockImage();
 
-  /************ Internal libpr0n use only below here. *****************/
-
-  /**
-   * Flags for imgIContainer initialization.
-   *
-   * Meanings:
-   *
-   * INIT_FLAG_NONE: Lack of flags
-   *
-   * INIT_FLAG_DISCARDABLE: The container should be discardable
-   *
-   * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
-   * decoding on load.
-   *
-   * INIT_FLAG_MULTIPART: The container will be used to display a stream of
-   * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
-   * and INIT_FLAG_DECODE_ON_DRAW must not be set.
-   */
-
-  const long INIT_FLAG_NONE           = 0x0;
-  const long INIT_FLAG_DISCARDABLE    = 0x1;
-  const long INIT_FLAG_DECODE_ON_DRAW = 0x2;
-  const long INIT_FLAG_MULTIPART      = 0x4;
-
-  /**
-   * Creates a new image container.
-   *
-   * @param aObserver Observer to send decoder and animation notifications to.
-   * @param aMimeType The mimetype of the image.
-   * @param aFlags Initialization flags of the INIT_FLAG_* variety.
-   */
-  void init(in imgIDecoderObserver aObserver,
-            in string aMimeType,
-            in PRUint32 aFlags);
-
-  /** 
-   * "Disposal" method indicates how the image should be handled before the
-   *  subsequent image is displayed.
-   *  Don't change these without looking at the implementations using them,
-   *  struct gif_struct::disposal_method and gif_write() in particular.
-   */
-  const long kDisposeClearAll         = -1; // Clear the whole image, revealing
-                                            // what was there before the gif displayed
-  const long kDisposeNotSpecified     =  0; // Leave frame, let new frame draw on top
-  const long kDisposeKeep             =  1; // Leave frame, let new frame draw on top
-  const long kDisposeClear            =  2; // Clear the frame's area, revealing bg
-  const long kDisposeRestorePrevious  =  3; // Restore the previous (composited) frame
-  
-  /*
-   * "Blend" method indicates how the current image is combined with the
-   * previous image.
-   */
-  const long kBlendSource             =  0; // All color components of the frame, including alpha, 
-                                            // overwrite the current contents of the frame's 
-                                            // output buffer region
-  const long kBlendOver               =  1; // The frame should be composited onto the output buffer 
-                                            // based on its alpha, using a simple OVER operation
-  
   /**
    * Animation mode Constants
    *   0 = normal
@@ -280,100 +241,8 @@ interface imgIContainer : nsISupports
 
   attribute unsigned short animationMode;
 
-  /**
-   * The rectangle defining the location and size of the currently displayed frame.
-   * Should be an attribute, but can't be because of reference/pointer
-   * conflicts with native types in xpidl.
-   */
-  [noscript] void getCurrentFrameRect(in nsIntRect aFrameRect);
-
-  /**
-   * The index of the current frame that would be drawn if the image was to be
-   * drawn now.
-   */
-  readonly attribute unsigned long currentFrameIndex;
-
-  /**
-   * The total number of frames in this image.
-   */
-  readonly attribute unsigned long numFrames;
-
-  /**
-   * The size, in bytes, occupied by the significant data portions of the image.
-   * This includes both compressed source data and decoded frames.
-   */
-  readonly attribute unsigned long dataSize;
-
-  void setFrameDisposalMethod(in unsigned long framenumber, in PRInt32 aDisposalMethod);
-  void setFrameBlendMethod(in unsigned long framenumber, in PRInt32 aBlendMethod);
-  void setFrameTimeout(in unsigned long framenumber, in PRInt32 aTimeout);
-  void setFrameHasNoAlpha(in unsigned long framenumber);
-
-  /**
-   * Sets the size of the container. This should only be called by the decoder. This function may be called multiple
-   * times, but will throw an error if subsequent calls do not match the first.
-   */
-  [noscript] void setSize(in long aWidth, in long aHeight);
-
-  /**
-   * Create or re-use a frame at index aFrameNum. It is an error to call this with aFrameNum not in the range [0, numFrames].
-   */
-  [noscript] void ensureCleanFrame(in unsigned long aFramenum, in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat,
-                                   [array, size_is(imageLength)] out PRUint8 imageData, out unsigned long imageLength);
-
-  /**
-   * Adds to the end of the list of frames.
-   */
-  [noscript] void appendFrame(in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat,
-                              [array, size_is(imageLength)] out PRUint8 imageData, out unsigned long imageLength);
-  [noscript] void appendPalettedFrame(in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat, in PRUint8 aPaletteDepth, 
-                                      [array, size_is(imageLength)] out PRUint8 imageData, out unsigned long imageLength,
-                                      [array, size_is(paletteLength)] out PRUint32 paletteData, out unsigned long paletteLength);
-
-  [noscript] void frameUpdated(in unsigned long framenum, in nsIntRect aNewRect);
-
-  /* notification when the current frame is done decoding */
-  void endFrameDecode(in unsigned long framenumber);
-  
-  /* notification that the entire image has been decoded */
-  void decodingComplete();
-  
+  /* Methods to control animation */
   void startAnimation();
-
   void stopAnimation();
-
   void resetAnimation();
-
-  /**
-   * number of times to loop the image.
-   * @note -1 means forever.
-   */
-  attribute long loopCount;
-
-  /* Add compressed source data to the imgContainer.
-   *
-   * The decoder will use this data, either immediately or at draw time, do
-   * decode the image.
-   */
-  [noscript] void addSourceData([array, size_is(aCount), const] in char data,
-                                 in unsigned long aCount);
-
-  /* Called after the all the source data has been added with addSourceData. */
-  [noscript] void sourceDataComplete();
-
-  /* Called for multipart images when there's a new source image to add. */
-  [noscript] void newSourceData();
-
-  /**
-   * A hint of the number of bytes of source data that the image contains. If
-   * called early on, this can help reduce copying and reallocations by
-   * appropriately preallocating the source data buffer.
-   *
-   * We take this approach rather than having the source data management code do
-   * something more complicated (like chunklisting) because HTTP is by far the
-   * dominant source of images, and the Content-Length header is quite reliable.
-   * Thus, pre-allocation simplifies code and reduces the total number of
-   * allocations.
-   */
-  void setSourceSizeHint(in unsigned long sizeHint);
 };

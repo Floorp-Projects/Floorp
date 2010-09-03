@@ -4,7 +4,7 @@
 <!-- Test if poster hides after playing with autoplay. -->
 <video src="black140x100.ogv"
        poster="blue250x200.png"
-       autobuffer
+       preload="auto"
        autoplay
        onplaying="setTimeout(function(){document.documentElement.className = '';},0);"></video>
 </body>

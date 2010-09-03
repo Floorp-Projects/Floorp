@@ -688,31 +688,6 @@
 
 .end apply
 
-.igroup objtostr JSOP_OBJTOSTR
-
-    .imacro toString                                # obj
-        dup                                         # obj obj
-        dup                                         # obj obj obj
-        getprop valueOf                             # obj obj valueOf?
-        ifprimtop 1                                 # obj obj valueOf?
-        swap                                        # obj valueOf obj
-        string void                                 # obj valueOf obj "void"
-        call 1                                      # obj val?
-        ifprimtop 3                                 # obj val?
-        pop                                         # obj
-        dup                                         # obj obj
-        goto 2
-1:      pop                                         # obj obj
-2:      callprop toString                           # obj toString obj
-        call 0                                      # obj val
-        primtop (JSTYPE_VOID)                       # obj val
-3:      swap                                        # val obj
-        pop                                         # val
-        stop
-    .end
-
-.end objtostr
-
 .igroup getprop JSOP_GETPROP
     .imacro scriptgetter        # obj
         .fixup +1               # getter obj

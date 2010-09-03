@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-331558.js';
 
 var BUGNUMBER = 331558;
 var summary = 'Decompiler: Missing = in default xml namespace statement';

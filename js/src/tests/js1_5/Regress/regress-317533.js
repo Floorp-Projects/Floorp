@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-317533.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 317533;
 var summary = 'improve function does not always return a value warnings';

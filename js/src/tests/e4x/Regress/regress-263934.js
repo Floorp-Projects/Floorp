@@ -39,7 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-263934.js';
 
 START("Testing that replacing a list item with a new list that contains that item works");
 printBugNumber(263934);

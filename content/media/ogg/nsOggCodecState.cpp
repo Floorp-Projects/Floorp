@@ -43,6 +43,13 @@
 #include "nsTraceRefcnt.h"
 #include "VideoUtils.h"
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gBuiltinDecoderLog;
+#define LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
+#else
+#define LOG(type, msg)
+#endif
+
 /*
    The maximum height and width of the video. Used for
    sanitizing the memory allocation of the RGB buffer.
@@ -51,15 +58,6 @@
 */
 #define MAX_VIDEO_WIDTH  4000
 #define MAX_VIDEO_HEIGHT 3000
-
-// Adds two 64bit numbers, retuns PR_TRUE if addition succeeded, or PR_FALSE
-// if addition would result in an overflow.
-static PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
-
-// 64 bit integer multiplication with overflow checking. Returns PR_TRUE
-// if the multiplication was successful, or PR_FALSE if the operation resulted
-// in an integer overflow.
-static PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
 
 nsOggCodecState*
 nsOggCodecState::Create(ogg_page* aPage)
@@ -373,7 +371,8 @@ PRBool nsVorbisState::Init()
   return PR_TRUE;
 }
 
-PRInt64 nsVorbisState::Time(PRInt64 granulepos) {
+PRInt64 nsVorbisState::Time(PRInt64 granulepos)
+{
   if (granulepos == -1 || !mActive || mDsp.vi->rate == 0) {
     return -1;
   }
@@ -383,133 +382,345 @@ PRInt64 nsVorbisState::Time(PRInt64 granulepos) {
 }
 
 nsSkeletonState::nsSkeletonState(ogg_page* aBosPage)
-  : nsOggCodecState(aBosPage)
+  : nsOggCodecState(aBosPage),
+    mVersion(0),
+    mLength(0)
 {
   MOZ_COUNT_CTOR(nsSkeletonState);
 }
-
+ 
 nsSkeletonState::~nsSkeletonState()
 {
   MOZ_COUNT_DTOR(nsSkeletonState);
 }
 
+// Support for Ogg Skeleton 4.0, as per specification at:
+// http://wiki.xiph.org/Ogg_Skeleton_4
+
+// Minimum length in bytes of a Skeleton 4.0 header packet.
+#define SKELETON_4_0_MIN_HEADER_LEN 80
+
+// Minimum length in bytes of a Skeleton 4.0 index packet.
+#define SKELETON_4_0_MIN_INDEX_LEN 42
+
+// Minimum possible size of a compressed index keypoint.
+#define MIN_KEY_POINT_SIZE 2
+
+// Byte offset of the major and minor version numbers in the
+// Ogg Skeleton 4.0 header packet.
+#define SKELETON_VERSION_MAJOR_OFFSET 8
+#define SKELETON_VERSION_MINOR_OFFSET 10
+
+// Byte-offsets of the length of file field in the Skeleton 4.0 header packet.
+#define SKELETON_FILE_LENGTH_OFFSET 64
+
+// Byte-offsets of the fields in the Skeleton index packet.
+#define INDEX_SERIALNO_OFFSET 6
+#define INDEX_NUM_KEYPOINTS_OFFSET 10
+#define INDEX_TIME_DENOM_OFFSET 18
+#define INDEX_FIRST_NUMER_OFFSET 26
+#define INDEX_LAST_NUMER_OFFSET 34
+#define INDEX_KEYPOINT_OFFSET 42
+
+static PRBool IsSkeletonBOS(ogg_packet* aPacket)
+{
+  return aPacket->bytes >= SKELETON_4_0_MIN_HEADER_LEN && 
+         memcmp(reinterpret_cast<char*>(aPacket->packet), "fishead", 8) == 0;
+}
+
+static PRBool IsSkeletonIndex(ogg_packet* aPacket)
+{
+  return aPacket->bytes >= SKELETON_4_0_MIN_INDEX_LEN &&
+         memcmp(reinterpret_cast<char*>(aPacket->packet), "index", 5) == 0;
+}
+
+// Reads a little-endian encoded unsigned 32bit integer at p.
+static PRUint32 LEUint32(const unsigned char* p)
+{
+  return p[0] +
+        (p[1] << 8) + 
+        (p[2] << 16) +
+        (p[3] << 24);
+}
+
+// Reads a little-endian encoded 64bit integer at p.
+static PRInt64 LEInt64(const unsigned char* p)
+{
+  PRUint32 lo = LEUint32(p);
+  PRUint32 hi = LEUint32(p + 4);
+  return static_cast<PRInt64>(lo) | (static_cast<PRInt64>(hi) << 32);
+}
+
+// Reads a little-endian encoded unsigned 16bit integer at p.
+static PRUint16 LEUint16(const unsigned char* p)
+{
+  return p[0] + (p[1] << 8);  
+}
+
+// Reads a variable length encoded integer at p. Will not read
+// past aLimit. Returns pointer to character after end of integer.
+static const unsigned char* ReadVariableLengthInt(const unsigned char* p,
+                                                  const unsigned char* aLimit,
+                                                  PRInt64& n)
+{
+  int shift = 0;
+  PRInt64 byte = 0;
+  n = 0;
+  while (p < aLimit &&
+         (byte & 0x80) != 0x80 &&
+         shift < 57)
+  {
+    byte = static_cast<PRInt64>(*p);
+    n |= ((byte & 0x7f) << shift);
+    shift += 7;
+    p++;
+  }
+  return p;
+}
+
+PRBool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
+{
+  NS_ASSERTION(aPacket->bytes >= SKELETON_4_0_MIN_INDEX_LEN,
+               "Index must be at least minimum size");
+  if (!mActive) {
+    return PR_FALSE;
+  }
+
+  PRUint32 serialno = LEUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
+  PRInt64 numKeyPoints = LEInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
+
+  PRInt64 n = 0;
+  PRInt64 endTime = 0, startTime = 0;
+  const unsigned char* p = aPacket->packet;
+
+  PRInt64 timeDenom = LEInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
+  if (timeDenom == 0) {
+    LOG(PR_LOG_DEBUG, ("Ogg Skeleton Index packet for stream %u has 0 "
+                       "timestamp denominator.", serialno));
+    return (mActive = PR_FALSE);
+  }
+
+  // Extract the start time.
+  n = LEInt64(p + INDEX_FIRST_NUMER_OFFSET);
+  PRInt64 t;
+  if (!MulOverflow(n, 1000, t)) {
+    return (mActive = PR_FALSE);
+  } else {
+    startTime = t / timeDenom;
+  }
+
+  // Extract the end time.
+  n = LEInt64(p + INDEX_LAST_NUMER_OFFSET);
+  if (!MulOverflow(n, 1000, t)) {
+    return (mActive = PR_FALSE);
+  } else {
+    endTime = t / timeDenom;
+  }
+
+  // Check the numKeyPoints value read, ensure we're not going to run out of
+  // memory while trying to decode the index packet.
+  PRInt64 minPacketSize;
+  if (!MulOverflow(numKeyPoints, MIN_KEY_POINT_SIZE, minPacketSize) ||
+      !AddOverflow(INDEX_KEYPOINT_OFFSET, minPacketSize, minPacketSize))
+  {
+    return (mActive = PR_FALSE);
+  }
+  
+  PRInt64 sizeofIndex = aPacket->bytes - INDEX_KEYPOINT_OFFSET;
+  PRInt64 maxNumKeyPoints = sizeofIndex / MIN_KEY_POINT_SIZE;
+  if (aPacket->bytes < minPacketSize ||
+      numKeyPoints > maxNumKeyPoints || 
+      numKeyPoints < 0)
+  {
+    // Packet size is less than the theoretical minimum size, or the packet is
+    // claiming to store more keypoints than it's capable of storing. This means
+    // that the numKeyPoints field is too large or small for the packet to
+    // possibly contain as many packets as it claims to, so the numKeyPoints
+    // field is possibly malicious. Don't try decoding this index, we may run
+    // out of memory.
+    LOG(PR_LOG_DEBUG, ("Possibly malicious number of key points reported "
+                       "(%lld) in index packet for stream %u.",
+                       numKeyPoints,
+                       serialno));
+    return (mActive = PR_FALSE);
+  }
+
+  nsAutoPtr<nsKeyFrameIndex> keyPoints(new nsKeyFrameIndex(startTime, endTime));
+  
+  p = aPacket->packet + INDEX_KEYPOINT_OFFSET;
+  const unsigned char* limit = aPacket->packet + aPacket->bytes;
+  PRInt64 numKeyPointsRead = 0;
+  PRInt64 offset = 0;
+  PRInt64 time = 0;
+  while (p < limit &&
+         numKeyPointsRead < numKeyPoints)
+  {
+    PRInt64 delta = 0;
+    p = ReadVariableLengthInt(p, limit, delta);
+    if (p == limit ||
+        !AddOverflow(offset, delta, offset) ||
+        offset > mLength ||
+        offset < 0)
+    {
+      return (mActive = PR_FALSE);
+    }
+    p = ReadVariableLengthInt(p, limit, delta);
+    if (!AddOverflow(time, delta, time) ||
+        time > endTime ||
+        time < startTime)
+    {
+      return (mActive = PR_FALSE);
+    }
+    PRInt64 timeMs = 0;
+    if (!MulOverflow(time, 1000, timeMs))
+      return mActive = PR_FALSE;
+    timeMs /= timeDenom;
+    keyPoints->Add(offset, timeMs);
+    numKeyPointsRead++;
+  }
+
+  PRInt32 keyPointsRead = keyPoints->Length();
+  if (keyPointsRead > 0) {
+    mIndex.Put(serialno, keyPoints.forget());
+  }
+
+  LOG(PR_LOG_DEBUG, ("Loaded %d keypoints for Skeleton on stream %u",
+                     keyPointsRead, serialno));
+  return PR_TRUE;
+}
+
+nsresult nsSkeletonState::IndexedSeekTargetForTrack(PRUint32 aSerialno,
+                                                    PRInt64 aTarget,
+                                                    nsKeyPoint& aResult)
+{
+  nsKeyFrameIndex* index = nsnull;
+  mIndex.Get(aSerialno, &index);
+
+  if (!index ||
+      index->Length() == 0 ||
+      aTarget < index->mStartTime ||
+      aTarget > index->mEndTime)
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Binary search to find the last key point with time less than target.
+  int start = 0;
+  int end = index->Length() - 1;
+  while (end > start) {
+    int mid = start + ((end - start + 1) >> 1);
+    if (index->Get(mid).mTime == aTarget) {
+       start = mid;
+       break;
+    } else if (index->Get(mid).mTime < aTarget) {
+      start = mid;
+    } else {
+      end = mid - 1;
+    }
+  }
+
+  aResult = index->Get(start);
+  NS_ASSERTION(aResult.mTime <= aTarget, "Result should have time <= target");
+  return NS_OK;
+}
+
+nsresult nsSkeletonState::IndexedSeekTarget(PRInt64 aTarget,
+                                            nsTArray<PRUint32>& aTracks,
+                                            nsSeekTarget& aResult)
+{
+  if (!mActive || mVersion < SKELETON_VERSION(4,0)) {
+    return NS_ERROR_FAILURE;
+  }
+  // Loop over all requested tracks' indexes, and get the keypoint for that
+  // seek target. Record the keypoint with the lowest offset, this will be
+  // our seek result. User must seek to the one with lowest offset to ensure we
+  // pass "keyframes" on all tracks when we decode forwards to the seek target.
+  nsSeekTarget r;
+  for (PRUint32 i=0; i<aTracks.Length(); i++) {
+    nsKeyPoint k;
+    if (NS_SUCCEEDED(IndexedSeekTargetForTrack(aTracks[i], aTarget, k)) &&
+        k.mOffset < r.mKeyPoint.mOffset)
+    {
+      r.mKeyPoint = k;
+      r.mSerial = aTracks[i];
+    }
+  }
+  if (r.IsNull()) {
+    return NS_ERROR_FAILURE;
+  }
+  LOG(PR_LOG_DEBUG, ("Indexed seek target for time %lld is offset %lld",
+                     aTarget, r.mKeyPoint.mOffset));
+  aResult = r;
+  return NS_OK;
+}
+
+nsresult nsSkeletonState::GetDuration(const nsTArray<PRUint32>& aTracks,
+                                      PRInt64& aDuration)
+{
+  if (!mActive ||
+      mVersion < SKELETON_VERSION(4,0) ||
+      !HasIndex() ||
+      aTracks.Length() == 0)
+  {
+    return NS_ERROR_FAILURE;
+  }
+  PRInt64 endTime = PR_INT64_MIN;
+  PRInt64 startTime = PR_INT64_MAX;
+  for (PRUint32 i=0; i<aTracks.Length(); i++) {
+    nsKeyFrameIndex* index = nsnull;
+    mIndex.Get(aTracks[i], &index);
+    if (!index) {
+      // Can't get the timestamps for one of the required tracks, fail.
+      return NS_ERROR_FAILURE;
+    }
+    if (index->mEndTime > endTime) {
+      endTime = index->mEndTime;
+    }
+    if (index->mStartTime < startTime) {
+      startTime = index->mStartTime;
+    }
+  }
+  NS_ASSERTION(endTime > startTime, "Duration must be positive");
+  return AddOverflow(endTime, -startTime, aDuration) ? NS_OK : NS_ERROR_FAILURE;
+}
+
 PRBool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
 {
-  if (aPacket->e_o_s) {
+  if (IsSkeletonBOS(aPacket)) {
+    PRUint16 verMajor = LEUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
+    PRUint16 verMinor = LEUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
+    mVersion = SKELETON_VERSION(verMajor, verMinor);
+    if (mVersion < SKELETON_VERSION(4,0) ||
+        mVersion >= SKELETON_VERSION(5,0) ||
+        aPacket->bytes < SKELETON_4_0_MIN_HEADER_LEN)
+    {
+      // We can only care to parse Skeleton version 4.0+.
+      mActive = PR_FALSE;
+      return mDoneReadingHeaders = PR_TRUE;
+    }
+
+    // Extract the segment length.
+    mLength = LEInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
+
+    LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
+
+    // Initialize the serianlno-to-index map.
+    PRBool init = mIndex.Init();
+    if (!init) {
+      NS_WARNING("Failed to initialize Ogg skeleton serialno-to-index map");
+      mActive = PR_FALSE;
+      return mDoneReadingHeaders = PR_TRUE;
+    }
     mActive = PR_TRUE;
+  } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
+    if (!DecodeIndex(aPacket)) {
+      // Failed to parse index, or invalid/hostile index. DecodeIndex() will
+      // have deactivated the track.
+      return mDoneReadingHeaders = PR_TRUE;
+    }
+
+  } else if (aPacket->e_o_s) {
     mDoneReadingHeaders = PR_TRUE;
   }
   return mDoneReadingHeaders;
-}
-
-// Adds two 64bit numbers, retuns PR_TRUE if addition succeeded, or PR_FALSE
-// if addition would result in an overflow.
-static PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
-  if (b < 1) {
-    if (PR_INT64_MIN - b <= a) {
-      aResult = a + b;
-      return PR_TRUE;
-    }
-  } else if (PR_INT64_MAX - b >= a) {
-    aResult = a + b;
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-// 64 bit integer multiplication with overflow checking. Returns PR_TRUE
-// if the multiplication was successful, or PR_FALSE if the operation resulted
-// in an integer overflow.
-static PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
-  // We break a multiplication a * b into of sign_a * sign_b * abs(a) * abs(b)
-  //
-  // This is equivalent to:
-  //
-  // (sign_a * sign_b) * ((a_hi * 2^32) + a_lo) * ((b_hi * 2^32) + b_lo)
-  //
-  // Which is equivalent to:
-  //
-  // (sign_a * sign_b) *
-  // ((a_hi * b_hi << 64) +
-  //  (a_hi * b_lo << 32) + (a_lo * b_hi << 32) +
-  //   a_lo * b_lo)
-  //
-  // So to check if a*b overflows, we must check each sub part of the above
-  // sum.
-  //
-  // Note: -1 * PR_INT64_MIN == PR_INT64_MIN ; we can't negate PR_INT64_MIN!
-  // Note: Shift of negative numbers is undefined.
-  //
-  // Figure out the sign after multiplication. Then we can just work with
-  // unsigned numbers.
-  PRInt64 sign = (!(a < 0) == !(b < 0)) ? 1 : -1;
-
-  PRInt64 abs_a = (a < 0) ? -a : a;
-  PRInt64 abs_b = (b < 0) ? -b : b;
-
-  if (abs_a < 0) {
-    NS_ASSERTION(a == PR_INT64_MIN, "How else can this happen?");
-    if (b == 0 || b == 1) {
-      aResult = a * b;
-      return PR_TRUE;
-    } else {
-      return PR_FALSE;
-    }
-  }
-
-  if (abs_b < 0) {
-    NS_ASSERTION(b == PR_INT64_MIN, "How else can this happen?");
-    if (a == 0 || a == 1) {
-      aResult = a * b;
-      return PR_TRUE;
-    } else {
-      return PR_FALSE;
-    }
-  }
-
-  NS_ASSERTION(abs_a >= 0 && abs_b >= 0, "abs values must be non-negative");
-
-  PRInt64 a_hi = abs_a >> 32;
-  PRInt64 a_lo = abs_a & 0xFFFFFFFF;
-  PRInt64 b_hi = abs_b >> 32;
-  PRInt64 b_lo = abs_b & 0xFFFFFFFF;
-
-  NS_ASSERTION((a_hi<<32) + a_lo == abs_a, "Partition must be correct");
-  NS_ASSERTION((b_hi<<32) + b_lo == abs_b, "Partition must be correct");
-
-  // In the sub-equation (a_hi * b_hi << 64), if a_hi or b_hi
-  // are non-zero, this will overflow as it's shifted by 64.
-  // Abort if this overflows.
-  if (a_hi != 0 && b_hi != 0) {
-    return PR_FALSE;
-  }
-
-  // We can now assume that either a_hi or b_hi is 0.
-  NS_ASSERTION(a_hi == 0 || b_hi == 0, "One of these must be 0");
-
-  // Next we calculate:
-  // (a_hi * b_lo << 32) + (a_lo * b_hi << 32)
-  // We can factor this as:
-  // (a_hi * b_lo + a_lo * b_hi) << 32
-  PRInt64 q = a_hi * b_lo + a_lo * b_hi;
-  if (q > PR_INT32_MAX) {
-    // q will overflow when we shift by 32; abort.
-    return PR_FALSE;
-  }
-  q <<= 32;
-
-  // Both a_lo and b_lo are less than INT32_MAX, so can't overflow.
-  PRUint64 lo = a_lo * b_lo;
-  if (lo > PR_INT64_MAX) {
-    return PR_FALSE;
-  }
-
-  // Add the final result. We must check for overflow during addition.
-  if (!AddOverflow(q, static_cast<PRInt64>(lo), aResult)) {
-    return PR_FALSE;
-  }
-
-  aResult *= sign;
-  NS_ASSERTION(a * b == aResult, "We didn't overflow, but result is wrong!");
-  return PR_TRUE;
 }

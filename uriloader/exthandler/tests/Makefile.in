@@ -40,6 +40,7 @@ DEPTH           = ../../..
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
+relativesrcdir = uriloader/exthandler/tests
 
 DIRS += mochitest \
         $(NULL)
@@ -70,4 +71,4 @@ endif
 
 # need the executable for running the xpcshell unit tests
 libs::
-	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(MODULE)/unit
+	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit

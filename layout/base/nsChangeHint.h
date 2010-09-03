@@ -87,10 +87,11 @@ enum nsChangeHint {
    * updating the layer(s) for the frame.
    */
   nsChangeHint_UpdateOpacityLayer = 0x100,
+  nsChangeHint_UpdateTransformLayer = 0x200,
 
   // change requires frame change (e.g., display:).
   // This subsumes all the above.
-  nsChangeHint_ReconstructFrame = 0x200
+  nsChangeHint_ReconstructFrame = 0x400
 };
 
 // Redefine these operators to return nothing. This will catch any use

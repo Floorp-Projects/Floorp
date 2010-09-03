@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-247179.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 247179;
 var summary = 'RegExp \\b should not recognize non-ASCII alphanumerics as word characters';

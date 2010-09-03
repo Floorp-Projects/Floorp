@@ -98,10 +98,10 @@ SetupOptions(int argc, const char *argv[], Options *options) {
   while ((ch = getopt(argc, (char * const *)argv, "p:v:h?")) != -1) {
     switch (ch) {
       case 'p':
-        options->product = [NSString stringWithCString:optarg];
+        options->product = [NSString stringWithUTF8String:optarg];
         break;
       case 'v':
-        options->version = [NSString stringWithCString:optarg];
+        options->version = [NSString stringWithUTF8String:optarg];
         break;
 
       default:
@@ -117,8 +117,8 @@ SetupOptions(int argc, const char *argv[], Options *options) {
     exit(1);
   }
 
-  options->minidumpPath = [NSString stringWithCString:argv[optind]];
-  options->uploadURLStr = [NSString stringWithCString:argv[optind + 1]];
+  options->minidumpPath = [NSString stringWithUTF8String:argv[optind]];
+  options->uploadURLStr = [NSString stringWithUTF8String:argv[optind + 1]];
 }
 
 //=============================================================================

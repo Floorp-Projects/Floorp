@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.6.2.js';
 
 START("11.6.2 - XMLList Assignment");
 

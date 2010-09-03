@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Miika Jarvinen <mjarvin@gmail.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,85 +39,81 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+#include <QWidget>
+#include <QX11Info>
 #include "nsQtRemoteService.h"
 
-#include <X11/Xatom.h> // for XA_STRING
-#include <stdlib.h>
-
-#include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
-#include "nsPIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsILocalFile.h"
-#include "nsIObserverService.h"
 #include "nsIServiceManager.h"
-#include "nsIWeakReference.h"
-#include "nsIWidget.h"
 #include "nsIAppShellService.h"
-#include "nsAppShellCID.h"
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
-#include "prprf.h"
-#include "prenv.h"
-#include "nsCRT.h"
 
-#ifdef MOZ_WIDGET_GTK2
-//#include "nsGTKToolkit.h"
-#endif
+/**
+  Helper class which is used to receive notification about property changes
+*/
+class MozQRemoteEventHandlerWidget: public QWidget {
+public:
+  /**
+    Constructor
+    @param aRemoteService remote service, which is notified about atom change
+  */
+  MozQRemoteEventHandlerWidget(nsQtRemoteService &aRemoteService);
 
-#include "nsICommandLineRunner.h"
-#include "nsXULAppAPI.h"
+protected:
+  /**
+    Event filter, which receives all XEvents
+    @return false which continues event handling
+  */
+  bool x11Event(XEvent *);
 
-#define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
-#define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
-#define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
-#define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
-#define MOZILLA_USER_PROP      "_MOZILLA_USER"
-#define MOZILLA_PROFILE_PROP   "_MOZILLA_PROFILE"
-#define MOZILLA_PROGRAM_PROP   "_MOZILLA_PROGRAM"
-#define MOZILLA_COMMANDLINE_PROP "_MOZILLA_COMMANDLINE"
+private:
+  /**
+    Service which is notified about property change
+  */
+  nsQtRemoteService &mRemoteService;
+};
 
-#ifdef IS_BIG_ENDIAN
-#define TO_LITTLE_ENDIAN32(x) \
-    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >> 8) | \
-    (((x) & 0x0000ff00) << 8) | (((x) & 0x000000ff) << 24))
-#else
-#define TO_LITTLE_ENDIAN32(x) (x)
-#endif
+MozQRemoteEventHandlerWidget::MozQRemoteEventHandlerWidget(nsQtRemoteService &aRemoteService)
+  :mRemoteService(aRemoteService)
+{
+}
 
-const unsigned char kRemoteVersion[] = "5.1";
+bool
+MozQRemoteEventHandlerWidget::x11Event(XEvent *aEvt)
+{
+  if (aEvt->type == PropertyNotify && aEvt->xproperty.state == PropertyNewValue)
+    mRemoteService.PropertyNotifyEvent(aEvt);
+
+  return false;
+}
 
 NS_IMPL_ISUPPORTS2(nsQtRemoteService,
                    nsIRemoteService,
                    nsIObserver)
 
+nsQtRemoteService::nsQtRemoteService():
+mServerWindow(0)
+{
+}
+
 NS_IMETHODIMP
 nsQtRemoteService::Startup(const char* aAppName, const char* aProfileName)
 {
+#if (MOZ_PLATFORM_MAEMO == 5)
   return NS_ERROR_NOT_IMPLEMENTED;
-}
+#endif
+  if (mServerWindow) return NS_ERROR_ALREADY_INITIALIZED;
+  NS_ASSERTION(aAppName, "Don't pass a null appname!");
 
-// #ifdef MOZ_WIDGET_GTK2
-// static nsGTKToolkit* GetGTKToolkit()
-// {
-//   nsCOMPtr<nsIAppShellService> svc = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
-//   if (!svc)
-//     return nsnull;
-//   nsCOMPtr<nsIDOMWindowInternal> window;
-//   svc->GetHiddenDOMWindow(getter_AddRefs(window));
-//   if (!window)
-//     return nsnull;
-//   nsIWidget* widget = GetMainWidget(window);
-//   if (!widget)
-//     return nsnull;
-//   nsIToolkit* toolkit = widget->GetToolkit();
-//   if (!toolkit)
-//     return nsnull;
-//   return static_cast<nsGTKToolkit*>(toolkit);
-// }
-// #endif
+  XRemoteBaseStartup(aAppName,aProfileName);
+
+  //Create window, which is not shown.
+  mServerWindow = new MozQRemoteEventHandlerWidget(*this);
+
+  HandleCommandsFor(mServerWindow->winId());
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsQtRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
@@ -127,15 +124,29 @@ nsQtRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
 NS_IMETHODIMP
 nsQtRemoteService::Shutdown()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mServerWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  delete mServerWindow;
+  mServerWindow = nsnull;
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsQtRemoteService::Observe(nsISupports* aSubject,
-                            const char *aTopic,
-                            const PRUnichar *aData)
+void
+nsQtRemoteService::PropertyNotifyEvent(XEvent *aEvt)
 {
-  return NS_OK;
+  HandleNewProperty(aEvt->xproperty.window,
+                    QX11Info::display(),
+                    aEvt->xproperty.time,
+                    aEvt->xproperty.atom,
+                    0);
+}
+
+void
+nsQtRemoteService::SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
+                                                  PRUint32 aTimestamp)
+{
 }
 
 // {C0773E90-5799-4eff-AD03-3EBCD85624AC}

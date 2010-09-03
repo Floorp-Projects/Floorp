@@ -27,7 +27,6 @@ toolkit.jar:
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
-*       skin/classic/global/headsUpDisplay.css
         skin/classic/global/linkTree.css
         skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
@@ -54,6 +53,8 @@ toolkit.jar:
 *       skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
         skin/classic/global/tree.css
+*       skin/classic/global/webConsole.css
+*       skin/classic/global/webConsole_networkPanel.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
         skin/classic/global/arrow/arrow-dn.gif                   (arrow/arrow-dn.gif)
@@ -97,6 +98,7 @@ toolkit.jar:
         skin/classic/global/icons/Close.gif                      (icons/Close.gif)
         skin/classic/global/icons/close.png                      (icons/close.png)
         skin/classic/global/icons/collapse.png                   (icons/collapse.png)
+        skin/classic/global/icons/commandline.png                (icons/commandline.png)
         skin/classic/global/icons/Error.png                      (icons/Error.png)
         skin/classic/global/icons/error-16.png                   (icons/error-16.png)
         skin/classic/global/icons/error-24.png                   (icons/error-24.png)
@@ -194,7 +196,6 @@ toolkit.jar:
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css
-*       skin/classic/aero/global/headsUpDisplay.css
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
 *       skin/classic/aero/global/menu.css                                (menu-aero.css)
@@ -221,6 +222,8 @@ toolkit.jar:
 *       skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
+*       skin/classic/aero/global/webConsole.css
+*       skin/classic/global/webConsole_networkPanel.css
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
         skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
@@ -264,6 +267,7 @@ toolkit.jar:
         skin/classic/aero/global/icons/Close.gif                         (icons/Close.gif)
         skin/classic/aero/global/icons/close.png                         (icons/close.png)
         skin/classic/aero/global/icons/collapse.png                      (icons/collapse.png)
+        skin/classic/aero/global/icons/commandline.png                   (icons/commandline.png)
         skin/classic/aero/global/icons/Error.png                         (icons/Error-aero.png)
         skin/classic/aero/global/icons/error-16.png                      (icons/error-16-aero.png)
         skin/classic/aero/global/icons/error-24.png                      (icons/error-24-aero.png)

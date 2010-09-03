@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'continue.js';
 
 /**
    Filename:     continue.js

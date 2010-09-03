@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322135-04.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 322135;
 var summary = 'Array.prototype.unshift on Array with length 2^32-1';

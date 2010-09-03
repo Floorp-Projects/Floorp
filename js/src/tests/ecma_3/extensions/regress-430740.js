@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-430740.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 430740;
 var summary = 'Do not strip format-control characters from string literals';

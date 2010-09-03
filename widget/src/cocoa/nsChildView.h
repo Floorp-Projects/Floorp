@@ -225,6 +225,8 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 - (void)lockFocus;
 - (void) _surfaceNeedsUpdate:(NSNotification*)notification;
 
+- (BOOL)isPluginView;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
@@ -295,6 +297,7 @@ public:
 
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
+  virtual float           GetDPI();
 
   LayerManager*           GetLayerManager();
 
@@ -313,9 +316,6 @@ public:
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-  virtual void            Scroll(const nsIntPoint& aDelta,
-                                 const nsTArray<nsIntRect>& aDestRects,
-                                 const nsTArray<Configuration>& aConfigurations);
   virtual nsIntPoint      WidgetToScreenOffset();
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
 
@@ -402,77 +402,6 @@ public:
   nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
   NSView<mozView>* GetEditorView();
 
-  // Wrapper methods of nsIMEManager and nsTSMManager
-  void IME_OnDestroyView(NSView<mozView> *aDestroyingView)
-  {
-    mTextInputHandler.OnDestroyView(aDestroyingView);
-  }
-
-  void IME_OnStartComposition(NSView<mozView>* aComposingView)
-  {
-    mTextInputHandler.OnStartIMEComposition(aComposingView);
-  }
-
-  void IME_OnUpdateComposition(NSString* aCompositionString)
-  {
-    mTextInputHandler.OnUpdateIMEComposition(aCompositionString);
-  }
-
-  void IME_OnEndComposition()
-  {
-    mTextInputHandler.OnEndIMEComposition();
-  }
-
-  PRBool IME_IsComposing()
-  {
-    return mTextInputHandler.IsIMEComposing();
-  }
-
-  PRBool IME_IsASCIICapableOnly()
-  {
-    return mTextInputHandler.IsASCIICapableOnly();
-  }
-
-  PRBool IME_IsOpened()
-  {
-    return mTextInputHandler.IsIMEOpened();
-  }
-
-  PRBool IME_IsEnabled()
-  {
-    return mTextInputHandler.IsIMEEnabled();
-  }
-
-  PRBool IME_IgnoreCommit()
-  {
-    return mTextInputHandler.IgnoreIMECommit();
-  }
-
-  void IME_CommitComposition()
-  {
-    mTextInputHandler.CommitIMEComposition();
-  }
-
-  void IME_CancelComposition()
-  {
-    mTextInputHandler.CancelIMEComposition();
-  }
-
-  void IME_SetASCIICapableOnly(PRBool aASCIICapableOnly)
-  {
-    mTextInputHandler.SetASCIICapableOnly(aASCIICapableOnly);
-  }
-
-  void IME_SetOpenState(PRBool aOpen)
-  {
-    mTextInputHandler.SetIMEOpenState(aOpen);
-  }
-
-  void IME_Enable(PRBool aEnable)
-  {
-    mTextInputHandler.EnableIME(aEnable);
-  }
-
 protected:
 
   PRBool            ReportDestroyEvent();
@@ -484,6 +413,14 @@ protected:
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
   nsCocoaWindow*    GetXULWindowWidget();
+
+  virtual already_AddRefed<nsIWidget>
+  AllocateChildPopupWidget()
+  {
+    static NS_DEFINE_IID(kCPopUpCID, NS_POPUP_CID);
+    nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
+    return widget.forget();
+  }
 
 protected:
 
@@ -505,6 +442,7 @@ protected:
   PRPackedBool          mDrawing;
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
+  PRPackedBool          mIsDispatchPaint; // Is a paint event being dispatched
 
   NP_CGContext          mPluginCGContext;
 #ifndef NP_NO_QUICKDRAW

@@ -250,7 +250,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   NS_ENSURE_ARG_POINTER(aPS);
 
   if (aFlags & nsIPrintSettings::kInitSaveMargins) {
-    PRInt32 halfInch = NS_INCHES_TO_TWIPS(0.5);
+    PRInt32 halfInch = NS_INCHES_TO_INT_TWIPS(0.5);
     nsIntMargin margin(halfInch, halfInch, halfInch, halfInch);
     ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrinterName), margin.top,
                           kMarginTop);
@@ -1182,7 +1182,7 @@ nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, PRInt32& aTwips,
     PRInt32 errCode;
     float inches = justStr.ToFloat(&errCode);
     if (NS_SUCCEEDED(errCode)) {
-      aTwips = NS_INCHES_TO_TWIPS(inches);
+      aTwips = NS_INCHES_TO_INT_TWIPS(inches);
     } else {
       aTwips = 0;
     }
@@ -1218,7 +1218,7 @@ nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, PRInt32& aTwips,
     rv = mPrefBranch->GetIntPref(aMarginPref, &value);
   }
   if (NS_SUCCEEDED(rv)) {
-    aTwips = NS_INCHES_TO_TWIPS(float(value)/100.0f);
+    aTwips = NS_INCHES_TO_INT_TWIPS(float(value)/100.0f);
   } else {
     aTwips = 0;
   }

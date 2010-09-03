@@ -103,6 +103,11 @@
                   label="&helpReleaseNotes.label;"
                   oncommand="openReleaseNotes()"
                   onclick="checkForMiddleClick(this, event);"/>
+        <menuitem id="feedbackPage"
+                  accesskey="&helpFeedbackPage.accesskey;"
+                  label="&helpFeedbackPage.label;"
+                  oncommand="openFeedbackPage()"
+                  onclick="checkForMiddleClick(this, event);"/>
         <menuseparator id="updateSeparator"/>
 #ifdef MOZ_UPDATER
         <menuitem id="checkForUpdates"

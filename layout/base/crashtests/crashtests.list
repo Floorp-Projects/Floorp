@@ -36,12 +36,12 @@ load 254367-1.html
 load 265027-1.html
 load 265736-1.html
 load 265736-2.html
-load 265899-1.html
+asserts(2) load 265899-1.html # bug 575011
 load 265973-1.html
-asserts(10) asserts-if(winWidget,8) load 265986-1.html # Bug 512405
-load 265999-1.html
+asserts(8-10) load 265986-1.html # Bug 512405
+asserts(2) load 265999-1.html # bug 575011
 load 266222-1.html
-asserts(7) load 266360-1.html # Bug 576358
+asserts(5-7) load 266360-1.html # bug 575011 / bug 576358
 asserts(4) load 266445-1.html # Bug 575011
 load 268157-1.html
 load 269566-1.html
@@ -305,3 +305,5 @@ load 567292-1.xhtml
 load 569018-1.html
 load 572003.xul
 load 572582-1.xhtml
+load 580494-1.html
+load 580834-1.xhtml

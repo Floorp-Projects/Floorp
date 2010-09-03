@@ -19,6 +19,7 @@
 <!ENTITY aboutSupport.appBasicsProfileDir "Profile Directory">
 <!ENTITY aboutSupport.appBasicsEnabledPlugins "Enabled Plugins">
 <!ENTITY aboutSupport.appBasicsBuildConfig "Build Configuration">
+<!ENTITY aboutSupport.appBasicsUserAgent "User Agent">
 
 <!ENTITY aboutSupport.show.label "Open Containing Folder">
 
@@ -30,6 +31,8 @@ variant of aboutSupport.show.label.  This allows us to use the preferred
 <!ENTITY aboutSupport.modifiedPrefsTitle "Modified Preferences">
 <!ENTITY aboutSupport.modifiedPrefsName "Name">
 <!ENTITY aboutSupport.modifiedPrefsValue "Value">
+
+<!ENTITY aboutSupport.graphicsTitle "Graphics">
 
 <!ENTITY aboutSupport.installationHistoryTitle "Installation History">
 <!ENTITY aboutSupport.updateHistoryTitle "Update History">

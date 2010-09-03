@@ -34,8 +34,8 @@ if (!gl) {
   debug("Checking gl.vertexAttribPointer.");
 
   gl.vertexAttribPointer(0, 3, gl.FLOAT, 0, 0, 12);
-  assertMsg(gl.getError() != gl.NO_ERROR,
-            "vertexAttribPointer should fail if no buffer is bound");
+  glErrorShouldBe(gl, gl.INVALID_OPERATION,
+      "vertexAttribPointer should fail if no buffer is bound");
 }
 
 debug("");

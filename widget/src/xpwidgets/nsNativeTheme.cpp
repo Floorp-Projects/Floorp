@@ -50,7 +50,6 @@
 #include "nsILookAndFeel.h"
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsPIDOMWindow.h"
 
 nsNativeTheme::nsNativeTheme()
@@ -213,7 +212,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
   }
 
   // Check for an HTML input element
-  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElt = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(content);
   if (inputElt) {
     PRBool indeterminate;
     inputElt->GetIndeterminate(&indeterminate);

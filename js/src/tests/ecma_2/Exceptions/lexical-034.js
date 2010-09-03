@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'lexical-034.js';
 
 /**
    File Name:          7.4.2-11-n.js

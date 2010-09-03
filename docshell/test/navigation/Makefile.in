@@ -66,7 +66,36 @@ _TEST_FILES = \
 		iframe.html \
 		parent.html \
 		blank.html \
+		test_sessionhistory.html \
+		file_bug462076_1.html \
+		file_bug462076_2.html \
+		file_bug462076_3.html \
+		file_bug508537_1.html \
+		file_document_write_1.html \
+		file_static_and_dynamic_1.html \
+		frame0.html \
+		frame1.html \
+		frame2.html \
+		frame3.html \
+		goback.html \
 		$(NULL)
+
+ifneq (mobile,$(MOZ_BUILD_APP))
+_BROWSER_TEST_FILES = \
+		browser_bug343515.js \
+		bug343515_pg1.html \
+		bug343515_pg2.html \
+		bug343515_pg3.html \
+		bug343515_pg3_1.html \
+		bug343515_pg3_2.html \
+		bug343515_pg3_1_1.html \
+		$(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+ifneq (mobile,$(MOZ_BUILD_APP))
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+endif

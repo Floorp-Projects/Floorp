@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-455464-03.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 455464;
 var summary = 'Do not assert with JIT: !TRACE_RECORDER(cx) ^ (jumpTable == recordingJumpTable)';

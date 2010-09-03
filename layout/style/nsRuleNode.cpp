@@ -80,6 +80,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
@@ -238,13 +239,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   NS_ASSERTION(aPresContext, "Must have prescontext");
 
   if (aValue.IsFixedLengthUnit()) {
-    return aPresContext->TwipsToAppUnits(aValue.GetLengthTwips());
+    return aValue.GetFixedLength(aPresContext);
   }
-  nsCSSUnit unit = aValue.GetUnit();
-  if (unit == eCSSUnit_Pixel) {
-    return nsPresContext::CSSPixelsToAppUnits(aValue.GetFloatValue());
+  if (aValue.IsPixelLengthUnit()) {
+    return aValue.GetPixelLength();
   }
-  // Common code for all units other than pixels:
+  // Common code for all units other than pixel-based units and fixed-length
+  // units:
   aCanStoreInRuleTree = PR_FALSE;
   const nsStyleFont *styleFont =
     aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
@@ -253,7 +254,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     // prefs into account?
     aFontSize = styleFont->mFont.size;
   }
-  switch (unit) {
+  switch (aValue.GetUnit()) {
     case eCSSUnit_RootEM: {
       nscoord rootFontSize;
 
@@ -510,21 +511,19 @@ SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   SpecifiedToComputedCalcOps ops(aStyleContext, aStyleContext->PresContext(),
                                  aCanStoreInRuleTree);
   aCoord = ComputeCalc(aValue, ops);
+  if (!aCoord.IsCalcUnit()) {
+    // Some callers distinguish between calc(50%) and 50%, or calc(50px)
+    // and 50px.
+    nsStyleCoord::Array *array =
+      nsStyleCoord::Array::Create(aStyleContext, aCanStoreInRuleTree, 1);
+    array->Item(0) = aCoord;
+    aCoord.SetArrayValue(array, eStyleUnit_Calc);
+  }
 }
 
-struct ComputeComputedCalcCalcOps : public css::BasicCoordCalcOps
+struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,
+                                    public css::BasicCoordCalcOps
 {
-  typedef nsStyleCoord input_type;
-  typedef nsStyleCoord::Array input_array_type;
-
-  static nsCSSUnit GetUnit(const nsStyleCoord& aValue)
-  {
-    if (aValue.IsCalcUnit()) {
-      return css::ConvertCalcUnit(aValue.GetUnit());
-    }
-    return eCSSUnit_Null;
-  }
-
   const nscoord mPercentageBasis;
 
   ComputeComputedCalcCalcOps(nscoord aPercentageBasis)
@@ -536,19 +535,12 @@ struct ComputeComputedCalcCalcOps : public css::BasicCoordCalcOps
   {
     nscoord result;
     if (aValue.GetUnit() == eStyleUnit_Percent) {
-      result = NSCoordSaturatingMultiply(mPercentageBasis,
-                                         aValue.GetPercentValue());
+      result =
+        NSToCoordFloorClamped(mPercentageBasis * aValue.GetPercentValue());
     } else {
       result = aValue.GetCoordValue();
     }
     return result;
-  }
-
-  float ComputeNumber(const nsStyleCoord& aValue)
-  {
-    NS_ABORT_IF_FALSE(PR_FALSE, "SpecifiedToComputedCalcOps should not "
-                                "leave numbers in structure");
-    return 0.0f;
   }
 };
 
@@ -562,19 +554,28 @@ nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
   return css::ComputeCalc(aValue, ops);
 }
 
-/* static */ nscoord
-nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
-                                    nscoord aPercentageBasis)
+/* Given an enumerated value that represents a box position, converts it to
+ * a float representing the percentage of the box it corresponds to.  For
+ * example, "center" becomes 0.5f.
+ *
+ * @param aEnumValue The enumerated value.
+ * @return The float percent it corresponds to.
+ */
+static float
+GetFloatFromBoxPosition(PRInt32 aEnumValue)
 {
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Coord:
-      return aCoord.GetCoordValue();
-    case eStyleUnit_Percent:
-      return NSCoordSaturatingMultiply(aPercentageBasis,
-                                       aCoord.GetPercentValue());
-    default:
-      NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(), "unexpected unit");
-      return nsRuleNode::ComputeComputedCalc(aCoord, aPercentageBasis);
+  switch (aEnumValue) {
+  case NS_STYLE_BG_POSITION_LEFT:
+  case NS_STYLE_BG_POSITION_TOP:
+    return 0.0f;
+  case NS_STYLE_BG_POSITION_RIGHT:
+  case NS_STYLE_BG_POSITION_BOTTOM:
+    return 1.0f;
+  default:
+    NS_NOTREACHED("unexpected value");
+    // fall through
+  case NS_STYLE_BG_POSITION_CENTER:
+    return 0.5f;
   }
 }
 
@@ -595,6 +596,7 @@ nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
 #define SETCOORD_CALC_LENGTH_ONLY       0x4000
 #define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
 #define SETCOORD_STORE_CALC             0x00010000
+#define SETCOORD_BOX_POSITION           0x00020000 // exclusive with _ENUMERATED
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -647,6 +649,10 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   else if (((aMask & SETCOORD_ENUMERATED) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Enumerated)) {
     aCoord.SetIntValue(aValue.GetIntValue(), eStyleUnit_Enumerated);
+  }
+  else if (((aMask & SETCOORD_BOX_POSITION) != 0) &&
+           (aValue.GetUnit() == eCSSUnit_Enumerated)) {
+    aCoord.SetPercentValue(GetFloatFromBoxPosition(aValue.GetIntValue()));
   }
   else if (((aMask & SETCOORD_AUTO) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Auto)) {
@@ -733,28 +739,27 @@ static inline PRBool SetAbsCoord(const nsCSSValue& aValue,
   return rv;
 }
 
-/* Given an enumerated value that represents a box position, converts it to
- * a float representing the percentage of the box it corresponds to.  For
- * example, "center" becomes 0.5f.
- *
- * @param aEnumValue The enumerated value.
- * @return The float percent it corresponds to.
+/* Given a specified value that might be a pair value, call SetCoord twice,
+ * either using each member of the pair, or using the unpaired value twice.
  */
-static float GetFloatFromBoxPosition(PRInt32 aEnumValue)
+static PRBool
+SetPairCoords(const nsCSSValue& aValue,
+              nsStyleCoord& aCoordX, nsStyleCoord& aCoordY,
+              const nsStyleCoord& aParentX, const nsStyleCoord& aParentY,
+              PRInt32 aMask, nsStyleContext* aStyleContext,
+              nsPresContext* aPresContext, PRBool& aCanStoreInRuleTree)
 {
-  switch (aEnumValue) {
-  case NS_STYLE_BG_POSITION_LEFT:
-  case NS_STYLE_BG_POSITION_TOP:
-    return 0.0f;
-  case NS_STYLE_BG_POSITION_RIGHT:
-  case NS_STYLE_BG_POSITION_BOTTOM:
-    return 1.0f;
-  default:
-    NS_NOTREACHED("unexpected value");
-    // fall through
-  case NS_STYLE_BG_POSITION_CENTER:
-    return 0.5f;
-  }
+  const nsCSSValue& valX =
+    aValue.GetUnit() == eCSSUnit_Pair ? aValue.GetPairValue().mXValue : aValue;
+  const nsCSSValue& valY =
+    aValue.GetUnit() == eCSSUnit_Pair ? aValue.GetPairValue().mYValue : aValue;
+
+  PRBool cX = SetCoord(valX, aCoordX, aParentX, aMask, aStyleContext,
+                       aPresContext, aCanStoreInRuleTree);
+  PRBool cY = SetCoord(valY, aCoordY, aParentY, aMask, aStyleContext,
+                       aPresContext, aCanStoreInRuleTree);
+  NS_ABORT_IF_FALSE(cX == cY, "changed one but not the other");
+  return cX;
 }
 
 static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
@@ -822,14 +827,9 @@ static void SetGradientCoord(const nsCSSValue& aValue, nsPresContext* aPresConte
                              nsStyleContext* aContext, nsStyleCoord& aResult,
                              PRBool& aCanStoreInRuleTree)
 {
-  // If coordinate is an enumerated type, handle it explicitly.
-  if (aValue.GetUnit() == eCSSUnit_Enumerated) {
-    aResult.SetPercentValue(GetFloatFromBoxPosition(aValue.GetIntValue()));
-    return;
-  }
-
   // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-  if (!SetCoord(aValue, aResult, nsStyleCoord(), SETCOORD_LPO,
+  if (!SetCoord(aValue, aResult, nsStyleCoord(),
+                SETCOORD_LPO | SETCOORD_BOX_POSITION,
                 aContext, aPresContext, aCanStoreInRuleTree)) {
     NS_NOTREACHED("unexpected unit for gradient anchor point");
     aResult.SetNoneValue();
@@ -870,10 +870,10 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   }
 
   // bg-position
-  SetGradientCoord(gradient->mBgPosX, aPresContext, aContext,
+  SetGradientCoord(gradient->mBgPos.mXValue, aPresContext, aContext,
                    aResult.mBgPosX, aCanStoreInRuleTree);
 
-  SetGradientCoord(gradient->mBgPosY, aPresContext, aContext,
+  SetGradientCoord(gradient->mBgPos.mYValue, aPresContext, aContext,
                    aResult.mBgPosY, aCanStoreInRuleTree);
 
   aResult.mRepeating = gradient->mIsRepeating;
@@ -980,6 +980,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       }
       break;
     }
+    case eCSSUnit_Element:
+      aResult.SetElementId(aValue.GetStringBufferValue());
+      break;
     case eCSSUnit_None:
       break;
     default:
@@ -1362,10 +1365,8 @@ nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 
 struct PropertyCheckData {
   size_t offset;
-  // These duplicate the same data in nsCSSProps::kTypeTable and
-  // kFlagsTable, except that we have some extra entries for
-  // CSS_PROP_INCLUDE_NOT_CSS.
-  nsCSSType type;
+  // These duplicate the data in nsCSSProps::kFlagsTable, except that
+  // we have some extra entries for CSS_PROP_INCLUDE_NOT_CSS.
   PRUint32 flags;
 };
 
@@ -1403,28 +1404,6 @@ ExamineCSSValue(const nsCSSValue& aValue,
   }
 }
 
-static void
-ExamineCSSValuePair(const nsCSSValuePair* aValuePair,
-                    PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
-{
-  NS_PRECONDITION(aValuePair, "Must have a value pair");
-
-  ExamineCSSValue(aValuePair->mXValue, aSpecifiedCount, aInheritedCount);
-  ExamineCSSValue(aValuePair->mYValue, aSpecifiedCount, aInheritedCount);
-}
-
-static void
-ExamineCSSRect(const nsCSSRect* aRect,
-               PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
-{
-  NS_PRECONDITION(aRect, "Must have a rect");
-
-  NS_FOR_CSS_SIDES(side) {
-    ExamineCSSValue(aRect->*(nsCSSRect::sides[side]),
-                    aSpecifiedCount, aInheritedCount);
-  }
-}
-
 static nsRuleNode::RuleDetail
 CheckFontCallback(const nsRuleDataStruct& aData,
                   nsRuleNode::RuleDetail aResult)
@@ -1439,7 +1418,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   const nsCSSValue& size = fontData.mSize;
   const nsCSSValue& weight = fontData.mWeight;
   const nsCSSValue& stretch = fontData.mStretch;
-  if ((size.IsRelativeLengthUnit() && size.GetUnit() != eCSSUnit_Pixel) ||
+  if (size.IsRelativeLengthUnit() ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
@@ -1513,8 +1492,8 @@ CheckTextCallback(const nsRuleDataStruct& aData,
 // structs but not nsCSS*
 #define CSS_PROP_INCLUDE_NOT_CSS
 
-#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_, stylestructoffset_, animtype_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, flags_ },
+#define CHECK_DATA_FOR_PROPERTY(name_, id_, method_, flags_, datastruct_, member_, kwtable_, stylestructoffset_, animtype_) \
+  { offsetof(nsRuleData##datastruct_, member_), flags_ },
 
 static const PropertyCheckData FontCheckProperties[] = {
 #define CSS_PROP_FONT CHECK_DATA_FOR_PROPERTY
@@ -1701,20 +1680,6 @@ RectAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
                          (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
-inline nsCSSValuePair*
-ValuePairAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return reinterpret_cast<nsCSSValuePair*>
-                         (reinterpret_cast<char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSValuePair*
-ValuePairAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return reinterpret_cast<const nsCSSValuePair*>
-                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
-
 inline nsCSSValueList*&
 ValueListAtOffset(nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
@@ -1768,60 +1733,12 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   for (const PropertyCheckData *prop = structData->props,
                            *prop_end = prop + structData->nprops;
        prop != prop_end;
-       ++prop)
-    switch (prop->type) {
+       ++prop) {
 
-      case eCSSType_Value:
-        ++total;
-        ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
-                        specified, inherited);
-        break;
-
-      case eCSSType_Rect:
-        total += 4;
-        ExamineCSSRect(RectAtOffset(aRuleDataStruct, prop->offset),
-                       specified, inherited);
-        break;
-
-      case eCSSType_ValuePair:
-        total += 2;
-        ExamineCSSValuePair(ValuePairAtOffset(aRuleDataStruct, prop->offset),
-                            specified, inherited);
-        break;
-
-      case eCSSType_ValueList:
-        {
-          ++total;
-          const nsCSSValueList* valueList =
-              ValueListAtOffset(aRuleDataStruct, prop->offset);
-          if (valueList) {
-            ++specified;
-            if (eCSSUnit_Inherit == valueList->mValue.GetUnit()) {
-              ++inherited;
-            }
-          }
-        }
-        break;
-
-      case eCSSType_ValuePairList:
-        {
-          ++total;
-          const nsCSSValuePairList* valuePairList =
-              ValuePairListAtOffset(aRuleDataStruct, prop->offset);
-          if (valuePairList) {
-            ++specified;
-            if (eCSSUnit_Inherit == valuePairList->mXValue.GetUnit()) {
-              ++inherited;
-            }
-          }
-        }
-        break;
-
-      default:
-        NS_NOTREACHED("unknown type");
-        break;
-
-    }
+    ++total;
+    ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
+                    specified, inherited);
+  }
 
 #if 0
   printf("CheckSpecifiedProperties: SID=%d total=%d spec=%d inh=%d.\n",
@@ -1902,9 +1819,7 @@ nsRuleNode::GetTextData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Text), mPresContext, aContext);
   ruleData.mTextData = &textData;
 
-  const void* res = WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData);
-  textData.mTextShadow = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData);
 }
 
 const void*
@@ -1924,9 +1839,7 @@ nsRuleNode::GetUserInterfaceData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(UserInterface), mPresContext, aContext);
   ruleData.mUserInterfaceData = &uiData;
 
-  const void* res = WalkRuleTree(eStyleStruct_UserInterface, aContext, &ruleData, &uiData);
-  uiData.mCursor = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_UserInterface, aContext, &ruleData, &uiData);
 }
 
 const void*
@@ -1966,22 +1879,7 @@ nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Background), mPresContext, aContext);
   ruleData.mColorData = &colorData;
 
-  // If any members need to be set to null here, they must also be set to
-  // null in HasAuthorSpecifiedRules (look at mBoxShadow in GetBorderData
-  // and HasAuthorSpecifiedRules).
-
-  const void *res = WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
-
-  // We are sharing with some style rule.  It really owns the data.
-  colorData.mBackImage = nsnull;
-  colorData.mBackRepeat = nsnull;
-  colorData.mBackAttachment = nsnull;
-  colorData.mBackPosition = nsnull;
-  colorData.mBackSize = nsnull;
-  colorData.mBackClip = nsnull;
-  colorData.mBackOrigin = nsnull;
-
-  return res;
+  return WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
 }
 
 const void*
@@ -2001,11 +1899,7 @@ nsRuleNode::GetBorderData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Border), mPresContext, aContext);
   ruleData.mMarginData = &marginData;
 
-  const void* res = WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
-  // We are sharing with some style rule.  It really owns the data.
-  // This nulling must also happen in HasAuthorSpecifiedRules.
-  marginData.mBoxShadow = nsnull;
-  return res;
+  return WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
 }
 
 const void*
@@ -2014,10 +1908,6 @@ nsRuleNode::GetPaddingData(nsStyleContext* aContext)
   nsRuleDataMargin marginData; // Declare a struct with null CSS values.
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Padding), mPresContext, aContext);
   ruleData.mMarginData = &marginData;
-
-  // If any members need to be set to null here, they must also be set to
-  // null in HasAuthorSpecifiedRules (look at mBoxShadow in GetBorderData
-  // and HasAuthorSpecifiedRules).
 
   return WalkRuleTree(eStyleStruct_Padding, aContext, &ruleData, &marginData);
 }
@@ -2079,10 +1969,7 @@ nsRuleNode::GetContentData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Content), mPresContext, aContext);
   ruleData.mContentData = &contentData;
 
-  const void* res = WalkRuleTree(eStyleStruct_Content, aContext, &ruleData, &contentData);
-  contentData.mCounterIncrement = contentData.mCounterReset = nsnull;
-  contentData.mContent = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_Content, aContext, &ruleData, &contentData);
 }
 
 const void*
@@ -2092,9 +1979,7 @@ nsRuleNode::GetQuotesData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Quotes), mPresContext, aContext);
   ruleData.mContentData = &contentData;
 
-  const void* res = WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData);
-  contentData.mQuotes = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData);
 }
 
 const void*
@@ -2124,9 +2009,7 @@ nsRuleNode::GetSVGData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(SVG), mPresContext, aContext);
   ruleData.mSVGData = &svgData;
 
-  const void *res = WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
-  svgData.mStrokeDasharray = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
 }
 
 const void*
@@ -2170,30 +2053,8 @@ UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
                            *prop_end = prop + structData->nprops;
        prop != prop_end;
        ++prop) {
-    if ((prop->flags & aFlags) == aFlags)
-      // Don't unset the property.
-      continue;
-
-    switch (prop->type) {
-      case eCSSType_Value:
-        ValueAtOffset(aRuleDataStruct, prop->offset).Reset();
-        break;
-      case eCSSType_Rect:
-        RectAtOffset(aRuleDataStruct, prop->offset)->Reset();
-        break;
-      case eCSSType_ValuePair:
-        ValuePairAtOffset(aRuleDataStruct, prop->offset)->Reset();
-        break;
-      case eCSSType_ValueList:
-        ValueListAtOffset(aRuleDataStruct, prop->offset) = nsnull;
-        break;
-      case eCSSType_ValuePairList:
-        ValuePairListAtOffset(aRuleDataStruct, prop->offset) = nsnull;
-        break;
-      default:
-        NS_NOTREACHED("unknown type");
-        break;
-    }
+    if ((prop->flags & aFlags) != aFlags)
+      ValueAtOffset(aRuleDataStruct, prop->offset).Reset();
   }
 }
 
@@ -2909,7 +2770,7 @@ struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
       size = CalcLengthWith(aValue, mParentSize, mParentFont,
                             nsnull, mPresContext, mAtRoot,
                             PR_TRUE, mCanStoreInRuleTree);
-      if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
+      if (!aValue.IsRelativeLengthUnit()) {
         size = nsStyleFont::ZoomText(mPresContext, size);
       }
     }
@@ -3123,7 +2984,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_List:
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size - nsPresContext::CSSPointsToAppUnits(2), 0);
         break;
     }
 #endif
@@ -3542,17 +3403,29 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   COMPUTE_END_INHERITED(Font, font)
 }
 
+template <typename T>
+inline PRUint32 ListLength(const T* aList)
+{
+  PRUint32 len = 0;
+  while (aList) {
+    len++;
+    aList = aList->mNext;
+  }
+  return len;
+}
+
+
+
 already_AddRefed<nsCSSShadowArray>
-nsRuleNode::GetShadowData(nsCSSValueList* aList,
+nsRuleNode::GetShadowData(const nsCSSValueList* aList,
                           nsStyleContext* aContext,
                           PRBool aIsBoxShadow,
                           PRBool& canStoreInRuleTree)
 {
-  PRUint32 arrayLength = 0;
-  for (nsCSSValueList *list2 = aList; list2; list2 = list2->mNext)
-    ++arrayLength;
+  PRUint32 arrayLength = ListLength(aList);
 
-  NS_ASSERTION(arrayLength > 0, "Non-null text-shadow list, yet we counted 0 items.");
+  NS_ABORT_IF_FALSE(arrayLength > 0,
+                    "Non-null text-shadow list, yet we counted 0 items.");
   nsCSSShadowArray* shadowList = new(arrayLength) nsCSSShadowArray(arrayLength);
 
   if (!shadowList)
@@ -3563,6 +3436,8 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
   for (nsCSSShadowItem* item = shadowList->ShadowAt(0);
        aList;
        aList = aList->mNext, ++item) {
+    NS_ABORT_IF_FALSE(aList->mValue.GetUnit() == eCSSUnit_Array,
+                      "expecting a plain array value");
     nsCSSValue::Array *arr = aList->mValue.GetArrayValue();
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
     unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
@@ -3643,19 +3518,19 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            aContext, mPresContext, canStoreInRuleTree);
 
   // text-shadow: none, list, inherit, initial
-  nsCSSValueList* list = textData.mTextShadow;
-  if (list) {
+  if (textData.mTextShadow.GetUnit() != eCSSUnit_Null) {
     text->mTextShadow = nsnull;
 
     // Don't need to handle none/initial explicitly: The above assignment
     // takes care of that
-    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+    if (textData.mTextShadow.GetUnit() == eCSSUnit_Inherit) {
       canStoreInRuleTree = PR_FALSE;
       text->mTextShadow = parentText->mTextShadow;
-    } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
+    } else if (textData.mTextShadow.GetUnit() == eCSSUnit_List ||
+               textData.mTextShadow.GetUnit() == eCSSUnit_ListDep) {
       // List of arrays
-      text->mTextShadow = GetShadowData(list, aContext, PR_FALSE,
-                                        canStoreInRuleTree);
+      text->mTextShadow = GetShadowData(textData.mTextShadow.GetListValue(),
+                                        aContext, PR_FALSE, canStoreInRuleTree);
     }
   }
 
@@ -3675,8 +3550,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LEH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, canStoreInRuleTree);
-    if (textData.mLineHeight.IsFixedLengthUnit() ||
-        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel) {
+    if (textData.mLineHeight.IsLengthUnit() &&
+        !textData.mLineHeight.IsRelativeLengthUnit()) {
       nscoord lh = nsStyleFont::ZoomText(mPresContext,
                                          text->mLineHeight.GetCoordValue());
       nscoord minimumFontSize =
@@ -3715,10 +3590,10 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                 NS_STYLE_TEXT_ALIGN_DEFAULT,
                 0, 0, 0, 0);
 
-  // text-indent: length, percent, inherit, initial
+  // text-indent: length, percent, calc, inherit, initial
   SetCoord(textData.mTextIndent, text->mTextIndent, parentText->mTextIndent,
-           SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
 
   // text-transform: enum, inherit, initial
   SetDiscrete(textData.mTextTransform, text->mTextTransform, canStoreInRuleTree,
@@ -3768,9 +3643,10 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
 {
   COMPUTE_START_RESET(TextReset, (), text, parentText, Text, textData)
 
-  // vertical-align: enum, length, percent, inherit
+  // vertical-align: enum, length, percent, calc, inherit
   if (!SetCoord(textData.mVerticalAlign, text->mVerticalAlign,
-                parentText->mVerticalAlign, SETCOORD_LPH | SETCOORD_ENUMERATED,
+                parentText->mVerticalAlign,
+                SETCOORD_LPH | SETCOORD_ENUMERATED | SETCOORD_STORE_CALC,
                 aContext, mPresContext, canStoreInRuleTree)) {
     if (eCSSUnit_Initial == textData.mVerticalAlign.GetUnit()) {
       text->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
@@ -3819,25 +3695,30 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                           UserInterface, uiData)
 
   // cursor: enum, url, inherit
-  nsCSSValueList*  list = uiData.mCursor;
-  if (nsnull != list) {
+  nsCSSUnit cursorUnit = uiData.mCursor.GetUnit();
+  if (cursorUnit != eCSSUnit_Null) {
     delete [] ui->mCursorArray;
     ui->mCursorArray = nsnull;
     ui->mCursorArrayLength = 0;
 
-    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+    if (cursorUnit == eCSSUnit_Inherit) {
       canStoreInRuleTree = PR_FALSE;
       ui->mCursor = parentUI->mCursor;
       ui->CopyCursorArrayFrom(*parentUI);
     }
-    else if (eCSSUnit_Initial == list->mValue.GetUnit()) {
+    else if (cursorUnit == eCSSUnit_Initial) {
       ui->mCursor = NS_STYLE_CURSOR_AUTO;
     }
     else {
       // The parser will never create a list that is *all* URL values --
       // that's invalid.
+      NS_ABORT_IF_FALSE(cursorUnit == eCSSUnit_List ||
+                        cursorUnit == eCSSUnit_ListDep,
+                        nsPrintfCString(64, "unrecognized cursor unit %d",
+                                        cursorUnit).get());
+      const nsCSSValueList* list = uiData.mCursor.GetListValue();
+      const nsCSSValueList* list2 = list;
       PRUint32 arrayLength = 0;
-      nsCSSValueList* list2 = list;
       for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext)
         if (list->mValue.GetArrayValue()->Item(0).GetImageValue())
           ++arrayLength;
@@ -3853,7 +3734,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
             nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
             imgIRequest *req = arr->Item(0).GetImageValue();
             if (req) {
-              item->mImage = req;
+              item->SetImage(req);
               if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
                 item->mHaveHotspot = PR_TRUE;
                 item->mHotspotX = arr->Item(1).GetFloatValue(),
@@ -3926,22 +3807,10 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
   COMPUTE_END_RESET(UIReset, ui)
 }
 
-// A simple helper function to get the length of a nsCSSValueList
-inline static PRUint32 GetValueListLength(nsCSSValueList* aValueList)
-{
-  PRUint32 len = 0;
-  nsCSSValueList* val = aValueList;
-  while (val) {
-    len++;
-    val = val->mNext;
-  }
-  return len;
-}
-
 // Information about each transition property that is constant.
 struct TransitionPropInfo {
   // Location of the property's specified value.
-  nsCSSValueList* nsRuleDataDisplay::* rdList;
+  nsCSSValue nsRuleDataDisplay::* rdList;
   // Location of the count of the property's computed value.
   PRUint32 nsStyleDisplay::* sdCount;
 };
@@ -3962,8 +3831,8 @@ static const TransitionPropInfo transitionPropInfo[4] = {
 // Information about each transition property that changes during
 // ComputeDisplayData.
 struct TransitionPropData {
-  nsCSSValueList *list;
-  PRBool inherited;
+  const nsCSSValueList *list;
+  nsCSSUnit unit;
   PRUint32 num;
 };
 
@@ -4024,11 +3893,14 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     const TransitionPropInfo& i = transitionPropInfo[p];
     TransitionPropData& d = transitionPropData[p];
 
-    d.list = displayData.*(i.rdList);
-
     // cache whether any of the properties are specified as 'inherit' so
     // we can use it below
-    d.inherited = d.list && d.list->mValue.GetUnit() == eCSSUnit_Inherit;
+
+    const nsCSSValue& value = displayData.*(i.rdList);
+    d.unit = value.GetUnit();
+    d.list = (value.GetUnit() == eCSSUnit_List ||
+              value.GetUnit() == eCSSUnit_ListDep)
+      ? value.GetListValue() : nsnull;
     d.num = 0;
 
     // General algorithm to determine how many total transitions we need
@@ -4044,13 +3916,11 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
 
     // calculate number of elements
-    if (d.list) {
-      if (d.inherited) {
-        d.num = parentDisplay->*(i.sdCount);
-        canStoreInRuleTree = PR_FALSE;
-      } else {
-        d.num = GetValueListLength(d.list);
-      }
+    if (d.unit == eCSSUnit_Inherit) {
+      d.num = parentDisplay->*(i.sdCount);
+      canStoreInRuleTree = PR_FALSE;
+    } else if (d.list) {
+      d.num = ListLength(d.list);
     } else {
       d.num = display->*(i.sdCount);
     }
@@ -4084,7 +3954,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
     if (i >= delay.num) {
       transition->SetDelay(display->mTransitions[i % delay.num].GetDelay());
-    } else if (delay.inherited) {
+    } else if (delay.unit == eCSSUnit_Inherit) {
       // FIXME (Bug 522599) (for all transition properties): write a test that
       // detects when this was wrong for i >= delay.num if parent had
       // count for this property not equal to length
@@ -4093,6 +3963,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       NS_ABORT_IF_FALSE(!canStoreInRuleTree,
                         "should have made canStoreInRuleTree false above");
       transition->SetDelay(parentDisplay->mTransitions[i].GetDelay());
+    } else if (delay.unit == eCSSUnit_Initial) {
+      transition->SetDelay(0.0);
     } else if (delay.list) {
       switch (delay.list->mValue.GetUnit()) {
         case eCSSUnit_Seconds:
@@ -4102,9 +3974,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
         case eCSSUnit_Milliseconds:
           transition->SetDelay(delay.list->mValue.GetFloatValue());
           break;
-        case eCSSUnit_Initial:
-          transition->SetDelay(0.0);
-          break;
         default:
           NS_NOTREACHED("Invalid delay unit");
       }
@@ -4113,12 +3982,14 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     if (i >= duration.num) {
       transition->SetDuration(
         display->mTransitions[i % duration.num].GetDuration());
-    } else if (duration.inherited) {
+    } else if (duration.unit == eCSSUnit_Inherit) {
       NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionDurationCount,
                         "duration.num computed incorrectly");
       NS_ABORT_IF_FALSE(!canStoreInRuleTree,
                         "should have made canStoreInRuleTree false above");
       transition->SetDuration(parentDisplay->mTransitions[i].GetDuration());
+    } else if (duration.unit == eCSSUnit_Initial) {
+      transition->SetDuration(0.0);
     } else if (duration.list) {
       switch (duration.list->mValue.GetUnit()) {
         case eCSSUnit_Seconds:
@@ -4128,9 +3999,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
         case eCSSUnit_Milliseconds:
           transition->SetDuration(duration.list->mValue.GetFloatValue());
           break;
-        case eCSSUnit_Initial:
-          transition->SetDuration(0.0);
-          break;
         default:
           NS_NOTREACHED("Invalid duration unit");
       }
@@ -4138,48 +4006,46 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
     if (i >= property.num) {
       transition->CopyPropertyFrom(display->mTransitions[i % property.num]);
-    } else if (property.inherited) {
+    } else if (property.unit == eCSSUnit_Inherit) {
       NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionPropertyCount,
                         "property.num computed incorrectly");
       NS_ABORT_IF_FALSE(!canStoreInRuleTree,
                         "should have made canStoreInRuleTree false above");
       transition->CopyPropertyFrom(parentDisplay->mTransitions[i]);
+    } else if (property.unit == eCSSUnit_Initial ||
+               property.unit == eCSSUnit_All) {
+      transition->SetProperty(eCSSPropertyExtra_all_properties);
+    } else if (property.unit == eCSSUnit_None) {
+      transition->SetProperty(eCSSPropertyExtra_no_properties);
     } else if (property.list) {
-      switch (property.list->mValue.GetUnit()) {
-        case eCSSUnit_Ident:
-          {
-            nsDependentString
-              propertyStr(property.list->mValue.GetStringBufferValue());
-            nsCSSProperty prop = nsCSSProps::LookupProperty(propertyStr);
-            if (prop == eCSSProperty_UNKNOWN) {
-              transition->SetUnknownProperty(propertyStr);
-            } else {
-              transition->SetProperty(prop);
-            }
-          }
-          break;
-        case eCSSUnit_None:
-          transition->SetProperty(eCSSPropertyExtra_no_properties);
-          break;
-        case eCSSUnit_All:
-        case eCSSUnit_Initial:
-          transition->SetProperty(eCSSPropertyExtra_all_properties);
-          break;
-        default:
-          NS_NOTREACHED("Invalid transition property unit");
+      NS_ABORT_IF_FALSE(property.list->mValue.GetUnit() == eCSSUnit_Ident,
+                        nsPrintfCString(64,
+                                        "Invalid transition property unit %d",
+                                        property.list->mValue.GetUnit()).get());
+
+      nsDependentString
+        propertyStr(property.list->mValue.GetStringBufferValue());
+      nsCSSProperty prop = nsCSSProps::LookupProperty(propertyStr);
+      if (prop == eCSSProperty_UNKNOWN) {
+        transition->SetUnknownProperty(propertyStr);
+      } else {
+        transition->SetProperty(prop);
       }
     }
 
     if (i >= timingFunction.num) {
       transition->SetTimingFunction(
         display->mTransitions[i % timingFunction.num].GetTimingFunction());
-    } else if (timingFunction.inherited) {
+    } else if (timingFunction.unit == eCSSUnit_Inherit) {
       NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionTimingFunctionCount,
                         "timingFunction.num computed incorrectly");
       NS_ABORT_IF_FALSE(!canStoreInRuleTree,
                         "should have made canStoreInRuleTree false above");
       transition->SetTimingFunction(
         parentDisplay->mTransitions[i].GetTimingFunction());
+    } else if (timingFunction.unit == eCSSUnit_Initial) {
+      transition->SetTimingFunction(
+        nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
     } else if (timingFunction.list) {
       switch (timingFunction.list->mValue.GetUnit()) {
         case eCSSUnit_Enumerated:
@@ -4199,10 +4065,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                array->Item(3).GetFloatValue()));
           }
           break;
-        case eCSSUnit_Initial:
-          transition->SetTimingFunction(
-            nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
-          break;
         default:
           NS_NOTREACHED("Invalid transition property unit");
       }
@@ -4214,8 +4076,9 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
       // if we're at the end of the list, start at the beginning and repeat
       // until we're out of transitions to populate
-      if (d.list) { // could also check && !d.inherited if desired
-        d.list = d.list->mNext ? d.list->mNext : displayData.*(info.rdList);
+      if (d.list) {
+        d.list = d.list->mNext ? d.list->mNext :
+          (displayData.*(info.rdList)).GetListValue();
       }
     }
   }
@@ -4343,62 +4206,75 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               NS_STYLE_RESIZE_NONE, 0, 0, 0, 0);
 
   // clip property: length, auto, inherit
-  if (eCSSUnit_Inherit == displayData.mClip.mTop.GetUnit()) { // if one is inherit, they all are
+  switch (displayData.mClip.GetUnit()) {
+  case eCSSUnit_Inherit:
     canStoreInRuleTree = PR_FALSE;
     display->mClipFlags = parentDisplay->mClipFlags;
     display->mClip = parentDisplay->mClip;
-  }
-  // if one is initial or auto (rect), they all are
-  else if (eCSSUnit_Initial == displayData.mClip.mTop.GetUnit() ||
-           eCSSUnit_RectIsAuto == displayData.mClip.mTop.GetUnit()) {
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Auto:
     display->mClipFlags = NS_STYLE_CLIP_AUTO;
     display->mClip.SetRect(0,0,0,0);
-  }
-  else if (eCSSUnit_Null != displayData.mClip.mTop.GetUnit()) {
-    display->mClipFlags = 0; // clear it
+    break;
 
-    if (eCSSUnit_Auto == displayData.mClip.mTop.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Rect: {
+    const nsCSSRect& clipRect = displayData.mClip.GetRectValue();
+
+    display->mClipFlags = NS_STYLE_CLIP_RECT;
+
+    if (clipRect.mTop.GetUnit() == eCSSUnit_Auto) {
       display->mClip.y = 0;
       display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
     }
-    else if (displayData.mClip.mTop.IsLengthUnit()) {
-      display->mClip.y = CalcLength(displayData.mClip.mTop, aContext,
+    else if (clipRect.mTop.IsLengthUnit()) {
+      display->mClip.y = CalcLength(clipRect.mTop, aContext,
                                     mPresContext, canStoreInRuleTree);
     }
-    if (eCSSUnit_Auto == displayData.mClip.mBottom.GetUnit()) {
+
+    if (clipRect.mBottom.GetUnit() == eCSSUnit_Auto) {
       // Setting to NS_MAXSIZE for the 'auto' case ensures that
       // the clip rect is nonempty. It is important that mClip be
       // nonempty if the actual clip rect could be nonempty.
       display->mClip.height = NS_MAXSIZE;
       display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
     }
-    else if (displayData.mClip.mBottom.IsLengthUnit()) {
-      display->mClip.height = CalcLength(displayData.mClip.mBottom, aContext,
+    else if (clipRect.mBottom.IsLengthUnit()) {
+      display->mClip.height = CalcLength(clipRect.mBottom, aContext,
                                          mPresContext, canStoreInRuleTree) -
                               display->mClip.y;
     }
-    if (eCSSUnit_Auto == displayData.mClip.mLeft.GetUnit()) {
+
+    if (clipRect.mLeft.GetUnit() == eCSSUnit_Auto) {
       display->mClip.x = 0;
       display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
     }
-    else if (displayData.mClip.mLeft.IsLengthUnit()) {
-      display->mClip.x = CalcLength(displayData.mClip.mLeft, aContext,
+    else if (clipRect.mLeft.IsLengthUnit()) {
+      display->mClip.x = CalcLength(clipRect.mLeft, aContext,
                                     mPresContext, canStoreInRuleTree);
     }
-    if (eCSSUnit_Auto == displayData.mClip.mRight.GetUnit()) {
+
+    if (clipRect.mRight.GetUnit() == eCSSUnit_Auto) {
       // Setting to NS_MAXSIZE for the 'auto' case ensures that
       // the clip rect is nonempty. It is important that mClip be
       // nonempty if the actual clip rect could be nonempty.
       display->mClip.width = NS_MAXSIZE;
       display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
     }
-    else if (displayData.mClip.mRight.IsLengthUnit()) {
-      display->mClip.width = CalcLength(displayData.mClip.mRight, aContext,
+    else if (clipRect.mRight.IsLengthUnit()) {
+      display->mClip.width = CalcLength(clipRect.mRight, aContext,
                                         mPresContext, canStoreInRuleTree) -
                              display->mClip.x;
     }
-    display->mClipFlags &= ~NS_STYLE_CLIP_TYPE_MASK;
-    display->mClipFlags |= NS_STYLE_CLIP_RECT;
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unrecognized clip unit");
   }
 
   if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
@@ -4447,79 +4323,55 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
 
   /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
-  const nsCSSValueList *head = displayData.mTransform;
+  switch (displayData.mTransform.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
 
-  if (head != nsnull) {
-    /* There is a chance that we will discover that
-     * the transform property has been set to 'none,' 'initial,' or 'inherit.'
-     * If so, process appropriately.
-     */
+  case eCSSUnit_Initial:
+  case eCSSUnit_None:
+    display->mSpecifiedTransform = nsnull;
+    break;
 
-    /* If it's 'none,' indicate that there are no transforms. */
+  case eCSSUnit_Inherit:
+    display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
+    if (parentDisplay->mSpecifiedTransform)
+      display->mTransform = parentDisplay->mTransform;
+    canStoreInRuleTree = PR_FALSE;
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    const nsCSSValueList* head = displayData.mTransform.GetListValue();
+    // can get a _None in here from transform animation
     if (head->mValue.GetUnit() == eCSSUnit_None) {
+      NS_ABORT_IF_FALSE(head->mNext == nsnull, "none must be alone");
       display->mSpecifiedTransform = nsnull;
-    }
-    /* If we need to inherit, copy the pointer owned by a style rule */
-    else if (head->mValue.GetUnit() == eCSSUnit_Inherit)  {
-      display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
-      if (parentDisplay->mSpecifiedTransform)
-        display->mTransform = parentDisplay->mTransform;
-      canStoreInRuleTree = PR_FALSE;
-    }
-    /* If it's 'initial', then we reset to empty. */
-    else if (head->mValue.GetUnit() == eCSSUnit_Initial) {
-      display->mSpecifiedTransform = nsnull;
-    }
-    /* Otherwise, we are looking at a list of CSS tokens.  We'll read each of
-     * them in as an array of nsTransformFunction objects, then will accumulate
-     * them all together to form the final transform matrix.
-     */
-    else {
+    } else {
       display->mSpecifiedTransform = head; // weak pointer, owned by rule
       display->mTransform = nsStyleTransformMatrix::ReadTransforms(head,
                               aContext, mPresContext, canStoreInRuleTree);
     }
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unrecognized transform unit");
   }
 
   /* Convert -moz-transform-origin. */
-  if (displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null ||
-      displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null) {
-
-    /* If X coordinate is an enumerated type, handle it explicitly. */
-    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mXValue.GetUnit())
-      display->mTransformOrigin[0].SetPercentValue
-        (GetFloatFromBoxPosition
-         (displayData.mTransformOrigin.mXValue.GetIntValue()));
-    else {
-      /* Convert lengths, percents, and inherit.  Default value is 50%. */
+  if (displayData.mTransformOrigin.GetUnit() != eCSSUnit_Null) {
 #ifdef DEBUG
-      PRBool result =
+    PRBool result =
 #endif
-        SetCoord(displayData.mTransformOrigin.mXValue,
-                 display->mTransformOrigin[0],
-                 parentDisplay->mTransformOrigin[0],
-                 SETCOORD_LPH | SETCOORD_INITIAL_HALF,
-                 aContext, mPresContext, canStoreInRuleTree);
-      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
-    }
-
-    /* If Y coordinate is an enumerated type, handle it explicitly. */
-    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mYValue.GetUnit())
-      display->mTransformOrigin[1].SetPercentValue
-        (GetFloatFromBoxPosition
-         (displayData.mTransformOrigin.mYValue.GetIntValue()));
-    else {
-      /* Convert lengths, percents, initial, inherit. */
-#ifdef DEBUG
-      PRBool result =
-#endif
-        SetCoord(displayData.mTransformOrigin.mYValue,
-                 display->mTransformOrigin[1],
-                 parentDisplay->mTransformOrigin[1],
-                 SETCOORD_LPH | SETCOORD_INITIAL_HALF,
-                 aContext, mPresContext, canStoreInRuleTree);
-      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
-    }
+      SetPairCoords(displayData.mTransformOrigin,
+                    display->mTransformOrigin[0],
+                    display->mTransformOrigin[1],
+                    parentDisplay->mTransformOrigin[0],
+                    parentDisplay->mTransformOrigin[1],
+                    SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                    SETCOORD_BOX_POSITION,
+                    aContext, mPresContext, canStoreInRuleTree);
+    NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
   }
 
   COMPUTE_END_RESET(Display, display)
@@ -4569,7 +4421,7 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
       nsAutoString lang;
       displayData.mLang.GetStringValue(lang);
 
-      ToLowerCase(lang);
+      nsContentUtils::ASCIIToLower(lang);
       visibility->mLanguage = do_GetAtom(lang);
     }
   }
@@ -4791,14 +4643,12 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
   }
 };
 
-
-template <class SpecifiedValueItem, class ComputedValueItem>
+template <class ComputedValueItem>
 static void
 SetBackgroundList(nsStyleContext* aStyleContext,
-                  const SpecifiedValueItem* aValueList,
+                  const nsCSSValue& aValue,
                   nsAutoTArray< nsStyleBackground::Layer, 1> &aLayers,
-                  const nsAutoTArray<nsStyleBackground::Layer, 1>
-                                                                 &aParentLayers,
+                  const nsAutoTArray<nsStyleBackground::Layer, 1> &aParentLayers,
                   ComputedValueItem nsStyleBackground::Layer::* aResultLocation,
                   ComputedValueItem aInitialValue,
                   PRUint32 aParentItemCount,
@@ -4807,45 +4657,133 @@ SetBackgroundList(nsStyleContext* aStyleContext,
                   PRBool& aRebuild,
                   PRBool& aCanStoreInRuleTree)
 {
-  if (aValueList) {
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
     aRebuild = PR_TRUE;
-    nsCSSValue SpecifiedValueItem::* initialInherit =
-      InitialInheritLocationFor<SpecifiedValueItem>::Location();
-    if (eCSSUnit_Inherit == (aValueList->*initialInherit).GetUnit()) {
-      NS_ASSERTION(!aValueList->mNext, "should have only one value");
-      aCanStoreInRuleTree = PR_FALSE;
-      if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
-        NS_WARNING("out of memory");
-        aParentItemCount = aLayers.Length();
-      }
-      aItemCount = aParentItemCount;
-      for (PRUint32 i = 0; i < aParentItemCount; ++i) {
-        aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
-      }
-    } else if (eCSSUnit_Initial == (aValueList->*initialInherit).GetUnit()) {
-      NS_ASSERTION(!aValueList->mNext, "should have only one value");
-      aItemCount = 1;
-      aLayers[0].*aResultLocation = aInitialValue;
-    } else {
-      const SpecifiedValueItem *item = aValueList;
-      aItemCount = 0;
-      do {
-        NS_ASSERTION((item->*initialInherit).GetUnit() != eCSSUnit_Inherit &&
-                     (item->*initialInherit).GetUnit() != eCSSUnit_Initial,
-                     "unexpected unit");
-        ++aItemCount;
-        if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
-          NS_WARNING("out of memory");
-          --aItemCount;
-          break;
-        }
-        BackgroundItemComputer<SpecifiedValueItem, ComputedValueItem>
-          ::ComputeValue(aStyleContext, item,
-                         aLayers[aItemCount-1].*aResultLocation,
-                         aCanStoreInRuleTree);
-        item = item->mNext;
-      } while (item);
+    aCanStoreInRuleTree = PR_FALSE;
+    if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
+      NS_WARNING("out of memory");
+      aParentItemCount = aLayers.Length();
     }
+    aItemCount = aParentItemCount;
+    for (PRUint32 i = 0; i < aParentItemCount; ++i) {
+      aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
+    }
+    break;
+
+  case eCSSUnit_Initial:
+    aRebuild = PR_TRUE;
+    aItemCount = 1;
+    aLayers[0].*aResultLocation = aInitialValue;
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    aRebuild = PR_TRUE;
+    aItemCount = 0;
+    const nsCSSValueList* item = aValue.GetListValue();
+    do {
+      NS_ASSERTION(item->mValue.GetUnit() != eCSSUnit_Null &&
+                   item->mValue.GetUnit() != eCSSUnit_Inherit &&
+                   item->mValue.GetUnit() != eCSSUnit_Initial,
+                   "unexpected unit");
+      ++aItemCount;
+      if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
+        NS_WARNING("out of memory");
+        --aItemCount;
+        break;
+      }
+      BackgroundItemComputer<nsCSSValueList, ComputedValueItem>
+        ::ComputeValue(aStyleContext, item,
+                       aLayers[aItemCount-1].*aResultLocation,
+                       aCanStoreInRuleTree);
+      item = item->mNext;
+    } while (item);
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false,
+                      nsPrintfCString(32, "unexpected unit %d",
+                                      aValue.GetUnit()).get());
+  }
+
+  if (aItemCount > aMaxItemCount)
+    aMaxItemCount = aItemCount;
+}
+
+template <class ComputedValueItem>
+static void
+SetBackgroundPairList(nsStyleContext* aStyleContext,
+                      const nsCSSValue& aValue,
+                      nsAutoTArray< nsStyleBackground::Layer, 1> &aLayers,
+                      const nsAutoTArray<nsStyleBackground::Layer, 1>
+                                                                 &aParentLayers,
+                      ComputedValueItem nsStyleBackground::Layer::*
+                                                                aResultLocation,
+                      ComputedValueItem aInitialValue,
+                      PRUint32 aParentItemCount,
+                      PRUint32& aItemCount,
+                      PRUint32& aMaxItemCount,
+                      PRBool& aRebuild,
+                      PRBool& aCanStoreInRuleTree)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aRebuild = PR_TRUE;
+    aCanStoreInRuleTree = PR_FALSE;
+    if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
+      NS_WARNING("out of memory");
+      aParentItemCount = aLayers.Length();
+    }
+    aItemCount = aParentItemCount;
+    for (PRUint32 i = 0; i < aParentItemCount; ++i) {
+      aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
+    }
+    break;
+
+  case eCSSUnit_Initial:
+    aRebuild = PR_TRUE;
+    aItemCount = 1;
+    aLayers[0].*aResultLocation = aInitialValue;
+    break;
+
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    aRebuild = PR_TRUE;
+    aItemCount = 0;
+    const nsCSSValuePairList* item = aValue.GetPairListValue();
+    do {
+      NS_ASSERTION(item->mXValue.GetUnit() != eCSSUnit_Inherit &&
+                   item->mXValue.GetUnit() != eCSSUnit_Initial &&
+                   item->mYValue.GetUnit() != eCSSUnit_Inherit &&
+                   item->mYValue.GetUnit() != eCSSUnit_Initial,
+                   "unexpected unit");
+      ++aItemCount;
+      if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
+        NS_WARNING("out of memory");
+        --aItemCount;
+        break;
+      }
+      BackgroundItemComputer<nsCSSValuePairList, ComputedValueItem>
+        ::ComputeValue(aStyleContext, item,
+                       aLayers[aItemCount-1].*aResultLocation,
+                       aCanStoreInRuleTree);
+      item = item->mNext;
+    } while (item);
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false,
+                      nsPrintfCString(32, "unexpected unit %d",
+                                      aValue.GetUnit()).get());
   }
 
   if (aItemCount > aMaxItemCount)
@@ -4934,20 +4872,20 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   // background-position: enum, length, percent (flags), inherit [pair list]
   nsStyleBackground::Position initialPosition;
   initialPosition.SetInitialValues();
-  SetBackgroundList(aContext, colorData.mBackPosition, bg->mLayers,
-                    parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
-                    initialPosition, parentBG->mPositionCount,
-                    bg->mPositionCount, maxItemCount, rebuild,
-                    canStoreInRuleTree);
+  SetBackgroundPairList(aContext, colorData.mBackPosition, bg->mLayers,
+                        parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
+                        initialPosition, parentBG->mPositionCount,
+                        bg->mPositionCount, maxItemCount, rebuild,
+                        canStoreInRuleTree);
 
   // background-size: enum, length, auto, inherit, initial [pair list]
   nsStyleBackground::Size initialSize;
   initialSize.SetInitialValues();
-  SetBackgroundList(aContext, colorData.mBackSize, bg->mLayers,
-                    parentBG->mLayers, &nsStyleBackground::Layer::mSize,
-                    initialSize, parentBG->mSizeCount,
-                    bg->mSizeCount, maxItemCount, rebuild,
-                    canStoreInRuleTree);
+  SetBackgroundPairList(aContext, colorData.mBackSize, bg->mLayers,
+                        parentBG->mLayers, &nsStyleBackground::Layer::mSize,
+                        initialSize, parentBG->mSizeCount,
+                        bg->mSizeCount, maxItemCount, rebuild,
+                        canStoreInRuleTree);
 
   if (rebuild) {
     // Delete any extra items.  We need to keep layers in which any
@@ -4970,6 +4908,10 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
     FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mSize,
                        bg->mSizeCount, fillCount);
   }
+
+  // Now that the dust has settled, register the images with the document
+  for (PRUint32 i = 0; i < bg->mImageCount; ++i)
+    bg->mLayers[i].TrackImages(aContext->PresContext());
 
   COMPUTE_END_RESET(Background, bg)
 }
@@ -5000,7 +4942,8 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentMargin->mMargin.Get(side);
     if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_ZERO,
+                 coord, parentCoord,
+                 SETCOORD_LPAH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       margin->mMargin.Set(side, coord);
     }
@@ -5022,21 +4965,30 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                       Margin, marginData)
 
   // -moz-box-shadow: none, list, inherit, initial
-  {
-    nsCSSValueList* list = marginData.mBoxShadow;
-    if (list) {
-      // This handles 'none' and 'initial'
-      border->mBoxShadow = nsnull;
+  switch (marginData.mBoxShadow.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
 
-      if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
-        canStoreInRuleTree = PR_FALSE;
-        border->mBoxShadow = parentBorder->mBoxShadow;
-      } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
-        // List of arrays
-        border->mBoxShadow = GetShadowData(list, aContext, PR_TRUE,
-                                           canStoreInRuleTree);
-      }
-    }
+  case eCSSUnit_Initial:
+  case eCSSUnit_None:
+    border->mBoxShadow = nsnull;
+    break;
+
+  case eCSSUnit_Inherit:
+    border->mBoxShadow = parentBorder->mBoxShadow;
+    canStoreInRuleTree = PR_FALSE;
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep:
+    border->mBoxShadow = GetShadowData(marginData.mBoxShadow.GetListValue(),
+                                       aContext, PR_TRUE, canStoreInRuleTree);
+    break;
+
+  default:
+    NS_ABORT_IF_FALSE(false,
+                      nsPrintfCString(64, "unrecognized shadow unit %d",
+                                      marginData.mBoxShadow.GetUnit()).get());
   }
 
   // border-width, border-*-width: length, enum, inherit
@@ -5130,45 +5082,53 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   nscolor borderColor;
   nscolor unused = NS_RGB(0,0,0);
 
-  { // scope for compilers with broken |for| loop scoping
-    NS_FOR_CSS_SIDES(side) {
-      nsCSSValueList* list =
-          marginData.mBorderColors.*(nsCSSValueListRect::sides[side]);
-      if (list) {
-        if (eCSSUnit_Initial == list->mValue.GetUnit() ||
-            eCSSUnit_None == list->mValue.GetUnit()) {
-          NS_ASSERTION(!list->mNext, "should have only one item");
-          border->ClearBorderColors(side);
-        }
-        else if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
-          canStoreInRuleTree = PR_FALSE;
-          NS_ASSERTION(!list->mNext, "should have only one item");
-          nsBorderColors *parentColors;
-          parentBorder->GetCompositeColors(side, &parentColors);
-          if (parentColors) {
-            border->EnsureBorderColors();
-            border->ClearBorderColors(side);
-            border->mBorderColors[side] = parentColors->Clone();
-          } else {
-            border->ClearBorderColors(side);
-          }
-        }
-        else {
-          // Some composite border color information has been specified for this
-          // border side.
-          border->EnsureBorderColors();
-          border->ClearBorderColors(side);
-          while (list) {
-            if (SetColor(list->mValue, unused, mPresContext,
-                         aContext, borderColor, canStoreInRuleTree))
-              border->AppendBorderColor(side, borderColor);
-            else {
-              NS_NOTREACHED("unexpected item in -moz-border-*-colors list");
-            }
-            list = list->mNext;
-          }
-        }
+  NS_FOR_CSS_SIDES(side) {
+    const nsCSSValue& value =
+      marginData.mBorderColors.*(nsCSSRect::sides[side]);
+    switch (value.GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+
+    case eCSSUnit_Initial:
+    case eCSSUnit_None:
+      border->ClearBorderColors(side);
+      break;
+
+    case eCSSUnit_Inherit: {
+      canStoreInRuleTree = PR_FALSE;
+      nsBorderColors *parentColors;
+      parentBorder->GetCompositeColors(side, &parentColors);
+      if (parentColors) {
+        border->EnsureBorderColors();
+        border->ClearBorderColors(side);
+        border->mBorderColors[side] = parentColors->Clone();
+      } else {
+        border->ClearBorderColors(side);
       }
+      break;
+    }
+
+    case eCSSUnit_List:
+    case eCSSUnit_ListDep: {
+      // Some composite border color information has been specified for this
+      // border side.
+      border->EnsureBorderColors();
+      border->ClearBorderColors(side);
+      const nsCSSValueList* list = value.GetListValue();
+      while (list) {
+        if (SetColor(list->mValue, unused, mPresContext,
+                     aContext, borderColor, canStoreInRuleTree))
+          border->AppendBorderColor(side, borderColor);
+        else {
+          NS_NOTREACHED("unexpected item in -moz-border-*-colors list");
+        }
+        list = list->mNext;
+      }
+      break;
+    }
+
+    default:
+      NS_ABORT_IF_FALSE(false, "unrecognized border color unit");
     }
   }
 
@@ -5226,12 +5186,20 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   // -moz-border-radius: length, percent, inherit
   {
     const nsCSSCornerSizes& borderRadius = marginData.mBorderRadius;
-    NS_FOR_CSS_HALF_CORNERS(corner) {
-      nsStyleCoord parentCoord = parentBorder->mBorderRadius.Get(corner);
-      if (SetCoord(borderRadius.GetHalfCorner(corner),
-                   coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
-                   aContext, mPresContext, canStoreInRuleTree))
-        border->mBorderRadius.Set(corner, coord);
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      int cx = NS_FULL_TO_HALF_CORNER(corner, false);
+      int cy = NS_FULL_TO_HALF_CORNER(corner, true);
+      const nsCSSValue& radius = borderRadius.GetCorner(corner);
+      nsStyleCoord parentX = parentBorder->mBorderRadius.Get(cx);
+      nsStyleCoord parentY = parentBorder->mBorderRadius.Get(cy);
+      nsStyleCoord coordX, coordY;
+
+      if (SetPairCoords(radius, coordX, coordY, parentX, parentY,
+                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                        aContext, mPresContext, canStoreInRuleTree)) {
+        border->mBorderRadius.Set(cx, coordX);
+        border->mBorderRadius.Set(cy, coordY);
+      }
     }
   }
 
@@ -5344,7 +5312,8 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentPadding->mPadding.Get(side);
     if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                 coord, parentCoord,
+                 SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       padding->mPadding.Set(side, coord);
     }
@@ -5425,12 +5394,20 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   {
     nsStyleCoord coord;
     const nsCSSCornerSizes& outlineRadius = marginData.mOutlineRadius;
-    NS_FOR_CSS_HALF_CORNERS(corner) {
-      nsStyleCoord parentCoord = parentOutline->mOutlineRadius.Get(corner);
-      if (SetCoord(outlineRadius.GetHalfCorner(corner),
-                   coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
-                   aContext, mPresContext, canStoreInRuleTree))
-        outline->mOutlineRadius.Set(corner, coord);
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      int cx = NS_FULL_TO_HALF_CORNER(corner, false);
+      int cy = NS_FULL_TO_HALF_CORNER(corner, true);
+      const nsCSSValue& radius = outlineRadius.GetCorner(corner);
+      nsStyleCoord parentX = parentOutline->mOutlineRadius.Get(cx);
+      nsStyleCoord parentY = parentOutline->mOutlineRadius.Get(cy);
+      nsStyleCoord coordX, coordY;
+
+      if (SetPairCoords(radius, coordX, coordY, parentX, parentY,
+                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                        aContext, mPresContext, canStoreInRuleTree)) {
+        outline->mOutlineRadius.Set(cx, coordX);
+        outline->mOutlineRadius.Set(cy, coordY);
+      }
     }
   }
 
@@ -5490,45 +5467,53 @@ nsRuleNode::ComputeListData(void* aStartStruct,
               NS_STYLE_LIST_STYLE_POSITION_OUTSIDE, 0, 0, 0, 0);
 
   // image region property: length, auto, inherit
-  if (eCSSUnit_Inherit == listData.mImageRegion.mTop.GetUnit()) { // if one is inherit, they all are
+  switch (listData.mImageRegion.GetUnit()) {
+  case eCSSUnit_Inherit:
     canStoreInRuleTree = PR_FALSE;
     list->mImageRegion = parentList->mImageRegion;
-  }
-  // if one is -moz-initial or auto (rect), they all are
-  else if (eCSSUnit_Initial == listData.mImageRegion.mTop.GetUnit() ||
-           eCSSUnit_RectIsAuto == listData.mImageRegion.mTop.GetUnit()) {
-    list->mImageRegion.Empty();
-  }
-  else if (eCSSUnit_Null != listData.mImageRegion.mTop.GetUnit()) {
-    if (eCSSUnit_Auto == listData.mImageRegion.mTop.GetUnit())
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Auto:
+    list->mImageRegion.SetRect(0,0,0,0);
+    break;
+
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Rect: {
+    const nsCSSRect& rgnRect = listData.mImageRegion.GetRectValue();
+
+    if (rgnRect.mTop.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.y = 0;
-    else if (listData.mImageRegion.mTop.IsLengthUnit())
+    else if (rgnRect.mTop.IsLengthUnit())
       list->mImageRegion.y =
-        CalcLength(listData.mImageRegion.mTop, aContext, mPresContext,
-                   canStoreInRuleTree);
+        CalcLength(rgnRect.mTop, aContext, mPresContext, canStoreInRuleTree);
 
-    if (eCSSUnit_Auto == listData.mImageRegion.mBottom.GetUnit())
+    if (rgnRect.mBottom.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.height = 0;
-    else if (listData.mImageRegion.mBottom.IsLengthUnit())
+    else if (rgnRect.mBottom.IsLengthUnit())
       list->mImageRegion.height =
-        CalcLength(listData.mImageRegion.mBottom, aContext, mPresContext,
-                   canStoreInRuleTree) -
-        list->mImageRegion.y;
+        CalcLength(rgnRect.mBottom, aContext, mPresContext,
+                   canStoreInRuleTree) - list->mImageRegion.y;
 
-    if (eCSSUnit_Auto == listData.mImageRegion.mLeft.GetUnit())
+    if (rgnRect.mLeft.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.x = 0;
-    else if (listData.mImageRegion.mLeft.IsLengthUnit())
+    else if (rgnRect.mLeft.IsLengthUnit())
       list->mImageRegion.x =
-        CalcLength(listData.mImageRegion.mLeft, aContext, mPresContext,
-                   canStoreInRuleTree);
+        CalcLength(rgnRect.mLeft, aContext, mPresContext, canStoreInRuleTree);
 
-    if (eCSSUnit_Auto == listData.mImageRegion.mRight.GetUnit())
+    if (rgnRect.mRight.GetUnit() == eCSSUnit_Auto)
       list->mImageRegion.width = 0;
-    else if (listData.mImageRegion.mRight.IsLengthUnit())
+    else if (rgnRect.mRight.IsLengthUnit())
       list->mImageRegion.width =
-        CalcLength(listData.mImageRegion.mRight, aContext, mPresContext,
-                   canStoreInRuleTree) -
-        list->mImageRegion.x;
+        CalcLength(rgnRect.mRight, aContext, mPresContext,
+                   canStoreInRuleTree) - list->mImageRegion.x;
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unrecognized image-region unit");
   }
 
   COMPUTE_END_INHERITED(List, list)
@@ -5544,36 +5529,37 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Position, (), pos, parentPos, Position, posData)
 
-  // box offsets: length, percent, auto, inherit
+  // box offsets: length, percent, calc, auto, inherit
   nsStyleCoord  coord;
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentPos->mOffset.Get(side);
     if (SetCoord(posData.mOffset.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_AUTO,
+                 coord, parentCoord,
+                 SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
                  aContext, mPresContext, canStoreInRuleTree)) {
       pos->mOffset.Set(side, coord);
     }
   }
 
   SetCoord(posData.mWidth, pos->mWidth, parentPos->mWidth,
-           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
-           SETCOORD_LPEH | SETCOORD_INITIAL_ZERO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPEH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
-           SETCOORD_LPOEH | SETCOORD_INITIAL_NONE, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPOEH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
 
   SetCoord(posData.mHeight, pos->mHeight, parentPos->mHeight,
-           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMinHeight, pos->mMinHeight, parentPos->mMinHeight,
-           SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
   SetCoord(posData.mMaxHeight, pos->mMaxHeight, parentPos->mMaxHeight,
-           SETCOORD_LPOH | SETCOORD_INITIAL_NONE, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LPOH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
 
   // box-sizing: enum, inherit, initial
   SetDiscrete(posData.mBoxSizing, pos->mBoxSizing, canStoreInRuleTree,
@@ -5639,31 +5625,26 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
               SETDSC_ENUMERATED, parentTable->mBorderCollapse,
               NS_STYLE_BORDER_SEPARATE, 0, 0, 0, 0);
 
-  // border-spacing-x: length, inherit
-  nsStyleCoord tempCoord;
-  if (SetCoord(tableData.mBorderSpacing.mXValue, tempCoord,
-               nsStyleCoord(parentTable->mBorderSpacingX,
-                            nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
-               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
-               aContext, mPresContext, canStoreInRuleTree)) {
-    table->mBorderSpacingX = tempCoord.GetCoordValue();
-  } else {
-    NS_ASSERTION(tableData.mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null,
-                 "unexpected unit");
-  }
+  if (tableData.mBorderSpacing.GetUnit() != eCSSUnit_Null) {
+    // border-spacing-x/y: length, inherit
+    nsStyleCoord parentX(parentTable->mBorderSpacingX,
+                         nsStyleCoord::CoordConstructor);
+    nsStyleCoord parentY(parentTable->mBorderSpacingY,
+                         nsStyleCoord::CoordConstructor);
+    nsStyleCoord coordX, coordY;
 
-  // border-spacing-y: length, inherit
-  if (SetCoord(tableData.mBorderSpacing.mYValue, tempCoord,
-               nsStyleCoord(parentTable->mBorderSpacingY,
-                            nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
-               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
-               aContext, mPresContext, canStoreInRuleTree)) {
-    table->mBorderSpacingY = tempCoord.GetCoordValue();
-  } else {
-    NS_ASSERTION(tableData.mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null,
-                 "unexpected unit");
+#ifdef DEBUG
+    PRBool result =
+#endif
+      SetPairCoords(tableData.mBorderSpacing,
+                    coordX, coordY, parentX, parentY,
+                    SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+                    SETCOORD_CALC_LENGTH_ONLY |
+                    SETCOORD_CALC_CLAMP_NONNEGATIVE,
+                    aContext, mPresContext, canStoreInRuleTree);
+    NS_ASSERTION(result, "malformed table border value");
+    table->mBorderSpacingX = coordX.GetCoordValue();
+    table->mBorderSpacingY = coordY.GetCoordValue();
   }
 
   // caption-side: enum, inherit, initial
@@ -5690,30 +5671,48 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
                                const RuleDetail aRuleDetail,
                                const PRBool aCanStoreInRuleTree)
 {
+  PRUint32 count;
+  nsAutoString buffer;
+
   COMPUTE_START_RESET(Content, (), content, parentContent,
                       Content, contentData)
 
   // content: [string, url, counter, attr, enum]+, normal, none, inherit
-  PRUint32 count;
-  nsAutoString  buffer;
-  nsCSSValueList* contentValue = contentData.mContent;
-  if (contentValue) {
-    if (eCSSUnit_Normal == contentValue->mValue.GetUnit() ||
-        eCSSUnit_None == contentValue->mValue.GetUnit() ||
-        eCSSUnit_Initial == contentValue->mValue.GetUnit()) {
-      // "normal", "none", and "initial" all mean no content
-      content->AllocateContents(0);
-    }
-    else if (eCSSUnit_Inherit == contentValue->mValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      count = parentContent->ContentCount();
-      if (NS_SUCCEEDED(content->AllocateContents(count))) {
-        while (0 < count--) {
-          content->ContentAt(count) = parentContent->ContentAt(count);
-        }
+  switch (contentData.mContent.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Normal:
+  case eCSSUnit_None:
+  case eCSSUnit_Initial:
+    // "normal", "none", and "initial" all mean no content
+    content->AllocateContents(0);
+    break;
+
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    count = parentContent->ContentCount();
+    if (NS_SUCCEEDED(content->AllocateContents(count))) {
+      while (0 < count--) {
+        content->ContentAt(count) = parentContent->ContentAt(count);
       }
     }
-    else {
+    break;
+
+  case eCSSUnit_Enumerated: {
+    NS_ABORT_IF_FALSE(contentData.mContent.GetIntValue() ==
+                      NS_STYLE_CONTENT_ALT_CONTENT,
+                      "unrecognized solitary content keyword");
+    content->AllocateContents(1);
+    nsStyleContentData& data = content->ContentAt(0);
+    data.mType = eStyleContentType_AltContent;
+    data.mContent.mString = nsnull;
+    break;
+  }
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    const nsCSSValueList* contentValue = contentData.mContent.GetListValue();
       count = 0;
       while (contentValue) {
         count++;
@@ -5722,36 +5721,34 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
       if (NS_SUCCEEDED(content->AllocateContents(count))) {
         const nsAutoString  nullStr;
         count = 0;
-        contentValue = contentData.mContent;
+        contentValue = contentData.mContent.GetListValue();
         while (contentValue) {
           const nsCSSValue& value = contentValue->mValue;
           nsCSSUnit unit = value.GetUnit();
           nsStyleContentType type;
           nsStyleContentData &data = content->ContentAt(count++);
           switch (unit) {
-            case eCSSUnit_String:   type = eStyleContentType_String;    break;
-            case eCSSUnit_Image:    type = eStyleContentType_Image;       break;
-            case eCSSUnit_Attr:     type = eStyleContentType_Attr;      break;
-            case eCSSUnit_Counter:  type = eStyleContentType_Counter;   break;
-            case eCSSUnit_Counters: type = eStyleContentType_Counters;  break;
-            case eCSSUnit_Enumerated:
-              switch (value.GetIntValue()) {
-                case NS_STYLE_CONTENT_OPEN_QUOTE:
-                  type = eStyleContentType_OpenQuote;     break;
-                case NS_STYLE_CONTENT_CLOSE_QUOTE:
-                  type = eStyleContentType_CloseQuote;    break;
-                case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
-                  type = eStyleContentType_NoOpenQuote;   break;
-                case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
-                  type = eStyleContentType_NoCloseQuote;  break;
-                case NS_STYLE_CONTENT_ALT_CONTENT:
-                  type = eStyleContentType_AltContent;    break;
-                default:
-                  NS_ERROR("bad content value");
-              }
-              break;
+          case eCSSUnit_String:   type = eStyleContentType_String;    break;
+          case eCSSUnit_Image:    type = eStyleContentType_Image;     break;
+          case eCSSUnit_Attr:     type = eStyleContentType_Attr;      break;
+          case eCSSUnit_Counter:  type = eStyleContentType_Counter;   break;
+          case eCSSUnit_Counters: type = eStyleContentType_Counters;  break;
+          case eCSSUnit_Enumerated:
+            switch (value.GetIntValue()) {
+            case NS_STYLE_CONTENT_OPEN_QUOTE:
+              type = eStyleContentType_OpenQuote;     break;
+            case NS_STYLE_CONTENT_CLOSE_QUOTE:
+              type = eStyleContentType_CloseQuote;    break;
+            case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
+              type = eStyleContentType_NoOpenQuote;   break;
+            case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
+              type = eStyleContentType_NoCloseQuote;  break;
             default:
-              NS_ERROR("bad content type");
+              NS_ERROR("bad content value");
+            }
+            break;
+          default:
+            NS_ERROR("bad content type");
           }
           data.mType = type;
           if (type == eStyleContentType_Image) {
@@ -5771,93 +5768,115 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           contentValue = contentValue->mNext;
         }
       }
-    }
+      break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false,
+                      nsPrintfCString(64, "unrecognized content unit %d",
+                                      contentData.mContent.GetUnit()).get());
   }
 
   // counter-increment: [string [int]]+, none, inherit
-  nsCSSValuePairList* ourIncrement = contentData.mCounterIncrement;
-  if (ourIncrement) {
-    if (eCSSUnit_None == ourIncrement->mXValue.GetUnit() ||
-        eCSSUnit_Initial == ourIncrement->mXValue.GetUnit()) {
-      content->AllocateCounterIncrements(0);
-    }
-    else if (eCSSUnit_Inherit == ourIncrement->mXValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      count = parentContent->CounterIncrementCount();
-      if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
-        while (0 < count--) {
-          const nsStyleCounterData *data =
-            parentContent->GetCounterIncrementAt(count);
-          content->SetCounterIncrementAt(count, data->mCounter, data->mValue);
-        }
+  switch (contentData.mCounterIncrement.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_None:
+  case eCSSUnit_Initial:
+    content->AllocateCounterIncrements(0);
+    break;
+
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    count = parentContent->CounterIncrementCount();
+    if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
+      while (0 < count--) {
+        const nsStyleCounterData *data =
+          parentContent->GetCounterIncrementAt(count);
+        content->SetCounterIncrementAt(count, data->mCounter, data->mValue);
       }
     }
-    else if (eCSSUnit_Ident == ourIncrement->mXValue.GetUnit()) {
-      count = 0;
-      while (ourIncrement) {
-        count++;
-        ourIncrement = ourIncrement->mNext;
-      }
-      if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
-        count = 0;
-        ourIncrement = contentData.mCounterIncrement;
-        while (ourIncrement) {
-          PRInt32 increment;
-          if (eCSSUnit_Integer == ourIncrement->mYValue.GetUnit()) {
-            increment = ourIncrement->mYValue.GetIntValue();
-          }
-          else {
-            increment = 1;
-          }
-          ourIncrement->mXValue.GetStringValue(buffer);
-          content->SetCounterIncrementAt(count++, buffer, increment);
-          ourIncrement = ourIncrement->mNext;
-        }
-      }
+    break;
+
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourIncrement =
+      contentData.mCounterIncrement.GetPairListValue();
+    NS_ABORT_IF_FALSE(ourIncrement->mXValue.GetUnit() == eCSSUnit_Ident,
+                      "unexpected value unit");
+    count = ListLength(ourIncrement);
+    if (NS_FAILED(content->AllocateCounterIncrements(count))) {
+      break;
     }
+
+    count = 0;
+    for (const nsCSSValuePairList* p = ourIncrement; p; p = p->mNext, count++) {
+      PRInt32 increment;
+      if (p->mYValue.GetUnit() == eCSSUnit_Integer) {
+        increment = p->mYValue.GetIntValue();
+      } else {
+        increment = 1;
+      }
+      p->mXValue.GetStringValue(buffer);
+      content->SetCounterIncrementAt(count, buffer, increment);
+    }
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected value unit");
   }
 
   // counter-reset: [string [int]]+, none, inherit
-  nsCSSValuePairList* ourReset = contentData.mCounterReset;
-  if (ourReset) {
-    if (eCSSUnit_None == ourReset->mXValue.GetUnit() ||
-        eCSSUnit_Initial == ourReset->mXValue.GetUnit()) {
-      content->AllocateCounterResets(0);
-    }
-    else if (eCSSUnit_Inherit == ourReset->mXValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      count = parentContent->CounterResetCount();
-      if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
-        while (0 < count--) {
-          const nsStyleCounterData *data =
-            parentContent->GetCounterResetAt(count);
-          content->SetCounterResetAt(count, data->mCounter, data->mValue);
-        }
+  switch (contentData.mCounterReset.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_None:
+  case eCSSUnit_Initial:
+    content->AllocateCounterResets(0);
+    break;
+
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    count = parentContent->CounterResetCount();
+    if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
+      while (0 < count--) {
+        const nsStyleCounterData *data =
+          parentContent->GetCounterResetAt(count);
+        content->SetCounterResetAt(count, data->mCounter, data->mValue);
       }
     }
-    else if (eCSSUnit_Ident == ourReset->mXValue.GetUnit()) {
-      count = 0;
-      while (ourReset) {
-        count++;
-        ourReset = ourReset->mNext;
-      }
-      if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
-        count = 0;
-        ourReset = contentData.mCounterReset;
-        while (ourReset) {
-          PRInt32 reset;
-          if (eCSSUnit_Integer == ourReset->mYValue.GetUnit()) {
-            reset = ourReset->mYValue.GetIntValue();
-          }
-          else {
-            reset = 0;
-          }
-          ourReset->mXValue.GetStringValue(buffer);
-          content->SetCounterResetAt(count++, buffer, reset);
-          ourReset = ourReset->mNext;
-        }
-      }
+    break;
+
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourReset =
+      contentData.mCounterReset.GetPairListValue();
+    NS_ABORT_IF_FALSE(ourReset->mXValue.GetUnit() == eCSSUnit_Ident,
+                      "unexpected value unit");
+    count = ListLength(ourReset);
+    if (NS_FAILED(content->AllocateCounterResets(count))) {
+      break;
     }
+
+    count = 0;
+    for (const nsCSSValuePairList* p = ourReset; p; p = p->mNext, count++) {
+      PRInt32 reset;
+      if (p->mYValue.GetUnit() == eCSSUnit_Integer) {
+        reset = p->mYValue.GetIntValue();
+      } else {
+        reset = 0;
+      }
+      p->mXValue.GetStringValue(buffer);
+      content->SetCounterResetAt(count, buffer, reset);
+    }
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected value unit");
   }
 
   // marker-offset: length, auto, inherit
@@ -5865,6 +5884,14 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
            SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO |
              SETCOORD_CALC_LENGTH_ONLY,
            aContext, mPresContext, canStoreInRuleTree);
+
+  // If we ended up with an image, track it.
+  for (PRUint32 i = 0; i < content->ContentCount(); ++i) {
+    if ((content->ContentAt(i).mType == eStyleContentType_Image) &&
+        content->ContentAt(i).mContent.mImage) {
+      content->ContentAt(i).TrackImage(aContext->PresContext());
+    }
+  }
 
   COMPUTE_END_RESET(Content, content)
 }
@@ -5881,38 +5908,43 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
                           Content, contentData)
 
   // quotes: inherit, initial, none, [string string]+
-  nsCSSValuePairList* ourQuotes = contentData.mQuotes;
-  if (ourQuotes) {
-    if (eCSSUnit_Inherit == ourQuotes->mXValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      quotes->CopyFrom(*parentQuotes);
+  switch (contentData.mQuotes.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    quotes->CopyFrom(*parentQuotes);
+    break;
+  case eCSSUnit_Initial:
+    quotes->SetInitial();
+    break;
+  case eCSSUnit_None:
+    quotes->AllocateQuotes(0);
+    break;
+  case eCSSUnit_PairList:
+  case eCSSUnit_PairListDep: {
+    const nsCSSValuePairList* ourQuotes
+      = contentData.mQuotes.GetPairListValue();
+    nsAutoString buffer;
+    nsAutoString closeBuffer;
+    PRUint32 count = ListLength(ourQuotes);
+    if (NS_FAILED(quotes->AllocateQuotes(count))) {
+      break;
     }
-    else if (eCSSUnit_Initial == ourQuotes->mXValue.GetUnit()) {
-      quotes->SetInitial();
+    count = 0;
+    while (ourQuotes) {
+      NS_ABORT_IF_FALSE(ourQuotes->mXValue.GetUnit() == eCSSUnit_String &&
+                        ourQuotes->mYValue.GetUnit() == eCSSUnit_String,
+                        "improper list contents for quotes");
+      ourQuotes->mXValue.GetStringValue(buffer);
+      ourQuotes->mYValue.GetStringValue(closeBuffer);
+      quotes->SetQuotesAt(count++, buffer, closeBuffer);
+      ourQuotes = ourQuotes->mNext;
     }
-    else if (eCSSUnit_None == ourQuotes->mXValue.GetUnit()) {
-      quotes->AllocateQuotes(0);
-    }
-    else if (eCSSUnit_String == ourQuotes->mXValue.GetUnit()) {
-      nsAutoString  buffer;
-      nsAutoString  closeBuffer;
-      PRUint32 count = 0;
-
-      while (ourQuotes) {
-        count++;
-        ourQuotes = ourQuotes->mNext;
-      }
-      if (NS_SUCCEEDED(quotes->AllocateQuotes(count))) {
-        count = 0;
-        ourQuotes = contentData.mQuotes;
-        while (ourQuotes) {
-          ourQuotes->mXValue.GetStringValue(buffer);
-          ourQuotes->mYValue.GetStringValue(closeBuffer);
-          quotes->SetQuotesAt(count++, buffer, closeBuffer);
-          ourQuotes = ourQuotes->mNext;
-        }
-      }
-    }
+    break;
+  }
+  default:
+    NS_ABORT_IF_FALSE(false, "unexpected value unit");
   }
 
   COMPUTE_END_INHERITED(Quotes, quotes)
@@ -6076,37 +6108,46 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
 }
 
 static void
-SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
+SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
             nsPresContext* aPresContext, nsStyleContext *aContext,
             nsStyleSVGPaint& aResult, nsStyleSVGPaintType aInitialPaintType,
             PRBool& aCanStoreInRuleTree)
 {
   nscolor color;
 
-  if (aValue.mXValue.GetUnit() == eCSSUnit_Inherit) {
+  if (aValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
     aCanStoreInRuleTree = PR_FALSE;
-  } else if (aValue.mXValue.GetUnit() == eCSSUnit_None) {
+  } else if (aValue.GetUnit() == eCSSUnit_None) {
     aResult.SetType(eStyleSVGPaintType_None);
-  } else if (aValue.mXValue.GetUnit() == eCSSUnit_Initial) {
+  } else if (aValue.GetUnit() == eCSSUnit_Initial) {
     aResult.SetType(aInitialPaintType);
     aResult.mPaint.mColor = NS_RGB(0, 0, 0);
     aResult.mFallbackColor = NS_RGB(0, 0, 0);
-  } else if (aValue.mXValue.GetUnit() == eCSSUnit_URL) {
-    aResult.SetType(eStyleSVGPaintType_Server);
-    aResult.mPaint.mPaintServer = aValue.mXValue.GetURLValue();
-    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
-    if (aValue.mYValue.GetUnit() == eCSSUnit_None) {
-      aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
-    } else {
-      NS_ASSERTION(aValue.mYValue.GetUnit() != eCSSUnit_Inherit, "cannot inherit fallback colour");
-      SetColor(aValue.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext,
-               aResult.mFallbackColor, aCanStoreInRuleTree);
-    }
-  } else if (SetColor(aValue.mXValue, parentPaint.mPaint.mColor, aPresContext,
-                      aContext, color, aCanStoreInRuleTree)) {
+  } else if (SetColor(aValue, NS_RGB(0, 0, 0), aPresContext, aContext,
+                      color, aCanStoreInRuleTree)) {
     aResult.SetType(eStyleSVGPaintType_Color);
     aResult.mPaint.mColor = color;
+  } else if (aValue.GetUnit() == eCSSUnit_Pair) {
+    const nsCSSValuePair& pair = aValue.GetPairValue();
+    NS_ABORT_IF_FALSE(pair.mXValue.GetUnit() == eCSSUnit_URL,
+                      "malformed paint server value");
+
+    aResult.SetType(eStyleSVGPaintType_Server);
+    aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
+    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+
+    if (pair.mYValue.GetUnit() == eCSSUnit_None) {
+      aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
+    } else {
+      NS_ABORT_IF_FALSE(pair.mYValue.GetUnit() != eCSSUnit_Inherit,
+                        "cannot inherit fallback colour");
+      SetColor(pair.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext,
+               aResult.mFallbackColor, aCanStoreInRuleTree);
+    }
+  } else {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Null,
+                      "malformed paint server value");
   }
 }
 
@@ -6198,56 +6239,66 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               svg->mStroke, eStyleSVGPaintType_None, canStoreInRuleTree);
 
   // stroke-dasharray: <dasharray>, none, inherit
-  nsCSSValueList *list = SVGData.mStrokeDasharray;
-  if (list) {
-    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
-      canStoreInRuleTree = PR_FALSE;
-      // only do the copy if weren't already set up by the copy constructor
-      // FIXME Bug 389408: This is broken when aStartStruct is non-null!
-      if (!svg->mStrokeDasharray) {
-        svg->mStrokeDasharrayLength = parentSVG->mStrokeDasharrayLength;
-        if (svg->mStrokeDasharrayLength) {
-          svg->mStrokeDasharray = new nsStyleCoord[svg->mStrokeDasharrayLength];
-          if (svg->mStrokeDasharray)
-            memcpy(svg->mStrokeDasharray,
-                   parentSVG->mStrokeDasharray,
-                   svg->mStrokeDasharrayLength * sizeof(nsStyleCoord));
-          else
-            svg->mStrokeDasharrayLength = 0;
-        }
-      }
-    } else {
-      delete [] svg->mStrokeDasharray;
-      svg->mStrokeDasharray = nsnull;
-      svg->mStrokeDasharrayLength = 0;
+  switch (SVGData.mStrokeDasharray.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
 
-      if (eCSSUnit_Initial != list->mValue.GetUnit() &&
-          eCSSUnit_None    != list->mValue.GetUnit()) {
-        // count number of values
-        nsCSSValueList *value = SVGData.mStrokeDasharray;
-        while (nsnull != value) {
-          ++svg->mStrokeDasharrayLength;
-          value = value->mNext;
-        }
-
-        NS_ASSERTION(svg->mStrokeDasharrayLength != 0, "no dasharray items");
-
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = PR_FALSE;
+    // only do the copy if weren't already set up by the copy constructor
+    // FIXME Bug 389408: This is broken when aStartStruct is non-null!
+    if (!svg->mStrokeDasharray) {
+      svg->mStrokeDasharrayLength = parentSVG->mStrokeDasharrayLength;
+      if (svg->mStrokeDasharrayLength) {
         svg->mStrokeDasharray = new nsStyleCoord[svg->mStrokeDasharrayLength];
-
-        if (svg->mStrokeDasharray) {
-          value = SVGData.mStrokeDasharray;
-          PRUint32 i = 0;
-          while (nsnull != value) {
-            SetCoord(value->mValue,
-                     svg->mStrokeDasharray[i++], nsStyleCoord(),
-                     SETCOORD_LP | SETCOORD_FACTOR,
-                     aContext, mPresContext, canStoreInRuleTree);
-            value = value->mNext;
-          }
-        } else
+        if (svg->mStrokeDasharray)
+          memcpy(svg->mStrokeDasharray,
+                 parentSVG->mStrokeDasharray,
+                 svg->mStrokeDasharrayLength * sizeof(nsStyleCoord));
+        else
           svg->mStrokeDasharrayLength = 0;
       }
     }
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_None:
+    delete [] svg->mStrokeDasharray;
+    svg->mStrokeDasharray = nsnull;
+    svg->mStrokeDasharrayLength = 0;
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    delete [] svg->mStrokeDasharray;
+    svg->mStrokeDasharray = nsnull;
+    svg->mStrokeDasharrayLength = 0;
+
+    // count number of values
+    const nsCSSValueList *value = SVGData.mStrokeDasharray.GetListValue();
+    svg->mStrokeDasharrayLength = ListLength(value);
+
+    NS_ASSERTION(svg->mStrokeDasharrayLength != 0, "no dasharray items");
+
+    svg->mStrokeDasharray = new nsStyleCoord[svg->mStrokeDasharrayLength];
+
+    if (svg->mStrokeDasharray) {
+      PRUint32 i = 0;
+      while (nsnull != value) {
+        SetCoord(value->mValue,
+                 svg->mStrokeDasharray[i++], nsStyleCoord(),
+                 SETCOORD_LP | SETCOORD_FACTOR,
+                 aContext, mPresContext, canStoreInRuleTree);
+        value = value->mNext;
+      }
+    } else {
+      svg->mStrokeDasharrayLength = 0;
+    }
+    break;
+  }
+
+  default:
+    NS_ABORT_IF_FALSE(false, "unrecognized dasharray unit");
   }
 
   // stroke-dashoffset: <dashoffset>, inherit
@@ -6583,7 +6634,6 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 {
   nsRuleDataColor colorData;
   nsRuleDataMargin marginData;
-  nsCSSValue firstBackgroundImage;
   PRUint32 nValues = 0;
 
   PRUint32 inheritBits = 0;
@@ -6604,7 +6654,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 
   nsCSSValue* backgroundValues[] = {
     &colorData.mBackColor,
-    &firstBackgroundImage
+    &colorData.mBackImage,
   };
 
   nsCSSValue* borderValues[] = {
@@ -6637,17 +6687,20 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                      NS_ARRAY_LENGTH(paddingValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
-    memcpy(&values[nValues], backgroundValues, NS_ARRAY_LENGTH(backgroundValues) * sizeof(nsCSSValue*));
+    memcpy(&values[nValues], backgroundValues,
+           NS_ARRAY_LENGTH(backgroundValues) * sizeof(nsCSSValue*));
     nValues += NS_ARRAY_LENGTH(backgroundValues);
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
-    memcpy(&values[nValues], borderValues, NS_ARRAY_LENGTH(borderValues) * sizeof(nsCSSValue*));
+    memcpy(&values[nValues], borderValues,
+           NS_ARRAY_LENGTH(borderValues) * sizeof(nsCSSValue*));
     nValues += NS_ARRAY_LENGTH(borderValues);
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
-    memcpy(&values[nValues], paddingValues, NS_ARRAY_LENGTH(paddingValues) * sizeof(nsCSSValue*));
+    memcpy(&values[nValues], paddingValues,
+           NS_ARRAY_LENGTH(paddingValues) * sizeof(nsCSSValue*));
     nValues += NS_ARRAY_LENGTH(paddingValues);
   }
 
@@ -6670,24 +6723,6 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
         ruleData.mIsImportantRule = ruleNode->IsImportantRule();
 
         rule->MapRuleInfoInto(&ruleData);
-
-        if ((ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) &&
-            colorData.mBackImage &&
-            firstBackgroundImage.GetUnit() == eCSSUnit_Null) {
-          // Handle background-image being a value list
-          firstBackgroundImage = colorData.mBackImage->mValue;
-        }
-        // Do the same nulling out as in GetBorderData, GetBackgroundData
-        // or GetPaddingData.
-        // We are sharing with some style rule.  It really owns the data.
-        marginData.mBoxShadow = nsnull;
-        colorData.mBackImage = nsnull;
-        colorData.mBackRepeat = nsnull;
-        colorData.mBackAttachment = nsnull;
-        colorData.mBackPosition = nsnull;
-        colorData.mBackClip = nsnull;
-        colorData.mBackOrigin = nsnull;
-        colorData.mBackSize = nsnull;
 
         if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
             ruleData.mLevel == nsStyleSet::eUserSheet) {

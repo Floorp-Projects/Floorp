@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-354499-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 354499;
 var summary = 'Iterating over Array elements';

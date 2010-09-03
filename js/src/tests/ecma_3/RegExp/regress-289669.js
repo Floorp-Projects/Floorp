@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-289669.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 289669;
 var summary = 'O(N^2) behavior on String.replace(/RegExp/, ...)';

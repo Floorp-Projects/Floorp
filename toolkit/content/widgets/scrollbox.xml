@@ -225,48 +225,39 @@
           this._stopSmoothScroll();
 
           // Positive amountToScroll makes us scroll right (elements fly left), negative scrolls left.
-          var round;
-          if (amountToScroll < 0) {
-            this._isScrolling = -1;
-            round = Math.floor;
-          } else {
-            this._isScrolling = 1;
-            round = Math.ceil;
-          }
+          this._isScrolling = amountToScroll < 0 ? -1 : 1;
 
-          const FRAME_LENGTH = 60;
-
-          function processFrame(self, scrollAmounts, off) {
-            var distance = scrollAmounts.shift();
-
-            // Skip frames if we aren't getting the desired frame rate.
-            if (off > 0) {
-              for (var i = Math.round(off / FRAME_LENGTH); i > 0; i--)
-                distance += scrollAmounts.shift() || 0;
-            }
-
-            self.scrollByPixels(distance);
-            if (!scrollAmounts.length)
-              self._stopSmoothScroll();
-          }
-
-          // amountToScroll: total distance to scroll
-          // scrollAmount: distance to move during the particular effect frame (60ms)
-          var scrollAmount, scrollAmounts = [];
-          if (amountToScroll > 2 || amountToScroll < -2) {
-            scrollAmount = round(amountToScroll * 0.2);
-            scrollAmounts.push(scrollAmount, scrollAmount, scrollAmount);
-            amountToScroll -= 3 * scrollAmount;
-          }
-          while (this._isScrolling < 0 && amountToScroll < 0 ||
-                 this._isScrolling > 0 && amountToScroll > 0) {
-            amountToScroll -= (scrollAmount = round(amountToScroll * 0.5));
-            scrollAmounts.push(scrollAmount);
-          }
-          this._smoothScrollTimer = setInterval(processFrame, FRAME_LENGTH, this, scrollAmounts);
-          processFrame(this, scrollAmounts, 0);
+          this._scrollAnim.start(amountToScroll);
         ]]></body>
       </method>
+
+      <field name="_scrollAnim"><![CDATA[({
+        scrollbox: this,
+        start: function scrollAnim_start(distance) {
+          this.distance = distance;
+          this.startPos = this.scrollbox.scrollPosition;
+          this.duration = Math.min(1000, Math.round(50 * Math.sqrt(Math.abs(distance))));
+          this.startTime = window.mozAnimationStartTime;
+
+          window.addEventListener("MozBeforePaint", this, false);
+          window.mozRequestAnimationFrame();
+        },
+        stop: function scrollAnim_stop() {
+          window.removeEventListener("MozBeforePaint", this, false);
+        },
+        handleEvent: function scrollAnim_handleEvent(event) {
+          const timePassed = event.timeStamp - this.startTime;
+          const pos = timePassed >= this.duration ? 1 :
+                      1 - Math.pow(1 - timePassed / this.duration, 4);
+
+          this.scrollbox.scrollPosition = this.startPos + (this.distance * pos);
+
+          if (pos == 1)
+            this.scrollbox._stopSmoothScroll();
+          else
+            window.mozRequestAnimationFrame();
+        }
+      })]]></field>
 
       <method name="scrollByIndex">
         <parameter name="index"/>
@@ -393,13 +384,12 @@
            1: scrolling right
           -1: scrolling left -->
       <field name="_isScrolling">0</field>
-      <field name="_smoothScrollTimer">0</field>
       <field name="_prevMouseScrolls">[null, null]</field>
 
       <method name="_stopSmoothScroll">
         <body><![CDATA[
           if (this._isScrolling) {
-            clearInterval(this._smoothScrollTimer);
+            this._scrollAnim.stop();
             this._isScrolling = 0;
             this._scrollTarget = null;
           }

@@ -45,7 +45,6 @@
  * Just seeing if this script will compile without crashing.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-90445.js';
 var BUGNUMBER = 90445;
 var summary = 'Testing this script will compile without crashing';
 

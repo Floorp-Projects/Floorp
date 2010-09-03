@@ -103,7 +103,7 @@ class MachHeader {
 class DynamicImage {
  public:
   DynamicImage(breakpad_mach_header *header, // we take ownership
-               int header_size,              // includes load commands
+               size_t header_size,              // includes load commands
                breakpad_mach_header *load_address,
                char *inFilePath,
                uintptr_t image_mod_date,
@@ -111,6 +111,11 @@ class DynamicImage {
     : header_(header),
       header_size_(header_size),
       load_address_(load_address),
+      vmaddr_(0),
+      vmsize_(0),
+      slide_(0),
+      version_(0),
+      file_path_(NULL),
       file_mod_date_(image_mod_date),
       task_(task) {
     InitializeFilePath(inFilePath);
@@ -128,7 +133,7 @@ class DynamicImage {
   breakpad_mach_header *GetMachHeader() {return header_;}
 
   // Size of mach_header plus load commands
-  int GetHeaderSize() const {return header_size_;}
+  size_t GetHeaderSize() const {return header_size_;}
 
   // Full path to mach-o binary
   char *GetFilePath() {return file_path_;}
@@ -158,8 +163,11 @@ class DynamicImage {
 
   // Debugging
   void Print();
- 
+
  private:
+  DynamicImage(const DynamicImage &);
+  DynamicImage &operator=(const DynamicImage &);
+
   friend class DynamicImages;
 
   // Sanity checking
@@ -180,7 +188,7 @@ class DynamicImage {
   void CalculateMemoryAndVersionInfo();
 
   breakpad_mach_header    *header_;        // our local copy of the header
-  int                     header_size_;    // mach_header plus load commands
+  size_t                  header_size_;    // mach_header plus load commands
   breakpad_mach_header    *load_address_;  // base address image is mapped into
   mach_vm_address_t       vmaddr_;
   mach_vm_size_t          vmsize_;
@@ -231,13 +239,13 @@ class DynamicImages {
   explicit DynamicImages(mach_port_t task);
 
   ~DynamicImages() {
-    for (int i = 0; i < (int)image_list_.size(); ++i) {
+    for (int i = 0; i < GetImageCount(); ++i) {
       delete image_list_[i];
     }
   }
 
   // Returns the number of dynamically loaded mach-o images.
-  int GetImageCount() const {return image_list_.size();}
+  int GetImageCount() const {return static_cast<int>(image_list_.size());}
 
   // Returns an individual image.
   DynamicImage *GetImage(int i) {
@@ -256,14 +264,14 @@ class DynamicImages {
 
   // Debugging
   void Print() {
-    for (int i = 0; i < (int)image_list_.size(); ++i) {
+    for (int i = 0; i < GetImageCount(); ++i) {
       image_list_[i]->Print();
     }
   }
 
   void TestPrint() {
     const breakpad_mach_header *header;
-    for (int i = 0; i < (int)image_list_.size(); ++i) {
+    for (int i = 0; i < GetImageCount(); ++i) {
       printf("dyld: %p: name = %s\n", _dyld_get_image_header(i),
              _dyld_get_image_name(i) );
 

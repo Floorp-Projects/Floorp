@@ -2,6 +2,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=475006
 https://bugzilla.mozilla.org/show_bug.cgi?id=391829
+https://bugzilla.mozilla.org/show_bug.cgi?id=581952
 -->
 <head>
   <title>Group attributes tests</title>
@@ -14,9 +15,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+          src="../attributes.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -69,6 +70,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
       testAttrs("statusChild", {"container-live-role" : "status"}, true);
       testAttrs("timerChild", {"container-live-role" : "timer"}, true);
 
+      // absent aria-label and aria-labelledby object attribute
+      testAbsentAttrs("label", {"label" : "foo"});
+      testAbsentAttrs("labelledby", {"labelledby" : "label"});
+
       // container that has no default live attribute
       testAttrs("liveGroup", {"live" : "polite"}, true);
       testAttrs("liveGroupChild", {"container-live" : "polite"}, true);
@@ -93,11 +98,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
      title="Extend nsARIAMap to capture ARIA attribute characteristics">
     Mozilla Bug 475006
   </a>
-    <a target="_blank"
-      href="https://bugzilla.mozilla.org/show_bug.cgi?id=391829"
-      title="Add support for container-live-role to object attributes">
-     Mozilla Bug 391829
-   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=391829"
+     title="Add support for container-live-role to object attributes">
+    Mozilla Bug 391829
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=581952"
+     title="Make explicit that aria-label is not an object attribute">
+    Mozilla Bug 475006
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -128,6 +138,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
   <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
   <div id="status" role="status">excuse <div id="statusChild">me</div></div>
   <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
+
+  <!-- aria-label[ledby] should not be an object attribute -->
+  <div id="label" role="checkbox" aria-label="foo"></div>
+  <div id="labelledby" role="checkbox" aria-labelledby="label"></div>
 
   <!-- unusual live case -->
   <div id="liveGroup" role="group" aria-live="polite">

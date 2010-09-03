@@ -65,6 +65,8 @@ public:
   nsSMILTimedElement();
   ~nsSMILTimedElement();
 
+  typedef mozilla::dom::Element Element;
+
   /*
    * Sets the owning animation element which this class uses to convert between
    * container times and to register timebase elements.
@@ -76,6 +78,17 @@ public:
    * nsnull if it is not associated with a time container.
    */
   nsSMILTimeContainer* GetTimeContainer();
+
+  /*
+   * Returns the element targeted by the animation element. Needed for
+   * registering event listeners against the appropriate element.
+   */
+  mozilla::dom::Element* GetTargetElement()
+  {
+    return mAnimationElement ?
+        mAnimationElement->GetTargetElementContent() :
+        nsnull;
+  }
 
   /**
    * Methods for supporting the nsIDOMElementTimeControl interface.
@@ -249,8 +262,8 @@ public:
    * @param aValue      The attribute value.
    * @param aResult     The nsAttrValue object that may be used for storing the
    *                    parsed result.
-   * @param aContextNode The node to use for context when resolving references
-   *                     to other elements.
+   * @param aContextNode The element to use for context when resolving
+   *                     references to other elements.
    * @param[out] aParseResult The result of parsing the attribute. Will be set
    *                          to NS_OK if parsing is successful.
    *
@@ -258,7 +271,7 @@ public:
    * otherwise.
    */
   PRBool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
-                 nsAttrValue& aResult, nsIContent* aContextNode,
+                 nsAttrValue& aResult, Element* aContextNode,
                  nsresult* aParseResult = nsnull);
 
   /**
@@ -318,6 +331,12 @@ public:
   void BindToTree(nsIContent* aContextNode);
 
   /**
+   * Called when the target of the animation has changed so that event
+   * registrations can be updated.
+   */
+  void HandleTargetElementChange(mozilla::dom::Element* aNewTarget);
+
+  /**
    * Called when the timed element has been removed from a document so that
    * references to other elements can be broken.
    */
@@ -326,6 +345,8 @@ public:
   // Cycle collection
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
   void Unlink();
+
+  typedef PRBool (*RemovalTestFunction)(nsSMILInstanceTime* aInstance);
 
 protected:
   // Typedefs
@@ -358,9 +379,11 @@ protected:
   //
 
   nsresult          SetBeginSpec(const nsAString& aBeginSpec,
-                                 nsIContent* aContextNode);
+                                 Element* aContextNode,
+                                 RemovalTestFunction aRemove);
   nsresult          SetEndSpec(const nsAString& aEndSpec,
-                               nsIContent* aContextNode);
+                               Element* aContextNode,
+                               RemovalTestFunction aRemove);
   nsresult          SetSimpleDuration(const nsAString& aDurSpec);
   nsresult          SetMin(const nsAString& aMinSpec);
   nsresult          SetMax(const nsAString& aMaxSpec);
@@ -369,8 +392,8 @@ protected:
   nsresult          SetRepeatDur(const nsAString& aRepeatDurSpec);
   nsresult          SetFillMode(const nsAString& aFillModeSpec);
 
-  void              UnsetBeginSpec();
-  void              UnsetEndSpec();
+  void              UnsetBeginSpec(RemovalTestFunction aRemove);
+  void              UnsetEndSpec(RemovalTestFunction aRemove);
   void              UnsetSimpleDuration();
   void              UnsetMin();
   void              UnsetMax();
@@ -380,11 +403,13 @@ protected:
   void              UnsetFillMode();
 
   nsresult          SetBeginOrEndSpec(const nsAString& aSpec,
-                                      nsIContent* aContextNode,
-                                      PRBool aIsBegin);
-  void              ClearBeginOrEndSpecs(PRBool aIsBegin);
+                                      Element* aContextNode,
+                                      PRBool aIsBegin,
+                                      RemovalTestFunction aRemove);
+  void              ClearSpecs(TimeValueSpecList& aSpecs,
+                               InstanceTimeList& aInstances,
+                               RemovalTestFunction aRemove);
   void              RewindTiming();
-  void              RewindInstanceTimes(InstanceTimeList& aList);
   void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
 
   /**
@@ -486,6 +511,7 @@ protected:
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   PRBool            HasPlayed() const { return !mOldIntervals.IsEmpty(); }
+  PRBool            EndHasEventConditions() const;
 
   // Hashtable callback methods
   PR_STATIC_CALLBACK(PLDHashOperator) NotifyNewIntervalCallback(
@@ -523,15 +549,6 @@ protected:
   };
   nsSMILRestartMode               mRestartMode;
   static nsAttrValue::EnumTable   sRestartModeTable[];
-
-  //
-  // We need to distinguish between attempting to set the begin spec and failing
-  // (in which case the mBeginSpecs array will be empty) and not attempting to
-  // set the begin spec at all. In the first case, we should act as if the begin
-  // was indefinite, and in the second, we should act as if begin was 0s.
-  //
-  PRPackedBool                    mBeginSpecSet;
-  PRPackedBool                    mEndHasEventConditions;
 
   InstanceTimeList                mBeginInstances;
   InstanceTimeList                mEndInstances;

@@ -22,6 +22,8 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
+copyToProfile('animals.sqlite');
+
 var testid ="storage tree";
 var queryType = "storage";
 var isTreeBuilder = true;
@@ -93,7 +95,7 @@ var changes = [];
 </script>
 
 <tree   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
-        flex="1" datasources="animals.sqlite" ref="*" querytype="storage" flags="dont-build-content">
+        flex="1" datasources="profile:animals.sqlite" ref="*" querytype="storage" flags="dont-build-content">
     <treecols>
         <treecol id="species" primary="true" label="Species" flex="2"/>
         <treecol id="name" label="Common name" flex="2"/>

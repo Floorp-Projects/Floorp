@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-431428.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 431428;
 var summary = 'Do not crash with for..in, trap';

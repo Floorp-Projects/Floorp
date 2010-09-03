@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-365869.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 365869;
 var summary = 'strict warning for object literal with duplicate propery names';
@@ -64,8 +63,8 @@ function test()
 
   try
   {
-    expect = 'TypeError: redeclaration of property a';
-    var o = {a:4, a:5};
+    expect = 'SyntaxError: property name a appears more than once in object literal';
+    eval('({a:4, a:5})');
     // syntax warning, need to eval to catch
     actual = 'No warning';
   }
@@ -81,8 +80,8 @@ function test()
 
   try
   {
-    expect = 'TypeError: redeclaration of property 1';
-    var o1 = {1:1, 1:2};
+    expect = 'SyntaxError: property name 1 appears more than once in object literal';
+    eval('({1:1, 1:2})');
     // syntax warning, need to eval to catch
     actual = 'No warning';
   }

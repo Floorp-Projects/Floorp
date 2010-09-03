@@ -40,7 +40,7 @@
 #include "nsContentCID.h"
 #include "nsDOMError.h"
 #include "nsIChannel.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
@@ -67,6 +67,8 @@
 #include "txExprParser.h"
 #include "nsIErrorService.h"
 #include "nsIScriptSecurityManager.h"
+
+using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -1228,7 +1230,7 @@ txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
 
 void
 txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
-                                         nsIContent* aContent,
+                                         Element* aElement,
                                          PRInt32 aNameSpaceID,
                                          nsIAtom* aAttribute,
                                          PRInt32 aModType)

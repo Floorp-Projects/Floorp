@@ -1,0 +1,44 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test document.mozSetImageElement() DOM API and check if ID targets are
+     correctly overridden.
+-->
+<html>
+  <head>
+    <style>
+      div {
+        width: 10px;
+        height: 10px;
+      }
+    </style>
+  </head>
+<body style="margin:0">
+  <div style="background:-moz-element(#d1);"></div>
+  <div style="background:-moz-element(#d2);"></div>
+  <div style="background:-moz-element(#d3);"></div>
+
+  <div style="overflow:hidden; height:0;">
+    <div id="d1" style="background:red;"></div>
+    <div id="d2" style="background:blue;"></div>
+    <!-- two elements with the same ID: the former one will be used -->
+    <div id="d3" style="background:black;"></div>
+    <div id="d3" style="background:yellow;"></div>
+  </div>
+
+  <script>
+      var d1 = document.getElementById("d1");
+      var d2 = document.getElementById("d2");
+      var d3 = document.getElementById("d3");
+      document.mozSetImageElement("d1", d3);
+      document.mozSetImageElement("d2", null);
+      document.mozSetImageElement("d3", d1);
+      document.mozSetImageElement("d3", null);
+      document.mozSetImageElement("d4", d1);
+      document.mozSetImageElement("", d1);
+      d1.id = "d2";
+      d2.id = "d1";
+  </script>
+</body>
+</html>

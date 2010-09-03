@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-341877-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 341877;
 var summary = 'GC hazard with for-in loop';

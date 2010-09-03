@@ -50,8 +50,8 @@ class nsIDeviceContext;
 class nsIViewObserver;
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0x9e924719, 0x3c4b, 0x435b, \
-    { 0xaf, 0x1e, 0x71, 0x52, 0x04, 0x6d, 0xaa, 0x44 } }
+  { 0x4017112c, 0x64d7, 0x47bc, \
+   { 0xab, 0x66, 0x4e, 0x5f, 0xff, 0x83, 0xec, 0x7c } }
 
 class nsIViewManager : public nsISupports
 {
@@ -116,7 +116,7 @@ public:
   /**
    * Do any resizes that are pending.
    */
-  NS_IMETHOD  FlushDelayedResize() = 0;
+  NS_IMETHOD  FlushDelayedResize(PRBool aDoReflow) = 0;
 
   /**
    * Called to force a redrawing of any dirty areas.
@@ -137,14 +137,15 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags) = 0;
 
   /**
-   * Called to inform the view manager that some portion of a view
-   * is dirty and needs to be redrawn. The rect passed in
-   * should be in the view's coordinate space.
+   * Called to inform the view manager that some portion of a view is dirty and
+   * needs to be redrawn. The rect passed in should be in the view's coordinate
+   * space. Does not check for paint suppression.
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect,
+                                      PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to inform the view manager that it should redraw all views.

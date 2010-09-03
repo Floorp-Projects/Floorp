@@ -48,7 +48,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsTextControlFrame.h"
 #include "nsIControllers.h"
-#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsITransactionManager.h"
 #include "nsIControllerContext.h"
@@ -726,7 +726,7 @@ DoCommandCallback(const char *aCommand, void *aData)
   nsIContent *content = frame->GetContent();
 
   nsCOMPtr<nsIControllers> controllers;
-  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(content);
   if (input) {
     input->GetControllers(getter_AddRefs(controllers));
   } else {
@@ -842,6 +842,8 @@ nsTextInputListener::EditAction()
   // Fire input event
   mFrame->FireOnInput();
 
+  mTxtCtrlElement->OnValueChanged(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -904,7 +906,8 @@ nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
   : mTextCtrlElement(aOwningElement),
     mBoundFrame(nsnull),
     mTextListener(nsnull),
-    mEditorInitialized(PR_FALSE)
+    mEditorInitialized(PR_FALSE),
+    mInitializing(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsTextEditorState);
 }
@@ -1084,6 +1087,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     return NS_OK;
   }
 
+  // Don't attempt to initialize recursively!
+  InitializationGuard guard(*this);
+  if (guard.IsInitializingRecursively()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Note that we don't check mEditor here, because we might already have one
   // around, in which case we don't create a new one, and we'll just tie the
   // required machinery to it.
@@ -1163,7 +1172,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   if (!SuppressEventHandlers(presContext)) {
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement =
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement =
       do_QueryInterface(mTextCtrlElement);
     if (inputElement) {
       rv = inputElement->GetControllers(getter_AddRefs(controllers));
@@ -1342,7 +1351,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   if (!SuppressEventHandlers(mBoundFrame->PresContext()))
   {
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement =
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement =
       do_QueryInterface(mTextCtrlElement);
     if (inputElement)
       inputElement->GetControllers(getter_AddRefs(controllers));
@@ -1775,6 +1784,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
   // If we've reached the point where the root node has been created, we
   // can assume that it's safe to notify.
   ValueWasChanged(!!mRootNode);
+
+  mTextCtrlElement->OnValueChanged(!!mRootNode);
 }
 
 void
@@ -1828,6 +1839,10 @@ nsTextEditorState::ValueWasChanged(PRBool aNotify)
 void
 nsTextEditorState::UpdatePlaceholderText(PRBool aNotify)
 {
+  // If we don't have a placeholder div, there's nothing to do.
+  if (!mPlaceholderDiv)
+    return;
+
   nsAutoString placeholderValue;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);

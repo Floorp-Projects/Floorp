@@ -78,7 +78,9 @@ CPPSRCS		= \
 		nsDOMProgressEvent.cpp \
 		nsDOMDataTransfer.cpp \
 		nsDOMNotifyPaintEvent.cpp \
+		nsDOMNotifyAudioAvailableEvent.cpp \
 		nsDOMSimpleGestureEvent.cpp \
+		nsDOMMozTouchEvent.cpp \
 		nsDOMEventTargetHelper.cpp \
 		nsDOMScrollAreaEvent.cpp \
 		nsDOMTransitionEvent.cpp \

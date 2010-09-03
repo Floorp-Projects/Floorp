@@ -49,7 +49,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-202564.js';
 var i = 0;
 var BUGNUMBER = 202564;
 var summary = 'Testing regexp with many backreferences';

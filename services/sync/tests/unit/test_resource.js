@@ -126,6 +126,8 @@ function server_headers(metadata, response) {
 
 
 function run_test() {
+  do_test_pending();
+
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
@@ -376,5 +378,5 @@ function run_test() {
   do_check_eq(content.status, 401);
   do_check_false(content.success);
 
-  server.stop(function() {});
+  server.stop(do_test_finished);
 }

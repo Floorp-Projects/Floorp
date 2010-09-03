@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-347559.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 347559;
 var summary = 'Let declarations should not warn that function does not ' +

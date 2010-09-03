@@ -38,6 +38,7 @@
 #define nsFrameMessageManager_h__
 
 #include "nsIFrameMessageManager.h"
+#include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
@@ -45,6 +46,11 @@
 #include "nsIAtom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
+#include "nsIPrincipal.h"
+#include "nsIXPConnect.h"
+#include "nsDataHashtable.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 
 class nsAXPCNativeCallContext;
 struct JSContext;
@@ -76,14 +82,16 @@ public:
                         void* aCallbackData,
                         nsFrameMessageManager* aParentManager,
                         JSContext* aContext,
-                        PRBool aGlobal = PR_FALSE)
-  : mChrome(aChrome), mGlobal(aGlobal), mParentManager(aParentManager),
+                        PRBool aGlobal = PR_FALSE,
+                        PRBool aProcessManager = PR_FALSE)
+  : mChrome(aChrome), mGlobal(aGlobal), mIsProcessManager(aProcessManager),
+    mParentManager(aParentManager),
     mSyncCallback(aSyncCallback), mAsyncCallback(aAsyncCallback),
     mLoadScriptCallback(aLoadScriptCallback), mCallbackData(aCallbackData),
     mContext(aContext)
   {
-    NS_ASSERTION(mContext || (aChrome && !aParentManager),
-                 "Should have mContext in non-global manager!");
+    NS_ASSERTION(mContext || (aChrome && !aParentManager) || aProcessManager,
+                 "Should have mContext in non-global/non-process manager!");
     NS_ASSERTION(aChrome || !aParentManager, "Should not set parent manager!");
     // This is a bit hackish. When parent manager is global, we want
     // to attach the window message manager to it immediately.
@@ -100,12 +108,21 @@ public:
       static_cast<nsFrameMessageManager*>(mChildManagers[i - 1])->
         Disconnect(PR_FALSE);
     }
+    if (mIsProcessManager) {
+      if (this == sParentProcessManager) {
+        sParentProcessManager = nsnull;
+      }
+      if (this == sChildProcessManager) {
+        sChildProcessManager = nsnull;
+      }
+    }
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameMessageManager,
                                            nsIContentFrameMessageManager)
   NS_DECL_NSIFRAMEMESSAGEMANAGER
+  NS_DECL_NSISYNCMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
   NS_DECL_NSICHROMEFRAMEMESSAGEMANAGER
 
@@ -136,11 +153,21 @@ public:
   }
   PRBool IsGlobal() { return mGlobal; }
   PRBool IsWindowLevel() { return mParentManager && mParentManager->IsGlobal(); }
+
+  static nsFrameMessageManager* GetParentProcessManager()
+  {
+    return sParentProcessManager;
+  }
+  static nsFrameMessageManager* GetChildProcessManager()
+  {
+    return sChildProcessManager;
+  }
 protected:
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
   PRPackedBool mChrome;
   PRPackedBool mGlobal;
+  PRPackedBool mIsProcessManager;
   nsFrameMessageManager* mParentManager;
   nsSyncMessageCallback mSyncCallback;
   nsAsyncMessageCallback mAsyncCallback;
@@ -148,6 +175,54 @@ protected:
   void* mCallbackData;
   JSContext* mContext;
   nsTArray<nsString> mPendingScripts;
+public:
+  static nsFrameMessageManager* sParentProcessManager;
+  static nsFrameMessageManager* sChildProcessManager;
+};
+
+class nsScriptCacheCleaner;
+
+struct nsFrameScriptExecutorJSObjectHolder
+{
+  nsFrameScriptExecutorJSObjectHolder(JSObject* aObject) : mObject(aObject) {}
+  JSObject* mObject;
+};
+
+class nsFrameScriptExecutor
+{
+public:
+  static void Shutdown();
+protected:
+  nsFrameScriptExecutor() : mCx(nsnull) {}
+  void DidCreateCx();
+  // Call this when you want to destroy mCx.
+  void DestroyCx();
+  void LoadFrameScriptInternal(const nsAString& aURL);
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
+  JSContext* mCx;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  static nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>* sCachedScripts;
+  static nsRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
+};
+
+class nsScriptCacheCleaner : public nsIObserver
+{
+  NS_DECL_ISUPPORTS
+
+  nsScriptCacheCleaner()
+  {
+    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+    if (obsSvc)
+      obsSvc->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+  }
+
+  NS_IMETHODIMP Observe(nsISupports *aSubject,
+                        const char *aTopic,
+                        const PRUnichar *aData)
+  {
+    nsFrameScriptExecutor::Shutdown();
+    return NS_OK;
+  }
 };
 
 #endif

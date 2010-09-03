@@ -18,6 +18,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448600
 <pre id="test">
 <script type="application/javascript">
 
+function filename(uri) {
+  return uri.substr(uri.lastIndexOf("/")+1);
+}
+
+function e(id) {
+  return document.getElementById(id);
+}
+
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                .getService(Components.interfaces.nsIPrefService);
@@ -39,13 +47,19 @@ var gErrorCount = 0;
 SimpleTest.waitForExplicitFinish();
 
 function finishTest() {
-  is(document.getElementById('video1').currentSrc, "", 'video1.currentSrc==""');
-  is(document.getElementById('video2').currentSrc, "", 'video2.currentSrc==""');
-  is(document.getElementById('video3').currentSrc, "", 'video3.currentSrc==""');
+  is(e('video1').currentSrc,
+     "",
+     'video1 currentSrc should be empty when there\'s no playable typed source children');
+  is(filename(e('video2').currentSrc),
+     filename(e('video2').src),
+     'video2 currentSrc should match src');
+  is(filename(e('video3').currentSrc),
+     filename(e('video3').src),
+     'video3 currentSrc should match src');
 
-  is(gLoadError['video1'], 1, "Load error on video1");
-  is(gLoadError['video2'], 1, "Load error on video2");
-  is(gLoadError['video3'], 1, "Load error on video3");
+  is(gLoadError['video1'], 2, "Expect one error per invalid source child on video1");
+  is(gLoadError['video2'], 1, "Expect one error on video2");
+  is(gLoadError['video3'], 1, "Expect one error on video3");
   
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
@@ -59,7 +73,7 @@ function videoError(event, id) {
   event.stopPropagation();
   gLoadError[id]++;
   gErrorCount++;
-  if (gErrorCount == 3) {
+  if (gErrorCount >= 4) {
     finishTest();
   }
 }
@@ -68,7 +82,7 @@ function videoError(event, id) {
 
 <video id="video1" onerror="videoError(event, 'video1');">
   <source type="video/ogg" src="320x240.ogv"/>
-  <source type="audio/wave" src="r11025_u8_c1.wav"/>
+  <source type="audio/wave" src="r11025_u8_c1.wav" id='s2'/>
 </video>
 
 <video id="video2" src="320x240.ogv" onerror="videoError(event, 'video2');"></video>

@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469247
   <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469247">Mozill
@@ -22,6 +23,8 @@ a Bug 469247</a>
 <script src="can_play_type_wave.js"></script>
 
 check_wave(document.getElementById('v'), false);
+
+mediaTestCleanup();
 
 </script>
 </pre>

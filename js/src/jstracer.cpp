@@ -79,6 +79,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsfuninlines.h"
 #include "jspropertycacheinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -141,10 +142,10 @@ StackFilter::getTop(LIns* guard)
 }
 
 #ifdef DEBUG
-void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
+void ValidateWriter::checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet accSet)
 {
-    LIns* sp = checkAccSetIns1;
-    LIns* rp = checkAccSetIns2;
+    LIns* sp = (LIns*)checkAccSetExtras[0];
+    LIns* rp = (LIns*)checkAccSetExtras[1];
 
     bool isRstack = base == rp;
     bool isStack =
@@ -1091,7 +1092,13 @@ Tracker::set(const void* v, LIns* i)
 static inline jsuint
 argSlots(JSStackFrame* fp)
 {
-    return JS_MAX(fp->argc, fp->fun->nargs);
+    return fp->isEvalFrame() ? 0 : JS_MAX(fp->numActualArgs(), fp->numFormalArgs());
+}
+
+static inline jsuint
+numActualArgs(JSStackFrame* fp)
+{
+    return fp->isEvalFrame() ? 0 : fp->numActualArgs();
 }
 
 static inline bool
@@ -1185,7 +1192,7 @@ static JS_REQUIRES_STACK inline int
 StackSlotHash(JSContext* cx, unsigned slot, const void* pc)
 {
     uintptr_t h = HASH_SEED;
-    HashAccum(h, uintptr_t(cx->fp->script), ORACLE_MASK);
+    HashAccum(h, uintptr_t(cx->fp()->getScript()), ORACLE_MASK);
     HashAccum(h, uintptr_t(pc), ORACLE_MASK);
     HashAccum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
@@ -1195,13 +1202,13 @@ static JS_REQUIRES_STACK inline int
 GlobalSlotHash(JSContext* cx, unsigned slot)
 {
     uintptr_t h = HASH_SEED;
-    JSStackFrame* fp = cx->fp;
+    JSStackFrame* fp = cx->fp();
 
     while (fp->down)
         fp = fp->down;
 
-    HashAccum(h, uintptr_t(fp->script), ORACLE_MASK);
-    HashAccum(h, uintptr_t(fp->scopeChain->getGlobal()->shape()), ORACLE_MASK);
+    HashAccum(h, uintptr_t(fp->maybeScript()), ORACLE_MASK);
+    HashAccum(h, uintptr_t(fp->getScopeChain()->getGlobal()->shape()), ORACLE_MASK);
     HashAccum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
 }
@@ -1529,14 +1536,14 @@ TreeFragment::initialize(JSContext* cx, SlotList *globalSlots, bool speculate)
     /* Capture the coerced type of each active slot in the type map. */
     this->typeMap.captureTypes(cx, globalObj, *globalSlots, 0 /* callDepth */, speculate);
     this->nStackTypes = this->typeMap.length() - globalSlots->length();
-    this->spOffsetAtEntry = cx->regs->sp - cx->fp->base();
+    this->spOffsetAtEntry = cx->regs->sp - cx->fp()->base();
 
 #ifdef DEBUG
-    this->treeFileName = cx->fp->script->filename;
-    this->treeLineNumber = js_FramePCToLineNumber(cx, cx->fp);
-    this->treePCOffset = FramePCOffset(cx, cx->fp);
+    this->treeFileName = cx->fp()->getScript()->filename;
+    this->treeLineNumber = js_FramePCToLineNumber(cx, cx->fp());
+    this->treePCOffset = FramePCOffset(cx, cx->fp());
 #endif
-    this->script = cx->fp->script;
+    this->script = cx->fp()->getScript();
     this->recursion = Recursion_None;
     this->gcthings.clear();
     this->sprops.clear();
@@ -1544,7 +1551,7 @@ TreeFragment::initialize(JSContext* cx, SlotList *globalSlots, bool speculate)
     this->sideExits.clear();
 
     /* Determine the native frame layout at the entry point. */
-    this->nativeStackBase = (nStackTypes - (cx->regs->sp - cx->fp->base())) *
+    this->nativeStackBase = (nStackTypes - (cx->regs->sp - cx->fp()->base())) *
                              sizeof(double);
     this->maxNativeStackSlots = nStackTypes;
     this->maxCallDepth = 0;
@@ -1815,26 +1822,26 @@ VisitFrameSlots(Visitor &visitor, JSContext *cx, unsigned depth,
                 return false;
         }
         visitor.setStackSlotKind("arguments");
-        if (!visitor.visitFrameObjPtr(&fp->argsobj, fp))
+        if (!visitor.visitFrameObjPtr(fp->addressArgsObj(), fp))
             return false;
         // We want to import and track |JSObject *scopeChain|, but the tracker
         // requires type |Value|. But the bits are the same, so we can import
         // it with a cast and the (identity function) unboxing will be OK.
         visitor.setStackSlotKind("scopeChain");
-        if (!visitor.visitFrameObjPtr(&fp->scopeChain, fp))
+        if (!visitor.visitFrameObjPtr(fp->addressScopeChain(), fp))
             return false;
         visitor.setStackSlotKind("var");
-        if (!visitor.visitStackSlots(fp->slots(), fp->script->nfixed, fp))
+        if (!visitor.visitStackSlots(fp->slots(), fp->getFixedCount(), fp))
             return false;
     }
 
     visitor.setStackSlotKind("stack");
     Value *base = fp->base();
-    JS_ASSERT(sp >= base && sp <= fp->slots() + fp->script->nslots);
+    JS_ASSERT(sp >= base && sp <= fp->slots() + fp->getSlotCount());
     if (!visitor.visitStackSlots(base, size_t(sp - base), fp))
         return false;
     if (up) {
-        int missing = up->fun->nargs - up->argc;
+        int missing = up->numFormalArgs() - up->numActualArgs();
         if (missing > 0) {
             visitor.setStackSlotKind("missing");
             if (!visitor.visitStackSlots(sp, size_t(missing), fp))
@@ -1873,7 +1880,7 @@ template <typename Visitor>
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitGlobalSlots(Visitor &visitor, JSContext *cx, SlotList &gslots)
 {
-    VisitGlobalSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
+    VisitGlobalSlots(visitor, cx, cx->fp()->getScopeChain()->getGlobal(),
                      gslots.length(), gslots.data());
 }
 
@@ -1892,7 +1899,7 @@ static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitSlots(Visitor& visitor, JSContext* cx, unsigned callDepth,
            unsigned ngslots, uint16* gslots)
 {
-    VisitSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
+    VisitSlots(visitor, cx, cx->fp()->getScopeChain()->getGlobal(),
                callDepth, ngslots, gslots);
 }
 
@@ -1910,7 +1917,7 @@ static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 VisitSlots(Visitor &visitor, JSContext *cx, unsigned callDepth,
            const SlotList& slots)
 {
-    VisitSlots(visitor, cx, cx->fp->scopeChain->getGlobal(),
+    VisitSlots(visitor, cx, cx->fp()->getScopeChain()->getGlobal(),
                callDepth, slots.length(), slots.data());
 }
 
@@ -1996,7 +2003,7 @@ NativeStackSlots(JSContext *cx, unsigned callDepth)
         JSStackFrame *const fp = i.fp();
         slots += i.sp() - fp->base();
         if (fp->argv)
-            slots += fp->script->nfixed + SPECIAL_FRAME_SLOTS;
+            slots += fp->getFixedCount() + SPECIAL_FRAME_SLOTS;
         if (depth-- == 0) {
             if (fp->argv)
                 slots += 2/*callee,this*/ + argSlots(fp);
@@ -2007,7 +2014,7 @@ NativeStackSlots(JSContext *cx, unsigned callDepth)
 #endif
             return slots;
         }
-        int missing = fp->fun->nargs - fp->argc;
+        int missing = fp->numFormalArgs() - fp->numActualArgs();
         if (missing > 0)
             slots += missing;
     }
@@ -2224,7 +2231,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     globalObj(tree->globalObj),
     outer(outer),
     outerArgc(outerArgc),
-    lexicalBlock(cx->fp->blockChain),
+    lexicalBlock(cx->fp()->maybeBlockChain()),
     anchor(anchor),
     lir(NULL),
     cx_ins(NULL),
@@ -2239,8 +2246,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     nativeFrameTracker(),
     global_dslots(NULL),
     callDepth(anchor ? anchor->calldepth : 0),
-    atoms(FrameAtomBase(cx, cx->fp)),
-    consts(cx->fp->script->constOffset ? cx->fp->script->consts()->vector : NULL),
+    atoms(FrameAtomBase(cx, cx->fp())),
+    consts(cx->fp()->getScript()->constOffset
+           ? cx->fp()->getScript()->consts()->vector
+           : NULL),
     cfgMerges(&tempAlloc()),
     trashSelf(false),
     whichTreesToTrash(&tempAlloc()),
@@ -2255,7 +2264,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     generatedSpecializedNative(),
     tempTypeMap(cx)
 {
-    JS_ASSERT(globalObj == cx->fp->scopeChain->getGlobal());
+    JS_ASSERT(globalObj == cx->fp()->getScopeChain()->getGlobal());
     JS_ASSERT(globalObj->scope()->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
@@ -2357,6 +2366,16 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         fragment->loopLabel = entryLabel;
     })
 
+#ifdef DEBUG
+    // Need to set these up before any loads/stores occur.
+    // 'extras' is heap-allocated because its lifetime matches validate[12]'s.
+    void** extras = new (tempAlloc()) void*[2];
+    extras[0] = 0;      // we'll set it shortly
+    extras[1] = 0;      // we'll set it shortly
+    validate1->setCheckAccSetExtras(extras);
+    validate2->setCheckAccSetExtras(extras);
+#endif
+
     lirbuf->sp =
         addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(TracerState, sp), ACCSET_OTHER), "sp");
     lirbuf->rp =
@@ -2369,11 +2388,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(TracerState, eor), ACCSET_OTHER), "eor");
 
 #ifdef DEBUG
-    // Need to set these up before any stack/rstack loads/stores occur.
-    validate1->setCheckAccSetIns1(lirbuf->sp);
-    validate2->setCheckAccSetIns1(lirbuf->sp);
-    validate1->setCheckAccSetIns2(lirbuf->rp);
-    validate2->setCheckAccSetIns2(lirbuf->rp);
+    // Need to update these before any stack/rstack loads/stores occur.
+    extras[0] = lirbuf->sp;
+    extras[1] = lirbuf->rp;
 #endif
 
     /* If we came from exit, we might not have enough global types. */
@@ -2477,9 +2494,9 @@ TraceRecorder::finishAbort(const char* reason)
                       tree->treeFileName,
                       tree->treeLineNumber,
                       tree->treePCOffset,
-                      cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp),
+                      cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()),
                       reason);
 #endif
     Backoff(cx, (jsbytecode*) fragment->root->ip, fragment->root);
@@ -2622,7 +2639,7 @@ TraceRecorder::nativeStackOffsetImpl(const void* p) const
      */
     if (!visitor.stopped()) {
         const Value *vp = (const Value *)p;
-        JS_ASSERT(size_t(vp - cx->fp->slots()) < cx->fp->script->nslots);
+        JS_ASSERT(size_t(vp - cx->fp()->slots()) < cx->fp()->getSlotCount());
         offset += size_t(vp - cx->regs->sp) * sizeof(double);
     }
     return offset;
@@ -2883,12 +2900,14 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
         debug_only_printf(LC_TMTracer, "string<%p> ", (void*)v.toString());
         break;
       case JSVAL_TYPE_NULL:
+        JS_ASSERT(v.isNull());
         debug_only_print0(LC_TMTracer, "null ");
         break;
       case JSVAL_TYPE_BOOLEAN:
         debug_only_printf(LC_TMTracer, "bool<%d> ", v.toBoolean());
         break;
       case JSVAL_TYPE_UNDEFINED:
+        JS_ASSERT(v.isUndefined());
         debug_only_print0(LC_TMTracer, "undefined ");
         break;
       case JSVAL_TYPE_MAGIC:
@@ -3221,13 +3240,13 @@ GetUpvarVarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDept
  */
 struct UpvarStackTraits {
     static Value interp_get(JSStackFrame* fp, int32 slot) {
-        return fp->slots()[slot + fp->script->nfixed];
+        return fp->slots()[slot + fp->getFixedCount()];
     }
 
     static uint32 native_slot(uint32 argc, int32 slot) {
         /*
          * Locals are not imported by the tracer when the frame has no
-         * function, so we do not add fp->script->nfixed.
+         * function, so we do not add fp->getFixedCount().
          */
         JS_ASSERT(argc == 0);
         return slot;
@@ -3293,8 +3312,8 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
      */
     uint32 slot = cv->slot;
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (cx->fp->callobj == call) {
-        slot = T::adj_slot(cx->fp, slot);
+    if (cx->fp()->maybeCallObj() == call) {
+        slot = T::adj_slot(cx->fp(), slot);
         *result = state->stackBase[slot];
         return state->callstackBase[0]->get_typemap()[slot];
     }
@@ -3363,10 +3382,12 @@ struct VarClosureTraits
     // See documentation on ArgClosureTraits for what these functions
     // should be doing.
     // See also UpvarVarTraits.
-    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return 4 + fp->argc + slot; }
+    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) {
+        return 4 + fp->numActualArgs() + slot;
+    }
 
     static inline LIns* adj_slot_lir(LirWriter* lir, LIns* fp_ins, unsigned slot) {
-        LIns *argc_ins = lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc), ACCSET_OTHER);
+        LIns *argc_ins = lir->insLoad(LIR_ldi, fp_ins, JSStackFrame::offsetNumActualArgs(), ACCSET_OTHER);
         return lir->ins2(LIR_addi, lir->insImmI(4 + slot), argc_ins);
     }
 
@@ -3399,7 +3420,7 @@ GetClosureVar(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double*
  * is infallible.
  *
  * @param callDepth the distance between the entry frame into our trace and
- *                  cx->fp when we make this call.  If this is not called as a
+ *                  cx->fp() when we make this call.  If this is not called as a
  *                  result of a nested exit, callDepth is 0.
  * @param mp an array of JSValueType that indicate what the types of the things
  *           on the stack are.
@@ -3424,7 +3445,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
     // Scope to keep |fp| from leaking into the macros we're using.
     {
         unsigned n = callDepth+1; // +1 to make sure we restore the entry frame
-        JSStackFrame* fp = cx->fp;
+        JSStackFrame* fp = cx->fp();
         if (stopFrame) {
             for (; fp != stopFrame; fp = fp->down) {
                 JS_ASSERT(n != 0);
@@ -3439,29 +3460,31 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                if (fp->argsobj && GetArgsPrivateNative(fp->argsobj))
-                    fp->argsobj->setPrivate(fp);
+                if (fp->hasArgsObj() && fp->getArgsObj()->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE) {
+                    JS_ASSERT(fp->getArgsObj()->isNormalArguments());
+                    fp->getArgsObj()->setPrivate(fp);
+                }
 
                 JS_ASSERT(fp->argv[-1].isObjectOrNull());
                 JS_ASSERT(fp->callee()->isFunction());
-                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
+                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->getFunction());
 
-                if (FUN_INTERPRETED(fp->fun) &&
-                    (fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
+                if (FUN_INTERPRETED(fp->getFunction()) &&
+                    (fp->getFunction()->flags & JSFUN_HEAVYWEIGHT)) {
                     // Iff these fields are NULL, then |fp| was synthesized on trace exit, so
                     // we need to update the frame fields.
-                    if (!fp->callobj)
-                        fp->callobj = fp->scopeChain;
+                    if (!fp->hasCallObj())
+                        fp->setCallObj(fp->getScopeChain());
 
                     // Iff scope chain's private is NULL, then |fp->scopeChain| was created
                     // on trace for a call, so we set the private field now. (Call objects
                     // that correspond to returned frames also have a NULL private, but such
                     // a call object would not occur as the |scopeChain| member of a frame,
                     // so we cannot be in that case here.)
-                    if (!fp->scopeChain->getPrivate())
-                        fp->scopeChain->setPrivate(fp);
+                    if (!fp->getScopeChain()->getPrivate())
+                        fp->getScopeChain()->setPrivate(fp);
                 }
-                fp->thisv = fp->argv[-1];
+                fp->setThisValue(fp->argv[-1]);
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
                     fp->flags |= JSFRAME_COMPUTED_THIS;
             }
@@ -3487,7 +3510,7 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
          * to see doubles on entry. The first op to use this slot will emit a
          * d2i cast which will cancel out the i2d we insert here.
          */
-        ins = lir->insLoad(LIR_ldi, base, offset + sPayloadOffset, accSet);
+        ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         ins = lir->ins1(LIR_i2d, ins);
     } else {
         JS_ASSERT_IF(t != JSVAL_TYPE_BOXED && !IsFrameObjPtrTraceType(t),
@@ -3495,13 +3518,13 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
         if (t == JSVAL_TYPE_DOUBLE) {
             ins = lir->insLoad(LIR_ldd, base, offset, accSet);
         } else if (t == JSVAL_TYPE_BOOLEAN) {
-            ins = lir->insLoad(LIR_ldi, base, offset + sPayloadOffset, accSet);
+            ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else if (t == JSVAL_TYPE_UNDEFINED) {
             ins = INS_UNDEFINED();
         } else if (t == JSVAL_TYPE_MAGIC) {
-            ins = lir->insLoad(LIR_ldi, base, offset + sPayloadOffset, accSet);
+            ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else {
-            ins = lir->insLoad(LIR_ldp, base, offset + sPayloadOffset, accSet);
+            ins = lir->insLoad(LIR_ldp, base, offset, accSet);
         }
     }
     checkForGlobalObjectReallocation();
@@ -3515,19 +3538,21 @@ TraceRecorder::importImpl(LIns* base, ptrdiff_t offset, const void* p, JSValueTy
     const char* funName = NULL;
     if (*prefix == 'a' || *prefix == 'v') {
         mark = JS_ARENA_MARK(&cx->tempPool);
-        if (fp->fun->hasLocalNames())
-            localNames = js_GetLocalNameArray(cx, fp->fun, &cx->tempPool);
-        funName = fp->fun->atom ? js_AtomToPrintableString(cx, fp->fun->atom) : "<anonymous>";
+        if (fp->getFunction()->hasLocalNames())
+            localNames = js_GetLocalNameArray(cx, fp->getFunction(), &cx->tempPool);
+        funName = fp->getFunction()->atom
+                ? js_AtomToPrintableString(cx, fp->getFunction()->atom)
+                : "<anonymous>";
     }
     if (!strcmp(prefix, "argv")) {
-        if (index < fp->fun->nargs) {
+        if (index < fp->numFormalArgs()) {
             JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
             JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
         } else {
             JS_snprintf(name, sizeof name, "$%s.<arg%d>", funName, index);
         }
     } else if (!strcmp(prefix, "vars")) {
-        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->fun->nargs + index]);
+        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->numFormalArgs() + index]);
         JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
@@ -3801,7 +3826,7 @@ TraceRecorder::attemptImport(const Value* p)
     CountSlotsVisitor countVisitor(p);
     VisitStackSlots(countVisitor, cx, callDepth);
 
-    if (countVisitor.stopped() || size_t(p - cx->fp->slots()) < cx->fp->script->nslots)
+    if (countVisitor.stopped() || size_t(p - cx->fp()->slots()) < cx->fp()->getSlotCount())
         return get(p);
 
     return NULL;
@@ -3835,7 +3860,7 @@ TraceRecorder::getImpl(const void *p)
         JSValueType type = importTypeMap[slot];
         JS_ASSERT(type != JSVAL_TYPE_UNINITIALIZED);
         importImpl(lirbuf->sp, -tree->nativeStackBase + slot * sizeof(jsdouble),
-                   p, type, "stack", slot, cx->fp);
+                   p, type, "stack", slot, cx->fp());
     }
     JS_ASSERT(knownImpl(p));
     return tracker.get(p);
@@ -3851,9 +3876,9 @@ TraceRecorder::get(const Value *p)
 bool
 TraceRecorder::isValidFrameObjPtr(JSObject **p)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     for (; fp; fp = fp->down) {
-        if (&fp->scopeChain == p || &fp->argsobj == p)
+        if (fp->addressScopeChain() == p || fp->addressArgsObj() == p)
             return true;
     }
     return false;
@@ -4119,8 +4144,8 @@ TreevisLogExit(JSContext* cx, VMSideExit* exit)
 {
     debug_only_printf(LC_TMTreeVis, "TREEVIS ADDEXIT EXIT=%p TYPE=%s FRAG=%p PC=%p FILE=\"%s\""
                       " LINE=%d OFFS=%d", (void*)exit, getExitName(exit->exitType),
-                      (void*)exit->from, (void*)cx->regs->pc, cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp), FramePCOffset(cx, cx->fp));
+                      (void*)exit->from, (void*)cx->regs->pc, cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()), FramePCOffset(cx, cx->fp()));
     debug_only_print0(LC_TMTreeVis, " STACK=\"");
     for (unsigned i = 0; i < exit->numStackSlots; i++)
         debug_only_printf(LC_TMTreeVis, "%c", TypeToChar(exit->stackTypeMap()[i]));
@@ -4134,7 +4159,7 @@ TreevisLogExit(JSContext* cx, VMSideExit* exit)
 JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
-    JSStackFrame* const fp = cx->fp;
+    JSStackFrame* const fp = cx->fp();
     JSFrameRegs* const regs = cx->regs;
     jsbytecode* pc = regs->pc;
 
@@ -4238,7 +4263,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (exitType == LOOP_EXIT) {
         for (unsigned n = 0; n < nexits; ++n) {
             VMSideExit* e = exits[n];
-            if (e->pc == pc && e->imacpc == fp->imacpc &&
+            if (e->pc == pc && (e->imacpc == fp->maybeIMacroPC()) &&
                 ngslots == e->numGlobalSlots &&
                 !memcmp(exits[n]->fullTypeMap(), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
@@ -4259,15 +4284,15 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->calldepth = callDepth;
     exit->numGlobalSlots = ngslots;
     exit->numStackSlots = stackSlots;
-    exit->numStackSlotsBelowCurrentFrame = cx->fp->argv ?
-                                           nativeStackOffset(&cx->fp->argv[-2]) / sizeof(double) :
+    exit->numStackSlotsBelowCurrentFrame = cx->fp()->argv ?
+                                           nativeStackOffset(&cx->fp()->argv[-2]) / sizeof(double) :
                                            0;
     exit->exitType = exitType;
-    exit->block = fp->blockChain;
-    if (fp->blockChain)
-        tree->gcthings.addUnique(ObjectValue(*fp->blockChain));
+    exit->block = fp->maybeBlockChain();
+    if (fp->hasBlockChain())
+        tree->gcthings.addUnique(ObjectValue(*fp->getBlockChain()));
     exit->pc = pc;
-    exit->imacpc = fp->imacpc;
+    exit->imacpc = fp->maybeIMacroPC();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     exit->nativeCalleeWord = 0;
@@ -4474,10 +4499,10 @@ TraceRecorder::compile()
     /* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
     /* Associate a filename and line number with the fragment. */
-    const char* filename = cx->fp->script->filename;
+    const char* filename = cx->fp()->getScript()->filename;
     char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
     sprintf(label, "%s:%u", filename ? filename : "<stdin>",
-            js_FramePCToLineNumber(cx, cx->fp));
+            js_FramePCToLineNumber(cx, cx->fp()));
     lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
     js_free(label);
 #endif
@@ -4857,7 +4882,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
      */
     JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOP ||
                *cx->regs->pc == JSOP_RETURN || *cx->regs->pc == JSOP_STOP) &&
-              !cx->fp->imacpc);
+              !cx->fp()->hasIMacroPC());
 
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer,
@@ -4939,17 +4964,23 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         }
     } else {
         exit->exitType = LOOP_EXIT;
-        exit->target = tree;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                           getExitName(LOOP_EXIT));
 
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
-            fragment->lastIns = lir->ins1(LIR_livep, lirbuf->state);
-        } else {
-            fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+            lir->ins1(LIR_livep, lirbuf->state);
         }
+
+        exit->target = tree;
+        /*
+         * This guard is dead code.  However, it must be present because it
+         * can keep alive values on the stack.  Without it, StackFilter can
+         * remove some stack stores that it shouldn't.  See bug 582766 comment
+         * 19.
+         */
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
 
     CHECK_STATUS_A(compile());
@@ -4980,9 +5011,9 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via closeLoop (FragID=%06u)\n",
-                      cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp),
+                      cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()),
                       fragment->profFragID);
     debug_only_print0(LC_TMMinimal, "\n");
 #endif
@@ -5154,9 +5185,9 @@ TraceRecorder::endLoop(VMSideExit* exit)
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via endLoop (FragID=%06u)\n",
-                      cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp),
+                      cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()),
                       fragment->profFragID);
     debug_only_print0(LC_TMTracer, "\n");
 #endif
@@ -5183,7 +5214,7 @@ TraceRecorder::prepareTreeCall(TreeFragment* inner)
          * compensate for any outer frames that the inner tree doesn't expect
          * but the outer tree has.
          */
-        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-2]);
+        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp()->argv[-2]);
 
         /* Calculate the amount we have to lift the call stack by. */
         ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo*);
@@ -5393,7 +5424,7 @@ TraceRecorder::trackCfgMerges(jsbytecode* pc)
 {
     /* If we hit the beginning of an if/if-else, then keep track of the merge point after it. */
     JS_ASSERT((*pc == JSOP_IFEQ) || (*pc == JSOP_IFEQX));
-    jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
+    jssrcnote* sn = js_GetSrcNote(cx->fp()->getScript(), pc);
     if (sn != NULL) {
         if (SN_TYPE(sn) == SRC_IF) {
             cfgMerges.add((*pc == JSOP_IFEQ)
@@ -5466,11 +5497,11 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
          * pointer and pretend we have reached the loop header.
          */
         if (pendingLoop) {
-            JS_ASSERT(!cx->fp->imacpc && (pc == cx->regs->pc || pc == cx->regs->pc + 1));
+            JS_ASSERT(!cx->fp()->hasIMacroPC() && (pc == cx->regs->pc || pc == cx->regs->pc + 1));
             JSFrameRegs orig = *cx->regs;
 
             cx->regs->pc = (jsbytecode*)tree->ip;
-            cx->regs->sp = cx->fp->base() + tree->spOffsetAtEntry;
+            cx->regs->sp = cx->fp()->base() + tree->spOffsetAtEntry;
 
             JSContext* localcx = cx;
             AbortableRecordingStatus ars = closeLoop();
@@ -5585,7 +5616,7 @@ TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
 {
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(!tm->needFlush);
-    JS_ASSERT_IF(cx->fp->imacpc, f->root != f);
+    JS_ASSERT_IF(cx->fp()->hasIMacroPC(), f->root != f);
 
     tm->recorder = new TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
                                      expectedInnerExit, outer, outerArgc, recordReason,
@@ -5639,13 +5670,13 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, callee);
     JS_ASSERT(FUN_INTERPRETED(fun));
 
-    /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
-    JSStackFrame* const fp = cx->fp;
+    /* Assert that we have a correct sp distance from cx->fp()->slots in fi. */
+    JSStackFrame* const fp = cx->fp();
     JS_ASSERT_IF(!fi.imacpc,
-                 js_ReconstructStackDepth(cx, fp->script, fi.pc) ==
-                 uintN(fi.spdist - fp->script->nfixed));
+                 js_ReconstructStackDepth(cx, fp->getScript(), fi.pc) ==
+                 uintN(fi.spdist - fp->getFixedCount()));
 
-    /* Simulate js_Interpret locals for when |cx->fp == fp|. */
+    /* Simulate js_Interpret locals for when |cx->fp() == fp|. */
     JSScript* newscript = fun->u.i.script;
     Value* sp = fp->slots() + fi.spdist;
     uintN argc = fi.get_argc();
@@ -5654,15 +5685,9 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     /* Fixup |fp| using |fi|. */
     cx->regs->sp = sp;
     cx->regs->pc = fi.pc;
-    fp->imacpc = fi.imacpc;
-    fp->blockChain = fi.block;
-    fp->blockChain = fi.block;
-#ifdef DEBUG
-    if (fi.block != fp->blockChain) {
-        for (JSObject* obj = fi.block; obj != fp->blockChain; obj = obj->getParent())
-            JS_ASSERT(obj);
-    }
-#endif
+    if (fi.imacpc)
+        fp->setIMacroPC(fi.imacpc);
+    fp->setBlockChain(fi.block);
 
     /*
      * Get pointer to new frame/slots, without changing global state.
@@ -5687,35 +5712,36 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     }
 
     /* Initialize the new stack frame. */
-    newfp->callobj = NULL;
-    newfp->argsobj = NULL;
-    newfp->script = newscript;
-    newfp->fun = fun;
-    newfp->argc = argc;
+    newfp->setCallObj(NULL);
+    newfp->setArgsObj(NULL);
+    newfp->setScript(newscript);
+    newfp->setFunction(fun);
+    newfp->setNumActualArgs(argc);
     newfp->argv = argv;
 #ifdef DEBUG
     // Initialize argv[-1] to a known-bogus value so we'll catch it if
     // someone forgets to initialize it later.
     newfp->argv[-1].setMagic(JS_THIS_POISON);
 #endif
-    newfp->rval = UndefinedValue();
-    newfp->annotation = NULL;
-    newfp->scopeChain = NULL; // will be updated in FlushNativeStackFrame
+    newfp->clearReturnValue();
+    newfp->setAnnotation(NULL);
+    newfp->setScopeChain(NULL); // will be updated in FlushNativeStackFrame
     newfp->flags = fi.is_constructing() ? JSFRAME_CONSTRUCTING : 0;
-    newfp->blockChain = NULL;
-    newfp->thisv.setNull(); // will be updated in FlushNativeStackFrame
-    newfp->imacpc = NULL;
+    newfp->setBlockChain(NULL);
+    newfp->setThisValue(NullValue()); // will be updated in FlushNativeStackFrame
+    JS_ASSERT(!newfp->hasIMacroPC());
 
     /*
      * Note that fp->script is still the caller's script; set the callee
      * inline frame's idea of caller version from its version.
      */
-    newfp->callerVersion = (JSVersion) fp->script->version;
+    newfp->setCallerVersion((JSVersion) fp->getScript()->version);
 
     /* Push inline frame. (Copied from js_Interpret.) */
     stack.pushInlineFrame(cx, fp, fi.pc, newfp);
 
     /* Initialize regs after pushInlineFrame snapshots pc. */
+    cx->regs->fp = newfp;
     cx->regs->pc = newscript->code;
     cx->regs->sp = newfp->base();
 
@@ -5725,9 +5751,9 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
      */
     JSInterpreterHook hook = cx->debugHooks->callHook;
     if (hook) {
-        newfp->hookData = hook(cx, newfp, JS_TRUE, 0, cx->debugHooks->callHookData);
+        newfp->setHookData(hook(cx, newfp, JS_TRUE, 0, cx->debugHooks->callHookData));
     } else {
-        newfp->hookData = NULL;
+        newfp->setHookData(NULL);
     }
 
     /*
@@ -5738,8 +5764,8 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
      * everything down to the caller's fp->slots (where vars start) and avoid
      * some of the complexity?
      */
-    return (fi.spdist - newfp->down->script->nfixed) +
-           ((fun->nargs > newfp->argc) ? fun->nargs - newfp->argc : 0) +
+    return (fi.spdist - newfp->down->getFixedCount()) +
+          ((fun->nargs > newfp->numActualArgs()) ? fun->nargs - newfp->numActualArgs() : 0) +
            newscript->nfixed + SPECIAL_FRAME_SLOTS;
 }
 
@@ -5751,9 +5777,9 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
      * no space (which will try to deep bail, which is bad), however we already
      * check on entry to ExecuteTree that there is enough space.
      */
-    CallStackSegment *css;
+    StackSegment *seg;
     JSStackFrame *fp;
-    cx->stack().getSynthesizedSlowNativeFrame(cx, css, fp);
+    cx->stack().getSynthesizedSlowNativeFrame(cx, seg, fp);
 
 #ifdef DEBUG
     JSObject *callee = &state.nativeVp[0].toObject();
@@ -5762,27 +5788,25 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     JS_ASSERT(fun->u.n.extra == 0);
 #endif
 
-    fp->imacpc = NULL;
-    fp->callobj = NULL;
-    fp->argsobj = NULL;
-    fp->script = NULL;
-    fp->thisv = state.nativeVp[1];
-    fp->argc = state.nativeVpLen - 2;
+    fp->setCallObj(NULL);
+    fp->setArgsObj(NULL);
+    fp->setScript(NULL);
+    fp->setThisValue(state.nativeVp[1]);
+    fp->setNumActualArgs(state.nativeVpLen - 2);
     fp->argv = state.nativeVp + 2;
-    fp->fun = GET_FUNCTION_PRIVATE(cx, fp->callee());
-    fp->rval = UndefinedValue();
-    fp->annotation = NULL;
-    JS_ASSERT(cx->fp->scopeChain);
-    fp->scopeChain = cx->fp->scopeChain;
-    fp->blockChain = NULL;
+    fp->setFunction(GET_FUNCTION_PRIVATE(cx, fp->callee()));
+    fp->clearReturnValue();
+    fp->setAnnotation(NULL);
+    fp->setScopeChain(cx->fp()->getScopeChain());
+    fp->setBlockChain(NULL);
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
+    JS_ASSERT(!fp->hasIMacroPC());
 
-    state.bailedSlowNativeRegs = *cx->regs;
-
-    cx->stack().pushSynthesizedSlowNativeFrame(cx, css, fp, state.bailedSlowNativeRegs);
-
+    state.bailedSlowNativeRegs.fp = fp;
     state.bailedSlowNativeRegs.pc = NULL;
     state.bailedSlowNativeRegs.sp = fp->slots();
+
+    cx->stack().pushSynthesizedSlowNativeFrame(cx, seg, state.bailedSlowNativeRegs);
 }
 
 static JS_REQUIRES_STACK bool
@@ -5835,7 +5859,7 @@ RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMTreeVis, "TREEVIS CREATETREE ROOT=%p PC=%p FILE=\"%s\" LINE=%d OFFS=%d",
                       (void*)f, f->ip, f->treeFileName, f->treeLineNumber,
-                      FramePCOffset(cx, cx->fp));
+                      FramePCOffset(cx, cx->fp()));
     debug_only_print0(LC_TMTreeVis, " STACK=\"");
     for (unsigned i = 0; i < f->nStackTypes; i++)
         debug_only_printf(LC_TMTreeVis, "%c", TypeToChar(f->typeMap[i]));
@@ -5959,7 +5983,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         }
         if (exit->recursive_pc != cx->regs->pc)
             return false;
-        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, cx->fp->argc);
+        from = LookupLoop(tm, exit->recursive_pc, globalObj, globalShape, numActualArgs(cx->fp()));
         if (!from)
             return false;
         /* use stale TI for RecordTree - since from might not have one anymore. */
@@ -5988,9 +6012,9 @@ CreateBranchFragment(JSContext* cx, TreeFragment* root, VMSideExit* anchor)
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
                       " LINE=%d ANCHOR=%p OFFS=%d\n",
-                      (void*)root, (void*)f, (void*)cx->regs->pc, cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp), (void*)anchor,
-                      FramePCOffset(cx, cx->fp));
+                      (void*)root, (void*)f, (void*)cx->regs->pc, cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()), (void*)anchor,
+                      FramePCOffset(cx, cx->fp()));
     verbose_only( tm->branches = new (*tm->dataAlloc) Seq<Fragment*>(f, tm->branches); )
 
     f->root = root;
@@ -6086,8 +6110,8 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
-                                               exitedFrom, outer, cx->fp->argc, Record_Branch,
-                                               hits < maxHits);
+                                               exitedFrom, outer, numActualArgs(cx->fp()),
+                                               Record_Branch, hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
             tvso->r = R_FAIL_EXTEND_START;
@@ -6118,7 +6142,7 @@ JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
-    if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
+    if (cx->fp()->getScopeChain()->getGlobal()->scope()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
     }
@@ -6135,13 +6159,13 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     JS_ASSERT(r->fragment && !r->fragment->lastIns);
     TreeFragment* root = r->fragment->root;
     TreeFragment* first = LookupOrAddLoop(tm, cx->regs->pc, root->globalObj,
-                                        root->globalShape, cx->fp->argc);
+                                          root->globalShape, numActualArgs(cx->fp()));
 
     /*
      * Make sure the shape of the global object still matches (this might flush
      * the JIT cache).
      */
-    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
+    JSObject* globalObj = cx->fp()->getScopeChain()->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
     if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
@@ -6151,9 +6175,9 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
 
     debug_only_printf(LC_TMTracer,
                       "Looking for type-compatible peer (%s:%d@%d)\n",
-                      cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp));
+                      cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()));
 
     // Find a matching inner tree. If none can be found, compile one.
     TreeFragment* f = r->findNestedCompatiblePeer(first);
@@ -6163,7 +6187,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         TreeFragment* outerFragment = root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
-        JS_ASSERT(cx->fp->argc == first->argc);
+        JS_ASSERT(numActualArgs(cx->fp()) == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
         return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch));
@@ -6194,9 +6218,9 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
      * In the interim, just do tree calls knowing that they won't go into
      * recursive trees that can pop parent frames.
      */
-    if (f->script == cx->fp->script) {
+    if (f->script == cx->fp()->getScript()) {
         if (f->recursion >= Recursion_Unwinds) {
-            Blacklist(cx->fp->script->code);
+            Blacklist(cx->fp()->getScript()->code);
             AbortRecording(cx, "Inner tree is an unsupported type of recursion");
             return ARECORD_ABORTED;
         }
@@ -6647,7 +6671,7 @@ ExecuteTrace(JSContext* cx, Fragment* f, TracerState& state)
 static JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
 ScopeChainCheck(JSContext* cx, TreeFragment* f)
 {
-    JS_ASSERT(f->globalObj == cx->fp->scopeChain->getGlobal());
+    JS_ASSERT(f->globalObj == cx->fp()->getScopeChain()->getGlobal());
 
     /*
      * The JIT records and expects to execute with two scope-chain
@@ -6665,7 +6689,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
      * class types; once a global is found, it's checked for #1. Failing
      * either check causes an early return from execution.
      */
-    JSObject* child = cx->fp->scopeChain;
+    JSObject* child = cx->fp()->getScopeChain();
     while (JSObject* parent = child->getParent()) {
         if (!js_IsCacheableNonGlobalScope(child)) {
             debug_only_print0(LC_TMTracer,"Blacklist: non-cacheable object on scope chain.\n");
@@ -6725,9 +6749,9 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     AUDIT(traceTriggered);
     debug_only_printf(LC_TMTracer,
                       "entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
-                      cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp),
+                      cx->fp()->getScript()->filename,
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()),
                       f->maxNativeStackSlots,
                       f->code());
 
@@ -6844,11 +6868,11 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
          *
          * First, if we just returned from a slow native, pop its stack frame.
          */
-        if (!cx->fp->script) {
+        if (!cx->fp()->hasScript()) {
             JS_ASSERT(cx->regs == &state.bailedSlowNativeRegs);
             cx->stack().popSynthesizedSlowNativeFrame(cx);
         }
-        JS_ASSERT(cx->fp->script);
+        JS_ASSERT(cx->fp()->hasScript());
 
         if (!(bs & BUILTIN_ERROR)) {
             /*
@@ -6893,9 +6917,9 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
             regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
             regs->sp += cs.ndefs;
             regs->pc += cs.length;
-            JS_ASSERT_IF(!cx->fp->imacpc,
-                         cx->fp->slots() + cx->fp->script->nfixed +
-                         js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
+            JS_ASSERT_IF(!cx->fp()->hasIMacroPC(),
+                         cx->fp()->slots() + cx->fp()->getFixedCount() +
+                         js_ReconstructStackDepth(cx, cx->fp()->getScript(), regs->pc) ==
                          regs->sp);
 
             /*
@@ -6949,12 +6973,12 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
          */
         SynthesizeFrame(cx, *fi, callee);
         int slots = FlushNativeStackFrame(cx, 1 /* callDepth */, (*callstack)->get_typemap(),
-                                          stack, cx->fp, 0);
+                                          stack, cx->fp(), 0);
 #ifdef DEBUG
-        JSStackFrame* fp = cx->fp;
+        JSStackFrame* fp = cx->fp();
         debug_only_printf(LC_TMTracer,
                           "synthesized deep frame for %s:%u@%u, slots=%d, fi=%p\n",
-                          fp->script->filename,
+                          fp->getScript()->filename,
                           js_FramePCToLineNumber(cx, fp),
                           FramePCOffset(cx, fp),
                           slots,
@@ -6987,10 +7011,10 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
         calldepth_slots += SynthesizeFrame(cx, *callstack[n], callee);
         ++*state.inlineCallCountp;
 #ifdef DEBUG
-        JSStackFrame* fp = cx->fp;
+        JSStackFrame* fp = cx->fp();
         debug_only_printf(LC_TMTracer,
                           "synthesized shallow frame for %s:%u@%u\n",
-                          fp->script->filename, js_FramePCToLineNumber(cx, fp),
+                          fp->getScript()->filename, js_FramePCToLineNumber(cx, fp),
                           FramePCOffset(cx, fp));
 #endif
     }
@@ -7002,20 +7026,23 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
      * first we recover fp->blockChain, which comes from the side exit
      * struct.
      */
-    JSStackFrame* const fp = cx->fp;
+    JSStackFrame* const fp = cx->fp();
 
-    fp->blockChain = innermost->block;
+    fp->setBlockChain(innermost->block);
 
     /*
      * If we are not exiting from an inlined frame, the state->sp is spbase.
      * Otherwise spbase is whatever slots frames around us consume.
      */
     cx->regs->pc = innermost->pc;
-    fp->imacpc = innermost->imacpc;
+    if (innermost->imacpc)
+        fp->setIMacroPC(innermost->imacpc);
+    else
+        fp->clearIMacroPC();
     cx->regs->sp = fp->base() + (innermost->sp_adj / sizeof(double)) - calldepth_slots;
-    JS_ASSERT_IF(!fp->imacpc,
-                 fp->slots() + fp->script->nfixed +
-                 js_ReconstructStackDepth(cx, fp->script, cx->regs->pc) == cx->regs->sp);
+    JS_ASSERT_IF(!fp->hasIMacroPC(),
+                 fp->slots() + fp->getFixedCount() +
+                 js_ReconstructStackDepth(cx, fp->getScript(), cx->regs->pc) == cx->regs->sp);
 
 #ifdef EXECUTE_TREE_TIMER
     uint64 cycles = rdtsc() - state.startTime;
@@ -7026,10 +7053,10 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     debug_only_printf(LC_TMTracer,
                       "leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%s, sp=%lld, "
                       "calldepth=%d, cycles=%llu\n",
-                      fp->script->filename,
+                      fp->getScript()->filename,
                       js_FramePCToLineNumber(cx, fp),
                       FramePCOffset(cx, fp),
-                      js_CodeName[fp->imacpc ? *fp->imacpc : *cx->regs->pc],
+                      js_CodeName[fp->hasIMacroPC() ? *fp->getIMacroPC() : *cx->regs->pc],
                       (void*)lr,
                       getExitName(lr->exitType),
                       (long long int)(cx->regs->sp - fp->base()),
@@ -7094,7 +7121,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     FlushNativeGlobalFrame(cx, globalObj, state.eos, ngslots, gslots, globalTypeMap);
 #ifdef DEBUG
     /* Verify that our state restoration worked. */
-    for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
+    for (JSStackFrame* fp = cx->fp(); fp; fp = fp->down) {
         JS_ASSERT_IF(fp->argv, fp->argv[-1].isObjectOrNull());
     }
 #endif
@@ -7154,7 +7181,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
      * Make sure the shape of the global object still matches (this might flush
      * the JIT cache).
      */
-    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
+    JSObject* globalObj = cx->fp()->getScopeChain()->getGlobal();
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
@@ -7172,7 +7199,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     }
 
     jsbytecode* pc = cx->regs->pc;
-    uint32 argc = cx->fp->argc;
+    uint32 argc = numActualArgs(cx->fp());
 
     TreeFragment* f = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
 
@@ -7211,8 +7238,8 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 
     debug_only_printf(LC_TMTracer,
                       "Looking for compat peer %d@%d, from %p (ip: %p)\n",
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx, cx->fp), (void*)f, f->ip);
+                      js_FramePCToLineNumber(cx, cx->fp()),
+                      FramePCOffset(cx, cx->fp()), (void*)f, f->ip);
 
     uintN count;
     TreeFragment* match = FindVMCompatiblePeer(cx, globalObj, f, count);
@@ -7373,10 +7400,10 @@ TraceRecorder::monitorRecording(JSOp op)
 
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
-            js_Disassemble1(cx, cx->fp->script, cx->regs->pc,
-                            cx->fp->imacpc
-                                ? 0 : cx->regs->pc - cx->fp->script->code,
-                            !cx->fp->imacpc, stdout);
+            js_Disassemble1(cx, cx->fp()->getScript(), cx->regs->pc,
+                            cx->fp()->hasIMacroPC()
+                                ? 0 : cx->regs->pc - cx->fp()->getScript()->code,
+                            !cx->fp()->hasIMacroPC(), stdout);
         }
     )
 
@@ -7389,7 +7416,7 @@ TraceRecorder::monitorRecording(JSOp op)
 
     AbortableRecordingStatus status;
 #ifdef DEBUG
-    bool wasInImacro = (cx->fp->imacpc != NULL);
+    bool wasInImacro = (cx->fp()->hasIMacroPC());
 #endif
     switch (op) {
       default:
@@ -7408,7 +7435,7 @@ TraceRecorder::monitorRecording(JSOp op)
 
     if (!JSOP_IS_IMACOP(op)) {
         JS_ASSERT(status != ARECORD_IMACRO);
-        JS_ASSERT_IF(!wasInImacro, localcx->fp->imacpc == NULL);
+        JS_ASSERT_IF(!wasInImacro, !localcx->fp()->hasIMacroPC());
     }
 
     if (localtm.recorder) {
@@ -8030,15 +8057,15 @@ DeepBail(JSContext *cx)
 JS_REQUIRES_STACK Value&
 TraceRecorder::argval(unsigned n) const
 {
-    JS_ASSERT(n < cx->fp->fun->nargs);
-    return cx->fp->argv[n];
+    JS_ASSERT(n < cx->fp()->numFormalArgs());
+    return cx->fp()->argv[n];
 }
 
 JS_REQUIRES_STACK Value&
 TraceRecorder::varval(unsigned n) const
 {
-    JS_ASSERT(n < cx->fp->script->nslots);
-    return cx->fp->slots()[n];
+    JS_ASSERT(n < cx->fp()->getSlotCount());
+    return cx->fp()->slots()[n];
 }
 
 JS_REQUIRES_STACK Value&
@@ -8050,10 +8077,10 @@ TraceRecorder::stackval(int n) const
 JS_REQUIRES_STACK void
 TraceRecorder::updateAtoms()
 {
-    atoms = FrameAtomBase(cx, cx->fp);
-    consts = cx->fp->imacpc || cx->fp->script->constOffset == 0
+    atoms = FrameAtomBase(cx, cx->fp());
+    consts = cx->fp()->hasIMacroPC() || cx->fp()->getScript()->constOffset == 0
            ? 0 
-           : cx->fp->script->consts()->vector;
+           : cx->fp()->getScript()->consts()->vector;
 }
 
 JS_REQUIRES_STACK void
@@ -8069,8 +8096,8 @@ TraceRecorder::updateAtoms(JSScript *script)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::scopeChain()
 {
-    return cx->fp->callee()
-           ? getFrameObjPtr(&cx->fp->scopeChain)
+    return cx->fp()->callee()
+           ? getFrameObjPtr(cx->fp()->addressScopeChain())
            : entryScopeChain();
 }
 
@@ -8082,21 +8109,30 @@ TraceRecorder::scopeChain()
 JS_REQUIRES_STACK LIns*
 TraceRecorder::entryScopeChain() const
 {
-    return lir->insLoad(LIR_ldp,
-                        lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER),
-                        offsetof(JSStackFrame, scopeChain), ACCSET_OTHER);
+    return lir->insLoad(LIR_ldp, entryFrameIns(),
+                        JSStackFrame::offsetScopeChain(), ACCSET_OTHER);
+}
+
+/*
+ * Generate LIR to compute the stack frame on entry to the trace.
+ */
+JS_REQUIRES_STACK LIns*
+TraceRecorder::entryFrameIns() const
+{
+    LIns *regs_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, regs), ACCSET_OTHER);
+    return lir->insLoad(LIR_ldp, regs_ins, offsetof(JSFrameRegs, fp), ACCSET_OTHER);
 }
 
 /*
  * Return the frame of a call object if that frame is part of the current
  * trace. |depthp| is an optional outparam: if it is non-null, it will be
- * filled in with the depth of the call object's frame relevant to cx->fp.
+ * filled in with the depth of the call object's frame relevant to cx->fp().
  */
 JS_REQUIRES_STACK JSStackFrame*
 TraceRecorder::frameIfInRange(JSObject* obj, unsigned* depthp) const
 {
     JSStackFrame* ofp = (JSStackFrame*) obj->getPrivate();
-    JSStackFrame* fp = cx->fp;
+    JSStackFrame* fp = cx->fp();
     for (unsigned depth = 0; depth <= callDepth; ++depth) {
         if (fp == ofp) {
             if (depthp)
@@ -8126,7 +8162,7 @@ JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, CVIPTR, DOU
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameResult& nr)
 {
-    JS_ASSERT(chainHead == cx->fp->scopeChain);
+    JS_ASSERT(chainHead == cx->fp()->getScopeChain());
     JS_ASSERT(chainHead != globalObj);
 
     TraceMonitor &localtm = *traceMonitor;
@@ -8150,12 +8186,12 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
         // the creation of properties that shadow the property in the middle
         // of the scope chain.
         LIns *head_ins;
-        if (cx->fp->argv) {
+        if (cx->fp()->argv) {
             // Skip any Call object when inside a function. Any reference to a
             // Call name the compiler resolves statically and we do not need
             // to match shapes of the Call objects.
-            chainHead = cx->fp->callee()->getParent();
-            head_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
+            chainHead = cx->fp()->callee()->getParent();
+            head_ins = stobj_get_parent(get(&cx->fp()->argv[-2]));
         } else {
             head_ins = scopeChain();
         }
@@ -8211,19 +8247,16 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     uintN slot = uint16(sprop->shortid);
 
     vp = NULL;
-    uintN upvar_slot = SPROP_INVALID_SLOT;
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
         if (sprop->getterOp() == js_GetCallArg) {
-            JS_ASSERT(slot < cfp->fun->nargs);
+            JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->argv[slot];
-            upvar_slot = slot;
             nr.v = *vp;
         } else if (sprop->getterOp() == js_GetCallVar ||
                    sprop->getterOp() == js_GetCallVarChecked) {
-            JS_ASSERT(slot < cfp->script->nslots);
+            JS_ASSERT(slot < cfp->getSlotCount());
             vp = &cfp->slots()[slot];
-            upvar_slot = cx->fp->fun->nargs + slot;
             nr.v = *vp;
         } else {
             RETURN_STOP("dynamic property of Call object");
@@ -8255,8 +8288,8 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     }
 
     LIns* obj_ins;
-    JSObject* parent = cx->fp->callee()->getParent();
-    LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
+    JSObject* parent = cx->fp()->callee()->getParent();
+    LIns* parent_ins = stobj_get_parent(get(&cx->fp()->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
     LIns* call_ins;
@@ -8550,20 +8583,6 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
             LIns* args[] = { fcallarg(f, 1), fcallarg(f, 0) };
             return lir->insCall(&js_StringToInt32_ci, args);
         }
-        if (ci == &js_String_p_charCodeAt0_ci) {
-            // Use a fast path builtin for a charCodeAt that converts to an int right away.
-            LIns* args[] = { fcallarg(f, 0) };
-            return lir->insCall(&js_String_p_charCodeAt0_int_ci, args);
-        }
-        if (ci == &js_String_p_charCodeAt_ci) {
-            LIns* idx = fcallarg(f, 1);
-            if (isPromote(idx)) {
-                LIns* args[] = { demote(lir, idx), fcallarg(f, 0) };
-                return lir->insCall(&js_String_p_charCodeAt_int_int_ci, args);
-            }
-            LIns* args[] = { idx, fcallarg(f, 0) };
-            return lir->insCall(&js_String_p_charCodeAt_double_int_ci, args);
-        }
     }
     return resultCanBeImpreciseIfFractional
          ? lir->ins1(LIR_d2i, f)
@@ -8631,7 +8650,7 @@ JS_REQUIRES_STACK bool
 TraceRecorder::canCallImacro() const
 {
     /* We cannot nest imacros. */
-    return !cx->fp->imacpc;
+    return !cx->fp()->hasIMacroPC();
 }
 
 JS_REQUIRES_STACK RecordingStatus
@@ -8643,10 +8662,10 @@ TraceRecorder::callImacro(jsbytecode* imacro)
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::callImacroInfallibly(jsbytecode* imacro)
 {
-    JSStackFrame* fp = cx->fp;
-    JS_ASSERT(!fp->imacpc);
+    JSStackFrame* fp = cx->fp();
+    JS_ASSERT(!fp->hasIMacroPC());
     JSFrameRegs* regs = cx->regs;
-    fp->imacpc = regs->pc;
+    fp->setIMacroPC(regs->pc);
     regs->pc = imacro;
     updateAtoms();
     return RECORD_IMACRO;
@@ -8678,9 +8697,7 @@ TraceRecorder::ifop()
                       lir->insEqI_0(lir->ins2(LIR_eqd, v_ins, lir->insImmD(0))));
     } else if (v.isString()) {
         cond = v.toString()->length() != 0;
-        x = lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, v_ins,
-                          offsetof(JSString, mLengthAndFlags), ACCSET_OTHER),
-                          JSString::FLAGS_LENGTH_SHIFT);
+        x = getStringLength(v_ins);
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
@@ -8733,13 +8750,22 @@ TraceRecorder::tableswitch()
         high = GET_JUMPX_OFFSET(pc);
     }
 
+    /* 
+     * If there are no cases, this is a no-op. The default case immediately
+     * follows in the bytecode and is always taken, so we need no special
+     * action to handle it.
+     */
+    int count = high + 1 - low;
+    if (count == 0)
+        return ARECORD_CONTINUE;
+
     /* Cap maximum table-switch size for modesty. */
-    if ((high + 1 - low) > MAX_TABLE_SWITCH)
+    if (count > MAX_TABLE_SWITCH)
         return InjectStatus(switchop());
 
     /* Generate switch LIR. */
     SwitchInfo* si = new (traceAlloc()) SwitchInfo();
-    si->count = high + 1 - low;
+    si->count = count;
     si->table = 0;
     si->index = (uint32) -1;
     LIns* diff = lir->ins2(LIR_subi, v_ins, lir->insImmI(low));
@@ -9001,9 +9027,20 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
             JS_ASSERT(r.isBoolean());
             cond = (l == r);
         } else if (l.isString()) {
-            args[0] = r_ins, args[1] = l_ins;
-            l_ins = lir->insCall(&js_EqualStrings_ci, args);
-            r_ins = lir->insImmI(1);
+            JSString *l_str = l.toString();
+            JSString *r_str = r.toString();
+            if (!l_str->isRope() && !r_str->isRope() && l_str->length() == 1 && r_str->length() == 1) {
+                VMSideExit *exit = snapshot(BRANCH_EXIT);
+                LIns *c = INS_CONSTWORD(1);
+                guard(true, lir->ins2(LIR_eqp, getStringLength(l_ins), c), exit);
+                guard(true, lir->ins2(LIR_eqp, getStringLength(r_ins), c), exit);
+                l_ins = lir->insLoad(LIR_ldus2ui, getStringChars(l_ins), 0, ACCSET_OTHER, LOAD_CONST);
+                r_ins = lir->insLoad(LIR_ldus2ui, getStringChars(r_ins), 0, ACCSET_OTHER, LOAD_CONST);
+            } else {
+                args[0] = r_ins, args[1] = l_ins;
+                l_ins = lir->insCall(&js_EqualStrings_ci, args);
+                r_ins = lir->insImmI(1);
+            }
             cond = !!js_EqualStrings(l.toString(), r.toString());
         } else {
             JS_ASSERT(l.isNumber() && r.isNumber());
@@ -9434,7 +9471,12 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JS_PROPERTY_CACHE(cx).test(cx, pc, aobj, obj2, entry, atom);
     if (atom) {
         // Miss: pre-fill the cache for the interpreter, as well as for our needs.
+        // FIXME: bug 458271.
         jsid id = ATOM_TO_JSID(atom);
+
+        // The lookup below may change object shapes.
+        forgetGuardedShapes();
+
         JSProperty* prop;
         if (JOF_OPMODE(*pc) == JOF_NAME) {
             JS_ASSERT(aobj == obj);
@@ -9525,7 +9567,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         if (entry->adding())
             RETURN_STOP("adding a property to the global object");
 
-        JSOp op = js_GetOpcode(cx, cx->fp->script, cx->regs->pc);
+        JSOp op = js_GetOpcode(cx, cx->fp()->getScript(), cx->regs->pc);
         if (JOF_OPMODE(op) != JOF_NAME) {
             guard(true,
                   addName(lir->ins2(LIR_eqp, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
@@ -9651,7 +9693,8 @@ LIns*
 TraceRecorder::stobj_get_fslot_ptr(LIns *obj_ins, unsigned slot)
 {
     JS_ASSERT(slot < JS_INITIAL_NSLOTS);
-    return lir->insLoad(LIR_ldi, obj_ins, offsetof(JSObject, fslots) + slot * sizeof(Value),
+    return lir->insLoad(LIR_ldi, obj_ins,
+                        offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
                         ACCSET_OTHER);
 }
 
@@ -9730,7 +9773,7 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
 
     if (v.isDouble()) {
         guard(true, lir->ins2(LIR_ltui, tag_ins, INS_CONSTU(JSVAL_TAG_CLEAR)), exit);
-        return lir->insLoad(LIR_ldd, vaddr_ins, offset + sPayloadOffset, accSet);
+        return lir->insLoad(LIR_ldd, vaddr_ins, offset, accSet);
     }
 
     if (v.isObject()) {
@@ -10027,25 +10070,25 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::getThis(LIns*& this_ins)
 {
     /*
-     * JSStackFrame::getThisObject updates cx->fp->argv[-1], so sample it into 'original' first.
+     * JSStackFrame::getThisObject updates cx->fp()->argv[-1], so sample it into 'original' first.
      */
     Value original = NullValue();
-    if (cx->fp->argv) {
-        original = cx->fp->argv[-1];
+    if (cx->fp()->argv) {
+        original = cx->fp()->argv[-1];
         if (!original.isPrimitive()) {
             if (original.toObject().hasClass(&js_WithClass))
                 RETURN_STOP("can't trace getThis on With object");
-            guardNotClass(get(&cx->fp->argv[-1]), &js_WithClass, snapshot(MISMATCH_EXIT),
+            guardNotClass(get(&cx->fp()->argv[-1]), &js_WithClass, snapshot(MISMATCH_EXIT),
                           LOAD_NORMAL);
         }
     }
 
-    JSObject* thisObj = cx->fp->getThisObject(cx);
+    JSObject* thisObj = cx->fp()->getThisObject(cx);
     if (!thisObj)
         RETURN_ERROR("fp->getThisObject failed");
 
     /* In global code, bake in the global object as 'this' object. */
-    if (!cx->fp->callee()) {
+    if (!cx->fp()->callee()) {
         JS_ASSERT(callDepth == 0);
         this_ins = INS_CONSTOBJ(thisObj);
 
@@ -10056,7 +10099,7 @@ TraceRecorder::getThis(LIns*& this_ins)
         return RECORD_CONTINUE;
     }
 
-    Value& thisv = cx->fp->argv[-1];
+    Value& thisv = cx->fp()->argv[-1];
     JS_ASSERT(thisv.isObject());
 
     /*
@@ -10223,8 +10266,8 @@ TraceRecorder::clearFrameSlotsFromTracker(Tracker& which, JSStackFrame* fp, unsi
         vpstop = &fp->argv[argSlots(fp)];
         while (vp < vpstop)
             which.set(vp++, (LIns*)0);
-        which.set(&fp->argsobj, (LIns*)0);
-        which.set(&fp->scopeChain, (LIns*)0);
+        which.set(fp->addressArgsObj(), (LIns*)0);
+        which.set(fp->addressScopeChain(), (LIns*)0);
     }
     vp = &fp->slots()[0];
     vpstop = &fp->slots()[nslots];
@@ -10235,7 +10278,7 @@ TraceRecorder::clearFrameSlotsFromTracker(Tracker& which, JSStackFrame* fp, unsi
 JS_REQUIRES_STACK JSStackFrame*
 TraceRecorder::entryFrame() const
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
     for (unsigned i = 0; i < callDepth; ++i)
         fp = fp->down;
     return fp;
@@ -10247,14 +10290,14 @@ TraceRecorder::clearEntryFrameSlotsFromTracker(Tracker& which)
     JSStackFrame *fp = entryFrame();
 
     // Clear only slots that are not also used by the next frame up.
-    clearFrameSlotsFromTracker(which, fp, fp->script->nfixed);
+    clearFrameSlotsFromTracker(which, fp, fp->getFixedCount());
 }
 
 JS_REQUIRES_STACK void
 TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
 {
     // Clear out all local slots.
-    clearFrameSlotsFromTracker(which, cx->fp, cx->fp->script->nslots);
+    clearFrameSlotsFromTracker(which, cx->fp(), cx->fp()->getSlotCount());
 }
 
 /*
@@ -10265,19 +10308,22 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
 JS_REQUIRES_STACK void
 TraceRecorder::putActivationObjects()
 {
-    bool have_args = cx->fp->argsobj && cx->fp->argc;
-    bool have_call = cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags) && cx->fp->fun->countArgsAndVars();
+    JSStackFrame *fp = cx->fp();
+
+    bool have_args = fp->hasArgsObj() && !fp->getArgsObj()->isStrictArguments();
+    bool have_call = fp->hasCallObj();
+    JS_ASSERT(have_call == (fp->hasFunction() && fp->getFunction()->isHeavyweight()));
 
     if (!have_args && !have_call)
         return;
 
-    int nargs = have_args ? argSlots(cx->fp) : cx->fp->fun->nargs;
+    int nargs = have_args ? argSlots(fp) : fp->numFormalArgs();
 
     LIns* args_ins;
     if (nargs) {
         args_ins = lir->insAlloc(sizeof(Value) * nargs);
         for (int i = 0; i < nargs; ++i) {
-            box_value_into(cx->fp->argv[i], get(&cx->fp->argv[i]), args_ins, i * sizeof(Value),
+            box_value_into(fp->argv[i], get(&fp->argv[i]), args_ins, i * sizeof(Value),
                            ACCSET_OTHER);
         }
     } else {
@@ -10285,27 +10331,27 @@ TraceRecorder::putActivationObjects()
     }
 
     if (have_args) {
-        LIns* argsobj_ins = getFrameObjPtr(&cx->fp->argsobj);
+        LIns* argsobj_ins = getFrameObjPtr(fp->addressArgsObj());
         LIns* args[] = { args_ins, argsobj_ins, cx_ins };
         lir->insCall(&js_PutArguments_ci, args);
     }
 
     if (have_call) {
-        int nslots = cx->fp->fun->countVars();
+        int nslots = fp->getFunction()->countVars();
         LIns* slots_ins;
         if (nslots) {
             slots_ins = lir->insAlloc(sizeof(Value) * nslots);
             for (int i = 0; i < nslots; ++i) {
-                box_value_into(cx->fp->slots()[i], get(&cx->fp->slots()[i]), slots_ins,
+                box_value_into(fp->slots()[i], get(&fp->slots()[i]), slots_ins,
                                i * sizeof(Value), ACCSET_OTHER);
             }
         } else {
             slots_ins = INS_CONSTPTR(0);
         }
 
-        LIns* scopeChain_ins = getFrameObjPtr(&cx->fp->scopeChain);
+        LIns* scopeChain_ins = getFrameObjPtr(fp->addressScopeChain());
         LIns* args[] = { slots_ins, INS_CONST(nslots), args_ins,
-                         INS_CONST(cx->fp->fun->nargs), scopeChain_ins, cx_ins };
+                         INS_CONST(fp->numFormalArgs()), scopeChain_ins, cx_ins };
         lir->insCall(&js_PutCallObjectOnTrace_ci, args);
     }
 }
@@ -10313,41 +10359,43 @@ TraceRecorder::putActivationObjects()
 static JS_REQUIRES_STACK inline bool
 IsTraceableRecursion(JSContext *cx)
 {
-    JSStackFrame *fp = cx->fp;
-    JSStackFrame *down = cx->fp->down;
+    JSStackFrame *fp = cx->fp();
+    JSStackFrame *down = fp->down;
     if (!down)
         return false;
-    if (down->script != fp->script)
+    if (down->maybeScript() != fp->maybeScript())
         return false;
-    if (down->argc != fp->argc)
+    if (down->isEvalFrame())
         return false;
-    if (fp->argc != fp->fun->nargs)
+    if (down->numActualArgs() != fp->numActualArgs())
         return false;
-    if (fp->imacpc || down->imacpc)
+    if (fp->numActualArgs() != fp->numFormalArgs())
+        return false;
+    if (fp->hasIMacroPC() || down->hasIMacroPC())
         return false;
     if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
         return false;
-    if (fp->blockChain || down->blockChain)
+    if (fp->hasBlockChain() || down->hasBlockChain())
         return false;
-    if (*fp->script->code != JSOP_TRACE)
+    if (*fp->getScript()->code != JSOP_TRACE)
         return false;
-    return true;
+    return !fp->getFunction()->isHeavyweight();
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
 {
-    JSStackFrame* const fp = cx->fp;
+    JSStackFrame* const fp = cx->fp();
 
     if (++callDepth >= MAX_CALLDEPTH)
         RETURN_STOP_A("exceeded maximum call depth");
 
     debug_only_printf(LC_TMTracer, "EnterFrame %s, callDepth=%d\n",
-                      js_AtomToPrintableString(cx, cx->fp->fun->atom),
+                      js_AtomToPrintableString(cx, cx->fp()->getFunction()->atom),
                       callDepth);
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
-            js_Disassemble(cx, cx->fp->script, JS_TRUE, stdout);
+            js_Disassemble(cx, cx->fp()->getScript(), JS_TRUE, stdout);
             debug_only_print0(LC_TMTracer, "----\n");
         }
     )
@@ -10366,49 +10414,49 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     // This doesn't do layout arithmetic, but it must initialize in the tracker all the
     // slots defined as imported by VisitFrameSlots.
 
-    Value* vp = &fp->argv[fp->argc];
-    Value* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
+    Value* vp = &fp->argv[fp->numActualArgs()];
+    Value* vpstop = vp + ptrdiff_t(fp->numFormalArgs()) - ptrdiff_t(fp->numActualArgs());
     for (; vp < vpstop; ++vp) {
         nativeFrameTracker.set(vp, NULL);
         set(vp, void_ins);
     }
 
-    nativeFrameTracker.set(&fp->argsobj, NULL);
-    setFrameObjPtr(&fp->argsobj, INS_NULL());
-    nativeFrameTracker.set(&fp->scopeChain, NULL);
+    nativeFrameTracker.set(fp->addressArgsObj(), NULL);
+    setFrameObjPtr(fp->addressArgsObj(), INS_NULL());
+    nativeFrameTracker.set(fp->addressScopeChain(), NULL);
 
     vp = fp->slots();
-    vpstop = vp + fp->script->nfixed;
+    vpstop = vp + fp->getFixedCount();
     for (; vp < vpstop; ++vp) {
         nativeFrameTracker.set(vp, NULL);
         set(vp, void_ins);
     }
 
     vp = vpstop;
-    vpstop = vp + (fp->script->nslots - fp->script->nfixed);
+    vpstop = vp + (fp->getSlotCount() - fp->getFixedCount());
     for (; vp < vpstop; ++vp)
         nativeFrameTracker.set(vp, NULL);
 
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    LIns* callee_ins = get(&cx->fp()->argv[-2]);
     LIns* scopeChain_ins = stobj_get_parent(callee_ins);
 
-    if (cx->fp->fun && JSFUN_HEAVYWEIGHT_TEST(cx->fp->fun->flags)) {
+    if (cx->fp()->hasFunction() && JSFUN_HEAVYWEIGHT_TEST(cx->fp()->getFunction()->flags)) {
         // We need to make sure every part of the frame is known to the tracker
         // before taking a snapshot.
-        setFrameObjPtr(&fp->scopeChain, INS_NULL());
+        setFrameObjPtr(fp->addressScopeChain(), INS_NULL());
 
-        if (js_IsNamedLambda(cx->fp->fun))
+        if (js_IsNamedLambda(cx->fp()->getFunction()))
             RETURN_STOP_A("can't call named lambda heavyweight on trace");
 
-        LIns* fun_ins = INS_CONSTPTR(cx->fp->fun);
+        LIns* fun_ins = INS_CONSTPTR(cx->fp()->getFunction());
 
         LIns* args[] = { scopeChain_ins, callee_ins, fun_ins, cx_ins };
         LIns* call_ins = lir->insCall(&js_CreateCallObjectOnTrace_ci, args);
         guard(false, lir->insEqP_0(call_ins), snapshot(OOM_EXIT));
 
-        setFrameObjPtr(&fp->scopeChain, call_ins);
+        setFrameObjPtr(fp->addressScopeChain(), call_ins);
     } else {
-        setFrameObjPtr(&fp->scopeChain, scopeChain_ins);
+        setFrameObjPtr(fp->addressScopeChain(), scopeChain_ins);
     }
 
     /*
@@ -10418,22 +10466,22 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
      * concerned about. That should pass through below to not regress pre-recursion
      * functionality.
      */
-    if (IsTraceableRecursion(cx) && tree->script == cx->fp->script) {
+    if (IsTraceableRecursion(cx) && tree->script == cx->fp()->getScript()) {
         if (tree->recursion == Recursion_Disallowed)
             RETURN_STOP_A("recursion not allowed in this tree");
-        if (tree->script != cx->fp->script)
+        if (tree->script != cx->fp()->getScript())
             RETURN_STOP_A("recursion does not match original tree");
         return InjectStatus(downRecursion());
     }
 
     /* Try inlining one level in case this recursion doesn't go too deep. */
-    if (fp->script == fp->down->script &&
-        fp->down->down && fp->down->down->script == fp->script) {
+    if (fp->getScript() == fp->down->getScript() &&
+        fp->down->down && fp->down->down->getScript() == fp->getScript()) {
         RETURN_STOP_A("recursion started inlining");
     }
 
     TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), cx->regs->pc, tree->globalObj,
-                                     tree->globalShape, fp->argc);
+                                     tree->globalShape, fp->numActualArgs());
     if (!first)
         return ARECORD_CONTINUE;
     TreeFragment* f = findNestedCompatiblePeer(first);
@@ -10453,7 +10501,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
                 JSContext* _cx = cx;
                 SlotList* globalSlots = tree->globalSlots;
                 AbortRecording(cx, "trying to compile inner recursive tree");
-                JS_ASSERT(_cx->fp->argc == first->argc);
+                JS_ASSERT(_cx->fp()->numActualArgs() == first->argc);
                 RecordTree(_cx, first, NULL, 0, globalSlots, Record_EnterFrame);
                 break;
             }
@@ -10464,7 +10512,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
          * Make sure the shape of the global object still matches (this might
          * flush the JIT cache).
          */
-        JSObject* globalObj = cx->fp->scopeChain->getGlobal();
+        JSObject* globalObj = cx->fp()->getScopeChain()->getGlobal();
         uint32 globalShape = -1;
         SlotList* globalSlots = NULL;
         if (!CheckGlobalObjectShape(cx, traceMonitor, globalObj, &globalShape, &globalSlots))
@@ -10479,21 +10527,21 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_LeaveFrame()
 {
     debug_only_stmt(
-        if (cx->fp->fun)
+        if (cx->fp()->hasFunction())
             debug_only_printf(LC_TMTracer,
                               "LeaveFrame (back to %s), callDepth=%d\n",
-                              js_AtomToPrintableString(cx, cx->fp->fun->atom),
+                              js_AtomToPrintableString(cx, cx->fp()->getFunction()->atom),
                               callDepth);
         );
 
-    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp->script,
+    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp()->getScript(),
               cx->regs->pc)].length == JSOP_CALL_LENGTH);
 
     if (callDepth-- <= 0)
         RETURN_STOP_A("returned out of a loop we started tracing");
 
     // LeaveFrame gets called after the interpreter popped the frame and
-    // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
+    // stored rval, so cx->fp() not cx->fp()->down, and -1 not 0.
     updateAtoms();
     set(&stackval(-1), rval_ins);
     return ARECORD_CONTINUE;
@@ -10511,11 +10559,11 @@ TraceRecorder::record_JSOP_POPV()
 {
     Value& rval = stackval(-1);
 
-    // Store it in cx->fp->rval. NB: Tricky dependencies. cx->fp is the right
+    // Store it in cx->fp()->rval. NB: Tricky dependencies. cx->fp() is the right
     // frame because POPV appears only in global and eval code and we don't
     // trace JSOP_EVAL or leaving the frame where tracing started.
-    LIns *fp_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER);
-    box_value_into(rval, get(&rval), fp_ins, offsetof(JSStackFrame, rval), ACCSET_OTHER);
+    LIns *fp_ins = entryFrameIns();
+    box_value_into(rval, get(&rval), fp_ins, JSStackFrame::offsetReturnValue(), ACCSET_OTHER);
     return ARECORD_CONTINUE;
 }
 
@@ -10531,13 +10579,29 @@ TraceRecorder::record_JSOP_LEAVEWITH()
     return ARECORD_STOP;
 }
 
+#ifdef MOZ_TRACE_JSCALLS
+// Usually, cx->doFunctionCallback() is invoked via DTrace::enterJSFun
+// and friends, but the DTrace:: probes use fp and therefore would
+// need to break out of tracing. So we define a functionProbe()
+// callback to be called by generated code when a Javascript function
+// is entered or exited.
+static JSBool JS_FASTCALL
+functionProbe(JSContext *cx, JSFunction *fun, JSBool enter)
+{
+    cx->doFunctionCallback(fun, FUN_SCRIPT(fun), enter);
+    return true;
+}
+
+JS_DEFINE_CALLINFO_3(static, BOOL, functionProbe, CONTEXT, FUNCTION, BOOL, 0, 0)
+#endif
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_RETURN()
 {
     /* A return from callDepth 0 terminates the current loop, except for recursion. */
     if (callDepth == 0) {
         if (IsTraceableRecursion(cx) && tree->recursion != Recursion_Disallowed &&
-            tree->script == cx->fp->script) {
+            tree->script == cx->fp()->getScript()) {
             return InjectStatus(upRecursion());
         } else {
             AUDIT(returnLoopExits);
@@ -10547,18 +10611,26 @@ TraceRecorder::record_JSOP_RETURN()
 
     putActivationObjects();
 
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        LIns* args[] = { INS_CONST(0), INS_CONSTPTR(cx->fp()->getFunction()), cx_ins };
+        LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+        guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+    }
+#endif
+
     /* If we inlined this function call, make the return value available to the caller code. */
     Value& rval = stackval(-1);
-    JSStackFrame *fp = cx->fp;
-    if ((cx->fp->flags & JSFRAME_CONSTRUCTING) && rval.isPrimitive()) {
-        JS_ASSERT(fp->thisv == fp->argv[-1]);
+    JSStackFrame *fp = cx->fp();
+    if ((fp->flags & JSFRAME_CONSTRUCTING) && rval.isPrimitive()) {
+        JS_ASSERT(fp->getThisValue() == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
         rval_ins = get(&rval);
     }
     debug_only_printf(LC_TMTracer,
                       "returning from %s\n",
-                      js_AtomToPrintableString(cx, cx->fp->fun->atom));
+                      js_AtomToPrintableString(cx, fp->getFunction()->atom));
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
 
     return ARECORD_CONTINUE;
@@ -10572,7 +10644,7 @@ TraceRecorder::record_JSOP_GOTO()
      * generate an always-taken loop exit guard.  For other downward gotos
      * (like if/else) continue recording.
      */
-    jssrcnote* sn = js_GetSrcNote(cx->fp->script, cx->regs->pc);
+    jssrcnote* sn = js_GetSrcNote(cx->fp()->getScript(), cx->regs->pc);
 
     if (sn && (SN_TYPE(sn) == SRC_BREAK || SN_TYPE(sn) == SRC_CONT2LABEL)) {
         AUDIT(breakLoopExits);
@@ -10595,37 +10667,44 @@ TraceRecorder::record_JSOP_IFNE()
 }
 
 LIns*
-TraceRecorder::newArguments(LIns* callee_ins)
+TraceRecorder::newArguments(LIns* callee_ins, bool strict)
 {
     LIns* global_ins = INS_CONSTOBJ(globalObj);
-    LIns* argc_ins = INS_CONST(cx->fp->argc);
-    LIns* argv_ins = cx->fp->argc
-                     ? lir->ins2(LIR_addp, lirbuf->sp,
-                                 lir->insImmWord(nativespOffset(&cx->fp->argv[0])))
-                     : INS_CONSTPTR((void *) 2);
-    ArgsPrivateNative *apn = ArgsPrivateNative::create(traceAlloc(), cx->fp->argc);
-    for (uintN i = 0; i < cx->fp->argc; ++i) {
-        apn->typemap()[i] = determineSlotType(&cx->fp->argv[i]);
-    }
+    LIns* argc_ins = INS_CONST(cx->fp()->numActualArgs());
 
-    LIns* args[] = { INS_CONSTPTR(apn), argv_ins, callee_ins, argc_ins, global_ins, cx_ins };
+    LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
     LIns* call_ins = lir->insCall(&js_Arguments_ci, args);
     guard(false, lir->insEqP_0(call_ins), OOM_EXIT);
+
+    if (strict) {
+        JSStackFrame* fp = cx->fp();
+        uintN argc = fp->numActualArgs();
+        LIns* argsSlots_ins = NULL;
+        for (uintN i = 0; i < argc; i++)
+            stobj_set_dslot(call_ins, i, argsSlots_ins, fp->argv[i], get(&fp->argv[i]));
+    }
+
     return call_ins;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
-    if (cx->fp->flags & JSFRAME_OVERRIDE_ARGS)
+    JSStackFrame* const fp = cx->fp();
+
+    /* In an eval, 'arguments' will be a BINDNAME, which we don't trace. */
+    JS_ASSERT(!(fp->flags & JSFRAME_EVAL));
+
+    if (fp->flags & JSFRAME_OVERRIDE_ARGS)
         RETURN_STOP_A("Can't trace |arguments| if |arguments| is assigned to");
 
-    LIns* a_ins = getFrameObjPtr(&cx->fp->argsobj);
+    LIns* a_ins = getFrameObjPtr(fp->addressArgsObj());
     LIns* args_ins;
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    LIns* callee_ins = get(&fp->argv[-2]);
+    bool strict = fp->getFunction()->inStrictMode();
     if (a_ins->isImmP()) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
-        args_ins = newArguments(callee_ins);
+        args_ins = newArguments(callee_ins, strict);
     } else {
         // Generate LIR to create arguments only if it has not already been created.
 
@@ -10638,7 +10717,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
         LIns* label1 = lir->ins0(LIR_label);
         br1->setTarget(label1);
 
-        LIns* call_ins = newArguments(callee_ins);
+        LIns* call_ins = newArguments(callee_ins, strict);
         lir->insStore(call_ins, mem_ins, 0, ACCSET_OTHER);
 
         LIns* label2 = lir->ins0(LIR_label);
@@ -10648,7 +10727,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     }
 
     stack(0, args_ins);
-    setFrameObjPtr(&cx->fp->argsobj, args_ins);
+    setFrameObjPtr(fp->addressArgsObj(), args_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -10684,7 +10763,7 @@ TraceRecorder::record_JSOP_PICK()
 {
     Value* sp = cx->regs->sp;
     jsint n = cx->regs->pc[1];
-    JS_ASSERT(sp - (n+1) >= cx->fp->base());
+    JS_ASSERT(sp - (n+1) >= cx->fp()->base());
     LIns* top = get(sp - (n+1));
     for (jsint i = 0; i < n; ++i)
         set(sp - (n+1) + i, get(sp - n + i));
@@ -10843,9 +10922,7 @@ TraceRecorder::record_JSOP_NOT()
         return ARECORD_CONTINUE;
     }
     JS_ASSERT(v.isString());
-    set(&v, lir->insEqP_0(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&v),
-                          offsetof(JSString, mLengthAndFlags), ACCSET_OTHER),
-                          JSString::FLAGS_LENGTH_SHIFT)));
+    set(&v, lir->insEqP_0(getStringLength(get(&v))));
     return ARECORD_CONTINUE;
 }
 
@@ -11210,7 +11287,7 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
                                      bool constructing)
 {
-    JSStackFrame* const fp = cx->fp;
+    JSStackFrame* const fp = cx->fp();
     jsbytecode *pc = cx->regs->pc;
 
     Value& fval = stackval(0 - (2 + argc));
@@ -11261,8 +11338,8 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
                 // FIXME: Set pc to imacpc when recording JSOP_CALL inside the
                 //        JSOP_GETELEM imacro (bug 476559).
                 if ((*pc == JSOP_CALL) &&
-                    fp->imacpc && *fp->imacpc == JSOP_GETELEM)
-                    *argp = INS_CONSTPTR(fp->imacpc);
+                    fp->hasIMacroPC() && *fp->getIMacroPC() == JSOP_GETELEM)
+                    *argp = INS_CONSTPTR(fp->getIMacroPC());
                 else
                     *argp = INS_CONSTPTR(pc);
             } else if (argtype == 'D') { /* this, as a number */
@@ -11329,19 +11406,39 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
     switch (argc) {
       case 1:
-        if (vp[2].isNumber() &&
-            (native == js_math_ceil || native == js_math_floor || native == js_math_round)) {
-            LIns* a = get(&vp[2]);
-            if (isPromote(a)) {
-                set(&vp[0], a);
-                pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-                return RECORD_CONTINUE;
+        if (vp[2].isNumber() && mode == JSOP_CALL) {
+            if (native == js_math_ceil || native == js_math_floor || native == js_math_round) {
+                LIns* a = get(&vp[2]);
+                if (isPromote(a)) {
+                    set(&vp[0], a);
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                }
+            }
+            if (vp[1].isString()) {
+                JSString *str = vp[1].toString();
+                if (native == (FastNative)js_str_charAt) {
+                    LIns* str_ins = get(&vp[1]);
+                    LIns* idx_ins = get(&vp[2]);
+                    set(&vp[0], getCharAt(str, str_ins, idx_ins));
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                } else if (native == (FastNative)js_str_charCodeAt) {
+                    jsdouble i = vp[2].toNumber();
+                    if (i < 0 || i >= str->length())
+                        RETURN_STOP("charCodeAt out of bounds");
+                    LIns* str_ins = get(&vp[1]);
+                    LIns* idx_ins = get(&vp[2]);
+                    set(&vp[0], getCharCodeAt(str, str_ins, idx_ins));
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                }
             }
         }
         break;
 
       case 2:
-        if (vp[2].isNumber() && vp[3].isNumber() &&
+        if (vp[2].isNumber() && vp[3].isNumber() && mode == JSOP_CALL &&
             (native == js_math_min || native == js_math_max)) {
             LIns* a = get(&vp[2]);
             LIns* b = get(&vp[3]);
@@ -11406,14 +11503,31 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (!clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
-        args[0] = INS_CONSTOBJ(funobj);
-        args[1] = INS_CONSTPTR(clasp);
-        args[2] = cx_ins;
-        newobj_ins = lir->insCall(&js_NewInstance_ci, args);
-        guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+        if (fun->isFastConstructor()) {
+            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+            newobj_ins = INS_CONST(JS_FAST_CONSTRUCTOR);
+
+            /* Treat this as a regular call, the constructor will behave correctly. */
+            mode = JSOP_CALL;
+        } else {
+            args[0] = INS_CONSTOBJ(funobj);
+            args[1] = INS_CONSTPTR(clasp);
+            args[2] = cx_ins;
+            newobj_ins = lir->insCall(&js_NewInstance_ci, args);
+            guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+
+            /*
+             * emitNativeCall may take a snapshot below. To avoid having a type
+             * mismatch (e.g., where get(&vp[1]) is an object and vp[1] is
+             * null), we make sure vp[1] is some object. The actual object
+             * doesn't matter; JSOP_NEW and InvokeConstructor both overwrite
+             * vp[1] without observing its value.
+             *
+             * N.B. tracing specializes for functions, so pick a non-function.
+             */
+            vp[1].setObject(*globalObj);
+        }
         this_ins = newobj_ins;
-    } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
-        this_ins = INS_CONSTOBJ(funobj->getParent());
     } else {
         this_ins = get(&vp[1]);
 
@@ -11524,7 +11638,7 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::functionCall(uintN argc, JSOp mode)
 {
     Value& fval = stackval(0 - (2 + argc));
-    JS_ASSERT(&fval >= cx->fp->base());
+    JS_ASSERT(&fval >= cx->fp()->base());
 
     if (!IsFunctionObject(fval))
         RETURN_STOP("callee is not a function");
@@ -11551,6 +11665,17 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
      */
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &fval.toObject());
 
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        JSScript *script = FUN_SCRIPT(fun);
+        if (! script || ! script->isEmpty()) {
+            LIns* args[] = { INS_CONST(1), INS_CONSTPTR(fun), cx_ins };
+            LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+            guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+        }
+    }
+#endif
+
     if (FUN_INTERPRETED(fun)) {
         if (mode == JSOP_NEW) {
             LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
@@ -11561,25 +11686,31 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
     }
 
-    if (FUN_SLOW_NATIVE(fun)) {
-        Native native = fun->u.n.native;
-        Value* argv = &tval + 1;
-        if (native == js_Array)
-            return newArray(&fval.toObject(), argc, argv, &fval);
-        if (native == js_String && argc == 1) {
-            if (mode == JSOP_NEW)
-                return newString(&fval.toObject(), 1, argv, &fval);
-            if (!argv[0].isPrimitive()) {
-                CHECK_STATUS(guardNativeConversion(argv[0]));
-                return callImacro(call_imacros.String);
-            }
-            set(&fval, stringify(argv[0]));
-            pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-            return RECORD_CONTINUE;
+    FastNative native = FUN_FAST_NATIVE(fun);
+    Value* argv = &tval + 1;
+    if (native == js_Array)
+        return newArray(&fval.toObject(), argc, argv, &fval);
+    if (native == js_String && argc == 1) {
+        if (mode == JSOP_NEW)
+            return newString(&fval.toObject(), 1, argv, &fval);
+        if (!argv[0].isPrimitive()) {
+            CHECK_STATUS(guardNativeConversion(argv[0]));
+            return callImacro(call_imacros.String);
         }
+        set(&fval, stringify(argv[0]));
+        pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+        return RECORD_CONTINUE;
     }
 
-    return callNative(argc, mode);
+    RecordingStatus rs = callNative(argc, mode);
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        LIns* args[] = { INS_CONST(0), INS_CONSTPTR(fun), cx_ins };
+        LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+        guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+    }
+#endif
+    return rs;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -12061,8 +12192,8 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     // entry frame. In that case, we must store to the native stack area for
     // that frame.
 
-    LIns *fp_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER);
-    LIns *fpcallobj_ins = lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, callobj),
+    LIns *fp_ins = entryFrameIns();
+    LIns *fpcallobj_ins = lir->insLoad(LIR_ldp, fp_ins, JSStackFrame::offsetCallObj(),
                                        ACCSET_OTHER);
     LIns *br1 = lir->insBranch(LIR_jf, lir->ins2(LIR_eqp, fpcallobj_ins, callobj_ins), NULL);
 
@@ -12437,6 +12568,85 @@ TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, JSScope
     }
 }
 
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getStringLength(LIns* str_ins)
+{
+    return addName(lir->ins2ImmI(LIR_rshup,
+                                 addName(lir->insLoad(LIR_ldp, str_ins,
+                                                      offsetof(JSString, mLengthAndFlags),
+                                                      ACCSET_OTHER), "mLengthAndFlags"),
+                                 JSString::FLAGS_LENGTH_SHIFT), "length");
+}
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getStringChars(LIns* str_ins)
+{
+    return addName(lir->insLoad(LIR_ldp, str_ins,
+                                offsetof(JSString, mChars),
+                                ACCSET_OTHER), "chars");
+}
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
+{
+    idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
+    LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
+                                    ACCSET_OTHER);
+    LIns *br = lir->insBranch(LIR_jt,
+                              lir->insEqP_0(lir->ins2(LIR_andp,
+                                                      length_ins,
+                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
+                              NULL);
+    lir->insCall(&js_Flatten_ci, &str_ins);
+    br->setTarget(lir->ins0(LIR_label));
+
+    guard(true,
+          lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
+          snapshot(MISMATCH_EXIT));
+    LIns *chars_ins = getStringChars(str_ins);
+    return i2d(lir->insLoad(LIR_ldus2ui,
+                            lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
+                            ACCSET_OTHER, LOAD_CONST));
+}
+
+JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
+{
+    idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
+    LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
+                                    ACCSET_OTHER);
+    LIns *br = lir->insBranch(LIR_jt,
+                              lir->insEqP_0(lir->ins2(LIR_andp,
+                                                      length_ins,
+                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
+                              NULL);
+    lir->insCall(&js_Flatten_ci, &str_ins);
+    br->setTarget(lir->ins0(LIR_label));
+
+    LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
+    lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
+
+    br = lir->insBranch(LIR_jf,
+                        lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
+                        NULL);
+    LIns *chars_ins = getStringChars(str_ins);
+    LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
+                                lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
+                                ACCSET_OTHER, LOAD_CONST);
+    guard(true, lir->ins2ImmI(LIR_ltui, ch_ins, UNIT_STRING_LIMIT), snapshot(MISMATCH_EXIT));
+    LIns *unitstr_ins = lir->ins2(LIR_addp,
+                                  INS_CONSTPTR(JSString::unitStringTable),
+                                  lir->ins2ImmI(LIR_lshp,
+                                                lir->insUI2P(ch_ins),
+                                                (sizeof(JSString) == 16) ? 4 : 5));
+    lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
+    br->setTarget(lir->ins0(LIR_label));
+
+    return lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
+}
+
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED && NJ_F2I_SUPPORTED
 static bool OkToTraceTypedArrays = true;
@@ -12462,11 +12672,7 @@ TraceRecorder::record_JSOP_GETELEM()
         int i = asInt32(idx);
         if (size_t(i) >= lval.toString()->length())
             RETURN_STOP_A("Invalid string index in JSOP_GETELEM");
-        idx_ins = makeNumberInt32(idx_ins);
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
-        LIns* unitstr_ins = lir->insCall(&js_String_getelem_ci, args);
-        guard(false, lir->insEqP_0(unitstr_ins), MISMATCH_EXIT);
-        set(&lval, unitstr_ins);
+        set(&lval, getCharAt(lval.toString(), obj_ins, idx_ins));
         return ARECORD_CONTINUE;
     }
 
@@ -12494,7 +12700,7 @@ TraceRecorder::record_JSOP_GETELEM()
             uintN int_idx = idx.toInt32();
             Value* vp = &afp->argv[int_idx];
             if (idx_ins->isImmD()) {
-                if (int_idx < 0 || int_idx >= afp->argc)
+                if (int_idx < 0 || int_idx >= afp->numActualArgs())
                     RETURN_STOP_A("cannot trace arguments with out of range index");
                 v_ins = get(vp);
             } else {
@@ -12502,17 +12708,18 @@ TraceRecorder::record_JSOP_GETELEM()
                 // the native stack area. The guard on js_ArgumentClass above ensures the up-to-date
                 // value has been written back to the native stack area.
                 idx_ins = makeNumberInt32(idx_ins);
-                if (int_idx < 0 || int_idx >= afp->argc)
+                if (int_idx < 0 || int_idx >= afp->numActualArgs())
                     RETURN_STOP_A("cannot trace arguments with out of range index");
 
-                guard(true,
+                VMSideExit *exit = snapshot(MISMATCH_EXIT);
+                 guard(true,
                       addName(lir->ins2(LIR_gei, idx_ins, INS_CONST(0)),
                               "guard(upvar index >= 0)"),
-                      MISMATCH_EXIT);
+                       exit);
                 guard(true,
-                      addName(lir->ins2(LIR_lti, idx_ins, INS_CONST(afp->argc)),
+                      addName(lir->ins2(LIR_lti, idx_ins, INS_CONST(afp->numActualArgs())),
                               "guard(upvar index in range)"),
-                      MISMATCH_EXIT);
+                      exit);
 
                 JSValueType type = getCoercedType(*vp);
 
@@ -12550,7 +12757,7 @@ TraceRecorder::record_JSOP_GETELEM()
                       BRANCH_EXIT);
 
                 // Read the value out of the native stack area.
-                guard(true, lir->ins2(LIR_ltui, idx_ins, INS_CONST(afp->argc)),
+                guard(true, lir->ins2(LIR_ltui, idx_ins, INS_CONST(afp->numActualArgs())),
                       snapshot(BRANCH_EXIT));
                 size_t stackOffset = nativespOffset(&afp->argv[0]);
                 LIns* args_addr_ins = lir->ins2(LIR_addp, lirbuf->sp, INS_CONSTWORD(stackOffset));
@@ -12916,7 +13123,7 @@ TraceRecorder::record_JSOP_SETELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLNAME()
 {
-    JSObject* obj = cx->fp->scopeChain;
+    JSObject* obj = cx->fp()->getScopeChain();
     if (obj != globalObj) {
         Value* vp;
         LIns* ins;
@@ -12979,10 +13186,10 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
     JSStackFrame* fp = cx->findFrameAtLevel(level);
     const CallInfo* ci;
     int32 slot;
-    if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
+    if (!fp->hasFunction() || (fp->flags & JSFRAME_EVAL)) {
         ci = &GetUpvarStackOnTrace_ci;
         slot = cookieSlot;
-    } else if (cookieSlot < fp->fun->nargs) {
+    } else if (cookieSlot < fp->numFormalArgs()) {
         ci = &GetUpvarArgOnTrace_ci;
         slot = cookieSlot;
     } else if (cookieSlot == UpvarCookie::CALLEE_SLOT) {
@@ -12990,7 +13197,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
         slot = -2;
     } else {
         ci = &GetUpvarVarOnTrace_ci;
-        slot = cookieSlot - fp->fun->nargs;
+        slot = cookieSlot - fp->numFormalArgs();
     }
 
     LIns* outp = lir->insAlloc(sizeof(double));
@@ -13050,7 +13257,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETUPVAR()
 {
     uintN index = GET_UINT16(cx->regs->pc);
-    JSScript *script = cx->fp->script;
+    JSScript *script = cx->fp()->getScript();
     JSUpvarArray* uva = script->upvars();
     JS_ASSERT(index < uva->length);
 
@@ -13073,8 +13280,8 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETDSLOT()
 {
-    JSObject* callee = cx->fp->callee();
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    JSObject* callee = cx->fp()->callee();
+    LIns* callee_ins = get(&cx->fp()->argv[-2]);
 
     unsigned index = GET_UINT16(cx->regs->pc);
     LIns* dslots_ins = lir->insLoad(LIR_ldp, callee_ins, offsetof(JSObject, dslots), ACCSET_OTHER);
@@ -13170,9 +13377,9 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
         return NULL;
 
     VMSideExit *exit = snapshot(MISMATCH_EXIT);
-    guardClass(obj_ins, &js_ArgumentsClass, exit, LOAD_CONST);
+    guardClass(obj_ins, obj->getClass(), exit, LOAD_CONST);
 
-    LIns* args_ins = getFrameObjPtr(&afp->argsobj);
+    LIns* args_ins = getFrameObjPtr(afp->addressArgsObj());
     LIns* cmp = lir->ins2(LIR_eqp, args_ins, obj_ins);
     lir->insGuard(LIR_xf, cmp, createGuardRecord(exit));
     return afp;
@@ -13198,7 +13405,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     if (fval.toObject().getGlobal() != globalObj)
         RETURN_STOP("JSOP_CALL or JSOP_NEW crosses global scopes");
 
-    JSStackFrame* const fp = cx->fp;
+    JSStackFrame* const fp = cx->fp();
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
@@ -13212,15 +13419,15 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     JS_ASSERT(argc < FrameInfo::CONSTRUCTING_FLAG);
 
     tree->gcthings.addUnique(fval);
-    fi->block = fp->blockChain;
-    if (fp->blockChain)
-        tree->gcthings.addUnique(ObjectValue(*fp->blockChain));
+    fi->block = fp->maybeBlockChain();
+    if (fp->hasBlockChain())
+        tree->gcthings.addUnique(ObjectValue(*fp->getBlockChain()));
     fi->pc = cx->regs->pc;
-    fi->imacpc = fp->imacpc;
+    fi->imacpc = fp->maybeIMacroPC();
     fi->spdist = cx->regs->sp - fp->slots();
     fi->set_argc(uint16(argc), constructing);
     fi->callerHeight = stackSlots - (2 + argc);
-    fi->callerArgc = fp->argc;
+    fi->callerArgc = numActualArgs(fp);
 
     if (callDepth >= tree->maxCallDepth)
         tree->maxCallDepth = callDepth + 1;
@@ -13248,7 +13455,7 @@ TraceRecorder::record_JSOP_CALL()
     uintN argc = GET_ARGC(cx->regs->pc);
     cx->assertValidStackDepth(argc + 2);
     return InjectStatus(functionCall(argc,
-                                     (cx->fp->imacpc && *cx->fp->imacpc == JSOP_APPLY)
+                                     (cx->fp()->hasIMacroPC() && *cx->fp()->getIMacroPC() == JSOP_APPLY)
                                         ? JSOP_APPLY
                                         : JSOP_CALL));
 }
@@ -13289,7 +13496,7 @@ TraceRecorder::record_JSOP_APPLY()
     JSObject* aobj = NULL;
     LIns* aobj_ins = NULL;
 
-    JS_ASSERT(!cx->fp->imacpc);
+    JS_ASSERT(!cx->fp()->hasIMacroPC());
 
     if (!IsFunctionObject(vp[0]))
         return record_JSOP_CALL();
@@ -13343,7 +13550,7 @@ TraceRecorder::record_JSOP_APPLY()
             JSStackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
                 RETURN_STOP_A("can't reach arguments object's frame");
-            length = afp->argc;
+            length = afp->numActualArgs();
         } else {
             RETURN_STOP_A("arguments parameter of apply is not a dense array or argments object");
         }
@@ -13366,10 +13573,11 @@ TraceRecorder::record_NativeCallComplete()
     if (pendingSpecializedNative == IGNORE_NATIVE_CALL_COMPLETE_CALLBACK)
         return ARECORD_CONTINUE;
 
-    jsbytecode* pc = cx->regs->pc;
-
+#ifdef DEBUG
     JS_ASSERT(pendingSpecializedNative);
+    jsbytecode* pc = cx->regs->pc;
     JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW || *pc == JSOP_SETPROP);
+#endif
 
     Value& v = stackval(-1);
     LIns* v_ins = get(&v);
@@ -13403,7 +13611,7 @@ TraceRecorder::record_NativeCallComplete()
              * indicating the error status.
              */
 
-            if (*pc == JSOP_NEW) {
+            if (pendingSpecializedNative->flags & JSTN_CONSTRUCTOR) {
                 LIns *cond_ins;
                 LIns *x;
 
@@ -13457,7 +13665,7 @@ TraceRecorder::record_NativeCallComplete()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::name(Value*& vp, LIns*& ins, NameResult& nr)
 {
-    JSObject* obj = cx->fp->scopeChain;
+    JSObject* obj = cx->fp()->getScopeChain();
     if (obj != globalObj)
         return scopeChainProp(obj, vp, ins, nr);
 
@@ -13673,7 +13881,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
      * property gets it does (e.g., for 'toString' from JSOP_NEW) will not be
      * leaked to the calling script.
      */
-    if (isMethod && !cx->fp->imacpc) {
+    if (isMethod && !cx->fp()->hasIMacroPC()) {
         enterDeepBailCall();
         LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
         v_ins = lir->insCall(&MethodReadBarrier_ci, args);
@@ -13744,6 +13952,15 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
         v_ins = INS_UNDEFINED();
     }
     return RECORD_CONTINUE;
+}
+
+/* See comments in TypedArrayTemplate<double>::copyIndexToValue. */
+LIns *
+TraceRecorder::canonicalizeNaNs(LIns *dval_ins)
+{
+    /* NaNs are the only floating point values that do not == themselves. */
+    LIns *isnonnan_ins = lir->ins2(LIR_eqd, dval_ins, dval_ins);
+    return lir->insChoose(isnonnan_ins, dval_ins, lir->insImmD(js_NaN), true);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -13825,11 +14042,11 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
         break;
       case js::TypedArray::TYPE_FLOAT32:
         addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
-        v_ins = lir->insLoad(LIR_ldf2d, addr_ins, 0, ACCSET_OTHER);
+        v_ins = canonicalizeNaNs(lir->insLoad(LIR_ldf2d, addr_ins, 0, ACCSET_OTHER));
         break;
       case js::TypedArray::TYPE_FLOAT64:
         addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 3));
-        v_ins = lir->insLoad(LIR_ldd, addr_ins, 0, ACCSET_OTHER);
+        v_ins = canonicalizeNaNs(lir->insLoad(LIR_ldd, addr_ins, 0, ACCSET_OTHER));
         break;
       default:
         JS_NOT_REACHED("Unknown typed array type in tracer");
@@ -13974,8 +14191,8 @@ TraceRecorder::record_JSOP_STRICTNE()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_OBJECT()
 {
-    JSStackFrame* const fp = cx->fp;
-    JSScript* script = fp->script;
+    JSStackFrame* const fp = cx->fp();
+    JSScript* script = fp->getScript();
     unsigned index = atoms - script->atomMap.vector + GET_INDEX(cx->regs->pc);
 
     JSObject* obj;
@@ -14140,7 +14357,7 @@ TraceRecorder::record_JSOP_LOCALDEC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_IMACOP()
 {
-    JS_ASSERT(cx->fp->imacpc);
+    JS_ASSERT(cx->fp()->hasIMacroPC());
     return ARECORD_CONTINUE;
 }
 
@@ -14546,11 +14763,11 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BINDNAME()
 {
-    JSStackFrame* const fp = cx->fp;
+    JSStackFrame* const fp = cx->fp();
     JSObject *obj;
 
-    if (!fp->fun) {
-        obj = fp->scopeChain;
+    if (!fp->hasFunction()) {
+        obj = fp->getScopeChain();
 
 #ifdef DEBUG
         JSStackFrame *fp2 = fp;
@@ -14561,7 +14778,7 @@ TraceRecorder::record_JSOP_BINDNAME()
         while (obj->getClass() == &js_BlockClass) {
             // The block's values are still on the stack.
 #ifdef DEBUG
-            // NB: fp2 can't be a generator frame, because !fp->fun.
+            // NB: fp2 can't be a generator frame, because !fp->hasFunction.
             while (obj->getPrivate() != fp2) {
                 JS_ASSERT(fp2->flags & JSFRAME_SPECIAL);
                 fp2 = fp2->down;
@@ -14593,13 +14810,13 @@ TraceRecorder::record_JSOP_BINDNAME()
     // We can't trace BINDNAME in functions that contain direct calls to eval,
     // as they might add bindings which previously-traced references would have
     // to see.
-    if (JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags))
+    if (JSFUN_HEAVYWEIGHT_TEST(fp->getFunction()->flags))
         RETURN_STOP_A("BINDNAME in heavyweight function.");
 
     // We don't have the scope chain on trace, so instead we get a start object
     // that is on the scope chain and doesn't skip the target object (the one
     // that contains the property).
-    Value *callee = &cx->fp->argv[-2];
+    Value *callee = &cx->fp()->argv[-2];
     obj = callee->toObject().getParent();
     if (obj == globalObj) {
         stack(0, INS_CONSTOBJ(obj));
@@ -14611,7 +14828,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     JSAtom *atom = atoms[GET_INDEX(cx->regs->pc)];
     jsid id = ATOM_TO_JSID(atom);
     JSContext *localCx = cx;
-    JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
+    JSObject *obj2 = js_FindIdentifierBase(cx, fp->getScopeChain(), id);
     if (!obj2)
         RETURN_ERROR_A("error in js_FindIdentifierBase");
     if (!TRACE_RECORDER(localCx))
@@ -14849,7 +15066,7 @@ jsatomid
 TraceRecorder::getFullIndex(ptrdiff_t pcoff)
 {
     jsatomid index = GET_INDEX(cx->regs->pc + pcoff);
-    index += atoms - cx->fp->script->atomMap.vector;
+    index += atoms - cx->fp()->getScript()->atomMap.vector;
     return index;
 }
 
@@ -14857,7 +15074,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LAMBDA()
 {
     JSFunction* fun;
-    fun = cx->fp->script->getFunction(getFullIndex());
+    fun = cx->fp()->getScript()->getFunction(getFullIndex());
 
     /*
      * Emit code to clone a null closure parented by this recorder's global
@@ -14873,19 +15090,60 @@ TraceRecorder::record_JSOP_LAMBDA()
     if (FUN_NULL_CLOSURE(fun)) {
         if (FUN_OBJECT(fun)->getParent() != globalObj)
             RETURN_STOP_A("Null closure function object parent must be global object");
-        JSOp op2 = JSOp(cx->regs->pc[JSOP_LAMBDA_LENGTH]);
+
+        jsbytecode *pc2 = cx->regs->pc + JSOP_LAMBDA_LENGTH;
+        JSOp op2 = JSOp(*pc2);
+
+        if (op2 == JSOP_INITMETHOD) {
+            stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
+            return ARECORD_CONTINUE;
+        }
 
         if (op2 == JSOP_SETMETHOD) {
             Value lval = stackval(-1);
 
-            if (!lval.isPrimitive() &&
-                lval.toObject().getClass() == &js_ObjectClass) {
+            if (!lval.isPrimitive() && lval.toObject().canHaveMethodBarrier()) {
                 stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
                 return ARECORD_CONTINUE;
             }
-        } else if (op2 == JSOP_INITMETHOD) {
-            stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
-            return ARECORD_CONTINUE;
+        } else if (fun->joinable()) {
+            if (op2 == JSOP_CALL) {
+                /*
+                 * Array.prototype.sort and String.prototype.replace are
+                 * optimized as if they are special form. We know that they
+                 * won't leak the joined function object in obj, therefore
+                 * we don't need to clone that compiler- created function
+                 * object for identity/mutation reasons.
+                 */
+                int iargc = GET_ARGC(pc2);
+
+                /*
+                 * Note that we have not yet pushed obj as the final argument,
+                 * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+                 * is the callee for this JSOP_CALL.
+                 */
+                const Value &cref = cx->regs->sp[1 - (iargc + 2)];
+                JSObject *callee;
+
+                if (IsFunctionObject(cref, &callee)) {
+                    JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+                    FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+
+                    if ((iargc == 1 && fastNative == array_sort) ||
+                        (iargc == 2 && fastNative == str_replace)) {
+                        stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
+                        return ARECORD_CONTINUE;
+                    }
+                }
+            } else if (op2 == JSOP_NULL) {
+                pc2 += JSOP_NULL_LENGTH;
+                op2 = JSOp(*pc2);
+
+                if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0) {
+                    stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
+                    return ARECORD_CONTINUE;
+                }
+            }
         }
 
         LIns *proto_ins;
@@ -14915,7 +15173,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LAMBDA_FC()
 {
     JSFunction* fun;
-    fun = cx->fp->script->getFunction(getFullIndex());
+    fun = cx->fp()->getScript()->getFunction(getFullIndex());
 
     if (FUN_OBJECT(fun)->getParent() != globalObj)
         return ARECORD_STOP;
@@ -14950,7 +15208,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLEE()
 {
-    stack(0, get(&cx->fp->argv[-2]));
+    stack(0, get(&cx->fp()->argv[-2]));
     return ARECORD_CONTINUE;
 }
 
@@ -14998,12 +15256,12 @@ TraceRecorder::record_JSOP_NOP()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARGSUB()
 {
-    JSStackFrame* const fp = cx->fp;
-    if (!(fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
+    JSStackFrame* const fp = cx->fp();
+    if (!(fp->getFunction()->flags & JSFUN_HEAVYWEIGHT)) {
         uintN slot = GET_ARGNO(cx->regs->pc);
-        if (slot >= fp->argc)
+        if (slot >= fp->numActualArgs())
             RETURN_STOP_A("can't trace out-of-range arguments");
-        stack(0, get(&cx->fp->argv[slot]));
+        stack(0, get(&cx->fp()->argv[slot]));
         return ARECORD_CONTINUE;
     }
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
@@ -15012,10 +15270,10 @@ TraceRecorder::record_JSOP_ARGSUB()
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
-    // The following implements IsOverriddenArgsLength on trace.
-    // The '2' bit is set if length was overridden.
+    // The following implements JSObject::isArgsLengthOverridden on trace.
+    // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = stobj_get_fslot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
-    LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(2));
+    LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
     guard(true, lir->insEqI_0(ovr_ins), snapshot(BRANCH_EXIT));
     return len_ins;
 }
@@ -15023,7 +15281,9 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARGCNT()
 {
-    if (cx->fp->fun->flags & JSFUN_HEAVYWEIGHT)
+    JSStackFrame * const fp = cx->fp();
+
+    if (fp->getFunction()->flags & JSFUN_HEAVYWEIGHT)
         RETURN_STOP_A("can't trace heavyweight JSOP_ARGCNT");
 
     // argc is fixed on trace, so ideally we would simply generate LIR for
@@ -15032,16 +15292,16 @@ TraceRecorder::record_JSOP_ARGCNT()
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
     // LIR, which will assert in alu().
-    if (cx->fp->argsobj && cx->fp->argsobj->isArgsLengthOverridden())
+    if (fp->hasArgsObj() && fp->getArgsObj()->isArgsLengthOverridden())
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
-    LIns *a_ins = getFrameObjPtr(&cx->fp->argsobj);
+    LIns *a_ins = getFrameObjPtr(fp->addressArgsObj());
     if (callDepth == 0) {
         LIns *br = lir->insBranch(LIR_jt, lir->insEqP_0(a_ins), NULL);
         guardArgsLengthNotAssigned(a_ins);
         LIns *label = lir->ins0(LIR_label);
         br->setTarget(label);
     }
-    stack(0, lir->insImmD(cx->fp->argc));
+    stack(0, lir->insImmD(fp->numActualArgs()));
     return ARECORD_CONTINUE;
 }
 
@@ -15170,7 +15430,7 @@ TraceRecorder::record_JSOP_RETRVAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETGVAR()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         return ARECORD_CONTINUE; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
 
@@ -15186,7 +15446,7 @@ TraceRecorder::record_JSOP_GETGVAR()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_SETGVAR()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         return ARECORD_CONTINUE; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
 
@@ -15202,7 +15462,7 @@ TraceRecorder::record_JSOP_SETGVAR()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INCGVAR()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
         return ARECORD_CONTINUE;
@@ -15218,7 +15478,7 @@ TraceRecorder::record_JSOP_INCGVAR()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DECGVAR()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
         return ARECORD_CONTINUE;
@@ -15234,7 +15494,7 @@ TraceRecorder::record_JSOP_DECGVAR()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GVARINC()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
         return ARECORD_CONTINUE;
@@ -15250,7 +15510,7 @@ TraceRecorder::record_JSOP_GVARINC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GVARDEC()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
         return ARECORD_CONTINUE;
@@ -15266,8 +15526,8 @@ TraceRecorder::record_JSOP_GVARDEC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_REGEXP()
 {
-    JSStackFrame* const fp = cx->fp;
-    JSScript* script = fp->script;
+    JSStackFrame* const fp = cx->fp();
+    JSScript* script = fp->getScript();
     unsigned index = atoms - script->atomMap.vector + GET_INDEX(cx->regs->pc);
 
     LIns* proto_ins;
@@ -15551,22 +15811,30 @@ TraceRecorder::record_JSOP_STOP()
 {
     if (callDepth == 0 && IsTraceableRecursion(cx) &&
         tree->recursion != Recursion_Disallowed &&
-        tree->script == cx->fp->script) {
+        tree->script == cx->fp()->getScript()) {
         return InjectStatus(upRecursion());
     }
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp = cx->fp();
 
-    if (fp->imacpc) {
+    if (fp->hasIMacroPC()) {
         /*
          * End of imacro, so return true to the interpreter immediately. The
          * interpreter's JSOP_STOP case will return from the imacro, back to
          * the pc after the calling op, still in the same JSStackFrame.
          */
-        updateAtoms(fp->script);
+        updateAtoms(fp->getScript());
         return ARECORD_CONTINUE;
     }
 
     putActivationObjects();
+
+#ifdef MOZ_TRACE_JSCALLS
+    if (cx->functionCallback) {
+        LIns* args[] = { INS_CONST(0), INS_CONSTPTR(cx->fp()->getFunction()), cx_ins };
+        LIns* call_ins = lir->insCall(&functionProbe_ci, args);
+        guard(false, lir->insEqI_0(call_ins), MISMATCH_EXIT);
+    }
+#endif
 
     /*
      * We know falling off the end of a constructor returns the new object that
@@ -15577,7 +15845,7 @@ TraceRecorder::record_JSOP_STOP()
      * of the last expression-statement, debugger API calls).
      */
     if (fp->flags & JSFRAME_CONSTRUCTING) {
-        JS_ASSERT(fp->thisv == fp->argv[-1]);
+        JS_ASSERT(fp->getThisValue() == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
         rval_ins = INS_UNDEFINED();
@@ -15617,7 +15885,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENTERBLOCK()
 {
     JSObject* obj;
-    obj = cx->fp->script->getObject(getFullIndex(0));
+    obj = cx->fp()->getScript()->getObject(getFullIndex(0));
 
     LIns* void_ins = INS_UNDEFINED();
     for (int i = 0, n = OBJ_BLOCK_COUNT(cx, obj); i < n; i++)
@@ -15629,7 +15897,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
     /* We mustn't exit the lexical block we began recording in. */
-    if (cx->fp->blockChain == lexicalBlock)
+    if (cx->fp()->getBlockChain() == lexicalBlock)
         return ARECORD_STOP;
     return ARECORD_CONTINUE;
 }
@@ -15650,9 +15918,9 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARRAYPUSH()
 {
     uint32_t slot = GET_UINT16(cx->regs->pc);
-    JS_ASSERT(cx->fp->script->nfixed <= slot);
-    JS_ASSERT(cx->fp->slots() + slot < cx->regs->sp - 1);
-    Value &arrayval = cx->fp->slots()[slot];
+    JS_ASSERT(cx->fp()->getFixedCount() <= slot);
+    JS_ASSERT(cx->fp()->slots() + slot < cx->regs->sp - 1);
+    Value &arrayval = cx->fp()->slots()[slot];
     JS_ASSERT(arrayval.isObject());
     JS_ASSERT(arrayval.toObject().isDenseArray());
     LIns *array_ins = get(&arrayval);
@@ -15688,11 +15956,11 @@ TraceRecorder::record_JSOP_GETTHISPROP()
     CHECK_STATUS_A(getThis(this_ins));
 
     /*
-     * It's safe to just use cx->fp->thisv here because getThis() returns
+     * It's safe to just use cx->fp()->thisv here because getThis() returns
      * ARECORD_STOP if thisv is not available.
      */
-    JS_ASSERT(cx->fp->flags & JSFRAME_COMPUTED_THIS);
-    CHECK_STATUS_A(getProp(&cx->fp->thisv.toObject(), this_ins));
+    JS_ASSERT(cx->fp()->flags & JSFRAME_COMPUTED_THIS);
+    CHECK_STATUS_A(getProp(&cx->fp()->getThisValue().toObject(), this_ins));
     return ARECORD_CONTINUE;
 }
 
@@ -15732,7 +16000,7 @@ TraceRecorder::record_JSOP_INDEXBASE3()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLGVAR()
 {
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
+    Value slotval = cx->fp()->slots()[GET_SLOTNO(cx->regs->pc)];
     if (slotval.isNull())
         // We will see JSOP_CALLNAME from the interpreter's jump, so no-op here.
         return ARECORD_CONTINUE;
@@ -15793,10 +16061,7 @@ TraceRecorder::record_JSOP_LENGTH()
     if (l.isPrimitive()) {
         if (!l.isString())
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
-        set(&l, lir->ins1(LIR_i2d,
-            p2i(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&l),
-                              offsetof(JSString, mLengthAndFlags), ACCSET_OTHER),
-                              JSString::FLAGS_LENGTH_SHIFT))));
+        set(&l, lir->ins1(LIR_i2d, p2i(getStringLength(get(&l)))));
         return ARECORD_CONTINUE;
     }
 
@@ -15815,9 +16080,11 @@ TraceRecorder::record_JSOP_LENGTH()
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 
-        // slot_ins is the value from the slot; right-shift by 2 bits to get
-        // the length (see GetArgsLength in jsfun.cpp).
-        LIns* v_ins = lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi, slot_ins, 1));
+        // slot_ins is the value from the slot; right-shift to get the length
+        // (see JSObject::getArgsInitialLength in jsfun.cpp).
+        LIns* v_ins =
+            lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi,
+                                             slot_ins, JSObject::ARGS_PACKED_BITS_COUNT));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }
@@ -15883,50 +16150,6 @@ TraceRecorder::record_JSOP_HOLE()
 AbortableRecordingStatus
 TraceRecorder::record_JSOP_TRACE()
 {
-    return ARECORD_CONTINUE;
-}
-
-static const uint32 sMaxConcatNSize = 32;
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_OBJTOSTR()
-{
-    Value &v = stackval(-1);
-    JS_ASSERT_IF(cx->fp->imacpc, v.isPrimitive() &&
-                                 *cx->fp->imacpc == JSOP_OBJTOSTR);
-    if (v.isPrimitive())
-        return ARECORD_CONTINUE;
-    CHECK_STATUS_A(guardNativeConversion(v));
-    return InjectStatus(callImacro(objtostr_imacros.toString));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CONCATN()
-{
-    JSFrameRegs regs = *cx->regs;
-    uint32 argc = GET_ARGC(regs.pc);
-    Value *argBase = regs.sp - argc;
-
-    /* Prevent code/alloca explosion. */
-    if (argc > sMaxConcatNSize)
-        return ARECORD_STOP;
-
-    /* Build an array of the stringified primitives. */
-    int32_t bufSize = argc * sizeof(JSString *);
-    LIns *buf_ins = lir->insAlloc(bufSize);
-    int32_t d = 0;
-    for (Value *vp = argBase; vp != regs.sp; ++vp, d += sizeof(void *)) {
-        JS_ASSERT(vp->isPrimitive());
-        lir->insStore(stringify(*vp), buf_ins, d, ACCSET_OTHER);
-    }
-
-    /* Perform concatenation using a builtin. */
-    LIns *args[] = { lir->insImmI(argc), buf_ins, cx_ins };
-    LIns *result_ins = lir->insCall(&js_ConcatN_ci, args);
-    guard(false, lir->insEqP_0(result_ins), OOM_EXIT);
-
-    /* Update tracker with result. */
-    set(argBase, result_ins);
     return ARECORD_CONTINUE;
 }
 

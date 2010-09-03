@@ -228,7 +228,6 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CLASS             _JS_CTYPE(js::Class *,            _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_DOUBLEPTR         _JS_CTYPE(double *,               _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CHARPTR           _JS_CTYPE(char *,                 _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_APNPTR            _JS_CTYPE(ArgsPrivateNative *,    _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAMEINFO         _JS_CTYPE(FrameInfo *,            _JS_PTR, --, --, INFALLIBLE)
 
@@ -597,7 +596,6 @@ JS_DECLARE_CALLINFO(js_TypeOfObject)
 JS_DECLARE_CALLINFO(js_BooleanIntToString)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
 JS_DECLARE_CALLINFO(js_PopInterpFrame)
-JS_DECLARE_CALLINFO(js_ConcatN)
 
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
@@ -625,12 +623,7 @@ JS_DECLARE_CALLINFO(js_String_tn)
 JS_DECLARE_CALLINFO(js_CompareStrings)
 JS_DECLARE_CALLINFO(js_ConcatStrings)
 JS_DECLARE_CALLINFO(js_EqualStrings)
-JS_DECLARE_CALLINFO(js_String_getelem)
-JS_DECLARE_CALLINFO(js_String_p_charCodeAt)
-JS_DECLARE_CALLINFO(js_String_p_charCodeAt0)
-JS_DECLARE_CALLINFO(js_String_p_charCodeAt0_int)
-JS_DECLARE_CALLINFO(js_String_p_charCodeAt_double_int)
-JS_DECLARE_CALLINFO(js_String_p_charCodeAt_int_int)
+JS_DECLARE_CALLINFO(js_Flatten)
 
 /* Defined in jstypedarray.cpp. */
 JS_DECLARE_CALLINFO(js_TypedArray_uint8_clamp_double)

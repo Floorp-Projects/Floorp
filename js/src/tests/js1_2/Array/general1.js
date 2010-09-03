@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'general1.js';
 
 /**
    Filename:     general1.js

@@ -50,7 +50,6 @@
  * what was confusing the engine in its attempt to look up h_peer
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-127557.js';
 var UBound = 0;
 var BUGNUMBER = 127557;
 var summary = 'Testing cloned function objects';

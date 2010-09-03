@@ -111,7 +111,7 @@ enum JSONDataType {
 struct JSONParser;
 
 extern JSONParser *
-js_BeginJSONParse(JSContext *cx, js::Value *rootVal);
+js_BeginJSONParse(JSContext *cx, js::Value *rootVal, bool suppressErrors = false);
 
 extern JSBool
 js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);

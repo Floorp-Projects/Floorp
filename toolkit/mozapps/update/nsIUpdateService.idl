@@ -251,10 +251,12 @@ interface nsIUpdate : nsISupports
 
   /**
    * A numeric error code that conveys additional information about the state
-   * of a failed update.  If the update is not in the "failed" state, then this
-   * value is zero.
+   * of a failed update or failed certificate attribute check during an update
+   * check. If the update is not in the "failed" state or the certificate
+   * attribute check has not failed the value is zero.
    *
-   * TODO: Define typical error codes (for now, see updater/errors.h)
+   * TODO: Define typical error codes (for now, see updater/errors.h and the
+   *       CERT_ATTR_CHECK_FAILED_* values in nsUpdateService.js)
    */
   attribute long errorCode;
 

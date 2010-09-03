@@ -42,6 +42,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+CC_WRAPPER =
+CXX_WRAPPER =
 include $(topsrcdir)/config/config.mk
 
 MODULE = psm
@@ -176,6 +178,7 @@ endif
 DEFAULT_GMAKE_FLAGS = MAKE="$(NSSMAKE) -j1" -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
 DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(ABS_DIST)
+DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(NSPR_INCLUDE_DIR)
 DEFAULT_GMAKE_FLAGS += DIST=$(ABS_DIST)
 DEFAULT_GMAKE_FLAGS += NSPR_INCLUDE_DIR=$(NSPR_INCLUDE_DIR)
 DEFAULT_GMAKE_FLAGS += NSPR_LIB_DIR=$(NSPR_LIB_DIR)
@@ -185,6 +188,7 @@ DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
 DEFAULT_GMAKE_FLAGS += NSINSTALL="$(NSINSTALL)"
 ifndef MOZ_NATIVE_SQLITE
 DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=mozsqlite3
+DEFAULT_GMAKE_FLAGS += SQLITE_INCLUDE_DIR=$(ABS_DIST)/include
 endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
@@ -237,8 +241,8 @@ DEFAULT_GMAKE_FLAGS += MACOS_SDK_DIR=$(MACOS_SDK_DIR)
 endif
 endif
 
-# Turn off TLS compression support because NSS 3.12.6 can't be built
-# with Mozilla's zlib.h.  See bug 527659 comment 10.
+# Turn off TLS compression support because it requires system zlib.
+# See bug 580679 comment 18.
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ZLIB=
 
 # Disable building of the test programs in security/nss/lib/zlib
@@ -285,7 +289,7 @@ DEFAULT_GMAKE_FLAGS += \
 	OS_RELEASE="2.6" \
 	OS_LIBS= \
 	STANDARDS_CFLAGS="-std=gnu89" \
-	DSO_CFLAGS="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -DANDROID_VERSION=$(ANDROID_VERSION) -include $(topsrcdir)/security/manager/android_stub.h" \
+	DSO_CFLAGS="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -DANDROID_VERSION=$(ANDROID_VERSION) -include $(ABS_topsrcdir)/security/manager/android_stub.h" \
 	DSO_LDOPTS="-shared $(LDFLAGS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) " \
 	$(NULL)
 endif

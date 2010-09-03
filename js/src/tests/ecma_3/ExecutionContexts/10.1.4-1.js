@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '10.1.4-1.js';
 
 /**
    ECMA Section: 10.1.4.1 Entering An Execution Context

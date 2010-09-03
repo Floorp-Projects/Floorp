@@ -292,8 +292,10 @@ enum TokenStreamFlags
 #define t_atom2         u.p.atom2
 #define t_dval          u.dval
 
-const size_t LINE_LIMIT = 1024; /* logical line buffer size limit
-                                   -- physical line length is unlimited */
+static const size_t LINE_LIMIT = 1024; /* logical line buffer size limit
+                                          -- physical line length is unlimited */
+static const size_t UNGET_LIMIT = 6;   /* maximum number of chars to unget at once
+                                          -- for \uXXXX lookahead */
 
 class TokenStream
 {
@@ -449,7 +451,21 @@ class TokenStream
     TokenKind getTokenInternal();     /* doesn't check for pushback or error flag. */
     int fillUserbuf();
     int32 getCharFillLinebuf();
-    int32 getChar();
+
+    /* This gets the next char, normalizing all EOL sequences to '\n' as it goes. */
+    JS_ALWAYS_INLINE int32 getChar() {
+        int32 c;
+        if (currbuf->ptr < currbuf->limit - 1) {
+            /* Not yet the last char of currbuf, so it can't be a newline.  Just get it. */
+            c = *currbuf->ptr++;
+            JS_ASSERT(c != '\n');
+        } else {
+            c = getCharSlowCase();
+        }
+        return c;
+    }
+
+    int32 getCharSlowCase();
     void ungetChar(int32 c);
     Token *newToken(ptrdiff_t adjust);
     int32 getUnicodeEscape();
@@ -480,19 +496,21 @@ class TokenStream
     uintN               cursor;         /* index of last parsed token */
     uintN               lookahead;      /* count of lookahead tokens */
     uintN               lineno;         /* current line number */
-    uintN               ungetpos;       /* next free char slot in ungetbuf */
-    jschar              ungetbuf[6];    /* at most 6, for \uXXXX lookahead */
     uintN               flags;          /* flags -- see above */
     uint32              linepos;        /* linebuf offset in physical line */
     uint32              lineposNext;    /* the next value of linepos */
     TokenBuf            linebuf;        /* line buffer for diagnostics */
     TokenBuf            userbuf;        /* user input buffer if !file */
+    TokenBuf            ungetbuf;       /* buffer for ungetChar */
+    TokenBuf            *currbuf;       /* the buffer getChar is currently using */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
     JSCharBuffer        tokenbuf;       /* current token string buffer */
+    bool                maybeEOL[256];  /* probabilistic EOL lookup table */
+    bool                maybeStrSpecial[256];/* speeds up string scanning */
 };
 
 } /* namespace js */

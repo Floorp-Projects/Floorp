@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-346027.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346027;
 var summary = 'Date.prototype.setFullYear()';

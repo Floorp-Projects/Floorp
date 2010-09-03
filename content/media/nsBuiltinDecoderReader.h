@@ -376,7 +376,7 @@ public:
       mTimeEnd(aTimeEnd)
   {}
 
-  PRBool IsNull() {
+  PRBool IsNull() const {
     return mOffsetStart == 0 &&
            mOffsetEnd == 0 &&
            mTimeStart == 0 &&
@@ -427,9 +427,9 @@ public:
   // or NS_ERROR_FAILURE on failure.
   virtual nsresult ReadMetadata() = 0;
 
-
-  // Stores the presentation time of the first sample in the stream in
-  // aOutStartTime, and returns the first video sample, if we have video.
+  // Stores the presentation time of the first frame/sample we'd be
+  // able to play if we started playback at aOffset, and returns the
+  // first video sample, if we have video.
   virtual VideoData* FindStartTime(PRInt64 aOffset,
                                    PRInt64& aOutStartTime);
 
@@ -438,8 +438,12 @@ public:
   virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
   // Moves the decode head to aTime milliseconds. aStartTime and aEndTime
-  // denote the start and end times of the media.
-  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime) = 0;
+  // denote the start and end times of the media in ms, and aCurrentTime
+  // is the current playback position in ms.
+  virtual nsresult Seek(PRInt64 aTime,
+                        PRInt64 aStartTime,
+                        PRInt64 aEndTime,
+                        PRInt64 aCurrentTime) = 0;
 
   // Gets presentation info required for playback.
   const nsVideoInfo& GetInfo() {
@@ -452,7 +456,18 @@ public:
   // Queue of video samples. This queue is threadsafe.
   MediaQueue<VideoData> mVideoQueue;
 
+  // Populates aBuffered with the time ranges which are buffered. aStartTime
+  // must be the presentation time of the first sample/frame in the media, e.g.
+  // the media time corresponding to playback time/position 0. This function
+  // should only be called on the main thread.
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered,
+                               PRInt64 aStartTime) = 0;
+
 protected:
+
+  // Pumps the decode until we reach frames/samples required to play at
+  // time aTarget (ms).
+  nsresult DecodeToTarget(PRInt64 aTarget);
 
   // Reader decode function. Matches DecodeVideoFrame() and
   // DecodeAudioData().

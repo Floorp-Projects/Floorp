@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349962.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349962;
 var summary = 'let variable bound to nested function expressions'

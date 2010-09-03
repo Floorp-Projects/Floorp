@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMNSHTMLImageElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
@@ -59,6 +58,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
+#include "nsFocusManager.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -81,7 +81,6 @@
 class nsHTMLImageElement : public nsGenericHTMLElement,
                            public nsImageLoadingContent,
                            public nsIDOMHTMLImageElement,
-                           public nsIDOMNSHTMLImageElement,
                            public nsIJSNativeInitializer
 {
 public:
@@ -102,9 +101,6 @@ public:
 
   // nsIDOMHTMLImageElement
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
-
-  // nsIDOMNSHTMLImageElement
-  NS_DECL_NSIDOMNSHTMLIMAGEELEMENT
 
   // override from nsGenericHTMLElement
   NS_IMETHOD GetDraggable(PRBool* aDraggable);
@@ -198,9 +194,8 @@ DOMCI_NODE_DATA(HTMLImageElement, nsHTMLImageElement)
 
 // QueryInterface implementation for nsHTMLImageElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLImageElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLImageElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLImageElement,
                                    nsIDOMHTMLImageElement,
-                                   nsIDOMNSHTMLImageElement,
                                    nsIJSNativeInitializer,
                                    imgIDecoderObserver,
                                    nsIImageLoadingContent,
@@ -486,7 +481,7 @@ nsHTMLImageElement::IsHTMLFocusable(PRBool aWithMouse,
 
   *aIsFocusable = 
 #ifdef XP_MACOSX
-    !aWithMouse &&
+    (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
 #endif
     (tabIndex >= 0 || HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 

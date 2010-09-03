@@ -39,6 +39,7 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = xpcom/tests
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -72,7 +73,6 @@ CPPSRCS		= \
 		TestRegistrationOrder.cpp \
 		TestThreadPoolListener.cpp \
 		TestTimers.cpp \
-		TestOOM.cpp \
 		TestBlockingProcess.cpp \
 		TestQuickReturn.cpp \
 		TestArguments.cpp \
@@ -147,10 +147,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-ifndef MOZILLA_INTERNAL_API
-LIBS +=	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX)
-endif
-
 LIBS += $(XPCOM_LIBS)
 
 # Needed to resolve __yylex (?)
@@ -176,7 +172,7 @@ LOCAL_INCLUDES	= \
 
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
-	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(MODULE)/unit
+	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 
 # Copy TestHarness.h into its own module, for ease of setting up includes
 # correctly.

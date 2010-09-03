@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352271.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352271;
 var summary = 'Do not crash with |getter| |for each|';

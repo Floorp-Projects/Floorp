@@ -76,6 +76,7 @@
 #include "jsvector.h"
 
 #include "jsscriptinlines.h"
+#include "jscntxtinlines.h"
 
 #include "jsautooplen.h"
 
@@ -214,8 +215,6 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc)
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
-      case JSOP_CONCATN:
-        return GET_UINT16(pc);
       case JSOP_LEAVEBLOCK:
         return GET_UINT16(pc);
       case JSOP_LEAVEBLOCKEXPR:
@@ -280,7 +279,7 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    return js_DisassembleAtPC(cx, cx->fp->script, true, stdout, cx->regs->pc);
+    return js_DisassembleAtPC(cx, cx->fp()->getScript(), true, stdout, cx->regs->pc);
 }
 
 JSBool
@@ -2874,8 +2873,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (fp) {
                         while (!(fp->flags & JSFRAME_EVAL))
                             fp = fp->down;
-                        JS_ASSERT(fp->script == jp->script);
-                        JS_ASSERT(fp->down->fun == jp->fun);
+                        JS_ASSERT(fp->getScript() == jp->script);
+                        JS_ASSERT(fp->down->getFunction() == jp->fun);
                         JS_ASSERT(FUN_INTERPRETED(jp->fun));
                         JS_ASSERT(jp->script != jp->fun->u.i.script);
                         JS_ASSERT(jp->script->upvarsOffset != 0);
@@ -3558,51 +3557,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = -2;
                 }
                 break;
-
-              case JSOP_CONCATN:
-              {
-                argc = GET_UINT16(pc);
-                JS_ASSERT(argc > 0);
-
-                js::Vector<char *> argv(cx);
-                if (!argv.resize(argc))
-                    return NULL;
-
-                MUST_FLOW_THROUGH("out");
-                ok = JS_FALSE;
-
-                for (i = argc - 1; i >= 0; i--) {
-                    argv[i] = JS_strdup(cx, POP_STR_PREC(cs->prec + 1));
-                    if (!argv[i])
-                        goto out;
-                }
-
-                todo = Sprint(&ss->sprinter, "%s", argv[0]);
-                if (todo < 0)
-                    goto out;
-                for (i = 1; i < argc; i++) {
-                    if (Sprint(&ss->sprinter, " + %s", argv[i]) < 0)
-                        goto out;
-                }
-
-                /*
-                 * The only way that our next op could be a JSOP_ADD is
-                 * if we are about to concatenate at least one non-string
-                 * literal. Deal with that here in order to avoid extra
-                 * parentheses (because JSOP_ADD is left-associative).
-                 */
-                if (pc[len] == JSOP_ADD)
-                    saveop = JSOP_NOP;
-
-                ok = JS_TRUE;
-
-              out:
-                for (i = 0; i < argc; i++)
-                    JS_free(cx, argv[i]);
-                if (!ok)
-                    return NULL;
-                break;
-              }
 
               case JSOP_NEW:
               case JSOP_CALL:
@@ -5128,15 +5082,15 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     
     /* Get scripted caller */
     FrameRegsIter i(cx);
-    while (!i.done() && !i.fp()->script)
+    while (!i.done() && !i.fp()->hasScript())
         ++i;
 
-    if (i.done() || !i.pc() || i.fp()->script->nslots == 0)
+    if (i.done() || !i.pc() || i.fp()->getSlotCount() == 0)
         goto do_fallback;
 
     fp = i.fp();
-    script = fp->script;
-    pc = fp->imacpc ? fp->imacpc : i.pc();
+    script = fp->getScript();
+    pc = fp->hasIMacroPC() ? fp->getIMacroPC() : i.pc();
     JS_ASSERT(pc >= script->main && pc < script->code + script->length);
 
     if (spindex != JSDVG_IGNORE_STACK) {
@@ -5176,15 +5130,19 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
             } while (*--sp != v);
 
             /*
-             * The value may have come from beyond stackBase + pcdepth,
-             * meaning that it came from a temporary slot that the
-             * interpreter uses for GC roots or when JSOP_APPLY extended
-             * the stack to fit the argument array elements. Only update pc
-             * if beneath stackBase + pcdepth; otherwise blame existing
-             * (current) PC.
+             * The value may have come from beyond stackBase + pcdepth, meaning
+             * that it came from a temporary slot pushed by the interpreter or
+             * arguments pushed for an InvokeFromEngine call. Only update pc if
+             * beneath stackBase + pcdepth. If above, we don't know whether the
+             * value is associated with the current pc or from a fast native
+             * whose arguments have been pushed, so just print the value.
              */
-            if (sp < stackBase + pcdepth)
-                pc = pcstack[sp - stackBase];
+            if (sp >= stackBase + pcdepth) {
+                pcdepth = -1;
+                goto release_pcstack;
+            }
+
+            pc = pcstack[sp - stackBase];
         }
 
       release_pcstack:
@@ -5195,13 +5153,14 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
     {
         jsbytecode* savepc = i.pc();
-        jsbytecode* imacpc = fp->imacpc;
-        if (imacpc) {
-            if (fp == cx->fp)
-                cx->regs->pc = imacpc;
+        jsbytecode* savedIMacroPC = fp->maybeIMacroPC();
+        if (savedIMacroPC) {
+            JS_ASSERT(cx->hasfp());
+            if (fp == cx->fp())
+                cx->regs->pc = savedIMacroPC;
             else
-                fp->savedPC = imacpc;
-            fp->imacpc = NULL;
+                fp->savedPC = savedIMacroPC;
+            fp->clearIMacroPC();
         }
 
         /*
@@ -5209,17 +5168,18 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
          * value *inside* an imacro; this would confuse the decompiler.
          */
         char *name;
-        if (imacpc && size_t(pc - script->code) >= script->length)
+        if (savedIMacroPC && size_t(pc - script->code) >= script->length)
             name = FAILED_EXPRESSION_DECOMPILER;
         else
-            name = DecompileExpression(cx, script, fp->fun, pc);
+            name = DecompileExpression(cx, script, fp->maybeFunction(), pc);
 
-        if (imacpc) {
-            if (fp == cx->fp)
-                cx->regs->pc = imacpc;
+        if (savedIMacroPC) {
+            JS_ASSERT(cx->hasfp());
+            if (fp == cx->fp())
+                cx->regs->pc = savedIMacroPC;
             else
                 fp->savedPC = savepc;
-            fp->imacpc = imacpc;
+            fp->setIMacroPC(savedIMacroPC);
         }
 
         if (name != FAILED_EXPRESSION_DECOMPILER)
@@ -5443,11 +5403,15 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
                   uintN pcdepth, jsbytecode *pc, jsbytecode *target,
                   jsbytecode **pcstack)
 {
-    size_t nbytes = StackDepth(script) * sizeof *pcstack;
-    jsbytecode** tmp_pcstack = (jsbytecode **) cx->malloc(nbytes);
-    if (!tmp_pcstack)
-        return -1;
-    memcpy(tmp_pcstack, pcstack, nbytes);
+    size_t nbytes = 0;
+    jsbytecode** tmp_pcstack = NULL;
+    if (pcstack) {
+        nbytes = StackDepth(script) * sizeof *pcstack;
+        tmp_pcstack = (jsbytecode **) cx->malloc(nbytes);
+        if (!tmp_pcstack)
+            return -1;
+        memcpy(tmp_pcstack, pcstack, nbytes);
+    }
 
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
@@ -5483,21 +5447,20 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
     LOCAL_ASSERT(pc == target);
 
   success:
-    memcpy(pcstack, tmp_pcstack, nbytes);
-    cx->free(tmp_pcstack);
+    if (tmp_pcstack) {
+        memcpy(pcstack, tmp_pcstack, nbytes);
+        cx->free(tmp_pcstack);
+    }
     return pcdepth;
 
   failure:
-    cx->free(tmp_pcstack);
+    if (tmp_pcstack)
+        cx->free(tmp_pcstack);
     return -1;
 }
 
 #undef LOCAL_ASSERT
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
-
-static intN
-ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
-                   jsbytecode **pcstack);
 
 static intN
 ReconstructImacroPCStack(JSContext *cx, JSScript *script,
@@ -5509,8 +5472,8 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
      * the state-of-the-world at the *start* of the imacro.
      */
     JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp->imacpc);
-    intN pcdepth = ReconstructPCStack(cx, script, fp->imacpc, pcstack);
+    JS_ASSERT(fp->hasIMacroPC());
+    intN pcdepth = ReconstructPCStack(cx, script, fp->getIMacroPC(), pcstack);
     if (pcdepth < 0)
         return pcdepth;
     return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);

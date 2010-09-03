@@ -127,28 +127,89 @@ cairo_dwrite_font_face_create_for_dwrite_fontface(void *dwrite_font, void *dwrit
 
 #if CAIRO_HAS_D2D_SURFACE
 
+struct _cairo_device
+{
+    int type;
+    int refcount;
+};
+typedef struct _cairo_device cairo_device_t;
+
+/**
+ * Create a D2D device
+ *
+ * \return New D2D device, NULL if creation failed.
+ */
+cairo_device_t *
+cairo_d2d_create_device();
+
+cairo_device_t *
+cairo_d2d_create_device_from_d3d10device(struct ID3D10Device1 *device);
+
+/**
+ * Releases a D2D device.
+ *
+ * \return References left to the device
+ */
+int
+cairo_release_device(cairo_device_t *device);
+
+/**
+ * Addrefs a D2D device.
+ *
+ * \return References to the device
+ */
+int
+cairo_addref_device(cairo_device_t *device);
+
+/**
+ * Flushes a D3D device. In most cases the surface backend will do this
+ * internally, but when using a surfaces created from a shared handle this
+ * should be executed manually when a different device is going to be accessing
+ * the same surface data. This will also block until the device is finished
+ * processing all work.
+ */
+void
+cairo_d2d_finish_device(cairo_device_t *device);
+
 /**
  * Create a D2D surface for an HWND
  *
+ * \param device Device used to create the surface
  * \param wnd Handle for the window
  * \param content Content of the window, should be COLOR_ALPHA for transparent windows
  * \return New cairo surface
  */
 cairo_public cairo_surface_t *
-cairo_d2d_surface_create_for_hwnd(HWND wnd, cairo_content_t content);
+cairo_d2d_surface_create_for_hwnd(cairo_device_t *device, HWND wnd, cairo_content_t content);
 
 /**
  * Create a D2D surface of a certain size.
  *
+ * \param device Device used to create the surface
  * \param format Cairo format of the surface
  * \param width Width of the surface
  * \param height Height of the surface
  * \return New cairo surface
  */
 cairo_public cairo_surface_t *
-cairo_d2d_surface_create(cairo_format_t format,
+cairo_d2d_surface_create(cairo_device_t *device,
+			 cairo_format_t format,
                          int width,
                          int height);
+
+/**
+ * Create a D3D surface from a Texture SharedHandle, this is obtained from a
+ * CreateTexture call on a D3D9 device. This has to be an A8R8G8B8 format
+ * or an A8 format, the treatment of the alpha channel can be indicated using
+ * the content parameter.
+ *
+ * \param device Device used to create the surface
+ * \param handle Shared handle to the texture we want to wrap
+ * \param content Content of the texture, COLOR_ALPHA for ARGB
+ * \return New cairo surface
+ */
+cairo_public cairo_surface_t *
+cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo_content_t content);
 
 /**
  * Present the backbuffer for a surface create for an HWND. This needs
@@ -171,15 +232,6 @@ void cairo_d2d_present_backbuffer(cairo_surface_t *surface);
  * scrolling.
  */
 void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t *clip);
-
-/**
- * Verify if D2D surfaces are actually supported. This will confirm the needed
- * hardware is available.
- *
- * \return True if the support is available. If false surface creation will
- * return error surfaces.
- */
-cairo_bool_t cairo_d2d_has_support();
 
 /**
  * Get a DC for the current render target. When selecting the retention option this
@@ -206,6 +258,13 @@ void cairo_d2d_release_dc(cairo_surface_t *surcace, const cairo_rectangle_int_t 
  * internal image surface cache.
  */
 int cairo_d2d_get_image_surface_cache_usage();
+
+/**
+ * Get an estimate of the amount of VRAM which is currently used by the d2d
+ * surfaces for a device. This does -not- include the internal image surface
+ * cache.
+ */
+int cairo_d2d_get_surface_vram_usage(cairo_device_t *device);
 #endif
 
 CAIRO_END_DECLS

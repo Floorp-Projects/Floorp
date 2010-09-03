@@ -57,7 +57,7 @@ let (commonFile = do_get_file("../head_common.js", false)) {
 function shutdownExpiration()
 {
   let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
-  expire.observe(null, PlacesUtils.TOPIC_SHUTDOWN, null);
+  expire.observe(null, "places-will-close-connection", null);
 }
 
 

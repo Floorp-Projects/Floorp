@@ -66,7 +66,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-58274.js';
 var UBound = 0;
 var BUGNUMBER = 58274;
 var summary = 'Testing functions with double-byte names';
