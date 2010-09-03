@@ -3176,11 +3176,6 @@ nsWindow::GetLayerManager()
     return nsBaseWidget::GetLayerManager();
   }
 
-  if (topWindow->GetAcceleratedRendering() != mUseAcceleratedRendering) {
-    mLayerManager = NULL;
-    mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
-  }
-
 #ifndef WINCE
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
