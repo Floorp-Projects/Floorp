@@ -5519,6 +5519,10 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
                               "Can't record: failed to give globalObj a unique shape.\n");
             return false;
         }
+    } else {
+        /* Claim the title so we don't abort at the top of recordLoopEdge. */
+        JS_LOCK_OBJ(cx, globalObj);
+        JS_UNLOCK_OBJ(cx, globalObj);
     }
 
     uint32 globalShape = globalObj->shape();
@@ -6029,6 +6033,7 @@ JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
+    /* If changing this, see "Claim the title" in CheckGlobalObjectShape. */
     if (cx->fp()->getScopeChain()->getGlobal()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
