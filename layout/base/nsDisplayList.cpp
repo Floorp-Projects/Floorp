@@ -434,6 +434,16 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   root->SetFrameMetrics(metrics);
 
+  // If the layer manager supports resolution scaling, set that up
+  if (LayerManager::LAYERS_BASIC == layerManager->GetBackendType()) {
+    BasicLayerManager* basicManager =
+      static_cast<BasicLayerManager*>(layerManager.get());
+    // This is free if both resolutions are 1.0, or neither resolution
+    // has changed since the last transaction
+    basicManager->SetResolution(presShell->GetXResolution(),
+                                presShell->GetYResolution());
+  }
+
   layerManager->SetRoot(root);
   aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,

@@ -424,7 +424,10 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   }
 
   {
-    Buffer::PaintState state = mBuffer.BeginPaint(this, contentType);
+    float paintXRes = BasicManager()->XResolution();
+    float paintYRes = BasicManager()->YResolution();
+    Buffer::PaintState state =
+      mBuffer.BeginPaint(this, contentType, paintXRes, paintYRes);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
     if (state.mContext) {
@@ -437,6 +440,10 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, state.mRegionToInvalidate,
                   aCallback, aCallbackData);
+
+      mXResolution = paintXRes;
+      mYResolution = paintYRes;
+      Mutated();
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
       // if we are shrinking the valid region to nothing.
@@ -459,7 +466,8 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
-  DrawBufferWithRotation(aTarget, aOpacity);
+  DrawBufferWithRotation(aTarget, aOpacity,
+                         aLayer->GetXResolution(), aLayer->GetYResolution());
   aTarget->Restore();
 }
 
