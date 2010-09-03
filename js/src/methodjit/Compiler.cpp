@@ -439,7 +439,6 @@ mjit::Compiler::finishThisUp()
         script->callICs[i].reset();
         script->callICs[i].funGuard = fullCode.locationOf(callICs[i].funGuard);
         script->callICs[i].funJump = fullCode.locationOf(callICs[i].funJump);
-        script->callICs[i].lastFunJump = script->callICs[i].funJump;
         script->callICs[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
 
         /* Compute the hot call offset. */

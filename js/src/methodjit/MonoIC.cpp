@@ -398,13 +398,13 @@ class CallCompiler
         uint8 *start = (uint8 *)ic.funGuard.executableAddress();
         JSC::RepatchBuffer repatch(start - 32, 64);
 
-        ic.guardedObject = obj;
+        ic.fastGuardedObject = obj;
 
         repatch.repatch(ic.funGuard, obj);
         repatch.relink(ic.funGuard.callAtOffset(ic.hotCallOffset),
                        JSC::FunctionPtr(script->ncode));
 
-        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %)\n", start, ic.guardedObject);
+        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %)\n", start, ic.fastGuardedObject);
     }
 
     bool generateStubForClosures(JSObject *obj)
@@ -441,12 +441,12 @@ class CallCompiler
         JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%d bytes)\n",
                    cs.executableAddress(), masm.size());
 
-        uint8 *start = (uint8 *)ic.lastFunJump.executableAddress();
+        uint8 *start = (uint8 *)ic.funJump.executableAddress();
         JSC::RepatchBuffer repatch(start - 32, 64);
-        repatch.relink(ic.lastFunJump, cs);
+        repatch.relink(ic.funJump, cs);
 
         /* Retarget funJump for future ICs. */
-        ic.lastFunJump = buffer.locationOf(funGuard);
+        ic.funJump = buffer.locationOf(funGuard);
 
         ic.hasJsFunCheck = true;
 
@@ -473,7 +473,7 @@ class CallCompiler
             THROWV(true);
 
         /* Right now, take slow-path for IC misses. */
-        if (ic.guardedNative)
+        if (ic.fastGuardedNative)
             return true;
 
         /* Native MIC needs to warm up first. */
@@ -591,14 +591,14 @@ class CallCompiler
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%d bytes)\n",
                    cs.executableAddress(), masm.size());
 
-        uint8 *start = (uint8 *)ic.lastFunJump.executableAddress();
+        uint8 *start = (uint8 *)ic.funJump.executableAddress();
         JSC::RepatchBuffer repatch(start - 32, 64);
-        repatch.relink(ic.lastFunJump, cs);
+        repatch.relink(ic.funJump, cs);
 
-        ic.guardedNative = true;
+        ic.fastGuardedNative = obj;
 
         /* Retarget funJump for future ICs. */
-        ic.lastFunJump = buffer.locationOf(funGuard);
+        ic.funJump = buffer.locationOf(funGuard);
 
         return true;
     }
@@ -653,10 +653,10 @@ class CallCompiler
                 if (!generateFullCallStub(script, flags))
                     THROWV(NULL);
             } else {
-                if (!ic.guardedObject) {
+                if (!ic.fastGuardedObject) {
                     patchInlinePath(script, obj);
                 } else if (!ic.hasJsFunCheck &&
-                           ic.guardedObject->getFunctionPrivate() == fun) {
+                           ic.fastGuardedObject->getFunctionPrivate() == fun) {
                     if (!generateStubForClosures(obj))
                         THROWV(NULL);
                 } else {
@@ -744,27 +744,6 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
             JS_NOT_REACHED("Unknown MIC type during purge");
             break;
         }
-    }
-}
-
-void
-ic::PurgeCallICs(JSContext *cx, JSScript *script)
-{
-    uint32 numCallICs = script->jit->nCallICs;
-    for (uint32 i = 0; i < numCallICs; i++) {
-        ic::CallICInfo &ic = script->callICs[i];
-
-        if (!ic.guardedNative && !ic.guardedObject)
-            continue;
-
-        /* Very fast path. */
-        uint8 *start = (uint8 *)ic.funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
-
-        repatch.repatch(ic.funGuard, NULL);
-        repatch.relink(ic.funJump, ic.slowPathStart);
-        ic.lastFunJump = ic.funJump;
-        ic.partialReset();
     }
 }
 
