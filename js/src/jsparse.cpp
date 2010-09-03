@@ -777,7 +777,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
         if (!js_GetClassPrototype(cx, scopeChain, JSProto_Function, &tobj))
             return NULL;
 
-        globalScope.globalFreeSlot = globalObj->freeslot();
+        globalScope.globalFreeSlot = globalObj->slotSpan();
     }
 
     /* Null script early in case of error, to reduce our code footprint. */
@@ -947,7 +947,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     }
 
     if (globalScope.defs.length()) {
-        JS_ASSERT(globalObj->freeslot() == globalScope.globalFreeSlot);
+        JS_ASSERT(globalObj->slotSpan() == globalScope.globalFreeSlot);
         JS_ASSERT(!cg.compilingForEval());
         for (size_t i = 0; i < globalScope.defs.length(); i++) {
             GlobalScope::GlobalDef &def = globalScope.defs[i];

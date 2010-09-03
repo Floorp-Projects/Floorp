@@ -4196,7 +4196,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     entry->vshape() == rt->protoHazardShape &&
                     shape->hasDefaultSetter()) {
                     slot = shape->slot;
-                    JS_ASSERT(slot == obj->freeslot());
+                    JS_ASSERT(slot == obj->slotSpan());
 
                     /*
                      * Fast path: adding a plain old property that was once at
@@ -5861,7 +5861,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
         /* Fast path. Property cache hit. */
         uint32 slot = shape->slot;
 
-        JS_ASSERT(slot == obj->freeslot());
+        JS_ASSERT(slot == obj->slotSpan());
         JS_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
         if (slot < obj->numSlots()) {
             JS_ASSERT(obj->getSlot(slot).isUndefined());
