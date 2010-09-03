@@ -111,6 +111,21 @@ nsDOMWindowUtils::~nsDOMWindowUtils()
 {
 }
 
+nsIPresShell*
+nsDOMWindowUtils::GetPresShell()
+{
+  if (!mWindow)
+    return nsnull;
+
+  nsIDocShell *docShell = mWindow->GetDocShell();
+  if (!docShell)
+    return nsnull;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  return presShell;
+}
+
 nsPresContext*
 nsDOMWindowUtils::GetPresContext()
 {
@@ -189,35 +204,27 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 NS_IMETHODIMP
 nsDOMWindowUtils::Redraw(PRUint32 aCount, PRUint32 *aDurationOut)
 {
-  nsresult rv;
-
   if (aCount == 0)
     aCount = 1;
 
-  nsCOMPtr<nsIDocShell> docShell = mWindow->GetDocShell();
-  if (docShell) {
-    nsCOMPtr<nsIPresShell> presShell;
+  if (nsIPresShell* presShell = GetPresShell()) {
+    nsIFrame *rootFrame = presShell->GetRootFrame();
 
-    rv = docShell->GetPresShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(rv) && presShell) {
-      nsIFrame *rootFrame = presShell->GetRootFrame();
+    if (rootFrame) {
+      nsRect r(nsPoint(0, 0), rootFrame->GetSize());
 
-      if (rootFrame) {
-        nsRect r(nsPoint(0, 0), rootFrame->GetSize());
+      PRIntervalTime iStart = PR_IntervalNow();
 
-        PRIntervalTime iStart = PR_IntervalNow();
-
-        for (PRUint32 i = 0; i < aCount; i++)
-          rootFrame->InvalidateWithFlags(r, nsIFrame::INVALIDATE_IMMEDIATE);
+      for (PRUint32 i = 0; i < aCount; i++)
+        rootFrame->InvalidateWithFlags(r, nsIFrame::INVALIDATE_IMMEDIATE);
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
-        XSync(GDK_DISPLAY(), False);
+      XSync(GDK_DISPLAY(), False);
 #endif
 
-        *aDurationOut = PR_IntervalToMilliseconds(PR_IntervalNow() - iStart);
+      *aDurationOut = PR_IntervalToMilliseconds(PR_IntervalNow() - iStart);
 
-        return NS_OK;
-      }
+      return NS_OK;
     }
   }
   return NS_ERROR_FAILURE;
