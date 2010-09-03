@@ -790,10 +790,10 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
 #ifdef WINCE
              iconsize="small" defaulticonsize="small"
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              iconsize="large"
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 
@@ -826,17 +826,6 @@
           <observes element="Browser:Forward" attribute="disabled"/>
         </toolbarbutton>
       </toolbaritem>
-
-      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&reloadCmd.label;" removable="true"
-                     command="Browser:ReloadOrDuplicate"
-                     onclick="checkForMiddleClick(this, event);"
-                     tooltiptext="&reloadButton.tooltip;"/>
-
-      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&stopCmd.label;" removable="true"
-                     command="Browser:Stop"
-                     tooltiptext="&stopButton.tooltip;"/>
 
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class" removable="true"
@@ -919,8 +908,29 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
+          <toolbarbutton id="urlbar-go-button"
+                         onclick="gURLBar.handleCommand(event);"
+                         tooltiptext="&goEndCap.tooltip;"/>
+          <toolbarbutton id="urlbar-reload-button"
+                         command="Browser:ReloadOrDuplicate"
+                         onclick="checkForMiddleClick(this, event);"
+                         tooltiptext="&reloadButton.tooltip;"/>
+          <toolbarbutton id="urlbar-stop-button"
+                         command="Browser:Stop"
+                         tooltiptext="&stopButton.tooltip;"/>
         </textbox>
       </toolbaritem>
+
+      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&reloadCmd.label;" removable="true"
+                     command="Browser:ReloadOrDuplicate"
+                     onclick="checkForMiddleClick(this, event);"
+                     tooltiptext="&reloadButton.tooltip;"/>
+
+      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&stopCmd.label;" removable="true"
+                     command="Browser:Stop"
+                     tooltiptext="&stopButton.tooltip;"/>
 
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
