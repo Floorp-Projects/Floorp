@@ -345,7 +345,6 @@ protected:
   static jsid sEnumerate_id;
   static jsid sNavigator_id;
   static jsid sDocument_id;
-  static jsid sWindow_id;
   static jsid sFrames_id;
   static jsid sSelf_id;
   static jsid sOpener_id;
