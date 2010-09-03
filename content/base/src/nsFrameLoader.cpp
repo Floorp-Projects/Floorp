@@ -1086,15 +1086,15 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     otherInternalHistory->EvictAllContentViewers();
   }
 
-  NS_ASSERTION(ourFrame == ourContent->GetPrimaryFrame() &&
-               otherFrame == otherContent->GetPrimaryFrame(),
-               "changed primary frame");
-
-  ourFrameFrame->EndSwapDocShells(otherFrame);
+  // We shouldn't have changed frames, but be really careful about it
+  if (ourFrame == ourContent->GetPrimaryFrame() &&
+      otherFrame == otherContent->GetPrimaryFrame()) {
+    ourFrameFrame->EndSwapDocShells(otherFrame);
+  }
 
   ourParentDocument->FlushPendingNotifications(Flush_Layout);
   otherParentDocument->FlushPendingNotifications(Flush_Layout);
-
+  
   FirePageShowEvent(ourTreeItem, otherChromeEventHandler, PR_TRUE);
   FirePageShowEvent(otherTreeItem, ourChromeEventHandler, PR_TRUE);
 
