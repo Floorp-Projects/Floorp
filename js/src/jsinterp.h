@@ -76,6 +76,11 @@ enum JSFrameFlags {
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
 
+namespace js { namespace mjit {
+    class Compiler;
+    class InlineFrameAssembler;
+} }
+
 /*
  * JS stack frame, may be allocated on the C stack by native callers.  Always
  * allocated on cx->stackPool for calls from the interpreter to an interpreted
@@ -289,6 +294,10 @@ struct JSStackFrame
         blockChain = obj;
     }
 
+    static size_t offsetBlockChain() {
+        return offsetof(JSStackFrame, blockChain);
+    }
+
     /* IMacroPC accessors. */
 
     bool hasIMacroPC() const { return flags & JSFRAME_IN_IMACRO; }
@@ -335,6 +344,10 @@ struct JSStackFrame
         annotation = annot;
     }
 
+    static size_t offsetAnnotation() {
+        return offsetof(JSStackFrame, annotation);
+    }
+
     /* Debugger hook data accessors */
 
     bool hasHookData() const {
@@ -354,6 +367,10 @@ struct JSStackFrame
         hookData = data;
     }
 
+    static size_t offsetHookData() {
+        return offsetof(JSStackFrame, hookData);
+    }
+
     /* Version accessors */
 
     JSVersion getCallerVersion() const {
@@ -362,6 +379,10 @@ struct JSStackFrame
 
     void setCallerVersion(JSVersion version) {
         callerVersion = version;
+    }
+
+    static size_t offsetCallerVersion() {
+        return offsetof(JSStackFrame, callerVersion);
     }
 
     /* Script accessors */
@@ -408,6 +429,10 @@ struct JSStackFrame
 
     JSFunction* maybeFunction() const {
         return fun;
+    }
+
+    static size_t offsetFunction() {
+        return offsetof(JSStackFrame, fun);
     }
 
     size_t numFormalArgs() const {
