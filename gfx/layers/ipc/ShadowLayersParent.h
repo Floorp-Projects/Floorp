@@ -66,7 +66,7 @@ public:
 
   ShadowLayerManager* layer_manager() const { return mLayerManager; }
 
-  Layer* GetRoot() const { return mRoot; }
+  ContainerLayer* GetRoot() const { return mRoot; }
 
 protected:
   NS_OVERRIDE virtual bool RecvUpdate(const EditArray& cset,
@@ -81,7 +81,7 @@ private:
   nsRefPtr<ShadowLayerManager> mLayerManager;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
-  nsRefPtr<Layer> mRoot;
+  nsRefPtr<ContainerLayer> mRoot;
 };
 
 } // namespace layers

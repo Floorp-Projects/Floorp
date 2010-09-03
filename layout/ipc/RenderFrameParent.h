@@ -83,7 +83,7 @@ protected:
 private:
   LayerManager* GetLayerManager() const;
   ShadowLayersParent* GetShadowLayers() const;
-  Layer* GetRootLayer() const;
+  ContainerLayer* GetRootLayer() const;
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
   nsRefPtr<ContainerLayer> mContainer;
