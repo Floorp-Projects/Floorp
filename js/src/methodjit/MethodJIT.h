@@ -167,6 +167,7 @@ typedef JSString * (JS_FASTCALL *JSStrStub)(VMFrame &);
 typedef JSString * (JS_FASTCALL *JSStrStubUInt32)(VMFrame &, uint32);
 typedef void (JS_FASTCALL *VoidStubJSObj)(VMFrame &, JSObject *);
 typedef void (JS_FASTCALL *VoidStubPC)(VMFrame &, jsbytecode *);
+typedef JSBool (JS_FASTCALL *BoolStubUInt32)(VMFrame &f, uint32);
 
 #define JS_UNJITTABLE_METHOD (reinterpret_cast<void*>(1))
 
@@ -180,11 +181,13 @@ struct JITScript {
     uint32          nCallSites;
 #ifdef JS_MONOIC
     uint32          nMICs;           /* number of MonoICs */
+    uint32          nCallICs;        /* number of call ICs */
 #endif
 #ifdef JS_POLYIC
     uint32          nPICs;           /* number of PolyICs */
 #endif
     void            *invoke;         /* invoke address */
+    void            *arityCheck;     /* arity check address */
     uint32          *escaping;       /* list of escaping slots */
     uint32          nescaping;       /* number of escaping slots */
 };
@@ -211,6 +214,9 @@ TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChai
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
 
+void
+SweepCallICs(JSContext *cx);
+
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {
@@ -220,9 +226,6 @@ CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeCh
         return TryCompile(cx, script, fun, scopeChain);
     return Compile_Okay;
 }
-
-void
-PurgeShapeDependencies(JSContext *cx);
 
 struct CallSite
 {
