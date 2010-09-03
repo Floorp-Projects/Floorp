@@ -322,6 +322,11 @@ public:
   virtual LayersBackend GetBackendType() = 0;
 
   /**
+   * Return the name of the layer manager's backend.
+   */
+  virtual void GetBackendName(nsAString& aName) = 0;
+
+  /**
    * This setter can be used anytime. The user data for all keys is
    * initially null. Ownership pases to the layer manager.
    */

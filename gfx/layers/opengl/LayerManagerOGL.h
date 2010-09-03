@@ -136,6 +136,7 @@ public:
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("OpenGL"); }
 
   /**
    * Image Container management.
