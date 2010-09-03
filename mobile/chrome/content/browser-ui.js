@@ -49,40 +49,49 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   return PlacesUtils;
 });
 
-const TOOLBARSTATE_LOADING  = 1;
-const TOOLBARSTATE_LOADED   = 2;
+XPCOMUtils.defineLazyServiceGetter(window, "gHistSvc", "@mozilla.org/browser/nav-history-service;1", "nsINavHistoryService", "nsIBrowserHistory");
+XPCOMUtils.defineLazyServiceGetter(window, "gURIFixup", "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+XPCOMUtils.defineLazyServiceGetter(window, "gFaviconService", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService");
+XPCOMUtils.defineLazyServiceGetter(window, "gFocusManager", "@mozilla.org/focus-manager;1", "nsIFocusManager");
 
 [
-  [
-    "gHistSvc",
-    "@mozilla.org/browser/nav-history-service;1",
-    [Ci.nsINavHistoryService, Ci.nsIBrowserHistory]
-  ],
-  [
-    "gFaviconService",
-     "@mozilla.org/browser/favicon-service;1",
-     [Ci.nsIFaviconService]
-  ],
-  [
-    "gURIFixup",
-    "@mozilla.org/docshell/urifixup;1",
-    [Ci.nsIURIFixup]
-  ],
-  [
-    "gFocusManager",
-    "@mozilla.org/focus-manager;1",
-    [Ci.nsIFocusManager]
-  ]
-].forEach(function (service) {
-  let [name, contract, ifaces] = service;
-  window.__defineGetter__(name, function () {
-    delete window[name];
-    window[name] = Cc[contract].getService(ifaces.splice(0, 1)[0]);
-    if (ifaces.length)
-      ifaces.forEach(function (i) { return window[name].QueryInterface(i); });
-    return window[name];
+  ["AllPagesList", "popup_autocomplete", "cmd_openLocation"],
+  ["HistoryList", "history-items", "cmd_history"],
+  ["BookmarkList", "bookmarks-items", "cmd_bookmarks"],
+#ifdef MOZ_SERVICES_SYNC
+  ["RemoteTabsList", "remotetabs-items", "cmd_remoteTabs"]
+#endif
+].forEach(function(aPanel) {
+  let [name, id, command] = aPanel;
+  XPCOMUtils.defineLazyGetter(window, name, function() {
+    return new AwesomePanel(id, command);
   });
 });
+
+/**
+ * Cache of commonly used elements.
+ */
+let Elements = {};
+
+[
+  ["browserBundle",      "bundle_browser"],
+  ["contentShowing",     "bcast_contentShowing"],
+  ["urlbarState",        "bcast_urlbarState"],
+  ["stack",              "stack"],
+  ["tabs",               "tabs-container"],
+  ["controls",           "browser-controls"],
+  ["panelUI",            "panel-container"],
+  ["viewBuffer",         "view-buffer"],
+  ["toolbarContainer",   "toolbar-container"],
+].forEach(function (aElementGlobal) {
+  let [name, id] = aElementGlobal;
+  XPCOMUtils.defineLazyGetter(Elements, name, function() {
+    return document.getElementById(id);
+  });
+});
+
+const TOOLBARSTATE_LOADING  = 1;
+const TOOLBARSTATE_LOADED   = 2;
 
 var BrowserUI = {
   _edit : null,
@@ -2482,23 +2491,4 @@ var SharingUI = {
     }
   ]
 };
-
-
-XPCOMUtils.defineLazyGetter(this, "HistoryList", function() {
-  return new AwesomePanel("history-items", "cmd_history");
-});
-
-#ifdef MOZ_SERVICES_SYNC
-XPCOMUtils.defineLazyGetter(this, "RemoteTabsList", function() {
-  return new AwesomePanel("remotetabs-items", "cmd_remoteTabs");
-});
-#endif
-
-XPCOMUtils.defineLazyGetter(this, "AllPagesList", function() {
-  return new AwesomePanel("popup_autocomplete", "cmd_openLocation");
-});
-
-XPCOMUtils.defineLazyGetter(this, "BookmarkList", function() {
-  return new AwesomePanel("bookmarks-items", "cmd_bookmarks");
-});
 
