@@ -235,7 +235,7 @@ ThebesLayerD3D9::RenderLayer()
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-  if (mD2DSurface && UseOpaqueSurface(this)) {
+  if (mD2DSurface && CanUseOpaqueSurface()) {
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
   } else
 #endif
