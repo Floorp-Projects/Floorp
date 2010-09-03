@@ -302,6 +302,8 @@ let Elements = {};
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
   ["stack",              "stack"],
+  ["tabs",               "tabs-container"],
+  ["controls",           "browser-controls"],
   ["panelUI",            "panel-container"],
   ["viewBuffer",         "view-buffer"],
   ["toolbarContainer",   "toolbar-container"],
