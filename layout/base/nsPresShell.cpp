@@ -831,6 +831,8 @@ public:
 
   virtual void SetDisplayPort(const nsRect& aDisplayPort);
 
+  virtual nsresult SetResolution(float aXResolution, float aYResolution);
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView* aDisplayRoot,
@@ -1023,9 +1025,13 @@ protected:
     RenderingState(PresShell* aPresShell) 
       : mRenderFlags(aPresShell->mRenderFlags)
       , mDisplayPort(aPresShell->mDisplayPort)
+      , mXResolution(aPresShell->mXResolution)
+      , mYResolution(aPresShell->mYResolution)
     { }
     PRUint32 mRenderFlags;
     nsRect mDisplayPort;
+    float mXResolution;
+    float mYResolution;
   };
 
   struct AutoSaveRestoreRenderingState {
@@ -1038,6 +1044,8 @@ protected:
     {
       mPresShell->mRenderFlags = mOldState.mRenderFlags;
       mPresShell->mDisplayPort = mOldState.mDisplayPort;
+      mPresShell->mXResolution = mOldState.mXResolution;
+      mPresShell->mYResolution = mOldState.mYResolution;
     }
 
     PresShell* mPresShell;
@@ -1651,6 +1659,8 @@ PresShell::PresShell()
   mPresArenaAllocCount = 0;
 #endif
   mRenderFlags = 0;
+  mXResolution = 1.0;
+  mYResolution = 1.0;
 
   static bool registeredReporter = false;
   if (!registeredReporter) {
@@ -5944,6 +5954,21 @@ void PresShell::SetDisplayPort(const nsRect& aDisplayPort)
   SetRenderingState(state);
 }
 
+nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
+{
+  if (!(aXResolution > 0.0 && aXResolution > 0.0)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  if (aXResolution == mXResolution && aYResolution == mYResolution) {
+    return NS_OK;
+  }
+  RenderingState state(this);
+  state.mXResolution = aXResolution;
+  state.mYResolution = aYResolution;
+  SetRenderingState(state);
+  return NS_OK;
+ }
+
 void PresShell::SetRenderingState(const RenderingState& aState)
 {
   if (mRenderFlags != aState.mRenderFlags) {
@@ -5961,6 +5986,8 @@ void PresShell::SetRenderingState(const RenderingState& aState)
   } else {
     mDisplayPort = nsRect();
   }
+  mXResolution = aState.mXResolution;
+  mYResolution = aState.mYResolution;
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {

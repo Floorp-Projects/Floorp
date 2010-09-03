@@ -279,6 +279,18 @@ nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  return presShell ? presShell->SetResolution(aXResolution, aYResolution)
+                   : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  float aX,
                                  float aY,
