@@ -48,7 +48,7 @@
 //
 // Parameters:
 //   tab - a xul:tab
-window.TabItem = function(tab) {
+window.TabItem = function(tab, options) {
 
   Utils.assert(tab, "tab");
 
@@ -56,6 +56,9 @@ window.TabItem = function(tab) {
   // register this as the tab's tabItem
   this.tab.tabItem = this;
 
+  if (!options)
+    options = {};
+  
   // ___ set up div
   var $div = iQ('<div>')
     .addClass('tab')
@@ -96,6 +99,10 @@ window.TabItem = function(tab) {
 
   // ___ superclass setup
   this._init($div[0]);
+
+  // ___ attempt to reconnect to data from Storage
+  this._hasBeenDrawn = false;
+  let reconnected = TabItems.reconnect(this);
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
@@ -164,7 +171,6 @@ window.TabItem = function(tab) {
   };
 
   this.draggable();
-  this.droppable(true);
 
   // ___ more div setup
   $div.mousedown(function(e) {
@@ -194,17 +200,20 @@ window.TabItem = function(tab) {
     .addClass('expander')
     .appendTo($div);
 
-  // ___ additional setup
-  this.reconnected = false;
-  this._hasBeenDrawn = false;
-  this.setResizable(true);
-
   this._updateDebugBounds();
 
   TabItems.register(this);
-
-  if (!TabItems.reconnect(this))
-    GroupItems.newTab(this);
+  
+  if (!this.reconnected) {
+    GroupItems.newTab(this, options);
+  }
+  
+  // tabs which were not reconnected at all or were not immediately added
+  // to a group get the same treatment.
+  if (!this.reconnected || (reconnected && !reconnected.addedToGroup) ) {
+    this.setResizable(true, options.immediately);
+    this.droppable(true);
+  }
 };
 
 window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
@@ -364,9 +373,9 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       if (css.fontSize && !this.inStack()) {
         if (css.fontSize < fontSizeRange.min)
-          $title.fadeOut();
+          immediately ? $title.hide() : $title.fadeOut();
         else
-          $title.fadeIn();
+          immediately ? $title.show() : $title.fadeIn();
       }
 
       if (css.width) {
@@ -470,17 +479,16 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // If value is true, makes this item resizable, otherwise non-resizable.
   // Shows/hides a visible resize handle as appropriate.
-  setResizable: function(value) {
+  setResizable: function(value, immediately) {
     var $resizer = iQ('.expander', this.container);
 
-    this.resizeOptions.minWidth = TabItems.minTabWidth;
-    this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
-
     if (value) {
-      $resizer.fadeIn();
+      this.resizeOptions.minWidth = TabItems.minTabWidth;
+      this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
+      immediately ? $resizer.show() : $resizer.fadeIn();
       this.resizable(true);
     } else {
-      $resizer.fadeOut();
+      immediately ? $resizer.hide() : $resizer.fadeOut();
       this.resizable(false);
     }
   },
@@ -695,7 +703,7 @@ window.TabItems = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      self.link(tab);
+      self.link(tab, {immediately: true});
       self.update(tab);
     });
   },
@@ -816,11 +824,11 @@ window.TabItems = {
   // ----------
   // Function: link
   // Takes in a xul:tab.
-  link: function(tab){
+  link: function(tab, options){
     try {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(!tab.tabItem, "shouldn't already be linked");
-      new TabItem(tab); // sets tab.tabItem to itself
+      new TabItem(tab, options); // sets tab.tabItem to itself
     } catch(e) {
       Utils.log(e);
     }
@@ -981,7 +989,7 @@ window.TabItems = {
       let tabData = Storage.getTabData(item.tab);
       if (tabData && this.storageSanity(tabData)) {
         if (item.parent)
-          item.parent.remove(item);
+          item.parent.remove(item, {immediately: true});
 
         item.setBounds(tabData.bounds, true);
 
@@ -991,7 +999,7 @@ window.TabItems = {
         if (tabData.groupID) {
           var groupItem = GroupItems.groupItem(tabData.groupID);
           if (groupItem) {
-            groupItem.add(item);
+            groupItem.add(item, null, {immediately: true});
 
             if (item.tab == gBrowser.selectedTab)
               GroupItems.setActiveGroupItem(item.parent);
@@ -1010,7 +1018,7 @@ window.TabItems = {
         }
 
         item.reconnected = true;
-        found = true;
+        found = {addedToGroup: tabData.groupID};
       } else
         item.reconnected = item.tab.linkedBrowser.currentURI.spec != 'about:blank';
 
