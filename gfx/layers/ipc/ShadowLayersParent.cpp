@@ -287,6 +287,13 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
           specific.get_ThebesLayerAttributes().validRegion());
         break;
 
+      case Specific::TContainerLayerAttributes:
+        MOZ_LAYERS_LOG(("[ParentSide]   container layer"));
+
+        static_cast<ContainerLayer*>(layer)->SetFrameMetrics(
+          specific.get_ContainerLayerAttributes().metrics());
+        break;
+
       case Specific::TColorLayerAttributes:
         MOZ_LAYERS_LOG(("[ParentSide]   color layer"));
 

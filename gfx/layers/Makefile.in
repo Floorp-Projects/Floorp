@@ -103,7 +103,8 @@ endif
 endif
 
 ifdef MOZ_IPC #{
-EXPORTS_NAMESPACES = mozilla/layers
+EXPORTS_NAMESPACES = IPC mozilla/layers
+EXPORTS_IPC = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
         ShadowLayers.h \
         ShadowLayersChild.h \
