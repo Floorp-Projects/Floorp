@@ -291,12 +291,12 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix)
 
   nsCAutoString pfx(aPrefix);
   pfx += "  ";
-  if (!mRoot) {
+  if (!GetRoot()) {
     fprintf(file, "%s(null)", pfx.get());
     return;
   }
 
-  mRoot->Dump(file, pfx.get());
+  GetRoot()->Dump(file, pfx.get());
 }
 
 void
@@ -317,12 +317,12 @@ LayerManager::Log(const char* aPrefix)
 
   nsCAutoString pfx(aPrefix);
   pfx += "  ";
-  if (!mRoot) {
+  if (!GetRoot()) {
     MOZ_LAYERS_LOG(("%s(null)", pfx.get()));
     return;
   }
 
-  mRoot->Log(pfx.get());
+  GetRoot()->Log(pfx.get());
 }
 
 void
