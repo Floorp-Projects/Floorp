@@ -756,7 +756,19 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
     JSStackFrame *checkFp = fp;
 #endif
 
-    Value *stackLimit = cx->stack().makeStackLimit(reinterpret_cast<Value*>(fp));
+    Value *fpAsVp = reinterpret_cast<Value*>(fp);
+    StackSpace &stack = cx->stack();
+    Value *stackLimit = stack.makeStackLimit(fpAsVp);
+
+    /*
+     * We ensure that there is always enough space to speculatively create a
+     * stack frame. By passing nslots = 0, we ensure only sizeof(JSStackFrame).
+     */
+    if (fpAsVp + VALUES_PER_STACK_FRAME >= stackLimit &&
+        !stack.ensureSpace(cx, fpAsVp, cx->regs->sp, stackLimit, 0)) {
+        js_ReportOutOfScriptQuota(cx);
+        return false;
+    }
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
     JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit, safePoint);
@@ -816,6 +828,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 #endif
         script->jit->execPool->release();
         script->jit->execPool = NULL;
+
         // Releasing the execPool takes care of releasing the code.
         script->ncode = NULL;
 
@@ -825,12 +838,36 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
             Destroy(script->pics[i].execPools);
         }
 #endif
+
+#if defined JS_MONOIC
+        for (uint32 i = 0; i < script->jit->nCallICs; i++)
+            script->callICs[i].releasePools();
+#endif
+
         cx->free(script->jit);
+
         // The recompiler may call ReleaseScriptCode, in which case it
         // will get called again when the script is destroyed, so we
         // must protect against calling ReleaseScriptCode twice.
         script->jit = NULL;
     }
+}
+
+void
+mjit::SweepCallICs(JSContext *cx)
+{
+#ifdef JS_MONOIC
+    JSRuntime *rt = cx->runtime;
+    for (size_t i = 0; i < rt->compartments.length(); i++) {
+        JSCompartment *compartment = rt->compartments[i];
+        for (JSScript *script = (JSScript *)compartment->scripts.next;
+             &script->links != &compartment->scripts;
+             script = (JSScript *)script->links.next) {
+            if (script->jit)
+                ic::SweepCallICs(cx, script);
+        }
+    }
+#endif
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
@@ -846,6 +883,6 @@ bool
 VMFrame::slowEnsureSpace(uint32 nslots)
 {
     return cx->stack().ensureSpace(cx, reinterpret_cast<Value*>(entryFp), regs.sp,
-                                   stackLimit, nslots);
+                                   stackLimit, nslots + VALUES_PER_STACK_FRAME);
 }
 
