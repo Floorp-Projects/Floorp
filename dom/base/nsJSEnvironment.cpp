@@ -1314,7 +1314,7 @@ nsJSContext::~nsJSContext()
 #endif
   NS_PRECONDITION(!mTerminations, "Shouldn't have termination funcs by now");
 
-  mGlobalWrapperRef = nsnull;
+  mGlobalObjectRef = nsnull;
 
   DestroyJSContext();
 
@@ -1372,11 +1372,11 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalWrapperRef)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSContext, tmp->GetCCRefcnt())
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObjectRef)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContext");
   nsContentUtils::XPConnect()->NoteJSContext(tmp->mContext, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -2553,6 +2553,8 @@ nsresult
 nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                nsIScriptGlobalObject *aCurrentInner)
 {
+  mGlobalObjectRef = aGlobalObject;
+
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
   PRUint32 flags = 0;
 
@@ -2583,19 +2585,8 @@ nsJSContext::SetOuterObject(void *aOuterObject)
 {
   JSObject *outer = static_cast<JSObject *>(aOuterObject);
 
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
-  nsresult rv = xpc->HoldObject(mContext, outer, getter_AddRefs(holder));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Force our context's global object to be the outer.
   JS_SetGlobalObject(mContext, outer);
-
-  // Hold a strong reference to the wrapper for the global to avoid
-  // rooting and unrooting the global object every time its AddRef()
-  // or Release() methods are called
-  mGlobalWrapperRef = holder;
   return NS_OK;
 }
 
