@@ -397,6 +397,12 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
   PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
+  PRBool opaqueBuffer = canUseOpaqueSurface &&
+    targetSurface->AreSimilarSurfacesSensitiveToContentType();
+  Buffer::ContentType contentType =
+    opaqueBuffer ? gfxASurface::CONTENT_COLOR :
+                   gfxASurface::CONTENT_COLOR_ALPHA;
+
   if (!BasicManager()->IsRetained() ||
       (aOpacity == 1.0 && !canUseOpaqueSurface &&
        !ShouldRetainTransparentSurface(mContentFlags, targetSurface))) {
@@ -406,7 +412,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     target->Save();
     gfxUtils::ClipToRegionSnapped(target, mVisibleRegion);
     if (aOpacity != 1.0) {
-      target->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      target->PushGroup(contentType);
     }
     aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
     if (aOpacity != 1.0) {
@@ -418,11 +424,6 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   }
 
   {
-    PRBool opaqueBuffer = canUseOpaqueSurface &&
-      targetSurface->AreSimilarSurfacesSensitiveToContentType();
-    Buffer::ContentType contentType =
-      opaqueBuffer ? gfxASurface::CONTENT_COLOR :
-                     gfxASurface::CONTENT_COLOR_ALPHA;
     Buffer::PaintState state = mBuffer.BeginPaint(this, contentType);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
