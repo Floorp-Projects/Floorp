@@ -403,17 +403,17 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     mValidRegion.SetEmpty();
     mBuffer.Clear();
 
+    target->Save();
+    gfxUtils::ClipToRegionSnapped(target, mVisibleRegion);
     if (aOpacity != 1.0) {
-      target->Save();
-      ClipToContain(target, mVisibleRegion.GetBounds());
       target->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     }
     aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
     if (aOpacity != 1.0) {
       target->PopGroupToSource();
       target->Paint(aOpacity);
-      target->Restore();
     }
+    target->Restore();
     return;
   }
 
