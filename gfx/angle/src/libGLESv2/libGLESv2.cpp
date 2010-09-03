@@ -3491,6 +3491,17 @@ void __stdcall glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLe
                 return error(GL_INVALID_OPERATION);
             }
             break;
+          case GL_BGRA_EXT:
+            switch (type)
+            {
+              case GL_UNSIGNED_BYTE:
+              case GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT:
+              case GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT:
+                break;
+              default:
+                return error(GL_INVALID_OPERATION);
+            }
+            break;
           case gl::IMPLEMENTATION_COLOR_READ_FORMAT:
             switch (type)
             {
@@ -3968,6 +3979,15 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
               case GL_UNSIGNED_BYTE:
               case GL_UNSIGNED_SHORT_4_4_4_4:
               case GL_UNSIGNED_SHORT_5_5_5_1:
+                break;
+              default:
+                return error(GL_INVALID_ENUM);
+            }
+            break;
+          case GL_BGRA_EXT:
+            switch (type)
+            {
+              case GL_UNSIGNED_BYTE:
                 break;
               default:
                 return error(GL_INVALID_ENUM);

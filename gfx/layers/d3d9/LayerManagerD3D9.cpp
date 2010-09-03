@@ -137,7 +137,7 @@ LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
 void
 LayerManagerD3D9::SetRoot(Layer *aLayer)
 {
-  mRootLayer = static_cast<LayerD3D9*>(aLayer->ImplData());
+  mRoot = aLayer;
 }
 
 already_AddRefed<ThebesLayer>
@@ -198,8 +198,8 @@ LayerManagerD3D9::Render()
 
   device()->BeginScene();
 
-  if (mRootLayer) {
-    const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
+  if (mRoot) {
+    const nsIntRect *clipRect = mRoot->GetClipRect();
     RECT r;
     if (clipRect) {
       r.left = (LONG)clipRect->x;
@@ -213,7 +213,7 @@ LayerManagerD3D9::Render()
     }
     device()->SetScissorRect(&r);
 
-    mRootLayer->RenderLayer();
+    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
   }
 
   device()->EndScene();

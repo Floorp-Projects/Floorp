@@ -38,6 +38,7 @@
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
+#define ZLIB_INTERNAL
 #include "zlib.h"
 
 void xxxNeverCalledZLib()

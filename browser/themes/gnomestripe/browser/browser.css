@@ -701,7 +701,7 @@ toolbar[iconsize="small"] #reload-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
 
-toolbar[iconsize="small"] #home-button ,
+toolbar[iconsize="small"] #home-button,
 #home-button.bookmark-item {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
@@ -787,6 +787,7 @@ toolbar[iconsize="small"] #fullscreen-button {
   width: 7em;
   min-width: 7em;
   -moz-appearance: textfield;
+  padding: 0;
 }
 
 #urlbar > .autocomplete-textbox-container {
@@ -1027,6 +1028,11 @@ toolbar[iconsize="small"] #fullscreen-button {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 
+.geolocation-text-link {
+  -moz-padding-start: 13px;
+  padding-top: 10px;
+}
+
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
@@ -1108,9 +1114,70 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Go button */
+
 #go-button {
   padding: 3px 2px 2px 2px;
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
+}
+
+/* Combined go/reload/stop button in location bar */
+
+#urlbar > toolbarbutton {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  margin: -1px;
+  -moz-margin-start: 0;
+  padding: 0 3px;
+  background-origin: border-box;
+  border: none;
+  border-left: 1px solid rgba(0,0,0,.35);
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-bottomright: 2px;
+}
+
+#urlbar > toolbarbutton:active:hover {
+  padding-left: 4px;
+  border-left: none;
+  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
+                   0 0 3px rgba(0,0,0,.4) inset;
+}
+
+#urlbar-go-button {
+  -moz-image-region: rect(0px, 56px, 14px, 42px);
+  background-image: -moz-linear-gradient(rgb(143,219,69), rgb(115,177,57));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 0 rgba(255,255,255,.2) inset;
+}
+
+#urlbar-go-button:hover {
+  background-image: -moz-linear-gradient(rgb(163,232,92), rgb(137,196,81));
+}
+
+#urlbar-reload-button {
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
+}
+
+#urlbar-reload-button:hover {
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
+  background-image: -moz-linear-gradient(rgb(137,183,233), rgb(79,130,195));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 0 rgba(255,255,255,.2) inset;
+}
+
+#urlbar-stop-button {
+  -moz-image-region: rect(0px, 42px, 14px, 28px);
+  background-image: -moz-linear-gradient(rgb(226,99,99), rgb(199,68,68));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 0 rgba(255,255,255,.2) inset;
+}
+
+#urlbar-stop-button:hover {
+  background-image: -moz-linear-gradient(rgb(237,120,120), rgb(216,92,92));
+}
+
+
+#urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: .5;
 }
 
 /* Star button */
@@ -1228,6 +1295,10 @@ statusbarpanel#statusbar-display {
 
 .tabbrowser-tab[pinned] + .tabbrowser-tab:not([pinned]) {
   -moz-margin-start: 0;
+}
+
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  -moz-box-shadow: 0 0 0 1em rgba(255,0,0,.5) inset;
 }
 
 .tab-icon-image {

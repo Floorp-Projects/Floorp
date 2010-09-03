@@ -495,6 +495,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
 
     aNode->mNodeInfo.swap(newNodeInfo);
+    if (elem) {
+      elem->NodeInfoChanged(newNodeInfo);
+    }
 
     nsIDocument* newDoc = aNode->GetOwnerDoc();
     if (newDoc) {

@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update checking wizard with invalid certificate attribute name"
+<window title="Test notification with invalid certificate attribute name with no update"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -20,17 +20,13 @@
 
 <script type="application/javascript">
 <![CDATA[
-// This is treated as no updates found until Bug 583408 is fixed
+
 const TESTS = [ {
-  pageid: PAGEID_CHECKING
-}, {
-  pageid: PAGEID_NO_UPDATES_FOUND,
+  pageid: PAGEID_ERROR_CERT_CHECK,
+  extraDelayedCheckFunction: checkCertErrorPage,
+  shouldBeHidden: false,
   buttonClick: "finish"
 } ];
-
-const PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME = PREF_APP_UPDATE_CERTS_BRANCH +
-                                               "1.invalidName";
-var gDefaultAppUpdateURL;
 
 function runTest() {
   debugDump("Entering runTest");
@@ -38,22 +34,14 @@ function runTest() {
   Services.prefs.setCharPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME,
                              "Invalid Attribute Name");
 
-  var queryString = "?showDetails=1" + getVersionParams();
-  var url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
-            getVersionParams();
-  gDefaultAppUpdateURL = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
+  let url = "https://example.com/" + URL_PATH + "/update.sjs?noUpdates=1";
+  gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
   debugDump("Default Update URL: " + url);
 
-  gUP.checkForUpdates();
-}
+  certErrorsPrefObserver.init();
 
-function finishTest() {
-  debugDump("Entering finishTest - clearing user preference " +
-            PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME);
-  Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME);
-  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, gDefaultAppUpdateURL);
-  finishTestDefault();
+  gAUS.notify(null);
 }
 
 ]]>

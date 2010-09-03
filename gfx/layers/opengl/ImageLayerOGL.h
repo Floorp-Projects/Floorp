@@ -40,6 +40,7 @@
 
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
+#include "yuv_convert.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
@@ -213,6 +214,7 @@ public:
   Data mData;
   gfxIntSize mSize;
   PRPackedBool mHasData;
+  gfx::YUVType mType; 
 };
 
 

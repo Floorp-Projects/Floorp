@@ -49,6 +49,8 @@ class nsHTMLFieldSetElement : public nsGenericHTMLFormElement,
                               public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLFieldSetElement();
 

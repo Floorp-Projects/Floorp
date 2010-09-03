@@ -913,21 +913,24 @@ bool TParseContext::extensionErrorCheck(int line, const char* extension)
 //
 const TFunction* TParseContext::findFunction(int line, TFunction* call, bool *builtIn)
 {
-    const TSymbol* symbol = symbolTable.find(call->getMangledName(), builtIn);
+    // First find by unmangled name to check whether the function name has been
+    // hidden by a variable name or struct typename.
+    const TSymbol* symbol = symbolTable.find(call->getName(), builtIn);
+    if (symbol == 0) {
+        symbol = symbolTable.find(call->getMangledName(), builtIn);
+    }
 
-    if (symbol == 0) {        
+    if (symbol == 0) {
         error(line, "no matching overloaded function found", call->getName().c_str(), "");
         return 0;
     }
 
-    if (! symbol->isFunction()) {
+    if (!symbol->isFunction()) {
         error(line, "function name expected", call->getName().c_str(), "");
         return 0;
     }
-    
-    const TFunction* function = static_cast<const TFunction*>(symbol);
-    
-    return function;
+
+    return static_cast<const TFunction*>(symbol);
 }
 
 //

@@ -325,6 +325,7 @@ bool Blit::setFormatConvertShaders(GLenum destFormat)
     {
       default: UNREACHABLE();
       case GL_RGBA:
+      case GL_BGRA_EXT:
       case GL_RGB:
       case GL_ALPHA:
         okay = okay && setPixelShader(SHADER_PS_COMPONENTMASK);
@@ -351,6 +352,7 @@ bool Blit::setFormatConvertShaders(GLenum destFormat)
     {
       default: UNREACHABLE();
       case GL_RGBA:
+      case GL_BGRA_EXT:
         psConst0[X] = 1;
         psConst0[Z] = 1;
         break;

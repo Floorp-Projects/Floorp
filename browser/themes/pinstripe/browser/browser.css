@@ -691,6 +691,9 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
 #urlbar {
   -moz-border-radius: @toolbarbuttonCornerRadius@;
   direction: ltr;
+}
+
+#urlbar-container:not([combined]) > #urlbar {
   -moz-padding-end: 3px;
 }
 
@@ -899,15 +902,64 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #go-button {
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);  
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 #go-button:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);  
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 #go-button:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);  
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+/* ----- COMBINED GO/RELOAD/STOP BUTTON IN LOCATION BAR ----- */
+
+#urlbar > toolbarbutton {
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  margin: 0;
+  -moz-margin-start: 2px;
+  padding: 0 3px;
+  background-origin: border-box;
+  border: none;
+  border-left: 1px solid rgba(0,0,0,.25);
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-bottomright: 2px;
+}
+
+#urlbar > toolbarbutton:active:hover {
+  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@;
+  padding-left: 4px;
+  border-left: none;
+}
+
+#urlbar-go-button {
+  -moz-image-region: rect(0px, 56px, 14px, 42px);
+  background-image: -moz-linear-gradient(rgb(184,221,142), rgb(154,201,111) 49%, rgb(130,187,92) 51%, rgb(114,171,79));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 1px rgba(255,255,255,.15) inset;
+}
+
+#urlbar-reload-button {
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
+}
+
+#urlbar-reload-button:hover {
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
+  background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 1px rgba(255,255,255,.15) inset;
+}
+
+#urlbar-stop-button {
+  -moz-image-region: rect(0px, 42px, 14px, 28px);
+  background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
+  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+                   -1px -1px 1px rgba(255,255,255,.15) inset;
+}
+
+#urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: .4;
 }
 
 /* STAR BUTTON */
@@ -1484,6 +1536,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-color: -moz-mac-chrome-inactive;
 }
 
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  background-color: rgba(255,0,0,.5) !important;
+}
+
 #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"] {
   -moz-border-top-colors: rgba(0,0,0,.04) rgba(0,0,0,.17) rgba(255,255,255,.9);
   -moz-border-right-colors: rgba(0,0,0,.04) rgba(0,0,0,.17) rgba(255,255,255,.6);
@@ -1855,6 +1911,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #notification-popup {
+  color: #fff;
   margin-top: -1px;
   margin-left: -27px;
 }
@@ -1878,12 +1935,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
 
-#addons-notification-icon {
-  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
+.geolocation-text-link {
+  color: #fff;
 }
 
-.popup-notification-description {
-  color: #fff;
+#addons-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
 .popup-notification-icon {

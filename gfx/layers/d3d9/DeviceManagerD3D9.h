@@ -129,6 +129,7 @@ public:
 
   enum ShaderMode {
     RGBLAYER,
+    RGBALAYER,
     YCBCRLAYER,
     SOLIDCOLORLAYER
   };
@@ -177,6 +178,9 @@ private:
 
   /* Pixel shader used for RGB textures */
   nsRefPtr<IDirect3DPixelShader9> mRGBPS;
+
+  /* Pixel shader used for RGBA textures */
+  nsRefPtr<IDirect3DPixelShader9> mRGBAPS;
 
   /* Pixel shader used for RGB textures */
   nsRefPtr<IDirect3DPixelShader9> mYCbCrPS;

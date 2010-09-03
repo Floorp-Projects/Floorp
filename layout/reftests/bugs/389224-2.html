@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div id="d" style="position:absolute; left:10px; top:10px; width:10px; height:10px;">
+  <div style="width:100px; height:100px; background:lime;"></div>
+</div>
+<script>
+var d = document.getElementById("d");
+function doTest() {
+  d.style.clip = "rect(0,0,0,0)";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

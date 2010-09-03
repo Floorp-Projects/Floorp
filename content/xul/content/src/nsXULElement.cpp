@@ -1379,6 +1379,10 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
       slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);
     }
 
+    // The id-handling code, and in the future possibly other code, need to
+    // react to unexpected attribute changes.
+    nsMutationGuard::DidMutate();
+
     nsAttrValue ignored;
     rv = mAttrsAndChildren.RemoveAttrAt(index, ignored);
     NS_ENSURE_SUCCESS(rv, rv);
