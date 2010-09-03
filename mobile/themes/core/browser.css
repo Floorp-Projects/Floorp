@@ -927,6 +927,7 @@ autocompleteresult.noresults > .autocomplete-item-label {
 #awesome-header > toolbarbutton.choice-remotetabs {
   list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
 }
+
 #awesome-header > toolbarbutton:hover:active,
 #awesome-header > toolbarbutton[checked="true"] {
   border-color: #36373b !important;
@@ -1239,8 +1240,8 @@ pageaction[selector="first-child"] {
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
-.prompt-button:hover:active,
-pageaction:hover:active {
+.prompt-button:not([disabled]):hover:active,
+pageaction:not([disabled]):hover:active {
   background-image: none !important;
   background-color: #8db8d8 !important;
 }
