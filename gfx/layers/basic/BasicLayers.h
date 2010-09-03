@@ -118,6 +118,21 @@ public:
   void SetDefaultTarget(gfxContext* aContext, BufferMode aDoubleBuffering);
   gfxContext* GetDefaultTarget() { return mDefaultTarget; }
 
+  /**
+   * Set a target resolution for managed layers that are scalable.  It
+   * might make sense to call this outside of a transaction, but
+   * currently it's only allowed during the construction phase of
+   * transactions.
+   */
+  void SetResolution(float aXResolution, float aYResolution)
+  {
+    NS_ASSERTION(InConstruction(), "resolution must be set before drawing");
+    mXResolution = aXResolution;
+    mYResolution = aYResolution;
+  }
+  float XResolution() const { return mXResolution; }
+  float YResolution() const { return mYResolution; }
+
   nsIWidget* GetRetainerWidget() { return mWidget; }
   void ClearRetainerWidget() { mWidget = nsnull; }
 
@@ -183,6 +198,10 @@ private:
                                                           gfxPoint *aSavedOffset);
   void PopGroupWithCachedSurface(gfxContext *aTarget,
                                  const gfxPoint& aSavedOffset);
+
+  // Target resolution for scalable content.
+  float mXResolution;
+  float mYResolution;
 
   // Widget whose surface should be used as the basis for ThebesLayer
   // buffers.
