@@ -303,8 +303,8 @@ ValueToTypeChar(const Value &v)
 /* Skip this many hits before attempting recording again, after an aborted attempt. */
 #define BL_BACKOFF 32
 
-/* Number of times a loop can execute before it becomes blacklisted. */
-#define MAX_LOOP_EXECS 300
+/* Minimum number of times a loop must execute, or else it is blacklisted. */
+#define MIN_LOOP_ITERS 2
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 1
@@ -2402,6 +2402,18 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         LIns* flagptr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->interruptFlags);
         LIns* x = lir->insLoad(LIR_ldi, flagptr, 0, ACCSET_OTHER, LOAD_VOLATILE);
         guard(true, lir->insEqI_0(x), snapshot(TIMEOUT_EXIT));
+
+        /*
+         * Count the number of iterations run by a trace, so that we can blacklist if
+         * the trace runs too few iterations to be worthwhile.
+         */
+        LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
+        LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
+        LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
+        LIns *branch = lir->insBranch(LIR_jf, test, NULL);
+        counterValue = lir->ins2(LIR_addi, counterValue, INS_CONST(1));
+        lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
+        branch->setTarget(lir->ins0(LIR_label));
     }
 
     /*
@@ -6594,6 +6606,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     debug_only_stmt(*(uint64*)&tm->storage->global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
 
     /* Execute trace. */
+    JS_THREAD_DATA(cx)->iterationCounter = 0;
 #ifdef MOZ_TRACEVIS
     VMSideExit* lr = (TraceVisStateObj(cx, S_NATIVE), ExecuteTrace(cx, f, state));
 #else
@@ -6609,6 +6622,12 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     *lrp = state.innermost;
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
     JS_ASSERT_IF(cx->throwing, !ok);
+
+    if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
+        debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
+                          (void*)f, f->execs);
+        Blacklist((jsbytecode *)f->ip);
+    }
     return ok;
 }
 
@@ -6942,19 +6961,6 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     state.innermost = innermost;
 }
 
-static bool
-ApplyBlacklistHeuristics(JSContext *cx, TreeFragment *tree)
-{
-    if (tree->execs >= MAX_LOOP_EXECS) {
-        debug_only_printf(LC_TMTracer, "tree %p executed %d times, blacklisting\n",
-                          (void*)tree, tree->execs);
-        Blacklist((jsbytecode *)tree->ip);
-        return false;
-    }
-    tree->execs++;
-    return true;
-}
-
 JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
@@ -7081,9 +7087,6 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     VMSideExit* lr = NULL;
     VMSideExit* innermostNestedGuard = NULL;
-
-    if (!ApplyBlacklistHeuristics(cx, match))
-        return MONITOR_NOT_RECORDING;
 
     if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
         return MONITOR_ERROR;
@@ -16141,9 +16144,6 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
         if (match) {
             VMSideExit* lr = NULL;
             VMSideExit* innermostNestedGuard = NULL;
-
-            if (!ApplyBlacklistHeuristics(cx, match))
-                return TPA_Nothing;
 
             /* Best case - just go and execute. */
             if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
