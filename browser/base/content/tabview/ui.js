@@ -929,11 +929,6 @@ var UIManager = {
         code: function() {
           self._saveAll();
         }
-      }, {
-        name: "group sites",
-        code: function() {
-          self._arrangeBySite();
-        }
       }];
 
       var count = commands.length;
@@ -996,56 +991,6 @@ var UIManager = {
     this._save();
     GroupItems.saveAll();
     TabItems.saveAll();
-  },
-
-  // ----------
-  // Function: _arrangeBySite
-  // Blows away all existing groupItems and organizes the tabs into new groupItems based
-  // on domain.
-  _arrangeBySite: function() {
-    function putInGroupItem(set, key) {
-      var groupItem = GroupItems.getGroupItemWithTitle(key);
-      if (groupItem) {
-        set.forEach(function(el) {
-          groupItem.add(el);
-        });
-      } else
-        new GroupItem(set, { dontPush: true, dontArrange: true, title: key });
-    }
-
-    GroupItems.removeAll();
-
-    var groupItems = [];
-    var leftovers = [];
-    var items = TabItems.getItems();
-    items.forEach(function(item) {
-      var url = item.tab.linkedBrowser.currentURI.spec;
-      var domain = url.split('/')[2];
-
-      if (!domain)
-        leftovers.push(item.container);
-      else {
-        var domainParts = domain.split(".");
-        var mainDomain = domainParts[domainParts.length - 2];
-        if (groupItems[mainDomain])
-          groupItems[mainDomain].push(item.container);
-        else
-          groupItems[mainDomain] = [item.container];
-      }
-    });
-
-    for (key in groupItems) {
-      var set = groupItems[key];
-      if (set.length > 1) {
-        putInGroupItem(set, key);
-      } else
-        leftovers.push(set[0]);
-    }
-
-    if (leftovers.length)
-      putInGroupItem(leftovers, "mixed");
-
-    GroupItems.arrange();
   },
 };
 
