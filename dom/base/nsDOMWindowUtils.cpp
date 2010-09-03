@@ -231,6 +231,30 @@ nsDOMWindowUtils::Redraw(PRUint32 aCount, PRUint32 *aDurationOut)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  if (!(aWidthPx >= 0.0 && aHeightPx >= 0.0)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nscoord width = nsPresContext::CSSPixelsToAppUnits(aWidthPx);
+  nscoord height = nsPresContext::CSSPixelsToAppUnits(aHeightPx);
+
+  presShell->ResizeReflow(width, height);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  float aX,
                                  float aY,

@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(8430e730-a085-421e-bb72-39fcf73fe57b)]
+[scriptable, uuid(46df9178-2b24-45a3-9c37-f00e999e9887)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -99,6 +99,16 @@ interface nsIDOMWindowUtils : nsISupports {
    * or is 0, it is taken to be 1.
    */
   unsigned long redraw([optional] in unsigned long aCount);
+
+  /**
+   * Set the CSS viewport to be |widthPx| x |heightPx| in units of CSS
+   * pixels, regardless of the size of the enclosing widget/view.
+   * This will trigger reflow.
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
+   */
+  void setCSSViewport(in float aWidthPx, in float aHeightPx);
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
