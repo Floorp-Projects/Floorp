@@ -2405,15 +2405,18 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 
         /*
          * Count the number of iterations run by a trace, so that we can blacklist if
-         * the trace runs too few iterations to be worthwhile.
+         * the trace runs too few iterations to be worthwhile. Do this only if the methodjit
+         * is on--otherwise we must try to trace as much as possible.
          */
-        LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
-        LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
-        LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
-        LIns *branch = lir->insBranch(LIR_jf, test, NULL);
-        counterValue = lir->ins2(LIR_addi, counterValue, INS_CONST(1));
-        lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
-        branch->setTarget(lir->ins0(LIR_label));
+        if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+            LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
+            LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
+            LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
+            LIns *branch = lir->insBranch(LIR_jf, test, NULL);
+            counterValue = lir->ins2(LIR_addi, counterValue, INS_CONST(1));
+            lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
+            branch->setTarget(lir->ins0(LIR_label));
+        }
     }
 
     /*
@@ -6623,10 +6626,12 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
     JS_ASSERT_IF(cx->throwing, !ok);
 
-    if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
-        debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
-                          (void*)f, f->execs);
-        Blacklist((jsbytecode *)f->ip);
+    if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+        if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
+            debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
+                              (void*)f, f->execs);
+            Blacklist((jsbytecode *)f->ip);
+        }
     }
     return ok;
 }
