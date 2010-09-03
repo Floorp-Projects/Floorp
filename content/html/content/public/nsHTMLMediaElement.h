@@ -117,9 +117,6 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual PRBool IsDoneAddingChildren();
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-
   /**
    * Call this to reevaluate whether we should start/stop due to our owner
    * document being active or inactive.
@@ -148,6 +145,10 @@ public:
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
   void DecodeError();
+
+  // Called by the video decoder object, on the main thread, when the
+  // resource load has been cancelled.
+  void LoadAborted();
 
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
@@ -280,7 +281,7 @@ public:
 
   /**
    * Called when a child source element is added to this media element. This
-   * may queue a load() task if appropriate.
+   * may queue a task to run the select resource algorithm if appropriate.
    */
   void NotifyAddedSource();
 
@@ -333,8 +334,6 @@ public:
 
 protected:
   class MediaLoadListener;
-  class LoadNextSourceEvent;
-  class SelectResourceEvent;
 
   /**
    * Changes mHasPlayedOrSeeked to aValue. If mHasPlayedOrSeeked changes
@@ -388,23 +387,25 @@ protected:
 
   /**
    * Attempts to load resources from the <source> children. This is a
-   * substep of the media selection algorith. Do not call this directly,
+   * substep of the resource selection algorithm. Do not call this directly,
    * call QueueLoadFromSourceTask() instead.
    */
   void LoadFromSourceChildren();
 
   /**
-   * Sends an async event to call LoadFromSourceChildren().
+   * Asynchronously awaits a stable state, and then causes
+   * LoadFromSourceChildren() to be called on the main threads' event loop.
    */
   void QueueLoadFromSourceTask();
 
   /**
-   * Media selection algorithm.
+   * Runs the media resource selection algorithm.
    */
   void SelectResource();
 
   /**
-   * Sends an async event to call SelectResource().
+   * Asynchronously awaits a stable state, and then causes SelectResource()
+   * to be run on the main thread's event loop.
    */
   void QueueSelectResourceTask();
 
@@ -415,9 +416,10 @@ protected:
 
   /**
    * Selects the next <source> child from which to load a resource. Called
-   * during the media selection algorithm.
+   * during the resource selection algorithm. Stores the return value in
+   * mSourceLoadCandidate before returning.
    */
-  already_AddRefed<nsIURI> GetNextSource();
+  nsIContent* GetNextSource();
 
   /**
    * Changes mDelayingLoadEvent, and will call BlockOnLoad()/UnblockOnLoad()
@@ -493,6 +495,17 @@ protected:
    */
   void UpdatePreloadAction();
 
+  /**
+   * Dispatches an error event to a child source element.
+   */
+  void DispatchAsyncSourceError(nsIContent* aSourceElement);
+
+  /**
+   * Resets the media element for an error condition as per aErrorCode.
+   * aErrorCode must be one of nsIDOMHTMLMediaError codes.
+   */
+  void Error(PRUint16 aErrorCode);
+
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   // A reference to the ImageContainer which contains the current frame
@@ -527,18 +540,19 @@ protected:
   nsMediaReadyState mReadyState;
 
   enum LoadAlgorithmState {
-    // Not waiting for any src/<source>.
+    // No load algorithm instance is waiting for a source to be added to the
+    // media in order to continue loading.
     NOT_WAITING,
-    // No src or <source> children, load is waiting at load algorithm step 1.
-    WAITING_FOR_SRC_OR_SOURCE,
-    // No src at load time, and all <source> children don't resolve or
-    // give network errors during fetch, waiting for more <source> children
-    // to be added.
+    // We've run the load algorithm, and we tried all source children of the 
+    // media element, and failed to load any successfully. We're waiting for
+    // another source element to be added to the media element, and will try
+    // to load any such element when its added.
     WAITING_FOR_SOURCE
   };
 
-  // When the load algorithm is waiting for more src/<source>, this denotes
-  // what type of waiting we're doing.
+  // Denotes the waiting state of a load algorithm instance. When the load
+  // algorithm is waiting for a source element child to be added, this is set
+  // to WAITING_FOR_SOURCE, otherwise it's NOT_WAITING.
   LoadAlgorithmState mLoadWaitStatus;
 
   // Current audio volume
@@ -550,11 +564,12 @@ protected:
   // Current audio sample rate.
   PRUint32 mRate;
 
-  // If we're loading a preload:none media, we'll record the URI we're
-  // attempting to load in mPreloadURI, and delay loading the resource until
-  // the user initiates a load by either playing the resource, or explicitly
-  // loading it.
-  nsCOMPtr<nsIURI> mPreloadURI;
+  // URI of the resource we're attempting to load. When the decoder is
+  // successfully initialized, we rely on it to record the URI we're playing,
+  // and clear mLoadingSrc. This stores the value we return in the currentSrc
+  // attribute until the decoder is initialized. Use GetCurrentSrc() to access
+  // the currentSrc attribute.
+  nsCOMPtr<nsIURI> mLoadingSrc;
   
   // Stores the current preload action for this element. Initially set to
   // PRELOAD_UNDEFINED, its value is changed by calling
@@ -562,10 +577,14 @@ protected:
   PreloadAction mPreloadAction;
 
   // Size of the media. Updated by the decoder on the main thread if
-  // it changes. Defaults to a width and height of -1 if not set.
+  // it changes. Defaults to a width and height of -1 inot set.
   nsIntSize mMediaSize;
 
   nsRefPtr<gfxASurface> mPrintSurface;
+
+  // Reference to the source element last returned by GetNextSource().
+  // This is the child source element which we're trying to load from.
+  nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
   nsAutoPtr<nsAudioStream> mAudioStream;
@@ -603,10 +622,6 @@ protected:
 
   // True if the sound is muted
   PRPackedBool mMuted;
-
-  // Flag to indicate if the child elements (eg. <source/>) have been
-  // parsed.
-  PRPackedBool mIsDoneAddingChildren;
 
   // If TRUE then the media element was actively playing before the currently
   // in progress seeking. If FALSE then the media element is either not seeking

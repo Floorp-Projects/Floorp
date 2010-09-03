@@ -81,7 +81,6 @@ Var TmpVal
 !include defines.nsi
 !include common.nsh
 !include locales.nsi
-!include version.nsh
 
 ; This is named BrandShortName helper because we use this for software update
 ; post update cleanup.

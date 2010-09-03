@@ -5866,26 +5866,6 @@ IsInlineFrame(nsIFrame *aFrame)
          type == nsGkAtoms::positionedInlineFrame;
 }
 
-nsRect
-nsIFrame::GetAdditionalOverflow(const nsRect& aOverflowArea,
-                                const nsSize& aNewSize,
-                                PRBool* aHasOutlineOrEffects)
-{
-  nsRect overflowRect =
-    ComputeOutlineAndEffectsRect(this, aHasOutlineOrEffects,
-                                 aOverflowArea, aNewSize, PR_TRUE);
-
-  // Absolute position clipping
-  PRBool hasAbsPosClip;
-  nsRect absPosClipRect;
-  hasAbsPosClip = GetAbsPosClipRect(GetStyleDisplay(), &absPosClipRect, aNewSize);
-  if (hasAbsPosClip) {
-    overflowRect.IntersectRect(overflowRect, absPosClipRect);
-  }
-
-  return overflowRect;
-}
-
 void 
 nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 {
@@ -5931,8 +5911,20 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   }
   
   PRBool hasOutlineOrEffects;
-  *aOverflowArea = GetAdditionalOverflow(*aOverflowArea, aNewSize,
-      &hasOutlineOrEffects);
+  *aOverflowArea =
+    ComputeOutlineAndEffectsRect(this, &hasOutlineOrEffects,
+                                 *aOverflowArea, aNewSize, PR_TRUE);
+
+  // Absolute position clipping
+  PRBool didHaveAbsPosClip = (GetStateBits() & NS_FRAME_HAS_CLIP) != 0;
+  nsRect absPosClipRect;
+  PRBool hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect, aNewSize);
+  if (hasAbsPosClip) {
+    aOverflowArea->IntersectRect(*aOverflowArea, absPosClipRect);
+    AddStateBits(NS_FRAME_HAS_CLIP);
+  } else {
+    RemoveStateBits(NS_FRAME_HAS_CLIP);
+  }
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
   PRBool hasTransform = IsTransformed();
@@ -5962,19 +5954,46 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     }
   }
 
-  if (overflowChanged && (hasOutlineOrEffects || hasTransform)) {
-    // When there's an outline or box-shadow or SVG effects or transform,
-    // changes to those styles might require repainting of the old and new
-    // overflow areas. Repainting of the old overflow area is handled in
-    // nsCSSFrameConstructor::DoApplyRenderingChangeToTree in response
-    // to nsChangeHint_RepaintFrame. Since the new overflow area is not
-    // known at that time, we have to handle it here.
-    // If the overflow area hasn't changed, then we don't have to do
-    // anything here since repainting the old overflow area was enough.
-    // If there is no outline or other effects now, then we don't have
-    // to do anything here since removing those styles can't require
-    // repainting of areas that weren't in the old overflow area.
-    Invalidate(*aOverflowArea);
+  if (overflowChanged) {
+    if (hasOutlineOrEffects) {
+      // When there's an outline or box-shadow or SVG effects,
+      // changes to those styles might require repainting of the old and new
+      // overflow areas. Repainting of the old overflow area is handled in
+      // nsCSSFrameConstructor::DoApplyRenderingChangeToTree in response
+      // to nsChangeHint_RepaintFrame. Since the new overflow area is not
+      // known at that time, we have to handle it here.
+      // If the overflow area hasn't changed, then we don't have to do
+      // anything here since repainting the old overflow area was enough.
+      // If there is no outline or other effects now, then we don't have
+      // to do anything here since removing those styles can't require
+      // repainting of areas that weren't in the old overflow area.
+      Invalidate(*aOverflowArea);
+    } else if (hasAbsPosClip || didHaveAbsPosClip) {
+      // If we are (or were) clipped by the 'clip' property, and our
+      // overflow area changes, it might be because the clipping changed.
+      // The nsChangeHint_RepaintFrame for the style change will only
+      // repaint the old overflow area, so if the overflow area has
+      // changed (in particular, if it grows), we have to repaint the
+      // new area here.
+      Invalidate(*aOverflowArea);
+    } else if (hasTransform) {
+      // When there's a transform, changes to that style might require
+      // repainting of the old and new overflow areas in the widget.
+      // Repainting of the frame itself will not be required if there's
+      // a retained layer, so we can call InvalidateLayer here
+      // which will avoid repainting ThebesLayers if possible.
+      // nsCSSFrameConstructor::DoApplyRenderingChangeToTree repaints
+      // the old overflow area in the widget in response to
+      // nsChangeHint_UpdateTransformLayer. But since the new overflow
+      // area is not known at that time, we have to handle it here.
+      // If the overflow area hasn't changed, then it doesn't matter that
+      // we didn't reach here since repainting the old overflow area was enough.
+      // If there is no transform now, then the container layer for
+      // the transform will go away and the frame contents will change
+      // ThebesLayers, forcing it to be invalidated, so it doesn't matter
+      // that we didn't reach here.
+      InvalidateLayer(*aOverflowArea, nsDisplayItem::TYPE_TRANSFORM);
+    }
   }
 }
 

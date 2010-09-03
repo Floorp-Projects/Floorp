@@ -475,10 +475,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
       }
       
       //nsIAccessibleSelection
-      nsCOMPtr<nsIAccessibleSelectable> accessInterfaceSelection;
-      QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                     getter_AddRefs(accessInterfaceSelection));
-      if (accessInterfaceSelection) {
+      if (IsSelect()) {
           interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
       }
     }

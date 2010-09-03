@@ -155,20 +155,12 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleSelectable))) {
-    if (mRoleMapEntry &&
-        (mRoleMapEntry->attributeMap1 == eARIAMultiSelectable ||
-         mRoleMapEntry->attributeMap2 == eARIAMultiSelectable ||
-         mRoleMapEntry->attributeMap3 == eARIAMultiSelectable)) {
-
-      // If we have an ARIA role attribute present and the role allows multi
-      // selectable state, then we need to support nsIAccessibleSelectable.
-      // If either attribute (role or multiselectable) change, then we'll
-      // destroy this accessible so that we can follow COM identity rules.
-
+    if (IsSelect()) {
       *aInstancePtr = static_cast<nsIAccessibleSelectable*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
     }
+    return NS_ERROR_NO_INTERFACE;
   }
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleValue))) {
@@ -2381,22 +2373,18 @@ nsAccessible::DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex)
 // nsIAccessibleSelectable
 NS_IMETHODIMP nsAccessible::GetSelectedChildren(nsIArray **aSelectedAccessibles)
 {
+  NS_ENSURE_ARG_POINTER(aSelectedAccessibles);
   *aSelectedAccessibles = nsnull;
 
-  nsCOMPtr<nsIMutableArray> selectedAccessibles =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-  NS_ENSURE_STATE(selectedAccessibles);
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
 
-  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
-  nsIAccessible *selected = nsnull;
-  while ((selected = iter.GetNext()))
-    selectedAccessibles->AppendElement(selected, PR_FALSE);
-
-  PRUint32 length = 0;
-  selectedAccessibles->GetLength(&length); 
-  if (length) { // length of nsIArray containing selected options
-    *aSelectedAccessibles = selectedAccessibles;
-    NS_ADDREF(*aSelectedAccessibles);
+  nsCOMPtr<nsIArray> items = SelectedItems();
+  if (items) {
+    PRUint32 length = 0;
+    items->GetLength(&length);
+    if (length)
+      items.swap(*aSelectedAccessibles);
   }
 
   return NS_OK;
@@ -2408,23 +2396,20 @@ NS_IMETHODIMP nsAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **aSelect
   NS_ENSURE_ARG_POINTER(aSelected);
   *aSelected = nsnull;
 
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
+
   if (aIndex < 0) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
-  nsAccessible *selected = nsnull;
-
-  PRInt32 count = 0;
-  while (count ++ <= aIndex) {
-    selected = iter.GetNext();
-    if (!selected) {
-      // The index is out of range.
-      return NS_ERROR_INVALID_ARG;
-    }
+  *aSelected = GetSelectedItem(aIndex);
+  if (*aSelected) {
+    NS_ADDREF(*aSelected);
+    return NS_OK;
   }
-  NS_IF_ADDREF(*aSelected = selected);
-  return NS_OK;
+
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP nsAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
@@ -2432,83 +2417,65 @@ NS_IMETHODIMP nsAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
   NS_ENSURE_ARG_POINTER(aSelectionCount);
   *aSelectionCount = 0;
 
-  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
-  nsAccessible *selected = nsnull;
-  while ((selected = iter.GetNext()))
-    ++(*aSelectionCount);
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
 
+  *aSelectionCount = SelectedItemCount();
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::AddChildToSelection(PRInt32 aIndex)
 {
-  // Tree views and other container widgets which may have grandchildren should
-  // implement a selection methods for their specific interfaces, because being
-  // able to deal with selection on a per-child basis would not be enough.
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
 
-  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_FAILURE);
-
-  nsAccessible* child = GetChildAt(aIndex);
-  PRUint32 state = nsAccUtils::State(child);
-  if (!(state & nsIAccessibleStates::STATE_SELECTABLE)) {
-    return NS_OK;
-  }
-
-  return child->SetSelected(PR_TRUE);
+  return aIndex >= 0 && AddItemToSelection(aIndex) ?
+    NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
 {
-  // Tree views and other container widgets which may have grandchildren should
-  // implement a selection methods for their specific interfaces, because being
-  // able to deal with selection on a per-child basis would not be enough.
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
 
-  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_FAILURE);
-
-  nsAccessible* child = GetChildAt(aIndex);
-  PRUint32 state = nsAccUtils::State(child);
-  if (!(state & nsIAccessibleStates::STATE_SELECTED)) {
-    return NS_OK;
-  }
-
-  return child->SetSelected(PR_FALSE);
+  return aIndex >=0 && RemoveItemFromSelection(aIndex) ?
+    NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, PRBool *aIsSelected)
 {
-  // Tree views and other container widgets which may have grandchildren should
-  // implement a selection methods for their specific interfaces, because being
-  // able to deal with selection on a per-child basis would not be enough.
-
+  NS_ENSURE_ARG_POINTER(aIsSelected);
   *aIsSelected = PR_FALSE;
+
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
+
   NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_FAILURE);
 
-  nsAccessible* child = GetChildAt(aIndex);
-  PRUint32 state = nsAccUtils::State(child);
-  if (state & nsIAccessibleStates::STATE_SELECTED) {
-    *aIsSelected = PR_TRUE;
-  }
+  *aIsSelected = IsItemSelected(aIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessible::ClearSelection()
 {
-  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
-  nsAccessible *selected = nsnull;
-  while ((selected = iter.GetNext()))
-    selected->SetSelected(PR_FALSE);
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
 
+  UnselectAll();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
+NS_IMETHODIMP
+nsAccessible::SelectAllSelection(PRBool* aIsMultiSelect)
 {
-  AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
-  nsAccessible *selectable = nsnull;
-  while((selectable = iter.GetNext()))
-    selectable->SetSelected(PR_TRUE);
+  NS_ENSURE_ARG_POINTER(aIsMultiSelect);
+  *aIsMultiSelect = PR_FALSE;
 
+  if (IsDefunct() || !IsSelect())
+    return NS_ERROR_FAILURE;
+
+  *aIsMultiSelect = SelectAll();
   return NS_OK;
 }
 
@@ -3032,6 +2999,138 @@ nsAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
 
   return nsnull;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// SelectAccessible
+
+bool
+nsAccessible::IsSelect()
+{
+  // If we have an ARIA role attribute present and the role allows multi
+  // selectable state, then we need to support SelectAccessible interface. If
+  // either attribute (role or multiselectable) change, then we'll destroy this
+  // accessible so that we can follow COM identity rules.
+
+  return mRoleMapEntry &&
+    (mRoleMapEntry->attributeMap1 == eARIAMultiSelectable ||
+     mRoleMapEntry->attributeMap2 == eARIAMultiSelectable ||
+     mRoleMapEntry->attributeMap3 == eARIAMultiSelectable);
+}
+
+already_AddRefed<nsIArray>
+nsAccessible::SelectedItems()
+{
+  nsCOMPtr<nsIMutableArray> selectedItems = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!selectedItems)
+    return nsnull;
+
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
+  nsIAccessible* selected = nsnull;
+  while ((selected = iter.GetNext()))
+    selectedItems->AppendElement(selected, PR_FALSE);
+
+  nsIMutableArray* items = nsnull;
+  selectedItems.forget(&items);
+  return items;
+}
+
+PRUint32
+nsAccessible::SelectedItemCount()
+{
+  PRUint32 count = 0;
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
+  nsAccessible* selected = nsnull;
+  while ((selected = iter.GetNext()))
+    ++count;
+
+  return count;
+}
+
+nsAccessible*
+nsAccessible::GetSelectedItem(PRUint32 aIndex)
+{
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
+  nsAccessible* selected = nsnull;
+
+  PRUint32 index = 0;
+  while ((selected = iter.GetNext()) && index < aIndex)
+    index++;
+
+  return selected;
+}
+
+bool
+nsAccessible::IsItemSelected(PRUint32 aIndex)
+{
+  PRUint32 index = 0;
+  AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
+  nsAccessible* selected = nsnull;
+  while ((selected = iter.GetNext()) && index < aIndex)
+    index++;
+
+  return selected &&
+    nsAccUtils::State(selected) & nsIAccessibleStates::STATE_SELECTED;
+}
+
+bool
+nsAccessible::AddItemToSelection(PRUint32 aIndex)
+{
+  PRUint32 index = 0;
+  AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
+  nsAccessible* selected = nsnull;
+  while ((selected = iter.GetNext()) && index < aIndex)
+    index++;
+
+  if (selected)
+    selected->SetSelected(PR_TRUE);
+
+  return static_cast<bool>(selected);
+}
+
+bool
+nsAccessible::RemoveItemFromSelection(PRUint32 aIndex)
+{
+  PRUint32 index = 0;
+  AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
+  nsAccessible* selected = nsnull;
+  while ((selected = iter.GetNext()) && index < aIndex)
+    index++;
+
+  if (selected)
+    selected->SetSelected(PR_FALSE);
+
+  return static_cast<bool>(selected);
+}
+
+bool
+nsAccessible::SelectAll()
+{
+  bool success = false;
+  nsAccessible* selectable = nsnull;
+
+  AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
+  while((selectable = iter.GetNext())) {
+    success = true;
+    selectable->SetSelected(PR_TRUE);
+  }
+  return success;
+}
+
+bool
+nsAccessible::UnselectAll()
+{
+  bool success = false;
+  nsAccessible* selected = nsnull;
+
+  AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
+  while ((selected = iter.GetNext())) {
+    success = true;
+    selected->SetSelected(PR_FALSE);
+  }
+  return success;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible protected methods

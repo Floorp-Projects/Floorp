@@ -98,7 +98,7 @@ struct OpDestroyImageFrontBuffer { PLayer layer; };
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
   gfx3DMatrix transform;
-  bool isOpaqueContent;
+  PRUint32 contentFlags;
   float opacity;
   bool useClipRect;
   nsIntRect clipRect;

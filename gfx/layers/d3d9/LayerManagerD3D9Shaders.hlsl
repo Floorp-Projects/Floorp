@@ -28,14 +28,28 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
   outp.vPosition = mul(mLayerQuadTransform, outp.vPosition);
   outp.vPosition = mul(mLayerTransform, outp.vPosition);
   outp.vPosition = outp.vPosition - vRenderTargetOffset;
+  
+  // adjust our vertices to match d3d9's pixel coordinate system
+  // which has pixel centers at integer locations
+  outp.vPosition.xy -= 0.5;
+  
   outp.vPosition = mul(mProjection, outp.vPosition);
+  
   outp.vTexCoords = aVertex.vPosition.xy;
   return outp;
 }
 
-float4 RGBShader(const VS_OUTPUT aVertex) : COLOR
+float4 RGBAShader(const VS_OUTPUT aVertex) : COLOR
 {
   return tex2D(s2D, aVertex.vTexCoords) * fLayerOpacity;
+}
+
+float4 RGBShader(const VS_OUTPUT aVertex) : COLOR
+{
+  float4 result;
+  result = tex2D(s2D, aVertex.vTexCoords) * fLayerOpacity;
+  result.a = 1.0;
+  return result;
 }
 
 float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR

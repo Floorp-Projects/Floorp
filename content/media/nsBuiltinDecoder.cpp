@@ -411,7 +411,6 @@ void nsBuiltinDecoder::ResourceLoaded()
 
   // Ensure the final progress event gets fired
   if (mElement) {
-    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
     mElement->ResourceLoaded();
   }
 }
@@ -566,8 +565,11 @@ void nsBuiltinDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  if (aStatus == NS_BINDING_ABORTED)
+  if (aStatus == NS_BINDING_ABORTED) {
+    // Download has been cancelled by user.
+    mElement->LoadAborted();
     return;
+  }
 
   {
     MonitorAutoEnter mon(mMonitor);

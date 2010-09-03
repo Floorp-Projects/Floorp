@@ -1,0 +1,113 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Indexed Database.
+ *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Turner <bent.mozilla@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface mozIStorageConnection;
+interface nsIFile;
+
+[scriptable, function, uuid(ae94f0a5-ebdf-48f4-9959-085e13235d8d)]
+interface mozIStorageQuotaCallback : nsISupports
+{
+  /**
+   * Called when the file size quota for a group of databases is exceeded.
+   *
+   * @param aFilename
+   *        The filename of the database that has exceeded the quota.
+   *
+   * @param aCurrentSizeLimit
+   *        The current size (in bytes) of the quota.
+   *
+   * @param aCurrentTotalSize
+   *        The current size of all databases in the quota group.
+   *
+   * @param aUserData
+   *        Any additional data that was provided to the
+   *        setQuotaForFilenamePattern function.
+   *
+   * @returns A new quota size. A new quota of 0 will disable the quota callback
+   *          and any quota value less than aCurrentTotalSize will cause the
+   *          database operation to fail with NS_ERROR_FILE_NO_DEVICE_SPACE.
+   */
+  long long quotaExceeded(in ACString aFilename,
+                          in long long aCurrentSizeLimit,
+                          in long long aCurrentTotalSize,
+                          in nsISupports aUserData);
+};
+
+/**
+ * This is a temporary interface that should eventually merge with
+ * mozIStorageService.
+ */
+[scriptable, uuid(11def472-446f-4635-a1d8-8856e85aac50)]
+interface mozIStorageServiceQuotaManagement : nsISupports
+{
+  /**
+   * See mozIStorageService.openDatabase. Exactly the same only with a custom
+   * SQLite VFS.
+   */
+  mozIStorageConnection openDatabaseWithVFS(in nsIFile aDatabaseFile,
+                                            in ACString aVFSName);
+
+  /**
+   * Set a file size quota for a group of databases matching the given filename
+   * pattern, optionally specifying a callback when the quota is exceeded.
+   *
+   * @param aPattern
+   *        A pattern to match filenames for inclusion in the quota system. May
+   *        contain the following special characters:
+   *          '*'    Matches any sequence of zero or more characters.
+   *          '?'    Matches exactly one character.
+   *          [...]  Matches one character from the enclosed list of characters.
+   *          [^...] Matches one character not in the enclosed list.
+   *
+   * @param aSizeLimit
+   *        The size limit (in bytes) for the quota group.
+   *
+   * @param aCallback
+   *        A callback that will be used when the quota is exceeded.
+   *
+   * @param aUserData
+   *        Additional information to be passed to the callback.
+   */
+  void setQuotaForFilenamePattern(in ACString aPattern,
+                                  in long long aSizeLimit,
+                                  in mozIStorageQuotaCallback aCallback,
+                                  in nsISupports aUserData);
+};

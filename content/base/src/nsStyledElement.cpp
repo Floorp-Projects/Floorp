@@ -137,10 +137,13 @@ nsStyledElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     RemoveFromIdTable();
     isId = PR_TRUE;
   }
+
+  nsMutationGuard guard;
   
   nsresult rv = nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 
-  if (isId) {
+  if (isId &&
+      (!guard.Mutated(0) || !HasAttr(kNameSpaceID_None, nsGkAtoms::id))) {
     UnsetFlags(NODE_HAS_ID);
   }
 

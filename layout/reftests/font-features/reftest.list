@@ -7,19 +7,17 @@
 
 # check that Turkish language causes a change in rendering (no fi ligature)
 # (also works via Pango)
-# marking as random on windows until we turn on harfbuzz, because behavior depends on uniscribe version
-random-if(winWidget) HTTP(..) != font-features-turkish.html font-features-ref.html
+HTTP(..) != font-features-turkish.html font-features-ref.html
 
 # check that disabling ligatures causes a change
-fails-if(!cocoaWidget) HTTP(..) != font-features-noliga.html font-features-ref.html
+fails-if(gtk2Widget) HTTP(..) != font-features-noliga.html font-features-ref.html
 
 # check that enabling optional ligatures causes a change
-fails-if(!cocoaWidget) HTTP(..) != font-features-hlig.html font-features-ref.html
+fails-if(gtk2Widget) HTTP(..) != font-features-hlig.html font-features-ref.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
 # (also works via Pango)
-# marking as random on windows until we turn on harfbuzz, because behavior depends on uniscribe version
-random-if(winWidget) HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
+HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
 
 # compare Turkish rendering with explicitly disabled ligatures
 # (fails on Linux because Pango recognizes the Turkish lang but not the feature setting)

@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.css"
+<?xml-stylesheet href="../nsIAccessible_name.css"
                  type="text/css"?>
 
 
@@ -15,11 +15,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js" />
+          src="../common.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/events.js" />
+          src="../events.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/actions.js" />
+          src="../actions.js" />
 
   <script type="application/javascript">
   <![CDATA[

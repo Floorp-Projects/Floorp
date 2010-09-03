@@ -83,7 +83,9 @@ CPPSRCS = \
   $(NULL)
 
 LOCAL_INCLUDES = \
-	$(SQLITE_CFLAGS)
+  $(SQLITE_CFLAGS) \
+  -I$(topsrcdir)/db/sqlite3/src \
+  $(NULL)
 
 # This is the default value.  If we ever change it when compiling sqlite, we
 # will need to change it here as well.

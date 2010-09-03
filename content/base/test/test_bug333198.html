@@ -9,7 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=333198
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body>
+<!-- setTimeout so that the test starts after paint suppression ends -->
+<body onload="setTimeout(runTest,0);">
 <iframe id="ifr"></iframe><br>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=333198">Mozilla Bug 333198</a>
 <p id="display"></p>
@@ -83,7 +84,6 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(runTest);
 
 </script>
 </pre>

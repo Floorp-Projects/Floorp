@@ -342,6 +342,11 @@ function BuildConditionSandbox(aURL) {
     } catch(e) {
       sandbox.d2d = false;
     }
+
+    if (gWindowUtils && gWindowUtils.layerManagerType == "Basic")
+      sandbox.layersGPUAccelerated = true;
+    else
+      sandbox.layersGPUAccelerated = false;
  
     // Shortcuts for widget toolkits.
     sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";

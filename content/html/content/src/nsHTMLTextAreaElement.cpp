@@ -94,6 +94,8 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                         PRUint32 aFromParser = 0);
 

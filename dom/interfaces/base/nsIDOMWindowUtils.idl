@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(59e6f1be-ba0e-4102-9fe5-d5af8777742a)]
+[scriptable, uuid(8430e730-a085-421e-bb72-39fcf73fe57b)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -711,4 +711,11 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void suspendTimeouts();
   void resumeTimeouts();
+
+  /**
+   * What type of layer manager the widget associated with this window is
+   * using. "Basic" is unaccelerated; other types are accelerated. Throws an
+   * error if there is no widget associated with this window.
+   */
+  readonly attribute AString layerManagerType;
 };

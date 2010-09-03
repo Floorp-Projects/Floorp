@@ -257,7 +257,7 @@ private:
                            PRBool aImageOnly = PR_FALSE);
 
   // empty if there are no elementswith this ID.
-  // The elementsnodes are stored addrefed.
+  // The elements are stored as weak pointers.
   nsSmallVoidArray mIdContentList;
   // NAME_NOT_VALID if this id cannot be used as a 'name'.  Otherwise
   // stores Elements.
