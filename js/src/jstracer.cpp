@@ -6185,67 +6185,35 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
 static inline bool
 IsEntryTypeCompatible(const Value &v, JSValueType type)
 {
-#ifdef DEBUG
-    char tag = ValueToTypeChar(v);
-    debug_only_printf(LC_TMTracer, "%c/%c ", tag, TypeToChar(type));
-#endif
+    bool ok;
 
     JS_ASSERT(type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
-    switch (type) {
-      case JSVAL_TYPE_DOUBLE:
-        if (v.isNumber())
-            return true;
-        debug_only_printf(LC_TMTracer, "double != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_INT32: {
+    JS_ASSERT(type != JSVAL_TYPE_OBJECT);   /* JSVAL_TYPE_OBJECT does not belong in a type map */
+
+    if (v.isInt32()) {
+        ok = (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_DOUBLE);
+
+    } else if (v.isDouble()) {
         int32_t _;
-        if (v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.toDouble(), &_)))
-            return true;
-        debug_only_printf(LC_TMTracer, "int != tag%c ", tag);
-        break;
-      }
-      case JSVAL_TYPE_UNDEFINED:
-        if (v.isUndefined())
-            return true;
-        debug_only_printf(LC_TMTracer, "undefined != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_BOOLEAN:
-        if (v.isBoolean())
-            return true;
-        debug_only_printf(LC_TMTracer, "bool != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_MAGIC:
-        if (v.isMagic())
-            return true;
-        debug_only_printf(LC_TMTracer, "magic != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_STRING:
-        if (v.isString())
-            return true;
-        debug_only_printf(LC_TMTracer, "string != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_NULL:
-        if (v.isNull())
-            return true;
-        debug_only_printf(LC_TMTracer, "null != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_OBJECT:
-        JS_NOT_REACHED("JSVAL_TYPE_OBJECT does not belong in a type map");
-        break;
-      case JSVAL_TYPE_NONFUNOBJ:
-        if (v.isObject() && !v.toObject().isFunction())
-            return true;
-        debug_only_printf(LC_TMTracer, "object != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_FUNOBJ:
-        if (v.isObject() && v.toObject().isFunction())
-            return true;
-        debug_only_printf(LC_TMTracer, "fun != tag%c ", tag);
-        break;
-      default:
-        JS_NOT_REACHED("unexpected type");
+        ok = (type == JSVAL_TYPE_DOUBLE) || 
+             (type == JSVAL_TYPE_INT32 && JSDOUBLE_IS_INT32(v.toDouble(), &_));
+
+    } else if (v.isObject()) {
+        ok = v.toObject().isFunction()
+           ? type == JSVAL_TYPE_FUNOBJ
+           : type == JSVAL_TYPE_NONFUNOBJ;
+
+    } else {
+        ok = v.extractNonDoubleObjectTraceType() == type;
     }
-    return false;
+#ifdef DEBUG
+    char ttag = TypeToChar(type);
+    char vtag = ValueToTypeChar(v);
+    debug_only_printf(LC_TMTracer, "%c/%c ", vtag, ttag);
+    if (!ok)
+        debug_only_printf(LC_TMTracer, "%s", "(incompatible types)");
+#endif
+    return ok;
 }
 
 class TypeCompatibilityVisitor : public SlotVisitorBase
