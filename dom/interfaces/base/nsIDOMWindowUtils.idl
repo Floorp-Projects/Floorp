@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(b6628355-e72f-4d1d-9b83-ffc2740536b5)]
+[scriptable, uuid(d0d23c20-16ca-4c0f-b2d2-74ae4c7b858b)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -138,6 +138,32 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void setDisplayPort(in float aXPx, in float aYPx,
                       in float aWidthPx, in float aHeightPx);
+
+  /**
+   * Get/set the resolution at which rescalable web content is drawn.
+   * Currently this is only (some) thebes content.
+   *
+   * Setting a new resolution does *not* trigger reflow.  This API is
+   * entirely separate from textZoom and fullZoom; a resolution scale
+   * can be applied together with both textZoom and fullZoom.
+   *
+   * The effect of is API for gfx code to allocate more or fewer
+   * pixels for rescalable content by a factor of |resolution| in
+   * either or both dimensions.  setResolution() together with
+   * setDisplayport() can be used to implement a non-reflowing
+   * scale-zoom in concert with another entity that can draw with a
+   * scale.  For example, to scale a content |window| inside a
+   * <browser> by a factor of 2.0
+   *
+   *   window.setDisplayport(x, y, oldW / 2.0, oldH / 2.0);
+   *   window.setResolution(2.0, 2.0);
+   *   // elsewhere
+   *   browser.setViewportScale(2.0, 2.0);
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
+   */
+  void setResolution(in float aXResolution, in float aYResolution);
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
