@@ -593,8 +593,8 @@
                           label="&appMenuUnsorted.label;"
                           oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
                           class="menuitem-iconic"/>
-                <menuitem id="appmenu_organizeBookmarks"
-                          label="&organizeBookmarks.label;"
+                <menuitem id="appmenu_showAllBookmarks"
+                          label="&showAllBookmarks.label;"
                           key="manBookmarkKb"
                           command="Browser:ShowAllBookmarks"
                           context=""/>
@@ -959,7 +959,7 @@
                       command="Browser:BookmarkAllTabs"
                       key="bookmarkAllTabsKb"/>
             <menuitem id="BMB_bookmarksShowAll"
-                      label="&organizeBookmarks.label;"
+                      label="&showAllBookmarks.label;"
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>
