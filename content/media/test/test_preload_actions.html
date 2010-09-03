@@ -46,7 +46,9 @@ function log(m) {
 
 function maybeFinish(v, n) {
   log(n + ",");
-  v.parentNode.removeChild(v);
+  if (v.parentNode) {
+    v.parentNode.removeChild(v);
+  }
   manager.finished(v.token);
 }
 
