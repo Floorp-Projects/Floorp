@@ -539,9 +539,9 @@
                                               .getService(Components.interfaces.nsIPrefService)
                                               .QueryInterface(Components.interfaces.nsIPrefBranch2);
 
-          this._pendingThresholdX = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelX"));
-          this._pendingThresholdY = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelY"));
           this._recacheRatio = Math.max(.01, Math.min(1, prefService.getIntPref("toolkit.browser.recacheRatio") / 100));
+          this._pendingThresholdX = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelX")) * this._recacheRatio;
+          this._pendingThresholdY = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelY")) * this._recacheRatio;
 
           this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
