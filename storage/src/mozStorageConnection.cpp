@@ -379,7 +379,8 @@ Connection::getAsyncExecutionTarget()
 }
 
 nsresult
-Connection::initialize(nsIFile *aDatabaseFile)
+Connection::initialize(nsIFile *aDatabaseFile,
+                       const char* aVFSName)
 {
   NS_ASSERTION (!mDBConn, "Initialize called on already opened database!");
 
@@ -394,11 +395,11 @@ Connection::initialize(nsIFile *aDatabaseFile)
     NS_ENSURE_SUCCESS(rv, rv);
 
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            NULL);
+                            aVFSName);
   }
   else {
     // in memory database requested, sqlite uses a magic file name
-    srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, NULL);
+    srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, aVFSName);
   }
   if (srv != SQLITE_OK) {
     mDBConn = nsnull;

@@ -101,7 +101,8 @@ public:
    *        does not exist.  Passing in nsnull here creates an in-memory
    *        database.
    */
-  nsresult initialize(nsIFile *aDatabaseFile);
+  nsresult initialize(nsIFile *aDatabaseFile,
+                      const char* aVFSName = NULL);
 
   // fetch the native handle
   sqlite3 *GetNativeConnection() { return mDBConn; }
