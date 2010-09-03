@@ -42,6 +42,7 @@
 #include "nsIThreadInternal.h"
 #include "nsIObserver.h"
 #include "nsIRunnable.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "prinrval.h"
 
@@ -99,6 +100,11 @@ protected:
 private:
   PRBool DoProcessNextNativeEvent(PRBool mayWait);
 
+  /**
+   * Runs all synchronous sections which are queued up in mSyncSections.
+   */
+  void RunSyncSections();
+
   nsCOMPtr<nsIRunnable> mDummyEvent;
   /**
    * mBlockedWait points back to a slot that controls the wait loop in
@@ -119,6 +125,7 @@ private:
     eEventloopOther  // innermost native event loop is a native library/plugin etc
   };
   EventloopNestingState mEventloopNestingState;
+  nsCOMArray<nsIRunnable> mSyncSections;
   PRPackedBool mRunning;
   PRPackedBool mExiting;
   /**

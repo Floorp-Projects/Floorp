@@ -134,8 +134,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("canplaythrough", this.canplaythrough, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },
   {
@@ -253,6 +253,7 @@ var tests = [
       ok(true, "(7) Got playback ended");
       var v = e.target;
       v._finished = true;
+      is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");      
       maybeFinish(v, 7);
     },
       
@@ -262,10 +263,12 @@ var tests = [
       v._gotLoadedMetaData = false;
       v._finished = false;
       v.preload = "none";
+      v._gotErrorEvent = false;
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("suspend", this.suspend, false);
       v.addEventListener("ended", this.ended, false);
+      v.addEventListener("error", function(e){v._gotErrorEvent = true; e.stopPropagation();}, false);
       var s1 = document.createElement("source");
       s1.src = "not-a-real-file.404"
       s1.type = test.type;
@@ -297,8 +300,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v.preload = "metadata";}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadeddata", this.loadeddata, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },
   /*{
@@ -326,8 +329,8 @@ var tests = [
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadeddata", function(){v.preload = "auto"}, false);
       v.addEventListener("canplaythrough", this.canplaythrough, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },*/
   {
@@ -348,8 +351,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v.preload = "auto";}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("canplaythrough", this.canplaythrough, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },
   {
@@ -372,8 +375,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v.preload = "metadata";}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadeddata", this.loadeddata, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },
   {
@@ -397,8 +400,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("canplaythrough", this.canplaythrough, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
       v.preload = "metadata";
     },
   },
@@ -426,8 +429,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadeddata", this.loadeddata, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
       v.preload = "none";
     },
   },
@@ -486,8 +489,8 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("ended", this.ended, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },
   {
@@ -506,8 +509,8 @@ var tests = [
       v.preload = "metadata";
       v.autoplay = true;
       v.addEventListener("ended", this.ended, false);
-      v.src = test.name;
-      document.body.appendChild(v); // Causes implicit load.
+      v.src = test.name; // Causes implicit load.
+      document.body.appendChild(v);
     },
   },
   {
