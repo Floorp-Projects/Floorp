@@ -454,7 +454,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
                                float aOpacity)
 {
   aTarget->Save();
-  ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+  gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
