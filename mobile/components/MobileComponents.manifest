@@ -61,6 +61,7 @@ contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e
 component {9a61149b-2276-4a0a-b79c-be994ad106cf} PromptService.js
 contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
 contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
+category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,nsIPromptService,getService,Prompt:Call
 
 # BrowserCLH.js
 component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js
