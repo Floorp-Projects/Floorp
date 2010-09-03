@@ -62,7 +62,7 @@ public:
   nsBaseAppShell();
 
 protected:
-  virtual ~nsBaseAppShell() {}
+  virtual ~nsBaseAppShell();
 
   /**
    * This method is called by subclasses when the app shell singleton is

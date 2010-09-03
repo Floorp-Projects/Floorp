@@ -70,6 +70,11 @@ nsBaseAppShell::nsBaseAppShell()
 {
 }
 
+nsBaseAppShell::~nsBaseAppShell()
+{
+  NS_ASSERTION(mSyncSections.Count() == 0, "Must have run all sync sections");
+}
+
 nsresult
 nsBaseAppShell::Init()
 {
@@ -369,14 +374,20 @@ nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
 NS_IMETHODIMP
 nsBaseAppShell::RunInStableState(nsIRunnable* aRunnable)
 {
-  if (!mRunning) {
-    // We're not running a "task"/event, so we're already in a "stable state",
-    // so we can run the synchronous section immediately.
-    aRunnable->Run();
-    return NS_OK;
-  }
-  // Else we're running a "task"/event, record the synchronous section, and
-  // run it with any others once we reach a stable state.
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  // Record the synchronous section, and run it with any others once
+  // we reach a stable state.
   mSyncSections.AppendObject(aRunnable);
+
+  // Ensure we've got a pending event, else the callbacks will never run.
+  nsIThread* thread = NS_GetCurrentThread(); 
+  if (!NS_HasPendingEvents(thread) &&
+       NS_FAILED(thread->Dispatch(new nsRunnable(), NS_DISPATCH_NORMAL)))
+  {
+    // Failed to dispatch dummy event to cause sync sections to run, thread
+    // is probably done processing events, just run the sync sections now.
+    RunSyncSections();
+  }
   return NS_OK;
 }
+
