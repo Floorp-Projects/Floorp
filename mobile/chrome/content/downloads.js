@@ -424,23 +424,18 @@ var DownloadsView = {
       let strings = Elements.browserBundle;
       var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
 
-      if (aTopic == "dl-start") {
-        notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsStart", [download.displayName]), false, "", null,
-                                       download.target.spec.replace("file:", "download:"));
-      }
-      else {
-        let observer = {
-          observe: function (aSubject, aTopic, aData) {
-            if (aTopic == "alertclickcallback")
-              BrowserUI.showPanel("downloads-container");
-          }
-        };
+      // Callback for tapping on the alert popup
+      let observer = {
+        observe: function (aSubject, aTopic, aData) {
+          if (aTopic == "alertclickcallback")
+            BrowserUI.showPanel("downloads-container");
+        }
+      };
 
-        notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsDone", [download.displayName]), true, "", observer,
-                                       download.target.spec.replace("file:", "download:"));
-      }
+      let msgKey = aTopic == "dl-start" ? "alertDownloadsStart" : "alertDownloadsDone";
+      notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
+                                     strings.getFormattedString(msgKey, [download.displayName]), true, "", observer,
+                                     download.target.spec.replace("file:", "download:"));
     }
   },
 
