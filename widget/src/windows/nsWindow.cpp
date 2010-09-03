@@ -3189,6 +3189,10 @@ nsWindow::GetLayerManager()
                          &preferOpenGL);
     }
 
+    const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+    accelerateByDefault = accelerateByDefault ||
+                          (acceleratedEnv && (*acceleratedEnv != '0'));
+
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
     PRBool safeMode = PR_FALSE;
     if (xr)
