@@ -47,6 +47,7 @@
 #include "nsIDocShell.h"
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
+#include "nsPoint.h"
 #include "nsSize.h"
 #include "nsIURI.h"
 #include "nsAutoPtr.h"
@@ -109,6 +110,47 @@ protected:
   {}
 
 public:
+  /**
+   * Defines a target configuration for this <browser>'s content
+   * document's viewport.  If the content document's actual viewport
+   * doesn't match a desired ViewportConfig, then on paints its pixels
+   * are transformed to compensate for the difference.
+   *
+   * Used to support asynchronous re-paints of content pixels; see
+   * nsIFrameLoader.scrollViewport* and viewportScale.
+   */
+  struct ViewportConfig {
+    ViewportConfig()
+      : mScrollOffset(0, 0)
+      , mXScale(1.0)
+      , mYScale(1.0)
+    {}
+
+    // Default copy ctor and operator= are fine
+
+    PRBool operator==(const ViewportConfig& aOther) const
+    {
+      return (mScrollOffset == aOther.mScrollOffset &&
+              mXScale == aOther.mXScale &&
+              mYScale == aOther.mYScale);
+    }
+
+    // This is the scroll offset the <browser> user wishes or expects
+    // its enclosed content document to have.  "Scroll offset" here
+    // means the document pixel at pixel (0,0) within the CSS
+    // viewport.  If the content document's actual scroll offset
+    // doesn't match |mScrollOffset|, the difference is used to define
+    // a translation transform when painting the content document.
+    nsPoint mScrollOffset;
+    // The scale at which the <browser> user wishes to paint its
+    // enclosed content document.  If content-document layers have a
+    // lower or higher resolution than the desired scale, then the
+    // ratio is used to define a scale transform when painting the
+    // content document.
+    float mXScale;
+    float mYScale;
+  };
+
   ~nsFrameLoader() {
     mNeedsAsyncDestroy = PR_TRUE;
     if (mMessageManager) {
@@ -206,6 +248,8 @@ public:
 #endif
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
+  const ViewportConfig& GetViewportConfig() { return mViewportConfig; }
+
 private:
 
 #ifdef MOZ_IPC
@@ -238,6 +282,8 @@ private:
   bool ShowRemoteFrame(const nsIntSize& size);
 #endif
 
+  nsresult UpdateViewportConfig(const ViewportConfig& aNewConfig);
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
@@ -268,6 +314,7 @@ private:
   TabParent* mRemoteBrowser;
 #endif
 
+  ViewportConfig mViewportConfig;
 };
 
 #endif
