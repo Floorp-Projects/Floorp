@@ -515,9 +515,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (e.g. form state restoration).
   // XXX expose ElementName group here and do switch
-  if (aName == nsHtml5Atoms::video ||
-      aName == nsHtml5Atoms::audio ||
-      aName == nsHtml5Atoms::object ||
+  if (aName == nsHtml5Atoms::object ||
       aName == nsHtml5Atoms::applet) {
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");

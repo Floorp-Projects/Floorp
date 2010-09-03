@@ -61,7 +61,7 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(7b5ed315-58b3-41fd-8257-d5768943021d)]
+[scriptable, uuid(ad035628-4ffb-42ff-a256-0ed9e410b859)]
 interface mozIStorageConnection : nsISupports {
   /**
    * Closes a database connection.  Callers must finalize all statements created
@@ -350,4 +350,16 @@ interface mozIStorageConnection : nsISupports {
    * @return previous registered handler.
    */
   mozIStorageProgressHandler removeProgressHandler();
+
+  /**
+   * Controls SQLITE_FCNTL_CHUNK_SIZE setting in sqlite. This helps avoid fragmentation
+   * by growing/shrinking the database file in SQLITE_FCNTL_CHUNK_SIZE increments.
+   *
+   * @param aIncrement
+   *        The database file will grow in multiples of chunkSize.
+   * @param aDatabaseName
+   *        Sqlite database name. "" means pass NULL for zDbName to sqlite3_file_control.
+   *        See http://sqlite.org/c3ref/file_control.html for more details.
+   */
+  void setGrowthIncrement(in PRInt32 aIncrement, in AUTF8String aDatabaseName);
 };

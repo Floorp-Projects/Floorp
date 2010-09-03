@@ -54,11 +54,14 @@ const Cu = Components.utils;
  *
  * @param  aChannel
  *         The nsIChannel that will have its certificate checked.
- * @param  aCerts
+ * @param  aAllowNonBuiltInCerts (optional)
+ *         When true certificates that aren't builtin are allowed. When false
+ *         or not specified the certificate must be a builtin certificate.
+ * @param  aCerts (optional)
  *         An array of JS objects with names / values corresponding to the
- *         channel's expected certificate's attribute names / values. This can
- *         be null or an empty array. If it isn't null the the scheme for the
- *         channel's originalURI must be https.
+ *         channel's expected certificate's attribute names / values. If it
+ *         isn't null or not specified the the scheme for the channel's
+ *         originalURI must be https.
  * @throws NS_ERROR_UNEXPECTED if a certificate is expected and the URI scheme
  *         is not https.
  *         NS_ERROR_ILLEGAL_VALUE if a certificate attribute name from the
@@ -66,7 +69,7 @@ const Cu = Components.utils;
  *         from the aCerts  param is different than the expected value.
  *         NS_ERROR_ABORT if the certificate issuer is not built-in.
  */
-function checkCert(aChannel, aCerts) {
+function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
   if (!aChannel.originalURI.schemeIs("https")) {
     // Require https if there are certificate values to verify
     if (aCerts) {
@@ -112,6 +115,8 @@ function checkCert(aChannel, aCerts) {
     }
   }
 
+  if (aAllowNonBuiltInCerts ===  true)
+    return;
 
   var issuerCert = cert;
   while (issuerCert.issuer && !issuerCert.issuer.equals(issuerCert))
@@ -136,6 +141,10 @@ function isBuiltinToken(tokenName) {
  * This class implements nsIBadCertListener.  Its job is to prevent "bad cert"
  * security dialogs from being shown to the user.  It is better to simply fail
  * if the certificate is bad. See bug 304286.
+ *
+ * @param  aAllowNonBuiltInCerts (optional)
+ *         When true certificates that aren't builtin are allowed. When false
+ *         or not specified the certificate must be a builtin certificate.
  */
 function BadCertHandler(aAllowNonBuiltInCerts) {
   this.allowNonBuiltInCerts = aAllowNonBuiltInCerts;

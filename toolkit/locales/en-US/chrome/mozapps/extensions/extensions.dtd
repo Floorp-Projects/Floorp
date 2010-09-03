@@ -86,7 +86,7 @@
 <!ENTITY detail.updateAutomatic.label         "On">
 <!ENTITY detail.updateAutomatic.tooltip       "Automatically install updates">
 <!ENTITY detail.updateManual.label            "Off">
-<!ENTITY detail.updateManual.tooltip          "Don't automaticall install updates">
+<!ENTITY detail.updateManual.tooltip          "Don't automatically install updates">
 <!ENTITY detail.home                          "Homepage">
 <!ENTITY detail.repository                    "Add-on Profile">
 <!ENTITY detail.size                          "Size">

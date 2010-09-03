@@ -1251,9 +1251,9 @@ IsSmoothScrollingEnabled()
 
 class ScrollFrameActivityTracker : public nsExpirationTracker<nsGfxScrollFrameInner,4> {
 public:
-  // Wait for 75-100ms between scrolls before we switch the appearance back to
-  // subpixel AA. That's 4 generations of 25ms each.
-  enum { TIMEOUT_MS = 25 };
+  // Wait for 3-4s between scrolls before we remove our layers.
+  // That's 4 generations of 1s each.
+  enum { TIMEOUT_MS = 1000 };
   ScrollFrameActivityTracker()
     : nsExpirationTracker<nsGfxScrollFrameInner,4>(TIMEOUT_MS) {}
   ~ScrollFrameActivityTracker() {

@@ -74,6 +74,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentTableItem(nsnull),
       mBuildCaret(aBuildCaret),
       mEventDelivery(aIsForEvents),
+      mIgnoreSuppression(PR_FALSE),
+      mHadToIgnoreSuppression(PR_FALSE),
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
       mSelectedFramesOnly(PR_FALSE),
       mAccurateVisibleRegions(PR_FALSE),
@@ -86,17 +88,12 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
-  mIsBackgroundOnly = shell->IsPaintingSuppressed();
   if (pc->IsRenderingOnlySelection()) {
     nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
     if (selcon) {
       selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                            getter_AddRefs(mBoundingSelection));
     }
-  }
-
-  if (mIsBackgroundOnly) {
-    mBuildCaret = PR_FALSE;
   }
 
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
@@ -200,7 +197,18 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
     state->mPresShell->IncrementPaintCount();
   }
 
-  if (!mBuildCaret)
+  PRBool buildCaret = mBuildCaret;
+  if (mIgnoreSuppression || !state->mPresShell->IsPaintingSuppressed()) {
+    if (state->mPresShell->IsPaintingSuppressed()) {
+      mHadToIgnoreSuppression = PR_TRUE;
+    }
+    state->mIsBackgroundOnly = PR_FALSE;
+  } else {
+    state->mIsBackgroundOnly = PR_TRUE;
+    buildCaret = PR_FALSE;
+  }
+
+  if (!buildCaret)
     return;
 
   nsRefPtr<nsCaret> caret = state->mPresShell->GetCaret();

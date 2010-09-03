@@ -55,11 +55,67 @@
 #include "mozilla/Services.h"
 
 #include "sqlite3.h"
+#include "test_quota.c"
 
 #include "nsIPromptService.h"
 #include "nsIMemoryReporter.h"
 
 #include "mozilla/FunctionTimer.h"
+
+namespace {
+
+class QuotaCallbackData
+{
+public:
+  QuotaCallbackData(mozIStorageQuotaCallback *aCallback,
+                    nsISupports *aUserData)
+  : callback(aCallback), userData(aUserData)
+  {
+    MOZ_COUNT_CTOR(QuotaCallbackData);
+  }
+
+  ~QuotaCallbackData()
+  {
+    MOZ_COUNT_DTOR(QuotaCallbackData);
+  }
+
+  static void Callback(const char *zFilename,
+                       sqlite3_int64 *piLimit,
+                       sqlite3_int64 iSize,
+                       void *pArg)
+  {
+    NS_ASSERTION(zFilename && strlen(zFilename), "Null or empty filename!");
+    NS_ASSERTION(piLimit, "Null pointer!");
+
+    QuotaCallbackData *data = static_cast<QuotaCallbackData*>(pArg);
+    if (!data) {
+      // No callback specified, return immediately.
+      return;
+    }
+
+    NS_ASSERTION(data->callback, "Should never have a null callback!");
+
+    nsDependentCString filename(zFilename);
+
+    PRInt64 newLimit;
+    if (NS_SUCCEEDED(data->callback->QuotaExceeded(filename, *piLimit,
+                                                   iSize, data->userData,
+                                                   &newLimit))) {
+      *piLimit = newLimit;
+    }
+  }
+
+  static void Destroy(void *aUserData)
+  {
+    delete static_cast<QuotaCallbackData*>(aUserData);
+  }
+
+private:
+  nsCOMPtr<mozIStorageQuotaCallback> callback;
+  nsCOMPtr<nsISupports> userData;
+};
+
+} // anonymous namespace
 
 namespace mozilla {
 namespace storage {
@@ -148,10 +204,11 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// Service
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(
+NS_IMPL_THREADSAFE_ISUPPORTS3(
   Service,
   mozIStorageService,
-  nsIObserver
+  nsIObserver,
+  mozIStorageServiceQuotaManagement
 )
 
 Service *Service::gService = nsnull;
@@ -218,7 +275,11 @@ Service::~Service()
 {
   // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
   // there is nothing actionable we can do in that case.
-  int rc = ::sqlite3_shutdown();
+  int rc = ::sqlite3_quota_shutdown();
+  if (rc != SQLITE_OK)
+    NS_WARNING("sqlite3 did not shutdown cleanly.");
+
+  rc = ::sqlite3_shutdown();
   if (rc != SQLITE_OK)
     NS_WARNING("sqlite3 did not shutdown cleanly.");
 
@@ -245,6 +306,10 @@ Service::initialize()
   // various sqlite3 functions (and the sqlite3_open calls in our case),
   // the documentation suggests calling this directly.  So we do.
   rc = ::sqlite3_initialize();
+  if (rc != SQLITE_OK)
+    return convertResultCode(rc);
+
+  rc = ::sqlite3_quota_initialize(NULL, 0);
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
@@ -463,6 +528,60 @@ Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
 {
   if (strcmp(aTopic, "xpcom-shutdown") == 0)
     shutdown();
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageServiceQuotaManagement
+
+NS_IMETHODIMP
+Service::OpenDatabaseWithVFS(nsIFile *aDatabaseFile,
+                             const nsACString &aVFSName,
+                             mozIStorageConnection **_connection)
+{
+  NS_ENSURE_ARG(aDatabaseFile);
+
+#ifdef NS_FUNCTION_TIMER
+  nsCString leafname;
+  (void)aDatabaseFile->GetNativeLeafName(leafname);
+  NS_TIME_FUNCTION_FMT("mozIStorageService::OpenDatabaseWithVFS(%s)",
+                       leafname.get());
+#endif
+
+  // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
+  // reasons.
+  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
+              SQLITE_OPEN_CREATE;
+  nsRefPtr<Connection> msc = new Connection(this, flags);
+  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = msc->initialize(aDatabaseFile,
+                                PromiseFlatCString(aVFSName).get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*_connection = msc);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Service::SetQuotaForFilenamePattern(const nsACString &aPattern,
+                                    PRInt64 aSizeLimit,
+                                    mozIStorageQuotaCallback *aCallback,
+                                    nsISupports *aUserData)
+{
+  NS_ENSURE_FALSE(aPattern.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  nsAutoPtr<QuotaCallbackData> data;
+  if (aSizeLimit && aCallback) {
+    data = new QuotaCallbackData(aCallback, aUserData);
+  }
+
+  int rc = ::sqlite3_quota_set(PromiseFlatCString(aPattern).get(),
+                               aSizeLimit, QuotaCallbackData::Callback,
+                               data, QuotaCallbackData::Destroy);
+  NS_ENSURE_TRUE(rc == SQLITE_OK, convertResultCode(rc));
+
+  data.forget();
   return NS_OK;
 }
 

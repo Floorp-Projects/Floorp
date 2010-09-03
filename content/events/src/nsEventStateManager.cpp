@@ -3945,16 +3945,17 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
 {
   nsCOMPtr<nsIContent> mouseContent;
   mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(mouseContent));
+  nsIContent* mouseContentParent = GetParentContentForMouseTarget(mouseContent);
 
   switch (aEvent->button) {
   case nsMouseEvent::eLeftButton:
     if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
       mLastLeftMouseDownContent = mouseContent;
-      mLastLeftMouseDownContentParent =
-        GetParentContentForMouseTarget(mouseContent);
+      mLastLeftMouseDownContentParent = mouseContentParent;
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastLeftMouseDownContent == mouseContent ||
-          mLastLeftMouseDownContentParent == mouseContent) {
+          mLastLeftMouseDownContentParent == mouseContent ||
+          mLastLeftMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mLClickCount;
         mLClickCount = 0;
       } else {
@@ -3968,11 +3969,11 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
   case nsMouseEvent::eMiddleButton:
     if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
       mLastMiddleMouseDownContent = mouseContent;
-      mLastMiddleMouseDownContentParent =
-        GetParentContentForMouseTarget(mouseContent);
+      mLastMiddleMouseDownContentParent = mouseContentParent;
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastMiddleMouseDownContent == mouseContent ||
-          mLastMiddleMouseDownContentParent == mouseContent) {
+          mLastMiddleMouseDownContentParent == mouseContent ||
+          mLastLeftMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mMClickCount;
         mMClickCount = 0;
       } else {
@@ -3986,11 +3987,11 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
   case nsMouseEvent::eRightButton:
     if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
       mLastRightMouseDownContent = mouseContent;
-      mLastRightMouseDownContentParent =
-        GetParentContentForMouseTarget(mouseContent);
+      mLastRightMouseDownContentParent = mouseContentParent;
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastRightMouseDownContent == mouseContent ||
-          mLastRightMouseDownContentParent == mouseContent) {
+          mLastRightMouseDownContentParent == mouseContent ||
+          mLastLeftMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mRClickCount;
         mRClickCount = 0;
       } else {

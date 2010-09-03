@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Test update checking wizard with valid certificate attribute names and values and cert not built-in"
+<window title="Test update check without requiring a certificate that is built-in and valid certificate attribute names and values"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -24,8 +24,8 @@
 const TESTS = [ {
   pageid: PAGEID_CHECKING
 }, {
-  pageid: PAGEID_ERRORS,
-  buttonClick: "finish"
+  pageid: PAGEID_FOUND_BASIC,
+  buttonClick: "extra1"
 } ];
 
 Components.utils.import("resource://gre/modules/CertUtils.jsm");
@@ -35,7 +35,6 @@ const CERT_ATTRS = ["nickname", "emailAddress", "subjectName", "commonName",
                     "md5Fingerprint", "tokenName", "issuerName", "serialNumber",
                     "issuerCommonName", "issuerOrganization",
                     "issuerOrganizationUnit", "dbKey", "windowTitle"];
-var gDefaultAppUpdateURL;
 
 function runTest() {
   debugDump("Entering runTest");
@@ -81,25 +80,15 @@ function testXHRLoad(aEvent) {
                                aCertAttrName, cert[aCertAttrName]);
   });
 
-  var queryString = "?showDetails=1" + getVersionParams();
-  var url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN, false);
+
+  let url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
             getVersionParams();
-  gDefaultAppUpdateURL = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
+  gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
   debugDump("Default Update URL: " + url);
 
   gUP.checkForUpdates();
-}
-
-function finishTest() {
-  debugDump("Entering finishTest");
-
-  CERT_ATTRS.forEach(function(aCertAttrName) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERTS_BRANCH + "1." +
-                                 aCertAttrName);
-  });
-  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, gDefaultAppUpdateURL);
-  finishTestDefault();
 }
 
 ]]>

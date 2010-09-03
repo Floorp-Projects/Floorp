@@ -709,6 +709,9 @@ nsNavHistory::InitDB()
   // a transaction for performances.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
+  // Grow places in 10MB increments
+  mDBConn->SetGrowthIncrement(10 * 1024 * 1024, EmptyCString());
+
   // Initialize the other Places services' database tables before creating our
   // statements. Some of our statements depend on these external tables, such as
   // the bookmarks or favicon tables.

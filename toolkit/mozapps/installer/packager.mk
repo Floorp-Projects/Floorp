@@ -237,12 +237,18 @@ NON_OMNIJAR_FILES = \
 PACK_OMNIJAR	= \
   rm -f omni.jar components/binary.manifest && \
   grep -h '^binary-component' components/*.manifest > binary.manifest ; \
+  sed -e 's/^binary-component/\#binary-component/' components/components.manifest > components.manifest && \
+  mv components.manifest components && \
   find . | xargs touch -t 201001010000 && \
   zip -r9mX omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
   $(OPTIMIZE_JARS_CMD) $(DIST)/jarlog/ ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
-UNPACK_OMNIJAR	= unzip -o omni.jar && rm -f components/binary.manifest
+UNPACK_OMNIJAR	= \
+  unzip -o omni.jar && \
+  rm -f components/binary.manifest && \
+  sed -e 's/^\#binary-component/binary-component/' components/components.manifest > components.manifest && \
+  mv components.manifest components
 
 MAKE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && $(INNER_MAKE_PACKAGE)
 UNMAKE_PACKAGE	= $(INNER_UNMAKE_PACKAGE) && (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(UNPACK_OMNIJAR))

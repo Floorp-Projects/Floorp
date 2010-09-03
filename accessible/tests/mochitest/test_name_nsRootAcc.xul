@@ -14,11 +14,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+          src="role.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+          src="events.js"></script>
 
   <script type="application/javascript">
   <![CDATA[
@@ -36,7 +36,7 @@
         return;
       }
 
-      var w = window.openDialog("chrome://mochikit/content/a11y/accessible/name_nsRootAcc_wnd.xul",
+      var w = window.openDialog("name_nsRootAcc_wnd.xul",
                                 "nsRootAcc_name_test", 
                                 "chrome,width=600,height=600");
     }

@@ -44,23 +44,29 @@ const AUS_Ci = Components.interfaces;
 const AUS_Cr = Components.results;
 const AUS_Cu = Components.utils;
 
-const PREF_APP_UPDATE_CERTS_BRANCH      = "app.update.certs.";
-const PREF_APP_UPDATE_CHANNEL           = "app.update.channel";
-const PREF_APP_UPDATE_ENABLED           = "app.update.enabled";
-const PREF_APP_UPDATE_IDLETIME          = "app.update.idletime";
-const PREF_APP_UPDATE_LOG               = "app.update.log";
-const PREF_APP_UPDATE_SHOW_INSTALLED_UI = "app.update.showInstalledUI";
-const PREF_APP_UPDATE_URL               = "app.update.url";
-const PREF_APP_UPDATE_URL_DETAILS       = "app.update.url.details";
-const PREF_APP_UPDATE_URL_OVERRIDE      = "app.update.url.override";
+const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
+const PREF_APP_UPDATE_CERT_CHECKATTRS     = "app.update.cert.checkAttributes";
+const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
+const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
+const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
+const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
+const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
+const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
+const PREF_APP_UPDATE_LOG                 = "app.update.log";
+const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
+const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
+const PREF_APP_UPDATE_URL                 = "app.update.url";
+const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
+const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 
-const PREF_APP_UPDATE_NEVER_BRANCH      = "app.update.never.";
+const PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME = PREF_APP_UPDATE_CERTS_BRANCH +
+                                               "1.invalidName";
 
-const PREF_APP_PARTNER_BRANCH           = "app.partner.";
-const PREF_DISTRIBUTION_ID              = "distribution.id";
-const PREF_DISTRIBUTION_VERSION         = "distribution.version";
+const PREF_APP_PARTNER_BRANCH             = "app.partner.";
+const PREF_DISTRIBUTION_ID                = "distribution.id";
+const PREF_DISTRIBUTION_VERSION           = "distribution.version";
 
-const PREF_EXTENSIONS_UPDATE_URL         = "extensions.update.url";
+const PREF_EXTENSIONS_UPDATE_URL          = "extensions.update.url";
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";

@@ -725,6 +725,8 @@ random == 387876-2.html 387876-2-ref.html # bug 471630
 == 388367-1.html about:blank
 == 388980-1.html 388980-1-ref.html
 == 389074-1.html 389074-1-ref.html
+== 389224-1.html 389224-1-ref.html
+== 389224-2.html about:blank
 == 389468-1.html 389468-1-ref.html
 == 389623-1.html 389623-1-ref.html
 == 389636-1.html about:blank  # assertion test

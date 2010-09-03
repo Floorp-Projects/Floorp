@@ -404,8 +404,10 @@
 
                     // If the binding is detached (or has been replaced by a
                     // newer instance of the binding), nuke our event-listeners.
-                    if (this.videocontrols.randomID != this.randomID)
+                    if (this.videocontrols.randomID != this.randomID) {
                         this.terminateEventListeners();
+                        return;
+                    }
 
                     switch (aEvent.type) {
                         case "play":

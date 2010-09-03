@@ -367,6 +367,23 @@ InheritContextFlags(gfxContext* aSource, gfxContext* aDest)
   }
 }
 
+static PRBool
+ShouldRetainTransparentSurface(PRUint32 aContentFlags,
+                               gfxASurface* aTargetSurface)
+{
+  if (aContentFlags & Layer::CONTENT_NO_TEXT)
+    return PR_TRUE;
+
+  switch (aTargetSurface->GetTextQualityInTransparentSurfaces()) {
+  case gfxASurface::TEXT_QUALITY_OK:
+    return PR_TRUE;
+  case gfxASurface::TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS:
+    return (aContentFlags & Layer::CONTENT_NO_TEXT_OVER_TRANSPARENT) != 0;
+  default:
+    return PR_FALSE;
+  }
+}
+
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
@@ -377,33 +394,36 @@ BasicThebesLayer::Paint(gfxContext* aContext,
                "Can only draw in drawing phase");
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
+  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
-  if (!BasicManager()->IsRetained()) {
-    if (aOpacity != 1.0) {
-      target->Save();
-      ClipToContain(target, mVisibleRegion.GetBounds());
-      target->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-    }
+  PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
+  PRBool opaqueBuffer = canUseOpaqueSurface &&
+    targetSurface->AreSimilarSurfacesSensitiveToContentType();
+  Buffer::ContentType contentType =
+    opaqueBuffer ? gfxASurface::CONTENT_COLOR :
+                   gfxASurface::CONTENT_COLOR_ALPHA;
+
+  if (!BasicManager()->IsRetained() ||
+      (aOpacity == 1.0 && !canUseOpaqueSurface &&
+       !ShouldRetainTransparentSurface(mContentFlags, targetSurface))) {
     mValidRegion.SetEmpty();
     mBuffer.Clear();
+
+    target->Save();
+    gfxUtils::ClipToRegionSnapped(target, mVisibleRegion);
+    if (aOpacity != 1.0) {
+      target->PushGroup(contentType);
+    }
     aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
     if (aOpacity != 1.0) {
       target->PopGroupToSource();
       target->Paint(aOpacity);
-      target->Restore();
     }
+    target->Restore();
     return;
   }
 
-  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
-  PRBool isOpaqueContent =
-    (targetSurface->AreSimilarSurfacesSensitiveToContentType() &&
-     aOpacity == 1.0 &&
-     CanUseOpaqueSurface());
   {
-    Buffer::ContentType contentType =
-      isOpaqueContent ? gfxASurface::CONTENT_COLOR :
-                        gfxASurface::CONTENT_COLOR_ALPHA;
     Buffer::PaintState state = mBuffer.BeginPaint(this, contentType);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
@@ -425,7 +445,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, isOpaqueContent, target, aOpacity);
+  mBuffer.DrawTo(this, canUseOpaqueSurface, target, aOpacity);
 }
 
 void
@@ -435,7 +455,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
                                float aOpacity)
 {
   aTarget->Save();
-  ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+  gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
@@ -682,7 +702,7 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
   if (mGLContext) {
     nsRefPtr<gfxImageSurface> isurf =
       new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                          IsOpaqueContent()
+                          (GetContentFlags() & CONTENT_OPAQUE)
                             ? gfxASurface::ImageFormatRGB24
                             : gfxASurface::ImageFormatARGB32);
     if (!isurf || isurf->CairoStatus() != 0) {
@@ -793,7 +813,7 @@ MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
                                       const nsIntRect& aBounds,
                                       nsIntRegion* aDirtyVisibleRegionInContainer)
 {
-  if (!aLayer->IsOpaqueContent()) {
+  if (!(aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     return PR_TRUE;
   }
 

@@ -89,6 +89,7 @@ function createMedia(type, src) {
     gMedia.addEventListener(gEventTypes[i], listener, false);
   }
   gMedia.src = src;
+  gMedia._name = src;
   document.body.appendChild(gMedia);
 }
 
@@ -106,6 +107,10 @@ function test_is(a, b, msg) {
     log("FAILED test_is: " + msg);
     is(a,b,msg);
   }
+}
+
+function filename(uri) {
+  return uri.substr(uri.lastIndexOf("/")+1);
 }
 
 function checkState() {
@@ -126,7 +131,9 @@ function checkState() {
     test_ok(gMedia.error==null || gMedia.error.code==MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
             "Error code should not exist or be SRC_NOT_SUPPORTED. gMedia.error=" +
             (gMedia.error ? gMedia.error.code : "null"));
-    test_is(gMedia.currentSrc, "", "Leaked currentSrc");
+    test_ok(filename(gMedia.currentSrc) == filename(gMedia._name) ||
+            gMedia.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+            "currentSrc should match candidate uri, if we've got a valid source");
   }
   if (!gFinished) {
     setTimeout(checkState, 1);
