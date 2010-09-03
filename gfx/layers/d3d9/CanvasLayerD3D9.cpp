@@ -239,7 +239,7 @@ CanvasLayerD3D9::RenderLayer()
   opacity[0] = GetOpacity();
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
-  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
   if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
