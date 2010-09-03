@@ -307,6 +307,10 @@ struct JSObject {
     inline void setLastProperty(const js::Shape *shape);
     inline void removeLastProperty();
 
+#ifdef DEBUG
+    void checkShapeConsistency();
+#endif
+
   public:
     inline const js::Shape *lastProperty() const;
 
