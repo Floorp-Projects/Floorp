@@ -404,7 +404,7 @@ class CallCompiler
         repatch.relink(ic.funGuard.callAtOffset(ic.hotCallOffset),
                        JSC::FunctionPtr(script->ncode));
 
-        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %)\n", start, ic.fastGuardedObject);
+        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n", start, ic.fastGuardedObject);
     }
 
     bool generateStubForClosures(JSObject *obj)
@@ -576,6 +576,12 @@ class CallCompiler
 #endif
 
         Jump done = masm.jump();
+
+        /* Move JaegerThrowpoline into register for very far jump on x64. */
+        hasException.linkTo(masm.label(), &masm);
+        masm.move(ImmPtr(JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline)), Registers::ReturnReg);
+        masm.jump(Registers::ReturnReg);
+
         JSC::ExecutablePool *ep = poolForSize(masm.size(), CallICInfo::Pool_NativeStub);
         if (!ep)
             THROWV(true);
@@ -583,7 +589,6 @@ class CallCompiler
         JSC::LinkBuffer buffer(&masm, ep);
         buffer.link(done, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
         buffer.link(call, JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native)));
-        buffer.link(hasException, JSC::CodeLocationLabel(JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline)));
         buffer.link(funGuard, ic.slowPathStart);
         
         JSC::CodeLocationLabel cs = buffer.finalizeCodeAddendum();
