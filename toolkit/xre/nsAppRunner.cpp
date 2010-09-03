@@ -869,6 +869,21 @@ NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
 
   *aTimestamp = boottime + ((starttime / tickspersecond) * PR_USEC_PER_SEC);
   return NS_OK;
+#elif XP_WIN
+  FILETIME start, foo, bar, baz;
+  bool success = GetProcessTimes(GetCurrentProcess(), &start, &foo, &bar, &baz);
+  if (success)
+  {
+    // copied from NSPR _PR_FileTimeToPRTime
+    CopyMemory(aTimestamp, &start, sizeof(PRTime));
+#ifdef __GNUC__
+    *aTimestamp = (*aTimestamp - 116444736000000000LL) / 10LL;
+#else
+    *aTimestamp = (*aTimestamp - 116444736000000000i64) / 10i64;
+#endif    
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
