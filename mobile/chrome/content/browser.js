@@ -2419,8 +2419,6 @@ Tab.prototype = {
   },
 
   updateThumbnail: function updateThumbnail() {
-    return;
-
     if (!this._browser)
       return;
 
@@ -2434,3 +2432,38 @@ Tab.prototype = {
     return "[Tab " + (this._browser ? this._browser.currentURI.spec : "(no browser)") + "]";
   }
 };
+
+// Helper used to hide IPC / non-IPC differences for rendering to a canvas
+function rendererFactory(aBrowser, aCanvas) {
+  let wrapper = {};
+
+  if (aBrowser.contentWindow) {
+    let ctx = aCanvas.getContext("2d");
+    let draw = function(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
+      ctx.drawWindow(browser.contentWindow, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+      let e = document.createEvent("HTMLEvents");
+      e.initEvent("MozAsyncCanvasRender", true, true);
+      aCanvas.dispatchEvent(e);
+    };
+    wrapper.checkBrowser = function(browser) {
+      return browser.contentWindow;
+    };
+    wrapper.drawContent = function(callback) {
+      callback(ctx, draw);
+    };
+  }
+  else {
+    let ctx = aCanvas.MozGetIPCContext("2d");
+    let draw = function(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags) {
+      ctx.asyncDrawXULElement(browser, aLeft, aTop, aWidth, aHeight, aColor, aFlags);
+    };
+    wrapper.checkBrowser = function(browser) {
+      return !browser.contentWindow;
+    };
+    wrapper.drawContent = function(callback) {
+      callback(ctx, draw);
+    };
+  }
+
+  return wrapper;
+}
