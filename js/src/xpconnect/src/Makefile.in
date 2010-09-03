@@ -62,6 +62,7 @@ LIBRARY_NAME    = xpconnect_s
 FORCE_STATIC_LIB = 1
 endif
 LIBXUL_LIBRARY = 1
+EXPORTS = xpcpublic.h
 
 CPPSRCS		= \
 		nsScriptError.cpp \
