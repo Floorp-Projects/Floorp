@@ -1239,6 +1239,11 @@ public:
   virtual void InsertAfter(Layer* aChild, Layer* aAfter);
   virtual void RemoveChild(Layer* aChild);
 
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  {
+    aAttrs = ContainerLayerAttributes(GetFrameMetrics());
+  }
+
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
 

@@ -79,6 +79,37 @@ class ImageContainer;
 class CanvasLayer;
 class SpecificLayerAttributes;
 
+/**
+ * The viewport and displayport metrics for the painted frame at the
+ * time of a layer-tree transaction.  These metrics are especially
+ * useful for shadow layers, because the metrics values are updated
+ * atomically with new pixels.
+ */
+struct FrameMetrics {
+  FrameMetrics()
+    : mViewportSize(0, 0)
+    , mViewportScrollOffset(0, 0)
+  {}
+
+  // Default copy ctor and operator= are fine
+
+  PRBool operator==(const FrameMetrics& aOther) const
+  {
+    return (mViewportSize == aOther.mViewportSize &&
+            mViewportScrollOffset == aOther.mViewportScrollOffset &&
+            mDisplayPort == aOther.mDisplayPort);
+  }
+
+  PRBool IsDefault() const
+  {
+    return (FrameMetrics() == *this);
+  }
+
+  nsIntSize mViewportSize;
+  nsIntPoint mViewportScrollOffset;
+  nsIntRect mDisplayPort;
+};
+
 #define MOZ_LAYER_DECL_NAME(n, e)                           \
   virtual const char* Name() const { return n; }            \
   virtual LayerType GetType() const { return e; }
@@ -733,8 +764,20 @@ public:
    */
   virtual void RemoveChild(Layer* aChild) = 0;
 
-  // This getter can be used anytime.
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the (sub)document metrics used to render the Layer subtree
+   * rooted at this.
+   */
+  void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
+  {
+    mFrameMetrics = aFrameMetrics;
+  }
+
+  // These getters can be used anytime.
+
   virtual Layer* GetFirstChild() { return mFirstChild; }
+  const FrameMetrics& GetFrameMetrics() { return mFrameMetrics; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
@@ -744,7 +787,10 @@ protected:
       mFirstChild(nsnull)
   {}
 
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
   Layer* mFirstChild;
+  FrameMetrics mFrameMetrics;
 };
 
 /**
