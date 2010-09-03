@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Inspector iframe Tests.
+ * The Original Code is Domplate Test.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -22,8 +22,6 @@
  *
  * Contributor(s):
  *   Rob Campbell <rcampbell@mozilla.com>
- *   Mihai Șucan <mihai.sucan@gmail.com>
- *   Julian Viereck <jviereck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,56 +39,32 @@
 
 let doc;
 let div;
-let iframe;
+let plate;
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource:///modules/domplate.jsm");
 
 function createDocument()
 {
-  doc.title = "Inspector scrolling Tests";
-
-  iframe = doc.createElement("iframe");
-
-  iframe.addEventListener("load", function () {
-    iframe.removeEventListener("load", arguments.callee, false);
-
-    div = iframe.contentDocument.createElement("div");
-    div.textContent = "big div";
-    div.setAttribute("style", "height:500px; width:500px; border:1px solid gray;");
-    iframe.contentDocument.body.appendChild(div);
-    toggleInspector();
-  }, false);
-
-  iframe.src = "data:text/html,foo bar";
-  doc.body.appendChild(iframe);
+  doc.body.innerHTML = '<div id="first">no</div>';
+  doc.title = "Domplate Test";
+  setupDomplateTests();
 }
 
-function toggleInspector()
+function setupDomplateTests()
 {
-  Services.obs.addObserver(inspectNode, "inspector-opened", false);
-  InspectorUI.toggleInspectorUI();
+  ok(domplate, "domplate is defined");
+  plate = domplate({tag: domplate.DIV("Hello!")});
+  ok(plate, "template is defined");
+  div = doc.getElementById("first");
+  ok(div, "we have our div");
+  plate.tag.replace({}, div, template);
+  is(div.innerText, "Hello!", "Is the div's innerText replaced?");
+  finishUp();
 }
 
-function inspectNode()
+function finishUp()
 {
-  Services.obs.removeObserver(inspectNode, "inspector-opened", false);
-  document.addEventListener("popupshown", performScrollingTest, false);
-
-  InspectorUI.inspectNode(div)
-}
-
-function performScrollingTest(aEvent)
-{
-  if (aEvent.target.id != "highlighter-panel") {
-    return true;
-  }
-
-  document.removeEventListener("popupshown", performScrollingTest, false);
-
-  EventUtils.synthesizeMouseScroll(aEvent.target, 10, 10,
-    {axis:"vertical", delta:50, type:"MozMousePixelScroll"}, window);
-
-  is(iframe.contentDocument.body.scrollTop, 50, "inspected iframe scrolled");
-
-  InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
   finish();
 }
@@ -105,5 +79,6 @@ function test()
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html,mouse scrolling test for inspector";
+  content.location = "data:text/html,basic domplate tests";
 }
+
