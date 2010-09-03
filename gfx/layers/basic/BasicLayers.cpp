@@ -1341,6 +1341,13 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
                                          const nsIntSize& aSize)
 {
   if (HasShadow()) {
+    if (mBackBuffer) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
+      mBackBuffer = nsnull;
+
+      BasicManager()->DestroyedThebesBuffer(BasicManager()->Hold(this));
+    }
+
     nsRefPtr<gfxSharedImageSurface> tmpFront;
     // XXX error handling
     if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
@@ -1424,6 +1431,13 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext,
 
   if (oldSize != mSize) {
     NS_ASSERTION(oldSize == gfxIntSize(0, 0), "video changed size?");
+
+    if (mBackSurface) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackSurface);
+      mBackSurface = nsnull;
+
+      BasicManager()->DestroyedImageBuffer(BasicManager()->Hold(this));
+    }
 
     nsRefPtr<gfxSharedImageSurface> tmpFrontSurface;
     // XXX error handling?
@@ -1531,6 +1545,15 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
   if (!HasShadow())
       return;
 
+  // XXX won't get here currently; need to figure out what to do on
+  // canvas resizes
+  if (mBackBuffer) {
+    BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
+    mBackBuffer = nsnull;
+
+    BasicManager()->DestroyedCanvasBuffer(BasicManager()->Hold(this));
+  }
+
   nsRefPtr<gfxSharedImageSurface> tmpFrontBuffer;
   // XXX error handling?
   if (!BasicManager()->AllocDoubleBuffer(
@@ -1613,7 +1636,11 @@ public:
     MOZ_COUNT_DTOR(BasicShadowThebesLayer);
   }
 
-  virtual void Disconnect();
+  virtual void Disconnect()
+  {
+    DestroyFrontBuffer();
+    ShadowThebesLayer::Disconnect();
+  }
 
   virtual already_AddRefed<gfxSharedImageSurface>
   Swap(gfxSharedImageSurface* aNewFront,
@@ -1621,6 +1648,15 @@ public:
        const nsIntPoint& aRotation)
   {
     return mFrontBuffer.Swap(aNewFront, aBufferRect, aRotation);
+  }
+
+  virtual void DestroyFrontBuffer()
+  {
+    nsRefPtr<gfxSharedImageSurface> frontBuffer =
+      mFrontBuffer.Swap(0, nsIntRect());
+    if (frontBuffer) {
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(frontBuffer);
+    }
   }
 
   virtual void Paint(gfxContext* aContext,
@@ -1636,18 +1672,6 @@ private:
 
   ShadowThebesLayerBuffer mFrontBuffer;
 };
-
-void
-BasicShadowThebesLayer::Disconnect()
-{
-  nsRefPtr<gfxSharedImageSurface> frontBuffer =
-    mFrontBuffer.Swap(0, nsIntRect());
-  if (frontBuffer) {
-    BasicManager()->ShadowLayerManager::DestroySharedSurface(frontBuffer);
-  }
-
-  ShadowThebesLayer::Disconnect();
-}
 
 void
 BasicShadowThebesLayer::Paint(gfxContext* aContext,
@@ -1689,12 +1713,24 @@ public:
     MOZ_COUNT_DTOR(BasicShadowImageLayer);
   }
 
-  virtual void Disconnect();
+  virtual void Disconnect()
+  {
+    DestroyFrontBuffer();
+    ShadowImageLayer::Disconnect();
+  }
 
   virtual PRBool Init(gfxSharedImageSurface* front, const nsIntSize& size);
 
   virtual already_AddRefed<gfxSharedImageSurface>
   Swap(gfxSharedImageSurface* newFront);
+
+  virtual void DestroyFrontBuffer()
+  {
+    if (mFrontSurface) {
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+    }
+    mFrontSurface = nsnull;
+  }
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
@@ -1711,17 +1747,6 @@ protected:
   nsRefPtr<gfxSharedImageSurface> mFrontSurface;
   gfxIntSize mSize;
 };
-
-void
-BasicShadowImageLayer::Disconnect()
-{
-  if (mFrontSurface) {
-    BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
-  }
-  mFrontSurface = nsnull;
-
-  ShadowImageLayer::Disconnect();
-}
 
 PRBool
 BasicShadowImageLayer::Init(gfxSharedImageSurface* front,
@@ -1769,7 +1794,11 @@ public:
     MOZ_COUNT_DTOR(BasicShadowCanvasLayer);
   }
 
-  virtual void Disconnect();
+  virtual void Disconnect()
+  {
+    DestroyFrontBuffer();
+    ShadowCanvasLayer::Disconnect();
+  }
 
   virtual void Initialize(const Data& aData);
 
@@ -1778,6 +1807,14 @@ public:
 
   virtual already_AddRefed<gfxSharedImageSurface>
   Swap(gfxSharedImageSurface* newFront);
+
+  virtual void DestroyFrontBuffer()
+  {
+    if (mFrontSurface) {
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+    }
+    mFrontSurface = nsnull;
+  }
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
@@ -1794,16 +1831,6 @@ private:
   nsIntRect mBounds;
 };
 
-void
-BasicShadowCanvasLayer::Disconnect()
-{
-  if (mFrontSurface) {
-    BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
-  }
-  mFrontSurface = nsnull;
-
-  ShadowCanvasLayer::Disconnect();
-}
 
 void
 BasicShadowCanvasLayer::Initialize(const Data& aData)

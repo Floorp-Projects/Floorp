@@ -77,18 +77,22 @@ struct OpCreateThebesBuffer {
   nsIntRect bufferRect;
   Shmem initialFront;
 };
+struct OpDestroyThebesFrontBuffer { PLayer layer; };
 
 struct OpCreateCanvasBuffer {
   PLayer layer;
   nsIntSize size;
   Shmem initialFront;
 };
+struct OpDestroyCanvasFrontBuffer { PLayer layer; };
 
 struct OpCreateImageBuffer {
   PLayer layer;
   nsIntSize size;
   Shmem initialFront;
 };
+struct OpDestroyImageFrontBuffer { PLayer layer; };
+
 
 // Change a layer's attributes
 struct CommonLayerAttributes {
@@ -164,6 +168,9 @@ union Edit {
   OpCreateCanvasBuffer;
   OpCreateThebesBuffer;
   OpCreateImageBuffer;
+  OpDestroyThebesFrontBuffer;
+  OpDestroyCanvasFrontBuffer;
+  OpDestroyImageFrontBuffer;
 
   OpSetLayerAttributes;
 
