@@ -856,22 +856,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 void
 mjit::TraceScriptCache(JSTracer *trc, JSScript *script)
 {
-#ifdef JS_MONOIC
-    uint32 numCallICs = script->jit->nCallICs;
-    for (uint32 i = 0; i < numCallICs; i++) {
-        ic::CallICInfo &ic = script->callICs[i];
-        if (ic.fastGuardedObject) {
-            JS_SET_TRACING_NAME(trc, "callIC fun");
-            Mark(trc, ic.fastGuardedObject, JSTRACE_OBJECT);
-        }
-        if (ic.fastGuardedNative) {
-            JS_SET_TRACING_NAME(trc, "callIC native");
-            Mark(trc, ic.fastGuardedNative, JSTRACE_OBJECT);
-        }
-        if (ic.isConstantThis)
-            MarkValue(trc, ic.constantThis, "callIC this");
-    }
-#endif
+    ic::PurgeCallICs(trc->context, script);
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
