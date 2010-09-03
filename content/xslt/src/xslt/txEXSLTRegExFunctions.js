@@ -50,22 +50,31 @@ function txEXSLTRegExFunctions()
 {
 }
 
-var SingletonInstance = null;
-
 txEXSLTRegExFunctions.prototype = {
-    classID: Components.ID("{18a03189-067b-4978-b4f1-bafe35292ed6}"),
+    classID: EXSLT_REGEXP_CID,
 
-    QueryInterface: function(iid) {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.txIEXSLTRegExFunctions))
-            return this;
+    QueryInterface: XPCOMUtils.generateQI([Ci.txIEXSLTRegExFunctions,
+                                           Ci.nsIClassInfo]),
 
-        if (iid.equals(Ci.nsIClassInfo))
-            return txEXSLTRegExModule.factory
+    // nsIClassInfo
+    getInterfaces: function(countRef) {
+        var interfaces = [
+            Ci.txIEXSLTRegExFunctions
+        ];
+        countRef.value = interfaces.length;
 
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        return interfaces;
     },
 
+    getHelperForLanguage: function(language) {
+        return null;
+    },
+
+    implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0,
+
+
+    // txIEXSLTRegExFunctions
     match: function(context, str, regex, flags) {
         var nodeset = Components.classes[NODESET_CONTRACTID]
                                 .createInstance(Ci.txINodeSet);
@@ -101,38 +110,6 @@ txEXSLTRegExFunctions.prototype = {
         var re = new RegExp(regex, flags);
 
         return re.test(str);
-    },
-
-    _xpcom_factory: {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
-                                               Ci.nsIClassInfo]),
-
-        createInstance: function(outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-            if (SingletonInstance == null)
-                SingletonInstance = new txEXSLTRegExFunctions();
-
-            return SingletonInstance.QueryInterface(iid);
-        },
-
-        getInterfaces: function(countRef) {
-            var interfaces = [
-                Ci.txIEXSLTRegExFunctions
-            ];
-            countRef.value = interfaces.length;
-
-            return interfaces;
-        },
-
-        getHelperForLanguage: function(language) {
-            return null;
-        },
-
-        classID: EXSLT_REGEXP_CID,
-        implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-        flags: Ci.nsIClassInfo.SINGLETON
     }
 }
 
