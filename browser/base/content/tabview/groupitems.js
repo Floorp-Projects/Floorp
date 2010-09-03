@@ -582,9 +582,6 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       item.removeTrenches();
 
-      if (!dropPos)
-        dropPos = {top:window.innerWidth, left:window.innerHeight};
-
       if (typeof options == 'undefined')
         options = {};
 
@@ -638,7 +635,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       // Insert the tab into the right position.
-      var index = findInsertionPoint(dropPos);
+      var index = dropPos ? findInsertionPoint(dropPos) : this._children.length;
       this._children.splice(index, 0, item);
 
       item.setZ(this.getZ() + 1);
