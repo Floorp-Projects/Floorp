@@ -841,6 +841,8 @@ public:
    *   set RENDER_ASYNC_DECODE_IMAGES to avoid having images synchronously
    * decoded during rendering.
    * (by default images decode synchronously with RenderDocument)
+   *   set RENDER_DOCUMENT_RELATIVE to interpret |aRect| relative to the
+   * document instead of the CSS viewport
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext the gfxContext to render to. We render so that
    * one CSS pixel in the source document is rendered to one unit in the current
@@ -851,7 +853,8 @@ public:
     RENDER_IGNORE_VIEWPORT_SCROLLING = 0x02,
     RENDER_CARET = 0x04,
     RENDER_USE_WIDGET_LAYERS = 0x08,
-    RENDER_ASYNC_DECODE_IMAGES = 0x10
+    RENDER_ASYNC_DECODE_IMAGES = 0x10,
+    RENDER_DOCUMENT_RELATIVE = 0x20
   };
   virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                                               nscolor aBackgroundColor,

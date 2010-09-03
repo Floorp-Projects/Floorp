@@ -1267,11 +1267,13 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     if (rootScrollFrame) {
       nsIScrollableFrame* rootScrollableFrame =
         presShell->GetRootScrollFrameAsScrollable();
-      // Make visibleRegion and aRenderingContext relative to the
-      // scrolled frame instead of the root frame.
-      nsPoint pos = rootScrollableFrame->GetScrollPosition();
-      visibleRegion.MoveBy(-pos);
-      aRenderingContext->Translate(pos.x, pos.y);
+      if (aFlags & PAINT_DOCUMENT_RELATIVE) {
+        // Make visibleRegion and aRenderingContext relative to the
+        // scrolled frame instead of the root frame.
+        nsPoint pos = rootScrollableFrame->GetScrollPosition();
+        visibleRegion.MoveBy(-pos);
+        aRenderingContext->Translate(pos.x, pos.y);
+      }
       builder.SetIgnoreScrollFrame(rootScrollFrame);
 
       nsCanvasFrame* canvasFrame =
@@ -1402,7 +1404,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       // paint in a window, so make sure we flush out any retained layer
       // trees before *and after* we draw
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
-    } else if (widget) {
+    } else if (widget && !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
       // XXX we should simplify this API now that dirtyWindowRegion always
       // covers the entire window
       widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
