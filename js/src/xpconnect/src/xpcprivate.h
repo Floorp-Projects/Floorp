@@ -1595,8 +1595,7 @@ public:
                             jsval* pval)
         {NS_ASSERTION(IsConstant(),
                       "Only call this if you're sure this is a constant!");
-         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
-         *pval = mVal; return JS_TRUE;}
+         return Resolve(ccx, iface, nsnull, pval);}
 
     JSBool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
                              JSObject *parent, jsval* pval);
@@ -1620,13 +1619,13 @@ public:
     void SetName(jsid a) {mName = a;}
 
     void SetMethod(PRUint16 index)
-        {mVal = JSVAL_NULL; mFlags = METHOD; mIndex = index;}
+        {mFlags = METHOD; mIndex = index;}
 
     void SetConstant(PRUint16 index)
-        {mVal = JSVAL_NULL; mFlags = CONSTANT; mIndex = index;}
+        {mFlags = CONSTANT; mIndex = index;}
 
     void SetReadOnlyAttribute(PRUint16 index)
-        {mVal = JSVAL_NULL; mFlags = GETTER; mIndex = index;}
+        {mFlags = GETTER; mIndex = index;}
 
     void SetWritableAttribute()
         {NS_ASSERTION(mFlags == GETTER,"bad"); mFlags = GETTER | SETTER_TOO;}
@@ -1635,27 +1634,20 @@ public:
     XPCNativeMember()  {MOZ_COUNT_CTOR(XPCNativeMember);}
     ~XPCNativeMember() {MOZ_COUNT_DTOR(XPCNativeMember);}
 
-    void DealWithDyingGCThings(JSContext* cx, XPCJSRuntime* rt)
-        {if(IsResolved() && JSVAL_IS_GCTHING(mVal) &&
-           JS_IsAboutToBeFinalized(cx, JSVAL_TO_GCTHING(mVal)))
-           {mVal = JSVAL_NULL; mFlags &= ~RESOLVED;}}
-
 private:
-    JSBool IsResolved() const {return mFlags & RESOLVED;}
-    JSBool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface);
+    JSBool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
+                   JSObject *parent, jsval *vp);
 
     enum {
-        RESOLVED    = 0x01,
-        METHOD      = 0x02,
-        CONSTANT    = 0x04,
-        GETTER      = 0x08,
-        SETTER_TOO  = 0x10
+        METHOD      = 0x01,
+        CONSTANT    = 0x02,
+        GETTER      = 0x04,
+        SETTER_TOO  = 0x08
     };
 
 private:
     // our only data...
     jsid     mName;
-    jsval    mVal;
     PRUint16 mIndex;
     PRUint16 mFlags;
 };
@@ -1693,8 +1685,6 @@ public:
         {NS_ASSERTION(!IsMarked(), "bad"); return mMemberCount;}
     XPCNativeMember* GetMemberAt(PRUint16 i)
         {NS_ASSERTION(i < mMemberCount, "bad index"); return &mMembers[i];}
-
-    inline void DealWithDyingGCThings(JSContext* cx, XPCJSRuntime* rt);
 
     void DebugDump(PRInt16 depth);
 

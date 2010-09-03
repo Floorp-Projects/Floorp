@@ -106,16 +106,6 @@ struct CX_AND_XPCRT_Data
 };
 
 static JSDHashOperator
-NativeInterfaceGC(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                  uint32 number, void *arg)
-{
-    CX_AND_XPCRT_Data* data = (CX_AND_XPCRT_Data*) arg;
-    ((IID2NativeInterfaceMap::Entry*)hdr)->value->
-            DealWithDyingGCThings(data->cx, data->rt);
-    return JS_DHASH_NEXT;
-}
-
-static JSDHashOperator
 NativeInterfaceSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
                        uint32 number, void *arg)
 {
@@ -534,15 +524,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     self->mWrappedJSMap->
                         Enumerate(WrappedJSDyingJSObjectFinder, &data);
                 }
-
-                // Do cleanup in NativeInterfaces. This part just finds 
-                // member cloned function objects that are about to be 
-                // collected. It does not deal with collection of interfaces or
-                // sets at this point.
-                CX_AND_XPCRT_Data data = {cx, self};
-
-                self->mIID2NativeInterfaceMap->
-                    Enumerate(NativeInterfaceGC, &data);
 
                 // Find dying scopes...
                 XPCWrappedNativeScope::FinishedMarkPhaseOfGC(cx, self);
