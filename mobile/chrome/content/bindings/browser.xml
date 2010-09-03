@@ -396,7 +396,7 @@
 
           // Prompt remoting
           ["Alert", "Confirm", "Prompt"].forEach(function(name) {
-            this.messageManager.addMessageListener("Prompt:Alert" + name, this);
+            this.messageManager.addMessageListener("Prompt:" + name, this);
           }, this);
 
           this._webProgress._init();
