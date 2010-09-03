@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="800" height="800" orient="vertical"
+        onload="init()">
+  <script src="chrome://global/content/test-ipcbrowser-chrome.js"/>
+
+  <toolbar id="controls">
+    <toolbarbutton label="Back"/>
+    <toolbarbutton label="Forward"/>
+    <textbox onchange="loadURL(this.value)" flex="1"/>
+  </toolbar>
+  <toolbar>
+    <textbox id="scbDx" flex="1" value="0"/>
+    <textbox id="scbDy" flex="1" value="100"/>
+    <toolbarbutton
+       onclick="scrollContentBy(document.getElementById('scbDx').value,
+                                document.getElementById('scbDy').value);"
+       label="scrollBy"/>
+    <textbox id="sctX" flex="1" value="200"/>
+    <textbox id="sctY" flex="1" value="300"/>
+    <toolbarbutton
+       onclick="scrollContentTo(document.getElementById('sctX').value,
+                                document.getElementById('sctY').value);"
+       label="scrollTo"/>
+  </toolbar>
+  <toolbar>
+    <textbox id="vW" flex="1" value="600"/>
+    <textbox id="vH" flex="1" value="400"/>
+    <toolbarbutton
+       onclick="setContentViewport(document.getElementById('vW').value,
+                                   document.getElementById('vH').value);"
+       label="setViewport"/>
+    <textbox id="dX" flex="1" value="0"/>
+    <textbox id="dY" flex="1" value="0"/>
+    <textbox id="dW" flex="1" value="600"/>
+    <textbox id="dH" flex="1" value="600"/>
+    <toolbarbutton
+       onclick="setContentDisplayPort(document.getElementById('dX').value,
+                                      document.getElementById('dY').value,
+                                      document.getElementById('dW').value,
+                                      document.getElementById('dH').value);"
+       label="setDisplayPort"/>
+    <textbox id="xR" flex="1" value="2.0"/>
+    <textbox id="yR" flex="1" value="2.0"/>
+    <toolbarbutton
+       onclick="setContentResolution(document.getElementById('xR').value,
+                                     document.getElementById('yR').value);"
+       label="setResolution"/>
+  </toolbar>
+  <toolbar>
+    <textbox id="vsbX" flex="1" value="0"/>
+    <textbox id="vsbY" flex="1" value="100"/>
+    <toolbarbutton
+       onclick="scrollViewportBy(document.getElementById('vsbX').value,
+                                 document.getElementById('vsbY').value);"
+       label="scrollViewportBy"/>
+    <textbox id="vstX" flex="1" value="200"/>
+    <textbox id="vstY" flex="1" value="300"/>
+    <toolbarbutton
+       onclick="scrollViewportTo(document.getElementById('vstX').value,
+                                 document.getElementById('vstY').value);"
+       label="scrollViewportTo"/>
+    <textbox id="vsX" flex="1" value="2.0"/>
+    <textbox id="vsY" flex="1" value="2.0"/>
+    <toolbarbutton
+       onclick="setViewportScale(document.getElementById('vsX').value,
+                                 document.getElementById('vsY').value);"
+       label="setViewportScale"/>
+  </toolbar>
+
+  <browser type="content" src="http://people.mozilla.com/~cjones/anim.html" flex="1" id="content"
+           remote="true"/>
+</window>
