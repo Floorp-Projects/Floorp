@@ -234,7 +234,12 @@ ThebesLayerD3D9::RenderLayer()
   opacity[0] = GetOpacity();
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
-  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mD2DSurface && UseOpaqueSurface(this)) {
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+  } else
+#endif
+  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
   device()->SetTexture(0, mTexture);
   device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
