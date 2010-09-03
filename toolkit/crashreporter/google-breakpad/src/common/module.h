@@ -41,6 +41,7 @@
 #include <stdio.h>
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -48,6 +49,7 @@
 
 namespace google_breakpad {
 
+using std::set;
 using std::string;
 using std::vector;
 using std::map;
@@ -90,7 +92,7 @@ class Module {
 
     // The function's name.
     string name;
-    
+
     // The start address and length of the function's code.
     Address address, size;
 
@@ -124,7 +126,7 @@ class Module {
   // A map from addresses to RuleMaps, representing changes that take
   // effect at given addresses.
   typedef map<Address, RuleMap> RuleChangeMap;
-  
+
   // A range of 'STACK CFI' stack walking information. An instance of
   // this structure corresponds to a 'STACK CFI INIT' record and the
   // subsequent 'STACK CFI' records that fall within its range.
@@ -143,10 +145,19 @@ class Module {
     // including the address you're interested in.
     RuleChangeMap rule_changes;
   };
-    
+
+  struct FunctionCompare {
+    bool operator() (const Function *lhs,
+                     const Function *rhs) const {
+      if (lhs->address == rhs->address)
+        return lhs->name < rhs->name;
+      return lhs->address < rhs->address;
+    }
+  };
+
   // Create a new module with the given name, operating system,
   // architecture, and ID string.
-  Module(const string &name, const string &os, const string &architecture, 
+  Module(const string &name, const string &os, const string &architecture,
          const string &id);
   ~Module();
 
@@ -176,7 +187,7 @@ class Module {
                     vector<Function *>::iterator end);
 
   // Add STACK_FRAME_ENTRY to the module.
-  // 
+  //
   // This module owns all StackFrameEntry objects added with this
   // function: destroying the module destroys them as well.
   void AddStackFrameEntry(StackFrameEntry *stack_frame_entry);
@@ -258,12 +269,13 @@ class Module {
   // A map from filenames to File structures.  The map's keys are
   // pointers to the Files' names.
   typedef map<const string *, File *, CompareStringPtrs> FileByNameMap;
+  typedef set<Function *, FunctionCompare> FunctionSet;
 
   // The module owns all the files and functions that have been added
   // to it; destroying the module frees the Files and Functions these
   // point to.
-  FileByNameMap files_;                 // This module's source files.  
-  vector<Function *> functions_;        // This module's functions.
+  FileByNameMap files_;    // This module's source files.
+  FunctionSet functions_;  // This module's functions.
 
   // The module owns all the call frame info entries that have been
   // added to it.

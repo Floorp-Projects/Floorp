@@ -164,6 +164,21 @@ PK11_CheckUserPassword(PK11SlotInfo *slot, const char *pw)
 	len = PORT_Strlen(pw);
     }
 
+    /*
+     * If the token does't need a login, don't try to relogin beause the
+     * effect is undefined. It's not clear what it means to check a non-empty
+     * password with such a token, so treat that as an error.
+     */
+    if (!slot->needLogin) {
+        if (len == 0) {
+            rv = SECSuccess;
+        } else {
+            PORT_SetError(SEC_ERROR_BAD_PASSWORD);
+            rv = SECFailure;
+        }
+        return rv;
+    }
+
     /* force a logout */
     PK11_EnterSlotMonitor(slot);
     PK11_GETTAB(slot)->C_Logout(slot->session);

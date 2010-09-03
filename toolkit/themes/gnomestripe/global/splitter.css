@@ -81,6 +81,10 @@ splitter[orient="vertical"][state="collapsed"][substate="after"] {
   cursor: n-resize;
 }
 
+splitter[disabled="true"] {
+  cursor: default !important;
+}
+
 /* ::::: splitter grippy ::::: */
 
 grippy {

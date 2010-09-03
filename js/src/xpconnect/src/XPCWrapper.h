@@ -109,13 +109,6 @@ ClassNeedsXOW(const char *name)
       return strcmp(++name, "indow") == 0;
     case 'L':
       return strcmp(++name, "ocation") == 0;
-    case 'H':
-      if (strncmp(++name, "TML", 3))
-        break;
-      name += 3;
-      if (*name == 'I')
-        ++name;
-      return strcmp(name, "FrameElement") == 0;
     default:
       break;
   }
@@ -443,6 +436,13 @@ WrapFunction(JSContext *cx, JSObject *wrapperObj, JSObject *funobj, jsval *v,
          ? XPCNativeWrapper::WrapFunction(cx, funobj, v)
          : XPCCrossOriginWrapper::WrapFunction(cx, wrapperObj, funobj, v);
 }
+
+/**
+ * Given a JSObject that might represent a Window object, ensures that the
+ * window object has an inner window.
+ */
+void
+CheckWindow(XPCWrappedNative *wn);
 
 /**
  * Given a potentially-wrapped object, creates a wrapper for it.

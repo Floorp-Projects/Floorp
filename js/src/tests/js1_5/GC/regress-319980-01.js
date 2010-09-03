@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-319980-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 319980;
 var summary = 'GC not called during non-fatal out of memory';

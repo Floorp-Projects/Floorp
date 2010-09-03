@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslreveal.c,v 1.7 2010/02/04 03:21:11 wtc%google.com Exp $ */
+/* $Id: sslreveal.c,v 1.7.2.1 2010/08/03 18:52:13 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -111,14 +111,26 @@ SSL_HandshakeNegotiatedExtension(PRFileDesc * socket,
   /* some decisions derived from SSL_GetChannelInfo */
   sslSocket * sslsocket = NULL;
   SECStatus rv = SECFailure;
+  PRBool enoughFirstHsDone = PR_FALSE;
 
   if (!pYes)
     return rv;
 
   sslsocket = ssl_FindSocket(socket);
+  if (!sslsocket) {
+    SSL_DBG(("%d: SSL[%d]: bad socket in HandshakeNegotiatedExtension",
+             SSL_GETPID(), socket));
+    return rv;
+  }
+
+  if (sslsocket->firstHsDone) {
+    enoughFirstHsDone = PR_TRUE;
+  } else if (sslsocket->ssl3.initialized && ssl3_CanFalseStart(sslsocket)) {
+    enoughFirstHsDone = PR_TRUE;
+  }
 
   /* according to public API SSL_GetChannelInfo, this doesn't need a lock */
-  if (sslsocket && sslsocket->opt.useSecurity && sslsocket->firstHsDone) {
+  if (sslsocket->opt.useSecurity && enoughFirstHsDone) {
     if (sslsocket->ssl3.initialized) { /* SSL3 and TLS */
       /* now we know this socket went through ssl3_InitState() and
        * ss->xtnData got initialized, which is the only member accessed by

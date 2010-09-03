@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-347739.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 347739;
 var summary = 'generator_instance.close readonly and immune';

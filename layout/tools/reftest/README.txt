@@ -116,7 +116,7 @@ must be one of the following:
 
       Examples of using conditions:
           fails-if(winWidget) == test reference
-          asserts-if(2,cocoaWidget) load crashtest
+          asserts-if(cocoaWidget,2) load crashtest
 
    b. <http>, if present, is one of the strings (sans quotes) "HTTP" or
       "HTTP(..)" or "HTTP(../..)" or "HTTP(../../..)", etc. , indicating that

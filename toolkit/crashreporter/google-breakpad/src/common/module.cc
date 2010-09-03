@@ -49,7 +49,7 @@ Module::Module(const string &name, const string &os,
 Module::~Module() {
   for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); it++)
     delete it->second;
-  for (vector<Function *>::iterator it = functions_.begin();
+  for (FunctionSet::iterator it = functions_.begin();
        it != functions_.end(); it++)
     delete *it;
   for (vector<StackFrameEntry *>::iterator it = stack_frame_entries_.begin();
@@ -62,12 +62,17 @@ void Module::SetLoadAddress(Address address) {
 }
 
 void Module::AddFunction(Function *function) {
-  functions_.push_back(function);
+  std::pair<FunctionSet::iterator,bool> ret = functions_.insert(function);
+  if (!ret.second) {
+    // Free the duplicate we failed to insert because we own it.
+    delete function;
+  }
 }
 
 void Module::AddFunctions(vector<Function *>::iterator begin,
                           vector<Function *>::iterator end) {
-  functions_.insert(functions_.end(), begin, end);
+  for (vector<Function *>::iterator it = begin; it != end; it++)
+    AddFunction(*it);
 }
 
 void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
@@ -130,7 +135,7 @@ void Module::AssignSourceIds() {
 
   // Next, mark all files actually cited by our functions' line number
   // info, by setting each one's source id to zero.
-  for (vector<Function *>::const_iterator func_it = functions_.begin();
+  for (FunctionSet::const_iterator func_it = functions_.begin();
        func_it != functions_.end(); func_it++) {
     Function *func = *func_it;
     for (vector<Line>::iterator line_it = func->lines.begin();
@@ -145,13 +150,13 @@ void Module::AssignSourceIds() {
   int next_source_id = 0;
   for (FileByNameMap::iterator file_it = files_.begin();
        file_it != files_.end(); file_it++)
-    if (! file_it->second->source_id)
+    if (!file_it->second->source_id)
       file_it->second->source_id = next_source_id++;
 }
 
 bool Module::ReportError() {
   fprintf(stderr, "error writing symbol file: %s\n",
-          strerror (errno));
+          strerror(errno));
   return false;
 }
 
@@ -187,7 +192,7 @@ bool Module::Write(FILE *stream) {
   }
 
   // Write out functions and their lines.
-  for (vector<Function *>::const_iterator func_it = functions_.begin();
+  for (FunctionSet::const_iterator func_it = functions_.begin();
        func_it != functions_.end(); func_it++) {
     Function *func = *func_it;
     if (0 > fprintf(stream, "FUNC %llx %llx %llx %s\n",
@@ -217,7 +222,7 @@ bool Module::Write(FILE *stream) {
         || !WriteRuleMap(entry->initial_rules, stream)
         || 0 > putc('\n', stream))
       return ReportError();
-    
+
     // Write out this entry's delta rules as 'STACK CFI' records.
     for (RuleChangeMap::const_iterator delta_it = entry->rule_changes.begin();
          delta_it != entry->rule_changes.end(); delta_it++) {

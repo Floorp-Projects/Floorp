@@ -152,8 +152,9 @@ public:
   PRBool RemoveFrameIfPresent(nsIFrame* aFrame);
 
   /**
-   * Take the frames after aAfterFrame out of the frame list.
-   * @param aAfterFrame a frame in this list
+   * Take the frames after aAfterFrame out of the frame list.  If
+   * aAfterFrame is null, removes the entire list.
+   * @param aAfterFrame a frame in this list, or null
    * @return the removed frames, if any
    */
   nsFrameList RemoveFramesAfter(nsIFrame* aAfterFrame);

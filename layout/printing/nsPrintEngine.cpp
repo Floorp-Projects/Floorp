@@ -155,6 +155,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 
 #include "nsPIDOMWindow.h"
@@ -249,7 +250,6 @@ protected:
 
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
-static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 
 NS_IMPL_ISUPPORTS1(nsPrintEngine, nsIObserver)
 
@@ -266,7 +266,6 @@ nsPrintEngine::nsPrintEngine() :
   mPrt(nsnull),
   mPagePrintTimer(nsnull),
   mPageSeqFrame(nsnull),
-  mParentWidget(nsnull),
   mPrtPreview(nsnull),
   mOldPrtPreview(nsnull),
   mDebugFile(nsnull)
@@ -321,7 +320,6 @@ nsresult nsPrintEngine::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
                                    nsISupports*            aContainer,
                                    nsIDocument*            aDocument,
                                    float                   aScreenDPI,
-                                   nsIWidget*              aParentWidget,
                                    FILE*                   aDebugFile)
 {
   NS_ENSURE_ARG_POINTER(aDocViewerPrint);
@@ -332,7 +330,6 @@ nsresult nsPrintEngine::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   mContainer      = aContainer;      // weak reference
   mDocument       = aDocument;
   mScreenDPI      = aScreenDPI;
-  mParentWidget   = aParentWidget;    
 
   mDebugFile      = aDebugFile;      // ok to be NULL
 
@@ -1885,12 +1882,14 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
 
   nsSize adjSize;
   PRBool documentIsTopLevel;
-  nsIFrame* frame = nsnull;
   if (!aPO->IsPrintable())
     return NS_OK;
 
+  PRBool canCreateScrollbars = PR_TRUE;
+  nsIView* parentView = nsnull;
+
   if (aPO->mParent && aPO->mParent->IsPrintable()) {
-    frame = aPO->mContent->GetPrimaryFrame();
+    nsIFrame* frame = aPO->mContent->GetPrimaryFrame();
     // Without a frame, this document can't be displayed; therefore, there is no
     // point to reflowing it
     if (!frame) {
@@ -1904,6 +1903,16 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     adjSize = frame->GetContentRect().Size();
     documentIsTopLevel = PR_FALSE;
     // presshell exists because parent is printable
+
+    // the top nsPrintObject's widget will always have scrollbars
+    if (frame && frame->GetType() == nsGkAtoms::subDocumentFrame) {
+      nsIView* view = frame->GetView();
+      NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+      view = view->GetFirstChild();
+      NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+      parentView = view;
+      canCreateScrollbars = PR_FALSE;
+    }
   } else {
     nscoord pageWidth, pageHeight;
     mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
@@ -1922,31 +1931,17 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     adjSize = nsSize(pageWidth, pageHeight);
 #endif // XP_UNIX && !XP_MACOSX
     documentIsTopLevel = PR_TRUE;
-  }
 
-  // Here we decide whether we need scrollbars and
-  // what the parent will be of the widget
-  // How this logic presently works: Print Preview is always as-is (as far
-  // as I can tell; not sure how it would work in other cases); only the root 
-  // is not eIFrame or eFrame.  The child documents get a parent widget from
-  // logic in nsFrameFrame.  In any case, a child widget is created for the root
-  // view of the document.
-  PRBool canCreateScrollbars = PR_TRUE;
-  nsIView* parentView = nsnull;
-  // the top nsPrintObject's widget will always have scrollbars
-  if (frame && frame->GetType() == nsGkAtoms::subDocumentFrame) {
-    nsIView* view = frame->GetView();
-    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    view = view->GetFirstChild();
-    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    parentView = view;
-    canCreateScrollbars = PR_FALSE;
+    nsCOMPtr<nsIDocumentViewer> dv = do_QueryInterface(mDocViewerPrint);
+    if (dv) {
+      parentView = dv->FindContainerView();
+    }
   }
 
   NS_ASSERTION(!aPO->mPresContext, "Recreating prescontext");
 
   // create the PresContext
-  aPO->mPresContext = new nsRootPresContext(aPO->mDocument,
+  aPO->mPresContext = new nsPresContext(aPO->mDocument,
     mIsCreatingPrintPreview ? nsPresContext::eContext_PrintPreview:
                               nsPresContext::eContext_Print);
   NS_ENSURE_TRUE(aPO->mPresContext, NS_ERROR_OUT_OF_MEMORY);
@@ -1992,18 +1987,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   nsIView* rootView = aPO->mViewManager->CreateView(tbounds, parentView);
   NS_ENSURE_TRUE(rootView, NS_ERROR_OUT_OF_MEMORY);
 
-  // Only create a widget for print preview; when printing, a widget is
-  // unnecessary and unexpected
-  // Also, no widget should be needed except for the top-level document
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
-    nsNativeWidget widget = nsnull;
-    if (!frame)
-      widget = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
-    rv = rootView->CreateWidget(kWidgetCID, nsnull,
-                                widget, PR_TRUE, PR_TRUE,
-                                eContentTypeContent);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aPO->mWindow = rootView->GetWidget();
     aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
   }
 
@@ -2021,13 +2005,12 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
   // Calculate scale factor from printer to screen
-  float printDPI = float(mPrt->mPrintDC->AppUnitsPerInch()) /
+  float printDPI = float(mPrt->mPrintDC->AppUnitsPerCSSInch()) /
                    float(mPrt->mPrintDC->AppUnitsPerDevPixel());
   aPO->mPresContext->SetPrintPreviewScale(mScreenDPI / printDPI);
 
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
-    mDocViewerPrint->SetPrintPreviewPresentation(aPO->mWindow,
-                                                 aPO->mViewManager,
+    mDocViewerPrint->SetPrintPreviewPresentation(aPO->mViewManager,
                                                  aPO->mPresContext,
                                                  aPO->mPresShell);
   }
@@ -2358,8 +2341,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
             nsIntMargin unwrtMarginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
             mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
-            nsMargin totalMargin = poPresContext->TwipsToAppUnits(marginTwips + 
-                                                              unwrtMarginTwips);
+            nsMargin totalMargin = poPresContext->CSSTwipsToAppUnits(marginTwips + 
+                                                                     unwrtMarginTwips);
             if (startPageNum == endPageNum) {
               {
                 startRect.y -= totalMargin.top;

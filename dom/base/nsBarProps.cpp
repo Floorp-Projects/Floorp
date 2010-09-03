@@ -84,10 +84,10 @@ nsBarProp::SetWebBrowserChrome(nsIWebBrowserChrome* aBrowserChrome)
 NS_IMETHODIMP
 nsBarProp::GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag)
 {
-  NS_ENSURE_TRUE(mBrowserChrome, NS_ERROR_FAILURE);
+  *aVisible = PR_FALSE;
+  NS_ENSURE_TRUE(mBrowserChrome, NS_OK);
 
   PRUint32 chromeFlags;
-  *aVisible = PR_FALSE;
 
   NS_ENSURE_SUCCESS(mBrowserChrome->GetChromeFlags(&chromeFlags),
                     NS_ERROR_FAILURE);
@@ -100,7 +100,7 @@ nsBarProp::GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag)
 NS_IMETHODIMP
 nsBarProp::SetVisibleByFlag(PRBool aVisible, PRUint32 aChromeFlag)
 {
-  NS_ENSURE_TRUE(mBrowserChrome, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mBrowserChrome, NS_OK);
 
   PRBool   enabled = PR_FALSE;
 

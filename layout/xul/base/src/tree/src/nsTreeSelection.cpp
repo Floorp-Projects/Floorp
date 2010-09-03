@@ -747,27 +747,27 @@ nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
   // no selection, so nothing to do.
   if (!mFirstRange) return NS_OK;
 
-  nsTreeRange* newRange = nsnull;
-
   PRBool selChanged = PR_FALSE;
+  nsTreeRange* oldFirstRange = mFirstRange;
   nsTreeRange* curr = mFirstRange;
+  mFirstRange = nsnull;
   while (curr) {
     if (aCount > 0) {
       // inserting
       if (aIndex > curr->mMax) {
         // adjustment happens after the range, so no change
-        ADD_NEW_RANGE(newRange, this, curr->mMin, curr->mMax);
+        ADD_NEW_RANGE(mFirstRange, this, curr->mMin, curr->mMax);
       }
       else if (aIndex <= curr->mMin) {  
         // adjustment happens before the start of the range, so shift down
-        ADD_NEW_RANGE(newRange, this, curr->mMin + aCount, curr->mMax + aCount);
+        ADD_NEW_RANGE(mFirstRange, this, curr->mMin + aCount, curr->mMax + aCount);
         selChanged = PR_TRUE;
       }
       else {
         // adjustment happen inside the range.
         // break apart the range and create two ranges
-        ADD_NEW_RANGE(newRange, this, curr->mMin, aIndex - 1);
-        ADD_NEW_RANGE(newRange, this, aIndex + aCount, curr->mMax + aCount);
+        ADD_NEW_RANGE(mFirstRange, this, curr->mMin, aIndex - 1);
+        ADD_NEW_RANGE(mFirstRange, this, aIndex + aCount, curr->mMax + aCount);
         selChanged = PR_TRUE;
       }
     }
@@ -775,7 +775,7 @@ nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
       // deleting
       if (aIndex > curr->mMax) {
         // adjustment happens after the range, so no change
-        ADD_NEW_RANGE(newRange, this, curr->mMin, curr->mMax);
+        ADD_NEW_RANGE(mFirstRange, this, curr->mMin, curr->mMax);
       }
       else {
         // remember, aCount is negative
@@ -784,31 +784,30 @@ nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
         if (aIndex <= curr->mMin) {
           if (lastIndexOfAdjustment < curr->mMin) {
             // adjustment happens before the start of the range, so shift up
-            ADD_NEW_RANGE(newRange, this, curr->mMin + aCount, curr->mMax + aCount);
+            ADD_NEW_RANGE(mFirstRange, this, curr->mMin + aCount, curr->mMax + aCount);
           }
           else if (lastIndexOfAdjustment >= curr->mMax) {
             // adjustment contains the range.  remove the range by not adding it to the newRange
           }
           else {
             // adjustment starts before the range, and ends in the middle of it, so trim the range
-            ADD_NEW_RANGE(newRange, this, aIndex, curr->mMax + aCount)
+            ADD_NEW_RANGE(mFirstRange, this, aIndex, curr->mMax + aCount)
           }
         }
         else if (lastIndexOfAdjustment >= curr->mMax) {
          // adjustment starts in the middle of the current range, and contains the end of the range, so trim the range
-         ADD_NEW_RANGE(newRange, this, curr->mMin, aIndex - 1)
+         ADD_NEW_RANGE(mFirstRange, this, curr->mMin, aIndex - 1)
         }
         else {
           // range contains the adjustment, so shorten the range
-          ADD_NEW_RANGE(newRange, this, curr->mMin, curr->mMax + aCount)
+          ADD_NEW_RANGE(mFirstRange, this, curr->mMin, curr->mMax + aCount)
         }
       }
     }
     curr = curr->mNext;
   }
 
-  delete mFirstRange;
-  mFirstRange = newRange;
+  delete oldFirstRange;
 
   // Fire the select event
   if (selChanged)

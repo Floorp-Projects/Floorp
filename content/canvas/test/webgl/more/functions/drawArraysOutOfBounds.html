@@ -41,12 +41,9 @@ var vertsA = new Float32Array(verts);
 var normalsA = new Float32Array(normals);
 var texcoordsA = new Float32Array(texcoords);
 
-// Tests.autorun = false;
-// Tests.message = "Caution: if your implementation has a bug in drawArrays bounds checking, this will likely segfault your browser";
-
 Tests.startUnit = function () {
   var canvas = document.getElementById('gl');
-  var gl = canvas.getContext(GL_CONTEXT_ID);
+  var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
   var prog = new Shader(gl, 'vert', 'frag');
   prog.use();
   var v = prog.attrib('Vertex');
@@ -74,7 +71,8 @@ Tests.testDrawArraysEmpty = function(gl, prog, v,n,t) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([]), gl.STATIC_DRAW);
   assertOk(function(){gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);})
   gl.enableVertexAttribArray(v);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
+  assertGLError(gl, gl.INVALID_OPERATION, "zero size array",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
   gl.deleteBuffer(b);
 }
 
@@ -84,15 +82,24 @@ Tests.testDrawArraysOutOfBounds = function(gl, prog, v,n,t) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([]), gl.STATIC_DRAW);
   assertOk(function(){gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);});
   gl.enableVertexAttribArray(v);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 10000);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 10000000000000);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 1.6);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, -1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, 0);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 0);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, -1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 1);});
+  assertGLError(gl, gl.INVALID_OPERATION, "zero size array",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 1);});
+  assertGLError(gl, gl.INVALID_OPERATION, "zero size array 10000",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 10000);});
+  assertGLError(gl, gl.INVALID_OPERATION, "zero size array 10000000000000",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 10000000000000);});
+  assertGLError(gl, gl.INVALID_OPERATION, "zero size array fraction",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 1.6);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative offset",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, -1);});
+  assertGLError(gl, gl.INVALID_OPERATION, "count out of range",
+      function(){gl.drawArrays(gl.TRIANGLES, 1, 0);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 0);});
+  assertGLError(gl, gl.INVALID_VALUE, "positive count, negative offset",
+      function(){gl.drawArrays(gl.TRIANGLES, 1, -1);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count, positive offset",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 1);});
   gl.deleteBuffer(b);
 }
 
@@ -103,15 +110,24 @@ Tests.testDrawArraysWithDataOutOfBounds = function(gl, prog, v,n,t) {
   gl.bufferData(gl.ARRAY_BUFFER, vertsA, gl.STATIC_DRAW);
   gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(v);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 10000);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 10000000000000);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 1.6);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, -1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 4, 0);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 0);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 2, -1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 1);});
+  assertGLError(gl, gl.INVALID_OPERATION, "3 element array",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "3 element array 10000",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 10000);});
+  assertGLError(gl, gl.INVALID_OPERATION, "3 element array 10000000000000",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 10000000000000);});
+  assertGLError(gl, gl.INVALID_OPERATION, "fractional count",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 1.6);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative offset",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, -1);});
+  assertGLError(gl, gl.INVALID_OPERATION, "count out of range",
+      function(){gl.drawArrays(gl.TRIANGLES, 4, 0);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 0);});
+  assertGLError(gl, gl.INVALID_VALUE, "positive count, negative offset",
+      function(){gl.drawArrays(gl.TRIANGLES, 2, -1);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count, positive offset",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 1);});
   gl.deleteBuffer(b);
 }
 
@@ -132,7 +148,8 @@ Tests.testDrawArraysMultiOutOfBounds = function(gl, prog, v,n,t) {
   gl.enableVertexAttribArray(v);
   gl.enableVertexAttribArray(n);
   gl.enableVertexAttribArray(t);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 1",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
   bs.push(gl.createBuffer());
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[bs.length-1]);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts.concat(verts)), gl.STATIC_DRAW);
@@ -147,8 +164,10 @@ Tests.testDrawArraysMultiOutOfBounds = function(gl, prog, v,n,t) {
   gl.enableVertexAttribArray(v);
   gl.enableVertexAttribArray(n);
   gl.enableVertexAttribArray(t);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 4, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 2",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 3",
+      function(){gl.drawArrays(gl.TRIANGLES, 4, 2);});
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[0]);
   gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[3]);
@@ -158,8 +177,10 @@ Tests.testDrawArraysMultiOutOfBounds = function(gl, prog, v,n,t) {
   gl.enableVertexAttribArray(v);
   gl.enableVertexAttribArray(n);
   gl.enableVertexAttribArray(t);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 4, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 4",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 5",
+      function(){gl.drawArrays(gl.TRIANGLES, 4, 2);});
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[0]);
   gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[1]);
@@ -169,8 +190,10 @@ Tests.testDrawArraysMultiOutOfBounds = function(gl, prog, v,n,t) {
   gl.enableVertexAttribArray(v);
   gl.enableVertexAttribArray(n);
   gl.enableVertexAttribArray(t);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 6",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 7",
+      function(){gl.drawArrays(gl.TRIANGLES, 3, 2);});
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[3]);
   gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);
   gl.bindBuffer(gl.ARRAY_BUFFER, bs[3]);
@@ -180,10 +203,14 @@ Tests.testDrawArraysMultiOutOfBounds = function(gl, prog, v,n,t) {
   gl.enableVertexAttribArray(v);
   gl.enableVertexAttribArray(n);
   gl.enableVertexAttribArray(t);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 4, 1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 4);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, 4);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 8",
+      function(){gl.drawArrays(gl.TRIANGLES, 4, 1);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "zero count???",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 4);});
+  assertGLError(gl, gl.INVALID_OPERATION, "multi array 9",
+      function(){gl.drawArrays(gl.TRIANGLES, 1, 4);});
   bs.forEach(function(b){ gl.deleteBuffer(b) });
 }
 
@@ -191,10 +218,14 @@ Tests.testDrawArraysMultiOutOfBounds = function(gl, prog, v,n,t) {
 Tests.testDrawArraysVBOOutOfBounds = function(gl, prog, v,n,t) {
   var vbo = new VBO(gl, {size:3, data:Quad.vertices});
   vbo.use(v);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 6, 1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 7);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, 6);});
+  assertGLError(gl, gl.INVALID_OPERATION, "1",
+      function(){gl.drawArrays(gl.TRIANGLES, 6, 1);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "3",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 7);});
+  assertGLError(gl, gl.INVALID_OPERATION, "4",
+      function(){gl.drawArrays(gl.TRIANGLES, 1, 6);});
   vbo.destroy();
 }
 
@@ -206,10 +237,14 @@ Tests.testDrawArraysVBOMultiOutOfBounds = function(gl, prog, v,n,t) {
     {size:3, data:Quad.normals},
     {size:2, data:Quad.texcoords});
   vbo.use(v, n, t);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 6, 1);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, -1, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 7);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, 6);});
+  assertGLError(gl, gl.INVALID_OPERATION, "1",
+      function(){gl.drawArrays(gl.TRIANGLES, 6, 1);});
+  assertGLError(gl, gl.INVALID_VALUE, "negative count",
+      function(){gl.drawArrays(gl.TRIANGLES, -1, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "2",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 7);});
+  assertGLError(gl, gl.INVALID_OPERATION, "3",
+      function(){gl.drawArrays(gl.TRIANGLES, 1, 6);});
   vbo.destroy();
 }
 
@@ -221,26 +256,27 @@ Tests.testDrawArraysOOBShaderJuggle = function(gl, prog, v,n,t) {
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo.vbos[0]);
   gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(v);
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 2);});
+  assertGLError(gl, gl.INVALID_OPERATION, "offset too big",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 2);});
   var sh2 = new Shader(gl, 'vert', 'frag');
   sh2.use();
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo.vbos[1]);
   gl.vertexAttribPointer(sh2.attrib('Vertex'), 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(sh2.attrib('Vertex'));
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 3);});
+  assertGLError(gl, gl.INVALID_OPERATION, "offset too big 2",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 3);});
   prog.use();
   gl.vertexAttribPointer(prog.attrib('Vertex'), 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(prog.attrib('Vertex'));
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 2);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 0, 3);});
+  assertGLError(gl, gl.INVALID_OPERATION, "offset too big 3",
+      function(){gl.drawArrays(gl.TRIANGLES, 0, 3);});
   sh2.destroy();
 }
 
 </script>
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
-
   attribute vec3 Vertex;
   attribute vec3 Normal;
   attribute vec2 Tex;
@@ -253,8 +289,9 @@ Tests.testDrawArraysOOBShaderJuggle = function(gl, prog, v,n,t) {
   }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
-
+  #ifdef GL_ES
+precision highp float;
+#endif
   varying vec4 texCoord0;
   void main()
   {

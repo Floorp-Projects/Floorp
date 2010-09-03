@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '10.4.js';
 
 START("10.4 - toXMLList");
 

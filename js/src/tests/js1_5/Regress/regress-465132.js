@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465132.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465132;
 var summary = 'TM: Mathematical constants should be constant';

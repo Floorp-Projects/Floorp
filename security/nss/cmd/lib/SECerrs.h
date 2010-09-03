@@ -562,3 +562,8 @@ ER3(SEC_ERROR_BAD_INFO_ACCESS_METHOD,      		(SEC_ERROR_BASE + 170),
 ER3(SEC_ERROR_CRL_IMPORT_FAILED,        		(SEC_ERROR_BASE + 171),
 "Error attempting to import a CRL.")
 
+ER3(SEC_ERROR_EXPIRED_PASSWORD,        		(SEC_ERROR_BASE + 172),
+"The password expired.")
+
+ER3(SEC_ERROR_LOCKED_PASSWORD,        		(SEC_ERROR_BASE + 173),
+"The password is locked.")

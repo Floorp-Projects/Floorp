@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-313500.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 313500;
 var summary = 'Root access to "prototype" property';

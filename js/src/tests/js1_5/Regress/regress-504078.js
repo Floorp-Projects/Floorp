@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-504078.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 504078;
 var summary = 'Iterations over global object';

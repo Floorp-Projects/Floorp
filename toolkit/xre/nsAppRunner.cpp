@@ -41,11 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/ContentParent.h"
-using mozilla::dom::ContentParent;
-#endif
-
 #if defined(XP_OS2) && defined(MOZ_OS2_HIGH_MEMORY)
 // os2safe.h has to be included before os2.h, needed for high mem
 #include <os2safe.h>
@@ -54,8 +49,20 @@ using mozilla::dom::ContentParent;
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #if defined(MOZ_WIDGET_QT)
-#include <qwidget.h>
-#include <qapplication.h>
+#include <QtGui/QApplication>
+#include <QtCore/QScopedPointer>
+#include <QtGui/QApplication>
+#include <QtGui/QInputContextFactory>
+#include <QtGui/QInputContext>
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+#include <MApplication>
+#include "MozMeegoAppService.h"
+#endif // MOZ_ENABLE_MEEGOTOUCH
+#endif // MOZ_WIDGET_QT
+
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentParent.h"
+using mozilla::dom::ContentParent;
 #endif
 
 #include "nsAppRunner.h"
@@ -1157,10 +1164,6 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 
     NS_ShutdownXPCOM(mServiceManager);
     mServiceManager = nsnull;
-
-#ifdef MOZ_OMNIJAR
-    mozilla::SetOmnijar(nsnull);
-#endif
   }
 }
 
@@ -1218,16 +1221,6 @@ ScopedXPCOMStartup::Initialize()
   NS_ASSERTION(gDirServiceProvider, "Should not get here!");
 
   nsresult rv;
-#ifdef MOZ_OMNIJAR
-  nsCOMPtr<nsILocalFile> lf;
-  char *omnijarPath = getenv("OMNIJAR_PATH");
-  if (omnijarPath)
-    rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE, getter_AddRefs(lf));
-  else
-    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
-  if (NS_SUCCEEDED(rv))
-    mozilla::SetOmnijar(lf);
-#endif
 
 #ifndef MOZ_ENABLE_LIBXUL
 #ifndef _BUILD_STATIC_BIN
@@ -2548,6 +2541,9 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   
   file->SetNativeLeafName(NS_LITERAL_CSTRING("XPC" PLATFORM_FASL_SUFFIX));
   file->Remove(PR_FALSE);
+
+  file->SetNativeLeafName(NS_LITERAL_CSTRING("startupCache"));
+  file->Remove(PR_TRUE);
 }
 
 // To support application initiated restart via nsIAppStartup.quit, we
@@ -3178,9 +3174,32 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG, PR_FALSE);
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
-    QApplication app(gArgc, gArgv);
 
-    QStringList nonQtArguments = app.arguments();
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+    QScopedPointer<QApplication> app;
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      MozMeegoAppService *appService = new MozMeegoAppService;
+      app.reset(new MApplication(gArgc, gArgv, appService));
+    } else {
+      app.reset(new QApplication(gArgc, gArgv));
+    }
+#else
+    QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
+#endif
+
+#if MOZ_PLATFORM_MAEMO > 5
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      // try to get the MInputContext if possible to support the MeeGo VKB
+      QInputContext* inputContext = app->inputContext();
+      if (inputContext && inputContext->identifierName() != "MInputContext") {
+          QInputContext* context = QInputContextFactory::create("MInputContext",
+                                                                app.data());
+          if (context)
+              app->setInputContext(context);
+      }
+    }
+#endif
+    QStringList nonQtArguments = app->arguments();
     gQtOnlyArgc = 1;
     gQtOnlyArgv = (char**) malloc(sizeof(char*) 
                   * (gRestartArgc - nonQtArguments.size() + 2));
@@ -3636,10 +3655,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef XP_MACOSX
-          // Set up ability to respond to system (Apple) events. This must be
-          // done before setting up the command line service.
-          SetupMacApplicationDelegate();
-
           // we re-initialize the command-line service and do appleevents munging
           // after we are sure that we're not restarting
           cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
@@ -3650,6 +3665,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           rv = cmdLine->Init(gArgc, gArgv,
                              workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
           NS_ENSURE_SUCCESS(rv, 1);
+          
+          // Set up ability to respond to system (Apple) events.
+          SetupMacApplicationDelegate();
 #endif
 
           MOZ_SPLASHSCREEN_UPDATE(70);
@@ -3801,16 +3819,6 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 #if defined(OS_WIN)
   CommandLine::Init(aArgc, aArgv);
 #else
-#ifdef MOZ_OMNIJAR
-  nsCOMPtr<nsILocalFile> lf;
-  char *omnijarPath = getenv("OMNIJAR_PATH");
-  if (omnijarPath)
-    rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE, getter_AddRefs(lf));
-  else
-    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
-  if (NS_SUCCEEDED(rv))
-    mozilla::SetOmnijar(lf);
-#endif
 
   // these leak on error, but that's OK: we'll just exit()
   char** canonArgs = new char*[aArgc];
@@ -3842,6 +3850,25 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
   delete[] canonArgs;
 #endif
 #endif
+
+#ifdef MOZ_OMNIJAR
+  const char *omnijarPath = nsnull;
+  ArgResult ar = CheckArg("omnijar", PR_FALSE, &omnijarPath);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -omnijar requires an omnijar path\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!omnijarPath)
+    return rv;
+
+  nsCOMPtr<nsILocalFile> omnijar;
+  rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE,
+                             getter_AddRefs(omnijar));
+  if (NS_SUCCEEDED(rv))
+    mozilla::SetOmnijar(omnijar);
+#endif
+
   return rv;
 }
 

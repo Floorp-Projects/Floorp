@@ -42,7 +42,6 @@
 #define __MAI_INTERFACE_SELECTION_H__
 
 #include "nsMai.h"
-#include "nsIAccessibleSelectable.h"
 
 G_BEGIN_DECLS
 

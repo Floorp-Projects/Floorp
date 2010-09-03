@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-152646.js';
 var UBound = 0;
 var BUGNUMBER = 152646;
 var summary = 'Testing expressions with large numbers of parentheses';

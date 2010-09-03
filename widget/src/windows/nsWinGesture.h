@@ -165,6 +165,45 @@ typedef struct tagGESTURENOTIFYSTRUCT {
 
 #endif /* #ifndef HGESTUREINFO */
 
+#ifndef HTOUCHINPUT // needs WINVER >= 0x0601
+
+typedef struct _TOUCHINPUT {
+  LONG      x;
+  LONG      y;
+  HANDLE    hSource;
+  DWORD     dwID;
+  DWORD     dwFlags;
+  DWORD     dwMask;
+  DWORD     dwTime;
+  ULONG_PTR dwExtraInfo;
+  DWORD     cxContact;
+  DWORD     cyContact;
+} TOUCHINPUT, *PTOUCHINPUT;
+
+typedef HANDLE HTOUCHINPUT;
+
+#define WM_TOUCH 0x0240
+
+#define TOUCHEVENTF_MOVE       0x0001
+#define TOUCHEVENTF_DOWN       0x0002
+#define TOUCHEVENTF_UP         0x0004
+#define TOUCHEVENTF_INRANGE    0x0008
+#define TOUCHEVENTF_PRIMARY    0x0010
+#define TOUCHEVENTF_NOCOALESCE 0x0020
+#define TOUCHEVENTF_PEN        0x0040
+#define TOUCHEVENTF_PALM       0x0080
+
+#define TOUCHINPUTMASKF_TIMEFROMSYSTEM 0x0001
+#define TOUCHINPUTMASKF_EXTRAINFO      0x0002
+#define TOUCHINPUTMASKF_CONTACTAREA    0x0004
+
+#define TOUCH_COORD_TO_PIXEL(C) (C/100)
+
+#define TWF_FINETOUCH          0x0001
+#define TWF_WANTPALM           0x0002
+
+#endif /* #ifndef HTOUCHINPUT */
+
 class nsPointWin : public nsIntPoint
 {
 public:
@@ -196,6 +235,10 @@ public:
 public:
   PRBool SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDirection aDirection);
   PRBool ShutdownWinGestureSupport();
+  PRBool RegisterTouchWindow(HWND hWnd);
+  PRBool UnregisterTouchWindow(HWND hWnd);
+  PRBool GetTouchInputInfo(HTOUCHINPUT hTouchInput, PRUint32 cInputs, PTOUCHINPUT pInputs);
+  PRBool CloseTouchInputHandle(HTOUCHINPUT hTouchInput);
   PRBool IsAvailable();
   
   // Simple gesture process
@@ -233,6 +276,10 @@ private:
   typedef BOOL (WINAPI * BeginPanningFeedbackPtr)(HWND hWnd);
   typedef BOOL (WINAPI * EndPanningFeedbackPtr)(HWND hWnd, BOOL fAnimateBack);
   typedef BOOL (WINAPI * UpdatePanningFeedbackPtr)(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
+  typedef BOOL (WINAPI * RegisterTouchWindowPtr)(HWND hWnd, ULONG flags);
+  typedef BOOL (WINAPI * UnregisterTouchWindowPtr)(HWND hWnd);
+  typedef BOOL (WINAPI * GetTouchInputInfoPtr)(HTOUCHINPUT hTouchInput, PRUint32 cInputs, PTOUCHINPUT pInputs, PRInt32 cbSize);
+  typedef BOOL (WINAPI * CloseTouchInputHandlePtr)(HTOUCHINPUT hTouchInput);
 
   // Static function pointers
   static GetGestureInfoPtr getGestureInfo;
@@ -243,13 +290,16 @@ private:
   static BeginPanningFeedbackPtr beginPanningFeedback;
   static EndPanningFeedbackPtr endPanningFeedback;
   static UpdatePanningFeedbackPtr updatePanningFeedback;
+  static RegisterTouchWindowPtr registerTouchWindow;
+  static UnregisterTouchWindowPtr unregisterTouchWindow;
+  static GetTouchInputInfoPtr getTouchInputInfo;
+  static CloseTouchInputHandlePtr closeTouchInputHandle;
 
   // Delay load info 
   PRBool InitLibrary();
 
   static HMODULE sLibraryHandle;
   static const PRUnichar kGestureLibraryName[];
-  static const PRUnichar kThemeLibraryName[];
 
   // Pan and feedback state
   nsPointWin mPanIntermediate;

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-470176.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470176;
 var summary = 'let-fun should not be able to modify constants';

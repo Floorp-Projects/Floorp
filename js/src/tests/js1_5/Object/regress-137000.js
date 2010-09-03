@@ -48,7 +48,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-137000.js';
 var UBound = 0;
 var BUGNUMBER = 137000;
 var summary = 'Function param or local var with same name as a function prop';

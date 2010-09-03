@@ -5,7 +5,6 @@
  * Contributor: Robert Sayre
  */
 
-var gTestfile = 'regress-366941.js';
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 366941;

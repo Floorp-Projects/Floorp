@@ -1,4 +1,3 @@
-var gTestfile = 'strict-warning.js';
 // Turn on strict mode and warnings-as-errors mode.
 if (options().split().indexOf('strict') == -1)
     options('strict');

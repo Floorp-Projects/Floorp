@@ -60,6 +60,8 @@
 #include "nsContentUtils.h"
 #include "nsIPluginWidget.h"
 #include "nsXULPopupManager.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
@@ -333,11 +335,19 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::FlushDelayedResize()
+NS_IMETHODIMP nsViewManager::FlushDelayedResize(PRBool aDoReflow)
 {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
-    mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+    if (aDoReflow) {
+      DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
+      mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+    } else if (mObserver) {
+      nsCOMPtr<nsIPresShell> shell = do_QueryInterface(mObserver);
+      nsPresContext* presContext = shell->GetPresContext();
+      if (presContext) {
+        presContext->SetVisibleArea(nsRect(nsPoint(0, 0), mDelayedResize));
+      }
+    }
   }
   return NS_OK;
 }
@@ -655,7 +665,35 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
   }
 }
 
-NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
+static PRBool
+ShouldIgnoreInvalidation(nsViewManager* aVM)
+{
+  while (aVM) {
+    nsIViewObserver* vo = aVM->GetViewObserver();
+    if (vo && vo->ShouldIgnoreInvalidation()) {
+      return PR_TRUE;
+    }
+    nsView* view = aVM->GetRootView()->GetParent();
+    aVM = view ? view->GetViewManager() : nsnull;
+  }
+  return PR_FALSE;
+}
+
+nsresult nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect,
+                                   PRUint32 aUpdateFlags)
+{
+  // If painting is suppressed in the presshell or an ancestor drop all
+  // invalidates, it will invalidate everything when it unsuppresses.
+  if (ShouldIgnoreInvalidation(this)) {
+    return NS_OK;
+  }
+
+  return UpdateViewNoSuppression(aView, aRect, aUpdateFlags);
+}
+
+NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
+                                                     const nsRect &aRect,
+                                                     PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
 
@@ -842,7 +880,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                       : nsnull) {
             if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
                 IsViewVisible(vm->mRootView)) {
-              vm->FlushDelayedResize();
+              vm->FlushDelayedResize(PR_TRUE);
 
               // Paint later.
               vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
@@ -1612,24 +1650,7 @@ nsViewManager::FlushPendingInvalidates()
 {
   NS_ASSERTION(IsRootVM(), "Must be root VM for this to be called!");
   NS_ASSERTION(mUpdateBatchCnt == 0, "Must not be in an update batch!");
-  // XXXbz this is probably not quite OK yet, if callers can explicitly
-  // DisableRefresh while we have an event posted.
-  // NS_ASSERTION(mRefreshEnabled, "How did we get here?");
 
-  // Let all the view observers of all viewmanagers in this tree know that
-  // we're about to "paint" (this lets them get in their invalidates now so
-  // we don't go through two invalidate-processing cycles).
-  NS_ASSERTION(gViewManagers, "Better have a viewmanagers array!");
-
-  // Disable refresh while we notify our view observers, so that if they do
-  // view update batches we don't reenter this code and so that we batch
-  // all of them together.  We don't use
-  // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
-  // exact code, but we want the effect of a single big update batch.
-  ++mUpdateBatchCnt;
-  CallWillPaintOnObservers(PR_FALSE);
-  --mUpdateBatchCnt;
-  
   if (mHasPendingUpdates) {
     ProcessPendingUpdates(mRootView, PR_TRUE);
     mHasPendingUpdates = PR_FALSE;

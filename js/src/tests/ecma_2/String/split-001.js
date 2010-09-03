@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'split-001.js';
 
 /**
  *  File Name:          String/split-001.js

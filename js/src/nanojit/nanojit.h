@@ -189,6 +189,121 @@ static inline bool isU32(uintptr_t i) {
 #define alignTo(x,s)        ((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
 #define alignUp(x,s)        ((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
 
+namespace nanojit
+{
+// Define msbSet32(), lsbSet32(), msbSet64(), and lsbSet64() functions using
+// fast find-first-bit instructions intrinsics when available.
+// The fall-back implementations use iteration.
+#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
+
+    extern "C" unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask);
+    extern "C" unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
+    # pragma intrinsic(_BitScanForward)
+    # pragma intrinsic(_BitScanReverse)
+
+    // Returns the index of the most significant bit that is set.
+    static inline int msbSet32(uint32_t x) {
+        unsigned long idx;
+        _BitScanReverse(&idx, (unsigned long)(x | 1)); // the '| 1' ensures a 0 result when x==0
+        return idx;
+    }
+
+    // Returns the index of the least significant bit that is set.
+    static inline int lsbSet32(uint32_t x) {
+        unsigned long idx;
+        _BitScanForward(&idx, (unsigned long)(x | 0x80000000)); // the '| 0x80000000' ensures a 0 result when x==0
+        return idx;
+    }
+
+#if defined(_M_AMD64) || defined(_M_X64)
+    extern "C" unsigned char _BitScanForward64(unsigned long * Index, unsigned __int64 Mask);
+    extern "C" unsigned char _BitScanReverse64(unsigned long * Index, unsigned __int64 Mask);
+    # pragma intrinsic(_BitScanForward64)
+    # pragma intrinsic(_BitScanReverse64)
+
+    // Returns the index of the most significant bit that is set.
+    static inline int msbSet64(uint64_t x) {
+        unsigned long idx;
+        _BitScanReverse64(&idx, (unsigned __int64)(x | 1)); // the '| 1' ensures a 0 result when x==0
+        return idx;
+    }
+
+    // Returns the index of the least significant bit that is set.
+    static inline int lsbSet64(uint64_t x) {
+        unsigned long idx;
+        _BitScanForward64(&idx, (unsigned __int64)(x | 0x8000000000000000LL)); // the '| 0x80000000' ensures a 0 result when x==0
+        return idx;
+    }
+#else
+    // Returns the index of the most significant bit that is set.
+    static int msbSet64(uint64_t x) {
+        return (x & 0xffffffff00000000LL) ? msbSet32(uint32_t(x >> 32)) + 32 : msbSet32(uint32_t(x));
+    }
+    // Returns the index of the least significant bit that is set.
+    static int lsbSet64(uint64_t x) {
+        return (x & 0x00000000ffffffffLL) ? lsbSet32(uint32_t(x)) : lsbSet32(uint32_t(x >> 32)) + 32;
+    }
+#endif
+
+#elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+
+    // Returns the index of the most significant bit that is set.
+    static inline int msbSet32(uint32_t x) {
+        return 31 - __builtin_clz(x | 1);
+    }
+
+    // Returns the index of the least significant bit that is set.
+    static inline int lsbSet32(uint32_t x) {
+        return __builtin_ctz(x | 0x80000000);
+    }
+
+    // Returns the index of the most significant bit that is set.
+    static inline int msbSet64(uint64_t x) {
+        return 63 - __builtin_clzll(x | 1);
+    }
+
+    // Returns the index of the least significant bit that is set.
+    static inline int lsbSet64(uint64_t x) {
+        return __builtin_ctzll(x | 0x8000000000000000LL);
+    }
+
+#else
+
+    // Slow fall-back: return most significant bit set by searching iteratively.
+    static int msbSet32(uint32_t x) {
+        for (int i = 31; i >= 0; i--)
+            if ((1 << i) & x)
+                return i;
+        return 0;
+    }
+
+    // Slow fall-back: return least significant bit set by searching iteratively.
+    static int lsbSet32(uint32_t x) {
+        for (int i = 0; i < 32; i++)
+            if ((1 << i) & x)
+                return i;
+        return 31;
+    }
+
+    // Slow fall-back: return most significant bit set by searching iteratively.
+    static int msbSet64(uint64_t x) {
+        for (int i = 63; i >= 0; i--)
+            if ((1LL << i) & x)
+                return i;
+        return 0;
+    }
+
+    // Slow fall-back: return least significant bit set by searching iteratively.
+    static int lsbSet64(uint64_t x) {
+        for (int i = 0; i < 64; i++)
+            if ((1LL << i) & x)
+                return i;
+        return 63;
+    }
+
+#endif // select compiler
+} // namespace nanojit
+
 // -------------------------------------------------------------------
 // START debug-logging definitions
 // -------------------------------------------------------------------

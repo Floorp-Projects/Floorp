@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.5.4.14.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 287630;
 var summary = '15.5.4.14 - String.prototype.split(/()/)';

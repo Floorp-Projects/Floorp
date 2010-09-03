@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-416628.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 416628;
 var summary = 'O(n^2) blowup due to overlong cx->tempPool arena list';

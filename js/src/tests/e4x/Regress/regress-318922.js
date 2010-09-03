@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-318922.js';
 
 var summary = 'E4X - Do not crash on XML initializer <b{b}>';
 var BUGNUMBER = 318922;

@@ -57,6 +57,7 @@
 #include "nsIContentSniffer.h"
 #include "nsCategoryCache.h"
 #include "nsINetworkLinkService.h"
+#include "nsAsyncRedirectVerifyHelper.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -95,8 +96,9 @@ public:
 
     // Called by channels before a redirect happens. This notifies the global
     // redirect observers.
-    nsresult OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                               PRUint32 flags);
+    nsresult AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
+                                    PRUint32 flags,
+                                    nsAsyncRedirectVerifyHelper *helper);
 
     // Gets the array of registered content sniffers
     const nsCOMArray<nsIContentSniffer>& GetContentSniffers() {

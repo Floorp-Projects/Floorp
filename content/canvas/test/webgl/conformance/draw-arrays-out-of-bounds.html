@@ -77,11 +77,11 @@ debug("")
 debug("Test buffer with interleaved (3+2) float vectors")
 
 var program2 = createProgram(context,
-			     "attribute vec3 aOne;" +
-			     "attribute vec2 aTwo;" +
-			     "void main() { gl_Position = vec4(aOne, 1.0) + vec4(aTwo, 0.0, 1.0); }",
-			     "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
-			     [ "aOne", "aTwo" ]);
+                             "attribute vec3 aOne;" +
+                             "attribute vec2 aTwo;" +
+                             "void main() { gl_Position = vec4(aOne, 1.0) + vec4(aTwo, 0.0, 1.0); }",
+                             "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
+                             [ "aOne", "aTwo" ]);
 if (!program2) {
     testFailed("failed to create test program");
 }

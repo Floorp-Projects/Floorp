@@ -55,7 +55,7 @@
 
 //----------------------------------------------------------------------
 
-nsDOMAttributeMap::nsDOMAttributeMap(nsIContent* aContent)
+nsDOMAttributeMap::nsDOMAttributeMap(Element* aContent)
   : mContent(aContent)
 {
   // We don't add a reference to our content. If it goes away,

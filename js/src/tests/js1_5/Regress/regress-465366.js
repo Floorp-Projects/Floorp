@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465366.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465366;
 var summary = 'TM: JIT: error with multiplicative loop';

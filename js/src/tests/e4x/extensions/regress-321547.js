@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-321547.js';
 
 var summary = "Operator .. should not implicitly quote its right operand";
 var BUGNUMBER = 321547;

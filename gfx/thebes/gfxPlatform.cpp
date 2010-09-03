@@ -84,9 +84,9 @@
 
 #include "mozilla/FunctionTimer.h"
 
-gfxPlatform *gPlatform = nsnull;
+#include "nsIGfxInfo.h"
 
-PRInt32 gfxPlatform::sDPI = -1;
+gfxPlatform *gPlatform = nsnull;
 
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nsnull;
@@ -222,6 +222,17 @@ gfxPlatform::Init()
 
     gfxAtoms::RegisterAtoms();
 
+    /* Initialize the GfxInfo service.
+     * Note: we can't call functions on GfxInfo that depend
+     * on gPlatform until after it has been initialized
+     * below. GfxInfo initialization annotates our
+     * crash reports so we want to do it before
+     * we try to load any drivers and do device detection
+     * incase that code crashes. See bug #591561. */
+    nsCOMPtr<nsIGfxInfo> gfxInfo;
+    /* this currently will only succeed on Windows */
+    gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+
 #if defined(XP_WIN)
     gPlatform = new gfxWindowsPlatform;
 #elif defined(XP_MACOSX)
@@ -239,6 +250,15 @@ gfxPlatform::Init()
 #endif
     if (!gPlatform)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    gPlatform->mScreenReferenceSurface =
+      gPlatform->CreateOffscreenSurface(gfxIntSize(1,1),
+                                        gfxASurface::ImageFormatARGB32);
+    if (!gPlatform->mScreenReferenceSurface) {
+      NS_ERROR("Could not initialize mScreenReferenceSurface");
+      Shutdown();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     nsresult rv;
 
@@ -1061,13 +1081,6 @@ static void MigratePrefs()
         prefs->ClearUserPref(CMPrefNameOld);
     }
 
-}
-
-void
-gfxPlatform::InitDisplayCaps()
-{
-    // Fall back to something sane
-    gfxPlatform::sDPI = 96;
 }
 
 // default SetupClusterBoundaries, based on Unicode properties;

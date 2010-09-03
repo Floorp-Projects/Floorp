@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+  <style>
+    div.spacer {width:20px; height: 20px;}
+    table {background-color: lime;}
+    td {background-color: green;}
+  </style>
+  <script>
+    function testIt() {
+      document.body.offsetWidth;
+      var table = document.getElementsByTagName("TABLE")[0];
+      table.setAttribute("cellpadding", "30px");
+    }
+  </script>
+  </head>
+  <body onload="testIt();">
+    <table><tr>
+        <td> <div class="spacer"></div> </td></tr>
+    </table>
+  </body>
+</html>

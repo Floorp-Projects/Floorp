@@ -45,11 +45,13 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 	browser_HUDServiceTestsAll.js \
+	browser_webconsole_netlogging.js \
 	$(NULL)
 
 _BROWSER_TEST_PAGES = \
 	test-console.html \
 	test-network.html \
+	test-network-request.html \
 	test-mutation.html \
 	testscript.js \
 	test-filter.html \
@@ -57,6 +59,9 @@ _BROWSER_TEST_PAGES = \
 	test-data.json \
 	test-property-provider.html \
 	test-error.html \
+	test-duplicate-error.html \
+	test-image.png \
+	test-encoding-ISO-8859-1.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

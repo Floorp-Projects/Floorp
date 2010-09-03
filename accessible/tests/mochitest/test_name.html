@@ -11,9 +11,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/name.js"></script>
+          src="name.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -23,8 +23,8 @@
       // Simple label provided via ARIA
       testName("btn_simple_aria_label", "I am a button");
 
-      // aria-label and aria-labelledby, expect aria-label
-      testName("btn_both_aria_labels", "I am a button, two");
+      // aria-label and aria-labelledby, expect aria-labelledby
+      testName("btn_both_aria_labels", "text I am a button, two");
 
       //////////////////////////////////////////////////////////////////////////
       // aria-labelledby
@@ -207,7 +207,7 @@
   <br/>
   <!-- aria-label plus aria-labelledby -->
   <span id="btn_both_aria_labels" role="button" aria-label="I am a button, two"
-        aria-labelledby="labelledby_text"/>
+        aria-labelledby="labelledby_text btn_both_aria_labels"/>
   <br/>
 
   <!-- aria-labelledby, single relation -->

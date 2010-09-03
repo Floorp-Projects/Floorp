@@ -49,6 +49,9 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
+class nsIScriptContext;
+class nsPIDOMWindow;
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -72,20 +75,16 @@ public:
         NS_ASSERTION(mLiveRequests.IsEmpty(), "Huh?!");
       }
 
-      IDBRequest* GenerateRequest() {
-        IDBRequest* request = new IDBRequest(this, false);
-        if (!mLiveRequests.AppendElement(request)) {
-          NS_ERROR("Append failed!");
-        }
-        return request;
+      already_AddRefed<IDBRequest>
+      GenerateRequest(nsIScriptContext* aScriptContext,
+                      nsPIDOMWindow* aOwner) {
+        return GenerateRequestInternal(aScriptContext, aOwner, PR_FALSE);
       }
 
-      IDBRequest* GenerateWriteRequest() {
-        IDBRequest* request = new IDBRequest(this, true);
-        if (!mLiveRequests.AppendElement(request)) {
-          NS_ERROR("Append failed!");
-        }
-        return request;
+      already_AddRefed<IDBRequest>
+      GenerateWriteRequest(nsIScriptContext* aScriptContext,
+                           nsPIDOMWindow* aOwner) {
+        return GenerateRequestInternal(aScriptContext, aOwner, PR_TRUE);
       }
 
       void NoteDyingRequest(IDBRequest* aRequest) {
@@ -94,6 +93,11 @@ public:
       }
 
     private:
+      already_AddRefed<IDBRequest>
+      GenerateRequestInternal(nsIScriptContext* aScriptContext,
+                              nsPIDOMWindow* aOwner,
+                              PRBool aWriteRequest);
+
       // XXXbent Assuming infallible nsTArray here, make sure it lands!
       nsAutoTArray<IDBRequest*, 1> mLiveRequests;
   };
@@ -113,8 +117,11 @@ public:
 
 private:
   // Only called by IDBRequestGenerator::Generate().
-  IDBRequest(Generator* aGenerator,
-             bool aWriteRequest);
+  IDBRequest()
+  : mReadyState(nsIIDBRequest::INITIAL),
+    mAborted(PR_FALSE),
+    mWriteRequest(PR_FALSE)
+  { }
 
   nsRefPtr<Generator> mGenerator;
 
@@ -122,11 +129,12 @@ protected:
   // Called by Release().
   ~IDBRequest();
 
-  PRUint16 mReadyState;
-  PRBool mAborted;
-  PRBool mWriteRequest;
   nsRefPtr<nsDOMEventListenerWrapper> mOnSuccessListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+
+  PRUint16 mReadyState;
+  PRPackedBool mAborted;
+  PRPackedBool mWriteRequest;
 };
 
 END_INDEXEDDB_NAMESPACE

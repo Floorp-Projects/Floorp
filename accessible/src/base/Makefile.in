@@ -49,12 +49,12 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
   AccCollector.cpp \
+  AccEvent.cpp \
   AccGroupInfo.cpp \
   AccIterator.cpp \
   filters.cpp \
   nsAccDocManager.cpp \
   nsAccessNode.cpp \
-  nsAccEvent.cpp \
   nsARIAGridAccessible.cpp \
   nsARIAMap.cpp \
   nsDocAccessible.cpp \
@@ -91,6 +91,7 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
   -I$(srcdir) \
+  -I$(srcdir)/../xpcom \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
   -I$(srcdir)/../../../layout/generic \

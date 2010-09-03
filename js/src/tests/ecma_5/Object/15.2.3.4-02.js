@@ -5,7 +5,6 @@
  *   Jeff Walden <jwalden+code@mit.edu>
  */
 
-var gTestfile = '15.2.3.4-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 518663;
 var summary = 'Object.getOwnPropertyNames: array objects';

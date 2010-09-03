@@ -186,7 +186,7 @@ check::
 	mkdir unify-sort-test unify-sort-test/a unify-sort-test/b
 	printf "lmn\nabc\nxyz\n" > unify-sort-test/a/file.foo
 	printf "xyz\nlmn\nabc" > unify-sort-test/b/file.foo
-	printf "abc\nlmn\nxyz\n" > unify-sort-test/expected-result
+	printf "lmn\nabc\nxyz\n" > unify-sort-test/expected-result
 	@if ! $(srcdir)/macosx/universal/unify --unify-with-sort "\.foo$$" \
           ./unify-sort-test/a ./unify-sort-test/b \
           ./unify-sort-test/c; then \
@@ -206,5 +206,5 @@ libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
 	$(INSTALL) $< $(DIST)/bin
 endif
 
-GARBAGE += automationutils.pyc
+GARBAGE += $(srcdir)/automationutils.pyc
 endif # ENABLE_TESTS

@@ -65,7 +65,6 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIFormControl.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -217,9 +216,11 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
         break;
       case NS_FORM_INPUT_SUBMIT:
         break;
+      case NS_FORM_INPUT_EMAIL:
       case NS_FORM_INPUT_SEARCH:
       case NS_FORM_INPUT_TEXT:
       case NS_FORM_INPUT_TEL:
+      case NS_FORM_INPUT_URL:
         mEmbedCtxType |= GTK_MOZ_EMBED_CTX_INPUT;
         break;
       case NS_FORM_LABEL:
@@ -270,7 +271,7 @@ EmbedContextMenuInfo::GetSelectedText()
   if (mCtxFormType != 0 && mEventNode) {
     PRInt32 TextLength = 0, selStart = 0, selEnd = 0;
     if (mCtxFormType == NS_FORM_INPUT_TEXT || mCtxFormType == NS_FORM_INPUT_FILE) {
-      nsCOMPtr<nsIDOMNSHTMLInputElement> nsinput = do_QueryInterface(mEventNode, &rv);
+      nsCOMPtr<nsIDOMHTMLInputElement> nsinput = do_QueryInterface(mEventNode, &rv);
       if (NS_SUCCEEDED(rv) && nsinput)
         nsinput->GetTextLength(&TextLength);
       if (TextLength > 0) {

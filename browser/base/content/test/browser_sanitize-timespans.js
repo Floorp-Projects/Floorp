@@ -11,7 +11,7 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
 function test() {
   
   var hoursSinceMidnight = new Date().getHours();
-  var minutesSinceMidnight = new Date().getMinutes();
+  var minutesSinceMidnight = hoursSinceMidnight * 60 + new Date().getMinutes();
 
   setupHistory();
   setupFormHistory();

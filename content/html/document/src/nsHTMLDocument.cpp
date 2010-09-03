@@ -206,6 +206,19 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 // ==================================================================
 // =
 // ==================================================================
+static void
+ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
+{
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning,
+                                  nsnull, 0,
+                                  static_cast<nsIDocument*>(aDoc)->
+                                    GetDocumentURI(),
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM Events");
+}
+
 nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 {
@@ -243,7 +256,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
   NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration()),
                "Shouldn't traverse nsHTMLDocument!");
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mImages)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEmbeds)
@@ -252,13 +264,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mForms, nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mFormControls,
                                                        nsIDOMNodeList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mImageMaps,
+                                                       nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWyciwygChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMidasCommandManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFragmentParser)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImages)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mApplets)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEmbeds)
@@ -266,6 +279,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAnchors)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mForms)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFormControls)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWyciwygChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMidasCommandManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFragmentParser)
@@ -330,7 +344,6 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   mLinks = nsnull;
   mAnchors = nsnull;
 
-  mImageMaps.Clear();
   mForms = nsnull;
 
   NS_ASSERTION(!mWyciwygChannel,
@@ -1157,39 +1170,20 @@ nsHTMLDocument::SetTitle(const nsAString& aTitle)
   return nsDocument::SetTitle(aTitle);
 }
 
-nsresult
-nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
-{
-  // XXX We should order the maps based on their order in the document.
-  // XXX Otherwise scripts that add/remove maps with duplicate names
-  // XXX will cause problems
-  NS_PRECONDITION(nsnull != aMap, "null ptr");
-  if (nsnull == aMap) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (mImageMaps.AppendObject(aMap)) {
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-void
-nsHTMLDocument::RemoveImageMap(nsIDOMHTMLMapElement* aMap)
-{
-  NS_PRECONDITION(nsnull != aMap, "null ptr");
-  mImageMaps.RemoveObject(aMap);
-}
-
 nsIDOMHTMLMapElement *
 nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
-  nsAutoString name;
-  PRUint32 i, n = mImageMaps.Count();
-  nsIDOMHTMLMapElement *firstMatch = nsnull;
+  if (!mImageMaps) {
+    mImageMaps = new nsContentList(this, nsGkAtoms::map, kNameSpaceID_XHTML);
+  }
+  NS_ASSERTION(mImageMaps, "Infallible malloc failed.");
 
+  nsIDOMHTMLMapElement* firstMatch = nsnull;
+  nsAutoString name;
+  PRUint32 i, n = mImageMaps->Length(PR_TRUE);
   for (i = 0; i < n; ++i) {
-    nsIDOMHTMLMapElement *map = mImageMaps[i];
-    NS_ASSERTION(map, "Null map in map list!");
+    nsCOMPtr<nsIDOMHTMLMapElement> map(
+      do_QueryInterface(mImageMaps->GetNodeAt(i)));
 
     PRBool match;
     nsresult rv;
@@ -2375,7 +2369,10 @@ NS_IMETHODIMP
 nsHTMLDocument::GetWidth(PRInt32* aWidth)
 {
   NS_ENSURE_ARG_POINTER(aWidth);
-
+  if (!mWarnedWidthHeight) {
+    ReportUseOfDeprecatedMethod(this, "UseOfDocumentWidthWarning");
+    mWarnedWidthHeight = true;
+  }
   PRInt32 height;
   return GetBodySize(aWidth, &height);
 }
@@ -2384,7 +2381,10 @@ NS_IMETHODIMP
 nsHTMLDocument::GetHeight(PRInt32* aHeight)
 {
   NS_ENSURE_ARG_POINTER(aHeight);
-
+  if (!mWarnedWidthHeight) {
+    ReportUseOfDeprecatedMethod(this, "UseOfDocumentHeightWarning");
+    mWarnedWidthHeight = true;
+  }
   PRInt32 width;
   return GetBodySize(&width, aHeight);
 }
@@ -2557,19 +2557,6 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
   aReturn.Assign(str);
 
   return rv;
-}
-
-static void
-ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
-{
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  nsnull, 0,
-                                  static_cast<nsIDocument*>(aDoc)->
-                                    GetDocumentURI(),
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM Events");
 }
 
 NS_IMETHODIMP
@@ -3253,6 +3240,12 @@ nsHTMLDocument::EditingStateChanged()
   if (newState == eOff) {
     // Editing is being turned off.
     return TurnEditingOff();
+  }
+
+  // Flush out style changes on our _parent_ document, if any, so that
+  // our check for a presshell won't get stale information.
+  if (mParentDocument) {
+    mParentDocument->FlushPendingNotifications(Flush_Style);
   }
 
   // get editing session

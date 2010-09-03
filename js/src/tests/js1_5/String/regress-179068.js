@@ -92,7 +92,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-179068.js';
 var UBound = 0;
 var BUGNUMBER = 179068;
 var summary = 'Test that interpreter can handle string literals exceeding 64K';

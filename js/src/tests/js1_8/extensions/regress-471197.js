@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-471197.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 471197;
 var summary = 'Do not crash when cx->thread is null';

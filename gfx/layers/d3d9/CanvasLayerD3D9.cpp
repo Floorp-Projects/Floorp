@@ -58,11 +58,12 @@ CanvasLayerD3D9::Initialize(const Data& aData)
     NS_ASSERTION(aData.mGLContext == nsnull,
                  "CanvasLayer can't have both surface and GLContext");
     mNeedsYFlip = PR_FALSE;
+    mDataIsPremultiplied = PR_TRUE;
   } else if (aData.mGLContext) {
     NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
     mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
-    mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+    mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = PR_TRUE;
   } else {
     NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
@@ -70,9 +71,17 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
 
-  device()->CreateTexture(mBounds.width, mBounds.height, 1, 0,
-                          D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
-                          getter_AddRefs(mTexture), NULL);
+  if (mD3DManager->deviceManager()->HasDynamicTextures()) {
+    device()->CreateTexture(mBounds.width, mBounds.height, 1, D3DUSAGE_DYNAMIC,
+                            D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
+                            getter_AddRefs(mTexture), NULL);    
+  } else {
+    // D3DPOOL_MANAGED is fine here since we require Dynamic Textures for D3D9Ex
+    // devices.
+    device()->CreateTexture(mBounds.width, mBounds.height, 1, 0,
+                            D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+                            getter_AddRefs(mTexture), NULL);
+  }
 }
 
 void
@@ -111,9 +120,15 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
     // For simplicity, we read the entire framebuffer for now -- in
     // the future we should use aRect, though with WebGL we don't
     // have an easy way to generate one.
-    mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
-                            LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
-                            destination);
+    nsRefPtr<gfxImageSurface> tmpSurface =
+      new gfxImageSurface(destination,
+                          gfxIntSize(mBounds.width, mBounds.height),
+                          mBounds.width * 4,
+                          gfxASurface::ImageFormatARGB32);
+    mGLContext->ReadPixelsIntoImageSurface(0, 0,
+                                           mBounds.width, mBounds.height,
+                                           tmpSurface);
+    tmpSurface = nsnull;
 
     // Put back the previous framebuffer binding.
     if (currentFramebuffer != mCanvasFramebuffer)
@@ -149,7 +164,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
                   aRect.x * 4;
       sourceStride = sourceSurface->Stride();
     } else if (mSurface->GetType() == gfxASurface::SurfaceTypeImage) {
-      sourceSurface = static_cast<gfxImageSurface*>(sourceSurface.get());
+      sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
       if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32 &&
           sourceSurface->Format() != gfxASurface::ImageFormatRGB24)
       {
@@ -165,7 +180,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
       nsRefPtr<gfxContext> ctx = new gfxContext(sourceSurface);
       ctx->Translate(gfxPoint(-aRect.x, -aRect.y));
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx->SetSource(sourceSurface);
+      ctx->SetSource(mSurface);
       ctx->Paint();
       startBits = sourceSurface->Data();
       sourceStride = sourceSurface->Stride();
@@ -203,13 +218,13 @@ CanvasLayerD3D9::RenderLayer()
   quadTransform[0][0] = (float)mBounds.width;
   if (mNeedsYFlip) {
     quadTransform[1][1] = (float)-mBounds.height;
-    quadTransform[3][1] = (float)mBounds.height - 0.5f;
+    quadTransform[3][1] = (float)mBounds.height;
   } else {
     quadTransform[1][1] = (float)mBounds.height;
-    quadTransform[3][1] = -0.5f;
+    quadTransform[3][1] = 0.0f;
   }
   quadTransform[2][2] = 1.0f;
-  quadTransform[3][0] = -0.5f;
+  quadTransform[3][0] = 0.0f;
   quadTransform[3][3] = 1.0f;
 
   device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
@@ -224,15 +239,17 @@ CanvasLayerD3D9::RenderLayer()
   opacity[0] = GetOpacity();
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
-  mD3DManager->SetShaderMode(LayerManagerD3D9::RGBLAYER);
+  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
-  if (!mGLBufferIsPremultiplied) {
+  if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
   }
   device()->SetTexture(0, mTexture);
   device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-  if (!mGLBufferIsPremultiplied) {
+  if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
   }
 }
 

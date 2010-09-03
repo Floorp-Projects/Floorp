@@ -46,10 +46,13 @@
 /**
  * Implementation of a box blur approximation of a Gaussian blur.
  *
- * Creates an 8-bit alpha channel context for callers to draw in, blurs the
- * contents of that context and applies it as an alpha mask on a
- * different existing context.
- *
+ * Creates an 8-bit alpha channel context for callers to draw in,
+ * spreads the contents of that context, blurs the contents, and applies
+ * it as an alpha mask on a different existing context.
+ * 
+ * A spread N makes each output pixel the maximum value of all source
+ * pixels within a square of side length 2N+1 centered on the output pixel.
+ * 
  * A temporary surface is created in the Init function. The caller then draws
  * any desired content onto the context acquired through GetContext, and lastly
  * calls Paint to apply the blurred content as an alpha mask.
@@ -75,6 +78,7 @@ public:
      *  pass NULL here.
      */
     gfxContext* Init(const gfxRect& aRect,
+                     const gfxIntSize& aSpreadRadius,
                      const gfxIntSize& aBlurRadius,
                      const gfxRect* aDirtyRect,
                      const gfxRect* aSkipRect);
@@ -95,8 +99,8 @@ public:
     void PremultiplyAlpha(gfxFloat alpha);
 
     /**
-     * Does the actual blurring and mask applying. Users of this object
-     * must have drawn whatever they want to be blurred onto the internal
+     * Does the actual blurring/spreading and mask applying. Users of this
+     * object must have drawn whatever they want to be blurred onto the internal
      * gfxContext returned by GetContext before calling this.
      *
      * @param aDestinationCtx The graphics context on which to apply the
@@ -111,6 +115,10 @@ public:
     static gfxIntSize CalculateBlurRadius(const gfxPoint& aStandardDeviation);
 
 protected:
+    /**
+     * The spread radius, in pixels.
+     */
+    gfxIntSize mSpreadRadius;
     /**
      * The blur radius, in pixels.
      */

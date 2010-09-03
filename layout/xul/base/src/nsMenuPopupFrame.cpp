@@ -78,6 +78,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIBoxLayout.h"
 #include "nsIPopupBoxObject.h"
+#include "nsPIWindowRoot.h"
 #include "nsIReflowCallback.h"
 #include "nsBindingManager.h"
 #include "nsIDocShellTreeOwner.h"
@@ -319,15 +320,9 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
       baseWindow->GetMainWidget(getter_AddRefs(parentWidget));
   }
 
-#if defined(XP_MACOSX) || defined(XP_BEOS)
-  static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
-  aView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
-                      eContentTypeUI, parentWidget);
-#else
-  static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE,
-                      eContentTypeInherit, parentWidget);
-#endif
+  aView->CreateWidgetForPopup(&widgetData, parentWidget,
+                              PR_TRUE, PR_TRUE, eContentTypeUI);
+
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
   widget->SetWindowShadowStyle(GetShadowStyle());
@@ -356,7 +351,7 @@ nsMenuPopupFrame::GetShadowStyle()
   return NS_STYLE_WINDOW_SHADOW_DEFAULT;
 }
 
-// this class is used for dispatching popupshowing events asynchronously.
+// this class is used for dispatching popupshown events asynchronously.
 class nsXULPopupShownEvent : public nsRunnable
 {
 public:
@@ -512,6 +507,8 @@ void
 nsMenuPopupFrame::InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                               const nsAString& aAlign)
 {
+  mTriggerContent = nsnull;
+
   if (aAnchor.EqualsLiteral("topleft"))
     mPopupAnchor = POPUPALIGNMENT_TOPLEFT;
   else if (aAnchor.EqualsLiteral("topright"))
@@ -537,6 +534,7 @@ nsMenuPopupFrame::InitPositionFromAnchorAlign(const nsAString& aAnchor,
 
 void
 nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
+                                  nsIContent* aTriggerContent,
                                   const nsAString& aPosition,
                                   PRInt32 aXPos, PRInt32 aYPos,
                                   PRBool aAttributesOverride)
@@ -545,6 +543,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 
   mPopupState = ePopupShowing;
   mAnchorContent = aAnchorContent;
+  mTriggerContent = aTriggerContent;
   mXPos = aXPos;
   mYPos = aYPos;
   mAdjustOffsetForContextMenu = PR_FALSE;
@@ -643,13 +642,15 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 }
 
 void
-nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
+nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
+                                          PRInt32 aXPos, PRInt32 aYPos,
                                           PRBool aIsContextMenu)
 {
   EnsureWidget();
 
   mPopupState = ePopupShowing;
   mAnchorContent = nsnull;
+  mTriggerContent = aTriggerContent;
   mScreenXPos = aXPos;
   mScreenYPos = aYPos;
   mPopupAnchor = POPUPALIGNMENT_NONE;
@@ -734,10 +735,10 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
     mPopupState = ePopupOpen;
     mIsOpenChanged = PR_TRUE;
 
-    nsIFrame* parent = GetParent();
-    if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+    nsMenuFrame* menuFrame = GetParentMenu();
+    if (menuFrame) {
       nsWeakFrame weakFrame(this);
-      (static_cast<nsMenuFrame*>(parent))->PopupOpened();
+      menuFrame->PopupOpened();
       if (!weakFrame.IsAlive())
         return PR_FALSE;
     }
@@ -774,6 +775,27 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
   // don't hide the popup when it isn't open
   if (mPopupState == ePopupClosed || mPopupState == ePopupShowing)
     return;
+
+  // clear the trigger content if the popup is being closed. But don't clear
+  // it if the popup is just being made invisible as a popuphiding or command
+  // event may want to retrieve it.
+  if (aNewState == ePopupClosed) {
+    // if the popup had a trigger node set, clear the global window popup node
+    // as well
+    if (mTriggerContent) {
+      nsIDocument* doc = mContent->GetCurrentDoc();
+      if (doc) {
+        nsPIDOMWindow* win = doc->GetWindow();
+        if (win) {
+          nsCOMPtr<nsPIWindowRoot> root = win->GetTopWindowRoot();
+          if (root) {
+            root->SetPopupNode(nsnull);
+          }
+        }
+      }
+    }
+    mTriggerContent = nsnull;
+  }
 
   // when invisible and about to be closed, HidePopup has already been called,
   // so just set the new state to closed and return
@@ -813,9 +835,9 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
   if (state & NS_EVENT_STATE_HOVER)
     esm->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
 
-  nsIFrame* parent = GetParent();
-  if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
-    (static_cast<nsMenuFrame*>(parent))->PopupClosed(aDeselectMenu);
+  nsMenuFrame* menuFrame = GetParentMenu();
+  if (menuFrame) {
+    menuFrame->PopupClosed(aDeselectMenu);
   }
 }
 
@@ -1157,7 +1179,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
     hFlip = vFlip = PR_FALSE;
   }
 
-  nsRect screenRect = GetConstraintRect(anchorRect.TopLeft(), rootScreenRect);
+  nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect);
 
   // ensure that anchorRect is on screen
   if (!anchorRect.IntersectRect(anchorRect, screenRect)) {
@@ -1235,7 +1257,8 @@ nsMenuPopupFrame::GetCurrentMenuItem()
 }
 
 nsRect
-nsMenuPopupFrame::GetConstraintRect(nsPoint aAnchorPoint, nsRect& aRootScreenRect)
+nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
+                                    const nsRect& aRootScreenRect)
 {
   nsIntRect screenRectPixels;
   nsPresContext* presContext = PresContext();
@@ -1250,10 +1273,12 @@ nsMenuPopupFrame::GetConstraintRect(nsPoint aAnchorPoint, nsRect& aRootScreenRec
     // This is because we need to constrain the content to this content area,
     // so we should use the same screen. Otherwise, use the screen where the
     // anchor is located.
-    nsPoint pnt = mInContentShell ? aRootScreenRect.TopLeft() : aAnchorPoint;
-    sm->ScreenForRect(presContext->AppUnitsToDevPixels(pnt.x),
-                      presContext->AppUnitsToDevPixels(pnt.y),
-                      1, 1, getter_AddRefs(screen));
+    nsRect rect = mInContentShell ? aRootScreenRect : aAnchorRect;
+    PRInt32 width = rect.width > 0 ? presContext->AppUnitsToDevPixels(rect.width) : 1;
+    PRInt32 height = rect.height > 0 ? presContext->AppUnitsToDevPixels(rect.height) : 1;
+    sm->ScreenForRect(presContext->AppUnitsToDevPixels(rect.x),
+                      presContext->AppUnitsToDevPixels(rect.y),
+                      width, height, getter_AddRefs(screen));
     if (screen) {
       // get the total screen area if the popup is allowed to overlap it.
       if (mMenuCanOverlapOSBar && !mInContentShell)

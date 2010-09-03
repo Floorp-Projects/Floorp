@@ -61,9 +61,13 @@ const PRUint32 kDefaultTreeCacheSize = 256;
   { 0xb8, 0xe1, 0x2c, 0x44, 0xb0, 0x41, 0x85, 0xe3 }    \
 }
 
-class nsXULTreeAccessible : public nsXULSelectableAccessible
+class nsXULTreeAccessible : public nsAccessibleWrap
 {
 public:
+  using nsAccessible::GetChildCount;
+  using nsAccessible::GetChildAt;
+  using nsAccessible::GetChildAtPoint;
+
   nsXULTreeAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsISupports and cycle collection
@@ -74,9 +78,6 @@ public:
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
-
-  // nsIAccessibleSelectable
-  NS_DECL_NSIACCESSIBLESELECTABLE
 
   // nsAccessNode
   virtual PRBool IsDefunct();
@@ -91,6 +92,17 @@ public:
 
   virtual nsAccessible* GetChildAt(PRUint32 aIndex);
   virtual PRInt32 GetChildCount();
+
+  // SelectAccessible
+  virtual bool IsSelect();
+  virtual already_AddRefed<nsIArray> SelectedItems();
+  virtual PRUint32 SelectedItemCount();
+  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+  virtual bool IsItemSelected(PRUint32 aIndex);
+  virtual bool AddItemToSelection(PRUint32 aIndex);
+  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual bool SelectAll();
+  virtual bool UnselectAll();
 
   // nsXULTreeAccessible
 
@@ -140,8 +152,6 @@ protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
   nsAccessibleHashtable mAccessibleCache;
-
-  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULTreeAccessible,
@@ -162,6 +172,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXULTreeAccessible,
 class nsXULTreeItemAccessibleBase : public nsAccessibleWrap
 {
 public:
+  using nsAccessible::GetParent;
+
   nsXULTreeItemAccessibleBase(nsIContent *aContent, nsIWeakReference *aShell,
                               nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow);

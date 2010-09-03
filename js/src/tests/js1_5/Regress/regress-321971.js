@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-321971.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 321971;
 var summary = 'JSOP_FINDNAME replaces JSOP_BINDNAME';

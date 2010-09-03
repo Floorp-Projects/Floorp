@@ -423,7 +423,7 @@ nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   {
     // XXX It's probably better not to check visibility here, right?
     return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-        nsDisplayEventReceiver(this));
+        nsDisplayEventReceiver(aBuilder, this));
   }
 
   return NS_OK;
@@ -664,10 +664,9 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (childIndex == childCount - 1 && GetResizeAfter() != Grow)
     return NS_OK;
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  nsresult rv = outerPresContext->PresShell()->
-                  CreateRenderingContext(mOuter, getter_AddRefs(rc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRenderingContext> rc =
+    outerPresContext->PresShell()->GetReferenceRenderingContext();
+  NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
   nsBoxLayoutState state(outerPresContext, rc);
   mCurrentPos = 0;
   mPressed = PR_TRUE;

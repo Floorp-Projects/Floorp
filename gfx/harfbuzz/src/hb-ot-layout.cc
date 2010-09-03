@@ -74,19 +74,19 @@ _hb_ot_layout_free (hb_ot_layout_t *layout)
 static const GDEF&
 _get_gdef (hb_face_t *face)
 {
-  return likely (face->ot_layout->gdef) ? *face->ot_layout->gdef : Null(GDEF);
+  return likely (face->ot_layout && face->ot_layout->gdef) ? *face->ot_layout->gdef : Null(GDEF);
 }
 
 static const GSUB&
 _get_gsub (hb_face_t *face)
 {
-  return likely (face->ot_layout->gsub) ? *face->ot_layout->gsub : Null(GSUB);
+  return likely (face->ot_layout && face->ot_layout->gsub) ? *face->ot_layout->gsub : Null(GSUB);
 }
 
 static const GPOS&
 _get_gpos (hb_face_t *face)
 {
-  return likely (face->ot_layout->gpos) ? *face->ot_layout->gpos : Null(GPOS);
+  return likely (face->ot_layout && face->ot_layout->gpos) ? *face->ot_layout->gpos : Null(GPOS);
 }
 
 

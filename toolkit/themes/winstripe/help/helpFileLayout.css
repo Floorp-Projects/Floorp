@@ -38,14 +38,17 @@
 
 @import url('chrome://help/content/platformClasses.css');
 
-body, td, th, input {
+body,
+td,
+th,
+input {
   font-family: verdana, sans-serif;
   font-size: small;
 }
 
 body {
-	margin: 2ex;
-	max-width: 120ex;
+  margin: 2ex;
+  max-width: 120ex;
 }
 
 :link:hover,
@@ -65,30 +68,67 @@ a[href^="https://"]:after {
   content: url('chrome://help/skin/Weblink.png');
 }
 
-:link { color: #039; }
-:visited { color: #636; }
-:link:hover, :visited:hover { color: #333; }
-:link:active, :link:active { color: #000; }
+:link {
+  color: #039;
+}
+:visited {
+  color: #636;
+}
+:link:hover,
+:visited:hover {
+  color: #333;
+}
+:link:active,
+:link:active {
+  color: #000;
+}
 
-h1 { font-size: 160%; font-weight: normal; }
-h2 { font-size: 150%; font-weight: normal; }
-h3 { font-size: 120%; }
-h4 { font-size: 100%; }
-h5 { font-size: 90%; }
-h6 { font-size: 90%; border: 0; }
+h1 {
+  font-size: 160%;
+  font-weight: normal;
+}
+h2 {
+  font-size: 150%;
+  font-weight: normal;
+}
+h3 {
+  font-size: 120%;
+}
+h4 {
+  font-size: 100%;
+}
+h5 {
+  font-size: 90%;
+}
+h6 {
+  font-size: 90%;
+  border: 0;
+}
 
-h1, h2, h3, h4, h5, h6 {
-  margin: 1em 0 0.2em 0;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 1em 0 .2em;
   border-bottom: 1px solid #ccc;
   font-family: arial, verdana, sans-serif;
 }
 
-li h1, li h2, li h3, li h4, li h5, li h6 {
+li h1,
+li h2,
+li h3,
+li h4,
+li h5,
+li h6 {
   border: none;
 }
 
 
-dt { font-weight: bold; }
+dt {
+  font-weight: bold;
+}
 
 sup {
   font-size: 70%;
@@ -102,21 +142,21 @@ sup {
 .contentsBox, 
 .contentsBox > ul,
 li {
-	text-indent: 0px;
+  text-indent: 0;
 }
 
 .contentsBox > ul,
-.contentsBox ul > ul{
-	margin: 0 0 0 0;
-	list-style-type: none;
+.contentsBox ul > ul {
+  margin: 0;
+  list-style-type: none;
 }
 
 .contentsBox {
-	margin-top: 12px;
-	background-color: #eee;
-	border: 1px solid #ccc;
-	width: 300px;
-	padding: 1em;
+  margin-top: 12px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  width: 300px;
+  padding: 1em;
 }
 
 .menuPath {
@@ -130,14 +170,15 @@ table {
   border-collapse: collapse;
 }
 
-td, th {
-  border: 1px solid #ddd;    /* grey */
+td,
+th {
+  border: 1px solid #ddd;
   padding: 6px;
   vertical-align: top;
 }
 
 th {
-  background-color: #eee;    /* light grey */
+  background-color: #eee;
   font-weight: bold;
   text-align: start;
 }
@@ -145,6 +186,6 @@ th {
 .noTableBorder,
 .noTableBorder td,
 .noTableBorder th {
-	background-color: transparent;
-	border: 0px solid transparent;
+  background-color: transparent;
+  border: none;
 }

@@ -315,7 +315,11 @@ void MessageLoop::SetNestableTasksAllowed(bool allowed) {
     if (!nestable_tasks_allowed_)
       return;
     // Start the native pump if we are not already pumping.
+#ifndef CHROMIUM_MOZILLA_BUILD
     pump_->ScheduleWork();
+#else
+    pump_->ScheduleWorkForNestedLoop();
+#endif
   }
 }
 

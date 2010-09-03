@@ -42,8 +42,8 @@ const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url
 do_load_httpd_js();
 var server;
 var RESULTS = [
-  -1,
-  -1,
+  null,
+  null,
   0,
   2,
   4,
@@ -59,8 +59,8 @@ var RecommendedCallback = {
     do_check_eq(length, RESULTS.length);
 
     for (var i = 0; i < length; i++) {
-      if (addons[i].rating != RESULTS[i])
-        do_throw("Rating for " + addons[i].id + " was " + addons[i].rating + ", should have been " + RESULTS[i]);
+      if (addons[i].averageRating != RESULTS[i])
+        do_throw("Rating for " + addons[i].id + " was " + addons[i].averageRating + ", should have been " + RESULTS[i]);
     }
     server.stop(do_test_finished);
   },

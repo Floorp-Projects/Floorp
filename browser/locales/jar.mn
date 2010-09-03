@@ -6,7 +6,11 @@
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
+    locale/browser/aboutHome.dtd                   (%chrome/browser/aboutHome.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
+#ifdef MOZ_SERVICES_SYNC
+    locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
+#endif
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
@@ -61,8 +65,17 @@
     locale/browser/preferences/preferences.properties (%chrome/browser/preferences/preferences.properties)
     locale/browser/preferences/privacy.dtd            (%chrome/browser/preferences/privacy.dtd)
     locale/browser/preferences/security.dtd           (%chrome/browser/preferences/security.dtd)
+#ifdef MOZ_SERVICES_SYNC
+    locale/browser/preferences/sync.dtd               (%chrome/browser/preferences/sync.dtd)
+#endif
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
+#ifdef MOZ_SERVICES_SYNC
+    locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
+    locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
+    locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
+    locale/browser/syncGenericChange.properties         (%chrome/browser/syncGenericChange.properties)
+#endif
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 # the following files are browser-specific overrides

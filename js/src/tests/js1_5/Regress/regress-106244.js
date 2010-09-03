@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-106244.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 106244;
 var summary = 'No warning in strict mode if (a = b && c == d)...';

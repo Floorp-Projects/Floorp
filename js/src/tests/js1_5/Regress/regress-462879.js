@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-462879.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 462879;
 var summary = 'Do not assert: UPVAR_FRAME_SKIP(uva->vector[i]) == 1';

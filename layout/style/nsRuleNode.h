@@ -690,7 +690,7 @@ protected:
   const void* GetSVGResetData(nsStyleContext* aContext);
 
   already_AddRefed<nsCSSShadowArray>
-              GetShadowData(nsCSSValueList* aList,
+              GetShadowData(const nsCSSValueList* aList,
                             nsStyleContext* aContext,
                             PRBool aIsBoxShadow,
                             PRBool& inherited);
@@ -767,7 +767,11 @@ public:
   // Compute the value of an nsStyleCoord that is either a coord, a
   // percent, or a calc expression.
   static nscoord ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
-                                         nscoord aPercentageBasis);
+                                         nscoord aPercentageBasis)
+  {
+    // ComputeComputedCalc will handle coords and percents correctly
+    return ComputeComputedCalc(aCoord, aPercentageBasis);
+  }
 
   // Return whether the rule tree for which this node is the root has
   // cached data such that we need to do dynamic change handling for

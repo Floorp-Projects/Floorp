@@ -191,7 +191,7 @@ nsOuterDocAccessible::InvalidateChildren()
   // then allow nsAccDocManager to handle this case since the document
   // accessible is created and appended as a child when it's requested.
 
-  mAreChildrenInitialized = PR_FALSE;
+  mChildrenFlags = eChildrenUninitialized;
 }
 
 PRBool

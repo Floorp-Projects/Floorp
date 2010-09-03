@@ -370,6 +370,7 @@ private:
 
 struct HeadTable {
     enum {
+        HEAD_VERSION = 0x00010000,
         HEAD_MAGIC_NUMBER = 0x5F0F3CF5,
         HEAD_CHECKSUM_CALC_CONST = 0xB1B0AFBA
     };

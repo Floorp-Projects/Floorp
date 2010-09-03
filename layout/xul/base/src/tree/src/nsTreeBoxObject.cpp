@@ -114,15 +114,31 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 }
 
 nsTreeBodyFrame*
-nsTreeBoxObject::GetTreeBody()
+nsTreeBoxObject::GetTreeBody(bool aFlushLayout)
 {
+  // Make sure our frames are up to date, and layout as needed.  We
+  // have to do this before checking for our cached mTreeBody, since
+  // it might go away on style flush, and in any case if aFlushLayout
+  // is true we need to make sure to flush no matter what.
+  // XXXbz except that flushing style when we were not asked to flush
+  // layout here breaks things.  See bug 585123.
+  nsIFrame* frame;
+  if (aFlushLayout) {
+    frame = GetFrame(aFlushLayout);
+    if (!frame)
+      return nsnull;
+  }
+
   if (mTreeBody) {
+    // Have one cached already.
     return mTreeBody;
   }
 
-  nsIFrame* frame = GetFrame(PR_FALSE);
-  if (!frame)
-    return nsnull;
+  if (!aFlushLayout) {
+    frame = GetFrame(aFlushLayout);
+    if (!frame)
+      return nsnull;
+  }
 
   // Iterate over our content model children looking for the body.
   nsCOMPtr<nsIContent> content;
@@ -324,7 +340,7 @@ nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 NS_IMETHODIMP
 nsTreeBoxObject::ScrollToRow(PRInt32 aRow)
 {
-  nsTreeBodyFrame* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody(true);
   if (body)
     return body->ScrollToRow(aRow);
   return NS_OK;

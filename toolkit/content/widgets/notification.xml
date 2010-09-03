@@ -469,7 +469,7 @@
   <binding id="popup-notification">
     <content align="start">
       <xul:image class="popup-notification-icon"
-                 xbl:inherits="popupid=id"/>
+                 xbl:inherits="popupid"/>
       <xul:vbox>
         <xul:description class="popup-notification-description"
                          xbl:inherits="value=label"/>

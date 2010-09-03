@@ -41,7 +41,6 @@
 #include "nsTextControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIServiceManager.h"
 #include "nsFrameSelection.h"
@@ -300,7 +299,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     // been reflowed yet, so we can't get its used padding, but it shouldn't be
     // using percentage padding anyway.
     nsMargin childPadding;
-    if (GetFirstChild(nsnull)->GetStylePadding()->GetPadding(childPadding)) {
+    nsIFrame* firstChild = GetFirstChild(nsnull);
+    if (firstChild && firstChild->GetStylePadding()->GetPadding(childPadding)) {
       aIntrinsicSize.width += childPadding.LeftRight();
     } else {
       NS_ERROR("Percentage padding on value div?");
@@ -329,12 +329,14 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
-    nsMargin scrollbarSizes =
+    if (scrollableFrame) {
+      nsMargin scrollbarSizes =
       scrollableFrame->GetDesiredScrollbarSizes(PresContext(), aRenderingContext);
 
-    aIntrinsicSize.width  += scrollbarSizes.LeftRight();
-    
-    aIntrinsicSize.height += scrollbarSizes.TopBottom();;
+      aIntrinsicSize.width  += scrollbarSizes.LeftRight();
+
+      aIntrinsicSize.height += scrollbarSizes.TopBottom();;
+    }
   }
 
   return NS_OK;
@@ -1290,6 +1292,9 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     { // unset disabled
       flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
       selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
+      if (nsContentUtils::IsFocusedContent(mContent)) {
+        selCon->SetCaretEnabled(PR_TRUE);
+      }
     }
     editor->SetFlags(flags);
   }
@@ -1416,7 +1421,9 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   // Mark the scroll frame as being a reflow root. This will allow
   // incremental reflows to be initiated at the scroll frame, rather
   // than descending from the root frame of the frame hierarchy.
-  first->AddStateBits(NS_FRAME_REFLOW_ROOT);
+  if (first) {
+    first->AddStateBits(NS_FRAME_REFLOW_ROOT);
+  }
 
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");

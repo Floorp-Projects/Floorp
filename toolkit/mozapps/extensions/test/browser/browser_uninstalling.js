@@ -10,6 +10,7 @@ var gCategoryUtilities;
 var gProvider;
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -40,9 +41,6 @@ function test() {
     type: "extension",
     operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
   }]);
-
-  // Turn off searching
-  Services.prefs.setIntPref("extensions.getAddons.maxResults", 0);
 
   open_manager(null, function(aWindow) {
     gManagerWindow = aWindow;
@@ -95,7 +93,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -146,7 +144,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -201,7 +199,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -244,6 +242,9 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
+    // Make sure to show local add-ons
+    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL, "Add-on should require a restart to uninstall");
@@ -260,7 +261,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -299,6 +300,9 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
+    // Make sure to show local add-ons
+    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(aAddon.isActive, "Add-on should be active");
       ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
@@ -316,7 +320,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -357,6 +361,9 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
+    // Make sure to show local add-ons
+    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+
     AddonManager.getAddonByID(ID, function(aAddon) {
       aAddon.userDisabled = true;
 
@@ -376,7 +383,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -437,7 +444,7 @@ add_test(function() {
 
           var item = get_item_in_list(ID, list);
           isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
           ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -500,7 +507,7 @@ add_test(function() {
 
           var item = get_item_in_list(ID, list);
           isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
           ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
           ok(!aAddon.isActive, "Add-on should be inactive");
@@ -566,7 +573,7 @@ add_test(function() {
 
           var item = get_item_in_list(ID, list);
           isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
           ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
           ok(!aAddon.isActive, "Add-on should be inactive");
@@ -625,7 +632,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -642,7 +649,7 @@ add_test(function() {
 
           var item = get_item_in_list(ID, list);
           isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
           ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -682,6 +689,9 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
+    // Make sure to show local add-ons
+    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL, "Add-on should require a restart to uninstall");
@@ -698,7 +708,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -720,7 +730,7 @@ add_test(function() {
 
           var item = get_item_in_list(ID, list);
           isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
           ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
 
@@ -773,7 +783,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -819,6 +829,9 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
+    // Make sure to show local add-ons
+    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(aAddon.isActive, "Add-on should be active");
       ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
@@ -836,7 +849,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -899,7 +912,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
@@ -948,6 +961,9 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
+    // Make sure to show local add-ons
+    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(aAddon.isActive, "Add-on should be active");
       ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
@@ -965,7 +981,7 @@ add_test(function() {
       // Force XBL to apply
       item.clientTop;
 
-      is(item.getAttribute("status"), "uninstalled", "Add-on should be uninstalling");
+      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'statement-003.js';
 
 /**
    File Name:          statement-003

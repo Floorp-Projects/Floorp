@@ -134,11 +134,9 @@ private:
    this class must be created on the main thread. 
 
    Most methods must be called on the main thread only. Read, Seek and
-   Tell may be called on another thread which may be a non main
-   thread. They may not be called on multiple other threads though. In
-   the case of the Ogg Decoder they are called on the Decode thread
-   for example. You must ensure that no threads are calling these
-   methods once Close is called.
+   Tell must only be called on non-main threads. In the case of the Ogg
+   Decoder they are called on the Decode thread for example. You must
+   ensure that no threads are calling these methods once Close is called.
 
    Instances of this class are explicitly managed. 'delete' it when done.
 */
@@ -253,6 +251,16 @@ public:
   // nsMediaDecoder::NotifySuspendedStatusChanged is called when this
   // changes.
   virtual PRBool IsSuspendedByCache() = 0;
+  // Returns true if this stream has been suspended.
+  virtual PRBool IsSuspended() = 0;
+  // Reads only data which is cached in the media cache. If you try to read
+  // any data which overlaps uncached data, or if aCount bytes otherwise can't
+  // be read, this function will return failure. This function be called from
+  // any thread, and it is the only read operation which is safe to call on
+  // the main thread, since it's guaranteed to be non blocking.
+  virtual nsresult ReadFromCache(char* aBuffer,
+                                 PRInt64 aOffset,
+                                 PRUint32 aCount) = 0;
 
   /**
    * Create a stream, reading data from the media resource via the
@@ -342,6 +350,7 @@ public:
   // Return PR_TRUE if the stream has been closed.
   PRBool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
+  virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
 
   // Other thread
   virtual void     SetReadMode(nsMediaCacheStream::ReadMode aMode);
@@ -359,6 +368,7 @@ public:
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset);
   virtual PRBool  IsSuspendedByCache();
+  virtual PRBool  IsSuspended();
 
   class Listener : public nsIStreamListener,
                    public nsIInterfaceRequestor,

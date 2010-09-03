@@ -13,6 +13,22 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
+<tree id="tree" seltype="single" width="100" height="100">
+  <treecols>
+    <treecol flex="1"/>
+    <treecol flex="1"/>
+  </treecols>
+  <treechildren id="treechildren">
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+  </treechildren>
+</tree>
+
+
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
@@ -33,6 +49,8 @@ function is(left, right, message) {
 
 function test_panels()
 {
+  checkTreeCoords();
+
   addEventListener("popupshown", popupShown, false);
   addEventListener("popuphidden", nextTest, false);
   nextTest();
@@ -82,6 +100,20 @@ function createPanel(attrs)
   button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
   panel.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
   return document.documentElement.appendChild(panel);
+}
+
+function checkTreeCoords()
+{
+  var tree = $("tree");
+  var treechildren = $("treechildren");
+  tree.currentIndex = 0;
+  tree.treeBoxObject.scrollToRow(0);
+  synthesizeMouse(treechildren, 10, tree.treeBoxObject.rowHeight + 2, { });
+  is(tree.currentIndex, 1, "tree selection");
+
+  tree.treeBoxObject.scrollToRow(2);
+  synthesizeMouse(treechildren, 10, tree.treeBoxObject.rowHeight + 2, { });
+  is(tree.currentIndex, 3, "tree selection after scroll");
 }
 
 var tests = [
@@ -144,6 +176,11 @@ var tests = [
       synthesizeMouse(panel, 10, 10, { type: "mousemove" });
       ok(gotMouseEvent, "mouse event on panel");      
       panel.removeEventListener("mousemove", mouseMoved, true);
+
+      var tree = $("tree");
+      tree.currentIndex = 0;
+      panel.appendChild(tree);
+      checkTreeCoords();
     }
   }
 ];

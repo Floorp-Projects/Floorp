@@ -1,0 +1,25 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test painting a continuation.
+-->
+<html>
+<style>
+@font-face
+{
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
+</style>
+<body style="line-height:1; font-family: Ahem; color: transparent;">
+  <div style="width:100px; height:100px; border:10px solid black;">
+    <div style="width:50px;">
+      <span style="display:inline-block; width:25px; height:1px;"></span
+        ><span id="d" style="background:-moz-linear-gradient(right, yellow, yellow);"
+        ><span style="display:inline-block; width:25px; height:1px;"></span>
+      AA</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -40,7 +40,9 @@
 #define COMMON_LINUX_DWARF_CFI_TO_MODULE_H
 
 #include <assert.h>
+#include <stdio.h>
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -51,6 +53,7 @@ namespace google_breakpad {
 
 using dwarf2reader::CallFrameInfo;
 using google_breakpad::Module;
+using std::set;
 using std::string;
 using std::vector;
 
@@ -124,7 +127,8 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   DwarfCFIToModule(Module *module, const vector<string> &register_names,
                    Reporter *reporter)
       : module_(module), register_names_(register_names), reporter_(reporter),
-        entry_(NULL), return_address_(-1) { }
+        entry_(NULL), return_address_(-1), cfa_name_(".cfa"), ra_name_(".ra") {
+  }
   virtual ~DwarfCFIToModule() { delete entry_; }
 
   virtual bool Entry(size_t offset, uint64 address, uint64 length,
@@ -168,6 +172,23 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
 
   // The return address column for that entry.
   unsigned return_address_;
+
+  // The names of the return address and canonical frame address. Putting
+  // these here instead of using string literals allows us to share their
+  // texts in reference-counted std::string implementations (all the
+  // popular ones). Many, many rules cite these strings.
+  string cfa_name_, ra_name_;
+
+  // A set of strings used by this CFI. Before storing a string in one of
+  // our data structures, insert it into this set, and then use the string
+  // from the set.
+  // 
+  // Because std::string uses reference counting internally, simply using
+  // strings from this set, even if passed by value, assigned, or held
+  // directly in structures and containers (map<string, ...>, for example),
+  // causes those strings to share a single instance of each distinct piece
+  // of text.
+  set<string> common_strings_;
 };
 
 } // namespace google_breakpad

@@ -343,6 +343,8 @@ nsPermissionManager::CreateTable()
   if (NS_FAILED(rv)) return rv;
 
   // create the table
+  // SQL also lives in automation.py.in. If you change this SQL change that
+  // one too.
   return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_hosts ("
       " id INTEGER PRIMARY KEY"
@@ -594,7 +596,7 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
 #ifdef MOZ_IPC
   ContentChild* cpc = ChildProcess();
   if (cpc) {
-    return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_TRUE,
+    return cpc->SendTestPermission(aURI, nsDependentCString(aType), PR_TRUE,
       aPermission) ? NS_OK : NS_ERROR_FAILURE;
   }
 #endif
@@ -609,7 +611,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 #ifdef MOZ_IPC
   ContentChild* cpc = ChildProcess();
   if (cpc) {
-    return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_FALSE,
+    return cpc->SendTestPermission(aURI, nsDependentCString(aType), PR_FALSE,
       aPermission) ? NS_OK : NS_ERROR_FAILURE;
   }
 #endif
@@ -630,8 +632,19 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 
   nsCAutoString host;
   nsresult rv = GetHost(aURI, host);
-  // no host doesn't mean an error. just return the default
-  if (NS_FAILED(rv)) return NS_OK;
+  // No host doesn't mean an error. Just return the default. Unless this is
+  // a file uri. In that case use a magic host.
+  if (NS_FAILED(rv)) {
+    PRBool isFile;
+    rv = aURI->SchemeIs("file", &isFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isFile) {
+      host.AssignLiteral("<file>");
+    }
+    else {
+      return NS_OK;
+    }
+  }
   
   PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
   // If type == -1, the type isn't known,
@@ -648,6 +661,8 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 // Get hostentry for given host string and permission type.
 // walk up the domain if needed.
 // return null if nothing found.
+// Also accepts host on the format "<foo>". This will perform an exact match
+// lookup as the string doesn't contain any dots.
 nsHostEntry *
 nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
                                   PRUint32              aType,

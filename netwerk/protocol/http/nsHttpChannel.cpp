@@ -62,6 +62,7 @@
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
+#include "prnetdb.h"
 #include "nsEscape.h"
 #include "nsInt64.h"
 #include "nsStreamUtils.h"
@@ -69,6 +70,7 @@
 #include "nsICacheService.h"
 #include "nsDNSPrefetch.h"
 #include "nsChannelClassifier.h"
+#include "nsIRedirectResultListener.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -76,6 +78,35 @@
                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE))
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+
+class AutoRedirectVetoNotifier
+{
+public:
+    AutoRedirectVetoNotifier(nsHttpChannel* channel) : mChannel(channel) {}
+    ~AutoRedirectVetoNotifier() {ReportRedirectResult(false);}
+    void RedirectSucceeded() {ReportRedirectResult(true);}
+
+private:
+    nsHttpChannel* mChannel;
+    void ReportRedirectResult(bool succeeded);
+};
+
+void
+AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
+{
+    if (!mChannel)
+        return;
+
+    mChannel->mRedirectChannel = nsnull;
+
+    nsCOMPtr<nsIRedirectResultListener> vetoHook;
+    NS_QueryNotificationCallbacks(mChannel, 
+                                  NS_GET_IID(nsIRedirectResultListener), 
+                                  getter_AddRefs(vetoHook));
+    mChannel = nsnull;
+    if (vetoHook)
+        vetoHook->OnRedirectResult(succeeded);
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel <public>
@@ -86,7 +117,6 @@ nsHttpChannel::nsHttpChannel()
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
-    , mStartPos(LL_MAXUINT)
     , mPendingAsyncCallOnResume(nsnull)
     , mSuspendCount(0)
     , mApplyConversion(PR_TRUE)
@@ -99,14 +129,12 @@ nsHttpChannel::nsHttpChannel()
     , mCacheForOfflineUse(PR_FALSE)
     , mCachingOpportunistically(PR_FALSE)
     , mFallbackChannel(PR_FALSE)
-    , mInheritApplicationCache(PR_TRUE)
-    , mChooseApplicationCache(PR_FALSE)
-    , mLoadedFromApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
     , mCustomConditionalRequest(PR_FALSE)
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
     , mRemoteChannel(PR_FALSE)
+    , mRequestTimeInitialized(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
 }
@@ -165,6 +193,29 @@ nsHttpChannel::Connect(PRBool firstTime)
     nsresult rv;
 
     LOG(("nsHttpChannel::Connect [this=%p]\n", this));
+
+    // Even if we're in private browsing mode, we still enforce existing STS
+    // data (it is read-only).
+    // if the connection is not using SSL and either the exact host matches or
+    // a superdomain wants to force HTTPS, do it.
+    PRBool usingSSL = PR_FALSE;
+    rv = mURI->SchemeIs("https", &usingSSL);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!usingSSL) {
+        // enforce Strict-Transport-Security
+        nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+        NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
+
+        PRBool isStsHost = PR_FALSE;
+        rv = stss->IsStsURI(mURI, &isStsHost);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (isStsHost) {
+            LOG(("nsHttpChannel::Connect() STS permissions found\n"));
+            return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
+        }
+    }
 
     // ensure that we are using a valid hostname
     if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Host())))
@@ -520,6 +571,7 @@ nsHttpChannel::SetupTransaction()
 
     // set the request time for cache expiration calculations
     mRequestTime = NowInSeconds();
+    mRequestTimeInitialized = PR_TRUE;
 
     // if doing a reload, force end-to-end
     if (mLoadFlags & LOAD_BYPASS_CACHE) {
@@ -853,6 +905,94 @@ nsHttpChannel::ShouldSSLProxyResponseContinue(PRUint32 httpStatus)
     return PR_FALSE;
 }
 
+/**
+ * Decide whether or not to remember Strict-Transport-Security, and whether
+ * or not to enforce channel integrity.
+ *
+ * @return NS_ERROR_FAILURE if there's security information missing even though
+ *             it's an HTTPS connection.
+ */
+nsresult
+nsHttpChannel::ProcessSTSHeader()
+{
+    nsresult rv;
+
+    // We need to check private browsing mode here since some permissions are
+    // allowed to be tweaked when private browsing mode is enabled, but STS is
+    // not allowed to operate at all in PBM.
+    if (gHttpHandler->InPrivateBrowsingMode())
+        return NS_OK;
+
+    PRBool isHttps = PR_FALSE;
+    rv = mURI->SchemeIs("https", &isHttps);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If this channel is not loading securely, STS doesn't do anything.
+    // The upgrade to HTTPS takes place earlier in the channel load process.
+    if (!isHttps)
+        return NS_OK;
+
+    nsCAutoString asciiHost;
+    rv = mURI->GetAsciiHost(asciiHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If the channel is not a hostname, but rather an IP, STS doesn't do
+    // anything.
+    PRNetAddr hostAddr;
+    if (PR_SUCCESS == PR_StringToNetAddr(asciiHost.get(), &hostAddr))
+        return NS_OK;
+
+    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+    NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
+
+    // Check the trustworthiness of the channel (are there any cert errors?)
+    // If there are certificate errors, we still load the data, we just ignore
+    // any STS headers that are present.
+    NS_ENSURE_TRUE(mSecurityInfo, NS_ERROR_FAILURE);
+    PRBool tlsIsBroken = PR_FALSE;
+    rv = stss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If this was already an STS host, the connection should have been aborted
+    // by the bad cert handler in the case of cert errors.  If it didn't abort the connection,
+    // there's probably something funny going on.
+    // If this wasn't an STS host, errors are allowed, but no more STS processing
+    // will happen during the session.
+    PRBool wasAlreadySTSHost;
+    rv = stss->IsStsURI(mURI, &wasAlreadySTSHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(!(wasAlreadySTSHost && tlsIsBroken),
+                 "connection should have been aborted by nss-bad-cert-handler");
+
+    // Any STS header is ignored if the channel is not trusted due to
+    // certificate errors (STS Spec 7.1) -- there is nothing else to do, and
+    // the load may progress.
+    if (tlsIsBroken) {
+        LOG(("STS: Transport layer is not trustworthy, ignoring "
+             "STS headers and continuing load\n"));
+        return NS_OK;
+    }
+
+    // If there's a STS header, process it (STS Spec 7.1).  At this point in
+    // processing, the channel is trusted, so the header should not be ignored.
+    const nsHttpAtom atom = nsHttp::ResolveAtom("Strict-Transport-Security");
+    nsCAutoString stsHeader;
+    rv = mResponseHead->GetHeader(atom, stsHeader);
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+        LOG(("STS: No STS header, continuing load.\n"));
+        return NS_OK;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stss->ProcessStsHeader(mURI, stsHeader.get());
+    if (NS_FAILED(rv)) {
+        LOG(("STS: Failed to parse STS header, continuing load.\n"));
+        return NS_OK;
+    }
+
+    return NS_OK;
+}
+
 nsresult
 nsHttpChannel::ProcessResponse()
 {
@@ -865,6 +1005,10 @@ nsHttpChannel::ProcessResponse()
     if (mTransaction->SSLConnectFailed() &&
         !ShouldSSLProxyResponseContinue(httpStatus))
         return ProcessFailedSSLConnect(httpStatus);
+
+    // If STS data is present, process it here.
+    rv = ProcessSTSHeader();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
@@ -1202,6 +1346,143 @@ nsHttpChannel::ContinueHandleAsyncReplaceWithProxy(nsresult status)
     return NS_OK;
 }
 
+void
+nsHttpChannel::HandleAsyncRedirectChannelToHttps()
+{
+    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume to do async redirect to https [this=%p]\n", this));
+        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncRedirectChannelToHttps;
+        return;
+    }
+
+    nsresult rv = AsyncRedirectChannelToHttps();
+    if (NS_FAILED(rv))
+        ContinueAsyncRedirectChannelToHttps(rv);
+}
+
+nsresult
+nsHttpChannel::AsyncRedirectChannelToHttps()
+{
+    nsresult rv = NS_OK;
+    LOG(("nsHttpChannel::HandleAsyncRedirectChannelToHttps() [STS]\n"));
+
+    nsCOMPtr<nsIChannel> newChannel;
+    nsCOMPtr<nsIURI> upgradedURI;
+
+    rv = mURI->Clone(getter_AddRefs(upgradedURI));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    upgradedURI->SetScheme(NS_LITERAL_CSTRING("https"));
+
+    PRInt32 oldPort = -1;
+    rv = mURI->GetPort(&oldPort);
+    if (NS_FAILED(rv)) return rv;
+
+    // Keep any nonstandard ports so only the scheme is changed.
+    // For example:
+    //  http://foo.com:80 -> https://foo.com:443
+    //  http://foo.com:81 -> https://foo.com:81
+
+    if (oldPort == 80 || oldPort == -1)
+        upgradedURI->SetPort(-1);
+    else
+        upgradedURI->SetPort(oldPort);
+
+    nsCOMPtr<nsIIOService> ioService;
+    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ioService->NewChannelFromURI(upgradedURI, getter_AddRefs(newChannel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetupReplacementChannel(upgradedURI, newChannel, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Inform consumers about this fake redirect
+    mRedirectChannel = newChannel;
+    PRUint32 flags = nsIChannelEventSink::REDIRECT_PERMANENT;
+
+    PushRedirectAsyncFunc(
+        &nsHttpChannel::ContinueAsyncRedirectChannelToHttps);
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, flags);
+
+    if (NS_SUCCEEDED(rv))
+        rv = WaitForRedirectCallback();
+
+    if (NS_FAILED(rv)) {
+        AutoRedirectVetoNotifier notifier(this);
+        PopRedirectAsyncFunc(
+            &nsHttpChannel::ContinueAsyncRedirectChannelToHttps);
+    }
+
+    return rv;
+}
+
+nsresult
+nsHttpChannel::ContinueAsyncRedirectChannelToHttps(nsresult rv)
+{
+    AutoRedirectVetoNotifier notifier(this);
+
+    if (NS_FAILED(rv)) {
+        // Fill the failure status here, the update to https had been vetoed
+        // but from the security reasons we have to discard the whole channel
+        // load.
+        mStatus = rv;
+    }
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    if (NS_FAILED(rv)) {
+        // We have to manually notify the listener because there is not any pump
+        // that would call our OnStart/StopRequest after resume from waiting for
+        // the redirect callback.
+        DoNotifyListener();
+        return rv;
+    }
+
+    // Make sure to do this _after_ calling OnChannelRedirect
+    mRedirectChannel->SetOriginalURI(mOriginalURI);
+
+    // And now, notify observers the deprecated way
+    nsCOMPtr<nsIHttpEventSink> httpEventSink;
+    GetCallback(httpEventSink);
+    if (httpEventSink) {
+        // NOTE: nsIHttpEventSink is only used for compatibility with pre-1.8
+        // versions.
+        rv = httpEventSink->OnRedirect(this, mRedirectChannel);
+        if (NS_FAILED(rv)) {
+            mStatus = rv;
+            DoNotifyListener();
+            return rv;
+        }
+    }
+
+    // open new channel
+    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
+    if (NS_FAILED(rv)) {
+        mStatus = rv;
+        DoNotifyListener();
+        return rv;
+    }
+
+    mStatus = NS_BINDING_REDIRECTED;
+
+    notifier.RedirectSucceeded();
+
+    // disconnect from the old listeners...
+    mListener = nsnull;
+    mListenerContext = nsnull;
+
+    // ...and the old callbacks
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
+
+    return rv;
+}
+
 nsresult
 nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
 {
@@ -1228,8 +1509,8 @@ nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
         rv = WaitForRedirectCallback();
 
     if (NS_FAILED(rv)) {
+        AutoRedirectVetoNotifier notifier(this);
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueDoReplaceWithProxy);
-        mRedirectChannel = nsnull;
     }
 
     return rv;
@@ -1238,6 +1519,8 @@ nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
 nsresult
 nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv)
 {
+    AutoRedirectVetoNotifier notifier(this);
+
     if (NS_FAILED(rv))
         return rv;
 
@@ -1248,11 +1531,12 @@ nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv)
 
     // open new channel
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    mRedirectChannel = nsnull;
     if (NS_FAILED(rv))
         return rv;
 
     mStatus = NS_BINDING_REDIRECTED;
+
+    notifier.RedirectSucceeded();
 
     // disconnect from the old listeners...
     mListener = nsnull;
@@ -1591,8 +1875,8 @@ nsHttpChannel::ProcessFallback(PRBool *waitingForRedirectCallback)
         rv = WaitForRedirectCallback();
 
     if (NS_FAILED(rv)) {
+        AutoRedirectVetoNotifier notifier(this);
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessFallback);
-        mRedirectChannel = nsnull;
         return rv;
     }
 
@@ -1605,6 +1889,8 @@ nsHttpChannel::ProcessFallback(PRBool *waitingForRedirectCallback)
 nsresult
 nsHttpChannel::ContinueProcessFallback(nsresult rv)
 {
+    AutoRedirectVetoNotifier notifier(this);
+
     if (NS_FAILED(rv))
         return rv;
 
@@ -1614,15 +1900,18 @@ nsHttpChannel::ContinueProcessFallback(nsresult rv)
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    mRedirectChannel = nsnull;
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     // close down this channel
     Cancel(NS_BINDING_REDIRECTED);
 
+    notifier.RedirectSucceeded();
+
     // disconnect from our listener
     mListener = 0;
     mListenerContext = 0;
+
     // and from our callbacks
     mCallbacks = nsnull;
     mProgressSink = nsnull;
@@ -2676,20 +2965,26 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsICacheService> serv =
+        do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIEventTarget> cacheIOTarget;
+    serv->GetCacheIOTarget(getter_AddRefs(cacheIOTarget));
+
     nsCacheStoragePolicy policy;
     rv = mCacheEntry->GetStoragePolicy(&policy);
 
-    if (!gHttpHandler->mCacheWriteThread ||
-         NS_FAILED(rv) ||
-         policy == nsICache::STORE_ON_DISK_AS_FILE) {
-        LOG(("nsHttpChannel::InstallCacheListener sync tee %p\n", tee.get()));
+    if (NS_FAILED(rv) || policy == nsICache::STORE_ON_DISK_AS_FILE ||
+        !cacheIOTarget) {
+        LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%x policy=%d "
+             "cacheIOTarget=%p", tee.get(), rv, policy, cacheIOTarget.get()));
         rv = tee->Init(mListener, out, nsnull);
     } else {
-        LOG(("nsHttpChannel::InstallCacheListener async tee %p\n",
-                tee.get()));
-        rv = tee->InitAsync(mListener, gHttpHandler->mCacheWriteThread, out, nsnull);
+        LOG(("nsHttpChannel::InstallCacheListener async tee %p", tee.get()));
+        rv = tee->InitAsync(mListener, cacheIOTarget, out, nsnull);
     }
-   
+
     if (NS_FAILED(rv)) return rv;
     mListener = tee;
     return NS_OK;
@@ -2750,15 +3045,6 @@ nsHttpChannel::ClearBogusContentEncodingIfNeeded()
 // nsHttpChannel <redirect>
 //-----------------------------------------------------------------------------
 
-static PLDHashOperator
-CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
-{
-    nsIWritablePropertyBag* bag = static_cast<nsIWritablePropertyBag*>
-                                             (aClosure);
-    bag->SetProperty(aKey, aData);
-    return PL_DHASH_NEXT;
-}
-
 nsresult
 nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                        nsIChannel   *newChannel,
@@ -2767,105 +3053,19 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     LOG(("nsHttpChannel::SetupReplacementChannel "
          "[this=%p newChannel=%p preserveMethod=%d]",
          this, newChannel, preserveMethod));
-    PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
-    // if the original channel was using SSL and this channel is not using
-    // SSL, then no need to inhibit persistent caching.  however, if the
-    // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
-    // set, then allow the flag to apply to the redirected channel as well.
-    // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
-    // we only need to check if the original channel was using SSL.
-    if (mConnectionInfo->UsingSSL())
-        newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
 
-    // Do not pass along LOAD_CHECK_OFFLINE_CACHE
-    newLoadFlags &= ~LOAD_CHECK_OFFLINE_CACHE;
-
-    newChannel->SetLoadGroup(mLoadGroup); 
-    newChannel->SetNotificationCallbacks(mCallbacks);
-    newChannel->SetLoadFlags(newLoadFlags);
+    nsresult rv = HttpBaseChannel::SetupReplacementChannel(newURI, newChannel, preserveMethod);
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
     if (!httpChannel)
         return NS_OK; // no other options to set
 
-    if (preserveMethod) {
-        nsCOMPtr<nsIUploadChannel> uploadChannel =
-            do_QueryInterface(httpChannel);
-        nsCOMPtr<nsIUploadChannel2> uploadChannel2 =
-            do_QueryInterface(httpChannel);
-        if (mUploadStream && (uploadChannel2 || uploadChannel)) {
-            // rewind upload stream
-            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
-            if (seekable)
-                seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-
-            // replicate original call to SetUploadStream...
-            if (uploadChannel2) {
-                const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
-                if (!ctype)
-                    ctype = "";
-                const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
-                PRInt64 len = clen ? nsCRT::atoll(clen) : -1;
-                uploadChannel2->ExplicitSetUploadStream(
-                        mUploadStream,
-                        nsDependentCString(ctype),
-                        len,
-                        nsDependentCString(mRequestHead.Method()),
-                        mUploadStreamHasHeaders);
-            }
-            else {
-                if (mUploadStreamHasHeaders)
-                    uploadChannel->SetUploadStream(mUploadStream, EmptyCString(),
-                                                   -1);
-                else {
-                    const char *ctype =
-                        mRequestHead.PeekHeader(nsHttp::Content_Type);
-                    const char *clen =
-                        mRequestHead.PeekHeader(nsHttp::Content_Length);
-                    if (!ctype) {
-                        ctype = "application/octet-stream";
-                    }
-                    if (clen) {
-                        uploadChannel->SetUploadStream(mUploadStream,
-                                                       nsDependentCString(ctype),
-                                                       atoi(clen));
-                    }
-                }
-            }
-        }
-        // since preserveMethod is true, we need to ensure that the appropriate 
-        // request method gets set on the channel, regardless of whether or not 
-        // we set the upload stream above. This means SetRequestMethod() will
-        // be called twice if ExplicitSetUploadStream() gets called above.
-
-        httpChannel->SetRequestMethod(nsDependentCString(mRequestHead.Method()));
-    }
-    // convey the referrer if one was used for this channel to the next one
-    if (mReferrer)
-        httpChannel->SetReferrer(mReferrer);
-    // convey the mAllowPipelining flag
-    httpChannel->SetAllowPipelining(mAllowPipelining);
-    // convey the new redirection limit
-    httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
-
+    // transfer the remote flag
     nsHttpChannel *httpChannelImpl = static_cast<nsHttpChannel*>(httpChannel.get());
     httpChannelImpl->SetRemoteChannel(mRemoteChannel);
 
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
-    if (httpInternal) {
-        // convey the mForceAllowThirdPartyCookie flag
-        httpInternal->SetForceAllowThirdPartyCookie(mForceAllowThirdPartyCookie);
-
-        // update the DocumentURI indicator since we are being redirected.
-        // if this was a top-level document channel, then the new channel
-        // should have its mDocumentURI point to newURI; otherwise, we
-        // just need to pass along our mDocumentURI to the new channel.
-        if (newURI && (mURI == mDocumentURI))
-            httpInternal->SetDocumentURI(newURI);
-        else
-            httpInternal->SetDocumentURI(mDocumentURI);
-    } 
-    
     // convey the mApplyConversion flag (bug 91862)
     nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
     if (encodedChannel)
@@ -2880,20 +3080,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
-
-    // transfer application cache information
-    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-        do_QueryInterface(newChannel);
-    if (appCacheChannel) {
-        appCacheChannel->SetApplicationCache(mApplicationCache);
-        appCacheChannel->SetInheritApplicationCache(mInheritApplicationCache);
-        // We purposely avoid transfering mChooseApplicationCache.
-    }
-
-    // transfer any properties
-    nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
-    if (bag)
-        mPropertyHash.EnumerateRead(CopyProperties, bag.get());
 
     return NS_OK;
 }
@@ -3032,8 +3218,8 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
         rv = WaitForRedirectCallback();
 
     if (NS_FAILED(rv)) {
+        AutoRedirectVetoNotifier notifier(this);
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirection);
-        mRedirectChannel = nsnull;
     }
 
     return rv;
@@ -3042,6 +3228,9 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
 nsresult
 nsHttpChannel::ContinueProcessRedirection(nsresult rv)
 {
+    AutoRedirectVetoNotifier notifier(this);
+
+    LOG(("ContinueProcessRedirection [rv=%x]\n", rv));
     if (NS_FAILED(rv))
         return rv;
 
@@ -3065,7 +3254,6 @@ nsHttpChannel::ContinueProcessRedirection(nsresult rv)
 
     // begin loading the new channel
     rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    mRedirectChannel = nsnull;
 
     if (NS_FAILED(rv))
         return rv;
@@ -3073,9 +3261,12 @@ nsHttpChannel::ContinueProcessRedirection(nsresult rv)
     // close down this channel
     Cancel(NS_BINDING_REDIRECTED);
     
+    notifier.RedirectSucceeded();
+
     // disconnect from our listener
     mListener = 0;
     mListenerContext = 0;
+
     // and from our callbacks
     mCallbacks = nsnull;
     mProgressSink = nsnull;
@@ -3245,6 +3436,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
     nsresult rv;
+
+    if (mCanceled)
+        return mStatus;
 
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
@@ -3708,8 +3902,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     mStatus = status;
 
     // perform any final cache operations before we close the cache entry.
-    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
+        mRequestTimeInitialized){
         FinalizeCacheEntry();
+    }
     
     if (mListener) {
         LOG(("  calling OnStopRequest\n"));
@@ -4130,51 +4326,6 @@ nsHttpChannel::ResumeAt(PRUint64 aStartPos,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::GetEntityID(nsACString& aEntityID)
-{
-    // Don't return an entity ID for Non-GET requests which require
-    // additional data
-    if (mRequestHead.Method() != nsHttp::Get) {
-        return NS_ERROR_NOT_RESUMABLE;
-    }
-
-    // Don't return an entity if the server sent the following header:
-    // Accept-Ranges: none
-    // Not sending the Accept-Ranges header means we can still try
-    // sending range requests.
-    const char* acceptRanges =
-        mResponseHead->PeekHeader(nsHttp::Accept_Ranges);
-    if (acceptRanges &&
-        !nsHttp::FindToken(acceptRanges, "bytes", HTTP_HEADER_VALUE_SEPS)) {
-        return NS_ERROR_NOT_RESUMABLE;
-    }
-
-    PRUint64 size = LL_MAXUINT;
-    nsCAutoString etag, lastmod;
-    if (mResponseHead) {
-        size = mResponseHead->TotalEntitySize();
-        const char* cLastMod = mResponseHead->PeekHeader(nsHttp::Last_Modified);
-        if (cLastMod)
-            lastmod = cLastMod;
-        const char* cEtag = mResponseHead->PeekHeader(nsHttp::ETag);
-        if (cEtag)
-            etag = cEtag;
-    }
-    nsCString entityID;
-    NS_EscapeURL(etag.BeginReading(), etag.Length(), esc_AlwaysCopy |
-            esc_FileBaseName | esc_Forced, entityID);
-    entityID.Append('/');
-    entityID.AppendInt(PRInt64(size));
-    entityID.Append('/');
-    entityID.Append(lastmod);
-    // NOTE: Appending lastmod as the last part avoids having to escape it
-
-    aEntityID = entityID;
-
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsICacheListener
 //-----------------------------------------------------------------------------
@@ -4341,6 +4492,8 @@ nsresult
 nsHttpChannel::WaitForRedirectCallback()
 {
     nsresult rv;
+    LOG(("nsHttpChannel::WaitForRedirectCallback [this=%p]\n", this));
+
     if (mTransactionPump) {
         rv = mTransactionPump->Suspend();
         NS_ENSURE_SUCCESS(rv, rv);
@@ -4362,6 +4515,9 @@ nsHttpChannel::WaitForRedirectCallback()
 NS_IMETHODIMP
 nsHttpChannel::OnRedirectVerifyCallback(nsresult result)
 {
+    LOG(("nsHttpChannel::OnRedirectVerifyCallback [this=%p] "
+         "result=%x stack=%d mWaitingForRedirectCallback=%u\n",
+         this, result, mRedirectFuncStack.Length(), mWaitingForRedirectCallback));
     NS_ASSERTION(mWaitingForRedirectCallback,
                  "Someone forgot to call WaitForRedirectCallback() ?!");
     mWaitingForRedirectCallback = PR_FALSE;

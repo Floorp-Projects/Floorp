@@ -48,8 +48,9 @@ XPCSHELL_TESTS  = unit
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef NS_ENABLE_TSF
-CPP_UNIT_TESTS += TestWinTSF.cpp  \
-                  $(NULL)
+#Test disabled because it uses the internal string APIs incorrectly (see bug 582863)
+#CPP_UNIT_TESTS += TestWinTSF.cpp  \
+#                  $(NULL)
 endif
 CPP_UNIT_TESTS += TestChromeMargin.cpp  \
                   $(NULL)
@@ -91,6 +92,9 @@ _CHROME_FILES += native_menus_window.xul \
                test_platform_colors.xul \
                test_standalone_native_menu.xul \
                standalone_native_menu_window.xul \
+               test_bug586713.xul \
+               bug586713_window.xul \
+               test_key_event_counts.xul \
                $(NULL)
 endif
 

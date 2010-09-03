@@ -86,8 +86,6 @@ using mozilla::gfx::SharedDIB;
 // helpers' section for details.
 const int kFlashWMUSERMessageThrottleDelayMs = 5;
 
-#define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
-
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
@@ -125,7 +123,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
-    mAlphaExtract.doublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
 #endif // OS_WIN
     InitQuirksModes(aMimeType);
 #if defined(OS_WIN)
@@ -565,7 +562,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
           *handled = SharedSurfacePaint(evcopy);
           return true;
        }
-       else if (evcopy.event == mAlphaExtract.doublePassEvent) {
+       else if (DoublePassRenderingEvent() == evcopy.event) {
             // We'll render to mSharedSurfaceDib first, then render to a cached bitmap
             // we store locally. The two passes are for alpha extraction, so the second
             // pass must be to a flat white surface in order for things to work.

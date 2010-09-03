@@ -163,3 +163,38 @@ function commonInit() {
     disabledHosts = pwmgr.getAllDisabledHosts();
     is(disabledHosts.length, 0, "Checking for no disabled hosts");
 }
+
+const masterPassword = "omgsecret!";
+
+function enableMasterPassword() {
+    setMasterPassword(true);
+}
+
+function disableMasterPassword() {
+    setMasterPassword(false);
+}
+
+function setMasterPassword(enable) {
+    var oldPW, newPW;
+    if (enable) {
+        oldPW = "";
+        newPW = masterPassword;
+    } else {
+        oldPW = masterPassword;
+        newPW = "";
+    }
+    // Set master password. Note that this does not log you in, so the next
+    // invocation of pwmgr can trigger a MP prompt.
+
+    var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].
+                 getService(Ci.nsIPK11TokenDB)
+    var token = pk11db.findTokenByName("");
+    ok(true, "change from " + oldPW + " to " + newPW);
+    token.changePassword(oldPW, newPW);
+}
+
+function logoutMasterPassword() {
+    var sdr = Cc["@mozilla.org/security/sdr;1"].
+            getService(Ci.nsISecretDecoderRing);
+    sdr.logoutAndTeardown();
+}

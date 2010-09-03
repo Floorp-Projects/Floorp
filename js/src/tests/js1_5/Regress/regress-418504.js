@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-418504.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 418504;
 var summary = 'Untagged boolean stored in a jsval in JS_ConvertValue';

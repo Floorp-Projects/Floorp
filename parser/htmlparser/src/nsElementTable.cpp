@@ -1076,16 +1076,6 @@ const nsHTMLElement gHTMLElements[] = {
 #endif
   {
     
-    /*tag*/                             eHTMLTag_spacer,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
-    /*special parents,kids*/            0,0,
-  },
-  {
-    
           // I made span a special% tag again, (instead of inline).
           // This fixes the case:  <font color="blue"><p><span>text</span>
 

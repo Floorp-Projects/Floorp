@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-348986.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 348986;
 var summary = 'Recursion check of nested functions';

@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Blair McBride <bmcbride@mozilla.com>
+   -   David Dahl <ddahl@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -240,19 +241,23 @@
       <xul:button anonid="btn-name" class="sorter"
                   label="&sort.name.label;" tooltiptext="&sort.name.tooltip;"
                   oncommand="this.parentNode._handleChange('name');"/>
-      <xul:button anonid="btn-size" class="sorter"
-                  label="&sort.size.label;" tooltiptext="&sort.size.tooltip;"
-                  oncommand="this.parentNode._handleChange('size');"/>
       <xul:button anonid="btn-date" class="sorter"
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
                   oncommand="this.parentNode._handleChange('dateUpdated');"/>
+      <xul:button anonid="btn-relevance" class="sorter" hidden="true"
+                  label="&sort.relevance.label;"
+                  tooltiptext="&sort.relevance.tooltip;"
+                  oncommand="this.parentNode._handleChange('relevancescore');"/>
     </content>
 
     <implementation>
       <constructor><![CDATA[
         if (!this.hasAttribute("sortby"))
           this.setAttribute("sortby", "name");
+
+        if (this.getAttribute("showrelevance") == "true")
+          this._btnRelevance.hidden = false;
 
         this._refreshState();
       ]]></constructor>
@@ -261,11 +266,11 @@
       <field name="_btnName">
         document.getAnonymousElementByAttribute(this, "anonid", "btn-name");
       </field>
-      <field name="_btnSize">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-size");
-      </field>
       <field name="_btnDate">
         document.getAnonymousElementByAttribute(this, "anonid", "btn-date");
+      </field>
+      <field name="_btnRelevance">
+        document.getAnonymousElementByAttribute(this, "anonid", "btn-relevance");
       </field>
 
       <property name="sortBy">
@@ -338,16 +343,15 @@
           else
             this._btnName.checkState = 0;
 
-          if (sortBy == "size")
-            this._btnSize.checkState = checkState;
-          else
-            this._btnSize.checkState = 0;
-
           if (sortBy == "dateUpdated")
             this._btnDate.checkState = checkState;
           else
             this._btnDate.checkState = 0;
 
+          if (sortBy == "relevancescore")
+            this._btnRelevance.checkState = checkState;
+          else
+            this._btnRelevance.checkState = 0;
 
           if (this.handler && "onSortChanged" in this.handler)
             this.handler.onSortChanged(sortBy, this.ascending);
@@ -399,7 +403,13 @@
           return this.getAttribute("count");
         ]]></getter>
         <setter><![CDATA[
-          this.setAttribute("count", aCount);
+          if (this.getAttribute("count") == val)
+            return;
+
+          this.setAttribute("count", val);
+          var event = document.createEvent("Events");
+          event.initEvent("CategoryBadgeUpdated", true, true);
+          this.dispatchEvent(event);
         ]]></setter>
       </property>
     </implementation>
@@ -433,20 +443,21 @@
       </field>
 
       <method name="setCreator">
-        <parameter name="aName"/>
-        <parameter name="aURL"/>
+        <parameter name="aCreator"/>
+        <parameter name="aHomepageURL"/>
         <body><![CDATA[
-          if (!aName) {
+          if (!aCreator) {
             this.collapsed = true;
             return;
           }
           this.collapsed = false;
-          var showLink = !!aURL;
+          var url = aCreator.url || aHomepageURL;
+          var showLink = !!url;
           if (showLink) {
-            this._creatorLink.value = aName;
-            this._creatorLink.href = aURL;
+            this._creatorLink.value = aCreator.name;
+            this._creatorLink.href = url;
           } else {
-            this._creatorName.value = aName;
+            this._creatorName.value = aCreator.name;
           }
           this._creatorLink.hidden = !showLink;
           this._creatorName.hidden = showLink;
@@ -465,17 +476,10 @@
                   class="addon-control" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).installRemote();"/>
-      <xul:button anonid="restart-needed" hidden="true" command="cmd_restartApp"
-                  class="addon-control" label="&addon.restartNow.label;"
-                  tooltiptext="&addon.restartNow.tooltip;"/>
       <xul:button anonid="restart-install" hidden="true"
                   class="addon-control" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).restartInstall();"/>
-      <xul:button anonid="undo" hidden="true"
-                  class="addon-control" label="&addon.undo.label;"
-                  tooltiptext="&addon.undo.tooltip;"
-                  oncommand="document.getBindingParent(this).undoAction();"/>
     </content>
 
     <implementation>
@@ -533,8 +537,6 @@
         <body><![CDATA[
           var showInstallRemote = false;
           var showRestartInstall = false;
-          var showRestartNeeded = false;
-          var showUndo = false;
 
           if (this.mInstall) {
 
@@ -562,14 +564,6 @@
               case AddonManager.STATE_INSTALLING:
                 this.showMessage("installInstalling");
                 break;
-              case AddonManager.STATE_INSTALLED:
-                if (this.mInstall.existingAddon)
-                  this.showMessage("installUpdatePending", true);
-                else
-                  this.showMessage("installInstallPending", true);
-                if (isPending(this.mInstall.addon, "install"))
-                  showRestartNeeded = true;
-                break;
               case AddonManager.STATE_INSTALL_FAILED:
                 // XXXunf expose what error occured (bug 553487)
                 this.showMessage("installFailed", true);
@@ -580,29 +574,10 @@
                 break;
             }
 
-          } else if (this.mAddon) {
-
-            // Not using an AddonInstall object for this action
-            var pending = this.mAddon.pendingOperations;
-            if (pending & AddonManager.PENDING_INSTALL) {
-              this.showMessage("installInstallPending", true);
-            } else if (pending & AddonManager.PENDING_UPGRADE) {
-              this.showMessage("installUpdatePending", true);
-            } else if (pending & AddonManager.PENDING_ENABLE) {
-              this.showMessage("installEnablePending", true);
-              showUndo = true;
-            } else if (pending & AddonManager.PENDING_DISABLE) {
-              this.showMessage("installDisablePending", true);
-              showUndo = true;
-            }
-            showRestartNeeded = true;
-
           }
 
           this._installRemote.hidden = !showInstallRemote;
           this._restartInstall.hidden = !showRestartInstall;
-          this._restartNeeded.hidden = !showRestartNeeded;
-          this._undo.hidden = !showUndo;
         ]]></body>
       </method>
 
@@ -736,77 +711,119 @@
   </binding>
 
 
-  <!-- Addon - generic - A normal addon item -->
+  <!-- Addon - generic - A normal addon item, or an update to one -->
   <binding id="addon-generic"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:vbox>
-        <xul:image anonid="icon" class="icon"/>
-        <xul:spacer flex="1"/>
-      </xul:vbox>
-      <xul:vbox flex="1" class="fade">
-        <xul:hbox class="name-container">
-          <xul:label anonid="name" class="name" xbl:inherits="value=name"/>
-          <xul:label anonid="version" class="version"/>
-          <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
-        </xul:hbox>
-        <xul:label anonid="creator" class="creator"/>
-        <xul:description anonid="description" class="description" flex="1"/>
-      </xul:vbox>
-      <xul:vbox align="end">
-        <xul:vbox class="details-container fade">
-          <xul:hbox anonid="incompatible-container"
-                    class="warning incompatible-warning">
-            <xul:image class="warning-icon"/>
-            <xul:label anonid="incompatible-warning"/>
-          </xul:hbox>
-          <xul:hbox>
-            <xul:label value="&rating.label;"/>
-            <xul:label class="meta-rating" userrating="-1" showrating="average"/>
-          </xul:hbox>
-          <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
-          <xul:vbox anonid="extra-details" class="extra-details">
-            <xul:label anonid="formatted-size"/>
-            <xul:label anonid="homepage" class="homepage text-link"
-                       value="&addon.homepage;"/>
+      <xul:hbox anonid="warning-container" align="center"
+                class="warning">
+        <xul:image class="warning-icon"/>
+        <xul:label anonid="warning" flex="1"/>
+        <xul:label anonid="warning-link" class="text-link"/>
+        <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
+      </xul:hbox>
+      <xul:hbox anonid="error-container" align="center"
+                class="error">
+        <xul:image class="error-icon"/>
+        <xul:label anonid="error" flex="1"/>
+        <xul:label anonid="error-link" class="text-link"/>
+        <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
+      </xul:hbox>
+      <xul:hbox anonid="pending-container" align="center"
+                class="pending">
+        <xul:image class="pending-icon"/>
+        <xul:label anonid="pending" flex="1"/>
+        <xul:button class="button-link"
+                    label="&addon.restartNow.label;"
+                    oncommand="document.getBindingParent(this).restart();"/>
+        <xul:button anonid="undo" class="button-link"
+                    label="&addon.undoAction.label;"
+                    tooltipText="&addon.undoAction.tooltip;"
+                    oncommand="document.getBindingParent(this).undo();"/>
+        <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
+      </xul:hbox>
+      <xul:hbox align="stretch">
+        <xul:vbox pack="start">
+          <xul:vbox align="center" pack="center" class="icon-container">
+            <xul:image anonid="icon" class="icon"/>
           </xul:vbox>
-          <xul:hbox>
-            <xul:spacer flex="1"/>
-            <xul:button type="checkbox" anonid="toggle-more" class="toggle-more"
-                        label="&showMore.label;"
-                        tooltiptext="&showMore.tooltip;"
-                        showless="&showLess.label;"
-                        showlesstooltip="&showLess.tooltip;"
-                        showmore="&showMore.label;"
-                        showmoretooltip="&showMore.tooltip;"
-                        oncommand="document.getBindingParent(this).toggleDetails();"/>
+        </xul:vbox>
+        <xul:vbox flex="1" class="fade" align="stretch">
+          <xul:hbox class="name-container" align="end">
+            <xul:label anonid="name" class="name" xbl:inherits="value=name"/>
+            <xul:label anonid="version" class="version"/>
+            <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
+            <xul:label class="update-postfix" value="&addon.update.postfix;"/>
+          </xul:hbox>
+          <xul:label anonid="creator" class="creator"/>
+          <xul:spacer flex="1"/>
+          <xul:hbox align="center" class="description-container">
+            <xul:label flex="1" anonid="description" class="description" crop="end"/>
+            <xul:button class="details button-link"
+                        label="&addon.details.label;"
+                        tooltiptext="&addon.details.tooltip;"
+                        oncommand="document.getBindingParent(this).showInDetailView();"/>
+            <xul:spacer flex="5000"/> <!-- Necessary to make the description crop -->
+          </xul:hbox>
+          <xul:vbox anonid="relnotes-container" class="relnotes-container">
+            <xul:label class="relnotes-header" value="&addon.releaseNotes.label;"/>
+            <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
+            <xul:label anonid="relnotes-error" hidden="true"
+                       value="&addon.errorLoadingReleaseNotes.label;"/>
+            <xul:vbox anonid="relnotes"/>
+          </xul:vbox>
+          <xul:hbox pack="start">
+            <xul:button anonid="relnotes-toggle" class="relnotes-toggle"
+                        hidden="true" label="&cmd.showReleaseNotes.label;"
+                        tooltiptext="&cmd.showReleaseNotes.tooltip;"
+                        showlabel="&cmd.showReleaseNotes.label;"
+                        showtooltip="&cmd.showReleaseNotes.tooltip;"
+                        hidelabel="&cmd.hideReleaseNotes.label;"
+                        hidetooltip="&cmd.hideReleaseNotes.tooltip;"
+                        oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
           </xul:hbox>
         </xul:vbox>
-        <xul:spacer flex="1"/>
-        <xul:hbox anonid="control-container" class="control-container">
-          <xul:button anonid="preferences-btn" class="addon-control"
-                      label="&cmd.showPreferences.label;"
-                      tooltiptext="&cmd.showPreferences.tooltip;"
-                      oncommand="document.getBindingParent(this).showPreferences();"/>
-          <xul:button anonid="remove-btn" class="addon-control remove"
-                      label="&cmd.uninstallAddon.label;"
-                      oncommand="document.getBindingParent(this).uninstall();"/>
-          <xul:button anonid="enable-btn"  class="addon-control enable"
-                      label="&cmd.enableAddon.label;"
-                      oncommand="document.getBindingParent(this).userDisabled = false;"/>
-          <xul:button anonid="disable-btn" class="addon-control disable"
-                      label="&cmd.disableAddon.label;"
-                      oncommand="document.getBindingParent(this).userDisabled = true;"/>
-        </xul:hbox>
-        <xul:hbox class="status-container">
-          <xul:hbox anonid="checking-update" hidden="true">
-            <xul:image class="spinner"/>
-            <xul:label value="&addon.checkingForUpdates.label;"/>
+        <xul:vbox class="fade" align="end">
+          <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
+          <xul:spacer flex="1"/>
+          <xul:hbox class="status-container">
+            <xul:hbox anonid="checking-update" hidden="true">
+              <xul:image class="spinner"/>
+              <xul:label value="&addon.checkingForUpdates.label;"/>
+            </xul:hbox>
+            <xul:hbox anonid="update-available" hidden="true" align="center">
+              <xul:label value="An update is available"/>
+              <xul:button anonid="update-btn" class="addon-control"
+                          label="&addon.updateNow.label;"
+                          tooltiptext="&addon.updateNow.tooltip;"
+                          oncommand="document.getBindingParent(this).upgrade();"/>
+            </xul:hbox>
+            <xul:hbox anonid="install-status" class="install-status"
+                      hidden="true"/>
           </xul:hbox>
-          <xul:hbox anonid="install-status" class="install-status"
-                    hidden="true"/>
-        </xul:hbox>
-      </xul:vbox>
+          <xul:hbox anonid="control-container" class="control-container">
+            <xul:button anonid="preferences-btn" class="addon-control"
+#ifdef XP_WIN
+                        label="&cmd.showPreferencesWin.label;"
+                        tooltiptext="&cmd.showPreferencesWin.tooltip;"
+#else
+                        label="&cmd.showPreferencesUnix.label;"
+                        tooltiptext="&cmd.showPreferencesUnix.tooltip;"
+#endif
+                        oncommand="document.getBindingParent(this).showPreferences();"/>
+            <xul:button anonid="enable-btn"  class="addon-control enable"
+                        label="&cmd.enableAddon.label;"
+                        oncommand="document.getBindingParent(this).userDisabled = false;"/>
+            <xul:button anonid="disable-btn" class="addon-control disable"
+                        label="&cmd.disableAddon.label;"
+                        oncommand="document.getBindingParent(this).userDisabled = true;"/>
+          </xul:hbox>
+        </xul:vbox>
+        <xul:vbox pack="start" class="remove-container">
+          <xul:button anonid="remove-btn" class="remove-button"
+                      oncommand="document.getBindingParent(this).uninstall();"/>
+        </xul:vbox>
+      </xul:hbox>
     </content>
 
     <implementation>
@@ -814,44 +831,41 @@
         this._installStatus.mControl = this;
         this._installStatus.mAddon = this.mAddon;
 
-        var numExtraDetails = this._extraDetails.childElementCount;
-
         this.setAttribute("contextmenu", "addonitem-popup");
 
-        this._incompatibleWarning.value = gStrings.ext.formatStringFromName(
-          "incompatibleWith",
-          [gStrings.brandShortName, gStrings.appVersion], 2
-        );
-
         this._showStatus("none");
-        this._updateSize();
         this._updateDates();
         this._updateState();
-
-        var homepageURL = this.mAddon.homepageURL;
-        if (homepageURL) {
-          this._homepage.href = homepageURL;
-          this._homepage.setAttribute("tooltiptext", homepageURL);
-        } else {
-          this._homepage.hidden = true;
-          numExtraDetails--;
-        }
 
         var iconURL = this.mAddon.iconURL;
         if (iconURL)
           this._icon.src = iconURL;
 
-        this._version.value = this.mAddon.version;
+        if (this.mAddon.version)
+          this._version.value = this.mAddon.version;
+        else
+          this._version.hidden = true;
 
-        var creator = this.mAddon.creator;
-        var creatorURL = this.mAddon.creatorURL;
-        // XXxunf api
-        this._creator.setCreator(creator, creatorURL || homepageURL);
+        this._creator.setCreator(this.mAddon.creator);
 
-        this._description.textContent = this.mAddon.description;
+        if (this.mAddon.description)
+          this._description.value = this.mAddon.description;
+        else
+          this._description.hidden = true;
 
-        if (numExtraDetails == 0)
-          this._toggleMore.hidden = true;
+        if (!this.mAddon.applyBackgroundUpdates) {
+          var self = this;
+          AddonManager.getAllInstalls(function(aInstallsList) {
+            for (let i = 0; i < aInstallsList.length; i++) {
+              let install = aInstallsList[i];
+              if (install.existingAddon &&
+                  install.existingAddon.id == self.mAddon.id &&
+                  install.state == AddonManager.STATE_AVAILABLE) {
+                self.onNewInstall(install);
+              }
+            }
+          });
+        }
 
         gEventManager.registerAddonListener(this, this.mAddon.id);
       ]]></constructor>
@@ -860,39 +874,55 @@
         gEventManager.unregisterAddonListener(this, this.mAddon.id);
       ]]></destructor>
 
-      <field name="_toggleMore">
+      <field name="_warningContainer">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "toggle-more");
+                                                "warning-container");
       </field>
-      <field name="_extraDetails">
+      <field name="_warning">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "extra-details");
+                                                "warning");
       </field>
-      <field name="_incompatibleContainer">
+      <field name="_warningLink">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "incompatible-container");
+                                                "warning-link");
       </field>
-      <field name="_incompatibleWarning">
+      <field name="_errorContainer">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "incompatible-warning");
+                                                "error-container");
+      </field>
+      <field name="_error">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "error");
+      </field>
+      <field name="_errorLink">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "error-link");
+      </field>
+      <field name="_pendingContainer">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "pending-container");
+      </field>
+      <field name="_pending">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "pending");
+      </field>
+      <field name="_infoContainer">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "info-container");
+      </field>
+      <field name="_info">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "info");
       </field>
       <field name="_creator">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "creator");
-      </field>
-      <field name="_homepage">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "homepage");
       </field>
       <field name="_version">
         document.getAnonymousElementByAttribute(this, "anonid", "version");
       </field>
       <field name="_icon">
         document.getAnonymousElementByAttribute(this, "anonid", "icon");
-      </field>
-      <field name="_size">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "formatted-size");
       </field>
       <field name="_dateUpdated">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -918,6 +948,10 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "remove-btn");
       </field>
+      <field name="_updateBtn">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "update-btn");
+      </field>
       <field name="_controlContainer">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "control-container");
@@ -930,6 +964,31 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "checking-update");
       </field>
+      <field name="_updateAvailable">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "update-available");
+      </field>
+      <field name="_relNotesLoaded">false</field>
+      <field name="_relNotesToggle">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-toggle");
+      </field>
+      <field name="_relNotesLoading">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-loading");
+      </field>
+      <field name="_relNotesError">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-error");
+      </field>
+      <field name="_relNotesContainer">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes-container");
+      </field>
+      <field name="_relNotes">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "relnotes");
+      </field>
 
       <property name="userDisabled">
         <getter><![CDATA[
@@ -940,56 +999,20 @@
         ]]></setter>
       </property>
 
-      <method name="toggleDetails">
-        <body><![CDATA[
-          if (this.hasAttribute("show-extra")) {
-            this._extraDetails.style.height = "0px";
-            this._toggleMore.setAttribute(
-              "label",
-              this._toggleMore.getAttribute("showmore")
-            );
-            this._toggleMore.setAttribute(
-              "tooltiptext",
-              this._toggleMore.getAttribute("showmoretooltip")
-            );
-            this.removeAttribute("show-extra");
-          } else {
-            this._extraDetails.style.height = this._extraDetails.scrollHeight +
-                                              "px";
-            this._toggleMore.setAttribute(
-              "label",
-              this._toggleMore.getAttribute("showless")
-            );
-            this._toggleMore.setAttribute(
-              "tooltiptext",
-              this._toggleMore.getAttribute("showlesstooltip")
-            );
-            this.setAttribute("show-extra", "true");
-          }
-        ]]></body>
-      </method>
-
       <method name="_showStatus">
         <parameter name="aType"/>
         <body><![CDATA[
-          this._controlContainer.hidden = aType != "none";
+          this._controlContainer.hidden = aType != "none" &&
+                                          !(aType == "update-available" && !this.hasAttribute("upgrade"));
+
           this._installStatus.hidden = aType != "progress";
           if (aType == "progress")
             this._installStatus.refreshState();
           this._checkingUpdate.hidden = aType != "checking-update";
-        ]]></body>
-      </method>
-
-      <method name="_updateSize">
-        <body><![CDATA[
-          var bytes = this.getAttribute("size"); // this.mAddon.size;
-          var formatted = gStrings.dl.GetStringFromName("doneSizeUnknown");
-          if (bytes && !isNaN(bytes) && bytes > 0) {
-            let [size, unit] = DownloadUtils.convertByteUnits(parseInt(bytes));
-            formatted = gStrings.dl.GetStringFromName("doneSize");
-            formatted = formatted.replace("#1", size).replace("#2", unit);
-          }
-          this._size.value = formatted;
+          this._updateAvailable.hidden = aType != "update-available";
+          this._relNotesToggle.hidden = !(this.mManualUpdate ?
+                                          this.mManualUpdate.releaseNotesURI :
+                                          this.mAddon.releaseNotesURI);
         ]]></body>
       </method>
 
@@ -1015,7 +1038,62 @@
 
       <method name="_updateState">
         <body><![CDATA[
-          this.setAttribute("incompatible", !this.mAddon.isCompatible);
+          var pending = this.mAddon.pendingOperations;
+          if (pending != AddonManager.PENDING_NONE) {
+            this.removeAttribute("notification");
+
+            var pending = null;
+            ["enable", "disable", "install", "uninstall", "upgrade"].forEach(function(aOp) {
+              if (this.isPending(aOp))
+                pending = aOp;
+            }, this);
+
+            this.setAttribute("pending", pending);
+            this._pending.textContent = gStrings.ext.formatStringFromName(
+              "notification." + pending,
+              [this.mAddon.name, gStrings.brandShortName], 2
+            );
+          } else {
+            this.removeAttribute("pending");
+
+            if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+              this.setAttribute("notification", "error");
+              this._error.textContent = gStrings.ext.formatStringFromName(
+                "notification.blocked",
+                [this.mAddon.name], 1
+              );
+              this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
+              this._errorLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+              this._errorLink.hidden = false;
+            } else if (!this.mAddon.isCompatible) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.incompatible",
+                [this.mAddon.name, gStrings.brandShortName, gStrings.appVersion], 3
+              );
+              this._warningLink.hidden = true;
+            } else if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.softblocked",
+                [this.mAddon.name], 1
+              );
+              this._warningLink.value = gStrings.ext.GetStringFromName("notification.softblocked.link");
+              this._warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+              this._warningLink.hidden = false;
+            } else if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.outdated",
+                [this.mAddon.name], 1
+              );
+              this._warningLink.value = gStrings.ext.GetStringFromName("notification.outdated.link");
+              this._warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
+              this._warningLink.hidden = false;
+            } else {
+              this.removeAttribute("notification");
+            }
+          }
 
           this._preferencesBtn.hidden = !this.mAddon.optionsURL;
 
@@ -1042,25 +1120,149 @@
             let tooltip = gViewController.commands["cmd_uninstallItem"]
                                          .getTooltip(this.mAddon);
             this._removeBtn.setAttribute("tooltiptext", tooltip);
-          }
-          else {
+          } else {
             this._removeBtn.hidden = true;
           }
 
-          var showAsActive = this.mAddon.isActive;
-          if (this.isPending("enable"))
-            showAsActive = true;
-          else if (this.isPending("disable"))
-            showAsActive = false;
-          this.setAttribute("active", showAsActive);
+          this.setAttribute("active", this.mAddon.isActive);
 
-          var pending = this.mAddon.pendingOperations;
-          this.setAttribute("pending", pending != 0);
-
-          var showProgress = pending != 0;
-          if (this.getAttribute("remote") == "true")
-            showProgress = showProgress || !!this.mAddon.install;
+          var showProgress = this.mAddon.install &&
+                             this.mAddon.install.state != AddonManager.STATE_INSTALLED;
           this._showStatus(showProgress ? "progress" : "none");
+        ]]></body>
+      </method>
+
+      <method name="_updateUpgradeInfo">
+        <body><![CDATA[
+          this._version.value = this.mManualUpdate.version;
+        ]]></body>
+      </method>
+
+      <method name="_fetchReleaseNotes">
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          var self = this;
+          if (!aURI || this._relNotesLoaded) {
+            sendToggleEvent();
+            return;
+          }
+
+          var relNotesData = null, transformData = null;
+ 
+          this._relNotesLoaded = true;
+          this._relNotesLoading.hidden = false;
+          this._relNotesError.hidden = true;
+          
+          function sendToggleEvent() {
+            var event = document.createEvent("Events");
+            event.initEvent("RelNotesToggle", true, true);
+            self.dispatchEvent(event);
+          }
+
+          function showRelNotes() {
+            if (!relNotesData || !transformData)
+              return;
+
+            self._relNotesLoading.hidden = true;
+
+            var processor = Components.classes["@mozilla.org/document-transformer;1?type=xslt"]
+                                      .createInstance(Components.interfaces.nsIXSLTProcessor);
+            processor.flags |= Components.interfaces.nsIXSLTProcessorPrivate.DISABLE_ALL_LOADS;
+
+            processor.importStylesheet(transformData);
+            var fragment = processor.transformToFragment(relNotesData, document);
+            self._relNotes.appendChild(fragment);
+            if (self.hasAttribute("show-relnotes")) {
+              var container = self._relNotesContainer;
+              container.style.height = container.scrollHeight + "px";
+            }
+            sendToggleEvent();
+          }
+
+          function handleError() {
+            dataReq.abort();
+            styleReq.abort();
+            self._relNotesLoading.hidden = true;
+            self._relNotesError.hidden = false;
+            self._relNotesLoaded = false; // allow loading to be re-tried
+            sendToggleEvent();
+          }
+
+          function handleResponse(aEvent) {
+            var req = aEvent.target;
+            if (req.responseXML &&
+                req.responseXML.documentElement.namespaceURI != XMLURI_PARSE_ERROR) {
+              if (req == dataReq)
+                relNotesData = req.responseXML;
+              else
+                transformData = req.responseXML;
+              showRelNotes();
+            } else {
+              handleError();
+            }
+          }
+
+          var dataReq = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          dataReq.open("GET", aURI.spec, true);
+          dataReq.addEventListener("load", handleResponse, false);
+          dataReq.addEventListener("error", handleError, false);
+          dataReq.send(null);
+
+          var styleReq = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          styleReq.open("GET", UPDATES_RELEASENOTES_TRANSFORMFILE, true);
+          styleReq.addEventListener("load", handleResponse, false);
+          styleReq.addEventListener("error", handleError, false);
+          styleReq.send(null);
+        ]]></body>
+      </method>
+
+      <method name="toggleReleaseNotes">
+        <body><![CDATA[
+          if (this.hasAttribute("show-relnotes")) {
+            this._relNotesContainer.style.height = "0px";
+            this.removeAttribute("show-relnotes");
+            this._relNotesToggle.setAttribute(
+              "label",
+              this._relNotesToggle.getAttribute("showlabel")
+            );
+            this._relNotesToggle.setAttribute(
+              "tooltiptext",
+              this._relNotesToggle.getAttribute("showtooltip")
+            );
+            var event = document.createEvent("Events");
+            event.initEvent("RelNotesToggle", true, true);
+            this.dispatchEvent(event);
+          } else {
+            this._relNotesContainer.style.height = this._relNotesContainer.scrollHeight +
+                                                   "px";
+            this.setAttribute("show-relnotes", true);
+            this._relNotesToggle.setAttribute(
+              "label",
+              this._relNotesToggle.getAttribute("hidelabel")
+            );
+            this._relNotesToggle.setAttribute(
+              "tooltiptext",
+              this._relNotesToggle.getAttribute("hidetooltip")
+            );
+            var uri = this.mManualUpdate ?
+                      this.mManualUpdate.releaseNotesURI :
+                      this.mAddon.releaseNotesURI;
+            this._fetchReleaseNotes(uri);
+          }
+        ]]></body>
+      </method>
+
+      <method name="restart">
+        <body><![CDATA[
+          gViewController.commands["cmd_restartApp"].doCommand();
+        ]]></body>
+      </method>
+
+      <method name="undo">
+        <body><![CDATA[
+          gViewController.commands["cmd_cancelOperation"].doCommand(this.mAddon);
         ]]></body>
       </method>
 
@@ -1069,20 +1271,32 @@
           // If uninstalling does not require a restart then just disable it
           // and show the undo UI.
           if (!this.opRequiresRestart("uninstall")) {
-            // This won't update any other add-on manager views (bug 582002)
             this.setAttribute("wasDisabled", this.mAddon.userDisabled);
-            this.setAttribute("restartrequired", false);
-            this.setAttribute("status", "uninstalled");
+
+            // We must set userDisabled to true first, this will call
+            // _updateState which will clear any pending attribute set.
             this.mAddon.userDisabled = true;
+
+            // This won't update any other add-on manager views (bug 582002)
+            this.setAttribute("restartrequired", false);
+            this.setAttribute("pending", "uninstall");
           } else {
             this.mAddon.uninstall();
           }
-          ]]></body>
+        ]]></body>
       </method>
 
       <method name="showPreferences">
         <body><![CDATA[
           gViewController.doCommand("cmd_showItemPreferences", this.mAddon);
+        ]]></body>
+      </method>
+
+      <method name="upgrade">
+        <body><![CDATA[
+          var install = this.mManualUpdate;
+          delete this.mManualUpdate;
+          install.install();
         ]]></body>
       </method>
 
@@ -1121,7 +1335,7 @@
         <parameter name="aRestartRequired"/>
         <body><![CDATA[
           this.setAttribute("restartrequired", aRestartRequired);
-          this.setAttribute("status", "uninstalled");
+          this.setAttribute("pending", "uninstall");
         ]]></body>
       </method>
 
@@ -1152,6 +1366,25 @@
       <method name="onNewInstall">
         <parameter name="aInstall"/>
         <body><![CDATA[
+          if (!this.mAddon.applyBackgroundUpdates) {
+            this.mManualUpdate = aInstall;
+            this._showStatus("update-available");
+            this._updateUpgradeInfo();
+          }
+        ]]></body>
+      </method>
+
+      <method name="onDownloadStarted">
+        <parameter name="aInstall"/>
+        <body><![CDATA[
+          this._showStatus("progress");
+          this._installStatus.initWithInstall(aInstall);
+        ]]></body>
+      </method>
+
+      <method name="onInstallStarted">
+        <parameter name="aInstall"/>
+        <body><![CDATA[
           this._showStatus("progress");
           this._installStatus.initWithInstall(aInstall);
         ]]></body>
@@ -1159,10 +1392,7 @@
 
       <method name="onInstallEnded">
         <body><![CDATA[
-          if (!this.isPending("upgrade"))
-            this._showStatus("none");
-          else
-            this.setAttribute("pending", true);
+          this._updateState();
         ]]></body>
       </method>
     </implementation>
@@ -1180,26 +1410,25 @@
   <binding id="addon-uninstalled"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:spacer flex="1"/>
-      <xul:hbox class="container">
-        <xul:label anonid="notice" class="notice"/>
-        <xul:button anonid="undo-btn" class="button-link"
-                    label="&addon.undoUninstall.label;"
-                    tooltiptext="&addon.undoUninstall.tooltip;"
-                    oncommand="document.getBindingParent(this).cancelUninstall();"/>
+      <xul:hbox class="pending" align="center">
+        <xul:image class="pending-icon"/>
+        <xul:label anonid="notice" flex="1"/>
         <xul:button anonid="restart-btn" class="button-link"
                     label="&addon.restartNow.label;"
-                    tooltiptext="&addon.restartNow.tooltip;"
                     command="cmd_restartApp"/>
+        <xul:button anonid="undo-btn" class="button-link"
+                    label="&addon.undoRemove.label;"
+                    tooltiptext="&addon.undoRemove.tooltip;"
+                    oncommand="document.getBindingParent(this).cancelUninstall();"/>
+        <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
-      <xul:spacer flex="1"/>
     </content>
 
     <implementation>
       <constructor><![CDATA[
-        this._notice.value = gStrings.ext.formatStringFromName("uninstallNotice",
-                                                               [this.mAddon.name],
-                                                               1);
+        this._notice.textContent = gStrings.ext.formatStringFromName("uninstallNotice",
+                                                                     [this.mAddon.name],
+                                                                     1);
 
         if (!this.isPending("uninstall"))
           this._restartBtn.setAttribute("hidden", true);
@@ -1230,14 +1459,14 @@
             this.mAddon.userDisabled = false;
 
           this.removeAttribute("restartrequired");
-          this.setAttribute("status", "installed");
+          this.removeAttribute("pending");
         ]]></body>
       </method>
 
       <method name="onOperationCancelled">
         <body><![CDATA[
           if (!this.isPending("uninstall"))
-            this.setAttribute("status", "installed");
+            this.removeAttribute("pending");
         ]]></body>
       </method>
     </implementation>
@@ -1248,7 +1477,11 @@
   <binding id="addon-installing"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:image anonid="icon" class="icon"/>
+      <xul:vbox pack="center">
+        <xul:vbox align="center" pack="center" class="icon-container">
+          <xul:image anonid="icon" class="icon"/>
+        </xul:vbox>
+      </xul:vbox>
       <xul:label anonid="name" class="name"/>
       <xul:spacer flex="1"/>
       <xul:hbox anonid="install-status" class="install-status"/>
@@ -1257,11 +1490,7 @@
     <implementation>
       <constructor><![CDATA[
         this._installStatus.mControl = this;
-        if (this.mAddon) {
-          this._installStatus.mAddon = this.mAddon;
-        } else {
-          this._installStatus.mInstall = this.mInstall;
-        }
+        this._installStatus.mInstall = this.mInstall;
         this.refreshInfo();
       ]]></constructor>
 
@@ -1278,12 +1507,9 @@
 
       <method name="onInstallCompleted">
         <body><![CDATA[
-          this.refreshInfo();
-          if (!this.isPending("install")) {
-            delete this.mInstall;
-            this.setAttribute("name", this.mAddon.name);
-            this.setAttribute("status", "installed");
-          }
+          this.mAddon = this.mInstall.addon;
+          this.setAttribute("name", this.mAddon.name);
+          this.setAttribute("status", "installed");
         ]]></body>
       </method>
 
@@ -1291,7 +1517,8 @@
         <body><![CDATA[
           this.mAddon = this.mAddon || this.mInstall.addon;
           if (this.mAddon) {
-            this._icon.src = this.mAddon.iconURL || this.mInstall.iconURL;
+            this._icon.src = this.mAddon.iconURL ||
+                             (this.mInstall ? this.mInstall.iconURL : "");
             this._name.value = this.mAddon.name;
           } else {
             this._icon.src = this.mInstall.iconURL;
@@ -1309,6 +1536,27 @@
           }
         ]]></body>
       </method>
+    </implementation>
+  </binding>
+
+  <binding id="detail-row">
+    <content>
+      <xul:label class="detail-row-label" xbl:inherits="value=label"/>
+      <xul:label class="detail-row-value" xbl:inherits="value"/>
+    </content>
+
+    <implementation>
+      <property name="value">
+        <getter><![CDATA[
+          return this.getAttribute("value");
+        ]]></getter>
+        <setter><![CDATA[
+          if (!val)
+            this.removeAttribute("value");
+          else
+            this.setAttribute("value", val);
+        ]]></setter>
+      </property>
     </implementation>
   </binding>
 

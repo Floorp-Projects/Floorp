@@ -1,3 +1,5 @@
 browser.jar:
 *   content/browser/feeds/subscribe.xhtml               (content/subscribe.xhtml) 
 *   content/browser/feeds/subscribe.js                  (content/subscribe.js)
+*   content/browser/feeds/subscribe.xml                 (content/subscribe.xml)
+    content/browser/feeds/subscribe.css                 (content/subscribe.css)

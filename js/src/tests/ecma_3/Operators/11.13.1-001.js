@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '11.13.1-001.js';
 var UBound = 0;
 var BUGNUMBER = 204919;
 var summary = 'JS should evaluate RHS before binding LHS implicit variable';

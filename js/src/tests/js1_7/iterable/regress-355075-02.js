@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355075-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355075;
 var summary = 'Regression tests from bug 354750';

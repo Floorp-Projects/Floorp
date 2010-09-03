@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-451322.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 451322;
 var summary = 'Do not crash with OOM in LirBufWriter';

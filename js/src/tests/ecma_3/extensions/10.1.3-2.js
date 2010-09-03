@@ -49,7 +49,6 @@
  * extensions to the language. So we include a test for them at the beginning -
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '10.1.3-2.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing functions having duplicate formal parameter names';

@@ -385,7 +385,9 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
 
 class nsDisplayTableCellBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : nsDisplayTableItem(aFrame) {
+  nsDisplayTableCellBackground(nsDisplayListBuilder* aBuilder,
+                               nsTableCellFrame* aFrame) :
+    nsDisplayTableItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -409,7 +411,7 @@ void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
                                          nsIRenderingContext* aCtx)
 {
   static_cast<nsTableCellFrame*>(mFrame)->
-    PaintBackground(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame),
+    PaintBackground(*aCtx, mVisibleRect, ToReferenceFrame(),
                     aBuilder->GetBackgroundPaintFlags());
 }
 
@@ -458,8 +460,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // display outset box-shadows if we need to.
     PRBool hasBoxShadow = !!(GetStyleBorder()->mBoxShadow);
     if (hasBoxShadow) {
-      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowOuter(this);
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -470,7 +472,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // The cell background was not painted by the nsTablePainter,
       // so we need to do it. We have special background processing here
       // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
-      nsDisplayTableItem* item = new (aBuilder) nsDisplayTableCellBackground(this);
+      nsDisplayTableItem* item =
+        new (aBuilder) nsDisplayTableCellBackground(aBuilder, this);
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
       item->UpdateForFrameBackground(this);
@@ -478,8 +481,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     // display inset box-shadows if we need to.
     if (hasBoxShadow) {
-      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowInner(this);
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(
+          new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -487,7 +490,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!tableFrame->IsBorderCollapse() && HasBorder() &&
         emptyCellStyle == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayBorder(this));
+          nsDisplayBorder(aBuilder, this));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -496,7 +499,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayGeneric(this, ::PaintTableCellSelection, "TableCellSelection",
+          nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
+                           "TableCellSelection",
                            nsDisplayItem::TYPE_TABLE_CELL_SELECTION));
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -552,21 +556,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   nscoord topInset = borderPadding.top;
   nscoord bottomInset = borderPadding.bottom;
 
-  // As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom',
-  // length and percentage values to 'baseline'
-  // XXX It seems that we don't get to see length and percentage values here
-  //     because the Style System has already fixed the error and mapped them
-  //     to whatever is inherited from the parent, i.e, 'middle' in most cases.
-  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
-  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-    if (verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_TOP &&
-        verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_MIDDLE &&
-        verticalAlignFlags != NS_STYLE_VERTICAL_ALIGN_BOTTOM)
-    {
-      verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
-    }
-  }
+  PRUint8 verticalAlignFlags = GetVerticalAlign();
 
   nscoord height = mRect.height;
   nsIFrame* firstKid = mFrames.FirstChild();
@@ -604,7 +594,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
 
   if (kidYTop != kidRect.y) {
     // Invalidate at the old position first
-    firstKid->InvalidateOverflowRect();
+    firstKid->InvalidateFrameSubtree();
   }
 
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
@@ -620,7 +610,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     nsContainerFrame::PositionChildViews(firstKid);
 
     // Invalidate new overflow rect
-    firstKid->InvalidateOverflowRect();
+    firstKid->InvalidateFrameSubtree();
   }
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this,
@@ -629,25 +619,21 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   }
 }
 
-// As per bug 10207, we map 'sub', 'super', 'text-top', 'text-bottom',
-// length and percentage values to 'baseline'
-// XXX It seems that we don't get to see length and percentage values here
-//     because the Style System has already fixed the error and mapped them
-//     to whatever is inherited from the parent, i.e, 'middle' in most cases.
-PRBool
-nsTableCellFrame::HasVerticalAlignBaseline()
+// Per CSS 2.1, we map 'sub', 'super', 'text-top', 'text-bottom',
+// length, percentage, and calc() values to 'baseline'.
+PRUint8
+nsTableCellFrame::GetVerticalAlign() const
 {
-  const nsStyleTextReset* textStyle = GetStyleTextReset();
-  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    PRUint8 verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-    if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_TOP ||
-        verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_MIDDLE ||
-        verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_BOTTOM)
-    {
-      return PR_FALSE;
+  const nsStyleCoord& verticalAlign = GetStyleTextReset()->mVerticalAlign;
+  if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    PRUint8 value = verticalAlign.GetIntValue();
+    if (value == NS_STYLE_VERTICAL_ALIGN_TOP ||
+        value == NS_STYLE_VERTICAL_ALIGN_MIDDLE ||
+        value == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
+      return value;
     }
   }
-  return PR_TRUE;
+  return NS_STYLE_VERTICAL_ALIGN_BASELINE;
 }
 
 PRBool
@@ -922,7 +908,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   // XXXbz is this invalidate actually needed, really?
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
 
 #ifdef NS_DEBUG

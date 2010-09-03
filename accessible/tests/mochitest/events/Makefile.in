@@ -50,6 +50,7 @@ _TEST_FILES =\
 		docload_wnd.xul \
 		focus.html \
 		scroll.html \
+		test_aria_alert.html \
 		test_aria_statechange.html \
 		test_attrs.html \
 		test_caretmove.html \

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-474935.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 474935;
 var summary = 'Do not assert: !ti->typeMap.matches(ti_other->typeMap)';

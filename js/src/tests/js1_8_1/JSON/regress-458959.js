@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-458959.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 458959;
 var summary = 'this.JSON should not be enumerable';

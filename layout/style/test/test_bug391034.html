@@ -56,13 +56,13 @@ is(getComp("three").bottom, "6px",
 is(getComp("three").left, "10px",
    "Incorrect computed left offset if specified in %")
 
-is(getComp("four").top, "0px",
+is(getComp("four").top, "auto",
    "Incorrect undisplayed computed top offset if specified in %")
-is(getComp("four").right, "0px",
+is(getComp("four").right, "auto",
    "Incorrect undisplayed computed right offset if specified in %")
-is(getComp("four").bottom, "0px",
+is(getComp("four").bottom, "20%",
    "Incorrect undisplayed computed bottom offset if specified in %")
-is(getComp("four").left, "0px",
+is(getComp("four").left, "10%",
    "Incorrect undisplayed computed left offset if specified in %")
 
 </script>

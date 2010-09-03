@@ -10,92 +10,69 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var PARALLEL_TESTS = 2;
 
-var testIndex = 0;
-var videos = [];
+var manager = new MediaTestManager;
 
-var testsWaiting = 0;
-
-function startTests() {
-  for (var i = 0; i < videos.length; ++i) {
-    document.body.removeChild(videos[i]);
-  }
-  videos = [];
-  while (videos.length < PARALLEL_TESTS && testIndex < gReplayTests.length) {
-    var v = document.createElement('video');
-    var test = gReplayTests[testIndex];
-    ++testIndex;
-    if (!v.canPlayType(test.type))
-      continue;
-
-    v.src = test.name;
-    v.name = test.name;
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v.name = test.name;
+  v.playingCount = 0;
+  var check = function(test, v) { return function() {
+    checkMetadata(test.name, v, test);
+  }}(test, v);
+  var noLoad = function(test, v) { return function() {
+    ok(false, test.name + " should not fire 'load' event");
+  }}(test, v);
+  var checkEnded = function(test, v) { return function() {
+    if (test.duration) {
+      ok(Math.abs(v.currentTime - test.duration) < 0.1,
+         test.name + " current time at end: " + v.currentTime);
+    }
+    is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
+    ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
+    ok(v.ended, test.name + " checking playback has ended");
+    ok(v.playingCount > 0, "Expect at least one playing event");
     v.playingCount = 0;
-    var check = function(test, v) { return function() {
-      checkMetadata(test.name, v, test);
-    }}(test, v);
-    var noLoad = function(test, v) { return function() {
-      ok(false, test.name + " should not fire 'load' event");
-    }}(test, v);
-    var checkEnded = function(test, v) { return function() {
-      if (test.duration) {
-        ok(Math.abs(v.currentTime - test.duration) < 0.1,
-           test.name + " current time at end: " + v.currentTime);
-      }
-      is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-      ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
-      ok(v.ended, test.name + " checking playback has ended");
-      ok(v.playingCount > 0, "Expect at least one playing event");
-      v.playingCount = 0;
-      if (v._playedOnce) {
-        --testsWaiting;
-        if (testsWaiting == 0) {
-          setTimeout(startTests, 0);
-        }
-      } else {
-        v._playedOnce = true;
-        v.play();
-      }
-    }}(test, v);
-    var checkSuspended = function(test, v) { return function() {
-      if (v.seenSuspend)
-        return;
+    if (v._playedOnce && v.seenSuspend) {
+      v.parentNode.removeChild(v);
+      manager.finished(v.token);
+    } else {
+      v._playedOnce = true;
+      v.play();
+    }
+  }}(test, v);
+  var checkSuspended = function(test, v) { return function() {
+    if (v.seenSuspend)
+      return;
 
-      v.seenSuspend = true;
-      ok(true, test.name + " got suspend");
-      --testsWaiting;
-      if (testsWaiting == 0) {
-        setTimeout(startTests, 0);
-      }
-    }}(test, v);
-    var checkPlaying = function(test, v) { return function() {
-      is(test.name, v.name, "Should be testing file we think we're testing...");
-      v.playingCount++;
-    }}(test, v);
-    v.addEventListener("load", noLoad, false);
-    v.addEventListener("loadedmetadata", check, false);
-    v.addEventListener("playing", checkPlaying, false);
+    v.seenSuspend = true;
+    ok(true, test.name + " got suspend");
+    if (v._playedOnce && v.seenSuspend) {
+      v.parentNode.removeChild(v);
+      manager.finished(v.token);
+    }
+  }}(test, v);
+  var checkPlaying = function(test, v) { return function() {
+    is(test.name, v.name, "Should be testing file we think we're testing...");
+    v.playingCount++;
+  }}(test, v);
+  v.addEventListener("load", noLoad, false);
+  v.addEventListener("loadedmetadata", check, false);
+  v.addEventListener("playing", checkPlaying, false);
 
-    // We should get "ended" and "suspend" events for every resource
-    v.addEventListener("ended", checkEnded, false);
-    v.addEventListener("suspend", checkSuspended, false);
-    testsWaiting += 2;
-
-    document.body.appendChild(v);
-    v.play();
-    videos.push(v);
-  }
-  if (videos.length == 0) {
-    // No new tests were spawned, perhaps the remaining tests on the list are
-    // not supported, or we just reached the end of the list.
-    SimpleTest.finish();
-  }
+  // We should get "ended" and "suspend" events for every resource
+  v.addEventListener("ended", checkEnded, false);
+  v.addEventListener("suspend", checkSuspended, false);
+  
+  document.body.appendChild(v);
+  v.play();
 }
 
-SimpleTest.waitForExplicitFinish();
+manager.runTests(gReplayTests, startTest);
 
-addLoadEvent(startTests);
 </script>
 </pre>
 </body>

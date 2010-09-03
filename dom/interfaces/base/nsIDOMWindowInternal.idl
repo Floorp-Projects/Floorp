@@ -220,4 +220,14 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * been painted to the screen.
    */
   readonly attribute unsigned long long mozPaintCount;
+
+  /**
+   * Request a refresh of this browser window.
+   */
+  void mozRequestAnimationFrame();
+
+  /**
+   * The current animation start time in milliseconds since the epoch.
+   */
+  readonly attribute long long mozAnimationStartTime;
 };

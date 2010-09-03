@@ -48,143 +48,22 @@
 #include "nsCSSValue.h"
 #include "nsStyleConsts.h"
 
-// Prefer nsCSSValue::Array for lists of fixed size.
-struct nsCSSValueList {
-  nsCSSValueList() : mNext(nsnull) { MOZ_COUNT_CTOR(nsCSSValueList); }
-  ~nsCSSValueList();
-
-  nsCSSValueList* Clone() const { return Clone(PR_TRUE); }
-
-  static PRBool Equal(nsCSSValueList* aList1, nsCSSValueList* aList2);
-
-  nsCSSValue      mValue;
-  nsCSSValueList* mNext;
-
-private:
-  nsCSSValueList(const nsCSSValueList& aCopy) // makes a shallow copy
-    : mValue(aCopy.mValue), mNext(nsnull)
-  {
-    MOZ_COUNT_CTOR(nsCSSValueList);
-  }
-  nsCSSValueList* Clone(PRBool aDeep) const;
-};
-
-struct nsCSSRect {
-  nsCSSRect(void);
-  nsCSSRect(const nsCSSRect& aCopy);
-  ~nsCSSRect();
-
-  PRBool operator==(const nsCSSRect& aOther) const {
-    return mTop == aOther.mTop &&
-           mRight == aOther.mRight &&
-           mBottom == aOther.mBottom &&
-           mLeft == aOther.mLeft;
-  }
-
-  PRBool operator!=(const nsCSSRect& aOther) const {
-    return mTop != aOther.mTop ||
-           mRight != aOther.mRight ||
-           mBottom != aOther.mBottom ||
-           mLeft != aOther.mLeft;
-  }
-
-  void SetAllSidesTo(const nsCSSValue& aValue);
-
-  void Reset() {
-    mTop.Reset();
-    mRight.Reset();
-    mBottom.Reset();
-    mLeft.Reset();
-  }
-
-  PRBool HasValue() const {
-    return
-      mTop.GetUnit() != eCSSUnit_Null ||
-      mRight.GetUnit() != eCSSUnit_Null ||
-      mBottom.GetUnit() != eCSSUnit_Null ||
-      mLeft.GetUnit() != eCSSUnit_Null;
-  }
-  
-  nsCSSValue mTop;
-  nsCSSValue mRight;
-  nsCSSValue mBottom;
-  nsCSSValue mLeft;
-
-  typedef nsCSSValue nsCSSRect::*side_type;
-  static const side_type sides[4];
-};
-
-struct nsCSSValuePair {
-  nsCSSValuePair()
-  {
-    MOZ_COUNT_CTOR(nsCSSValuePair);
-  }
-  nsCSSValuePair(const nsCSSValuePair& aCopy)
-    : mXValue(aCopy.mXValue),
-      mYValue(aCopy.mYValue)
-  { 
-    MOZ_COUNT_CTOR(nsCSSValuePair);
-  }
-  ~nsCSSValuePair()
-  {
-    MOZ_COUNT_DTOR(nsCSSValuePair);
-  }
-
-  PRBool operator==(const nsCSSValuePair& aOther) const {
-    return mXValue == aOther.mXValue &&
-           mYValue == aOther.mYValue;
-  }
-
-  PRBool operator!=(const nsCSSValuePair& aOther) const {
-    return mXValue != aOther.mXValue ||
-           mYValue != aOther.mYValue;
-  }
-
-  void SetBothValuesTo(const nsCSSValue& aValue) {
-    mXValue = aValue;
-    mYValue = aValue;
-  }
-
-  void Reset() {
-    mXValue.Reset();
-    mYValue.Reset();
-  }
-
-  PRBool HasValue() const {
-    return mXValue.GetUnit() != eCSSUnit_Null ||
-           mYValue.GetUnit() != eCSSUnit_Null;
-  }
-
-  nsCSSValue mXValue;
-  nsCSSValue mYValue;
-};
-
 struct nsCSSCornerSizes {
   nsCSSCornerSizes(void);
   nsCSSCornerSizes(const nsCSSCornerSizes& aCopy);
   ~nsCSSCornerSizes();
 
   // argument is a "full corner" constant from nsStyleConsts.h
-  nsCSSValuePair const & GetFullCorner(PRUint32 aCorner) const {
-    return (this->*corners[aCorner]);
+  nsCSSValue const & GetCorner(PRUint32 aCorner) const {
+    return this->*corners[aCorner];
   }
-  nsCSSValuePair & GetFullCorner(PRUint32 aCorner) {
-    return (this->*corners[aCorner]);
+  nsCSSValue & GetCorner(PRUint32 aCorner) {
+    return this->*corners[aCorner];
   }
 
-  // argument is a "half corner" constant from nsStyleConsts.h
-  const nsCSSValue& GetHalfCorner(PRUint32 hc) const {
-    nsCSSValuePair const & fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
-    return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
-  }
-  nsCSSValue & GetHalfCorner(PRUint32 hc) {
-    nsCSSValuePair& fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
-    return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
-  }
-  
   PRBool operator==(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
+      if (this->GetCorner(corner) != aOther.GetCorner(corner))
         return PR_FALSE;
     }
     return PR_TRUE;
@@ -192,7 +71,7 @@ struct nsCSSCornerSizes {
 
   PRBool operator!=(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
+      if (this->GetCorner(corner) != aOther.GetCorner(corner))
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -200,7 +79,7 @@ struct nsCSSCornerSizes {
 
   PRBool HasValue() const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
-      if (this->GetFullCorner(corner).HasValue())
+      if (this->GetCorner(corner).GetUnit() != eCSSUnit_Null)
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -208,50 +87,14 @@ struct nsCSSCornerSizes {
 
   void Reset();
 
-  nsCSSValuePair mTopLeft;
-  nsCSSValuePair mTopRight;
-  nsCSSValuePair mBottomRight;
-  nsCSSValuePair mBottomLeft;
+  nsCSSValue mTopLeft;
+  nsCSSValue mTopRight;
+  nsCSSValue mBottomRight;
+  nsCSSValue mBottomLeft;
 
 protected:
-  typedef nsCSSValuePair nsCSSCornerSizes::*corner_type;
+  typedef nsCSSValue nsCSSCornerSizes::*corner_type;
   static const corner_type corners[4];
-};
-
-struct nsCSSValueListRect {
-  nsCSSValueListRect(void);
-  nsCSSValueListRect(const nsCSSValueListRect& aCopy);
-  ~nsCSSValueListRect();
-
-  nsCSSValueList* mTop;
-  nsCSSValueList* mRight;
-  nsCSSValueList* mBottom;
-  nsCSSValueList* mLeft;
-
-  typedef nsCSSValueList* nsCSSValueListRect::*side_type;
-  static const side_type sides[4];
-};
-
-// Maybe should be replaced with nsCSSValueList and nsCSSValue::Array?
-struct nsCSSValuePairList {
-  nsCSSValuePairList() : mNext(nsnull) { MOZ_COUNT_CTOR(nsCSSValuePairList); }
-  ~nsCSSValuePairList();
-
-  nsCSSValuePairList* Clone() const { return Clone(PR_TRUE); }
-
-  static PRBool Equal(nsCSSValuePairList* aList1, nsCSSValuePairList* aList2);
-
-  nsCSSValue          mXValue;
-  nsCSSValue          mYValue;
-  nsCSSValuePairList* mNext;
-
-private:
-  nsCSSValuePairList(const nsCSSValuePairList& aCopy) // makes a shallow copy
-    : mXValue(aCopy.mXValue), mYValue(aCopy.mYValue), mNext(nsnull)
-  {
-    MOZ_COUNT_CTOR(nsCSSValuePairList);
-  }
-  nsCSSValuePairList* Clone(PRBool aDeep) const;
 };
 
 /****************************************************************************/
@@ -307,27 +150,22 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
   ~nsCSSColor(void);
 
-  nsCSSValue      mColor;
-  nsCSSValue      mBackColor;
-  nsCSSValueList* mBackImage;
-  nsCSSValueList* mBackRepeat;
-  nsCSSValueList* mBackAttachment;
-  nsCSSValuePairList* mBackPosition;
-  nsCSSValuePairList* mBackSize;
-  nsCSSValueList* mBackClip;
-  nsCSSValueList* mBackOrigin;
-  nsCSSValue      mBackInlinePolicy;
+  nsCSSValue mColor;
+  nsCSSValue mBackColor;
+  nsCSSValue mBackImage;
+  nsCSSValue mBackRepeat;
+  nsCSSValue mBackAttachment;
+  nsCSSValue mBackPosition;
+  nsCSSValue mBackSize;
+  nsCSSValue mBackClip;
+  nsCSSValue mBackOrigin;
+  nsCSSValue mBackInlinePolicy;
 private:
   nsCSSColor(const nsCSSColor& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataColor : public nsCSSColor {
   nsRuleDataColor() {}
-
-  // A little bit of a hack here:  now that background-image is
-  // represented by a value list, attribute mapping code needs a place
-  // to store one item in a value list in order to map a simple value.
-  nsCSSValueList mTempBackImage;
 private:
   nsRuleDataColor(const nsRuleDataColor& aOther); // NOT IMPLEMENTED
 };
@@ -344,7 +182,7 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mTextAlign;
   nsCSSValue mTextIndent;
   nsCSSValue mDecoration;
-  nsCSSValueList* mTextShadow; // NEW
+  nsCSSValue mTextShadow; // NEW
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
@@ -370,19 +208,19 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mPosition;
   nsCSSValue mFloat;
   nsCSSValue mClear;
-  nsCSSRect  mClip;
+  nsCSSValue mClip;
   nsCSSValue mOverflowX;
   nsCSSValue mOverflowY;
   nsCSSValue mResize;
   nsCSSValue mPointerEvents;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
-  nsCSSValueList *mTransform; // List of Arrays containing transform information
-  nsCSSValuePair mTransformOrigin;
-  nsCSSValueList* mTransitionProperty;
-  nsCSSValueList* mTransitionDuration;
-  nsCSSValueList* mTransitionTimingFunction;
-  nsCSSValueList* mTransitionDelay;
+  nsCSSValue mTransform; // List of Arrays containing transform information
+  nsCSSValue mTransformOrigin;
+  nsCSSValue mTransitionProperty;
+  nsCSSValue mTransitionDuration;
+  nsCSSValue mTransitionTimingFunction;
+  nsCSSValue mTransitionDelay;
 
   // temp fix for bug 24000 
   nsCSSValue mBreakBefore;
@@ -431,7 +269,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mBorderLeftColorRTLSource;
   nsCSSValue  mBorderRightColorLTRSource;
   nsCSSValue  mBorderRightColorRTLSource;
-  nsCSSValueListRect mBorderColors;
+  nsCSSRect   mBorderColors;
   nsCSSRect   mBorderStyle;
   nsCSSValue  mBorderStartStyle;
   nsCSSValue  mBorderEndStyle;
@@ -447,7 +285,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSCornerSizes mOutlineRadius;
   nsCSSValue  mFloatEdge; // NEW
   nsCSSValue  mBorderImage;
-  nsCSSValueList* mBoxShadow;
+  nsCSSValue  mBoxShadow;
 private:
   nsCSSMargin(const nsCSSMargin& aOther); // NOT IMPLEMENTED
 };
@@ -488,7 +326,7 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSValue mType;
   nsCSSValue mImage;
   nsCSSValue mPosition;
-  nsCSSRect  mImageRegion;
+  nsCSSValue mImageRegion;
 private:
   nsCSSList(const nsCSSList& aOther); // NOT IMPLEMENTED
 };
@@ -504,7 +342,7 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   ~nsCSSTable(void);
 
   nsCSSValue mBorderCollapse;
-  nsCSSValuePair mBorderSpacing;
+  nsCSSValue mBorderSpacing;
   nsCSSValue mCaptionSide;
   nsCSSValue mEmptyCells;
   
@@ -547,7 +385,7 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   ~nsCSSPage(void);
 
   nsCSSValue mMarks;
-  nsCSSValuePair mSize;
+  nsCSSValue mSize;
 private:
   nsCSSPage(const nsCSSPage& aOther); // NOT IMPLEMENTED
 };
@@ -562,11 +400,11 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(void);
   ~nsCSSContent(void);
 
-  nsCSSValueList*     mContent;
-  nsCSSValuePairList* mCounterIncrement;
-  nsCSSValuePairList* mCounterReset;
-  nsCSSValue          mMarkerOffset;
-  nsCSSValuePairList* mQuotes;
+  nsCSSValue mContent;
+  nsCSSValue mCounterIncrement;
+  nsCSSValue mCounterReset;
+  nsCSSValue mMarkerOffset;
+  nsCSSValue mQuotes;
 private:
   nsCSSContent(const nsCSSContent& aOther); // NOT IMPLEMENTED
 };
@@ -581,15 +419,15 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(void);
   ~nsCSSUserInterface(void);
 
-  nsCSSValue      mUserInput;
-  nsCSSValue      mUserModify;
-  nsCSSValue      mUserSelect;
-  nsCSSValue      mUserFocus;
-  
-  nsCSSValueList* mCursor;
-  nsCSSValue      mForceBrokenImageIcon;
-  nsCSSValue      mIMEMode;
-  nsCSSValue      mWindowShadow;
+  nsCSSValue mUserInput;
+  nsCSSValue mUserModify;
+  nsCSSValue mUserSelect;
+  nsCSSValue mUserFocus;
+
+  nsCSSValue mCursor;
+  nsCSSValue mForceBrokenImageIcon;
+  nsCSSValue mIMEMode;
+  nsCSSValue mWindowShadow;
 private:
   nsCSSUserInterface(const nsCSSUserInterface& aOther); // NOT IMPLEMENTED
 };
@@ -681,7 +519,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mColorInterpolation;
   nsCSSValue mColorInterpolationFilters;
   nsCSSValue mDominantBaseline;
-  nsCSSValuePair mFill;
+  nsCSSValue mFill;
   nsCSSValue mFillOpacity;
   nsCSSValue mFillRule;
   nsCSSValue mFilter;
@@ -696,8 +534,8 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mShapeRendering;
   nsCSSValue mStopColor;
   nsCSSValue mStopOpacity;
-  nsCSSValuePair mStroke;
-  nsCSSValueList *mStrokeDasharray;
+  nsCSSValue mStroke;
+  nsCSSValue mStrokeDasharray;
   nsCSSValue mStrokeDashoffset;
   nsCSSValue mStrokeLinecap;
   nsCSSValue mStrokeLinejoin;

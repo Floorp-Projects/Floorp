@@ -38,6 +38,7 @@
 DEPTH = ../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
+relativesrcdir = chrome/test
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk

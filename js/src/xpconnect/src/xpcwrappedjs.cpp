@@ -42,6 +42,7 @@
 /* Class that wraps JS objects to appear as XPCOM objects. */
 
 #include "xpcprivate.h"
+#include "nsAtomicRefcnt.h"
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
@@ -208,7 +209,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
-    nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
+    nsrefcnt cnt = NS_AtomicIncrementRefcnt(mRefCnt);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
     if(2 == cnt && IsValid())
@@ -232,7 +233,7 @@ nsXPCWrappedJS::Release(void)
 
 do_decrement:
 
-    nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
+    nsrefcnt cnt = NS_AtomicDecrementRefcnt(mRefCnt);
     NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
 
     if(0 == cnt)
@@ -620,9 +621,12 @@ nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
     if(!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 
-    jsval jsstr = XPCStringConvert::ReadableToJSVal(ccx, name);
+    nsStringBuffer* buf;
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(ccx, name, &buf);
     if(JSVAL_IS_NULL(jsstr))
         return NS_ERROR_OUT_OF_MEMORY;
+    if(buf)
+        buf->AddRef();
 
     return nsXPCWrappedJSClass::
         GetNamedPropertyAsVariant(ccx, mJSObj, jsstr, _retval);

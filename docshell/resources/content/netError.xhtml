@@ -369,13 +369,12 @@
              error types.  -->
         <div id="securityOverrideDiv">
           <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
-          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningText;</div>
+          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningContent;</div>
         </div>
       </div>
 
       <!-- Retry Button -->
-      <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  id="errorTryAgain" label="&retry.label;" oncommand="retryThis(this);" />
+      <button id="errorTryAgain" onclick="retryThis(this);">&retry.label;</button>
 
     </div>
 

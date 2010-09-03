@@ -99,6 +99,8 @@
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsAsyncRedirectVerifyHelper.h"
+#include "jstypedarray.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -486,13 +488,17 @@ nsACProxyListener::OnDataAvailable(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-nsACProxyListener::OnChannelRedirect(nsIChannel *aOldChannel,
-                                     nsIChannel *aNewChannel,
-                                     PRUint32 aFlags)
+nsACProxyListener::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                          nsIChannel *aNewChannel,
+                                          PRUint32 aFlags,
+                                          nsIAsyncVerifyRedirectCallback *callback)
 {
   // Only internal redirects allowed for now.
-  return NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags) ?
-         NS_OK : NS_ERROR_DOM_BAD_URI;
+  if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags))
+    return NS_ERROR_DOM_BAD_URI;
+
+  callback->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1227,6 +1233,35 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
   }
 
   return rv;
+}
+
+/* readonly attribute jsval (ArrayBuffer) mozResponseArrayBuffer; */
+NS_IMETHODIMP nsXMLHttpRequest::GetMozResponseArrayBuffer(jsval *aResult)
+{
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  if (!(mState & (XML_HTTP_REQUEST_COMPLETED |
+                  XML_HTTP_REQUEST_INTERACTIVE))) {
+    *aResult = JSVAL_NULL;
+    return NS_OK;
+  }
+
+  PRInt32 dataLen = mResponseBody.Length();
+  JSObject *obj = js_CreateArrayBuffer(cx, dataLen);
+  if (!obj)
+    return NS_ERROR_FAILURE;
+
+  *aResult = OBJECT_TO_JSVAL(obj);
+
+  if (dataLen > 0) {
+    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(obj);
+    NS_ASSERTION(abuf, "What happened?");
+    memcpy(abuf->data, mResponseBody.BeginReading(), dataLen);
+  }
+
+  return NS_OK;
 }
 
 /* readonly attribute unsigned long status; */
@@ -1981,6 +2016,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> responseDoc = do_QueryInterface(mResponseXML);
     responseDoc->SetPrincipal(documentPrincipal);
+
+    if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+      responseDoc->ForceEnableXULXBL();
+    }
 
     if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mResponseXML);
@@ -2988,13 +3027,60 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
   return rv;
 }
 
+/*
+ * Simple helper class that just forwards the redirect callback back
+ * to the nsXMLHttpRequest.
+ */
+class AsyncVerifyRedirectCallbackForwarder : public nsIAsyncVerifyRedirectCallback
+{
+public:
+  AsyncVerifyRedirectCallbackForwarder(nsXMLHttpRequest *xhr)
+    : mXHR(xhr)
+  {
+  }
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(AsyncVerifyRedirectCallbackForwarder)
+
+  // nsIAsyncVerifyRedirectCallback implementation
+  NS_IMETHOD OnRedirectVerifyCallback(nsresult result)
+  {
+    mXHR->OnRedirectVerifyCallback(result);
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsXMLHttpRequest> mXHR;
+};
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(AsyncVerifyRedirectCallbackForwarder)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AsyncVerifyRedirectCallbackForwarder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mXHR, nsIDOMEventListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AsyncVerifyRedirectCallbackForwarder)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mXHR)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackForwarder)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AsyncVerifyRedirectCallbackForwarder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AsyncVerifyRedirectCallbackForwarder)
+
+
 /////////////////////////////////////////////////////
 // nsIChannelEventSink methods:
 //
 NS_IMETHODIMP
-nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
-                                    nsIChannel *aNewChannel,
-                                    PRUint32    aFlags)
+nsXMLHttpRequest::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                         nsIChannel *aNewChannel,
+                                         PRUint32    aFlags,
+                                         nsIAsyncVerifyRedirectCallback *callback)
 {
   NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
 
@@ -3002,7 +3088,11 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
     rv = CheckChannelForCrossSiteRequest(aNewChannel);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("nsXMLHttpRequest::OnChannelRedirect: "
+                 "CheckChannelForCrossSiteRequest returned failure");
+      return rv;
+    }
 
     // Disable redirects for preflighted cross-site requests entirely for now
     // Note, do this after the call to CheckChannelForCrossSiteRequest
@@ -3012,18 +3102,42 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
     }
   }
 
+  // Prepare to receive callback
+  mRedirectCallback = callback;
+  mNewRedirectChannel = aNewChannel;
+
   if (mChannelEventSink) {
-    rv =
-      mChannelEventSink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+    nsRefPtr<AsyncVerifyRedirectCallbackForwarder> fwd =
+      new AsyncVerifyRedirectCallbackForwarder(this);
+
+    rv = mChannelEventSink->AsyncOnChannelRedirect(aOldChannel,
+                                                   aNewChannel,
+                                                   aFlags, fwd);
     if (NS_FAILED(rv)) {
-      mErrorLoad = PR_TRUE;
-      return rv;
+        mRedirectCallback = nsnull;
+        mNewRedirectChannel = nsnull;
     }
+    return rv;
   }
-
-  mChannel = aNewChannel;
-
+  OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
+}
+
+void
+nsXMLHttpRequest::OnRedirectVerifyCallback(nsresult result)
+{
+  NS_ASSERTION(mRedirectCallback, "mRedirectCallback not set in callback");
+  NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
+
+  if (NS_SUCCEEDED(result))
+    mChannel = mNewRedirectChannel;
+  else
+    mErrorLoad = PR_TRUE;
+
+  mNewRedirectChannel = nsnull;
+
+  mRedirectCallback->OnRedirectVerifyCallback(result);
+  mRedirectCallback = nsnull;
 }
 
 /////////////////////////////////////////////////////

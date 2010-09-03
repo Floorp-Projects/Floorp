@@ -360,6 +360,8 @@ public:
   virtual NS_HIDDEN_(nsresult) ForceClose();
 
   virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
+  virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
+  virtual NS_HIDDEN_(void) UpdateTouchState();
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -380,6 +382,11 @@ public:
   {
     // Make sure this matches the casts we do in QueryInterface().
     return (nsGlobalWindow *)(nsIScriptGlobalObject *)supports;
+  }
+  static nsISupports *ToSupports(nsGlobalWindow *win)
+  {
+    // Make sure this matches the casts we do in QueryInterface().
+    return (nsISupports *)(nsIScriptGlobalObject *)win;
   }
   static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
   {
@@ -473,6 +480,11 @@ public:
             mHavePendingClose ||
             mCleanedUp);
   }
+
+  static void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
+                                    nsIDOMWindow *aRequestingWindow, nsIURI *aPopupURI,
+                                    const nsAString &aPopupWindowName,
+                                    const nsAString &aPopupWindowFeatures);
 
 protected:
   // Object Management
@@ -784,7 +796,6 @@ protected:
   nsRefPtr<nsBarProp>           mStatusbar;
   nsRefPtr<nsBarProp>           mScrollbars;
   nsCOMPtr<nsIWeakReference>    mWindowUtils;
-  nsRefPtr<nsLocation>          mLocation;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   // index 0->language_id 1, so index MAX-1 == language_id MAX
@@ -806,6 +817,7 @@ protected:
   nsTimeout*                    mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
+  nsRefPtr<nsLocation>          mLocation;
 
   // Holder of the dummy java plugin, used to expose window.java and
   // window.packages.

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'string_split.js';
 
 /**
    Filename:     string_split.js

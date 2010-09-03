@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-288688.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 288688;
 var summary = 'x->regExpStatics should be stacked and unstacked around the lambda invocations';

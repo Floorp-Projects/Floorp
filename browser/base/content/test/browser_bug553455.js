@@ -59,7 +59,7 @@ function test_blocked_install() {
   // Wait for the blocked notification
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-blocked", "Should have seen the install blocked");
+    is(notification.id, "addon-install-blocked-notification", "Should have seen the install blocked");
     is(notification.button.label, "Allow", "Should have seen the right button");
     is(notification.getAttribute("label"),
        gApp + " prevented this site (example.com) from asking you to install " +
@@ -76,7 +76,7 @@ function test_blocked_install() {
       // Wait for the complete notification
       wait_for_notification(function(aPanel) {
         let notification = aPanel.childNodes[0];
-        is(notification.id, "addon-install-complete", "Should have seen the install complete");
+        is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
         is(notification.button.label, "Restart Now", "Should have seen the right button");
         is(notification.getAttribute("label"), 
            "XPI Test will be installed after you restart " + gApp + ".",
@@ -111,7 +111,7 @@ function test_whitelisted_install() {
     // Wait for the complete notification
     wait_for_notification(function(aPanel) {
       let notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
       is(notification.button.label, "Restart Now", "Should have seen the right button");
       is(notification.getAttribute("label"),
          "XPI Test will be installed after you restart " + gApp + ".",
@@ -142,7 +142,7 @@ function test_failed_download() {
   // Wait for the failed notification
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
     is(notification.getAttribute("label"),
        "The add-on could not be downloaded because of a connection failure " +
        "on example.com.",
@@ -167,7 +167,7 @@ function test_corrupt_file() {
   // Wait for the failed notification
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
     is(notification.getAttribute("label"),
        "The add-on downloaded from example.com could not be installed " +
        "because it appears to be corrupt.",
@@ -192,7 +192,7 @@ function test_incompatible() {
   // Wait for the failed notification
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
     is(notification.getAttribute("label"),
        "XPI Test could not be installed because it is not compatible with " +
        gApp + " " + gVersion + ".",
@@ -221,7 +221,7 @@ function test_restartless() {
     // Wait for the complete notification
     wait_for_notification(function(aPanel) {
       let notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
       is(notification.button.label, "Open Add-ons Manager", "Should have seen the right button");
       is(notification.getAttribute("label"),
          "XPI Test has been installed successfully.",
@@ -260,7 +260,7 @@ function test_multiple() {
     // Wait for the complete notification
     wait_for_notification(function(aPanel) {
       let notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
       is(notification.button.label, "Restart Now", "Should have seen the right button");
       is(notification.getAttribute("label"),
          "2 add-ons will be installed after you restart " + gApp + ".",
@@ -293,7 +293,7 @@ function test_url() {
     // Wait for the complete notification
     wait_for_notification(function(aPanel) {
       let notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
       is(notification.button.label, "Restart Now", "Should have seen the right button");
       is(notification.getAttribute("label"),
          "XPI Test will be installed after you restart " + gApp + ".",
@@ -321,7 +321,7 @@ function test_localfile() {
   // Wait for the complete notification
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
     is(notification.getAttribute("label"),
        "This add-on could not be installed because it appears to be corrupt.",
        "Should have seen the right message");
@@ -344,7 +344,7 @@ function test_wronghost() {
     // Wait for the complete notification
     wait_for_notification(function(aPanel) {
       let notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-failed", "Should have seen the install fail");
+      is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
       is(notification.getAttribute("label"),
          "The add-on downloaded from example.com could not be installed " +
          "because it appears to be corrupt.",
@@ -374,7 +374,7 @@ function test_reload() {
     // Wait for the complete notification
     wait_for_notification(function(aPanel) {
       let notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
       is(notification.button.label, "Restart Now", "Should have seen the right button");
       is(notification.getAttribute("label"),
          "XPI Test will be installed after you restart " + gApp + ".",
@@ -404,6 +404,135 @@ function test_reload() {
         });
       }, true);
       gBrowser.loadURI(TESTROOT2 + "enabled.html");
+    });
+  });
+},
+
+function test_theme() {
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "Theme XPI": "theme.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+  // Wait for the install confirmation dialog
+  wait_for_install_dialog(function(aWindow) {
+    aWindow.document.documentElement.acceptDialog();
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
+      is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "Theme Test will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
+
+      gBrowser.removeTab(gBrowser.selectedTab);
+      Services.perms.remove("example.com", "install");
+      runNextTest();
+    });
+  });
+},
+
+function test_renotify_blocked() {
+  var triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "unsigned.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+  // Wait for the blocked notification
+  wait_for_notification(function(aPanel) {
+    let notification = aPanel.childNodes[0];
+    is(notification.id, "addon-install-blocked-notification", "Should have seen the install blocked");
+
+    aPanel.addEventListener("popuphidden", function () {
+      aPanel.removeEventListener("popuphidden", arguments.callee, false);
+      info("Timeouts after this probably mean bug 589954 regressed");
+      executeSoon(function () {
+        gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+        wait_for_notification(function(aPanel) {
+          let notification = aPanel.childNodes[0];
+          is(notification.id, "addon-install-blocked-notification",
+             "Should have seen the install blocked - 2nd time");
+
+          AddonManager.getAllInstalls(function(aInstalls) {
+          is(aInstalls.length, 2, "Should be two pending installs");
+            aInstalls[0].cancel();
+            aInstalls[1].cancel();
+
+            info("Closing browser tab");
+            gBrowser.removeTab(gBrowser.selectedTab);
+            runNextTest();
+          });
+        });
+
+      });
+    }, false);
+
+    // hide the panel (this simulates the user dismissing it)
+    aPanel.hidePopup();
+  });
+},
+
+function test_renotify_installed() {
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "unsigned.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+  // Wait for the install confirmation dialog
+  wait_for_install_dialog(function(aWindow) {
+    aWindow.document.documentElement.acceptDialog();
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
+
+      // Dismiss the notification
+      aPanel.addEventListener("popuphidden", function () {
+        aPanel.removeEventListener("popuphidden", arguments.callee, false);
+
+        // Install another
+        executeSoon(function () {
+          gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+          // Wait for the install confirmation dialog
+          wait_for_install_dialog(function(aWindow) {
+            aWindow.document.documentElement.acceptDialog();
+            info("Timeouts after this probably mean bug 589954 regressed");
+
+            // Wait for the complete notification
+            wait_for_notification(function(aPanel) {
+              let notification = aPanel.childNodes[0];
+              is(notification.id, "addon-install-complete-notification", "Should have seen the second install complete");
+
+              AddonManager.getAllInstalls(function(aInstalls) {
+              is(aInstalls.length, 2, "Should be two pending installs");
+                aInstalls[0].cancel();
+                aInstalls[1].cancel();
+
+                gBrowser.removeTab(gBrowser.selectedTab);
+                runNextTest();
+              });
+            });
+          });
+
+        });
+      }, false);
+  
+      // hide the panel (this simulates the user dismissing it)
+      aPanel.hidePopup();
     });
   });
 }

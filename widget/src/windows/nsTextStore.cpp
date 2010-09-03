@@ -293,7 +293,7 @@ nsTextStore::GetSelection(ULONG ulIndex,
   NS_ENSURE_TRUE(ulCount && pSelection && pcFetched, E_INVALIDARG);
 
   *pcFetched = 0;
-  NS_ENSURE_TRUE(TS_DEFAULT_SELECTION == ulIndex || 0 == ulIndex,
+  NS_ENSURE_TRUE((ULONG)TS_DEFAULT_SELECTION == ulIndex || 0 == ulIndex,
                  TS_E_NOSELECTION);
   if (mCompositionView) {
     // Emulate selection during compositions
@@ -576,9 +576,9 @@ IsSameTextEvent(const nsTextEvent* aEvent1, const nsTextEvent* aEvent2)
           aEvent1->rangeCount == aEvent2->rangeCount &&
           aEvent1->theText == aEvent2->theText &&
           (aEvent1->rangeCount == 0 ||
-           (aEvent1->rangeArray && aEvent2->rangeArray) &&
+           ((aEvent1->rangeArray && aEvent2->rangeArray) &&
            !memcmp(aEvent1->rangeArray, aEvent2->rangeArray,
-                   sizeof(nsTextRange) * aEvent1->rangeCount)));
+                   sizeof(nsTextRange) * aEvent1->rangeCount))));
 }
 
 HRESULT
@@ -599,7 +599,7 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
   hr = GetRangeExtent(composingRange, &compStart, &compLength);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   if (mCompositionStart != compStart ||
-      mCompositionString.Length() != compLength) {
+      mCompositionString.Length() != (ULONG)compLength) {
     // If the queried composition length is different from the length
     // of our composition string, OnUpdateComposition is being called
     // because a part of the original composition was committed.
@@ -772,8 +772,8 @@ nsTextStore::SendTextEventForCompositionString()
                         mCompositionSelection.acpEnd);
     LONG end = PR_MAX(mCompositionSelection.acpStart,
                       mCompositionSelection.acpEnd);
-    if (range.mStartOffset == start - mCompositionStart &&
-        range.mEndOffset == end - mCompositionStart &&
+    if ((LONG)range.mStartOffset == start - mCompositionStart &&
+        (LONG)range.mEndOffset == end - mCompositionStart &&
         range.mRangeStyle.IsNoChangeStyle()) {
       range.mRangeStyle.Clear();
       // The looks of selected type is better than others.
@@ -873,7 +873,7 @@ nsTextStore::GetText(LONG acpStart,
 
   // Making sure to NULL-terminate string just to be on the safe side
   *pcchPlainOut = 0;
-  if (pchPlain && cchPlainReq) *pchPlain = NULL;
+  if (pchPlain && cchPlainReq) *pchPlain = 0;
   if (pulRunInfoOut) *pulRunInfoOut = 0;
   if (pacpNext) *pacpNext = acpStart;
   if (prgRunInfo && ulRunInfoReq) {
@@ -926,7 +926,7 @@ nsTextStore::GetText(LONG acpStart,
     if (pchPlain && cchPlainReq) {
       memcpy(pchPlain, event.mReply.mString.BeginReading(),
              length * sizeof(*pchPlain));
-      pchPlain[length] = NULL;
+      pchPlain[length] = 0;
       *pcchPlainOut = length;
     }
     if (prgRunInfo && ulRunInfoReq) {
@@ -1467,7 +1467,7 @@ nsTextStore::OnTextChangeInternal(PRUint32 aStart,
     mTextChange.acpOldEnd = PR_MAX(mTextChange.acpOldEnd, LONG(aOldEnd));
     mTextChange.acpNewEnd = PR_MAX(mTextChange.acpNewEnd, LONG(aNewEnd));
     ::PostMessageW(mWindow->GetWindowHandle(),
-                   WM_USER_TSF_TEXTCHANGE, 0, NULL);
+                   WM_USER_TSF_TEXTCHANGE, 0, 0);
   }
   return NS_OK;
 }

@@ -139,6 +139,9 @@ class XPCShellTests(object):
     self.httpdJSPath = os.path.join(os.path.dirname(self.xpcshell), 'components', 'httpd.js')
     self.httpdJSPath = replaceBackSlashes(self.httpdJSPath)
 
+    self.httpdManifest = os.path.join(os.path.dirname(self.xpcshell), 'components', 'httpd.manifest')
+    self.httpdManifest = replaceBackSlashes(self.httpdManifest)
+
     if self.xrePath is None:
       self.xrePath = os.path.dirname(self.xpcshell)
     else:
@@ -204,7 +207,7 @@ class XPCShellTests(object):
     """
     # - NOTE: if you rename/add any of the constants set here, update
     #   do_load_child_test_harness() in head.js
-    self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-j', '-s'] + \
+    self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-r', self.httpdManifest, '-j', '-s'] + \
         ['-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
          '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
          '-f', os.path.join(self.testharnessdir, 'head.js')]

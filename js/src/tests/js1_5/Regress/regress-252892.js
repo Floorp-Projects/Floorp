@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-252892.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 252892;
 var summary = 'for (var i in o) in heavyweight function f should define i in f\'s activation';

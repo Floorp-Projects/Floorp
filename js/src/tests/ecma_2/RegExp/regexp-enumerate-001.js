@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regexp-enumerate-001.js';
 
 /**
    File Name:          regexp-enumerate-001.js

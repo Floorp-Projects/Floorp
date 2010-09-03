@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-333728.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 333728;
 var summary = 'Throw ReferenceErrors for typeof(...undef)';

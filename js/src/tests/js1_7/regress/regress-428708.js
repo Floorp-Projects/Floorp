@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-428708.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 428708;
 var summary = 'Do not assert: OBJ_BLOCK_COUNT(cx, obj) == 1';

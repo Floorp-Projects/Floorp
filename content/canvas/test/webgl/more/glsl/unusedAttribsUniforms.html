@@ -60,7 +60,7 @@ Tests.testPassingTooManyUniforms = function(gl) {
 </script>
 
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex; attribute vec2 Tex;
   varying vec2 TexCoord;
@@ -72,16 +72,18 @@ Tests.testPassingTooManyUniforms = function(gl) {
 </script>
 
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
 
 
+  #ifdef GL_ES
+precision highp float;
+#endif
   void main()
   {
     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
 </script>
 <script id="vert2" type="x-shader/x-vertex">
-  #version 120
+
 
   uniform float foo, bar;
   attribute vec3 Vertex; attribute vec2 Tex;
@@ -94,8 +96,11 @@ Tests.testPassingTooManyUniforms = function(gl) {
 </script>
 
 <script id="frag2" type="x-shader/x-fragment">
-  #version 120
 
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   uniform float baz;
 
   varying vec2 TexCoord;

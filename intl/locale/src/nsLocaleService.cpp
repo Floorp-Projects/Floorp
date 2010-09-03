@@ -60,6 +60,9 @@
 #  include <locale.h>
 #  include <stdlib.h>
 #  include "nsIPosixLocale.h"
+#if (MOZ_PLATFORM_MAEMO >= 6)
+#  include "nsIGConfService.h"
+#endif
 #endif
 
 //
@@ -174,24 +177,43 @@ nsLocaleService::nsLocaleService(void)
         if ( resultLocale == NULL ) { 
             return; 
         }
+
+        // Get system configuration
+        const char* lang = getenv("LANG");
+#if (MOZ_PLATFORM_MAEMO >= 6)
+        nsCAutoString gconfLocaleString;
+        nsresult rv;
+        nsCOMPtr<nsIGConfService> gconf =
+            do_GetService(NS_GCONFSERVICE_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = gconf->GetString(NS_LITERAL_CSTRING("/meegotouch/i18n/language"),
+                                  gconfLocaleString);
+            if (NS_SUCCEEDED(rv) && !gconfLocaleString.IsEmpty()) {
+                lang = gconfLocaleString.get();
+                // For setlocale() doing the right thing we need to export
+                // this as LANG to the environment
+                setenv("LANG", lang, 1);
+            }
+        }
+#endif
         for( i = 0; i < LocaleListLength; i++ ) {
             nsresult result;
+            // setlocale( , "") evaluates LC_* and LANG
             char* lc_temp = setlocale(posix_locale_category[i], "");
             CopyASCIItoUTF16(LocaleList[i], category);
-            category_platform = category; 
+            category_platform = category;
             category_platform.AppendLiteral("##PLATFORM");
             if (lc_temp != nsnull) {
                 result = posixConverter->GetXPLocale(lc_temp, xpLocale);
                 CopyASCIItoUTF16(lc_temp, platformLocale);
             } else {
-                char* lang = getenv("LANG");
                 if ( lang == nsnull ) {
                     platformLocale.AssignLiteral("en_US");
                     result = posixConverter->GetXPLocale("en-US", xpLocale);
                 }
                 else {
                     CopyASCIItoUTF16(lang, platformLocale);
-                    result = posixConverter->GetXPLocale(lang, xpLocale); 
+                    result = posixConverter->GetXPLocale(lang, xpLocale);
                 }
             }
             if (NS_FAILED(result)) {

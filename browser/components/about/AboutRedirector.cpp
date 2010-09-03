@@ -96,7 +96,12 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT },
   { "sessionrestore", "chrome://browser/content/aboutSessionRestore.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
+    nsIAboutModule::ALLOW_SCRIPT },
+#endif
   { "startup", "chrome://browser/content/aboutStartup.html",
+    nsIAboutModule::ALLOW_SCRIPT },
+  { "home", "chrome://browser/content/aboutHome.xhtml",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT },
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);

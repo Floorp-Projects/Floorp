@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTests()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+  <iframe type="content" id="f" src="about:blank" style="border:1px solid black;"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    var imports = [ "SimpleTest", "is", "isnot", "ok" ];
+    for each (var import in imports) {
+      window[import] = window.opener.wrappedJSObject[import];
+    }
+    
+    function snapshot(win) {
+      var el = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      el.width = win.innerWidth;
+      el.height = win.innerHeight;
+
+      var ctx = el.getContext("2d");
+      ctx.drawWindow(win, 0, 0,
+                     win.innerWidth, win.innerHeight,
+                     "rgba(0,0,0,0)", 0);
+      return el;
+    }
+
+    var color = '#2468AC';
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+        .getService(Components.interfaces.nsIPrefBranch);
+    prefs.setCharPref('browser.display.background_color', color);
+
+    function runTests() {
+      var f = document.getElementById("f");
+
+      var testCanvas = snapshot(f.contentWindow);
+      prefs.clearUserPref('browser.display.background_color');
+
+      var refCanvas = snapshot(f.contentWindow);
+      var ctx = refCanvas.getContext('2d');
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, refCanvas.width, refCanvas.height);
+
+      var comparison = compareSnapshots(testCanvas, refCanvas, true);
+      ok(comparison[0], "Rendering OK, got " + comparison[1] + ", expected " + comparison[2]);
+
+      var tester = window.SimpleTest;
+      window.close();
+      tester.finish();
+    }
+  ]]>
+  </script>
+</window>

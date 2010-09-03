@@ -43,6 +43,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
+#include "nsIObserver.h"
 
 #include "AndroidJavaWrappers.h"
 
@@ -59,6 +60,14 @@ namespace mozilla {
 class AndroidBridge
 {
 public:
+    enum {
+        NOTIFY_IME_RESETINPUTSTATE = 0,
+        NOTIFY_IME_SETOPENSTATE = 1,
+        NOTIFY_IME_SETENABLED = 2,
+        NOTIFY_IME_CANCELCOMPOSITION = 3,
+        NOTIFY_IME_FOCUSCHANGE = 4
+    };
+
     static AndroidBridge *ConstructBridge(JNIEnv *jEnv,
                                           jclass jGeckoAppShellClass);
 
@@ -89,13 +98,15 @@ public:
     JNIEnv* AttachThread(PRBool asDaemon = PR_TRUE);
 
     /* These are all implemented in Java */
-    void ShowIME(int aState);
+    static void NotifyIME(int aType, int aState);
+
+    static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 
     void EnableAccelerometer(bool aEnable);
 
     void EnableLocation(bool aEnable);
 
-    void ReturnIMEQueryResult(const PRUnichar *result, PRUint32 len, int selectionStart, int selectionEnd);
+    void ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen, int aSelStart, int aSelLen);
 
     void NotifyXreExit();
 
@@ -104,13 +115,32 @@ public:
     void SetSurfaceView(jobject jobj);
     AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
 
-    void GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray);
+    PRBool GetHandlersForProtocol(const char *aScheme, nsStringArray* aStringArray = nsnull);
 
-    PRBool OpenUriExternal(nsCString& aUriSpec, nsCString& aMimeType);
+    PRBool GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray = nsnull);
 
-    void GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType);
+    PRBool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType, 
+                           const nsAString& aPackageName = EmptyString(), 
+                           const nsAString& aClassName = EmptyString());
+
+    void GetMimeTypeFromExtension(const nsACString& aFileExt, nsCString& aMimeType);
 
     void MoveTaskToBack();
+
+    bool GetClipboardText(nsAString& aText);
+
+    void SetClipboardText(const nsAString& aText);
+    
+    void EmptyClipboard();
+
+    bool ClipboardHasText();
+
+    void ShowAlertNotification(const nsAString& aImageUrl,
+                               const nsAString& aAlertTitle,
+                               const nsAString& aAlertText,
+                               const nsAString& aAlertData,
+                               nsIObserver *aAlertListener,
+                               const nsAString& aAlertName);
 
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
@@ -154,7 +184,8 @@ protected:
     void EnsureJNIThread();
 
     // other things
-    jmethodID jShowIME;
+    jmethodID jNotifyIME;
+    jmethodID jNotifyIMEChange;
     jmethodID jEnableAccelerometer;
     jmethodID jEnableLocation;
     jmethodID jReturnIMEQueryResult;
@@ -162,9 +193,13 @@ protected:
     jmethodID jScheduleRestart;
     jmethodID jGetOutstandingDrawEvents;
     jmethodID jGetHandlersForMimeType;
+    jmethodID jGetHandlersForProtocol;
     jmethodID jOpenUriExternal;
     jmethodID jGetMimeTypeFromExtension;
     jmethodID jMoveTaskToBack;
+    jmethodID jGetClipboardText;
+    jmethodID jSetClipboardText;
+    jmethodID jShowAlertNotification;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

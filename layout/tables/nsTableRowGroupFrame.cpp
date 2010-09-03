@@ -166,7 +166,9 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*        aPresContext,
  */
 class nsDisplayTableRowGroupBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableRowGroupBackground(nsTableRowGroupFrame* aFrame) : nsDisplayTableItem(aFrame) {
+  nsDisplayTableRowGroupBackground(nsDisplayListBuilder* aBuilder,
+                                   nsTableRowGroupFrame* aFrame) :
+    nsDisplayTableItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableRowGroupBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -186,11 +188,10 @@ nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
                                         nsIRenderingContext* aCtx) {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
-  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  mFrame->PresContext(), *aCtx,
-                                 mVisibleRect, pt,
+                                 mVisibleRect, ToReferenceFrame(),
                                  aBuilder->GetBackgroundPaintFlags());
   painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(mFrame));
 }
@@ -261,7 +262,7 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // This background is created regardless of whether this frame is
     // visible or not. Visibility decisions are delegated to the
     // table background painter.
-    item = new (aBuilder) nsDisplayTableRowGroupBackground(this);
+    item = new (aBuilder) nsDisplayTableRowGroupBackground(aBuilder, this);
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -815,7 +816,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*           aPresContext,
     if (movedFrame || (rowHeight != rowBounds.height)) {
       // Resize/move the row to its final size and position
       if (movedFrame) {
-        rowFrame->InvalidateOverflowRect();
+        rowFrame->InvalidateFrameSubtree();
       }
       
       rowFrame->SetRect(nsRect(rowBounds.x, yOrigin, rowBounds.width,
@@ -880,7 +881,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
   groupRect.width = aWidth;
 
   if (aYTotalOffset != 0) {
-    InvalidateOverflowRect();
+    InvalidateFrameSubtree();
   }
   
   SetRect(groupRect);
@@ -905,10 +906,10 @@ nsTableRowGroupFrame::SlideChild(nsRowGroupReflowState& aReflowState,
   nsPoint newPosition = oldPosition;
   newPosition.y = aReflowState.y;
   if (oldPosition.y != newPosition.y) {
-    aKidFrame->InvalidateOverflowRect();
+    aKidFrame->InvalidateFrameSubtree();
     aKidFrame->SetPosition(newPosition);
     nsTableFrame::RePositionViews(aKidFrame);
-    aKidFrame->InvalidateOverflowRect();
+    aKidFrame->InvalidateFrameSubtree();
   }
 }
 

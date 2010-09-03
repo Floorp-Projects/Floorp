@@ -88,11 +88,11 @@ nsContentEventHandler::InitCommon()
   // we need to flush the pending reflow here.
   mPresShell->FlushPendingNotifications(Flush_Layout);
 
+  // Flushing notifications can cause mPresShell to be destroyed (bug 577963).
+  NS_ENSURE_TRUE(!mPresShell->IsDestroying(), NS_ERROR_FAILURE);
+
   nsCopySupport::GetSelectionForCopy(mPresShell->GetDocument(),
                                      getter_AddRefs(mSelection));
-  NS_ASSERTION(mSelection,
-               "GetSelectionForCopy succeeded, but the result is null");
-
 
   nsCOMPtr<nsIDOMRange> firstRange;
   nsresult rv = mSelection->GetRangeAt(0, getter_AddRefs(firstRange));

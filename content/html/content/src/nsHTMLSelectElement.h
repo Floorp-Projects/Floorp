@@ -52,6 +52,7 @@
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"
 #include "nsIHTMLCollection.h"
+#include "nsIConstraintValidation.h"
 
 // PresState
 #include "nsXPCOM.h"
@@ -236,9 +237,12 @@ private:
  */
 class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLSelectElement,
-                            public nsISelectElement
+                            public nsISelectElement,
+                            public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                       PRUint32 aFromParser = 0);
   virtual ~nsHTMLSelectElement();
@@ -269,10 +273,11 @@ public:
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_SELECT; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement);
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
+
+  PRInt32 IntrinsicState() const;
 
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT

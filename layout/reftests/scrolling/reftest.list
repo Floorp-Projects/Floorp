@@ -1,5 +1,7 @@
 HTTP == fixed-1.html fixed-1.html?ref
+HTTP == fixed-text-1.html fixed-text-1.html?ref
 HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref
 HTTP == simple-1.html simple-1.html?ref
+HTTP == text-1.html text-1.html?ref
 == uncovering-1.html uncovering-1-ref.html
 == uncovering-2.html uncovering-2-ref.html

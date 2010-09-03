@@ -116,10 +116,10 @@ NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
   PMPageFormat pageFormat = GetPMPageFormat();
   ::PMGetPageFormatPaper(pageFormat, &paper);
   ::PMPaperGetMargins(paper, &paperMargin);
-  mUnwriteableMargin.top    = NS_POINTS_TO_TWIPS(paperMargin.top);
-  mUnwriteableMargin.left   = NS_POINTS_TO_TWIPS(paperMargin.left);
-  mUnwriteableMargin.bottom = NS_POINTS_TO_TWIPS(paperMargin.bottom);
-  mUnwriteableMargin.right  = NS_POINTS_TO_TWIPS(paperMargin.right);
+  mUnwriteableMargin.top    = NS_POINTS_TO_INT_TWIPS(paperMargin.top);
+  mUnwriteableMargin.left   = NS_POINTS_TO_INT_TWIPS(paperMargin.left);
+  mUnwriteableMargin.bottom = NS_POINTS_TO_INT_TWIPS(paperMargin.bottom);
+  mUnwriteableMargin.right  = NS_POINTS_TO_INT_TWIPS(paperMargin.right);
 
   return NS_OK;
 

@@ -177,16 +177,17 @@ GPSDProvider.prototype = {
   
   watch: function(c) {
     LOG("watch called\n");    
+    try {
+        // Turn GPSD buffer on, results in smoother data points which I think we want.
+        // Required due to the way that different data arrives in different NMEA sentences.
+        var bufferOption = "J=1\n";
+        this.outputStream.write(bufferOption, bufferOption.length);
+        
+        // Go into "watcher" mode
+        var mode = "w\n";
+        this.outputStream.write(mode, mode.length);
+    } catch (e) { return; }
 
-    // Turn GPSD buffer on, results in smoother data points which I think we want.
-    // Required due to the way that different data arrives in different NMEA sentences.
-    var bufferOption = "J=1\n";
-    this.outputStream.write(bufferOption, bufferOption.length);
-
-    // Go into "watcher" mode
-    var mode = "w\n";
-    this.outputStream.write(mode, mode.length);
-    
     var dataListener = {
       onStartRequest: function(request, context) {},
       onStopRequest: function(request, context, status) {},

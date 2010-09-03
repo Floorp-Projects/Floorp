@@ -966,7 +966,7 @@ namespace nanojit
             else if (ty == ARGTYPE_D && fr < XMM8) {
                 // double goes in next available XMM register
                 asm_regarg(ty, arg, fr);
-                fr = nextreg(fr);
+                fr = Register(fr + 1);
             }
         #endif
             else {
@@ -1110,11 +1110,32 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
         NanoAssert(cond->isCmp());
         NanoAssert((ins->isop(LIR_cmovi) && iftrue->isI() && iffalse->isI()) ||
-                   (ins->isop(LIR_cmovq) && iftrue->isQ() && iffalse->isQ()));
+                   (ins->isop(LIR_cmovq) && iftrue->isQ() && iffalse->isQ()) ||
+                   (ins->isop(LIR_cmovd) && iftrue->isD() && iffalse->isD()));
 
-        Register rr = prepareResultReg(ins, GpRegs);
+        RegisterMask allow = ins->isD() ? FpRegs : GpRegs;
 
-        Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+        Register rr = prepareResultReg(ins, allow);
+
+        Register rf = findRegFor(iffalse, allow & ~rmask(rr));
+
+        if (ins->isop(LIR_cmovd)) {
+            NIns* target = _nIns;
+            asm_nongp_copy(rr, rf);
+            asm_branch(false, cond, target);
+
+            // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+            Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+            if (rr != rt)
+                asm_nongp_copy(rr, rt);
+            freeResourcesOf(ins);
+            if (!iftrue->isInReg()) {
+                NanoAssert(rt == rr);
+                findSpecificRegForUnallocated(iftrue, rr);
+            }
+            return;
+        }
 
         // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
         Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
@@ -1123,7 +1144,7 @@ namespace nanojit
         // codes between the MRcc generation here and the asm_cmp() call
         // below.  See asm_cmp() for more details.
         LOpcode condop = cond->opcode();
-        if (ins->opcode() == LIR_cmovi) {
+        if (ins->isop(LIR_cmovi)) {
             switch (condop) {
             case LIR_eqi:  case LIR_eqq:    CMOVNE( rr, rf);  break;
             case LIR_lti:  case LIR_ltq:    CMOVNL( rr, rf);  break;
@@ -1137,6 +1158,7 @@ namespace nanojit
             default:                        NanoAssert(0);    break;
             }
         } else {
+            NanoAssert(ins->isop(LIR_cmovq));
             switch (condop) {
             case LIR_eqi:  case LIR_eqq:    CMOVQNE( rr, rf); break;
             case LIR_lti:  case LIR_ltq:    CMOVQNL( rr, rf); break;
@@ -1163,12 +1185,21 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
-        if (target && !isTargetWithinS32(target)) {
-            setError(ConditionalBranchTooFar);
-            NanoAssert(0);
-        }
         NanoAssert(cond->isCmp());
         LOpcode condop = cond->opcode();
+
+        if (target && !isTargetWithinS32(target)) {
+            // conditional jumps beyond 32bit range, so invert the branch/compare
+            // and emit an unconditional jump to the target
+            //         j(inverted) B1
+            //         jmp target
+            //     B1:
+            NIns* shortTarget = _nIns;
+            JMP(target);
+            target = shortTarget;
+
+            onFalse = !onFalse;
+        }
         if (isCmpDOpcode(condop))
             return asm_branchd(onFalse, cond, target);
 
@@ -1826,7 +1857,7 @@ namespace nanojit
         endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_spill(Register rr, int d, bool /*pop*/, bool quad) {
+    void Assembler::asm_spill(Register rr, int d, bool quad) {
         NanoAssert(d);
         if (!IsFpReg(rr)) {
             if (quad)
@@ -1883,7 +1914,6 @@ namespace nanojit
 #else
         a.free = 0xffffffff & ~(1<<RSP | 1<<RBP);
 #endif
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns *patch, NIns *target) {

@@ -16,7 +16,7 @@
  * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -52,6 +52,7 @@ let EXPORTED_SYMBOLS = [
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 const PR_UINT32_MAX = 0xffffffff;
 
@@ -130,15 +131,20 @@ const NetUtil = {
     /**
      * Asynchronously opens a source and fetches the response.  A source can be
      * an nsIURI, nsIFile, string spec, or nsIChannel.  The provided callback
-     * will get an input stream containing the response, and the result code.
+     * will get an input stream containing the response, the result code, and a
+     * reference to the request.
      *
      * @param aSource
      *        The nsIURI, nsIFile, string spec, or nsIChannel to open.
+     *        Note: If passing an nsIChannel whose notificationCallbacks is
+     *              already set, callers are responsible for implementations
+     *              of nsIBadCertListener/nsISSLErrorListener.
      * @param aCallback
      *        The callback function that will be notified upon completion.  It
      *        will get two arguments:
      *        1) An nsIInputStream containing the data from the channel, if any.
      *        2) The status code from opening the source.
+     *        3) Reference to the channel (as an nsIRequest).
      */
     asyncFetch: function NetUtil_asyncOpen(aSource, aCallback)
     {
@@ -164,13 +170,20 @@ const NetUtil = {
             onStartRequest: function(aRequest, aContext) {},
             onStopRequest: function(aRequest, aContext, aStatusCode) {
                 pipe.outputStream.close();
-                aCallback(pipe.inputStream, aStatusCode);
+                aCallback(pipe.inputStream, aStatusCode, aRequest);
             }
         });
 
         let channel = aSource;
         if (!(channel instanceof Ci.nsIChannel)) {
             channel = this.newChannel(aSource);
+        }
+
+        // Add a BadCertHandler to suppress SSL/cert error dialogs, but only if
+        // the channel doesn't already have a notificationCallbacks.
+        if (!channel.notificationCallbacks) {
+          // Pass true to avoid optional redirect-cert-checking behavior.
+          channel.notificationCallbacks = new BadCertHandler(true);
         }
 
         channel.asyncOpen(listener, null);
@@ -245,6 +258,56 @@ const NetUtil = {
     },
 
     /**
+     * Reads aCount bytes from aInputStream into a string.
+     *
+     * @param aInputStream
+     *        The input stream to read from.
+     * @param aCount
+     *        The number of bytes to read from the stream.
+     *
+     * @return the bytes from the input stream in string form.
+     *
+     * @throws NS_ERROR_INVALID_ARG if aInputStream is not an nsIInputStream.
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from aInputStream would
+     *         block the calling thread (non-blocking mode only).
+     * @throws NS_ERROR_FAILURE if there are not enough bytes available to read
+     *         aCount amount of data.
+     */
+    readInputStreamToString: function NetUtil_readInputStreamToString(aInputStream,
+                                                                      aCount)
+    {
+        if (!(aInputStream instanceof Ci.nsIInputStream)) {
+            let exception = new Components.Exception(
+                "First argument should be an nsIInputStream",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        if (!aCount) {
+            let exception = new Components.Exception(
+                "Non-zero amount of bytes must be specified",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        let sis = Cc["@mozilla.org/scriptableinputstream;1"].
+                  createInstance(Ci.nsIScriptableInputStream);
+        sis.init(aInputStream);
+        try {
+            return sis.readBytes(aCount);
+        }
+        catch (e) {
+            // Adjust the stack so it throws at the caller's location.
+            throw new Components.Exception(e.message, e.result,
+                                           Components.stack.caller, e.data);
+        }
+    },
+
+    /**
      * Returns a reference to nsIIOService.
      *
      * @return a reference to nsIIOService.
@@ -265,3 +328,9 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 // Define our lazy getters.
 XPCOMUtils.defineLazyServiceGetter(this, "ioUtil", "@mozilla.org/io-util;1",
                                    "nsIIOUtil");
+
+XPCOMUtils.defineLazyGetter(this, "BadCertHandler", function () {
+  var obj = {};
+  Cu.import("resource://gre/modules/CertUtils.jsm", obj);
+  return obj.BadCertHandler;
+});

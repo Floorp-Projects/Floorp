@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352266.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352266;
 var summary = 'decompilation of excess indendation should not cause round-trip change';

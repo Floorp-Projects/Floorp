@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-306788.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 306788;
 var summary = 'Do not crash sorting Arrays due to GC';

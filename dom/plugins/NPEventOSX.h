@@ -63,46 +63,49 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
     static void Write(Message* aMsg, const paramType& aParam)
     {
-        // Make a non-const copy of aParam so that we can muck with
-        // its insides for transport
-        paramType paramCopy;
-
-        paramCopy.event = aParam.event;
-
-        switch (paramCopy.event.type) {
+        aMsg->WriteInt(aParam.event.type);
+        aMsg->WriteUInt32(aParam.event.version);
+        switch (aParam.event.type) {
             case NPCocoaEventMouseDown:
             case NPCocoaEventMouseUp:
             case NPCocoaEventMouseMoved:
             case NPCocoaEventMouseEntered:
             case NPCocoaEventMouseExited:
             case NPCocoaEventMouseDragged:
-            case NPCocoaEventFocusChanged:
-            case NPCocoaEventWindowFocusChanged:
             case NPCocoaEventScrollWheel:
-                aMsg->WriteBytes(&paramCopy, sizeof(paramType));
-                return;
-            case NPCocoaEventDrawRect:
-                paramCopy.event.data.draw.context = NULL;
-                aMsg->WriteBytes(&paramCopy, sizeof(paramType));
-                return;
-            case NPCocoaEventFlagsChanged:
-                paramCopy.event.data.key.characters = NULL;
-                paramCopy.event.data.key.charactersIgnoringModifiers = NULL;
-                aMsg->WriteBytes(&paramCopy, sizeof(paramType));
-                return;
+                aMsg->WriteUInt32(aParam.event.data.mouse.modifierFlags);
+                aMsg->WriteDouble(aParam.event.data.mouse.pluginX);
+                aMsg->WriteDouble(aParam.event.data.mouse.pluginY);
+                aMsg->WriteInt32(aParam.event.data.mouse.buttonNumber);
+                aMsg->WriteInt32(aParam.event.data.mouse.clickCount);
+                aMsg->WriteDouble(aParam.event.data.mouse.deltaX);
+                aMsg->WriteDouble(aParam.event.data.mouse.deltaY);
+                aMsg->WriteDouble(aParam.event.data.mouse.deltaZ);
+                break;
             case NPCocoaEventKeyDown:
             case NPCocoaEventKeyUp:
-                paramCopy.event.data.key.characters = NULL;
-                paramCopy.event.data.key.charactersIgnoringModifiers = NULL;
-                aMsg->WriteBytes(&paramCopy, sizeof(paramType));
+            case NPCocoaEventFlagsChanged:
+                aMsg->WriteUInt32(aParam.event.data.key.modifierFlags);
                 WriteParam(aMsg, aParam.event.data.key.characters);
                 WriteParam(aMsg, aParam.event.data.key.charactersIgnoringModifiers);
-                return;
+                aMsg->WriteUnsignedChar(aParam.event.data.key.isARepeat);
+                aMsg->WriteUInt16(aParam.event.data.key.keyCode);
+                break;
+            case NPCocoaEventFocusChanged:
+            case NPCocoaEventWindowFocusChanged:
+                aMsg->WriteUnsignedChar(aParam.event.data.focus.hasFocus);
+                break;
+            case NPCocoaEventDrawRect:
+                // We don't write out the context pointer, it would always be NULL
+                // and is just filled in as such on the read.
+                aMsg->WriteDouble(aParam.event.data.draw.x);
+                aMsg->WriteDouble(aParam.event.data.draw.y);
+                aMsg->WriteDouble(aParam.event.data.draw.width);
+                aMsg->WriteDouble(aParam.event.data.draw.height);
+                break;
             case NPCocoaEventTextInput:
-                paramCopy.event.data.text.text = NULL;
-                aMsg->WriteBytes(&paramCopy, sizeof(paramType));
                 WriteParam(aMsg, aParam.event.data.text.text);
-                return;
+                break;
             default:
                 NS_NOTREACHED("Attempted to serialize unknown event type.");
                 return;
@@ -111,12 +114,15 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
     static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
     {
-        const char* bytes = 0;
-
-        if (!aMsg->ReadBytes(aIter, &bytes, sizeof(paramType))) {
+        int type = 0;
+        if (!aMsg->ReadInt(aIter, &type)) {
             return false;
         }
-        memcpy(aResult, bytes, sizeof(paramType));
+        aResult->event.type = static_cast<NPCocoaEventType>(type);
+
+        if (!aMsg->ReadUInt32(aIter, &aResult->event.version)) {
+            return false;
+        }
 
         switch (aResult->event.type) {
             case NPCocoaEventMouseDown:
@@ -125,17 +131,70 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
             case NPCocoaEventMouseEntered:
             case NPCocoaEventMouseExited:
             case NPCocoaEventMouseDragged:
-            case NPCocoaEventFocusChanged:
-            case NPCocoaEventWindowFocusChanged:
             case NPCocoaEventScrollWheel:
-            case NPCocoaEventDrawRect:
-            case NPCocoaEventFlagsChanged:
+                if (!aMsg->ReadUInt32(aIter, &aResult->event.data.mouse.modifierFlags)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.mouse.pluginX)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.mouse.pluginY)) {
+                    return false;
+                }
+                if (!aMsg->ReadInt32(aIter, &aResult->event.data.mouse.buttonNumber)) {
+                    return false;
+                }
+                if (!aMsg->ReadInt32(aIter, &aResult->event.data.mouse.clickCount)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.mouse.deltaX)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.mouse.deltaY)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.mouse.deltaZ)) {
+                    return false;
+                }
                 break;
             case NPCocoaEventKeyDown:
             case NPCocoaEventKeyUp:
-                if (!ReadParam(aMsg, aIter, &aResult->event.data.key.characters) ||
-                    !ReadParam(aMsg, aIter, &aResult->event.data.key.charactersIgnoringModifiers)) {
-                  return false;
+            case NPCocoaEventFlagsChanged:
+                if (!aMsg->ReadUInt32(aIter, &aResult->event.data.key.modifierFlags)) {
+                    return false;
+                }
+                if (!ReadParam(aMsg, aIter, &aResult->event.data.key.characters)) {
+                    return false;
+                }
+                if (!ReadParam(aMsg, aIter, &aResult->event.data.key.charactersIgnoringModifiers)) {
+                    return false;
+                }
+                if (!aMsg->ReadUnsignedChar(aIter, &aResult->event.data.key.isARepeat)) {
+                    return false;
+                }
+                if (!aMsg->ReadUInt16(aIter, &aResult->event.data.key.keyCode)) {
+                    return false;
+                }
+                break;
+            case NPCocoaEventFocusChanged:
+            case NPCocoaEventWindowFocusChanged:
+                if (!aMsg->ReadUnsignedChar(aIter, &aResult->event.data.focus.hasFocus)) {
+                    return false;
+                }
+                break;
+            case NPCocoaEventDrawRect:
+                aResult->event.data.draw.context = NULL;
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.draw.x)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.draw.y)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.draw.width)) {
+                    return false;
+                }
+                if (!aMsg->ReadDouble(aIter, &aResult->event.data.draw.height)) {
+                    return false;
                 }
                 break;
             case NPCocoaEventTextInput:
@@ -144,7 +203,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
                 }
                 break;
             default:
-                // ignore any events we don't expect
+                NS_NOTREACHED("Attempted to de-serialize unknown event type.");
                 return false;
         }
 

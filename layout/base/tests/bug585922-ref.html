@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="doTest()">
+    <input type=text>
+    <script>
+      function doTest() {
+        netscape.security.PrivilegeManager.enablePrivilege(
+          "UniversalXPConnect");
+
+        var d = document.querySelector("input");
+        d.value = "b";
+        d.focus();
+        var editor = d.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+        var sel = editor.selection;
+        var t = editor.rootElement.firstChild;
+        sel.collapse(t, 1); // put the caret at the end of the textbox
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

@@ -100,6 +100,8 @@ ifeq (WINNT,$(OS_ARCH))
 UNINSTALLER_PACKAGE_HOOK = $(RM) -r $(STAGEDIST)/uninstall; \
     $(NSINSTALL) -D $(STAGEDIST)/uninstall; \
     cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall; \
+    $(RM) $(_ABS_DIST)/l10n-stage/setup.exe; \
+    cp ../installer/windows/l10ngen/setup.exe $(_ABS_DIST)/l10n-stage; \
     $(NULL)
 endif
 
@@ -185,7 +187,6 @@ libs-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
@@ -195,29 +196,14 @@ repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(P
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
 	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
-	if test ! -d $(_ABS_DIST)/$(PKG_INST_PATH); then \
-	  $(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH); \
-	fi
-	$(RM) -rf l10n-stage
-	$(NSINSTALL) -D l10n-stage
-	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
-	$(RM) -r l10n-stage/localized
-	$(RM) l10n-stage/setup.exe
-# copy xpi-stage over, but not install.rdf and chrome.manifest,
-# those are just for language packs
-	cp -r $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
-	$(RM) l10n-stage/localized/install.rdf l10n-stage/localized/chrome.manifest
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
-	cp ../installer/windows/l10ngen/setup.exe l10n-stage
-	$(NSINSTALL) -D l10n-stage/localized/uninstall
-	cp ../installer/windows/l10ngen/helper.exe l10n-stage/localized/uninstall
-	rm -f app.7z
-	cd l10n-stage && \
-	  $(CYGWIN_WRAPPER) 7z a -r -t7z ../app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-	cat ../installer/windows/l10ngen/7zSD.sfx \
-	    $(topsrcdir)/browser/installer/windows/app.tag \
-	    app.7z > $(WIN32_INSTALLER_OUT)
-	chmod 0755 $(WIN32_INSTALLER_OUT)
+	$(MAKE) repackage-zip \
+	  AB_CD=$(AB_CD) \
+	  MOZ_PKG_FORMAT=SFX7Z \
+	  ZIP_IN=$(WIN32_INSTALLER_IN) \
+	  ZIP_OUT=$(WIN32_INSTALLER_OUT) \
+	  SFX_HEADER="$(PWD)/../installer/windows/l10ngen/7zSD.sfx \
+	              $(topsrcdir)/browser/installer/windows/app.tag"
 
 ifeq (WINNT,$(OS_ARCH))
 repackage-win32-installer-%: $(WIN32_INSTALLER_IN) libs-%

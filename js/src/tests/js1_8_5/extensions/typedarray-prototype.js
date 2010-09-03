@@ -1,7 +1,6 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
-var gTestfile = 'typedarray-prototype.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 565604;
 var summary =

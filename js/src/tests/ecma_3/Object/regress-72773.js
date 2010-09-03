@@ -51,7 +51,6 @@
  * The getJSClass() function we use is in a utility file, e.g. "shell.js"
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-72773.js';
 var BUGNUMBER = 72773;
 var summary = "Regression test: we shouldn't crash on this code";
 var status = '';

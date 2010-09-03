@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-470300-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470300;
 var summary = 'TM: Do not assert: StackBase(fp) + blockDepth == regs.sp';

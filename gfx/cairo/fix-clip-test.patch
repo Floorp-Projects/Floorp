@@ -1,0 +1,15 @@
+Fix a clip test to test the right coordinate.
+
+Fixed upstream by 498c10032ea3f8631a928cd7df96766f2c8ddca4
+diff --git a/gfx/cairo/cairo/src/cairo-clip.c b/gfx/cairo/cairo/src/cairo-clip.c
+--- a/gfx/cairo/cairo/src/cairo-clip.c
++++ b/gfx/cairo/cairo/src/cairo-clip.c
+@@ -408,7 +408,7 @@ _cairo_clip_rectangle (cairo_clip_t     
+     /* if a smaller clip has already been set, ignore the new path */
+     if (clip->path != NULL) {
+ 	if (rectangle->x <= clip->path->extents.x &&
+-	    rectangle->y <= clip->path->extents.x &&
++	    rectangle->y <= clip->path->extents.y &&
+ 	    rectangle->x + rectangle->width >= clip->path->extents.x + clip->path->extents.width &&
+ 	    rectangle->y + rectangle->height >= clip->path->extents.y + clip->path->extents.height)
+ 	{

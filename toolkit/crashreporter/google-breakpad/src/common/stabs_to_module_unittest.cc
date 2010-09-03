@@ -74,6 +74,38 @@ TEST(StabsToModule, SimpleCU) {
   EXPECT_EQ(174823314, line->number);
 }
 
+TEST(StabsToModule, DuplicateFunctionNames) {
+  Module m("name", "os", "arch", "id");
+  StabsToModule h(&m);
+
+  // Compilation unit with one function, mangled name.
+  EXPECT_TRUE(h.StartCompilationUnit("compilation-unit", 0xf2cfda36ecf7f46cLL,
+                                     "build-directory"));
+  EXPECT_TRUE(h.StartFunction("funcfoo",
+                              0xf2cfda36ecf7f46dLL));
+  EXPECT_TRUE(h.EndFunction(0));
+  EXPECT_TRUE(h.StartFunction("funcfoo",
+                              0xf2cfda36ecf7f46dLL));
+  EXPECT_TRUE(h.EndFunction(0));
+  EXPECT_TRUE(h.EndCompilationUnit(0));
+
+  h.Finalize();
+
+  // Now check to see what has been added to the Module.
+  Module::File *file = m.FindExistingFile("compilation-unit");
+  ASSERT_TRUE(file != NULL);
+
+  vector<Module::Function *> functions;
+  m.GetFunctions(&functions, functions.end());
+  ASSERT_EQ(1U, functions.size());
+
+  Module::Function *function = functions[0];
+  EXPECT_EQ(0xf2cfda36ecf7f46dLL, function->address);
+  EXPECT_LT(0U, function->size);  // should have used dummy size
+  EXPECT_EQ(0U, function->parameter_size);
+  ASSERT_EQ(0U, function->lines.size());
+}
+
 TEST(InferSizes, LineSize) {
   Module m("name", "os", "arch", "id");
   StabsToModule h(&m);
@@ -88,7 +120,7 @@ TEST(InferSizes, LineSize) {
   EXPECT_TRUE(h.EndFunction(0));  // unknown function end address
   EXPECT_TRUE(h.EndCompilationUnit(0)); // unknown CU end address
   EXPECT_TRUE(h.StartCompilationUnit("compilation-unit-2", 0xb4523963eff94e92LL,
-                                     "build-directory-2")); // next boundary  
+                                     "build-directory-2")); // next boundary
   EXPECT_TRUE(h.EndCompilationUnit(0));
   h.Finalize();
 

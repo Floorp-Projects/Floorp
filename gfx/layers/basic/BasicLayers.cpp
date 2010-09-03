@@ -112,6 +112,13 @@ public:
                      float aOpacity) {}
 
   virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
+
+  /**
+   * Layers will get this call when their layer manager is destroyed, this
+   * indicates they should clear resources they don't really need after their
+   * LayerManager ceases to exist.
+   */
+  virtual void ClearCachedResources() {}
 };
 
 static BasicImplData*
@@ -290,6 +297,8 @@ public:
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
                      float aOpacity);
+
+  virtual void ClearCachedResources() { mBuffer.Clear(); mValidRegion.SetEmpty(); }
   
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize)
@@ -358,6 +367,23 @@ InheritContextFlags(gfxContext* aSource, gfxContext* aDest)
   }
 }
 
+static PRBool
+ShouldRetainTransparentSurface(PRUint32 aContentFlags,
+                               gfxASurface* aTargetSurface)
+{
+  if (aContentFlags & Layer::CONTENT_NO_TEXT)
+    return PR_TRUE;
+
+  switch (aTargetSurface->GetTextQualityInTransparentSurfaces()) {
+  case gfxASurface::TEXT_QUALITY_OK:
+    return PR_TRUE;
+  case gfxASurface::TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS:
+    return (aContentFlags & Layer::CONTENT_NO_TEXT_OVER_TRANSPARENT) != 0;
+  default:
+    return PR_FALSE;
+  }
+}
+
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
@@ -368,33 +394,36 @@ BasicThebesLayer::Paint(gfxContext* aContext,
                "Can only draw in drawing phase");
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
+  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
-  if (!BasicManager()->IsRetained()) {
-    if (aOpacity != 1.0) {
-      target->Save();
-      ClipToContain(target, mVisibleRegion.GetBounds());
-      target->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-    }
+  PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
+  PRBool opaqueBuffer = canUseOpaqueSurface &&
+    targetSurface->AreSimilarSurfacesSensitiveToContentType();
+  Buffer::ContentType contentType =
+    opaqueBuffer ? gfxASurface::CONTENT_COLOR :
+                   gfxASurface::CONTENT_COLOR_ALPHA;
+
+  if (!BasicManager()->IsRetained() ||
+      (aOpacity == 1.0 && !canUseOpaqueSurface &&
+       !ShouldRetainTransparentSurface(mContentFlags, targetSurface))) {
     mValidRegion.SetEmpty();
     mBuffer.Clear();
+
+    target->Save();
+    gfxUtils::ClipToRegionSnapped(target, mVisibleRegion);
+    if (aOpacity != 1.0) {
+      target->PushGroup(contentType);
+    }
     aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
     if (aOpacity != 1.0) {
       target->PopGroupToSource();
       target->Paint(aOpacity);
-      target->Restore();
     }
+    target->Restore();
     return;
   }
 
-  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
-  PRBool isOpaqueContent =
-    (targetSurface->AreSimilarSurfacesSensitiveToContentType() &&
-     aOpacity == 1.0 &&
-     CanUseOpaqueSurface());
   {
-    Buffer::ContentType contentType =
-      isOpaqueContent ? gfxASurface::CONTENT_COLOR :
-                        gfxASurface::CONTENT_COLOR_ALPHA;
     Buffer::PaintState state = mBuffer.BeginPaint(this, contentType);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
@@ -416,7 +445,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, isOpaqueContent, target, aOpacity);
+  mBuffer.DrawTo(this, canUseOpaqueSurface, target, aOpacity);
 }
 
 void
@@ -426,7 +455,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
                                float aOpacity)
 {
   aTarget->Save();
-  ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+  gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
@@ -673,7 +702,7 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
   if (mGLContext) {
     nsRefPtr<gfxImageSurface> isurf =
       new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                          IsOpaqueContent()
+                          (GetContentFlags() & CONTENT_OPAQUE)
                             ? gfxASurface::ImageFormatRGB24
                             : gfxASurface::ImageFormatARGB32);
     if (!isurf || isurf->CairoStatus() != 0) {
@@ -701,15 +730,9 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     // For simplicity, we read the entire framebuffer for now -- in
     // the future we should use mUpdatedRect, though with WebGL we don't
     // have an easy way to generate one.
-    if (mGLContext->IsGLES2()) {
-      mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
-                              LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                              isurf->Data());
-    } else {
-      mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
-                              LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
-                              isurf->Data());
-    }
+    mGLContext->ReadPixelsIntoImageSurface(0, 0,
+                                           mBounds.width, mBounds.height,
+                                           isurf);
 
     // Put back the previous framebuffer binding.
     if (currentFramebuffer != mCanvasFramebuffer)
@@ -790,7 +813,7 @@ MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
                                       const nsIntRect& aBounds,
                                       nsIntRegion* aDirtyVisibleRegionInContainer)
 {
-  if (!aLayer->IsOpaqueContent()) {
+  if (!(aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     return PR_TRUE;
   }
 
@@ -861,6 +884,8 @@ BasicLayerManager::BasicLayerManager() :
 BasicLayerManager::~BasicLayerManager()
 {
   NS_ASSERTION(!InTransaction(), "Died during transaction?");
+
+  ClearCachedResources();
 
   mRoot = nsnull;
 
@@ -1081,6 +1106,25 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     }
 
     mTarget->Restore();
+  }
+}
+
+void
+BasicLayerManager::ClearCachedResources()
+{
+  if (mRoot) {
+    ClearLayer(mRoot);
+  }
+
+  mCachedSurface.Expire();
+}
+void
+BasicLayerManager::ClearLayer(Layer* aLayer)
+{
+  ToData(aLayer)->ClearCachedResources();
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    ClearLayer(child);
   }
 }
 

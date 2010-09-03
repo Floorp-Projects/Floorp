@@ -240,6 +240,10 @@ tier_platform_dirs += embedding/browser/gtk
 endif
 endif
 
+ifdef MOZ_ENABLE_LIBXUL
+tier_platform_dirs += startupcache
+endif
+
 ifndef BUILD_STATIC_LIBS
 tier_platform_dirs += toolkit/library
 endif
@@ -280,5 +284,6 @@ ifdef ENABLE_TESTS
 tier_platform_dirs += testing/mochitest
 tier_platform_dirs += testing/xpcshell 
 tier_platform_dirs += testing/mozmill
+tier_platform_dirs += testing/tools/screenshot
 endif
 

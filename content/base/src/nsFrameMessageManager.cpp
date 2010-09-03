@@ -35,8 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "ContentChild.h"
+#include "ContentParent.h"
+#endif
 #include "jscntxt.h"
-
 #include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
@@ -44,6 +47,22 @@
 #include "jsarray.h"
 #include "jsinterp.h"
 #include "nsJSUtils.h"
+#include "nsNetUtil.h"
+#include "nsScriptLoader.h"
+#include "nsIJSContextStack.h"
+#include "nsIXULRuntime.h"
+
+static PRBool
+IsChromeProcess()
+{
+  nsCOMPtr<nsIXULRuntime> rt = do_GetService("@mozilla.org/xre/runtime;1");
+  if (!rt)
+    return PR_TRUE;
+
+  PRUint32 type;
+  rt->GetProcessType(&type);
+  return type == nsIXULRuntime::PROCESS_TYPE_DEFAULT;
+}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
 
@@ -74,8 +93,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
                                          static_cast<nsIChromeFrameMessageManager*>(this)) :
                                        static_cast<nsIFrameMessageManager*>(
                                          static_cast<nsIContentFrameMessageManager*>(this))))
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager, !mChrome)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChromeFrameMessageManager, mChrome)
+  /* nsIContentFrameMessageManager is accessible only in TabChildGlobal. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIContentFrameMessageManager,
+                                     !mChrome && !mIsProcessManager)
+  /* Message managers in child process support nsISyncMessageSender. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISyncMessageSender, !mChrome)
+  /* Process message manager doesn't support nsIChromeFrameMessageManager. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChromeFrameMessageManager,
+                                     mChrome && !mIsProcessManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFrameMessageManager,
@@ -305,6 +330,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       JSContext* aContext)
 {
   JSContext* ctx = mContext ? mContext : aContext;
+  if (!ctx) {
+    nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&ctx);
+  }
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     nsRefPtr<nsFrameMessageManager> kungfuDeathGrip(this);
@@ -494,6 +522,7 @@ nsFrameMessageManager::Disconnect(PRBool aRemoveFromParent)
 nsresult
 NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult)
 {
+  NS_ENSURE_TRUE(IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
   nsFrameMessageManager* mm = new nsFrameMessageManager(PR_TRUE,
                                                         nsnull,
                                                         nsnull,
@@ -504,4 +533,271 @@ NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult)
                                                         PR_TRUE);
   NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
   return CallQueryInterface(mm, aResult);
+}
+
+nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>*
+  nsFrameScriptExecutor::sCachedScripts = nsnull;
+nsRefPtr<nsScriptCacheCleaner> nsFrameScriptExecutor::sScriptCacheCleaner;
+
+void
+nsFrameScriptExecutor::DidCreateCx()
+{
+  NS_ASSERTION(mCx, "Should have mCx!");
+  if (!sCachedScripts) {
+    sCachedScripts =
+      new nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>;
+    sCachedScripts->Init();
+
+    sScriptCacheCleaner = new nsScriptCacheCleaner();
+  }
+}
+
+void
+nsFrameScriptExecutor::DestroyCx()
+{
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  if (xpc) {
+    xpc->ReleaseJSContext(mCx, PR_TRUE);
+  } else {
+    JS_DestroyContext(mCx);
+  }
+  mCx = nsnull;
+  mGlobal = nsnull;
+}
+
+static PLDHashOperator
+CachedScriptUnrooter(const nsAString& aKey,
+                       nsFrameScriptExecutorJSObjectHolder*& aData,
+                       void* aUserArg)
+{
+  JSContext* cx = static_cast<JSContext*>(aUserArg);
+  JS_RemoveObjectRoot(cx, &(aData->mObject));
+  return PL_DHASH_REMOVE;
+}
+
+// static
+void
+nsFrameScriptExecutor::Shutdown()
+{
+  if (sCachedScripts) {
+    JSContext* cx = nsnull;
+    nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+    if (cx) {
+#ifdef DEBUG_smaug
+      printf("Will clear cached frame manager scripts!\n");
+#endif
+      JSAutoRequest ar(cx);
+      NS_ASSERTION(sCachedScripts != nsnull, "Need cached scripts");
+      sCachedScripts->Enumerate(CachedScriptUnrooter, cx);
+    } else {
+      NS_WARNING("No context available. Leaking cached scripts!\n");
+    }
+
+    delete sCachedScripts;
+    sCachedScripts = nsnull;
+
+    sScriptCacheCleaner = nsnull;
+  }
+}
+
+void
+nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
+{
+  if (!mGlobal || !mCx) {
+    return;
+  }
+
+  nsFrameScriptExecutorJSObjectHolder* holder = sCachedScripts->Get(aURL);
+  if (holder) {
+    nsContentUtils::ThreadJSContextStack()->Push(mCx);
+    {
+      // Need to scope JSAutoRequest to happen after Push but before Pop,
+      // at least for now. See bug 584673.
+      JSAutoRequest ar(mCx);
+      JSObject* global = nsnull;
+      mGlobal->GetJSObject(&global);
+      if (global) {
+        jsval val;
+        JS_ExecuteScript(mCx, global,
+                         (JSScript*)JS_GetPrivate(mCx, holder->mObject),
+                         &val);
+      }
+    }
+    JSContext* unused;
+    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
+    return;
+  }
+
+  nsCString url = NS_ConvertUTF16toUTF8(aURL);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsCOMPtr<nsIChannel> channel;
+  NS_NewChannel(getter_AddRefs(channel), uri);
+  if (!channel) {
+    return;
+  }
+
+  nsCOMPtr<nsIInputStream> input;
+  channel->Open(getter_AddRefs(input));
+  nsString dataString;
+  if (input) {
+    const PRUint32 bufferSize = 8192;
+    char buffer[bufferSize];
+    nsCString data;
+    PRUint32 avail = 0;
+    input->Available(&avail);
+    PRUint32 read = 0;
+    if (avail) {
+      while (NS_SUCCEEDED(input->Read(buffer, bufferSize, &read)) && read) {
+        data.Append(buffer, read);
+        read = 0;
+      }
+    }
+    nsScriptLoader::ConvertToUTF16(channel, (PRUint8*)data.get(), data.Length(),
+                                   EmptyString(), nsnull, dataString);
+  }
+
+  if (!dataString.IsEmpty()) {
+    nsContentUtils::ThreadJSContextStack()->Push(mCx);
+    {
+      // Need to scope JSAutoRequest to happen after Push but before Pop,
+      // at least for now. See bug 584673.
+      JSAutoRequest ar(mCx);
+      JSObject* global = nsnull;
+      mGlobal->GetJSObject(&global);
+      if (global) {
+        JSPrincipals* jsprin = nsnull;
+        mPrincipal->GetJSPrincipals(mCx, &jsprin);
+        nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
+        JSScript* script =
+          JS_CompileUCScriptForPrincipals(mCx, nsnull, jsprin,
+                                         (jschar*)dataString.get(),
+                                          dataString.Length(),
+                                          url.get(), 1);
+
+        if (script) {
+          JSObject* scriptObj = JS_NewScriptObject(mCx, script);
+          JS_AddObjectRoot(mCx, &scriptObj);
+          nsCAutoString scheme;
+          uri->GetScheme(scheme);
+          // We don't cache data: scripts!
+          if (!scheme.EqualsLiteral("data")) {
+            nsFrameScriptExecutorJSObjectHolder* holder =
+              new nsFrameScriptExecutorJSObjectHolder(scriptObj);
+            // Root the object also for caching.
+            JS_AddNamedObjectRoot(mCx, &(holder->mObject),
+                                  "Cached message manager script");
+            sCachedScripts->Put(aURL, holder);
+          }
+          jsval val;
+          JS_ExecuteScript(mCx, global,
+                           (JSScript*)JS_GetPrivate(mCx, scriptObj), &val);
+          JS_RemoveObjectRoot(mCx, &scriptObj);
+        }
+        //XXX Argh, JSPrincipals are manually refcounted!
+        JSPRINCIPALS_DROP(mCx, jsprin);
+      }
+    } 
+    JSContext* unused;
+    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
+  }
+}
+
+NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
+
+nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nsnull;
+nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nsnull;
+
+#ifdef MOZ_IPC
+bool SendAsyncMessageToChildProcess(void* aCallbackData,
+                                    const nsAString& aMessage,
+                                    const nsAString& aJSON)
+{
+  mozilla::dom::ContentParent* cp =
+    mozilla::dom::ContentParent::GetSingleton(PR_FALSE);
+  NS_WARN_IF_FALSE(cp, "No child process!");
+  if (cp) {
+    return cp->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
+  }
+  return true;
+}
+
+bool SendSyncMessageToParentProcess(void* aCallbackData,
+                                    const nsAString& aMessage,
+                                    const nsAString& aJSON,
+                                    nsTArray<nsString>* aJSONRetVal)
+{
+  mozilla::dom::ContentChild* cc =
+    mozilla::dom::ContentChild::GetSingleton();
+  if (cc) {
+    return
+      cc->SendSyncMessage(nsString(aMessage), nsString(aJSON), aJSONRetVal);
+  }
+  return true;
+}
+
+bool SendAsyncMessageToParentProcess(void* aCallbackData,
+                                     const nsAString& aMessage,
+                                     const nsAString& aJSON)
+{
+  mozilla::dom::ContentChild* cc =
+    mozilla::dom::ContentChild::GetSingleton();
+  if (cc) {
+    return cc->SendAsyncMessage(nsString(aMessage), nsString(aJSON));
+  }
+  return true;
+}
+
+#endif
+
+nsresult
+NS_NewParentProcessMessageManager(nsIFrameMessageManager** aResult)
+{
+  NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
+               "Re-creating sParentProcessManager");
+#ifdef MOZ_IPC
+  NS_ENSURE_TRUE(IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
+  nsFrameMessageManager* mm = new nsFrameMessageManager(PR_TRUE,
+                                                        nsnull,
+                                                        SendAsyncMessageToChildProcess,
+                                                        nsnull,
+                                                        &nsFrameMessageManager::sParentProcessManager,
+                                                        nsnull,
+                                                        nsnull,
+                                                        PR_FALSE,
+                                                        PR_TRUE);
+  NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
+  nsFrameMessageManager::sParentProcessManager = mm;
+  return CallQueryInterface(mm, aResult);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+
+nsresult
+NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
+{
+  NS_ASSERTION(!nsFrameMessageManager::sChildProcessManager,
+               "Re-creating sChildProcessManager");
+#ifdef MOZ_IPC
+  NS_ENSURE_TRUE(!IsChromeProcess(), NS_ERROR_NOT_AVAILABLE);
+  nsFrameMessageManager* mm = new nsFrameMessageManager(PR_FALSE,
+                                                        SendSyncMessageToParentProcess,
+                                                        SendAsyncMessageToParentProcess,
+                                                        nsnull,
+                                                        &nsFrameMessageManager::sChildProcessManager,
+                                                        nsnull,
+                                                        nsnull,
+                                                        PR_FALSE,
+                                                        PR_TRUE);
+  NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
+  nsFrameMessageManager::sChildProcessManager = mm;
+  return CallQueryInterface(mm, aResult);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
 }

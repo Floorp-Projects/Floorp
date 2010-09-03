@@ -107,7 +107,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
 class nsDisplayXULGroupBackground : public nsDisplayItem {
 public:
-  nsDisplayXULGroupBackground(nsGroupBoxFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayXULGroupBackground(nsDisplayListBuilder* aBuilder,
+                              nsGroupBoxFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULGroupBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -130,8 +132,7 @@ nsDisplayXULGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
                                    nsIRenderingContext* aCtx)
 {
   static_cast<nsGroupBoxFrame*>(mFrame)->
-    PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame),
-                          mVisibleRect);
+    PaintBorderBackground(*aCtx, ToReferenceFrame(), mVisibleRect);
 }
 
 NS_IMETHODIMP
@@ -142,7 +143,7 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Paint our background and border
   if (IsVisibleForPainting(aBuilder)) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayXULGroupBackground(this));
+        nsDisplayXULGroupBackground(aBuilder, this));
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = DisplayOutline(aBuilder, aLists);

@@ -5,7 +5,6 @@
  * Contributor: Bob Clary
  */
 
-var gTestfile = 'regress-424954.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 424954;
 var summary = 'Do not crash with [].concat(null)';

@@ -56,6 +56,7 @@ endif
 EXTRA_JS_MODULES = \
 	content/openLocationLastURL.jsm \
 	content/NetworkPrioritizer.jsm \
+	content/domplate.jsm \
 	content/stylePanel.jsm \
 	$(NULL)
 
@@ -83,3 +84,6 @@ endif
 ifneq (,$(filter windows, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DMENUBAR_CAN_AUTOHIDE=1
 endif
+
+libs::
+	$(NSINSTALL) $(srcdir)/content/tabview/modules/* $(FINAL_TARGET)/modules/tabview

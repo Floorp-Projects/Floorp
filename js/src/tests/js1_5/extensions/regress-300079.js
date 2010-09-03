@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-300079.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 300079;
 var summary = "precompiled functions should inherit from current window's Function.prototype";

@@ -40,13 +40,14 @@
  
 #include "nsPaperPS.h"
 #include "plstr.h"
+#include "nsCoord.h"
 
 #define COUNTOF(x) (sizeof(x) / sizeof((x)[0]))
 
 const nsPaperSizePS_ nsPaperSizePS::mList[] =
 {
 #define SIZE_MM(x)      (x)
-#define SIZE_INCH(x)    ((x) * 25.4)
+#define SIZE_INCH(x)    ((x) * MM_PER_INCH_FLOAT)
     { "A5",             SIZE_MM(148),   SIZE_MM(210),   PR_TRUE },
     { "A4",             SIZE_MM(210),   SIZE_MM(297),   PR_TRUE },
     { "A3",             SIZE_MM(297),   SIZE_MM(420),   PR_TRUE },

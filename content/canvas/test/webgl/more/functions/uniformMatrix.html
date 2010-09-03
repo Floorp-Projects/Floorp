@@ -22,19 +22,9 @@ Tests.testUniformf = function(gl) {
     gl.uniformMatrix2fv(bar, false, [2,1, 2,2]);
     gl.uniformMatrix3fv(bar3, false, [2,2,2, 2,2,2, 2,1,2]);
   });
-  var d = gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([1,2,3,8], d.data);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  sh.apply(function(f){
-    var foo = f.uniform('foo');
-    var bar = f.uniform('bar');
-    var bar3 = f.uniform('bar3');
-    gl.uniformMatrix4fv(foo, true, [1,0,0,0, 0,2,0,0, 0,0,3,0, 0,0,0,4]);
-    gl.uniformMatrix2fv(bar, true, [2,1, 2,2]);
-    gl.uniformMatrix3fv(bar3, true, [2,2,2, 2,2,2, 2,1,2]);
-  });
-  var d = gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([1,2,3,16], d.data);
+  var d = new Uint8Array(4);
+  gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE, d);
+  assertEquals([1,2,3,8], [d[0], d[1], d[2], d[3]]);
   sh.destroy();
 }
 
@@ -43,7 +33,6 @@ Tests.endUnit = function(gl) {
 
 </script>
 <script id="foobar-vert" type="x-shader/x-vertex">
-#version 120
 attribute vec3 Vertex;
 attribute vec2 Tex;
 
@@ -58,7 +47,9 @@ void main()
 }
 </script>
 <script id="foobar-frag" type="x-shader/x-fragment">
-#version 120
+#ifdef GL_ES
+precision highp float;
+#endif
 
 uniform mat4 foo;
 

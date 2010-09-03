@@ -102,14 +102,36 @@ nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
 
 PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
 {
-  if (mUnit == aOther.mUnit) {
-    if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-      return PRBool(mValue.mFloat == aOther.mValue.mFloat);
-    }
-    else {
-      return PRBool(mValue.mInt == aOther.mValue.mInt);
-    }
+  if (mUnit != aOther.mUnit) {
+    return PR_FALSE;
   }
+  switch (mUnit) {
+    case eStyleUnit_Null:
+    case eStyleUnit_Normal:
+    case eStyleUnit_Auto:
+    case eStyleUnit_None:
+      return PR_TRUE;
+    case eStyleUnit_Percent:
+    case eStyleUnit_Factor:
+    case eStyleUnit_Degree:
+    case eStyleUnit_Grad:
+    case eStyleUnit_Radian:
+      return mValue.mFloat == aOther.mValue.mFloat;
+    case eStyleUnit_Coord:
+    case eStyleUnit_Integer:
+    case eStyleUnit_Enumerated:
+      return mValue.mInt == aOther.mValue.mInt;
+    case eStyleUnit_Calc:
+    case eStyleUnit_Calc_Plus:
+    case eStyleUnit_Calc_Minus:
+    case eStyleUnit_Calc_Times_L:
+    case eStyleUnit_Calc_Times_R:
+    case eStyleUnit_Calc_Divided:
+    case eStyleUnit_Calc_Minimum:
+    case eStyleUnit_Calc_Maximum:
+      return *this->GetArrayValue() == *aOther.GetArrayValue();
+  }
+  NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
   return PR_FALSE;
 }
 
@@ -210,6 +232,24 @@ nsStyleCoord::GetAngleValueInRadians() const
     return 0.0;
   }
 }
+
+PRBool
+nsStyleCoord::CalcHasPercent() const
+{
+  NS_ABORT_IF_FALSE(IsCalcUnit(), "caller should check IsCalcUnit()");
+  nsStyleCoord::Array *a = GetArrayValue();
+  for (size_t i = 0, i_end = a->Count(); i < i_end; ++i) {
+    const nsStyleCoord &v = a->Item(i);
+    if (v.GetUnit() == eStyleUnit_Percent) {
+      return PR_TRUE;
+    }
+    if (v.IsCalcUnit() && v.CalcHasPercent()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 
 inline void*
 nsStyleCoord::Array::operator new(size_t aSelfSize,

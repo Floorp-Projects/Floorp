@@ -6,7 +6,6 @@
  *      Rasmus Jensen <rje(a)dbc.dk>
  */
 
-gTestfile = 'template.js';
 
 var summary = 'Uneval+eval of XML containing string with {';
 var BUGNUMBER = 463360;

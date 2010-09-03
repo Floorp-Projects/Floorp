@@ -1,7 +1,6 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
-var gTestfile = '15.2.3.6-new-definition.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 430133;
 var summary = 'ES5 Object.defineProperty(O, P, Attributes): new definition';

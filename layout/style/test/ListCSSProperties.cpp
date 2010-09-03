@@ -48,7 +48,7 @@ struct PropertyInfo {
 
 const PropertyInfo gLonghandProperties[] = {
 
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,     \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
     { #name_, #method_ },
 
@@ -66,7 +66,7 @@ const PropertyInfo gLonghandProperties[] = {
 const char* gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,     \
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
     #name_,
 

@@ -5,7 +5,6 @@
  * Contributor: Robert Sayre
  */
 
-var gTestfile = 'regress-449627.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 449627;
 var summary = 'Crash with JIT in js_FillPropertyCache';

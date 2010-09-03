@@ -52,6 +52,10 @@ struct PathPoint {
 static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
 
 //----------------------------------------------------------------------
+// Maximum recursion limit for length calculation
+static const PRUint32 MAX_STEPS = 10;
+
+//----------------------------------------------------------------------
 // implementation helper macros
 
 #define NS_IMPL_SVGPATHSEG(type, letter)                      \
@@ -122,8 +126,9 @@ static void SplitCubicBezier(PathPoint *curve,
   left[3].y = right[0].y = (left[2].y + right[1].y) / 2;
 }
 
-static float CalcBezLength(PathPoint *curve,PRUint32 numPts,
-                           void (*split)(PathPoint*, PathPoint*, PathPoint*))
+static float CalcBezLengthHelper(PathPoint *curve, PRUint32 numPts,
+                                 PRUint32 steps,
+                                 void (*split)(PathPoint*, PathPoint*, PathPoint*))
 {
   PathPoint left[4];
   PathPoint right[4];
@@ -134,12 +139,20 @@ static float CalcBezLength(PathPoint *curve,PRUint32 numPts,
   }
   dist = GetDistance(curve[0].x, curve[numPts - 1].x,
                      curve[0].y, curve[numPts - 1].y);
-  if (length - dist > PATH_SEG_LENGTH_TOLERANCE) {
+  if (length - dist > PATH_SEG_LENGTH_TOLERANCE && steps < MAX_STEPS) {
       split(curve, left, right);
-      return CalcBezLength(left, numPts, split) + 
-             CalcBezLength(right, numPts, split);
+      ++steps;
+      return CalcBezLengthHelper(left, numPts, steps, split) + 
+             CalcBezLengthHelper(right, numPts, steps, split);
   }
+
   return length;
+}
+
+static inline float CalcBezLength(PathPoint *curve, PRUint32 numPts,
+                                  void (*split)(PathPoint*, PathPoint*, PathPoint*))
+{
+  return CalcBezLengthHelper(curve, numPts, 0, split);
 }
 
 ////////////////////////////////////////////////////////////////////////

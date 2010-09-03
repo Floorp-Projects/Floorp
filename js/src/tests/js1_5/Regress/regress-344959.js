@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-344959.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 344959;
 var summary = 'Functions should not lose scope chain after exception';

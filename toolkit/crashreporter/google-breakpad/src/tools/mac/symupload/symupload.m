@@ -134,7 +134,7 @@ static void Start(Options *options) {
   fprintf(stdout, "Send: %s\n", error ? [[error description] UTF8String] :
           "No Error");
   fprintf(stdout, "Response: %d\n", status);
-  fprintf(stdout, "Result: %d bytes\n%s\n", [data length], [result UTF8String]);
+  fprintf(stdout, "Result: %lu bytes\n%s\n", [data length], [result UTF8String]);
 
   [result release];
   [ul release];
@@ -173,8 +173,8 @@ SetupOptions(int argc, const char *argv[], Options *options) {
     exit(1);
   }
 
-  options->symbolsPath = [NSString stringWithCString:argv[optind]];
-  options->uploadURLStr = [NSString stringWithCString:argv[optind + 1]];
+  options->symbolsPath = [NSString stringWithUTF8String:argv[optind]];
+  options->uploadURLStr = [NSString stringWithUTF8String:argv[optind + 1]];
 }
 
 //=============================================================================

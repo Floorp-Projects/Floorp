@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-257679.js';
 
 START("Standalone <![CDATA[ .... ]]> should be allowed");
 printBugNumber(257679);

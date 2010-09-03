@@ -161,7 +161,7 @@ DEFINES		+= \
 		-DEXPORT_XPTC_API
 
 EXTRA_DSO_LDOPTS +=				\
-	-L$(LIBXUL_DIST)/lib $(MOZALLOC_LIB)    \
+	$(MOZALLOC_LIB)				\
 	$(NSPR_LIBS)				\
 	$(NULL)
 

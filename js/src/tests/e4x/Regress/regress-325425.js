@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-325425.js';
 
 var BUGNUMBER = 325425;
 var summary = 'jsxml.c: Bad assumptions about js_ConstructObject';

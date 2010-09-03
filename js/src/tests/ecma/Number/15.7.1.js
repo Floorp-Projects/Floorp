@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '15.7.1.js';
 
 /**
    File Name:          15.7.1.js
@@ -50,7 +49,7 @@ gTestfile = '15.7.1.js';
    computed by ToNumber( value )
    15.7.1.2    Number() returns 0.
 
-   need to add more test cases.  see the gTestcases for
+   need to add more test cases.  see the testcases for
    TypeConversion ToNumber.
 
    Author:             christine@netscape.com

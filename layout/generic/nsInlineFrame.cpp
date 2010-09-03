@@ -94,18 +94,10 @@ nsInlineFrame::GetType() const
 }
 
 static inline PRBool
-IsPaddingZero(nsStyleUnit aUnit, const nsStyleCoord &aCoord)
+IsMarginZero(const nsStyleCoord &aCoord)
 {
-    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
-            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
-}
-
-static inline PRBool
-IsMarginZero(nsStyleUnit aUnit, const nsStyleCoord &aCoord)
-{
-    return (aUnit == eStyleUnit_Auto ||
-            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
-            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
+  return aCoord.GetUnit() == eStyleUnit_Auto ||
+         nsLayoutUtils::IsPaddingZero(aCoord);
 }
 
 /* virtual */ PRBool
@@ -126,16 +118,12 @@ nsInlineFrame::IsSelfEmpty()
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
   PRBool haveRight =
     border->GetActualBorderWidth(NS_SIDE_RIGHT) != 0 ||
-    !IsPaddingZero(padding->mPadding.GetRightUnit(),
-                   padding->mPadding.GetRight()) ||
-    !IsMarginZero(margin->mMargin.GetRightUnit(),
-                  margin->mMargin.GetRight());
+    !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight()) ||
+    !IsMarginZero(margin->mMargin.GetRight());
   PRBool haveLeft =
     border->GetActualBorderWidth(NS_SIDE_LEFT) != 0 ||
-    !IsPaddingZero(padding->mPadding.GetLeftUnit(),
-                   padding->mPadding.GetLeft()) ||
-    !IsMarginZero(margin->mMargin.GetLeftUnit(),
-                  margin->mMargin.GetLeft());
+    !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
+    !IsMarginZero(margin->mMargin.GetLeft());
   if (haveLeft || haveRight) {
     if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
       PRBool haveStart, haveEnd;
@@ -754,17 +742,6 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
 
   // Create a next-in-flow if needed.
   if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
-    if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
-      nsBlockReflowState* blockRS = lineLayout->mBlockRS;
-      nsPlaceholderFrame* placeholder =
-        static_cast<nsPlaceholderFrame*>(aFrame);
-      rv = blockRS->mBlock->SplitFloat(*blockRS,
-                                       placeholder->GetOutOfFlowFrame(),
-                                       aStatus);
-      // Allow the parent to continue reflowing.
-      aStatus = NS_FRAME_COMPLETE;
-      return rv;
-    }
     nsIFrame* newFrame;
     rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
     if (NS_FAILED(rv)) {

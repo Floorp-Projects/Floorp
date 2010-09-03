@@ -16,10 +16,14 @@ AM_INIT_AUTOMAKE
 # We must force CC to /not/ be precious variables; otherwise
 # the wrong, non-multilib-adjusted value will be used in multilibs.
 # As a side effect, we have to subst CFLAGS ourselves.
+# Also save and restore CFLAGS, since AC_PROG_CC will come up with
+# defaults of its own if none are provided.
 
 m4_rename([_AC_ARG_VAR_PRECIOUS],[real_PRECIOUS])
 m4_define([_AC_ARG_VAR_PRECIOUS],[])
+save_CFLAGS=$CFLAGS
 AC_PROG_CC
+CFLAGS=$save_CFLAGS
 m4_undefine([_AC_ARG_VAR_PRECIOUS])
 m4_rename([real_PRECIOUS],[_AC_ARG_VAR_PRECIOUS])
 
@@ -43,7 +47,7 @@ TARGETDIR="unknown"
 case "$host" in
   alpha*-*-*)
 	TARGET=ALPHA; TARGETDIR=alpha;
-	# Support 128-bit long double, changable via command-line switch.
+	# Support 128-bit long double, changeable via command-line switch.
 	HAVE_LONG_DOUBLE='defined(__LONG_DOUBLE_128__)'
 	;;
 
@@ -120,6 +124,10 @@ case "$host" in
 	TARGET=MIPS; TARGETDIR=mips
 	;;
 
+  moxie-*-*)
+        TARGET=MOXIE; TARGETDIR=moxie
+	;;
+
   powerpc*-*-linux* | powerpc-*-sysv*)
 	TARGET=POWERPC; TARGETDIR=powerpc
 	;;
@@ -185,6 +193,7 @@ AM_CONDITIONAL(ALPHA, test x$TARGET = xALPHA)
 AM_CONDITIONAL(IA64, test x$TARGET = xIA64)
 AM_CONDITIONAL(M32R, test x$TARGET = xM32R)
 AM_CONDITIONAL(M68K, test x$TARGET = xM68K)
+AM_CONDITIONAL(MOXIE, test x$TARGET = xMOXIE)
 AM_CONDITIONAL(POWERPC, test x$TARGET = xPOWERPC)
 AM_CONDITIONAL(POWERPC_AIX, test x$TARGET = xPOWERPC_AIX)
 AM_CONDITIONAL(POWERPC_DARWIN, test x$TARGET = xPOWERPC_DARWIN)
@@ -270,13 +279,39 @@ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64
 	libffi_cv_as_x86_pcrel, [
 	libffi_cv_as_x86_pcrel=yes
 	echo '.text; foo: nop; .data; .long foo-.; .text' > conftest.s
-	if $CC $CFLAGS -c conftest.s 2>&1 | grep -i warning > /dev/null; then
+	if $CC $CFLAGS -c conftest.s 2>&1 | $EGREP -i 'illegal|warning' > /dev/null; then
 	    libffi_cv_as_x86_pcrel=no
 	fi
 	])
     if test "x$libffi_cv_as_x86_pcrel" = xyes; then
 	AC_DEFINE(HAVE_AS_X86_PCREL, 1,
 		  [Define if your assembler supports PC relative relocs.])
+    fi
+
+    AC_CACHE_CHECK([assembler .ascii pseudo-op support],
+       libffi_cv_as_ascii_pseudo_op, [
+       libffi_cv_as_ascii_pseudo_op=unknown
+       # Check if we have .ascii
+       AC_TRY_COMPILE([asm (".ascii \"string\"");],,
+		       [libffi_cv_as_ascii_pseudo_op=yes],
+		       [libffi_cv_as_ascii_pseudo_op=no])
+    ])
+    if test "x$libffi_cv_as_ascii_pseudo_op" = xyes; then
+       AC_DEFINE(HAVE_AS_ASCII_PSEUDO_OP, 1,
+	       [Define if your assembler supports .ascii.])
+    fi
+
+    AC_CACHE_CHECK([assembler .string pseudo-op support],
+       libffi_cv_as_string_pseudo_op, [
+       libffi_cv_as_string_pseudo_op=unknown
+       # Check if we have .string
+       AC_TRY_COMPILE([asm (".string \"string\"");],,
+		       [libffi_cv_as_string_pseudo_op=yes],
+		       [libffi_cv_as_string_pseudo_op=no])
+    ])
+    if test "x$libffi_cv_as_string_pseudo_op" = xyes; then
+       AC_DEFINE(HAVE_AS_STRING_PSEUDO_OP, 1,
+	       [Define if your assembler supports .string.])
     fi
 fi
 
@@ -287,6 +322,21 @@ case "$target" in
                    alternative means])
      ;;
 esac
+
+if test x$TARGET = xX86_64; then
+    AC_CACHE_CHECK([assembler supports unwind section type],
+	libffi_cv_as_x86_64_unwind_section_type, [
+	libffi_cv_as_x86_64_unwind_section_type=yes
+	echo '.section .eh_frame,"a",@unwind' > conftest.s
+	if $CC $CFLAGS -c conftest.s 2>&1 | grep -i warning > /dev/null; then
+	    libffi_cv_as_x86_64_unwind_section_type=no
+	fi
+	])
+    if test "x$libffi_cv_as_x86_64_unwind_section_type" = xyes; then
+	AC_DEFINE(HAVE_AS_X86_64_UNWIND_SECTION_TYPE, 1,
+		  [Define if your assembler supports unwind section type.])
+    fi
+fi
 
 AC_CACHE_CHECK([whether .eh_frame section should be read-only],
     libffi_cv_ro_eh_frame, [
@@ -354,6 +404,7 @@ AC_ARG_ENABLE(debug,
   if test "$enable_debug" = "yes"; then
     AC_DEFINE(FFI_DEBUG, 1, [Define this if you want extra debugging.])
   fi)
+AM_CONDITIONAL(FFI_DEBUG, test "$enable_debug" = "yes")
 
 AC_ARG_ENABLE(structs,
 [  --disable-structs       omit code for struct support],

@@ -7,8 +7,10 @@
 #feedback-menu-button .toolbarbutton-text {
   display: -moz-box;
   margin: 0;
+  color: -moz-dialogtext;
+  text-shadow: none;
 }
- 
+
 #feedback-menu-button .toolbarbutton-icon {
   display: none;
 }
@@ -170,7 +172,7 @@ image.study-result {
     color: white;
     font-weight: bold;
     padding: 2px;
-    -moz-border-radius: 100%;
+    -moz-border-radius: 10000px;
     margin-right: 25px;
     margin-bottom: 13px;
 }

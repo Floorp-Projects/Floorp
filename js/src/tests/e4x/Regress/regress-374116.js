@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-374116.js';
 
 var BUGNUMBER = 374116;
 var summary = 'Crash with <a/>.@b[1] = 2;';

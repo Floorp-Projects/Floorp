@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'exception-009.js';
 
 /**
  *  File Name:          exception-009

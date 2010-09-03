@@ -49,10 +49,10 @@ if (!gl) {
   // Get the location of an unknown uniform.
   var loc = gl.getUniformLocation(gl.program, "someUnknownUniform");
   assertMsg(loc === null, "location of unknown uniform should be null");
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "there should be no error from getting an unknown uniform");
   gl.uniform1f(loc, 1);
-  assertMsg(gl.getError() == gl.NO_ERROR,
+  glErrorShouldBe(gl, gl.NO_ERROR,
             "there should be no error from trying to set an unknown uniform");
 }
 

@@ -5,11 +5,17 @@ function test_seek6(v, seekTime, is, ok, finish) {
 var seekCount = 0;
 var completed = false;
 var interval;
+var sum = 0;
+
+function poll() {
+  sum += v.currentTime;
+}
 
 function startTest() {
   if (completed)
     return false;
-  interval = setInterval(function() { v.currentTime=Math.random()*v.duration; }, 10);
+  interval = setInterval(poll, 10);
+  v.currentTime = Math.random() * v.duration;
   return false;
 }
 
@@ -22,7 +28,10 @@ function seekEnded() {
   if (seekCount == 3) {
     clearInterval(interval);
     completed = true;
+    dump("Seek test 6 time sum:" + sum + "\n");
     finish();
+  } else {
+    v.currentTime = Math.random() * v.duration;
   }
   return false;
 }

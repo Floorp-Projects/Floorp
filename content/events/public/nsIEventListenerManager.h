@@ -68,6 +68,7 @@ public:
     mMayHaveMutationListeners(PR_FALSE),
     mMayHaveCapturingListeners(PR_FALSE),
     mMayHaveSystemGroupListeners(PR_FALSE),
+    mMayHaveAudioAvailableEventListener(PR_FALSE),
     mNoListenerForEvent(0)
   {}
 
@@ -205,12 +206,20 @@ public:
    */
   PRBool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
 
+  /**
+   * Returns PR_TRUE if there may be a MozAudioAvailable event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
+
+
 protected:
   PRUint32 mMayHavePaintEventListener : 1;
   PRUint32 mMayHaveMutationListeners : 1;
   PRUint32 mMayHaveCapturingListeners : 1;
   PRUint32 mMayHaveSystemGroupListeners : 1;
-  PRUint32 mNoListenerForEvent : 28;
+  PRUint32 mMayHaveAudioAvailableEventListener : 1;
+  PRUint32 mNoListenerForEvent : 27;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,

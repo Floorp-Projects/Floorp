@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-366468.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 366468;
 var summary = 'Set property without setter';

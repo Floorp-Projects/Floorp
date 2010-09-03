@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-453411.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 453411;
 var summary = 'Do not assert with JIT: !cx->executingTrace|!tm->onTrace';

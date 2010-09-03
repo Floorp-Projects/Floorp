@@ -1,0 +1,117 @@
+.wizard-header-icon {
+  list-style-image: url(chrome://browser/skin/sync-32.png);
+}
+
+wizard,
+.wizard-page-box,
+.wizard-header {
+  -moz-appearance: none !important;
+}
+
+wizard {
+  background-color: #FFF;
+  background: url(chrome://browser/skin/sync-bg.png) #FFF repeat-x center -80px;
+}
+
+/* Override the text-link style from global.css */
+.text-link,
+.text-link:focus {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+}
+
+
+.accountChoiceButton,
+.mergeChoiceButton {
+  -moz-appearance: none;
+  border: #999999 1px solid !important;
+  padding: 2px 3px;
+  -moz-border-radius: 6px;
+  background-color: menu;
+  -moz-box-shadow:
+    inset rgba(255, 255, 255, 0.5) 0 1px 0px,
+    inset rgba(0, 0, 0, 0.1) 0 -2px 0px,
+    rgba(0, 0, 0, 0.1) 0px 1px 0px;
+}
+
+.accountChoiceButton:hover,
+.mergeChoiceButton[selected="true"] {
+  background-color: -moz-MenuHover;
+  color: -moz-MenuHoverText;
+}
+
+.mergeChoiceButtonBox {
+  padding: 0.2em;
+}
+
+.success,
+.error {
+  padding: 2px;
+  -moz-border-radius: 2px;
+}
+
+.error {
+  background-color: #FF0000 !important;
+  color: #FFFFFF !important;
+}
+
+.success {
+  background-color: #00FF00 !important;
+}
+
+.warning {
+  font-weight: bold;
+  font-size: 100%;
+  color: red;
+}
+
+.mainDesc {
+  font-weight: bold;
+  font-size: 100%;
+}
+
+.normal {
+  font-size: 100%;
+}
+
+/* Buttons on first page of wizard */
+#newAccount,
+#existingAccount {
+  min-height: 5em;
+}
+#newAccount image {
+  list-style-image: url("chrome://browser/skin/sync-usedNever.png");
+}
+#existingAccount image {
+  list-style-image: url("chrome://browser/skin/sync-usedBefore.png");
+}
+
+.inputColumn {
+  -moz-margin-end: 2px
+}
+
+#tosDesc {
+  width: 16em;
+}
+
+#connect-throbber image,
+#passphrase-throbber image {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+/* Merge choice images */
+#resetClient .mergeChoiceImage,
+#chosenActionMerge image {
+  list-style-image: url("chrome://browser/skin/sync-merge.png");
+}
+
+#wipeClient .mergeChoiceImage,
+#chosenActionWipeClient image {
+  list-style-image: url("chrome://browser/skin/sync-wipeClient.png");
+}
+
+#wipeRemote .mergeChoiceImage,
+#chosenActionWipeServer image {
+  list-style-image: url("chrome://browser/skin/sync-wipeServer.png");
+}

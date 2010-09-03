@@ -69,7 +69,8 @@ class nsIWidget;
 enum nsTransparencyMode {
   eTransparencyOpaque = 0,  // Fully opaque
   eTransparencyTransparent, // Parts of the window may be transparent
-  eTransparencyGlass        // Transparent parts of the window have Vista AeroGlass effect applied
+  eTransparencyGlass,       // Transparent parts of the window have Vista AeroGlass effect applied
+  eTransparencyBorderlessGlass // As above, but without a border around the opaque areas when there would otherwise be one with eTransparencyGlass
 };
 
 /**

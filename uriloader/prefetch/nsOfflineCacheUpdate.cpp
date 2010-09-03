@@ -70,6 +70,7 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "prlog.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
 
@@ -283,13 +284,16 @@ nsManifestCheck::GetInterface(const nsIID &aIID, void **aResult)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsManifestCheck::OnChannelRedirect(nsIChannel *aOldChannel,
-                                   nsIChannel *aNewChannel,
-                                   PRUint32 aFlags)
+nsManifestCheck::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                        nsIChannel *aNewChannel,
+                                        PRUint32 aFlags,
+                                        nsIAsyncVerifyRedirectCallback *callback)
 {
     // Redirects should cause the load (and therefore the update) to fail.
-    if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)
+    if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+        callback->OnRedirectVerifyCallback(NS_OK);
         return NS_OK;
+    }
     aOldChannel->Cancel(NS_ERROR_ABORT);
     return NS_ERROR_ABORT;
 }
@@ -491,9 +495,10 @@ nsOfflineCacheUpdateItem::GetInterface(const nsIID &aIID, void **aResult)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateItem::OnChannelRedirect(nsIChannel *aOldChannel,
-                                            nsIChannel *aNewChannel,
-                                            PRUint32 aFlags)
+nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                                 nsIChannel *aNewChannel,
+                                                 PRUint32 aFlags,
+                                                 nsIAsyncVerifyRedirectCallback *cb)
 {
     if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
         // Don't allow redirect in case of non-internal redirect and cancel
@@ -539,6 +544,7 @@ nsOfflineCacheUpdateItem::OnChannelRedirect(nsIChannel *aOldChannel,
 
     mChannel = aNewChannel;
 
+    cb->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
 }
 

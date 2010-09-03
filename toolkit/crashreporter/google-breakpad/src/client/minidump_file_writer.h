@@ -151,7 +151,7 @@ class UntypedMDRVA {
 
   // Return size and position
   inline MDLocationDescriptor location() const {
-    MDLocationDescriptor location = { size_, position_ };
+    MDLocationDescriptor location = { static_cast<int>(size_), position_ };
     return location;
   }
 
@@ -218,7 +218,7 @@ class TypedMDRVA : public UntypedMDRVA {
   // Allocate an array of |count| elements of |size| after object of MDType
   // Must not call more than once.
   // Return true on success, or false on failure
-  bool AllocateObjectAndArray(unsigned int count, size_t size);
+  bool AllocateObjectAndArray(size_t count, size_t size);
 
   // Copy |item| to |index|
   // Must have been allocated using AllocateArray().

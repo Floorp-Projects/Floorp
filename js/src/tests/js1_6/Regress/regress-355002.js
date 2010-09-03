@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355002.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355002;
 var summary = 'Do not assert on |for each (this in []) { }|';

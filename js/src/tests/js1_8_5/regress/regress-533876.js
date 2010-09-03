@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  * Contributors: Gary Kwong and Jason Orendorff
  */
-gTestfile = 'regress-533876';
 
 var savedEval = eval;
 var x = [0];

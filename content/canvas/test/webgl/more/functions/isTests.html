@@ -41,12 +41,14 @@ Tests.startUnit = function () {
 
 Tests.testIs = function(gl) {
     var tex = loadTexture(gl, document.getElementById('2d'));
+    gl.bindTexture(gl.TEXTURE_2D, tex);
     var fbo = new FBO(gl, 1, 1);
     fbo.use();
     var prog = gl.createProgram();
     var sh1 = gl.createShader(gl.VERTEX_SHADER);
     var sh2 = gl.createShader(gl.FRAGMENT_SHADER);
     var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     assert("tex", gl.isTexture(tex));
     assert("fbo", gl.isFramebuffer(fbo.fbo));
     assert("rbo", gl.isRenderbuffer(fbo.rbo));
@@ -54,6 +56,21 @@ Tests.testIs = function(gl) {
     assert("sh1", gl.isShader(sh1));
     assert("sh2", gl.isShader(sh2));
     assert("buf", gl.isBuffer(buf));
+    gl.deleteTexture(tex);
+    gl.deleteFramebuffer(fbo.fbo);
+    gl.deleteRenderbuffer(fbo.rbo);
+    gl.deleteProgram(prog);
+    gl.deleteShader(sh1);
+    gl.deleteShader(sh2);
+    gl.deleteBuffer(buf);
+    // NOTE: we purposely do not unbind things.
+    assert("tex", !gl.isTexture(tex));
+    assert("fbo", !gl.isFramebuffer(fbo.fbo));
+    assert("rbo", !gl.isRenderbuffer(fbo.rbo));
+    assert("prog", !gl.isProgram(prog));
+    assert("sh1", !gl.isShader(sh1));
+    assert("sh2", !gl.isShader(sh2));
+    assert("buf", !gl.isBuffer(buf));
 }
 
 </script>

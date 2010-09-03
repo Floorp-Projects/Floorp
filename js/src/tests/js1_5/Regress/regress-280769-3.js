@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-280769-3.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 280769;
 var summary = 'Do not crash on overflow of 64K boundary in number of classes in regexp';

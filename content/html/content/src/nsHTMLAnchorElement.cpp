@@ -41,7 +41,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMNSHTMLAnchorElement2.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsGkAtoms.h"
@@ -57,7 +56,6 @@ using namespace mozilla::dom;
 
 class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLAnchorElement,
-                            public nsIDOMNSHTMLAnchorElement2,
                             public nsILink,
                             public Link
 {
@@ -82,12 +80,6 @@ public:
 
   // nsIDOMHTMLAnchorElement
   NS_DECL_NSIDOMHTMLANCHORELEMENT  
-
-  // nsIDOMNSHTMLAnchorElement
-  NS_DECL_NSIDOMNSHTMLANCHORELEMENT
-
-  // nsIDOMNSHTMLAnchorElement2
-  NS_DECL_NSIDOMNSHTMLANCHORELEMENT2
 
   // nsILink
   NS_IMETHOD LinkAdded() { return NS_OK; }
@@ -153,10 +145,8 @@ DOMCI_NODE_DATA(HTMLAnchorElement, nsHTMLAnchorElement)
 
 // QueryInterface implementation for nsHTMLAnchorElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLAnchorElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLAnchorElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLAnchorElement,
                                    nsIDOMHTMLAnchorElement,
-                                   nsIDOMNSHTMLAnchorElement,
-                                   nsIDOMNSHTMLAnchorElement2,
                                    nsILink,
                                    Link)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAnchorElement,

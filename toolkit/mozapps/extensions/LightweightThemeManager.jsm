@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org Code.
+ * The Original Code is the Extension Manager.
  *
  * The Initial Developer of the Original Code is
- * Dao Gottwald <dao@mozilla.com>.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dão Gottwald <dao@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const ID_SUFFIX              = "@personas.mozilla.org";
 const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
+const PREF_EM_DSS_ENABLED    = "extensions.dss.enabled";
 const ADDON_TYPE             = "theme";
 
 const DEFAULT_MAX_USED_THEMES_COUNT = 30;
@@ -65,22 +67,8 @@ const PERSIST_FILES = {
 
 __defineGetter__("_prefs", function () {
   delete this._prefs;
-  return this._prefs =
-         Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService).getBranch("lightweightThemes.")
-           .QueryInterface(Ci.nsIPrefBranch2);
-});
-
-__defineGetter__("_observerService", function () {
-  delete this._observerService;
-  return this._observerService =
-         Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-});
-
-__defineGetter__("_ioService", function () {
-  delete this._ioService;
-  return this._ioService =
-         Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  return this._prefs = Services.prefs.getBranch("lightweightThemes.")
+                                     .QueryInterface(Ci.nsIPrefBranch2);
 });
 
 __defineGetter__("_maxUsedThemes", function() {
@@ -175,8 +163,8 @@ var LightweightThemeManager = {
 
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
-    _observerService.notifyObservers(cancel, "lightweight-theme-preview-requested",
-                                     JSON.stringify(aData));
+    Services.obs.notifyObservers(cancel, "lightweight-theme-preview-requested",
+                                 JSON.stringify(aData));
     if (cancel.data)
       return;
 
@@ -267,7 +255,7 @@ var LightweightThemeManager = {
 
     _prefs.setBoolPref("isThemeSelected", aData != null);
     _notifyWindows(aData);
-    _observerService.notifyObservers(null, "lightweight-theme-changed", null);
+    Services.obs.notifyObservers(null, "lightweight-theme-changed", null);
   },
 
   /**
@@ -437,8 +425,14 @@ function AddonWrapper(aTheme, aBeingEnabled) {
     });
   }, this);
 
-  this.__defineGetter__("creator", function() aTheme.author);
-  this.__defineGetter__("screenshots", function() [aTheme.previewURL]);
+  this.__defineGetter__("creator", function() {
+    return new AddonManagerPrivate.AddonAuthor(aTheme.author);
+  });
+
+  this.__defineGetter__("screenshots", function() {
+    let url = aTheme.previewURL;
+    return [new AddonManagerPrivate.AddonScreenshot(url)];
+  });
 
   this.__defineGetter__("pendingOperations", function() {
     let pending = AddonManager.PENDING_NONE;
@@ -448,6 +442,18 @@ function AddonWrapper(aTheme, aBeingEnabled) {
   });
 
   this.__defineGetter__("operationsRequiringRestart", function() {
+    // If a non-default theme is in use then a restart will be required to
+    // enable lightweight themes unless dynamic theme switching is enabled
+    if (Services.prefs.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
+      try {
+        if (Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED))
+          return AddonManager.OP_NEEDS_RESTART_NONE;
+      }
+      catch (e) {
+      }
+      return AddonManager.OP_NEEDS_RESTART_ENABLE;
+    }
+
     return AddonManager.OP_NEEDS_RESTART_NONE;
   });
 
@@ -570,8 +576,8 @@ function _setCurrentTheme(aData, aLocal) {
 
   let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
   cancel.data = false;
-  _observerService.notifyObservers(cancel, "lightweight-theme-change-requested",
-                                   JSON.stringify(aData));
+  Services.obs.notifyObservers(cancel, "lightweight-theme-change-requested",
+                               JSON.stringify(aData));
 
   if (aData) {
     let theme = LightweightThemeManager.getUsedTheme(aData.id);
@@ -668,7 +674,7 @@ function _version(aThemeData)
   aThemeData.version || "";
 
 function _makeURI(aURL, aBaseURI)
-  _ioService.newURI(aURL, null, aBaseURI);
+  Services.io.newURI(aURL, null, aBaseURI);
 
 function _updateUsedThemes(aList) {
   // Send uninstall events for all themes that need to be removed.
@@ -684,12 +690,12 @@ function _updateUsedThemes(aList) {
   str.data = JSON.stringify(aList);
   _prefs.setComplexValue("usedThemes", Ci.nsISupportsString, str);
 
-  _observerService.notifyObservers(null, "lightweight-theme-list-changed", null);
+  Services.obs.notifyObservers(null, "lightweight-theme-list-changed", null);
 }
 
 function _notifyWindows(aThemeData) {
-  _observerService.notifyObservers(null, "lightweight-theme-styling-update",
-                                   JSON.stringify(aThemeData));
+  Services.obs.notifyObservers(null, "lightweight-theme-styling-update",
+                               JSON.stringify(aThemeData));
 }
 
 var _previewTimer;
@@ -699,26 +705,23 @@ var _previewTimerCallback = {
   }
 };
 
-var _prefObserver = {
-  /**
-   * Called when any of the lightweightThemes preferences are changed.
-   * @see nsIObserver
-   */
-  observe: function (aSubject, aTopic, aData) {
-    switch (aData) {
-      case "maxUsedThemes":
-        try {
-          _maxUsedThemes = _prefs.getIntPref(aData);
-        }
-        catch (e) {
-          _maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
-        }
-        // Update the theme list to remove any themes over the number we keep
-        _updateUsedThemes(LightweightThemeManager.usedThemes);
-        break;
-    }
-  },
-};
+/**
+ * Called when any of the lightweightThemes preferences are changed.
+ */
+function _prefObserver(aSubject, aTopic, aData) {
+  switch (aData) {
+    case "maxUsedThemes":
+      try {
+        _maxUsedThemes = _prefs.getIntPref(aData);
+      }
+      catch (e) {
+        _maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
+      }
+      // Update the theme list to remove any themes over the number we keep
+      _updateUsedThemes(LightweightThemeManager.usedThemes);
+      break;
+  }
+}
 
 function _persistImages(aData) {
   function onSuccess(key) function () {
@@ -735,11 +738,9 @@ function _persistImages(aData) {
 }
 
 function _getLocalImageURI(localFileName) {
-  var localFile = Cc["@mozilla.org/file/directory_service;1"]
-                    .getService(Ci.nsIProperties)
-                    .get("ProfD", Ci.nsILocalFile);
+  var localFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
   localFile.append(localFileName);
-  return _ioService.newFileURI(localFile);
+  return Services.io.newFileURI(localFile);
 }
 
 function _persistImage(sourceURL, localFileName, successCallback) {

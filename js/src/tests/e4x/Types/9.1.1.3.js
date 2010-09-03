@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.1.1.3.js';
 
 START("9.1.1.3 - XML [[Delete]]");
 

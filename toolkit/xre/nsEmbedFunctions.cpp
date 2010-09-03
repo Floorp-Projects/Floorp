@@ -73,6 +73,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXREDirProvider.h"
 
+#include "mozilla/Omnijar.h"
 #ifdef MOZ_IPC
 #include "nsX11ErrorHandler.h"
 #include "base/at_exit.h"
@@ -257,11 +258,10 @@ XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsILocalFile** aDump)
   return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
 }
 
-#if !defined(XP_MACOSX)
 PRBool
 XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
 #elif defined(OS_LINUX)
   return CrashReporter::SetRemoteExceptionHandler();
@@ -269,7 +269,6 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 #  error "OOP crash reporter unsupported on this platform"
 #endif
 }
-#endif // !XP_MACOSX
 #endif // if defined(MOZ_CRASHREPORTER)
 
 #if defined(XP_WIN)
@@ -384,51 +383,61 @@ XRE_InitChildProcess(int aArgc,
       break;
   }
 
-  // Associate this thread with a UI MessageLoop
-  MessageLoop uiMessageLoop(uiLoopType);
   {
-    nsAutoPtr<ProcessChild> process;
+    // This is a lexical scope for the MessageLoop below.  We want it
+    // to go out of scope before NS_LogTerm() so that we don't get
+    // spurious warnings about XPCOM objects being destroyed from a
+    // static context.
 
-    switch (aProcess) {
-    case GeckoProcessType_Default:
-      NS_RUNTIMEABORT("This makes no sense");
-      break;
+    // Associate this thread with a UI MessageLoop
+    MessageLoop uiMessageLoop(uiLoopType);
+    {
+      nsAutoPtr<ProcessChild> process;
 
-    case GeckoProcessType_Plugin:
-      process = new PluginProcessChild(parentHandle);
-      break;
+      switch (aProcess) {
+      case GeckoProcessType_Default:
+        NS_RUNTIMEABORT("This makes no sense");
+        break;
 
-    case GeckoProcessType_Content:
-      process = new ContentProcess(parentHandle);
-      break;
+      case GeckoProcessType_Plugin:
+        process = new PluginProcessChild(parentHandle);
+        break;
 
-    case GeckoProcessType_Jetpack:
-      process = new JetpackProcessChild(parentHandle);
-      break;
+      case GeckoProcessType_Content:
+        process = new ContentProcess(parentHandle);
+        break;
 
-    case GeckoProcessType_IPDLUnitTest:
+      case GeckoProcessType_Jetpack:
+        process = new JetpackProcessChild(parentHandle);
+        break;
+
+      case GeckoProcessType_IPDLUnitTest:
 #ifdef MOZ_IPDL_TESTS
-      process = new IPDLUnitTestProcessChild(parentHandle);
+        process = new IPDLUnitTestProcessChild(parentHandle);
 #else 
-      NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
+        NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
 #endif
-      break;
+        break;
 
-    default:
-      NS_RUNTIMEABORT("Unknown main thread class");
+      default:
+        NS_RUNTIMEABORT("Unknown main thread class");
+      }
+
+      if (!process->Init()) {
+        NS_LogTerm();
+        return NS_ERROR_FAILURE;
+      }
+
+      // Run the UI event loop on the main thread.
+      uiMessageLoop.MessageLoop::Run();
+
+      // Allow ProcessChild to clean up after itself before going out of
+      // scope and being deleted
+      process->CleanUp();
+#ifdef MOZ_OMNIJAR
+      mozilla::SetOmnijar(nsnull);
+#endif
     }
-
-    if (!process->Init()) {
-      NS_LogTerm();
-      return NS_ERROR_FAILURE;
-    }
-
-    // Run the UI event loop on the main thread.
-    uiMessageLoop.MessageLoop::Run();
-
-    // Allow ProcessChild to clean up after itself before going out of
-    // scope and being deleted
-    process->CleanUp();
   }
 
   NS_LogTerm();

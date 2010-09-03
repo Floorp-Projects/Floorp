@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '10.1.6-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 293782;
 var summary = 'Local variables should not be enumerable properties of the function';

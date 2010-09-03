@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349331.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349331;
 var summary = 'generator.close without GeneratorExit';

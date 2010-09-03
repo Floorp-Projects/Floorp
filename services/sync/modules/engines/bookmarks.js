@@ -54,7 +54,6 @@ catch(ex) {
 }
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/type_records/bookmark.js");
@@ -115,12 +114,12 @@ BookmarksEngine.prototype = {
   _trackerObj: BookmarksTracker,
 
   _handleImport: function _handleImport() {
-    Observers.add("bookmarks-restore-begin", function() {
+    Svc.Obs.add("bookmarks-restore-begin", function() {
       this._log.debug("Ignoring changes from importing bookmarks");
       this._tracker.ignoreAll = true;
     }, this);
 
-    Observers.add("bookmarks-restore-success", function() {
+    Svc.Obs.add("bookmarks-restore-success", function() {
       this._log.debug("Tracking all items on successful import");
       this._tracker.ignoreAll = false;
 
@@ -129,7 +128,7 @@ BookmarksEngine.prototype = {
         this._tracker.addChangedID(id);
     }, this);
 
-    Observers.add("bookmarks-restore-failed", function() {
+    Svc.Obs.add("bookmarks-restore-failed", function() {
       this._tracker.ignoreAll = false;
     }, this);
   },
@@ -249,6 +248,17 @@ BookmarksEngine.prototype = {
 
 function BookmarksStore(name) {
   Store.call(this, name);
+
+  // Explicitly nullify our references to our cached services so we don't leak
+  Svc.Obs.add("places-shutdown", function() {
+    this.__bms = null;
+    this.__hsvc = null;
+    this.__ls = null;
+    this.__ms = null;
+    this.__ts = null;
+    if (this.__frecencyStm)
+      this.__frecencyStm.finalize();
+  }, this);
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
@@ -273,22 +283,24 @@ BookmarksStore.prototype = {
   get _ls() {
     if (!this.__ls)
       this.__ls = Cc["@mozilla.org/browser/livemark-service;2"].
-        getService(Ci.nsILivemarkService);
+                  getService(Ci.nsILivemarkService);
     return this.__ls;
   },
 
+  __ms: null,
   get _ms() {
-    let ms;
-    try {
-      ms = Cc["@mozilla.org/microsummary/service;1"].
-        getService(Ci.nsIMicrosummaryService);
-    } catch (e) {
-      ms = null;
-      this._log.warn("Could not load microsummary service");
-      this._log.debug(e);
+    if (!this.__ms) {
+      try {
+        this.__ms = Cc["@mozilla.org/microsummary/service;1"].
+                    getService(Ci.nsIMicrosummaryService);
+      } catch (e) {
+        this._log.warn("Could not load microsummary service");
+        this._log.debug(e);
+        // Redefine our getter so we won't keep trying to get the service
+        this.__defineGetter__("_ms", function() null);
+      }
     }
-    this.__defineGetter__("_ms", function() ms);
-    return ms;
+    return this.__ms;
   },
 
   __ts: null,
@@ -835,14 +847,18 @@ BookmarksStore.prototype = {
     return record;
   },
 
+  __frecencyStm: null,
   get _frecencyStm() {
-    this._log.trace("Creating SQL statement: _frecencyStm");
-    let stm = Svc.History.DBConnection.createStatement(
-      "SELECT frecency " +
-      "FROM moz_places " +
-      "WHERE url = :url");
-    this.__defineGetter__("_frecencyStm", function() stm);
-    return stm;
+    if (!this.__frecencyStm) {
+      this._log.trace("Creating SQL statement: _frecencyStm");
+      this.__frecencyStm = Utils.createStatement(
+        Svc.History.DBConnection,
+        "SELECT frecency " +
+        "FROM moz_places " +
+        "WHERE url = :url " +
+        "LIMIT 1");
+    }
+    return this.__frecencyStm;
   },
 
   _calculateIndex: function _calculateIndex(record) {
@@ -854,14 +870,10 @@ BookmarksStore.prototype = {
 
     // Add in the bookmark's frecency if we have something
     if (record.bmkUri != null) {
-      try {
-        this._frecencyStm.params.url = record.bmkUri;
-        if (this._frecencyStm.step())
-          index += this._frecencyStm.row.frecency;
-      }
-      finally {
-        this._frecencyStm.reset();
-      }
+      this._frecencyStm.params.url = record.bmkUri;
+      let result = Utils.queryAsync(this._frecencyStm, ["frecency"]);
+      if (result.length)
+        index += result[0].frecency;
     }
 
     return index;
@@ -986,28 +998,57 @@ function BookmarksTracker(name) {
   for (let guid in kSpecialIds)
     this.ignoreID(guid);
 
-  Svc.Bookmark.addObserver(this, false);
+  Svc.Obs.add("places-shutdown", this);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  get _bms() {
-    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-      getService(Ci.nsINavBookmarksService);
-    this.__defineGetter__("_bms", function() bms);
-    return bms;
+  _enabled: false,
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.Bookmark.addObserver(this, true);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.Bookmark.removeObserver(this);
+          this._enabled = false;
+        }
+        // Fall through to clean up.
+      case "places-shutdown":
+        // Explicitly nullify our references to our cached services so
+        // we don't leak
+        this.__ls = null;
+        this.__bms = null;
+        break;
+    }
   },
 
+  __bms: null,
+  get _bms() {
+    if (!this.__bms)
+      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                   getService(Ci.nsINavBookmarksService);
+    return this.__bms;
+  },
+
+  __ls: null,
   get _ls() {
-    let ls = Cc["@mozilla.org/browser/livemark-service;2"].
-      getService(Ci.nsILivemarkService);
-    this.__defineGetter__("_ls", function() ls);
-    return ls;
+    if (!this.__ls)
+      this.__ls = Cc["@mozilla.org/browser/livemark-service;2"].
+                  getService(Ci.nsILivemarkService);
+    return this.__ls;
   },
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver,
-    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS
+    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS,
+    Ci.nsISupportsWeakReference
   ]),
 
   /**

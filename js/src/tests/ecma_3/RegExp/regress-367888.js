@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-367888.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 367888;
 var summary = 'RegExp /(|)??x/g.exec("y") barfs';

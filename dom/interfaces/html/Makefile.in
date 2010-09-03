@@ -104,27 +104,24 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLTextAreaElement.idl		\
 	nsIDOMHTMLTitleElement.idl		\
 	nsIDOMHTMLUListElement.idl		\
-	nsIDOMHTMLMediaError.idl		\
-	nsIDOMHTMLTimeRanges.idl		\
+	nsIDOMMediaError.idl		\
+	nsIDOMTimeRanges.idl		\
 	nsIDOMHTMLByteRanges.idl		\
 	nsIDOMHTMLMediaElement.idl		\
 	nsIDOMHTMLSourceElement.idl		\
 	nsIDOMHTMLVideoElement.idl		\
 	nsIDOMHTMLAudioElement.idl		\
 	nsIDOMHTMLVoidCallback.idl		\
+	nsIDOMValidityState.idl		\
 	$(NULL)
 
 XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\
-	nsIDOMNSHTMLAnchorElement.idl		\
-	nsIDOMNSHTMLAnchorElement2.idl		\
 	nsIDOMNSHTMLDocument.idl		\
 	nsIDOMNSHTMLElement.idl			\
 	nsIDOMNSHTMLFormElement.idl		\
 	nsIDOMNSHTMLFrameElement.idl		\
 	nsIDOMNSHTMLHRElement.idl		\
-	nsIDOMNSHTMLImageElement.idl		\
-	nsIDOMNSHTMLInputElement.idl		\
 	nsIDOMNSHTMLOptionCollectn.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
 	$(NULL)

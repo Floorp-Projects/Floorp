@@ -43,11 +43,13 @@ function runNextTest() {
                   getInterface(Components.interfaces.nsIDOMWindowUtils);
   utils.sendNativeKeyEvent(0, 13 /* w */, 0x4000 /* cmd */, "w", "w");
 
-  ok(didClose, "Cmd+W should have closed the tab");
-  if (!didClose) {
-    win.close();
-  }
-  SimpleTest.finish();
+  setTimeout(function () {
+    ok(didClose, "Cmd+W should have closed the tab");
+    if (!didClose) {
+      win.close();
+    }
+    SimpleTest.finish();
+  }, 1000);
 }
 
 </script>

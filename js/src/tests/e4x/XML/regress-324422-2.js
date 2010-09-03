@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-324422-2.js';
 
 var summary = "Do not crash creating XML object with long initialiser";
 var BUGNUMBER = 324422;

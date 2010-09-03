@@ -115,6 +115,8 @@ public class DoCommand {
 	String	currentDir = "/";
 	String	sErrorPrefix = "##AGENT-ERROR## ";
 	
+	private final String prgVersion = "SUTAgentAndroid Version 0.80";
+	
 	public enum Command
 		{
 		RUN ("run"),
@@ -163,8 +165,10 @@ public class DoCommand {
 		FTPG ("ftpg"),
 		FTPP ("ftpp"),
 		INST ("inst"),
+		UPDT ("updt"),
 		UNINST ("uninst"),
 		TEST ("test"),
+		VER ("ver"),
 		UNKNOWN ("unknown");
 		
 		private final String theCmd;
@@ -207,6 +211,14 @@ public class DoCommand {
 		
 		switch(cCmd)
 			{
+			case VER:
+				strReturn = prgVersion;
+				break;
+				
+			case UPDT:
+				strReturn = StartUpdateOMatic(Argv[1], Argv[2]);
+				break;
+			
 			case CWD:
 				try {
 					strReturn = new java.io.File(currentDir).getCanonicalPath();
@@ -2294,6 +2306,58 @@ public class DoCommand {
 		return (sRet);
 		}
 
+	public String StartUpdateOMatic(String sPkgName, String sPkgFileName)
+		{
+		String sRet = "";
+	
+//		Context ctx = SUTAgentAndroid.me.getApplicationContext();
+		Context ctx = contextWrapper.getApplicationContext();
+		PackageManager pm = ctx.getPackageManager();
+
+		Intent prgIntent = new Intent();
+		prgIntent.setPackage("com.mozilla.UpdateOMatic");
+		prgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+		try {
+			PackageInfo pi = pm.getPackageInfo("com.mozilla.UpdateOMatic", PackageManager.GET_ACTIVITIES | PackageManager.GET_INTENT_FILTERS);
+			ActivityInfo [] ai = pi.activities;
+			for (int i = 0; i < ai.length; i++)
+				{
+				ActivityInfo a = ai[i];
+				if (a.name.length() > 0)
+					{
+					prgIntent.setClassName(a.packageName, a.name);
+					break;
+					}
+				}
+			}
+		catch (NameNotFoundException e)
+			{
+			e.printStackTrace();
+			}
+		
+		prgIntent.putExtra("pkgName", sPkgName);
+		prgIntent.putExtra("pkgFileName", sPkgFileName);
+
+		try 
+			{
+			contextWrapper.startActivity(prgIntent);
+//			Thread.sleep(5000);
+			sRet = "exit";
+			}
+		catch(ActivityNotFoundException anf)
+			{
+			anf.printStackTrace();
+			} 
+//		catch (InterruptedException e)
+//			{
+//			e.printStackTrace();
+//			}
+	
+		ctx = null;
+		return (sRet);
+		}
+
 	public String StartJavaPrg(String [] sArgs)
 		{
 		String sRet = "";
@@ -2485,8 +2549,12 @@ public class DoCommand {
 			"unzp zipfile destdir     - unzip the zipfile into the destination dir\n" +
 			"zip zipfile src          - zip the source file/dir into zipfile\n" +
 			"rebt                     - reboot device\n" +
+			"inst /path/filename.apk  - install the referenced apk file\n" +
+			"uninst packagename       - uninstall the referenced package\n" +
+			"rebt                     - reboot device\n" +
 			"quit                     - disconnect SUTAgent\n" +
 			"exit                     - close SUTAgent\n" +
+			"ver                      - SUTAgent version\n" +
 			"help                     - you're reading it";
 		return (sRet);
 		}

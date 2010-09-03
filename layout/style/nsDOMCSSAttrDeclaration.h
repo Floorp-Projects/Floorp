@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,18 +38,22 @@
 
 /* DOM object for element.style */
 
-#ifndef nsDOMCSSAttributeDeclaration_h___
-#define nsDOMCSSAttributeDeclaration_h___
+#ifndef nsDOMCSSAttributeDeclaration_h
+#define nsDOMCSSAttributeDeclaration_h
 
 #include "nsDOMCSSDeclaration.h"
 
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
-#include "nsIContent.h"
 
 namespace mozilla {
 namespace css {
 class Loader;
+}
+
+namespace dom {
+class Element;
 }
 }
 
@@ -56,7 +61,8 @@ class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration,
                                      public nsWrapperCache
 {
 public:
-  nsDOMCSSAttributeDeclaration(nsIContent *aContent
+  typedef mozilla::dom::Element Element;
+  nsDOMCSSAttributeDeclaration(Element* aContent
 #ifdef MOZ_SMIL
                                , PRBool aIsSMILOverride
 #endif // MOZ_SMIL
@@ -69,24 +75,20 @@ public:
 
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
-  virtual nsresult GetCSSDeclaration(mozilla::css::Declaration **aDecl,
-                                     PRBool aAllocate);
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
                                             mozilla::css::Loader** aCSSLoader);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
 
-  virtual nsINode *GetParentObject()
-  {
-    return mContent;
-  }
+  virtual nsINode* GetParentObject();
 
 protected:
-  virtual nsresult DeclarationChanged();
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl);
   virtual nsIDocument* DocToUpdate();
 
-  nsCOMPtr<nsIContent> mContent;
+  nsRefPtr<Element> mElement;
 
 #ifdef MOZ_SMIL
   /* If true, this indicates that this nsDOMCSSAttributeDeclaration
@@ -97,4 +99,4 @@ protected:
 #endif // MOZ_SMIL
 };
 
-#endif /* nsDOMCSSAttributeDeclaration_h___ */
+#endif /* nsDOMCSSAttributeDeclaration_h */

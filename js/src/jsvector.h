@@ -42,6 +42,12 @@
 
 #include "jstl.h"
 
+/* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4345)
+#endif
+
 namespace js {
 
 /*
@@ -361,7 +367,7 @@ class Vector : AllocPolicy
 
     /* mutators */
 
-    /* If reserve(N) succeeds, the N next appends are guaranteed to succeed. */
+    /* If reserve(length() + N) succeeds, the N next appends are guaranteed to succeed. */
     bool reserve(size_t capacity);
 
     /* Destroy elements in the range [begin() + incr, end()). */
@@ -382,6 +388,7 @@ class Vector : AllocPolicy
     bool appendN(const T &t, size_t n);
     template <class U> bool append(const U *begin, const U *end);
     template <class U> bool append(const U *begin, size_t length);
+    template <class U, size_t O, class BP> bool append(const Vector<U,O,BP> &other);
 
     void popBack();
 
@@ -401,6 +408,18 @@ class Vector : AllocPolicy
      *      passed array.
      */
     void replaceRawBuffer(T *p, size_t length);
+
+    /*
+     * Places |val| at position |p|, shifting existing elements
+     * from |p| onward one position higher.
+     */
+    bool insert(T *p, const T &val);
+
+    /*
+     * Removes the element |t|, which must fall in the bounds [begin, end),
+     * shifting existing elements from |t + 1| onward one position lower.
+     */
+    void erase(T *t);
 };
 
 /* Helper functions */
@@ -681,6 +700,39 @@ Vector<T,N,AP>::appendN(const T &t, size_t needed)
 }
 
 template <class T, size_t N, class AP>
+inline bool
+Vector<T,N,AP>::insert(T *p, const T &val)
+{
+    JS_ASSERT(begin() <= p && p < end());
+    size_t pos = p - begin();
+    JS_ASSERT(pos <= length());
+    size_t oldLength = length();
+    if (pos == oldLength)
+        return append(val);
+    {
+        T oldBack = back();
+        if (!append(oldBack)) /* Dup the last element. */
+            return false;
+    }
+    for (size_t i = oldLength; i > pos; --i)
+        (*this)[i] = (*this)[i - 1];
+    (*this)[pos] = val;
+    return true;
+}
+
+template<typename T, size_t N, class AP>
+inline void
+Vector<T,N,AP>::erase(T *it)
+{
+    JS_ASSERT(begin() <= it && it < end());
+    while (it + 1 != end()) {
+        *it = *(it + 1);
+        ++it;
+    }
+    popBack();
+}
+
+template <class T, size_t N, class AP>
 template <class U>
 JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
@@ -708,6 +760,14 @@ Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
     Impl::copyConstruct(heapEnd(), insBegin, insEnd);
     heapEnd() += needed;
     return true;
+}
+
+template <class T, size_t N, class AP>
+template <class U, size_t O, class BP>
+inline bool
+Vector<T,N,AP>::append(const Vector<U,O,BP> &other)
+{
+    return append(other.begin(), other.end());
 }
 
 template <class T, size_t N, class AP>
@@ -785,5 +845,9 @@ Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
 }
 
 }  /* namespace js */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif /* jsvector_h_ */

@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-374163.js';
 
 var BUGNUMBER = 374163;
 var summary = 'Set E4X xml.function::__proto__ = null causes toString to throw';

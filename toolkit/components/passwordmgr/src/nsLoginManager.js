@@ -169,8 +169,6 @@ LoginManager.prototype = {
                        getService(Ci.nsIWebProgress);
         progress.addProgressListener(this._webProgressListener,
                                      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-
-
     },
 
 
@@ -347,6 +345,9 @@ LoginManager.prototype = {
                     var [usernameField, passwordField, ignored] =
                         this._pwmgr._getFormFields(acForm, false);
                     if (usernameField == acInputField && passwordField) {
+                        // This shouldn't trigger a master password prompt,
+                        // because we don't attach to the input until after we
+                        // successfully obtain logins for the form.
                         this._pwmgr._fillForm(acForm, true, true, true, null);
                     } else {
                         this._pwmgr.log("Oops, form changed before AC invoked");
@@ -518,6 +519,14 @@ LoginManager.prototype = {
 
 
     /*
+     * uiBusy
+     */
+    get uiBusy() {
+        return this._storage.uiBusy;
+    },
+
+
+    /*
      * getLoginSavingEnabled
      *
      * Check to see if user has disabled saving logins for the host.
@@ -561,7 +570,7 @@ LoginManager.prototype = {
         // aElement is nsIDOMHTMLInputElement
 
         if (!this._remember)
-            return false;
+            return null;
 
         this.log("AutoCompleteSearch invoked. Search is: " + aSearchString);
 
@@ -596,6 +605,9 @@ LoginManager.prototype = {
             var origin = this._getPasswordOrigin(doc.documentURI);
             var actionOrigin = this._getActionOrigin(aElement.form);
 
+            // This shouldn't trigger a master password prompt, because we
+            // don't attach to the input until after we successfully obtain
+            // logins for the form.
             var logins = this.findLogins({}, origin, actionOrigin, null);
             var matchingLogins = [];
 
@@ -966,7 +978,7 @@ LoginManager.prototype = {
     },
 
     _getActionOrigin : function (form) {
-        var uriString = form.action;
+        var uriString = form.mozActionUri;
 
         // A blank or mission action submits to where it came from.
         if (uriString == "")
@@ -992,6 +1004,37 @@ LoginManager.prototype = {
         // If there are no logins for this site, bail out now.
         if (!this.countLogins(formOrigin, "", null))
             return;
+
+        // If we're currently displaying a master password prompt, defer
+        // processing this document until the user handles the prompt.
+        if (this.uiBusy) {
+            this.log("deferring fillDoc for " + doc.documentURI);
+            let self = this;
+            let observer = {
+                QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+                observe: function (subject, topic, data) {
+                    self.log("Got deferred fillDoc notification: " + topic);
+                    // Only run observer once.
+                    Services.obs.removeObserver(this, "passwordmgr-crypto-login");
+                    Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
+                    if (topic == "passwordmgr-crypto-loginCanceled")
+                        return;
+                    self._fillDocument(doc);
+                },
+                handleEvent : function (event) {
+                    // Not expected to be called
+                }
+            };
+            // Trickyness follows: We want an observer, but don't want it to
+            // cause leaks. So add the observer with a weak reference, and use
+            // a dummy event listener (a strong reference) to keep it alive
+            // until the document is destroyed.
+            Services.obs.addObserver(observer, "passwordmgr-crypto-login", true);
+            Services.obs.addObserver(observer, "passwordmgr-crypto-loginCanceled", true);
+            doc.addEventListener("mozCleverClosureHack", observer, false);
+            return;
+        }
 
         this.log("fillDocument processing " + forms.length +
                  " forms on " + doc.documentURI);

@@ -10,15 +10,14 @@ found in the LICENSE file.
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>WebGL BindAttribLocation Conformance Tests</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
-<script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
 </head>
 <body>
 <div id="description"></div>
 <div id="console"></div>
-<canvas style="border: 1px solid black;" id="canvas" width="50" height="50">
-</canvas><script id="vshader" type="text/something-not-javascript">
+<canvas style="border: 1px solid black;" id="canvas" width="50" height="50"></canvas>
+<script id="vshader" type="text/something-not-javascript">
 attribute vec4 vPosition;
 attribute vec4 vColor;
 varying vec4 color;
@@ -29,6 +28,9 @@ void main()
 }
 </script>
 <script id="fshader" type="text/something-not-javascript">
+#ifdef GL_ES
+precision highp float;
+#endif
 varying vec4 color;
 void main()
 {
@@ -90,11 +92,11 @@ debug("Checking gl.bindAttribLocation.");
 
 var program = gl.createProgram();
 gl.bindAttribLocation(program, 0, "gl_foo");
-assertMsg(gl.getError() == gl.INVALID_OPERATION,
-          "bindAttribLocation should return INVALID_OPERATION if name starts with 'gl_'");
+glErrorShouldBe(gl, gl.INVALID_OPERATION,
+    "bindAttribLocation should return INVALID_OPERATION if name starts with 'gl_'");
 gl.bindAttribLocation(program, 0, "gl_TexCoord0");
-assertMsg(gl.getError() == gl.INVALID_OPERATION,
-          "bindAttribLocation should return INVALID_OPERATION if name starts with 'gl_'");
+glErrorShouldBe(gl, gl.INVALID_OPERATION,
+    "bindAttribLocation should return INVALID_OPERATION if name starts with 'gl_'");
 
 var vs = loadShader(gl.VERTEX_SHADER, "vshader");
 var fs = loadShader(gl.FRAGMENT_SHADER, "fshader");
@@ -189,16 +191,13 @@ gl.disableVertexAttribArray(0);
 gl.vertexAttrib4f(0, 1, 0, 0, 1);
 checkDraw(0, 3, 255, 0, 0, 255);
 
-shouldBe("gl.getError()", "gl.NO_ERROR");
+glErrorShouldBe(gl, gl.NO_ERROR);
 
 debug("");
 successfullyParsed = true;
 
 </script>
 <script src="../resources/js-test-post.js"></script>
-
-<script>
-</script>
 
 </body>
 </html>

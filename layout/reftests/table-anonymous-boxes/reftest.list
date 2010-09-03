@@ -27,8 +27,8 @@ fails == 156888-1.html 156888-1-ref.html # bug 484825
 == 372641-1c.xhtml 372641-1-ref.xhtml
 == 372649-1.html 372649-1-ref.html
 == 373379-1.html 373379-1-ref.html
-== 394402-1a.html 394402-1-ref.html
-== 394402-1b.html 394402-1-ref.html
+random-if(d2d) == 394402-1a.html 394402-1-ref.html # bug 586833
+== 394402-1b.html 394402-1-ref.html # bug 586833
 == 398095-1.html 398095-1-ref.html
 == 407115-1.html 407115-1-ref.html
 == 443616-1a.xhtml 443616-1-ref.html

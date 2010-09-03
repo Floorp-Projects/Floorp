@@ -753,6 +753,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_SIMPLE_GESTURE_EVENT:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext,
                                          static_cast<nsSimpleGestureEvent*>(aEvent));
+    case NS_MOZTOUCH_EVENT:
+      return NS_NewDOMMozTouchEvent(aDOMEvent, aPresContext,
+                                    static_cast<nsMozTouchEvent*>(aEvent));
     case NS_TRANSITION_EVENT:
       return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext,
                                       static_cast<nsTransitionEvent*>(aEvent));
@@ -827,6 +830,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
     return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("moztouchevent"))
+    return NS_NewDOMMozTouchEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aPresContext, nsnull);
   // FIXME: Should get spec to say what the right string is here!  This
@@ -835,6 +840,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
     return NS_NewDOMPopStateEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("mozaudioavailableevent"))
+    return NS_NewDOMAudioAvailableEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("closeevent"))
     return NS_NewDOMCloseEvent(aDOMEvent, aPresContext, nsnull);
 

@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-172699.js';
 var UBound = 0;
 var BUGNUMBER = 172699;
 var summary = 'UTF-8 decoder should not accept overlong sequences';

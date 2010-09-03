@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.7.4.3-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = "446494";
 var summary = "num.toLocaleString should handle exponents";

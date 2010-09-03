@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-314874.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 314874;
 var summary = 'Function.call/apply with non-primitive argument';

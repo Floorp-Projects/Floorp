@@ -38,6 +38,7 @@ DEPTH = ../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
+relativesrcdir = ipc/testshell
 
 include $(DEPTH)/config/autoconf.mk
 

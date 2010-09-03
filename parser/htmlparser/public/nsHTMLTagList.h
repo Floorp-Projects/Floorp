@@ -166,7 +166,6 @@ HTML_HTMLELEMENT_TAG(small)
 #if defined(MOZ_MEDIA)
 HTML_TAG(source, Source)
 #endif
-HTML_TAG(spacer, Shared)
 HTML_TAG(span, Span)
 HTML_HTMLELEMENT_TAG(strike)
 HTML_HTMLELEMENT_TAG(strong)

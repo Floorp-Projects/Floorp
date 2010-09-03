@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-112626.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 112626;
 var summary = 'Do not crash String.split(regexp) when regexp contains parens';

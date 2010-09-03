@@ -44,6 +44,24 @@ SimpleTest.ok(!gh.isVisited(startPage),
 SimpleTest.ok(!gh.isVisited(postedPage),
               "Posted page does not start in global history.");
 
+// Because adding visits is async, we will not be notified imemdiately.
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+var visitObserver = {
+  _visitCount: 0,
+  observe: function(aSubject, aTopic, aData)
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    if (!startPage.equals(aSubject.QueryInterface(Ci.nsIURI)) ||
+        ++this._visitCount < 2) {
+      return;
+    }
+    os.removeObserver(this, aTopic);
+    finishTest();
+  },
+};
+os.addObserver(visitObserver, "uri-visit-saved", false);
+
 var w = window.open(startURI, "", "width=10,height=10");
 
 function finishTest()

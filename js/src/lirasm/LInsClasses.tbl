@@ -97,8 +97,9 @@ CL_64(  LOP_Q_QI,       2)  // 41%  LIR_qilsh, LIR_qirsh, LIR_qursh
 CL___(  LOP_D_DD,       0)  // 51%  LIR_fadd, etc.
 
 // cmov has a low weight because is also used with LIR_div/LIR_mod.
-CL___(  LOP_I_BII,      1)  // 52%  LIR_cmov
-CL_64(  LOP_Q_BQQ,      2)  // 54%  LIR_qcmov
+CL___(  LOP_I_BII,      1)  // 52%  LIR_cmovi
+CL_64(  LOP_Q_BQQ,      1)  // 53%  LIR_cmovq
+CL___(  LOP_D_BDD,      1)  // 54%  LIR_cmovd
 
 CL___(  LOP_B_II,       3)  // 57%  LIR_eq,  LIR_lt,  etc
 CL_64(  LOP_B_QQ,       3)  // 60%  LIR_qeq, LIR_qlt, etc

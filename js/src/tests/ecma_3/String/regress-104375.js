@@ -43,7 +43,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=104375
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-104375.js';
 var UBound = 0;
 var BUGNUMBER = 104375;
 var summary = 'Testing string.replace() with backreferences';

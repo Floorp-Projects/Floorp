@@ -48,7 +48,7 @@ if [ $# = 0 ]; then
   exit 1
 fi
 
-requested_forced_updates='components/components.list Contents/MacOS/components/components.list'
+requested_forced_updates=''
 
 while getopts "hf:" flag
 do

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'hexadecimal.js';
 
 /**
    Filename:     hexadecimal.js

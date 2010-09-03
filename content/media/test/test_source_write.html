@@ -33,8 +33,8 @@ if (resource != null) {
   v.appendChild(s);
 }
 
-ok(v.networkState == HTMLMediaElement.NETWORK_EMPTY,
-   "We shouldn't start a load until the video tag is closed.");
+ok(v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
+   "We shouldn't start network load until the current task returns.");
 </script>
 </video>
 </body>

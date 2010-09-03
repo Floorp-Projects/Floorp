@@ -66,17 +66,6 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-// Adds two 32bit unsigned numbers, retuns PR_TRUE if addition succeeded,
-// or PR_FALSE the if addition would result in an overflow.
-static PRBool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
-  PRUint64 rl = static_cast<PRUint64>(a) + static_cast<PRUint64>(b);
-  if (rl > PR_UINT32_MAX) {
-    return PR_FALSE;
-  }
-  aResult = static_cast<PRUint32>(rl);
-  return true;
-}
-
 static PRBool
 ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
 {
@@ -267,7 +256,7 @@ nsBuiltinDecoderReader::GetSeekRange(const nsTArray<ByteRange>& ranges,
 }
 
 VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
-                                      PRInt64& aOutStartTime)
+                                                 PRInt64& aOutStartTime)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
 
@@ -325,6 +314,78 @@ Data* nsBuiltinDecoderReader::DecodeToFirstData(DecodeFn aDecodeFn,
   }
   Data* d = nsnull;
   return (d = aQueue.PeekFront()) ? d : nsnull;
+}
+
+nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
+{
+  // Decode forward to the target frame. Start with video, if we have it.
+  if (HasVideo()) {
+    PRBool eof = PR_FALSE;
+    PRInt64 startTime = -1;
+    while (HasVideo() && !eof) {
+      while (mVideoQueue.GetSize() == 0 && !eof) {
+        PRBool skip = PR_FALSE;
+        eof = !DecodeVideoFrame(skip, 0);
+        {
+          MonitorAutoExit exitReaderMon(mMonitor);
+          MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
+          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+            return NS_ERROR_FAILURE;
+          }
+        }
+      }
+      if (mVideoQueue.GetSize() == 0) {
+        break;
+      }
+      nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
+      // If the frame end time is less than the seek target, we won't want
+      // to display this frame after the seek, so discard it.
+      if (video && video->mEndTime < aTarget) {
+        if (startTime == -1) {
+          startTime = video->mTime;
+        }
+        mVideoQueue.PopFront();
+        video = nsnull;
+      } else {
+        video.forget();
+        break;
+      }
+    }
+    {
+      MonitorAutoExit exitReaderMon(mMonitor);
+      MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
+      if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    LOG(PR_LOG_DEBUG, ("First video frame after decode is %lld", startTime));
+  }
+
+  if (HasAudio()) {
+    // Decode audio forward to the seek target.
+    PRBool eof = PR_FALSE;
+    while (HasAudio() && !eof) {
+      while (!eof && mAudioQueue.GetSize() == 0) {
+        eof = !DecodeAudioData();
+        {
+          MonitorAutoExit exitReaderMon(mMonitor);
+          MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
+          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+            return NS_ERROR_FAILURE;
+          }
+        }
+      }
+      nsAutoPtr<SoundData> audio(mAudioQueue.PeekFront());
+      if (audio && audio->mTime + audio->mDuration <= aTarget) {
+        mAudioQueue.PopFront();
+        audio = nsnull;
+      } else {
+        audio.forget();
+        break;
+      }
+    }
+  }
+  return NS_OK;
 }
 
 

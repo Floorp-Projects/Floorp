@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352283.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352283;
 var summary = 'decompilation of |let| block with |while|, |let|';

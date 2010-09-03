@@ -130,6 +130,16 @@ private:
      */
     nsresult ContinueOnAuthAvailable(const nsCSubstring& creds);
 
+    nsresult DoRedirectChannelToHttps();
+
+    /**
+     * A function that takes care of reading STS headers and enforcing STS 
+     * load rules.  After a secure channel is erected, STS requires the channel
+     * to be trusted or any STS header data on the channel is ignored.
+     * This is called from ProcessResponse.
+     */
+    nsresult ProcessSTSHeader();
+
 private:
     nsIHttpAuthenticableChannel      *mAuthChannel;  // weak ref
 

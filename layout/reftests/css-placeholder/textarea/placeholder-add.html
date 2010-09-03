@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      document.getElementById('t').placeholder='foo';
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='loadHandler();'>
+    <textarea id='t'></textarea>
+  </body>
+</html>

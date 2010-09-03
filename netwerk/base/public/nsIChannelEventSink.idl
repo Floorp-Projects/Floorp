@@ -24,6 +24,7 @@
  *   Gagan Saksena <gagan@netscape.com> (original author)
  *   Darin Fisher <darin@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Bjarne Geir Herland <bjarne@runitsoft.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,7 @@
 #include "nsISupports.idl"
 
 interface nsIChannel;
+interface nsIAsyncVerifyRedirectCallback;
 
 /**
  * Implement this interface to receive control over various channel events.
@@ -49,10 +51,9 @@ interface nsIChannel;
  * notificationCallbacks or, if not available there, from the loadGroup's
  * notificationCallbacks.
  *
- * These methods are called before onStartRequest, and should be handled
- * SYNCHRONOUSLY.
+ * These methods are called before onStartRequest.
  */
-[scriptable, uuid(6757d790-2916-498e-aaca-6b668a956875)]
+[scriptable, uuid(a430d870-df77-4502-9570-d46a8de33154)]
 interface nsIChannelEventSink : nsISupports
 {
     /**
@@ -82,7 +83,30 @@ interface nsIChannelEventSink : nsISupports
 
     /**
      * Called when a redirect occurs. This may happen due to an HTTP 3xx status
-     * code.
+     * code. The purpose of this method is to notify the sink that a redirect
+     * is about to happen, but also to give the sink the right to veto the
+     * redirect by throwing or passing a failure-code in the callback.
+     *
+     * Note that vetoing the redirect simply means that |newChannel| will not
+     * be opened. It is important to understand that |oldChannel| will continue
+     * loading as if it received a HTTP 200, which includes notifying observers
+     * and possibly display or process content attached to the HTTP response.
+     * If the sink wants to prevent this loading it must explicitly deal with
+     * it, e.g. by calling |oldChannel->Cancel()|
+     *
+     * There is a certain freedom in implementing this method:
+     *
+     * If the return-value indicates success, a callback on |callback| is
+     * required. This callback can be done from within asyncOnChannelRedirect
+     * (effectively making the call synchronous) or at some point later
+     * (making the call asynchronous). Repeat: A callback must be done
+     * if this method returns successfully.
+     *
+     * If the return value indicates error (method throws an exception)
+     * the redirect is vetoed and no callback must be done. Repeat: No
+     * callback must be done if this method throws!
+     *
+     * @see nsIAsyncVerifyRedirectCallback::onRedirectVerifyCallback()
      *
      * @param oldChannel
      *        The channel that's being redirected.
@@ -93,11 +117,14 @@ interface nsIChannelEventSink : nsISupports
      *        of flags from above.
      *        One of REDIRECT_TEMPORARY and REDIRECT_PERMANENT will always be
      *        set.
+     * @param callback
+     *        Object to inform about the async result of this method
      *
-     * @throw <any> Throwing an exception will cancel the load. No network
-     * request for the new channel will be made.
+     * @throw <any> Throwing an exception will cause the redirect to be
+     *        cancelled
      */
-    void onChannelRedirect(in nsIChannel oldChannel, 
-                           in nsIChannel newChannel,
-                           in unsigned long flags);
+    void asyncOnChannelRedirect(in nsIChannel oldChannel, 
+                                in nsIChannel newChannel,
+                                in unsigned long flags,
+                                in nsIAsyncVerifyRedirectCallback callback);
 };

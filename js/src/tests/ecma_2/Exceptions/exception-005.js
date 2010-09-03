@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'exception-005.js';
 
 /**
  *  File Name:          exception-005

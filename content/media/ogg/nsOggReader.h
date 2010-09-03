@@ -44,8 +44,12 @@
 #include <vorbis/codec.h>
 #include "nsBuiltinDecoderReader.h"
 #include "nsOggCodecState.h"
+#include "VideoUtils.h"
+
+using namespace mozilla;
 
 class nsMediaDecoder;
+class nsTimeRanges;
 
 class nsOggReader : public nsBuiltinDecoderReader
 {
@@ -62,8 +66,12 @@ public:
   // read have valid time info.  
   virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
+
   virtual VideoData* FindStartTime(PRInt64 aOffset,
                                    PRInt64& aOutStartTime);
+
+  // Get the end time of aEndOffset. This is the playback position we'd reach
+  // after playback finished at aEndOffset.
   virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
   virtual PRBool HasAudio()
@@ -79,9 +87,69 @@ public:
   }
 
   virtual nsresult ReadMetadata();
-  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime);
+  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime);
+  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
 
 private:
+
+  PRBool HasSkeleton()
+  {
+    MonitorAutoEnter mon(mMonitor);
+    return mSkeletonState != 0 && mSkeletonState->mActive;
+  }
+
+  // Returns PR_TRUE if we should decode up to the seek target rather than
+  // seeking to the target using a bisection search or index-assisted seek.
+  // We should do this if the seek target (aTarget, in ms), lies not too far
+  // ahead of the current playback position (aCurrentTime, in ms).
+  PRBool CanDecodeToTarget(PRInt64 aTarget,
+                           PRInt64 aCurrentTime);
+
+  // Seeks to the keyframe preceeding the target time using available
+  // keyframe indexes.
+  enum IndexedSeekResult {
+    SEEK_OK,          // Success.
+    SEEK_INDEX_FAIL,  // Failure due to no index, or invalid index.
+    SEEK_FATAL_ERROR  // Error returned by a stream operation.
+  };
+  IndexedSeekResult SeekToKeyframeUsingIndex(PRInt64 aTarget);
+
+  // Rolls back a seek-using-index attempt, returning a failure error code.
+  IndexedSeekResult RollbackIndexedSeek(PRInt64 aOffset);
+
+  // Seeks to aTarget ms in the buffered range aRange using bisection search,
+  // or to the keyframe prior to aTarget if we have video. aStartTime must be
+  // the presentation time at the start of media, and aEndTime the time at
+  // end of media. aRanges must be the time/byte ranges buffered in the media
+  // cache as per GetBufferedBytes().
+  nsresult SeekInBufferedRange(PRInt64 aTarget,
+                               PRInt64 aStartTime,
+                               PRInt64 aEndTime,
+                               const nsTArray<ByteRange>& aRanges,
+                               const ByteRange& aRange);
+
+  // Seeks to before aTarget ms in media using bisection search. If the media
+  // has video, this will seek to before the keyframe required to render the
+  // media at aTarget. Will use aRanges in order to narrow the bisection
+  // search space. aStartTime must be the presentation time at the start of
+  // media, and aEndTime the time at end of media. aRanges must be the time/byte
+  // ranges buffered in the media cache as per GetBufferedBytes().
+  nsresult SeekInUnbuffered(PRInt64 aTarget,
+                            PRInt64 aStartTime,
+                            PRInt64 aEndTime,
+                            const nsTArray<ByteRange>& aRanges);
+
+  // Get the end time of aEndOffset. This is the playback position we'd reach
+  // after playback finished at aEndOffset. If PRBool aCachedDataOnly is
+  // PR_TRUE, then we'll only read from data which is cached in the media cached,
+  // otherwise we'll do regular blocking reads from the media stream.
+  // If PRBool aCachedDataOnly is PR_TRUE, and aState is not mOggState, this can
+  // safely be called on the main thread, otherwise it must be called on the
+  // state machine thread.
+  PRInt64 FindEndTime(PRInt64 aEndOffset,
+                      PRBool aCachedDataOnly,
+                      ogg_sync_state* aState);
+
   // Decodes one packet of Vorbis data, storing the resulting chunks of
   // PCM samples in aChunks.
   nsresult DecodeVorbis(nsTArray<SoundData*>& aChunks,
@@ -118,6 +186,9 @@ private:
 
   // Decode state of the Vorbis bitstream we're decoding, if we have audio.
   nsVorbisState* mVorbisState;
+
+  // Decode state of the Skeleton bitstream.
+  nsSkeletonState* mSkeletonState;
 
   // Ogg decoding state.
   ogg_sync_state mOggState;

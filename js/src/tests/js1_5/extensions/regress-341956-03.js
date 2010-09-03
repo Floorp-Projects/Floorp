@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-341956-03.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 341956;
 var summary = 'GC Hazards in jsarray.c - reverse';

@@ -18,3 +18,8 @@
 != mathbackground-2.xml mathbackground-2-ref.xml
 != mathbackground-3.xml mathbackground-3-ref.xml
 == mathbackground-4.xml mathbackground-4-ref.xml
+== scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
+!= scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
+== scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
+!= scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
+!= scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml

@@ -58,7 +58,6 @@
  * To do this, just change the two LENGTH constants below -
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-123002.js';
 var LENGTH_RHINO = 1;
 var LENGTH_SPIDERMONKEY = 3;
 var UBound = 0;

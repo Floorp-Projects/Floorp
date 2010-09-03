@@ -58,7 +58,7 @@ static string Demangle(const string &mangled) {
 
 StabsToModule::~StabsToModule() {
   // Free any functions we've accumulated but not added to the module.
-  for (vector<Module::Function *>::iterator func_it = functions_.begin();
+  for (vector<Module::Function *>::const_iterator func_it = functions_.begin();
        func_it != functions_.end(); func_it++)
     delete *func_it;
   // Free any function that we're currently within.
@@ -104,16 +104,8 @@ bool StabsToModule::EndFunction(uint64_t address) {
   assert(current_function_);
   // Functions in this compilation unit should have address bigger
   // than the compilation unit's starting address.  There may be a lot
-  // of duplicated entries for functions in the STABS data; only one
-  // entry can meet this requirement.
-  //
-  // (I don't really understand the above comment; just bringing it along
-  // from the previous code, and leaving the behavior unchanged. GCC marks
-  // the end of each function with an N_FUN entry with no name, whose value
-  // is the size of the function; perhaps this test was concerned with
-  // skipping those. Now StabsReader interprets them properly. If you know
-  // the whole story, please patch this comment. --jimb)
-  //
+  // of duplicated entries for functions in the STABS data. We will
+  // count on the Module to remove the duplicates.
   if (current_function_->address >= comp_unit_base_address_)
     functions_.push_back(current_function_);
   else
@@ -153,12 +145,13 @@ void StabsToModule::Finalize() {
   // Sort all functions by address, just for neatness.
   sort(functions_.begin(), functions_.end(),
        Module::Function::CompareByAddress);
-  for (vector<Module::Function *>::iterator func_it = functions_.begin();
+
+  for (vector<Module::Function *>::const_iterator func_it = functions_.begin();
        func_it != functions_.end();
        func_it++) {
     Module::Function *f = *func_it;
     // Compute the function f's size.
-    vector<Module::Address>::iterator boundary
+    vector<Module::Address>::const_iterator boundary
         = std::upper_bound(boundaries_.begin(), boundaries_.end(), f->address);
     if (boundary != boundaries_.end())
       f->size = *boundary - f->address;

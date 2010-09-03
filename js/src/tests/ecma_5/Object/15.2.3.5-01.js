@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = '15.2.3.5-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 492840;
 var summary = 'ES5 Object.create(O [, Properties])';

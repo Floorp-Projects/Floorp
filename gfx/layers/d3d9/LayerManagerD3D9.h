@@ -46,6 +46,8 @@
 #include "gfxContext.h"
 #include "nsIWidget.h"
 
+#include "DeviceManagerD3D9.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -116,91 +118,78 @@ public:
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 9"); }
 
   /*
    * Helper methods.
    */
   void SetClippingEnabled(PRBool aEnabled);
 
-  IDirect3DDevice9 *device() const { return mDevice; }
+  void SetShaderMode(DeviceManagerD3D9::ShaderMode aMode)
+    { mDeviceManager->SetShaderMode(aMode); }
 
-  enum ShaderMode {
-    RGBLAYER,
-    YCBCRLAYER,
-    SOLIDCOLORLAYER
-  };
+  IDirect3DDevice9 *device() const { return mDeviceManager->device(); }
+  DeviceManagerD3D9 *deviceManager() const { return mDeviceManager; }
 
-  void SetShaderMode(ShaderMode aMode);
+  /** 
+   * Return pointer to the Nv3DVUtils instance. Re-direct to mDeviceManager.
+   */ 
+  Nv3DVUtils *GetNv3DVUtils()  { return mDeviceManager ? mDeviceManager->GetNv3DVUtils() : NULL; } 
 
-  nsTArray<ThebesLayerD3D9*> mThebesLayers;
+  /** 
+   * Indicate whether 3D is enabled or not 
+   */ 
+  PRBool Is3DEnabled() { return mIs3DEnabled; } 
+
+  static void OnDeviceManagerDestroy(DeviceManagerD3D9 *aDeviceManager) {
+    if(aDeviceManager == mDeviceManager)
+      mDeviceManager = nsnull;
+  }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const { return "D3D9"; }
+#endif // MOZ_LAYERS_HAVE_LOG
 
 private:
-  /* Direct3D9 instance */
-  static IDirect3D9 *mD3D9;
+  /* Device manager instance */
+  static DeviceManagerD3D9 *mDeviceManager;
+
+  /* Swap chain associated with this layer manager */
+  nsRefPtr<SwapChainD3D9> mSwapChain;
 
   /* Widget associated with this layer manager */
   nsIWidget *mWidget;
+
   /*
    * Context target, NULL when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
 
-  nsRefPtr<IDirect3DDevice9> mDevice;
-
-  /* Vertex shader used for layer quads */
-  nsRefPtr<IDirect3DVertexShader9> mLayerVS;
-
-  /* Pixel shader used for RGB textures */
-  nsRefPtr<IDirect3DPixelShader9> mRGBPS;
-
-  /* Pixel shader used for RGB textures */
-  nsRefPtr<IDirect3DPixelShader9> mYCbCrPS;
-
-  /* Pixel shader used for solid colors */
-  nsRefPtr<IDirect3DPixelShader9> mSolidColorPS;
-
-  /* Vertex buffer containing our basic vertex structure */
-  nsRefPtr<IDirect3DVertexBuffer9> mVB;
-
-  /* Our vertex declaration */
-  nsRefPtr<IDirect3DVertexDeclaration9> mVD;
-
-  /* Current root layer. */
-  LayerD3D9 *mRootLayer;
-
   /* Callback info for current transaction */
   CallbackInfo mCurrentCallbackInfo;
+
+  /* Flag that indicates whether 3D is enabled or not*/ 
+  PRBool mIs3DEnabled; 
 
   /*
    * Region we're clipping our current drawing to.
    */
   nsIntRegion mClippingRegion;
+
   /*
    * Render the current layer tree to the active target.
    */
   void Render();
+
   /*
    * Setup the pipeline.
    */
   void SetupPipeline();
-  /*
-   * Setup the backbuffer.
-   *
-   * \return PR_TRUE if setup was succesful
-   */
-  PRBool SetupBackBuffer();
-  /*
-   * Setup the render state for the surface.
-   */
-  void SetupRenderState();
+
   /*
    * Copies the content of our backbuffer to the set transaction target.
    */
   void PaintToTarget();
-  /*
-   * Verifies all required device capabilities are present.
-   */
-  PRBool VerifyCaps();
 
 };
 

@@ -99,7 +99,6 @@ list_files() {
   count=0
 
   find . -type f \
-    ! -name "channel-prefs.js" \
     ! -name "update.manifest" \
     ! -name "temp-filelist" \
     | sed 's/\.\/\(.*\)/\1/' \

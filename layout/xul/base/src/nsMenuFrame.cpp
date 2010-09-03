@@ -153,6 +153,37 @@ private:
   PRBool mIsActivate;
 };
 
+class nsMenuAttributeChangedEvent : public nsRunnable
+{
+public:
+  nsMenuAttributeChangedEvent(nsIFrame* aFrame, nsIAtom* aAttr)
+  : mFrame(aFrame), mAttr(aAttr)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsMenuFrame* frame = static_cast<nsMenuFrame*>(mFrame.GetFrame());
+    NS_ENSURE_STATE(frame);
+    if (mAttr == nsGkAtoms::checked) {
+      frame->UpdateMenuSpecialState(frame->PresContext());
+    } else if (mAttr == nsGkAtoms::acceltext) {
+      // someone reset the accelText attribute,
+      // so clear the bit that says *we* set it
+      frame->AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
+      frame->BuildAcceleratorText();
+    } else if (mAttr == nsGkAtoms::key) {
+      frame->BuildAcceleratorText();
+    } else if (mAttr == nsGkAtoms::type || mAttr == nsGkAtoms::name) {
+      frame->UpdateMenuType(frame->PresContext());
+    }
+    return NS_OK;
+  }
+protected:
+  nsWeakFrame       mFrame;
+  nsCOMPtr<nsIAtom> mAttr;
+};
+
 //
 // NS_NewMenuFrame and NS_NewMenuItemFrame
 //
@@ -201,12 +232,11 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext):
 
 } // cntr
 
-NS_IMETHODIMP
-nsMenuFrame::SetParent(const nsIFrame* aParent)
+void
+nsMenuFrame::SetParent(nsIFrame* aParent)
 {
   nsBoxFrame::SetParent(aParent);
-  InitMenuParent(const_cast<nsIFrame *>(aParent));
-  return NS_OK;
+  InitMenuParent(aParent);
 }
 
 void
@@ -669,20 +699,16 @@ nsMenuFrame::AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
 {
-  nsAutoString value;
 
-  if (aAttribute == nsGkAtoms::checked) {
-    if (mType != eMenuType_Normal)
-        UpdateMenuSpecialState(PresContext());
-  } else if (aAttribute == nsGkAtoms::acceltext) {
-    // someone reset the accelText attribute, so clear the bit that says *we* set it
-    AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
-    BuildAcceleratorText();
-  } else if (aAttribute == nsGkAtoms::key) {
-    BuildAcceleratorText();
-  } else if (aAttribute == nsGkAtoms::type || aAttribute == nsGkAtoms::name)
-    UpdateMenuType(PresContext());
-
+  if (aAttribute == nsGkAtoms::checked ||
+      aAttribute == nsGkAtoms::acceltext ||
+      aAttribute == nsGkAtoms::key ||
+      aAttribute == nsGkAtoms::type ||
+      aAttribute == nsGkAtoms::name) {
+    nsCOMPtr<nsIRunnable> event =
+      new nsMenuAttributeChangedEvent(this, aAttribute);
+    nsContentUtils::AddScriptRunner(event);
+  }
   return NS_OK;
 }
 

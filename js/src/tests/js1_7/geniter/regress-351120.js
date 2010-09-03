@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351120.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351120;
 var summary = 'Incorrect error messages with yield expressions';

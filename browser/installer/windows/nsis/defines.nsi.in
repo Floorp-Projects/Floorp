@@ -16,11 +16,18 @@
 !define WindowClass           "FirefoxMessageWindow"
 !define DDEApplication        "Firefox"
 !define AppRegName            "Firefox"
-!define MinSupportedVer       "Microsoft Windows 2000"
 
 !define BrandShortName        "@MOZ_APP_DISPLAYNAME@"
 !define PreReleaseSuffix      "@PRE_RELEASE_SUFFIX@"
 !define BrandFullName         "${BrandFullNameInternal}${PreReleaseSuffix}"
+
+# LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
+# category value is ANDed together to set multiple permitted categories.
+# See http://msdn.microsoft.com/en-us/library/ms742253%28VS.85%29.aspx
+# The value below permits the LSP_INSPECTOR, LSP_REDIRECTOR, LSP_PROXY,
+# LSP_FIREWALL, LSP_INBOUND_MODIFY, LSP_OUTBOUND_MODIFY, LSP_CRYPTO_COMPRESS,
+# and LSP_LOCAL_CACHE LSP categories.
+!define LSP_CATEGORIES "0x000000ff"
 
 # NO_INSTDIR_FROM_REG is defined for pre-releases which have a PreReleaseSuffix
 # (e.g. Alpha X, Beta X, etc.) to prevent finding a non-default installation
@@ -30,3 +37,27 @@
 !if "@PRE_RELEASE_SUFFIX@" != ""
 !define NO_INSTDIR_FROM_REG
 !endif
+
+# ARCH is used when it is necessary to differentiate the x64 registry keys from
+# the x86 registry keys (e.g. the uninstall registry key).
+#ifdef HAVE_64BIT_OS
+!define HAVE_64BIT_OS
+!define ARCH "x64"
+!define MinSupportedVer "Microsoft Windows Vista x64"
+#else
+!define ARCH "x86"
+!define MinSupportedVer "Microsoft Windows 2000"
+#endif
+
+# File details shared by both the installer and uninstaller
+VIProductVersion "1.0.0.0"
+VIAddVersionKey "ProductName"     "${BrandShortName}"
+VIAddVersionKey "CompanyName"     "${CompanyName}"
+#ifdef MOZ_OFFICIAL_BRANDING
+VIAddVersionKey "LegalTrademarks" "${BrandShortName} is a Trademark of The Mozilla Foundation."
+#endif
+VIAddVersionKey "LegalCopyright"  "${CompanyName}"
+VIAddVersionKey "FileVersion"     "${AppVersion}"
+VIAddVersionKey "ProductVersion"  "${AppVersion}"
+# Comments is not used but left below commented out for future reference
+# VIAddVersionKey "Comments"        "Comments"

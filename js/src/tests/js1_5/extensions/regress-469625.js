@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-469625.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469625;
 var summary = 'TM: Do not crash @ js_String_getelem';

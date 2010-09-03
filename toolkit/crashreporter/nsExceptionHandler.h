@@ -52,6 +52,10 @@
 #include <windows.h>
 #endif
 
+#if defined(XP_MACOSX)
+#include <mach/mach.h>
+#endif
+
 namespace CrashReporter {
 nsresult SetExceptionHandler(nsILocalFile* aXREDirectory, bool force=false);
 nsresult UnsetExceptionHandler();
@@ -94,9 +98,12 @@ nsresult SetSubmitReports(PRBool aSubmitReport);
 bool TakeMinidumpForChild(PRUint32 childPid,
                           nsILocalFile** dump NS_OUTPARAM);
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
 typedef DWORD ThreadId;
+#elif defined(XP_MACOSX)
+typedef task_t ProcessHandle;
+typedef mach_port_t ThreadId;
 #else
 typedef int ProcessHandle;
 typedef int ThreadId;
@@ -123,7 +130,7 @@ bool CreatePairedMinidumps(ProcessHandle childPid,
                            nsILocalFile** childDump NS_OUTPARAM,
                            nsILocalFile** parentDump NS_OUTPARAM);
 
-#  if defined(XP_WIN32)
+#  if defined(XP_WIN32) || defined(XP_MACOSX)
 // Parent-side API for children
 const char* GetChildNotificationPipe();
 
@@ -146,11 +153,6 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd);
 // Child-side API
 bool SetRemoteExceptionHandler();
 
-#  elif defined(XP_MACOSX)
-// When OOP crash reporting is implemented for Mac, it will almost
-// certainly use the same interface as the linux code above.  Until
-// then, we provide stubs.
-void CreateNotificationPipeForChild();
 #endif  // XP_WIN32
 
 bool UnsetRemoteExceptionHandler();

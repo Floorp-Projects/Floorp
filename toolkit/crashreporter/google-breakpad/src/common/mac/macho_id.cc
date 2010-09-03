@@ -53,7 +53,12 @@ extern "C" {  // necessary for Leopard
 
 namespace MacFileUtilities {
 
-MachoID::MachoID(const char *path) {
+MachoID::MachoID(const char *path)
+   : file_(0), 
+     crc_(0), 
+     md5_context_(), 
+     sha1_context_(), 
+     update_function_(NULL) {
   strlcpy(path_, path, sizeof(path_));
   file_ = open(path, O_RDONLY);
 }
@@ -119,7 +124,7 @@ void MachoID::UpdateSHA1(unsigned char *bytes, size_t size) {
   SHA_Update(&sha1_context_, bytes, size);
 }
 
-void MachoID::Update(MachoWalker *walker, unsigned long offset, size_t size) {
+void MachoID::Update(MachoWalker *walker, off_t offset, size_t size) {
   if (!update_function_ || !size)
     return;
 
@@ -182,7 +187,7 @@ bool MachoID::IDCommand(int cpu_type, unsigned char identifier[16]) {
     identifier[2] = 0;
     identifier[3] = 0;
 
-    for (int j = 0, i = strlen(path_)-1; i >= 0 && path_[i]!='/'; ++j, --i) {
+    for (int j = 0, i = (int)strlen(path_)-1; i>=0 && path_[i]!='/'; ++j, --i) {
       identifier[j%4] += path_[i];
     }
 
@@ -313,7 +318,9 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       // sections of type S_ZEROFILL are "virtual" and contain no data
       // in the file itself
       if ((sec64.flags & SECTION_TYPE) != S_ZEROFILL && sec64.offset != 0)
-        macho_id->Update(walker, header_offset + sec64.offset, sec64.size);
+        macho_id->Update(walker, 
+                         header_offset + sec64.offset, 
+                         (size_t)sec64.size);
 
       offset += sizeof(struct section_64);
     }

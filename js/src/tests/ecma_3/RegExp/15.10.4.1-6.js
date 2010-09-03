@@ -43,7 +43,6 @@
   exception.
 */
 
-var gTestfile = '15.10.4.1-6.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 476940;
 var summary = 'Section 15.10.4.1 - RegExp with invalid flags';

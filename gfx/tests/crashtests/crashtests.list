@@ -79,3 +79,4 @@ load balinese-letter-spacing.html
 load 580100-1.html
 load 580212-1.html
 skip-if(gtk2Widget) load 580233-1.html
+load 580719-1.html

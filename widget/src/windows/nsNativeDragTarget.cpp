@@ -61,7 +61,7 @@ static POINTL gDragLastPoint;
  * class nsNativeDragTarget
  */
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
-  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE), mTookOwnRef(PR_FALSE),
+  : m_cRef(0), mCanMove(PR_TRUE), mTookOwnRef(PR_FALSE), mWindow(aWnd),
   mDropTargetHelper(nsnull)
 {
   mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
@@ -365,15 +365,15 @@ nsNativeDragTarget::DragLeave()
 void
 nsNativeDragTarget::DragCancel()
 {
-  if (mDropTargetHelper) {
-    mDropTargetHelper->DragLeave();
-  }
-  if (mDragService) {
-    mDragService->EndDragSession(PR_FALSE);
-  }
-  // release the ref that we might have taken in DragEnter
+  // Cancel the drag session if we did DragEnter.
   if (mTookOwnRef) {
-    this->Release();
+    if (mDropTargetHelper) {
+      mDropTargetHelper->DragLeave();
+    }
+    if (mDragService) {
+      mDragService->EndDragSession(PR_FALSE);
+    }
+    this->Release(); // matching the AddRef in DragEnter
     mTookOwnRef = PR_FALSE;
   }
 }
@@ -399,15 +399,22 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   // This cast is ok because in the constructor we created a
   // the actual implementation we wanted, so we know this is
   // a nsDragService (but it should still be a private interface)
-  nsDragService * winDragService =
-    static_cast<nsDragService *>(mDragService);
+  nsDragService* winDragService = static_cast<nsDragService*>(mDragService);
   winDragService->SetIDataObject(pData);
 
-  // Note: Calling ProcessDrag can destroy us; don't touch members after that.
+  // NOTE: ProcessDrag spins the event loop which may destroy arbitrary objects.
+  // We use strong refs to prevent it from destroying these:
+  nsRefPtr<nsNativeDragTarget> kungFuDeathGrip = this;
   nsCOMPtr<nsIDragService> serv = mDragService;
 
   // Now process the native drag state and then dispatch the event
   ProcessDrag(pData, NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
+
+  nsCOMPtr<nsIDragSession> currentDragSession;
+  serv->GetCurrentSession(getter_AddRefs(currentDragSession));
+  if (!currentDragSession) {
+    return S_OK;  // DragCancel() was called.
+  }
 
   // Let the win drag service know whether this session experienced 
   // a drop event within the application. Drop will not oocur if the

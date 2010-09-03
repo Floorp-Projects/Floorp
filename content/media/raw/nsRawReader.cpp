@@ -242,7 +242,7 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   return PR_TRUE;
 }
 
-nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime)
+nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime)
 {
   mozilla::MonitorAutoEnter autoEnter(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
@@ -299,4 +299,9 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime)
 PRInt64 nsRawReader::FindEndTime(PRInt64 aEndTime)
 {
   return -1;
+}
+
+nsresult nsRawReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
+{
+  return NS_OK;
 }

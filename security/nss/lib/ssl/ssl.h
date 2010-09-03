@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.38 2010/02/17 02:29:07 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.38.2.1 2010/07/31 04:33:52 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -128,6 +128,17 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
                                           /* Renegotiation  Info (RI)       */
 					  /* extension in ALL handshakes.   */
                                           /* default: off                   */
+#define SSL_ENABLE_FALSE_START         22 /* Enable SSL false start (off by */
+                                          /* default, applies only to       */
+                                          /* clients). False start is a     */
+/* mode where an SSL client will start sending application data before      */
+/* verifying the server's Finished message. This means that we could end up */
+/* sending data to an imposter. However, the data will be encrypted and     */
+/* only the true server can derive the session key. Thus, so long as the    */
+/* cipher isn't broken this is safe. Because of this, False Start will only */
+/* occur on RSA or DH ciphersuites where the cipher's key length is >= 80   */
+/* bits. The advantage of False Start is that it saves a round trip for     */
+/* client-speaks-first protocols when performing a full handshake.          */
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */

@@ -57,13 +57,13 @@ public:
   // nsISupports and cycle collector
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessibleHyperLink
-  NS_IMETHOD GetAnchorCount(PRInt32 *aAnchorCount);
-  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
-  NS_IMETHOD GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible);
-
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
+
+  // HyperLinkAccessible
+  virtual PRUint32 AnchorCount();
+  virtual nsAccessible* GetAnchor(PRUint32 aAnchorIndex);
+  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
 
 protected:
 
@@ -81,8 +81,9 @@ private:
  */
 class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
 {
-
 public:
+  using nsAccessible::GetChildAtPoint;
+
   nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
@@ -96,6 +97,10 @@ public:
   virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
+
+  // HyperLinkAccessible
+  virtual PRUint32 StartOffset();
+  virtual PRUint32 EndOffset();
 
 protected:
 

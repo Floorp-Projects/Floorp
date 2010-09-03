@@ -146,6 +146,10 @@ using namespace mozilla::ipc;
 #include "gfxXlibSurface.h"
 #endif
 
+#ifdef MOZ_SVG
+#include "nsSVGEffects.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -416,6 +420,7 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
+    NS_IMETHOD Reset();
     already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
                                                  LayerManager *aManager);
     void MarkContextClean();
@@ -462,9 +467,6 @@ protected:
      * Lookup table used to speed up PutImageData().
      */
     static PRUint8 (*sPremultiplyTable)[256];
-
-    // destroy thebes/image stuff, in preparation for possibly recreating
-    void Destroy();
 
     // Some helpers.  Doesn't modify acolor on failure.
     nsresult SetStyleFromStringOrInterface(const nsAString& aStr, nsISupports *aInterface, Style aWhichStyle);
@@ -838,7 +840,7 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
 
 nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 {
-    Destroy();
+    Reset();
 
 #ifdef MOZ_IPC
     ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
@@ -858,8 +860,8 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     }
 }
 
-void
-nsCanvasRenderingContext2D::Destroy()
+nsresult
+nsCanvasRenderingContext2D::Reset()
 {
 #ifdef MOZ_IPC
     ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
@@ -878,6 +880,7 @@ nsCanvasRenderingContext2D::Destroy()
     mThebes = nsnull;
     mValid = PR_FALSE;
     mIsEntireFrameInvalid = PR_FALSE;
+    return NS_OK;
 }
 
 nsresult
@@ -1039,6 +1042,10 @@ nsCanvasRenderingContext2D::Redraw()
         return NS_OK;
     }
 
+#ifdef MOZ_SVG
+    nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
+#endif
+
     if (mIsEntireFrameInvalid)
         return NS_OK;
 
@@ -1057,6 +1064,10 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
         return NS_OK;
     }
 
+#ifdef MOZ_SVG
+    nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
+#endif
+
     if (mIsEntireFrameInvalid)
         return NS_OK;
 
@@ -1071,7 +1082,7 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 {
-    Destroy();
+    Reset();
 
     nsRefPtr<gfxASurface> surface;
 
@@ -1132,7 +1143,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height) {
-    Destroy();
+    Reset();
 
     NS_ASSERTION(!docShell ^ !mCanvasElement, "Cannot set both docshell and canvas element");
     mDocShell = docShell;
@@ -1876,7 +1887,7 @@ nsCanvasRenderingContext2D::ShadowInitialize(const gfxRect& extents, gfxAlphaBox
                        blurRadius.height, blurRadius.width);
     drawExtents = drawExtents.Intersect(clipExtents - CurrentState().shadowOffset);
 
-    gfxContext* ctx = blur.Init(drawExtents, blurRadius, nsnull, nsnull);
+    gfxContext* ctx = blur.Init(drawExtents, gfxIntSize(0,0), blurRadius, nsnull, nsnull);
 
     if (!ctx)
         return nsnull;
@@ -2316,8 +2327,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     // We know the declaration is not !important, so we can use
     // GetNormalBlock().
     const nsCSSValue *fsaVal =
-      declaration->GetNormalBlock()->
-        ValueStorageFor(eCSSProperty_font_size_adjust);
+      declaration->GetNormalBlock()->ValueFor(eCSSProperty_font_size_adjust);
     if (!fsaVal || (fsaVal->GetUnit() != eCSSUnit_None &&
                     fsaVal->GetUnit() != eCSSUnit_System_Font)) {
         // We got an all-property value or a syntax error.  The spec says
@@ -2600,8 +2610,26 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
         point.x += xOffset * mAppUnitsPerDevPixel;
 
         // offset is given in terms of left side of string
-        if (mTextRun->IsRightToLeft())
-            point.x += width * mAppUnitsPerDevPixel;
+        if (mTextRun->IsRightToLeft()) {
+            // Bug 581092 - don't use rounded pixel width to advance to
+            // right-hand end of run, because this will cause different
+            // glyph positioning for LTR vs RTL drawing of the same
+            // glyph string on OS X and DWrite where textrun widths may
+            // involve fractional pixels.
+            gfxTextRun::Metrics textRunMetrics =
+                mTextRun->MeasureText(0,
+                                      mTextRun->GetLength(),
+                                      mDoMeasureBoundingBox ?
+                                          gfxFont::TIGHT_INK_EXTENTS :
+                                          gfxFont::LOOSE_INK_EXTENTS,
+                                      mThebes,
+                                      nsnull);
+            point.x += textRunMetrics.mAdvanceWidth;
+            // old code was:
+            //   point.x += width * mAppUnitsPerDevPixel;
+            // TODO: restore this if/when we move to fractional coords
+            // throughout the text layout process
+        }
 
         // stroke or fill the text depending on operation
         if (mOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_STROKE)
@@ -3521,6 +3549,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
         /* Direct2D isn't very good at clipping so use Fill() when we can */
         if (CurrentState().globalAlpha == 1.0f && mThebes->CurrentOperator() == gfxContext::OPERATOR_OVER) {
+            mThebes->NewPath();
             mThebes->Rectangle(clip);
             mThebes->Fill();
         } else {
@@ -3922,6 +3951,9 @@ nsCanvasRenderingContext2D::GetImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+    if (w == 0 || h == 0)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!CanvasUtils::CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
@@ -4012,6 +4044,9 @@ nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
 {
     if (!mValid)
         return NS_ERROR_FAILURE;
+
+    if (w == 0 || h == 0)
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (!CanvasUtils::CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
         return NS_ERROR_DOM_SYNTAX_ERR;
@@ -4119,7 +4154,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
         return nsnull;
 
     if (!mResetLayer && aOldLayer &&
-        aOldLayer->GetUserData() == &g2DContextLayerUserData) {
+        aOldLayer->HasUserData(&g2DContextLayerUserData)) {
         NS_ADDREF(aOldLayer);
         // XXX Need to just update the changed area here
         aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
@@ -4131,7 +4166,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
-    canvasLayer->SetUserData(&g2DContextLayerUserData);
+    canvasLayer->SetUserData(&g2DContextLayerUserData, nsnull);
 
     CanvasLayer::Data data;
 
@@ -4139,7 +4174,8 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
     data.mSize = nsIntSize(mWidth, mHeight);
 
     canvasLayer->Initialize(data);
-    canvasLayer->SetIsOpaqueContent(mOpaque);
+    PRUint32 flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
+    canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
     mResetLayer = PR_FALSE;

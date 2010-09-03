@@ -134,6 +134,12 @@ empty-clip-extents.patch: b79ea8a6cab8bd28aebecf6e1e8229d5ac017264
 
 clip-rects-surface-extents.patch: 108b1c7825116ed3f93aa57384bbd3290cdc9181
 
+disable-previous-scaled-font-cache.patch: Disable the previous-scaled-font-cache until we figure out our ctm handling (#583035)
+ 
+copyarea-with-alpha.patch: support simple overlapping self copies in (some) color_alpha xlib surfaces. https://bugs.freedesktop.org/show_bug.cgi?id=29250
+
+fix-clip-test.patch: Use y 498c10032ea3f8631a928cd7df96766f2c8ddca4
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

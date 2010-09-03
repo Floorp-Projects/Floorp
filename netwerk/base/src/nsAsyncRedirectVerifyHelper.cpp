@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  *
  * Contributor(s):
  *    Honza Bambas <honzab@firemni.cz>
+ *    Bjarne Geir Herland <bjarne@runitsoft.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
+#include "prlog.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
@@ -44,15 +51,60 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
-NS_IMPL_ISUPPORTS1(nsAsyncRedirectVerifyHelper, nsIRunnable)
+#ifdef PR_LOGGING
+static PRLogModuleInfo *gLog = PR_NewLogModule("nsRedirect");
+#define LOG(args) PR_LOG(gLog, PR_LOG_DEBUG, args)
+#else
+#define LOG(args)
+#endif
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsAsyncRedirectVerifyHelper,
+                              nsIAsyncVerifyRedirectCallback,
+                              nsIRunnable)
+
+class nsAsyncVerifyRedirectCallbackEvent : public nsRunnable {
+public:
+    nsAsyncVerifyRedirectCallbackEvent(nsIAsyncVerifyRedirectCallback *cb,
+                                       nsresult result)
+        : mCallback(cb), mResult(result) {
+    }
+
+    NS_IMETHOD Run()
+    {
+        LOG(("nsAsyncVerifyRedirectCallbackEvent::Run() "
+             "callback to %p with result %x",
+             mCallback.get(), mResult));
+       (void) mCallback->OnRedirectVerifyCallback(mResult);
+       return NS_OK;
+    }
+private:
+    nsCOMPtr<nsIAsyncVerifyRedirectCallback> mCallback;
+    nsresult mResult;
+};
+
+nsAsyncRedirectVerifyHelper::nsAsyncRedirectVerifyHelper()
+    : mCallbackInitiated(PR_FALSE),
+      mExpectedCallbacks(0),
+      mResult(NS_OK)
+{
+}
+
+nsAsyncRedirectVerifyHelper::~nsAsyncRedirectVerifyHelper()
+{
+    NS_ASSERTION(NS_FAILED(mResult) || mExpectedCallbacks == 0,
+                 "Did not receive all required callbacks!");
+}
 
 nsresult
 nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
                                   PRUint32 flags, PRBool synchronize)
 {
-    mOldChan = oldChan;
-    mNewChan = newChan;
-    mFlags = flags;
+    LOG(("nsAsyncRedirectVerifyHelper::Init() "
+         "oldChan=%p newChan=%p", oldChan, newChan));
+    mOldChan           = oldChan;
+    mNewChan           = newChan;
+    mFlags             = flags;
+    mCallbackThread    = do_GetCurrentThread();
 
     if (synchronize)
       mWaitingForRedirectCallback = PR_TRUE;
@@ -73,55 +125,172 @@ nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
     return NS_OK;
 }
 
-void
-nsAsyncRedirectVerifyHelper::Callback(nsresult result)
+NS_IMETHODIMP
+nsAsyncRedirectVerifyHelper::OnRedirectVerifyCallback(nsresult result)
 {
-    // TODO E10S OnRedirectCallback has to be called on the original process
-    nsCOMPtr<nsIAsyncVerifyRedirectCallback> callback(do_QueryInterface(mOldChan));
-    NS_ASSERTION(callback, "nsAsyncRedirectVerifyHelper: oldChannel doesn't"
-                           " implement nsIAsyncVerifyRedirectCallback");
+    LOG(("nsAsyncRedirectVerifyHelper::OnRedirectVerifyCallback() "
+         "result=%x expectedCBs=%u mResult=%x",
+         result, mExpectedCallbacks, mResult));
 
-    if (callback)
-        callback->OnRedirectVerifyCallback(result);
+    --mExpectedCallbacks;
 
+    // If response indicates failure we may call back immediately
+    if (NS_FAILED(result)) {
+        // We chose to store the first failure-value (as opposed to the last)
+        if (NS_SUCCEEDED(mResult))
+            mResult = result;
+
+        // If InitCallback() has been called, just invoke the callback and
+        // return. Otherwise it will be invoked from InitCallback()
+        if (mCallbackInitiated) {
+            ExplicitCallback(mResult);
+            return NS_OK;
+        }
+    }
+
+    // If the expected-counter is in balance and InitCallback() was called, all
+    // sinks have agreed that the redirect is ok and we can invoke our callback
+    if (mCallbackInitiated && mExpectedCallbacks == 0) {
+        ExplicitCallback(mResult);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect(nsIChannelEventSink *sink,
+                                                       nsIChannel *oldChannel,
+                                                       nsIChannel *newChannel,
+                                                       PRUint32 flags)
+{
+    LOG(("nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect() "
+         "sink=%p expectedCBs=%u mResult=%x",
+         sink, mExpectedCallbacks, mResult));
+
+    ++mExpectedCallbacks;
+
+    if (IsOldChannelCanceled()) {
+        LOG(("  old channel has been canceled, cancel the redirect by "
+             "emulating OnRedirectVerifyCallback..."));
+        (void) OnRedirectVerifyCallback(NS_BINDING_ABORTED);
+        return NS_BINDING_ABORTED;
+    }
+
+    nsresult rv =
+        sink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, this);
+
+    LOG(("  result=%x expectedCBs=%u", rv, mExpectedCallbacks));
+
+    // If the sink returns failure from this call the redirect is vetoed. We
+    // emulate a callback from the sink in this case in order to perform all
+    // the necessary logic.
+    if (NS_FAILED(rv)) {
+        LOG(("  emulating OnRedirectVerifyCallback..."));
+        (void) OnRedirectVerifyCallback(rv);
+    }
+
+    return rv;  // Return the actual status since our caller may need it
+}
+
+void
+nsAsyncRedirectVerifyHelper::ExplicitCallback(nsresult result)
+{
+    LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
+         "result=%x expectedCBs=%u mCallbackInitiated=%u mResult=%x",
+         result, mExpectedCallbacks, mCallbackInitiated, mResult));
+
+    nsCOMPtr<nsIAsyncVerifyRedirectCallback>
+        callback(do_QueryInterface(mOldChan));
+
+    if (!callback || !mCallbackThread) {
+        LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
+             "callback=%p mCallbackThread=%p", callback.get(), mCallbackThread.get()));
+        return;
+    }
+
+    mCallbackInitiated = PR_FALSE;  // reset to ensure only one callback
     mWaitingForRedirectCallback = PR_FALSE;
+
+    // Now, dispatch the callback on the event-target which called Init()
+    nsRefPtr<nsIRunnable> event =
+        new nsAsyncVerifyRedirectCallbackEvent(callback, result);
+    if (!event) {
+        NS_WARNING("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
+                   "failed creating callback event!");
+        return;
+    }
+    nsresult rv = mCallbackThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
+                   "failed dispatching callback event!");
+    } else {
+        LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
+             "dispatched callback event=%p", event.get()));
+    }
+   
+}
+
+void
+nsAsyncRedirectVerifyHelper::InitCallback()
+{
+    LOG(("nsAsyncRedirectVerifyHelper::InitCallback() "
+         "expectedCBs=%d mResult=%x", mExpectedCallbacks, mResult));
+
+    mCallbackInitiated = PR_TRUE;
+
+    // Invoke the callback if we are done
+    if (mExpectedCallbacks == 0)
+        ExplicitCallback(mResult);
 }
 
 NS_IMETHODIMP
 nsAsyncRedirectVerifyHelper::Run()
 {
     /* If the channel got canceled after it fired AsyncOnChannelRedirect
-     * (bug 546606) and before we got here, mostly because docloader
-     * load has been canceled, we must completely ignore this notification
-     * and prevent any further notification.
-     *
-     * TODO Bug 546606, this must be checked before every single call!
+     * and before we got here, mostly because docloader load has been canceled,
+     * we must completely ignore this notification and prevent any further
+     * notification.
      */
-    PRBool canceled;
-    nsCOMPtr<nsIHttpChannelInternal> oldChannelInternal =
-        do_QueryInterface(mOldChan);
-    if (oldChannelInternal) {
-      oldChannelInternal->GetCanceled(&canceled);
-      if (canceled) {
-          Callback(NS_BINDING_ABORTED);
-          return NS_OK;
-      }
+    if (IsOldChannelCanceled()) {
+        ExplicitCallback(NS_BINDING_ABORTED);
+        return NS_OK;
     }
 
     // First, the global observer
     NS_ASSERTION(gIOService, "Must have an IO service at this point");
-    nsresult rv = gIOService->OnChannelRedirect(mOldChan, mNewChan, mFlags);
+    LOG(("nsAsyncRedirectVerifyHelper::Run() calling gIOService..."));
+    nsresult rv = gIOService->AsyncOnChannelRedirect(mOldChan, mNewChan,
+                                                     mFlags, this);
     if (NS_FAILED(rv)) {
-        Callback(rv);
+        ExplicitCallback(rv);
         return NS_OK;
     }
 
     // Now, the per-channel observers
     nsCOMPtr<nsIChannelEventSink> sink;
     NS_QueryNotificationCallbacks(mOldChan, sink);
-    if (sink)
-        rv = sink->OnChannelRedirect(mOldChan, mNewChan, mFlags);
+    if (sink) {
+        LOG(("nsAsyncRedirectVerifyHelper::Run() calling sink..."));
+        rv = DelegateOnChannelRedirect(sink, mOldChan, mNewChan, mFlags);
+    }
 
-    Callback(rv);
+    // All invocations to AsyncOnChannelRedirect has been done - call
+    // InitCallback() to flag this
+    InitCallback();
     return NS_OK;
+}
+
+bool
+nsAsyncRedirectVerifyHelper::IsOldChannelCanceled()
+{
+    PRBool canceled;
+    nsCOMPtr<nsIHttpChannelInternal> oldChannelInternal =
+        do_QueryInterface(mOldChan);
+    if (oldChannelInternal) {
+        oldChannelInternal->GetCanceled(&canceled);
+        if (canceled)
+            return true;
+    }
+
+    return false;
 }

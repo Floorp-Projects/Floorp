@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-350531.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350531;
 var summary = 'exhaustively test parenthesization of binary operator subsets';

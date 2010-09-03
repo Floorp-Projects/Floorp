@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-320854.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 320854;
 var summary = 'o.hasOwnProperty("length") should not lie when o has function in proto chain';

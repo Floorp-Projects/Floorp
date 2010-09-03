@@ -85,10 +85,10 @@
 
 #placesToolbar > toolbarbutton {
   list-style-image: url("chrome://browser/skin/places/toolbar.png");
-  margin: 4px 6px 5px;
-  padding: 1px 5px;
-  -moz-border-radius: 100%;
+  margin: 4px 4px 5px;
+  padding: 1px 3px;
   border: 1px solid @toolbarbuttonBorderColor@;
+  -moz-border-radius: @toolbarbuttonCornerRadius@;
   -moz-box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
@@ -96,11 +96,9 @@
 
 #placesToolbar > toolbarbutton:not([disabled="true"]):active:hover,
 #placesToolbar > toolbarbutton[open="true"] {
-  background: rgba(0, 0, 0, 0.6);
-  border-color: transparent;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@,
-                   @loweredShadow@,
-                   inset 0 0 0 20px @toolbarbuttonPressedBackgroundColor@;
+  background: @toolbarbuttonPressedBackgroundColor@;
+  text-shadow: @loweredShadow@;
+  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 #placesToolbar > toolbarbutton:-moz-window-inactive {
@@ -121,18 +119,17 @@
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
-  -moz-image-region: rect(0, 7px, 5px, 0);
+  list-style-image: url(chrome://browser/skin/toolbarbutton-dropmarker.png);
   padding: 0;
   margin-top: 1px;
-  -moz-margin-end: 3px;
+  -moz-margin-end: 2px;
+}
+
+#placesToolbar > toolbarbutton > menupopup {
+  margin-top: 1px;
 }
 
 /* back and forward button */
-#placesToolbar > #back-button {
-  -moz-margin-start: 3px;
-}
-
 #back-button:-moz-locale-dir(ltr),
 #forward-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
@@ -151,11 +148,13 @@
 }
 
 #back-button > .toolbarbutton-icon {
+  -moz-margin-start: 3px !important;
   -moz-margin-end: 2px !important;
 }
 
 #forward-button > .toolbarbutton-icon {
   -moz-margin-start: 2px !important;
+  -moz-margin-end: 3px !important;
 }
 
 /* organize button */
@@ -284,7 +283,7 @@
   font: icon;
   font-weight: bold;
   color: #2D2D2D;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   padding: 0 10px 1px;
   margin: 1px;
   font-weight: bold;
@@ -337,7 +336,7 @@
   margin: 0 4px;
   padding: 0 10px;
   -moz-appearance: none;
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
   border: @roundButtonBorder@;
   text-shadow: @loweredShadow@;
   background: @roundButtonBackground@;

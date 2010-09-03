@@ -68,10 +68,13 @@ JetpackChild::sImplMethods[] = {
   JS_FN("registerReceiver", RegisterReceiver, 2, IMPL_METHOD_FLAGS),
   JS_FN("unregisterReceiver", UnregisterReceiver, 2, IMPL_METHOD_FLAGS),
   JS_FN("unregisterReceivers", UnregisterReceivers, 1, IMPL_METHOD_FLAGS),
-  JS_FN("wrap", Wrap, 1, IMPL_METHOD_FLAGS),
   JS_FN("createHandle", CreateHandle, 0, IMPL_METHOD_FLAGS),
   JS_FN("createSandbox", CreateSandbox, 0, IMPL_METHOD_FLAGS),
   JS_FN("evalInSandbox", EvalInSandbox, 2, IMPL_METHOD_FLAGS),
+  JS_FN("gc", GC, 0, IMPL_METHOD_FLAGS),
+#ifdef JS_GC_ZEAL
+  JS_FN("gczeal", GCZeal, 1, IMPL_METHOD_FLAGS),
+#endif
   JS_FS_END
 };
 
@@ -108,9 +111,12 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
     JSAutoRequest request(mCx);
     JS_SetContextPrivate(mCx, this);
     JSObject* implGlobal =
-      JS_NewGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass));
+      JS_NewCompartmentAndGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass), NULL);
     if (!implGlobal ||
         !JS_InitStandardClasses(mCx, implGlobal) ||
+#ifdef BUILD_CTYPES
+        !JS_InitCTypesClass(mCx, implGlobal) ||
+#endif
         !JS_DefineFunctions(mCx, implGlobal,
                             const_cast<JSFunctionSpec*>(sImplMethods)))
       return false;
@@ -363,13 +369,6 @@ JetpackChild::UnregisterReceivers(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-JetpackChild::Wrap(JSContext* cx, uintN argc, jsval* vp)
-{
-  NS_NOTYETIMPLEMENTED("wrap not yet implemented (depends on bug 563010)");
-  return JS_FALSE;
-}
-
-JSBool
 JetpackChild::CreateHandle(JSContext* cx, uintN argc, jsval* vp)
 {
   if (argc > 0) {
@@ -400,8 +399,12 @@ JetpackChild::CreateSandbox(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
   }
 
-  JSObject* obj = JS_NewGlobalObject(cx, const_cast<JSClass*>(&sGlobalClass));
+  JSObject* obj = JS_NewCompartmentAndGlobalObject(cx, const_cast<JSClass*>(&sGlobalClass), NULL);
   if (!obj)
+    return JS_FALSE;
+
+  JSAutoCrossCompartmentCall ac;
+  if (!ac.enter(cx, obj))
     return JS_FALSE;
 
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
@@ -429,6 +432,10 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
 
   JSString* str = JS_ValueToString(cx, argv[1]);
   if (!str)
+    return JS_FALSE;
+
+  JSAutoCrossCompartmentCall ac;
+  if (!ac.enter(cx, obj))
     return JS_FALSE;
 
   js::AutoValueRooter ignored(cx);
@@ -475,6 +482,28 @@ JetpackChild::ReportError(JSContext* cx, const char* message,
 
   sReportingError = false;
 }
+
+JSBool
+JetpackChild::GC(JSContext* cx, uintN argc, jsval *vp)
+{
+  JS_GC(cx);
+  return JS_TRUE;
+}
+
+#ifdef JS_GC_ZEAL
+JSBool
+JetpackChild::GCZeal(JSContext* cx, uintN argc, jsval *vp)
+{
+  jsval* argv = JS_ARGV(cx, vp);
+
+  uint32 zeal;
+  if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
+    return JS_FALSE;
+
+  JS_SetGCZeal(cx, PRUint8(zeal));
+  return JS_TRUE;
+}
+#endif
 
 } // namespace jetpack
 } // namespace mozilla

@@ -154,6 +154,19 @@ private:
 
     virtual bool RecvSetURITitle(const IPC::URI& uri,
                                  const nsString& title);
+    
+    virtual bool RecvNotifyIME(const int&, const int&);
+
+    virtual bool RecvNotifyIMEChange(const nsString&, const PRUint32&, const int&, 
+                               const int&, const int&)
+;
+
+
+    virtual bool RecvLoadURIExternal(const IPC::URI& uri);
+
+    virtual bool RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
+                                 nsTArray<nsString>* aRetvals);
+    virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
 
     mozilla::Monitor mMonitor;
 

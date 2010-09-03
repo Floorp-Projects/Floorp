@@ -186,6 +186,14 @@ ToLowerCase(const nsAString& aSource,
   ToLowerCase(in, out, len);
 }
 
+PRUnichar
+ToLowerCaseASCII(const PRUnichar aChar)
+{
+  if (IS_ASCII_UPPER(aChar))
+    return aChar + 0x0020;
+  return aChar;
+}
+
 void
 ToUpperCase(nsAString& aString)
 {
@@ -233,6 +241,49 @@ nsCaseInsensitiveStringComparator::operator()(PRUnichar lhs,
   else
     return 1;
 }
+
+PRInt32
+nsASCIICaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
+                                                   const PRUnichar* rhs,
+                                                   PRUint32 aLength) const
+{
+  while (aLength) {
+    PRUnichar l = *lhs++;
+    PRUnichar r = *rhs++;
+    if (l != r) {
+      l = ToLowerCaseASCII(l);
+      r = ToLowerCaseASCII(r);
+
+      if (l > r)
+        return 1;
+      else if (r > l)
+        return -1;
+    }
+    aLength--;
+  }
+
+  return 0;
+}
+
+PRInt32
+nsASCIICaseInsensitiveStringComparator::operator()(PRUnichar lhs,
+                                                   PRUnichar rhs) const
+{
+  // see if they're an exact match first
+  if (lhs == rhs)
+    return 0;
+  
+  lhs = ToLowerCaseASCII(lhs);
+  rhs = ToLowerCaseASCII(rhs);
+  
+  if (lhs == rhs)
+    return 0;
+  else if (lhs < rhs)
+    return -1;
+  else
+    return 1;
+}
+
 
 #endif // MOZILLA_INTERNAL_API
 

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'digit.js';
 
 /**
    Filename:     digit.js

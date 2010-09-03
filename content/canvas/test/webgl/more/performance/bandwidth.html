@@ -159,7 +159,7 @@ Tests.endUnit = function(gl) {
 
 </script>
 <script id="vert-v" type="x-shader/x-vertex">
-  #version 120
+
   attribute vec4 Vertex;
   void main()
   {
@@ -167,14 +167,17 @@ Tests.endUnit = function(gl) {
   }
 </script>
 <script id="frag-v" type="x-shader/x-fragment">
-  #version 120
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   void main()
   {
     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
 </script>
 <script id="vert-t" type="x-shader/x-vertex">
-  #version 120
+
 
   attribute vec3 Vertex;
   attribute vec2 Tex;
@@ -186,7 +189,10 @@ Tests.endUnit = function(gl) {
   }
 </script>
 <script id="frag-t" type="x-shader/x-fragment">
-  #version 120
+
+  #ifdef GL_ES
+precision highp float;
+#endif
   uniform sampler2D Texture;
 
   varying vec2 texCoord0;

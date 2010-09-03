@@ -40,17 +40,14 @@
   * Test bookmarksService.getBookmarkedURIFor(aURI);
   */
 
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
+let hs = PlacesUtils.history;
+let bs = PlacesUtils.bookmarks;
 
 /**
  * Adds a fake redirect between two visits.
  */
 function addFakeRedirect(aSourceVisitId, aDestVisitId, aRedirectType) {
-  let dbConn = DBConn();
-  let stmt = dbConn.createStatement(
+  let stmt = DBConn().createStatement(
     "UPDATE moz_historyvisits " +
     "SET from_visit = :source, visit_type = :type " +
     "WHERE id = :dest");
@@ -122,6 +119,7 @@ function run_test() {
                                      "bookmark");
   do_check_true(bs.getBookmarkedURIFor(sourceURI).equals(sourceURI));
   do_check_true(bs.getBookmarkedURIFor(tempURI).equals(tempURI));
+
   // Now remove the bookmark on the destination.
   bs.removeItem(tempItemId);
   // We should see the source as bookmark.
@@ -129,4 +127,9 @@ function run_test() {
   // Remove the source bookmark as well.
   bs.removeItem(sourceItemId);
   do_check_eq(bs.getBookmarkedURIFor(tempURI), null);
+
+  // Try to pass in a never seen URI, should return null and a new entry should
+  // not be added to the database.
+  do_check_eq(bs.getBookmarkedURIFor(uri("http://does.not.exist/")), null);
+  do_check_false(page_in_database("http://does.not.exist/"));
 }

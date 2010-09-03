@@ -88,8 +88,11 @@ public:
    * @param aWatch if false, then we do not set up the notifications to track
    * changes, so ElementChanged won't fire and get() will always return the same
    * value, the current element for the ID.
+   * @param aReferenceImage whether the ID references image elements which are
+   * subject to the document's mozSetImageElement overriding mechanism.
    */
-  void Reset(nsIContent* aFrom, nsIURI* aURI, PRBool aWatch = PR_TRUE);
+  void Reset(nsIContent* aFrom, nsIURI* aURI, PRBool aWatch = PR_TRUE,
+             PRBool aReferenceImage = PR_FALSE);
 
   /**
    * A variation on Reset() to set up a reference that consists of the ID of
@@ -208,6 +211,7 @@ private:
   nsCOMPtr<nsIDocument>  mWatchDocument;
   nsRefPtr<Element> mElement;
   nsRefPtr<Notification> mPendingNotification;
+  PRPackedBool           mReferencingImage;
 };
 
 #endif /*NSREFERENCEDELEMENT_H_*/

@@ -48,18 +48,22 @@ function makeChan(url) {
 
 var httpserv = null;
 
+function execute_test() {
+  var chan = makeChan("http://localhost:4444/failtest");
+ 
+  var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
+  obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+  obs.addObserver(observer, "http-on-modify-request", false); 
+ 
+  chan.asyncOpen(listener, null);
+}
+
 function run_test() {
   httpserv = new nsHttpServer();
   httpserv.registerPathHandler("/failtest", failtest);
   httpserv.start(4444);
-
-  var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
-  obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
-  obs.addObserver(observer, "http-on-modify-request", false);
-
-  var chan = makeChan("http://localhost:4444/failtest");
-
-  chan.asyncOpen(listener, null);
+  
+  execute_test();
 
   do_test_pending();
 }

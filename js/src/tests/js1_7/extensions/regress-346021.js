@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-346021.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346021;
 var summary = 'Implementing __iterator__ as generator';

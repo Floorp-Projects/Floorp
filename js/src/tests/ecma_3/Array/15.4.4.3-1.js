@@ -56,7 +56,6 @@
  * end value of this variable should be myArray.length.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.4.4.3-1.js';
 var BUGNUMBER = 56883;
 var summary = 'Testing Array.prototype.toLocaleString() -';
 var actual = '';

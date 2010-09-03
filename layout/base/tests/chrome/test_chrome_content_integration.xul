@@ -16,6 +16,8 @@
   <script type="application/javascript">
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
+    // Run the test in a separate window so that the test runs as a chrome
+    // window
     window.open("chrome_content_integration_window.xul", "chrome_content_integration",
                 "chrome,width=200,height=300");
   ]]>

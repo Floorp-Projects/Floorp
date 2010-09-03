@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-260106.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 260106;
 var summary = 'Elisions in array literals should not create properties';

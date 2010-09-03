@@ -301,7 +301,7 @@ class ByteReader {
   // Base addresses for Linux C++ exception handling data's encoded pointers.
   bool have_section_base_, have_text_base_, have_data_base_;
   bool have_function_base_;
-  uint64 section_base_, text_base_, data_base_, function_base_;
+  size_t section_base_, text_base_, data_base_, function_base_;
   const char *buffer_base_;
 };
 

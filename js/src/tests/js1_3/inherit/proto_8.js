@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'proto_8.js';
 
 /**
    File Name:          proto_8.js

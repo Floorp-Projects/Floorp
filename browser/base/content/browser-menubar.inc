@@ -208,6 +208,10 @@
             <menu id="view-menu" label="&viewMenu.label;"
                   accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
+                <menuitem id="menu_tabview"
+                          label="&showTabView2.label;"
+                          accesskey="&showTabView2.accesskey;"
+                          command="Browser:ToggleTabView"/>
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
                       accesskey="&viewToolbarsMenu.accesskey;">
@@ -501,7 +505,14 @@
                 <menuseparator id="endHistorySeparator"
                                class="hide-if-empty-places-result"
                                builder="end"/>
+#ifdef MOZ_SERVICES_SYNC
+                <menuitem id="sync-tabs-menuitem"
+                          label="&syncTabsMenu.label;"
+                          oncommand="BrowserOpenSyncTabs();"
+                          disabled="true"/>
+#endif
                 <menu id="historyUndoMenu"
+                      class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
                   <menupopup id="historyUndoPopup"
@@ -511,6 +522,7 @@
                              onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoSubmenu();"/>
                 </menu>
                 <menu id="historyUndoWindowMenu"
+                      class="recentlyClosedWindowsMenu"
                       label="&historyUndoWindowMenu.label;"
                       disabled="true">
                   <menupopup id="historyUndoWindowPopup"
@@ -547,10 +559,10 @@
                 label="&subscribeToPageMenuitem.label;"
                 oncommand="return FeedHandler.subscribeToFeed(null, event);"
                 onclick="checkForMiddleClick(this, event);"
-                disabled="true"/>
+                observes="singleFeedMenuitemState"/>
       <menu id="subscribeToPageMenupopup"
             label="&subscribeToPageMenupopup.label;"
-            hidden="true">
+            observes="multipleFeedsMenuState">
         <menupopup id="subscribeToPageSubmenuMenupopup"
                    onpopupshowing="return FeedHandler.buildFeedList(event.target);"
                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
@@ -584,7 +596,11 @@
             <menu id="tools-menu"
                   label="&toolsMenu.label;"
                   accesskey="&toolsMenu.accesskey;">
-              <menupopup id="menu_ToolsPopup">
+              <menupopup id="menu_ToolsPopup"
+#ifdef MOZ_SERVICES_SYNC
+                         onpopupshowing="gSyncUI.updateUI();"
+#endif
+                         >
               <menuitem id="menu_search"
                         label="&search.label;"
                         accesskey="&search.accesskey;"
@@ -599,7 +615,37 @@
               <menuitem id="menu_openAddons"
                         label="&addons.label;"
                         accesskey="&addons.accesskey;"
+                        key="key_openAddons"
                         command="Tools:Addons"/>
+#ifdef MOZ_SERVICES_SYNC
+              <!-- only one of sync-setup or sync-menu will be showing at once -->
+              <menuitem id="sync-setup"
+                        label="&syncSetup.label;"
+                        accesskey="&syncSetup.accesskey;"
+                        oncommand="gSyncUI.openSetup()"/>
+              <menu id="sync-menu"
+                    label="&syncMenu.label;"
+                    accesskey="&syncMenu.accesskey;">
+                <menupopup id="sync-menu-popup"
+                           onpopupshowing="if (event.target == this) gSyncUI.doUpdateMenu(event);">
+                  <menuitem id="sync-loginitem"
+                            label="&syncLogInItem.label;"
+                            accesskey="&syncLogInItem.accesskey;"
+                            oncommand="gSyncUI.doLogin();"/>
+                  <menuitem id="sync-logoutitem"
+                            label="&syncLogOutItem.label;"
+                            accesskey="&syncLogOutItem.accesskey;"
+                            oncommand="gSyncUI.doLogout();"/>
+                  <menuitem id="sync-syncnowitem"
+                            label="&syncSyncNowItem.label;"
+                            accesskey="&syncSyncNowItem.accesskey;"
+                            oncommand="gSyncUI.doSync(event);"/>
+                  <menuseparator id="sync-lastsyncsep" hidden="true"/>
+                  <menuitem id="sync-lastsyncitem"
+                            disabled="true" hidden="true"/>
+                </menupopup>
+              </menu>
+#endif
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="menu_pageinspect"
                         type="checkbox"

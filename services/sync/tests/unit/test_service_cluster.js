@@ -67,7 +67,7 @@ function test_findCluster() {
   } finally {
     Svc.Prefs.resetBranch("");
     if (server) {
-      server.stop(function() {});
+      server.stop(runNextTest);
     }
   }
 }
@@ -101,7 +101,7 @@ function test_setCluster() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(function() {});
+    server.stop(runNextTest);
   }
 }
 
@@ -120,33 +120,44 @@ function test_updateCluster() {
     do_check_eq(Svc.Prefs.get("lastClusterUpdate"), null);
 
     _("Set the cluster URL.");
+    let before = Date.now();
     do_check_true(Weave.Service._updateCluster());
     do_check_eq(Weave.Service.clusterURL, "http://weave.user.node/");
-    let lastUpdate = parseInt(Svc.Prefs.get("lastClusterUpdate"), 10);
-    do_check_true(lastUpdate > Date.now() - 1000);
+    let lastUpdate = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
+    do_check_true(lastUpdate >= before);
 
     _("Trying to update the cluster URL within the backoff timeout won't do anything.");
     do_check_false(Weave.Service._updateCluster());
     do_check_eq(Weave.Service.clusterURL, "http://weave.user.node/");
-    do_check_eq(parseInt(Svc.Prefs.get("lastClusterUpdate"), 10), lastUpdate);
+    do_check_eq(parseFloat(Svc.Prefs.get("lastClusterUpdate")), lastUpdate);
 
     _("Time travel 30 mins into the past and the update will work.");
     Weave.Service.username = "janedoe";
     Svc.Prefs.set("lastClusterUpdate", (lastUpdate - 30*60*1000).toString());
 
+    before = Date.now();
     do_check_true(Weave.Service._updateCluster());
     do_check_eq(Weave.Service.clusterURL, "http://weave.cluster.url/");
-    lastUpdate = parseInt(Svc.Prefs.get("lastClusterUpdate"), 10);
-    do_check_true(lastUpdate > Date.now() - 1000);
+    lastUpdate = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
+    do_check_true(lastUpdate >= before);
   
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(function() {});
+    server.stop(runNextTest);
   }
 }
 
+let tests = [test_findCluster, test_setCluster, test_updateCluster];
+
 function run_test() {
-  test_findCluster();
-  test_setCluster();
-  test_updateCluster();
+  do_test_pending();
+  runNextTest();
 }
+
+function runNextTest() {
+  if (tests.length)
+    tests.pop()();
+  else
+    do_test_finished();
+}
+

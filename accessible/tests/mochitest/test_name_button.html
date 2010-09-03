@@ -10,9 +10,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/name.js"></script>
+          src="name.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -83,10 +83,9 @@
   <pre id="test">
   </pre>
 
-  <!-- button, aria-label, preferred to aria-labelledby -->
+  <!-- aria-labelledby preferred to aria-label -->
   <button id="btn_aria_label"
-          aria-label="button label"
-          aria-labelledby="btn_aria_labelledby_text">1</button>
+          aria-label="button label">1</button>
   <br/>
 
   <!-- button, aria-labelledby, preferred to html:label -->
@@ -109,10 +108,9 @@
   <!-- button, no content, name from @title -->
   <button id="btn_title" title="title"></button>
 
-  <!-- input, aria-label, preferred to aria-labelledby -->
+  <!-- input, aria-label -->
   <input type="button" id="input_aria_label"
           aria-label="button label"
-          aria-labelledby="aria_labelledby_text_for_input"
           value="1"/>
   <br/>
 

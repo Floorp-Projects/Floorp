@@ -348,15 +348,15 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
 
   if (aCSSValue.IsFixedLengthUnit()) {
-    return aPresContext->TwipsToAppUnits(aCSSValue.GetLengthTwips());
+    return aCSSValue.GetFixedLength(aPresContext);
+  }
+  if (aCSSValue.IsPixelLengthUnit()) {
+    return aCSSValue.GetPixelLength();
   }
 
   nsCSSUnit unit = aCSSValue.GetUnit();
 
-  if (eCSSUnit_Pixel == unit) {
-    return nsPresContext::CSSPixelsToAppUnits(aCSSValue.GetFloatValue());
-  }
-  else if (eCSSUnit_EM == unit) {
+  if (eCSSUnit_EM == unit) {
     const nsStyleFont* font = aStyleContext->GetStyleFont();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
@@ -368,6 +368,8 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
 
+  // MathML doesn't specify other CSS units such as rem or ch
+  NS_ERROR("Unsupported unit");
   return 0;
 }
 
@@ -452,8 +454,9 @@ nsCSSMapping {
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
 class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
 public:
-  nsDisplayMathMLBoundingMetrics(nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aFrame), mRect(aRect) {
+  nsDisplayMathMLBoundingMetrics(nsDisplayListBuilder* aBuilder,
+                                 nsIFrame* aFrame, const nsRect& aRect)
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBoundingMetrics);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -473,7 +476,7 @@ void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
                                            nsIRenderingContext* aCtx)
 {
   aCtx->SetColor(NS_RGB(0,0,255));
-  aCtx->DrawRect(mRect + aBuilder->ToReferenceFrame(mFrame));
+  aCtx->DrawRect(mRect + ToReferenceFrame());
 }
 
 nsresult
@@ -490,14 +493,15 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
   nscoord h = aMetrics.ascent + aMetrics.descent;
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayMathMLBoundingMetrics(this, nsRect(x,y,w,h)));
+      nsDisplayMathMLBoundingMetrics(aBuilder, this, nsRect(x,y,w,h)));
 }
 #endif
 
 class nsDisplayMathMLBar : public nsDisplayItem {
 public:
-  nsDisplayMathMLBar(nsIFrame* aFrame, const nsRect& aRect)
-    : nsDisplayItem(aFrame), mRect(aRect) {
+  nsDisplayMathMLBar(nsDisplayListBuilder* aBuilder,
+                     nsIFrame* aFrame, const nsRect& aRect)
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBar);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -518,7 +522,7 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
 {
   // paint the bar with the current text color
   aCtx->SetColor(mFrame->GetStyleColor()->mColor);
-  aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
+  aCtx->FillRect(mRect + ToReferenceFrame());
 }
 
 nsresult
@@ -529,5 +533,5 @@ nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
     return NS_OK;
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayMathMLBar(aFrame, aRect));
+      nsDisplayMathMLBar(aBuilder, aFrame, aRect));
 }

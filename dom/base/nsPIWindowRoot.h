@@ -48,10 +48,10 @@ class nsIControllers;
 class nsIController;
 struct JSContext;
 
-// 2e26a297-6e40-41c1-81c9-7306571f955e
+// 426C1B56-E38A-435E-B291-BE1557F2A0A2
 #define NS_IWINDOWROOT_IID \
-{ 0x2e26a297, 0x6e40, 0x41c1, \
-  { 0x81, 0xc9, 0x73, 0x06, 0x57, 0x1f, 0x95, 0x5e } }
+{ 0x426c1b56, 0xe38a, 0x435e, \
+  { 0xb2, 0x91, 0xbe, 0x15, 0x57, 0xf2, 0xa0, 0xa2 } }
 
 class nsPIWindowRoot : public nsPIDOMEventTarget {
 public:
@@ -59,7 +59,8 @@ public:
 
   virtual nsPIDOMWindow* GetWindow()=0;
 
-  virtual void GetPopupNode(nsIDOMNode** aNode) = 0;
+  // get and set the node that is the context of a popup menu
+  virtual nsIDOMNode* GetPopupNode() = 0;
   virtual void SetPopupNode(nsIDOMNode* aNode) = 0;
 
   virtual nsresult GetControllerForCommand(const char *aCommand,

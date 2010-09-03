@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-291213.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 291213;
 var summary = 'Do not crash in args_resolve enumerating |arguments|';

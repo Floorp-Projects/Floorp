@@ -49,6 +49,7 @@ typedef boolean        WebGLboolean;
 typedef unsigned long  WebGLbitfield;
 typedef long           WebGLint;
 typedef long           WebGLsizei;
+typedef long           WebGLsizeiptr;
 typedef unsigned long  WebGLuint;
 typedef float          WebGLfloat;
 typedef float          WebGLclampf;
@@ -128,7 +129,7 @@ interface nsIWebGLUniformLocation : nsISupports
 };
 
 
-[scriptable, uuid(f02c85e0-8305-11de-abe2-000c29206271)]
+[scriptable, uuid(2f21ca21-9720-4eee-ad94-27eefe4f72dc)]
 interface nsICanvasRenderingContextWebGL : nsISupports
 {
   //
@@ -699,7 +700,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   nsIWebGLUniformLocation getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
-  void getVertexAttrib(in WebGLuint index, in WebGLenum pname);
+  nsIVariant getVertexAttrib(in WebGLuint index, in WebGLenum pname);
 
   // TBD
   // void glGetVertexAttribPointerv(WebGLuint index, WebGLenum pname, void** pointer);
@@ -725,8 +726,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
                                    in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   [noscript] void readPixels_buf(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
                                  in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
-  [noscript] WebGLsizei readPixels_byteLength_old_API_deprecated(
-                            in WebGLsizei width, in WebGLsizei height, in WebGLenum format, in WebGLenum type);
 
   //void glReleaseShaderCompiler();
 
@@ -754,9 +753,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                  in WebGLenum format, in WebGLenum type, in nsIDOMElement element);
-  // XXX the old API. Eventually drop that.
-  [noscript] void TexImage2D_dom_old_API_deprecated(in WebGLenum target, in WebGLint level,
-                                                    in nsIDOMElement element, in PRBool flipY, in PRBool premultiplyAlpha);
 
   void texSubImage2D([optional] in long dummy);
   [noscript] void texSubImage2D_buf(in WebGLenum target, in WebGLint level,
@@ -835,7 +831,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   [noscript] void vertexAttrib4fv_array(in WebGLuint indx, in WebGLArrayPtr values);
 
   // size is number of elements per attrib; offset, stride are in bytes
-  void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLuint stride, in WebGLuint offset);
+  void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLsizei stride, in WebGLsizeiptr offset);
 
   void viewport(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
 };

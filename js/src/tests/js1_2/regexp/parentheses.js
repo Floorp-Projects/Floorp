@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'parentheses.js';
 
 /**
    Filename:     parentheses.js

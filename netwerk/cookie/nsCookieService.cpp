@@ -39,6 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
+#ifdef MOZ_LOGGING
+// this next define has to appear before the include of prlog.h
+#define FORCE_PR_LOG // Allow logging in the release build
+#endif
+
 #ifdef MOZ_IPC
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -204,8 +210,6 @@ struct nsEnumerationData
 //    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
 //    set NSPR_LOG_FILE=cookie.log
 //
-// this next define has to appear before the include of prlog.h
-#define FORCE_PR_LOG // Allow logging in the release build
 #include "prlog.h"
 #endif
 
@@ -219,10 +223,10 @@ static PRLogModuleInfo *sCookieLog = PR_NewLogModule("cookie");
 #define COOKIE_LOGFAILURE(a, b, c, d)    LogFailure(a, b, c, d)
 #define COOKIE_LOGSUCCESS(a, b, c, d, e) LogSuccess(a, b, c, d, e)
 
-#define COOKIE_LOGEVICTED(a)                   \
+#define COOKIE_LOGEVICTED(a, details)          \
   PR_BEGIN_MACRO                               \
     if (PR_LOG_TEST(sCookieLog, PR_LOG_DEBUG)) \
-      LogEvicted(a);                           \
+      LogEvicted(a, details);                  \
   PR_END_MACRO
 
 #define COOKIE_LOGSTRING(lvl, fmt)   \
@@ -315,9 +319,10 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCoo
 }
 
 static void
-LogEvicted(nsCookie *aCookie)
+LogEvicted(nsCookie *aCookie, const char* details)
 {
   PR_LOG(sCookieLog, PR_LOG_DEBUG,("===== COOKIE EVICTED =====\n"));
+  PR_LOG(sCookieLog, PR_LOG_DEBUG,("%s\n", details));
 
   LogCookie(aCookie);
 
@@ -340,7 +345,7 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 #else
 #define COOKIE_LOGFAILURE(a, b, c, d)    PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #define COOKIE_LOGSUCCESS(a, b, c, d, e) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
-#define COOKIE_LOGEVICTED(a)             PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGEVICTED(a, b)          PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #define COOKIE_LOGSTRING(a, b)           PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #endif
 
@@ -730,6 +735,9 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   rv = mStorageService->OpenDatabase(cookieFile, getter_AddRefs(mDBState->dbConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Grow cookie db in 512KB increments
+  mDBState->dbConn->SetGrowthIncrement(512 * 1024, EmptyCString());
+
   PRBool tableExists = PR_FALSE;
   mDBState->dbConn->TableExists(NS_LITERAL_CSTRING("moz_cookies"), &tableExists);
   if (!tableExists) {
@@ -852,6 +860,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
             "host, "
             "path, "
             "expiry, "
+            "lastAccessed, "
             "isSecure, "
             "isHttpOnly "
           "FROM moz_cookies"), getter_AddRefs(stmt));
@@ -1337,7 +1346,7 @@ nsCookieService::Add(const nsACString &aHost,
     nsCookie::Create(aName, aValue, host, aPath,
                      aExpiry,
                      currentTimeInUsec,
-                     currentTimeInUsec,
+                     nsCookie::GenerateCreationID(currentTimeInUsec),
                      aIsSession,
                      aIsSecure,
                      aIsHttpOnly);
@@ -1454,7 +1463,8 @@ nsCookieService::GetCookieFromRow(T &aRow)
   PRBool isSecure = 0 != aRow->AsInt32(7);
   PRBool isHttpOnly = 0 != aRow->AsInt32(8);
 
-  // create a new nsCookie and assign the data.
+  // Create a new nsCookie and assign the data. We are guaranteed that the
+  // creationID is unique, since we're reading it from the db itself.
   return nsCookie::Create(name, value, host, path,
                           expiry,
                           lastAccessed,
@@ -1784,10 +1794,9 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     if (NS_FAILED(rv))
       continue;
 
-    // create a new nsCookie and assign the data.
-    // we don't know the cookie creation time, so just use the current time;
-    // this is okay, since nsCookie::Create() will make sure the creation id
-    // ends up monotonically increasing.
+    // Create a new nsCookie and assign the data.
+    // We don't know the cookie creation time, so just use the current time
+    // to generate a unique creationID.
     nsRefPtr<nsCookie> newCookie =
       nsCookie::Create(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
                        Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
@@ -1795,7 +1804,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
                        Substring(buffer, pathIndex, secureIndex - pathIndex - 1),
                        expires,
                        lastAccessedCounter,
-                       currentTimeInUsec,
+                       nsCookie::GenerateCreationID(currentTimeInUsec),
                        PR_FALSE,
                        Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).EqualsLiteral(kTrue),
                        isHttpOnly);
@@ -2119,7 +2128,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                      cookieAttributes.path,
                      cookieAttributes.expiryTime,
                      currentTimeInUsec,
-                     currentTimeInUsec,
+                     nsCookie::GenerateCreationID(currentTimeInUsec),
                      cookieAttributes.isSession,
                      cookieAttributes.isSecure,
                      cookieAttributes.isHttpOnly);
@@ -2214,9 +2223,9 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
     // check if we have to delete an old cookie.
     nsEnumerationData data(currentTime, LL_MAXINT);
     if (CountCookiesFromHostInternal(aBaseDomain, data) >= mMaxCookiesPerHost) {
-      // remove the oldest cookie from host
+      // remove the oldest cookie from the domain
       oldCookie = data.iter.Cookie();
-      COOKIE_LOGEVICTED(oldCookie);
+      COOKIE_LOGEVICTED(oldCookie, "Too many cookies for this domain");
       RemoveCookieFromList(data.iter);
 
       NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
@@ -2242,7 +2251,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
-  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, aCookieHeader, aCookie, foundCookie != nsnull);
+  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, aCookieHeader, aCookie, foundCookie);
 }
 
 /******************************************************************************
@@ -2940,7 +2949,7 @@ purgeCookiesCallback(nsCookieEntry *aEntry,
     // check if the cookie has expired
     if (cookie->Expiry() <= data.currentTime) {
       data.removedList->AppendElement(cookie, PR_FALSE);
-      COOKIE_LOGEVICTED(cookie);
+      COOKIE_LOGEVICTED(cookie, "Cookie expired");
 
       // remove from list; do not increment our iterator
       gCookieService->RemoveCookieFromList(iter, array);
@@ -3017,7 +3026,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   for (nsPurgeData::ArrayType::index_type i = purgeList.Length(); i--; ) {
     nsCookie *cookie = purgeList[i].Cookie();
     removedList->AppendElement(cookie, PR_FALSE);
-    COOKIE_LOGEVICTED(cookie);
+    COOKIE_LOGEVICTED(cookie, "Cookie expired or too old");
 
     RemoveCookieFromList(purgeList[i], paramsArray);
   }

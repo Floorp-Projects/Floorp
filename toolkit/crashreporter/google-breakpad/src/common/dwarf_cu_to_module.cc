@@ -36,12 +36,16 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <set>
+#include <utility>
 
 #include "common/dwarf_line_to_module.h"
 
 namespace google_breakpad {
 
 using std::map;
+using std::pair;
+using std::set;
 using std::vector;
 
 // Data provided by a DWARF specification DIE.
@@ -83,6 +87,17 @@ typedef map<uint64, AbstractOrigin> AbstractOriginByOffset;
 // Data global to the DWARF-bearing file that is private to the
 // DWARF-to-Module process.
 struct DwarfCUToModule::FilePrivate {
+  // A set of strings used in this CU. Before storing a string in one of
+  // our data structures, insert it into this set, and then use the string
+  // from the set.
+  // 
+  // Because std::string uses reference counting internally, simply using
+  // strings from this set, even if passed by value, assigned, or held
+  // directly in structures and containers (map<string, ...>, for example),
+  // causes those strings to share a single instance of each distinct piece
+  // of text.
+  set<string> common_strings;
+
   // A map from offsets of DIEs within the .debug_info section to
   // Specifications describing those DIEs. Specification references can
   // cross compilation unit boundaries.
@@ -256,7 +271,17 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeString(
     enum DwarfForm form,
     const string &data) {
   switch (attr) {
-    case dwarf2reader::DW_AT_name: name_attribute_ = data; break;
+    case dwarf2reader::DW_AT_name: {
+      // Place the name in our global set of strings, and then use the
+      // string from the set. Even though the assignment looks like a copy,
+      // all the major std::string implementations use reference counting
+      // internally, so the effect is to have all our data structures share
+      // copies of strings whenever possible.
+      pair<set<string>::iterator, bool> result =
+          cu_context_->file_context->file_private->common_strings.insert(data);
+      name_attribute_ = *result.first; 
+      break;
+    }
     default: break;
   }
 }

@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566245
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566245">Mozill
@@ -22,6 +23,7 @@ a Bug 566245</a>
 <script src="can_play_type_webm.js"></script>
 <script>
 check_webm(document.getElementById('v'), true);
+mediaTestCleanup();
 </script>
 </pre>
 </body>

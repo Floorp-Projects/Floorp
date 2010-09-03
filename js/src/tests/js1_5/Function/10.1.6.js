@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '10.1.6.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 293782;
 var summary = 'Local variables can cause predefined function object properties to be undefined';

@@ -86,64 +86,117 @@ HistoryEngine.prototype = {
 
 function HistoryStore(name) {
   Store.call(this, name);
+
+  // Explicitly nullify our references to our cached services so we don't leak
+  Svc.Obs.add("places-shutdown", function() {
+    for each ([query, stmt] in Iterator(this._stmts))
+      stmt.finalize();
+    this.__hsvc = null;
+    this._stmts = [];
+  }, this);
 }
 HistoryStore.prototype = {
   __proto__: Store.prototype,
 
+  __hsvc: null,
   get _hsvc() {
-    let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-      getService(Ci.nsINavHistoryService);
-    hsvc.QueryInterface(Ci.nsIGlobalHistory2);
-    hsvc.QueryInterface(Ci.nsIBrowserHistory);
-    hsvc.QueryInterface(Ci.nsPIPlacesDatabase);
-    this.__defineGetter__("_hsvc", function() hsvc);
-    return hsvc;
+    if (!this.__hsvc)
+      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                    getService(Ci.nsINavHistoryService).
+                    QueryInterface(Ci.nsIGlobalHistory2).
+                    QueryInterface(Ci.nsIBrowserHistory).
+                    QueryInterface(Ci.nsPIPlacesDatabase);
+    return this.__hsvc;
   },
 
   get _db() {
     return this._hsvc.DBConnection;
   },
 
+  _stmts: {},
+  _getStmt: function(query) {
+    if (query in this._stmts)
+      return this._stmts[query];
+
+    this._log.trace("Creating SQL statement: " + query);
+    return this._stmts[query] = Utils.createStatement(this._db, query);
+  },
+
+  get _haveTempTablesStm() {
+    return this._getStmt(
+      "SELECT name FROM sqlite_temp_master " +
+      "WHERE name IN ('moz_places_temp', 'moz_historyvisits_temp')");
+  },
+
+  get _haveTempTables() {
+    if (this.__haveTempTables == null)
+      this.__haveTempTables = !!Utils.queryAsync(this._haveTempTablesStm,
+                                                 ["name"]).length;
+    return this.__haveTempTables;
+  },
+
   get _visitStm() {
-    this._log.trace("Creating SQL statement: _visitStm");
-    let stm = this._db.createStatement(
+    // Gecko <2.0
+    if (this._haveTempTables) {
+      let where = 
+        "WHERE place_id = IFNULL( " +
+          "(SELECT id FROM moz_places_temp WHERE url = :url), " +
+          "(SELECT id FROM moz_places WHERE url = :url) " +
+        ") ";
+      return this._getStmt(
+        "SELECT visit_type type, visit_date date " +
+        "FROM moz_historyvisits_temp " + where + "UNION " +
+        "SELECT visit_type type, visit_date date " +
+        "FROM moz_historyvisits " + where +
+        "ORDER BY date DESC LIMIT 10 ");
+    }
+    // Gecko 2.0
+    return this._getStmt(
       "SELECT visit_type type, visit_date date " +
-      "FROM moz_historyvisits_view " +
-      "WHERE place_id = (" +
-        "SELECT id " +
-        "FROM moz_places_view " +
-        "WHERE url = :url) " +
+      "FROM moz_historyvisits " +
+      "WHERE place_id = (SELECT id FROM moz_places WHERE url = :url) " +
       "ORDER BY date DESC LIMIT 10");
-    this.__defineGetter__("_visitStm", function() stm);
-    return stm;
   },
 
   get _urlStm() {
-    this._log.trace("Creating SQL statement: _urlStm");
-    let stm = this._db.createStatement(
-      "SELECT url, title, frecency " +
-      "FROM moz_places_view " +
+    let where =
       "WHERE id = (" +
         "SELECT place_id " +
         "FROM moz_annos " +
         "WHERE content = :guid AND anno_attribute_id = (" +
           "SELECT id " +
           "FROM moz_anno_attributes " +
-          "WHERE name = '" + GUID_ANNO + "'))");
-    this.__defineGetter__("_urlStm", function() stm);
-    return stm;
+          "WHERE name = '" + GUID_ANNO + "')) ";
+    // Gecko <2.0
+    if (this._haveTempTables)
+      return this._getStmt(
+        "SELECT url, title, frecency FROM moz_places_temp " + where +
+        "UNION ALL " +
+        "SELECT url, title, frecency FROM moz_places " + where + "LIMIT 1");
+    // Gecko 2.0
+    return this._getStmt(
+      "SELECT url, title, frecency FROM moz_places " + where + "LIMIT 1");
   },
 
   get _allUrlStm() {
-    this._log.trace("Creating SQL statement: _allUrlStm");
-    let stm = this._db.createStatement(
+    // Gecko <2.0
+    if (this._haveTempTables)
+      return this._getStmt(
+        "SELECT url, frecency FROM moz_places_temp " +
+        "WHERE last_visit_date > :cutoff_date " +
+        "UNION " +
+        "SELECT url, frecency FROM moz_places " +
+        "WHERE last_visit_date > :cutoff_date " +
+        "ORDER BY 2 DESC " +
+        "LIMIT :max_results");
+
+    // Gecko 2.0
+    return this._getStmt(
       "SELECT url " +
-      "FROM moz_places_view " +
+      "FROM moz_places " +
       "WHERE last_visit_date > :cutoff_date " +
       "ORDER BY frecency DESC " +
       "LIMIT :max_results");
-    this.__defineGetter__("_allUrlStm", function() stm);
-    return stm;
   },
 
   // See bug 320831 for why we use SQL here
@@ -182,7 +235,7 @@ HistoryStore.prototype = {
   },
 
   remove: function HistStore_remove(record) {
-    let page = this._findURLByGUID(record.id)
+    let page = this._findURLByGUID(record.id);
     if (page == null) {
       this._log.debug("Page already removed: " + record.id);
       return;
@@ -248,14 +301,34 @@ HistoryStore.prototype = {
 
 function HistoryTracker(name) {
   Tracker.call(this, name);
-  Svc.History.addObserver(this, false);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
 
+  _enabled: false,
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.History.addObserver(this, true);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.History.removeObserver(this);
+          this._enabled = false;
+        }
+        break;
+    }
+  },
+
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavHistoryObserver,
-    Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS
+    Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS,
+    Ci.nsISupportsWeakReference
   ]),
 
   onBeginUpdateBatch: function HT_onBeginUpdateBatch() {},

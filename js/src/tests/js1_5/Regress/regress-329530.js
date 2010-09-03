@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-329530.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 329530;
 var summary = 'Do not crash when calling toString on a deeply nested function';

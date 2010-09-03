@@ -296,7 +296,7 @@ var tests = [
       this.firstNotification = showNotification(this.notifyObj);
       this.notifyObj2 = new basicNotification();
       this.notifyObj2.id += "-2";
-      this.notifyObj2.anchorID = "urlbar";
+      this.notifyObj2.anchorID = "addons-notification-icon";
       // Second showNotification() overrides the first
       this.secondNotification = showNotification(this.notifyObj2);
     },
@@ -327,10 +327,11 @@ var tests = [
       this.notification.remove();
     }
   },
-  // Test that anchor icon appears
+  // Test that icons appear
   { // Test #11
     run: function () {
       this.notifyObj = new basicNotification();
+      this.notifyObj.id = "geolocation";
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notification = showNotification(this.notifyObj);
     },
@@ -418,6 +419,47 @@ var tests = [
       gBrowser.selectedTab = this.oldSelectedTab;
     }
   },
+  // Test that nested icon nodes correctly activate popups
+  { // Test #14
+    run: function() {
+      // Add a temporary box as the anchor with a button
+      this.box = document.createElement("box");
+      PopupNotifications.iconBox.appendChild(this.box);
+
+      let button = document.createElement("button");
+      button.setAttribute("label", "Please click me!");
+      this.box.appendChild(button);
+
+      // The notification should open up on the box
+      this.notifyObj = new basicNotification();
+      this.notifyObj.anchorID = this.box.id = "nested-box";
+      this.notifyObj.options = {dismissed: true};
+      this.notification = showNotification(this.notifyObj);
+
+      EventUtils.synthesizeMouse(button, 1, 1, {});
+    },
+    onShown: function(popup) {
+      checkPopup(popup, this.notifyObj);
+      dismissNotification(popup);
+    },
+    onHidden: function(popup) {
+      this.notification.remove();
+      this.box.parentNode.removeChild(this.box);
+    }
+  },
+  // Test that popupnotifications without popups have anchor icons shown
+  { // Test #15
+    run: function() {
+      let notifyObj = new basicNotification();
+      notifyObj.anchorID = "geo-notification-icon";
+      notifyObj.options = {neverShow: true};
+      showNotification(notifyObj);
+    },
+    updateNotShowing: function() {
+      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+            "geo anchor should be visible");
+    }
+  },
 ];
 
 function showNotification(notifyObj) {
@@ -436,8 +478,11 @@ function checkPopup(popup, notificationObj) {
 
   is(notifications.length, 1, "only one notification displayed");
   let notification = notifications[0];
+  let icon = document.getAnonymousElementByAttribute(notification, "class", "popup-notification-icon");
+  if (notificationObj.id == "geolocation")
+    isnot(icon.boxObject.width, 0, "icon for geo displayed");
   is(notification.getAttribute("label"), notificationObj.message, "message matches");
-  is(notification.id, notificationObj.id, "id matches");
+  is(notification.id, notificationObj.id + "-notification", "id matches");
   if (notificationObj.mainAction) {
     is(notification.getAttribute("buttonlabel"), notificationObj.mainAction.label, "main action label matches");
     is(notification.getAttribute("buttonaccesskey"), notificationObj.mainAction.accessKey, "main action accesskey matches");
@@ -485,15 +530,17 @@ function triggerSecondaryCommand(popup, index) {
 }
 
 function loadURI(uri, callback) {
-  gBrowser.addEventListener("load", function() {
-    // Ignore the about:blank load
-    if (gBrowser.currentURI.spec != uri)
-      return;
+  if (callback) {
+    gBrowser.addEventListener("load", function() {
+      // Ignore the about:blank load
+      if (gBrowser.currentURI.spec != uri)
+        return;
 
-    gBrowser.removeEventListener("load", arguments.callee, true);
+      gBrowser.removeEventListener("load", arguments.callee, true);
 
-    callback();
-  }, true);
+      callback();
+    }, true);
+  }
   gBrowser.loadURI(uri);
 }
 

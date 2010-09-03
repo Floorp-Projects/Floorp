@@ -5,7 +5,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestsubsuite='strict';
 
 /*
  * Return true if both of these return true:

@@ -155,12 +155,10 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
   switch (cif->rtype->type)
     {
     case FFI_TYPE_VOID:
-#if defined(X86) || defined (X86_WIN32) || defined(X86_FREEBSD) || defined(X86_DARWIN) || defined(X86_WIN64)
     case FFI_TYPE_UINT8:
     case FFI_TYPE_UINT16:
     case FFI_TYPE_SINT8:
     case FFI_TYPE_SINT16:
-#endif
 #ifdef X86_WIN64
     case FFI_TYPE_UINT32:
     case FFI_TYPE_SINT32:
@@ -291,27 +289,8 @@ void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
     {
 #ifdef X86_WIN64
     case FFI_WIN64:
-      {
-        /* Make copies of all struct arguments
-           NOTE: not sure if responsibility should be here or in caller */
-        unsigned int i;
-        for (i=0; i < cif->nargs;i++) {
-          size_t size = cif->arg_types[i]->size;
-          if ((cif->arg_types[i]->type == FFI_TYPE_STRUCT
-               && (size != 1 && size != 2 && size != 4 && size != 8))
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-              || cif->arg_types[i]->type == FFI_TYPE_LONGDOUBLE
-#endif
-              )
-            {
-              void *local = alloca(size);
-              memcpy(local, avalue[i], size);
-              avalue[i] = local;
-            }
-        }
-        ffi_call_win64(ffi_prep_args, &ecif, cif->bytes,
-                       cif->flags, ecif.rvalue, fn);
-      }
+      ffi_call_win64(ffi_prep_args, &ecif, cif->bytes,
+                     cif->flags, ecif.rvalue, fn);
       break;
 #elif defined(X86_WIN32)
     case FFI_SYSV:
@@ -586,9 +565,9 @@ ffi_prep_raw_closure_loc (ffi_raw_closure* closure,
   }
 
   /* we currently don't support certain kinds of arguments for raw
-     closures.  This should be implemented by a separate assembly language
-     routine, since it would require argument processing, something we
-     don't do now for performance. */
+     closures.  This should be implemented by a separate assembly
+     language routine, since it would require argument processing,
+     something we don't do now for performance.  */
 
   for (i = cif->nargs-1; i >= 0; i--)
     {

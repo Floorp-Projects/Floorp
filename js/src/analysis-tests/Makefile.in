@@ -46,7 +46,7 @@ NEED_MDDEPDIR = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-REDGREEN_FAILURE_TESTCASES = \
+REDGREEN_WARNING_TESTCASES = \
   green-callred.cpp \
   green-accessred.cpp \
   green-tored-badpath.cpp \
@@ -72,8 +72,8 @@ REDGREEN_SUCCESS_TESTCASES = \
   green-toredptr.cpp \
   $(NULL)
 
-STATIC_FAILURE_TESTCASES = \
-  $(REDGREEN_FAILURE_TESTCASES) \
+STATIC_WARNING_TESTCASES = \
+  $(REDGREEN_WARNING_TESTCASES) \
   $(NULL)
 
 STATIC_PASS_TESTCASES = \
@@ -85,19 +85,23 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += -I$(srcdir)/.. -I..
 
 check:: \
-  $(STATIC_FAILURE_TESTCASES:.cpp=.s-fail) \
+  $(STATIC_WARNING_TESTCASES:.cpp=.s-warn) \
   $(STATIC_PASS_TESTCASES:.cpp=.s-pass) \
   $(NULL)
 
 # We want to compile each file and invert the result to ensure that
 # compilation failed.
-%.s-fail: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS)
+%.s-warn: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS)
 	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
-	@if $(CCC) $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
-	  printf "fail:\nerror: compilation of $(<F) succeeded. It shouldn't have!\n"; \
+	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
+	  printf "fail:\nerror: compilation of $(<F) succeeded with -Werror. It shouldn't have!\n"; \
 	  exit 1; \
-	else \
+	fi
+	@if $(CCC) $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).werrlog 2>&1; then \
 	  printf "ok.\n"; \
+	else \
+	  printf "fail:\nerror: compilation of $(<F) without -Werror failed. A warning should have been issued.\n"; \
+	  exit 1; \
 	fi
 
 %.s-pass: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS)

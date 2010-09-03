@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-340526-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 340526;
 var summary = 'Iterators: cross-referenced objects with close handler can ' +

@@ -24,8 +24,9 @@
 <!ENTITY  pinTab.accesskey                   "p">
 <!ENTITY  unpinTab.label                     "Make into Normal Tab">
 <!ENTITY  unpinTab.accesskey                 "k">
-<!ENTITY  bookmarkThisTab.label              "Bookmark This Tab">
-<!ENTITY  bookmarkThisTab.accesskey          "B">
+<!ENTITY  moveToGroup.label                  "Move to Group">
+<!ENTITY  moveToGroup.accesskey              "M">
+<!ENTITY  moveToNewGroup.label               "New Group">
 <!ENTITY  bookmarkAllTabs.label              "Bookmark All Tabs…">
 <!ENTITY  bookmarkAllTabs.accesskey          "T">
 <!ENTITY  undoCloseTab.label                 "Undo Close Tab">
@@ -119,6 +120,7 @@
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
+<!ENTITY backForwardItem.title        "Back/Forward">
 <!ENTITY locationItem.title           "Location">
 <!ENTITY searchItem.title             "Search">
 <!ENTITY throbberItem.title           "Activity Indicator">
@@ -126,6 +128,8 @@
 
 <!-- Toolbar items --> 
 <!ENTITY  homeButton.label            "Home">
+<!ENTITY tabViewButton2.label         "Tab Groups">
+<!ENTITY tabViewButton2.tooltip       "Group Your Tabs">
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
@@ -162,6 +166,7 @@
 <!ENTITY downloadsUnix.commandkey     "y">
 <!ENTITY addons.label                 "Add-ons">
 <!ENTITY addons.accesskey             "A">
+<!ENTITY addons.commandkey            "A">
 
 <!ENTITY errorConsoleCmd.label        "Error Console">
 <!ENTITY errorConsoleCmd.accesskey    "C">
@@ -185,6 +190,12 @@
 <!ENTITY inspectStyleButton.label     "Style">
 <!ENTITY inspectStyleButton.accesskey "S">
 <!ENTITY inspectStylePanelTitle.label  "Style">
+<!-- LOCALIZATION NOTE (inspectObjectButton.label): This button label
+  -  appears on the Inspector's toolbar. It is used to open and close the Object
+  -  panel. There is also a label in inspector.properties for the panel
+  -  titlebar: object.objectPanelTitle. -->
+<!ENTITY inspectObjectButton.label       "Object">
+<!ENTITY inspectObjectButton.accesskey   "O">
 
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
@@ -232,6 +243,8 @@
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
+<!ENTITY showTabView2.label     "Group Your Tabs…">
+<!ENTITY showTabView2.accesskey     "G">
 <!ENTITY viewToolbarsMenu.label       "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey     "T"> 
 <!ENTITY viewSidebarMenu.label "Sidebar">
@@ -251,11 +264,12 @@
 <!ENTITY showAllHistoryCmd2.label "Show All History">
 <!ENTITY showAllHistoryCmd.commandkey "H">
 
-<!ENTITY appMenuPrintCmd.label "Print">
 <!ENTITY appMenuCustomize.label "Customize">
 <!ENTITY appMenuToolbarLayout.label "Toolbar Layout…">
 <!ENTITY appMenuSidebars.label "Sidebars">
-<!ENTITY appMenuHelp.label "Help">
+<!ENTITY appMenuFind.label "Find…">
+<!ENTITY appMenuUnsorted.label "Unsorted Bookmarks">
+<!ENTITY appMenuGettingStarted.label "Getting Started">
 
 <!ENTITY developerMenu.label "Developer">
 
@@ -509,3 +523,21 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
+
+<!-- LOCALIZATION NOTE (syncTabsMenu.label): This appears in the history menu -->
+<!ENTITY syncTabsMenu.label     "Tabs From Other Computers">
+
+<!ENTITY syncBrand.shortName.label  "Sync">
+
+<!ENTITY syncMenu.label               "&syncBrand.shortName.label;">
+<!-- LOCALIZATION NOTE (sync.menu.accesskey): This is part of the tools menu, so
+                                              don't use a conflicting access key -->
+<!ENTITY syncMenu.accesskey           "Y">
+<!ENTITY syncSetup.label              "Set Up &syncBrand.shortName.label;…">
+<!ENTITY syncSetup.accesskey          "Y">
+<!ENTITY syncLogInItem.label          "Connect">
+<!ENTITY syncLogInItem.accesskey      "C">
+<!ENTITY syncLogOutItem.label         "Disconnect">
+<!ENTITY syncLogOutItem.accesskey     "D">
+<!ENTITY syncSyncNowItem.label        "Sync Now">
+<!ENTITY syncSyncNowItem.accesskey    "S">

@@ -46,6 +46,9 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
+#include "gfxPlatform.h"
+#include "gfxDrawable.h"
+#include "nsSVGPaintServerFrame.h"
 
 // ----------------------------------------------------------------------
 
@@ -57,9 +60,8 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
           !aFrame->IsFrameOfType(nsIFrame::eSVG);
 }
 
-// Get the union the frame border-box rects over all continuations,
-// relative to aFirst. This defines "user space" for non-SVG frames.
-static nsRect GetNonSVGUserSpace(nsIFrame* aFirst)
+/* static */ nsRect
+nsSVGIntegrationUtils::GetNonSVGUserSpace(nsIFrame* aFirst)
 {
   NS_ASSERTION(!aFirst->GetPrevContinuation(), "Not first continuation");
   return nsLayoutUtils::GetAllInFlowRectsUnion(aFirst, aFirst);
@@ -397,4 +399,154 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
   nsPresContext* presContext = aNonSVGFrame->PresContext();
   result.ScaleInverse(presContext->AppUnitsPerCSSPixel());
   return result;
+}
+
+class PaintFrameCallback : public gfxDrawingCallback {
+public:
+  PaintFrameCallback(nsIFrame* aFrame,
+                     nsIFrame* aTarget,
+                     const nsSize aPaintServerSize,
+                     const gfxIntSize aRenderSize)
+   : mFrame(aFrame)
+   , mTarget(aTarget)
+   , mPaintServerSize(aPaintServerSize)
+   , mRenderSize(aRenderSize)
+  {}
+  virtual PRBool operator()(gfxContext* aContext,
+                            const gfxRect& aFillRect,
+                            const gfxPattern::GraphicsFilter& aFilter,
+                            const gfxMatrix& aTransform);
+private:
+  nsIFrame* mFrame;
+  nsIFrame* mTarget;
+  nsSize mPaintServerSize;
+  gfxIntSize mRenderSize;
+};
+
+PRBool
+PaintFrameCallback::operator()(gfxContext* aContext,
+                               const gfxRect& aFillRect,
+                               const gfxPattern::GraphicsFilter& aFilter,
+                               const gfxMatrix& aTransform)
+{
+  if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)
+    return PR_FALSE;
+
+  mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+
+  nsSVGRenderState renderState(aContext);
+  aContext->Save();
+
+  // Clip to aFillRect so that we don't paint outside.
+  aContext->NewPath();
+  aContext->Rectangle(aFillRect);
+  aContext->Clip();
+  gfxMatrix savedMatrix(aContext->CurrentMatrix());
+
+  aContext->Multiply(gfxMatrix(aTransform).Invert());
+
+  // nsLayoutUtils::PaintFrame will anchor its painting at mFrame. But we want
+  // to have it anchored at the top left corner of the bounding box of all of
+  // mFrame's continuations. So we add a translation transform.
+  nsRect bbox = nsSVGIntegrationUtils::GetNonSVGUserSpace(mFrame);
+  PRInt32 appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxPoint offset = gfxPoint(bbox.x, bbox.y) / appUnitsPerDevPixel;
+  aContext->Multiply(gfxMatrix().Translate(-offset));
+
+  gfxSize paintServerSize =
+    gfxSize(mPaintServerSize.width, mPaintServerSize.height) /
+      mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  // nsLayoutUtils::PaintFrame wants to render with paintServerSize, but we
+  // want it to render with mRenderSize, so we need to set up a scale transform.
+  gfxFloat scaleX = mRenderSize.width / paintServerSize.width;
+  gfxFloat scaleY = mRenderSize.height / paintServerSize.height;
+  gfxMatrix scaleMatrix = gfxMatrix().Scale(scaleX, scaleY);
+  aContext->Multiply(scaleMatrix);
+
+  // Draw.
+  nsRect dirty(bbox.x, bbox.y, mPaintServerSize.width, mPaintServerSize.height);
+  nsLayoutUtils::PaintFrame(renderState.GetRenderingContext(mTarget), mFrame,
+                            dirty, NS_RGBA(0, 0, 0, 0),
+                            nsLayoutUtils::PAINT_IN_TRANSFORM |
+                            nsLayoutUtils::PAINT_ALL_CONTINUATIONS);
+
+  aContext->SetMatrix(savedMatrix);
+  aContext->Restore();
+
+  mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+
+  return PR_TRUE;
+}
+
+static already_AddRefed<gfxDrawable>
+DrawableFromPaintServer(nsIFrame*         aFrame,
+                        nsIFrame*         aTarget,
+                        const nsSize&     aPaintServerSize,
+                        const gfxIntSize& aRenderSize)
+{
+  // aPaintServerSize is the size that would be filled when using
+  // background-repeat:no-repeat and background-size:auto. For normal background
+  // images, this would be the intrinsic size of the image; for gradients and
+  // patterns this would be the whole target frame fill area.
+  // aRenderSize is what we will be actually filling after accounting for
+  // background-size.
+  if (aFrame->IsFrameOfType(nsIFrame::eSVGPaintServer)) {
+    // aFrame is either a pattern or a gradient. These fill the whole target
+    // frame by default, so aPaintServerSize is the whole target background fill
+    // area.
+    nsSVGPaintServerFrame* server =
+      static_cast<nsSVGPaintServerFrame*>(aFrame);
+
+    gfxRect overrideBounds(0, 0,
+                           aPaintServerSize.width, aPaintServerSize.height);
+    overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
+    nsRefPtr<gfxPattern> pattern =
+      server->GetPaintServerPattern(aTarget, 1.0, &overrideBounds);
+
+    // pattern is now set up to fill aPaintServerSize. But we want it to
+    // fill aRenderSize, so we need to add a scaling transform.
+    // We couldn't just have set overrideBounds to aRenderSize - it would have
+    // worked for gradients, but for patterns it would result in a different
+    // pattern size.
+    gfxFloat scaleX = overrideBounds.Width() / aRenderSize.width;
+    gfxFloat scaleY = overrideBounds.Height() / aRenderSize.height;
+    gfxMatrix scaleMatrix = gfxMatrix().Scale(scaleX, scaleY);
+    pattern->SetMatrix(scaleMatrix.Multiply(pattern->GetMatrix()));
+    nsRefPtr<gfxDrawable> drawable =
+      new gfxPatternDrawable(pattern, aRenderSize);
+    return drawable.forget();
+  }
+
+  // We don't want to paint into a surface as long as we don't need to, so we
+  // set up a drawing callback.
+  nsRefPtr<gfxDrawingCallback> cb =
+    new PaintFrameCallback(aFrame, aTarget, aPaintServerSize, aRenderSize);
+  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
+  return drawable.forget();
+}
+
+/* static */ void
+nsSVGIntegrationUtils::DrawPaintServer(nsIRenderingContext* aRenderingContext,
+                                       nsIFrame*            aTarget,
+                                       nsIFrame*            aPaintServer,
+                                       gfxPattern::GraphicsFilter aFilter,
+                                       const nsRect&        aDest,
+                                       const nsRect&        aFill,
+                                       const nsPoint&       aAnchor,
+                                       const nsRect&        aDirty,
+                                       const nsSize&        aPaintServerSize)
+{
+  if (aDest.IsEmpty() || aFill.IsEmpty())
+    return;
+
+  PRInt32 appUnitsPerDevPixel = aTarget->PresContext()->AppUnitsPerDevPixel();
+  nsRect destSize = aDest - aDest.TopLeft();
+  nsIntSize roundedOut = destSize.ToOutsidePixels(appUnitsPerDevPixel).Size();
+  gfxIntSize imageSize(roundedOut.width, roundedOut.height);
+  nsRefPtr<gfxDrawable> drawable =
+    DrawableFromPaintServer(aPaintServer, aTarget, aPaintServerSize, imageSize);
+
+  nsLayoutUtils::DrawPixelSnapped(aRenderingContext, drawable, aFilter,
+                                  aDest, aFill, aAnchor, aDirty);
 }

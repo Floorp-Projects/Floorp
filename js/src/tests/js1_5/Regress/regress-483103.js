@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-483103.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 483103;
 var summary = 'TM: Do not assert: p->isQuad()';

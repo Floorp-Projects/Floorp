@@ -52,7 +52,6 @@
  * The getJSClass() function we use is in a utility file, e.g. "shell.js"
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'class-004.js';
 var i = 0;
 var UBound = 0;
 var BUGNUMBER = 56868;

@@ -169,7 +169,7 @@
 # define JS_PUBLIC_API(t)   t
 # define JS_PUBLIC_DATA(t)  t
 
-#elif defined(EXPORT_JS_API)
+#elif defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
 
 # define JS_PUBLIC_API(t)   JS_EXPORT_API(t)
 # define JS_PUBLIC_DATA(t)  JS_EXPORT_DATA(t)

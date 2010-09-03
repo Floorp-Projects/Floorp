@@ -41,6 +41,8 @@ DEPTH          = ../../../..
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
+relativesrcdir = toolkit/mozapps/downloads/tests
+
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_downloads

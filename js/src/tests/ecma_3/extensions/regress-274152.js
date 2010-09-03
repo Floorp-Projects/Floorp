@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-274152.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 274152;
 var summary = 'Do not ignore unicode format-control characters';

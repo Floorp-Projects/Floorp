@@ -262,6 +262,11 @@ namespace nanojit
     static const AccSet ACCSET_LOAD_ANY  = ACCSET_ALL;      // synonym
     static const AccSet ACCSET_STORE_ANY = ACCSET_ALL;      // synonym
 
+    inline bool isSingletonAccSet(AccSet accSet) {
+        // This is a neat way of testing if a value has only one bit set.
+        return (accSet & (accSet - 1)) == 0;
+    }
+
     // Full AccSets don't fit into load and store instructions.  But
     // load/store AccSets almost always contain a single access region.  We
     // take advantage of this to create a compressed AccSet, MiniAccSet, that
@@ -285,22 +290,11 @@ namespace nanojit
     static const MiniAccSet MINI_ACCSET_MULTIPLE = { 99 };
 
     static MiniAccSet compressAccSet(AccSet accSet) {
-        // As the number of regions increase, this may become a bottleneck.
-        // If it does we can first count the number of bits using Kernighan's
-        // technique 
-        // (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan)
-        // and if it's a single-region set, use a bit-scanning instruction to
-        // work out which single-region set it is.  That would require
-        // factoring out the bit-scanning code currently in
-        // nRegisterAllocFromSet().
-        //
-        // Try all the single-region AccSets first.
-        for (int i = 0; i < NUM_ACCS; i++) {
-            if (accSet == (1U << i)) {
-                MiniAccSet ret = { uint8_t(i) };
-                return ret;
-            }
+        if (isSingletonAccSet(accSet)) {
+            MiniAccSet ret = { uint8_t(msbSet32(accSet)) };
+            return ret;
         }
+
         // If we got here, it must be a multi-region AccSet.
         return MINI_ACCSET_MULTIPLE;
     }
@@ -455,7 +449,8 @@ namespace nanojit
 #if defined NANOJIT_64BIT
             op == LIR_cmovq ||
 #endif
-            op == LIR_cmovi;
+            op == LIR_cmovi ||
+            op == LIR_cmovd;
     }
     inline bool isCmpIOpcode(LOpcode op) {
         return LIR_eqi <= op && op <= LIR_geui;
@@ -1125,8 +1120,12 @@ namespace nanojit
         // Nb: the types of these bitfields are all 32-bit integers to ensure
         // they are fully packed on Windows, sigh.  Also, 'loadQual' is
         // unsigned to ensure the values 0, 1, and 2 all fit in 2 bits.
-        int32_t     disp:16;
-        int32_t     miniAccSetVal:8;
+        //
+        // Nb: explicit signed keyword for bitfield types is required,
+        // some compilers may treat them as unsigned without it.
+        // See Bugzilla 584219 comment #18
+        signed int  disp:16;
+        signed int  miniAccSetVal:8;
         uint32_t    loadQual:2;
 
         LIns*       oprnd_1;
@@ -1742,7 +1741,9 @@ namespace nanojit
         const int EMB_NUM_USED_ACCS;
 
         char *formatImmI(RefBuf* buf, int32_t c);
+#ifdef NANOJIT_64BIT
         char *formatImmQ(RefBuf* buf, uint64_t c);
+#endif
         char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LIns* ins);       // defined by the embedder
         void formatGuardXov(InsBuf* buf, LIns* ins);    // defined by the embedder
@@ -2231,15 +2232,14 @@ namespace nanojit
         void checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2);
         void checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins);
         void checkLInsIsNull(LOpcode op, int argN, LIns* ins);
-        void checkAccSet(LOpcode op, LIns* base, AccSet accSet);   // defined by the embedder
+        void checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet accSet);   // defined by the embedder
 
         // These can be set by the embedder and used in checkAccSet().
-        LIns *checkAccSetIns1, *checkAccSetIns2;
+        void** checkAccSetExtras;
 
     public:
         ValidateWriter(LirWriter* out, LInsPrinter* printer, const char* where);
-        void setCheckAccSetIns1(LIns* ins) { checkAccSetIns1 = ins; }
-        void setCheckAccSetIns2(LIns* ins) { checkAccSetIns2 = ins; }
+        void setCheckAccSetExtras(void** extras) { checkAccSetExtras = extras; }
 
         LIns* insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet, LoadQual loadQual);
         LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet);

@@ -49,7 +49,7 @@
 == filter-clipped-rect-01.svg pass.svg
 == filter-filterRes-high-01.svg pass.svg
 == filter-filterRes-high-02.svg pass.svg
-== filter-filterRes-low-01.svg pass.svg
+random-if(d2d) == filter-filterRes-low-01.svg pass.svg
 == filter-inner-svg-01.svg pass.svg
 == filter-inner-svg-02.svg pass.svg
 == filter-inner-svg-03.svg pass.svg
@@ -71,6 +71,8 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feComposite-arguments-01.svg pass.svg
 == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
+
+== feDisplacementMap-alpha-01.svg pass.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg

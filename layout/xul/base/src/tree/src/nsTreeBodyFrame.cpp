@@ -143,6 +143,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
 :nsLeafBoxFrame(aPresShell, aContext),
  mSlots(nsnull),
  mTopRowIndex(0),
+ mPageLength(0),
  mHorzPosition(0),
  mHorzWidth(0),
  mAdjustWidth(0),
@@ -269,8 +270,10 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   nscoord rowWidth;
   nsTreeColumn* col;
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
+  nsCOMPtr<nsIRenderingContext> rc =
+    PresContext()->PresShell()->GetReferenceRenderingContext();
+  if (!rc)
+    return 0;
 
   for (PRInt32 row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
@@ -1013,35 +1016,21 @@ nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts, nsWeakFrame& aW
   }
 }
 
-// Takes client x/y in pixels, converts them to twips, and massages them to be
-// in our coordinate system.
-void
-nsTreeBodyFrame::AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
-                                                   nscoord* aResultX,
-                                                   nscoord* aResultY)
+// Takes client x/y in pixels, converts them to appunits, and converts into
+// values relative to this nsTreeBodyFrame frame.
+nsPoint
+nsTreeBodyFrame::AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY)
 {
-  nsPresContext* presContext = PresContext();
-
   nsPoint point(nsPresContext::CSSPixelsToAppUnits(aX),
                 nsPresContext::CSSPixelsToAppUnits(aY));
 
-  // Now get our client offset, in twips, and subtract if from the
-  // point to get it in our coordinates
-  nsPoint clientOffset;
-  nsIView* closestView = GetClosestView(&clientOffset);
-  point -= clientOffset;
-
-  nsIView* rootView;
-  presContext->GetPresShell()->GetViewManager()->GetRootView(rootView);
-  NS_ASSERTION(closestView && rootView, "No view?");
-  point -= closestView->GetOffsetTo(rootView);
+  nsPresContext* presContext = PresContext();
+  point -= GetOffsetTo(presContext->GetPresShell()->GetRootFrame());
 
   // Adjust by the inner box coords, so that we're in the inner box's
   // coordinate space.
   point -= mInnerBox.TopLeft();
-
-  *aResultX = point.x;
-  *aResultY = point.y;
+  return point;
 } // AdjustClientCoordsToBoxCoordSpace
 
 nsresult
@@ -1050,17 +1039,15 @@ nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32* _retval)
   if (!mView)
     return NS_OK;
 
-  nscoord x;
-  nscoord y;
-  AdjustClientCoordsToBoxCoordSpace(aX, aY, &x, &y);
+  nsPoint point = AdjustClientCoordsToBoxCoordSpace(aX, aY);
 
   // Check if the coordinates are above our visible space.
-  if (y < 0) {
+  if (point.y < 0) {
     *_retval = -1;
     return NS_OK;
   }
 
-  *_retval = GetRowAt(x, y);
+  *_retval = GetRowAt(point.x, point.y);
 
   return NS_OK;
 }
@@ -1072,19 +1059,17 @@ nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, nsITreeColumn*
   if (!mView)
     return NS_OK;
 
-  nscoord x;
-  nscoord y;
-  AdjustClientCoordsToBoxCoordSpace(aX, aY, &x, &y);
+  nsPoint point = AdjustClientCoordsToBoxCoordSpace(aX, aY);
 
   // Check if the coordinates are above our visible space.
-  if (y < 0) {
+  if (point.y < 0) {
     *aRow = -1;
     return NS_OK;
   }
 
   nsTreeColumn* col;
   nsIAtom* child;
-  GetCellAt(x, y, aRow, &col, &child);
+  GetCellAt(point.x, point.y, aRow, &col, &child);
 
   if (col) {
     NS_ADDREF(*aCol = col);
@@ -1190,8 +1175,10 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     // interfere with our computations.
     AdjustForBorderPadding(cellContext, cellRect);
 
-    nsCOMPtr<nsIRenderingContext> rc;
-    presContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
+    nsCOMPtr<nsIRenderingContext> rc =
+      presContext->PresShell()->GetReferenceRenderingContext();
+    if (!rc)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     // Now we'll start making our way across the cell, starting at the edge of 
     // the cell and proceeding until we hit the right edge. |cellX| is the 
@@ -1538,6 +1525,12 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   // Handle right alignment hit testing.
   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 
+  nsPresContext* presContext = PresContext();
+  nsCOMPtr<nsIRenderingContext> rc =
+    presContext->PresShell()->GetReferenceRenderingContext();
+  if (!rc)
+    return nsCSSAnonBoxes::moztreecell;
+
   if (aColumn->IsPrimary()) {
     // If we're the primary column, we have indentation and a twisty.
     PRInt32 level;
@@ -1564,10 +1557,6 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
       if (!isContainerEmpty)
         hasTwisty = PR_TRUE;
     }
-
-    nsPresContext* presContext = PresContext();
-    nsCOMPtr<nsIRenderingContext> rc;
-    presContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
     // Resolve style for the twisty.
     nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
@@ -1639,12 +1628,9 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
 
   AdjustForBorderPadding(textContext, textRect);
 
-  nsCOMPtr<nsIRenderingContext> renderingContext;
-  PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(renderingContext));
+  nsLayoutUtils::SetFontFromStyle(rc, textContext);
 
-  nsLayoutUtils::SetFontFromStyle(renderingContext, textContext);
-
-  AdjustForCellText(cellText, aRowIndex, aColumn, *renderingContext, textRect);
+  AdjustForCellText(cellText, aRowIndex, aColumn, *rc, textRect);
   if (isRTL)
     textRect.x = currX + remainingWidth - textRect.width;
 
@@ -1792,10 +1778,9 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *_retva
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  rv = PresContext()->PresShell()->
-    CreateRenderingContext(this, getter_AddRefs(rc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRenderingContext> rc =
+    PresContext()->PresShell()->GetReferenceRenderingContext();
+  NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
 
   rv = GetCellWidth(aRow, col, rc, desiredSize, currentSize);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2230,6 +2215,10 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
 
     if (!imageRequest)
       return NS_ERROR_FAILURE;
+
+    // We don't want discarding/decode-on-draw for xul images
+    imageRequest->RequestDecode();
+    imageRequest->LockImage();
 
     // In a case it was already cached.
     imageRequest->GetImage(aResult);
@@ -2822,7 +2811,7 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, ::PaintTreeBody, "XULTreeBody",
+      nsDisplayGeneric(aBuilder, this, ::PaintTreeBody, "XULTreeBody",
                        nsDisplayItem::TYPE_XUL_TREE_BODY));
 }
 

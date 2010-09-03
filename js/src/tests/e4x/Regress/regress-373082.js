@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-373082.js';
 
 var BUGNUMBER = 373082;
 var summary = 'Simpler sharing of XML and XMLList functions';

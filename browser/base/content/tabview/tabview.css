@@ -1,0 +1,173 @@
+/* Platform-independent structural styling for 
+ * <strike>Tab Candy</strike> Panorama
+----------------------------------*/
+
+html {
+  overflow: hidden;
+/*   image-rendering: -moz-crisp-edges; */
+}
+
+body {
+  padding: 0px;
+  margin: 0 auto;
+}
+
+#content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -999999;
+}
+
+/* Tabs
+----------------------------------*/
+
+.tab {
+  position: absolute;
+  overflow: visible !important;
+}
+
+.tab canvas,
+.cached-thumb {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+.thumb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.thumb-shadow {
+  position: absolute;
+}
+
+.favicon {
+  position: absolute;
+}
+
+.close {
+  position: absolute;
+  cursor: pointer;
+}
+
+.expander {
+  position: absolute;
+}
+
+.tab-title {
+  position: absolute;
+}
+
+.stacked .tab-title,
+.stacked .thumb-shadow {
+  display: none;
+}
+
+.stack-trayed .tab-title {
+  display: block !important;
+}
+
+/* Tab: Zooming
+----------------------------------*/
+
+.front {
+  z-index: 999999 !important;
+  -moz-border-radius: 0 !important;
+  -moz-box-shadow: none !important;
+  -moz-transform: none !important;
+  image-rendering: -moz-crisp-edges;
+}
+
+/* Other Items
+----------------------------------*/
+
+.groupItem,
+.info-item {
+  position: absolute;
+}
+
+/* Trenches
+----------------------------------*/
+
+.guideTrench, 
+.visibleTrench, 
+.activeVisibleTrench {
+  position: absolute;
+}
+
+.guideTrench {
+  z-index: -101;
+}
+
+.visibleTrench {
+  z-index: -103;
+}
+
+.activeVisibleTrench {
+  z-index: -102;
+}
+
+/* Other
+----------------------------------*/
+
+.newTabButton {
+  position: absolute !important;
+  z-index: 99999;
+}
+
+.title-shield {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.transparentBorder {
+  border: 1px solid transparent !important;
+}
+
+.stackExpander {
+  position: absolute;
+}
+
+.shield {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+/* Resizable
+----------------------------------*/
+.resizer {
+  position: absolute;
+}
+
+.iq-resizable-handle {
+  position: absolute;
+  z-index: 99999;
+  display: block;
+}
+
+.iq-resizable-disabled .iq-resizable-handle, 
+.iq-resizable-autohide .iq-resizable-handle {
+  display: none;
+}

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-330812.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 330812;
 var summary = 'Making Array(1<<29).sort() less problematic';

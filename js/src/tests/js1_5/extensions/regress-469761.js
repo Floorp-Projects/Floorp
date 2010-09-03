@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-469761.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469761;
 var summary = 'TM: Do not assert: JSVAL_IS_INT(STOBJ_GET_SLOT(callee_obj, JSSLOT_PRIVATE))';

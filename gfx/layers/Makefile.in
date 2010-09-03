@@ -84,7 +84,10 @@ CPPSRCS = \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef MOZ_ENABLE_D3D9_LAYER
-EXPORTS += LayerManagerD3D9.h
+EXPORTS += \
+        LayerManagerD3D9.h \
+        DeviceManagerD3D9.h \
+        $(NULL)
 
 CPPSRCS += \
         LayerManagerD3D9.cpp \
@@ -93,6 +96,8 @@ CPPSRCS += \
         ImageLayerD3D9.cpp \
         ColorLayerD3D9.cpp \
         CanvasLayerD3D9.cpp \
+        DeviceManagerD3D9.cpp \
+        Nv3DVUtils.cpp \
         $(NULL)
 endif
 endif

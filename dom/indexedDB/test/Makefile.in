@@ -48,6 +48,7 @@ _TEST_FILES = \
   helpers.js \
   test_add_twice_failure.html \
   test_bad_keypath.html \
+  test_clear.html \
   test_create_index.html \
   test_create_objectStore.html \
   test_cursors.html \
@@ -61,6 +62,7 @@ _TEST_FILES = \
   test_indexes_bad_values.html \
   test_key_requirements.html \
   test_null_keys.html \
+  test_objectCursors.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
   test_objectStore_remove_values.html \
   test_open_empty_db.html \

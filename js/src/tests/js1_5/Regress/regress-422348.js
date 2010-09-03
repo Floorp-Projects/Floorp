@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-422348.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 422348;
 var summary = 'Proper overflow error reporting';

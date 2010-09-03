@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.77 2010/02/10 00:33:50 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.77.2.1 2010/07/31 04:33:52 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -333,6 +333,7 @@ typedef struct sslOptionsStr {
     unsigned int enableDeflate          : 1;  /* 19 */
     unsigned int enableRenegotiation    : 2;  /* 20-21 */
     unsigned int requireSafeNegotiation : 1;  /* 22 */
+    unsigned int enableFalseStart       : 1;  /* 23 */
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -1249,6 +1250,8 @@ extern PRBool    ssl_SocketIsBlocking(sslSocket *ss);
 extern void      ssl_SetAlwaysBlock(sslSocket *ss);
 
 extern SECStatus ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled);
+
+extern PRBool    ssl3_CanFalseStart(sslSocket *ss);
 
 #define SSL_LOCK_READER(ss)		if (ss->recvLock) PZ_Lock(ss->recvLock)
 #define SSL_UNLOCK_READER(ss)		if (ss->recvLock) PZ_Unlock(ss->recvLock)

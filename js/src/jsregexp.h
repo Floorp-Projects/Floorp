@@ -43,12 +43,20 @@
  * JS regular expression interface.
  */
 #include <stddef.h>
-#include "jspubtd.h"
+#include "jsprvtd.h"
 #include "jsstr.h"
 
 #ifdef JS_THREADSAFE
 #include "jsdhash.h"
 #endif
+
+extern js::Class js_RegExpClass;
+
+static inline bool
+VALUE_IS_REGEXP(JSContext *cx, js::Value v)
+{
+    return !v.isPrimitive() && v.toObject().isRegExp();
+}
 
 inline const js::Value &
 JSObject::getRegExpLastIndex() const
@@ -80,82 +88,6 @@ JSObject::zeroRegExpLastIndex()
 
 namespace js { class AutoStringRooter; }
 
-extern JS_FRIEND_API(void)
-js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                             js::AutoStringRooter *tvr);
-
-extern JS_FRIEND_API(void)
-js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics);
-
-/*
- * This struct holds a bitmap representation of a class from a regexp.
- * There's a list of these referenced by the classList field in the JSRegExp
- * struct below. The initial state has startIndex set to the offset in the
- * original regexp source of the beginning of the class contents. The first
- * use of the class converts the source representation into a bitmap.
- *
- */
-typedef struct RECharSet {
-    JSPackedBool    converted;
-    JSPackedBool    sense;
-    uint16          length;
-    union {
-        uint8       *bits;
-        struct {
-            size_t  startIndex;
-            size_t  length;
-        } src;
-    } u;
-} RECharSet;
-
-typedef struct RENode RENode;
-
-struct JSRegExp {
-    jsrefcount   nrefs;         /* reference count */
-    uint16       flags;         /* flags, see jsapi.h's JSREG_* defines */
-    size_t       parenCount;    /* number of parenthesized submatches */
-    size_t       classCount;    /* count [...] bitmaps */
-    RECharSet    *classList;    /* list of [...] bitmaps */
-    JSString     *source;       /* locked source string, sans // */
-    jsbytecode   program[1];    /* regular expression bytecode */
-};
-
-extern JSRegExp *
-js_NewRegExp(JSContext *cx, js::TokenStream *ts,
-             JSString *str, uintN flags, JSBool flat);
-
-extern JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat);
-
-#define HOLD_REGEXP(cx, re) JS_ATOMIC_INCREMENT(&(re)->nrefs)
-#define DROP_REGEXP(cx, re) js_DestroyRegExp(cx, re)
-
-extern void
-js_DestroyRegExp(JSContext *cx, JSRegExp *re);
-
-/*
- * Execute re on input str at *indexp, returning null in *rval on mismatch.
- * On match, return true if test is true, otherwise return an array object.
- * Update *indexp and cx->regExpStatics always on match.
- */
-extern JSBool
-js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
-                 JSBool test, js::Value *rval);
-
-extern void
-js_InitRegExpStatics(JSContext *cx);
-
-extern void
-js_TraceRegExpStatics(JSTracer *trc, JSContext *acx);
-
-extern void
-js_FreeRegExpStatics(JSContext *cx);
-
-#define VALUE_IS_REGEXP(cx, v)                                                \
-    ((v).isObject() && v.toObject().isRegExp())
-
-extern js::Class js_RegExpClass;
-
 inline bool
 JSObject::isRegExp() const
 {
@@ -174,21 +106,21 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
 extern JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, js::Value *vp);
 
-/*
- * Create, serialize/deserialize, or clone a RegExp object.
- */
-extern JSObject *
-js_NewRegExpObject(JSContext *cx, js::TokenStream *ts,
-                   const jschar *chars, size_t length, uintN flags);
-
-extern JSBool
-js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
-
 extern JS_FRIEND_API(JSObject *) JS_FASTCALL
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
-/* Return whether the given character array contains RegExp meta-characters. */
-extern bool
-js_ContainsRegExpMetaChars(const jschar *chars, size_t length);
+/*
+ * Move data from |cx|'s regexp statics to |statics| and root the input string in |tvr| if it's
+ * available.
+ */
+extern JS_FRIEND_API(void)
+js_SaveAndClearRegExpStatics(JSContext *cx, js::RegExpStatics *res, js::AutoStringRooter *tvr);
+
+/* Move the data from |statics| into |cx|. */
+extern JS_FRIEND_API(void)
+js_RestoreRegExpStatics(JSContext *cx, js::RegExpStatics *res);
+
+extern JSBool
+js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
 
 #endif /* jsregexp_h___ */

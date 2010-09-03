@@ -42,6 +42,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#include "mozilla/dom/ContentChild.h"
+#include "nsXULAppAPI.h"
+#endif
+
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIURI.h"
@@ -128,6 +138,15 @@
 
 #include "nsIPrivateBrowsingService.h"
 
+#ifdef MOZ_IPC
+#include "TabChild.h"
+#include "nsXULAppAPI.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocShellTreeItem.h"
+#include "ExternalHelperAppChild.h"
+#endif
+
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
 
@@ -147,6 +166,7 @@ PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
 // Using level 3 here because the OSHelperAppServices use a log level
 // of PR_LOG_DEBUG (4), and we want less detailed output here
 // Using 3 instead of PR_LOG_WARN because we don't output warnings
+#undef LOG
 #define LOG(args) PR_LOG(mLog, 3, args)
 #define LOG_ENABLED() PR_LOG_TEST(mLog, 3)
 
@@ -436,6 +456,22 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
                                          getter_AddRefs(dir));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#elif defined(ANDROID)
+  char* sdcard = getenv("EXTERNAL_STORAGE");
+  nsresult rv;
+  if (sdcard) {
+    nsCOMPtr<nsILocalFile> ldir; 
+    rv = NS_NewNativeLocalFile(nsDependentCString(sdcard),
+                               PR_TRUE, getter_AddRefs(ldir));
+    NS_ENSURE_SUCCESS(rv, rv);
+    dir = ldir;
+    
+  }
+  else {
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
 #else
   // On all other platforms, we default to the systems temporary directory.
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
@@ -607,6 +643,26 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
   gExtProtSvc = nsnull;
 }
 
+static PRInt64 GetContentLengthAsInt64(nsIRequest *request)
+{
+  PRInt64 contentLength = -1;
+  nsresult rv;
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
+  if (props)
+    rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &contentLength);
+
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    if (channel) {
+      PRInt32 smallLen;
+      channel->GetContentLength(&smallLen);
+      contentLength = smallLen;
+    }
+  }
+
+  return contentLength;
+}
+
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
@@ -620,6 +676,60 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 
   // Get the file extension and name that we will need later
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  nsCOMPtr<nsIURI> uri;
+  if (channel)
+    channel->GetURI(getter_AddRefs(uri));
+
+#ifdef MOZ_IPC
+  PRInt64 contentLength = GetContentLengthAsInt64(aRequest);
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    // We need to get a hold of a TabChild so that we can begin forwarding
+    // this data to the parent.  In the HTTP case, this is unfortunate, since
+    // we're actually passing data from parent->child->parent wastefully, but
+    // the Right Fix will eventually be to short-circuit those channels on the
+    // parent side based on some sort of subscription concept.
+    nsCOMPtr<nsIDocShell> docshell(do_GetInterface(aWindowContext));
+    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    item->GetTreeOwner(getter_AddRefs(owner));
+    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsITabChild> tabchild = do_GetInterface(owner);
+    if (!tabchild)
+      return NS_ERROR_FAILURE;
+
+    // Now we build a protocol for forwarding our data to the parent.  The
+    // protocol will act as a listener on the child-side and create a "real"
+    // helperAppService listener on the parent-side, via another call to
+    // DoContent.
+    using mozilla::dom::TabChild;
+    using mozilla::dom::ExternalHelperAppChild;
+    TabChild *child = static_cast<TabChild*>(tabchild.get());
+    mozilla::dom::PExternalHelperAppChild *pc;
+    pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
+                                                  nsCString(aMimeContentType),
+                                                  aForceSave, contentLength);
+    ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
+
+    NS_ADDREF(*aStreamListener = childListener);
+
+    // FIXME:  Eventually we'll use this original listener to finish up client-side
+    // work, such as closing a no-longer-needed window.  (Bug 588255)
+    // nsExternalAppHandler * handler = new nsExternalAppHandler(nsnull,
+    //                                                           EmptyCString(),
+    //                                                           aWindowContext,
+    //                                                           fileName,
+    //                                                           reason,
+    //                                                           aForceSave);
+    // if (!handler)
+    //   return NS_ERROR_OUT_OF_MEMORY;
+    //
+    // childListener->SetHandler(handler);
+
+    return NS_OK;
+  }
+#endif // MOZ_IPC
+
   if (channel) {
     // Check if we have a POST request, in which case we don't want to use
     // the url's extension
@@ -630,9 +740,6 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
       httpChan->GetRequestMethod(requestMethod);
       allowURLExt = !requestMethod.Equals("POST");
     }
-
-    nsCOMPtr<nsIURI> uri;
-    channel->GetURI(getter_AddRefs(uri));
 
     // Check if we had a query string - we don't want to check the URL
     // extension if a query is present in the URI
@@ -860,6 +967,13 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
                                     nsIInterfaceRequestor *aWindowContext)
 {
   NS_ENSURE_ARG_POINTER(aURI);
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(aURI);
+    return NS_OK;
+  }
+#endif
 
   nsCAutoString spec;
   aURI->GetSpec(spec);
@@ -1266,7 +1380,6 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
       
   aChannel->SetLoadGroup(nsnull);
   aChannel->SetNotificationCallbacks(nsnull);
-
 }
 
 /**
@@ -1442,18 +1555,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   mIsFileChannel = fileChan != nsnull;
 
   // Get content length
-  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
-  if (props) {
-    rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
-                                   &mContentLength.mValue);
-  }
-  // If that failed, ask the channel
-  if (NS_FAILED(rv) && aChannel) {
-    PRInt32 len;
-    aChannel->GetContentLength(&len);
-    mContentLength = len;
-  }
+  mContentLength.mValue = GetContentLengthAsInt64(request);
 
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   // Determine whether a new window was opened specifically for this request
   if (props) {
     PRBool tmp = PR_FALSE;

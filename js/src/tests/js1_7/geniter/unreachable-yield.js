@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'unreachable-yield.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = "(none)";
 var summary = "Iterator with unreachable yield statement";

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'unicode-001.js';
 
 /**
  *  File Name:          RegExp/unicode-001.js

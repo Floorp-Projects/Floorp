@@ -81,6 +81,8 @@ parent:
     async VisitURI(URI uri, URI referrer, PRUint32 flags);
     async SetURITitle(URI uri, nsString title);
 
+    async LoadURIExternal(URI uri);
+
     // PrefService messages
     sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
     sync GetBoolPref(nsCString prefName) returns (PRBool retValue, nsresult rv);
@@ -93,6 +95,16 @@ parent:
 
     // PermissionsManager messages
     sync TestPermission(URI uri, nsCString type, PRBool exact) returns (PRUint32 retValue);
+    NotifyIME(int aType, int aState);
+    NotifyIMEChange(nsString aText, PRUint32 aTextLen,
+                    int aStart, int aEnd, int aNewEnd);
+
+    sync SyncMessage(nsString aMessage, nsString aJSON)
+      returns (nsString[] retval);
+
+both:
+     AsyncMessage(nsString aMessage, nsString aJSON);
+
 };
 
 }

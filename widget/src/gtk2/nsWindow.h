@@ -136,6 +136,7 @@ public:
                               nsWidgetInitData *aInitData);
     NS_IMETHOD         Destroy(void);
     virtual nsIWidget *GetParent();
+    virtual float      GetDPI();
     virtual nsresult   SetParent(nsIWidget* aNewParent);
     NS_IMETHOD         SetModal(PRBool aModal);
     NS_IMETHOD         IsVisible(PRBool & aState);
@@ -172,9 +173,6 @@ public:
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
                                   PRBool           aIsSynchronous);
     NS_IMETHOD         Update();
-    virtual void       Scroll(const nsIntPoint& aDelta,
-                              const nsTArray<nsIntRect>& aDestRects,
-                              const nsTArray<Configuration>& aReconfigureChildren);
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);

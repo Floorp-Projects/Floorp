@@ -68,7 +68,7 @@ for (var tt = 0; tt < tests.length; ++tt) {
               test.oneColor, test.oneX, test.oneY);
 }
 
-assertMsg(gl.getError() == gl.NO_ERROR,
+glErrorShouldBe(gl, gl.NO_ERROR,
           "there should be no GL errors");
 
 function checkBuffer(checkColor, x, y, oneColor, oneX, oneY) {

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when switching to another type, the input element should not look
+             like an input email element -->
+  <script type="text/javascript">
+    function setToCheckbox()
+    {
+      document.getElementById('i').type='checkbox';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setToCheckbox(); disableReftestWait();">
+    <input type='email' id='i'>
+  </body>
+</html>

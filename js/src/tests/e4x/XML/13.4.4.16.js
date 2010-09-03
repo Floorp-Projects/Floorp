@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.4.4.16.js';
 
 START("13.4.4.16 - XML hasSimpleContent()");
 

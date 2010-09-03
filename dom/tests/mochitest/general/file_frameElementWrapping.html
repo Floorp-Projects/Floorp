@@ -1,0 +1,26 @@
+<html>
+    <script>
+        function check(elt, expectXOW, message) {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+            var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
+            var result = ((utils.getClassName(elt) === 'XPCCrossOriginWrapper') === expectXOW)
+                         ? "PASS"
+                         : "FAIL";
+
+            parent.postMessage(result + ',' + message, '*');
+        }
+
+        try {
+            // true if same origin, throws otherwise
+            var sameOrigin = parent.location.href !== '';
+        } catch (e) {
+            sameOrigin = false;
+        }
+
+        check(frameElement, !sameOrigin,
+              sameOrigin
+              ? 'no wrapper needed if same origin'
+              : 'wrapper needed if not same origin');
+    </script>
+</html>

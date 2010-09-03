@@ -71,9 +71,11 @@ HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(HOST_CPPSRCS:.cpp=$(HOST_BIN_SUFFIX)
 # TestCSSPropertyLookup.cpp needs the internal XPCOM APIs and so cannot
 # be built with libxul enabled.
 
+ifndef BUILD_STATIC_LIBS
 ifndef MOZ_ENABLE_LIBXUL
 CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
 LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -143,7 +145,6 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_dont_use_document_colors.html \
 		test_font_face_parser.html \
 		test_garbage_at_end_of_declarations.html \
-		test_hover.html \
 		test_ident_escaping.html \
 		test_inherit_computation.html \
 		test_inherit_storage.html \
@@ -156,6 +157,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_of_type_selectors.xhtml \
 		test_parse_rule.html \
 		test_parse_url.html \
+		test_pixel_lengths.html \
 		test_pointer-events.html \
 		test_property_database.html \
 		test_priority_preservation.html \
@@ -173,6 +175,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_transitions_per_property.html \
 		test_transitions_dynamic_changes.html \
 		test_transitions_bug537151.html \
+		test_unclosed_parentheses.html \
 		test_units_angle.html \
 		test_units_frequency.html \
 		test_units_length.html \

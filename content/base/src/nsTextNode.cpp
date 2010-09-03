@@ -49,6 +49,7 @@
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
 
+using namespace mozilla::dom;
 
 /**
  * class used to implement attr() generated content
@@ -337,13 +338,13 @@ nsAttributeTextNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
 void
 nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
-                                      nsIContent* aContent,
+                                      Element* aElement,
                                       PRInt32 aNameSpaceID,
                                       nsIAtom* aAttribute,
                                       PRInt32 aModType)
 {
   if (aNameSpaceID == mNameSpaceID && aAttribute == mAttrName &&
-      aContent == mGrandparent) {
+      aElement == mGrandparent) {
     // Since UpdateText notifies, do it when it's safe to run script.  Note
     // that if we get unbound while the event is up that's ok -- we'll just
     // have no grandparent when it fires, and will do nothing.

@@ -723,23 +723,6 @@ typedef enum BuiltinStatus {
     BUILTIN_ERROR = 2
 } BuiltinStatus;
 
-// Arguments objects created on trace have a private value that points to an
-// instance of this struct. The struct includes a typemap that is allocated
-// as part of the object.
-struct ArgsPrivateNative {
-    double      *argv;
-
-    static ArgsPrivateNative *create(VMAllocator &alloc, unsigned argc)
-    {
-        return (ArgsPrivateNative*) new (alloc) char[sizeof(ArgsPrivateNative) + argc];
-    }
-
-    JSValueType *typemap()
-    {
-        return (JSValueType*) (this+1);
-    }
-};
-
 static JS_INLINE void
 SetBuiltinError(JSContext *cx)
 {
@@ -1153,6 +1136,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* scopeChain();
     JS_REQUIRES_STACK nanojit::LIns* entryScopeChain() const;
+    JS_REQUIRES_STACK nanojit::LIns* entryFrameIns() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
     JS_REQUIRES_STACK RecordingStatus traverseScopeChain(JSObject *obj, nanojit::LIns *obj_ins, JSObject *obj2, nanojit::LIns *&obj2_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus scopeChainProp(JSObject* obj, Value*& vp, nanojit::LIns*& ins, NameResult& nr);
@@ -1176,7 +1160,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* stringify(const Value& v);
 
-    JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins);
+    JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins, bool strict);
 
     JS_REQUIRES_STACK bool canCallImacro() const;
     JS_REQUIRES_STACK RecordingStatus callImacro(jsbytecode* imacro);
@@ -1253,6 +1237,7 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus denseArrayElement(Value& oval, Value& idx, Value*& vp,
                                                         nanojit::LIns*& v_ins,
                                                         nanojit::LIns*& addr_ins);
+    JS_REQUIRES_STACK nanojit::LIns *canonicalizeNaNs(nanojit::LIns *dval_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus typedArrayElement(Value& oval, Value& idx, Value*& vp,
                                                                  nanojit::LIns*& v_ins,
                                                                  nanojit::LIns*& addr_ins);
@@ -1281,6 +1266,13 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus getPropertyWithScriptGetter(JSObject *obj,
                                                                   nanojit::LIns* obj_ins,
                                                                   JSScopeProperty* sprop);
+
+    JS_REQUIRES_STACK nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
+                                                   nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
+                                               nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
 
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                   JSScopeProperty* sprop,

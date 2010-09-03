@@ -45,7 +45,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=105972
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-105972.js';
 var i = 0;
 var BUGNUMBER = 105972;
 var summary = 'Regression test for Bugzilla bug 105972';

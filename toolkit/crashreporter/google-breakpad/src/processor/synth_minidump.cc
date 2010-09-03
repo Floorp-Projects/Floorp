@@ -38,16 +38,16 @@ namespace google_breakpad {
 namespace SynthMinidump {
 
 Section::Section(const Dump &dump)
-  : TestAssembler::Section(dump.endianness()) { }
+  : test_assembler::Section(dump.endianness()) { }
 
-void Section::CiteLocationIn(TestAssembler::Section *section) const {
+void Section::CiteLocationIn(test_assembler::Section *section) const {
   if (this)
     (*section).D32(size_).D32(file_offset_);
   else
     (*section).D32(0).D32(0);
 }
 
-void Stream::CiteStreamIn(TestAssembler::Section *section) const {
+void Stream::CiteStreamIn(test_assembler::Section *section) const {
   section->D32(type_);
   CiteLocationIn(section);
 }
@@ -114,11 +114,11 @@ String::String(const Dump &dump, const string &contents) : Section(dump) {
     D16(*i);
 }
 
-void String::CiteStringIn(TestAssembler::Section *section) const {
+void String::CiteStringIn(test_assembler::Section *section) const {
   section->D32(file_offset_);
 }
 
-void Memory::CiteMemoryIn(TestAssembler::Section *section) const {
+void Memory::CiteMemoryIn(test_assembler::Section *section) const {
   section->D64(address_);
   CiteLocationIn(section);
 }
@@ -237,7 +237,7 @@ Dump::Dump(u_int64_t flags,
            Endianness endianness,
            u_int32_t version,
            u_int32_t date_time_stamp)
-    : TestAssembler::Section(endianness),
+    : test_assembler::Section(endianness),
       file_start_(0),
       stream_directory_(*this),
       stream_count_(0),
@@ -301,7 +301,7 @@ void Dump::Finish() {
   // has the stream count and MDRVA.
   stream_count_label_ = stream_count_;
   stream_directory_rva_ = file_start_ + Size();
-  Append(static_cast<TestAssembler::Section &>(stream_directory_));
+  Append(static_cast<test_assembler::Section &>(stream_directory_));
 }
 
 } // namespace SynthMinidump

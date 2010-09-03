@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465460-03.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465460;
 var summary = 'TM: valueOf in a loop: do not assert';

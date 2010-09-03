@@ -49,10 +49,14 @@
 #include "jspubtd.h"
 #include "jsdhash.h"
 #include "jsbit.h"
+#include "jsgcchunk.h"
 #include "jsutil.h"
 #include "jstask.h"
 #include "jsvector.h"
 #include "jsversion.h"
+#include "jsobj.h"
+#include "jsfun.h"
+#include "jsgcstats.h"
 
 #define JSTRACE_XML         2
 
@@ -72,6 +76,9 @@ js_GetExternalStringGCType(JSString *str);
 
 extern JS_FRIEND_API(uint32)
 js_GetGCThingTraceKind(void *thing);
+
+extern size_t
+ThingsPerArena(size_t thingSize);
 
 /*
  * The sole purpose of the function is to preserve public API compatibility
@@ -283,7 +290,16 @@ js_NewGCExternalString(JSContext *cx, uintN type)
 static inline JSFunction*
 js_NewGCFunction(JSContext *cx)
 {
-    return (JSFunction *) js_NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
+    JSFunction* obj = (JSFunction *)js_NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
+
+#ifdef DEBUG
+    if (obj) {
+        memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
+               sizeof(JSFunction) - sizeof(JSObject));
+    }
+#endif
+
+    return obj;
 }
 
 #if JS_HAS_XML_SUPPORT
@@ -295,7 +311,6 @@ js_NewGCXML(JSContext *cx)
 #endif
 
 struct JSGCArena;
-struct JSGCChunkInfo;
 
 struct JSGCArenaList {
     JSGCArena       *head;          /* list start */
@@ -324,21 +339,6 @@ struct JSGCFreeLists {
 
 extern void
 js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
-
-struct JSWeakRoots {
-    /* Most recently created things by type, members of the GC's root set. */
-    void              *finalizableNewborns[FINALIZE_LIMIT];
-
-    /* Atom root for the last-looked-up atom on this context. */
-    JSAtom            *lastAtom;
-
-    /* Root for the result of the most recent js_InternalInvoke call. */
-    void              *lastInternalResult;
-
-    void mark(JSTracer *trc);
-};
-
-#define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
 namespace js {
 
@@ -388,6 +388,31 @@ class BackgroundSweepTask : public JSBackgroundTask {
 
 #endif /* JS_THREADSAFE */
 
+
+struct GCChunkInfo;
+
+struct GCChunkHasher {
+    typedef jsuword Lookup;
+
+    /*
+     * Strip zeros for better distribution after multiplying by the golden
+     * ratio.
+     */
+    static HashNumber hash(jsuword chunk) {
+        JS_ASSERT(!(chunk & GC_CHUNK_MASK));
+        return HashNumber(chunk >> GC_CHUNK_SHIFT);
+    }
+
+    static bool match(jsuword k, jsuword l) {
+        JS_ASSERT(!(k & GC_CHUNK_MASK));
+        JS_ASSERT(!(l & GC_CHUNK_MASK));
+        return k == l;
+    }
+};
+
+typedef HashSet<jsuword, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
+typedef Vector<GCChunkInfo *, 32, SystemAllocPolicy> GCChunkInfoVector;
+
 struct ConservativeGCThreadData {
 
     /*
@@ -408,92 +433,60 @@ struct ConservativeGCThreadData {
     bool isEnabled() const { return enableCount > 0; }
 };
 
-} /* namespace js */
+struct GCMarker : public JSTracer {
+  private:
+    /* The color is only applied to objects, functions and xml. */
+    uint32 color;
 
-#define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
+    /* See comments before delayMarkingChildren is jsgc.cpp. */
+    JSGCArena           *unmarkedArenaStackTop;
+#ifdef DEBUG
+    size_t              markLaterCount;
+#endif
+
+  public:
+#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
+    ConservativeGCStats conservativeStats;
+#endif
+   
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    struct ConservativeRoot { void *thing; uint32 traceKind; };
+    Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
+    const char *conservativeDumpFileName;
+
+    void dumpConservativeRoots();
+#endif
+
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
+
+  public:
+    explicit GCMarker(JSContext *cx);
+    ~GCMarker();
+
+    uint32 getMarkColor() const {
+        return color;
+    }
+
+    void setMarkColor(uint32 newColor) {
+        /*
+         * We must process any delayed marking here, otherwise we confuse
+         * colors.
+         */
+        markDelayedChildren();
+        color = newColor;
+    }
+
+    void delayMarkingChildren(void *thing);
+
+    JS_FRIEND_API(void) markDelayedChildren();
+
+    void slowifyArrays();
+};
+
+} /* namespace js */
 
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
-
-#if defined JS_GCMETER
-const bool JS_WANT_GC_METER_PRINT = true;
-#elif defined DEBUG
-# define JS_GCMETER 1
-const bool JS_WANT_GC_METER_PRINT = false;
-#endif
-
-#if defined JS_GCMETER || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
-
-struct JSConservativeGCStats {
-    uint32  words;      /* number of words on native stacks */
-    uint32  lowbitset;  /* excluded because one of the low bits was set */
-    uint32  notarena;   /* not within arena range in a chunk */
-    uint32  notchunk;   /* not within a valid chunk */
-    uint32  freearena;  /* not within non-free arena */
-    uint32  wrongtag;   /* tagged pointer but wrong type */
-    uint32  notlive;    /* gcthing is not allocated */
-    uint32  gcthings;   /* number of live gcthings */
-    uint32  unmarked;   /* number of unmarked gc things discovered on the
-                           stack */
-};
-
-#endif
-
-#ifdef JS_GCMETER
-
-struct JSGCArenaStats {
-    uint32  alloc;          /* allocation attempts */
-    uint32  localalloc;     /* allocations from local lists */
-    uint32  retry;          /* allocation retries after running the GC */
-    uint32  fail;           /* allocation failures */
-    uint32  nthings;        /* live GC things */
-    uint32  maxthings;      /* maximum of live GC cells */
-    double  totalthings;    /* live GC things the GC scanned so far */
-    uint32  narenas;        /* number of arena in list before the GC */
-    uint32  newarenas;      /* new arenas allocated before the last GC */
-    uint32  livearenas;     /* number of live arenas after the last GC */
-    uint32  maxarenas;      /* maximum of allocated arenas */
-    uint32  totalarenas;    /* total number of arenas with live things that
-                               GC scanned so far */
-};
-
-struct JSGCStats {
-    uint32  finalfail;  /* finalizer calls allocator failures */
-    uint32  lockborn;   /* things born locked */
-    uint32  lock;       /* valid lock calls */
-    uint32  unlock;     /* valid unlock calls */
-    uint32  depth;      /* mark tail recursion depth */
-    uint32  maxdepth;   /* maximum mark tail recursion depth */
-    uint32  cdepth;     /* mark recursion depth of C functions */
-    uint32  maxcdepth;  /* maximum mark recursion depth of C functions */
-    uint32  unmarked;   /* number of times marking of GC thing's children were
-                           delayed due to a low C stack */
-#ifdef DEBUG
-    uint32  maxunmarked;/* maximum number of things with children to mark
-                           later */
-#endif
-    uint32  poke;           /* number of potentially useful GC calls */
-    uint32  afree;          /* thing arenas freed so far */
-    uint32  stackseg;       /* total extraordinary stack segments scanned */
-    uint32  segslots;       /* total stack segment value slots scanned */
-    uint32  nclose;         /* number of objects with close hooks */
-    uint32  maxnclose;      /* max number of objects with close hooks */
-    uint32  closelater;     /* number of close hooks scheduled to run */
-    uint32  maxcloselater;  /* max number of close hooks scheduled to run */
-    uint32  nallarenas;     /* number of all allocated arenas */
-    uint32  maxnallarenas;  /* maximum number of all allocated arenas */
-    uint32  nchunks;        /* number of allocated chunks */
-    uint32  maxnchunks;     /* maximum number of allocated chunks */
-
-    JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
-
-    JSConservativeGCStats conservative;
-};
-
-extern JS_FRIEND_API(void)
-js_DumpGCStats(JSRuntime *rt, FILE *fp);
-
-#endif /* JS_GCMETER */
 
 /*
  * This function is defined in jsdbgapi.cpp but is declared here to avoid

@@ -50,6 +50,7 @@
 #include "nsColor.h"
 #include "nsCaseTreatment.h"
 #include "nsMargin.h"
+#include "nsCOMPtr.h"
 
 typedef PRUptrdiff PtrBits;
 class nsAString;
@@ -57,7 +58,7 @@ class nsIAtom;
 class nsICSSStyleRule;
 class nsISVGValue;
 class nsIDocument;
-template<class E> class nsCOMArray;
+template<class E> class nsTArray;
 template<class E> class nsTPtrArray;
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
@@ -92,10 +93,12 @@ public:
 
 class nsAttrValue {
 public:
+  typedef nsTArray< nsCOMPtr<nsIAtom> > AtomArray;
+
   nsAttrValue();
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
-  explicit nsAttrValue(nsICSSStyleRule* aValue);
+  nsAttrValue(nsICSSStyleRule* aValue, const nsAString* aSerialized);
 #ifdef MOZ_SVG
   explicit nsAttrValue(nsISVGValue* aValue);
 #endif
@@ -132,7 +135,7 @@ public:
   void SetTo(const nsAttrValue& aOther);
   void SetTo(const nsAString& aValue);
   void SetTo(PRInt16 aInt);
-  void SetTo(nsICSSStyleRule* aValue);
+  void SetTo(nsICSSStyleRule* aValue, const nsAString* aSerialized);
 #ifdef MOZ_SVG
   void SetTo(nsISVGValue* aValue);
 #endif
@@ -151,7 +154,7 @@ public:
   PRBool GetColorValue(nscolor& aColor) const;
   inline PRInt16 GetEnumValue() const;
   inline float GetPercentValue() const;
-  inline nsCOMArray<nsIAtom>* GetAtomArrayValue() const;
+  inline AtomArray* GetAtomArrayValue() const;
   inline nsICSSStyleRule* GetCSSStyleRuleValue() const;
 #ifdef MOZ_SVG
   inline nsISVGValue* GetSVGValue() const;
@@ -170,7 +173,7 @@ public:
   // Methods to get access to atoms we may have
   // Returns the number of atoms we have; 0 if we have none.  It's OK
   // to call this without checking the type first; it handles that.
-  PRInt32 GetAtomCount() const;
+  PRUint32 GetAtomCount() const;
   // Returns the atom at aIndex (0-based).  Do not call this with
   // aIndex >= GetAtomCount().
   nsIAtom* AtomAt(PRInt32 aIndex) const;
@@ -333,7 +336,7 @@ private:
       PRUint32 mEnumValue;
       PRInt32 mPercent;
       nsICSSStyleRule* mCSSStyleRule;
-      nsCOMArray<nsIAtom>* mAtomArray;
+      AtomArray* mAtomArray;
 #ifdef MOZ_SVG
       nsISVGValue* mSVGValue;
 #endif
@@ -426,7 +429,7 @@ nsAttrValue::GetPercentValue() const
             / 100.0f;
 }
 
-inline nsCOMArray<nsIAtom>*
+inline nsAttrValue::AtomArray*
 nsAttrValue::GetAtomArrayValue() const
 {
   NS_PRECONDITION(Type() == eAtomArray, "wrong type");

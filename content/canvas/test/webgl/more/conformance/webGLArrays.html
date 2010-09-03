@@ -110,15 +110,16 @@ Tests.testThatWritesChangeDrawing = function(gl) {
   gl.vertexAttribPointer(va, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(va);
 
-  var id = gl.readPixels(8,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([0, 0, 0, 0], id.data);
+  var id = new Uint8Array(4);
+  gl.readPixels(8,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertEquals([0, 0, 0, 0], [id[0], id[1], id[2], id[3]]);
 
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-  var id = gl.readPixels(8,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([255, 0, 0, 255], id.data);
-  var id = gl.readPixels(0,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([0, 0, 0, 0], id.data);
+  gl.readPixels(8,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertEquals([255, 0, 0, 255], [id[0], id[1], id[2], id[3]]);
+  gl.readPixels(0,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertEquals([0, 0, 0, 0], [id[0], id[1], id[2], id[3]]);
 
   a[0] = a[6] = a[10] = -1;
   gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW);
@@ -126,17 +127,17 @@ Tests.testThatWritesChangeDrawing = function(gl) {
 
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-  var id = gl.readPixels(8,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([255, 0, 0, 255], id.data);
-  var id = gl.readPixels(0,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals("Test that Float32Array#[]= worked and drawArrays drew a full-width rectangle", [255, 0, 0, 255], id.data);
-  var id = gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
-  assertEquals([0, 0, 0, 0], id.data);
+  gl.readPixels(8,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertEquals([255, 0, 0, 255], [id[0], id[1], id[2], id[3]]);
+  gl.readPixels(0,8,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertEquals("Test that Float32Array#[]= worked and drawArrays drew a full-width rectangle",
+               [255, 0, 0, 255], [id[0], id[1], id[2], id[3]]);
+  gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE, id);
+  assertEquals([0, 0, 0, 0], [id[0], id[1], id[2], id[3]]);
 }
 
 </script>
 <script id="vert" type="x-shader/x-vertex">
-  #version 120
   attribute vec2 Vertex;
   void main()
   {
@@ -144,7 +145,9 @@ Tests.testThatWritesChangeDrawing = function(gl) {
   }
 </script>
 <script id="frag" type="x-shader/x-fragment">
-  #version 120
+  #ifdef GL_ES
+precision highp float;
+#endif
   uniform vec4 c;
   void main()
   {

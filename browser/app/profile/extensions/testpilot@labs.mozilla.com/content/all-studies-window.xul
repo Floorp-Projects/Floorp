@@ -96,13 +96,13 @@
         </preferences>
         <vbox style="padding: 12px;">
           <groupbox>
-            <caption label="Data Submission" />
+            <caption label="&testpilot.settings.dataSubmission.label;" />
             <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
                       preference="always-submit-data"/>
           </groupbox>
           <groupbox>
-            <caption label="Notifications" />
-            <label value="&testpilot.settings.notifyMeWhen.label;"/>
+            <caption label="&testpilot.settings.notifications.label;" />
+            <label value="&testpilot.settings.notifyWhen.label;"/>
             <hbox>
               <separator orient="vertical" />
               <vbox>

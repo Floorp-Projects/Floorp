@@ -52,8 +52,8 @@
 #include "nsCOMPtr.h"
 #include "nsIUnicodeNormalizer.h"
 #include "nsStringAPI.h"
+#include "nsUnicharUtils.h"
 
-NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 NS_DEFINE_CID(kUnicodeNormalizerCID, NS_UNICODE_NORMALIZER_CID);
@@ -284,104 +284,63 @@ static PRUnichar t4result[T4LEN+2] =  {
 
 void TestCaseConversion()
 {
-   printf("==============================\n");
-   printf("Start nsICaseConversion Test \n");
-   printf("==============================\n");
-   nsICaseConversion *t = NULL;
-   nsresult res;
-   res = CallGetService(kUnicharUtilCID, &t);
-           
-   printf("Test 1 - GetService():\n");
-   if(NS_FAILED(res) || ( t == NULL ) ) {
-     printf("\t1st GetService failed\n");
-   } else {
-     NS_RELEASE(t);
-   }
+  printf("==========================\n");
+  printf("Start case conversion test\n");
+  printf("==========================\n");
 
-   res = CallGetService(kUnicharUtilCID, &t);
-           
-   if(NS_FAILED(res) || ( t == NULL ) ) {
-     printf("\t2nd GetService failed\n");
-   } else {
-     int i;
-     PRUnichar ch;
-     PRUnichar buf[256];
+  int i;
+  PRUnichar buf[256];
 
-    printf("Test 2 - ToUpper(PRUnichar, PRUnichar*):\n");
-    for(i=0;i < T2LEN ; i++)
-    {
-         res = t->ToUpper(t2data[i], &ch);
-         if(NS_FAILED(res)) {
-            printf("\tFailed!! return value != NS_OK\n");
-            break;
-         }
-         if(ch != t2result[i]) 
-            printf("\tFailed!! result unexpected %d\n", i);
+  printf("Test 2 - ToUpper(PRUnichar, PRUnichar*):\n");
+  for(i=0;i < T2LEN ; i++)
+  {
+    PRUnichar ch = ToUpperCase(t2data[i]);
+    if(ch != t2result[i])
+      printf("\tFailed!! result unexpected %d\n", i);
+  }
+
+
+  printf("Test 3 - ToLower(PRUnichar, PRUnichar*):\n");
+  for(i=0;i < T3LEN; i++)
+  {
+    PRUnichar ch = ToLowerCase(t3data[i]);
+    if(ch != t3result[i])
+      printf("\tFailed!! result unexpected %d\n", i);
+  }
+
+  printf("Test 4 - ToTitle(PRUnichar, PRUnichar*):\n");
+  for(i=0;i < T4LEN; i++)
+  {
+    PRUnichar ch = ToTitleCase(t4data[i]);
+    if(ch != t4result[i])
+      printf("\tFailed!! result unexpected %d\n", i);
+  }
+
+  printf("Test 5 - ToUpper(PRUnichar*, PRUnichar*, PRUint32):\n");
+  ToUpperCase(t2data, buf, T2LEN);
+  for(i = 0; i < T2LEN; i++)
+  {
+     if(buf[i] != t2result[i])
+     {
+       printf("\tFailed!! result unexpected %d\n", i);
+       break;
      }
+  }
 
-
-    printf("Test 3 - ToLower(PRUnichar, PRUnichar*):\n");
-    for(i=0;i < T3LEN; i++)
-    {
-         res = t->ToLower(t3data[i], &ch);
-         if(NS_FAILED(res)) {
-            printf("\tFailed!! return value != NS_OK\n");
-            break;
-         }
-         if(ch != t3result[i]) 
-            printf("\tFailed!! result unexpected %d\n", i);
+  printf("Test 6 - ToLower(PRUnichar*, PRUnichar*, PRUint32):\n");
+  ToLowerCase(t3data, buf, T3LEN);
+  for(i = 0; i < T3LEN; i++)
+  {
+     if(buf[i] != t3result[i])
+     {
+       printf("\tFailed!! result unexpected %d\n", i);
+       break;
      }
+  }
 
-
-    printf("Test 4 - ToTitle(PRUnichar, PRUnichar*):\n");
-    for(i=0;i < T4LEN; i++)
-    {
-         res = t->ToTitle(t4data[i], &ch);
-         if(NS_FAILED(res)) {
-            printf("\tFailed!! return value != NS_OK\n");
-            break;
-         }
-         if(ch != t4result[i]) 
-            printf("\tFailed!! result unexpected %d\n", i);
-     }
-
-
-    printf("Test 5 - ToUpper(PRUnichar*, PRUnichar*, PRUint32):\n");
-    res = t->ToUpper(t2data, buf, T2LEN);
-    if(NS_FAILED(res)) {
-       printf("\tFailed!! return value != NS_OK\n");
-    } else {
-       for(i = 0; i < T2LEN; i++)
-       {
-          if(buf[i] != t2result[i])
-          {
-            printf("\tFailed!! result unexpected %d\n", i);
-            break;
-          }
-       }
-    }
-
-    printf("Test 6 - ToLower(PRUnichar*, PRUnichar*, PRUint32):\n");
-    res = t->ToLower(t3data, buf, T3LEN);
-    if(NS_FAILED(res)) {
-       printf("\tFailed!! return value != NS_OK\n");
-    } else {
-       for(i = 0; i < T3LEN; i++)
-       {
-          if(buf[i] != t3result[i])
-          {
-            printf("\tFailed!! result unexpected %d\n", i);
-            break;
-          }
-       }
-    }
-
-   NS_RELEASE(t);
-   }
-   printf("==============================\n");
-   printf("Finish nsICaseConversion Test \n");
-   printf("==============================\n");
-
+  printf("===========================\n");
+  printf("Finish case conversion test\n");
+  printf("===========================\n");
 }
 
 static void TestEntityConversion(PRUint32 version)

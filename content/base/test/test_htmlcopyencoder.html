@@ -49,14 +49,14 @@ function testHtmlCopyEncoder () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = "<div style=\"display: none;\">\n\n<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>\n\n</div>";
+  expected = "<div style=\"display: none\">\n\n<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>\n\n</div>";
   is(out, expected, "test selection");
 
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks | de.OutputEncodeHTMLEntities | de.OutputSelectionOnly | de.OutputRaw);
   encoder.setSelection(select);
   var outContext = {value:''}, outInfo = {value:''};
   out = encoder.encodeToStringWithContext(outContext, outInfo);
-  expected = "<div style=\"display: none;\">\n\n<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>\n\n</div>";
+  expected = "<div style=\"display: none\">\n\n<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>\n\n</div>";
   is(out, expected, "test encodeToStringWithContext with selection ");
 
   node.nextSibling.data="\nfoo bar\n";
