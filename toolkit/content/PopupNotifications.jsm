@@ -220,6 +220,11 @@ PopupNotifications.prototype = {
    *                              and re-shown)
    *        neverShow:   Indicate that no popup should be shown for this
    *                     notification. Useful for just showing the anchor icon.
+   *        removeOnDismissal:
+   *                     Notifications with this parameter set to true will be
+   *                     removed when they would have otherwise been dismissed
+   *                     (i.e. any time the popup is closed due to user
+   *                     interaction).
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -483,7 +488,9 @@ PopupNotifications.prototype = {
       // Notify observers that we're not showing the popup (useful for testing)
       this._notify("updateNotShowing");
 
-      this._hidePanel();
+      // Dismiss the panel if needed. _onPopupHidden will ensure we never call
+      // a dismissal handler on a notification that's been removed.
+      this._dismiss();
 
       // Only hide the iconBox if we actually have no notifications (as opposed
       // to not having any showable notifications)
@@ -537,11 +544,27 @@ PopupNotifications.prototype = {
     if (event.target != this.panel || this._ignoreDismissal)
       return;
 
+    let browser = this.panel.firstChild &&
+                  this.panel.firstChild.notification.browser;
+    if (!browser)
+      return;
+
+    let notifications = this._getNotificationsForBrowser(browser);
     // Mark notifications as dismissed and call dismissal callbacks
     Array.forEach(this.panel.childNodes, function (nEl) {
       let notificationObj = nEl.notification;
-      notificationObj.dismissed = true;
-      this._fireCallback(notificationObj, "dismissed");
+      // Never call a dismissal handler on a notification that's been removed.
+      if (notifications.indexOf(notificationObj) == -1)
+        return;
+
+      // Do not mark the notification as dismissed or fire "dismissed" if the
+      // notification is removed. 
+      if (notificationObj.options.removeOnDismissal)
+        this._remove(notificationObj);
+      else {
+        notificationObj.dismissed = true;
+        this._fireCallback(notificationObj, "dismissed");
+      }
     }, this);
 
     this._update();
