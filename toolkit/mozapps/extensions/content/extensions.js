@@ -177,6 +177,12 @@ var gEventManager = {
     Services.prefs.addObserver(PREF_CHECK_UPDATE_SECURITY, this, false);
 
     this.refreshGlobalWarning();
+
+    var contextMenu = document.getElementById("addonitem-popup");
+    contextMenu.addEventListener("popupshowing", function() {
+      var addon = gViewController.currentViewObj.getSelectedAddon();
+      contextMenu.setAttribute("addontype", addon.type);
+    }, false);
   },
 
   shutdown: function() {
@@ -762,13 +768,14 @@ var gViewController = {
         return aAddon.install && aAddon.install.state == AddonManager.STATE_AVAILABLE;
       },
       doCommand: function(aAddon) {
-        // This case should never happen
-        if (gViewController.currentViewObj != gDetailView)
-          return;
-
-        gViewController.popState(function() {
+        function doInstall() {
           gViewController.currentViewObj.getListItemForID(aAddon.id)._installStatus.installRemote();
-        });
+        }
+
+        if (gViewController.currentViewObj == gDetailView)
+          gViewController.popState(doInstall);
+        else
+          doInstall();
       }
     },
 

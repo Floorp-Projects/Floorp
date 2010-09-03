@@ -67,9 +67,24 @@
       <menuitem id="menuitem_showDetails" command="cmd_showItemDetails"
                 default="true" label="&cmd.showDetails.label;"
                 accesskey="&cmd.showDetails.accesskey;"/>
-      <menuitem id="menuitem_findUpdates" command="cmd_findItemUpdates"
-                label="&cmd.findUpdates.label;"
-                accesskey="&cmd.findUpdates.accesskey;"/>
+      <menuitem id="menuitem_enableItem" command="cmd_enableItem"
+                label="&cmd.enableAddon.label;"
+                accesskey="&cmd.enableAddon.accesskey;"/>
+      <menuitem id="menuitem_disableItem" command="cmd_disableItem"
+                label="&cmd.disableAddon.label;"
+                accesskey="&cmd.disableAddon.accesskey;"/>
+      <menuitem id="menuitem_enableTheme" command="cmd_enableItem"
+                label="&cmd.enableTheme.label;"
+                accesskey="&cmd.enableTheme.accesskey;"/>
+      <menuitem id="menuitem_disableTheme" command="cmd_disableItem"
+                label="&cmd.disableTheme.label;"
+                accesskey="&cmd.disableTheme.accesskey;"/>
+      <menuitem id="menuitem_installItem" command="cmd_installItem"
+                label="&cmd.installAddon.label;"
+                accesskey="&cmd.installAddon.accesskey;"/>
+      <menuitem id="menuitem_uninstallItem" command="cmd_uninstallItem"
+                label="&cmd.uninstallAddon.label;"
+                accesskey="&cmd.uninstallAddon.accesskey;"/>
       <menuseparator/>
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
 #ifdef XP_WIN
@@ -79,6 +94,9 @@
                 label="&cmd.preferencesUnix.label;"
                 accesskey="&cmd.preferencesUnix.accesskey;"/>
 #endif
+      <menuitem id="menuitem_findUpdates" command="cmd_findItemUpdates"
+                label="&cmd.findUpdates.label;"
+                accesskey="&cmd.findUpdates.accesskey;"/>
       <menuitem id="menuitem_about" command="cmd_showItemAbout"
                 label="&cmd.about.label;"
                 accesskey="&cmd.about.accesskey;"/>
@@ -378,7 +396,7 @@
               <label value="&loading.label;"/>
             </hbox>
             <!-- actual detail view -->
-            <vbox class="detail-view-container" flex="3">
+            <vbox class="detail-view-container" flex="3" contextmenu="addonitem-popup">
               <vbox id="detail-notifications">
                 <hbox id="warning-container" align="center" class="warning">
                   <image class="warning-icon"/>

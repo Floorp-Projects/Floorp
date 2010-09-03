@@ -87,6 +87,17 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
 }
 
+#addonitem-popup > menuitem[disabled="true"] {
+  display: none;
+}
+
+#addonitem-popup[addontype="theme"] > #menuitem_enableItem,
+#addonitem-popup[addontype="theme"] > #menuitem_disableItem,
+#addonitem-popup:not([addontype="theme"]) > #menuitem_enableTheme,
+#addonitem-popup:not([addontype="theme"]) > #menuitem_disableTheme {
+  display: none;
+}
+
 #header-searching:not([active]) {
   visibility: hidden;
 }
