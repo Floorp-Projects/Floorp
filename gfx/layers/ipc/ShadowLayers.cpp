@@ -188,6 +188,24 @@ ShadowLayerForwarder::CreatedCanvasBuffer(ShadowableLayer* aCanvas,
 }
 
 void
+ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes)
+{
+  mTxn->AddEdit(OpDestroyThebesFrontBuffer(NULL, Shadow(aThebes)));
+}
+
+void
+ShadowLayerForwarder::DestroyedImageBuffer(ShadowableLayer* aImage)
+{
+  mTxn->AddEdit(OpDestroyImageFrontBuffer(NULL, Shadow(aImage)));
+}
+
+void
+ShadowLayerForwarder::DestroyedCanvasBuffer(ShadowableLayer* aCanvas)
+{
+  mTxn->AddEdit(OpDestroyCanvasFrontBuffer(NULL, Shadow(aCanvas)));
+}
+
+void
 ShadowLayerForwarder::Mutated(ShadowableLayer* aMutant)
 {
   mTxn->AddMutant(aMutant);
