@@ -331,6 +331,16 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   */
+  void SetResolution(float aXResolution, float aYResolution)
+  {
+    mXResolution = aXResolution;
+    mYResolution = aYResolution;
+    Mutated();
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    *
    * Publish the remote layer's back ThebesLayerBuffer to this shadow,
    * swapping out the old front ThebesLayerBuffer (the new back buffer

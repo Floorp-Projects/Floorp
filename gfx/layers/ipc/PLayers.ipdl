@@ -107,7 +107,11 @@ struct CommonLayerAttributes {
   nsIntRect clipRect;
 };
 
-struct ThebesLayerAttributes   { nsIntRegion validRegion; };
+struct ThebesLayerAttributes {
+  nsIntRegion validRegion;
+  float xResolution;
+  float yResolution;
+};
 struct ContainerLayerAttributes{ FrameMetrics metrics; };
 struct ColorLayerAttributes    { gfxRGBA color; };
 struct CanvasLayerAttributes   { GraphicsFilterType filter; };

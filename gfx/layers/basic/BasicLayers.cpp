@@ -864,7 +864,9 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
 #ifdef DEBUG
   mPhase(PHASE_NONE),
 #endif
-  mWidget(aWidget)
+  mXResolution(1.0)
+  , mYResolution(1.0)
+  , mWidget(aWidget)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
@@ -1300,7 +1302,8 @@ public:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
-    aAttrs = ThebesLayerAttributes(GetValidRegion());
+    aAttrs = ThebesLayerAttributes(GetValidRegion(),
+                                   mXResolution, mYResolution);
   }
 
   virtual Layer* AsLayer() { return this; }
