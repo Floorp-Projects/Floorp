@@ -1013,35 +1013,32 @@ var Browser = {
    * @param [optional] dx
    * @param [optional] dy an offset distance at which to perform the visibility
    * computation
-   * @return [leftVisibility, rightVisiblity, leftTotalWidth, rightTotalWidth]
    */
   computeSidebarVisibility: function computeSidebarVisibility(dx, dy) {
-    function visibility(bar, visrect) {
-      let w = bar.width;
-      bar.restrictTo(visrect);
-      return bar.width / w;
+    function visibility(aSidebarRect, aVisibleRect) {
+      let width = aSidebarRect.width;
+      aSidebarRect.restrictTo(aVisibleRect);
+      return aSidebarRect.width / width;
     }
 
     if (!dx) dx = 0;
     if (!dy) dy = 0;
 
-    let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
-    let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
+    let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
+    if (leftSidebar.left > rightSidebar.left)
+      [rightSidebar, leftSidebar] = [leftSidebar, rightSidebar]; // switch in RTL case
 
-    if (leftbarCBR.left > ritebarCBR.left)
-      [ritebarCBR, leftbarCBR] = [leftbarCBR, ritebarCBR]; // switch in RTL case
+    let visibleRect = new Rect(0, 0, window.innerWidth, 1);
+    let leftRect = new Rect(Math.round(leftSidebar.left) - dx, 0, Math.round(leftSidebar.width), 1);
+    let rightRect = new Rect(Math.round(rightSidebar.left) - dx, 0, Math.round(rightSidebar.width), 1);
 
-    let leftbar = new Rect(Math.round(leftbarCBR.left) - dx, 0, Math.round(leftbarCBR.width), 1);
-    let ritebar = new Rect(Math.round(ritebarCBR.left) - dx, 0, Math.round(ritebarCBR.width), 1);
-    let leftw = leftbar.width;
-    let ritew = ritebar.width;
+    let leftTotalWidth = leftRect.width;
+    let leftVisibility = visibility(leftRect, visibleRect);
 
-    let visrect = new Rect(0, 0, window.innerWidth, 1);
+    let rightTotalWidth = rightRect.width;
+    let rightVisibility = visibility(rightRect, visibleRect);
 
-    let leftvis = visibility(leftbar, visrect);
-    let ritevis = visibility(ritebar, visrect);
-
-    return [leftvis, ritevis, leftw, ritew];
+    return [leftVisibility, rightVisibility, leftTotalWidth, rightTotalWidth];
   },
 
   /**
@@ -2222,16 +2219,23 @@ var AlertsHelper = {
   _listener: null,
   _cookie: "",
   _clickable: false,
-  _container: null,
   get container() {
-    if (!this._container) {
-      this._container = document.getElementById("alerts-container");
-      let self = this;
-      this._container.addEventListener("transitionend", function() {
-        self.alertTransitionOver();
-      }, true);
+    delete this.container;
+    let container = document.getElementById("alerts-container");
+
+    // Move the popup on the other side if we are in RTL
+    let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
+    if (leftSidebar.left > rightSidebar.left) {
+      container.removeAttribute("right");
+      container.setAttribute("left", "0");
     }
-    return this._container;
+
+    let self = this;
+    container.addEventListener("transitionend", function() {
+      self.alertTransitionOver();
+    }, true);
+
+    return this.container = container;
   },
 
   showAlertNotification: function ah_show(aImageURL, aTitle, aText, aTextClickable, aCookie, aListener) {

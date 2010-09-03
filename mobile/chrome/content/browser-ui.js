@@ -350,11 +350,8 @@ var BrowserUI = {
   },
 
   get sidebarW() {
-    if (!this._sidebarW) {
-      let sidebar = document.getElementById("browser-controls");
-      this._sidebarW = sidebar.boxObject.width;
-    }
-    return this._sidebarW;
+    delete this._sidebarW;
+    return this._sidebarW = Elements.controls.getBoundingClientRect().width;
   },
 
   get starButton() {
@@ -1276,7 +1273,17 @@ var NewTabPopup = {
 
   get box() {
     delete this.box;
-    return this.box = document.getElementById("newtab-popup");
+    let box = document.getElementById("newtab-popup");
+
+    // Move the popup on the other side if we are in RTL
+    let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
+    if (leftSidebar.left > rightSidebar.left) {
+      let margin = box.getAttribute("left");
+      box.removeAttribute("left");
+      box.setAttribute("right", margin);
+    }
+
+    return this.box = box;
   },
 
   _updateLabel: function() {
@@ -1366,14 +1373,21 @@ var AwesomePanel = function(aElementId, aCommandId) {
 
 var BookmarkPopup = {
   get box() {
-    let self = this;
+    delete this.box;
+    this.box = document.getElementById("bookmark-popup");
+
+    const margin = 10;
+    let [tabsSidebar, controlsSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
+    this.box.setAttribute(tabsSidebar.left < controlsSidebar.left ? "right" : "left", controlsSidebar.width + margin);
+    this.box.top  = BrowserUI.starButton.getBoundingClientRect().top + margin;
+
     // Hide the popup if there is any new page loading
+    let self = this;
     messageManager.addMessageListener("pagehide", function(aMessage) {
       self.hide();
     });
 
-    delete this.box;
-    return this.box = document.getElementById("bookmark-popup");
+    return this.box;
   },
 
   _bookmarkPopupTimeout: -1,
@@ -1388,13 +1402,7 @@ var BookmarkPopup = {
   },
 
   show : function show(aAutoClose) {
-    const margin = 10;
-
     this.box.hidden = false;
-
-    let [,,,controlsW] = Browser.computeSidebarVisibility();
-    this.box.left = window.innerWidth - (this.box.getBoundingClientRect().width + controlsW + margin);
-    this.box.top  = BrowserUI.starButton.getBoundingClientRect().top + margin;
 
     if (aAutoClose) {
       this._bookmarkPopupTimeout = setTimeout(function (self) {
