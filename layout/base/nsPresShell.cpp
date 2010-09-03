@@ -5294,6 +5294,9 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
   if (aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) {
     flags |= nsLayoutUtils::PAINT_IGNORE_VIEWPORT_SCROLLING;
   }
+  if (aFlags & RENDER_DOCUMENT_RELATIVE) {
+    flags |= nsLayoutUtils::PAINT_DOCUMENT_RELATIVE;
+  }
   nsLayoutUtils::PaintFrame(rc, rootFrame, nsRegion(aRect),
                             aBackgroundColor, flags);
 
