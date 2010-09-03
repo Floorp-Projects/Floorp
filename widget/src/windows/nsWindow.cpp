@@ -3209,7 +3209,7 @@ nsWindow::GetLayerManager()
         }
       }
 #endif
-      if (!mLayerManager) {
+      if (!mLayerManager && preferOpenGL) {
         nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
           new mozilla::layers::LayerManagerOGL(this);
         if (layerManager->Initialize()) {
