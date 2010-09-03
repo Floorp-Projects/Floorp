@@ -408,9 +408,31 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   if (!root)
     return;
 
-  nsIntRect visible =
-    mVisibleRect.ToNearestPixels(aForFrame->PresContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = aForFrame->PresContext();
+  nsIPresShell* presShell = presContext->GetPresShell();
+
+  nsIntRect visible = mVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
   root->SetVisibleRegion(nsIntRegion(visible));
+
+  // Collect frame metrics with which to stamp the root layer.
+  FrameMetrics metrics;
+
+  PRInt32 auPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
+  metrics.mViewportSize =
+    presContext->GetVisibleArea().ToNearestPixels(auPerCSSPixel).Size();
+  if (presShell->UsingDisplayPort()) {
+    metrics.mDisplayPort =
+      presShell->GetDisplayPort().ToNearestPixels(auPerCSSPixel);
+  }
+
+  nsIScrollableFrame* rootScrollableFrame =
+    presShell->GetRootScrollFrameAsScrollable();
+  if (rootScrollableFrame) {
+    metrics.mViewportScrollOffset =
+      rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerCSSPixel);
+  }
+
+  root->SetFrameMetrics(metrics);
 
   layerManager->SetRoot(root);
   aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
