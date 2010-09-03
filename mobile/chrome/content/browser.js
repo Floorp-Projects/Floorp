@@ -113,7 +113,7 @@ function onDebugKeyPress(ev) {
     e.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,
                                0, 0, 0, 0, false, false, false, false, 0, null,
                                aDirection, 0);
-    document.getElementById("inputhandler-overlay").dispatchEvent(e);
+    Browser.selectedTab.inputHandler.dispatchEvent(e);
   }
   switch (ev.charCode) {
   case w:
@@ -207,12 +207,20 @@ var Browser = {
     // to redo all the dragging code.
     this.contentScrollbox = Elements.browsers;
     this.contentScrollboxScroller = {
-      scrollBy: function(x, y) {
-        getBrowser().scrollBy(x, y);
+      scrollBy: function(dx, dy) {
+        getBrowser().scrollBy(dx, dy);
+
+        let scrollX = {}, scrollY = {};
+        getBrowser().getPosition(scrollX, scrollY);
+
+        let x = scrollX.value + dx;
+        let y = scrollY.value + dy;
+        document.getElementById("browsers").style.backgroundPosition = (-x % 128) + "px " + (-y % 128) + "px";
       },
 
       scrollTo: function(x, y) {
         getBrowser().scrollTo(x, y);
+        document.getElementById("browsers").style.backgroundPosition = (-x % 128) + "px " + (-y % 128) + "px";
       },
 
       getPosition: function(scrollX, scrollY) {
