@@ -2428,12 +2428,12 @@ var ContextCommands = {
 
   saveLink: function cc_saveLink() {
     let browser = ContextHelper.popupState.target;
-    saveURL(ContextHelper.popupState.linkURL, null, "SaveLinkTitle", false, false, browser.documentURI);
+    saveURL(ContextHelper.popupState.linkURL, null, "SaveLinkTitle", false, true, browser.documentURI);
   },
 
   saveImage: function cc_saveImage() {
     let browser = ContextHelper.popupState.target;
-    saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, false, browser.documentURI);
+    saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, true, browser.documentURI);
   },
 
   shareLink: function cc_shareLink() {
