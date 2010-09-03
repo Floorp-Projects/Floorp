@@ -18,6 +18,13 @@ let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
 let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
 
+// Blindly copied from Safari documentation for now.
+const kViewportMinScale  = 0;
+const kViewportMaxScale  = 10;
+const kViewportMinWidth  = 200;
+const kViewportMaxWidth  = 10000;
+const kViewportMinHeight = 223;
+const kViewportMaxHeight = 10000;
 
 /** Watches for mouse click in content and redirect them to the best found target **/
 const ElementTouchHelper = {
