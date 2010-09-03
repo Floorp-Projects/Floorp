@@ -264,7 +264,7 @@ private:
   nsBaseContentList *mNameContentList;
   nsRefPtr<nsContentList> mDocAllList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
-  nsCOMPtr<Element> mImageElement;
+  nsRefPtr<Element> mImageElement;
 };
 
 class nsDocHeaderData
