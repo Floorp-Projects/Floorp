@@ -1529,6 +1529,77 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::ScrollViewportTo(float aXpx, float aYpx)
+{
+  ViewportConfig config(mViewportConfig);
+  config.mScrollOffset = nsPoint(nsPresContext::CSSPixelsToAppUnits(aXpx),
+                                nsPresContext::CSSPixelsToAppUnits(aYpx));
+  return UpdateViewportConfig(config);
+}
+
+NS_IMETHODIMP
+nsFrameLoader::ScrollViewportBy(float aDXpx, float aDYpx)
+{
+  ViewportConfig config(mViewportConfig);
+  config.mScrollOffset.MoveBy(nsPresContext::CSSPixelsToAppUnits(aDXpx),
+                             nsPresContext::CSSPixelsToAppUnits(aDYpx));
+  return UpdateViewportConfig(config);
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetViewportScale(float aXScale, float aYScale)
+{
+  ViewportConfig config(mViewportConfig);
+  config.mXScale = aXScale;
+  config.mYScale = aYScale;
+  return UpdateViewportConfig(config);
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetViewportScrollX(float* aViewportScrollX)
+{
+  *aViewportScrollX =
+    nsPresContext::AppUnitsToFloatCSSPixels(mViewportConfig.mScrollOffset.x);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetViewportScrollY(float* aViewportScrollY)
+{
+  *aViewportScrollY =
+    nsPresContext::AppUnitsToFloatCSSPixels(mViewportConfig.mScrollOffset.y);
+  return NS_OK;
+}
+
+nsresult
+nsFrameLoader::UpdateViewportConfig(const ViewportConfig& aNewConfig)
+{
+  if (aNewConfig == mViewportConfig) {
+    return NS_OK;
+  }
+  mViewportConfig = aNewConfig;
+
+  // Viewport changed.  Try to locate our subdoc frame and invalidate
+  // it if found.
+  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
+  if (!frame) {
+    // XXX should this be a silent failure?
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // XXX could be clever here and compute a smaller invalidation
+  // rect
+  nsRect rect = nsRect(nsPoint(0, 0), frame->GetRect().Size());
+  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep viewport
+  // semantics the same for both in-process and out-of-process
+  // <browser>.  This is just a transform of the layer subtree in
+  // both.
+  frame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+
+  return NS_OK;
+}
+
 nsIntSize
 nsFrameLoader::GetSubDocumentSize(const nsIFrame *aIFrame)
 {
