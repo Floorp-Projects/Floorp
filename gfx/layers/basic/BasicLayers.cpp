@@ -1326,6 +1326,7 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
     NS_ABORT_IF_FALSE(!!mBackBuffer, "should have a back buffer by now");
 
     nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
     tmpCtx->DrawSurface(aContext->OriginalSurface(),
                         gfxIntSize(mBufferSize.width, mBufferSize.height));
 
@@ -1580,6 +1581,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext,
   // XXX this is yucky and slow.  It'd be nice to draw directly into
   // the shmem back buffer
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
+  tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   tmpCtx->DrawSurface(mSurface, gfxSize(mBounds.width, mBounds.height));
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
