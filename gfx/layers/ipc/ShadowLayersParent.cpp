@@ -222,6 +222,42 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       break;
     }
+    case Edit::TOpDestroyThebesFrontBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] DestroyThebesFrontBuffer"));
+
+      const OpDestroyThebesFrontBuffer& odfb =
+        edit.get_OpDestroyThebesFrontBuffer();
+      ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
+        AsShadowLayer(odfb)->AsLayer());
+
+      thebes->DestroyFrontBuffer();
+
+      break;
+    }
+    case Edit::TOpDestroyCanvasFrontBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] DestroyCanvasFrontBuffer"));
+
+      const OpDestroyCanvasFrontBuffer& odfb =
+        edit.get_OpDestroyCanvasFrontBuffer();
+      ShadowCanvasLayer* canvas = static_cast<ShadowCanvasLayer*>(
+        AsShadowLayer(odfb)->AsLayer());
+
+      canvas->DestroyFrontBuffer();
+
+      break;
+    }
+    case Edit::TOpDestroyImageFrontBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] DestroyImageFrontBuffer"));
+
+      const OpDestroyImageFrontBuffer& odfb =
+        edit.get_OpDestroyImageFrontBuffer();
+      ShadowImageLayer* image = static_cast<ShadowImageLayer*>(
+        AsShadowLayer(odfb)->AsLayer());
+
+      image->DestroyFrontBuffer();
+
+      break;
+    }
 
       // Attributes
     case Edit::TOpSetLayerAttributes: {
