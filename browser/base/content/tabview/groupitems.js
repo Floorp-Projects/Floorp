@@ -1408,21 +1408,6 @@ window.GroupItems = {
   },
 
   // ----------
-  // Function: getGroupItemWithTitle
-  // Returns the <GroupItem> that has the given title, or null if none found.
-  // TODO: what if there are multiple groupItems with the same title??
-  //       Right now, looks like it'll return the last one. Bug 586557
-  getGroupItemWithTitle: function(title) {
-    var result = null;
-    this.groupItems.forEach(function(groupItem) {
-      if (groupItem.getTitle() == title)
-        result = groupItem;
-    });
-
-    return result;
-  },
-
-  // ----------
   // Function: register
   // Adds the given <GroupItem> to the list of groupItems we're tracking.
   register: function(groupItem) {
