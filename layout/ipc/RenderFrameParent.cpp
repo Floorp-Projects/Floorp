@@ -173,7 +173,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   Layer* containerRoot = mContainer ? RootOf(mContainer) : nsnull;
-  Layer* shadowRoot = GetRootLayer();
+  ContainerLayer* shadowRoot = GetRootLayer();
   NS_ABORT_IF_FALSE(!shadowRoot || shadowRoot->Manager() == aManager,
                     "retaining manager changed out from under us ... HELP!");
 
@@ -263,7 +263,7 @@ RenderFrameParent::GetShadowLayers() const
     static_cast<ShadowLayersParent*>(shadowParents[0]) : nsnull;
 }
 
-Layer*
+ContainerLayer*
 RenderFrameParent::GetRootLayer() const
 {
   ShadowLayersParent* shadowLayers = GetShadowLayers();

@@ -403,7 +403,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     layerManager->BeginTransaction();
   }
 
-  nsRefPtr<Layer> root = aBuilder->LayerBuilder()->
+  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this);
   if (!root)
     return;
