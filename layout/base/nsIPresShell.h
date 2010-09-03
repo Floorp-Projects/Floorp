@@ -1089,6 +1089,19 @@ public:
     return mDisplayPort;
   }
 
+   /**
+   * Set a "resolution" for the document, which if not 1.0 will
+   * allocate more or fewer pixels for rescalable content by a factor
+   * of |resolution| in both dimensions.  Return NS_OK iff the
+   * resolution bounds are sane, and the resolution of this was
+   * actually updated.
+   *
+   * The resolution defaults to 1.0.
+   */
+  virtual nsresult SetResolution(float aXResolution, float aYResolution) = 0;
+  float GetXResolution() { return mXResolution; }
+  float GetYResolution() { return mYResolution; }
+
   /**
    * Refresh observer management.
    */
@@ -1200,6 +1213,11 @@ protected:
   // is true and |mDisplayPort| defines the "visible rect" we
   // maintain.
   nsRect                    mDisplayPort;
+
+  // Used to force allocation and rendering of proportionally more or
+  // less pixels in the given dimension.
+  float                     mXResolution;
+  float                     mYResolution;
 
   // Live pres shells, for memory and other tracking
   typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;
