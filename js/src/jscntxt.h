@@ -1092,6 +1092,9 @@ struct JSThreadData {
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     js::TraceMonitor    traceMonitor;
+
+    /* Counts the number of iterations run by a trace. */
+    unsigned            iterationCounter;
 #endif
 
 #ifdef JS_METHODJIT
