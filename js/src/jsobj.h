@@ -181,10 +181,10 @@ struct JSObjectMap {
     static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
 
     uint32 shape;       /* shape identifier */
-    uint32 freeslot;    /* first free object slot */
+    uint32 slotSpan;    /* one more than maximum live slot number */
 
-    explicit JSObjectMap(uint32 shape) : shape(shape), freeslot(0) {}
-    JSObjectMap(uint32 shape, uint32 freeslot) : shape(shape), freeslot(freeslot) {}
+    explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
+    JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
 
     enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
 
@@ -356,8 +356,8 @@ struct JSObject {
 #endif
 
     /*
-     * Return an immutable, shareable, empty scope with the same ops as this
-     * and the same freeslot as this had when empty.
+     * Return an immutable, shareable, empty shape with the same clasp as this
+     * and the same slotSpan as this had when empty.
      *
      * If |this| is the scope of an object |proto|, the resulting scope can be
      * used as the scope of a new object whose prototype is |proto|.
@@ -577,9 +577,9 @@ struct JSObject {
 
     inline bool ensureClassReservedSlots(JSContext *cx);
 
-    uint32 freeslot() const { return map->freeslot; }
+    uint32 slotSpan() const { return map->slotSpan; }
 
-    bool containsSlot(uint32 slot) const { return slot < freeslot(); }
+    bool containsSlot(uint32 slot) const { return slot < slotSpan(); }
 
     js::Value& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)

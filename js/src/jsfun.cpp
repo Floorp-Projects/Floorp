@@ -968,7 +968,7 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     for (Shape::Range r = callobj->lastProp; !r.empty(); r.popFront()) {
         const Shape &s = r.front();
         if (s.slot != SHAPE_INVALID_SLOT) {
-            JS_ASSERT(s.slot + 1 == callobj->freeslot());
+            JS_ASSERT(s.slot + 1 == callobj->slotSpan());
             break;
         }
     }
@@ -2415,7 +2415,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
         if (!empty)
             return false;
 
-        empty->freeslot += argslen;
+        empty->slotSpan += argslen;
         map = empty;
 
         if (!ensureInstanceReservedSlots(cx, argslen))
@@ -3212,8 +3212,8 @@ JSFunction::addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind)
     if (findArgInsertionPoint) {
         while (parent->parent && parent->getter() != js_GetCallArg) {
             ++parent->slot;
-            JS_ASSERT(parent->slot == parent->freeslot);
-            ++parent->freeslot;
+            JS_ASSERT(parent->slot == parent->slotSpan);
+            ++parent->slotSpan;
             listp = &parent->parent;
             parent = *listp;
         }
