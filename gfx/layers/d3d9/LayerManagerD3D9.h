@@ -118,6 +118,7 @@ public:
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 9"); }
 
   /*
    * Helper methods.
