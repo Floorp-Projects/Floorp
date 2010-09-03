@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352044-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352044;
 var summary = 'issues with Unicode escape sequences in JavaScript source code';

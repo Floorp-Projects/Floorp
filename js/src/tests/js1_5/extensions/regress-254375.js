@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-254375.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 254375;
 var summary = 'Object.toSource for negative number property names';

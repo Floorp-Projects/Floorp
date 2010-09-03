@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html class="reftest-print">
+<title>Test for setting and handling of mIsTopOfPage on floats</title>
+<body style="margin: 0">
+<div>
+  <div style="display:inline-block; vertical-align: top; height: 1in; width: 1in; background: fuchsia"></div
+  ><div style="display:inline-block; vertical-align: top; height: 2in; width: 1in; background: aqua"></div>
+</div>
+<div style="page-break-before:always">
+  <!-- FIXME: uncomment this when bug 511551 is fixed
+  <div style="display:inline-block; vertical-align: top; height: 1in; width: 1in"></div
+  >--><div style="display:inline-block; vertical-align: top; height: 1in; width: 1in; background: yellow"></div>
+</div>

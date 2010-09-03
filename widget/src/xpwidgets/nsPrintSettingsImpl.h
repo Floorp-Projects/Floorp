@@ -62,7 +62,7 @@ public:
   nsPrintSettings(const nsPrintSettings& aPS);
   virtual ~nsPrintSettings();
 
-  virtual nsPrintSettings& operator=(const nsPrintSettings& rhs);
+  nsPrintSettings& operator=(const nsPrintSettings& rhs);
 
 protected:
   // May be implemented by the platform-specific derived class                       

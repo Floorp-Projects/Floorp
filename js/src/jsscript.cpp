@@ -617,12 +617,14 @@ SaveScriptFilename(JSRuntime *rt, const char *filename, uint32 flags)
         sfp->flags |= flags;
     }
 
-#ifdef JS_FUNCTION_METERING
-    size_t len = strlen(sfe->filename);
-    if (len >= sizeof rt->lastScriptFilename)
-        len = sizeof rt->lastScriptFilename - 1;
-    memcpy(rt->lastScriptFilename, sfe->filename, len);
-    rt->lastScriptFilename[len] = '\0';
+#ifdef DEBUG
+    if (rt->functionMeterFilename) {
+        size_t len = strlen(sfe->filename);
+        if (len >= sizeof rt->lastScriptFilename)
+            len = sizeof rt->lastScriptFilename - 1;
+        memcpy(rt->lastScriptFilename, sfe->filename, len);
+        rt->lastScriptFilename[len] = '\0';
+    }
 #endif
 
     return sfe;
@@ -998,13 +1000,25 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         {
             /*
              * We can probably use the immutable empty script singleton, just
-             * one hard case (nupvars != 0) may stand in our way.
+             * two hard cases (nupvars != 0, strict mode code) may stand in our
+             * way.
              */
             JSScript *empty = JSScript::emptyScript();
 
             if (cg->flags & TCF_IN_FUNCTION) {
                 fun = cg->fun;
-                JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
+                JS_ASSERT(fun->isInterpreted() && !FUN_SCRIPT(fun));
+                if (cg->flags & TCF_STRICT_MODE_CODE) {
+                    /*
+                     * We can't use a script singleton for empty strict mode
+                     * functions because they have poison-pill caller and
+                     * arguments properties:
+                     *
+                     * function strict() { "use strict"; }
+                     * strict.caller; // calls [[ThrowTypeError]] function
+                     */
+                    goto skip_empty;
+                }
                 if (fun->u.i.nupvars != 0) {
                     /*
                      * FIXME: upvar uses that were all optimized away may leave
@@ -1263,6 +1277,33 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         js_MarkScriptFilename(script->filename);
 }
 
+JSBool
+js_NewScriptObject(JSContext *cx, JSScript *script)
+{
+    AutoScriptRooter root(cx, script);
+
+    JS_ASSERT(!script->u.object);
+    JS_ASSERT(script != JSScript::emptyScript());
+
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
+    if (!obj)
+        return JS_FALSE;
+    obj->setPrivate(script);
+    script->u.object = obj;
+
+    /*
+     * Clear the object's proto, to avoid entraining stuff. Once we no longer use the parent
+     * for security checks, then we can clear the parent, too.
+     */
+    obj->clearProto();
+
+#ifdef CHECK_SCRIPT_OWNER
+    script->owner = NULL;
+#endif
+
+    return JS_TRUE;
+}
+
 typedef struct GSNCacheEntry {
     JSDHashEntryHdr     hdr;
     jsbytecode          *pc;
@@ -1354,7 +1395,8 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 uintN
 js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp)
 {
-    return js_PCToLineNumber(cx, fp->script, fp->imacpc ? fp->imacpc : fp->pc(cx));
+    return js_PCToLineNumber(cx, fp->getScript(),
+                             fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx));
 }
 
 uintN

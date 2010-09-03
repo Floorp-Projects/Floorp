@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352616.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352616;
 var summary = 'Do not Crash reporting error with |for..in| and |let|';

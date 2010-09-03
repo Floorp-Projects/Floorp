@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-260541.js';
 //-----------------------------------------------------------------------------
 // have not been able to reproduce the crash in any build.
 var BUGNUMBER = 260541;

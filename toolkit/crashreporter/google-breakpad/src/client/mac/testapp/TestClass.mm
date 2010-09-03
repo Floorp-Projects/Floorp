@@ -78,7 +78,7 @@ void InternalTestClass::InternalFunction(AStruct &s) {
 float InternalTestClass::kStaticFloatValue = 42;
 
 static float PlainOldFunction() {
-  return 3.14145;
+  return 3.14145f;
 }
 
 @implementation TestClass

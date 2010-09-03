@@ -76,13 +76,17 @@
  * This trigger allows for an insertion into moz_places_view.  It enters the new
  * data into the temporary table, ensuring that the new id is one greater than
  * the largest id value found.
+ * We have both sync and async users for this trigger, so it could happen that
+ * an async statement tries to insert a page when a sync statement just added
+ * it.  We should ignore the insertion in such a case, the async implementer
+ * will fetch the id of the existing entry.
  */
 #define CREATE_PLACES_VIEW_INSERT_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_places_view_insert_trigger " \
   "INSTEAD OF INSERT " \
   "ON moz_places_view " \
   "BEGIN " \
-    "INSERT INTO moz_places_temp (" MOZ_PLACES_COLUMNS ") " \
+    "INSERT OR IGNORE INTO moz_places_temp (" MOZ_PLACES_COLUMNS ") " \
     "VALUES (MAX(IFNULL((SELECT MAX(id) FROM moz_places_temp), 0), " \
                 "IFNULL((SELECT MAX(id) FROM moz_places), 0)) + 1," \
             "NEW.url, NEW.title, NEW.rev_host, " \
@@ -107,7 +111,7 @@
     "DELETE FROM moz_places " \
     "WHERE id = OLD.id; " \
     "DELETE FROM moz_openpages_temp " \
-    "WHERE place_id = OLD.id; " \
+    "WHERE url = OLD.url; " \
   "END" \
 )
 
@@ -270,7 +274,7 @@
   "WHEN NEW.open_count = 0 " \
   "BEGIN " \
     "DELETE FROM moz_openpages_temp " \
-    "WHERE place_id = NEW.place_id;" \
+    "WHERE url = NEW.url;" \
   "END" \
 )
 

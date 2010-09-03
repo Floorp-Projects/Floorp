@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'interval.js';
 
 /**
    Filename:     interval.js

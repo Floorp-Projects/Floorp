@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-294191.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 294191;
 var summary = 'Do not crash with nested function and "delete" op';

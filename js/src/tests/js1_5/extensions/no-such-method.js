@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'no-such-method.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 196097;
 var summary = '__noSuchMethod__ handler';

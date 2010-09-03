@@ -44,7 +44,7 @@ interface nsIInputStream;
  * nsIScriptableInputStream provides scriptable access to an nsIInputStream
  * instance.
  */
-[scriptable, uuid(a2a32f90-9b90-11d3-a189-0050041caf44)] 
+[scriptable, uuid(e546afd6-1248-4deb-8940-4b000b618a58)]
 interface nsIScriptableInputStream : nsISupports
 { 
     /** 
@@ -82,4 +82,19 @@ interface nsIScriptableInputStream : nsISupports
      * @throws NS_ERROR_NOT_INITIALIZED if init was not called
      */ 
     string read(in unsigned long aCount); 
-}; 
+
+    /**
+     * Read data from the stream, including NULL bytes.
+     *
+     * @param aCount the maximum number of bytes to read.
+     *
+     * @return the data from the stream, which will be an empty string if EOF
+     *         has been reached.
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from the input stream
+     *         would block the calling thread (non-blocking mode only).
+     * @throws NS_ERROR_FAILURE if there are not enough bytes available to read
+     *         aCount amount of data.
+     */
+    ACString readBytes(in unsigned long aCount);
+};

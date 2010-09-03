@@ -47,6 +47,7 @@
 #include "nsIClipboard.h"
 
 #include "nsEditorCommands.h"
+#include "nsIDocument.h"
 
 
 #define STATE_ENABLED  "state_enabled"
@@ -669,13 +670,21 @@ nsSelectionMoveCommands::IsCommandEnabled(const char * aCommandName,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsSelectionMoveCommands::DoCommand(const char *aCommandName,
                                    nsISupports *aCommandRefCon)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
   NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  editor->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (doc) {
+    // Most of the commands below (possibly all of them) need layout to
+    // be up to date.
+    doc->FlushPendingNotifications(Flush_Layout);
+  }
 
   nsCOMPtr<nsISelectionController> selCont;
   nsresult rv = editor->GetSelectionController(getter_AddRefs(selCont)); 

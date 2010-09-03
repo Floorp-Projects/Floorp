@@ -54,7 +54,7 @@
 }
 
 .menulist-icon {
-	margin: 0 !important;
+  margin: 0 !important;
 }
 
 /**** expanders ****/
@@ -69,19 +69,19 @@
 }
 
 .expander-up {
-	list-style-image: url("chrome://browser/skin/places/expander-open.png") !important;
+  list-style-image: url("chrome://browser/skin/places/expander-open.png") !important;
 }
 
 .expander-down {
-	list-style-image: url("chrome://browser/skin/places/expander-closed.png") !important;
+  list-style-image: url("chrome://browser/skin/places/expander-closed.png") !important;
 }
 
 .expander-down:hover:active {
-	list-style-image: url("chrome://browser/skin/places/expander-closed-active.png") !important;
+  list-style-image: url("chrome://browser/skin/places/expander-closed-active.png") !important;
 }
 
 .expander-up:hover:active {
-	list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
+  list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
 }
 
 #editBookmarkPanelContent {
@@ -166,7 +166,7 @@
 }
 
 
-/* ----- BOOKMARK PANEL DROPDOWN MENU ITEMS ----- */	
+/* ----- BOOKMARK PANEL DROPDOWN MENU ITEMS ----- */
 
 #editBMPanel_folderMenuList[selectedIndex="0"],
 #editBMPanel_toolbarFolderItem {

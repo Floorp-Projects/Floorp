@@ -16,6 +16,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=564863
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 <style>
+* {
+  color: rgb(0, 0, 0);
+}
 #div_id {
   color: rgb(10, 10, 10);
 }
@@ -256,16 +259,15 @@ checkHasIdNoGEBI("removed node");
 is(div.id, "div_id", "div still has id set");
 var mutateFired = false;
 root.appendChild(div);
-var f = function(e) {
-  div.removeEventListener("DOMAttrModified", f, false);
+div.addEventListener("DOMAttrModified", function(e) {
+  div.removeEventListener("DOMAttrModified", arguments.callee, false);
   is(e.target, div, "target is div");
   is(div.id, "", "div no longer has id");
   is(div.getAttribute("id"), null, "div no longer has id attr");
   removeNode(div);
   is(div.parentNode, null, "div was removed");
   mutateFired = true;
-}
-div.addEventListener("DOMAttrModified", f, false);
+}, false);
 div.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 
@@ -273,15 +275,14 @@ ok(mutateFired, "mutation event fired");
 is(nsx.getAttribute("id"), "ns_id", "nsx still has id set");
 mutateFired = false;
 root.appendChild(nsx);
-var f2 = function(e) {
-  nsx.removeEventListener("DOMAttrModified", f2, false);
+nsx.addEventListener("DOMAttrModified", function(e) {
+  nsx.removeEventListener("DOMAttrModified", arguments.callee, false);
   is(e.target, nsx, "target is nsx");
   is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
   removeNode(nsx);
   is(nsx.parentNode, null, "nsx was removed");
   mutateFired = true;
-}
-nsx.addEventListener("DOMAttrModified", f2, false);
+}, false);
 nsx.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 
@@ -295,10 +296,12 @@ is(nsx_cs.color, "rgb(50, 50, 50)", "nsx has initial id");
 is($("ns_id"), nsx, "gEBI works on old id");
 nsx.setAttribute("id_2", "ns2_id");
 nsx.prefix = "ns2";
+is($("ns2_id"), nsx, "gEBI works on new id");
+is($("ns_id"), null, "gEBI does't work on old id");
 removeNode(nsx);
 root.appendChild(nsx);
 is(nsx_cs.color, "rgb(60, 60, 60)", "nsx has new id");
-is($("ns2_id"), nsx, "gEBI works on new id");
+is($("ns2_id"), nsx, "gEBI still works on new id");
 
 // Need to change id and then CC to ensure that we don't end up with dangling pointers
 function gc() {
@@ -320,6 +323,99 @@ gc();
 $("tempNode_id");
 ok(true, "Didn't crash when accessing old id");
 
+
+// Update the id-name inside a mutation event
+removeNode(nsx);
+nsx = document.createElementNS("urn:namespace", "ns:x");
+nsx.setAttribute("id", "ns_id");
+nsx.setAttribute("id_2", "ns2_id");
+root.appendChild(nsx);
+is($("ns_id"), nsx, "new nsx is set up");
+is($("ns2_id"), null, "ns2_id doesn't exist");
+mutateFired = false;
+nsx.addEventListener("DOMAttrModified", function(e) {
+  nsx.removeEventListener("DOMAttrModified", arguments.callee, false);
+  is(e.target, nsx, "target is nsx");
+  is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
+  nsx.prefix = "ns2";
+  mutateFired = true;
+}, false);
+nsx.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("ns_id"), null, "ns_id was removed from table");
+is($("ns2_id"), nsx, "ns2_id was added");
+removeNode(nsx);
+is($("ns2_id"), null, "ns2_id was removed");
+nsx = null;
+gc();
+$("ns2_id");
+ok(true, "we didn't crash");
+
+// Re-add the id inside a mutation event on a XML element
+is($("ns_id"), null, "no nsx");
+is($("ns2_id"), null, "no nsx");
+nsx = document.createElementNS("urn:namespace", "ns:x");
+nsx.setAttribute("id", "ns_id");
+root.appendChild(nsx);
+is($("ns_id"), nsx, "new nsx is set up");
+mutateFired = false;
+nsx.addEventListener("DOMAttrModified", function(e) {
+  nsx.removeEventListener("DOMAttrModified", arguments.callee, false);
+  is(e.target, nsx, "target is nsx");
+  is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
+  nsx.setAttribute("id", "other_id");
+  mutateFired = true;
+}, false);
+nsx.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("ns_id"), null, "ns_id was removed from table");
+is($("other_id"), nsx, "other_id was added");
+removeNode(nsx);
+is($("other_id"), null, "other_id was removed");
+
+// Re-add the id inside a mutation event on a HTML element
+is($("div_id"), null, "no div");
+div = document.createElement("div");
+div.id = "div_id";
+root.appendChild(div);
+is($("div_id"), div, "new div is set up");
+mutateFired = false;
+div.addEventListener("DOMAttrModified", function(e) {
+  div.removeEventListener("DOMAttrModified", arguments.callee, false);
+  is(e.target, div, "target is div");
+  is(div.getAttribute("id"), null, "div no longer has id attr");
+  is(div.id, "", "div no longer has id");
+  div.id = "other_div_id";
+  mutateFired = true;
+}, false);
+div.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("div_id"), null, "div_id was removed from table");
+is($("other_div_id"), div, "other_div_id was added");
+removeNode(div);
+is($("other_div_id"), null, "other_div_id was removed");
+
+// Re-add the id inside a mutation event on a XUL element
+is($("xul_id"), null, "no xul");
+xul = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
+xul.id = "xul_id";
+root.appendChild(xul);
+is($("xul_id"), xul, "new xul is set up");
+mutateFired = false;
+xul.addEventListener("DOMAttrModified", function(e) {
+  xul.removeEventListener("DOMAttrModified", arguments.callee, false);
+  is(e.target, xul, "target is xul");
+  is(xul.getAttribute("id"), "", "xul no longer has id attr");
+  is(xul.id, "", "xul no longer has id");
+  xul.id = "other_xul_id";
+  mutateFired = true;
+}, false);
+xul.removeAttribute("id");
+ok(mutateFired, "mutation event fired");
+is($("xul_id"), null, "xul_id was removed from table");
+is($("other_xul_id"), xul, "other_xul_id was added");
+removeNode(xul);
+is($("other_xul_id"), null, "other_xul_id was removed");
 
 ]]>
 </script>

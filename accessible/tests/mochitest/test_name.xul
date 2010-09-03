@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/name.css"
+<?xml-stylesheet href="name.css"
                  type="text/css"?>
 
 
@@ -15,11 +15,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+          src="common.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+          src="role.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/name.js"></script>
+          src="name.js"></script>
 
   <script type="application/javascript">
   <![CDATA[
@@ -30,8 +30,8 @@
       // Simple label provided via ARIA
       testName("btn_simple_aria_label", "I am a button");
 
-      // aria-label and aria-labelledby, expect aria-label
-      testName("btn_both_aria_labels", "I am a button, two");
+      // aria-label and aria-labelledby, expect aria-labelledby
+      testName("btn_both_aria_labels", "text I am a button, two");
 
       //////////////////////////////////////////////////////////////////////////
       // aria-labelledby
@@ -205,9 +205,10 @@
 
   <!-- aria-label, simple label -->
   <button id="btn_simple_aria_label" aria-label="I am a button"/>
+
   <!-- aria-label plus aria-labelledby -->
   <button id="btn_both_aria_labels" aria-label="I am a button, two"
-        aria-labelledby="labelledby_text"/>
+          aria-labelledby="labelledby_text btn_both_aria_labels"/>
 
   <!-- aria-labelledby, single relation -->
   <description id="labelledby_text">text</description>

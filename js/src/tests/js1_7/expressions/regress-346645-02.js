@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-346645-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346645;
 var summary = 'Do not crash with empty array in destructuring assign LHS';

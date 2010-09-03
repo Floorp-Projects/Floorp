@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.9.5.6.js';
 
 /**
    File Name:          15.9.5.6.js
@@ -127,7 +126,7 @@ test();
 function addTestCase()
 {
   new TestCase(
-    gTestfile,
+    "unknown-test-name",
     status,
     expect,
     actual);

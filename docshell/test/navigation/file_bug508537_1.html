@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <script>
+      function dynFrameLoad() {
+        var ifrs = document.getElementsByTagName("iframe");
+        opener.ok(new String(ifrs[0].contentWindow.location).indexOf(ifrs[0].src) >= 0,
+                  "Wrong document loaded (1)\n");
+        opener.ok(new String(ifrs[1].contentWindow.location).indexOf(ifrs[1].src) >= 0,
+                  "Wrong document loaded (2)\n");
+        if (opener && ++opener.testCount == 1) {
+          window.location = "goback.html";
+        } else {
+          opener.nextTest();
+          window.close();
+        }
+      }
+
+      window.addEventListener("load",
+        function () {
+          var container = document.getElementById("t1");
+          container.addEventListener("load", dynFrameLoad, true);
+          container.appendChild(container.appendChild(document.getElementById("i1")));
+        }, false);
+    </script>
+  </head>
+  <body>
+    <h5>Container:</h5>
+    <div id="t1"></div>
+    <h5>Original frames:</h5>
+    <iframe id="i1" src="frame0.html"></iframe>
+    <iframe src="frame1.html"></iframe>
+  </body>
+</html>
+

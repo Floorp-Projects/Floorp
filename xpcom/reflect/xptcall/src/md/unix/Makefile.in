@@ -64,6 +64,18 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 endif
 
+ifeq (Darwin,$(OS_ARCH))
+ifeq (86,$(findstring 86,$(OS_TEST)))
+ifneq (x86_64,$(OS_TEST))
+# If we compile xptcinvoke_unixish_x86.cpp with -fomit-frame-pointer
+# we end up crashing on startup, presumably because of the %esp munging we do
+# when KEEP_STACK_16_BYTE_ALIGNED.  So let's not use that flag here.
+# NOTE: MODULE_OPTIMIZE_FLAGS must be set before including config.mk
+MODULE_OPTIMIZE_FLAGS=-O3
+endif
+endif
+endif
+
 include $(topsrcdir)/config/config.mk
 
 ######################################################################
@@ -544,7 +556,8 @@ ifndef GNU_CC
 ifeq (x86_64,$(OS_TEST))
 xptcstubs_asm_x86_64_solaris_SUNW.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_x86_64_solaris_SUNW.s
 	sed \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
+	  -e 's/^\(STUB_ENTRY\)(\([0
+-9]\))/\11\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
 	$(DIST)/include/xptcstubsdef.inc > ./xptcstubsdef_asm.solx86
@@ -564,4 +577,4 @@ endif
 endif
 
 libs:: $(LIBRARY)
-	$(INSTALL) $(LIBRARY) ../..
+	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..

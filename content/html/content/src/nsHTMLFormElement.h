@@ -241,7 +241,7 @@ public:
    * submission. In that case the form will defer the submission until the
    * script handler returns and the return value is known.
    */
-  void OnSubmitClickBegin();
+  void OnSubmitClickBegin(nsIContent* aOriginatingElement);
   void OnSubmitClickEnd();
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -304,10 +304,8 @@ protected:
    * their data pumped into the FormSubmitter.
    *
    * @param aFormSubmission the form submission object
-   * @param aSubmitElement the element that was clicked on (nsnull if none)
    */
-  nsresult WalkFormElements(nsFormSubmission* aFormSubmission,
-                            nsIContent* aSubmitElement);
+  nsresult WalkFormElements(nsFormSubmission* aFormSubmission);
 
   /**
    * Notify any submit observers of the submit.
@@ -328,8 +326,20 @@ protected:
    * Get the full URL to submit to.  Do not submit if the returned URL is null.
    *
    * @param aActionURL the full, unadulterated URL you'll be submitting to [OUT]
+   * @param aOriginatingElement the originating element of the form submission [IN]
    */
-  nsresult GetActionURL(nsIURI** aActionURL);
+  nsresult GetActionURL(nsIURI** aActionURL, nsIContent* aOriginatingElement);
+
+  /**
+   * Check the form validity following this algorithm:
+   * http://www.whatwg.org/specs/web-apps/current-work/#statically-validate-the-constraints
+   *
+   * TODO: add a [out] parameter to have the list of unhandled invalid controls
+   *       but not needed until we have a UI to test it.
+   *
+   * @return Whether the form is currently valid.
+   */
+  PRBool CheckFormValidity() const;
 
 public:
   /**

@@ -111,7 +111,11 @@ public:
   private:
     PRUint32 mFloatInfoCount;
     nscoord mX, mY;
-    
+    PRPackedBool mPushedLeftFloatPastBreak;
+    PRPackedBool mPushedRightFloatPastBreak;
+    PRPackedBool mSplitLeftFloatAcrossBreak;
+    PRPackedBool mSplitRightFloatAcrossBreak;
+
     friend class nsFloatManager;
   };
 
@@ -152,14 +156,13 @@ public:
    * @param aY [in] vertical coordinate for top of available space
    *           desired
    * @param aHeight [in] see above
-   * @param aContentAreaWidth [in] the width of the content area (whose left
-   *                          edge must be zero in the current translation)
+   * @param aContentArea [in] an nsRect representing the content area
    * @param aState [in] If null, use the current state, otherwise, do
    *                    computation based only on floats present in the given
    *                    saved state.
    * @return An nsFlowAreaRect whose:
-   *           mRect is the resulting rectangle for line boxes.  It will not go
-   *             left of 0, nor right of aContentAreaWidth, but will be
+   *           mRect is the resulting rectangle for line boxes.  It will not
+   *             extend beyond aContentArea's horizontal bounds, but may be
    *             narrower when floats are present.
    *          mBandHasFloats is whether there are floats at the sides of the
    *            return value including those that do not reduce the line box
@@ -169,7 +172,7 @@ public:
    */
   enum BandInfoType { BAND_FROM_POINT, WIDTH_WITHIN_HEIGHT };
   nsFlowAreaRect GetFlowArea(nscoord aY, BandInfoType aInfoType,
-                             nscoord aHeight, nscoord aContentAreaWidth,
+                             nscoord aHeight, nsRect aContentArea,
                              SavedState* aState) const;
 
   /**
@@ -180,6 +183,28 @@ public:
    * must ensure aMarginRect.height >= 0 and aMarginRect.width >= 0.
    */
   nsresult AddFloat(nsIFrame* aFloatFrame, const nsRect& aMarginRect);
+
+  /**
+   * Notify that we tried to place a float that could not fit at all and
+   * had to be pushed to the next page/column?  (If so, we can't place
+   * any more floats in this page/column because of the rule that the
+   * top of a float cannot be above the top of an earlier float.  It
+   * also means that any clear needs to continue to the next column.)
+   */
+  void SetPushedLeftFloatPastBreak()
+    { mPushedLeftFloatPastBreak = PR_TRUE; }
+  void SetPushedRightFloatPastBreak()
+    { mPushedRightFloatPastBreak = PR_TRUE; }
+
+  /**
+   * Notify that we split a float, with part of it needing to be pushed
+   * to the next page/column.  (This means that any 'clear' needs to
+   * continue to the next page/column.)
+   */
+  void SetSplitLeftFloatAcrossBreak()
+    { mSplitLeftFloatAcrossBreak = PR_TRUE; }
+  void SetSplitRightFloatAcrossBreak()
+    { mSplitRightFloatAcrossBreak = PR_TRUE; }
 
   /**
    * Remove the regions associated with this floating frame and its
@@ -248,7 +273,12 @@ public:
    *
    * Both aY and the result are relative to the current translation.
    */
-  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType) const;
+  enum {
+    // Tell ClearFloats not to push to nscoord_MAX when floats have been
+    // pushed to the next page/column.
+    DONT_CLEAR_PUSHED_FLOATS = (1<<0)
+  };
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType, PRUint32 aFlags = 0) const;
 
   /**
    * Checks if clear would pass into the floats' BFC's next-in-flow,
@@ -259,6 +289,14 @@ public:
   void AssertStateMatches(SavedState *aState) const
   {
     NS_ASSERTION(aState->mX == mX && aState->mY == mY &&
+                 aState->mPushedLeftFloatPastBreak ==
+                   mPushedLeftFloatPastBreak &&
+                 aState->mPushedRightFloatPastBreak ==
+                   mPushedRightFloatPastBreak &&
+                 aState->mSplitLeftFloatAcrossBreak ==
+                   mSplitLeftFloatAcrossBreak &&
+                 aState->mSplitRightFloatAcrossBreak ==
+                   mSplitRightFloatAcrossBreak &&
                  aState->mFloatInfoCount == mFloats.Length(),
                  "float manager state should match saved state");
   }
@@ -288,6 +326,21 @@ private:
   nscoord         mX, mY;     // translation from local to global coordinate space
   nsTArray<FloatInfo> mFloats;
   nsIntervalSet   mFloatDamage;
+
+  // Did we try to place a float that could not fit at all and had to be
+  // pushed to the next page/column?  If so, we can't place any more
+  // floats in this page/column because of the rule that the top of a
+  // float cannot be above the top of an earlier float.  And we also
+  // need to apply this information to 'clear', and thus need to
+  // separate left and right floats.
+  PRPackedBool mPushedLeftFloatPastBreak;
+  PRPackedBool mPushedRightFloatPastBreak;
+
+  // Did we split a float, with part of it needing to be pushed to the
+  // next page/column.  This means that any 'clear' needs to continue to
+  // the next page/column.
+  PRPackedBool mSplitLeftFloatAcrossBreak;
+  PRPackedBool mSplitRightFloatAcrossBreak;
 
   static PRInt32 sCachedFloatManagerCount;
   static void* sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];

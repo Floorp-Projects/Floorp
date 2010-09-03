@@ -35,14 +35,14 @@ if (!gl) {
   checkPrefix("WebGL GLSL ES 1.0", "SHADING_LANGUAGE_VERSION");
 }
 
-function checkPrefix(expected, enum) {
-  var s = gl.getParameter(gl[enum]);
+function checkPrefix(expected, enum_val) {
+  var s = gl.getParameter(gl[enum_val]);
   if (s != null &&
       s.length >= expected.length &&
       s.substring(0, expected.length) == expected) {
-    testPassed("getParameter(gl." + enum + ") correctly started with " + expected);
+    testPassed("getParameter(gl." + enum_val + ") correctly started with " + expected);
   } else {
-    testFailed("getParameter(gl." + enum + ") did not start with " + expected);
+    testFailed("getParameter(gl." + enum_val + ") did not start with " + expected);
   }
 }
 

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-157334-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 157334;
 var summary = 'String concat should not be O(N**2)';

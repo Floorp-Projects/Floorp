@@ -41,6 +41,7 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = storage/test
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -56,6 +57,7 @@ CPP_UNIT_TESTS = \
   test_true_async.cpp \
   test_unlock_notify.cpp \
   test_service_init_background_thread.cpp \
+  test_AsXXX_helpers.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG

@@ -866,6 +866,17 @@ Blocklist.prototype = {
       if (addonList.length == 0)
         return;
 
+      if ("@mozilla.org/addons/blocklist-prompt;1" in Cc) {
+        try {
+          let blockedPrompter = Cc["@mozilla.org/addons/blocklist-prompt;1"]
+                                 .getService(Ci.nsIBlocklistPrompt);
+          blockedPrompter.prompt(addonList);
+        } catch (e) {
+          LOG(e);
+        }
+        return;
+      }
+
       var args = {
         restart: false,
         list: addonList

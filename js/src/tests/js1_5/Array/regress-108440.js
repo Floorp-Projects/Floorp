@@ -49,7 +49,6 @@
  * avoiding recursive death on a cycle."
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-108440.js';
 var BUGNUMBER = 108440;
 var summary = "Shouldn't crash trying to add an array as an element of itself";
 var self = this;

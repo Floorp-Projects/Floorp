@@ -566,7 +566,7 @@ public:
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
     virtual PRInt32 IntrinsicState() const;
 
-    nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+    nsresult EnsureLocalStyle();
 
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
     already_AddRefed<nsFrameLoader> GetFrameLoader();
@@ -697,6 +697,8 @@ protected:
 
     friend nsresult
     NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
+    friend void
+    NS_TrustedNewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
 
     static already_AddRefed<nsXULElement>
     Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,

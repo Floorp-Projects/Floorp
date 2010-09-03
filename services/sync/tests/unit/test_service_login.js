@@ -24,6 +24,7 @@ function run_test() {
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
+  do_test_pending();
   let server = httpd_setup({
     "/1.0/johndoe/info/collections": login_handler,
     "/1.0/janedoe/info/collections": login_handler
@@ -34,7 +35,8 @@ function run_test() {
     Weave.Service.clusterURL = "http://localhost:8080/";
     Svc.Prefs.set("autoconnect", false);
 
-    _("Initial state is ok.");
+    _("Force the initial state.");
+    Status.service = STATUS_OK;
     do_check_eq(Status.service, STATUS_OK);
 
     _("Try logging in. It wont' work because we're not configured yet.");
@@ -76,6 +78,21 @@ function run_test() {
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
     do_check_true(Weave.Service.isLoggedIn);
     do_check_true(Svc.Prefs.get("autoconnect"));
+    
+    _("Calling login() with parameters when the client is unconfigured sends notification.");
+    let notified = false;
+    Weave.Svc.Obs.add("weave:service:setup-complete", function() {
+      notified = true;
+    });
+    Weave.Service.username = "";
+    Weave.Service.password = "";
+    Weave.Service.passphrase = "";    
+    Weave.Service.login("janedoe", "ilovejohn", "bar");
+    do_check_true(notified);
+    do_check_eq(Status.service, STATUS_OK);
+    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Svc.Prefs.get("autoconnect"));
 
     _("Logout.");
     Weave.Service.logout();
@@ -89,6 +106,6 @@ function run_test() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(function() {});
+    server.stop(do_test_finished);
   }
 }

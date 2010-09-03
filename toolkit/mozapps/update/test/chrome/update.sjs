@@ -32,6 +32,7 @@ function handleRequest(aRequest, aResponse) {
   // before the download completes.
   if (params.slowDownloadMar) {
     aResponse.processAsync();
+    aResponse.setHeader("Content-Type", "binary/octet-stream");
     aResponse.setHeader("Content-Length", "775");
     var marFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
                   getService(AUS_Ci.nsIProperties).
@@ -43,7 +44,7 @@ function handleRequest(aRequest, aResponse) {
     var contents = readFileBytes(marFile);
     var timer = AUS_Cc["@mozilla.org/timer;1"].
                 createInstance(AUS_Ci.nsITimer);
-    timer.initWithCallback(function() {
+    timer.initWithCallback(function(aTimer) {
       aResponse.write(contents);
       aResponse.finish();
     }, SLOW_MAR_DOWNLOAD_INTERVAL, AUS_Ci.nsITimer.TYPE_ONE_SHOT);
@@ -93,12 +94,12 @@ function handleRequest(aRequest, aResponse) {
   if (billboardURL && params.remoteNoTypeAttr)
     billboardURL += "&amp;remoteNoTypeAttr=1";
   if (params.billboard404)
-    billboardURL = URL_HOST + URL_PATH + "missing.html"
+    billboardURL = URL_HOST + URL_PATH + "missing.html";
   var licenseURL = params.showLicense ? URL_UPDATE + "?uiURL=LICENSE" : null;
   if (licenseURL && params.remoteNoTypeAttr)
     licenseURL += "&amp;remoteNoTypeAttr=1";
   if (params.license404)
-    licenseURL = URL_HOST + URL_PATH + "missing.html"
+    licenseURL = URL_HOST + URL_PATH + "missing.html";
   var showPrompt = params.showPrompt ? "true" : null;
   var showNever = params.showNever ? "true" : null;
   var showSurvey = params.showSurvey ? "true" : null;

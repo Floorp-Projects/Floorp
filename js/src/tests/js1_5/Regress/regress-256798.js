@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-256798.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 256798;
 var summary = 'regexp zero-width positive lookahead';

@@ -9,7 +9,7 @@
 
 # User files that may appear at the root
 ^\.mozconfig
-^mozconfig
+^mozconfig$
 ^configure$
 ^config\.cache$
 ^config\.log$

@@ -43,7 +43,6 @@
  * SUMMARY:  Testing that we don't crash on obj.toSource()
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-44009.js';
 var BUGNUMBER = 44009;
 var summary = "Testing that we don't crash on obj.toSource()";
 var obj1 = {};

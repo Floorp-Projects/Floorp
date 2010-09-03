@@ -16,12 +16,12 @@
 == linear-diagonal-8a.html linear-diagonal-8-ref.html
 == linear-position-1a.html linear-position-1-ref.html
 == linear-repeat-1a.html linear-repeat-1-ref.html
-== linear-repeat-1b.html linear-repeat-1-ref.html
+fails-if(d2d) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
 == linear-repeat-1c.html linear-repeat-1-ref.html
-== linear-repeat-1d.html linear-repeat-1-ref.html
+fails-if(d2d) == linear-repeat-1d.html linear-repeat-1-ref.html # bug 582236
 == linear-repeat-1e.html linear-repeat-1-ref.html
-== linear-repeat-1f.html linear-repeat-1-ref.html
-== linear-repeat-1g.html linear-repeat-1-ref.html
+fails-if(d2d) == linear-repeat-1f.html linear-repeat-1-ref.html # bug 582236
+fails-if(d2d) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
 == linear-size-1a.html linear-size-1-ref.html
 == linear-stops-1a.html linear-stops-1-ref.html
 == linear-stops-1b.html linear-stops-1-ref.html
@@ -39,7 +39,7 @@
 == linear-zero-length-1c.html linear-zero-length-1-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-== radial-1a.html radial-1-ref.html
+random-if(d2d) == radial-1a.html radial-1-ref.html
 == radial-2a.html radial-2-ref.html
 == radial-2b.html radial-2-ref.html
 == radial-position-1a.html radial-position-1-ref.html
@@ -54,21 +54,21 @@
 == radial-zero-length-1d.html radial-zero-length-1-ref.html
 == radial-zero-length-1e.html radial-zero-length-1-ref.html
 == radial-zero-length-1f.html radial-zero-length-1-ref.html
-== repeating-linear-1a.html repeating-linear-1-ref.html
-== repeating-linear-1b.html repeating-linear-1-ref.html
+fails-if(d2d) == repeating-linear-1a.html repeating-linear-1-ref.html
+fails-if(d2d) == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-linear-2a.html repeating-linear-2-ref.html
 == repeating-radial-1a.html repeating-radial-1-ref.html
 == repeating-radial-1b.html repeating-radial-1-ref.html
 == repeating-radial-2a.html repeating-radial-2-ref.html
 == twostops-1a.html twostops-1-ref.html
 == twostops-1b.html twostops-1-ref.html
-fails == twostops-1c.html twostops-1-ref.html # bug 524173
+fails-if(!d2d) == twostops-1c.html twostops-1-ref.html # bug 524173
 == twostops-1d.html twostops-1-ref.html
-fails-if(!cocoaWidget) == twostops-1e.html twostops-1-ref.html # bug 524173
+fails-if(!cocoaWidget&&!d2d) == twostops-1e.html twostops-1-ref.html # bug 524173
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 == aja-linear-1a.html aja-linear-1-ref.html
-fails == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
+fails-if(!d2d) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 == aja-linear-1c.html aja-linear-1-ref.html
 == aja-linear-1d.html aja-linear-1-ref.html
 == aja-linear-1e.html aja-linear-1-ref.html
@@ -77,7 +77,7 @@ fails == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 == aja-linear-2a.html aja-linear-2-ref.html
 == aja-linear-2b.html aja-linear-2-ref.html
 fails == aja-linear-2c.html aja-linear-2-ref.html # bug 522607
-fails == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
+fails-if(!d2d) == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
 == aja-linear-3a.html aja-linear-3-ref.html
 == aja-linear-3b.html aja-linear-3-ref.html
 == aja-linear-4a.html aja-linear-4-ref.html

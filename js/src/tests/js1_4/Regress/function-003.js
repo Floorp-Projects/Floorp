@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'function-003.js';
 
 /**
  *  File Name:          function-003.js

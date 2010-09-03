@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'dowhile-003.js';
 
 /**
  *  File Name:          dowhile-003

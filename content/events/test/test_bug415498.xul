@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
 <body  xmlns="http://www.w3.org/1999/xhtml">
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=415498">Mozilla Bug 415498</a>
 
@@ -23,9 +25,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
   <script class="testbody" type="application/javascript"><![CDATA[
 
     /** Test for Bug 415498 **/
-    const Cc = Components.classes;
-    const Ci = Components.interfaces;
-    const Cr = Components.results;
+    if (Cc === undefined) {
+      var Cc = Components.classes;
+      var Ci = Components.interfaces;
+    }
+    var Cr = Components.results;
 
     SimpleTest.waitForExplicitFinish();
 
@@ -72,7 +76,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       }, false);
 
       // 1) This document uses addEventListener to register a method throwing an exception
-      browser.loadURI("chrome://mochikit/content/chrome/content/events/test/bug415498-doc1.html");
+      var chromeDir = getRootDirectory(window.location.href);
+      browser.loadURI(chromeDir + "bug415498-doc1.html");
       yield;
 
       ok(verifyErrorReceived("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"),
@@ -80,7 +85,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       gMessages = [];
 
       // 2) This document sets window.onload to register a method throwing an exception
-      browser.loadURI("chrome://mochikit/content/chrome/content/events/test/bug415498-doc2.html");
+      var chromeDir = getRootDirectory(window.location.href);
+      browser.loadURI(chromeDir + "bug415498-doc2.html");
       yield;
 
       ok(verifyErrorReceived("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"),

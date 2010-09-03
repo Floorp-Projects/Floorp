@@ -8,7 +8,7 @@
 
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=392233 -->
 
-  <text x="0" y="100" font-size="100">Hello</text>
-  <text x="0" y="200" font-size="100">Hello</text>
-  <text x="0" y="300" font-size="100">Hello</text>
+  <text x="0" y="128" font-size="128">Hello</text>
+  <text x="0" y="256" font-size="128">Hello</text>
+  <text x="0" y="384" font-size="128">Hello</text>
 </svg>

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-348810.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 348810;
 var summary = 'Do not crash when sorting an array of holes';

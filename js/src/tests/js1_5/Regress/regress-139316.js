@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-139316.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 139316;
 var summary = 'Do not crash in js_ReportIsNotDefined()';

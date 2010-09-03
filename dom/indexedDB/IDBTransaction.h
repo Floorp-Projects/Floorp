@@ -53,7 +53,9 @@
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
 
+class nsIScriptContext;
 class nsIThread;
+class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -78,7 +80,8 @@ public:
                                            nsDOMEventTargetHelper)
 
   static already_AddRefed<IDBTransaction>
-  Create(IDBDatabase* aDatabase,
+  Create(JSContext* aCx,
+         IDBDatabase* aDatabase,
          nsTArray<nsString>& aObjectStoreNames,
          PRUint16 aMode,
          PRUint32 aTimeout);
@@ -144,6 +147,16 @@ public:
 
   enum { FULL_LOCK = nsIIDBTransaction::SNAPSHOT_READ + 1 };
 
+  nsIScriptContext* ScriptContext()
+  {
+    return mScriptContext;
+  }
+
+  nsPIDOMWindow* Owner()
+  {
+    return mOwner;
+  }
+
 private:
   IDBTransaction();
   ~IDBTransaction();
@@ -176,26 +189,6 @@ private:
 
   bool mHasInitialSavepoint;
   bool mAborted;
-};
-
-NS_STACK_CLASS
-class AutoTransactionRequestNotifier
-{
-public:
-  AutoTransactionRequestNotifier(IDBTransaction* aTransaction)
-  : mTransaction(aTransaction)
-  {
-    NS_ASSERTION(mTransaction, "Null pointer!");
-    mTransaction->OnNewRequest();
-  }
-
-  ~AutoTransactionRequestNotifier()
-  {
-    mTransaction->OnRequestFinished();
-  }
-
-private:
-  nsRefPtr<IDBTransaction> mTransaction;
 };
 
 class CommitHelper : public nsIRunnable

@@ -140,10 +140,11 @@ nanojit::LInsPrinter::accNames[] = {
 #endif
 
 #ifdef DEBUG
-void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
+void ValidateWriter::checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet accSet)
 {
     (void)op;
     (void)base;
+    (void)disp;
     NanoAssert(accSet == ACCSET_OTHER);
 }
 #endif
@@ -1039,6 +1040,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
           case LIR_cmovi:
           CASE64(LIR_cmovq:)
+          case LIR_cmovd:
             need(3);
             ins = mLir->ins3(mOpcode,
                              ref(mTokens[0]),
@@ -1399,6 +1401,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     Q_BQQ_ops.push_back(LIR_cmovq);
 #endif
 
+    vector<LOpcode> D_BDD_ops;
+    D_BDD_ops.push_back(LIR_cmovd);
+
     vector<LOpcode> B_II_ops;
     B_II_ops.push_back(LIR_eqi);
     B_II_ops.push_back(LIR_lti);
@@ -1739,6 +1744,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             }
             break;
 #endif
+
+        case LOP_D_BDD:
+            if (!Bs.empty() && !Ds.empty()) {
+                ins = mLir->ins3(rndPick(D_BDD_ops), rndPick(Bs), rndPick(Ds), rndPick(Ds));
+                addOrReplace(Ds, ins);
+                n++;
+            }
+            break;
 
         case LOP_B_II:
            if (!Is.empty()) {

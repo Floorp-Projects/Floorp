@@ -46,7 +46,8 @@ class nsHTMLFrameElement : public nsGenericHTMLFrameElement,
                            public nsIDOMHTMLFrameElement
 {
 public:
-  nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                     PRUint32 aFromParser = NS_NOT_FROM_PARSER);
   virtual ~nsHTMLFrameElement();
 
   // nsISupports
@@ -76,11 +77,12 @@ public:
 };
 
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Frame)
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Frame)
 
 
-nsHTMLFrameElement::nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLFrameElement(aNodeInfo)
+nsHTMLFrameElement::nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                       PRUint32 aFromParser)
+  : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
 {
 }
 

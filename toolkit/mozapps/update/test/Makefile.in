@@ -39,10 +39,9 @@ DEPTH     = ../../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
+relativesrcdir = toolkit/mozapps/update/test
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE = test_update
 
 DIRS = \
   chrome \
@@ -52,7 +51,7 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-TESTROOT = $(call core_abspath,$(DEPTH))/_tests/xpcshell/$(MODULE)
+TESTROOT = $(call core_abspath,$(DEPTH))/_tests/xpcshell/$(relativesrcdir)
 
 CPPSRCS = \
   TestAUSReadStrings.cpp \

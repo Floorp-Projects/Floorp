@@ -54,7 +54,7 @@
 
 class nsIContent;
 class nsIURI;
-class nsIFrameFrame;
+class nsSubDocumentFrame;
 class nsIView;
 class nsIInProcessContentFrameMessageManager;
 class AutoResetInShow;
@@ -84,7 +84,7 @@ class nsFrameLoader : public nsIFrameLoader
 #endif
 
 protected:
-  nsFrameLoader(nsIContent *aOwner) :
+  nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated) :
     mOwnerContent(aOwner),
     mDepthTooGreat(PR_FALSE),
     mIsTopLevelContent(PR_FALSE),
@@ -92,7 +92,8 @@ protected:
     mNeedsAsyncDestroy(PR_FALSE),
     mInSwap(PR_FALSE),
     mInShow(PR_FALSE),
-    mHideCalled(PR_FALSE)
+    mHideCalled(PR_FALSE),
+    mNetworkCreated(aNetworkCreated)
 #ifdef MOZ_IPC
     , mDelayRemoteDialogs(PR_FALSE)
     , mRemoteWidgetCreated(PR_FALSE)
@@ -113,7 +114,7 @@ public:
     nsFrameLoader::Destroy();
   }
 
-  static nsFrameLoader* Create(nsIContent* aOwner);
+  static nsFrameLoader* Create(nsIContent* aOwner, PRBool aNetworkCreated);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
@@ -131,7 +132,7 @@ public:
    */
   PRBool Show(PRInt32 marginWidth, PRInt32 marginHeight,
               PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
-              nsIFrameFrame* frame);
+              nsSubDocumentFrame* frame);
 
   /**
    * Called from the layout frame associated with this frame loader, when
@@ -151,6 +152,22 @@ public:
 
   // When IPC is enabled, destroy any associated child process.
   void DestroyChild();
+
+  /**
+   * Return the primary frame for our owning content, or null if it
+   * can't be found.
+   */
+  nsIFrame* GetPrimaryFrameOfOwningContent() const
+  {
+    return mOwnerContent ? mOwnerContent->GetPrimaryFrame() : nsnull;
+  }
+
+  /** 
+   * Return the document that owns this, or null if we don't have
+   * an owner.
+   */
+  nsIDocument* GetOwnerDoc() const
+  { return mOwnerContent ? mOwnerContent->GetOwnerDoc() : nsnull; }
 
 #ifdef MOZ_IPC
   PBrowserParent* GetRemoteBrowser();
@@ -187,7 +204,7 @@ private:
 
   // Do the hookup necessary to actually show a remote frame once the view and
   // widget are available.
-  bool ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view);
+  bool ShowRemoteFrame(nsSubDocumentFrame* frame, nsIView* view);
 #endif
 
   nsCOMPtr<nsIDocShell> mDocShell;
@@ -205,6 +222,10 @@ private:
   PRPackedBool mInSwap : 1;
   PRPackedBool mInShow : 1;
   PRPackedBool mHideCalled : 1;
+  // True when the object is created for an element which the parser has
+  // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
+  // it may lose the flag.
+  PRPackedBool mNetworkCreated : 1;
 
 #ifdef MOZ_IPC
   PRPackedBool mDelayRemoteDialogs : 1;

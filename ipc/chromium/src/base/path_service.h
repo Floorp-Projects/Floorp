@@ -62,7 +62,7 @@ class PathService {
   // Otherwise, true is returned.
   //
   // WARNING: This function could be called on any thread from which the
-  // PathService is used, so a the ProviderFunc MUST BE THREADSAFE.
+  // PathService is used, so the ProviderFunc MUST BE THREADSAFE.
   //
   typedef bool (*ProviderFunc)(int, FilePath*);
 

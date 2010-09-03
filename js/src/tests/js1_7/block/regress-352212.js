@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352212.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352212;
 var summary = 'Do not crash with XML filtering predicate, |let|, string.replace';

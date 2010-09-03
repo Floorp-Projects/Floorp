@@ -190,6 +190,15 @@ extern bool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
              void *arg, void *tmp, JSMergeSortElemType elemType);
 
+/*
+ * The Array.prototype.sort fast-native entry point is exported for joined
+ * function optimization in js{interp,tracer}.cpp.
+ */
+namespace js {
+extern JSBool
+array_sort(JSContext *cx, uintN argc, js::Value *vp);
+}
+
 #ifdef DEBUG_ARRAYS
 extern JSBool
 js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
@@ -230,7 +239,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Array(JSContext* cx, JSObject* obj, uintN argc, js::Value* argv, js::Value* rval);
+js_Array(JSContext *cx, uintN argc, js::Value *vp);
 
 /*
  * Friend api function that allows direct creation of an array object with a

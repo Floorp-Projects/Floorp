@@ -961,79 +961,6 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   ctx->mOperationCallbackTime = callbackTime;
   ctx->mModalStateTime = modalStateTime;
 
-  // Check to see if we are running OOM
-  nsCOMPtr<nsIMemory> mem;
-  NS_GetMemoryManager(getter_AddRefs(mem));
-  if (!mem) {
-    JS_ClearPendingException(cx);
-    return JS_FALSE;
-  }
-
-  PRBool lowMemory;
-  mem->IsLowMemory(&lowMemory);
-  if (lowMemory) {
-    // try to clean up:
-    nsJSContext::CC();
-
-    // never prevent system scripts from running
-    if (!::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx))) {
-
-      // lets see if CC() did anything, if not, cancel the script.
-      mem->IsLowMemory(&lowMemory);
-      if (lowMemory) {
-
-        if (nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE)) {
-          JS_ClearPendingException(cx);
-          return JS_FALSE;
-        }
-
-        nsCOMPtr<nsIScriptError> errorObject =
-          do_CreateInstance("@mozilla.org/scripterror;1");
-
-        if (errorObject) {
-          nsXPIDLString msg;
-          nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                             "LowMemoryMessage",
-                                             msg);
-
-          JSStackFrame *fp, *iterator = nsnull;
-          fp = ::JS_FrameIterator(cx, &iterator);
-          PRUint32 lineno = 0;
-          nsAutoString sourcefile;
-          if (fp) {
-            JSScript* script = ::JS_GetFrameScript(cx, fp);
-            if (script) {
-              const char* filename = ::JS_GetScriptFilename(cx, script);
-              if (filename) {
-                CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
-              }
-              jsbytecode* pc = ::JS_GetFramePC(cx, fp);
-              if (pc) {
-                lineno = ::JS_PCToLineNumber(cx, script, pc);
-              }
-            }
-          }
-
-          rv = errorObject->Init(msg.get(),
-                                 sourcefile.get(),
-                                 EmptyString().get(),
-                                 lineno, 0, nsIScriptError::errorFlag,
-                                 "content javascript");
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIConsoleService> consoleService =
-              do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-              consoleService->LogMessage(errorObject);
-            }
-          }
-        }
-
-        JS_ClearPendingException(cx);
-        return JS_FALSE;
-      }
-    }
-  }
-
   PRTime now = PR_Now();
 
   if (callbackTime == 0) {
@@ -1045,7 +972,6 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   if (ctx->mModalStateDepth) {
     // We're waiting on a modal dialog, nothing more to do here.
-
     return JS_TRUE;
   }
 
@@ -1222,7 +1148,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
                                            cx->debugHooks->
                                            debuggerHandlerData)) {
       case JSTRAP_RETURN:
-        fp->rval = js::Valueify(rval);
+        fp->setReturnValue(js::Valueify(rval));
         return JS_TRUE;
       case JSTRAP_ERROR:
         cx->throwing = JS_FALSE;
@@ -2582,7 +2508,7 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
 {
   NS_ENSURE_ARG(aNewInner);
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
-  JSObject *myobject = (JSObject *)aOuterGlobal;
+  JSObject *outerGlobal = (JSObject *)aOuterGlobal;
 
   // Make the inner and outer window both share the same
   // prototype. The prototype we share is the outer window's
@@ -2603,12 +2529,18 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   // Object.prototype. This way the outer also gets the benefits
   // of the global scope polluter, and the inner window's
   // Object.prototype.
-  JSObject *proto = ::JS_GetPrototype(mContext, myobject);
-  JSObject *innerProto = ::JS_GetPrototype(mContext, newInnerJSObject);
-  JSObject *innerProtoProto = ::JS_GetPrototype(mContext, innerProto);
+  JSObject *proto = JS_GetPrototype(mContext, outerGlobal);
+  JSObject *innerProto = JS_GetPrototype(mContext, newInnerJSObject);
+  JSObject *innerProtoProto = JS_GetPrototype(mContext, innerProto);
 
-  ::JS_SetPrototype(mContext, newInnerJSObject, proto);
-  ::JS_SetPrototype(mContext, proto, innerProtoProto);
+  JS_SetPrototype(mContext, newInnerJSObject, proto);
+  JS_SetPrototype(mContext, proto, innerProtoProto);
+
+  // Now that we're connecting the outer global to the inner one,
+  // we must have transplanted it. The JS engine tries to maintain
+  // the global object's compartment as its default compartment,
+  // so update that now since it might have changed.
+  JS_SetGlobalObject(mContext, outerGlobal);
   return NS_OK;
 }
 
@@ -2648,11 +2580,8 @@ nsJSContext::InitContext()
 
 nsresult
 nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
-                               nsIPrincipal *aPrincipal)
+                               nsIScriptGlobalObject *aCurrentInner)
 {
-  NS_PRECONDITION(!JS_GetGlobalObject(mContext),
-                  "Outer window already initialized");
-
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
   PRUint32 flags = 0;
 
@@ -2666,17 +2595,20 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
     // need to preserve the <!-- script hiding hack from JS-in-HTML daze
     // (introduced in 1995 for graceful script degradation in Netscape 1,
     // Mosaic, and other pre-JS browsers).
-    ::JS_SetOptions(mContext, ::JS_GetOptions(mContext) | JSOPTION_XML);
+    JS_SetOptions(mContext, JS_GetOptions(mContext) | JSOPTION_XML);
   }
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv =
-    xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
-                                         NS_GET_IID(nsISupports),
-                                         aPrincipal, EmptyCString(),
-                                         flags, getter_AddRefs(holder));
+  nsresult rv = xpc->WrapNative(mContext, aCurrentInner->GetGlobalJSObject(),
+                                aGlobalObject, NS_GET_IID(nsISupports),
+                                getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Force our context's global object to be the outer.
+  JSObject *globalObj;
+  holder->GetJSObject(&globalObj);
+  JS_SetGlobalObject(mContext, globalObj);
 
   // Hold a strong reference to the wrapper for the global to avoid
   // rooting and unrooting the global object every time its AddRef()
@@ -2696,14 +2628,9 @@ nsJSContext::InitOuterWindow()
   // properties will be forwarded to the inner window.
   JS_ClearScope(mContext, global);
 
-  // Now that the inner and outer windows are connected, tell XPConnect to
-  // re-initialize the prototypes on the outer window's scope.
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  nsresult rv = xpc->InitClassesForOuterObject(mContext, global);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(sgo));
-
   if (ci) {
     jsval v;
 
@@ -3464,7 +3391,7 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
     // chain when we're clearing an outer window whose current inner we
     // still want.
     if (aClearFromProtoChain) {
-      nsWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
+      nsCommonWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
 
       // Clear up obj's prototype chain, but not Object.prototype.
       for (JSObject *o = ::JS_GetPrototype(mContext, obj), *next;
@@ -3980,11 +3907,13 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
   PRInt32 highwatermark = nsContentUtils::GetIntPref(aPrefName, 32);
 
   if (highwatermark >= 32) {
-    // There are two options of memory usage in tracemonkey. One is
-    // to use malloc() and the other is to use memory for GC. (E.g.
-    // js_NewGCThing()/RefillDoubleFreeList()).
-    // Let's limit the high water mark for the first one to 32MB,
-    // and second one to 0xffffffff.
+    /*
+     * There are two ways to allocate memory in SpiderMonkey. One is
+     * to use jsmalloc() and the other is to use GC-owned memory
+     * (e.g. js_NewGCThing()).
+     *
+     * In the browser, we don't cap the amount of GC-owned memory.
+     */
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
                       64L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,

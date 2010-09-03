@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-451340.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 451340;
 var summary = 'Do no crash [@ CheckDestructuring]';

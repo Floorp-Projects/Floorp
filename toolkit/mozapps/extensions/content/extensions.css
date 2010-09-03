@@ -35,6 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace xhtml "http://www.w3.org/1999/xhtml";
+
+/* HTML link elements do weird things to the layout if they are not hidden */
+xhtml|link {
+  display: none;
+}
+
 #categories {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#categories-list");
 }
@@ -48,6 +55,7 @@
 }
 
 .addon[status="installed"] {
+  -moz-box-orient: vertical;
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");
 }
 
@@ -55,7 +63,7 @@
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-installing");
 }
 
-.addon[status="uninstalled"] {
+.addon[pending="uninstall"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-uninstalled");
 }
 
@@ -75,16 +83,12 @@
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-status");
 }
 
+.detail-row {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
+}
+
 #header-searching:not([active]) {
   visibility: hidden;
-}
-
-.addon[active="true"] .disabled-postfix {
-  display: none;
-}
-
-.addon[incompatible="false"] .incompatible-warning {
-  display: none;
 }
 
 #search-list[local="false"]  > .addon[remote="false"],
@@ -92,6 +96,29 @@
   visibility: collapse;
 }
 
-#detail-view[loading] > .detail-view-container {
+#detail-view {
+  overflow-y: auto;
+}
+
+.addon:not([notification="warning"]) .warning,
+.addon:not([notification="error"]) .error,
+.addon:not([notification="info"]) .info,
+.addon:not([pending]) .pending,
+.addon:not([upgrade="true"]) .update-postfix,
+.addon[active="true"] .disabled-postfix,
+.addon[pending="install"] .update-postfix,
+.addon[pending="install"] .disabled-postfix,
+#detail-view:not([notification="warning"]) .warning,
+#detail-view:not([notification="error"]) .error,
+#detail-view:not([notification="info"]) .info,
+#detail-view:not([pending]) .pending,
+#detail-view:not([upgrade="true"]) .update-postfix,
+#detail-view[active="true"] .disabled-postfix,
+#detail-view[loading] > .detail-view-container,
+.detail-row:not([value]) {
+  display: none;
+}
+
+.view-pane:not(#updates-view) .addon .relnotes-toggle {
   display: none;
 }

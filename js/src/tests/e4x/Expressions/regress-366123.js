@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-366123.js';
 
 var BUGNUMBER = 366123;
 var summary = 'Compiling long XML filtering predicate';

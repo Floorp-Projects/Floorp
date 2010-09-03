@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIDOMCSSVALUE
 
   // nsROCSSPrimitiveValue
-  nsROCSSPrimitiveValue(PRInt32 aAppUnitsPerInch);
+  nsROCSSPrimitiveValue();
   virtual ~nsROCSSPrimitiveValue();
 
   void SetNumber(float aValue);
@@ -91,8 +91,6 @@ private:
     nsIURI*         mURI;
     nsCSSKeyword    mKeyword;
   } mValue;
-  
-  PRInt32 mAppUnitsPerInch;
 };
 
 #endif /* nsROCSSPrimitiveValue_h___ */

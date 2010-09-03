@@ -1,5 +1,7 @@
 pref("extensions.testpilot.indexFileName", "index.json");
 
+pref("extensions.testpilot@labs.mozilla.com.description", "chrome://testpilot/locale/main.properties");
+
 pref("extensions.testpilot.popup.delayAfterStartup", 180000); // 3 minutes
 pref("extensions.testpilot.popup.timeBetweenChecks", 86400000); // 24 hours
 pref("extensions.testpilot.uploadRetryInterval", 3600000); // 1 hour
@@ -16,5 +18,5 @@ pref("extensions.testpilot.dataUploadURL", "https://testpilot.mozillalabs.com/su
 pref("extensions.testpilot.homepageURL", "https://testpilot.mozillalabs.com/");
 
 
-pref("extensions.input.happyURL", "https://input.mozilla.com/happy");
-pref("extensions.input.sadURL", "https://input.mozilla.com/sad");
+pref("extensions.input.happyURL", "http://input.mozilla.com/happy");
+pref("extensions.input.sadURL", "http://input.mozilla.com/sad");

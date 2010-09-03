@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = 'trapflatclosure.js';
 var BUGNUMBER = 549617;
 var summary = 'flat closure debugged via trap while still active';
 

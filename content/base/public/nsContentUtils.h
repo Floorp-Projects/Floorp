@@ -69,6 +69,7 @@
 #include "nsIPrefBranch2.h"
 #include "mozilla/AutoRestore.h"
 #include "nsINode.h"
+#include "nsHashtable.h"
 
 #include "jsapi.h"
 
@@ -110,6 +111,7 @@ class nsIScriptContext;
 class nsIRunnable;
 class nsIInterfaceRequestor;
 template<class E> class nsCOMArray;
+template<class K, class V> class nsRefPtrHashtable;
 struct JSRuntime;
 class nsIUGenCategory;
 class nsIWidget;
@@ -119,6 +121,7 @@ class nsPIDOMEventTarget;
 class nsIPresShell;
 class nsIXPConnectJSObjectHolder;
 class nsPrefOldCallback;
+class nsPrefObserverHashKey;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -382,6 +385,7 @@ public:
   static const nsDependentSubstring TrimCharsInSet(const char* aSet,
                                                    const nsAString& aValue);
 
+  template<PRBool IsWhitespace(PRUnichar)>
   static const nsDependentSubstring TrimWhitespace(const nsAString& aStr,
                                                    PRBool aTrimTrailing = PR_TRUE);
 
@@ -605,6 +609,11 @@ public:
   {
     return sPrefBranch;
   }
+
+  // Get a permission-manager setting for the given uri and type.
+  // If the pref doesn't exist or if it isn't ALLOW_ACTION, PR_FALSE is
+  // returned, otherwise PR_TRUE is returned.
+  static PRBool IsSitePermAllow(nsIURI* aURI, const char* aType);
 
   static nsILineBreaker* LineBreaker()
   {
@@ -1494,12 +1503,14 @@ public:
   /**
    * Convert ASCII A-Z to a-z.
    */
+  static void ASCIIToLower(nsAString& aStr);
   static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
 
   /**
    * Convert ASCII a-z to A-Z.
    */
   static void ASCIIToUpper(nsAString& aStr);
+  static void ASCIIToUpper(const nsAString& aSource, nsAString& aDest);
 
   static nsIInterfaceRequestor* GetSameOriginChecker();
 
@@ -1671,6 +1682,23 @@ public:
    */
   static PRBool IsFocusedContent(nsIContent *aContent);
 
+#ifdef MOZ_IPC
+#ifdef ANDROID
+  static void SetActiveFrameLoader(nsFrameLoader *aFrameLoader)
+  {
+    sActiveFrameLoader = aFrameLoader;
+  }
+
+  static void ClearActiveFrameLoader(const nsFrameLoader *aFrameLoader)
+  {
+    if (sActiveFrameLoader == aFrameLoader)
+      sActiveFrameLoader = nsnull;
+  }
+
+  static already_AddRefed<nsFrameLoader> GetActiveFrameLoader();
+#endif
+#endif
+
 private:
 
   static PRBool InitializeEventTable();
@@ -1711,7 +1739,8 @@ private:
 
   static nsIPrefBranch2 *sPrefBranch;
   // For old compatibility of RegisterPrefCallback
-  static nsCOMArray<nsPrefOldCallback> *sPrefCallbackList;
+  static nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>
+    *sPrefCallbackTable;
 
   static bool sImgLoaderInitialized;
   static void InitImgLoader();
@@ -1759,6 +1788,12 @@ private:
   static nsIInterfaceRequestor* sSameOriginChecker;
 
   static PRBool sIsHandlingKeyBoardEvent;
+
+#ifdef MOZ_IPC
+#ifdef ANDROID
+  static nsFrameLoader *sActiveFrameLoader;
+#endif
+#endif
 };
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \

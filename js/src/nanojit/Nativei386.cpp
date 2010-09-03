@@ -839,7 +839,7 @@ namespace nanojit
     inline void Assembler::FMULdm( const double* dm) { count_ldq(); FPUdm(0xdc01, dm); asm_output("fmul (%p)", (void*)dm); }
     inline void Assembler::FDIVRdm(const double* dm) { count_ldq(); FPUdm(0xdc07, dm); asm_output("fdivr (%p)",(void*)dm); }
 
-    inline void Assembler::FINCSTP()   { count_fpu(); FPUc(0xd9f7);    asm_output("fincstp"); }
+    inline void Assembler::FINCSTP()   { count_fpu(); FPUc(0xd9f7); asm_output("fincstp"); fpu_pop(); }
 
     inline void Assembler::FCOMP()     { count_fpu(); FPUc(0xD8D9);    asm_output("fcomp"); fpu_pop();}
     inline void Assembler::FCOMPP()    { count_fpu(); FPUc(0xDED9);    asm_output("fcompp"); fpu_pop();fpu_pop();}
@@ -1112,7 +1112,6 @@ namespace nanojit
         a.free = SavedRegs | ScratchRegs;
         if (!_config.i386_sse2)
             a.free &= ~XmmRegs;
-        debug_only( a.managed = a.free; )
     }
 
     void Assembler::nPatchBranch(NIns* branch, NIns* targ)
@@ -1216,7 +1215,7 @@ namespace nanojit
                 if (rmask(r) & XmmRegs) {
                     SSE_LDQ(r, d, FP);
                 } else {
-                    NanoAssert(rmask(r) & x87Regs);
+                    NanoAssert(r == FST0);
                     FLDQ(d, FP);
                 }
             }
@@ -1276,17 +1275,16 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
+    void Assembler::asm_spill(Register rr, int d, bool pop)
     {
-        (void)quad;
         NanoAssert(d);
         if (rmask(rr) & GpRegs) {
             ST(FP, d, rr);
         } else if (rmask(rr) & XmmRegs) {
             SSE_STQ(d, FP, rr);
         } else {
-            NanoAssert(rmask(rr) & x87Regs);
-            FSTQ((pop?1:0), d, FP);
+            NanoAssert(rr == FST0);
+            FSTQ(pop, d, FP);
         }
     }
 
@@ -1314,7 +1312,7 @@ namespace nanojit
                 if (rmask(rr) & XmmRegs) {
                     SSE_LDQ(rr, db, rb);
                 } else {
-                    NanoAssert(rmask(rr) & x87Regs);
+                    NanoAssert(rr == FST0);
                     FLDQ(db, rb);
                 }
                 break;
@@ -1325,7 +1323,7 @@ namespace nanojit
                     SSE_LDSS(rr, db, rb);
                     SSE_XORPDr(rr,rr);
                 } else {
-                    NanoAssert(rmask(rr) & x87Regs);
+                    NanoAssert(rr == FST0);
                     FLD32(db, rb);
                 }
                 break;
@@ -1380,7 +1378,7 @@ namespace nanojit
                 SSE_XORPDr(rt, rt);     // zero dest to ensure no dependency stalls
 
             } else {
-                FST32(pop?1:0, dr, rb);
+                FST32(pop, dr, rb);
             }
 
         } else if (value->isImmD()) {
@@ -1414,7 +1412,7 @@ namespace nanojit
             if (rmask(rv) & XmmRegs) {
                 SSE_STQ(dr, rb, rv);
             } else {
-                FSTQ(pop?1:0, dr, rb);
+                FSTQ(pop, dr, rb);
             }
         }
     }
@@ -2021,14 +2019,66 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(condval->isCmp());
-        NanoAssert(ins->isop(LIR_cmovi) && iftrue->isI() && iffalse->isI());
+        NanoAssert((ins->isop(LIR_cmovi) && iftrue->isI() && iffalse->isI()) ||
+                   (ins->isop(LIR_cmovd) && iftrue->isD() && iffalse->isD()));
 
-        Register rr = prepareResultReg(ins, GpRegs);
+        if (!_config.i386_sse2 && ins->isop(LIR_cmovd)) {
+            debug_only( Register rr = ) prepareResultReg(ins, x87Regs);
+            NanoAssert(FST0 == rr);
+            NanoAssert(!iftrue->isInReg() || iftrue->getReg() == FST0);
 
-        Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+            NanoAssert(!iffalse->isInReg());
+
+            NIns* target = _nIns;
+
+            if (iffalse->isImmD()) {
+                asm_immd(FST0, iffalse->immDasQ(), iffalse->immD(), /*canClobberCCs*/false);
+            } else {
+                int df = findMemFor(iffalse);
+                FLDQ(df, FP);
+            }
+
+            FINCSTP();
+            // Its not sufficient to merely decrement the FP stack pointer, we have to
+            // also free FST0, otherwise the load above fails.
+            FFREE(FST0);
+            asm_branch(false, condval, target);
+
+            freeResourcesOf(ins);
+            if (!iftrue->isInReg())
+                findSpecificRegForUnallocated(iftrue, FST0);
+
+            return;
+        }
+
+        RegisterMask allow = ins->isD() ? XmmRegs : GpRegs;
+
+        Register rr = prepareResultReg(ins, allow);
+
+        Register rf = findRegFor(iffalse, allow & ~rmask(rr));
+
+        if (ins->isop(LIR_cmovd)) {
+            NIns* target = _nIns;
+            asm_nongp_copy(rr, rf);
+            asm_branch(false, condval, target);
+
+            // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+            Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+            if (rr != rt)
+                asm_nongp_copy(rr, rt);
+            freeResourcesOf(ins);
+            if (!iftrue->isInReg()) {
+                NanoAssert(rt == rr);
+                findSpecificRegForUnallocated(iftrue, rr);
+            }
+            return;
+        }
 
         // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
         Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+        NanoAssert(ins->isop(LIR_cmovi));
 
         // WARNING: We cannot generate any code that affects the condition
         // codes between the MRcc generation here and the asm_cmp() call
@@ -2511,12 +2561,12 @@ namespace nanojit
             Register ra = findRegFor(lhs, XmmRegs);
             SSE_CVTSD2SI(rr, ra);
         } else {
-            int pop = !lhs->isInReg();
+            bool pop = !lhs->isInReg();
             findSpecificRegFor(lhs, FST0);
             if (ins->isInReg())
                 evict(ins);
             int d = findMemFor(ins);
-            FIST((pop?1:0), d, FP);
+            FIST(pop, d, FP);
         }
 
         freeResourcesOf(ins);
@@ -2713,7 +2763,7 @@ namespace nanojit
             }
 
             evictIfActive(EAX);
-            int pop = !lhs->isInReg();
+            bool pop = !lhs->isInReg();
             findSpecificRegFor(lhs, FST0);
 
             if (lhs == rhs) {
@@ -2731,12 +2781,12 @@ namespace nanojit
                 if (rhs->isImmD())
                 {
                     const uint64_t* p = findImmDFromPool(rhs->immDasQ());
-                    FCOMdm((pop?1:0), (const double*)p);
+                    FCOMdm(pop, (const double*)p);
                 }
                 else
                 {
                     int d = findMemFor(rhs);
-                    FCOM((pop?1:0), d, FP);
+                    FCOM(pop, d, FP);
                 }
             }
         }

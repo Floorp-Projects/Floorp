@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352022.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352022;
 var summary = 'decompilation old, bad bug dropping parenthesis';

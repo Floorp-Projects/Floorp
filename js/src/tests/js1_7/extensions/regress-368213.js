@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-368213.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 368213;
 var summary = 'Do not crash with group assignment and sharp variable defn';

@@ -52,6 +52,7 @@ XPIDLSRCS = \
 		$(NULL)
 
 EXPORTS = \
+		nsIConstraintValidation.h \
 		nsIFormControl.h \
 		nsIForm.h \
 		nsIFormProcessor.h \

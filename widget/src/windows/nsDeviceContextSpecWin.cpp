@@ -789,7 +789,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
 
   if (doingOrientation) {
     PRInt32 orientation  = aDevMode->dmOrientation == DMORIENT_PORTRAIT?
-      nsIPrintSettings::kPortraitOrientation:nsIPrintSettings::kLandscapeOrientation;
+      PRInt32(nsIPrintSettings::kPortraitOrientation):nsIPrintSettings::kLandscapeOrientation;
     aPrintSettings->SetOrientation(orientation);
   }
 
@@ -813,7 +813,8 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
     aPrintSettings->SetPaperData(aDevMode->dmPaperSize);
     for (PRInt32 i=0;i<kNumPaperSizes;i++) {
       if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
-        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeMillimeters);
+        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches
+          ?PRInt16(nsIPrintSettings::kPaperSizeInches):nsIPrintSettings::kPaperSizeMillimeters);
         break;
       }
     }
@@ -825,7 +826,8 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
         aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
         aPrintSettings->SetPaperWidth(kPaperSizes[i].mWidth);
         aPrintSettings->SetPaperHeight(kPaperSizes[i].mHeight);
-        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeMillimeters);
+        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches
+          ?PRInt16(nsIPrintSettings::kPaperSizeInches):nsIPrintSettings::kPaperSizeMillimeters);
         found = PR_TRUE;
         break;
       }
@@ -1019,7 +1021,7 @@ GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
     while (*sPtr != comma && *sPtr != 0) 
       sPtr++;
     if (*sPtr == comma) {
-      *sPtr = NULL;
+      *sPtr = 0;
     }
     aDefaultPrinterName = szDefaultPrinterName;
   } else {

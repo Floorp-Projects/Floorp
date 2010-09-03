@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-383269-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 383269;
 var summary = 'Leak related to arguments object';

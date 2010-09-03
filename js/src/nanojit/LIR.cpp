@@ -1154,7 +1154,7 @@ namespace nanojit
                 op = LIR_cmovq;
 #endif
             } else if (iftrue->isD() && iffalse->isD()) {
-                NanoAssertMsg(0, "LIR_fcmov doesn't exist yet, sorry");
+                op = LIR_cmovd;
             } else {
                 NanoAssert(0);  // type error
             }
@@ -1478,6 +1478,7 @@ namespace nanojit
 
                 case LIR_cmovi:
                 CASE64(LIR_cmovq:)
+                case LIR_cmovd:
                     live.add(ins->oprnd1(), 0);
                     live.add(ins->oprnd2(), 0);
                     live.add(ins->oprnd3(), 0);
@@ -1627,7 +1628,7 @@ namespace nanojit
     }
 
     char* LInsPrinter::formatImmI(RefBuf* buf, int32_t c) {
-        if (-10000 < c || c < 10000) {
+        if (-10000 < c && c < 10000) {
             VMPI_snprintf(buf->buf, buf->len, "%d", c);
         } else {
 #if !defined NANOJIT_64BIT
@@ -1639,18 +1640,16 @@ namespace nanojit
         return buf->buf;
     }
 
+#if defined NANOJIT_64BIT
     char* LInsPrinter::formatImmQ(RefBuf* buf, uint64_t c) {
-        if (-10000 < (int64_t)c || c < 10000) {
+        if (-10000 < (int64_t)c && c < 10000) {
             VMPI_snprintf(buf->buf, buf->len, "%dLL", (int)c);
         } else {
-#if defined NANOJIT_64BIT
             formatAddr(buf, (void*)c);
-#else
-            VMPI_snprintf(buf->buf, buf->len, "0x%llxLL", c);
-#endif
         }
         return buf->buf;
     }
+#endif
 
     char* LInsPrinter::formatImmD(RefBuf* buf, double c) {
         VMPI_snprintf(buf->buf, buf->len, "%g", c);
@@ -1902,6 +1901,7 @@ namespace nanojit
 
             CASE64(LIR_cmovq:)
             case LIR_cmovi:
+            case LIR_cmovd:
                 VMPI_snprintf(s, n, "%s = %s %s ? %s : %s", formatRef(&b1, i), lirNames[op],
                     formatRef(&b2, i->oprnd1()),
                     formatRef(&b3, i->oprnd2()),
@@ -1976,13 +1976,16 @@ namespace nanojit
         m_capNL[LIns3]     = 16;
         m_capNL[LInsCall]  = 64;
 
-        for (NLKind nlkind = LInsFirst; nlkind <= LInsLast; nlkind = nextNLKind(nlkind))
+        for (NLKind nlkind = LInsFirst; nlkind <= LInsLast; nlkind = nextNLKind(nlkind)) {
             m_listNL[nlkind] = new (alloc) LIns*[m_capNL[nlkind]];
+            m_usedNL[nlkind] = 1; // Force memset in clearAll().
+        }
 
         // Note that this allocates the CONST and MULTIPLE tables as well.
         for (CseAcc a = 0; a < CSE_NUM_USED_ACCS; a++) {
             m_capL[a] = 16;
             m_listL[a] = new (alloc) LIns*[m_capL[a]];
+            m_usedL[a] = 1; // Force memset(0) in first clearAll().
         }
 
         clearAll();
@@ -2035,13 +2038,17 @@ namespace nanojit
     }
 
     void CseFilter::clearNL(NLKind nlkind) {
-        VMPI_memset(m_listNL[nlkind], 0, sizeof(LIns*)*m_capNL[nlkind]);
-        m_usedNL[nlkind] = 0;
+        if (m_usedNL[nlkind] > 0) {
+            VMPI_memset(m_listNL[nlkind], 0, sizeof(LIns*)*m_capNL[nlkind]);
+            m_usedNL[nlkind] = 0;
+        }
     }
 
     void CseFilter::clearL(CseAcc a) {
-        VMPI_memset(m_listL[a], 0, sizeof(LIns*)*m_capL[a]);
-        m_usedL[a] = 0;
+        if (m_usedL[a] > 0) {
+            VMPI_memset(m_listL[a], 0, sizeof(LIns*)*m_capL[a]);
+            m_usedL[a] = 0;
+        }
     }
 
     void CseFilter::clearAll() {
@@ -2478,9 +2485,12 @@ namespace nanojit
                 // Clear all normal (excludes CONST and MULTIPLE) loads
                 // aliased by stores and calls since the last time we were in
                 // this function.  
-                for (CseAcc a = 0; a < EMB_NUM_USED_ACCS; a++)
-                    if (storesSinceLastLoad & (1 << a))
-                        clearL(a);
+                AccSet a = storesSinceLastLoad & ((1 << EMB_NUM_USED_ACCS) - 1);
+                while (a) {
+                    int acc = msbSet32(a);
+                    clearL((CseAcc)acc);
+                    a &= ~(1 << acc);
+                }
 
                 // No need to clear CONST loads (those in the CSE_ACC_CONST table).
 
@@ -2877,13 +2887,13 @@ namespace nanojit
 
     ValidateWriter::ValidateWriter(LirWriter *out, LInsPrinter* printer, const char* where)
         : LirWriter(out), printer(printer), whereInPipeline(where), 
-          checkAccSetIns1(0), checkAccSetIns2(0)
+          checkAccSetExtras(0)
     {}
 
     LIns* ValidateWriter::insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet,
                                   LoadQual loadQual)
     {
-        checkAccSet(op, base, accSet);
+        checkAccSet(op, base, d, accSet);
 
         switch (loadQual) {
         case LOAD_CONST:
@@ -2921,7 +2931,7 @@ namespace nanojit
 
     LIns* ValidateWriter::insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet)
     {
-        checkAccSet(op, base, accSet);
+        checkAccSet(op, base, d, accSet);
 
         int nArgs = 2;
         LTy formals[2] = { LTy_V, LTy_P };     // LTy_V is overwritten shortly
@@ -3031,7 +3041,7 @@ namespace nanojit
 
         case LIR_file:
         case LIR_line:
-            // XXX: not sure about these ones.  Ignore for the moment.
+            // These will never get hit since VTUNE implies !DEBUG.  Ignore for the moment.
             nArgs = 0;
             break;
 
@@ -3150,6 +3160,12 @@ namespace nanojit
             formals[2] = LTy_Q;
             break;
 #endif
+
+        case LIR_cmovd:
+            checkLInsIsACondOrConst(op, 1, a);
+            formals[1] = LTy_D;
+            formals[2] = LTy_D;
+            break;
 
         default:
             NanoAssert(0);

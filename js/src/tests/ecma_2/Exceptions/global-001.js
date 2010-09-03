@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'global-001.js';
 
 /**
    File Name:          global-001

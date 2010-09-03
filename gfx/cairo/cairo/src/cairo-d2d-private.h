@@ -49,9 +49,28 @@ extern "C" {
 }
 
 #include "cairo-win32-refptr.h"
+#include "cairo-d2d-private-fx.h"
+#include "cairo-win32.h"
 
 /* describes the type of the currently applied clip so that we can pop it */
 struct d2d_clip;
+
+#define MAX_OPERATORS CAIRO_OPERATOR_HSL_LUMINOSITY + 1
+
+struct _cairo_d2d_device
+{
+    cairo_device_t base;
+
+    HMODULE mD3D10_1;
+    RefPtr<ID3D10Device1> mD3D10Device;
+    RefPtr<ID3D10Effect> mSampleEffect;
+    RefPtr<ID3D10InputLayout> mInputLayout;
+    RefPtr<ID3D10Buffer> mQuadBuffer;
+    RefPtr<ID3D10RasterizerState> mRasterizerState;
+    RefPtr<ID3D10BlendState> mBlendStates[MAX_OPERATORS];
+    int mVRAMUsage;
+};
+typedef struct _cairo_d2d_device cairo_d2d_device_t;
 
 struct _cairo_d2d_surface {
     _cairo_d2d_surface() : d2d_clip(NULL), clipping(false), isDrawing(false),
@@ -61,6 +80,10 @@ struct _cairo_d2d_surface {
     }
 
     cairo_surface_t base;
+    /* Device used by this surface 
+     * NOTE: In upstream cairo this is in the surface base class */
+    cairo_d2d_device_t *device;
+
     /** Render target of the texture we render to */
     RefPtr<ID2D1RenderTarget> rt;
     /** Surface containing our backstore */
@@ -103,6 +126,10 @@ struct _cairo_d2d_surface {
     /** Indicates if text rendering is initialized */
     bool textRenderingInit;
 
+    RefPtr<ID3D10RenderTargetView> buffer_rt_view;
+    RefPtr<ID3D10ShaderResourceView> buffer_sr_view;
+
+
     //cairo_surface_clipper_t clipper;
 };
 typedef struct _cairo_d2d_surface cairo_d2d_surface_t;
@@ -124,104 +151,14 @@ typedef HRESULT (WINAPI*D3D10CreateDevice1Func)(
   ID3D10Device1 **ppDevice
 );
 
-class D2DSurfFactory
-{
-public:
-    static ID2D1Factory *Instance()
-    {
-	if (!mFactoryInstance) {
-	    D2D1CreateFactoryFunc createD2DFactory = (D2D1CreateFactoryFunc)
-		GetProcAddress(LoadLibraryW(L"d2d1.dll"), "D2D1CreateFactory");
-	    if (createD2DFactory) {
-		D2D1_FACTORY_OPTIONS options;
-#ifdef DEBUG
-		options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
-#else
-		options.debugLevel = D2D1_DEBUG_LEVEL_NONE;
-#endif
-		createD2DFactory(
-		    D2D1_FACTORY_TYPE_SINGLE_THREADED,
-		    __uuidof(ID2D1Factory),
-		    &options,
-		    (void**)&mFactoryInstance);
-	    }
-	}
-	return mFactoryInstance;
-    }
-private:
-    static ID2D1Factory *mFactoryInstance;
-};
-
-/**
- * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
- * documentation on D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
- * can be misleading. In fact, that flag gives no such indication. I pointed this
- * out to Bas in my email. However, Microsoft is in fact using this flag to
- * indicate "light weight" DX applications. By light weight they are essentially
- * referring to applications that are not games. The idea is that when you create
- * a DX game, the driver assumes that you will pretty much have a single instance
- * and therefore it doesn't try to hold back when it comes to GPU resource
- * allocation as long as it can crank out performance. In other words, the
- * priority in regular DX applications is to make that one application run as fast
- * as you can. For "light weight" applications, including D2D applications, the
- * priorities are a bit different. Now you are no longer going to have a single
- * (or very few) instances. You can have a lot of them (say, for example, a
- * separate DX context/device per browser tab). In such cases, the GPU resource
- * allocation scheme changes.
- */
-class D3D10Factory
-{
-public:
-    static ID3D10Device1 *Device()
-    {
-	if (!mDeviceInstance) {
-	    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
-		GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateDevice1");
-	    if (createD3DDevice) {
-		HRESULT hr = createD3DDevice(
-		    NULL, 
-		    D3D10_DRIVER_TYPE_HARDWARE,
-		    NULL,
-		    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-		    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-		    D3D10_FEATURE_LEVEL_10_1,
-		    D3D10_1_SDK_VERSION,
-		    &mDeviceInstance);
-		if (FAILED(hr)) {
-		    HRESULT hr = createD3DDevice(
-			NULL, 
-			D3D10_DRIVER_TYPE_HARDWARE,
-			NULL,
-			D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-			D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-			D3D10_FEATURE_LEVEL_10_0,
-			D3D10_1_SDK_VERSION,
-			&mDeviceInstance);
-		    if (FAILED(hr)) {
-			/* TODO: D3D10Level9 might be slower than GDI */
-			HRESULT hr = createD3DDevice(
-			    NULL, 
-			    D3D10_DRIVER_TYPE_HARDWARE,
-			    NULL,
-			    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-			    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-			    D3D10_FEATURE_LEVEL_9_3,
-			    D3D10_1_SDK_VERSION,
-			    &mDeviceInstance);
-
-		    }
-		}
-		if (SUCCEEDED(hr)) {
-		    mDeviceInstance->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP);
-		}
-	    }
-	}
-	return mDeviceInstance;
-    }
-private:
-    static ID3D10Device1 *mDeviceInstance;
-};
-
+typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
+    void *pData,
+    SIZE_T DataLength,
+    UINT FXFlags,
+    ID3D10Device *pDevice, 
+    ID3D10EffectPool *pEffectPool,
+    ID3D10Effect **ppEffect
+);
 
 RefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
@@ -229,8 +166,15 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 				    bool unique = false);
 void
 _cairo_d2d_begin_draw_state(cairo_d2d_surface_t *d2dsurf);
+
 cairo_status_t
 _cairo_d2d_set_clip(cairo_d2d_surface_t *d2dsurf, cairo_clip_t *clip);
+
+cairo_int_status_t _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds = NULL);
+
+RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip);
+
+cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op, const cairo_pattern_t *source);
 
 #endif /* CAIRO_HAS_D2D_SURFACE */
 #endif /* CAIRO_D2D_PRIVATE_H */

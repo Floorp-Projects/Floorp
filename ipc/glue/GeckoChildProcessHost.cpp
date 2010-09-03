@@ -83,6 +83,9 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mChannelInitialized(false),
     mDelegate(aDelegate),
     mChildProcessHandle(0)
+#if defined(XP_MACOSX)
+  , mChildTask(MACH_PORT_NULL)
+#endif
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
     
@@ -105,6 +108,11 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
                                             , false // don't "force"
 #endif
     );
+
+#if defined(XP_MACOSX)
+  if (mChildTask != MACH_PORT_NULL)
+    mach_port_deallocate(mach_task_self(), mChildTask);
+#endif
 }
 
 #ifdef XP_WIN
@@ -131,12 +139,14 @@ void GeckoChildProcessHost::InitWindowsGroupID()
 #endif
 
 bool
-GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
+GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs)
 {
 #ifdef XP_WIN
   InitWindowsGroupID();
 #endif
 
+  PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ? 
+    PR_MillisecondsToInterval(aTimeoutMs) : PR_INTERVAL_NO_TIMEOUT;
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
@@ -144,15 +154,29 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
                    NewRunnableMethod(this,
                                      &GeckoChildProcessHost::PerformAsyncLaunch,
                                      aExtraOpts));
-
   // NB: this uses a different mechanism than the chromium parent
   // class.
   MonitorAutoEnter mon(mMonitor);
+  PRIntervalTime waitStart = PR_IntervalNow();
+  PRIntervalTime current;
+
+  // We'll receive several notifications, we need to exit when we
+  // have either successfully launched or have timed out.
   while (!mLaunched) {
-    mon.Wait();
+    mon.Wait(timeoutTicks);
+
+    if (timeoutTicks != PR_INTERVAL_NO_TIMEOUT) {
+      current = PR_IntervalNow();
+      PRIntervalTime elapsed = current - waitStart;
+      if (elapsed > timeoutTicks) {
+        break;
+      }
+      timeoutTicks = timeoutTicks - elapsed;
+      waitStart = current;
+    }
   }
 
-  return true;
+  return mLaunched;
 }
 
 bool
@@ -200,6 +224,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   }
 
   base::ProcessHandle process;
+#if defined(XP_MACOSX)
+  task_t child_task;
+#endif
 
   // send the child the PID so that it can open a ProcessHandle back to us.
   // probably don't want to do this in the long run
@@ -238,14 +265,6 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 #elif OS_MACOSX
     newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
 #endif
-#ifdef MOZ_OMNIJAR
-    // Make sure the child process can find the omnijar
-    // See ScopedXPCOMStartup::Initialize in nsAppRunner.cpp
-    nsCAutoString omnijarPath;
-    if (mozilla::OmnijarPath())
-      mozilla::OmnijarPath()->GetNativePath(omnijarPath);
-    newEnvVars["OMNIJAR_PATH"] = omnijarPath.get();
-#endif
   }
   else {
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
@@ -280,6 +299,17 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 
   childArgv.insert(childArgv.end(), aExtraOpts.begin(), aExtraOpts.end());
 
+#ifdef MOZ_OMNIJAR
+  // Make sure the child process can find the omnijar
+  // See XRE_InitCommandLine in nsAppRunner.cpp
+  nsCAutoString omnijarPath;
+  if (mozilla::OmnijarPath()) {
+    mozilla::OmnijarPath()->GetNativePath(omnijarPath);
+    childArgv.push_back("-omnijar");
+    childArgv.push_back(omnijarPath.get());
+  }
+#endif
+
   childArgv.push_back(pidstring);
   childArgv.push_back(childProcessType);
 
@@ -299,9 +329,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     childArgv.push_back("false");
   }
 #  elif defined(XP_MACOSX)
-  // Call the stub for initialization side effects.  Eventually this
-  // code will be unified with that above.
-  CrashReporter::CreateNotificationPipeForChild();
+  childArgv.push_back(CrashReporter::GetChildNotificationPipe());
 #  endif  // OS_LINUX
 #endif
 
@@ -309,7 +337,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 #if defined(OS_LINUX) || defined(OS_MACOSX)
                   newEnvVars,
 #endif
-                  false, &process);
+                  false, &process
+#if defined(XP_MACOSX)
+                  , &child_task
+#endif
+                  );
 
 //--------------------------------------------------
 #elif defined(OS_WIN)
@@ -330,6 +362,18 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   }
 
   cmdLine.AppendLooseValue(std::wstring(mGroupId.get()));
+
+#ifdef MOZ_OMNIJAR
+  // Make sure the child process can find the omnijar
+  // See XRE_InitCommandLine in nsAppRunner.cpp
+  nsAutoString omnijarPath;
+  if (mozilla::OmnijarPath()) {
+    mozilla::OmnijarPath()->GetPath(omnijarPath);
+    cmdLine.AppendLooseValue(UTF8ToWide("-omnijar"));
+    cmdLine.AppendLooseValue(omnijarPath.get());
+  }
+#endif
+
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 #if defined(MOZ_CRASHREPORTER)
@@ -347,6 +391,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     return false;
   }
   SetHandle(process);
+#if defined(XP_MACOSX)
+  mChildTask = child_task;
+#endif
 
   return true;
 }

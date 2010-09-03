@@ -12,9 +12,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js" />
+          src="../common.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js" />
+          src="../role.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -23,7 +23,7 @@
 
     // Note: bug 560239 can be tested if this test runs in standalone mode only.
  
-    var gURL = "chrome://mochikit/content/a11y/accessible/tree/wnd.xul"
+    var gURL = "../tree/wnd.xul"
     var gWnd = window.openDialog(gURL, "wnd", "chrome,width=600,height=600");
 
     function doTest()

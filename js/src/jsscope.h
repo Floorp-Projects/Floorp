@@ -611,7 +611,9 @@ struct JSScopeProperty {
     union {
         js::PropertyOp  rawGetter;      /* getter and setter hooks or objects */
         JSObject        *getterObj;     /* user-defined callable "get" object or
-                                           null if sprop->hasGetterValue() */
+                                           null if sprop->hasGetterValue(); or
+                                           joined function object if METHOD flag
+                                           is set. */
         JSScopeProperty *next;          /* next node in freelist */
     };
 
@@ -980,6 +982,22 @@ JSScopeProperty::isSharedPermanent() const
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
+
+namespace js {
+
+class AutoObjectLocker {
+    JSContext   * const cx;
+    JSObject    * const obj;
+  public:
+    AutoObjectLocker(JSContext *cx, JSObject *obj)
+      : cx(cx), obj(obj) {
+        JS_LOCK_OBJ(cx, obj);
+    }
+
+    ~AutoObjectLocker() { JS_UNLOCK_OBJ(cx, obj); }
+};
+
+}
 
 #ifdef _MSC_VER
 #pragma warning(pop)

@@ -9,9 +9,11 @@ const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 var gInternalManager = null;
 var gAppInfo = null;
@@ -118,6 +120,114 @@ function do_get_addon(aName) {
 }
 
 /**
+ * Check that an array of actual add-ons is the same as an array of
+ * expected add-ons.
+ *
+ * @param  aActualAddons
+ *         The array of actual add-ons to check.
+ * @param  aExpectedAddons
+ *         The array of expected add-ons to check against.
+ * @param  aProperties
+ *         An array of properties to check.
+ */
+function do_check_addons(aActualAddons, aExpectedAddons, aProperties) {
+  do_check_neq(aActualAddons, null);
+  do_check_eq(aActualAddons.length, aExpectedAddons.length);
+  for (let i = 0; i < aActualAddons.length; i++)
+    do_check_addon(aActualAddons[i], aExpectedAddons[i], aProperties);
+}
+
+/**
+ * Check that the actual add-on is the same as the expected add-on.
+ *
+ * @param  aActualAddon
+ *         The actual add-on to check.
+ * @param  aExpectedAddon
+ *         The expected add-on to check against.
+ * @param  aProperties
+ *         An array of properties to check.
+ */
+function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
+  do_check_neq(aActualAddon, null);
+
+  aProperties.forEach(function(aProperty) {
+    let actualValue = aActualAddon[aProperty];
+    let expectedValue = aExpectedAddon[aProperty];
+
+    // Check that all undefined expected properties are null on actual add-on
+    if (!(aProperty in aExpectedAddon)) {
+      if (actualValue !== undefined && actualValue !== null)
+        do_throw("Unexpected defined/non-null property for add-on " +
+                 aExpectedAddon.id + " (addon[" + aProperty + "] = " + actualValue);
+
+      return;
+    }
+
+    switch (aProperty) {
+      case "creator":
+        do_check_author(actualValue, expectedValue);
+        break;
+
+      case "developers":
+      case "translators":
+      case "contributors":
+        do_check_eq(actualValue.length, expectedValue.length);
+        for (let i = 0; i < actualValue.length; i++)
+          do_check_author(actualValue[i], expectedValue[i]);
+        break;
+
+      case "screenshots":
+        do_check_eq(actualValue.length, expectedValue.length);
+        for (let i = 0; i < actualValue.length; i++)
+          do_check_screenshot(actualValue[i], expectedValue[i]);
+        break;
+
+      case "sourceURI":
+        do_check_eq(actualValue.spec, expectedValue);
+        break;
+
+      case "updateDate":
+        do_check_eq(actualValue.getTime(), expectedValue.getTime());
+        break;
+
+      default:
+        if (actualValue !== expectedValue)
+          do_throw("Failed for " + aProperty + " for add-on " + aExpectedAddon.id +
+                   " (" + actualValue + " === " + expectedValue + ")");
+    }
+  });
+}
+
+/**
+ * Check that the actual author is the same as the expected author.
+ *
+ * @param  aActual
+ *         The actual author to check.
+ * @param  aExpected
+ *         The expected author to check against.
+ */
+function do_check_author(aActual, aExpected) {
+  do_check_eq(aActual.toString(), aExpected.name);
+  do_check_eq(aActual.name, aExpected.name);
+  do_check_eq(aActual.url, aExpected.url);
+}
+
+/**
+ * Check that the actual screenshot is the same as the expected screenshot.
+ *
+ * @param  aActual
+ *         The actual screenshot to check.
+ * @param  aExpected
+ *         The expected screenshot to check against.
+ */
+function do_check_screenshot(aActual, aExpected) {
+  do_check_eq(aActual.toString(), aExpected.url);
+  do_check_eq(aActual.url, aExpected.url);
+  do_check_eq(aActual.thumbnailURL, aExpected.thumbnailURL);
+  do_check_eq(aActual.caption, aExpected.caption);
+}
+
+/**
  * Starts up the add-on manager as if it was started by the application.
  *
  * @param  aAppChanged
@@ -171,9 +281,28 @@ function shutdownManager() {
 
   let obs = AM_Cc["@mozilla.org/observer-service;1"].
             getService(AM_Ci.nsIObserverService);
+
+  let xpiShutdown = false;
+  obs.addObserver({
+    observe: function(aSubject, aTopic, aData) {
+      xpiShutdown = true;
+      obs.removeObserver(this, "xpi-provider-shutdown");
+    }
+  }, "xpi-provider-shutdown", false);
+
+  let repositoryShutdown = false;
+  obs.addObserver({
+    observe: function(aSubject, aTopic, aData) {
+      repositoryShutdown = true;
+      obs.removeObserver(this, "addon-repository-shutdown");
+    }
+  }, "addon-repository-shutdown", false);
+
   obs.notifyObservers(null, "quit-application-granted", null);
   gInternalManager.observe(null, "xpcom-shutdown", null);
   gInternalManager = null;
+
+  AddonRepository.shutdown();
 
   // Load the add-ons list as it was after application shutdown
   loadAddonsList();
@@ -181,43 +310,14 @@ function shutdownManager() {
   // Clear any crash report annotations
   gAppInfo.annotations = {};
 
-  let dbfile = gProfD.clone();
-  dbfile.append("extensions.sqlite");
-
-  // If there is no database then it cannot be locked.
-  if (!dbfile.exists())
-    return;
-
   let thr = AM_Cc["@mozilla.org/thread-manager;1"].
             getService(AM_Ci.nsIThreadManager).
             mainThread;
 
-  // Wait until we can open a connection to the database
-  let db = null;
-  while (!db) {
-    // Poll for database
-    try {
-      db = Services.storage.openUnsharedDatabase(dbfile);
-    }
-    catch (e) {
-      if (thr.hasPendingEvents())
-        thr.processNextEvent(false);
-    }
-  }
-
-  // Wait until we can write to the database
-  while (db) {
-    // Poll for write access
-    try {
-      db.executeSimpleSQL("PRAGMA user_version = 1");
-      db.executeSimpleSQL("PRAGMA user_version = 0");
-      db.close();
-      db = null;
-    }
-    catch (e) {
-      if (thr.hasPendingEvents())
-        thr.processNextEvent(false);
-    }
+  // Wait until we observe the shutdown notifications
+  while (!repositoryShutdown || !xpiShutdown) {
+    if (thr.hasPendingEvents())
+      thr.processNextEvent(false);
   }
 }
 
@@ -327,7 +427,8 @@ function writeInstallRDFToDir(aData, aDir) {
   rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
-   "optionsURL", "aboutURL", "iconURL", "skinnable"].forEach(function(aProp) {
+   "optionsURL", "aboutURL", "iconURL", "icon64URL",
+   "skinnable"].forEach(function(aProp) {
     if (aProp in aData)
       rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });
@@ -795,4 +896,29 @@ Services.prefs.setBoolPref("extensions.logging.enabled", true);
 // By default only load extensions from the profile install location
 Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_PROFILE);
 
-do_register_cleanup(shutdownManager);
+// By default, don't cache add-ons in AddonRepository.jsm
+Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
+
+// Disable the compatibility updates window by default
+Services.prefs.setBoolPref("extensions.showMismatchUI", false);
+
+// By default, don't cache add-ons in AddonRepository.jsm
+Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
+
+// Register a temporary directory for the tests.
+const gTmpD = gProfD.clone();
+gTmpD.append("temp");
+gTmpD.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+registerDirectory("TmpD", gTmpD);
+
+do_register_cleanup(function() {
+  // Check that the temporary directory is empty
+  var dirEntries = gTmpD.directoryEntries
+                        .QueryInterface(AM_Ci.nsIDirectoryEnumerator);
+  var entry;
+  while (entry = dirEntries.nextFile) {
+    do_throw("Found unexpected file in temporary directory: " + entry.leafName);
+  }
+
+  shutdownManager();
+});

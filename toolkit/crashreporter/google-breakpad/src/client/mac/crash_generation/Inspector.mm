@@ -44,6 +44,8 @@
 #import "common/mac/SimpleStringDictionary.h"
 #import "common/mac/MachIPC.h"
 
+#import "GTMDefines.h"
+
 #import <Foundation/Foundation.h>
 
 #if VERBOSE
@@ -91,14 +93,14 @@ static BOOL EnsureDirectoryPathExists(NSString *dirPath) {
   // Break up the difference into components
   NSString *diff = [dirPath substringFromIndex:[common length] + 1];
   NSArray *components = [diff pathComponents];
-  unsigned count = [components count];
+  NSUInteger count = [components count];
 
   // Rebuild the path one component at a time
   NSDictionary *attrs =
     [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:0750]
                                 forKey:NSFilePosixPermissions];
   path = common;
-  for (unsigned i = 0; i < count; ++i) {
+  for (NSUInteger i = 0; i < count; ++i) {
     path = [path stringByAppendingPathComponent:[components objectAtIndex:i]];
 
     if (![mgr createDirectoryAtPath:path attributes:attrs])
@@ -329,12 +331,12 @@ kern_return_t Inspector::ReadMessages() {
     // we are expected to read.
     // Read each key/value pair, one mach message per key/value pair.
     for (unsigned int i = 0; i < info.parameter_count; ++i) {
-      MachReceiveMessage message;
-      result = receive_port.WaitForMessage(&message, 1000);
+      MachReceiveMessage parameter_message;
+      result = receive_port.WaitForMessage(&parameter_message, 1000);
 
       if(result == KERN_SUCCESS) {
         KeyValueMessageData &key_value_data =
-          (KeyValueMessageData&)*message.GetData();
+          (KeyValueMessageData&)*parameter_message.GetData();
         // If we get a blank key, make sure we don't increment the
         // parameter count; in some cases (notably on-demand generation
         // many times in a short period of time) caused the Mach IPC
@@ -376,11 +378,11 @@ void Inspector::SetCrashTimeParameters() {
   if (processStartTimeString) {
     time_t processStartTime = strtol(processStartTimeString, NULL, 10);
     time_t processUptime = tv.tv_sec - processStartTime;
-    sprintf(processUptimeString, "%d", processUptime);
+    sprintf(processUptimeString, "%zd", processUptime);
     config_params_.SetKeyValue(BREAKPAD_PROCESS_UP_TIME, processUptimeString);
   }
 
-  sprintf(processCrashtimeString, "%d", tv.tv_sec);
+  sprintf(processCrashtimeString, "%zd", tv.tv_sec);
   config_params_.SetKeyValue(BREAKPAD_PROCESS_CRASH_TIME,
                              processCrashtimeString);
 }

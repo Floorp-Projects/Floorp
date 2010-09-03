@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-418051.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 418051;
 var summary = 'Do not assert: (pnkey)->pn_arity == PN_NULLARY && ' + 

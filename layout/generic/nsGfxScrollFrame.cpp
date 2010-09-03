@@ -1157,29 +1157,6 @@ nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState)
   return maxSize;
 }
 
-#if 0 // XXXldb I don't think this is even needed
-/* virtual */ nscoord
-nsXULScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
-{
-  nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
-  if (widthUnit == eStyleUnit_Percent || widthUnit == eStyleUnit_Auto) {
-    nsMargin border = aReflowState.mComputedBorderPadding;
-    aDesiredSize.mMaxElementWidth = border.right + border.left;
-    mMaxElementWidth = aDesiredSize.mMaxElementWidth;
-  } else {
-    NS_NOTYETIMPLEMENTED("Use the info from the scrolled frame");
-#if 0
-    // if not set then use the cached size. If set then set it.
-    if (aDesiredSize.mMaxElementWidth == -1)
-      aDesiredSize.mMaxElementWidth = mMaxElementWidth;
-    else
-      mMaxElementWidth = aDesiredSize.mMaxElementWidth;
-#endif
-  }
-  return 0;
-}
-#endif
-
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsXULScrollFrame::GetFrameName(nsAString& aResult) const
@@ -1274,9 +1251,9 @@ IsSmoothScrollingEnabled()
 
 class ScrollFrameActivityTracker : public nsExpirationTracker<nsGfxScrollFrameInner,4> {
 public:
-  // Wait for 75-100ms between scrolls before we switch the appearance back to
-  // subpixel AA. That's 4 generations of 25ms each.
-  enum { TIMEOUT_MS = 25 };
+  // Wait for 3-4s between scrolls before we remove our layers.
+  // That's 4 generations of 1s each.
+  enum { TIMEOUT_MS = 1000 };
   ScrollFrameActivityTracker()
     : nsExpirationTracker<nsGfxScrollFrameInner,4>(TIMEOUT_MS) {}
   ~ScrollFrameActivityTracker() {
@@ -1286,7 +1263,7 @@ public:
   virtual void NotifyExpired(nsGfxScrollFrameInner *aObject) {
     RemoveObject(aObject);
     aObject->mScrollingActive = PR_FALSE;
-    aObject->mOuter->InvalidateOverflowRect();
+    aObject->mOuter->InvalidateFrameSubtree();
   }
 };
 
@@ -1548,21 +1525,22 @@ CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot)
 
 static void
 InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
+                                        nsIFrame* aMovingFrame,
                                         const nsDisplayList& aList)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayList* sublist = item->GetList();
     if (sublist) {
-      InvalidateFixedBackgroundFramesFromList(aBuilder, *sublist);
+      InvalidateFixedBackgroundFramesFromList(aBuilder, aMovingFrame, *sublist);
       continue;
     }
     nsIFrame* f = item->GetUnderlyingFrame();
-    if (f && aBuilder->IsMovingFrame(f) &&
-        item->IsVaryingRelativeToMovingFrame(aBuilder)) {
+    if (f &&
+        item->IsVaryingRelativeToMovingFrame(aBuilder, aMovingFrame)) {
       if (item->IsFixedAndCoveringViewport(aBuilder)) {
         // FrameLayerBuilder takes care of scrolling these
       } else {
-        f->Invalidate(item->GetVisibleRect() - aBuilder->ToReferenceFrame(f));
+        f->Invalidate(item->GetVisibleRect() - item->ToReferenceFrame());
       }
     }
   }
@@ -1582,7 +1560,6 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
   // Build the 'after' display list over the whole area of interest.
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
   builder.EnterPresShell(aRootFrame, aUpdateRect);
-  builder.SetMovingFrame(aMovingFrame);
   nsDisplayList list;
   nsresult rv =
     aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
@@ -1591,9 +1568,9 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
     return;
 
   nsRegion visibleRegion(aUpdateRect);
-  list.ComputeVisibility(&builder, &visibleRegion, nsnull);
+  list.ComputeVisibilityForRoot(&builder, &visibleRegion);
 
-  InvalidateFixedBackgroundFramesFromList(&builder, list);
+  InvalidateFixedBackgroundFramesFromList(&builder, aMovingFrame, list);
   list.DeleteAll();
 }
 
@@ -1649,9 +1626,12 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
   mOuter->InvalidateWithFlags(mScrollPort, flags);
 
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
-    // XXX fix this to transform rectangle properly
-    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame,
-      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot));
+    nsRect update =
+      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot);
+    update = update.ConvertAppUnitsRoundOut(
+      mOuter->PresContext()->AppUnitsPerDevPixel(),
+      displayRoot->PresContext()->AppUnitsPerDevPixel());
+    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame, update);
   }
 }
 
@@ -1732,7 +1712,8 @@ AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
             nsDisplayList* aSource, nsIFrame* aSourceFrame, PRBool aOwnLayer)
 {
   if (aOwnLayer) {
-    aDest->AppendNewToTop(new (aBuilder) nsDisplayOwnLayer(aSourceFrame, aSource));
+    aDest->AppendNewToTop(
+        new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource));
   } else {
     aDest->AppendToTop(aSource);
   }  
@@ -2183,8 +2164,6 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     }
   }
 
-  nsresult rv;
-
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -2194,9 +2173,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   if (canHaveHorizontal) {
     nsCOMPtr<nsINodeInfo> ni = nodeInfo;
-    rv = NS_NewElement(getter_AddRefs(mHScrollbarContent),
-                       kNameSpaceID_XUL, ni.forget(), PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_TrustedNewXULElement(getter_AddRefs(mHScrollbarContent), ni.forget());
     mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("horizontal"), PR_FALSE);
     mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
@@ -2207,9 +2184,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   if (canHaveVertical) {
     nsCOMPtr<nsINodeInfo> ni = nodeInfo;
-    rv = NS_NewElement(getter_AddRefs(mVScrollbarContent),
-                       kNameSpaceID_XUL, ni.forget(), PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_TrustedNewXULElement(getter_AddRefs(mVScrollbarContent), ni.forget());
     mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("vertical"), PR_FALSE);
     mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
@@ -2224,9 +2199,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                             kNameSpaceID_XUL);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = NS_NewXULElement(getter_AddRefs(mScrollCornerContent),
-                          nodeInfo.forget());
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_TrustedNewXULElement(getter_AddRefs(mScrollCornerContent), nodeInfo.forget());
 
     nsAutoString dir;
     switch (resizeStyle) {
@@ -2259,9 +2232,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   else if (canHaveHorizontal && canHaveVertical) {
     nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
                                             kNameSpaceID_XUL);
-    rv = NS_NewElement(getter_AddRefs(mScrollCornerContent),
-                       kNameSpaceID_XUL, nodeInfo.forget(), PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_TrustedNewXULElement(getter_AddRefs(mScrollCornerContent), nodeInfo.forget());
     if (!aElements.AppendElement(mScrollCornerContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2997,7 +2968,7 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
     if (aScrollbarIsBeingHidden) {
       aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
     } else {
-      aBox->InvalidateOverflowRect();
+      aBox->InvalidateFrameSubtree();
     }
   }
   nsBoxFrame::LayoutChildAt(aState, aBox, aRect);
@@ -3005,7 +2976,7 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
     if (aScrollbarIsBeingHidden) {
       aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
     } else {
-      aBox->InvalidateOverflowRect();
+      aBox->InvalidateFrameSubtree();
     }
   }
 }

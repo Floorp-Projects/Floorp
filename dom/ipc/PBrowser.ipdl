@@ -43,16 +43,22 @@ include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PGeolocationRequest;
+include protocol PExternalHelperApp;
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "IPC/nsGUIEventIPC.h";
 
 using IPC::URI;
 using MagicWindowHandle;
 using RemoteDOMEvent;
 using gfxMatrix;
+using nsCompositionEvent;
+using nsTextEvent;
+using nsQueryContentEvent;
+using nsSelectionEvent;
 
 namespace mozilla {
 namespace dom {
@@ -66,12 +72,10 @@ rpc protocol PBrowser
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
     manages PGeolocationRequest;
+    manages PExternalHelperApp;
 
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
-
-child:
-    __delete__();
 
 parent:
     /**
@@ -94,7 +98,10 @@ parent:
     NotifyStatusChange(nsresult status,
                        nsString message);
 
-    NotifySecurityChange(PRUint32 aState);
+    NotifySecurityChange(PRUint32 aState,
+                         PRBool aUseSSLStatusObject,
+                         nsString aTooltip,
+                         nsCString aSecInfoAsString);
 
     sync RefreshAttempted(nsCString uri, PRInt32 millis,
                           bool sameURI) returns (bool retval);
@@ -105,10 +112,16 @@ parent:
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
 
+    QueryContentResult(nsQueryContentEvent event);
+
     PGeolocationRequest(URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
                    PRInt32[] aIntParams, nsString[] aStringParams);
+
+    __delete__();
+
+    PExternalHelperApp(URI uri, nsCString aMimeContentType, bool aForceSave, PRInt64 aContentLength);
 
 child:
     CreateWidget(MagicWindowHandle parentWidget);
@@ -145,6 +158,14 @@ child:
              PRInt32 aModifiers,
              bool aPreventDefault);
 
+    CompositionEvent(nsCompositionEvent event);
+
+    TextEvent(nsTextEvent event);
+
+    QueryContentEvent(nsQueryContentEvent event);
+
+    SelectionEvent(nsSelectionEvent event);
+
     /**
      * Activate event forwarding from client to parent.
      */
@@ -161,6 +182,28 @@ child:
     // @param matrix the transformation matrix the context we're going to draw into should have.
     PDocumentRendererNativeID(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush,
                               gfxMatrix matrix, PRUint32 nativeID);
+
+    /**
+     * Sent by the chrome process when it no longer wants this remote
+     * <browser>.  The child side cleans up in response, then
+     * finalizing its death by sending back __delete__() to the
+     * parent.
+     */
+    Destroy();
+
+/*
+ * FIXME: write protocol!
+
+state LIVE:
+    send LoadURL goto LIVE;
+//etc.
+    send Destroy goto DYING;
+
+state DYING:
+    discard send blah;
+// etc.
+    recv __delete__;
+ */
 };
 
 }

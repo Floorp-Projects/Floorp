@@ -436,7 +436,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
   // Visibility, Outline, TableBorder, Table, Text, UIReset, Quotes
   nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateOpacityLayer);
+      nsChangeHint_UpdateTransformLayer | nsChangeHint_UpdateOpacityLayer);
   DO_STRUCT_DIFFERENCE(Display);
 
   maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
@@ -474,14 +474,14 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Position);
   DO_STRUCT_DIFFERENCE(TextReset);
 
-  // At this point, we know that the worst kind of damage we could do is
-  // a re-render (i.e., a VISUAL change).
-  maxHint = NS_STYLE_HINT_VISUAL;
-
-  // The following structs cause (as their maximal difference) a
-  // re-render to occur.  VISUAL Structs: Color, Background
-  DO_STRUCT_DIFFERENCE(Color);
+  // Most backgrounds only require a re-render (i.e., a VISUAL change), but
+  // backgrounds using -moz-element need to reset SVG effects, too.
+  maxHint = nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_UpdateEffects);
   DO_STRUCT_DIFFERENCE(Background);
+
+  // Color only needs a repaint.
+  maxHint = NS_STYLE_HINT_VISUAL;
+  DO_STRUCT_DIFFERENCE(Color);
 
 #undef DO_STRUCT_DIFFERENCE
 

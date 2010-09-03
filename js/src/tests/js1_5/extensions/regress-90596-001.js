@@ -46,7 +46,6 @@
  * Sorting properties alphabetically is done for definiteness in comparisons.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-90596-001.js';
 var UBound = 0;
 var BUGNUMBER = 90596;
 var summary = 'A [DontEnum] prop, if overridden, should appear in toSource()';

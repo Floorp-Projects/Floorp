@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <android/log.h>
+#include <math.h>
 
 #include "nsAppShell.h"
 #include "nsIdleService.h"
@@ -43,6 +44,7 @@
 
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
+#include "nsIDOMSimpleGestureEvent.h"
 
 #include "nsWidgetAtoms.h"
 #include "nsWidgetsCID.h"
@@ -79,10 +81,12 @@ static PRBool gSym;
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
 static nsWindow* gFocusedWindow = nsnull;
-static PRUint32 gIMEState;
 
 static nsRefPtr<gl::GLContext> sGLContext;
-static PRBool sFailedToCreateGLContext = PR_FALSE;
+
+// Multitouch swipe thresholds (in screen pixels)
+static const double SWIPE_MAX_PINCH_DELTA = 100;
+static const double SWIPE_MIN_DISTANCE = 150;
 
 static nsWindow*
 TopWindow()
@@ -447,14 +451,6 @@ nsWindow::Update()
     return NS_OK;
 }
 
-void
-nsWindow::Scroll(const nsIntPoint&,
-                 const nsTArray<nsIntRect>&,
-                 const nsTArray<nsIWidget::Configuration>&)
-{
-    ALOG("nsWindow[%p]::Scroll ignored!", (void*)this);
-}
-
 nsWindow*
 nsWindow::FindTopLevel()
 {
@@ -554,8 +550,24 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
 nsEventStatus
 nsWindow::DispatchEvent(nsGUIEvent *aEvent)
 {
-    if (mEventCallback)
-        return (*mEventCallback)(aEvent);
+    if (mEventCallback) {
+        nsEventStatus status = (*mEventCallback)(aEvent);
+
+        // Don't track composition if event was dispatched to remote child
+        if (status != nsEventStatus_eConsumeNoDefault)
+            switch (aEvent->message) {
+            case NS_COMPOSITION_START:
+                mIMEComposing = PR_TRUE;
+                break;
+            case NS_COMPOSITION_END:
+                mIMEComposing = PR_FALSE;
+                break;
+            case NS_TEXT_TEXT:
+                mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
+                break;
+            }
+        return status;
+    }
     return nsEventStatus_eIgnore;
 }
 
@@ -772,8 +784,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
     AndroidBridge::AutoLocalJNIFrame jniFrame;
 
-    static bool firstDraw = true;
-
     ALOG(">> OnDraw");
 
     AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
@@ -963,48 +973,98 @@ send_again:
 }
 
 static double
-getDistance(int x1, int y1, int x2, int y2)
+getDistance(const nsIntPoint &p1, const nsIntPoint &p2)
 {
-    double deltaX = x2 - x1;
-    double deltaY = y2 - y1;
+    double deltaX = p2.x - p1.x;
+    double deltaY = p2.y - p1.y;
     return sqrt(deltaX*deltaX + deltaY*deltaY);
 }
 
 void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
-    double dist = getDistance(ae->P0().x, ae->P0().y, ae->P1().x, ae->P1().y);
+    PRUint32 msg = 0;
 
-    PRUint32 msg;
+    nsIntPoint midPoint;
+    midPoint.x = ((ae->P0().x + ae->P1().x) / 2);
+    midPoint.y = ((ae->P0().y + ae->P1().y) / 2);
+    nsIntPoint refPoint = midPoint - WidgetToScreenOffset();
+
+    double pinchDist = getDistance(ae->P0(), ae->P1());
+    double pinchDelta = 0;
+
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
-        case AndroidMotionEvent::ACTION_MOVE:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-            break;
         case AndroidMotionEvent::ACTION_POINTER_DOWN:
             msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
-            mStartDist = dist;
+            mStartPoint = new nsIntPoint(midPoint);
+            mStartDist = mLastDist = pinchDist;
+            mGestureFinished = false;
+            break;
+        case AndroidMotionEvent::ACTION_MOVE:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            pinchDelta = pinchDist - mLastDist;
+            mLastDist = pinchDist;
             break;
         case AndroidMotionEvent::ACTION_POINTER_UP:
             msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            pinchDelta = pinchDist - mStartDist;
+            mStartPoint = nsnull;
             break;
-
         default:
             return;
     }
 
-    nsIntPoint offset = WidgetToScreenOffset();
-    nsSimpleGestureEvent event(PR_TRUE, msg, this, 0, dist - mStartDist);
+    if (!mGestureFinished) {
+        DispatchGestureEvent(msg, 0, pinchDelta, refPoint, ae->Time());
+
+        // If the cumulative pinch delta goes past the threshold, treat this
+        // as a pinch only, and not a swipe.
+        if (fabs(pinchDist - mStartDist) > SWIPE_MAX_PINCH_DELTA)
+            mStartPoint = nsnull;
+
+        // If we have traveled more than SWIPE_MIN_DISTANCE from the start
+        // point, stop the pinch gesture and fire a swipe event.
+        if (mStartPoint) {
+            double swipeDistance = getDistance(midPoint, *mStartPoint);
+            if (swipeDistance > SWIPE_MIN_DISTANCE) {
+                PRUint32 direction = 0;
+                nsIntPoint motion = midPoint - *mStartPoint;
+
+                if (motion.x < -swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+                if (motion.x > swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+                if (motion.y < -swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_UP;
+                if (motion.y > swipeDistance/2)
+                    direction |= nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
+
+                // Finish the pinch gesture, then fire the swipe event:
+                msg = NS_SIMPLE_GESTURE_MAGNIFY;
+                DispatchGestureEvent(msg, 0, pinchDist - mStartDist, refPoint, ae->Time());
+                msg = NS_SIMPLE_GESTURE_SWIPE;
+                DispatchGestureEvent(msg, direction, 0, refPoint, ae->Time());
+
+                // Don't generate any more gesture events for this touch.
+                mGestureFinished = true;
+            }
+        }
+    }
+}
+
+void
+nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
+                               const nsIntPoint &refPoint, PRUint64 time)
+{
+    nsSimpleGestureEvent event(PR_TRUE, msg, this, direction, delta);
 
     event.isShift = gLeftShift || gRightShift;
     event.isControl = gSym;
     event.isMeta = PR_FALSE;
     event.isAlt = gLeftAlt || gRightAlt;
-    event.time = ae->Time();
-    event.refPoint.x = ((ae->P0().x + ae->P1().x) / 2) - offset.x;
-    event.refPoint.y = ((ae->P0().y + ae->P1().y) / 2) - offset.y;
+    event.time = time;
+    event.refPoint = refPoint;
 
     DispatchEvent(&event);
-
-    mStartDist = dist;
 }
 
 void
@@ -1283,112 +1343,149 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     }
 }
 
-nsresult
-nsWindow::GetCurrentOffset(PRUint32 &aOffset, PRUint32 &aLength)
+#ifdef ANDROID_DEBUG_IME
+#define ALOGIME(args...) ALOG(args)
+#else
+#define ALOGIME(args...)
+#endif
+
+void
+nsWindow::OnIMEAddRange(AndroidGeckoEvent *ae)
 {
-    nsQueryContentEvent event(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
-    DispatchEvent(&event);
-
-    if (!event.mSucceeded)
-        return NS_ERROR_FAILURE;
-
-    aOffset = event.mReply.mOffset;
-    aLength = event.mReply.mString.Length();
-    return NS_OK;
-}
-
-nsresult
-nsWindow::DeleteRange(int aOffset, int aLen)
-{
-    nsSelectionEvent selectEvent(PR_TRUE, NS_SELECTION_SET, this);
-    selectEvent.mOffset = aOffset;
-    selectEvent.mLength = aLen;
-    DispatchEvent(&selectEvent);
-    NS_ENSURE_TRUE(selectEvent.mSucceeded, NS_ERROR_FAILURE);
-
-    nsContentCommandEvent event(PR_TRUE, NS_CONTENT_COMMAND_DELETE, this);
-    DispatchEvent(&event);
-    NS_ENSURE_TRUE(event.mSucceeded, NS_ERROR_FAILURE);
-
-    return NS_OK;
+    //ALOGIME("IME: IME_ADD_RANGE");
+    nsTextRange range;
+    range.mStartOffset = ae->Offset();
+    range.mEndOffset = range.mStartOffset + ae->Count();
+    range.mRangeType = ae->RangeType();
+    range.mRangeStyle.mDefinedStyles = ae->RangeStyles();
+    range.mRangeStyle.mLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
+    range.mRangeStyle.mForegroundColor = NS_RGBA(
+        ((ae->RangeForeColor() >> 16) & 0xff),
+        ((ae->RangeForeColor() >> 8) & 0xff),
+        (ae->RangeForeColor() & 0xff),
+        ((ae->RangeForeColor() >> 24) & 0xff));
+    range.mRangeStyle.mBackgroundColor = NS_RGBA(
+        ((ae->RangeBackColor() >> 16) & 0xff),
+        ((ae->RangeBackColor() >> 8) & 0xff),
+        (ae->RangeBackColor() & 0xff),
+        ((ae->RangeBackColor() >> 24) & 0xff));
+    mIMERanges.AppendElement(range);
+    return;
 }
 
 void
 nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 {
     switch (ae->Action()) {
-    case AndroidGeckoEvent::IME_BATCH_END:
+    case AndroidGeckoEvent::IME_COMPOSITION_END:
         {
+            ALOGIME("IME: IME_COMPOSITION_END");
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
-            event.time = PR_Now() / 1000;
+            InitEvent(event, nsnull);
             DispatchEvent(&event);
         }
         return;
-    case AndroidGeckoEvent::IME_BATCH_BEGIN:
+    case AndroidGeckoEvent::IME_COMPOSITION_BEGIN:
         {
+            ALOGIME("IME: IME_COMPOSITION_BEGIN");
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
-            event.time = PR_Now() / 1000;
+            InitEvent(event, nsnull);
             DispatchEvent(&event);
+        }
+        return;
+    case AndroidGeckoEvent::IME_ADD_RANGE:
+        {
+            OnIMEAddRange(ae);
         }
         return;
     case AndroidGeckoEvent::IME_SET_TEXT:
         {
+            OnIMEAddRange(ae);
+
             nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, this);
+            InitEvent(event, nsnull);
+
             event.theText.Assign(ae->Characters());
-            event.time = PR_Now() / 1000;
+            event.rangeArray = mIMERanges.Elements();
+            event.rangeCount = mIMERanges.Length();
+
+            ALOGIME("IME: IME_SET_TEXT: l=%u, r=%u",
+                event.theText.Length(), mIMERanges.Length());
+
             DispatchEvent(&event);
+            mIMERanges.Clear();
         }
         return;
     case AndroidGeckoEvent::IME_GET_TEXT:
         {
-            PRUint32 offset, len;
-            if (NS_FAILED(GetCurrentOffset(offset, len))) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
-                return;
-            }
-
-            PRUint32 readLen = ae->Count();
-            PRUint32 readOffset = offset;
-            if (!ae->Count() && !ae->Count2()) {
-                readOffset = 0;
-                readLen = PR_UINT32_MAX;
-            } else if (!readLen) { // backwards
-                readLen = ae->Count2();
-                if (readLen > offset) {
-                    readLen = offset;
-                    readOffset = 0;
-                } else
-                    readOffset -= readLen;
-            } else
-                readOffset += len;
+            ALOGIME("IME: IME_GET_TEXT: o=%u, l=%u", ae->Offset(), ae->Count());
 
             nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
-            event.InitForQueryTextContent(0, PR_UINT32_MAX);
+            InitEvent(event, nsnull);
+
+            event.InitForQueryTextContent(ae->Offset(), ae->Count());
+            
             DispatchEvent(&event);
 
             if (!event.mSucceeded) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
+                ALOGIME("IME:     -> failed");
+                AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                    nsnull, 0, 0, 0);
                 return;
+            } else if (!event.mWasAsync) {
+                AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                    event.mReply.mString.get(), 
+                    event.mReply.mString.Length(), 0, 0);
             }
-
-            nsAutoString textContent(Substring(event.mReply.mString, readOffset, readLen));
-            AndroidBridge::Bridge()->ReturnIMEQueryResult(textContent.get(), textContent.Length(), offset, offset + len);
+            //ALOGIME("IME:     -> l=%u", event.mReply.mString.Length());
         }
         return;
     case AndroidGeckoEvent::IME_DELETE_TEXT:
+        {   
+            ALOGIME("IME: IME_DELETE_TEXT");
+            nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
+            InitEvent(event, nsnull);
+            event.keyCode = NS_VK_BACK;
+            DispatchEvent(&event);
+        }
+        return;
+    case AndroidGeckoEvent::IME_SET_SELECTION:
         {
-            PRUint32 offset, len;
-            PRUint32 count = ae->Count();
-            if (NS_FAILED(GetCurrentOffset(offset, len)))
-                return;
+            ALOGIME("IME: IME_SET_SELECTION: o=%u, l=%d", ae->Offset(), ae->Count());
 
-            DeleteRange(offset + len, ae->Count2());
-            offset -= ae->Count();
-            if (offset < 0) {
-                count += offset;
-                offset = 0;
+            nsSelectionEvent selEvent(PR_TRUE, NS_SELECTION_SET, this);
+            InitEvent(selEvent, nsnull);
+
+            selEvent.mOffset = PRUint32(ae->Count() >= 0 ?
+                                        ae->Offset() :
+                                        ae->Offset() + ae->Count());
+            selEvent.mLength = PRUint32(PR_ABS(ae->Count()));
+            selEvent.mReversed = ae->Count() >= 0 ? PR_FALSE : PR_TRUE;
+
+            DispatchEvent(&selEvent);
+        }
+        return;
+    case AndroidGeckoEvent::IME_GET_SELECTION:
+        {
+            ALOGIME("IME: IME_GET_SELECTION");
+
+            nsQueryContentEvent event(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+            InitEvent(event, nsnull);
+            DispatchEvent(&event);
+
+            if (!event.mSucceeded) {
+                ALOGIME("IME:     -> failed");
+                AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                    nsnull, 0, 0, 0);
+                return;
+            } else if (!event.mWasAsync) {
+                AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                    event.mReply.mString.get(),
+                    event.mReply.mString.Length(), 
+                    event.GetSelectionStart(),
+                    event.GetSelectionEnd() - event.GetSelectionStart());
             }
-            DeleteRange(offset, count);
+            //ALOGIME("IME:     -> o=%u, l=%u", event.mReply.mOffset, event.mReply.mString.Length());
         }
         return;
     }
@@ -1424,17 +1521,116 @@ nsWindow::UserActivity()
 }
 
 NS_IMETHODIMP
+nsWindow::ResetInputState()
+{
+    //ALOGIME("IME: ResetInputState: s=%d", aState);
+
+    // Cancel composition on Gecko side
+    if (mIMEComposing) {
+        nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+        InitEvent(textEvent, nsnull);
+        textEvent.theText = mIMEComposingText;
+        DispatchEvent(&textEvent);
+
+        nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
+        InitEvent(event, nsnull);
+        DispatchEvent(&event);
+    }
+
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindow::SetIMEEnabled(PRUint32 aState)
 {
-    gIMEState = aState;
-    if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->ShowIME(aState);
+    ALOGIME("IME: SetIMEEnabled: s=%d", aState);
+
+    mIMEEnabled = aState;
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_SETENABLED, int(aState));
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::GetIMEEnabled(PRUint32* aState)
 {
-    *aState = gIMEState;
+    *aState = mIMEEnabled;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWindow::CancelIMEComposition()
+{
+    ALOGIME("IME: CancelIMEComposition");
+
+    // Cancel composition on Gecko side
+    if (mIMEComposing) {
+        nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+        InitEvent(textEvent, nsnull);
+        DispatchEvent(&textEvent);
+
+        nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
+        InitEvent(compEvent, nsnull);
+        DispatchEvent(&compEvent);
+    }
+
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_CANCELCOMPOSITION, 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMEFocusChange(PRBool aFocus)
+{
+    ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
+
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
+                             int(aFocus));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
+{
+    ALOGIME("IME: OnIMETextChange: s=%d, oe=%d, ne=%d",
+            aStart, aOldEnd, aNewEnd);
+
+    // A quirk in Android makes it necessary to pass the whole text
+    // from index 0 to index aNewEnd. The more efficient way would
+    // have been passing the substring from index aStart to index aNewEnd
+
+    if (aNewEnd > 0) {
+        nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+        InitEvent(event, nsnull);
+        event.InitForQueryTextContent(0, aNewEnd);
+
+        DispatchEvent(&event);
+        if (!event.mSucceeded)
+            return NS_OK;
+
+        AndroidBridge::NotifyIMEChange(event.mReply.mString.get(),
+                                       event.mReply.mString.Length(),
+                                       aStart, aOldEnd, aNewEnd);
+    } else {
+        AndroidBridge::NotifyIMEChange(nsnull, 0, aStart, aOldEnd, aNewEnd);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMESelectionChange(void)
+{
+    ALOGIME("IME: OnIMESelectionChange");
+
+    nsQueryContentEvent event(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+    InitEvent(event, nsnull);
+
+    DispatchEvent(&event);
+    if (!event.mSucceeded)
+        return NS_OK;
+
+    AndroidBridge::NotifyIMEChange(nsnull, 0, int(event.mReply.mOffset),
+                                   int(event.mReply.mOffset + 
+                                       event.mReply.mString.Length()), -1);
+    return NS_OK;
+}
+

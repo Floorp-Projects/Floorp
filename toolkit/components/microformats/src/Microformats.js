@@ -312,6 +312,16 @@ var Microformats = {
         return Microformats.debug(microformatObject)
       };
   },
+  remove: function remove(microformat) {
+    if (Microformats[microformat]) {
+      var list = Microformats.list;
+      var index = list.indexOf(microformat, 1);
+      if (index != -1) {
+        list.splice(index, 1);
+      }
+      delete Microformats[microformat];
+    }
+  },
   /* All parser specific functions are contained in this object */
   parser: {
     /**

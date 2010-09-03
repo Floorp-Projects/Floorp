@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-469940.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469940;
 var summary = 'Do not insert semi-colon after var with multiline initializer';

@@ -42,7 +42,6 @@
 #include "LayerManagerD3D9.h"
 #include "gfxImageSurface.h"
 
-
 namespace mozilla {
 namespace layers {
 
@@ -70,6 +69,17 @@ private:
    * D3D9 texture
    */
   nsRefPtr<IDirect3DTexture9> mTexture;
+
+  /* This contains the D2D surface if we have one */
+  nsRefPtr<gfxASurface> mD2DSurface;
+
+  bool mD2DSurfaceInitialized;
+
+  /* Have a region of our layer drawn */
+  void DrawRegion(const nsIntRegion &aRegion);
+
+  /* Create a new texture */
+  void CreateNewTexture(const gfxIntSize &aSize);
 };
 
 } /* layers */

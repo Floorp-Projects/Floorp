@@ -2,13 +2,13 @@
 <head>
   <title>Test for key event handler of HTML editor</title>
   <script type="text/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+          src="/MochiKit/packed.js"></script>
   <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+          src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+          src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css"
-          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+          href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <div id="display">
@@ -29,7 +29,7 @@ var htmlEditor = document.getElementById("htmlEditor");
 
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 const kIsWin = navigator.platform.indexOf("Win") == 0;
-const kIsLinux = navigator.platform.indexOf("Linux") == 0;
+const kIsLinux = navigator.platform.indexOf("Linux") == 0 || navigator.platform.indexOf("SunOS") == 0 ;
 
 function runTests()
 {

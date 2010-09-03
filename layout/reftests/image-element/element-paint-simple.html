@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test a simple element painting.
+     Note: if background is repeated, a temporary surface will be created to
+     hold the paint server image, which results in a reftest failure:
+     temporary surfaces use the RGBA 32bit format, but the fonts are rendered
+     with a deeper format (more than 32bit), so when rendering a font to a
+     temporary surface, we lose some color information.
+-->
+<html>
+<body>
+  <p style="width:60%; border:1px solid black; margin-left:100px;
+            background:-moz-element(#d); background-repeat:no-repeat;">
+    "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+    veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+    commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+    velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+    cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+    est laborum."
+  </p>
+  <div style="overflow:hidden; height:0;">
+    <div id="d" style="border:2px solid red; width:50px; height:50px;">A</div>
+  </div>
+</body>
+</html>

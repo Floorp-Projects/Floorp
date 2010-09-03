@@ -228,6 +228,18 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
 
   var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground");
 
+  if (where == "current" && w.gBrowser.selectedTab.pinned) {
+    try {
+      let uriObj = Services.io.newURI(url, null, null);
+      if (!uriObj.schemeIs("javascript") &&
+          w.gBrowser.currentURI.host != uriObj.host) {
+        where = "tab";
+      }
+    } catch (err) {
+      where = "tab";
+    }
+  }
+
   switch (where) {
   case "current":
     w.loadURI(url, aReferrerURI, aPostData, aAllowThirdPartyFixup);
@@ -451,6 +463,15 @@ function openTroubleshootingPage()
 {
   openUILinkIn("about:support", "tab");
 }
+
+/**
+ * Opens the feedback page for this version of the application.
+ */
+function openFeedbackPage()
+{
+  openUILinkIn("http://input.mozilla.com/sad", "tab");
+}
+
 
 #ifdef MOZ_UPDATER
 /**

@@ -41,24 +41,24 @@ Tests.startUnit = function () {
 
 Tests.testBindBufferARRAY_BUFFER = function(gl) {
   var b = gl.createBuffer();
-  assert(0 == checkError(gl, "genBuffers"));
+  assert(gl.NO_ERROR == checkError(gl, "genBuffers"));
   gl.bindBuffer(gl.ARRAY_BUFFER, b);
-  assert(0 == checkError(gl, "bindBuffer"));
+  assert(gl.NO_ERROR == checkError(gl, "bindBuffer"));
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  assert(0 == checkError(gl, "bindBuffer 0"));
+  assert(gl.NO_ERROR == checkError(gl, "bindBuffer 0"));
   gl.deleteBuffer(b);
-  assert(0 == checkError(gl, "deleteBuffers"));
+  assert(gl.NO_ERROR == checkError(gl, "deleteBuffers"));
 }
 
 Tests.testBindBufferELEMENT_ARRAY_BUFFER = function(gl) {
   var b = gl.createBuffer();
-  assert(0 == checkError(gl, "genBuffers"));
+  assert(gl.NO_ERROR == checkError(gl, "genBuffers"));
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b);
-  assert(0 == checkError(gl, "bindBuffer"));
+  assert(gl.NO_ERROR == checkError(gl, "bindBuffer"));
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-  assert(0 == checkError(gl, "bindBuffer 0"));
+  assert(gl.NO_ERROR == checkError(gl, "bindBuffer 0"));
   gl.deleteBuffer(b);
-  assert(0 == checkError(gl, "deleteBuffers"));
+  assert(gl.NO_ERROR == checkError(gl, "deleteBuffers"));
 }
 
 </script>

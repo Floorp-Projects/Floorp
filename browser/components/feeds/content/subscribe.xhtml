@@ -16,12 +16,15 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <html id="feedHandler"
-      xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>&feedPage.title;</title>
     <link rel="stylesheet"
           href="chrome://browser/skin/feeds/subscribe.css"
+          type="text/css"
+          media="all"/>
+    <link rel="stylesheet"
+          href="chrome://browser/content/feeds/subscribe.css"
           type="text/css"
           media="all"/>
     <script type="application/javascript"
@@ -34,30 +37,8 @@
           <p id="feedSubscriptionInfo1" />
           <p id="feedSubscriptionInfo2" />
         </div>
-
-<!-- XXXmano this can't have any whitespace in it.  Otherwise you would see
-     how much XUL-in-XHTML sucks, see bug 348830 -->
-        <div id="feedSubscribeLine"
-          ><xul:vbox
-            ><xul:hbox align="center" 
-              ><xul:description id="subscribeUsingDescription"
-              /><xul:menulist id="handlersMenuList" aria-labelledby="subscribeUsingDescription"
-                ><xul:menupopup menugenerated="true" id="handlersMenuPopup"
-                  ><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" image="chrome://browser/skin/page-livemarks.png" selected="true"
-                  /><xul:menuseparator
-                /></xul:menupopup
-              ></xul:menulist
-            ></xul:hbox
-            ><xul:hbox
-              ><xul:checkbox id="alwaysUse" checked="false"
-            /></xul:hbox
-            ><xul:hbox align="center"
-              ><xul:spacer flex="1"
-              /><xul:button label="&feedSubscribeNow;" id="subscribeButton"
-            /></xul:hbox
-          ></xul:vbox
-        ></div
-      ></div>
+        <div id="feedSubscribeLine"></div>
+      </div>
     </div>
 
     <script type="application/javascript">

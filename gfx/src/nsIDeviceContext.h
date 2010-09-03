@@ -169,8 +169,8 @@ const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Sur
 #endif
 
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0x41391E7C, 0x9ED5, 0x4A60, \
-  { 0x88, 0x72, 0x06, 0x15, 0x73, 0xF5, 0x0E, 0xE7 } }
+{ 0x30a9d22f, 0x8e51, 0x40af, \
+  { 0xa1, 0xf5, 0x48, 0xe3, 0x00, 0xaa, 0xa9, 0x27 } }
 
   typedef enum {
     eSystemFont_Caption,         // css2
@@ -231,8 +231,7 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) = 0;
 
   /**
-   * Create a rendering context and initialize it. This API should *only* be called
-   * on device contexts whose SupportsNativeWidgets() method return PR_FALSE.
+   * Create a rendering context and initialize it.
    * @param aContext out parameter for new rendering context
    * @return error status
    */
@@ -244,15 +243,6 @@ public:
    * @return error status
    */
   NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext) = 0;
-
-  /**
-   * Query the device to see if it supports native widgets. If not, then
-   * nsIWidget->Create() calls should be avoided.
-   * @param aSupportsWidgets out paramater. If PR_TRUE, then native widgets
-   *        can be created.
-   * @return error status
-   */
-  NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets) = 0;
 
   /**
    * We are in the process of creating the native widget for aWidget.
@@ -296,10 +286,16 @@ public:
   { return gfxFloat(aAppUnits) / AppUnitsPerDevPixel(); }
 
   /**
-   * Gets the number of app units in one inch; this is the device's DPI
-   * times AppUnitsPerDevPixel().
+   * Gets the number of app units in one physical inch; this is the
+   * device's DPI times AppUnitsPerDevPixel().
    */
-  PRInt32 AppUnitsPerInch() const { return mAppUnitsPerInch; }
+  PRInt32 AppUnitsPerPhysicalInch() const { return mAppUnitsPerPhysicalInch; }
+
+  /**
+   * Gets the number of app units in one CSS inch; this is the
+   * 96 times AppUnitsPerCSSPixel.
+   */
+  static PRInt32 AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
 
   /**
    * Fill in an nsFont based on the ID of a system font.  This function
@@ -469,7 +465,7 @@ public:
   /**
    * Check to see if the DPI has changed
    * @return whether there was actually a change in the DPI
-   *         (whether AppUnitsPerDevPixel() or AppUnitsPerInch() changed)
+   *         (whether AppUnitsPerDevPixel() or AppUnitsPerPhysicalInch() changed)
   */
   virtual PRBool CheckDPIChange() = 0;
 
@@ -494,7 +490,7 @@ public:
 
 protected:
   PRInt32 mAppUnitsPerDevPixel;
-  PRInt32 mAppUnitsPerInch;
+  PRInt32 mAppUnitsPerPhysicalInch;
   PRInt32 mAppUnitsPerDevNotScaledPixel;
   float  mPixelScale;
 };

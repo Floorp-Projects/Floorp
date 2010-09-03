@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.5.4.8-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 480096;
 var summary = 'Array.lastIndexOf';

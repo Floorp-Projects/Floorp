@@ -81,6 +81,7 @@ enum ButtonElementTypes {
 enum InputElementTypes {
   NS_FORM_INPUT_BUTTON = NS_FORM_INPUT_ELEMENT + 1,
   NS_FORM_INPUT_CHECKBOX,
+  NS_FORM_INPUT_EMAIL,
   NS_FORM_INPUT_FILE,
   NS_FORM_INPUT_HIDDEN,
   NS_FORM_INPUT_RESET,
@@ -91,6 +92,7 @@ enum InputElementTypes {
   NS_FORM_INPUT_SUBMIT,
   NS_FORM_INPUT_TEL,
   NS_FORM_INPUT_TEXT,
+  NS_FORM_INPUT_URL,
   eInputElementTypesMax
 };
 
@@ -99,8 +101,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x0dc5083b, 0xb0a8, 0x48c4, \
- { 0xb2, 0xeb, 0xc2, 0x4f, 0xfb, 0x7e, 0xc2, 0x8e } }
+{ 0x218eb090, 0x32eb, 0x4e2a, \
+ { 0x96, 0x42, 0xcd, 0xcd, 0x33, 0xae, 0xdb, 0x95 } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -156,11 +158,8 @@ public:
    * submission object
    * @param aFormSubmission the form submission to notify of names/values/files
    *                       to submit
-   * @param aSubmitElement the element that was pressed to submit (possibly
-   *                       null)
    */
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement) = 0;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) = 0;
 
   /**
    * Save to presentation state.  The form control will determine whether it
@@ -208,6 +207,12 @@ public:
    * @return Whether this is a labelable form control.
    */
   virtual PRBool IsLabelableControl() const = 0;
+
+  /**
+   * Returns true if this is a submittable form control.
+   * @return Whether this is a submittable form control.
+   */
+  virtual PRBool IsSubmittableControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

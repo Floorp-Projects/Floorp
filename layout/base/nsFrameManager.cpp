@@ -22,6 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -499,7 +500,7 @@ nsFrameManager::RemoveFrame(nsIAtom*        aListName,
   // that doesn't change the size of the parent.)
   // This has to sure to invalidate the entire overflow rect; this
   // is important in the presence of absolute positioning
-  aOldFrame->InvalidateOverflowRect();
+  aOldFrame->InvalidateFrameSubtree();
 
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
                // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
@@ -771,12 +772,13 @@ nsresult
 nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
-    // Also reparent the out-of-flow
+    // Also reparent the out-of-flow and all its continuations.
     nsIFrame* outOfFlow =
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     NS_ASSERTION(outOfFlow, "no out-of-flow frame");
-
-    ReparentStyleContext(outOfFlow);
+    do {
+      ReparentStyleContext(outOfFlow);
+    } while (outOfFlow = outOfFlow->GetNextContinuation());
   }
 
   // DO NOT verify the style tree before reparenting.  The frame
@@ -1470,13 +1472,15 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 
               // |nsFrame::GetParentStyleContextFrame| checks being out
               // of flow so that this works correctly.
-              ReResolveStyleContext(aPresContext, outOfFlowFrame,
-                                    content, aChangeList,
-                                    NS_SubtractHint(aMinChange,
-                                                    nsChangeHint_ReflowFrame),
-                                    childRestyleHint,
-                                    fireAccessibilityEvents,
-                                    aRestyleTracker);
+              do {
+                ReResolveStyleContext(aPresContext, outOfFlowFrame,
+                                      content, aChangeList,
+                                      NS_SubtractHint(aMinChange,
+                                                      nsChangeHint_ReflowFrame),
+                                      childRestyleHint,
+                                      fireAccessibilityEvents,
+                                      aRestyleTracker);
+              } while (outOfFlowFrame = outOfFlowFrame->GetNextContinuation());
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame

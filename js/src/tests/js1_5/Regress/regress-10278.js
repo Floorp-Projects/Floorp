@@ -5,7 +5,6 @@
  * Contributor: Bob Clary
  */
 
-var gTestfile = 'regress-10278.js';
 /**
  *  File Name:          regress-10278.js
  *  Reference:          https://bugzilla.mozilla.org/show_bug.cgi?id=10278

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
 
 const TEST_URL_BASES = [
   "http://example.org/browser/browser/base/content/test/dummy_page.html#tabmatch",
@@ -102,7 +101,31 @@ var gTestSteps = [
       ensure_opentabs_match_db();
       nextStep()
     });
-  }
+  },
+  function() {
+    info("Running step 6 - ensure we don't register subframes as open pages");
+    let tab = gBrowser.addTab();
+    tab.linkedBrowser.addEventListener("load", function () {
+      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      // Start the sub-document load.
+      executeSoon(function () {
+        tab.linkedBrowser.addEventListener("load", function (e) {
+          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+            ensure_opentabs_match_db();
+            nextStep()
+        }, true);
+        tab.linkedBrowser.contentDocument.querySelector("iframe").src = "http://test2.example.org/";
+      });
+    }, true);
+    tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
+  },
+  function() {
+    info("Running step 7 - remove tab immediately");
+    let tab = gBrowser.addTab("about:blank");
+    gBrowser.removeTab(tab);
+    ensure_opentabs_match_db();
+    nextStep();
+  },
 ];
 
 
@@ -113,22 +136,32 @@ function test() {
 }
 
 function loadTab(tab, url) {
+  // Because adding visits is async, we will not be notified immediately.
+  let visited = false;
+
   tab.linkedBrowser.addEventListener("load", function (event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
-    if (--gTabWaitCount > 0)
-      return;
-    is(gTabWaitCount, 0,
-       "sanity check, gTabWaitCount should not be decremented below 0");
+    Services.obs.addObserver(
+      function (aSubject, aTopic, aData) {
+        if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
+          return;
+        Services.obs.removeObserver(arguments.callee, aTopic);
+        if (--gTabWaitCount > 0)
+          return;
+        is(gTabWaitCount, 0,
+           "sanity check, gTabWaitCount should not be decremented below 0");
 
-    try {
-      ensure_opentabs_match_db();
-    } catch (e) {
-      ok(false, "exception from ensure_openpages_match_db: " + e);
-    }
+        try {
+          ensure_opentabs_match_db();
+        } catch (e) {
+          ok(false, "exception from ensure_openpages_match_db: " + e);
+        }
 
-    executeSoon(nextStep);
+        executeSoon(nextStep);
+      }, "uri-visit-saved", false);
   }, true);
+
   gTabWaitCount++;
   tab.linkedBrowser.loadURI(url);
 }
@@ -174,10 +207,10 @@ function ensure_opentabs_match_db() {
 
   try {
     var stmt = db.createStatement(
-                          "SELECT IFNULL(p_t.url, p.url) AS url, open_count, place_id " +
-                          "FROM moz_openpages_temp " +
-                          "LEFT JOIN moz_places p ON p.id=place_id " +
-                          "LEFT JOIN moz_places_temp p_t ON p_t.id=place_id");
+                          "SELECT t.url, open_count, IFNULL(p_t.id, p.id) " +
+                          "FROM moz_openpages_temp t " +
+                          "LEFT JOIN moz_places p ON p.url = t.url " +
+                          "LEFT JOIN moz_places_temp p_t ON p_t.url = t.url");
   } catch (e) {
     ok(false, "error creating db statement: " + e);
     return;
@@ -199,17 +232,9 @@ function ensure_opentabs_match_db() {
   }
 
   for (let url in tabs) {
-    // ignore URLs that should never be in the places db
-    if (!is_expected_in_db(url))
-      continue;
     ok(dbtabs.indexOf(url) > -1,
        "tab is open (" + tabs[url] + " times) and should recorded in db: " + url);
   }
-}
-
-function is_expected_in_db(url) {
-  var uri = Services.io.newURI(url, null, null);
-  return PlacesUtils.history.canAddURI(uri);
 }
 
 /**

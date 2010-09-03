@@ -15,10 +15,11 @@
     document.getElementById("para").style.content =
       "url('http://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg')";
 
-    window.setTimeout(function() {
+    waitForSecurityState("broken", function()
+    {
       isSecurityState("broken", "insecure content added by styling breaks security");
       finish();
-    }, 500);
+    });
   }
 
   function afterNavigationTest()

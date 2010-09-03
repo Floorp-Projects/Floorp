@@ -12,7 +12,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var testsWaiting = 0;
+var manager = new MediaTestManager;
 
 function cloneLoaded(event) {
   ok(true, "Clone loaded OK");
@@ -23,16 +23,14 @@ function cloneLoaded(event) {
        "Clone " + e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
   }
 
-  --testsWaiting;
-  if (testsWaiting == 0) {
-    SimpleTest.finish();
-  }
+  manager.finished(e.token);
 }
 
 function tryClone(event) {
   var e = event.target;
   var clone = e.cloneNode(false);
-
+  clone.token = e.token;
+  
   if (e._expectedDuration) {
     ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
        e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
@@ -45,9 +43,7 @@ function tryClone(event) {
   clone.addEventListener("loadeddata", cloneLoaded, false);
 }
 
-// Find something we can play
-for (var i = 0; i < gCloneTests.length; ++i) {
-  var test = gCloneTests[i];
+function initTest(test, token) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var e = document.createElement(elemType);
   if (e.canPlayType(test.type)) {
@@ -57,15 +53,12 @@ for (var i = 0; i < gCloneTests.length; ++i) {
     }
     e.addEventListener("loadeddata", tryClone, false);
     e.load();
-    ++testsWaiting;
+    e.token = token;
+    manager.started(token);
   }
 }
 
-if (testsWaiting == 0) {
-  todo(false, "Can't play anything");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gCloneTests, initTest);
 
 </script>
 </pre>

@@ -45,7 +45,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=76683
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-76683.js';
 var i = 0;
 var BUGNUMBER = 76683;
 var summary = 'Regression test for Bugzilla bug 76683';

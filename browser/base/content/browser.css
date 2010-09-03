@@ -29,26 +29,23 @@ tabbrowser {
   max-width: 250px;
   min-width: 100px;
   width: 0;
+  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
 }
 
-.tabbrowser-tab:not([fadein]) {
+.tabbrowser-tab:not([pinned]):not([fadein]) {
   max-width: 1px;
   min-width: 1px;
 }
 
-.tabbrowser-tab[fadein]:not([pinned]) {
-  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
-}
-
-.tabbrowser-tab:not([fadein]) > .tab-text,
-.tabbrowser-tab:not([fadein]) > .tab-icon-image,
-.tabbrowser-tab:not([fadein]) > .tab-close-button {
+.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-text,
+.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-icon-image,
+.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-close-button {
   opacity: 0 !important;
 }
 
-.tabbrowser-tab[fadein] > .tab-text,
-.tabbrowser-tab[fadein] > .tab-icon-image,
-.tabbrowser-tab[fadein] > .tab-close-button {
+.tabbrowser-tab > .tab-text,
+.tabbrowser-tab > .tab-icon-image,
+.tabbrowser-tab > .tab-close-button {
   -moz-transition: opacity .25s;
 }
 
@@ -59,6 +56,10 @@ tabbrowser {
 
 .tabbrowser-tab[pinned] > .tab-text {
   display: none;
+}
+
+.tabbrowser-tab[pinned] > .tab-icon-image {
+  vertical-align: middle;
 }
 
 #alltabs-popup {
@@ -86,8 +87,12 @@ toolbar[printpreview="true"] {
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#main-window[inFullscreen] > #appmenu-button-container {
+#main-window[inFullscreen] > #titlebar {
   display: none;
+}
+
+#titlebar {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
 }
 %endif
 
@@ -95,6 +100,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+#wrapper-urlbar-container #urlbar-container > #urlbar > toolbarbutton,
+#urlbar-container:not([combined]) > #urlbar > toolbarbutton,
+#urlbar-container[combined] + #reload-button + #stop-button,
+#urlbar-container[combined] + #reload-button,
+toolbar:not([mode="icons"]) > #urlbar-container > #urlbar > toolbarbutton,
+toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
+toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button[displaystop],
 toolbar[mode="icons"] > #reload-button:not([displaystop]) + #stop-button,
 toolbar[mode="icons"] > #reload-button[displaystop] {
   visibility: collapse;
@@ -138,7 +150,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 
 /* For results that are actions, their description text is shown instead of
    the URL - this needs to follow the locale's direction, unlike URLs. */
-richlistitem[type="action"]:-moz-locale-dir(rtl) > .ac-url-box {
+richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   direction: rtl;
 }
 
@@ -173,8 +185,12 @@ richlistitem[type="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   direction: rtl;
 }
 
+#urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
+#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button,
+#urlbar[pageproxystate="invalid"][focused="true"] > #urlbar-go-button ~ toolbarbutton,
+#urlbar[pageproxystate="valid"] > #urlbar-go-button,
+#urlbar:not([focused="true"]) > #urlbar-go-button {
   visibility: collapse;
 }
 
@@ -251,6 +267,17 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   min-width: 1px;
 }
 
+/* Sync statusbar UI */
+%ifdef MOZ_SERVICES_SYNC
+#sync-notifications-box {
+  -moz-binding: url("chrome://browser/content/syncNotification.xml#notificationbox");
+}
+
+#sync-notifications-box notification {
+  -moz-binding: url("chrome://browser/content/syncNotification.xml#notification");
+}
+%endif
+
 /* Identity UI */
 #identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
@@ -325,9 +352,14 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
    notifications are */
 .notification-anchor-icon {
   display: none;
+  -moz-user-focus: normal;
 }
 
 #notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
 #notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon {
   display: -moz-box;
+}
+
+#geolocation-notification {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
 }

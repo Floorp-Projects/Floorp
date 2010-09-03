@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-233483.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 233483;
 var summary = 'Don\'t crash with null properties - Browser only';

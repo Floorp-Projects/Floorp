@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-370048-01.js';
 
 var BUGNUMBER = 370048;
 var summary = 'with (obj) function:: with xml lists';

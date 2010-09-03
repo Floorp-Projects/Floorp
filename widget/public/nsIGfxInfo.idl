@@ -1,0 +1,109 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2000
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/* NOTE: this interface is completely undesigned, not stable and likely to change */
+
+[scriptable, uuid(d2bfa0fd-8f73-4660-9609-f999680243b1)]
+interface nsIGfxInfo : nsISupports
+{
+  readonly attribute boolean D2DEnabled;
+  readonly attribute boolean DWriteEnabled;
+  
+  /**
+   * The name of the display adapter.
+   */
+  readonly attribute DOMString adapterDescription;
+
+  readonly attribute DOMString adapterDriver;
+  
+  /* These types are inspired by DXGI_ADAPTER_DESC */
+  readonly attribute unsigned long adapterVendorID;
+  
+  readonly attribute unsigned long adapterDeviceID;
+  
+  /**
+   * The amount of RAM in MB in the display adapter.
+   */
+  readonly attribute DOMString adapterRAM;
+  
+  readonly attribute DOMString adapterDriverVersion;
+  
+  readonly attribute DOMString adapterDriverDate;
+
+  /*
+   * A set of constants for features that we can ask this GfxInfo object
+   * about via GetFeatureStatus
+   */
+  /* Don't assign 0 or -1 */
+  /* Whether Direct2D is supported for content rendering. */
+  const long FEATURE_DIRECT2D = 1;
+  /* Whether Direct3D 9 is supported for layers. */
+  const long FEATURE_DIRECT3D_9_LAYERS = 2;
+  /* Whether Direct3D 10.0 is supported for layers. */
+  const long FEATURE_DIRECT3D_10_LAYERS = 3;
+  /* Whether Direct3D 10.1 is supported for layers. */
+  const long FEATURE_DIRECT3D_10_1_LAYERS = 4;
+  /* Whether OpenGL is supported for layers */
+  const long FEATURE_OPENGL_LAYERS = 5;
+  /* Whether WebGL is supported via OpenGL. */
+  const long FEATURE_WEBGL_OPENGL = 6;
+  /* Whether WebGL is supported via ANGLE (D3D9 -- does not check for the presence of ANGLE libs). */
+  const long FEATURE_WEBGL_ANGLE = 7;
+
+  /*
+   * A set of return values from GetFeatureStatus
+   */
+  /* We don't have any information about this feature on this hardware */
+  const long FEATURE_STATUS_UNKNOWN = 0;
+  /* This feature is available and can be used */
+  const long FEATURE_AVAILABLE = 1;
+  /* This feature is not available */
+  const long FEATURE_NOT_AVAILABLE = 2;
+  /* This feature is available, but is blocked due to a blocklist entry */
+  const long FEATURE_BLOCKED = 3;
+  /* This feature is available and can be used, but is not suggested (e.g. shouldn't be used by default */
+  const long FEATURE_NOT_SUGGESTED = 4;
+
+  /**
+   * Ask about a feature, and return the status of that feature
+   */
+  long getFeatureStatus(in long aFeature);
+};
+

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<searchresults total_results="1111">
+  <addon>
+    <name>Repo Add-on 1</name>
+    <type id="1">Extension</type>
+    <guid>test_AddonRepository_1@tests.mozilla.org</guid>
+    <version>2.1</version>
+    <authors>
+      <author>
+        <name>Repo Add-on 1 - Creator</name>
+        <link>http://localhost:4444/repo/1/creator.html</link>
+      </author>
+      <author>
+        <name>Repo Add-on 1 - First Developer</name>
+        <link>http://localhost:4444/repo/1/firstDeveloper.html</link>
+      </author>
+      <author>
+        <name>Repo Add-on 1 - Second Developer</name>
+        <link>http://localhost:4444/repo/1/secondDeveloper.html</link>
+      </author>
+    </authors>
+    <summary>Repo Add-on 1 - Description</summary>
+    <description>Repo Add-on 1 - Full Description</description>
+    <eula>Repo Add-on 1 - EULA</eula>
+    <developer_comments>Repo Add-on 1 - Developer Comments</developer_comments>
+    <icon>http://localhost:4444/repo/1/icon.png</icon>
+    <status id="4">Public</status>
+    <rating>1</rating>
+    <learnmore>http://localhost:4444/repo/1/learnmore.html</learnmore>
+    <homepage>http://localhost:4444/repo/1/homepage.html</homepage>
+    <support>http://localhost:4444/repo/1/support.html</support>
+    <contribution_data>
+      <link>http://localhost:4444/repo/1/contribution.html</link>
+      <suggested_amount currency="USD">$11.11</suggested_amount>
+      <meet_developers>http://localhost:4444/repo/1/meetDevelopers.html</meet_developers>
+    </contribution_data>
+    <reviews num="1111">http://localhost:4444/repo/1/review.html</reviews>
+    <total_downloads>2221</total_downloads>
+    <weekly_downloads>3331</weekly_downloads>
+    <daily_users>4441</daily_users>
+    <last_updated epoch="9">1970-01-01T00:00:09Z</last_updated>
+    <install size="9">http://localhost:4444/repo/1/install.xpi</install>
+  </addon>
+
+  <addon>
+    <name>Repo Add-on 2</name>
+    <type id="2">Theme</type>
+    <guid>test_AddonRepository_2@tests.mozilla.org</guid>
+    <version>2.2</version>
+    <authors>
+      <author>
+        <name>Repo Add-on 2 - Creator</name>
+        <link>http://localhost:4444/repo/2/creator.html</link>
+      </author>
+      <author>
+        <name>Repo Add-on 2 - First Developer</name>
+        <link>http://localhost:4444/repo/2/firstDeveloper.html</link>
+      </author>
+      <author>
+        <name>Repo Add-on 2 - Second Developer</name>
+        <link>http://localhost:4444/repo/2/secondDeveloper.html</link>
+      </author>
+    </authors>
+    <summary>Repo Add-on 2 - Description</summary>
+    <description>Repo Add-on 2 - Full Description</description>
+    <eula>Repo Add-on 2 - EULA</eula>
+    <developer_comments>Repo Add-on 2 - Developer Comments</developer_comments>
+    <icon>http://localhost:4444/repo/2/icon.png</icon>
+    <status id="9">Unknown</status>
+    <previews>
+      <preview primary="1">
+        <full type="image/png">http://localhost:4444/repo/2/firstFull.png</full>
+        <thumbnail type="image/png">http://localhost:4444/repo/2/firstThumbnail.png</thumbnail>
+        <caption>Repo Add-on 2 - First Caption</caption>
+      </preview>
+      <preview primary="0">
+        <full type="image/png">http://localhost:4444/repo/2/secondFull.png</full>
+        <thumbnail type="image/png">http://localhost:4444/repo/2/secondThumbnail.png</thumbnail>
+        <caption>Repo Add-on 2 - Second Caption</caption>
+      </preview>
+    </previews>
+    <rating>2</rating>
+    <learnmore>http://localhost:4444/repo/2/learnmore.html</learnmore>
+    <homepage>http://localhost:4444/repo/2/homepage.html</homepage>
+    <support>http://localhost:4444/repo/2/support.html</support>
+    <contribution_data>
+      <link>http://localhost:4444/repo/2/contribution.html</link>
+      <suggested_amount currency="USD">$11.12</suggested_amount>
+      <meet_developers>http://localhost:4444/repo/2/meetDevelopers.html</meet_developers>
+    </contribution_data>
+    <reviews num="1112">http://localhost:4444/repo/2/review.html</reviews>
+    <total_downloads>2222</total_downloads>
+    <weekly_downloads>3332</weekly_downloads>
+    <daily_users>4442</daily_users>
+    <last_updated epoch="9">1970-01-01T00:00:09Z</last_updated>
+    <install size="9">http://localhost:4444/repo/2/install.xpi</install>
+  </addon>
+
+  <addon>
+    <name>Repo Add-on 3</name>
+    <type id="9999">Unknown</type>
+    <guid>test_AddonRepository_3@tests.mozilla.org</guid>
+    <version>2.3</version>
+    <icon>http://localhost:4444/repo/3/icon.png</icon>
+    <previews>
+      <preview primary="1">
+        <full type="image/png">http://localhost:4444/repo/3/firstFull.png</full>
+        <thumbnail type="image/png">http://localhost:4444/repo/3/firstThumbnail.png</thumbnail>
+        <caption>Repo Add-on 3 - First Caption</caption>
+      </preview>
+      <preview primary="0">
+        <full type="image/png">http://localhost:4444/repo/3/secondFull.png</full>
+        <thumbnail type="image/png">http://localhost:4444/repo/3/secondThumbnail.png</thumbnail>
+        <caption>Repo Add-on 3 - Second Caption</caption>
+      </preview>
+    </previews>
+  </addon>
+</searchresults>
+

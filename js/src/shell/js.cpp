@@ -71,6 +71,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsparse.h"
+#include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
@@ -1035,6 +1036,38 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+PutStr(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    JSString *str;
+    char *bytes;
+
+    if (argc != 0) {
+        argv = JS_ARGV(cx, vp);
+        str = JS_ValueToString(cx, argv[0]);
+        if (!str)
+            return JS_FALSE;
+        bytes = JS_EncodeString(cx, str);
+        if (!bytes)
+            return JS_FALSE;
+        fputs(bytes, gOutFile);
+        JS_free(cx, bytes);
+        fflush(gOutFile);
+    }
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+Now(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsdouble now = PRMJ_Now() / double(PRMJ_USEC_PER_MSEC);
+    JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL(now));
+    return true;
+}
+
+static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
@@ -1396,7 +1429,7 @@ ValueToScript(JSContext *cx, jsval v)
             script = (JSScript *) JS_GetPrivate(cx, obj);
         } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->getFloatingFrame()->fun;
+            fun = gen->getFloatingFrame()->getFunction();
             script = FUN_SCRIPT(fun);
         }
     }
@@ -1423,7 +1456,7 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
     uintN intarg;
     JSScript *script;
 
-    *scriptp = JS_GetScriptedCaller(cx, NULL)->script;
+    *scriptp = JS_GetScriptedCaller(cx, NULL)->getScript();
     *ip = 0;
     if (argc != 0) {
         v = argv[0];
@@ -1453,7 +1486,8 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     JSStackFrame *caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateUCInStackFrame(cx, caller,
                                    JS_GetStringChars(str), JS_GetStringLength(str),
-                                   caller->script->filename, caller->script->lineno,
+                                   caller->getScript()->filename,
+                                   caller->getScript()->lineno,
                                    rval)) {
         return JSTRAP_ERROR;
     }
@@ -1507,7 +1541,7 @@ LineToPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
         return JS_FALSE;
     }
-    script = JS_GetScriptedCaller(cx, NULL)->script;
+    script = JS_GetScriptedCaller(cx, NULL)->getScript();
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
     lineno = (i == 0) ? script->lineno : (uintN)i;
@@ -1747,7 +1781,6 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
             SHOW_FLAG(LAMBDA);
-            SHOW_FLAG(BOUND_METHOD);
             SHOW_FLAG(HEAVYWEIGHT);
             SHOW_FLAG(THISP_STRING);
             SHOW_FLAG(THISP_NUMBER);
@@ -2161,6 +2194,18 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     JS_ReportError(cx, "argument '%s' is not null or a heap-allocated thing",
                    badTraceArg);
     return JS_FALSE;
+}
+
+JSBool
+DumpObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *arg0 = NULL;
+    if (!JS_ConvertArguments(cx, argc, argv, "o", &arg0))
+        return JS_FALSE;
+
+    js_DumpObject(arg0);
+
+    return JS_TRUE;
 }
 
 #endif /* DEBUG */
@@ -2662,6 +2707,23 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
+ResolveClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
+{
+    if (!JS_ResolveStandardClass(cx, obj, id, resolved))
+        return JS_FALSE;
+
+    if (!*resolved) {
+        if (JSID_IS_ATOM(id, CLASS_ATOM(cx, Reflect))) {
+            if (!js_InitReflectClass(cx, obj))
+                return JS_FALSE;
+            *resolved = JS_TRUE;
+        }
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
     ComplexObject *cpx;
@@ -2691,7 +2753,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
     if (!(flags & JSRESOLVE_ASSIGNING)) {
         JSBool resolved;
 
-        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+        if (!ResolveClass(cx, obj, id, &resolved))
             return JS_FALSE;
 
         if (resolved) {
@@ -2838,7 +2900,7 @@ split_create_outer(JSContext *cx)
     cpx->outer = NULL;
 
     obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
-    if (!obj || !JS_SetParent(cx, obj, NULL)) {
+    if (!obj) {
         JS_free(cx, cpx);
         return NULL;
     }
@@ -2868,7 +2930,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx->outer = outer;
 
     obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
-    if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
+    if (!obj || !JS_SetPrivate(cx, obj, cpx)) {
         JS_free(cx, cpx);
         return NULL;
     }
@@ -2917,7 +2979,7 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     JS_ValueToBoolean(cx, v, &b);
     if (b && (flags & JSRESOLVE_ASSIGNING) == 0) {
-        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+        if (!ResolveClass(cx, obj, id, &resolved))
             return JS_FALSE;
         if (resolved) {
             *objp = obj;
@@ -3023,8 +3085,8 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return false;
         }
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
-                                 fp->script->filename,
-                                 JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
+                                 fp->getScript()->filename,
+                                 JS_PCToLineNumber(cx, fp->getScript(), fp->pc(cx)),
                                  rval)) {
             return false;
         }
@@ -3050,7 +3112,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
                         ? !!(JSVAL_TO_BOOLEAN(argv[2]))
                         : false;
 
-    JS_ASSERT(cx->fp);
+    JS_ASSERT(cx->hasfp());
 
     FrameRegsIter fi(cx);
     for (uint32 i = 0; i < upCount; ++i, ++fi) {
@@ -3059,7 +3121,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSStackFrame *const fp = fi.fp();
-    if (!fp->script) {
+    if (!fp->hasScript()) {
         JS_ReportError(cx, "cannot eval in non-script frame");
         return JS_FALSE;
     }
@@ -3069,8 +3131,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
         oldfp = JS_SaveFrameChain(cx);
 
     JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
-                                          fp->script->filename,
-                                          JS_PCToLineNumber(cx, fp->script,
+                                          fp->getScript()->filename,
+                                          JS_PCToLineNumber(cx, fp->getScript(),
                                                             fi.pc()),
                                           vp);
 
@@ -3792,9 +3854,9 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Get the currently executing script's name. */
     fp = JS_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp && fp->script->filename);
+    JS_ASSERT(fp && fp->getScript()->filename);
 #ifdef XP_UNIX
-    pathname = MakeAbsolutePathname(cx, fp->script->filename, filename);
+    pathname = MakeAbsolutePathname(cx, fp->getScript()->filename, filename);
     if (!pathname)
         return JS_FALSE;
 #else
@@ -3846,6 +3908,35 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Snarl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    if (argc < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "compile", "0", "s");
+    }
+
+    jsval arg0 = argv[0];
+    if (!JSVAL_IS_STRING(arg0)) {
+        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, arg0));
+        JS_ReportError(cx, "expected string to compile, got %s", typeName);
+        return JS_FALSE;
+    }
+
+    JSString *scriptContents = JSVAL_TO_STRING(arg0);
+    JSScript *script = JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
+                                          JS_GetStringLength(scriptContents), "<string>", 0);
+    if (!script)
+        return JS_FALSE;
+
+    JS_ExecuteScript(cx, obj, script, NULL);
+    JS_DestroyScript(cx, script);
+
+    return JS_TRUE;
+}
+
+
+
 JSBool
 Wrap(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -3872,6 +3963,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("load",           Load,           1,0,0),
     JS_FN("readline",       ReadLine,       0,0),
     JS_FN("print",          Print,          0,0),
+    JS_FN("putstr",         PutStr,         0,0),
+    JS_FN("dateNow",        Now,            0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
@@ -3897,6 +3990,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("disfile",        DisassFile,     1,0,0),
     JS_FS("dissrc",         DisassWithSrc,  1,0,0),
     JS_FN("dumpHeap",       DumpHeap,       0,0),
+    JS_FS("dumpObject",     DumpObject,     1,0,0),
     JS_FS("notes",          Notes,          1,0,0),
     JS_FS("tracing",        Tracing,        0,0,0),
     JS_FS("stats",          DumpStats,      1,0,0),
@@ -3944,6 +4038,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FS("snarf",          Snarf,        0,0,0),
+    JS_FS("snarl",          Snarl,        0,0,0),
+    JS_FS("read",           Snarf,        0,0,0),
     JS_FN("compile",        Compile,        1,0),
     JS_FN("parse",          Parse,          1,0),
     JS_FN("timeout",        Timeout,        1,0),
@@ -3963,6 +4059,8 @@ static const char *const shell_help_messages[] = {
 "load(['foo.js' ...])     Load files named by string arguments",
 "readline()               Read a single line from stdin",
 "print([exp ...])         Evaluate and print expressions",
+"putstr([exp])            Evaluate and print expression without newline",
+"dateNow()                    Return the current time with sub-ms precision",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
 "assertEq(actual, expected[, msg])\n"
@@ -3998,6 +4096,7 @@ static const char *const shell_help_messages[] = {
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",
+"dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
 "tracing([true|false|filename]) Turn bytecode execution tracing on/off.\n"
 "                         With filename, send to file.\n",
@@ -4053,6 +4152,8 @@ static const char *const shell_help_messages[] = {
 "scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 "snarf(filename)          Read filename into returned string",
+"snarl(codestring)        Eval code, without being eval.",
+"read(filename)           Synonym for snarf",
 "compile(code)            Compiles a string to bytecode, potentially throwing",
 "parse(code)              Parses a string, potentially throwing",
 "timeout([seconds])\n"
@@ -4627,7 +4728,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 
-    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+    if (!ResolveClass(cx, obj, id, &resolved))
         return JS_FALSE;
     if (resolved) {
         *objp = obj;
@@ -5035,7 +5136,7 @@ main(int argc, char **argv, char **envp)
     CALIBRATION_DELAY_COUNT = 0;
 #endif
 
-    rt = JS_NewRuntime(64L * 1024L * 1024L);
+    rt = JS_NewRuntime(128L * 1024L * 1024L);
     if (!rt)
         return 1;
 

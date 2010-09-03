@@ -17,6 +17,7 @@ IPDLSRCS =					\
   PTestMultiMgrsRight.ipdl			\
   PTestMultiMgrsBottom.ipdl			\
   PTestNestedLoops.ipdl				\
+  PTestRacyReentry.ipdl				\
   PTestRacyRPCReplies.ipdl			\
   PTestRPCErrorCleanup.ipdl			\
   PTestRPCRaces.ipdl				\
@@ -30,5 +31,6 @@ IPDLSRCS =					\
   PTestShutdownSubsub.ipdl			\
   PTestStackHooks.ipdl				\
   PTestSyncWakeup.ipdl				\
+  PTestSyncHang.ipdl                            \
   PTestSysVShmem.ipdl				\
   $(NULL)

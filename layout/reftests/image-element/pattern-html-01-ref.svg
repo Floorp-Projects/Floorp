@@ -1,0 +1,14 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="10" height="10" fill="lime"/>
+  <rect x="60" y="10" width="10" height="10" fill="lime"/>
+  <rect x="10" y="60" width="10" height="10" fill="lime"/>
+  <rect x="60" y="60" width="10" height="10" fill="lime"/>
+  <rect x="0" y="200" width="10" height="10" fill="lime"/>
+  <rect x="50" y="200" width="10" height="10" fill="lime"/>
+  <rect x="0" y="250" width="10" height="10" fill="lime"/>
+  <rect x="50" y="250" width="10" height="10" fill="lime"/>
+</svg>

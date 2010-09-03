@@ -2,35 +2,28 @@
 %include browser.css
 %undef WINSTRIPE_AERO
 
-%define customToolbarColor rgb(227,237,246)
+%define customToolbarColor hsl(214,44%,87%)
 
 @media all and (-moz-windows-default-theme) {
   #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
     background-color: @customToolbarColor@;
   }
 
-  #navigator-toolbox[tabsontop="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: -moz-radial-gradient(center top, white, rgba(255,255,255,0) 60%),
-                      -moz-linear-gradient(left, transparent, transparent 1px,
-                                                 @toolbarHighlight@ 1px, @toolbarHighlight@),
-                      -moz-linear-gradient(left, transparent, transparent 1px,
-                                                 @customToolbarColor@ 1px, @customToolbarColor@);
+  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
+                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 }
 
 @media all and (-moz-windows-compositor) {
-  #main-window:not(:-moz-lwtheme) {
-    -moz-appearance: -moz-win-glass;
+  /* these should be hidden w/glass enabled. windows draws it's own buttons. */
+  #titlebar-buttonbox {
+    display: none;
+  }
+
+  #main-window {
+    -moz-appearance: -moz-win-borderless-glass;
     background: transparent;
-  }
-
-  /* the new titlebar requires this, or content will be clipped at the top of the screen. */
-  #main-window[sizemode="maximized"][chromemargin^="0,"] {
-    margin-top: 8px;
-  }
-
-  #main-window[sizemode="normal"][chromemargin^="0,"] {
-    margin-top: 2px;
   }
 
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
@@ -47,7 +40,7 @@
     text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
     border-left: 1px solid ThreeDShadow;
     border-right: 1px solid ThreeDShadow;
   }
@@ -66,6 +59,11 @@
     background-color: -moz-dialog;
   }
 
+  #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
+    background-color: rgba(255,255,255,.5);
+    -moz-border-radius: 4px;
+  }
+
   #urlbar,
   .searchbar-textbox {
     background-color: rgba(255,255,255,.725);
@@ -73,12 +71,10 @@
     color: black;
   }
 
-  /*XXX :-moz-placeholder isn't implemented yet (bug 457801)
   #urlbar > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
   .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
     color: #777;
   }
-  */
 
   #urlbar:hover,
   .searchbar-textbox:hover {
@@ -92,15 +88,13 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(left, transparent, transparent 1px,
-                                                 rgba(255,255,255,.4) 1px, rgba(255,255,255,.4));
+    background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%);
     text-shadow: 0 1px 0 rgba(255,255,255,.4);
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: -moz-linear-gradient(left, transparent, transparent 1px,
-                                                 rgba(255,255,255,.6) 1px, rgba(255,255,255,.6));
+    background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,75%,.6) 50%);
   }
 
   #allTabs-panel,

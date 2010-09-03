@@ -45,6 +45,8 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMJSUtils.h"
+#include "nsPIDOMWindow.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
 
@@ -52,14 +54,29 @@
 
 USING_INDEXEDDB_NAMESPACE
 
-IDBRequest::IDBRequest(Generator* aGenerator,
-                       bool aWriteRequest)
-: mGenerator(aGenerator),
-  mReadyState(nsIIDBRequest::INITIAL),
-  mAborted(false),
-  mWriteRequest(aWriteRequest)
+already_AddRefed<IDBRequest>
+IDBRequest::Generator::GenerateRequestInternal(nsIScriptContext* aScriptContext,
+                                               nsPIDOMWindow* aOwner,
+                                               PRBool aWriteRequest)
 {
-  NS_ASSERTION(aGenerator, "Null generator!");
+  if (!aScriptContext || !aOwner) {
+    NS_ERROR("Null context and owner!");
+    return nsnull;
+  }
+
+  nsRefPtr<IDBRequest> request(new IDBRequest());
+
+  request->mGenerator = this;
+  request->mWriteRequest = aWriteRequest;
+  request->mScriptContext = aScriptContext;
+  request->mOwner = aOwner;
+
+  if (!mLiveRequests.AppendElement(request)) {
+    NS_ERROR("Append failed!");
+    return nsnull;
+  }
+
+  return request.forget();
 }
 
 IDBRequest::~IDBRequest()
@@ -84,7 +101,7 @@ IDBRequest::Abort()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mAborted = true;
+  mAborted = PR_TRUE;
   mReadyState = nsIIDBRequest::DONE;
   return NS_OK;
 }

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-488989.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 488989;
 var summary = 'Array.prototype.push for non-arrays near max-array-index limit';

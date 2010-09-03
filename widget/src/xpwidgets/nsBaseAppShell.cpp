@@ -70,6 +70,11 @@ nsBaseAppShell::nsBaseAppShell()
 {
 }
 
+nsBaseAppShell::~nsBaseAppShell()
+{
+  NS_ASSERTION(mSyncSections.Count() == 0, "Must have run all sync sections");
+}
+
 nsresult
 nsBaseAppShell::Init()
 {
@@ -324,7 +329,27 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
     thr->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
   }
 
+  // We're about to run an event, so we're in a stable state. 
+  RunSyncSections();
+
   return NS_OK;
+}
+
+void
+nsBaseAppShell::RunSyncSections()
+{
+  if (mSyncSections.Count() == 0) {
+    return;
+  }
+  // We've got synchronous sections awaiting a stable state. Run
+  // all the synchronous sections. Note that a synchronous section could
+  // add another synchronous section, so we don't remove elements from
+  // mSyncSections until all sections have been run, else we'll screw up
+  // our iteration.
+  for (PRUint32 i=0; i<mSyncSections.Count(); i++) {
+    mSyncSections[i]->Run();
+  }
+  mSyncSections.Clear();
 }
 
 // Called from the main thread
@@ -332,6 +357,8 @@ NS_IMETHODIMP
 nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
                                       PRUint32 recursionDepth)
 {
+  // We've just finished running an event, so we're in a stable state. 
+  RunSyncSections();
   return NS_OK;
 }
 
@@ -343,3 +370,24 @@ nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
   Exit();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBaseAppShell::RunInStableState(nsIRunnable* aRunnable)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  // Record the synchronous section, and run it with any others once
+  // we reach a stable state.
+  mSyncSections.AppendObject(aRunnable);
+
+  // Ensure we've got a pending event, else the callbacks will never run.
+  nsIThread* thread = NS_GetCurrentThread(); 
+  if (!NS_HasPendingEvents(thread) &&
+       NS_FAILED(thread->Dispatch(new nsRunnable(), NS_DISPATCH_NORMAL)))
+  {
+    // Failed to dispatch dummy event to cause sync sections to run, thread
+    // is probably done processing events, just run the sync sections now.
+    RunSyncSections();
+  }
+  return NS_OK;
+}
+

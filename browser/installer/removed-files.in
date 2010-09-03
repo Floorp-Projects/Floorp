@@ -9,11 +9,14 @@
 @DLL_PREFIX@xpcom_compat@DLL_SUFFIX@
 @DLL_PREFIX@xpistub@DLL_SUFFIX@
 @DLL_PREFIX@zlib@DLL_SUFFIX@
+#ifdef MOZ_STATIC_JS
+@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#endif
 LICENSE
 browserconfig.properties
-chrome.manifest
 chrome/US.jar
 chrome/app-chrome.manifest
+chrome/browser.manifest
 chrome/chrome.rdf
 chrome/chromelist.txt
 chrome/classic.jar
@@ -21,14 +24,18 @@ chrome/classic.manifest
 chrome/comm.jar
 chrome/comm.manifest
 chrome/en-win.jar
+chrome/@AB_CD@.manifest
 chrome/help.jar
 chrome/installed-chrome.txt
 chrome/m3ffxtbr.jar
 chrome/m3ffxtbr.manifest
 chrome/overlayinfo/
+chrome/pippki.manifest
 chrome/reporter.jar
 chrome/reporter.manifest
+chrome/toolkit.manifest
 component.reg
+components/browser.manifest
 components/components.list
 components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
 components/@DLL_PREFIX@brwsrdir@DLL_SUFFIX@
@@ -67,6 +74,7 @@ components/xptitemp.dat
 defaults/pref/all.js
 defaults/pref/bug259708.js
 defaults/pref/bug307259.js
+defaults/pref/reporter.js
 defaults/pref/security-prefs.js
 defaults/pref/winpref.js
 defaults/pref/xpinstall.js
@@ -541,6 +549,224 @@ uninstall/UninstallFirefox.exe
 uninstall/uninst.exe
 uninstall/uninstall.exe
 xpicleanup@BIN_SUFFIX@
+#ifdef MOZ_OMNIJAR
+  chrome/@AB_CD@.jar
+  chrome/browser.jar
+  chrome/localized.manifest
+  chrome/nonlocalized.manifest
+  chrome/pippki.jar
+  chrome/toolkit.jar
+  components/addonManager.js
+  components/amContentHandler.js
+  components/amWebInstallListener.js
+  components/browser.xpt
+  components/components.manifest
+  components/contentAreaDropListener.js
+  components/contentSecurityPolicy.js
+  components/crypto-SDR.js
+  components/FeedConverter.js
+  components/FeedProcessor.js
+  components/FeedWriter.js
+  components/fuelApplication.js
+  components/GPSDGeolocationProvider.js
+  components/interfaces.manifest
+  components/jsconsole-clhandler.js
+  components/NetworkGeolocationProvider.js
+  components/nsBadCertHandler.js
+  components/nsBlocklistService.js
+  components/nsBrowserContentHandler.js
+  components/nsBrowserGlue.js
+  components/nsContentDispatchChooser.js
+  components/nsContentPrefService.js
+  components/nsDefaultCLH.js
+  components/nsDownloadManagerUI.js
+  #ifdef XP_UNIX
+    #ifndef XP_MACOSX
+      components/nsFilePicker.js
+    #endif
+  #endif
+  components/nsFormAutoComplete.js
+  components/nsFormHistory.js
+  components/nsHandlerService.js
+  components/nsHelperAppDlg.js
+  components/nsINIProcessor.js
+  components/nsLivemarkService.js
+  components/nsLoginInfo.js
+  components/nsLoginManager.js
+  components/nsLoginManagerPrompter.js
+  components/nsMicrosummaryService.js
+  components/nsPlacesAutoComplete.js
+  components/nsPlacesDBFlush.js
+  components/nsPlacesExpiration.js
+  components/nsPrivateBrowsingService.js
+  components/nsPrompter.js
+  components/nsProxyAutoConfig.js
+  components/nsSafebrowsingApplication.js
+  components/nsSearchService.js
+  components/nsSearchSuggestions.js
+  components/nsSessionStartup.js
+  components/nsSessionStore.js
+  components/nsSetDefaultBrowser.js
+  components/nsSidebar.js
+  components/nsTaggingService.js
+  components/nsTryToClose.js
+  components/nsUpdateService.js
+  components/nsUpdateServiceStub.js
+  components/nsUpdateTimerManager.js
+  components/nsUrlClassifierLib.js
+  components/nsUrlClassifierListManager.js
+  components/nsURLFormatter.js
+  components/nsWebHandlerApp.js
+  components/PlacesProtocolHandler.js
+  components/storage-Legacy.js
+  components/storage-mozStorage.js
+  components/txEXSLTRegExFunctions.js
+  components/WeaveCrypto.js
+  components/Weave.js
+  components/WebContentConverter.js
+  defaults/autoconfig/platform.js
+  defaults/autoconfig/prefcalls.js
+  defaults/pref/firefox-branding.js
+  defaults/pref/firefox.js
+  defaults/pref/firefox-l10n.js
+  defaults/pref/services-sync.js
+  defaults/profile/bookmarks.html
+  defaults/profile/chrome/userChrome-example.css
+  defaults/profile/chrome/userContent-example.css
+  defaults/profile/localstore.rdf
+  defaults/profile/mimeTypes.rdf
+  defaults/profile/prefs.js
+  greprefs.js
+  modules/AddonLogging.jsm
+  modules/AddonManager.jsm
+  modules/AddonRepository.jsm
+  modules/AddonUpdateChecker.jsm
+  modules/CertUtils.jsm
+  modules/CrashSubmit.jsm
+  modules/CSPUtils.jsm
+  modules/ctypes.jsm
+  modules/debug.js
+  modules/distribution.js
+  modules/DownloadLastDir.jsm
+  modules/DownloadPaths.jsm
+  #ifdef XP_WIN
+    modules/DownloadTaskbarProgress.jsm
+  #endif
+  modules/DownloadUtils.jsm
+  modules/FileUtils.jsm
+  modules/Geometry.jsm
+  modules/HUDService.jsm
+  modules/InlineSpellChecker.jsm
+  modules/ISO8601DateUtils.jsm
+  modules/LightweightThemeConsumer.jsm
+  modules/LightweightThemeManager.jsm
+  modules/Microformats.js
+  modules/NetUtil.jsm
+  modules/NetworkPrioritizer.jsm
+  modules/openLocationLastURL.jsm
+  modules/PerfMeasurement.jsm
+  modules/PlacesDBUtils.jsm
+  modules/PlacesUIUtils.jsm
+  modules/PlacesUtils.jsm
+  modules/PluginProvider.jsm
+  modules/PluralForm.jsm
+  modules/PopupNotifications.jsm
+  modules/PropertyPanel.jsm
+  modules/Services.jsm
+  modules/services-sync/auth.js
+  modules/services-sync/base_records/collection.js
+  modules/services-sync/base_records/crypto.js
+  modules/services-sync/base_records/keys.js
+  modules/services-sync/base_records/wbo.js
+  modules/services-sync/constants.js
+  modules/services-sync/engines/bookmarks.js
+  modules/services-sync/engines/clients.js
+  modules/services-sync/engines/forms.js
+  modules/services-sync/engines/history.js
+  modules/services-sync/engines.js
+  modules/services-sync/engines/passwords.js
+  modules/services-sync/engines/prefs.js
+  modules/services-sync/engines/tabs.js
+  modules/services-sync/ext/Observers.js
+  modules/services-sync/ext/Preferences.js
+  modules/services-sync/ext/StringBundle.js
+  modules/services-sync/ext/Sync.js
+  modules/services-sync/identity.js
+  modules/services-sync/log4moz.js
+  modules/services-sync/notifications.js
+  modules/services-sync/resource.js
+  modules/services-sync/service.js
+  modules/services-sync/status.js
+  modules/services-sync/stores.js
+  modules/services-sync/trackers.js
+  modules/services-sync/type_records/bookmark.js
+  modules/services-sync/type_records/clients.js
+  modules/services-sync/type_records/forms.js
+  modules/services-sync/type_records/history.js
+  modules/services-sync/type_records/passwords.js
+  modules/services-sync/type_records/prefs.js
+  modules/services-sync/type_records/tabs.js
+  modules/services-sync/util.js
+  modules/SpatialNavigation.js
+  modules/stylePanel.jsm
+  modules/tabview/AllTabs.jsm
+  modules/tabview/groups.jsm
+  modules/tabview/utils.jsm
+  modules/utils.js
+  modules/WindowDraggingUtils.jsm
+  #ifdef XP_WIN
+    modules/WindowsJumpLists.jsm
+    modules/WindowsPreviewPerTab.jsm
+  #endif
+  modules/XPCOMUtils.jsm
+  modules/XPIProvider.jsm
+  res/contenteditable.css
+  res/designmode.css
+  res/dtd/mathml.dtd
+  res/dtd/xhtml11.dtd
+  res/EditorOverride.css
+  res/entityTables/html40Latin1.properties
+  res/entityTables/html40Special.properties
+  res/entityTables/html40Symbols.properties
+  res/entityTables/htmlEntityVersions.properties
+  res/entityTables/mathml20.properties
+  res/entityTables/transliterate.properties
+  res/fonts/mathfont.properties
+  res/fonts/mathfontStandardSymbolsL.properties
+  res/fonts/mathfontSTIXNonUnicode.properties
+  res/fonts/mathfontSTIXSize1.properties
+  res/fonts/mathfontSTIXSizeOneSym.properties
+  #ifdef XP_WIN
+    res/fonts/mathfontSymbol.properties
+  #endif
+  res/fonts/mathfontUnicode.properties
+  res/grabber.gif
+  res/html/folder.png
+  res/langGroups.properties
+  res/language.properties
+  res/svg.css
+  res/table-add-column-after-active.gif
+  res/table-add-column-after.gif
+  res/table-add-column-after-hover.gif
+  res/table-add-column-before-active.gif
+  res/table-add-column-before.gif
+  res/table-add-column-before-hover.gif
+  res/table-add-row-after-active.gif
+  res/table-add-row-after.gif
+  res/table-add-row-after-hover.gif
+  res/table-add-row-before-active.gif
+  res/table-add-row-before.gif
+  res/table-add-row-before-hover.gif
+  res/table-remove-column-active.gif
+  res/table-remove-column.gif
+  res/table-remove-column-hover.gif
+  res/table-remove-row-active.gif
+  res/table-remove-row.gif
+  res/table-remove-row-hover.gif
+#else
+  components/binary.manifest
+  omni.jar
+#endif
 #ifdef XP_MACOSX
   ../Plug-Ins/PrintPDE.plugin/Contents/Info.plist
   ../Plug-Ins/PrintPDE.plugin/Contents/MacOS/PrintPDE
@@ -563,7 +789,6 @@ xpicleanup@BIN_SUFFIX@
   components/commandhandler.xpt
   components/commandlines.xpt
   components/composer.xpt
-  components/content.xpt
   components/content.xpt
   components/content_base.xpt
   components/content_html.xpt

@@ -130,7 +130,6 @@ DOMCI_CLASS(HTMLPreElement)
 DOMCI_CLASS(HTMLQuoteElement)
 DOMCI_CLASS(HTMLScriptElement)
 DOMCI_CLASS(HTMLSelectElement)
-DOMCI_CLASS(HTMLSpacerElement)
 DOMCI_CLASS(HTMLSpanElement)
 DOMCI_CLASS(HTMLStyleElement)
 DOMCI_CLASS(HTMLTableCaptionElement)
@@ -143,6 +142,7 @@ DOMCI_CLASS(HTMLTextAreaElement)
 DOMCI_CLASS(HTMLTitleElement)
 DOMCI_CLASS(HTMLUListElement)
 DOMCI_CLASS(HTMLUnknownElement)
+DOMCI_CLASS(ValidityState)
 
 // CSS classes
 DOMCI_CLASS(CSSStyleRule)
@@ -431,8 +431,9 @@ DOMCI_CLASS(CSSFontFaceStyleDecl)
 // WhatWG Video Element
 DOMCI_CLASS(HTMLVideoElement)
 DOMCI_CLASS(HTMLSourceElement)
-DOMCI_CLASS(HTMLMediaError)
+DOMCI_CLASS(MediaError)
 DOMCI_CLASS(HTMLAudioElement)
+DOMCI_CLASS(TimeRanges)
 #endif
 
 DOMCI_CLASS(ProgressEvent)
@@ -446,7 +447,11 @@ DOMCI_CLASS(DataTransfer)
 
 DOMCI_CLASS(NotifyPaintEvent)
 
+DOMCI_CLASS(NotifyAudioAvailableEvent)
+
 DOMCI_CLASS(SimpleGestureEvent)
+
+DOMCI_CLASS(MozTouchEvent)
 
 #ifdef MOZ_MATHML
 DOMCI_CLASS(MathMLElement)
@@ -464,6 +469,7 @@ DOMCI_CLASS(WebGLShader)
 DOMCI_CLASS(WebGLFramebuffer)
 DOMCI_CLASS(WebGLRenderbuffer)
 DOMCI_CLASS(WebGLUniformLocation)
+DOMCI_CLASS(WebGLActiveInfo)
 
 // WebGL Buffers
 DOMCI_CLASS(PaintRequest)

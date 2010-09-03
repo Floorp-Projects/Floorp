@@ -41,7 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.1.1.2.js';
 
 START('9.1.1.2 - XML [[Put]]');
 

@@ -1,0 +1,3 @@
+== input-url-1.html input-url-ref.html
+== input-url-2.html input-url-ref.html
+!= input-url-3.html input-url-ref.html

@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,8 +58,6 @@ protocol PHttpChannel
   manager PNecko;
 
 parent:
-  __delete__();
-
   AsyncOpen(URI                 uri,
             // - TODO: bug 571161: unclear if any HTTP channel clients ever
             // set originalURI != uri (about:credits?); also not clear if
@@ -74,11 +73,31 @@ parent:
             PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,
-            PRBool              forceAllowThirdPartyCookie);
+            PRBool              forceAllowThirdPartyCookie,
+            bool                resumeAt,
+            PRUint64            startPos,
+            nsCString           entityID);
 
   SetPriority(PRUint16 priority);
 
   SetCacheTokenCachedCharset(nsCString charset);
+
+  UpdateAssociatedContentSecurity(PRInt32 high,
+                                  PRInt32 low,
+                                  PRInt32 broken,
+                                  PRInt32 no);
+  Suspend();
+  Resume();
+
+  Cancel(nsresult status);
+
+  // Reports approval/veto of redirect by child process redirect observers
+  Redirect2Result(nsresult result, RequestHeaderTuples changedHeaders);
+
+  // For document loads we keep this protocol open after child's
+  // OnStopRequest, and send this msg (instead of __delete__) to allow
+  // partial cleanup on parent. 
+  DocumentChannelCleanup();
 
 child:
   OnStartRequest(nsHttpResponseHead responseHead,
@@ -86,7 +105,8 @@ child:
                  PRBool             isFromCache,
                  PRBool             cacheEntryAvailable,
                  PRUint32           cacheExpirationTime,
-                 nsCString          cachedCharset);
+                 nsCString          cachedCharset,
+                 nsCString          securityInfoSerialization);
 
   OnDataAvailable(nsCString data, 
                   PRUint32  offset, 
@@ -97,6 +117,22 @@ child:
   OnProgress(PRUint64 progress, PRUint64 progressMax);
 
   OnStatus(nsresult status, nsString statusArg);
+
+  // Used to cancel child channel if we hit errors during creating and
+  // AsyncOpen of nsHttpChannel on the parent.
+  CancelEarly(nsresult status);
+
+  // Called to initiate content channel redirect, starts talking to sinks
+  // on the content process and reports result via OnRedirect2Result above
+  Redirect1Begin(PHttpChannel       newChannel,
+                 URI                newUri,
+                 PRUint32           redirectFlags,
+                 nsHttpResponseHead responseHead);
+  // Called if redirect successful so that child can complete setup.
+  Redirect3Complete();
+
+both:
+  __delete__();
 };
 
 

@@ -231,7 +231,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     }
 
     if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-        *lengthp = obj->getArgsLength();
+        *lengthp = obj->getArgsInitialLength();
         return true;
     }
 
@@ -1007,7 +1007,8 @@ Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_FIXED_RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
+    JSCLASS_FAST_CONSTRUCTOR,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -1042,7 +1043,9 @@ Class js_ArrayClass = {
 
 Class js_SlowArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
+    JSCLASS_FAST_CONSTRUCTOR,
     slowarray_addProperty,
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -1376,14 +1379,13 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
     if (!cx->stack().pushInvokeArgs(cx, 0, args))
         return false;
 
-    Value *sp = args.getvp();
-    sp[0] = join;
-    sp[1].setObject(*obj);
+    args.callee() = join;
+    args.thisv().setObject(*obj);
 
     /* Do the call. */
     if (!Invoke(cx, args, 0))
         return false;
-    *vp = *args.getvp();
+    *vp = args.rval();
     return true;
 }
 
@@ -1727,18 +1729,17 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    Value *invokevp = ca->args.getvp();
-    Value *sp = invokevp;
-    *sp++ = ca->fval;
-    *sp++ = NullValue();
-    *sp++ = *av;
-    *sp++ = *bv;
+    CallArgs &args = ca->args;
+    args.callee() = ca->fval;
+    args.thisv().setNull();
+    args[0] = *av;
+    args[1] = *bv;
 
     if (!Invoke(cx, ca->args, 0))
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ValueToNumber(cx, *invokevp, &cmp))
+    if (!ValueToNumber(cx, args.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -1778,8 +1779,8 @@ sort_compare_strings(void *arg, const void *a, const void *b, int *result)
     return JS_TRUE;
 }
 
-static JSBool
-array_sort(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::array_sort(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint len, newlen, i, undefs;
     size_t elemsize;
@@ -2774,7 +2775,6 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     MUST_FLOW_THROUGH("out");
     JSBool ok = JS_TRUE;
     JSBool cond;
-    Value *invokevp = args.getvp();
 
     Value calleev, thisv, objv;
     calleev.setObject(*callable);
@@ -2792,18 +2792,16 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
 
         /*
          * Push callable and 'this', then args. We must do this for every
-         * iteration around the loop since js_Invoke uses invokevp[0] for return
-         * value storage, while some native functions use invokevp[1] for local
-         * rooting.
+         * iteration around the loop since Invoke clobbers its arguments.
          */
-        Value *sp = invokevp;
-        *sp++ = calleev;
-        *sp++ = thisv;
+        args.callee() = calleev;
+        args.thisv() = thisv;
+        Value *sp = args.argv();
         if (REDUCE_MODE(mode))
             *sp++ = *vp;
-        *sp++ = tvr.value();
-        sp++->setInt32(i);
-        *sp++ = objv;
+        sp[0] = tvr.value();
+        sp[1].setInt32(i);
+        sp[2] = objv;
 
         /* Do the call. */
         ok = Invoke(cx, args, 0);
@@ -2811,7 +2809,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             break;
 
         if (mode > MAP)
-            cond = js_ValueToBoolean(*invokevp);
+            cond = js_ValueToBoolean(args.rval());
 #ifdef __GNUC__ /* quell GCC overwarning */
         else
             cond = JS_FALSE;
@@ -2822,10 +2820,10 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             break;
           case REDUCE:
           case REDUCE_RIGHT:
-            *vp = *invokevp;
+            *vp = args.rval();
             break;
           case MAP:
-            ok = SetArrayElement(cx, newarr, i, *invokevp);
+            ok = SetArrayElement(cx, newarr, i, args.rval());
             if (!ok)
                 goto out;
             break;
@@ -2954,35 +2952,33 @@ static JSFunctionSpec array_static_methods[] = {
 static inline JSObject *
 NewDenseArrayObject(JSContext *cx)
 {
-    return NewObject(cx, &js_ArrayClass, NULL, NULL);
+    return NewNonFunction<WithProto::Class>(cx, &js_ArrayClass, NULL, NULL);
 }
 
 JSBool
-js_Array(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+js_Array(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint length;
     const Value *vector;
 
-    /* If called without new, replace obj with a new Array object. */
-    if (!JS_IsConstructing(cx)) {
-        obj = NewDenseArrayObject(cx);
-        if (!obj)
-            return JS_FALSE;
-        rval->setObject(*obj);
-    }
+    /* Whether called with 'new' or not, use a new Array object. */
+    JSObject *obj = NewDenseArrayObject(cx);
+    if (!obj)
+        return JS_FALSE;
+    vp->setObject(*obj);
 
     if (argc == 0) {
         length = 0;
         vector = NULL;
     } else if (argc > 1) {
         length = (jsuint) argc;
-        vector = argv;
-    } else if (!argv[0].isNumber()) {
+        vector = vp + 2;
+    } else if (!vp[2].isNumber()) {
         length = 1;
-        vector = argv;
+        vector = vp + 2;
     } else {
-        length = ValueIsLength(cx, &argv[0]);
-        if (argv[0].isNull())
+        length = ValueIsLength(cx, vp + 2);
+        if (vp[2].isNull())
             return JS_FALSE;
         vector = NULL;
     }
@@ -3032,7 +3028,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewPreallocatedArray, CONTEXT, OBJECT, I
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, (Native) js_Array, 1,
                                    NULL, array_methods, NULL, array_static_methods);
     if (!proto)
         return NULL;
@@ -3054,18 +3050,13 @@ js_NewArrayObject(JSContext *cx, jsuint length, const Value *vector)
      */
     JS_ASSERT(obj->getProto());
 
-    if (!InitArrayObject(cx, obj, length, vector))
-        obj = NULL;
-
-    /* Set/clear newborn root, in case we lost it.  */
-    cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
-    return obj;
+    return InitArrayObject(cx, obj, length, vector) ? obj : NULL;
 }
 
 JSObject *
 js_NewSlowArrayObject(JSContext *cx)
 {
-    JSObject *obj = NewObject(cx, &js_SlowArrayClass, NULL, NULL);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_SlowArrayClass, NULL, NULL);
     if (obj)
         obj->setArrayLength(0);
     return obj;

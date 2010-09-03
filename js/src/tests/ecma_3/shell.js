@@ -37,4 +37,3 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestsuite = 'ecma_3';

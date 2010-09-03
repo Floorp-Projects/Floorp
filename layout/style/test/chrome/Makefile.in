@@ -48,6 +48,8 @@ _CHROME_FILES = \
     bug535806-css.css \
     bug535806-html.html \
     bug535806-xul.xul \
+    test_hover.html \
+    hover_helper.html \
     $(NULL)
 
 libs:: $(_CHROME_FILES)

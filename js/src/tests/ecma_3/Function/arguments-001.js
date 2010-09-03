@@ -44,7 +44,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=72884
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'arguments-001.js';
 var UBound = 0;
 var BUGNUMBER = 72884;
 var summary = 'Testing the arguments object';

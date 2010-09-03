@@ -19,6 +19,7 @@ EXPORTS	= \
 	gfxCachedTempSurface.h \
 	gfxColor.h \
 	gfxContext.h \
+	gfxDrawable.h \
 	gfxFont.h \
 	gfxFontConstants.h \
 	gfxFontUtils.h \
@@ -166,6 +167,7 @@ CPPSRCS	= \
 	gfxBlur.cpp \
 	gfxCachedTempSurface.cpp \
 	gfxContext.cpp \
+	gfxDrawable.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
 	gfxFontMissingGlyphs.cpp \
@@ -195,6 +197,15 @@ ifdef MOZ_IPC
 CPPSRCS += \
 	gfxSharedImageSurface.cpp \
 	$(NULL)
+endif
+
+ifeq (86,$(findstring 86,$(OS_TEST)))
+ifdef __GNUC__
+gfxAlphaRecovery.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS += -msse2
+endif
+ifdef SOLARIS_SUNPRO_CXX
+gfxAlphaRecovery.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+endif
 endif
 
 SHARED_LIBRARY_LIBS += \
@@ -254,7 +265,7 @@ CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-_OS_LIBS = usp10 msimg32
+_OS_LIBS = usp10 msimg32 ole32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
@@ -412,6 +423,11 @@ ifeq ($(GL_PROVIDER),CGL)
 CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
 else
 CPPSRCS += GLContextProvider$(GL_PROVIDER).cpp
+endif
+
+# Win32 is a special snowflake, for ANGLE
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += GLContextProviderEGL.cpp
 endif
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT

@@ -90,6 +90,11 @@ ifdef MOZ_ENABLE_LIBCONIC
         ../system/maemo/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
+ifdef MOZ_ENABLE_QTNETWORK
+    SHARED_LIBRARY_LIBS += \
+        ../system/qt/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
+endif
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \
   -I$(srcdir)/../dns \
@@ -117,6 +122,10 @@ endif
 
 ifdef MOZ_ENABLE_LIBCONIC
     LOCAL_INCLUDES += -I$(srcdir)/../system/maemo
+endif
+
+ifdef MOZ_ENABLE_QTNETWORK
+    LOCAL_INCLUDES += -I$(srcdir)/../system/qt
 endif
 
 ifdef NECKO_COOKIES

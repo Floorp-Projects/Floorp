@@ -107,6 +107,12 @@ JSObject::getReservedSlot(uintN index) const
 }
 
 inline bool
+JSObject::canHaveMethodBarrier() const
+{
+    return isObject() || isFunction() || isPrimitive() || isDate();
+}
+
+inline bool
 JSObject::isPrimitive() const
 {
     return isNumber() || isString() || isBoolean();
@@ -214,15 +220,16 @@ JSObject::setArgsLength(uint32 argc)
 {
     JS_ASSERT(isArguments());
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << 1);
+    JS_ASSERT(UINT32_MAX > (uint64(argc) << ARGS_PACKED_BITS_COUNT));
+    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << ARGS_PACKED_BITS_COUNT);
     JS_ASSERT(!isArgsLengthOverridden());
 }
 
 inline uint32
-JSObject::getArgsLength() const
+JSObject::getArgsInitialLength() const
 {
     JS_ASSERT(isArguments());
-    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> 1;
+    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> ARGS_PACKED_BITS_COUNT;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
 }
@@ -231,7 +238,7 @@ inline void
 JSObject::setArgsLengthOverridden()
 {
     JS_ASSERT(isArguments());
-    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= 1;
+    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= ARGS_LENGTH_OVERRIDDEN_BIT;
 }
 
 inline bool
@@ -239,7 +246,7 @@ JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
     const js::Value &v = fslots[JSSLOT_ARGS_LENGTH];
-    return (v.toInt32() & 1) != 0;
+    return v.toInt32() & ARGS_LENGTH_OVERRIDDEN_BIT;
 }
 
 inline const js::Value & 
@@ -281,20 +288,6 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
 }
 
 inline const js::Value &
-JSObject::getDateLocalTime() const
-{
-    JS_ASSERT(isDate());
-    return fslots[JSSLOT_DATE_LOCAL_TIME];
-}
-
-inline void 
-JSObject::setDateLocalTime(const js::Value &time)
-{
-    JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_LOCAL_TIME] = time;
-}
-
-inline const js::Value &
 JSObject::getDateUTCTime() const
 {
     JS_ASSERT(isDate());
@@ -306,6 +299,26 @@ JSObject::setDateUTCTime(const js::Value &time)
 {
     JS_ASSERT(isDate());
     fslots[JSSLOT_DATE_UTC_TIME] = time;
+}
+
+inline bool
+JSObject::hasMethodObj(const JSObject& obj) const
+{
+    return fslots[JSSLOT_FUN_METHOD_OBJ].isObject() &&
+           &fslots[JSSLOT_FUN_METHOD_OBJ].toObject() == &obj;
+}
+
+inline void
+JSObject::setMethodObj(JSObject& obj)
+{
+    fslots[JSSLOT_FUN_METHOD_OBJ].setObject(obj);
+}
+
+inline JSFunction *
+JSObject::getFunctionPrivate() const
+{
+    JS_ASSERT(isFunction());
+    return reinterpret_cast<JSFunction *>(getPrivate());
 }
 
 inline NativeIterator *
@@ -523,9 +536,9 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
 
 /*
  * Helper optimized for creating a native instance of the given class (not the
- * class's prototype object). Use this in preference to NewObjectWithGivenProto
- * and NewObject, but use NewBuiltinClassInstance if you need the default class
- * prototype as proto, and its parent global as parent.
+ * class's prototype object). Use this in preference to NewObject, but use
+ * NewBuiltinClassInstance if you need the default class prototype as proto,
+ * and its parent global as parent.
  */
 static inline JSObject *
 NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
@@ -534,14 +547,14 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
     JS_ASSERT(proto->isNative());
     JS_ASSERT(parent);
 
-    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->maybefp(), clasp);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
-     * doing any operation that can potentially trigger GC. Functions have a
-     * larger non-standard allocation size.
+     * doing any operation that can potentially trigger GC.
      */
     JSObject* obj = js_NewGCObject(cx);
+
     if (obj) {
         /*
          * Default parent to the parent of the prototype, which was set from
@@ -586,13 +599,13 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->fp) {
+    if (!cx->hasfp()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)
             return NULL;
     } else {
-        global = cx->fp->scopeChain->getGlobal();
+        global = cx->fp()->getScopeChain()->getGlobal();
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 
@@ -609,33 +622,79 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
     return NewNativeClassInstance(cx, clasp, proto, global);
 }
 
-/*
- * Like NewObject but with exactly the given proto. A null parent defaults to
- * proto->getParent() if proto is non-null (else to null). NB: only this helper
- * and NewObject can be used to construct full-sized JSFunction instances.
- */
-static inline JSObject *
-NewObjectWithGivenProto(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
+static inline JSProtoKey
+GetClassProtoKey(js::Class *clasp)
 {
-    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
+    if (key != JSProto_Null)
+        return key;
+    if (clasp->flags & JSCLASS_IS_ANONYMOUS)
+        return JSProto_Object;
+    return JSProto_Null;
+}
+
+namespace WithProto {
+    enum e {
+        Class = 0,
+        Given = 1
+    };
+}
+
+/*
+ * Create an instance of any class, native or not, JSFunction-sized or not.
+ *
+ * If withProto is 'Class':
+ *    If proto is null:
+ *      for a built-in class:
+ *        use the memoized original value of the class constructor .prototype
+ *        property object
+ *      else if available
+ *        the current value of .prototype
+ *      else
+ *        Object.prototype.
+ *
+ *    If parent is null, default it to proto->getParent() if proto is non
+ *    null, else to null.
+ *
+ * If withProto is 'Given':
+ *    We allocate an object with exactly the given proto.  A null parent
+ *    defaults to proto->getParent() if proto is non-null (else to null).
+ *
+ * If isFunction is true, return a JSFunction-sized object. If isFunction is
+ * false, return a normal object.
+ *
+ * Note that as a template, there will be lots of instantiations, which means
+ * the internals will be specialized based on the template parameters.
+ */
+namespace detail
+{
+template <bool withProto, bool isFunction>
+static JS_ALWAYS_INLINE JSObject *
+NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
+{
+    /* Bootstrap the ur-object, and make it the default prototype object. */
+    if (withProto == WithProto::Class && !proto) {
+        JSProtoKey protoKey = GetClassProtoKey(clasp);
+        if (!js_GetClassPrototype(cx, parent, protoKey, &proto, clasp))
+            return NULL;
+        if (!proto && !js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+            return NULL;
+     }
+
+
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->maybefp(), clasp);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
      * doing any operation that can potentially trigger GC. Functions have a
      * larger non-standard allocation size.
+     *
+     * The should be specialized by the template.
      */
-    JSObject* obj;
-    if (clasp == &js_FunctionClass) {
-        obj = (JSObject*) js_NewGCFunction(cx);
-#ifdef DEBUG
-        if (obj) {
-            memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
-                   sizeof(JSFunction) - sizeof(JSObject));
-        }
-#endif
-    } else {
-        obj = js_NewGCObject(cx);
-    }
+    JSObject* obj = isFunction
+                    ? (JSObject *)js_NewGCFunction(cx)
+                    : js_NewGCObject(cx);
+
     if (!obj)
         goto out;
 
@@ -661,40 +720,28 @@ out:
     objectCreationScope.handleCreation(obj);
     return obj;
 }
-
-static inline JSProtoKey
-GetClassProtoKey(js::Class *clasp)
-{
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-    if (key != JSProto_Null)
-        return key;
-    if (clasp->flags & JSCLASS_IS_ANONYMOUS)
-        return JSProto_Object;
-    return JSProto_Null;
 }
 
-/*
- * Create an instance of any class, native or not, JSFunction-sized or not.
- *
- * If proto is null, use the memoized original value of the class constructor
- * .prototype property object for a built-in class, else the current value of
- * .prototype if available, else Object.prototype.
- *
- * Default parent is null to proto's parent (null if proto is null too).
- */
-static inline JSObject *
+static JS_ALWAYS_INLINE JSObject *
+NewFunction(JSContext *cx, JSObject *parent)
+{
+    return detail::NewObject<WithProto::Class, true>(cx, &js_FunctionClass, NULL, parent);
+}
+
+template <WithProto::e withProto>
+static JS_ALWAYS_INLINE JSObject *
+NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
+{
+    return detail::NewObject<withProto, false>(cx, clasp, proto, parent);
+}
+
+template <WithProto::e withProto>
+static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    /* Bootstrap the ur-object, and make it the default prototype object. */
-    if (!proto) {
-        JSProtoKey protoKey = GetClassProtoKey(clasp);
-        if (!js_GetClassPrototype(cx, parent, protoKey, &proto, clasp))
-            return NULL;
-        if (!proto && !js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
-            return NULL;
-    }
-
-    return NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return (clasp == &js_FunctionClass)
+           ? detail::NewObject<withProto, true>(cx, clasp, proto, parent)
+           : detail::NewObject<withProto, false>(cx, clasp, proto, parent);
 }
 
 } /* namespace js */

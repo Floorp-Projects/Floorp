@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-416601.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 416601;
 var summary = 'Property cache can be left disabled after exit from a generator or trap handler';

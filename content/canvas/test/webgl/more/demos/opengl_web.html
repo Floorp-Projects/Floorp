@@ -77,7 +77,7 @@ function drawScene (gl, shader, va, na, ta) {
         var t = ot;
         drawCube(gl, shader,
                 (t/(f*400*(c[0]+0.5))) % (2*Math.PI), c,
-                  
+
                 0.45+0.8*c[2],
                 -0.4+Math.cos((i/carr.length*Math.PI*2)+t/1000),
                 0.8+Math.sin((i/carr.length*Math.PI*2)+t/1000)*3.2,
@@ -97,7 +97,7 @@ var useDoF = false;
 var firstFrame = true;
 
 function redraw(canvas, gl, shader, fbo, fbo2, fbo3, depth, identity, unpremult, hblur, vblur, hdof, vdof) {
-    
+
     var doDoF = useDoF;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -105,7 +105,7 @@ function redraw(canvas, gl, shader, fbo, fbo2, fbo3, depth, identity, unpremult,
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
+
     fbo.use();
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -154,7 +154,7 @@ function redraw(canvas, gl, shader, fbo, fbo2, fbo3, depth, identity, unpremult,
         for (var i=0; i<3; i++) {
             fbo2.use();
             gl.bindTexture(gl.TEXTURE_2D, fbo.texture);
-        
+
             hdof.apply(function(f){
                 f.uniform1i("Texture", 0);
                 f.uniform1i("Depth", 1);
@@ -196,7 +196,6 @@ window.addEventListener("load", init, false);
     </script>
 
     <script id="ppix-vert" type="x-shader/x-vertex">
-    #version 120
       attribute vec3 Vertex;
       attribute vec3 Normal;
       attribute vec2 Tex;
@@ -210,7 +209,7 @@ window.addEventListener("load", init, false);
 
       uniform vec4 LightAmbient;
       uniform vec4 LightDiffuse;
-      
+
       uniform vec4 GlobalAmbient;
 
       uniform vec4 LightPos;
@@ -250,7 +249,9 @@ window.addEventListener("load", init, false);
     </script>
 
     <script id="ppix-frag" type="x-shader/x-fragment">
-    #version 120
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform vec4 LightSpecular;
       uniform vec4 MaterialSpecular;
       uniform float MaterialShininess;
@@ -290,7 +291,6 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="depth-vert" type="x-shader/x-vertex">
-    #version 110
       attribute vec3 Vertex;
       uniform mat4 PMatrix;
       uniform mat4 MVMatrix;
@@ -302,7 +302,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="depth-frag" type="x-shader/x-fragment">
-    #version 110
+      #ifdef GL_ES
+precision highp float;
+#endif
       varying float depth;
       void main()
       {
@@ -312,7 +314,6 @@ window.addEventListener("load", init, false);
     </script>
 
     <script id="identity-vert" type="x-shader/x-vertex">
-    #version 110
       attribute vec3 Vertex;
       attribute vec2 Tex;
 
@@ -324,7 +325,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="identity-frag" type="x-shader/x-fragment">
-    #version 110
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
 
       varying vec4 texCoord0;
@@ -335,7 +338,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="premult-frag" type="x-shader/x-fragment">
-    #version 110
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
 
       varying vec4 texCoord0;
@@ -349,7 +354,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="unpremult-frag" type="x-shader/x-fragment">
-    #version 110
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
 
       varying vec4 texCoord0;
@@ -364,11 +371,13 @@ window.addEventListener("load", init, false);
     </script>
 
     <script id="hblur-frag" type="x-shader/x-fragment">
-    #version 120
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform float step;
       float kernel[7] = float[](0.046, 0.111, 0.202, 0.283, 0.202, 0.111, 0.046);
-      
+
       varying vec4 texCoord0;
       void main()
       {
@@ -386,7 +395,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="vblur-frag" type="x-shader/x-fragment">
-    #version 120
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform float step;
       float kernel[7] = float[](0.046, 0.111, 0.202, 0.283, 0.202, 0.111, 0.046);
@@ -408,7 +419,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="hdof-frag" type="x-shader/x-fragment">
-    #version 120
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform sampler2D Depth;
       uniform float step;
@@ -439,7 +452,9 @@ window.addEventListener("load", init, false);
       }
     </script>
     <script id="vdof-frag" type="x-shader/x-fragment">
-    #version 120
+      #ifdef GL_ES
+precision highp float;
+#endif
       uniform sampler2D Texture;
       uniform sampler2D Depth;
       uniform float step;

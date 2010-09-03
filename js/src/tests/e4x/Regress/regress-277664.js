@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-277664.js';
 
 // testcase from  Martin.Honnen@arcor.de
 

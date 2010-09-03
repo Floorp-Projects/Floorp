@@ -51,8 +51,12 @@ namespace MacFileUtilities {
 
 MachoWalker::MachoWalker(const char *path, LoadCommandCallback callback,
                          void *context)
-    : callback_(callback),
-      callback_context_(context) {
+    : file_(0),
+      callback_(callback),
+      callback_context_(context),
+      current_header_(NULL),
+      current_header_size_(0),
+      current_header_offset_(0) {
   file_ = open(path, O_RDONLY);
 }
 
@@ -95,7 +99,7 @@ bool MachoWalker::CurrentHeader(struct mach_header_64 *header, off_t *offset) {
     *offset = current_header_offset_;
     return true;
   }
-  
+
   return false;
 }
 
@@ -111,7 +115,7 @@ bool MachoWalker::FindHeader(int cpu_type, off_t &offset) {
   // Figure out what type of file we've got
   bool is_fat = false;
   if (magic == FAT_MAGIC || magic == FAT_CIGAM) {
-    is_fat = true;    
+    is_fat = true;
   }
   else if (magic != MH_MAGIC && magic != MH_CIGAM && magic != MH_MAGIC_64 &&
            magic != MH_CIGAM_64) {
@@ -174,13 +178,13 @@ bool MachoWalker::WalkHeaderAtOffset(off_t offset) {
   bool swap = (header.magic == MH_CIGAM);
   if (swap)
     swap_mach_header(&header, NXHostByteOrder());
-  
+
   // Copy the data into the mach_header_64 structure.  Since the 32-bit and
   // 64-bit only differ in the last field (reserved), this is safe to do.
   struct mach_header_64 header64;
   memcpy((void *)&header64, (const void *)&header, sizeof(header));
   header64.reserved = 0;
-  
+
   current_header_ = &header64;
   current_header_size_ = sizeof(header); // 32-bit, not 64-bit
   current_header_offset_ = offset;

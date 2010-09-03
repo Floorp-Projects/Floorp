@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-306633.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 306633;
 var summary = 'report compile warnings in evald code when strict warnings enabled';

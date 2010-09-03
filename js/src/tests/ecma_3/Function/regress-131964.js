@@ -46,7 +46,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-131964.js';
 var UBound = 0;
 var BUGNUMBER =   131964;
 var summary = 'Functions defined in global or function scope are {DontDelete}';

@@ -22,6 +22,7 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
+copyToProfile('animals.sqlite');
 
 function test_storage_template()
 {
@@ -67,7 +68,7 @@ var changes = [];
 </script>
 
 <listbox  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" 
-              flex="1"  datasources="animals.sqlite" ref="." querytype="storage">
+              flex="1"  datasources="profile:animals.sqlite" ref="." querytype="storage">
     <template>
         <query>
              SELECT * FROM animals WHERE species_id = :spec ORDER BY name

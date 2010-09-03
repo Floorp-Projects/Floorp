@@ -282,7 +282,7 @@
 
       is(event.result, "bar", "Update succeeded");
 
-      request = objectStore.modify("foo", sortedKeys[4]);
+      request = objectStore.put("foo", sortedKeys[4]);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

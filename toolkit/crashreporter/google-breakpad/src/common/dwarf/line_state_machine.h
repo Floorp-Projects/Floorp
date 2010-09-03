@@ -48,7 +48,7 @@ struct LineStateMachine {
 
   uint32 file_num;
   uint64 address;
-  uint64 line_num;
+  uint32 line_num;
   uint32 column_num;
   bool is_stmt;  // stmt means statement.
   bool basic_block;

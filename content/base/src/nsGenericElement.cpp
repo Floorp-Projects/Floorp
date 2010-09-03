@@ -2175,7 +2175,12 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
                                               getter_AddRefs(newNodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mNodeInfo = newNodeInfo;
+  mNodeInfo.swap(newNodeInfo);
+  NodeInfoChanged(newNodeInfo);
+
+  // The id-handling code need to react to unexpected changes to an elements
+  // nodeinfo as that can change the elements id-attribute.
+  nsMutationGuard::DidMutate();
 
   return NS_OK;
 }
@@ -3521,7 +3526,7 @@ nsGenericElement::SetScriptTypeID(PRUint32 aLang)
     }
     /* SetFlags will just mask in the specific flags set, leaving existing
        ones alone.  So we must clear all the bits first */
-    UnsetFlags(0x000FU << NODE_SCRIPT_TYPE_OFFSET);
+    UnsetFlags(NODE_SCRIPT_TYPE_MASK << NODE_SCRIPT_TYPE_OFFSET);
     SetFlags(aLang << NODE_SCRIPT_TYPE_OFFSET);
     return NS_OK;
 }
@@ -3570,6 +3575,8 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   PRUint32 childCount = aChildArray.ChildCount();
   NS_ENSURE_TRUE(aIndex <= childCount, NS_ERROR_ILLEGAL_VALUE);
 
+  // The id-handling code, and in the future possibly other code, need to
+  // react to unexpected attribute changes.
   nsMutationGuard::DidMutate();
 
   PRBool isAppend = (aIndex == childCount);
@@ -4638,6 +4645,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     stateMask = PRUint32(IntrinsicState());
   }
 
+  nsMutationGuard::DidMutate();
+
   if (aNamespaceID == kNameSpaceID_None) {
     // XXXbz Perhaps we should push up the attribute mapping function
     // stuff to nsGenericElement?
@@ -4894,6 +4903,10 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (slots && slots->mAttributeMap) {
     slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);
   }
+
+  // The id-handling code, and in the future possibly other code, need to
+  // react to unexpected attribute changes.
+  nsMutationGuard::DidMutate();
 
   nsAttrValue oldValue;
   rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);

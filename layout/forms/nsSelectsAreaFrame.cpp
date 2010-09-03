@@ -92,10 +92,12 @@ nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
  */
 class nsDisplayOptionEventGrabber : public nsDisplayWrapList {
 public:
-  nsDisplayOptionEventGrabber(nsIFrame* aFrame, nsDisplayItem* aItem)
-    : nsDisplayWrapList(aFrame, aItem) {}
-  nsDisplayOptionEventGrabber(nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aFrame, aList) {}
+  nsDisplayOptionEventGrabber(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame, nsDisplayItem* aItem)
+    : nsDisplayWrapList(aBuilder, aFrame, aItem) {}
+  nsDisplayOptionEventGrabber(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aBuilder, aFrame, aList) {}
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   NS_DISPLAY_DECL_NAME("OptionEventGrabber", TYPE_OPTION_EVENT_GRABBER)
@@ -128,7 +130,8 @@ void nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
 
 nsDisplayWrapList* nsDisplayOptionEventGrabber::WrapWithClone(
     nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
-  return new (aBuilder) nsDisplayOptionEventGrabber(aItem->GetUnderlyingFrame(), aItem);
+  return new (aBuilder)
+    nsDisplayOptionEventGrabber(aBuilder, aItem->GetUnderlyingFrame(), aItem);
 }
 
 class nsOptionEventGrabberWrapper : public nsDisplayWrapper
@@ -139,11 +142,11 @@ public:
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We can't specify the underlying frame here. We need this list to be
     // exploded if sorted.
-    return new (aBuilder) nsDisplayOptionEventGrabber(nsnull, aList);
+    return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, nsnull, aList);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
-    return new (aBuilder) nsDisplayOptionEventGrabber(aItem->GetUnderlyingFrame(), aItem);
+    return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, aItem->GetUnderlyingFrame(), aItem);
   }
 };
 
@@ -160,7 +163,9 @@ static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame)
 
 class nsDisplayListFocus : public nsDisplayItem {
 public:
-  nsDisplayListFocus(nsSelectsAreaFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayListFocus(nsDisplayListBuilder* aBuilder,
+                     nsSelectsAreaFrame* aFrame) :
+    nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayListFocus);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -214,7 +219,7 @@ nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
     // because then the list's scrollframe won't clip it (the scrollframe
     // only clips contained descendants).
     return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayListFocus(this));
+      nsDisplayListFocus(aBuilder, this));
   }
   
   return NS_OK;

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-372563.js';
 
 var BUGNUMBER = 372563;
 var summary = 'Do not assert: ss->top >= 2';

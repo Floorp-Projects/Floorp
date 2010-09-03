@@ -55,7 +55,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIURI.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMText.h"
 #include "nsFocusManager.h"
 #include "nsIEventListenerManager.h"
@@ -561,7 +561,7 @@ nsXBLPrototypeHandler::GetController(nsPIDOMEventTarget* aTarget)
   }
 
   if (!controllers) {
-    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement(do_QueryInterface(aTarget));
+    nsCOMPtr<nsIDOMHTMLInputElement> htmlInputElement(do_QueryInterface(aTarget));
     if (htmlInputElement)
       htmlInputElement->GetControllers(getter_AddRefs(controllers));
   }

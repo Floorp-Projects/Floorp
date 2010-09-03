@@ -51,7 +51,6 @@
  *  of the running execution context when the function was declared)
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'scope-001.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing that functions are scoped statically, not dynamically';

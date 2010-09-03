@@ -146,6 +146,15 @@ let Utils = {
         throw batchEx;
     };
   },
+  
+  createStatement: function createStatement(db, query) {
+    // Gecko 2.0
+    if (db.createAsyncStatement)
+      return db.createAsyncStatement(query);
+
+    // Gecko <2.0
+    return db.createStatement(query);
+  },
 
   queryAsync: function(query, names) {
     // Allow array of names, single name, and no name
@@ -909,3 +918,8 @@ Svc.Obs = Observers;
 let Str = {};
 ["errors", "sync"]
   .forEach(function(lazy) Utils.lazy2(Str, lazy, Utils.lazyStrings(lazy)));
+
+Svc.Obs.add("xpcom-shutdown", function () {
+  for (let name in Svc)
+    delete Svc[name];
+});

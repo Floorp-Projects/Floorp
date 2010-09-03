@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352208.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352208;
 var summary = 'Do not assert new Function("setter/*\n")';

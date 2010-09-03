@@ -41,6 +41,7 @@
 #include "nsXPCOM.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "mozilla/FileUtils.h"
 
 #include "nsAppRunner.h" // for MAXPATHLEN
 #include "nsStringAPI.h"
@@ -59,27 +60,10 @@
 // we stop at 1000
 #define UNIQ_LOOP_LIMIT 1000
 
+using namespace mozilla;
+
 static const char kRegFileGlobal[] = "global.reginfo";
 static const char kRegFileUser[] = "user.reginfo";
-
-class AutoFDClose
-{
-public:
-  AutoFDClose(PRFileDesc* fd = nsnull) : mFD(fd) { }
-  ~AutoFDClose() { if (mFD) PR_Close(mFD); }
-
-  PRFileDesc* operator= (PRFileDesc *fd) {
-    if (mFD) PR_Close(mFD);
-    mFD = fd;
-    return fd;
-  }
-
-  operator PRFileDesc* () { return mFD; }
-  PRFileDesc** operator &() { *this = nsnull; return &mFD; }
-
-private:
-  PRFileDesc *mFD;
-};
 
 static PRBool
 MakeConfFile(const char *regfile, const nsCString &greHome,

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352008.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352008;
 var summary = 'decompilation of |for([k,v] in o| should not assert';

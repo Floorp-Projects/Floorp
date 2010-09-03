@@ -404,7 +404,8 @@ nsContextMenu.prototype = {
     this.showItem("context-video-fullscreen", this.onVideo);
     // Disable them when there isn't a valid media source loaded.
     if (onMedia) {
-      var hasError = (this.target.error != null);
+      var hasError = this.target.error != null ||
+                     this.target.networkState == this.target.NETWORK_NO_SOURCE;
       this.setItemAttr("context-media-play",  "disabled", hasError);
       this.setItemAttr("context-media-pause", "disabled", hasError);
       this.setItemAttr("context-media-mute",   "disabled", hasError);
@@ -421,6 +422,7 @@ nsContextMenu.prototype = {
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
+        aNode.nodeType == Node.DOCUMENT_NODE ||
         this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
       return;
@@ -807,7 +809,7 @@ nsContextMenu.prototype = {
     this.target.pause();
 
     openDialog("chrome://browser/content/fullscreen-video.xhtml",
-               "", "chrome,dialog=no", this.target);
+               "", "chrome,centerscreen,dialog=no", this.target);
   },
 
   // Change current window to the URL of the background image.

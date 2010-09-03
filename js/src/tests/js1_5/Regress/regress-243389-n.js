@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-243389-n.js';
 //-----------------------------------------------------------------------------
 // test from Henrik Gemal
 var BUGNUMBER = 243389;

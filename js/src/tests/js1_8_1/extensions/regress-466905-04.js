@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-466905-04.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 466905;
 var summary = 'Prototypes of sandboxed arrays';

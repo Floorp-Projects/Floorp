@@ -63,6 +63,7 @@
 
 #include "nsChromeRegistryContent.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
+#include "nsFrameMessageManager.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
@@ -351,9 +352,21 @@ ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aPref)
 bool
 ContentChild::RecvNotifyVisited(const IPC::URI& aURI)
 {
-    nsCOMPtr<nsIURI> newURI = aURI;
+    nsCOMPtr<nsIURI> newURI(aURI);
     History::GetService()->NotifyVisited(newURI);
     return true;
+}
+
+
+bool
+ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
+{
+  nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::sChildProcessManager;
+  if (cpm) {
+    cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
+                        aMsg, PR_FALSE, aJSON, nsnull, nsnull);
+  }
+  return true;
 }
 
 } // namespace dom

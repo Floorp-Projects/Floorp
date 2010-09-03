@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-313799.js';
 
 var summary = 'Do not crash on XMLListInitializer.child(0)';
 var BUGNUMBER = 313799;

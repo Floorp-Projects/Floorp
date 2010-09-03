@@ -135,6 +135,8 @@ struct _cairo_dwrite_scaled_font {
     cairo_scaled_font_t base;
     cairo_matrix_t mat;
     cairo_matrix_t mat_inverse;
+    cairo_antialias_t antialias_mode;
+    DWRITE_MEASURING_MODE measuring_mode;
 };
 typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
@@ -333,6 +335,54 @@ _cairo_dwrite_font_face_destroy (void *font_face)
 	dwrite_font_face->font->Release();
 }
 
+
+static inline unsigned short
+read_short(const char *buf)
+{
+    return be16_to_cpu(*(unsigned short*)buf);
+}
+
+#define GASP_TAG 0x70736167
+#define GASP_DOGRAY 0x2
+
+static cairo_bool_t
+do_grayscale(IDWriteFontFace *dwface, unsigned int ppem)
+{
+    void *tableContext;
+    char *tableData;
+    UINT32 tableSize;
+    BOOL exists;
+    dwface->TryGetFontTable(GASP_TAG, (const void**)&tableData, &tableSize, &tableContext, &exists);
+
+    if (exists) {
+	if (tableSize < 4) {
+	    dwface->ReleaseFontTable(tableContext);
+	    return true;
+	}
+	struct gaspRange {
+	    unsigned short maxPPEM; // Stored big-endian
+	    unsigned short behavior; // Stored big-endian
+	};
+	unsigned short numRanges = read_short(tableData + 2);
+	if (tableSize < (UINT)4 + numRanges * 4) {
+	    dwface->ReleaseFontTable(tableContext);
+	    return true;
+	}
+	gaspRange *ranges = (gaspRange *)(tableData + 4);
+	for (int i = 0; i < numRanges; i++) {
+	    if (be16_to_cpu(ranges[i].maxPPEM) > ppem) {
+		if (!(be16_to_cpu(ranges[i].behavior) & GASP_DOGRAY)) {
+		    dwface->ReleaseFontTable(tableContext);
+		    return false;
+		}
+		break;
+	    }
+	}
+	dwface->ReleaseFontTable(tableContext);
+    }
+    return true;
+}
+
 static cairo_status_t
 _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
 					    const cairo_matrix_t	*font_matrix,
@@ -362,6 +412,41 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     cairo_matrix_multiply(&dwriteFont->mat, &dwriteFont->mat, font_matrix);
     dwriteFont->mat_inverse = dwriteFont->mat;
     cairo_matrix_invert (&dwriteFont->mat_inverse);
+
+    cairo_antialias_t default_quality = CAIRO_ANTIALIAS_SUBPIXEL;
+
+    dwriteFont->measuring_mode = DWRITE_MEASURING_MODE_NATURAL;
+
+    // The following code detects the system quality at scaled_font creation time,
+    // this means that if cleartype settings are changed but the scaled_fonts
+    // are re-used, they might not adhere to the new system setting until re-
+    // creation.
+    switch (_cairo_win32_get_system_text_quality()) {
+	case CLEARTYPE_QUALITY:
+	    default_quality = CAIRO_ANTIALIAS_SUBPIXEL;
+	    break;
+	case ANTIALIASED_QUALITY:
+	    default_quality = CAIRO_ANTIALIAS_GRAY;
+	    dwriteFont->measuring_mode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
+	    break;
+	case DEFAULT_QUALITY:
+	    // _get_system_quality() seems to think aliased is default!
+	    default_quality = CAIRO_ANTIALIAS_NONE;
+	    dwriteFont->measuring_mode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
+	    break;
+    }
+
+    if (default_quality == CAIRO_ANTIALIAS_GRAY) {
+	if (!do_grayscale(font_face->dwriteface, (unsigned int)_cairo_round(font_matrix->yy))) {
+	    default_quality = CAIRO_ANTIALIAS_NONE;
+	}
+    }
+
+    if (options->antialias == CAIRO_ANTIALIAS_DEFAULT) {
+	dwriteFont->antialias_mode = default_quality;
+    } else {
+	dwriteFont->antialias_mode = options->antialias;
+    }
 
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
@@ -604,8 +689,6 @@ _cairo_dwrite_scaled_font_init_glyph_metrics(cairo_dwrite_scaled_font_t *scaled_
         extents.width > 0 && extents.height > 0) {
         extents.width += scaled_font->mat_inverse.xx * 2;
         extents.x_bearing -= scaled_font->mat_inverse.xx;
-        extents.height += scaled_font->mat_inverse.yy * 2;
-        extents.y_bearing -= scaled_font->mat_inverse.yy;
     }
 
     _cairo_scaled_glyph_set_metrics (scaled_glyph,
@@ -1239,6 +1322,7 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 }
 
 #if CAIRO_HAS_D2D_SURFACE
+
 /* Surface helper function */
 //XXX: this function should probably be in cairo-d2d-surface.cpp
 cairo_int_status_t
@@ -1262,32 +1346,49 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    op = _cairo_d2d_simplify_operator(op, source);
 
-    /* We can only handle operator SOURCE or OVER with the destination
-     * having no alpha */
-    if (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER)
+    /* We cannot handle operator SOURCE or CLEAR */
+    if (op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_CLEAR) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    _cairo_d2d_begin_draw_state (dst);
-    _cairo_d2d_set_clip (dst, clip);
-
-    D2D1_TEXT_ANTIALIAS_MODE cleartype = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
-
-    if (dst->base.content != CAIRO_CONTENT_COLOR) {
-	cleartype = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
     }
-    switch (scaled_font->options.antialias) {
-	case CAIRO_ANTIALIAS_DEFAULT:
-	    dst->rt->SetTextAntialiasMode(cleartype);
-	    break;
+
+    RefPtr<ID2D1RenderTarget> target_rt = dst->rt;
+    cairo_rectangle_int_t fontArea;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(dst, clip);
+
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_cairo_d2d_begin_draw_state(dst);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (dst, clip);
+
+	if (unlikely(status))
+	    return status;
+    }
+#endif
+
+    D2D1_TEXT_ANTIALIAS_MODE cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
+
+    // If we're rendering to a temporary surface we cannot do sub-pixel AA.
+    if (dst->base.content != CAIRO_CONTENT_COLOR || dst->rt.get() != target_rt.get()) {
+	cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
+    }
+
+    switch (dwritesf->antialias_mode) {
 	case CAIRO_ANTIALIAS_NONE:
-	    dst->rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_ALIASED);
+	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_ALIASED);
 	    break;
 	case CAIRO_ANTIALIAS_GRAY:
-	    dst->rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 	    break;
 	case CAIRO_ANTIALIAS_SUBPIXEL:
-	    dst->rt->SetTextAntialiasMode(cleartype);
+	    target_rt->SetTextAntialiasMode(cleartype_quality);
 	    break;
     }
 
@@ -1349,7 +1450,29 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(&dwritesf->mat);
 	
     if (transform) {
-	dst->rt->SetTransform(mat);
+	target_rt->SetTransform(mat);
+    }
+
+    if (dst->rt.get() != target_rt.get()) {
+	RefPtr<IDWriteGlyphRunAnalysis> analysis;
+	DWRITE_MATRIX dwmat = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
+	DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+							  1.0f,
+							  transform ? &dwmat : 0,
+							  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC,
+							  DWRITE_MEASURING_MODE_NATURAL,
+							  0,
+							  0,
+							  &analysis);
+
+	RECT bounds;
+	analysis->GetAlphaTextureBounds(scaled_font->options.antialias == CAIRO_ANTIALIAS_NONE ?
+					DWRITE_TEXTURE_ALIASED_1x1 : DWRITE_TEXTURE_CLEARTYPE_3x1,
+					&bounds);
+	fontArea.x = bounds.left;
+	fontArea.y = bounds.top;
+	fontArea.width = bounds.right - bounds.left;
+	fontArea.height = bounds.bottom - bounds.top;
     }
 
     RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
@@ -1374,15 +1497,19 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	brush->SetTransform(&mat_brush);
     }
     
-    dst->rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush);
+    target_rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush, dwritesf->measuring_mode);
     
     if (transform) {
-	dst->rt->SetTransform(D2D1::Matrix3x2F::Identity());
+	target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
     }
 
     delete [] indices;
     delete [] offsets;
     delete [] advances;
+
+    if (target_rt.get() != dst->rt.get()) {
+	return _cairo_d2d_blend_temp_surface(dst, op, target_rt, clip, &fontArea);
+    }
 
     return CAIRO_INT_STATUS_SUCCESS;
 }

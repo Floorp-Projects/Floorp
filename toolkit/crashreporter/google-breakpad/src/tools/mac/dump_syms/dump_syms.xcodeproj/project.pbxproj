@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 45;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -25,6 +25,7 @@
 				B88FB15D116CF54B00407530 /* PBXTargetDependency */,
 				B84A9201116CF7D2006C210E /* PBXTargetDependency */,
 				B88FB0C8116CEB4A00407530 /* PBXTargetDependency */,
+				8B31051511F100CF00FCF3E4 /* PBXTargetDependency */,
 			);
 			name = all_unittests;
 			productName = all_unittests;
@@ -32,6 +33,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		8B4BDBCA12013288009C7060 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4BDBC912013288009C7060 /* libcrypto.dylib */; };
 		B84A91F8116CF78F006C210E /* libgtestmockall.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B88FB024116BDFFF00407530 /* libgtestmockall.a */; };
 		B84A91FB116CF7AF006C210E /* module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FAE241166603300407530 /* module.cc */; };
 		B84A91FC116CF7AF006C210E /* stabs_to_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FAE3C11666C8900407530 /* stabs_to_module.cc */; };
@@ -83,7 +85,6 @@
 		B88FB13F116CF38300407530 /* bytereader_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FB0DA116CEC5800407530 /* bytereader_unittest.cc */; };
 		B88FB14F116CF4AE00407530 /* libgtestmockall.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B88FB024116BDFFF00407530 /* libgtestmockall.a */; };
 		B88FB152116CF4D300407530 /* byte_cursor_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FB0D4116CEC0600407530 /* byte_cursor_unittest.cc */; };
-		B89E0E601166556C00DD08C9 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B89E0E5F1166556C00DD08C9 /* libcrypto.dylib */; };
 		B89E0E781166576C00DD08C9 /* macho_reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = B89E0E6E1166571D00DD08C9 /* macho_reader.cc */; };
 		B89E0E7A1166576C00DD08C9 /* macho_dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = B89E0E701166573700DD08C9 /* macho_dump.cc */; };
 		B89E0E9911665A7200DD08C9 /* macho_reader_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B89E0E6D1166571D00DD08C9 /* macho_reader_unittest.cc */; };
@@ -103,6 +104,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		8B31051411F100CF00FCF3E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D21F97D111CBA0F200239E38;
+			remoteInfo = test_assembler_unittest;
+		};
 		B84A91F9116CF796006C210E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -261,9 +269,13 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* dump_syms.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = dump_syms.mm; path = ../../../common/mac/dump_syms.mm; sourceTree = "<group>"; };
-		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		557800890BE1F3AB00EC23E0 /* macho_utilities.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_utilities.cc; path = ../../../common/mac/macho_utilities.cc; sourceTree = SOURCE_ROOT; };
 		5578008A0BE1F3AB00EC23E0 /* macho_utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_utilities.h; path = ../../../common/mac/macho_utilities.h; sourceTree = SOURCE_ROOT; };
+		8B31023E11F0CF1C00FCF3E4 /* Breakpad.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Breakpad.xcconfig; path = ../../../common/mac/Breakpad.xcconfig; sourceTree = SOURCE_ROOT; };
+		8B3102D411F0D60300FCF3E4 /* BreakpadDebug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = BreakpadDebug.xcconfig; path = ../../../common/mac/BreakpadDebug.xcconfig; sourceTree = SOURCE_ROOT; };
+		8B3102D511F0D60300FCF3E4 /* BreakpadRelease.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = BreakpadRelease.xcconfig; path = ../../../common/mac/BreakpadRelease.xcconfig; sourceTree = SOURCE_ROOT; };
+		8B4BDBC912013288009C7060 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		9BDF186D0B1BB43700F8391B /* dump_syms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dump_syms.h; path = ../../../common/mac/dump_syms.h; sourceTree = "<group>"; };
 		9BDF186E0B1BB43700F8391B /* dump_syms_tool.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = dump_syms_tool.mm; sourceTree = "<group>"; };
 		9BE650410B52F6D800611104 /* file_id.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_id.cc; path = ../../../common/mac/file_id.cc; sourceTree = SOURCE_ROOT; };
@@ -315,7 +327,6 @@
 		B88FB11F116CF27F00407530 /* dwarf_cfi_to_module_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dwarf_cfi_to_module_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B88FB135116CF30F00407530 /* bytereader_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bytereader_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B88FB14B116CF4A700407530 /* byte_cursor_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = byte_cursor_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B89E0E5F1166556C00DD08C9 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = /usr/lib/libcrypto.dylib; sourceTree = "<absolute>"; };
 		B89E0E6D1166571D00DD08C9 /* macho_reader_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = macho_reader_unittest.cc; path = ../../../common/mac/macho_reader_unittest.cc; sourceTree = SOURCE_ROOT; };
 		B89E0E6E1166571D00DD08C9 /* macho_reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = macho_reader.cc; path = ../../../common/mac/macho_reader.cc; sourceTree = SOURCE_ROOT; };
 		B89E0E6F1166571D00DD08C9 /* macho_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = macho_reader.h; path = ../../../common/mac/macho_reader.h; sourceTree = SOURCE_ROOT; };
@@ -445,7 +456,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8C5B523116653BA00D34F4E /* Foundation.framework in Frameworks */,
-				B89E0E601166556C00DD08C9 /* libcrypto.dylib in Frameworks */,
+				8B4BDBCA12013288009C7060 /* libcrypto.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -463,6 +474,9 @@
 		08FB7794FE84155DC02AAC07 /* dump_syms */ = {
 			isa = PBXGroup;
 			children = (
+				8B31023E11F0CF1C00FCF3E4 /* Breakpad.xcconfig */,
+				8B3102D411F0D60300FCF3E4 /* BreakpadDebug.xcconfig */,
+				8B3102D511F0D60300FCF3E4 /* BreakpadRelease.xcconfig */,
 				B89E0E9D11665A9500DD08C9 /* TESTING */,
 				F9F5344B0E7C8FFC0012363F /* DWARF */,
 				B89E0E6C1166569700DD08C9 /* MACHO */,
@@ -486,8 +500,8 @@
 		08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				8B4BDBC912013288009C7060 /* libcrypto.dylib */,
 				08FB779EFE84155DC02AAC07 /* Foundation.framework */,
-				B89E0E5F1166556C00DD08C9 /* libcrypto.dylib */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -869,7 +883,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "dump_syms" */;
-			compatibilityVersion = "Xcode 2.4";
+			compatibilityVersion = "Xcode 3.1";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* dump_syms */;
 			projectDirPath = "";
@@ -907,7 +921,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -eu\n\ncd $BUILT_PRODUCTS_DIR\npwd\n\n./byte_cursor_unittest\n./macho_reader_unittest\n./stabs_reader_unittest\n./bytereader_unittest\n./dwarf2reader_cfi_unittest\n./dwarf2diehandler_unittest\n./dwarf_cu_to_module_unittest\n./dwarf_line_to_module_unittest\n./dwarf_cfi_to_module_unittest\n./stabs_to_module_unittest\n./module_unittest\n\necho \"Expect two warnings from the following tests:\"\necho \"   Errors.BadFileNumber\"\necho \"   Errors.BadDirectoryNumber\"\necho \"The proper behavior of these tests is to print text that XCode confuses with compiler warnings.\"\n";
+			shellScript = "set -eu\n\ncd $BUILT_PRODUCTS_DIR\npwd\n\n./byte_cursor_unittest\n./macho_reader_unittest\n./stabs_reader_unittest\n./bytereader_unittest\n./dwarf2reader_cfi_unittest\n./dwarf2diehandler_unittest\n./dwarf_cu_to_module_unittest\n./dwarf_line_to_module_unittest\n./dwarf_cfi_to_module_unittest\n./stabs_to_module_unittest\n./module_unittest\n./test_assembler_unittest\n\necho \"Expect two warnings from the following tests:\"\necho \"   Errors.BadFileNumber\"\necho \"   Errors.BadDirectoryNumber\"\necho \"The proper behavior of these tests is to print text that XCode confuses with compiler warnings.\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1074,6 +1088,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		8B31051511F100CF00FCF3E4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D21F97D111CBA0F200239E38 /* test_assembler_unittest */;
+			targetProxy = 8B31051411F100CF00FCF3E4 /* PBXContainerItemProxy */;
+		};
 		B84A91FA116CF796006C210E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B88FB023116BDFFF00407530 /* gtestmockall */;
@@ -1189,38 +1208,30 @@
 /* Begin XCBuildConfiguration section */
 		1DEB927908733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8B3102D411F0D60300FCF3E4 /* BreakpadDebug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ONLY_ACTIVE_ARCH_PRE_XCODE_3_1)";
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "../../../**";
-				ONLY_ACTIVE_ARCH_PRE_XCODE_3_1 = "$(NATIVE_ARCH_ACTUAL)";
-				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				HEADER_SEARCH_PATHS = ../../..;
 			};
 			name = Debug;
 		};
 		1DEB927A08733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8B3102D511F0D60300FCF3E4 /* BreakpadRelease.xcconfig */;
 			buildSettings = {
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				HEADER_SEARCH_PATHS = ../../..;
 			};
 			name = Release;
 		};
 		B84A91F6116CF784006C210E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = stabs_to_module_unittest;
 			};
 			name = Debug;
@@ -1228,38 +1239,32 @@
 		B84A91F7116CF784006C210E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = stabs_to_module_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FAF31116A591F00407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ONLY_ACTIVE_ARCH_PRE_XCODE_3_1)";
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				INSTALL_PATH = /usr/local/bin;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/build/Debug\"";
-				ONLY_ACTIVE_ARCH_PRE_XCODE_3_1 = "$(NATIVE_ARCH_ACTUAL)";
-				PREBINDING = NO;
 				PRODUCT_NAME = dwarf2reader_cfi_unittest;
 			};
 			name = Debug;
@@ -1267,29 +1272,25 @@
 		B88FAF32116A591F00407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/build/Debug\"";
-				PREBINDING = NO;
 				PRODUCT_NAME = dwarf2reader_cfi_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FAFCA116BDCAD00407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				PRODUCT_NAME = all_unittests;
 			};
 			name = Debug;
@@ -1297,26 +1298,21 @@
 		B88FAFCB116BDCAD00407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = all_unittests;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB009116BDE8400407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = stabs_reader_unittest;
 			};
 			name = Debug;
@@ -1324,32 +1320,28 @@
 		B88FB00A116BDE8400407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = stabs_reader_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB025116BE00100407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				INSTALL_PATH = /usr/local/lib;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = gtestmockall;
 			};
 			name = Debug;
@@ -1357,29 +1349,27 @@
 		B88FB026116BE00100407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/lib;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = gtestmockall;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB0BB116CEAC000407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = module_unittest;
 			};
 			name = Debug;
@@ -1387,29 +1377,27 @@
 		B88FB0BC116CEAC000407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = module_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB0E1116CEEA800407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf2diehandler_unittest;
 			};
 			name = Debug;
@@ -1417,29 +1405,27 @@
 		B88FB0E2116CEEA800407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf2diehandler_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB0F4116CEF1900407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf_line_to_module_unittest;
 			};
 			name = Debug;
@@ -1447,29 +1433,27 @@
 		B88FB0F5116CEF1900407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf_line_to_module_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB10C116CF07A00407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf_cu_to_module_unittest;
 			};
 			name = Debug;
@@ -1477,29 +1461,27 @@
 		B88FB10D116CF07A00407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf_cu_to_module_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB121116CF28000407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf_cfi_to_module_unittest;
 			};
 			name = Debug;
@@ -1507,29 +1489,27 @@
 		B88FB122116CF28000407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = dwarf_cfi_to_module_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB137116CF30F00407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = bytereader_unittest;
 			};
 			name = Debug;
@@ -1537,29 +1517,27 @@
 		B88FB138116CF30F00407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = bytereader_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B88FB14D116CF4A800407530 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = byte_cursor_unittest;
 			};
 			name = Debug;
@@ -1567,29 +1545,20 @@
 		B88FB14E116CF4A800407530 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = byte_cursor_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B89E0E761166575300DD08C9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = macho_dump;
 			};
 			name = Debug;
@@ -1597,29 +1566,20 @@
 		B89E0E771166575300DD08C9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = macho_dump;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B89E0E9711665A6400DD08C9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = macho_reader_unittest;
 			};
 			name = Debug;
@@ -1627,31 +1587,21 @@
 		B89E0E9811665A6400DD08C9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
+				);
 				PRODUCT_NAME = macho_reader_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		B8C5B5131166531B00D34F4E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
-				INSTALL_PATH = /usr/local/bin;
-				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = dump_syms;
 			};
 			name = Debug;
@@ -1659,39 +1609,21 @@
 		B8C5B5141166531B00D34F4E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
-				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = dump_syms;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		D21F97D411CBA0F200239E38 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
-				INSTALL_PATH = /usr/local/bin;
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-					"-framework",
-					AppKit,
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
 				);
-				PREBINDING = NO;
-				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
 				PRODUCT_NAME = test_assembler_unittest;
 			};
 			name = Debug;
@@ -1699,23 +1631,14 @@
 		D21F97D511CBA0F200239E38 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
-				INSTALL_PATH = /usr/local/bin;
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-					"-framework",
-					AppKit,
+				HEADER_SEARCH_PATHS = (
+					$inherited,
+					../../../testing,
+					../../../testing/include,
+					../../../testing/gtest,
+					../../../testing/gtest/include,
 				);
-				PREBINDING = NO;
 				PRODUCT_NAME = test_assembler_unittest;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};

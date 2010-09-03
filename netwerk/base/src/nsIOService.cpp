@@ -78,7 +78,7 @@
 
 #include "mozilla/FunctionTimer.h"
 
-#if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
+#if defined(XP_WIN) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsNativeConnectionHelper.h"
 #endif
 
@@ -324,13 +324,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsIOService,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsIOService::OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                               PRUint32 flags)
+nsIOService::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
+                                    PRUint32 flags,
+                                    nsAsyncRedirectVerifyHelper *helper)
 {
     nsCOMPtr<nsIChannelEventSink> sink =
         do_GetService(NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID);
     if (sink) {
-        nsresult rv = sink->OnChannelRedirect(oldChan, newChan, flags);
+        nsresult rv = helper->DelegateOnChannelRedirect(sink, oldChan,
+                                                        newChan, flags);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -340,11 +342,11 @@ nsIOService::OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
         mChannelEventSinks.GetEntries();
     PRInt32 len = entries.Count();
     for (PRInt32 i = 0; i < len; ++i) {
-        nsresult rv = entries[i]->OnChannelRedirect(oldChan, newChan, flags);
+        nsresult rv = helper->DelegateOnChannelRedirect(entries[i], oldChan,
+                                                        newChan, flags);
         if (NS_FAILED(rv))
             return rv;
     }
-
     return NS_OK;
 }
 
@@ -1075,7 +1077,7 @@ nsIOService::TrackNetworkLinkStatusForOffline()
         // option is set to always autodial. If so, then we are 
         // always up for the purposes of offline management.
         if (autodialEnabled) {
-#if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
+#if defined(XP_WIN) || defined(MOZ_PLATFORM_MAEMO)
             // On Windows and Maemo (libconic) we should first check with the OS
             // to see if autodial is enabled.  If it is enabled then we are
             // allowed to manage the offline state.

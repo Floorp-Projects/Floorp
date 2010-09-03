@@ -64,8 +64,8 @@ CanvasElementFromContent(nsIContent *content)
 
 class nsDisplayCanvas : public nsDisplayItem {
 public:
-  nsDisplayCanvas(nsIFrame* aFrame)
-    : nsDisplayItem(aFrame)
+  nsDisplayCanvas(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
@@ -85,7 +85,7 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(GetUnderlyingFrame());
-    return f->GetInnerArea() + aBuilder->ToReferenceFrame(f);
+    return f->GetInnerArea() + ToReferenceFrame();
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -241,7 +241,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               nsDisplayItem* aItem)
 {
-  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
+  nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
   nsIntSize canvasSize = GetCanvasSize();
 
@@ -269,8 +269,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetTransform(gfx3DMatrix::From2D(transform));
   layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
-  nsRefPtr<Layer> result = layer.forget();
-  return result.forget();
+  return layer.forget();
 }
 
 NS_IMETHODIMP
@@ -284,7 +283,8 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCanvas(this));
+  rv = aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayCanvas(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DisplaySelectionOverlay(aBuilder, aLists,

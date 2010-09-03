@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-453397.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 453397;
 var summary = 'Do not assert with JIT: script->main <= target && target < script->code + script->length';

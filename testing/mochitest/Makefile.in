@@ -74,6 +74,7 @@ _SERV_FILES = 	\
 		harness.xul \
 		browser-test-overlay.xul \
 		browser-test.js \
+		chrome-harness.js \
 		ipc-overlay.xul \
 		ipc.js \
 		browser-harness.xul \
@@ -149,6 +150,10 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 TEST_HARNESS_BINS += fix-linux-stack.pl
+endif
+
+ifeq (gtk2_1,$(MOZ_WIDGET_TOOLKIT)_$(MOZ_X11))
+TEST_HARNESS_BINS += screentopng
 endif
 
 # Components / typelibs that don't get packaged with

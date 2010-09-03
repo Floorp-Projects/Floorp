@@ -639,6 +639,7 @@ SyncEngine.prototype = {
 
   // Upload outgoing records
   _uploadOutgoing: function SyncEngine__uploadOutgoing() {
+    let failed = {};
     let outnum = [i for (i in this._tracker.changedIDs)].length;
     if (outnum) {
       this._log.trace("Preparing " + outnum + " outgoing records");
@@ -661,6 +662,18 @@ SyncEngine.prototype = {
         let modified = resp.headers["x-weave-timestamp"];
         if (modified > this.lastSync)
           this.lastSync = modified;
+
+        // Remember changed IDs and timestamp of failed items so we
+        // can mark them changed again.
+        let failed_ids = [];
+        for (let id in resp.obj.failed) {
+          failed[id] = this._tracker.changedIDs[id];
+          failed_ids.push(id);
+        }
+        if (failed_ids.length)
+          this._log.debug("Records that will be uploaded again because "
+                          + "the server couldn't store them: "
+                          + failed_ids.join(", "));
 
         up.clearRecords();
       });
@@ -690,6 +703,11 @@ SyncEngine.prototype = {
         doUpload(count >= MAX_UPLOAD_RECORDS ? "last batch" : "all");
     }
     this._tracker.clearChangedIDs();
+
+    // Mark failed WBOs as changed again so they are reuploaded next time.
+    for (let id in failed) {
+      this._tracker.addChangedID(id, failed[id]);
+    }
   },
 
   // Any cleanup necessary.

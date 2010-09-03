@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.3.2.js';
 
 START("11.3.2 - Typeof Operator");
 

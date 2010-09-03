@@ -47,8 +47,9 @@ interface nsISimpleEnumerator;
 interface nsICacheListener;
 interface nsICacheSession;
 interface nsICacheVisitor;
+interface nsIEventTarget;
 
-[scriptable, uuid(de114eb4-29fc-4959-b2f7-2d03eb9bc771)]
+[scriptable, uuid(14dbe1e9-f3bc-45af-92f4-2c574fcd4e39)]
 interface nsICacheService : nsISupports
 {
     /**
@@ -87,6 +88,11 @@ interface nsICacheService : nsISupports
      *       everything.
      */
     void evictEntries(in nsCacheStoragePolicy  storagePolicy);
+
+    /**
+     * Event target which is used for I/O operations
+     */
+    readonly attribute nsIEventTarget cacheIOTarget;
 };
 
 %{C++

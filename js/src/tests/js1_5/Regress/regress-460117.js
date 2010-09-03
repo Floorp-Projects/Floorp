@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-460117.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 460117;
 var summary = 'TM: hasOwnProperty with JIT';

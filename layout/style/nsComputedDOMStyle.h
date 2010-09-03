@@ -104,8 +104,8 @@ public:
   // nsDOMCSSDeclaration abstract methods which should never be called
   // on a nsComputedDOMStyle object, but must be defined to avoid
   // compile errors.
-  virtual nsresult GetCSSDeclaration(mozilla::css::Declaration**, PRBool);
-  virtual nsresult DeclarationChanged();
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool);
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration*);
   virtual nsIDocument* DocToUpdate();
   virtual nsresult GetCSSParsingEnvironment(nsIURI**, nsIURI**, nsIPrincipal**,
                                             mozilla::css::Loader**);
@@ -492,8 +492,6 @@ private:
    * otherwise.
    */
   nsIPresShell* mPresShell;
-
-  PRInt32 mAppUnitsPerInch; /* For unit conversions */
 
   PRPackedBool mExposeVisitedStyle;
 

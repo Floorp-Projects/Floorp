@@ -42,7 +42,6 @@
  */
 
 #include "nsTextFragment.h"
-#include "nsString.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
@@ -203,13 +202,18 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
     }
   }
 
-  // See if we need to store the data in ucs2 or not
-  PRBool need2 = PR_FALSE;
-  while (ucp < uend) {
-    PRUnichar ch = *ucp++;
-    if (ch >= 256) {
-      need2 = PR_TRUE;
-      break;
+  // We don't attempt to detect if large text nodes can be stored compactly,
+  // because that wastes too much time.
+  const PRInt32 LARGE_STRING_THRESHOLD = 10240; // 10KB
+  PRBool need2 = aLength >= LARGE_STRING_THRESHOLD;
+  if (!need2) {
+    // See if we need to store the data in ucs2 or not
+    while (ucp < uend) {
+      PRUnichar ch = *ucp++;
+      if (ch >= 256) {
+        need2 = PR_TRUE;
+        break;
+      }
     }
   }
 
@@ -239,27 +243,6 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
   mState.mInHeap = PR_TRUE;
   mState.mIs2b = need2;
   mState.mLength = aLength;
-}
-
-void
-nsTextFragment::AppendTo(nsAString& aString) const
-{
-  if (mState.mIs2b) {
-    aString.Append(m2b, mState.mLength);
-  } else {
-    AppendASCIItoUTF16(Substring(m1b, m1b + mState.mLength),
-                       aString);
-  }
-}
-
-void
-nsTextFragment::AppendTo(nsAString& aString, PRInt32 aOffset, PRInt32 aLength) const
-{
-  if (mState.mIs2b) {
-    aString.Append(m2b + aOffset, aLength);
-  } else {
-    AppendASCIItoUTF16(Substring(m1b + aOffset, m1b + aOffset + aLength), aString);
-  }
 }
 
 void

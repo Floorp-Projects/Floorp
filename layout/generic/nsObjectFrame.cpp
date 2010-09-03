@@ -54,6 +54,20 @@
 #endif
 #endif
 
+#ifdef MOZ_IPC
+#include "mozilla/plugins/PluginMessageUtils.h"
+#endif
+
+#ifdef MOZ_X11
+#include <cairo-xlib.h>
+#include "gfxXlibSurface.h"
+/* X headers suck */
+enum { XKeyPress = KeyPress };
+#ifdef KeyPress
+#undef KeyPress
+#endif
+#endif
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
@@ -169,14 +183,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #endif
 
 #ifdef MOZ_X11
-#include <cairo-xlib.h>
-#include "gfxXlibSurface.h"
-/* X headers suck */
-enum { XKeyPress = KeyPress };
-#ifdef KeyPress
-#undef KeyPress
-#endif
-
 #if (MOZ_PLATFORM_MAEMO == 5) && defined(MOZ_WIDGET_GTK2)
 #define MOZ_COMPOSITED_PLUGINS 1
 #define MOZ_USE_IMAGE_EXPOSE   1
@@ -207,9 +213,6 @@ using mozilla::DefaultXDisplay;
 #ifdef XP_WIN
 #include <wtypes.h>
 #include <winuser.h>
-#ifdef MOZ_IPC
-#define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
-#endif
 #endif
 
 #ifdef XP_OS2
@@ -624,10 +627,6 @@ nsObjectFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-#ifdef XP_WIN
-  mDoublePassEvent = 0;
-#endif
-
   return rv;
 }
 
@@ -698,10 +697,8 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
-  PRBool usewidgets;
   nsCOMPtr<nsIDeviceContext> dx;
   viewMan->GetDeviceContext(*getter_AddRefs(dx));
-  dx->SupportsNativeWidgets(usewidgets);
 
   //this is ugly. it was ripped off from didreflow(). MMP
   // Position and size view relative to its parent, not relative to our
@@ -720,7 +717,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     return NS_ERROR_FAILURE;
   }
 
-  if (!aViewOnly && !mWidget && usewidgets) {
+  if (!aViewOnly && !mWidget) {
     mInnerView = viewMan->CreateView(GetContentRect() - GetPosition(), view);
     if (!mInnerView) {
       NS_ERROR("Could not create inner view");
@@ -1175,8 +1172,8 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 nsRect
 nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetContentRect() +
-    aBuilder->ToReferenceFrame(mFrame->GetParent());
+  return mFrame->GetContentRect() - mFrame->GetPosition() +
+    ToReferenceFrame();
 }
 
 void
@@ -1189,14 +1186,10 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 
 PRBool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   nsRegion* aVisibleRegionBeforeMove)
+                                   nsRegion* aVisibleRegion)
 {
-  NS_ASSERTION(!aVisibleRegionBeforeMove, "not supported anymore");
-
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
-  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
-                                          aVisibleRegionBeforeMove);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
 }
 
 PRBool
@@ -1212,7 +1205,7 @@ nsDisplayPlugin::GetWidgetConfiguration(nsDisplayListBuilder* aBuilder,
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   nsPoint pluginOrigin = mFrame->GetUsedBorderAndPadding().TopLeft() +
-    aBuilder->ToReferenceFrame(mFrame);
+    ToReferenceFrame();
   f->ComputeWidgetGeometry(mVisibleRegion, pluginOrigin, aConfigurations);
 }
 
@@ -1351,11 +1344,11 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // determine if we are printing
   if (type == nsPresContext::eContext_Print)
     return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin",
+        nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                          nsDisplayItem::TYPE_PRINT_PLUGIN));
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayPlugin(this));
+      nsDisplayPlugin(aBuilder, this));
 }
 
 void
@@ -1730,15 +1723,12 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         // OOP plugin specific: let the shim know before we paint if we are doing a
         // double pass render. If this plugin isn't oop, the register window message
         // will be ignored.
-        if (!mDoublePassEvent)
-          mDoublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
-        if (mDoublePassEvent) {
-          NPEvent pluginEvent;
-          pluginEvent.event = mDoublePassEvent;
-          pluginEvent.wParam = 0;
-          pluginEvent.lParam = 0;
+        NPEvent pluginEvent;
+        pluginEvent.event = mozilla::plugins::DoublePassRenderingEvent();
+        pluginEvent.wParam = 0;
+        pluginEvent.lParam = 0;
+        if (pluginEvent.event)
           inst->HandleEvent(&pluginEvent, nsnull);
-        }
       }
 #endif
       do {
@@ -2314,6 +2304,16 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
     NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
     rootPC->UnregisterPluginForGeometryUpdates(this);
+
+    // Make sure the plugin is hidden in case an update of plugin geometry
+    // hasn't happened since this plugin became hidden.
+    nsIWidget* parent = mWidget->GetParent();
+    if (parent) {
+      nsTArray<nsIWidget::Configuration> configurations;
+      GetEmptyClipConfiguration(&configurations);
+      parent->ConfigureChildren(configurations);
+      DidSetWidgetGeometry();
+    }
   }
 
   // Transfer the reference to the instance owner onto the stack so

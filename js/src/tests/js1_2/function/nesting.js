@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'nesting.js';
 
 /**
    Filename:     nesting.js

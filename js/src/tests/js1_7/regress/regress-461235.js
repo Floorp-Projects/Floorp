@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-461235.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 461235;
 var summary = 'Do not assert: pos == GET_UINT16(pc)';

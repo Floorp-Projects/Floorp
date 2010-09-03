@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-469405-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 469405;
 var summary = 'Do not assert: !JSVAL_IS_PRIMITIVE(regs.sp[-2])';

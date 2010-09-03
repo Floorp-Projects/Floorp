@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-358508.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 358508;
 var summary = 'destructuring-parameters and block local functions';

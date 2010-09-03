@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-458851.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 458851;
 var summary = 'TM: for-in loops should not skip every other value sometimes';

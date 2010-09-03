@@ -72,8 +72,6 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // Leave out this code until we can fix painting. See bug 568513.
-  /*
   // Create a timer to process browser events while waiting
   // on the menu. This prevents the browser from hanging
   // during the lifetime of the menu.
@@ -86,19 +84,18 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
   // not fire during the right click menu.
   [[NSRunLoop currentRunLoop] addTimer:eventTimer 
                               forMode:NSEventTrackingRunLoopMode];
-  */
 
   NSMenu* nsmenu = reinterpret_cast<NSMenu*>(aMenu);
   NSPoint screen_point = ::NSMakePoint(aX, aY);
 
   [nsmenu popUpMenuPositioningItem:nil atLocation:screen_point inView:nil];
 
-  //[eventTimer invalidate];
-  //[eventProcessor release];
+  [eventTimer invalidate];
+  [eventProcessor release];
 
   return NPERR_NO_ERROR;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NPERR_GENERIC_ERROR);
 }
 
 void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop()

@@ -9,6 +9,7 @@ crashReporter.enabled = true;
 crashReporter.minidumpPath = cwd;
 let cd = cwd.clone();
 cd.append("components");
+cd.append("testcrasher.manifest");
 Components.manager instanceof Components.interfaces.nsIComponentRegistrar;
 Components.manager.autoRegister(cd);
 let crashType = Components.interfaces.nsITestCrasher.CRASH_INVALID_POINTER_DEREF;

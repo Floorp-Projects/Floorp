@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-220362.js';
 var UBound = 0;
 var BUGNUMBER = 220362;
 var summary = 'Calling a local function from global scope';

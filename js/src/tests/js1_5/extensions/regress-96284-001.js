@@ -49,7 +49,6 @@
  * obj2.toSource() == obj1.toSource().
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-96284-001.js';
 var UBound = 0;
 var BUGNUMBER = 96284;
 var summary = 'Double quotes should be escaped in Error.prototype.toSource()';

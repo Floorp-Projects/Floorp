@@ -452,11 +452,8 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         interfacesBits |= 1 << MAI_INTERFACE_IMAGE;
     }
 
-    //nsIAccessibleHyperLink
-    nsCOMPtr<nsIAccessibleHyperLink> accessInterfaceHyperlink;
-    QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),
-                   getter_AddRefs(accessInterfaceHyperlink));
-    if (accessInterfaceHyperlink) {
+    // HyperLinkAccessible
+    if (IsHyperLink()) {
        interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
     }
 
@@ -478,10 +475,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
       }
       
       //nsIAccessibleSelection
-      nsCOMPtr<nsIAccessibleSelectable> accessInterfaceSelection;
-      QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                     getter_AddRefs(accessInterfaceSelection));
-      if (accessInterfaceSelection) {
+      if (IsSelect()) {
           interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
       }
     }
@@ -848,9 +842,8 @@ getParentCB(AtkObject *aAtkObj)
             return nsnull;
         }
 
-        nsCOMPtr<nsIAccessible> accParent;
-        nsresult rv = accWrap->GetParent(getter_AddRefs(accParent));
-        if (NS_FAILED(rv) || !accParent)
+        nsAccessible* accParent = accWrap->GetParent();
+        if (!accParent)
             return nsnull;
 
         AtkObject *parent = nsAccessibleWrap::GetAtkObject(accParent);
@@ -868,11 +861,7 @@ getChildCountCB(AtkObject *aAtkObj)
         return 0;
     }
 
-    // Links within hypertext accessible play role of accessible children in
-    // ATK since every embedded object is a link and text accessibles are
-    // ignored.
-    nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(accWrap);
-    return hyperText ? hyperText->GetLinkCount() : accWrap->GetChildCount();
+    return accWrap->GetEmbeddedChildCount();
 }
 
 AtkObject *
@@ -888,12 +877,7 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
         return nsnull;
     }
 
-    // Links within hypertext accessible play role of accessible children in
-    // ATK since every embedded object is a link and text accessibles are
-    // ignored.
-    nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(accWrap);
-    nsAccessible* accChild = hyperText ? hyperText->GetLinkAt(aChildIndex) :
-                                         accWrap->GetChildAt(aChildIndex);
+    nsAccessible* accChild = accWrap->GetEmbeddedChildAt(aChildIndex);
     if (!accChild)
         return nsnull;
 
@@ -924,12 +908,7 @@ getIndexInParentCB(AtkObject *aAtkObj)
         return -1; // No parent
     }
 
-    // Links within hypertext accessible play role of accessible children in
-    // ATK since every embedded object is a link and text accessibles are
-    // ignored.
-    nsRefPtr<nsHyperTextAccessible> hyperTextParent(do_QueryObject(parent));
-    return hyperTextParent ?
-        hyperTextParent->GetLinkIndex(accWrap) : accWrap->GetIndexInParent();
+    return parent->GetIndexOfEmbeddedChild(accWrap);
 }
 
 static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,
@@ -1065,7 +1044,7 @@ nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
 }
 
 nsresult
-nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
+nsAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
     nsresult rv = nsAccessible::HandleAccEvent(aEvent);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1074,7 +1053,7 @@ nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
+nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 {
     nsAccessible *accessible = aEvent->GetAccessible();
     NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
@@ -1112,10 +1091,10 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
         if (rootAccWrap && rootAccWrap->mActivated) {
             atk_focus_tracker_notify(atkObj);
             // Fire state change event for focus
-            nsRefPtr<nsAccEvent> stateChangeEvent =
-              new nsAccStateChangeEvent(accessible,
-                                        nsIAccessibleStates::STATE_FOCUSED,
-                                        PR_FALSE, PR_TRUE);
+            nsRefPtr<AccEvent> stateChangeEvent =
+              new AccStateChangeEvent(accessible,
+                                      nsIAccessibleStates::STATE_FOCUSED,
+                                      PR_FALSE, PR_TRUE);
             return FireAtkStateChangeEvent(stateChangeEvent, atkObj);
         }
       } break;
@@ -1145,7 +1124,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CARET_MOVED\n"));
 
-        nsAccCaretMoveEvent *caretMoveEvent = downcast_accEvent(aEvent);
+        AccCaretMoveEvent* caretMoveEvent = downcast_accEvent(aEvent);
         NS_ASSERTION(caretMoveEvent, "Event needs event data");
         if (!caretMoveEvent)
             break;
@@ -1174,7 +1153,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_INSERT\n"));
-        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
+        AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         PRInt32 rowIndex = tableEvent->GetIndex();
@@ -1191,7 +1170,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
    case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE:
      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_DELETE\n"));
-        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
+        AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         PRInt32 rowIndex = tableEvent->GetIndex();
@@ -1215,7 +1194,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_INSERT\n"));
-        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
+        AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         PRInt32 colIndex = tableEvent->GetIndex();
@@ -1232,7 +1211,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_DELETE\n"));
-        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
+        AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
         PRInt32 colIndex = tableEvent->GetIndex();
@@ -1335,12 +1314,12 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
 }
 
 nsresult
-nsAccessibleWrap::FireAtkStateChangeEvent(nsAccEvent *aEvent,
+nsAccessibleWrap::FireAtkStateChangeEvent(AccEvent* aEvent,
                                           AtkObject *aObject)
 {
     MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
 
-    nsAccStateChangeEvent *event = downcast_accEvent(aEvent);
+    AccStateChangeEvent* event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
     PRUint32 state = event->GetState();
@@ -1371,12 +1350,12 @@ nsAccessibleWrap::FireAtkStateChangeEvent(nsAccEvent *aEvent,
 }
 
 nsresult
-nsAccessibleWrap::FireAtkTextChangedEvent(nsAccEvent *aEvent,
+nsAccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
                                           AtkObject *aObject)
 {
     MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_REMOVED/INSERTED\n"));
 
-    nsAccTextChangeEvent *event = downcast_accEvent(aEvent);
+    AccTextChangeEvent* event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
     PRInt32 start = event->GetStartOffset();
@@ -1394,7 +1373,7 @@ nsAccessibleWrap::FireAtkTextChangedEvent(nsAccEvent *aEvent,
 }
 
 nsresult
-nsAccessibleWrap::FireAtkShowHideEvent(nsAccEvent *aEvent,
+nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
                                        AtkObject *aObject, PRBool aIsAdded)
 {
     if (aIsAdded)

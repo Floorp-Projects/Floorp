@@ -61,11 +61,8 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(32b43ec6-e905-4070-9cfe-370c45f7c1bf)]
+[scriptable, uuid(ad035628-4ffb-42ff-a256-0ed9e410b859)]
 interface mozIStorageConnection : nsISupports {
-  //////////////////////////////////////////////////////////////////////////////
-  //// Initialization and status
-
   /**
    * Closes a database connection.  Callers must finalize all statements created
    * for this connection prior to calling this method.  It is illegal to use
@@ -90,6 +87,25 @@ interface mozIStorageConnection : nsISupports {
    *         If is called on a thread other than the one that opened it.
    */
   void asyncClose([optional] in mozIStorageCompletionCallback aCallback);
+
+  /**
+   * Clones a database and makes the clone read only if needed.
+   *
+   * @note If your connection is already read-only, you will get a read-only
+   *       clone.
+   * @note Due to a bug in SQLite, if you use the shared cache (openDatabase),
+   *       you end up with the same privileges as the first connection opened
+   *       regardless of what is specified in aReadOnly.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *         If this connection is a memory database.
+   *
+   * @param aReadOnly
+   *        If true, the returned database should be put into read-only mode.
+   *        Defaults to false.
+   * @return the cloned database connection.
+   */
+  mozIStorageConnection clone([optional] in boolean aReadOnly);
 
   /**
    * Indicates if the connection is open and ready to use.  This will be false
@@ -334,4 +350,16 @@ interface mozIStorageConnection : nsISupports {
    * @return previous registered handler.
    */
   mozIStorageProgressHandler removeProgressHandler();
+
+  /**
+   * Controls SQLITE_FCNTL_CHUNK_SIZE setting in sqlite. This helps avoid fragmentation
+   * by growing/shrinking the database file in SQLITE_FCNTL_CHUNK_SIZE increments.
+   *
+   * @param aIncrement
+   *        The database file will grow in multiples of chunkSize.
+   * @param aDatabaseName
+   *        Sqlite database name. "" means pass NULL for zDbName to sqlite3_file_control.
+   *        See http://sqlite.org/c3ref/file_control.html for more details.
+   */
+  void setGrowthIncrement(in PRInt32 aIncrement, in AUTF8String aDatabaseName);
 };

@@ -5,7 +5,6 @@
  * Contributor: Bob Clary
  */
 
-var gTestfile = '15.9.3.2-1.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 273292;
 var summary = '15.9.3.2  new Date(value)';

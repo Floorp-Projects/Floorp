@@ -889,3 +889,10 @@ nsDOMWorkerXHR::SetWithCredentials(PRBool aWithCredentials)
 
   return NS_OK;
 }
+
+/* readonly attribute jsval (ArrayBuffer) mozResponseArrayBuffer; */
+NS_IMETHODIMP
+nsDOMWorkerXHR::GetMozResponseArrayBuffer(jsval *aResult)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

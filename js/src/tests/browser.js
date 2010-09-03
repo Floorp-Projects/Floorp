@@ -126,7 +126,7 @@ window.onerror = function (msg, page, line)
     EXPECTED = 'Unknown';
   }
 
-  var testcase = new TestCase(gTestfile, DESCRIPTION, EXPECTED, "error");
+  var testcase = new TestCase("unknown-test-name", DESCRIPTION, EXPECTED, "error");
 
   if (document.location.href.indexOf('-n.js') != -1)
   {

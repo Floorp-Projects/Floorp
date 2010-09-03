@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349650.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349650;
 var summary = 'Number getting parens replaces last character of identifier in decompilation of array comprehension';

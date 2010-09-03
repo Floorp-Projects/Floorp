@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+
+     Test with background-position and some transform.
+-->
+<html>
+<body style="filter:url(#thresholdAt128);">
+  <div style="width:100px; height:100px; border: 1px solid black;
+              background: 50px 50px -moz-element(#d) no-repeat;
+              -moz-transform:matrix(2,1,0,2,50,50);">
+  </div>
+  <div style="overflow:hidden; height:0;">
+    <div id="d" style="border:10px solid red; width:20px; height:20px;
+                       background:yellow"></div>
+  </div>
+  <svg>
+    <filter id="thresholdAt128" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix"
+           values="255 0 0 0 -128 
+                   0 255 0 0 -128 
+                   0 0 255 0 -128 
+                   0 0 0 255 -128"/>
+
+    </filter>
+  </svg>
+</body>
+</html>

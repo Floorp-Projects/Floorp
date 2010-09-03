@@ -852,9 +852,9 @@ PREF_UnregisterCallback(const char *pref_node,
 
     while (node != NULL)
     {
-        if ( strcmp(node->domain, pref_node) == 0 &&
-             node->func == callback &&
-             node->data == instance_data)
+        if ( node->func == callback &&
+             node->data == instance_data &&
+             strcmp(node->domain, pref_node) == 0)
         {
             if (gCallbacksInProgress)
             {

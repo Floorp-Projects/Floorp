@@ -161,7 +161,14 @@ SessionStartup.prototype = {
 
     if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
-      Services.obs.addObserver(this, "domwindowopened", true);
+
+      // Don't reset the initial window's default args (i.e. the home page(s))
+      // if all stored tabs are pinned.
+      if (!initialState.windows ||
+          !initialState.windows.every(function (win)
+             win.tabs.every(function (tab) tab.pinned)))
+        Services.obs.addObserver(this, "domwindowopened", true);
+
       Services.obs.addObserver(this, "browser:purge-session-history", true);
     }
   },

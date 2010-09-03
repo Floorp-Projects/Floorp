@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-324422-1.js';
 
 var summary = "Do not crash creating XML object with long initialiser";
 

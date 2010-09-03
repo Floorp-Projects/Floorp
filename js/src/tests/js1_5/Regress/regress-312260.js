@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-312260.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 312260;
 var summary = 'Switch discriminant detecting case should not warn';

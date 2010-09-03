@@ -68,7 +68,7 @@
 
 #ifdef MOZ_OMNIJAR
 #include "mozilla/Omnijar.h"
-#include "nsIManifestLoader.h"
+#include "nsManifestZIPLoader.h"
 #endif
 
 struct nsFactoryEntry;
@@ -118,18 +118,12 @@ class nsComponentManagerImpl
     , public nsSupportsWeakReference
     , public nsIComponentRegistrar
     , public nsIInterfaceRequestor
-#ifdef MOZ_OMNIJAR
-    , public nsIManifestLoaderSink
-#endif
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICOMPONENTMANAGER
     NS_DECL_NSICOMPONENTREGISTRAR
-#ifdef MOZ_OMNIJAR
-    NS_DECL_NSIMANIFESTLOADERSINK
-#endif
 
     static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -259,32 +253,28 @@ public:
                           KnownModule* aModule);
     void RegisterContractID(const mozilla::Module::ContractIDEntry* aEntry);
 
-    void RegisterLocation(NSLocationType aType, nsILocalFile* aLocation,
-                          bool aChromeOnly);
-
 #ifdef MOZ_OMNIJAR
-    void RegisterOmnijar(bool aChromeOnly);
+    void RegisterOmnijar(const char* aPath, bool aChromeOnly);
 #endif
-
-    void GetManifestsInDirectory(nsILocalFile* aDirectory,
-                                 nsCOMArray<nsILocalFile>& aManifests);
 
     void RegisterManifestFile(NSLocationType aType, nsILocalFile* aFile,
                               bool aChromeOnly);
 
     struct ManifestProcessingContext
     {
-        ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile)
+        ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile, bool aChromeOnly)
             : mType(aType)
             , mFile(aFile)
             , mPath(NULL)
+            , mChromeOnly(aChromeOnly)
         { }
 
 #ifdef MOZ_OMNIJAR
-        ManifestProcessingContext(NSLocationType aType, const char* aPath)
+        ManifestProcessingContext(NSLocationType aType, const char* aPath, bool aChromeOnly)
             : mType(aType)
             , mFile(mozilla::OmnijarPath())
             , mPath(aPath)
+            , mChromeOnly(aChromeOnly)
         { }
 #endif
 
@@ -293,8 +283,10 @@ public:
         NSLocationType mType;
         nsILocalFile* mFile;
         const char* mPath;
+        bool mChromeOnly;
     };
 
+    void ManifestManifest(ManifestProcessingContext& cx, int lineno, char *const * argv);
     void ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
     void ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv);
     void ManifestComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
@@ -331,8 +323,7 @@ private:
     ~nsComponentManagerImpl();
 
 #ifdef MOZ_OMNIJAR
-    nsIManifestLoader* mManifestLoader;
-    bool mRegisterJARChromeOnly;
+    nsAutoPtr<nsManifestZIPLoader> mManifestLoader;
 #endif
 };
 

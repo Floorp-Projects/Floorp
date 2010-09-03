@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-444608.js';
 
 var summary = '13.2 Namespaces - call constructors directly';
 var BUGNUMBER = 444608;

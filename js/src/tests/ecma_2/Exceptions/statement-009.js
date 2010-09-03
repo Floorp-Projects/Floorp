@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'statement-009.js';
 
 /**
    File Name:          12.9-1-n.js

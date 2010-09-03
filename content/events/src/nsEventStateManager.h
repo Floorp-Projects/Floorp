@@ -331,6 +331,13 @@ protected:
   nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
 
+#ifdef MOZ_IPC
+#ifdef ANDROID
+  mozilla::dom::PBrowserParent *GetCrossProcessTarget();
+  PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
+#endif
+#endif
+
   PRInt32     mLockCursor;
 
   nsWeakFrame mCurrentTarget;

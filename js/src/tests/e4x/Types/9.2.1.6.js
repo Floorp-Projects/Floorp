@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.2.1.6.js';
 
 START("9.2.1.6 XMLList [[Append]]");
 

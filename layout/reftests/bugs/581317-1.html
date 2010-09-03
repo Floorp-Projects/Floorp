@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+#d { width:200px; }
+#e { width:200px; height:200px; opacity:0.99; }
+#f { width:200px; height:10px; }
+</style>
+</head>
+<body onload="step()">
+<div id="d">
+  <div id="e">
+    <div style="width:10px; height:10px; background:yellow;"></div>
+    <div id="f">
+      <div style="width:10px; height:10px; background:blue;"></div>
+    </div>
+  </div>
+</div>
+<script>
+var d = document.getElementById("d");
+var e = document.getElementById("e");
+var f = document.getElementById("f");
+var v = 0;
+function step() {
+  v += 40;
+  d.style.border = "10px solid rgba(" + v + "," + v + "," + v + ", 0.99)";
+  e.style.backgroundColor = "rgb(" + v + "," + v + "," + v + ")";
+  f.style.opacity = v/250.0;
+  if (v < 200) {
+    setTimeout(step, 50);
+  } else {
+    document.documentElement.removeAttribute("class");
+  }
+}
+</script>
+</body>
+</html>

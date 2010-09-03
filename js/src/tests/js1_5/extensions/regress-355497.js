@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355497.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355497;
 var summary = 'Do not overflow stack with Array.slice, getter';

@@ -57,6 +57,8 @@ _TEST_FILES =	test_bug408328.html \
 		bug368464-data.xml \
 		test_bug494328.html \
 		bug494328-data.xml \
+		test_bug589543.html \
+		bug589543-data.xml \
 		test_registerHandler.html \
 		$(NULL)
 

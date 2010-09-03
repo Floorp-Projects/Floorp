@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.2.1.js';
 
 START("11.2.1 - Property Accessors");
 

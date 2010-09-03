@@ -42,7 +42,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsITextControlElement.h"
 #include "nsIPhonetic.h"
 #include "nsIDOMNSEditableElement.h"
@@ -50,6 +49,7 @@
 
 #include "nsTextEditorState.h"
 #include "nsCOMPtr.h"
+#include "nsIConstraintValidation.h"
 
 //
 // Accessors for mBitField
@@ -75,16 +75,51 @@
 
 class nsDOMFileList;
 
+class UploadLastDir : public nsIObserver, public nsSupportsWeakReference {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  UploadLastDir();
+
+  /**
+   * Fetch the last used directory for this location from the content
+   * pref service, if it is available.
+   *
+   * @param aURI URI of the current page
+   * @param aFile path to the last used directory
+   */
+  nsresult FetchLastUsedDirectory(nsIURI* aURI, nsILocalFile** aFile);
+
+  /**
+   * Store the last used directory for this location using the
+   * content pref service, if it is available
+   * @param aURI URI of the current page
+   * @param aFile file chosen by the user - the path to the parent of this
+   *        file will be stored
+   */
+  nsresult StoreLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile);
+private:
+  // Directories are stored here during private browsing mode
+  nsInterfaceHashtable<nsStringHashKey, nsILocalFile> mUploadLastDirStore;
+  PRBool mInPrivateBrowsing;
+};
+
+class nsIRadioGroupContainer;
+class nsIRadioVisitor;
+
 class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsImageLoadingContent,
                            public nsIDOMHTMLInputElement,
-                           public nsIDOMNSHTMLInputElement,
                            public nsITextControlElement,
                            public nsIPhonetic,
                            public nsIDOMNSEditableElement,
-                           public nsIFileControlElement
+                           public nsIFileControlElement,
+                           public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                      PRUint32 aFromParser);
   virtual ~nsHTMLInputElement();
@@ -104,9 +139,6 @@ public:
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
 
-  // nsIDOMNSHTMLInputElement
-  NS_DECL_NSIDOMNSHTMLINPUTELEMENT
-
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
 
@@ -120,8 +152,7 @@ public:
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRUint32) GetType() const { return mType; }
   NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
-                               nsIContent* aSubmitElement);
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();
@@ -175,6 +206,7 @@ public:
   NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
+  NS_IMETHOD_(void) OnValueChanged(PRBool aNotify);
 
   // nsIFileControlElement
   virtual void GetDisplayFileName(nsAString& aFileName);
@@ -184,14 +216,25 @@ public:
   void SetCheckedChangedInternal(PRBool aCheckedChanged);
   PRBool GetCheckedChanged();
   void AddedToRadioGroup(PRBool aNotify = PR_TRUE);
-  void WillRemoveFromRadioGroup();
+  void WillRemoveFromRadioGroup(PRBool aNotify);
   /**
    * Get the radio group container for this button (form or document)
    * @return the radio group container (or null if no form or document)
    */
   virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
 
+ /**
+   * Helper function returning the currently selected button in the radio group.
+   * Returning null if the element is not a button or if there is no selectied
+   * button in the group.
+   *
+   * @return the selected button (or null).
+   */
+  already_AddRefed<nsIDOMHTMLInputElement> GetSelectedRadioButton();
+
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  NS_IMETHOD FireAsyncClickHandler();
 
   virtual void UpdateEditableState()
   {
@@ -201,14 +244,96 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,
                                                      nsGenericHTMLFormElement)
 
+  static UploadLastDir* gUploadLastDir;
+  // create and destroy the static UploadLastDir object for remembering
+  // which directory was last used on a site-by-site basis
+  static void InitUploadLastDir();
+  static void DestroyUploadLastDir();
+
   void MaybeLoadImage();
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // nsIConstraintValidation
+  PRBool   IsTooLong();
+  PRBool   IsValueMissing();
+  PRBool   HasTypeMismatch();
+  PRBool   HasPatternMismatch();
+  void     UpdateTooLongValidityState();
+  void     UpdateValueMissingValidityState();
+  void     UpdateTypeMismatchValidityState();
+  void     UpdatePatternMismatchValidityState();
+  void     UpdateAllValidityStates(PRBool aNotify);
+  PRBool   IsBarredFromConstraintValidation() const;
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                ValidityStateType aType);
 
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
   using nsGenericHTMLFormElement::IsSingleLineTextControl;
+
+  /**
+   * The ValueModeType specifies how the value IDL attribute should behave.
+   *
+   * See: http://dev.w3.org/html5/spec/forms.html#dom-input-value
+   */
+  enum ValueModeType
+  {
+    // On getting, returns the value.
+    // On setting, sets value.
+    VALUE_MODE_VALUE,
+    // On getting, returns the value if present or the empty string.
+    // On setting, sets the value.
+    VALUE_MODE_DEFAULT,
+    // On getting, returns the value if present or "on".
+    // On setting, sets the value.
+    VALUE_MODE_DEFAULT_ON,
+    // On getting, returns "C:\fakepath\" followed by the file name of the
+    // first file of the selected files if any.
+    // On setting the empty string, empties the selected files list, otherwise
+    // throw the INVALID_STATE_ERR exception.
+    VALUE_MODE_FILENAME
+  };
+
+  /**
+   * This helper method returns true if aValue is a valid email address.
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address
+   *
+   * @param aValue  the email address to check.
+   * @result        whether the given string is a valid email address.
+   */
+  static PRBool IsValidEmailAddress(const nsAString& aValue);
+
+  /**
+   * This helper method returns true if aValue is a valid email address list.
+   * Email address list is a list of email address separated by comas (,) which
+   * can be surrounded by space charecters.
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#valid-e-mail-address-list
+   *
+   * @param aValue  the email address list to check.
+   * @result        whether the given string is a valid email address list.
+   */
+  static PRBool IsValidEmailAddressList(const nsAString& aValue);
+
+  /**
+   * This helper method returns true if the aPattern pattern matches aValue.
+   * aPattern should not contain leading and trailing slashes (/).
+   * The pattern has to match the entire value not just a subset.
+   * aDocument must be a valid pointer (not null).
+   *
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#attr-input-pattern
+   *
+   * @param aValue    the string to check.
+   * @param aPattern  the string defining the pattern.
+   * @param aDocument the owner document of the element.
+   * @result          whether the given string is matches the pattern.
+   */
+  static PRBool IsPatternMatching(nsAString& aValue, nsAString& aPattern,
+                                  nsIDocument* aDocument);
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
@@ -297,7 +422,7 @@ protected:
    * Actually set checked and notify the frame of the change.
    * @param aValue the value of checked to set
    */
-  nsresult SetCheckedInternal(PRBool aValue, PRBool aNotify);
+  void SetCheckedInternal(PRBool aValue, PRBool aNotify);
 
   /**
    * Syntax sugar to make it easier to check for checked
@@ -327,6 +452,35 @@ protected:
    */
   PRBool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
 
+  /**
+   * Get the value mode of the element, depending of the type.
+   */
+  ValueModeType GetValueMode() const;
+
+  /**
+   * Get the mutable state of the element.
+   * When the element isn't mutable (immutable), the value or checkedness
+   * should not be changed by the user.
+   *
+   * See: http://dev.w3.org/html5/spec/forms.html#concept-input-mutable
+   */
+  PRBool IsMutable() const;
+
+  /**
+   * Returns if the readonly attribute applies for the current type.
+   */
+  PRBool DoesReadOnlyApply() const;
+
+  /**
+   * Returns if the required attribute applies for the current type.
+   */
+  PRBool DoesRequiredApply() const;
+
+  /**
+   * Returns if the pattern attribute applies for the current type.
+   */
+  PRBool DoesPatternApply() const;
+
   void FreeData();
   nsTextEditorState *GetEditorState() const;
 
@@ -340,6 +494,11 @@ protected:
    * See: http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
    */
   void SanitizeValue(nsAString& aValue);
+
+  /**
+   * Returns whether the placeholder attribute applies for the current type.
+   */
+  bool PlaceholderApplies() const { return IsSingleLineTextControlInternal(PR_FALSE, mType); }
 
   /**
    * Set the current default value to the value of the input element.

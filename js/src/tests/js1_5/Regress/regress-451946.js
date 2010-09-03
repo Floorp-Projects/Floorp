@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-451946.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 451946;
 var summary = 'Do not crash with SELinux execheap protection';

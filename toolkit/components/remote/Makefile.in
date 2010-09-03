@@ -54,6 +54,7 @@ LIBXUL_LIBRARY = 1
 
 XPIDLSRCS = nsIRemoteService.idl
 
+CPPSRCS += nsXRemoteService.cpp
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsGTKRemoteService.cpp
 endif

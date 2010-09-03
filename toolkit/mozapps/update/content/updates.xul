@@ -22,7 +22,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
-#   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -215,7 +215,7 @@
   
   <wizardpage id="errors" pageid="errors" object="gErrorsPage"
               onpageshow="gErrorsPage.onPageShow();">
-    <updateheader id="errorsHeader" label=""/>
+    <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="errorIntro">&error.label;</label>
       <separator/>
@@ -229,11 +229,27 @@
       </hbox>
     </vbox>
   </wizardpage>
+
+  <wizardpage id="errorcertcheck" pageid="errorcertcheck"
+              object="gErrorCertCheckPage"
+              onpageshow="gErrorCertCheckPage.onPageShow();">
+    <updateheader label="&error.title;"/>
+    <vbox class="update-content" flex="1">
+      <label id="errorCertAttrHasUpdateLabel"
+             hidden="true">&errorCertAttrHasUpdate.label;</label>
+      <label id="errorCertCheckNoUpdateLabel"
+             hidden="true">&errorCertAttrNoUpdate.label;</label>
+      <hbox>
+        <label id="errorCertAttrLinkLabel" class="text-link" hidden="true"
+               value="" onclick="openUpdateURL(event);"/>
+      </hbox>
+    </vbox>
+  </wizardpage>
   
   <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
               object="gErrorPatchingPage"
               onpageshow="gErrorPatchingPage.onPageShow();">
-    <updateheader label="&errorpatching.title;"/>
+    <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label>&errorpatching.intro;</label>
     </vbox>

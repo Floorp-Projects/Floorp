@@ -572,7 +572,14 @@ var gCSSProperties = {
 		/* no subproperties */
 		/* auto may or may not be initial */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
-		other_values: [ "1px", "3em" ],
+		other_values: [ "1px", "3em",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"-moz-margin-start": {
@@ -583,7 +590,14 @@ var gCSSProperties = {
 		/* no subproperties */
 		/* auto may or may not be initial */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
-		other_values: [ "1px", "3em" ],
+		other_values: [ "1px", "3em",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"-moz-outline-radius": {
@@ -644,7 +658,14 @@ var gCSSProperties = {
 		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
-		other_values: [ "1px", "3em" ],
+		other_values: [ "1px", "3em",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"-moz-padding-start": {
@@ -654,7 +675,14 @@ var gCSSProperties = {
 		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
-		other_values: [ "1px", "3em" ],
+		other_values: [ "1px", "3em",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"resize": {
@@ -802,6 +830,7 @@ var gCSSProperties = {
 			"-moz-linear-gradient(10px 10px -45deg, red, blue) repeat",
 			"-moz-repeating-radial-gradient(10% bottom, #ffffff, black) scroll no-repeat",
 			"-moz-repeating-linear-gradient(10px 10px -45deg, red, blue) repeat",
+			"-moz-element(#test) lime",
 				/* multiple backgrounds */
 				"url(404.png), url(404.png)",
 				"url(404.png), url(404.png) transparent",
@@ -809,7 +838,7 @@ var gCSSProperties = {
 				"repeat-x, fixed, none",
 				"0% top url(404.png), url(404.png) 0% top",
 				"fixed repeat-y top left url(404.png), repeat-x green",
-				"url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green) black",
+				"url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green), -moz-element(#a) black",
 				/* test cases with clip+origin in the shorthand */
 				"url(404.png) green padding-box",
 				"url(404.png) border-box transparent",
@@ -876,6 +905,10 @@ var gCSSProperties = {
 		"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
 		"none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
 		"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
+		"-moz-element(#a)",
+		"-moz-element(  #a  )",
+		"-moz-element(#a-1)",
+		"-moz-element(#a\\:1)",
 		/* gradient torture test */
 		"-moz-linear-gradient(red, blue)",
 		"-moz-linear-gradient(red, yellow, blue)",
@@ -1031,9 +1064,17 @@ var gCSSProperties = {
 		"-moz-repeating-radial-gradient(top left 99deg, cover, red, blue)",
 		"-moz-repeating-radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
 		"-moz-repeating-radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
-		"-moz-repeating-radial-gradient(45px 399grad, farthest-side circle, red, blue)"
+		"-moz-repeating-radial-gradient(45px 399grad, farthest-side circle, red, blue)",
+		"-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 2, 10, 10, 2)",
+		"-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10%, 50%, 30%, 0%)",
+		"-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10, 50%, 30%, 0)",
 		],
 		invalid_values: [
+			"-moz-element(#a:1)",
+			"-moz-element(a#a)",
+			"-moz-element(#a a)",
+			"-moz-element(#a+a)",
+			"-moz-element(#a()",
 			/* Old syntax */
 			"-moz-linear-gradient(10px 10px, 20px, 30px 30px, 40px, from(blue), to(red))",
 			"-moz-radial-gradient(20px 20px, 10px 10px, from(green), to(#ff00ff))",
@@ -1324,10 +1365,18 @@ var gCSSProperties = {
 		domProp: "bottom",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"caption-side": {
@@ -1369,8 +1418,8 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX needs to be on pseudo-elements */
 		initial_values: [ "normal", "none" ],
-		other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)", "attr(\\32)", "attr(\\2)", "attr(-\\2)", "attr(-\\32)", "counter(\\2)", "counters(\\32, '.')", "counter(-\\32, upper-roman)", "counters(-\\2, '-', lower-greek)", "counter(\\()", "counters(a\\+b, '.')", "counter(\\}, upper-alpha)" ],
-		invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')", "attr(2)", "attr(-2)", "counter(2)", "counters(-2, '.')" ]
+		other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)", "attr(\\32)", "attr(\\2)", "attr(-\\2)", "attr(-\\32)", "counter(\\2)", "counters(\\32, '.')", "counter(-\\32, upper-roman)", "counters(-\\2, '-', lower-greek)", "counter(\\()", "counters(a\\+b, '.')", "counter(\\}, upper-alpha)", "-moz-alt-content" ],
+		invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')", "attr(2)", "attr(-2)", "counter(2)", "counters(-2, '.')", "-moz-alt-content 'foo'", "'foo' -moz-alt-content" ]
 	},
 	"counter-increment": {
 		domProp: "counterIncrement",
@@ -1568,8 +1617,16 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
-		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%" ],
+		/* computed value tests for height test more with display:block */
+		prerequisites: { "display": "block" },
+		other_values: [ "15px", "3em", "15%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"ime-mode": {
@@ -1584,10 +1641,18 @@ var gCSSProperties = {
 		domProp: "left",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"letter-spacing": {
@@ -1687,7 +1752,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"margin-left": {
@@ -1697,7 +1769,14 @@ var gCSSProperties = {
 		/* no subproperties */
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%", ".5px", "+32px", "+.789px", "-.328px", "+0.56px", "-0.974px", "237px", "-289px", "-056px", "1987.45px", "-84.32px" ],
+		other_values: [ "1px", "2em", "5%", ".5px", "+32px", "+.789px", "-.328px", "+0.56px", "-0.974px", "237px", "-289px", "-056px", "1987.45px", "-84.32px",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ]
 	},
 	"margin-right": {
@@ -1707,7 +1786,14 @@ var gCSSProperties = {
 		/* no subproperties */
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"margin-top": {
@@ -1716,7 +1802,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"marker-offset": {
@@ -1741,32 +1834,64 @@ var gCSSProperties = {
 		domProp: "maxHeight",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0" ],
+		other_values: [ "30px", "50%", "0",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto" ]
 	},
 	"min-height": {
 		domProp: "minHeight",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%" ],
+		other_values: [ "30px", "50%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "display": "block" },
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {
@@ -1878,7 +2003,14 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"padding-left": {
@@ -1887,7 +2019,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"padding-right": {
@@ -1896,7 +2035,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"padding-top": {
@@ -1904,7 +2050,14 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
+		other_values: [ "1px", "2em", "5%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: [ ]
 	},
 	"page": {
@@ -2026,10 +2179,18 @@ var gCSSProperties = {
 		domProp: "right",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"size": {
@@ -2131,15 +2292,22 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
-		other_values: [ "2em", "5%", "-10px" ],
+		other_values: [ "2em", "5%", "-10px",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"text-shadow": {
 		domProp: "textShadow",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
 		prerequisites: { "color": "blue" },
+		initial_values: [ "none" ],
 		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px",
 			/* calc() values */
 			"2px 2px -moz-calc(-5px)", /* clamped */
@@ -2167,10 +2335,18 @@ var gCSSProperties = {
 		domProp: "top",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX requires position to be set */
+		/* FIXME: run tests with multiple prerequisites */
+		prerequisites: { "position": "relative" },
 		/* XXX 0 may or may not be equal to auto */
 		initial_values: [ "auto" ],
-		other_values: [ "32px", "-3em", "12%" ],
+		other_values: [ "32px", "-3em", "12%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"-moz-transition": {
@@ -2211,8 +2387,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],
-		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)" ],
-		invalid_values: [ "none", "auto" ]
+		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)" ],
+		invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)" ]
 	},
 	"unicode-bidi": {
 		domProp: "unicodeBidi",
@@ -2227,7 +2403,14 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "baseline" ],
-		other_values: [ "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "15%", "3px", "0.2em", "-5px", "-3%" ],
+		other_values: [ "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "15%", "3px", "0.2em", "-5px", "-3%",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+		],
 		invalid_values: []
 	},
 	"visibility": {
@@ -2278,10 +2461,67 @@ var gCSSProperties = {
 		domProp: "width",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		/* computed value tests for width test more with display:block */
+		prerequisites: { "display": "block" },
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
-		invalid_values: [ "none", "-2px" ]
+		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			/* valid calc() values */
+			"-moz-calc(-2px)",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(50% + 2px)",
+			"-moz-calc( 50% + 2px)",
+			"-moz-calc(50% + 2px )",
+			"-moz-calc( 50% + 2px )",
+			"-moz-calc(50% - -2px)",
+			"-moz-calc(2px - -50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3 *25px)",
+			"-moz-calc(3 * 25px)",
+			"-moz-calc(3* 25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(25px *3)",
+			"-moz-calc(25px* 3)",
+			"-moz-calc(25px * 3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-calc(50% - 3em + 2px)",
+			"-moz-calc(50% - (3em + 2px))",
+			"-moz-calc((50% - 3em) + 2px)",
+			"-moz-min(50%, 30em)",
+			"-moz-calc(min(50%, 30em))",
+			"-moz-max(30em, 2px + 50%)",
+			"-moz-calc(max(30em, 2px + 50%))",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+			"-moz-calc(min(30%, 30em,200px, min(500px ,40em)))",
+			"-moz-min(50%)",
+			"-moz-max(20px)",
+			"-moz-calc(min(2em))",
+			"-moz-calc(max(50%))",
+			"-moz-calc(50px/2)",
+			"-moz-calc(50px/(2 - 1))"
+		],
+		invalid_values: [ "none", "-2px",
+			/* invalid calc() values */
+			"-moz-calc(50%+ 2px)",
+			"-moz-calc(50% +2px)",
+			"-moz-calc(50%+2px)",
+			"-moz-min()",
+			"-moz-calc(min())",
+			"-moz-max()",
+			"-moz-calc(max())",
+			"-moz-calc(50px/(2 - 2))",
+			/* If we ever support division by values, which is
+			 * complicated for the reasons described in
+			 * http://lists.w3.org/Archives/Public/www-style/2010Jan/0007.html
+			 * , we should support all 4 of these as described in
+			 * http://lists.w3.org/Archives/Public/www-style/2009Dec/0296.html
+			 */
+			"-moz-calc((3em / 100%) * 3em)",
+			"-moz-calc(3em / 100% * 3em)",
+			"-moz-calc(3em * (3em / 100%))",
+			"-moz-calc(3em * 3em / 100%)"
+		]
 	},
 	"word-spacing": {
 		domProp: "wordSpacing",

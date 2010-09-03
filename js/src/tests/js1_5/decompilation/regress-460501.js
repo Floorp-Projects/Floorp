@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-460501.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 460501;
 var summary = 'Decompilation of constant folding with && and valueOf, eval';

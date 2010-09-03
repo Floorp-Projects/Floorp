@@ -41,7 +41,7 @@ interface nsIFile;
 interface nsILoginInfo;
 interface nsIPropertyBag;
 
-[scriptable, uuid(e66c97cd-3bcf-4eee-9937-38f650372d77)]
+[scriptable, uuid(32a4f9f1-60a8-4971-b54e-71ad661483ae)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
@@ -284,4 +284,8 @@ interface nsILoginManagerStorage : nsISupports {
     */
    unsigned long countLogins(in AString aHostname, in AString aActionURL,
                              in AString aHttpRealm);
+   /**
+    * True when a master password prompt is being shown.
+    */
+    readonly attribute boolean uiBusy;
 };

@@ -45,7 +45,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=133897
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-96526-003.js';
 printBugNumber(96526);
 printStatus("Just seeing that we don't crash when compiling this script -");
 

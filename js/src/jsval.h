@@ -74,7 +74,7 @@ JS_BEGIN_EXTERN_C
  * nice symbolic type tags, however we can only do this when we can force the
  * underlying type of the enum to be the desired size.
  */
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(__SUNPRO_CC)
 
 #if defined(_MSC_VER)
 # define JS_ENUM_HEADER(id, type)              enum id : type
@@ -150,7 +150,7 @@ JS_STATIC_ASSERT(sizeof(JSValueTag) == sizeof(uint32));
 
 JS_ENUM_HEADER(JSValueShiftedTag, uint64)
 {
-    JSVAL_SHIFTED_TAG_MAX_DOUBLE   = (((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_MAX_DOUBLE   = ((((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT) | 0xFFFFFFFF),
     JSVAL_SHIFTED_TAG_INT32        = (((uint64)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_UNDEFINED    = (((uint64)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_STRING       = (((uint64)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT),
@@ -177,8 +177,6 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_OBJECT            ((uint8)0x07)
 #define JSVAL_TYPE_NONFUNOBJ         ((uint8)0x57)
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0x67)
-#define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
-#define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
 #define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_BOXED             ((uint8)0x99)
@@ -209,7 +207,7 @@ typedef uint32 JSValueTag;
 #define JSVAL_TAG_OBJECT             (uint32)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT)
 
 typedef uint64 JSValueShiftedTag;
-#define JSVAL_SHIFTED_TAG_MAX_DOUBLE (((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_MAX_DOUBLE ((((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT) | 0xFFFFFFFF)
 #define JSVAL_SHIFTED_TAG_INT32      (((uint64)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_UNDEFINED  (((uint64)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_STRING     (((uint64)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT)
@@ -219,7 +217,7 @@ typedef uint64 JSValueShiftedTag;
 #define JSVAL_SHIFTED_TAG_OBJECT     (((uint64)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
 
 #endif  /* JS_BITS_PER_WORD */
-#endif  /* defined(__cplusplus) */
+#endif  /* defined(__cplusplus) && !defined(__SUNPRO_CC) */
 
 #define JSVAL_LOWER_INCL_TYPE_OF_OBJ_OR_NULL_SET        JSVAL_TYPE_NULL
 #define JSVAL_UPPER_EXCL_TYPE_OF_PRIMITIVE_SET          JSVAL_TYPE_OBJECT
@@ -260,8 +258,10 @@ typedef enum JSWhyMagic
                                   * enumerated like a native object. */
     JS_NO_ITER_VALUE,            /* there is not a pending iterator value */
     JS_GENERATOR_CLOSING,        /* exception value thrown when closing a generator */
+    JS_FAST_CONSTRUCTOR,         /* 'this' value for fast natives invoked with 'new' */
     JS_NO_CONSTANT,              /* compiler sentinel value */
     JS_THIS_POISON,              /* used in debug builds to catch tracing errors */
+    JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
@@ -291,7 +291,7 @@ typedef union jsval_layout
 typedef union jsval_layout
 {
     uint64 asBits;
-#ifndef _MSC_VER
+#ifndef _WIN64
     /* MSVC does not pack these correctly :-( */
     struct {
         uint64             payload47 : 47;
@@ -698,6 +698,17 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 }
 
 #endif
+
+static JS_ALWAYS_INLINE double
+JS_CANONICALIZE_NAN(double d)
+{
+    if (JS_UNLIKELY(d != d)) {
+        jsval_layout l;
+        l.asBits = 0x7FF8000000000000LL;
+        return l.asDouble;
+    }
+    return d;
+}
 
 /* See JS_USE_JSVAL_JSID_STRUCT_TYPES comment in jsapi.h. */
 #if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)

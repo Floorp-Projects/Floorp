@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-464418.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 464418;
 var summary = 'Do not assert: fp->slots + fp->script->nfixed + ' +

@@ -271,7 +271,7 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
     CommonLayerAttributes& common = attrs.common();
     common.visibleRegion() = mutant->GetVisibleRegion();
     common.transform() = mutant->GetTransform();
-    common.isOpaqueContent() = mutant->IsOpaqueContent();
+    common.contentFlags() = mutant->GetContentFlags();
     common.opacity() = mutant->GetOpacity();
     common.useClipRect() = !!mutant->GetClipRect();
     common.clipRect() = (common.useClipRect() ?

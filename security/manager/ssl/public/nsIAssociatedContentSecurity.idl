@@ -46,11 +46,12 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(8DB92DDE-799F-4d33-80F7-459CAC800DC9)]
+[scriptable, uuid(6AC9A699-D12A-45dc-9B02-9E5E0DD831B9)]
 interface nsIAssociatedContentSecurity : nsISupports
 {
   attribute long countSubRequestsHighSecurity;
   attribute long countSubRequestsLowSecurity;
   attribute long countSubRequestsBrokenSecurity;
   attribute long countSubRequestsNoSecurity;
+  void flush();
 };

@@ -4,7 +4,7 @@
       package="org.mozilla.@MOZ_APP_NAME@"
       android:installLocation="auto"
       android:versionCode="1"
-      android:versionName="1.9.3"
+      android:versionName="@MOZ_APP_VERSION@"
       android:sharedUserId="org.mozilla.sharedID">
     <uses-sdk android:minSdkVersion="5"
               android:targetSdkVersion="5"/>
@@ -14,7 +14,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> 
 
     <application android:label="@MOZ_APP_DISPLAYNAME@"
-		 android:icon="@drawable/icon">
+		 android:icon="@drawable/icon"
+		 android:debuggable="true">
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|orientation|mcc|mnc"
@@ -60,10 +61,20 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-	<receiver android:enabled="true" android:name="Restarter">
-	  <intent-filter>
+
+        <activity android:name="NotificationHandler"
+                  android:label="@MOZ_APP_DISPLAYNAME@ Notification"
+                  android:theme="@android:style/Theme.NoTitleBar">
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.ACTION_ALERT_CLICK" />
+                <action android:name="org.mozilla.gecko.ACTION_ALERT_CLEAR" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:enabled="true" android:name="Restarter">
+          <intent-filter>
             <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" />
-	  </intent-filter>
-	</receiver>
+          </intent-filter>
+        </receiver>
     </application>
 </manifest> 

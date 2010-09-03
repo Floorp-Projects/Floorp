@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-451974-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 451974;
 var summary = 'TM: loops with anon functions should not be slower with jit enabled';

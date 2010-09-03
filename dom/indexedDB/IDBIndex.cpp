@@ -319,12 +319,14 @@ IDBIndex::Get(nsIVariant* aKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  IDBTransaction* transaction = mObjectStore->Transaction();
+
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetHelper> helper =
-    new GetHelper(mObjectStore->Transaction(), request, key, mId, mUnique,
-                  mAutoIncrement);
+    new GetHelper(transaction, request, key, mId, mUnique, mAutoIncrement);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -346,11 +348,14 @@ IDBIndex::GetObject(nsIVariant* aKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  IDBTransaction* transaction = mObjectStore->Transaction();
+
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetObjectHelper> helper =
-    new GetObjectHelper(mObjectStore->Transaction(), request, key, mId, mUnique,
+    new GetObjectHelper(transaction, request, key, mId, mUnique,
                         mAutoIncrement);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -379,12 +384,15 @@ IDBIndex::GetAll(nsIVariant* aKey,
     aLimit = PR_UINT32_MAX;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  IDBTransaction* transaction = mObjectStore->Transaction();
+
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetAllHelper> helper =
-    new GetAllHelper(mObjectStore->Transaction(), request, key, mId, mUnique,
-                     mAutoIncrement, aLimit);
+    new GetAllHelper(transaction, request, key, mId, mUnique, mAutoIncrement,
+                     aLimit);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -412,12 +420,15 @@ IDBIndex::GetAllObjects(nsIVariant* aKey,
     aLimit = PR_UINT32_MAX;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  IDBTransaction* transaction = mObjectStore->Transaction();
+
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetAllObjectsHelper> helper =
-    new GetAllObjectsHelper(mObjectStore->Transaction(), request, key, mId,
-                            mUnique, mAutoIncrement, aLimit);
+    new GetAllObjectsHelper(transaction, request, key, mId, mUnique,
+                            mAutoIncrement, aLimit);
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -477,13 +488,16 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  IDBTransaction* transaction = mObjectStore->Transaction();
+
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<OpenCursorHelper> helper =
-    new OpenCursorHelper(mObjectStore->Transaction(), request, this, mId,
-                         mUnique, mAutoIncrement, leftKey, rightKey,
-                         keyRangeFlags, aDirection, aPreload);
+    new OpenCursorHelper(transaction, request, this, mId, mUnique,
+                         mAutoIncrement, leftKey, rightKey, keyRangeFlags,
+                         aDirection, aPreload);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -544,13 +558,16 @@ IDBIndex::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  IDBTransaction* transaction = mObjectStore->Transaction();
+
+  nsRefPtr<IDBRequest> request =
+    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<OpenObjectCursorHelper> helper =
-    new OpenObjectCursorHelper(mObjectStore->Transaction(), request, this, mId,
-                               mUnique, mAutoIncrement, leftKey, rightKey,
-                               keyRangeFlags, aDirection, aPreload);
+    new OpenObjectCursorHelper(transaction, request, this, mId, mUnique,
+                               mAutoIncrement, leftKey, rightKey, keyRangeFlags,
+                               aDirection, aPreload);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -708,7 +725,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (mAutoIncrement) {
     keyColumn.AssignLiteral("ai_object_data_id");
     if (mUnique) {
-      tableName.AssignLiteral("unique_ai_index_data");
+      tableName.AssignLiteral("ai_unique_index_data");
     }
     else {
       tableName.AssignLiteral("ai_index_data");
@@ -957,7 +974,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (mAutoIncrement) {
     keyColumn.AssignLiteral("ai_object_data_id");
     if (mUnique) {
-      table.AssignLiteral("unique_ai_index_data");
+      table.AssignLiteral("ai_unique_index_data");
     }
     else {
       table.AssignLiteral("ai_index_data");
@@ -1158,11 +1175,13 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCString indexTable;
   nsCString objectTable;
+  nsCString objectDataId;
 
   if (mAutoIncrement) {
     objectTable.AssignLiteral("ai_object_data");
+    objectDataId.AssignLiteral("ai_object_data_id");
     if (mUnique) {
-      indexTable.AssignLiteral("unique_ai_index_data");
+      indexTable.AssignLiteral("ai_unique_index_data");
     }
     else {
       indexTable.AssignLiteral("ai_index_data");
@@ -1170,6 +1189,7 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
   else {
     objectTable.AssignLiteral("object_data");
+    objectDataId.AssignLiteral("object_data_id");
     if (mUnique) {
       indexTable.AssignLiteral("unique_index_data");
     }
@@ -1248,7 +1268,8 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                     NS_LITERAL_CSTRING(" FROM ") + objectTable +
                     NS_LITERAL_CSTRING(" INNER JOIN ") + indexTable +
                     NS_LITERAL_CSTRING(" ON ") + indexTable +
-                    NS_LITERAL_CSTRING(".object_data_id = ") + objectTable +
+                    NS_LITERAL_CSTRING(".") + objectDataId +
+                    NS_LITERAL_CSTRING(" = ") + objectTable +
                     NS_LITERAL_CSTRING(".id WHERE ") + indexId +
                     NS_LITERAL_CSTRING(" = :") + indexId + keyRangeClause +
                     groupClause + NS_LITERAL_CSTRING(" ORDER BY ") +

@@ -1,8 +1,0 @@
-coverage.jar:
-% content coverage %content/
-  content/coverage.xul (chrome/content/coverage.xul)
-  content/coverage.js (chrome/content/coverage.js)
-  content/coverage-menu.js (chrome/content/coverage-menu.js)
-  content/coverage-prefs.js (chrome/content/coverage-prefs.js)
-  content/neterror-coverage.xul (chrome/content/neterror-coverage.xul)
-  content/coverage-neterror.js (chrome/content/coverage-neterror.js)

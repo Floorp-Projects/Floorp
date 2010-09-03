@@ -303,6 +303,41 @@ public:
 
 #endif /* !defined(DEBUG) */
 
+namespace js {
+
+template <class T>
+JS_ALWAYS_INLINE static void
+PodZero(T *t)
+{
+    memset(t, 0, sizeof(T));
+}
+
+template <class T>
+JS_ALWAYS_INLINE static void
+PodZero(T *t, size_t nelem)
+{
+    memset(t, 0, nelem * sizeof(T));
+}
+
+/*
+ * Arrays implicitly convert to pointers to their first element, which is
+ * dangerous when combined with the above PodZero definitions. Adding an
+ * overload for arrays is ambiguous, so we need another identifier. The
+ * ambiguous overload is left to catch mistaken uses of PodZero; if you get a
+ * compile error involving PodZero and array types, use PodArrayZero instead.
+ */
+template <class T, size_t N> static void PodZero(T (&)[N]);          /* undefined */
+template <class T, size_t N> static void PodZero(T (&)[N], size_t);  /* undefined */
+
+template <class T, size_t N>
+JS_ALWAYS_INLINE static void
+PodArrayZero(T (&t)[N])
+{
+    memset(t, 0, N * sizeof(T));
+}
+
+} /* namespace js */
+
 #endif /* defined(__cplusplus) */
 
 #endif /* jsutil_h___ */

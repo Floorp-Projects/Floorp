@@ -1,5 +1,5 @@
 .searchbar-textbox {
-  -moz-border-radius: 100%;
+  -moz-border-radius: 10000px;
 }
 
 .searchbar-engine-button {
@@ -17,6 +17,11 @@
 
 .searchbar-engine-button[addengines="true"]:-moz-locale-dir(rtl) {
   background-position: left center;
+}
+
+.searchbar-popup {
+  margin-top: 4px;
+  -moz-margin-start: 3px;
 }
 
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {

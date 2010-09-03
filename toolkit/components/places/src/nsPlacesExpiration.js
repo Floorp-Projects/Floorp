@@ -80,7 +80,8 @@ const nsPlacesExpirationFactory = {
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
 
-const TOPIC_SHUTDOWN = "places-shutdown";
+// Last expiration step should run before the final sync.
+const TOPIC_SHUTDOWN = "places-will-close-connection";
 const TOPIC_PREF_CHANGED = "nsPref:changed";
 const TOPIC_DEBUG_START_EXPIRATION = "places-debug-start-expiration";
 const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
@@ -522,24 +523,16 @@ nsPlacesExpiration.prototype = {
         this._timer = null;
       }
 
-      // We must be sure to run after all other shutdown observers (but DBFlush)
-      // thus we enqueue the calls.
-      let self = this;
-      Services.tm.mainThread.dispatch({
-        run: function() {
-          // If we ran a clearHistory recently, or database id not dirty, we don't want to spend
-          // time expiring on shutdown.  In such a case just expire session annotations.
-          let hasRecentClearHistory =
-            Date.now() - self._lastClearHistoryTime <
-              SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS * 1000;
-          let action = hasRecentClearHistory ||
-                       self.status != STATUS.DIRTY ? ACTION.CLEAN_SHUTDOWN
-                                                   : ACTION.SHUTDOWN;
-          self._expireWithActionAndLimit(action, LIMIT.LARGE);
-
-          self._finalizeInternalStatements();
-        }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      // If we ran a clearHistory recently, or database id not dirty, we don't want to spend
+      // time expiring on shutdown.  In such a case just expire session annotations.
+      let hasRecentClearHistory =
+        Date.now() - this._lastClearHistoryTime <
+          SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS * 1000;
+      let action = hasRecentClearHistory ||
+                   this.status != STATUS.DIRTY ? ACTION.CLEAN_SHUTDOWN
+                                               : ACTION.SHUTDOWN;
+      this._expireWithActionAndLimit(action, LIMIT.LARGE);
+      this._finalizeInternalStatements();
     }
     else if (aTopic == TOPIC_PREF_CHANGED) {
       this._loadPrefs();

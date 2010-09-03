@@ -424,19 +424,22 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (PresContext()->IsScreen()) {
     rv = set.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, ::PaintPrintPreviewBackground, "PrintPreviewBackground",
+        nsDisplayGeneric(aBuilder, this, ::PaintPrintPreviewBackground,
+                         "PrintPreviewBackground",
                          nsDisplayItem::TYPE_PRINT_PREVIEW_BACKGROUND));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   rv = set.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, ::PaintPageContent, "PageContent",
+        nsDisplayGeneric(aBuilder, this, ::PaintPageContent,
+                         "PageContent",
                          nsDisplayItem::TYPE_PAGE_CONTENT));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (PresContext()->IsRootPaginatedDocument()) {
     rv = set.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, ::PaintHeaderFooter, "HeaderFooter",
+        nsDisplayGeneric(aBuilder, this, ::PaintHeaderFooter,
+                         "HeaderFooter",
                          nsDisplayItem::TYPE_HEADER_FOOTER));
     NS_ENSURE_SUCCESS(rv, rv);
   }

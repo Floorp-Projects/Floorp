@@ -71,6 +71,7 @@ IPDLTESTS = \
   TestRPCErrorCleanup \
   TestRPCRaces \
   TestRPCShutdownRace \
+  TestRacyReentry  \
   TestRacyRPCReplies  \
   TestSanity  \
   TestSelfManageRoot \
@@ -78,6 +79,7 @@ IPDLTESTS = \
   TestShutdown \
   TestStackHooks \
   TestSyncWakeup \
+  TestSyncHang \
   $(NULL)
 
 ifeq ($(OS_ARCH),Linux)

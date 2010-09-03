@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-444608.js';
 
 var summary = '13.3 QNames - call constructors directly';
 var BUGNUMBER = 444608;

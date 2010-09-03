@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349605.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349605;
 var summary = 'decompilation of let inside |for| statements';

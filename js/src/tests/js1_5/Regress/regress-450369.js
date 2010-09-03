@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-450369.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 450369;
 var summary = 'Crash with JIT and json2.js';

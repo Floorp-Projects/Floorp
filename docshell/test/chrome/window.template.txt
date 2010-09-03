@@ -9,7 +9,7 @@
         title="bug {BUGNUMBER} test">
 
   <script type="application/javascript"
-  src="chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  src="docshell_helpers.js">
   </script>
 
   <script type="application/javascript"><![CDATA[

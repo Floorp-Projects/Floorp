@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355090.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355090;
 var summary = 'Iterator(8) is a function';

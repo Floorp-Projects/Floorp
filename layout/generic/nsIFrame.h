@@ -235,10 +235,7 @@ typedef PRUint64 nsFrameState;
 // to its coordinate system (e.g. CSS transform, SVG foreignObject).
 // This is used primarily in GetTransformMatrix to optimize for the
 // common case.
-// ALSO, if this bit is set, the frame's first-continuation may
-// have an associated nsSVGRenderingObserverList.
-#define  NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS \
-                                                    NS_FRAME_STATE_BIT(16)
+#define  NS_FRAME_MAY_BE_TRANSFORMED                NS_FRAME_STATE_BIT(16)
 
 #ifdef IBMBIDI
 // If this bit is set, the frame itself is a bidi continuation,
@@ -253,8 +250,24 @@ typedef PRUint64 nsFrameState;
 // frame instead of the root frame.
 #define NS_FRAME_REFLOW_ROOT                        NS_FRAME_STATE_BIT(19)
 
-// Bits 20-31 of the frame state are reserved for implementations.
-#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xFFF00000)
+// Bits 20-31 and 60-63 of the frame state are reserved for implementations.
+#define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xF0000000FFF00000)
+
+// This bit is set on floats whose parent does not contain their
+// placeholder.  This can happen for two reasons:  (1) the float was
+// split, and this piece is the continuation, or (2) the entire float
+// didn't fit on the page.
+#define NS_FRAME_IS_PUSHED_FLOAT                    NS_FRAME_STATE_BIT(32)
+
+// This bit acts as a loop flag for recursive paint server drawing.
+#define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
+
+// Frame or one of its (cross-doc) descendants may have the
+// NS_FRAME_HAS_CONTAINER_LAYER bit.
+#define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
+
+// Frame's overflow area was clipped by the 'clip' property.
+#define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
 
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
@@ -415,9 +428,11 @@ typedef PRUint32 nsReflowStatus;
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
    NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
 
-// The frame (not counting a continuation) did not fit in the available height and 
-// wasn't at the top of a page. If it was at the top of a page, then it is not 
-// possible to reflow it again with more height, so we don't set it in that case.
+// A frame is "truncated" if the part of the frame before the first
+// possible break point was unable to fit in the available vertical
+// space.  Therefore, the entire frame should be moved to the next page.
+// A frame that begins at the top of the page must never be "truncated".
+// Doing so would likely cause an infinite loop.
 #define NS_FRAME_TRUNCATED  0x0010
 #define NS_FRAME_IS_TRUNCATED(status) \
   (0 != ((status) & NS_FRAME_TRUNCATED))
@@ -739,10 +754,6 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext) = 0;
 
-  // returns GetStyleBorder()->mBoxShadow unless this frame is using
-  // -moz-appearance and is not chrome
-  nsCSSShadowArray* GetEffectiveBoxShadows();
-
   /**
    * @return PR_FALSE if this frame definitely has no borders at all
    */                 
@@ -752,7 +763,7 @@ public:
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }
-  NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
+  virtual void SetParent(nsIFrame* aParent) = 0;
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
@@ -1959,10 +1970,21 @@ public:
   void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
 
   /**
-   * Invalidate the overflow rect of this frame
+   * Invalidate the entire frame subtree for this frame. Invalidates this
+   * frame's overflow rect, and also ensures that all ThebesLayer children
+   * of ContainerLayers associated with frames in this subtree are
+   * completely invalidated.
+   */
+  void InvalidateFrameSubtree();
+
+  /**
+   * Invalidate the overflow area for this frame. Invalidates this
+   * frame's overflow rect. Does not necessarily cause ThebesLayers for
+   * descendant frames to be repainted; only this frame can be relied on
+   * to be repainted.
    */
   void InvalidateOverflowRect();
-  
+
   /**
    * Computes a rect that encompasses everything that might be painted by
    * this frame.  This includes this frame, all its descendent frames, this
@@ -2397,7 +2419,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   PRBool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   PRBool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
+  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   virtual PRBool GetMouseThrough() const = 0;
 
@@ -2499,13 +2521,6 @@ protected:
    * comboboxes, menupoups) this function will invalidate the window.
    */
   void InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags);
-
-  /**
-   * Gets the overflow area for any properties that are common to all types of frames
-   * e.g. outlines.
-   */
-  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize,
-                               PRBool* aHasOutlineOrEffects);
 
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
@@ -2627,6 +2642,11 @@ class nsWeakFrame {
 public:
   nsWeakFrame() : mPrev(nsnull), mFrame(nsnull) { }
 
+  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nsnull), mFrame(nsnull)
+  {
+    Init(aOther.GetFrame());
+  }
+
   nsWeakFrame(nsIFrame* aFrame) : mPrev(nsnull), mFrame(nsnull)
   {
     Init(aFrame);
@@ -2662,7 +2682,7 @@ public:
 
   PRBool IsAlive() { return !!mFrame; }
 
-  nsIFrame* GetFrame() { return mFrame; }
+  nsIFrame* GetFrame() const { return mFrame; }
 
   nsWeakFrame* GetPreviousWeakFrame() { return mPrev; }
 

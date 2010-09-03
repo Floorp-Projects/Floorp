@@ -116,6 +116,7 @@ not yet time to display the next frame.
 #include "nsThreadUtils.h"
 #include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
+#include "nsAudioAvailableEventManager.h"
 #include "nsHTMLMediaElement.h"
 #include "mozilla/Monitor.h"
 
@@ -234,6 +235,11 @@ public:
   // Accessed on state machine, audio, main, and AV thread. 
   State mState;
 
+  nsresult GetBuffered(nsTimeRanges* aBuffered) {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    return mReader->GetBuffered(aBuffered, mStartTime);
+  }
+
 protected:
 
   // Returns PR_TRUE when there's decoded audio waiting to play.
@@ -280,6 +286,21 @@ protected:
   // The decoder monitor must be held with exactly one lock count. Called
   // on the state machine thread.
   void AdvanceFrame();
+
+  // Pushes up to aSamples samples of silence onto the audio hardware. Returns
+  // the number of samples acutally pushed to the hardware. This pushes up to
+  // 32KB worth of samples to the hardware before returning, so must be called
+  // in a loop to ensure that the desired number of samples are pushed to the
+  // hardware. This ensures that the playback position advances smoothly, and
+  // guarantees that we don't try to allocate an impossibly large chunk of
+  // memory in order to play back silence. Called on the audio thread.
+  PRUint32 PlaySilence(PRUint32 aSamples, PRUint32 aChannels,
+                       PRUint64 aSampleOffset);
+
+  // Pops an audio chunk from the front of the audio queue, and pushes its
+  // sound data to the audio hardware. MozAudioAvailable sample data is also
+  // queued here. Called on the audio thread.
+  PRUint32 PlayFromAudioQueue(PRUint64 aSampleOffset, PRUint32 aChannels);
 
   // Stops the decode threads. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
@@ -436,7 +457,12 @@ protected:
   // PR_FALSE while decode threads should be running. Accessed on audio, 
   // state machine and decode threads. Syncrhonised by decoder monitor.
   PRPackedBool mStopDecodeThreads;
-};
 
+private:
+  // Manager for queuing and dispatching MozAudioAvailable events.  The
+  // event manager is accessed from the state machine and audio threads,
+  // and takes care of synchronizing access to its internal queue.
+  nsAudioAvailableEventManager mEventManager;
+};
 
 #endif

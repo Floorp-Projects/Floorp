@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'Function_object.js';
 
 /**
    Filename:     Function_object.js

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-344120.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 344120;
 var summary = 'function to source with numeric labels';

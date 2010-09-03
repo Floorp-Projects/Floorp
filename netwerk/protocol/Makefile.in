@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 PARALLEL_DIRS = \
   about \
   data \
+  device \
   file \
   ftp \
   http \

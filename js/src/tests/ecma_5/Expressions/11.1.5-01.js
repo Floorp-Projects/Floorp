@@ -1,7 +1,6 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
-var gTestfile = '11.1.5-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 520696;
 var summary =
@@ -19,8 +18,8 @@ assertEq("get" in Object.getOwnPropertyDescriptor(o, "a b c"), true);
 o = eval('({ get "a b c"() { return 17; } })');
 assertEq("get" in Object.getOwnPropertyDescriptor(o, "a b c"), true);
 
-var f = eval("(function literalInside() { return { set 'c d e'() { } }; })");
-f = function literalInside() { return { set 'c d e'() { } }; };
+var f = eval("(function literalInside() { return { set 'c d e'(q) { } }; })");
+f = function literalInside() { return { set 'c d e'(q) { } }; };
 
 function checkO()
 {

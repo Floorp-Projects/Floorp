@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349484.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349484;
 var summary = 'Incorrect decompilation of import/export statements';

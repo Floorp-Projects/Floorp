@@ -47,7 +47,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-181834.js';
 var UBound = 0;
 var BUGNUMBER = 181834;
 var summary = 'Testing scope';

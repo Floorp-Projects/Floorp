@@ -157,6 +157,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsFocusManager* nsFocusManager::sInstance = nsnull;
+PRBool nsFocusManager::sMouseFocusesFormControl = PR_FALSE;
 
 nsFocusManager::nsFocusManager()
 { }
@@ -168,6 +169,7 @@ nsFocusManager::~nsFocusManager()
   if (prefBranch) {
     prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
     prefBranch->RemoveObserver("accessibility.tabfocus_applies_to_xul", this);
+    prefBranch->RemoveObserver("accessibility.mouse_focuses_formcontrol", this);
   }
 }
 
@@ -184,9 +186,13 @@ nsFocusManager::Init()
     nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
                                 nsIContent::sTabFocusModelAppliesToXUL);
 
+  sMouseFocusesFormControl =
+    nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
+
   nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
   prefBranch->AddObserver("accessibility.browsewithcaret", fm, PR_TRUE);
   prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", fm, PR_TRUE);
+  prefBranch->AddObserver("accessibility.mouse_focuses_formcontrol", fm, PR_TRUE);
 
   return NS_OK;
 }
@@ -212,6 +218,10 @@ nsFocusManager::Observe(nsISupports *aSubject,
       nsIContent::sTabFocusModelAppliesToXUL =
         nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
                                     nsIContent::sTabFocusModelAppliesToXUL);
+    }
+    else if (data.EqualsLiteral("accessibility.mouse_focuses_formcontrol")) {
+      sMouseFocusesFormControl =
+        nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
     }
   }
 
@@ -1592,11 +1602,16 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
          aIsNewDocument, aFocusChanged, aWindowRaised, aFlags);
 #endif
 
-  // if this is a new document, update the parent chain of frames so that
-  // focus can be traversed from the top level down to the newly focused
-  // window.
-  if (aIsNewDocument)
+  if (aIsNewDocument) {
+    // if this is a new document, update the parent chain of frames so that
+    // focus can be traversed from the top level down to the newly focused
+    // window.
     AdjustWindowFocus(aWindow, PR_FALSE);
+
+    // Update the window touch registration to reflect the state of
+    // the new document that got focus
+    aWindow->UpdateTouchState();
+  }
 
   // indicate that the window has taken focus.
   if (aWindow->TakeFocus(PR_TRUE, focusMethod))

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-380237-04.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 380237;
 var summary = 'Generator expressions parenthesization test';

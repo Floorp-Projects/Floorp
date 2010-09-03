@@ -20,12 +20,15 @@ toolkit.jar:
 +  skin/classic/global/printPageSetup.css
 +  skin/classic/global/printPreview.css
 +  skin/classic/global/radio.css
++  skin/classic/global/scrollbox.css
 +  skin/classic/global/splitter.css
 +  skin/classic/global/tabbox.css
 +  skin/classic/global/textbox.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/tree.css
++  skin/classic/global/webConsole.css
++  skin/classic/global/webConsole_networkPanel.css
 +  skin/classic/global/alerts/alert.css                        (alerts/alert.css)
 +  skin/classic/global/console/console.css                     (console/console.css)
 +  skin/classic/global/console/console.png                     (console/console.png)

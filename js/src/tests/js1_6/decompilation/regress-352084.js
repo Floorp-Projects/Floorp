@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352084.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352084;
 var summary = 'decompilation of comma expression lists';

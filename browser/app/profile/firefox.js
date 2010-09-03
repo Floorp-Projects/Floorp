@@ -56,8 +56,10 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
 
-// Preferences for the Get Add-ons pane
+// Preferences for the Addon Repository
+pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
+pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/guid:%IDS%");
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%");
 
 // Preferences for AMO integration
@@ -85,6 +87,41 @@ pref("app.update.timer", 600000);
 // The interval to check for updates (app.update.interval) is defined in
 // firefox-branding.js
 
+// Enables some extra Application Update Logging (can reduce performance)
+pref("app.update.log", false);
+
+// When |app.update.cert.requireBuiltIn| is true or not specified the
+// final certificate and all certificates the connection is redirected to before
+// the final certificate for the url specified in the |app.update.url|
+// preference must be built-in.
+pref("app.update.cert.requireBuiltIn", true);
+
+// When |app.update.cert.checkAttributes| is true or not specified the
+// certificate attributes specified in the |app.update.certs.| preference branch
+// are checked against the certificate for the url specified by the
+// |app.update.url| preference.
+pref("app.update.cert.checkAttributes", true);
+
+// The number of certificate attribute check failures to allow for background
+// update checks before notifying the user of the failure. User initiated update
+// checks always notify the user of the certificate attribute check failure.
+pref("app.update.cert.maxErrors", 5);
+
+// The |app.update.certs.| preference branch contains branches that are
+// sequentially numbered starting at 1 that contain attribute name / value
+// pairs for the certificate used by the server that hosts the update xml file
+// as specified in the |app.update.url| preference. When these preferences are
+// present the following conditions apply for a successful update check:
+// 1. the uri scheme must be https
+// 2. the preference name must exist as an attribute name on the certificate and
+//    the value for the name must be the same as the value for the attribute name
+//    on the certificate.
+// If these conditions aren't met it will be treated the same as when there is
+// no update available. This validation will not be performed when using the
+// |app.update.url.override| preference for update checking.
+pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
+pref("app.update.certs.1.commonName", "*.mozilla.org");
+
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
 
@@ -100,7 +137,7 @@ pref("app.update.auto", true);
 // 1                  download no prompt  download no prompt if no incompatibilities
 // 2                  download no prompt  prompt
 //
-// See chart in nsUpdateService.js.in for more details
+// See chart in nsUpdateService.js source for more details
 //
 pref("app.update.mode", 1);
 
@@ -165,11 +202,12 @@ pref("xpinstall.whitelist.add.36", "getpersonas.com");
 pref("lightweightThemes.update.enabled", true);
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "chrome://browser-region/locale/region.properties");
+// Override the default keyword.URL. Empty value means
+// "use the search service's default engine"
+pref("keyword.URL", "");
 
 pref("general.useragent.locale", "@AB_CD@");
 pref("general.skins.selectedSkin", "classic/1.0");
-pref("general.useragent.extra.firefox", "@APP_UA_NAME@/@APP_VERSION@");
 
 pref("general.smoothScroll", false);
 #ifdef UNIX_BUT_NOT_MAC
@@ -325,6 +363,7 @@ pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabClipWidth", 140);
+pref("browser.tabs.animate", true);
 
 // Where to show tab close buttons:
 // 0  on active tab only
@@ -904,7 +943,7 @@ pref("dom.ipc.plugins.enabled", false);
 #ifndef WINCE
 pref("browser.taskbar.previews.enable", true);
 pref("browser.taskbar.previews.max", 20);
-pref("browser.taskbar.previews.cachetime", 20);
+pref("browser.taskbar.previews.cachetime", 5);
 pref("browser.taskbar.lists.enabled", true);
 pref("browser.taskbar.lists.frequent.enabled", true);
 pref("browser.taskbar.lists.recent.enabled", false);
@@ -912,4 +951,83 @@ pref("browser.taskbar.lists.maxListItemCount", 7);
 pref("browser.taskbar.lists.tasks.enabled", true);
 pref("browser.taskbar.lists.refreshInSeconds", 30);
 #endif
+#endif
+
+#ifdef MOZ_SERVICES_SYNC
+// The sync engines to use.
+pref("services.sync.registerEngines", "Bookmarks,Form,History,Password,Prefs,Tab");
+// Preferences to be synced by default
+pref("services.sync.prefs.sync.accessibility.blockautorefresh", true);
+pref("services.sync.prefs.sync.accessibility.browsewithcaret", true);
+pref("services.sync.prefs.sync.accessibility.typeaheadfind", true);
+pref("services.sync.prefs.sync.accessibility.typeaheadfind.linksonly", true);
+pref("services.sync.prefs.sync.app.update.mode", true);
+pref("services.sync.prefs.sync.browser.download.manager.closeWhenDone", true);
+pref("services.sync.prefs.sync.browser.download.manager.retention", true);
+pref("services.sync.prefs.sync.browser.download.manager.scanWhenDone", true);
+pref("services.sync.prefs.sync.browser.download.manager.showWhenStarting", true);
+pref("services.sync.prefs.sync.browser.formfill.enable", true);
+pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
+pref("services.sync.prefs.sync.browser.offline-apps.notify", true);
+pref("services.sync.prefs.sync.browser.safebrowsing.enabled", true);
+pref("services.sync.prefs.sync.browser.safebrowsing.malware.enabled", true);
+pref("services.sync.prefs.sync.browser.search.selectedEngine", true);
+pref("services.sync.prefs.sync.browser.search.update", true);
+pref("services.sync.prefs.sync.browser.startup.homepage", true);
+pref("services.sync.prefs.sync.browser.startup.page", true);
+pref("services.sync.prefs.sync.browser.tabs.autoHide", true);
+pref("services.sync.prefs.sync.browser.tabs.closeButtons", true);
+pref("services.sync.prefs.sync.browser.tabs.loadInBackground", true);
+pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
+pref("services.sync.prefs.sync.browser.tabs.warnOnOpen", true);
+pref("services.sync.prefs.sync.browser.urlbar.autocomplete.enabled", true);
+pref("services.sync.prefs.sync.browser.urlbar.autoFill", true);
+pref("services.sync.prefs.sync.browser.urlbar.default.behavior", true);
+pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);
+pref("services.sync.prefs.sync.dom.disable_open_during_load", true);
+pref("services.sync.prefs.sync.dom.disable_window_flip", true);
+pref("services.sync.prefs.sync.dom.disable_window_move_resize", true);
+pref("services.sync.prefs.sync.dom.disable_window_open_feature.status", true);
+pref("services.sync.prefs.sync.dom.disable_window_status_change", true);
+pref("services.sync.prefs.sync.dom.event.contextmenu.enabled", true);
+pref("services.sync.prefs.sync.extensions.personas.current", true);
+pref("services.sync.prefs.sync.extensions.update.enabled", true);
+pref("services.sync.prefs.sync.general.autoScroll", true);
+pref("services.sync.prefs.sync.general.smoothScroll", true);
+pref("services.sync.prefs.sync.intl.accept_languages", true);
+pref("services.sync.prefs.sync.javascript.enabled", true);
+pref("services.sync.prefs.sync.layout.spellcheckDefault", true);
+pref("services.sync.prefs.sync.lightweightThemes.isThemeSelected", true);
+pref("services.sync.prefs.sync.lightweightThemes.usedThemes", true);
+pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
+pref("services.sync.prefs.sync.network.cookie.lifetimePolicy", true);
+pref("services.sync.prefs.sync.permissions.default.image", true);
+pref("services.sync.prefs.sync.pref.advanced.images.disable_button.view_image", true);
+pref("services.sync.prefs.sync.pref.advanced.javascript.disable_button.advanced", true);
+pref("services.sync.prefs.sync.pref.downloads.disable_button.edit_actions", true);
+pref("services.sync.prefs.sync.pref.privacy.disable_button.cookie_exceptions", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.cache", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.cookies", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.downloads", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.formdata", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.history", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.offlineApps", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.passwords", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.sessions", true);
+pref("services.sync.prefs.sync.privacy.clearOnShutdown.siteSettings", true);
+pref("services.sync.prefs.sync.privacy.sanitize.sanitizeOnShutdown", true);
+pref("services.sync.prefs.sync.security.OCSP.disable_button.managecrl", true);
+pref("services.sync.prefs.sync.security.OCSP.enabled", true);
+pref("services.sync.prefs.sync.security.OCSP.require", true);
+pref("services.sync.prefs.sync.security.default_personal_cert", true);
+pref("services.sync.prefs.sync.security.enable_ssl3", true);
+pref("services.sync.prefs.sync.security.enable_tls", true);
+pref("services.sync.prefs.sync.security.warn_entering_secure", true);
+pref("services.sync.prefs.sync.security.warn_entering_weak", true);
+pref("services.sync.prefs.sync.security.warn_leaving_secure", true);
+pref("services.sync.prefs.sync.security.warn_submit_insecure", true);
+pref("services.sync.prefs.sync.security.warn_viewing_mixed", true);
+pref("services.sync.prefs.sync.signon.rememberSignons", true);
+pref("services.sync.prefs.sync.spellchecker.dictionary", true);
+pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif

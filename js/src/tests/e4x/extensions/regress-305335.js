@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-305335.js';
 
 var summary = "Regression - XML instance methods should type check in " +
     "JS_GetPrivate()";

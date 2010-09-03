@@ -240,7 +240,6 @@ verbose_only( extern const char* shiftNames[]; )
     inline uint32_t CountLeadingZeroes(uint32_t data);                          \
     int *       _nSlot;                                                         \
     int *       _nExitSlot;                                                     \
-    bool        blx_lr_bug;                                                     \
     int         max_out_args; /* bytes */
 
 #define IMM32(imm)  *(--_nIns) = (NIns)((imm));

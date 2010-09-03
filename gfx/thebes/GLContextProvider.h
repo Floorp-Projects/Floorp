@@ -74,11 +74,14 @@ namespace gl {
 #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
 #endif
 
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO) || defined(XP_WIN)
 #define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
 #include "GLContextProviderImpl.h"
 #undef GL_CONTEXT_PROVIDER_NAME
+
+#ifndef GL_CONTEXT_PROVIDER_DEFAULT
 #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
+#endif
 #endif
 
 // X11, but only if we didn't use EGL above

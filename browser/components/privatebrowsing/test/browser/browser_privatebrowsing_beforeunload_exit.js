@@ -111,6 +111,7 @@ function test() {
         acceptDialog = 2;
         gBrowser.removeTab(gBrowser.tabContainer.lastChild);
         gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+        gBrowser.getBrowserAtIndex(gBrowser.tabContainer.selectedIndex).contentWindow.focus();
 
         Services.obs.removeObserver(promptObserver, "common-dialog-loaded", false);
         finish();

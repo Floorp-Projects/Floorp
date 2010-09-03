@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-455982-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 455982;
 var summary = 'Do not assert with JIT: with generator as getter';

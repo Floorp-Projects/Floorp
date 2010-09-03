@@ -124,4 +124,6 @@ LOCAL_INCLUDES	+= \
 		   -I$(topsrcdir)/widget/src/xpwidgets \
 		   -I$(srcdir) \
 		   $(NULL)
-
+ifdef MOZ_X11
+INCLUDES   	+= -I$(srcdir)/../shared/x11
+endif

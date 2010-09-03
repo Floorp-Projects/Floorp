@@ -60,7 +60,6 @@ EXPORTS		= \
 		nsHTMLReflowState.h \
 		nsIAnonymousContentCreator.h \
 		nsIFrame.h \
-		nsIFrameFrame.h \
 		nsIFrameUtil.h \
 		nsIImageFrame.h \
 		nsILineIterator.h \
@@ -69,6 +68,7 @@ EXPORTS		= \
 		nsIScrollableFrame.h \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
+		nsSubDocumentFrame.h \
 		$(NULL)
 
 ifdef IBMBIDI
@@ -90,7 +90,6 @@ CPPSRCS		= \
 		nsFirstLetterFrame.cpp \
 		nsFloatManager.cpp \
 		nsFrame.cpp \
-		nsFrameFrame.cpp \
 		nsFrameList.cpp \
 		nsFrameSetFrame.cpp \
 		nsFrameUtil.cpp \
@@ -112,8 +111,8 @@ CPPSRCS		= \
 		nsPlaceholderFrame.cpp \
 		nsSelection.cpp \
 		nsSimplePageSequence.cpp \
-		nsSpacerFrame.cpp \
 		nsSplittableFrame.cpp \
+		nsSubDocumentFrame.cpp \
 		nsTextFrameThebes.cpp \
 		nsTextFrameUtils.cpp \
 		nsTextRunTransformations.cpp \
@@ -144,12 +143,15 @@ RESOURCES_HTML = \
 
 FORCE_STATIC_LIB = 1
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../forms \
+		-I$(srcdir)/../style \
 		-I$(srcdir)/../tables \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/xul/content/src \

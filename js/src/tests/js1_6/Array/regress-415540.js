@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-415540.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 415540;
 var summary = 'Array.push'

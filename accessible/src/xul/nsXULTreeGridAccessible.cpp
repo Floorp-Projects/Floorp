@@ -586,8 +586,8 @@ nsXULTreeGridAccessible::GetRoleInternal(PRUint32 *aRole)
   treeColumns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
 
   *aRole = primaryColumn ?
-    nsIAccessibleRole::ROLE_TREE_TABLE :
-    nsIAccessibleRole::ROLE_TABLE;
+    static_cast<PRUint32>(nsIAccessibleRole::ROLE_TREE_TABLE) :
+    static_cast<PRUint32>(nsIAccessibleRole::ROLE_TABLE);
 
   return NS_OK;
 }
@@ -1238,9 +1238,9 @@ nsXULTreeGridCellAccessible::CellInvalidated()
     mTreeView->GetCellValue(mRow, mColumn, textEquiv);
     if (mCachedTextEquiv != textEquiv) {
       PRBool isEnabled = textEquiv.EqualsLiteral("true");
-      nsRefPtr<nsAccEvent> accEvent =
-        new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_CHECKED,
-                                  PR_FALSE, isEnabled);
+      nsRefPtr<AccEvent> accEvent =
+        new AccStateChangeEvent(this, nsIAccessibleStates::STATE_CHECKED,
+                                PR_FALSE, isEnabled);
       nsEventShell::FireEvent(accEvent);
 
       mCachedTextEquiv = textEquiv;

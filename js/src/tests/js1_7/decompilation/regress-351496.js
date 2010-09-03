@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351496.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351496;
 var summary = 'decompilation of case let (y = 3) expression';

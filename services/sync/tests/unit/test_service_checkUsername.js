@@ -8,6 +8,7 @@ function send(statusCode, status, body) {
 }
 
 function run_test() {
+  do_test_pending();
   let server = httpd_setup({
     "/user/1.0/johndoe": send(200, "OK", "1"),
     "/user/1.0/janedoe": send(200, "OK", "0")
@@ -26,6 +27,6 @@ function run_test() {
 
   } finally {
     Weave.Svc.Prefs.resetBranch("");
-    server.stop(function() {});
+    server.stop(do_test_finished);
   }
 }

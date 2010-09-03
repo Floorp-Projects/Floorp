@@ -146,20 +146,20 @@ class Message : public Pickle {
   }
 
 #if defined(CHROMIUM_MOZILLA_BUILD)
-  size_t rpc_remote_stack_depth_guess() const {
+  uint32 rpc_remote_stack_depth_guess() const {
     return header()->rpc_remote_stack_depth_guess;
   }
 
-  void set_rpc_remote_stack_depth_guess(size_t depth) {
+  void set_rpc_remote_stack_depth_guess(uint32 depth) {
     DCHECK(is_rpc());
     header()->rpc_remote_stack_depth_guess = depth;
   }
 
-  size_t rpc_local_stack_depth() const {
+  uint32 rpc_local_stack_depth() const {
     return header()->rpc_local_stack_depth;
   }
 
-  void set_rpc_local_stack_depth(size_t depth) {
+  void set_rpc_local_stack_depth(uint32 depth) {
     DCHECK(is_rpc());
     header()->rpc_local_stack_depth = depth;
   }
@@ -293,9 +293,9 @@ class Message : public Pickle {
 #endif
 #if defined(CHROMIUM_MOZILLA_BUILD)
     // For RPC messages, a guess at what the *other* side's stack depth is.
-    size_t rpc_remote_stack_depth_guess;
+    uint32 rpc_remote_stack_depth_guess;
     // The actual local stack depth.
-    size_t rpc_local_stack_depth;
+    uint32 rpc_local_stack_depth;
     // Sequence number
     int32 seqno;
 #endif

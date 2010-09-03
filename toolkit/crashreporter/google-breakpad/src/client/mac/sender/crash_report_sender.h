@@ -35,6 +35,7 @@
 #include <Foundation/Foundation.h>
 
 #include "client/mac/Framework/Breakpad.h"
+#import "GTMDefines.h"
 
 #define kClientIdPreferenceKey @"clientid"
 
@@ -53,10 +54,10 @@ extern NSString *const kDefaultServerType;
 // work in the middle of a validation.
 @interface LengthLimitingTextField : NSTextField {
   @private
-   unsigned int maximumLength_;
+   NSUInteger maximumLength_;
 }
 
-- (void) setMaximumLength:(unsigned int)maxLength;
+- (void)setMaximumLength:(NSUInteger)maxLength;
 @end
 
 @interface Reporter : NSObject {

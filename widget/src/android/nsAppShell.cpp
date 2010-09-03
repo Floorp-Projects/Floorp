@@ -118,6 +118,8 @@ nsAppShell::Init()
     mQueueCond = PR_NewCondVar(mCondLock);
     mPaused = PR_NewCondVar(mPausedLock);
 
+    mObserversHash.Init();
+
     return nsBaseAppShell::Init();
 }
 
@@ -365,6 +367,67 @@ nsAppShell::OnResume()
     PR_NotifyCondVar(mPaused);
     PR_Unlock(mPausedLock);
 
+}
+
+nsresult
+nsAppShell::AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver)
+{
+    NS_ASSERTION(aObserver != nsnull, "nsAppShell::AddObserver: aObserver is null!");
+    return mObserversHash.Put(aObserverKey, aObserver) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+/**
+ * The XPCOM event that will call the observer on the main thread.
+ */
+class ObserverCaller : public nsRunnable {
+public:
+    ObserverCaller(nsIObserver *aObserver, const char *aTopic, const PRUnichar *aData) :
+        mObserver(aObserver), mTopic(aTopic), mData(aData) {
+        NS_ASSERTION(aObserver != nsnull, "ObserverCaller: aObserver is null!");
+    }
+
+    NS_IMETHOD Run() {
+        ALOG("ObserverCaller::Run: observer = %p, topic = '%s')",
+             (nsIObserver*)mObserver, mTopic.get());
+        mObserver->Observe(nsnull, mTopic.get(), mData.get());
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsIObserver> mObserver;
+    nsCString mTopic;
+    nsString mData;
+};
+
+void
+nsAppShell::CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData)
+{
+    nsCOMPtr<nsIObserver> observer;
+    mObserversHash.Get(aObserverKey, getter_AddRefs(observer));
+
+    if (!observer) {
+        ALOG("nsAppShell::CallObserver: Observer was not found!");
+        return;
+    }
+
+    const NS_ConvertUTF16toUTF8 sTopic(aTopic);
+    const nsPromiseFlatString& sData = PromiseFlatString(aData);
+    
+    if (NS_IsMainThread()) {
+        // This branch will unlikely be hit, have it just in case
+        observer->Observe(nsnull, sTopic.get(), sData.get());
+    } else {
+        // Java is not running on main thread, so we have to use NS_DispatchToMainThread
+        nsCOMPtr<nsIRunnable> observerCaller = new ObserverCaller(observer, sTopic.get(), sData.get());
+        nsresult rv = NS_DispatchToMainThread(observerCaller);
+        ALOG("NS_DispatchToMainThread result: %d", rv);
+    }
+}
+
+void
+nsAppShell::RemoveObserver(const nsAString &aObserverKey)
+{
+    mObserversHash.Remove(aObserverKey);
 }
 
 // Used by IPC code

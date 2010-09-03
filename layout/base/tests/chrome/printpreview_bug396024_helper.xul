@@ -7,8 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
 -->
 <window title="Mozilla Bug 396024" onload="run()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<iframe src="data:text/html;charset=utf-8,&lt;body onload='window.parent.loadedChild()'&gt;"></iframe>
-<iframe src="about:blank"/>
+<iframe id="i" src="about:blank" type="content"></iframe>
+<iframe src="about:blank" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
 var is = window.opener.wrappedJSObject.is;
@@ -77,7 +77,11 @@ function run()
 }
 
 function run2() {
-  window.loadedChild = function() { setTimeout(run3, 0); };
+  var loadhandler = function() {
+    document.getElementById("i").removeEventListener("load", arguments.callee, true);
+    setTimeout(run3, 0);
+  };
+  document.getElementById("i").addEventListener("load", loadhandler, true);
   window.frames[0].location.reload();
 }
 
@@ -85,14 +89,18 @@ function run3() {
   gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
   ok(gWbp.doingPrintPreview, "Should be doing print preview");
-  window.loadedChild = null;
   exitprintpreview();
   setTimeout(run4, 0);
 }
 
 function run4() {
-  var x = window.frames[0].frameElement.parentNode.removeChild(window.frames[0].frameElement);
-  window.loadedChild = function() { setTimeout(run5, 0); };
+  var i = document.getElementById("i");
+  var x = i.parentNode.removeChild(i);
+  var loadhandler = function() {
+    document.getElementById("i").removeEventListener("load", loadhandler, true);
+    setTimeout(run5, 0);
+  };
+  x.addEventListener("load", loadhandler, true);
   document.documentElement.getBoundingClientRect();
   document.documentElement.appendChild(x);
   gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)

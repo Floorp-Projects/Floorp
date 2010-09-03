@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-360969-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 360969;
 var summary = '2^17: local var';
