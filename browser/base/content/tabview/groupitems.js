@@ -62,8 +62,7 @@
 //   bounds - a <Rect>; otherwise based on the locations of the provided elements
 //   container - a DOM element to use as the container for this groupItem; otherwise will create
 //   title - the title for the groupItem; otherwise blank
-//   dontPush - true if this groupItem shouldn't push away or snap on creation; default is false
-//   immediately - true if we want all placement immediately, not with animation
+//   dontPush - true if this groupItem shouldn't push away on creation; default is false
 let GroupItem = function GroupItem(listOfEls, options) {
   try {
   if (typeof options == 'undefined')
@@ -111,7 +110,6 @@ let GroupItem = function GroupItem(listOfEls, options) {
   }
 
   var $container = options.container;
-  let immediately = options.immediately || $container ? true : false;
   if (!$container) {
     $container = iQ('<div>')
       .addClass('groupItem')
@@ -171,7 +169,7 @@ let GroupItem = function GroupItem(listOfEls, options) {
   this.$titleShield = iQ('.title-shield', this.$titlebar);
   this.setTitle(options.title || this.defaultName);
 
-  var titleUnfocus = function(immediately) {
+  var titleUnfocus = function() {
     self.$titleShield.show();
     if (!self.getTitle()) {
       self.$title
@@ -179,19 +177,13 @@ let GroupItem = function GroupItem(listOfEls, options) {
         .val(self.defaultName);
     } else {
       self.$title
-        .css({"background":"none"});
-      if (immediately) {
-        self.$title.css({
-            "padding-left": "1px"
-          });
-      } else {
-        self.$title.animate({
-            "padding-left": "1px"
-          }, {
-            duration: 200,
-            easing: "tabviewBounce"
-          });
-      }
+        .css({"background":"none"})
+        .animate({
+          "padding-left": "1px"
+        }, {
+          duration: 200,
+          easing: "tabviewBounce"
+        });
     }
   };
 
@@ -226,7 +218,7 @@ let GroupItem = function GroupItem(listOfEls, options) {
     })
     .keyup(handleKeyPress);
 
-  titleUnfocus(immediately);
+  titleUnfocus();
 
   if (this.locked.title)
     this.$title.addClass('name-locked');
@@ -276,14 +268,14 @@ let GroupItem = function GroupItem(listOfEls, options) {
   this._addHandlers($container);
 
   if (!this.locked.bounds)
-    this.setResizable(true, immediately);
+    this.setResizable(true);
 
   GroupItems.register(this);
 
   // ___ Position
+  var immediately = $container ? true : false;
   this.setBounds(rectToBe, immediately);
-  if (!options.dontPush)
-    this.snap();
+  this.snap();
   if ($container)
     this.setBounds(rectToBe, immediately);
 
@@ -564,8 +556,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   a - The item to add. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
   //   dropPos - An object with left and top properties referring to the location dropped at.  Optional.
-  //   options - An object with optional settings for this call. Currently this includes dontArrange
-  //       and immediately
+  //   options - An object with optional settings for this call. Currently the only one is dontArrange.
   add: function(a, dropPos, options) {
     try {
       var item;
@@ -581,6 +572,9 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           "shouldn't already be in another groupItem");
 
       item.removeTrenches();
+
+      if (!dropPos)
+        dropPos = {top:window.innerWidth, left:window.innerHeight};
 
       if (typeof options == 'undefined')
         options = {};
@@ -635,7 +629,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       // Insert the tab into the right position.
-      var index = dropPos ? findInsertionPoint(dropPos) : this._children.length;
+      var index = findInsertionPoint(dropPos);
       this._children.splice(index, 0, item);
 
       item.setZ(this.getZ() + 1);
@@ -652,16 +646,15 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.setParent(this);
 
         if (typeof item.setResizable == 'function')
-          item.setResizable(false, options.immediately);
+          item.setResizable(false);
 
         if (item.tab == gBrowser.selectedTab)
           GroupItems.setActiveGroupItem(this);
       }
 
       if (!options.dontArrange) {
-        this.arrange({animate: !options.immediately});
+        this.arrange();
       }
-
       UI.setReorderTabsOnHide(this);
     } catch(e) {
       Utils.log('GroupItem.add error', e);
@@ -675,8 +668,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   //   a - The item to remove. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
-  //   options - An object with optional settings for this call. Currently this includes
-  //             dontArrange and immediately
+  //   options - An object with optional settings for this call. Currently the only one is dontArrange.
   remove: function(a, options) {
     try {
       var $el;
@@ -707,12 +699,12 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.removeSubscriber(this, "close");
 
       if (typeof item.setResizable == 'function')
-        item.setResizable(true, options.immediately);
+        item.setResizable(true);
 
       if (!this._children.length && !this.locked.close && !this.getTitle() && !options.dontClose) {
         this.close();
       } else if (!options.dontArrange) {
-        this.arrange({animate: !options.immediately});
+        this.arrange();
       }
     } catch(e) {
       Utils.log(e);
@@ -785,19 +777,19 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
-      Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
+      Items.arrange(this._children, box, Utils.extend({}, options, {padding: 8, z: 99999}));
     } else {
       var bb = this.getContentBounds();
       var count = this._children.length;
       if (!this.shouldStack(count)) {
-        if (!options)
-          options = {};
-          
         var animate;
-        if (typeof options.animate == 'undefined')
+        if (!options || typeof options.animate == 'undefined')
           animate = true;
         else
           animate = options.animate;
+
+        if (typeof options == 'undefined')
+          options = {};
 
         this._children.forEach(function(child) {
             child.removeClass("stacked")
@@ -1159,15 +1151,15 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
-  setResizable: function(value, immediately) {
+  setResizable: function(value) {
     this.resizeOptions.minWidth = 90;
     this.resizeOptions.minHeight = 90;
 
     if (value) {
-      immediately ? this.$resizer.show() : this.$resizer.fadeIn();
+      this.$resizer.fadeIn();
       this.resizable(true);
     } else {
-      immediately ? this.$resizer.hide() : this.$resizer.fadeOut();
+      this.$resizer.fadeOut();
       this.resizable(false);
     }
   },
@@ -1385,8 +1377,7 @@ window.GroupItems = {
           var groupItem = groupItemData[id];
           if (this.groupItemStorageSanity(groupItem)) {
             var options = {
-              dontPush: true,
-              immediately: true
+              dontPush: true
             };
 
             new GroupItem([], Utils.extend({}, groupItem, options));
@@ -1414,6 +1405,21 @@ window.GroupItems = {
     }
 
     return sane;
+  },
+
+  // ----------
+  // Function: getGroupItemWithTitle
+  // Returns the <GroupItem> that has the given title, or null if none found.
+  // TODO: what if there are multiple groupItems with the same title??
+  //       Right now, looks like it'll return the last one. Bug 586557
+  getGroupItemWithTitle: function(title) {
+    var result = null;
+    this.groupItems.forEach(function(groupItem) {
+      if (groupItem.getTitle() == title)
+        result = groupItem;
+    });
+
+    return result;
   },
 
   // ----------
@@ -1499,12 +1505,12 @@ window.GroupItems = {
   // ----------
   // Function: newTab
   // Given a <TabItem>, files it in the appropriate groupItem.
-  newTab: function(tabItem, options) {
+  newTab: function(tabItem) {
     let activeGroupItem = this.getActiveGroupItem();
     let orphanTab = this.getActiveOrphanTab();
 //    Utils.log('newTab', activeGroupItem, orphanTab);
     if (activeGroupItem) {
-      activeGroupItem.add(tabItem, null, options);
+      activeGroupItem.add(tabItem);
     } else if (orphanTab) {
       let newGroupItemBounds = orphanTab.getBoundsWithTitle();
       newGroupItemBounds.inset(-40,-40);
@@ -1512,7 +1518,7 @@ window.GroupItems = {
       newGroupItem.snap();
       this.setActiveGroupItem(newGroupItem);
     } else {
-      this.positionNewTabAtBottom(tabItem, options);
+      this.positionNewTabAtBottom(tabItem);
     }
   },
 
@@ -1522,9 +1528,7 @@ window.GroupItems = {
   // TODO: Make more robust and improve documentation,
   // Also, this probably belongs in tabitems.js
   // Bug 586558
-  // TODO: perhaps this should be positioned not at the bottom but in an
-  // empty part of the frame: Bug 592932
-  positionNewTabAtBottom: function(tabItem, options) {
+  positionNewTabAtBottom: function(tabItem) {
     let windowBounds = Items.getSafeWindowBounds();
 
     let itemBounds = new Rect(
@@ -1534,10 +1538,7 @@ window.GroupItems = {
       TabItems.tabHeight
     );
 
-    if (!options)
-      options = {};
-
-    tabItem.setBounds(itemBounds, options.immediately);
+    tabItem.setBounds(itemBounds);
   },
 
   // ----------
