@@ -303,8 +303,8 @@ ValueToTypeChar(const Value &v)
 /* Skip this many hits before attempting recording again, after an aborted attempt. */
 #define BL_BACKOFF 32
 
-/* Number of times a loop can execute before it becomes blacklisted. */
-#define MAX_LOOP_EXECS 300
+/* Minimum number of times a loop must execute, or else it is blacklisted. */
+#define MIN_LOOP_ITERS 2
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 1
@@ -2402,6 +2402,21 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         LIns* flagptr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->interruptFlags);
         LIns* x = lir->insLoad(LIR_ldi, flagptr, 0, ACCSET_OTHER, LOAD_VOLATILE);
         guard(true, lir->insEqI_0(x), snapshot(TIMEOUT_EXIT));
+
+        /*
+         * Count the number of iterations run by a trace, so that we can blacklist if
+         * the trace runs too few iterations to be worthwhile. Do this only if the methodjit
+         * is on--otherwise we must try to trace as much as possible.
+         */
+        if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+            LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
+            LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
+            LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
+            LIns *branch = lir->insBranch(LIR_jf, test, NULL);
+            counterValue = lir->ins2(LIR_addi, counterValue, INS_CONST(1));
+            lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
+            branch->setTarget(lir->ins0(LIR_label));
+        }
     }
 
     /*
@@ -5519,6 +5534,10 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
                               "Can't record: failed to give globalObj a unique shape.\n");
             return false;
         }
+    } else {
+        /* Claim the title so we don't abort at the top of recordLoopEdge. */
+        JS_LOCK_OBJ(cx, globalObj);
+        JS_UNLOCK_OBJ(cx, globalObj);
     }
 
     uint32 globalShape = globalObj->shape();
@@ -6029,6 +6048,7 @@ JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
+    /* If changing this, see "Claim the title" in CheckGlobalObjectShape. */
     if (cx->fp()->getScopeChain()->getGlobal()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
         return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
@@ -6185,67 +6205,35 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
 static inline bool
 IsEntryTypeCompatible(const Value &v, JSValueType type)
 {
-#ifdef DEBUG
-    char tag = ValueToTypeChar(v);
-    debug_only_printf(LC_TMTracer, "%c/%c ", tag, TypeToChar(type));
-#endif
+    bool ok;
 
     JS_ASSERT(type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
-    switch (type) {
-      case JSVAL_TYPE_DOUBLE:
-        if (v.isNumber())
-            return true;
-        debug_only_printf(LC_TMTracer, "double != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_INT32: {
+    JS_ASSERT(type != JSVAL_TYPE_OBJECT);   /* JSVAL_TYPE_OBJECT does not belong in a type map */
+
+    if (v.isInt32()) {
+        ok = (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_DOUBLE);
+
+    } else if (v.isDouble()) {
         int32_t _;
-        if (v.isInt32() || (v.isDouble() && JSDOUBLE_IS_INT32(v.toDouble(), &_)))
-            return true;
-        debug_only_printf(LC_TMTracer, "int != tag%c ", tag);
-        break;
-      }
-      case JSVAL_TYPE_UNDEFINED:
-        if (v.isUndefined())
-            return true;
-        debug_only_printf(LC_TMTracer, "undefined != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_BOOLEAN:
-        if (v.isBoolean())
-            return true;
-        debug_only_printf(LC_TMTracer, "bool != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_MAGIC:
-        if (v.isMagic())
-            return true;
-        debug_only_printf(LC_TMTracer, "magic != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_STRING:
-        if (v.isString())
-            return true;
-        debug_only_printf(LC_TMTracer, "string != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_NULL:
-        if (v.isNull())
-            return true;
-        debug_only_printf(LC_TMTracer, "null != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_OBJECT:
-        JS_NOT_REACHED("JSVAL_TYPE_OBJECT does not belong in a type map");
-        break;
-      case JSVAL_TYPE_NONFUNOBJ:
-        if (v.isObject() && !v.toObject().isFunction())
-            return true;
-        debug_only_printf(LC_TMTracer, "object != tag%c ", tag);
-        break;
-      case JSVAL_TYPE_FUNOBJ:
-        if (v.isObject() && v.toObject().isFunction())
-            return true;
-        debug_only_printf(LC_TMTracer, "fun != tag%c ", tag);
-        break;
-      default:
-        JS_NOT_REACHED("unexpected type");
+        ok = (type == JSVAL_TYPE_DOUBLE) || 
+             (type == JSVAL_TYPE_INT32 && JSDOUBLE_IS_INT32(v.toDouble(), &_));
+
+    } else if (v.isObject()) {
+        ok = v.toObject().isFunction()
+           ? type == JSVAL_TYPE_FUNOBJ
+           : type == JSVAL_TYPE_NONFUNOBJ;
+
+    } else {
+        ok = v.extractNonDoubleObjectTraceType() == type;
     }
-    return false;
+#ifdef DEBUG
+    char ttag = TypeToChar(type);
+    char vtag = ValueToTypeChar(v);
+    debug_only_printf(LC_TMTracer, "%c/%c ", vtag, ttag);
+    if (!ok)
+        debug_only_printf(LC_TMTracer, "%s", "(incompatible types)");
+#endif
+    return ok;
 }
 
 class TypeCompatibilityVisitor : public SlotVisitorBase
@@ -6621,6 +6609,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     debug_only_stmt(*(uint64*)&tm->storage->global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
 
     /* Execute trace. */
+    JS_THREAD_DATA(cx)->iterationCounter = 0;
 #ifdef MOZ_TRACEVIS
     VMSideExit* lr = (TraceVisStateObj(cx, S_NATIVE), ExecuteTrace(cx, f, state));
 #else
@@ -6636,6 +6625,14 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     *lrp = state.innermost;
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
     JS_ASSERT_IF(cx->throwing, !ok);
+
+    if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+        if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
+            debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
+                              (void*)f, f->execs);
+            Blacklist((jsbytecode *)f->ip);
+        }
+    }
     return ok;
 }
 
@@ -6969,19 +6966,6 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     state.innermost = innermost;
 }
 
-static bool
-ApplyBlacklistHeuristics(JSContext *cx, TreeFragment *tree)
-{
-    if (tree->execs >= MAX_LOOP_EXECS) {
-        debug_only_printf(LC_TMTracer, "tree %p executed %d times, blacklisting\n",
-                          (void*)tree, tree->execs);
-        Blacklist((jsbytecode *)tree->ip);
-        return false;
-    }
-    tree->execs++;
-    return true;
-}
-
 JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
@@ -7108,9 +7092,6 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     VMSideExit* lr = NULL;
     VMSideExit* innermostNestedGuard = NULL;
-
-    if (!ApplyBlacklistHeuristics(cx, match))
-        return MONITOR_NOT_RECORDING;
 
     if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
         return MONITOR_ERROR;
@@ -16168,9 +16149,6 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
         if (match) {
             VMSideExit* lr = NULL;
             VMSideExit* innermostNestedGuard = NULL;
-
-            if (!ApplyBlacklistHeuristics(cx, match))
-                return TPA_Nothing;
 
             /* Best case - just go and execute. */
             if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
