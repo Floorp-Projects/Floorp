@@ -167,13 +167,7 @@ var ContentPrefTest = {
 ContentPrefTest.deleteDatabase();
 
 // Turn on logging for the content preferences service so we can troubleshoot
-// problems with the tests. This is only useful in regular (parent)
-// processes - child processes are not able to do that and will crash.
-var appInfo = Cc["@mozilla.org/xre/app-info;1"];
-if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType ==
-    Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.preferences.content.log", true);
-}
-
+// problems with the tests.
+var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                 getService(Ci.nsIPrefBranch);
+prefBranch.setBoolPref("browser.preferences.content.log", true);
