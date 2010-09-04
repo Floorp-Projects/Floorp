@@ -497,17 +497,19 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: makeActive
   // Updates this item to visually indicate that it's active.
   makeActive: function() {
-   iQ(this.container).find("canvas").addClass("focus");
-   iQ(this.container).find("img.cached-thumb").addClass("focus");
+    iQ(this.container).find("canvas").addClass("focus");
+    iQ(this.container).find("img.cached-thumb").addClass("focus");
 
+    if (this.parent)
+      this.parent.setActiveTab(this);
   },
 
   // ----------
   // Function: makeDeactive
   // Updates this item to visually indicate that it's not active.
   makeDeactive: function() {
-   iQ(this.container).find("canvas").removeClass("focus");
-   iQ(this.container).find("img.cached-thumb").removeClass("focus");
+    iQ(this.container).find("canvas").removeClass("focus");
+    iQ(this.container).find("img.cached-thumb").removeClass("focus");
   },
 
   // ----------
@@ -536,7 +538,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           .css(orig.css())
           .removeClass("front");
 
-        // If it's not focused, the onFocus lsitener would handle it.
+        // If it's not focused, the onFocus listener would handle it.
         if (gBrowser.selectedTab == tab)
           UI.onTabSelect(tab);
         else
