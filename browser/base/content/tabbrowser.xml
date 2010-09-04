@@ -926,9 +926,14 @@
                 title = this.mStringBundle.getString("tabs.emptyTabTitle");
             }
 
+            if (aTab.label == title &&
+                aTab.crop == crop)
+              return false;
+
             aTab.label = title;
             aTab.setAttribute("crop", crop);
             this._tabAttrModified(aTab);
+            return true;
           ]]>
         </body>
       </method>
@@ -2448,7 +2453,10 @@
             return;
 
           var tab = this._getTabForContentWindow(contentWin);
-          this.setTabTitle(tab);
+          var titleChanged = this.setTabTitle(tab);
+          if (!titleChanged)
+            return;
+
           if (tab == this.mCurrentTab)
             this.updateTitlebar();
           else if (!tab.hasAttribute("busy"))
