@@ -388,7 +388,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
           case JSOP_URSH: 
           {
             uint32 unsignedL;
-            if (ValueToECMAUint32(cx, lhs->getValue(), &unsignedL)) {
+            if (ValueToECMAUint32(cx, lhs->getValue(), (uint32_t*)&unsignedL)) {
                 frame.push(NumberValue(uint32(unsignedL >> (R & 31))));
                 return;
             }
