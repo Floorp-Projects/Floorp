@@ -181,246 +181,14 @@ top:
     return NULL;
 }
 
-static bool
-InlineReturn(VMFrame &f, JSBool ok)
-{
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.regs.fp;
-
-    JS_ASSERT(f.fp() != f.entryFp);
-
-    JS_ASSERT(!fp->hasBlockChain());
-    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
-
-    // Marker for debug support.
-    if (JS_UNLIKELY(fp->hasHookData())) {
-        JSInterpreterHook hook;
-        JSBool status;
-
-        hook = cx->debugHooks->callHook;
-        if (hook) {
-            /*
-             * Do not pass &ok directly as exposing the address inhibits
-             * optimizations and uninitialised warnings.
-             */
-            status = ok;
-            hook(cx, fp, JS_FALSE, &status, fp->getHookData());
-            ok = (status == JS_TRUE);
-            // CHECK_INTERRUPT_HANDLER();
-        }
-    }
-
-    fp->putActivationObjects(cx);
-
-    /* :TODO: version stuff */
-
-    if (fp->flags & JSFRAME_CONSTRUCTING && fp->getReturnValue().isPrimitive())
-        fp->setReturnValue(fp->getThisValue());
-
-    Value *newsp = fp->argv - 1;
-
-    cx->stack().popInlineFrame(cx, fp, fp->down);
-
-    cx->regs->sp = newsp;
-    cx->regs->sp[-1] = fp->getReturnValue();
-
-    JS_ASSERT(cx->regs->pc != JSStackFrame::sInvalidPC);
-
-    return ok;
-}
-
-JSBool JS_FASTCALL
-stubs::NewObject(VMFrame &f, uint32 argc)
-{
-    JSContext *cx = f.cx;
-    Value *vp = f.regs.sp - (argc + 2);
-
-    JSObject *funobj = &vp[0].toObject();
-    JS_ASSERT(funobj->isFunction());
-
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    if (!funobj->getProperty(cx, id, &vp[1]))
-        THROWV(JS_FALSE);
-
-    JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent());
-    if (!obj)
-        THROWV(JS_FALSE);
-
-    vp[1].setObject(*obj);
-
-    return JS_TRUE;
-}
-
-void JS_FASTCALL
-stubs::SlowCall(VMFrame &f, uint32 argc)
-{
-    Value *vp = f.regs.sp - (argc + 2);
-
-    if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
-        THROW();
-}
-
-void JS_FASTCALL
-stubs::SlowNew(VMFrame &f, uint32 argc)
-{
-    JSContext *cx = f.cx;
-    Value *vp = f.regs.sp - (argc + 2);
-
-    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
-        THROW();
-}
-
 static inline void
-RemovePartialFrame(VMFrame &f)
+FixVMFrame(VMFrame &f, JSStackFrame *fp)
 {
-    /* Unwind the half-pushed frame. */
-    f.regs.pc = f.fp()->down->savedPC;
-    f.regs.sp = f.fp()->argv + f.fp()->argc;
-#ifdef DEBUG
-    f.fp()->down->savedPC = JSStackFrame::sInvalidPC;
-#endif
-    f.regs.fp = f.fp()->down;
+    JS_ASSERT(f.fp() == fp->down);
+    f.fp() = fp;
 }
 
-void JS_FASTCALL
-stubs::CheckStackQuota(VMFrame &f)
-{
-    if (JS_LIKELY(f.ensureSpace(0, f.fp()->getScript()->nslots)))
-        return;
-
-    RemovePartialFrame(f);
-
-    js_ReportOverRecursed(f.cx);
-    THROW();
-}
-
-void * JS_FASTCALL
-stubs::CheckArity(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp();
-    uint32 argc = fp->argc;
-    JSFunction *fun = fp->getFunction();
-
-    JS_ASSERT(argc < fun->nargs);
-
-    /*
-     * Grossssss! *move* the stack frame. If this ends up being perf-critical,
-     * we can figure out how to spot-optimize it. As the frame shrinks it will
-     * matter less.
-     */
-    uint32 flags = fp->flags;
-    JSObject *scopeChain = fp->getScopeChain();
-    Value *argv = fp->argv;
-    JSStackFrame *down = fp->down;
-    void *ncode = fp->ncode;
-
-    /* Pop the inline frame. */
-    RemovePartialFrame(f);
-
-    uint32 missing = fun->nargs - argc;
-
-    /* Include an extra stack frame for callees. */
-    if (!f.ensureSpace(missing, fun->u.i.script->nslots + VALUES_PER_STACK_FRAME)) {
-        js_ReportOverRecursed(cx);
-        THROWV(NULL);
-    }
-
-#ifdef DEBUG
-    down->savedPC = f.regs.pc;
-#endif
-
-    SetValueRangeToUndefined(f.regs.sp, missing);
-    f.regs.sp += missing;
-
-    JSStackFrame *newfp = (JSStackFrame *)f.regs.sp;
-    newfp->argc = argc;
-    newfp->setFunction(fun);
-    newfp->flags = flags;
-    newfp->argv = argv;
-    newfp->setScopeChain(scopeChain);
-    newfp->down = down;
-    newfp->ncode = ncode;
-    newfp->setThisValue(argv[-1]);
-
-    return newfp;
-}
-
-void * JS_FASTCALL
-stubs::CompileFunction(VMFrame &f)
-{
-    /*
-     * We have a partially constructed frame. That's not really good enough to
-     * compile though because we could throw, so get a full, adjusted frame.
-     */
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp();
-    uint32 argc = fp->argc;
-
-    JSObject *obj = &fp->argv[-2].toObject();
-    JSFunction *fun = obj->getFunctionPrivate();
-    JSScript *script = fun->u.i.script;
-
-    bool callingNew = !!(fp->flags & JSFRAME_CONSTRUCTING);
-
-    /* Empty script does nothing. */
-    if (script->isEmpty()) {
-        RemovePartialFrame(f);
-        Value *vp = f.regs.sp - argc;
-        if (callingNew)
-            vp[-2] = vp[-1];
-        else
-            vp[-2].setUndefined();
-        return NULL;
-    }
-
-    /* CheckArity expects fun to be set. */
-    fp->setFunction(fun);
-
-    if (argc < fun->nargs) {
-        fp = (JSStackFrame *)CheckArity(f);
-        if (!fp)
-            return NULL;
-    }
-
-    fp->setCallObj(NULL);
-    fp->setArgsObj(NULL);
-    fp->setBlockChain(NULL);
-    fp->setHookData(NULL);
-    fp->setAnnotation(NULL);
-    fp->setCallerVersion(fp->down->getCallerVersion());
-    fp->setScript(script);
-    fp->clearReturnValue();
-#ifdef DEBUG
-    fp->savedPC = JSStackFrame::sInvalidPC;
-#endif
-
-    f.regs.fp = fp;
-    f.regs.sp = fp->base();
-    f.regs.pc = script->code;
-
-    SetValueRangeToUndefined(fp->slots(), script->nfixed);
-
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
-        THROWV(NULL);
-
-    CompileStatus status = CanMethodJIT(cx, script, fun, fp->getScopeChain());
-    if (status == Compile_Okay)
-        return script->jit->invoke;
-
-    /* Function did not compile... interpret it. */
-    JSBool ok = Interpret(cx, fp);
-    InlineReturn(f, ok);
-
-    if (!ok)
-        THROWV(NULL);
-
-    return NULL;
-}
-
-/* Preserved for when calls need to be slow (debug mode, no ICs) */
-static bool
+static inline bool
 CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
 {
     JSContext *cx = f.cx;
@@ -489,18 +257,19 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
     if (JSInterpreterHook hook = cx->debugHooks->callHook) {
         newfp->setHookData(hook(cx, fp, JS_TRUE, 0,
                                 cx->debugHooks->callHookData));
+        // CHECK_INTERRUPT_HANDLER();
     } else {
         newfp->setHookData(NULL);
     }
 
     stack.pushInlineFrame(cx, fp, cx->regs->pc, newfp);
-    f.regs.fp = newfp;
+    FixVMFrame(f, newfp);
 
     return true;
 }
 
 static inline bool
-UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
+InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 {
     if (!CreateFrame(f, flags, argc))
         return false;
@@ -532,54 +301,80 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     return ok;
 }
 
-void * JS_FASTCALL
-stubs::UncachedNew(VMFrame &f, uint32 argc)
+static bool
+InlineReturn(VMFrame &f, JSBool ok)
 {
     JSContext *cx = f.cx;
+    JSStackFrame *fp = cx->fp();
 
-    Value *vp = f.regs.sp - (argc + 2);
+    JS_ASSERT(f.fp() == cx->fp());
+    JS_ASSERT(f.fp() != f.entryFp);
 
-    JSObject *obj;
-    if (IsFunctionObject(*vp, &obj)) {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JS_ASSERT(!fp->hasBlockChain());
+    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
 
-        if (fun->isInterpreted()) {
-            JSScript *script = fun->u.i.script;
-            if (!stubs::NewObject(f, argc))
-                THROWV(NULL);
+    // Marker for debug support.
+    if (JS_UNLIKELY(fp->hasHookData())) {
+        JSInterpreterHook hook;
+        JSBool status;
 
-            if (script->isEmpty()) {
-                vp[0] = vp[1];
-                return NULL;
-            }
-
-            void *ret;
-            if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
-                THROWV(NULL);
-
-            return ret;
-        }
-
-        if (fun->isConstructor()) {
-            vp[1].setMagicWithObjectOrNullPayload(NULL);
-            Native fn = fun->u.n.native;
-            if (!fn(cx, argc, vp))
-                THROWV(NULL);
-            JS_ASSERT(!vp->isPrimitive());
-            return NULL;
+        hook = cx->debugHooks->callHook;
+        if (hook) {
+            /*
+             * Do not pass &ok directly as exposing the address inhibits
+             * optimizations and uninitialised warnings.
+             */
+            status = ok;
+            hook(cx, fp, JS_FALSE, &status, fp->getHookData());
+            ok = (status == JS_TRUE);
+            // CHECK_INTERRUPT_HANDLER();
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
-        THROWV(NULL);
+    fp->putActivationObjects(cx);
 
-    return NULL;
+    /* :TODO: version stuff */
+
+    if (fp->flags & JSFRAME_CONSTRUCTING && fp->getReturnValue().isPrimitive())
+        fp->setReturnValue(fp->getThisValue());
+
+    Value *newsp = fp->argv - 1;
+
+    cx->stack().popInlineFrame(cx, fp, fp->down);
+    f.fp() = cx->fp();
+
+    cx->regs->sp = newsp;
+    cx->regs->sp[-1] = fp->getReturnValue();
+
+    return ok;
+}
+
+static inline JSObject *
+InlineConstruct(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
+    Value *vp = f.regs.sp - (argc + 2);
+
+    JSObject *funobj = &vp[0].toObject();
+    JS_ASSERT(funobj->isFunction());
+
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    if (!funobj->getProperty(cx, id, &vp[1]))
+        return NULL;
+
+    JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
+    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent());
 }
 
 void * JS_FASTCALL
-stubs::UncachedCall(VMFrame &f, uint32 argc)
+stubs::SlowCall(VMFrame &f, uint32 argc)
 {
     JSContext *cx = f.cx;
+
+#ifdef JS_MONOIC
+    ic::MICInfo &mic = f.fp()->getScript()->mics[argc];
+    argc = mic.argc;
+#endif
 
     Value *vp = f.regs.sp - (argc + 2);
 
@@ -596,13 +391,19 @@ stubs::UncachedCall(VMFrame &f, uint32 argc)
                 return NULL;
             }
 
-            if (!UncachedInlineCall(f, 0, &ret, argc))
+            if (!InlineCall(f, 0, &ret, argc))
                 THROWV(NULL);
 
             return ret;
         }
 
         if (fun->isNative()) {
+#ifdef JS_MONOIC
+#ifdef JS_CPU_X86
+            ic::CallNative(cx, f.fp()->getScript(), mic, fun, false);
+#endif
+#endif
+
             if (!fun->u.n.native(cx, argc, vp))
                 THROWV(NULL);
             return NULL;
@@ -613,6 +414,160 @@ stubs::UncachedCall(VMFrame &f, uint32 argc)
         THROWV(NULL);
 
     return NULL;
+}
+
+void * JS_FASTCALL
+stubs::SlowNew(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
+
+#ifdef JS_MONOIC
+    ic::MICInfo &mic = f.fp()->getScript()->mics[argc];
+    argc = mic.argc;
+#endif
+
+    Value *vp = f.regs.sp - (argc + 2);
+
+    JSObject *obj;
+    if (IsFunctionObject(*vp, &obj)) {
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+
+        if (fun->isInterpreted()) {
+            JSScript *script = fun->u.i.script;
+            JSObject *obj2 = InlineConstruct(f, argc);
+            if (!obj2)
+                THROWV(NULL);
+
+            if (script->isEmpty()) {
+                vp[0].setObject(*obj2);
+                return NULL;
+            }
+
+            void *ret;
+            vp[1].setObject(*obj2);
+            if (!InlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
+                THROWV(NULL);
+
+            return ret;
+        }
+
+        if (fun->isConstructor()) {
+#ifdef JS_MONOIC
+#ifdef JS_CPU_X86
+            ic::CallNative(cx, f.fp()->getScript(), mic, fun, true);
+#endif
+#endif
+
+            vp[1].setMagicWithObjectOrNullPayload(NULL);
+
+            if (!fun->u.n.native(cx, argc, vp))
+                THROWV(NULL);
+            JS_ASSERT(!vp->isPrimitive());
+
+            return NULL;
+        }
+    }
+
+    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
+        THROWV(NULL);
+
+    return NULL;
+}
+
+static inline bool
+CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp();
+    Value *vp = f.regs.sp - (argc + 2);
+    JSObject *funobj = &vp->toObject();
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+
+    JS_ASSERT(FUN_INTERPRETED(fun));
+
+    JSScript *newscript = fun->u.i.script;
+
+    /* Allocate the frame. */
+    StackSpace &stack = cx->stack();
+    uintN nslots = newscript->nslots;
+    uintN funargs = fun->nargs;
+    Value *argv = vp + 2;
+    JSStackFrame *newfp;
+    if (argc < funargs) {
+        uintN missing = funargs - argc;
+        if (!f.ensureSpace(missing, nslots))
+            return false;
+        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, missing);
+        if (!newfp)
+            return false;
+        for (Value *v = argv + argc, *end = v + missing; v != end; ++v)
+            v->setUndefined();
+    } else {
+        if (!f.ensureSpace(0, nslots))
+            return false;
+        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, 0);
+        if (!newfp)
+            return false;
+    }
+
+    /* Initialize the frame. */
+    newfp->setCallObj(NULL);
+    newfp->setArgsObj(NULL);
+    newfp->setScript(newscript);
+    newfp->setFunction(fun);
+    newfp->argc = argc;
+    newfp->argv = vp + 2;
+    newfp->clearReturnValue();
+    newfp->setAnnotation(NULL);
+    newfp->setScopeChain(funobj->getParent());
+    newfp->flags = flags;
+    newfp->setBlockChain(NULL);
+    newfp->setThisValue(vp[1]);
+    newfp->setHookData(NULL);
+    JS_ASSERT(!fp->hasIMacroPC());
+
+#if 0
+    /* :TODO: Switch version if currentVersion wasn't overridden. */
+    newfp->setCallerVersion((JSVersion)cx->version);
+#endif
+
+#ifdef DEBUG
+    newfp->savedPC = JSStackFrame::sInvalidPC;
+#endif
+    newfp->down = fp;
+    fp->savedPC = f.regs.pc;
+    FixVMFrame(f, newfp);
+
+    return true;
+}
+
+/*
+ * stubs::Call is guaranteed to be called on a scripted call with JIT'd code.
+ */
+void * JS_FASTCALL
+stubs::Call(VMFrame &f, uint32 argc)
+{
+    if (!CreateLightFrame(f, 0, argc))
+        THROWV(NULL);
+
+    return f.fp()->getScript()->ncode;
+}
+
+/*
+ * stubs::New is guaranteed to be called on a scripted call with JIT'd code.
+ */
+void * JS_FASTCALL
+stubs::New(VMFrame &f, uint32 argc)
+{
+    JSObject *obj = InlineConstruct(f, argc);
+    if (!obj)
+        THROWV(NULL);
+
+    f.regs.sp[-int(argc + 1)].setObject(*obj);
+    if (!CreateLightFrame(f, JSFRAME_CONSTRUCTING, argc))
+        THROWV(NULL);
+
+    return f.fp()->getScript()->ncode;
 }
 
 void JS_FASTCALL
@@ -627,6 +582,14 @@ void JS_FASTCALL
 stubs::PutArgsObject(VMFrame &f)
 {
     js_PutArgsObject(f.cx, f.fp());
+}
+
+void JS_FASTCALL
+stubs::CopyThisv(VMFrame &f)
+{
+    JS_ASSERT(f.fp()->flags & JSFRAME_CONSTRUCTING);
+    if (f.fp()->getReturnValue().isPrimitive())
+        f.fp()->setReturnValue(f.fp()->getThisValue());
 }
 
 extern "C" void *
