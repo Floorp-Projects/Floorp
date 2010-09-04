@@ -488,7 +488,7 @@ nsXULMenuitemAccessible::GetRoleInternal(PRUint32 *aRole)
     return NS_OK;
   }
 
-  if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
     return NS_OK;
   }
@@ -670,9 +670,10 @@ nsXULMenupopupAccessible::GetNameInternal(nsAString& aName)
 nsresult
 nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  nsAccessible *parent = GetParent();
-  if (parent) {
-    PRUint32 role = nsAccUtils::Role(parent);
+  // If accessible is not bound to the tree (this happens while children are
+  // cached) return general role.
+  if (mParent) {
+    PRUint32 role = nsAccUtils::Role(mParent);
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
         role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
@@ -680,7 +681,7 @@ nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
 
     } else if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
-      nsAccessible *grandParent = parent->GetParent();
+      nsAccessible* grandParent = mParent->GetParent();
       if (nsAccUtils::Role(grandParent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
         *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
         return NS_OK;

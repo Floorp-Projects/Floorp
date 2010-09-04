@@ -166,8 +166,6 @@ nsXULColorPickerAccessible::CacheChildren()
 
   nsRefPtr<nsAccessible> child;
   while ((child = walker.GetNextChild())) {
-    // XXX: do not call nsAccessible::GetRole() while accessible not in tree
-    // (bug 574588).
     PRUint32 role = nsAccUtils::Role(child);
 
     // Get an accessbile for menupopup or panel elements.
