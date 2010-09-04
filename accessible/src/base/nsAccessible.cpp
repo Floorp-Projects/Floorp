@@ -2785,9 +2785,7 @@ nsAccessible::GetParent()
 
   // XXX: mParent can be null randomly because supposedly we get layout
   // notification and invalidate parent-child relations, this accessible stays
-  // unattached. This should gone after bug 572951. Other reason is bug 574588
-  // since CacheChildren() implementation calls nsAccessible::GetRole() what
-  // can need to get a parent and we are here as result.
+  // unattached. This should gone after bug 572951.
   NS_WARNING("Bad accessible tree!");
 
 #ifdef DEBUG
