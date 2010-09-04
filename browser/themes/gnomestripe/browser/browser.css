@@ -1321,7 +1321,7 @@ statusbarpanel#statusbar-display {
   padding: 0;
   -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px;
   -moz-border-radius: 10px 8px 0 0;
-  min-height: 27px; /* reserve space for the sometimes hidden close button */
+  min-height: 25px; /* reserve space for the sometimes hidden close button */
 }
 
 .tabbrowser-tab:hover,
@@ -1367,7 +1367,7 @@ statusbarpanel#statusbar-display {
 }
 
 .tabbrowser-tab[pinned] {
-  min-height: 20px; /* corresponds to the max. height of non-textual tab contents, i.e. the tab close button */
+  min-height: 18px; /* corresponds to the max. height of non-textual tab contents, i.e. the tab close button */
 }
 
 .tabbrowser-tab > .tab-text {
@@ -1464,6 +1464,9 @@ statusbarpanel#statusbar-display {
 .tab-close-button {
   padding: 0;
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  margin-top: -1px;
+  margin-bottom: -1px;
+  -moz-margin-end: -1px;
 }
 
 .tabbrowser-tab[selected="true"] > .tab-close-button {
