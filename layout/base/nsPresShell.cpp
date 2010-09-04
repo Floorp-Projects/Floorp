@@ -5354,7 +5354,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
   }
   if (aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) {
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
-    ChangeFlag(mRenderFlags, PR_TRUE, STATE_IGNORING_VIEWPORT_SCROLLING);
+    mRenderFlags = ChangeFlag(mRenderFlags, PR_TRUE, STATE_IGNORING_VIEWPORT_SCROLLING);
   }
   if (aFlags & RENDER_DOCUMENT_RELATIVE) {
     // XXX be smarter about this ... drawWindow might want a rect
