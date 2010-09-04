@@ -3162,20 +3162,6 @@ nsWindow::HasPendingInputEvent()
 mozilla::layers::LayerManager*
 nsWindow::GetLayerManager()
 {
-  nsWindow *topWindow = GetNSWindowPtr(GetTopLevelHWND(mWnd, PR_TRUE));
-
-  if (!topWindow) {
-    return nsBaseWidget::GetLayerManager();
-  }
-
-  /* We don't currently support using an accelerated layer manager with
-   * transparent windows so don't even try. I'm also not sure if we even
-   * want to support this case. See bug #593471 */
-  if (eTransparencyTransparent == mTransparencyMode) {
-    mUseAcceleratedRendering = PR_FALSE;
-    return nsBaseWidget::GetLayerManager();
-  }
-
 #ifndef WINCE
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -3195,6 +3181,12 @@ nsWindow::GetLayerManager()
     const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
     accelerateByDefault = accelerateByDefault ||
                           (acceleratedEnv && (*acceleratedEnv != '0'));
+
+    /* We don't currently support using an accelerated layer manager with
+     * transparent windows so don't even try. I'm also not sure if we even
+     * want to support this case. See bug #593471 */
+    disableAcceleration = disableAcceleration ||
+                          eTransparencyTransparent == mTransparencyMode;
 
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
     PRBool safeMode = PR_FALSE;
@@ -3224,10 +3216,14 @@ nsWindow::GetLayerManager()
         }
       }
     }
+
+    // Fall back to software if we couldn't use any hardware backends.
+    if (!mLayerManager)
+      mLayerManager = new BasicLayerManager(this);
   }
 #endif
 
-  return nsBaseWidget::GetLayerManager();
+  return mLayerManager;
 }
 
 /**************************************************************
