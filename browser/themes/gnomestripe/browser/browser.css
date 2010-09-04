@@ -68,7 +68,7 @@
   padding-top: 0;
 }
 
-#browser-bottombox:not([lwthemefooter="true"]) {
+#browser-bottombox {
   /* opaque for layers optimization */
   background-color: -moz-Dialog;
 }
