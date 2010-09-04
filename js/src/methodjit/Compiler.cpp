@@ -827,10 +827,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RSH)
 
           BEGIN_CASE(JSOP_URSH)
-            prepareStubCall(Uses(2));
-            stubCall(stubs::Ursh);
-            frame.popn(2);
-            frame.pushSynced();
+            jsop_bitop(op);
           END_CASE(JSOP_URSH)
 
           BEGIN_CASE(JSOP_ADD)
