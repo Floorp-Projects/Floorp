@@ -323,20 +323,6 @@ Range.prototype = {
   },
 
   // ----------
-  // Function: overlaps
-  // Whether the <Range> overlaps with the given <Range> or value or not.
-  //
-  // Paramaters
-  //  - a number or <Range>
-  overlaps: function Rect_overlaps(value) {
-    if (Utils.isNumber(value))
-      return this.contains(value);
-    if (Utils.isRange(value))
-      return !(value.max < this.min || this.max < value.min);
-    return false;
-  },
-
-  // ----------
   // Function: proportion
   // Maps the given value to the range [0,1], so that it returns 0 if the value is <= the min,
   // returns 1 if the value >= the max, and returns an interpolated "proportion" in (min, max).

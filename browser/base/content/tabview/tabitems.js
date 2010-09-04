@@ -48,7 +48,7 @@
 //
 // Parameters:
 //   tab - a xul:tab
-window.TabItem = function(tab, options) {
+window.TabItem = function(tab) {
 
   Utils.assert(tab, "tab");
 
@@ -56,9 +56,6 @@ window.TabItem = function(tab, options) {
   // register this as the tab's tabItem
   this.tab.tabItem = this;
 
-  if (!options)
-    options = {};
-  
   // ___ set up div
   var $div = iQ('<div>')
     .addClass('tab')
@@ -99,10 +96,6 @@ window.TabItem = function(tab, options) {
 
   // ___ superclass setup
   this._init($div[0]);
-
-  // ___ attempt to reconnect to data from Storage
-  this._hasBeenDrawn = false;
-  let reconnected = TabItems.reconnect(this);
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
@@ -171,6 +164,7 @@ window.TabItem = function(tab, options) {
   };
 
   this.draggable();
+  this.droppable(true);
 
   // ___ more div setup
   $div.mousedown(function(e) {
@@ -200,20 +194,17 @@ window.TabItem = function(tab, options) {
     .addClass('expander')
     .appendTo($div);
 
+  // ___ additional setup
+  this.reconnected = false;
+  this._hasBeenDrawn = false;
+  this.setResizable(true);
+
   this._updateDebugBounds();
 
   TabItems.register(this);
-  
-  if (!this.reconnected) {
-    GroupItems.newTab(this, options);
-  }
-  
-  // tabs which were not reconnected at all or were not immediately added
-  // to a group get the same treatment.
-  if (!this.reconnected || (reconnected && !reconnected.addedToGroup) ) {
-    this.setResizable(true, options.immediately);
-    this.droppable(true);
-  }
+
+  if (!TabItems.reconnect(this))
+    GroupItems.newTab(this);
 };
 
 window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
@@ -373,9 +364,9 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       if (css.fontSize && !this.inStack()) {
         if (css.fontSize < fontSizeRange.min)
-          immediately ? $title.hide() : $title.fadeOut();
+          $title.fadeOut();
         else
-          immediately ? $title.show() : $title.fadeIn();
+          $title.fadeIn();
       }
 
       if (css.width) {
@@ -479,16 +470,17 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // If value is true, makes this item resizable, otherwise non-resizable.
   // Shows/hides a visible resize handle as appropriate.
-  setResizable: function(value, immediately) {
+  setResizable: function(value) {
     var $resizer = iQ('.expander', this.container);
 
+    this.resizeOptions.minWidth = TabItems.minTabWidth;
+    this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
+
     if (value) {
-      this.resizeOptions.minWidth = TabItems.minTabWidth;
-      this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
-      immediately ? $resizer.show() : $resizer.fadeIn();
+      $resizer.fadeIn();
       this.resizable(true);
     } else {
-      immediately ? $resizer.hide() : $resizer.fadeOut();
+      $resizer.fadeOut();
       this.resizable(false);
     }
   },
@@ -497,19 +489,17 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: makeActive
   // Updates this item to visually indicate that it's active.
   makeActive: function() {
-    iQ(this.container).find("canvas").addClass("focus");
-    iQ(this.container).find("img.cached-thumb").addClass("focus");
+   iQ(this.container).find("canvas").addClass("focus");
+   iQ(this.container).find("img.cached-thumb").addClass("focus");
 
-    if (this.parent)
-      this.parent.setActiveTab(this);
   },
 
   // ----------
   // Function: makeDeactive
   // Updates this item to visually indicate that it's not active.
   makeDeactive: function() {
-    iQ(this.container).find("canvas").removeClass("focus");
-    iQ(this.container).find("img.cached-thumb").removeClass("focus");
+   iQ(this.container).find("canvas").removeClass("focus");
+   iQ(this.container).find("img.cached-thumb").removeClass("focus");
   },
 
   // ----------
@@ -538,7 +528,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           .css(orig.css())
           .removeClass("front");
 
-        // If it's not focused, the onFocus listener would handle it.
+        // If it's not focused, the onFocus lsitener would handle it.
         if (gBrowser.selectedTab == tab)
           UI.onTabSelect(tab);
         else
@@ -705,7 +695,7 @@ window.TabItems = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      self.link(tab, {immediately: true});
+      self.link(tab);
       self.update(tab);
     });
   },
@@ -826,11 +816,11 @@ window.TabItems = {
   // ----------
   // Function: link
   // Takes in a xul:tab.
-  link: function(tab, options){
+  link: function(tab){
     try {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(!tab.tabItem, "shouldn't already be linked");
-      new TabItem(tab, options); // sets tab.tabItem to itself
+      new TabItem(tab); // sets tab.tabItem to itself
     } catch(e) {
       Utils.log(e);
     }
@@ -991,7 +981,7 @@ window.TabItems = {
       let tabData = Storage.getTabData(item.tab);
       if (tabData && this.storageSanity(tabData)) {
         if (item.parent)
-          item.parent.remove(item, {immediately: true});
+          item.parent.remove(item);
 
         item.setBounds(tabData.bounds, true);
 
@@ -1001,7 +991,7 @@ window.TabItems = {
         if (tabData.groupID) {
           var groupItem = GroupItems.groupItem(tabData.groupID);
           if (groupItem) {
-            groupItem.add(item, null, {immediately: true});
+            groupItem.add(item);
 
             if (item.tab == gBrowser.selectedTab)
               GroupItems.setActiveGroupItem(item.parent);
@@ -1020,7 +1010,7 @@ window.TabItems = {
         }
 
         item.reconnected = true;
-        found = {addedToGroup: tabData.groupID};
+        found = true;
       } else
         item.reconnected = item.tab.linkedBrowser.currentURI.spec != 'about:blank';
 

@@ -382,7 +382,7 @@ Trench.prototype = {
   ruleOverlaps: function Trench_ruleOverlaps(position, range) {
     return (this.position - this.radius < position &&
            position < this.position + this.radius &&
-           this.activeRange.overlaps(range));
+           this.activeRange.contains(range));
   },
 
   //----------
