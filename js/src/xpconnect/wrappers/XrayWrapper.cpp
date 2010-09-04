@@ -272,16 +272,34 @@ struct NativePropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *obj, jsid id, bool set, Permission &perm);
 };
 
-extern JSWrapper WaiveXrayWrapperWrapper;
+extern JSCrossCompartmentWrapper XrayWrapperWaivedWrapper;
 
 static JSBool
 wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
 {
+    if (holder->isWrapper()) {
+#ifdef DEBUG
+        {
+            JSProxyHandler *handler = holder->getProxyHandler();
+            NS_ASSERTION(handler == &XrayWrapper<JSCrossCompartmentWrapper>::singleton ||
+                         handler == &XrayWrapper<CrossOriginWrapper>::singleton,
+                         "bad object");
+        }
+#endif
+        holder = holder->unwrap();
+    }
+
     // If the caller intentionally waives the X-ray wrapper we usually
     // apply for wrapped natives, use a special wrapper to make sure the
     // membrane will not automatically apply an X-ray wrapper.
     JSObject *wn = GetWrappedNativeObjectFromHolder(cx, holder);
-    JSObject *obj = JSWrapper::New(cx, wn, NULL, wn->getParent(), &WaiveXrayWrapperWrapper);
+
+    // We have to make sure that if we're wrapping an outer window, that
+    // the .wrappedJSObject also wraps the outer window.
+    OBJ_TO_OUTER_OBJECT(cx, wn);
+    if (!wn)
+        return false;
+    JSObject *obj = JSWrapper::New(cx, wn, NULL, holder->getParent(), &XrayWrapperWaivedWrapper);
     if (!obj)
         return false;
     *vp = OBJECT_TO_JSVAL(obj);
