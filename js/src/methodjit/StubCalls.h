@@ -59,18 +59,17 @@ void JS_FASTCALL InitElem(VMFrame &f, uint32 last);
 void JS_FASTCALL InitProp(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL InitMethod(VMFrame &f, JSAtom *atom);
 
-void JS_FASTCALL CheckStackQuota(VMFrame &f);
-void * JS_FASTCALL CheckArity(VMFrame &f);
-void * JS_FASTCALL CompileFunction(VMFrame &f);
-void JS_FASTCALL SlowNew(VMFrame &f, uint32 argc);
-void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
-void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
-void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
-
-JSBool JS_FASTCALL NewObject(VMFrame &f, uint32 argc);
+void * JS_FASTCALL Call(VMFrame &f, uint32 argc);
+void * JS_FASTCALL New(VMFrame &f, uint32 argc);
+void * JS_FASTCALL SlowNew(VMFrame &f, uint32 argc);
+void * JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
+JSObject * JS_FASTCALL NewObject(VMFrame &f);
 void JS_FASTCALL Throw(VMFrame &f);
+void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
+void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutArgsObject(VMFrame &f);
+void JS_FASTCALL CopyThisv(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
 void JS_FASTCALL WrapPrimitiveThis(VMFrame &f);
 #if JS_MONOIC
@@ -78,9 +77,6 @@ void * JS_FASTCALL InvokeTracer(VMFrame &f, uint32 index);
 #else
 void * JS_FASTCALL InvokeTracer(VMFrame &f);
 #endif
-
-void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
-void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
