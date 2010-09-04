@@ -88,13 +88,13 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%);
+    background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
     text-shadow: 0 1px 0 rgba(255,255,255,.4);
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,75%,.6) 50%);
+    background-image: -moz-linear-gradient(hsla(214,15%,90%,.8), hsla(214,15%,75%,.8) 50%);
   }
 
   #allTabs-panel,
