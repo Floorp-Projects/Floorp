@@ -44,7 +44,7 @@ function test() {
              .get("TmpD", Components.interfaces.nsILocalFile);
   file.append("466937_test.file");
   file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
-  filePath = file.path;
+  let testPath = file.path;
   
   let testURL = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_466937_sample.html";
