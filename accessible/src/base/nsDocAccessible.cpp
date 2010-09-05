@@ -203,11 +203,9 @@ nsDocAccessible::GetName(nsAString& aName)
 }
 
 // nsAccessible public method
-nsresult
-nsDocAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsDocAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_PANE; // Fall back
-
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDocument);
   if (docShellTreeItem) {
@@ -217,28 +215,24 @@ nsDocAccessible::GetRoleInternal(PRUint32 *aRole)
     docShellTreeItem->GetItemType(&itemType);
     if (sameTypeRoot == docShellTreeItem) {
       // Root of content or chrome tree
-      if (itemType == nsIDocShellTreeItem::typeChrome) {
-        *aRole = nsIAccessibleRole::ROLE_CHROME_WINDOW;
-      }
-      else if (itemType == nsIDocShellTreeItem::typeContent) {
+      if (itemType == nsIDocShellTreeItem::typeChrome)
+        return nsIAccessibleRole::ROLE_CHROME_WINDOW;
+
+      if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL
         nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-        if (xulDoc) {
-          *aRole = nsIAccessibleRole::ROLE_APPLICATION;
-        } else {
-          *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
-        }
-#else
-        *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
+        if (xulDoc)
+          return nsIAccessibleRole::ROLE_APPLICATION;
 #endif
+        return nsIAccessibleRole::ROLE_DOCUMENT;
       }
     }
     else if (itemType == nsIDocShellTreeItem::typeContent) {
-      *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
+      return nsIAccessibleRole::ROLE_DOCUMENT;
     }
   }
 
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_PANE; // Fall back;
 }
 
 // nsAccessible public method

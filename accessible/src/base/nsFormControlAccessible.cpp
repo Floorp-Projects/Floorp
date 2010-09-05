@@ -82,10 +82,9 @@ nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
   return NS_OK;
 }
 
-nsresult
-nsRadioButtonAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsRadioButtonAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_RADIOBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_RADIOBUTTON;
 }
 
