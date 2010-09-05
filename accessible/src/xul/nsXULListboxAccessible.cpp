@@ -57,11 +57,10 @@ nsXULColumnsAccessible::
 {
 }
 
-nsresult
-nsXULColumnsAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULColumnsAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_LIST;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_LIST;
 }
 
 nsresult
@@ -97,11 +96,10 @@ nsXULColumnItemAccessible::
 {
 }
 
-nsresult
-nsXULColumnItemAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULColumnItemAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_COLUMNHEADER;
 }
 
 nsresult
@@ -236,24 +234,19 @@ NS_IMETHODIMP nsXULListboxAccessible::GetValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsXULListboxAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULListboxAccessible::NativeRole()
 {
   // A richlistbox is used with the new autocomplete URL bar, and has a parent
   // popup <panel>.
   nsCOMPtr<nsIDOMXULPopupElement> xulPopup =
     do_QueryInterface(mContent->GetParent());
-  if (xulPopup) {
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-    return NS_OK;
-  }
+  if (xulPopup)
+    return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
 
   if (IsMulticolumn())
-    *aRole = nsIAccessibleRole::ROLE_TABLE;
-  else
-    *aRole = nsIAccessibleRole::ROLE_LISTBOX;
-
-  return NS_OK;
+    return nsIAccessibleRole::ROLE_TABLE;
+  return nsIAccessibleRole::ROLE_LISTBOX;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -923,24 +916,25 @@ nsXULListitemAccessible::GetNameInternal(nsAString& aName)
   return GetXULName(aName);
 }
 
-nsresult
-nsXULListitemAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULListitemAccessible::NativeRole()
 {
   nsAccessible *list = GetListAccessible();
-  NS_ENSURE_STATE(list);
-
-  if (nsAccUtils::Role(list) == nsIAccessibleRole::ROLE_TABLE) {
-    *aRole = nsIAccessibleRole::ROLE_ROW;
-    return NS_OK;
+  if (!list) {
+    NS_ERROR("No list accessible for listitem accessible!");
+    return nsIAccessibleRole::ROLE_NOTHING;
   }
 
+  if (nsAccUtils::Role(list) == nsIAccessibleRole::ROLE_TABLE)
+    return nsIAccessibleRole::ROLE_ROW;
+
   if (mIsCheckbox)
-    *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
-  else if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
-  else
-    *aRole = nsIAccessibleRole::ROLE_RICH_OPTION;
-  return NS_OK;
+    return nsIAccessibleRole::ROLE_CHECKBUTTON;
+
+  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
+
+  return nsIAccessibleRole::ROLE_RICH_OPTION;
 }
 
 nsresult
@@ -1228,11 +1222,10 @@ nsXULListCellAccessible::IsSelected(PRBool *aIsSelected)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListCellAccessible. nsAccessible implementation
 
-nsresult
-nsXULListCellAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULListCellAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_CELL;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_CELL;
 }
 
 nsresult

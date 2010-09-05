@@ -578,23 +578,6 @@ nsAccUtils::GetRoleMapEntry(nsINode *aNode)
   return &nsARIAMap::gLandmarkRoleMap;
 }
 
-PRUint32
-nsAccUtils::RoleInternal(nsIAccessible *aAcc)
-{
-  PRUint32 role = nsIAccessibleRole::ROLE_NOTHING;
-  if (aAcc) {
-    nsAccessible* accessible = nsnull;
-    CallQueryInterface(aAcc, &accessible);
-
-    if (accessible) {
-      accessible->GetRoleInternal(&role);
-      NS_RELEASE(accessible);
-    }
-  }
-
-  return role;
-}
-
 PRUint8
 nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
 {

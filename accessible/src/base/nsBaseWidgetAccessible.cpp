@@ -302,9 +302,8 @@ nsEnumRoleAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, nsAccessible)
 
-nsresult
-nsEnumRoleAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsEnumRoleAccessible::NativeRole()
 {
-  *aRole = mRole;
-  return NS_OK;
+  return mRole;
 }

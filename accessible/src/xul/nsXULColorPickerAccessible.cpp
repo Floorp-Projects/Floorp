@@ -73,11 +73,10 @@ nsXULColorPickerTileAccessible::GetValue(nsAString& aValue)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULColorPickerTileAccessible: nsAccessible
 
-nsresult
-nsXULColorPickerTileAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULColorPickerTileAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_PUSHBUTTON;
 }
 
 nsresult
@@ -149,11 +148,10 @@ nsXULColorPickerAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsresult
-nsXULColorPickerAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULColorPickerAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_BUTTONDROPDOWNGRID;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_BUTTONDROPDOWNGRID;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
