@@ -747,12 +747,12 @@ GLContext::UpdateActualFormat()
 {
     ContextFormat nf;
 
-    fGetIntegerv(LOCAL_GL_RED_BITS, (GLint*) &nf.alpha);
-    fGetIntegerv(LOCAL_GL_GREEN_BITS, (GLint*) &nf.alpha);
-    fGetIntegerv(LOCAL_GL_BLUE_BITS, (GLint*) &nf.alpha);
+    fGetIntegerv(LOCAL_GL_RED_BITS, (GLint*) &nf.red);
+    fGetIntegerv(LOCAL_GL_GREEN_BITS, (GLint*) &nf.green);
+    fGetIntegerv(LOCAL_GL_BLUE_BITS, (GLint*) &nf.blue);
     fGetIntegerv(LOCAL_GL_ALPHA_BITS, (GLint*) &nf.alpha);
     fGetIntegerv(LOCAL_GL_DEPTH_BITS, (GLint*) &nf.depth);
-    fGetIntegerv(LOCAL_GL_STENCIL_BITS, (GLint*) &nf.depth);
+    fGetIntegerv(LOCAL_GL_STENCIL_BITS, (GLint*) &nf.stencil);
 
     mActualFormat = nf;
 }
