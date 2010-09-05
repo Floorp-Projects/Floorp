@@ -1486,7 +1486,7 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 574898-1.html 574898-ref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-== 579323-1.html 579323-1-ref.html
+random-if(layersGPUAccelerated) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 580160-1.html 580160-1-ref.html
 random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
