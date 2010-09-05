@@ -2442,7 +2442,7 @@ var SharingUI = {
       button.setAttribute("label", handler.name);
       button.addEventListener("command", function() {
         SharingUI.hide();
-        handler.callback(aURL, aTitle);
+        handler.callback(aURL || "", aTitle || "");
       }, false);
       bbox.appendChild(button);
     });
@@ -2459,7 +2459,7 @@ var SharingUI = {
     {
       name: "Email",
       callback: function callback(aURL, aTitle) {
-        let url = "mailto:?subject=" + encodeURIComponent(aTitle || "") +
+        let url = "mailto:?subject=" + encodeURIComponent(aTitle) +
                   "&body=" + encodeURIComponent(aURL);
         let uri = Services.io.newURI(url, null, null);
         let extProtocolSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
