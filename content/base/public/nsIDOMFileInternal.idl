@@ -1,3 +1,4 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,8 +15,8 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,45 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsFormData_h__
-#define nsFormData_h__
+#include "domstubs.idl"
 
-#include "nsIDOMFormData.h"
-#include "nsIXMLHttpRequest.h"
-#include "nsFormSubmission.h"
-#include "nsTArray.h"
+interface nsIFile;
 
-class nsFormData : public nsIDOMFormData,
-                   public nsIXHRSendable,
-                   public nsFormSubmission
+[scriptable, uuid(047CA6C4-52B3-46F1-8976-E198B724F72F)]
+interface nsIDOMFileInternal : nsISupports
 {
-public:
-  nsFormData();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMFORMDATA
-  NS_DECL_NSIXHRSENDABLE
-
-  // nsFormSubmission
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream);
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue);
-  virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIFile* aFile);
-
-  
-
-private:
-  struct FormDataTuple
-  {
-    nsString name;
-    nsString stringValue;
-    nsCOMPtr<nsIFile> fileValue;
-    PRBool valueIsFile;
-  };
-  
-  nsTArray<FormDataTuple> mFormData;
+  attribute nsIFile internalFile;
 };
-
-#endif // nsFormData_h__
