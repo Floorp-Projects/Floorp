@@ -86,6 +86,7 @@ FunctionTimer::InitTimers()
 }
 
 FunctionTimerLog::FunctionTimerLog(const char *fname)
+    : mLatest(sAppStart)
 {
     if (strcmp(fname, "stdout") == 0) {
         mFile = stdout;
@@ -119,9 +120,16 @@ void
 FunctionTimerLog::LogString(const char *str)
 {
     if (mFile) {
-        TimeDuration elapsed = TimeStamp::Now() - sAppStart;
+        mLatest = TimeStamp::Now();
+        TimeDuration elapsed = mLatest - sAppStart;
         fprintf((FILE*)mFile, "[% 9.2f] %s\n", elapsed.ToSeconds() * 1000.0, str);
     }
+}
+
+TimeDuration
+FunctionTimerLog::LatestSinceStartup() const
+{
+    return mLatest - sAppStart;
 }
 
 int
