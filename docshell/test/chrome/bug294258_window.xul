@@ -43,13 +43,7 @@
       // Change the data for each of the form fields, and reload.
       $("text").value = "text value";
       $("checkbox").checked = true;
-      var file = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsILocalFile);
-      file.append("294258_test.file");
-      file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
-      filePath = file.path;
-      $("file").value = filePath;
+      $("file").value = "file value";
       $("textarea").value = "textarea value";
       $("radio1").checked = true;
       $("select").selectedIndex = 2;
@@ -62,7 +56,7 @@
       // Verify that none of the form data has changed.
       is($("text").value, "text value", "Text value changed");
       is($("checkbox").checked, true, "Checkbox value changed");
-      is($("file").value, filePath, "File value changed");
+      is($("file").value, "file value", "File value changed");
       is($("textarea").value, "textarea value", "Textarea value changed");
       is($("radio1").checked, true, "Radio value changed");
       is($("select").selectedIndex, 2, "Select value changed");
