@@ -1000,25 +1000,40 @@ function UpdateCanvasCache(url, canvas)
     }
 }
 
-// Compute drawWindow flags lazily so the window is set up and can be
-// measured accurately
+// Recompute drawWindow flags for every drawWindow operation.
+// We have to do this every time since our window can be
+// asynchronously resized (e.g. by the window manager, to make
+// it fit on screen) at unpredictable times.
+// Fortunately this is pretty cheap.
 function DoDrawWindow(ctx, x, y, w, h)
 {
-    if (typeof gDrawWindowFlags == "undefined") {
-        gDrawWindowFlags = ctx.DRAWWINDOW_DRAW_CARET |
-                           ctx.DRAWWINDOW_DRAW_VIEW;
-        var flags = "DRAWWINDOW_DRAW_CARET | DRAWWINDOW_DRAW_VIEW";
-        var r = gBrowser.getBoundingClientRect();
-        if (window.innerWidth >= r.right && window.innerHeight >= r.bottom) {
-            // We can use the window's retained layers
-            // because the window is big enough to display the entire browser element
-            gDrawWindowFlags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-            flags += " | DRAWWINDOW_USE_WIDGET_LAYERS";
+    var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW;
+    var testRect = gBrowser.getBoundingClientRect();
+    if (0 <= testRect.left &&
+        0 <= testRect.top &&
+        window.innerWidth >= testRect.right &&
+        window.innerHeight >= testRect.bottom) {
+        // We can use the window's retained layer manager
+        // because the window is big enough to display the entire
+        // browser element
+        flags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+    }
+
+    if (gDrawWindowFlags != flags) {
+        // Every time the flags change, dump the new state.
+        gDrawWindowFlags = flags;
+        var flagsStr = "DRAWWINDOW_DRAW_CARET | DRAWWINDOW_DRAW_VIEW";
+        if (flags & ctx.DRAWWINDOW_USE_WIDGET_LAYERS) {
+            flagsStr += " | DRAWWINDOW_USE_WIDGET_LAYERS";
+        } else {
+            // Output a special warning because we need to be able to detect
+            // this whenever it happens.
+            dump("REFTEST INFO | WARNING: USE_WIDGET_LAYERS disabled\n");
         }
-        dump("REFTEST INFO | drawWindow flags = " + flags +
-             "; window.innerWidth/Height = " + window.innerWidth + "," +
-             window.innerHeight + "; browser.width/height = " +
-             r.width + "," + r.height + "\n");
+        dump("REFTEST INFO | drawWindow flags = " + flagsStr +
+             "; window size = " + window.innerWidth + "," + window.innerHeight +
+             "; test browser size = " + testRect.width + "," + testRect.height +
+             "\n");
     }
 
     ctx.drawWindow(window, x, y, w, h, "rgb(255,255,255)",
