@@ -63,6 +63,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMFileInternal.h"
 #include "nsIDOMWindow.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
@@ -2325,6 +2326,29 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
       aCharset.Truncate();
 
       return NS_OK;
+    }
+
+    // nsIDOMFile?
+    nsCOMPtr<nsIDOMFileInternal> file = do_QueryInterface(supports);
+    if (file) {
+      aCharset.Truncate();
+
+      nsCOMPtr<nsIFile> internalFile;
+      rv = file->GetInternalFile(getter_AddRefs(internalFile));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Get the mimetype
+      nsCOMPtr<nsIMIMEService> mimeService =
+          do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mimeService->GetTypeFromFile(internalFile, aContentType);
+      if (NS_FAILED(rv)) {
+        aContentType.Truncate();
+      }
+
+      // Feed local file input stream into our upload channel
+      return NS_NewLocalFileInputStream(aResult, internalFile);
     }
 
     // nsIXHRSendable?

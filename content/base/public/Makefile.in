@@ -99,6 +99,7 @@ XPIDLSRCS	= \
 		nsIDocumentEncoder.idl      \
 		nsIDOMFile.idl \
 		nsIDOMFileReader.idl \
+		nsIDOMFileInternal.idl \
 		nsIDOMFileList.idl \
 		nsIDOMFileException.idl \
 		nsIDOMFileError.idl \

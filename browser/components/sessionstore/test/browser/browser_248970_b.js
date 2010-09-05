@@ -45,11 +45,6 @@ function test() {
     return false;
   }
 
-  var file = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsIFile);
-  filePath = file.path;
-
   let fieldList = {
     "//input[@name='input']":     Date.now().toString(),
     "//input[@name='spaced 1']":  Math.random().toString(),
@@ -64,7 +59,7 @@ function test() {
     "//textarea[1]":              "",
     "//textarea[2]":              "Some text... " + Math.random(),
     "//textarea[3]":              "Some more text\n" + new Date(),
-    "//input[@type='file']":      filePath
+    "//input[@type='file']":      "/dev/null"
   };
 
   function getElementByXPath(aTab, aQuery) {
