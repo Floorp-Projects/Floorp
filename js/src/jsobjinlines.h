@@ -692,14 +692,6 @@ JSObject::flagsOffset()
     return 0;
 }
 
-inline uint32
-JSObject::flagsAndFreeslot()
-{
-    size_t offset = flagsOffset();
-    char *ptr = offset + (char*) this;
-    return *(uint32*)ptr;
-}
-
 namespace js {
 
 class AutoPropDescArrayRooter : private AutoGCRooter
