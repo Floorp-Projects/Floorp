@@ -880,21 +880,21 @@ function OnDocumentLoad(event)
         }
 
         function WhenMozAfterPaintFlushed(continuation) {
-            if (utils.isMozAfterPaintPending) {
+            if (gWindowUtils.isMozAfterPaintPending) {
                 function handler() {
-                    gBrowser.removeEventListener("MozAfterPaint", handler, false);
+                    window.removeEventListener("MozAfterPaint", handler, false);
                     continuation();
                 }
-                gBrowser.addEventListener("MozAfterPaint", handler, false);
+                window.addEventListener("MozAfterPaint", handler, false);
             } else {
                 continuation();
             }
         }
 
         function AfterPaintListener(event) {
-            if (event.target.document != currentDoc) {
+            if (event.target.document != document) {
                 // ignore paint events for subframes or old documents in the window.
-                // Invalidation in subframes will cause invalidation in the main document anyway.
+                // Invalidation in subframes will cause invalidation in the toplevel document anyway.
                 return;
             }
 
@@ -903,13 +903,13 @@ function OnDocumentLoad(event)
             // When stopAfteraintReceived is set, we can stop --- but we should keep going as long
             // as there are paint events coming (there probably shouldn't be any, but it doesn't
             // hurt to process them)
-            if (stopAfterPaintReceived && !utils.isMozAfterPaintPending) {
+            if (stopAfterPaintReceived && !gWindowUtils.isMozAfterPaintPending) {
                 FinishWaitingForTestEnd();
             }
         }
 
         function FinishWaitingForTestEnd() {
-            gBrowser.removeEventListener("MozAfterPaint", AfterPaintListener, false);
+            window.removeEventListener("MozAfterPaint", AfterPaintListener, false);
             setTimeout(DocumentLoaded, 0);
         }
 
@@ -931,7 +931,7 @@ function OnDocumentLoad(event)
                 setupPrintMode();
             FlushRendering();
 
-            if (utils.isMozAfterPaintPending) {
+            if (gWindowUtils.isMozAfterPaintPending) {
                 // Wait for the last invalidation to have happened and been snapshotted before
                 // we stop the test
                 stopAfterPaintReceived = true;
@@ -945,7 +945,7 @@ function OnDocumentLoad(event)
             FlushRendering();
 
             function continuation() {
-                gBrowser.addEventListener("MozAfterPaint", AfterPaintListener, false);
+                window.addEventListener("MozAfterPaint", AfterPaintListener, false);
                 contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
 
                 // Take a snapshot of the window in its current state
@@ -1002,7 +1002,7 @@ function UpdateCanvasCache(url, canvas)
 
 // Compute drawWindow flags lazily so the window is set up and can be
 // measured accurately
-function DoDrawWindow(ctx, win, x, y, w, h)
+function DoDrawWindow(ctx, x, y, w, h)
 {
     if (typeof gDrawWindowFlags == "undefined") {
         gDrawWindowFlags = ctx.DRAWWINDOW_DRAW_CARET |
@@ -1021,13 +1021,7 @@ function DoDrawWindow(ctx, win, x, y, w, h)
              r.width + "," + r.height + "\n");
     }
 
-    var scrollX = 0;
-    var scrollY = 0;
-    if (!(gDrawWindowFlags & ctx.DRAWWINDOW_DRAW_VIEW)) {
-        scrollX = win.scrollX;
-        scrollY = win.scrollY;
-    }
-    ctx.drawWindow(win, scrollX + x, scrollY + y, w, h, "rgb(255,255,255)",
+    ctx.drawWindow(window, x, y, w, h, "rgb(255,255,255)",
                    gDrawWindowFlags);
 }
 
@@ -1040,21 +1034,8 @@ function InitCurrentCanvasWithSnapshot()
 
     gCurrentCanvas = AllocateCanvas();
 
-    /* XXX This needs to be rgb(255,255,255) because otherwise we get
-     * black bars at the bottom of every test that are different size
-     * for the first test and the rest (scrollbar-related??) */
-    var win = gBrowser.contentWindow;
     var ctx = gCurrentCanvas.getContext("2d");
-    var scale = gBrowser.markupDocumentViewer.fullZoom;
-    ctx.save();
-    // drawWindow always draws one canvas pixel for each CSS pixel in the source
-    // window, so scale the drawing to show the zoom (making each canvas pixel be one
-    // device pixel instead)
-    ctx.scale(scale, scale);
-    DoDrawWindow(ctx, win, 0, 0,
-                 Math.ceil(gCurrentCanvas.width / scale),
-                 Math.ceil(gCurrentCanvas.height / scale));
-    ctx.restore();
+    DoDrawWindow(ctx, 0, 0, gCurrentCanvas.width, gCurrentCanvas.height);
 }
 
 function roundTo(x, fraction)
@@ -1067,23 +1048,19 @@ function UpdateCurrentCanvasForEvent(event)
     if (!gCurrentCanvas)
         return;
 
-    var win = gBrowser.contentWindow;
     var ctx = gCurrentCanvas.getContext("2d");
-    var scale = gBrowser.markupDocumentViewer.fullZoom;
-
     var rectList = event.clientRects;
     for (var i = 0; i < rectList.length; ++i) {
         var r = rectList[i];
-        // Set left/top/right/bottom to "device pixel" boundaries
-        var left = Math.floor(roundTo(r.left*scale, 0.001))/scale;
-        var top = Math.floor(roundTo(r.top*scale, 0.001))/scale;
-        var right = Math.ceil(roundTo(r.right*scale, 0.001))/scale;
-        var bottom = Math.ceil(roundTo(r.bottom*scale, 0.001))/scale;
+        // Set left/top/right/bottom to pixel boundaries
+        var left = Math.floor(r.left);
+        var top = Math.floor(r.top);
+        var right = Math.ceil(r.right);
+        var bottom = Math.ceil(r.bottom);
 
         ctx.save();
-        ctx.scale(scale, scale);
         ctx.translate(left, top);
-        DoDrawWindow(ctx, win, left, top, right - left, bottom - top);
+        DoDrawWindow(ctx, left, top, right - left, bottom - top);
         ctx.restore();
     }
 }
