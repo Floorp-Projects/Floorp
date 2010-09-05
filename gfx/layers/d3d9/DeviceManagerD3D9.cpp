@@ -284,7 +284,7 @@ DeviceManagerD3D9::Init()
     }
 
     D3DCAPS9 caps;
-    if (mDeviceEx->GetDeviceCaps(&caps)) {
+    if (mDeviceEx && mDeviceEx->GetDeviceCaps(&caps)) {
       if (LACKS_CAP(caps.Caps2, D3DCAPS2_DYNAMICTEXTURES)) {
         // XXX - Should we actually hit this we'll need a CanvasLayer that
         // supports static D3DPOOL_DEFAULT textures.
