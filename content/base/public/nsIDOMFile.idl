@@ -38,8 +38,10 @@
 #include "domstubs.idl"
 
 interface nsIDOMFileError;
+interface nsIInputStream;
+interface nsIURI;
 
-[scriptable, uuid(b10293e1-d531-4bdd-9b2b-4d8c1c9bc633)]
+[scriptable, uuid(e72e2d6e-e267-4ea1-a798-6703d3a2c362)]
 interface nsIDOMFile : nsISupports
 {
   //fileName and fileSize are now deprecated attributes
@@ -56,4 +58,11 @@ interface nsIDOMFile : nsISupports
   DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
   DOMString getAsDataURL();             // raises(FileException) on retrieval
   DOMString getAsBinary();              // raises(FileException) on retrieval
+
+  [noscript] readonly attribute nsIInputStream internalStream;
+  // The caller is responsible for releasing the internalUrl from the
+  // moz-filedata: protocol handler
+  [noscript] readonly attribute DOMString internalUrl;
+  // This performs no security checks!
+  [noscript] readonly attribute DOMString mozFullPathInternal;
 };
