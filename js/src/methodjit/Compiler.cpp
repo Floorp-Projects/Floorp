@@ -378,7 +378,8 @@ mjit::Compiler::finishThisUp()
         memcpy(&script->pics[i].labels, &pics[i].labels, sizeof(PICLabels));
 # endif
 
-        if (pics[i].kind == ic::PICInfo::SET) {
+        if (pics[i].kind == ic::PICInfo::SET ||
+            pics[i].kind == ic::PICInfo::SETMETHOD) {
             script->pics[i].u.vr = pics[i].vr;
         } else if (pics[i].kind != ic::PICInfo::NAME) {
             if (pics[i].hasTypeCheck) {
@@ -2527,8 +2528,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
                            inlineShapeLabel);
     DBGLABEL(dbgInlineShapeJump);
 
-    pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j, Uses(1));
+    pic.slowPathStart = stubcc.linkExit(j, Uses(1));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
@@ -2630,7 +2630,9 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         return;
     }
 
-    PICGenInfo pic(ic::PICInfo::SET);
+    JSOp op = JSOp(*PC);
+
+    PICGenInfo pic(op == JSOP_SETMETHOD ? ic::PICInfo::SETMETHOD : ic::PICInfo::SET);
     pic.atom = atom;
 
     /* Guard that the type is an object. */
