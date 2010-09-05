@@ -69,8 +69,11 @@
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
 #include "mozilla/Services.h"
-
+#include "mozilla/storage.h"
 #include "mozilla/FunctionTimer.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsIXULRuntime.h"
+#include "nsXPCOMCIDInternal.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -91,6 +94,10 @@ public:
     return NS_OK;
   }
 };
+
+nsresult RecordStartupDuration();
+nsresult OpenStartupDatabase(mozIStorageConnection **db);
+nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table, const nsACString &schema);
 
 //
 // nsAppStartup
@@ -125,6 +132,8 @@ nsAppStartup::Init()
   NS_TIME_FUNCTION_MARK("Got Observer service");
 
   os->AddObserver(this, "quit-application-forced", PR_TRUE);
+  os->AddObserver(this, "sessionstore-browser-state-restored", PR_TRUE);
+  os->AddObserver(this, "sessionstore-windows-restored", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);
   os->AddObserver(this, "xul-window-registered", PR_TRUE);
   os->AddObserver(this, "xul-window-destroyed", PR_TRUE);
@@ -467,7 +476,7 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
     nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
     if (!appShell)
       return NS_ERROR_FAILURE;
-    
+
     appShell->CreateTopLevelWindow(0, 0, aChromeFlags,
                                    nsIAppShellService::SIZE_TO_CONTENT,
                                    nsIAppShellService::SIZE_TO_CONTENT,
@@ -508,9 +517,84 @@ nsAppStartup::Observe(nsISupports *aSubject,
     EnterLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {
     ExitLastWindowClosingSurvivalArea();
+  } else if ((!strcmp(aTopic, "sessionstore-browser-state-restored")) ||
+             (!strcmp(aTopic, "sessionstore-windows-restored"))) {
+    RecordStartupDuration();
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
 
+  return NS_OK;
+}
+
+nsresult RecordStartupDuration()
+{
+  nsresult rv;
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+
+  PRTime launched, started, finished;
+  runtime->GetLaunchTimestamp((PRUint64*)&launched);
+  runtime->GetStartupTimestamp((PRUint64*)&started);
+
+  nsCOMPtr<mozIStorageConnection> db;
+  rv = OpenStartupDatabase(getter_AddRefs(db));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = EnsureTable(db, NS_LITERAL_CSTRING("duration"),
+                   NS_LITERAL_CSTRING("timestamp INTEGER, launch INTEGER, startup INTEGER"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = EnsureTable(db, NS_LITERAL_CSTRING("events"),
+                   NS_LITERAL_CSTRING("timestamp INTEGER, description TEXT"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO duration VALUES (?1, ?2, ?3)"),
+                           getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt64Parameter(0, launched);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(1, started - launched);
+  NS_ENSURE_SUCCESS(rv, rv);
+  finished = PR_Now();
+  rv = statement->BindInt64Parameter(2, finished - started);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  statement->Execute();
+  return NS_OK;
+}
+
+nsresult OpenStartupDatabase(mozIStorageConnection **db)
+{
+  nsresult rv;
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = file->Append(NS_LITERAL_STRING("startup.sqlite"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<mozIStorageService> svc = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = svc->OpenDatabase(file, db);
+  if (NS_ERROR_FILE_CORRUPTED == rv)
+  {
+    svc->BackupDatabaseFile(file, NS_LITERAL_STRING("startup.sqlite.backup"), nsnull, nsnull);
+    rv = svc->OpenDatabase(file, db);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table, const nsACString &schema)
+{
+  nsresult rv;
+  PRBool exists = false;
+  rv = db->TableExists(table, &exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists)
+    rv = db->CreateTable(PromiseFlatCString(table).get(),
+                         PromiseFlatCString(schema).get());
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
