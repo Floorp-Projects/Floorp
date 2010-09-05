@@ -64,13 +64,10 @@ nsHTMLWin32ObjectOwnerAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLWin32ObjectOwnerAccessible: nsAccessible implementation
 
-nsresult
-nsHTMLWin32ObjectOwnerAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsHTMLWin32ObjectOwnerAccessible::NativeRole()
 {
-  NS_ENSURE_ARG_POINTER(aRole);
-
-  *aRole = nsIAccessibleRole::ROLE_EMBEDDED_OBJECT;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_EMBEDDED_OBJECT;
 }
 
 nsresult

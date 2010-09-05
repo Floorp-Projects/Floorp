@@ -126,42 +126,35 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
   return nsAccessible::QueryInterface(aIID, aInstancePtr);
 }
 
-nsresult
-nsHyperTextAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsHyperTextAccessible::NativeRole()
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsIAtom *tag = mContent->Tag();
 
-  if (tag == nsAccessibilityAtoms::form) {
-    *aRole = nsIAccessibleRole::ROLE_FORM;
+  if (tag == nsAccessibilityAtoms::form)
+    return nsIAccessibleRole::ROLE_FORM;
+
+  if (tag == nsAccessibilityAtoms::div ||
+      tag == nsAccessibilityAtoms::blockquote)
+    return nsIAccessibleRole::ROLE_SECTION;
+
+  if (tag == nsAccessibilityAtoms::h1 ||
+      tag == nsAccessibilityAtoms::h2 ||
+      tag == nsAccessibilityAtoms::h3 ||
+      tag == nsAccessibilityAtoms::h4 ||
+      tag == nsAccessibilityAtoms::h5 ||
+      tag == nsAccessibilityAtoms::h6)
+    return nsIAccessibleRole::ROLE_HEADING;
+
+  nsIFrame *frame = GetFrame();
+  if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame &&
+      frame->GetContent()->Tag() != nsAccessibilityAtoms::input) {
+    // An html:input @type="file" is the only input that is exposed as a
+    // blockframe. It must be exposed as ROLE_TEXT_CONTAINER for JAWS.
+    return nsIAccessibleRole::ROLE_PARAGRAPH;
   }
-  else if (tag == nsAccessibilityAtoms::div ||
-           tag == nsAccessibilityAtoms::blockquote) {
-    *aRole = nsIAccessibleRole::ROLE_SECTION;
-  }
-  else if (tag == nsAccessibilityAtoms::h1 ||
-           tag == nsAccessibilityAtoms::h2 ||
-           tag == nsAccessibilityAtoms::h3 ||
-           tag == nsAccessibilityAtoms::h4 ||
-           tag == nsAccessibilityAtoms::h5 ||
-           tag == nsAccessibilityAtoms::h6) {
-    *aRole = nsIAccessibleRole::ROLE_HEADING;
-  }
-  else {
-    nsIFrame *frame = GetFrame();
-    if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame &&
-        frame->GetContent()->Tag() != nsAccessibilityAtoms::input) {
-      // An html:input @type="file" is the only input that is exposed as a
-      // blockframe. It must be exposed as ROLE_TEXT_CONTAINER for JAWS.
-      *aRole = nsIAccessibleRole::ROLE_PARAGRAPH;
-    }
-    else {
-      *aRole = nsIAccessibleRole::ROLE_TEXT_CONTAINER; // In ATK this works
-    }
-  }
-  return NS_OK;
+
+  return nsIAccessibleRole::ROLE_TEXT_CONTAINER; // In ATK this works
 }
 
 nsresult

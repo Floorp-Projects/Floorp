@@ -142,14 +142,9 @@ nsRootAccessible::GetName(nsAString& aName)
   return document->GetTitle(aName);
 }
 
-/* readonly attribute unsigned long accRole; */
-nsresult
-nsRootAccessible::GetRoleInternal(PRUint32 *aRole) 
-{ 
-  if (!mDocument) {
-    return NS_ERROR_FAILURE;
-  }
-
+PRUint32
+nsRootAccessible::NativeRole()
+{
   // If it's a <dialog> or <wizard>, use nsIAccessibleRole::ROLE_DIALOG instead
   dom::Element *root = mDocument->GetRootElement();
   if (root) {
@@ -158,13 +153,12 @@ nsRootAccessible::GetRoleInternal(PRUint32 *aRole)
       nsAutoString name;
       rootElement->GetLocalName(name);
       if (name.EqualsLiteral("dialog") || name.EqualsLiteral("wizard")) {
-        *aRole = nsIAccessibleRole::ROLE_DIALOG; // Always at the root
-        return NS_OK;
+        return nsIAccessibleRole::ROLE_DIALOG; // Always at the root
       }
     }
   }
 
-  return nsDocAccessibleWrap::GetRoleInternal(aRole);
+  return nsDocAccessibleWrap::NativeRole();
 }
 
 // nsRootAccessible protected member
@@ -395,8 +389,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mCurrentARIAMenubar) {  // Entering menus
       // The natural role is the role that this type of element normally has
-      PRUint32 naturalRole = nsAccUtils::RoleInternal(finalFocusAccessible);
-      if (role != naturalRole) { // Must be a DHTML menuitem
+      if (role != finalFocusAccessible->NativeRole()) { // Must be a DHTML menuitem
         nsAccessible *menuBarAccessible =
           nsAccUtils::GetAncestorWithRole(finalFocusAccessible,
                                           nsIAccessibleRole::ROLE_MENUBAR);

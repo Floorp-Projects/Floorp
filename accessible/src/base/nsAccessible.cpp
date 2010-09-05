@@ -1308,7 +1308,8 @@ nsAccessible::GetRole(PRUint32 *aRole)
       return NS_OK;
   }
 
-  return GetRoleInternal(aRole);
+  *aRole = NativeRole();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1852,19 +1853,11 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
   return NS_OK;
 }
 
-/* unsigned long getRole (); */
-nsresult
-nsAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_NOTHING;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  if (nsCoreUtils::IsXLink(mContent))
-    *aRole = nsIAccessibleRole::ROLE_LINK;
-
-  return NS_OK;
+  return nsCoreUtils::IsXLink(mContent) ?
+    nsIAccessibleRole::ROLE_LINK : nsIAccessibleRole::ROLE_NOTHING;
 }
 
 // readonly attribute PRUint8 numActions

@@ -428,7 +428,7 @@ nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 
   nsAccessible* parentAcc = GetParent();
   if (parentAcc) {
-    if (nsAccUtils::RoleInternal(parentAcc) == nsIAccessibleRole::ROLE_MENUBAR) {
+    if (parentAcc->NativeRole() == nsIAccessibleRole::ROLE_MENUBAR) {
       // If top level menu item, add Alt+ or whatever modifier text to string
       // No need to cache pref service, this happens rarely
       if (gMenuAccesskeyModifier == -1) {
@@ -479,34 +479,28 @@ nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
   return NS_OK;
 }
 
-nsresult
-nsXULMenuitemAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenuitemAccessible::NativeRole()
 {
   nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mContent));
-  if (xulContainer) {
-    *aRole = nsIAccessibleRole::ROLE_PARENT_MENUITEM;
-    return NS_OK;
-  }
+  if (xulContainer)
+    return nsIAccessibleRole::ROLE_PARENT_MENUITEM;
 
-  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
-    return NS_OK;
-  }
+  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
 
   if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                             nsAccessibilityAtoms::radio, eCaseMatters)) {
-    *aRole = nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
-
-  } else if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                                   nsAccessibilityAtoms::checkbox,
-                                   eCaseMatters)) {
-    *aRole = nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
-
-  } else {
-    *aRole = nsIAccessibleRole::ROLE_MENUITEM;
+    return nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
   }
 
-  return NS_OK;
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                            nsAccessibilityAtoms::checkbox,
+                            eCaseMatters)) {
+    return nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
+  }
+
+  return nsIAccessibleRole::ROLE_MENUITEM;
 }
 
 PRInt32
@@ -587,11 +581,10 @@ nsXULMenuSeparatorAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULMenuSeparatorAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenuSeparatorAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_SEPARATOR;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_SEPARATOR;
 }
 
 NS_IMETHODIMP nsXULMenuSeparatorAccessible::DoAction(PRUint8 index)
@@ -667,8 +660,8 @@ nsXULMenupopupAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenupopupAccessible::NativeRole()
 {
   // If accessible is not bound to the tree (this happens while children are
   // cached) return general role.
@@ -676,21 +669,18 @@ nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
     PRUint32 role = nsAccUtils::Role(mParent);
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
         role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-      *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      return NS_OK;
+      return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+    }
 
-    } else if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+    if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
       nsAccessible* grandParent = mParent->GetParent();
-      if (nsAccUtils::Role(grandParent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-        return NS_OK;
-      }
+      if (nsAccUtils::Role(grandParent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE)
+        return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
     }
   }
 
-  *aRole = nsIAccessibleRole::ROLE_MENUPOPUP;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_MENUPOPUP;
 }
 
 
@@ -724,10 +714,9 @@ nsXULMenubarAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULMenubarAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenubarAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_MENUBAR;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_MENUBAR;
 }
 
