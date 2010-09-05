@@ -362,6 +362,16 @@ class SetPropCompiler : public PICStubCompiler
             JS_ASSERT(shape->hasSlot());
             pic.shapeRegHasBaseShape = false;
 
+#ifdef JS_THREADSAFE
+            /* Check that the object isn't shared, so no locking needed. */
+            masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), pic.shapeReg);
+            Jump sharedObject = masm.branchPtr(Assembler::NotEqual,
+                                               Address(pic.objReg, offsetof(JSObject, title.ownercx)),
+                                               pic.shapeReg);
+            if (!slowExits.append(sharedObject))
+                return false;
+#endif
+
             Address flagsAndFreeslot(pic.objReg, JSObject::flagsOffset());
 
             /*
@@ -555,6 +565,11 @@ class SetPropCompiler : public PICStubCompiler
             return disable("non-native");
         if (obj->sealed())
             return disable("sealed");
+
+#ifdef JS_THREADSAFE
+        if (!CX_OWNS_OBJECT_TITLE(f.cx, obj))
+            return disable("shared object");
+#endif
 
         jsid id = ATOM_TO_JSID(atom);
 
