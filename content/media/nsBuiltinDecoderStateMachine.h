@@ -338,6 +338,16 @@ protected:
   // be held.
   PRBool IsPlaying();
 
+  // Returns the "media time". This is the absolute time which the media
+  // playback has reached. i.e. this returns values in the range
+  // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
+  // not start at 0. Note this is different to the value returned
+  // by GetCurrentTime(), which is in the range [0,duration].
+  PRInt64 GetMediaTime() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    return mStartTime + mCurrentFrameTime;
+  }
+
   // Monitor on mAudioStream. This monitor must be held in order to delete
   // or use the audio stream. This stops us destroying the audio stream
   // while it's being used on another thread (typically when it's being
