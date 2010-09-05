@@ -36,8 +36,9 @@
 
 #include "nsFormData.h"
 #include "nsIVariant.h"
+#include "nsIDOMFileInternal.h"
 #include "nsIInputStream.h"
-#include "nsIDOMFile.h"
+#include "nsIFile.h"
 #include "nsContentUtils.h"
 
 nsFormData::nsFormData()
@@ -83,7 +84,7 @@ nsFormData::AddNameValuePair(const nsAString& aName,
 
 nsresult
 nsFormData::AddNameFilePair(const nsAString& aName,
-                            nsIDOMFile* aFile)
+                            nsIFile* aFile)
 {
   FormDataTuple* data = mFormData.AppendElement();
   data->name = aName;
@@ -112,9 +113,13 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 
     nsMemory::Free(iid);
 
-    nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(supports);
+    nsCOMPtr<nsIDOMFileInternal> domFile = do_QueryInterface(supports);
     if (domFile) {
-      return AddNameFilePair(aName, domFile);
+      nsCOMPtr<nsIFile> file;
+      rv = domFile->GetInternalFile(getter_AddRefs(file));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return AddNameFilePair(aName, file);
     }
   }
 

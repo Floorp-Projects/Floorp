@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jonas Sicking <jonas@sicking.cc> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,45 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsFormData_h__
-#define nsFormData_h__
+#ifndef nsIFileControlElement_h___
+#define nsIFileControlElement_h___
 
-#include "nsIDOMFormData.h"
-#include "nsIXMLHttpRequest.h"
-#include "nsFormSubmission.h"
+#include "nsISupports.h"
 #include "nsTArray.h"
+#include "nsString.h"
+#include "nsCOMArray.h"
 
-class nsFormData : public nsIDOMFormData,
-                   public nsIXHRSendable,
-                   public nsFormSubmission
-{
+class nsIFile;
+
+// IID for the nsIFileControl interface
+#define NS_IFILECONTROLELEMENT_IID \
+{ 0x1f6a32fd, 0x9cda, 0x43e9, \
+  { 0x90, 0xef, 0x18, 0x0a, 0xd5, 0xe6, 0xcd, 0xa9 } }
+
+/**
+ * This interface is used for the file control frame to store its value away
+ * into the content.
+ */
+class nsIFileControlElement : public nsISupports {
 public:
-  nsFormData();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMFORMDATA
-  NS_DECL_NSIXHRSENDABLE
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILECONTROLELEMENT_IID)
 
-  // nsFormSubmission
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream);
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue);
-  virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIFile* aFile);
+  /**
+   * Gets a readable string representing the list of files currently
+   * selected by this control. This value might not be a valid file name
+   * and should not be used for anything but displaying the filename to the
+   * user.
+   */
+  virtual void GetDisplayFileName(nsAString& aFileName) = 0;
 
-  
+  /**
+   * Sets the list of filenames currently selected by this control.
+   */
+  virtual void SetFileNames(const nsTArray<nsString>& aFileNames) = 0;
 
-private:
-  struct FormDataTuple
-  {
-    nsString name;
-    nsString stringValue;
-    nsCOMPtr<nsIFile> fileValue;
-    PRBool valueIsFile;
-  };
-  
-  nsTArray<FormDataTuple> mFormData;
+  /**
+   * Gets a list of nsIFile objects for the files currently selected by
+   * this control.
+   */
+  virtual void GetFileArray(nsCOMArray<nsIFile>& aFiles) = 0;
 };
 
-#endif // nsFormData_h__
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileControlElement,
+                              NS_IFILECONTROLELEMENT_IID)
+
+#endif // nsIFileControlElement_h___
