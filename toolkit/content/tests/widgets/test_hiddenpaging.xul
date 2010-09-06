@@ -104,6 +104,8 @@ function testListbox()
   ok(listbox.firstChild.getBoundingClientRect().width < listbox.getBoundingClientRect().width - 10,
      id + ": Scrollbar visible");
 
+  var rowHeight = listbox.firstChild.getBoundingClientRect().height;
+
   listbox.selectedIndex = 0;
   sendKey("PAGE_DOWN", id);
   is(listbox.selectedItem.id, id + "_item8", id + ": Page down should go to the item one visible page away");
@@ -124,6 +126,27 @@ function testListbox()
   sendKey("PAGE_UP", id);
   is(listbox.selectedItem.id, id + "_item1", id + ": Third page up should return to the first visible item");
   is(listbox.getIndexOfFirstVisibleRow(), 0, id + ": Third page up should not have scrolled at all");
+
+  var scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
+  is(scrollHeight, rowHeight * 15, id + ": scrollHeight when rows set");
+
+  listbox.minHeight = 50;
+  scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
+  is(scrollHeight, rowHeight * 15, id + ": scrollHeight when rows and minimium height set");
+
+  listbox.removeAttribute("rows");
+
+  var availHeight = document.getAnonymousNodes(listbox)[1].lastChild.getBoundingClientRect().height;
+  // The listbox layout adds this extra height in GetPrefSize. Not sure what it's for though.
+  var e = (rowHeight * 15 - availHeight) % rowHeight;
+  var extraHeight = (e == 0) ? 0 : rowHeight - e;
+
+  scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
+  is(scrollHeight, rowHeight * 15 + extraHeight, id + ": scrollHeight when minimium height set");
+
+  listbox.removeAttribute("minheight");
+  scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
+  is(scrollHeight, rowHeight * 15 + extraHeight, id + ": scrollHeight");
 }
 
 window.onload = function runTests() {
