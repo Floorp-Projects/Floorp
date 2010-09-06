@@ -758,7 +758,11 @@
             if (!this._previewMode && oldTab != this.selectedTab)
               oldTab.owner = null;
 
-            this._lastRelatedTab = null;
+            if (this._lastRelatedTab) {
+              if (this._lastRelatedTab != this.selectedTab)
+                this._lastRelatedTab.owner = null;
+              this._lastRelatedTab = null;
+            }
 
             var oldBrowser = this.mCurrentBrowser;
             if (oldBrowser) {
@@ -1252,6 +1256,10 @@
                 Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
               let newTabPos = (this._lastRelatedTab ||
                                this.selectedTab)._tPos + 1;
+              if (this._lastRelatedTab)
+                this._lastRelatedTab.owner = null;
+              else
+                t.owner = this.selectedTab;
               this.moveTabTo(t, newTabPos);
               this._lastRelatedTab = t;
             }
