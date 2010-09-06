@@ -108,20 +108,20 @@ class InlineFrameAssembler {
         tempRegs.takeReg(funObjReg);
     }
 
-    struct AdjustedFrame {
-        AdjustedFrame(uint32 baseOffset)
-         : baseOffset(baseOffset)
-        { }
-
-        uint32 baseOffset;
-
-        Address addrOf(uint32 offset) {
-            return Address(JSFrameReg, baseOffset + offset);
-        }
-    };
-
     void assemble()
     {
+        struct AdjustedFrame {
+            AdjustedFrame(uint32 baseOffset)
+             : baseOffset(baseOffset)
+            { }
+
+            uint32 baseOffset;
+
+            Address addrOf(uint32 offset) {
+                return Address(JSFrameReg, baseOffset + offset);
+            }
+        };
+
         RegisterID t0 = tempRegs.takeAnyReg();
 
         /* Note: savedPC goes into the down frame. */
