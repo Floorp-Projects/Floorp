@@ -242,17 +242,6 @@ public:
 
 protected:
 
-  // Returns the number of unplayed ms of audio we've got decoded and/or
-  // pushed to the hardware waiting to play. This is how much audio we can
-  // play without having to run the audio decoder.
-  PRInt64 AudioDecodedMs() const;
-
-  // Returns PR_TRUE if we're running low on decoded data.
-  PRBool HasLowDecodedData() const;
-
-  // Returns PR_TRUE if we've got plenty of decoded data.
-  PRBool HasAmpleDecodedData() const;
-
   // Returns PR_TRUE when there's decoded audio waiting to play.
   // The decoder monitor must be held.
   PRBool HasFutureAudio() const;
