@@ -1456,7 +1456,7 @@
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
 
-            if (browser.registeredOpenURI) {
+            if (browser.registeredOpenURI && !aTabWillBeMoved) {
               this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
@@ -1658,10 +1658,18 @@
             filter.removeProgressListener(tabListener);
             var tabListenerBlank = tabListener.mBlank;
 
+            var otherBrowser = aOtherTab.linkedBrowser;
+
+            // Restore current registered open URI.
+            if (ourBrowser.registeredOpenURI)
+              this.mBrowserHistory.unregisterOpenPage(ourBrowser.registeredOpenURI);
+            if (otherBrowser.registeredOpenURI)
+              ourBrowser.registeredOpenURI = otherBrowser.registeredOpenURI;
+
             // Workarounds for bug 458697
             // Icon might have been set on DOMLinkAdded, don't override that.
-            if (!ourBrowser.mIconURL && aOtherTab.linkedBrowser.mIconURL)
-              this.setIcon(aOurTab, aOtherTab.linkedBrowser.mIconURL);
+            if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
+              this.setIcon(aOurTab, otherBrowser.mIconURL);
             var isBusy = aOtherTab.hasAttribute("busy");
             if (isBusy) {
               aOurTab.setAttribute("busy", "true");
@@ -1671,7 +1679,7 @@
             }
 
             // Swap the docshells
-            ourBrowser.swapDocShells(aOtherTab.linkedBrowser);
+            ourBrowser.swapDocShells(otherBrowser);
 
             // Finish tearing down the tab that's going away.
             remoteBrowser._endRemoveTab(aOtherTab);
