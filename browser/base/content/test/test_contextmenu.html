@@ -452,6 +452,11 @@ function startTest() {
     contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     ok(contextMenu, "Got context menu XUL");
 
+    if (chromeWin.document.getElementById("Browser:Stop").getAttribute("disabled") != "true") {
+      SimpleTest.executeSoon(startTest);
+      return;
+    }
+
     text   = subwindow.document.getElementById("test-text");
     link   = subwindow.document.getElementById("test-link");
     mailto = subwindow.document.getElementById("test-mailto");
