@@ -260,28 +260,11 @@
 }
 
 #header-utils-btn {
-  -moz-appearance: none;
   min-width: 4.5em;
-  border-width: 1px;
-  -moz-border-top-colors: #999;
-  -moz-border-bottom-colors: #999;
-  -moz-border-left-colors: #999;
-  -moz-border-right-colors: #999;
-  -moz-border-radius: 8px;
-  background-image: -moz-linear-gradient(#FFF, #BBB);
+}
+
+#header-utils-btn .button-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
-}
-
-#header-utils-btn:hover,
-#header-utils-btn[open="true"] {
-  -moz-border-top-colors: #777;
-  -moz-border-bottom-colors: #777;
-  -moz-border-left-colors: #777;
-  -moz-border-right-colors: #777;
-}
-
-#header-utils-btn[open="true"] {
-  -moz-box-shadow: inset 3px 3px 8px #555;
 }
 
 #header-utils-btn:-moz-focusring > .button-box {
