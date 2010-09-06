@@ -52,6 +52,7 @@ XPIDLSRCS = \
 
 EXTRA_PP_COMPONENTS = \
         AboutRedirector.js \
+        BrowserCLH.js \
         DirectoryProvider.js\
         Sidebar.js \
         SessionStore.js \
@@ -65,7 +66,6 @@ EXTRA_COMPONENTS = \
         DownloadManagerUI.js \
         HelperAppDialog.js \
         PromptService.js \
-        BrowserCLH.js \
         ContentDispatchChooser.js \
         AutoCompleteCache.js \
         AddonUpdateService.js \
