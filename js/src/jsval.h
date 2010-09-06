@@ -632,8 +632,8 @@ JSVAL_IS_MAGIC_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE JSObject *
 MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
 {
-    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
     uint64 ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
+    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
     JS_ASSERT((ptrBits >> JSVAL_TAG_SHIFT) == 0);
     return (JSObject *)ptrBits;
 }
@@ -670,8 +670,8 @@ static JS_ALWAYS_INLINE jsval_layout
 OBJECT_TO_JSVAL_IMPL(JSObject *obj)
 {
     jsval_layout l;
-    JS_ASSERT(obj);
     uint64 objBits = (uint64)obj;
+    JS_ASSERT(obj);
     JS_ASSERT((objBits >> JSVAL_TAG_SHIFT) == 0);
     l.asBits = objBits | JSVAL_SHIFTED_TAG_OBJECT;
     return l;
