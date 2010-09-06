@@ -178,13 +178,8 @@ GPSDProvider.prototype = {
   watch: function(c) {
     LOG("watch called\n");    
     try {
-        // Turn GPSD buffer on, results in smoother data points which I think we want.
-        // Required due to the way that different data arrives in different NMEA sentences.
-        var bufferOption = "J=1\n";
-        this.outputStream.write(bufferOption, bufferOption.length);
-        
         // Go into "watcher" mode
-        var mode = "w\n";
+        var mode = '?WATCH={"enable":true,"json":true}';
         this.outputStream.write(mode, mode.length);
     } catch (e) { return; }
 
@@ -196,54 +191,57 @@ GPSDProvider.prototype = {
         var sInputStream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(Ci.nsIScriptableInputStream);
         sInputStream.init(inputStream);
 
-        var s = sInputStream.read(count);
+        var responseSentence = sInputStream.read(count);
         
-        var response = s.split('=');
+        var response = null; 
+        try {
+          response = JSON.parse(responseSentence);
+          } catch (e) { return; }
         
-        var header = response[0];
-        var info = response[1];
-        
-        // is this location information?
-        if (header != 'GPSD,O') {
-          // don't do anything
+        // is the right kind of sentence?
+        if (response.class != 'TPV') {
+          //don't do anything
           return;
         }
-        
+
         // is there a fix?
-        if (info == '?') {
+        if (response.mode == '1') {
           // don't do anything
           return;
         }
-    
-        // get the info from the string
-        var fields = info.split(' ');
         
-        // we'll only use RMC data as it seems to make sense
-        if (fields[0] != 'RMC') {
-          return;
-        }
-
-        LOG("Got info: " + info);
-
-        for (var i = 0; i < fields.length; i++) {
-          if (fields[i] == '?') {
-            fields[i] = null;
-          }
-        }
+        LOG("Got info: " + responseSentence);
+ 
+        // The API requires these values, if one is missing
+        // we return without updating the position.
+        if (response.time && response.lat && response.lon
+            && response.epx && response.epy) {
+        var timestamp = response.time; // UTC
+        var latitude = response.lat; // degrees
+        var longitude = response.lon; // degrees
+        var horizontalError = Math.max(response.epx,response.epy); } // meters 
+        else { return; }
         
-        var timestamp = fields[1]; // UTC
-        var timeError = fields[2]; // seconds
-        var latitude = fields[3]; // degrees
-        var longitude = fields[4]; // degrees
-        var altitude = fields[5]; // meters
-        var horizontalError = fields[6]; // meters
-        var verticalError = fields[7]; // meters
-        var course = fields[8]; // degrees;
-        var speed = fields[9]; // meters/sec maybe knots depending on GPSD version TODO: figure this out
+        // Altitude is optional, but if it's present, so must be vertical precision.
+        var altitude = null;
+        var verticalError = null; 
+        if (response.alt && response.epv) {
+          altitude = response.alt; // meters
+          verticalError = response.epv; // meters
+        } 
+
+        var speed = null;
+        if (response.speed) { var speed = response.speed; } // meters/sec
+         
+        var course = null;
+        if (response.track) { var course = response.track; } // degrees
         
         var geoPos = new GeoPositionObject(latitude, longitude, altitude, horizontalError, verticalError, course, speed, timestamp);
         
         c.update(geoPos);
+        LOG("Position updated:" + timestamp + "," + latitude + "," + longitude + ","
+             + horizontalError + "," + altitude + "," + verticalError + "," + course 
+             + "," + speed);
     
       }
       
