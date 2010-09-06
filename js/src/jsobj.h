@@ -372,7 +372,6 @@ struct JSObject {
     inline void trace(JSTracer *trc);
 
     static size_t flagsOffset();
-    uint32 flagsAndFreeslot();
 
     uint32 shape() const {
         JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
