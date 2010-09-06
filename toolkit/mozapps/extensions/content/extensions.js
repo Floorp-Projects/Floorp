@@ -1727,8 +1727,8 @@ var gDetailView = {
 
     var screenshot = document.getElementById("detail-screenshot");
     if (aAddon.screenshots && aAddon.screenshots.length > 0) {
-      if (aAddon.screenshots[0].thumbnail)
-        screenshot.src = aAddon.screenshots[0].thumbnail;
+      if (aAddon.screenshots[0].thumbnailURL)
+        screenshot.src = aAddon.screenshots[0].thumbnailURL;
       else
         screenshot.src = aAddon.screenshots[0].url;
       screenshot.hidden = false;
