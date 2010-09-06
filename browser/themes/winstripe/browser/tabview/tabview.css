@@ -3,14 +3,15 @@
 */
 
 body {
+  background-color: transparent;  
   font-family: Tahoma, sans-serif !important;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 13px;
+  color: rgba(0,0,0,0.4);
+  font-size: 12px;
   line-height: 16px;
 }
 
 #bg {
-  background: url("chrome://browser/skin/tabview/grain.png") repeat scroll center top, -moz-linear-gradient(center top , #CCD9EA, #C7D5E7) repeat scroll 0 0 transparent;
+  background: -moz-linear-gradient(top,#F1F5FB,#EDF4FB);
 }
 
 /* Tabs
@@ -18,35 +19,36 @@ body {
 
 .tab {
   padding: 4px 6px 6px 4px;
-  background-color: #E0EAF5;
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(245,245,245,1);
   -moz-border-radius: 0.4em;
-  -moz-box-shadow:
-    0 1px 0 #FFFFFF inset,
-    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
-    1px 0 1px rgba(255, 255, 255, 0.8) inset,
-    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
-    0 1px 2px rgba(4, 38, 60, 0.4);
+  -moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px;
   cursor: pointer;
-  margin: 4px;
 }
 
 .tab canvas,
 .cached-thumb {
-  border: 1px solid rgba(73, 99, 119, 0.3);
+  border: 1px solid rgba(0,0,0,0.2);
 }
 
-.thumb {
-  -moz-box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.1);
+.thumb-shadow {
+  border-bottom: 5px solid rgba(0,0,0,0.05);
+  margin-right: -12px;
+  bottom: 2px;
+  width: 94.5%;
 }
 
 .favicon {
-  background-color: #E0EAF5;
+  background-color: rgba(245,245,245,1);
   -moz-border-radius-bottomright: 0.4em;
+  -moz-box-shadow:
+    inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
+    inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
   padding: 4px 6px 6px 4px;
   top: 4px;
   left: 4px;
-  border-right: 1px solid rgba(73, 99, 119, 0.3);
-  border-bottom: 1px solid rgba(73, 99, 119, 0.3);
+  border-right: 1px solid rgba(0,0,0,0.2);
+  border-bottom: 1px solid rgba(0,0,0,0.2);
   height: 17px;
   width: 17px;
 }
@@ -62,11 +64,12 @@ body {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/Close.gif) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
   opacity: 0.2;
+  background: url(chrome://global/skin/icons/Close.gif) no-repeat;
+}
+
+.close:hover {
+  opacity: 1.0;
 }
 
 .expander {
@@ -75,17 +78,10 @@ body {
   width: 16px;
   height: 16px;
   background: url(chrome://global/skin/icons/resizer.png) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
   opacity: 0.2;
 }
 
-.close:hover,
 .expander:hover {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
   opacity: 1.0;
 }
 
@@ -97,12 +93,11 @@ body {
 }
 
 .tab-title {
-  bottom: -20px;
+  top: 100%;
   text-align: center;
   width: 94.5%;
   white-space: nowrap;
   overflow: hidden;
-  text-shadow: 0 1px rgba(255, 255, 255, 0.6);
 }
 
 .stacked {
@@ -123,13 +118,8 @@ body {
   -moz-box-shadow: none !important;
 }
 
-.tab.focus {
-  -moz-box-shadow:
-    0 1px 0 #FFFFFF inset,
-    0 -1px 1px #FFFFFF inset,
-    1px 0 1px #FFFFFF inset,
-    -1px 0 1px #FFFFFF inset,
-    0 0 8px #007ECE;
+.focus {
+  -moz-box-shadow:  rgba(54,79,225,1) 0px 0px 5px -1px !important;
 }
 
 /* Tab: Zooming
@@ -143,11 +133,7 @@ body {
   display: none;
 }
 
-.front .thumb {
-  -moz-box-shadow: none !important;
-}
-
-.front.focus {
+.front .focus {
   -moz-box-shadow: none !important;
 }
 
@@ -155,24 +141,18 @@ body {
 ----------------------------------*/
 
 .tabInGroupItem {
-  -moz-box-shadow: none;
-  background-color: #E0EAF5;
-}
-
-.tabInGroupItem .favicon {
-  background-color: #E0EAF5;
+  border: none;
+  -moz-box-shadow: none !important;
 }
 
 .groupItem {
   cursor: move;
-  background-color: #E0EAF5;
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(248,248,248,1);
   -moz-border-radius: 0.4em;
   -moz-box-shadow:
-    0 1px 0 #FFFFFF inset,
-    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
-    1px 0 1px rgba(255, 255, 255, 0.8) inset,
-    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
-    0 1px 4px rgba(4, 38, 60, 0.6);
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+    rgba(0,0,0,0.2) 1px 1px 4px;
 }
 
 .groupItem.activeGroupItem {
@@ -181,6 +161,7 @@ body {
 }
 
 .phantom {
+  border: 1px solid rgba(190,190,190,1);
 }
 
 .overlay {

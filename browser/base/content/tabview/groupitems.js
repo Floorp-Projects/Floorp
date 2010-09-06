@@ -777,7 +777,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
-      Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
+      Items.arrange(this._children, box, Utils.extend({}, options, {padding: 8, z: 99999}));
     } else {
       var bb = this.getContentBounds();
       var count = this._children.length;
@@ -1405,6 +1405,21 @@ window.GroupItems = {
     }
 
     return sane;
+  },
+
+  // ----------
+  // Function: getGroupItemWithTitle
+  // Returns the <GroupItem> that has the given title, or null if none found.
+  // TODO: what if there are multiple groupItems with the same title??
+  //       Right now, looks like it'll return the last one. Bug 586557
+  getGroupItemWithTitle: function(title) {
+    var result = null;
+    this.groupItems.forEach(function(groupItem) {
+      if (groupItem.getTitle() == title)
+        result = groupItem;
+    });
+
+    return result;
   },
 
   // ----------
