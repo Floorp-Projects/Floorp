@@ -52,10 +52,6 @@ body {
   height: 100%;
 }
 
-.thumb-shadow {
-  position: absolute;
-}
-
 .favicon {
   position: absolute;
 }
@@ -73,8 +69,7 @@ body {
   position: absolute;
 }
 
-.stacked .tab-title,
-.stacked .thumb-shadow {
+.stacked .tab-title {
   display: none;
 }
 
