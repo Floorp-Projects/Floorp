@@ -777,7 +777,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
-      Items.arrange(this._children, box, Utils.extend({}, options, {padding: 8, z: 99999}));
+      Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
     } else {
       var bb = this.getContentBounds();
       var count = this._children.length;
