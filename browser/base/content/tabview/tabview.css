@@ -171,3 +171,10 @@ body {
 .iq-resizable-autohide .iq-resizable-handle {
   display: none;
 }
+
+/* Exit button
+----------------------------------*/
+#exit-button {
+  position: absolute;
+  z-index: 99999;
+}
