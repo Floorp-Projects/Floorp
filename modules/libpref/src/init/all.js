@@ -1748,9 +1748,6 @@ pref("network.autodial-helper.enabled", true);
 // and we're not already running).
 pref("advanced.system.supportDDEExec", true);
 
-// Use CP932 compatible map for JIS X 0208
-pref("intl.jis0208.map", "CP932");
-
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
 
@@ -2397,9 +2394,6 @@ pref("applications.telnet.host", "%host%");
 pref("applications.telnet.port", "-p %port%");
 
 pref("mail.compose.max_recycled_windows", 0);
-
-// Use IBM943 compatible map for JIS X 0208
-pref("intl.jis0208.map", "IBM943");
 
 // Disable IPv6 name lookups by default.
 // This is because OS/2 doesn't support IPv6
