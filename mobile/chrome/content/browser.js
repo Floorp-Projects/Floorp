@@ -363,10 +363,6 @@ var Browser = {
       dump("###########" + e + "\n");
     }
 
-    let needOverride = Util.needHomepageOverride();
-    if (needOverride == "new profile")
-      this.initNewProfile();
-
     let container = document.getElementById("tile-container");
     let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect);
 
@@ -507,45 +503,13 @@ var Browser = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    // Command line arguments/initial homepage
-    let whereURI = this.getHomePage();
-    if (needOverride == "new profile")
-        whereURI = "about:firstrun";
+    // If this is an intial window launch the commandline handler passes us the default
+    // page as an argument
+    let defaultURL = this.getHomePage();
+    if (window.arguments && window.arguments[0])
+      defaultURL = window.arguments[0];
 
-    // If this is an intial window launch (was a nsICommandLine passed via window params)
-    // we execute some logic to load the initial launch page
-    if (window.arguments && window.arguments[0]) {
-      if (window.arguments[0] instanceof Ci.nsICommandLine) {
-        try {
-          var cmdLine = window.arguments[0];
-
-          // Check for and use a single commandline parameter
-          if (cmdLine.length == 1) {
-            // Assume the first arg is a URI if it is not a flag
-            var uri = cmdLine.getArgument(0);
-            if (uri != "" && uri[0] != '-') {
-              whereURI = cmdLine.resolveURI(uri);
-              if (whereURI)
-                whereURI = whereURI.spec;
-            }
-          }
-
-          // Check for the "url" flag
-          var uriFlag = cmdLine.handleFlagWithParam("url", false);
-          if (uriFlag) {
-            whereURI = cmdLine.resolveURI(uriFlag);
-            if (whereURI)
-              whereURI = whereURI.spec;
-          }
-        } catch (e) {}
-      }
-      else {
-        // This window could have been opened by nsIBrowserDOMWindow.openURI
-        whereURI = window.arguments[0];
-      }
-    } 
-
-    this.addTab(whereURI, true);
+    this.addTab(defaultURL, true);
 
     // JavaScript Error Console
     if (Services.prefs.getBoolPref("browser.console.showInPanel")){
@@ -654,9 +618,6 @@ var Browser = {
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
-  },
-
-  initNewProfile: function initNewProfile() {
   },
 
   getHomePage: function () {
