@@ -384,6 +384,17 @@ ShouldRetainTransparentSurface(PRUint32 aContentFlags,
   }
 }
 
+static nsIntRegion
+IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
+{
+  gfxRect clip = aContext->GetClipExtents();
+  clip.RoundOut();
+  nsIntRect r(clip.X(), clip.Y(), clip.Width(), clip.Height());
+  nsIntRegion result;
+  result.And(aRegion, r);
+  return result;
+}
+
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
@@ -409,17 +420,20 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     mValidRegion.SetEmpty();
     mBuffer.Clear();
 
-    target->Save();
-    gfxUtils::ClipToRegionSnapped(target, mVisibleRegion);
-    if (aOpacity != 1.0) {
-      target->PushGroup(contentType);
+    nsIntRegion toDraw = IntersectWithClip(mVisibleRegion, target);
+    if (!toDraw.IsEmpty()) {
+      target->Save();
+      gfxUtils::ClipToRegionSnapped(target, toDraw);
+      if (aOpacity != 1.0) {
+        target->PushGroup(contentType);
+      }
+      aCallback(this, target, toDraw, nsIntRegion(), aCallbackData);
+      if (aOpacity != 1.0) {
+        target->PopGroupToSource();
+        target->Paint(aOpacity);
+      }
+      target->Restore();
     }
-    aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
-    if (aOpacity != 1.0) {
-      target->PopGroupToSource();
-      target->Paint(aOpacity);
-    }
-    target->Restore();
     return;
   }
 
