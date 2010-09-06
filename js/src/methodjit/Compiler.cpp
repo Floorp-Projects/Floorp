@@ -2743,8 +2743,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
                            inlineShapeLabel);
     DBGLABEL(dbgInlineShapeJump);
 
-    pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j, Uses(1));
+    pic.slowPathStart = stubcc.linkExit(j, Uses(1));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
@@ -2929,8 +2928,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
 
     /* Slow path. */
     {
-        pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExit(j, Uses(2));
+        pic.slowPathStart = stubcc.linkExit(j, Uses(2));
 
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
@@ -3079,8 +3077,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     Label inlineJumpOffset = masm.label();
 #endif
     {
-        pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExit(j, Uses(0));
+        pic.slowPathStart = stubcc.linkExit(j, Uses(0));
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
         pic.callReturn = stubcc.call(ic::BindName);
