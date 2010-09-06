@@ -729,6 +729,8 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 
   nsCOMPtr<nsIDocument> doc;
 
+  nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->mElement);
+
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
     // XXX This is inefficient - GetText makes multiple
@@ -740,14 +742,18 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   else {
     script = &aRequest->mScriptText;
 
-    nsCOMPtr<nsIContent> eltAsContent = do_QueryInterface(aRequest->mElement);
-    NS_ASSERTION(eltAsContent, "Script should QI to nsIContent.");
-    doc = eltAsContent->GetOwnerDoc();
+    doc = scriptElem->GetOwnerDoc();
+  }
+
+  nsCOMPtr<nsIScriptElement> oldParserInsertedScript;
+  PRUint32 parserCreated = aRequest->mElement->GetParserCreated();
+  if (parserCreated) {
+    oldParserInsertedScript = mCurrentParserInsertedScript;
+    mCurrentParserInsertedScript = aRequest->mElement;
   }
 
   FireScriptAvailable(NS_OK, aRequest);
 
-  nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->mElement);
   PRBool runScript = PR_TRUE;
   nsContentUtils::DispatchTrustedEvent(scriptElem->GetOwnerDoc(),
                                        scriptElem,
@@ -756,15 +762,15 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 
   nsresult rv = NS_OK;
   if (runScript) {
-    aRequest->mElement->BeginEvaluating();
     if (doc) {
       doc->BeginEvaluatingExternalScript();
     }
+    aRequest->mElement->BeginEvaluating();
     rv = EvaluateScript(aRequest, *script);
+    aRequest->mElement->EndEvaluating();
     if (doc) {
       doc->EndEvaluatingExternalScript();
     }
-    aRequest->mElement->EndEvaluating();
 
     nsContentUtils::DispatchTrustedEvent(scriptElem->GetOwnerDoc(),
                                          scriptElem,
@@ -773,6 +779,10 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   }
 
   FireScriptEvaluated(rv, aRequest);
+
+  if (parserCreated) {
+    mCurrentParserInsertedScript = oldParserInsertedScript;
+  }
 
   return rv;
 }

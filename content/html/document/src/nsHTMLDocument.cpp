@@ -2890,7 +2890,7 @@ nsHTMLDocument::GenerateParserKey(void)
   // The script loader provides us with the currently executing script element,
   // which is guaranteed to be unique per script.
   if (nsHtml5Module::sEnabled) {
-    nsIScriptElement* script = mScriptLoader->GetCurrentScript();
+    nsIScriptElement* script = mScriptLoader->GetCurrentParserInsertedScript();
     if (script && mParser && mParser->IsScriptCreated()) {
       nsCOMPtr<nsIParser> creatorParser = script->GetCreatorParser();
       if (creatorParser != mParser) {

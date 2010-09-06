@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>document.write() from script-inserted inline scripts and script@onload</title>
+</head>
+<body>
+1
+<script>
+function write(num) {
+  document.write(num + " ");
+}
+write(2);
+document.write("\u003Cscript src='data:text/javascript,write(3)'>\u003C/script> 4 \u003Cscript>write(5)\u003C/script>");
+var s = document.createElement("script");
+s.textContent = "write(6)";
+document.body.appendChild(s);
+write(7);
+document.write("\u003Cscript src='data:text/javascript,write(8)' onload='scriptload()'>\u003C/script> 13 \u003Cscript>write(14)\u003C/script>");
+write(15);
+</script>
+</body>
+</html>
