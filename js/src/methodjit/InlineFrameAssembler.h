@@ -55,8 +55,8 @@ struct AdjustedFrame {
 
     uint32 baseOffset;
 
-    Address addrOf(uint32 offset) {
-        return Address(JSFrameReg, baseOffset + offset);
+    JSC::MacroAssembler::Address addrOf(uint32 offset) {
+        return JSC::MacroAssembler::Address(JSFrameReg, baseOffset + offset);
     }
 };
 
