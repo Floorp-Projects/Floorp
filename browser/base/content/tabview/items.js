@@ -915,11 +915,7 @@ window.Items = {
       return rects;
 
     var columns = 1;
-    // We'll assume for the time being that all the items have the same styling
-    // and that the margin is the same width around.
-    var itemMargin = items && items.length ?
-                       parseInt(iQ(items[0].container).css('margin-left')) : 0;
-    var padding = itemMargin * 2;
+    var padding = options.padding || 0;
     var yScale = 1.1; // to allow for titles
     var rows;
     var tabWidth;
@@ -928,9 +924,9 @@ window.Items = {
 
     function figure() {
       rows = Math.ceil(count / columns);
-      tabWidth = (bounds.width - (padding * columns)) / columns;
+      tabWidth = (bounds.width - (padding * (columns - 1))) / columns;
       tabHeight = tabWidth * tabAspect;
-      totalHeight = (tabHeight * yScale * rows) + (padding * rows);
+      totalHeight = (tabHeight * yScale * rows) + (padding * (rows - 1));
     }
 
     figure();
@@ -941,7 +937,8 @@ window.Items = {
     }
 
     if (rows == 1) {
-      tabWidth = Math.min(tabWidth, (bounds.height - 2 * itemMargin) / tabAspect);
+      var maxWidth = Math.max(TabItems.tabWidth, bounds.width / 2);
+      tabWidth = Math.min(Math.min(maxWidth, bounds.width / count), bounds.height / tabAspect);
       tabHeight = tabWidth * tabAspect;
     }
 
