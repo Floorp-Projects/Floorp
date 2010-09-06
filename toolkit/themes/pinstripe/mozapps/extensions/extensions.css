@@ -493,10 +493,6 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
-.remove-container {
-  width: 16px;
-}
-
 /*** item - uninstalled ***/
 
 .addon[status="uninstalled"] {
@@ -829,28 +825,6 @@
   display: none;
 }
 
-.remove-button {
-  -moz-appearance: none;
-  padding: 0;
-  margin: 0;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
-  border: none;
-  min-width: 0;
-  margin: 0;
-}
-
-.remove-button .button-text {
-  display: none;
-}
-
-.remove-button:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
-}
-
-.remove-button:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
-}
-  
 .button-link {
   -moz-appearance: none;
   background: transparent;

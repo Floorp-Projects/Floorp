@@ -768,26 +768,6 @@
   display: none;
 }
 
-.remove-button {
-  -moz-appearance: toolbarbutton;
-  margin: 0;
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  min-width: 0;
-  margin: 0;
-}
-
-.remove-button .button-text {
-  display: none;
-}
-
-.remove-button .button-icon {
-  margin: 0;
-}
-
-.remove-button .button-box {
-  padding: 0;
-}
-
 .button-link {
   -moz-appearance: none;
   background: transparent;
