@@ -144,6 +144,11 @@ public:
   virtual nsresult GetNameInternal(nsAString& aName);
 
   /**
+   * Return enumerated accessible role (see constants in nsIAccessibleRole).
+   */
+  virtual PRUint32 Role();
+
+  /**
    * Returns enumerated accessible role from native markup (see constants in
    * nsIAccessibleRole). Doesn't take into account ARIA roles.
    */
