@@ -75,6 +75,14 @@ then
         # a platform seems so unlikely that it probably isn't worthwhile. It's also
         # unlikely that it's worth testing ARMv5 with VFP.
         runtest $infile "--arch 6"
+        
+        # For --novfp, Skip tests that require hard floating-point.
+        # Note that these are also disabled in the --random test. The
+        # soft-float filter normally removes instructions that these tests use.
+        if [[ $infile =~ .*/(f2i|d2i|i2d|ui2d)\.in$ ]]
+        then
+            continue
+        fi
         runtest $infile "--arch 5 --novfp"
     done
 
