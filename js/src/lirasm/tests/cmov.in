@@ -1,0 +1,68 @@
+i = immi -1
+j = immi 0
+k = immi 1
+
+; Test each comparison operator. In each case, the result is set to k (1) if it
+; did what it should do, or i (-1) if not.
+
+c1 = eqi j k
+r1 = cmovi c1 i k
+
+c2 = lti j k
+r2 = cmovi c2 k i
+
+c3 = lei j k
+r3 = cmovi c3 k i
+
+c4 = gti j k
+r4 = cmovi c4 i k
+
+c5 = gei j k
+r5 = cmovi c5 i k
+
+c6 = ltui j k
+r6 = cmovi c6 k i
+
+c7 = leui j k
+r7 = cmovi c7 k i
+
+c8 = gtui j k
+r8 = cmovi c8 i k
+
+c9 = geui j k
+r9 = cmovi c9 i k
+
+; A few weird cases: Perform unsigned tests on a signed quantity to ensure that
+; they do what they should. This is dependent on the platform using two's
+; complement arithmetic, but we don't support anything that doesn't do that.
+
+c10 = ltui i k
+r10 = cmovi c10 i k
+
+c11 = leui i k
+r11 = cmovi c11 i k
+
+c12 = gtui i k
+r12 = cmovi c12 k i
+
+c13 = geui i k
+r13 = cmovi c13 k i
+
+; Sum the results. They should all be 1 so an overall result of 13 is a pass.
+
+r1_2 = addi r1 r2
+r3_4 = addi r3 r4
+r5_6 = addi r5 r6
+r7_8 = addi r7 r8
+r9_10 = addi r9 r10
+r11_12 = addi r11 r12
+
+r1_4 = addi r1_2 r3_4
+r5_8 = addi r5_6 r7_8
+r9_12 = addi r9_10 r11_12
+
+r1_8 = addi r1_4 r5_8
+r9_13 = addi r9_12 r13
+
+res = addi r1_8 r9_13
+reti res

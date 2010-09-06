@@ -1451,15 +1451,32 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
     vector<LOpcode> D_I_ops;
+#if !NJ_SOFTFLOAT_SUPPORTED
+    // Don't emit LIR_{ui,i}2d for soft-float platforms because the soft-float filter removes them.
     D_I_ops.push_back(LIR_i2d);
     D_I_ops.push_back(LIR_ui2d);
+#elif defined(NANOJIT_ARM)
+    // The ARM back-end can detect FP support at run-time.
+    if (avmplus::AvmCore::config.arm_vfp) {
+        D_I_ops.push_back(LIR_i2d);
+        D_I_ops.push_back(LIR_ui2d);
+    }
+#endif
 
     vector<LOpcode> I_D_ops;
 #if NJ_SOFTFLOAT_SUPPORTED
     I_D_ops.push_back(LIR_dlo2i);
     I_D_ops.push_back(LIR_dhi2i);
 #endif
+#if !NJ_SOFTFLOAT_SUPPORTED
+    // Don't emit LIR_d2i for soft-float platforms because the soft-float filter removes it.
     I_D_ops.push_back(LIR_d2i);
+#elif defined(NANOJIT_ARM)
+    // The ARM back-end can detect FP support at run-time.
+    if (avmplus::AvmCore::config.arm_vfp) {
+        I_D_ops.push_back(LIR_d2i);
+    }
+#endif
 
 #ifdef NANOJIT_64BIT
     vector<LOpcode> Q_D_ops;
@@ -1800,7 +1817,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
         case LOP_D_I:
-            if (!Is.empty()) {
+            if (!Is.empty() && !D_I_ops.empty()) {
                 ins = mLir->ins1(rndPick(D_I_ops), rndPick(Is));
                 addOrReplace(Ds, ins);
                 n++;
