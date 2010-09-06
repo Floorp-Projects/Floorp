@@ -2785,6 +2785,20 @@ NS_IMETHODIMP nsWindow::Update()
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
+    case NS_NATIVE_TMP_WINDOW:
+      return (void*)::CreateWindowExW(WS_EX_NOACTIVATE |
+                                       mIsRTL ? WS_EX_LAYOUTRTL : 0,
+                                      WindowClass(),
+                                      L"",
+                                      WS_CHILD,
+                                      CW_USEDEFAULT,
+                                      CW_USEDEFAULT,
+                                      CW_USEDEFAULT,
+                                      CW_USEDEFAULT,
+                                      mWnd,
+                                      NULL,
+                                      nsToolkit::mDllInstance,
+                                      NULL);
     case NS_NATIVE_PLUGIN_PORT:
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:

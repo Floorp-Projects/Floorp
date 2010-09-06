@@ -92,6 +92,7 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
  */
 #define NS_NATIVE_WINDOW      0
 #define NS_NATIVE_GRAPHIC     1
+#define NS_NATIVE_TMP_WINDOW  2
 #define NS_NATIVE_WIDGET      3
 #define NS_NATIVE_DISPLAY     4
 #define NS_NATIVE_REGION      5

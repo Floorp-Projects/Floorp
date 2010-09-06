@@ -152,7 +152,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
     BROWSEINFOW browserInfo;
     browserInfo.hwndOwner      = (HWND)
-      (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+      (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : 0); 
     browserInfo.pidlRoot       = nsnull;
     browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
     browserInfo.lpszTitle      = mTitle.get();
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     // If we're running fullscreen the dialog inherits that, which is bad
     ofn.hwndOwner    = (HWND) 0;
 #else
-    ofn.hwndOwner    = (HWND) (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+    ofn.hwndOwner    = (HWND) (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : 0); 
 #endif
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
@@ -352,7 +352,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         mUnicodeFile.Assign(fileBuffer);
       }
     }
-
+    if (ofn.hwndOwner) {
+      ::DestroyWindow(ofn.hwndOwner);
+    }
   }
 
   if (result) {
