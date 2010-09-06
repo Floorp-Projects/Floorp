@@ -1263,52 +1263,7 @@ nsAccessible::GetRole(PRUint32 *aRole)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (mRoleMapEntry) {
-    *aRole = mRoleMapEntry->role;
-
-    // These unfortunate exceptions don't fit into the ARIA table
-    // This is where the nsIAccessible role depends on both the role and ARIA state
-    if (*aRole == nsIAccessibleRole::ROLE_PUSHBUTTON) {
-
-      if (nsAccUtils::HasDefinedARIAToken(mContent,
-                                          nsAccessibilityAtoms::aria_pressed)) {
-        // For simplicity, any existing pressed attribute except "", or "undefined"
-        // indicates a toggle.
-        *aRole = nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
-
-      } else if (mContent->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::aria_haspopup,
-                                       nsAccessibilityAtoms::_true,
-                                       eCaseMatters)) {
-        // For button with aria-haspopup="true".
-        *aRole = nsIAccessibleRole::ROLE_BUTTONMENU;
-      }
-    }
-    else if (*aRole == nsIAccessibleRole::ROLE_LISTBOX) {
-      // A listbox inside of a combo box needs a special role because of ATK mapping to menu
-      nsCOMPtr<nsIAccessible> possibleCombo;
-      GetParent(getter_AddRefs(possibleCombo));
-      if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX) {
-        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      }
-      else {   // Check to see if combo owns the listbox instead
-        possibleCombo = nsRelUtils::
-          GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
-        if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX)
-          *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      }
-    }
-    else if (*aRole == nsIAccessibleRole::ROLE_OPTION) {
-      if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
-    }
-
-    // We are done if the mapped role trumps native semantics
-    if (mRoleMapEntry->roleRule == kUseMapRole)
-      return NS_OK;
-  }
-
-  *aRole = NativeRole();
+  *aRole = Role();
   return NS_OK;
 }
 
@@ -1628,10 +1583,6 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  PRUint32 role;
-  rv = GetRole(&role);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // For some reasons DOM node may have not a frame. We tract such accessibles
   // as invisible.
   nsIFrame *frame = GetFrame();
@@ -1851,6 +1802,52 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
 
   NS_ADDREF(*aKeyBindings = keyBindings);
   return NS_OK;
+}
+
+PRUint32
+nsAccessible::Role()
+{
+  // No ARIA role or it doesn't suppress role from native markup.
+  if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
+    return NativeRole();
+
+  // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
+  // where the accessible role depends on both the role and ARIA state.
+  if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+    if (nsAccUtils::HasDefinedARIAToken(mContent,
+                                        nsAccessibilityAtoms::aria_pressed)) {
+      // For simplicity, any existing pressed attribute except "" or "undefined"
+      // indicates a toggle.
+      return nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
+    }
+
+    if (mContent->AttrValueIs(kNameSpaceID_None,
+                              nsAccessibilityAtoms::aria_haspopup,
+                              nsAccessibilityAtoms::_true,
+                              eCaseMatters)) {
+      // For button with aria-haspopup="true".
+      return nsIAccessibleRole::ROLE_BUTTONMENU;
+    }
+
+  } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_LISTBOX) {
+    // A listbox inside of a combobox needs a special role because of ATK
+    // mapping to menu.
+    if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+      return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+
+      nsCOMPtr<nsIAccessible> possibleCombo =
+        nsRelUtils::GetRelatedAccessible(this,
+                                         nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
+      if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX)
+        return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+    }
+
+  } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OPTION) {
+    if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+      return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
+  }
+
+  return mRoleMapEntry->role;
 }
 
 PRUint32
