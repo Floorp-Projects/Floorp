@@ -68,6 +68,14 @@
 // Number of milliseconds of no data before a stall event is fired as defined by spec
 #define STALL_MS 3000
 
+// Number of estimated seconds worth of data we need to have buffered 
+// ahead of the current playback position before we allow the media decoder
+// to report that it can play through the entire media without the decode
+// catching up with the download. Having this margin make the
+// nsMediaDecoder::CanPlayThrough() calculation more stable in the case of
+// fluctuating bitrates.
+#define CAN_PLAY_THROUGH_MARGIN 20
+
 nsMediaDecoder::nsMediaDecoder() :
   mElement(0),
   mRGBWidth(-1),
@@ -289,5 +297,21 @@ PRBool nsMediaDecoder::CanPlayThrough()
   double timeToDownload =
     (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
   double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
-  return timeToDownload <= timeToPlay;
+
+  if (timeToDownload > timeToPlay) {
+    // Estimated time to download is greater than the estimated time to play.
+    // We probably can't play through without having to stop to buffer.
+    return PR_FALSE;
+  }
+
+  // Estimated time to download is less than the estimated time to play.
+  // We can probably play through without having to buffer, but ensure that
+  // we've got a reasonable amount of data buffered after the current
+  // playback position, so that if the bitrate of the media fluctuates, or if
+  // our download rate or decode rate estimation is otherwise inaccurate,
+  // we don't suddenly discover that we need to buffer. This is particularly
+  // required near the start of the media, when not much data is downloaded.
+  PRInt64 readAheadMargin = stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN;
+  return stats.mTotalBytes == stats.mDownloadPosition ||
+         stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
