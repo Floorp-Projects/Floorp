@@ -128,6 +128,7 @@ typedef enum {
     // S14 overlaps with D7 and is hard-coded into i2d and u2f operations, but
     // D7 is still listed here for completeness and to facilitate assertions.
     D7 = 23,
+    // D8-D15 are caller-saved registers that we don't currently handle.
 
     FirstFloatReg = D0,
     LastFloatReg = D6,
@@ -136,7 +137,10 @@ typedef enum {
     LastReg = D6,
     deprecated_UnknownReg = 32,     // XXX: remove eventually, see bug 538924
 
-    S14 = 24
+    S14 = 24,
+
+    SBZ = 0         // Used for 'should-be-zero' fields in instructions with
+                    // unused register fields.
 } Register;
 
 /* ARM condition codes */
@@ -177,13 +181,13 @@ typedef struct _FragInfo {
     NIns*           epilogue;
 } FragInfo;
 
-// D0-D6 are not saved; D7-D15 are, but we don't use those,
+// D0-D7 are not saved; D8-D15 are, but we don't use those,
 // so we don't have to worry about saving/restoring them
 static const RegisterMask SavedFpRegs = 0;
 static const RegisterMask SavedRegs = 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 static const int NumSavedRegs = 7;
 
-static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5 | 1<<D6; // no D7; S14-S15 are used for i2d/u2f.
+static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5 | 1<<D6 | 1<<D7;
 static const RegisterMask GpRegs = 0xFFFF;
 static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 
@@ -549,19 +553,6 @@ enum {
 #define MOV_cond(_cond,_d,_s)               ALUr(_cond, mov, 0, _d, 0, _s)
 
 #define MOV(dr,sr)   MOV_cond(AL, dr, sr)
-#define MOVEQ(dr,sr) MOV_cond(EQ, dr, sr)
-#define MOVNE(dr,sr) MOV_cond(NE, dr, sr)
-#define MOVLT(dr,sr) MOV_cond(LT, dr, sr)
-#define MOVLE(dr,sr) MOV_cond(LE, dr, sr)
-#define MOVGT(dr,sr) MOV_cond(GT, dr, sr)
-#define MOVGE(dr,sr) MOV_cond(GE, dr, sr)
-#define MOVLO(dr,sr) MOV_cond(LO, dr, sr) // Equivalent to MOVCC
-#define MOVCC(dr,sr) MOV_cond(CC, dr, sr) // Equivalent to MOVLO
-#define MOVLS(dr,sr) MOV_cond(LS, dr, sr)
-#define MOVHI(dr,sr) MOV_cond(HI, dr, sr)
-#define MOVHS(dr,sr) MOV_cond(HS, dr, sr) // Equivalent to MOVCS
-#define MOVCS(dr,sr) MOV_cond(CS, dr, sr) // Equivalent to MOVHS
-#define MOVVC(dr,sr) MOV_cond(VC, dr, sr) // overflow clear
 
 // _d = [_b+off]
 #define LDR(_d,_b,_off)        asm_ldr_chk(_d,_b,_off,1)
@@ -872,11 +863,12 @@ enum {
         asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
     } while (0)
 
-#define FSTD_allowD7(_Dd,_Rn,_offs,_allowD7) do {                               \
+#define FSTD_allowD7(_Dd,_Rn,_offs,_allowD7) do {                       \
         underrunProtect(4);                                             \
-        NanoAssert(ARM_VFP);                                    \
-        NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2));         \
-        NanoAssert((IsFpReg(_Dd) || ((_allowD7) && (_Dd) == D7)) && !IsFpReg(_Rn));     \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_offs)%4) == 0);                                   \
+        NanoAssert(isU8((_offs)/4) || isU8(-(_offs)/4));                \
+        NanoAssert(IsFpReg(_Dd) && IsGpReg(_Rn));                       \
         int negflag = 1<<23;                                            \
         intptr_t offs = (_offs);                                        \
         if (_offs < 0) {                                                \
@@ -892,8 +884,9 @@ enum {
 
 #define FLDD_chk(_Dd,_Rn,_offs,_chk) do {                               \
         if(_chk) underrunProtect(4);                                    \
-        NanoAssert(ARM_VFP);                                    \
-        NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2));         \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_offs)%4) == 0);                                   \
+        NanoAssert(isU8((_offs)/4) || isU8(-(_offs)/4));                \
         NanoAssert(IsFpReg(_Dd) && !IsFpReg(_Rn));                      \
         int negflag = 1<<23;                                            \
         intptr_t offs = (_offs);                                        \
@@ -951,7 +944,7 @@ enum {
         NanoAssert(ARM_VFP);                                    \
         NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dn) && IsFpReg(_Dm));       \
         *(--_nIns) = (NIns)( COND_AL | (0xE8<<20) | (FpRegNum(_Dn)<<16) | (FpRegNum(_Dd)<<12) | (0xB0<<4) | (FpRegNum(_Dm)) ); \
-        asm_output("fmuld %s,%s,%s", gpn(_Dd), gpn(_Dn), gpn(_Dm));    \
+        asm_output("fdivd %s,%s,%s", gpn(_Dd), gpn(_Dn), gpn(_Dm));    \
     } while (0)
 
 #define FMSTAT() do {                               \
@@ -970,13 +963,15 @@ enum {
         asm_output("fcmp%sd %s,%s", (((_E)==1)?"e":""), gpn(_Dd), gpn(_Dm)); \
     } while (0)
 
-#define FCPYD(_Dd,_Dm) do {                                             \
-        underrunProtect(4);                                             \
-        NanoAssert(ARM_VFP);                                    \
-        NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dm));                       \
-        *(--_nIns) = (NIns)( COND_AL | (0xEB0<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
-        asm_output("fcpyd %s,%s", gpn(_Dd), gpn(_Dm));                 \
+#define FCPYD_cond(_cond,_Dd,_Dm) do {                                      \
+        underrunProtect(4);                                                 \
+        NanoAssert(ARM_VFP);                                                \
+        NanoAssert(IsFpReg(_Dd) && IsFpReg(_Dm));                           \
+        NanoAssert(IsCond(_cond));                                          \
+        *(--_nIns) = (NIns)( ((_cond)<<28) | (0xEB0<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
+        asm_output("fcpyd%s %s,%s", condNames[_cond], gpn(_Dd), gpn(_Dm));  \
     } while (0)
+#define FCPYD(_Dd,_Dm)      FCPYD_cond(AL,_Dd,_Dm)
 
 #define FMRS(_Rd,_Sn) do {                                              \
         underrunProtect(4);                                             \
@@ -1034,22 +1029,20 @@ enum {
         asm_output("[0x%08x] fcvtsd s14,%s", *_nIns, gpn(_Dm));                          \
     } while (0)
 
-#define FCVTDS_allowD7(_Dd,_Sm,_allowD7) do {       \
-        underrunProtect(4);                         \
-        NanoAssert(ARM_VFP);                \
-        NanoAssert(((_Sm) == S14) && (IsFpReg(_Dd) || ((_allowD7) && (_Dd) == D7))); \
+#define FCVTDS(_Dd,_Sm) do {                                    \
+        underrunProtect(4);                                     \
+        NanoAssert(ARM_VFP);                                    \
+        NanoAssert(((_Sm) == S14) && IsFpReg(_Dd));             \
         *(--_nIns) = (NIns)( COND_AL | (0xEB7<<16) | (FpRegNum(_Dd)<<12) | (0xAC<<4) | (0x7) ); \
-        asm_output("[0x%08x] fcvtds %s,s14", *_nIns, gpn(_Dd));      \
+        asm_output("fcvtds %s,s14", gpn(_Dd));                  \
     } while(0)
-
-#define FCVTDS(_Dd,_Sm) \
-    FCVTDS_allowD7(_Dd,_Sm,0)
 
 #define FLDS(_Sd,_Rn,_offs) do {                                \
         underrunProtect(4);                                     \
-        NanoAssert(ARM_VFP);                            \
+        NanoAssert(ARM_VFP);                                    \
         NanoAssert(((_Sd) == S14) && !IsFpReg(_Rn));            \
-        NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2)); \
+        NanoAssert(((_offs)%4) == 0);                           \
+        NanoAssert((isU8((_offs)/4)) || isU8(-(_offs)/4));      \
         int addflag = 1<<23;                                    \
         intptr_t offs = (_offs);                                \
         if (offs < 0) {                                         \
@@ -1057,14 +1050,15 @@ enum {
             offs = -offs;                                       \
         }                                                       \
         *(--_nIns) = (NIns)( COND_AL | (0xD1<<20) | ((_Rn)<<16) | (0x7<<12) | (0xA << 8) | addflag | ((offs>>2)&0xff) ); \
-        asm_output("[0x%08x] flds s14, [%s, #%d]", *_nIns, gpn(_Rn), (_offs)); \
+        asm_output("flds s14, [%s, #%d]", gpn(_Rn), (_offs));   \
     } while (0)
 
 #define FSTS(_Sd,_Rn,_offs) do {                                \
         underrunProtect(4);                                     \
-        NanoAssert(ARM_VFP);                            \
+        NanoAssert(ARM_VFP);                                    \
         NanoAssert(((_Sd) == S14) && !IsFpReg(_Rn));            \
-        NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2)); \
+        NanoAssert(((_offs)%4) == 0);                           \
+        NanoAssert((isU8((_offs)/4)) || isU8(-(_offs)/4));      \
         int addflag = 1<<23;                                    \
         intptr_t offs = (_offs);                                \
         if (offs < 0) {                                         \
@@ -1072,7 +1066,7 @@ enum {
             offs = -offs;                                       \
         }                                                       \
         *(--_nIns) = (NIns)( COND_AL | (0xD0<<20) | ((_Rn)<<16) | (0x7<<12) | (0xA << 8) | addflag | ((offs>>2)&0xff) ); \
-        asm_output("[0x%08x] fsts s14, [%s, #%d]", *_nIns, gpn(_Rn), (_offs)); \
+        asm_output("fsts s14, [%s, #%d]", gpn(_Rn), (_offs));   \
     } while (0)
 
 #define FTOSID(_Sd,_Dm) do {                                   \
