@@ -51,7 +51,6 @@
 #include "assembler/assembler/LinkBuffer.h"
 #include "FrameState-inl.h"
 #include "jsscriptinlines.h"
-#include "InlineFrameAssembler.h"
 
 #include "jsautooplen.h"
 
@@ -77,7 +76,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
     branchPatches(ContextAllocPolicy(cx)),
 #if defined JS_MONOIC
     mics(ContextAllocPolicy(cx)),
-    callICs(ContextAllocPolicy(cx)),
 #endif
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
@@ -132,13 +130,6 @@ mjit::Compiler::Compile()
     prof.start();
 #endif
 
-    /* Initialize PC early so stub calls in the prologue can be fallible. */
-    PC = script->code;
-
-#ifdef JS_METHODJIT
-    script->debugMode = cx->compartment->debugMode;
-#endif
-
     CHECK_STATUS(generatePrologue());
     CHECK_STATUS(generateMethod());
     CHECK_STATUS(generateEpilogue());
@@ -177,15 +168,16 @@ mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *sco
     return status;
 }
 
-JSC::MacroAssembler::RegisterID
-mjit::Compiler::takeHWReturnAddress(Assembler &masm)
+void
+mjit::Compiler::saveReturnAddress()
 {
 #ifndef JS_CPU_ARM
-    JS_STATIC_ASSERT(JSParamReg_Argc != Registers::ReturnReg);
     masm.pop(Registers::ReturnReg);
-    return Registers::ReturnReg;
+    restoreFrameRegs(masm);
+    masm.storePtr(Registers::ReturnReg, Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
 #else
-    return JSC::ARMRegisters::lr;
+    restoreFrameRegs(masm);
+    masm.storePtr(JSC::ARMRegisters::lr, Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
 #endif
 }
 
@@ -194,9 +186,7 @@ mjit::Compiler::generatePrologue()
 {
     invokeLabel = masm.label();
 
-    RegisterID retAddr = takeHWReturnAddress(masm);
-    restoreFrameRegs(masm);
-    masm.saveReturnAddress(retAddr);
+    saveReturnAddress();
 
     /*
      * If there is no function, then this can only be called via JaegerShot(),
@@ -204,81 +194,8 @@ mjit::Compiler::generatePrologue()
      */
     if (fun) {
         Jump j = masm.jump();
-
-        /*
-         * Entry point #2: The caller has partially constructed a frame, and
-         * either argc >= nargs or the arity check has corrected the frame.
-         */
         invokeLabel = masm.label();
-        RegisterID retAddr = takeHWReturnAddress(masm);
-        masm.saveReturnAddress(retAddr);
-
-        Label fastPath = masm.label();
-
-        /* Store these early on so slow paths can access them. */
-        masm.storePtr(ImmPtr(script), Address(JSFrameReg, JSStackFrame::offsetScript()));
-        masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
-
-        {
-            /*
-             * Entry point #3: The caller has partially constructed a frame,
-             * but argc might be != nargs, so an arity check might be called.
-             *
-             * This loops back to entry point #2.
-             */
-            arityLabel = stubcc.masm.label();
-            RegisterID retAddr = takeHWReturnAddress(stubcc.masm);
-            stubcc.masm.saveReturnAddress(retAddr);
-            Jump argMatch = stubcc.masm.branch32(Assembler::AboveOrEqual, JSParamReg_Argc,
-                                                 Imm32(fun->nargs));
-            stubcc.crossJump(argMatch, fastPath);
-
-            /* Slow path - call the arity check function. Returns new fp. */
-            stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetFunction()));
-            stubcc.masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
-            stubcc.call(stubs::CheckArity);
-            stubcc.masm.move(Registers::ReturnReg, JSFrameReg);
-            stubcc.crossJump(stubcc.masm.jump(), fastPath);
-        }
-
-        /*
-         * Guard that there is enough stack space. Note we include the size of
-         * a second frame, to ensure we can create a frame from call sites.
-         */
-        masm.addPtr(Imm32((script->nslots + VALUES_PER_STACK_FRAME * 2) * sizeof(Value)),
-                    JSFrameReg,
-                    Registers::ReturnReg);
-        Jump stackCheck = masm.branchPtr(Assembler::AboveOrEqual, Registers::ReturnReg,
-                                         FrameAddress(offsetof(VMFrame, stackLimit)));
-
-        /* If the stack check fails... */
-        {
-            stubcc.linkExitDirect(stackCheck, stubcc.masm.label());
-            stubcc.masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetFunction()));
-            stubcc.call(stubs::CheckStackQuota);
-            stubcc.crossJump(stubcc.masm.jump(), masm.label());
-        }
-
-        /* Easy frame members. Hard ones are in caller. */
-        masm.storePtr(ImmPtr(fun), Address(JSFrameReg, JSStackFrame::offsetFunction()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetCallObj()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetArgsObj()));
-        masm.storeValue(UndefinedValue(), Address(JSFrameReg, JSStackFrame::offsetReturnValue()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetAnnotation()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetBlockChain()));
-        if (script->debugMode)
-            masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetHookData()));
-#ifdef DEBUG
-        masm.storePtr(ImmPtr(JSStackFrame::sInvalidPC),
-                      Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
-#endif
-
-        /* :TODO: This is entirely wrong. */
-        masm.store32(Imm32(cx->version),
-                     Address(JSFrameReg, JSStackFrame::offsetCallerVersion()));
-
-        /* Set cx->fp */
-        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ReturnReg);
+        saveReturnAddress();
 
         /* Set locals to undefined. */
         for (uint32 i = 0; i < script->nfixed; i++) {
@@ -339,7 +256,6 @@ mjit::Compiler::finishThisUp()
                         sizeof(void *) * script->length +
 #if defined JS_MONOIC
                         sizeof(ic::MICInfo) * mics.length() +
-                        sizeof(ic::CallICInfo) * callICs.length() +
 #endif
 #if defined JS_POLYIC
                         sizeof(ic::PICInfo) * pics.length() +
@@ -384,9 +300,6 @@ mjit::Compiler::finishThisUp()
         }
     }
 
-    if (fun)
-        script->jit->arityCheck = stubCode.locationOf(arityLabel).executableAddress();
-
 #if defined JS_MONOIC
     script->jit->nMICs = mics.length();
     if (mics.length()) {
@@ -412,6 +325,17 @@ mjit::Compiler::finishThisUp()
             script->mics[i].patchValueOffset = mics[i].patchValueOffset;
 #endif
             break;
+          case ic::MICInfo::CALL:
+            script->mics[i].frameDepth = mics[i].frameDepth;
+            script->mics[i].knownObject = fullCode.locationOf(mics[i].knownObject);
+            script->mics[i].callEnd = fullCode.locationOf(mics[i].callEnd);
+            script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
+            script->mics[i].dataReg = mics[i].dataReg;
+            script->mics[i].u.generated = false;
+            /* FALLTHROUGH */
+          case ic::MICInfo::EMPTYCALL:
+            script->mics[i].argc = mics[i].argc;
+            break;
           case ic::MICInfo::TRACER: {
             uint32 offs = uint32(mics[i].jumpTarget - script->code);
             JS_ASSERT(jumpMap[offs].isValid());
@@ -425,64 +349,6 @@ mjit::Compiler::finishThisUp()
           default:
             JS_NOT_REACHED("Bad MIC kind");
         }
-    }
-
-    script->jit->nCallICs = callICs.length();
-    if (callICs.length()) {
-        script->callICs = (ic::CallICInfo *)cursor;
-        cursor += sizeof(ic::CallICInfo) * callICs.length();
-    } else {
-        script->callICs = NULL;
-    }
-
-    for (size_t i = 0; i < callICs.length(); i++) {
-        script->callICs[i].reset();
-        script->callICs[i].funGuard = fullCode.locationOf(callICs[i].funGuard);
-        script->callICs[i].funJump = fullCode.locationOf(callICs[i].funJump);
-        script->callICs[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
-
-        /* Compute the hot call offset. */
-        uint32 offset = fullCode.locationOf(callICs[i].hotCall) -
-                        fullCode.locationOf(callICs[i].funGuard);
-        script->callICs[i].hotCallOffset = offset;
-        JS_ASSERT(script->callICs[i].hotCallOffset == offset);
-
-        /* Compute the join point offset. */
-        offset = fullCode.locationOf(callICs[i].joinPoint) -
-                 fullCode.locationOf(callICs[i].funGuard);
-        script->callICs[i].joinPointOffset = offset;
-        JS_ASSERT(script->callICs[i].joinPointOffset == offset);
-                                        
-        /* Compute the OOL call offset. */
-        offset = stubCode.locationOf(callICs[i].oolCall) -
-                 stubCode.locationOf(callICs[i].slowPathStart);
-        script->callICs[i].oolCallOffset = offset;
-        JS_ASSERT(script->callICs[i].oolCallOffset == offset);
-
-        /* Compute the OOL jump offset. */
-        offset = stubCode.locationOf(callICs[i].oolJump) -
-                 stubCode.locationOf(callICs[i].slowPathStart);
-        script->callICs[i].oolJumpOffset = offset;
-        JS_ASSERT(script->callICs[i].oolJumpOffset == offset);
-
-        /* Compute the slow join point offset. */
-        offset = stubCode.locationOf(callICs[i].slowJoinPoint) -
-                 stubCode.locationOf(callICs[i].slowPathStart);
-        script->callICs[i].slowJoinOffset = offset;
-        JS_ASSERT(script->callICs[i].slowJoinOffset == offset);
-
-        /* Compute the join point offset for continuing on the hot path. */
-        offset = stubCode.locationOf(callICs[i].hotPathLabel) -
-                 stubCode.locationOf(callICs[i].funGuard);
-        script->callICs[i].hotPathOffset = offset;
-        JS_ASSERT(script->callICs[i].hotPathOffset == offset);
-
-        script->callICs[i].argc = callICs[i].argc;
-        script->callICs[i].funObjReg = callICs[i].funObjReg;
-        script->callICs[i].funPtrReg = callICs[i].funPtrReg;
-        script->callICs[i].frameDepth = callICs[i].frameDepth;
-        script->callICs[i].isConstantThis = callICs[i].isConstantThis;
-        script->callICs[i].constantThis  = callICs[i].constantThis;
     }
 #endif /* JS_MONOIC */
 
@@ -572,6 +438,10 @@ mjit::Compiler::finishThisUp()
 
     JS_ASSERT(size_t(cursor - (uint8*)script->jit) == totalBytes);
 
+#ifdef JS_METHODJIT
+    script->debugMode = cx->compartment->debugMode;
+#endif
+
     return Compile_Okay;
 }
 
@@ -599,6 +469,7 @@ CompileStatus
 mjit::Compiler::generateMethod()
 {
     mjit::AutoScriptRetrapper trapper(cx, script);
+    PC = script->code;
 
     for (;;) {
         JSOp op = JSOp(*PC);
@@ -1855,257 +1726,183 @@ mjit::Compiler::interruptCheckHelper()
 }
 
 void
-mjit::Compiler::emitPrimitiveTestForNew(uint32 argc)
-{
-    Jump primitive = masm.testPrimitive(Assembler::Equal, JSReturnReg_Type);
-    stubcc.linkExitDirect(primitive, stubcc.masm.label());
-    FrameEntry *fe = frame.peek(-int(argc + 1));
-    Address thisv(frame.addressOf(fe));
-    stubcc.masm.loadTypeTag(thisv, JSReturnReg_Type);
-    stubcc.masm.loadPayload(thisv, JSReturnReg_Data);
-    Jump primFix = stubcc.masm.jump();
-    stubcc.crossJump(primFix, masm.label());
-}
-
-void
-mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
-{
-    RegisterID r0 = Registers::ReturnReg;
-    VoidPtrStubUInt32 stub = callingNew ? stubs::UncachedNew : stubs::UncachedCall;
-
-    frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
-    prepareStubCall(Uses(argc + 2));
-    masm.move(Imm32(argc), Registers::ArgReg1);
-    stubCall(stub);
-    ADD_CALLSITE(false);
-
-    Jump notCompiled = masm.branchTestPtr(Assembler::Zero, r0, r0);
-    stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
-
-    masm.call(r0);
-    ADD_CALLSITE(false);
-
-    if (callingNew)
-        emitPrimitiveTestForNew(argc);
-
-    frame.popn(argc + 2);
-    frame.takeReg(JSReturnReg_Type);
-    frame.takeReg(JSReturnReg_Data);
-    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
-
-    stubcc.rejoin(Changes(0));
-}
-
-/* See MonoIC.cpp, CallCompiler for more information on call ICs. */
-void
 mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 {
     /* Check for interrupts on function call */
     interruptCheckHelper();
 
     FrameEntry *fe = frame.peek(-int(argc + 2));
+    bool typeKnown = fe->isTypeKnown();
 
-    /* Currently, we don't support constant functions. */
-    if (fe->isNotType(JSVAL_TYPE_OBJECT) || script->debugMode || fe->isConstant()) {
-        emitUncachedCall(argc, callingNew);
+    if (typeKnown && fe->getKnownType() != JSVAL_TYPE_OBJECT) {
+#ifdef JS_MONOIC
+        /*
+         * Make an otherwise empty MIC to hold the argument count.
+         * This can't be a fast native so the rest of the MIC won't be used.
+         */
+        MICGenInfo mic(ic::MICInfo::EMPTYCALL);
+        mic.entry = masm.label();
+        mic.argc = argc;
+        mics.append(mic);
+#endif
+
+        prepareStubCall(Uses(argc + 2));
+        VoidPtrStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
+#ifdef JS_MONOIC
+        masm.move(Imm32(mics.length() - 1), Registers::ArgReg1);
+#else
+        masm.move(Imm32(argc), Registers::ArgReg1);
+#endif
+        masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
+        ADD_CALLSITE(false);
+        frame.popn(argc + 2);
+        frame.pushSynced();
         return;
     }
 
 #ifdef JS_MONOIC
-    FrameEntry *thisvFe = frame.peek(-int(argc + 1));
-    Address thisvAddr = frame.addressOf(thisvFe);
+    MICGenInfo mic(ic::MICInfo::CALL);
+    mic.entry = masm.label();
+    mic.argc = argc;
+    mic.frameDepth = frame.frameDepth() - argc - 2;
+#endif
 
-    CallGenInfo callIC(argc);
-    uint32 callICIndex = callICs.length();
-
-    /*
-     * Save constant |this| to optimize thisv stores for common call cases
-     * like CALL[LOCAL, GLOBAL, ARG] which push NULL.
-     */
-    callIC.isConstantThis = false;
-    if (thisvFe->isConstant()) {
-        callIC.isConstantThis = true;
-        callIC.constantThis = thisvFe->getValue();
-    }
-    callIC.frameDepth = frame.frameDepth();
-
-    /* Grab type and data registers up-front. */
     MaybeRegisterID typeReg;
-    frame.ensureFullRegs(fe);
+    RegisterID data = frame.tempRegForData(fe);
+    frame.pinReg(data);
 
-    if (!fe->isTypeKnown()) {
-        typeReg = frame.tempRegForType(fe);
-        frame.pinReg(typeReg.reg());
+    Address addr = frame.addressOf(fe);
+
+    if (!typeKnown) {
+        if (!frame.shouldAvoidTypeRemat(fe)) {
+            typeReg = frame.tempRegForType(fe);
+            frame.pinReg(typeReg.reg());
+        }
     }
-    RegisterID dataReg = frame.tempRegForData(fe);
-    frame.pinReg(dataReg);
 
     /*
      * We rely on the fact that syncAndKill() is not allowed to touch the
      * registers we've preserved.
      */
     frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
-    frame.unpinKilledReg(dataReg);
+    frame.unpinKilledReg(data);
     if (typeReg.isSet())
         frame.unpinKilledReg(typeReg.reg());
 
-    Registers tempRegs;
+    Label invoke = stubcc.masm.label();
 
-    /* Test the type if necessary. Failing this always takes a really slow path. */
-    MaybeJump notObjectJump;
-    if (typeReg.isSet())
-        notObjectJump = masm.testObject(Assembler::NotEqual, typeReg.reg());
+#ifdef JS_MONOIC
+    mic.stubEntry = invoke;
+    mic.dataReg = data;
+#endif
 
-    /*
-     * Ensure that dataReg stays in a register which won't be clobbered
-     * by the intervening call to NewObject.
-     */
-    if (callingNew && !(Registers::maskReg(dataReg) & Registers::SavedRegs)) {
-        RegisterID reg = Registers(Registers::SavedRegs).takeAnyReg();
-        masm.move(dataReg, reg);
-        dataReg = reg;
+    Jump j;
+    if (!typeKnown) {
+        if (!typeReg.isSet())
+            j = masm.testObject(Assembler::NotEqual, frame.addressOf(fe));
+        else
+            j = masm.testObject(Assembler::NotEqual, typeReg.reg());
+        stubcc.linkExit(j, Uses(argc + 2));
     }
 
-    tempRegs.takeReg(dataReg);
-    RegisterID t0 = tempRegs.takeAnyReg();
-    RegisterID t1 = tempRegs.takeAnyReg();
+#ifdef JS_MONOIC
+    mic.knownObject = masm.label();
+#endif
 
-    /*
-     * Guard on the callee identity. This misses on the first run. If the
-     * callee is scripted, compiled/compilable, and argc == nargs, then this
-     * guard is patched, and the compiled code address is baked in.
-     */
-    Jump j = masm.branchPtrWithPatch(Assembler::NotEqual, dataReg, callIC.funGuard);
-    callIC.funJump = j;
+    j = masm.testFunction(Assembler::NotEqual, data);
+    stubcc.linkExit(j, Uses(argc + 2));
+    stubcc.leave();
+#ifdef JS_MONOIC
+    stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
+#else
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+#endif
+    stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
+    ADD_CALLSITE(true);
 
-    Jump oolCallDone;
-    Jump rejoin1, rejoin2;
+    /* Get function private pointer. */
+    masm.loadFunctionPrivate(data, data);
+
+    frame.takeReg(data);
+    RegisterID t0 = frame.allocReg();
+    RegisterID t1 = frame.allocReg();
+
+    /* Test if the function is interpreted, and if not, take a slow path. */
     {
-        stubcc.linkExitDirect(j, stubcc.masm.label());
-        callIC.slowPathStart = stubcc.masm.label();
+        masm.load16(Address(data, offsetof(JSFunction, flags)), t0);
+        masm.move(t0, t1);
+        masm.and32(Imm32(JSFUN_KINDMASK), t1);
+        Jump notInterp = masm.branch32(Assembler::Below, t1, Imm32(JSFUN_INTERPRETED));
+        stubcc.linkExitDirect(notInterp, invoke);
+    }
 
+    /* Test if it's not got compiled code. */
+    Address scriptAddr(data, offsetof(JSFunction, u) + offsetof(JSFunction::U::Scripted, script));
+    masm.loadPtr(scriptAddr, data);
+    Jump notCompiled = masm.branchPtr(Assembler::BelowOrEqual,
+                                      Address(data, offsetof(JSScript, ncode)),
+                                      ImmIntPtr(1));
+    {
+        stubcc.linkExitDirect(notCompiled, invoke);
+    }
+
+    frame.freeReg(t0);
+    frame.freeReg(t1);
+    frame.freeReg(data);
+
+    /* Scripted call. */
+    masm.move(Imm32(argc), Registers::ArgReg1);
+    masm.stubCall(callingNew ? stubs::New : stubs::Call,
+                  PC, frame.stackDepth() + script->nfixed);
+
+    Jump invokeCallDone;
+    {
         /*
-         * Test if the callee is even a function. If this doesn't match, we
-         * take a _really_ slow path later.
-         */
-        Jump notFunction = stubcc.masm.testFunction(Assembler::NotEqual, dataReg);
-
-        /* Test if the function is scripted. */
-        stubcc.masm.loadFunctionPrivate(dataReg, t0);
-        stubcc.masm.load16(Address(t0, offsetof(JSFunction, flags)), t1);
-        stubcc.masm.and32(Imm32(JSFUN_KINDMASK), t1);
-        Jump isNative = stubcc.masm.branch32(Assembler::Below, t1, Imm32(JSFUN_INTERPRETED));
-
-        /* Create the new object. This requires some fiddling to save the two values. */
-        if (callingNew) {
-            void *pfun = stubcc.masm.getCallTarget(JS_FUNC_TO_DATA_PTR(void *, stubs::NewObject));
-            stubcc.masm.storePtr(ImmPtr(PC),
-                             FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
-            stubcc.masm.fixScriptStack(frame.frameDepth());
-            stubcc.masm.setupVMFrame();
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-            /* Need to stay 16-byte aligned on x86/x64. */
-            stubcc.masm.subPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
-#endif
-            stubcc.masm.push(dataReg);
-            stubcc.masm.push(t0);
-            stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-            stubcc.masm.wrapCall(pfun);
-            stubcc.masm.pop(t0);
-            stubcc.masm.pop(dataReg);
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-            stubcc.masm.addPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
-#endif
-        }
-
-        /*
-         * No-op jump that gets re-patched. This is so ArgReg1 won't be
-         * clobbered, with the added bonus that the generated stub doesn't
-         * need to pop its own return address.
-         */
-        Jump toPatch = stubcc.masm.jump();
-        toPatch.linkTo(stubcc.masm.label(), &stubcc.masm);
-        callIC.oolJump = toPatch;
-
-        /* At this point the function is definitely scripted. Call the link routine. */
-        stubcc.masm.move(Imm32(callICIndex), Registers::ArgReg1);
-        callIC.oolCall = stubcc.call(callingNew ? ic::New : ic::Call);
-
-        callIC.funObjReg = dataReg;
-        callIC.funPtrReg = t0;
-
-        /*
-         * The IC call either returns NULL, meaning call completed, or a
-         * function pointer to jump to. Caveat: Must restore JSFrameReg
-         * because a new frame has been pushed.
+         * Stub call returns a pointer to JIT'd code, or NULL.
          *
-         * This function only executes once. If hit, it will generate a stub
-         * to compile and execute calls on demand.
+         * If the function could not be JIT'd, it was already invoked using
+         * js_Interpret() or js_Invoke(). In that case, the stack frame has
+         * already been popped. We don't have to do any extra work.
          */
-        rejoin1 = stubcc.masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
-                                            Registers::ReturnReg);
-        stubcc.masm.move(Imm32(argc), JSParamReg_Argc);
-        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
-        stubcc.masm.call(Registers::ReturnReg);
-        oolCallDone = stubcc.masm.jump();
-
-        /* Catch-all case, for natives this will turn into a MIC. */
-        if (notObjectJump.isSet())
-            stubcc.linkExitDirect(notObjectJump.get(), stubcc.masm.label());
-        notFunction.linkTo(stubcc.masm.label(), &stubcc.masm);
-        isNative.linkTo(stubcc.masm.label(), &stubcc.masm);
-
-        stubcc.masm.move(Imm32(callICIndex), Registers::ArgReg1);
-        stubcc.call(callingNew ? ic::NativeNew : ic::NativeCall);
-
-        rejoin2 = stubcc.masm.jump();
+        Jump j = stubcc.masm.branchTestPtr(Assembler::NonZero, Registers::ReturnReg, Registers::ReturnReg);
+        stubcc.crossJump(j, masm.label());
+        if (callingNew)
+            invokeCallDone = stubcc.masm.jump();
     }
 
-    /*
-     * If the call site goes to a closure over the same function, it will
-     * generate an out-of-line stub that joins back here.
-     */
-    callIC.hotPathLabel = masm.label();
+    /* Fast-path: return address contains scripted call. */
+    masm.call(Registers::ReturnReg);
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
+    masm.callLabel = masm.label();
+#endif
+    ADD_CALLSITE(false);
 
-    /* If calling |new|, make sure to allocate a new object. */
+    /*
+     * Functions invoked with |new| can return, for some reason, primitive
+     * values. Just deal with this here.
+     */
     if (callingNew) {
-        prepareStubCall(Uses(argc + 2));
-        masm.move(Imm32(argc), Registers::ArgReg1);
-        stubCall(stubs::NewObject);
+        Jump primitive = masm.testPrimitive(Assembler::Equal, JSReturnReg_Type);
+        stubcc.linkExitDirect(primitive, stubcc.masm.label());
+        FrameEntry *fe = frame.peek(-int(argc + 1));
+        Address thisv(frame.addressOf(fe));
+        stubcc.masm.loadTypeTag(thisv, JSReturnReg_Type);
+        stubcc.masm.loadPayload(thisv, JSReturnReg_Data);
+        Jump primFix = stubcc.masm.jump();
+        stubcc.crossJump(primFix, masm.label());
+        invokeCallDone.linkTo(stubcc.masm.label(), &stubcc.masm);
     }
-
-    uint32 flags = 0;
-    if (callingNew)
-        flags |= JSFRAME_CONSTRUCTING;
-
-    InlineFrameAssembler inlFrame(masm, callIC, PC, flags);
-    inlFrame.assemble();
-
-    callIC.hotCall = masm.call();
-    stubcc.crossJump(oolCallDone, masm.label());
-
-    callIC.joinPoint = masm.label();
-
-    /*
-     * Functions invoked with |new| can return primitive values.
-     * Just deal with this here.
-     */
-    if (callingNew)
-        emitPrimitiveTestForNew(argc);
 
     frame.popn(argc + 2);
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
-    callIC.slowJoinPoint = stubcc.masm.label();
-    rejoin1.linkTo(callIC.slowJoinPoint, &stubcc.masm);
-    rejoin2.linkTo(callIC.slowJoinPoint, &stubcc.masm);
     stubcc.rejoin(Changes(0));
 
-    callICs.append(callIC);
-#else
-    emitUncachedCall(argc, callingNew);
+#ifdef JS_MONOIC
+    mic.callEnd = masm.label();
+    mics.append(mic);
 #endif
 }
 
