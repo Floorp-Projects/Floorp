@@ -2,9 +2,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/tabview/AllTabs.jsm");
-Cu.import("resource://gre/modules/tabview/groups.jsm");
-Cu.import("resource://gre/modules/tabview/utils.jsm");
+Cu.import("resource:///modules/tabview/AllTabs.jsm");
+Cu.import("resource:///modules/tabview/groups.jsm");
+Cu.import("resource:///modules/tabview/utils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
