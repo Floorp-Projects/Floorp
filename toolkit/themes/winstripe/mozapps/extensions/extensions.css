@@ -469,10 +469,6 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
-.remove-container {
-  width: 16px;
-}
-
 /*** item - uninstalled ***/
 
 .addon[status="uninstalled"] {
@@ -784,38 +780,6 @@
 /*** buttons ***/
 
 .addon-control[disabled="true"] {
-  display: none;
-}
-
-.remove-button {
-  -moz-appearance: none;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0, 64px, 16px, 48px);
-  border: none;
-  min-width: 0;
-  margin: 0;
-}
-
-.remove-button .button-box {
-  padding: 0;
-}
-
-.addon[selected] .remove-button:not(:hover):not(:active) {
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.remove-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.remove-button:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
-.remove-button .button-text {
   display: none;
 }
 
