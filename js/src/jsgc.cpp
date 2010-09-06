@@ -80,7 +80,6 @@
 #include "jsstr.h"
 #include "jstask.h"
 #include "jstracer.h"
-#include "methodjit/MethodJIT.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -2772,11 +2771,6 @@ MarkAndSweep(JSContext *cx  GCTIMER_PARAM)
 #ifdef DEBUG
     /* Save the pre-sweep count of scope-mapped properties. */
     rt->liveObjectPropsPreSweep = rt->liveObjectProps;
-#endif
-
-#ifdef JS_METHODJIT
-    /* Fix-up call ICs guarding against unreachable objects. */
-    mjit::SweepCallICs(cx);
 #endif
 
     /*
