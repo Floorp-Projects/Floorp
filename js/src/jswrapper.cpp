@@ -489,9 +489,6 @@ void
 JSCompartment::purge(JSContext *cx)
 {
 #ifdef JS_METHODJIT
-    if (!cx->runtime->gcRegenShapes)
-        return;
-
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
@@ -500,7 +497,12 @@ JSCompartment::purge(JSContext *cx)
             mjit::ic::PurgePICs(cx, script);
 # endif
 # if defined JS_MONOIC
-            mjit::ic::PurgeMICs(cx, script);
+            /*
+             * MICs do not refer to data which can be GC'ed, but are sensitive
+             * to shape regeneration.
+             */
+            if (cx->runtime->gcRegenShapes)
+                mjit::ic::PurgeMICs(cx, script);
 # endif
         }
     }
