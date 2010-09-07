@@ -485,12 +485,12 @@ ComputePixelRadii(const nscoord *aTwipsRadii,
 
   gfxFloat radii[8];
   NS_FOR_CSS_HALF_CORNERS(corner)
-    radii[corner] = twipsRadii[corner] / twipsPerPixel;
+    radii[corner] = gfxFloat(twipsRadii[corner]) / twipsPerPixel;
 
   // css3-background specifies this algorithm for reducing
   // corner radii when they are too big.
-  gfxFloat maxWidth = outerRect.width / twipsPerPixel;
-  gfxFloat maxHeight = outerRect.height / twipsPerPixel;
+  gfxFloat maxWidth = gfxFloat(outerRect.width) / twipsPerPixel;
+  gfxFloat maxHeight = gfxFloat(outerRect.height) / twipsPerPixel;
   gfxFloat f = 1.0f;
   NS_FOR_CSS_SIDES(side) {
     PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_TRUE);
