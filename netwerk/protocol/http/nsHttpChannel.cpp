@@ -755,10 +755,20 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
-    if (mResponseHead)
+    if (mResponseHead) {
         SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
                            mResponseHead->ContentLength());
-
+        // If we have a cache entry, set its predicted size to ContentLength to
+        // avoid caching an entry that will exceed the max size limit.
+        if (mCacheEntry) {
+            nsresult rv;
+            PRInt64 predictedDataSize = -1; // -1 in case GetAsInt64 fails.
+            GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, 
+                               &predictedDataSize);
+            rv = mCacheEntry->SetPredictedDataSize(predictedDataSize);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
         gIOService->GetContentSniffers().Count() != 0) {
@@ -2796,13 +2806,6 @@ nsHttpChannel::InitCacheEntry()
     if (NS_FAILED(rv)) return rv;
 
     rv = AddCacheEntryHeaders(mCacheEntry);
-    if (NS_FAILED(rv)) return rv;
-
-    // set predicted size of entry so we do not store anything that will exceed
-    // the max entry size limit
-    PRInt64 predictedDataSize;
-    GetContentLength(&predictedDataSize);
-    rv = mCacheEntry->SetPredictedDataSize(predictedDataSize);
     if (NS_FAILED(rv)) return rv;
 
     mInitedCacheEntry = PR_TRUE;
