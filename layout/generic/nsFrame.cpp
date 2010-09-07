@@ -738,8 +738,7 @@ nsIFrame::GetContentRect() const
 
 PRBool
 nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
-                             const nscoord aFrameWidth,
-                             const nscoord aFrameHeight,
+                             const nsSize& aFrameSize,
                              nscoord aRadii[8])
 {
   PRBool result = PR_FALSE;
@@ -747,7 +746,8 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
   // Percentages are relative to whichever side they're on.
   NS_FOR_CSS_HALF_CORNERS(i) {
     const nsStyleCoord c = aBorderRadius.Get(i);
-    nscoord axis = NS_HALF_CORNER_IS_X(i) ? aFrameWidth : aFrameHeight;
+    nscoord axis =
+      NS_HALF_CORNER_IS_X(i) ? aFrameSize.width : aFrameSize.height;
 
     switch (c.GetUnit()) {
       case eStyleUnit_Percent:
