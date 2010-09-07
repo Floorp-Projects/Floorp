@@ -739,6 +739,7 @@ nsIFrame::GetContentRect() const
 PRBool
 nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                              const nsSize& aFrameSize,
+                             const nsSize& aBorderArea,
                              PRIntn aSkipSides,
                              nscoord aRadii[8])
 {
@@ -792,15 +793,30 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
     aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
   }
 
-  PRBool result = PR_FALSE;
-  NS_FOR_CSS_HALF_CORNERS(i) {
-    if (aRadii[i]) {
-      result = PR_TRUE;
-      break;
+  // css3-background specifies this algorithm for reducing
+  // corner radii when they are too big.
+  PRBool haveRadius = PR_FALSE;
+  double ratio = 1.0f;
+  NS_FOR_CSS_SIDES(side) {
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_TRUE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_TRUE);
+    nscoord length =
+      NS_SIDE_IS_VERTICAL(side) ? aBorderArea.height : aBorderArea.width;
+    nscoord sum = aRadii[hc1] + aRadii[hc2];
+    if (sum)
+      haveRadius = PR_TRUE;
+
+    // avoid floating point division in the normal case
+    if (length < sum)
+      ratio = NS_MIN(ratio, double(length)/sum);
+  }
+  if (ratio < 1.0) {
+    NS_FOR_CSS_HALF_CORNERS(corner) {
+      aRadii[corner] *= ratio;
     }
   }
 
-  return result;
+  return haveRadius;
 }
 
 nsStyleContext*
