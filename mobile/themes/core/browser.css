@@ -130,14 +130,6 @@ toolbarbutton.urlbar-cap-button {
   -moz-box-flex: 1;
 }
 
-#tool-go {
-  list-style-image: url("chrome://browser/skin/images/go-30.png");
-}
-
-#tool-go:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/images/go-rtl-30.png");
-}
-
 #tool-reload {
   list-style-image: url("chrome://browser/skin/images/reload-30.png");
 }
@@ -146,12 +138,16 @@ toolbarbutton.urlbar-cap-button {
   list-style-image: url("chrome://browser/skin/images/stop-30.png");
 }
 
-#urlbar-icons[mode="loading"] > #tool-go,
+#tool-search {
+  list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
+}
+
+#urlbar-icons[mode="loading"] > #tool-search,
 #urlbar-icons[mode="loading"] > #tool-reload {
   visibility: collapse;
 }
 
-#urlbar-icons[mode="view"] > #tool-go,
+#urlbar-icons[mode="view"] > #tool-search,
 #urlbar-icons[mode="view"] > #tool-stop {
   visibility: collapse;
 }
@@ -228,21 +224,12 @@ toolbarbutton.urlbar-cap-button {
   background: url("images/rightcapSSL-active-64.png");
 }
 
-#urlbar-image-box[mode=edit] > #urlbar-favicon,
-#urlbar-image-box[mode=edit] > #urlbar-throbber {
-  display: none;
+#urlbar-container[mode="edit"] > #identity-box {
+  visibility: collapse;
 }
 
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
-}
-
-#urlbar-magnifier {
-  list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
-}
-
-#urlbar-image-box[mode=edit] > #urlbar-magnifier {
-  display: block !important;
 }
 
 #urlbar-favicon {
@@ -276,7 +263,20 @@ toolbarbutton.urlbar-cap-button {
 
 #urlbar-edit > hbox > hbox > .textbox-input {
   min-height: 60px;
-  text-indent: 3px;
+  text-indent: 8px;
+}
+
+#urlbar-container[mode="edit"] > #urlbar-edit {
+  -moz-border-start: 3px solid #262629 !important;
+  -moz-border-radius-topleft: 10px;
+  -moz-border-radius-bottomleft: 10px;
+}
+
+#urlbar-container[mode="edit"] > #urlbar-edit:-moz-locale-dir(rtl) {
+  -moz-border-radius-topleft: 0;
+  -moz-border-radius-bottomleft: 0;
+  -moz-border-radius-topright: 10px;
+  -moz-border-radius-bottomright: 10px;
 }
 
 /* make sure this endcap matches the other endcap */
