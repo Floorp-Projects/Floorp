@@ -280,7 +280,6 @@ FrameState::assertValidRegisterState() const
         JS_ASSERT(i == fe->trackerIndex());
         JS_ASSERT_IF(fe->isCopy(),
                      fe->trackerIndex() > fe->copyOf()->trackerIndex());
-        JS_ASSERT_IF(fe->isCopy(), fe > fe->copyOf());
         JS_ASSERT_IF(fe->isCopy(), !fe->type.inRegister() && !fe->data.inRegister());
         JS_ASSERT_IF(fe->isCopy(), fe->copyOf() < sp);
         JS_ASSERT_IF(fe->isCopy(), fe->copyOf()->isCopied());
@@ -763,10 +762,9 @@ FrameState::uncopy(FrameEntry *original)
     JS_ASSERT(original->isCopied());
 
     /*
-     * Copies have three critical invariants:
+     * Copies have two critical invariants:
      *  1) The backing store precedes all copies in the tracker.
-     *  2) The backing store precedes all copies in the FrameState.
-     *  3) The backing store of a copy cannot be popped from the stack
+     *  2) The backing store of a copy cannot be popped from the stack
      *     while the copy is still live.
      *
      * Maintaining this invariant iteratively is kind of hard, so we choose
@@ -778,16 +776,12 @@ FrameState::uncopy(FrameEntry *original)
      *    [A, D, C, B]
      *
      * If B, C, and D are copies of A - we will walk the tracker to the end
-     * and select B, not D (see bug 583684).
-     *
-     * Note: |tracker.nentries <= (nslots + nargs)|. However, this walk is
-     * sub-optimal if |original->trackerIndex() > sp - original|. With large
-     * scripts this may be a problem worth investigating.
+     * and select D, not B (see bug 583684).
      */
     uint32 firstCopy = InvalidIndex;
     FrameEntry *bestFe = NULL;
     uint32 ncopies = 0;
-    for (uint32 i = original->trackerIndex() + 1; i < tracker.nentries; i++) {
+    for (uint32 i = 0; i < tracker.nentries; i++) {
         FrameEntry *fe = tracker[i];
         if (fe >= sp)
             continue;
@@ -811,7 +805,6 @@ FrameState::uncopy(FrameEntry *original)
 
     JS_ASSERT(firstCopy != InvalidIndex);
     JS_ASSERT(bestFe);
-    JS_ASSERT(bestFe > original);
 
     /* Mark all extra copies as copies of the new backing index. */
     bestFe->setCopyOf(NULL);
@@ -921,10 +914,9 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
     }
 
     /*
-     * When dealing with copies, there are three important invariants:
+     * When dealing with copies, there are two important invariants:
      *
      * 1) The backing store precedes all copies in the tracker.
-     * 2) The backing store precedes all copies in the FrameState.
      * 2) The backing store of a local is never a stack slot, UNLESS the local
      *    variable itself is a stack slot (blocks) that precedes the stack
      *    slot.
@@ -938,7 +930,9 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         backing = top->copyOf();
         JS_ASSERT(backing->trackerIndex() < top->trackerIndex());
 
-        if (backing < localFe) {
+        uint32 backingIndex = indexOfFe(backing);
+        uint32 tol = uint32(spBase - entries);
+        if (backingIndex < tol || backingIndex < localIndex(n)) {
             /* local.idx < backing.idx means local cannot be a copy yet */
             if (localFe->trackerIndex() < backing->trackerIndex())
                 swapInTracker(backing, localFe);
