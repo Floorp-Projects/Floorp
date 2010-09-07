@@ -195,6 +195,23 @@ assertDecl("function foo() { return 42 }",
            funDecl(ident("foo"), [], blockStmt([returnStmt(lit(42))])));
 
 
+// Bug 591437: rebound args have their defs turned into uses
+assertDecl("function f(a) { function a() { } }",
+           funDecl(ident("f"), [ident("a")], blockStmt([funDecl(ident("a"), [], blockStmt([]))])));
+assertDecl("function f(a,b,c) { function b() { } }",
+           funDecl(ident("f"), [ident("a"),ident("b"),ident("c")], blockStmt([funDecl(ident("b"), [], blockStmt([]))])));
+assertDecl("function f(a,[x,y]) { function a() { } }",
+           funDecl(ident("f"),
+                   [ident("a"), arrPatt([ident("x"), ident("y")])],
+                   blockStmt([funDecl(ident("a"), [], blockStmt([]))])));
+
+// Bug 591450: this test currently crashes because of a bug in jsparse
+// assertDecl("function f(a,[x,y],b,[w,z],c) { function b() { } }",
+//            funDecl(ident("f"),
+//                    [ident("a"), arrPatt([ident("x"), ident("y")]), ident("b"), arrPatt([ident("w"), ident("z")]), ident("c")],
+//                    blockStmt([funDecl(ident("b"), [], blockStmt([]))])));
+
+
 // expressions
 
 assertExpr("true", lit(true));
