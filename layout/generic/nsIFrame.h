@@ -919,6 +919,16 @@ public:
   nsRect GetContentRect() const;
 
   /**
+   * Get the size, in app units, of the border radii. It returns FALSE iff all
+   * returned radii == 0 (so no border radii), TRUE otherwise.
+   * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
+   */
+  static PRBool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
+                                   const nscoord aFrameWidth,
+                                   const nscoord aFrameHeight,
+                                   nscoord aRadii[8]);
+
+  /**
    * Get the position of the frame's baseline, relative to the top of
    * the frame (its top border edge).  Only valid when Reflow is not
    * needed and when the frame returned nsHTMLReflowMetrics::
