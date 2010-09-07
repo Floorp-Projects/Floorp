@@ -52,13 +52,6 @@ let Util = {
     };
   },
 
-  bindAll: function bindAll(instance) {
-    let bind = Util.bind;
-    for (let key in instance)
-      if (instance[key] instanceof Function)
-        instance[key] = bind(instance[key], instance);
-  },
-
   /** printf-like dump function */
   dumpf: function dumpf(str) {
     let args = arguments;
