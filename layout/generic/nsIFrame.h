@@ -924,8 +924,7 @@ public:
    * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
    */
   static PRBool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
-                                   const nscoord aFrameWidth,
-                                   const nscoord aFrameHeight,
+                                   const nsSize& aFrameSize,
                                    nscoord aRadii[8]);
 
   /**
