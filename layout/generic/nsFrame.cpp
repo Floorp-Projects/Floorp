@@ -739,10 +739,9 @@ nsIFrame::GetContentRect() const
 PRBool
 nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                              const nsSize& aFrameSize,
+                             PRIntn aSkipSides,
                              nscoord aRadii[8])
 {
-  PRBool result = PR_FALSE;
-
   // Percentages are relative to whichever side they're on.
   NS_FOR_CSS_HALF_CORNERS(i) {
     const nsStyleCoord c = aBorderRadius.Get(i);
@@ -763,10 +762,44 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
         aRadii[i] = 0;
         break;
     }
-
-    if (aRadii[i])
-      result = PR_TRUE;
   }
+
+  if (aSkipSides & (1 << NS_SIDE_TOP)) {
+    aRadii[NS_CORNER_TOP_LEFT_X] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_RIGHT)) {
+    aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_BOTTOM)) {
+    aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_LEFT)) {
+    aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_X] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
+  }
+
+  PRBool result = PR_FALSE;
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    if (aRadii[i]) {
+      result = PR_TRUE;
+      break;
+    }
+  }
+
   return result;
 }
 

@@ -471,47 +471,17 @@ RectToGfxRect(const nsRect& rect, nscoord twipsPerPixel)
  * Compute the float-pixel radii that should be used for drawing
  * this border/outline, given the various input bits.
  *
- * If a side is skipped via skipSides, its corners are forced to 0.
  * All corner radii are then adjusted so they do not require more
  * space than outerRect, according to the algorithm in css3-background.
  */
 static void
 ComputePixelRadii(const nscoord *aTwipsRadii,
                   const nsRect& outerRect,
-                  PRIntn skipSides,
                   nscoord twipsPerPixel,
                   gfxCornerSizes *oBorderRadii)
 {
   nscoord twipsRadii[8];
   memcpy(twipsRadii, aTwipsRadii, sizeof twipsRadii);
-
-  if (skipSides & SIDE_BIT_TOP) {
-    twipsRadii[NS_CORNER_TOP_LEFT_X] = 0;
-    twipsRadii[NS_CORNER_TOP_LEFT_Y] = 0;
-    twipsRadii[NS_CORNER_TOP_RIGHT_X] = 0;
-    twipsRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
-  }
-
-  if (skipSides & SIDE_BIT_RIGHT) {
-    twipsRadii[NS_CORNER_TOP_RIGHT_X] = 0;
-    twipsRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
-    twipsRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
-    twipsRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
-  }
-
-  if (skipSides & SIDE_BIT_BOTTOM) {
-    twipsRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
-    twipsRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
-    twipsRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
-    twipsRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
-  }
-
-  if (skipSides & SIDE_BIT_LEFT) {
-    twipsRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
-    twipsRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
-    twipsRadii[NS_CORNER_TOP_LEFT_X] = 0;
-    twipsRadii[NS_CORNER_TOP_LEFT_Y] = 0;
-  }
 
   gfxFloat radii[8];
   NS_FOR_CSS_HALF_CORNERS(corner)
@@ -629,7 +599,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   }
 
   nsIFrame::ComputeBorderRadii(aStyleBorder.mBorderRadius,
-                               aForFrame->GetSize(), twipsRadii);
+                               aForFrame->GetSize(), aSkipSides, twipsRadii);
 
   // Turn off rendering for all of the zero sized sides
   if (aSkipSides & SIDE_BIT_TOP) border.top = 0;
@@ -658,8 +628,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   // convert the radii
   gfxCornerSizes borderRadii;
-  ComputePixelRadii(twipsRadii, outerRect, aSkipSides, twipsPerPixel,
-                    &borderRadii);
+  ComputePixelRadii(twipsRadii, outerRect, twipsPerPixel, &borderRadii);
 
   PRUint8 borderStyles[4];
   nscolor borderColors[4];
@@ -750,7 +719,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
 
   // get the radius for our outline
   nsIFrame::ComputeBorderRadii(ourOutline->mOutlineRadius, aBorderArea.Size(),
-                               twipsRadii);
+                               0, twipsRadii);
 
   // When the outline property is set on :-moz-anonymous-block or
   // :-moz-anonyomus-positioned-block pseudo-elements, it inherited that
@@ -806,8 +775,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // convert the radii
   nsMargin outlineMargin(width, width, width, width);
   gfxCornerSizes outlineRadii;
-  ComputePixelRadii(twipsRadii, outerRect, 0, twipsPerPixel,
-                    &outlineRadii);
+  ComputePixelRadii(twipsRadii, outerRect, twipsPerPixel, &outlineRadii);
 
   PRUint8 outlineStyle = ourOutline->GetOutlineStyle();
   PRUint8 outlineStyles[4] = { outlineStyle,
@@ -865,7 +833,7 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   gfxCornerSizes focusRadii;
   {
     nscoord twipsRadii[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    ComputePixelRadii(twipsRadii, aFocusRect, 0, oneDevPixel, &focusRadii);
+    ComputePixelRadii(twipsRadii, aFocusRect, oneDevPixel, &focusRadii);
   }
   gfxFloat focusWidths[4] = { gfxFloat(oneCSSPixel / oneDevPixel),
                               gfxFloat(oneCSSPixel / oneDevPixel),
@@ -1167,11 +1135,10 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     nativeTheme = PR_FALSE;
     nscoord twipsRadii[8];
     hasBorderRadius = nsIFrame::ComputeBorderRadii(styleBorder->mBorderRadius,
-                        aFrameArea.Size(), twipsRadii);
+                        aFrameArea.Size(), aForFrame->GetSkipSides(),
+                        twipsRadii);
     if (hasBorderRadius) {
-      PRIntn sidesToSkip = aForFrame->GetSkipSides();
-      ComputePixelRadii(twipsRadii, aFrameArea, sidesToSkip, twipsPerPixel,
-                        &borderRadii);
+      ComputePixelRadii(twipsRadii, aFrameArea, twipsPerPixel, &borderRadii);
     }
   }
 
@@ -1348,7 +1315,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   nscoord twipsRadii[8];
   PRBool hasBorderRadius = nsIFrame::ComputeBorderRadii(
                              styleBorder->mBorderRadius, aFrameArea.Size(),
-                             twipsRadii);
+                             aForFrame->GetSkipSides(), twipsRadii);
   nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 
   nsRect paddingRect = aFrameArea;
@@ -1359,10 +1326,8 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   gfxCornerSizes innerRadii;
   if (hasBorderRadius) {
     gfxCornerSizes borderRadii;
-    PRIntn sidesToSkip = aForFrame->GetSkipSides();
 
-    ComputePixelRadii(twipsRadii, aFrameArea, sidesToSkip,
-                      twipsPerPixel, &borderRadii);
+    ComputePixelRadii(twipsRadii, aFrameArea, twipsPerPixel, &borderRadii);
     gfxFloat borderSizes[4] = {
       gfxFloat(border.top / twipsPerPixel),
       gfxFloat(border.right / twipsPerPixel),
@@ -2240,10 +2205,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   {
     nscoord radii[8];
     haveRoundedCorners = nsIFrame::ComputeBorderRadii(aBorder.mBorderRadius,
-                           aForFrame->GetSize(), radii);
+                           aForFrame->GetSize(), aForFrame->GetSkipSides(),
+                           radii);
     if (haveRoundedCorners)
-      ComputePixelRadii(radii, aBorderArea, aForFrame->GetSkipSides(),
-                        appUnitsPerPixel, &bgRadii);
+      ComputePixelRadii(radii, aBorderArea, appUnitsPerPixel, &bgRadii);
   }
 
   // The 'bgClipArea' (used only by the image tiling logic, far below)
