@@ -1702,6 +1702,10 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
       case TOK_LET:
         return declaration(pn, dst);
 
+      case TOK_NAME:
+        LOCAL_ASSERT(pn->pn_used);
+        return statement(pn->pn_lexdef, dst);
+
       case TOK_SEMI:
         if (pn->pn_kid) {
             Value expr;

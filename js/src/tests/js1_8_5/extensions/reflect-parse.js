@@ -28,7 +28,6 @@ function genFunDecl(id, params, body) Pattern({ type: "FunctionDeclaration",
 function varDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "var" })
 function letDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "let" })
 function constDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "const" })
-function blockStmt(body) Pattern({ type: "BlockStatement", body: body })
 function ident(name) Pattern({ type: "Identifier", name: name })
 function dotExpr(obj, id) Pattern({ type: "MemberExpression", computed: false, object: obj, property: id })
 function memExpr(obj, id) Pattern({ type: "MemberExpression", computed: true, object: obj, property: id })
@@ -37,7 +36,7 @@ function forInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: lhs, 
 function forEachInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body, each: true })
 function breakStmt(lab) Pattern({ type: "BreakStatement", label: lab })
 function continueStmt(lab) Pattern({ type: "ContinueStatement", label: lab })
-function blockStmt(stmts) Pattern({ type: "BlockStatement", body: stmts })
+function blockStmt(body) Pattern({ type: "BlockStatement", body: body })
 var emptyStmt = Pattern({ type: "EmptyStatement" })
 function ifStmt(test, cons, alt) Pattern({ type: "IfStatement", test: test, alternate: alt, consequent: cons })
 function labStmt(lab, stmt) Pattern({ type: "LabeledStatement", label: lab, body: stmt })
@@ -368,6 +367,21 @@ assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } fina
                      catchClause(ident("e"), ident("bar"), blockStmt([])),
                      catchClause(ident("e"), null, blockStmt([])) ],
                    blockStmt([])));
+
+// redeclarations (TOK_NAME nodes with lexdef)
+
+assertStmt("function f() { function g() { } function g() { } }",
+           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+                                              funDecl(ident("g"), [], blockStmt([]))])));
+
+assertStmt("function f() { function g() { } function g() { return 42 } }",
+           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+                                              funDecl(ident("g"), [], blockStmt([returnStmt(lit(42))]))])));
+
+assertStmt("function f() { var x = 42; var x = 43; }",
+           funDecl(ident("f"), [], blockStmt([varDecl([{ id: ident("x"), init: lit(42) }]),
+                                              varDecl([{ id: ident("x"), init: lit(43) }])])));
+
 
 assertDecl("var {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
                                           init: ident("foo") }]));
