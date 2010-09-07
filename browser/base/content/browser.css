@@ -133,6 +133,16 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   display: none;
 }
 
+.menuitem-tooltip {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-tooltip");
+}
+
+.menuitem-iconic-tooltip,
+.menuitem-tooltip[type="checkbox"],
+.menuitem-tooltip[type="radio"] {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
