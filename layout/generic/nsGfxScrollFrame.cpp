@@ -3141,6 +3141,69 @@ nsGfxScrollFrameInner::SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
   aContent->SetAttr(kNameSpaceID_None, aAtom, newValue, PR_TRUE);
 }
 
+static void
+ReduceRadii(nscoord aXBorder, nscoord aYBorder,
+            nscoord& aXRadius, nscoord& aYRadius)
+{
+  // In order to ensure that the inside edge of the border has no
+  // curvature, we need at least one of its radii to be zero.
+  if (aXRadius <= aXBorder || aYRadius <= aYBorder)
+    return;
+
+  // For any corner where we reduce the radii, preserve the corner's shape.
+  double ratio = NS_MAX(double(aXBorder) / aXRadius,
+                        double(aYBorder) / aYRadius);
+  aXRadius *= ratio;
+  aYRadius *= ratio;
+}
+
+/**
+ * Implement an override for nsIFrame::GetBorderRadii to ensure that
+ * the clipping region for the border radius does not clip the scrollbars.
+ *
+ * In other words, we require that the border radius be reduced until the
+ * inner border radius at the inner edge of the border is 0 wherever we
+ * have scrollbars.
+ */
+PRBool
+nsGfxScrollFrameInner::GetBorderRadii(nscoord aRadii[8]) const
+{
+  if (!mOuter->nsContainerFrame::GetBorderRadii(aRadii))
+    return PR_FALSE;
+
+  // Since we can use GetActualScrollbarSizes (rather than
+  // GetDesiredScrollbarSizes) since this doesn't affect reflow, we
+  // probably should.
+  nsMargin sb = GetActualScrollbarSizes();
+  nsMargin border = mOuter->GetUsedBorder();
+
+  if (sb.left > 0 || sb.top > 0) {
+    ReduceRadii(border.left, border.top,
+                aRadii[NS_CORNER_TOP_LEFT_X],
+                aRadii[NS_CORNER_TOP_LEFT_Y]);
+  }
+
+  if (sb.top > 0 || sb.right > 0) {
+    ReduceRadii(border.right, border.top,
+                aRadii[NS_CORNER_TOP_RIGHT_X],
+                aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  }
+
+  if (sb.right > 0 || sb.bottom > 0) {
+    ReduceRadii(border.right, border.bottom,
+                aRadii[NS_CORNER_BOTTOM_RIGHT_X],
+                aRadii[NS_CORNER_BOTTOM_RIGHT_Y]);
+  }
+
+  if (sb.bottom > 0 || sb.left > 0) {
+    ReduceRadii(border.left, border.bottom,
+                aRadii[NS_CORNER_BOTTOM_LEFT_X],
+                aRadii[NS_CORNER_BOTTOM_LEFT_Y]);
+  }
+
+  return PR_TRUE;
+}
+
 nsRect
 nsGfxScrollFrameInner::GetScrolledRect() const
 {
