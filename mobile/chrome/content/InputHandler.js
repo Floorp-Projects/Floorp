@@ -1292,22 +1292,22 @@ GestureModule.prototype = {
   },
 
   _pinchStart: function _pinchStart(aEvent) {
-    let bv = Browser._browserView;
     // start gesture if it's not taking place already, or over a XUL element
-    if (this._pinchZoom || (aEvent.target instanceof XULElement) || !bv.allowZoom)
+    if (this._pinchZoom || (aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom)
       return;
 
     // grab events during pinch
     this._owner.grab(this);
 
     // hide element highlight
-    document.getElementById("tile-container").customClicker.panBegin();
+    // XXX ugh, this is awful. None of this code should be in InputHandler.
+    document.getElementById("inputhandler-overlay").customClicker.panBegin();
 
     // create the AnimatedZoom object for fast arbitrary zooming
-    this._pinchZoom = new AnimatedZoom(bv);
+    this._pinchZoom = animatedZoom;
 
     // start from current zoom level
-    this._pinchZoomLevel = bv.getZoomLevel();
+    this._pinchZoomLevel = getBrowser().scale;
     this._pinchDelta = 0;
     this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
@@ -1319,6 +1319,11 @@ GestureModule.prototype = {
     // save the initial gesture start point as reference
     [this._pinchStartX, this._pinchStartY] =
         Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
+
+    let scrollX = {}, scrollY = {};
+    getBrowser().getPosition(scrollX, scrollY);
+    this._pinchStartX += scrollX.value;
+    this._pinchStartY += scrollY.value;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
@@ -1331,12 +1336,17 @@ GestureModule.prototype = {
     // decrease the pinchDelta min/max values to limit zooming out/in speed
     let delta = Math.max(-this._maxShrink, Math.min(this._maxGrowth, this._pinchDelta));
     this._pinchZoomLevel *= (1 + delta / this._scalingFactor);
-    this._pinchZoomLevel = Browser._browserView.clampZoomLevel(this._pinchZoomLevel);
+    this._pinchZoomLevel = Browser.selectedTab.clampZoomLevel(this._pinchZoomLevel);
     this._pinchDelta = 0;
 
     // get current pinch position to calculate opposite vector for zoom point
     let [pX, pY] =
         Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
+
+    let scrollX = {}, scrollY = {};
+    getBrowser().getPosition(scrollX, scrollY);
+    pX += scrollX.value;
+    pY += scrollY.value;
 
     // redraw zoom canvas according to new zoom rect
     let rect = Browser._getZoomRectForPoint(2 * this._pinchStartX - pX,
