@@ -474,31 +474,30 @@ FrameState::syncAndKill(Registers kill, Uses uses)
 void
 FrameState::merge(Assembler &masm, Changes changes) const
 {
-    Registers search(Registers::AvailRegs & ~freeRegs.freeMask);
+    Registers temp(Registers::TempRegs);
 
-    while (!search.empty()) {
-        RegisterID reg = search.peekReg();
-
-        FrameEntry *fe = regstate[reg].usedBy();
-        if (!fe)
+    for (uint32 i = 0; i < tracker.nentries; i++) {
+        FrameEntry *fe = tracker[i];
+        if (fe >= sp)
             continue;
+
+        /* Copies do not have registers. */
+        if (fe->isCopy()) {
+            JS_ASSERT(!fe->data.inRegister());
+            JS_ASSERT(!fe->type.inRegister());
+            continue;
+        }
 
 #if defined JS_PUNBOX64
         if (fe->data.inRegister() && fe->type.inRegister()) {
             masm.loadValueAsComponents(addressOf(fe), fe->type.reg(), fe->data.reg());
-            search.takeReg(fe->data.reg());
-            search.takeReg(fe->type.reg());
         } else
 #endif
         {
-            if (fe->data.inRegister()) {
+            if (fe->data.inRegister())
                 masm.loadPayload(addressOf(fe), fe->data.reg());
-                search.takeReg(fe->data.reg());
-            }
-            if (fe->type.inRegister()) {
+            if (fe->type.inRegister())
                 masm.loadTypeTag(addressOf(fe), fe->type.reg());
-                search.takeReg(fe->type.reg());
-            }
         }
     }
 }
