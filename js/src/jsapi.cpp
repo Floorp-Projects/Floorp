@@ -80,7 +80,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jstask.h"
 #include "jstracer.h"
 #include "jsdbgapi.h"
 #include "prmjtime.h"
@@ -607,15 +606,6 @@ JSRuntime::init(uint32 maxbytes)
     wrapObjectCallback = js::TransparentObjectWrapper;
 
 #ifdef JS_THREADSAFE
-    gcLock = JS_NEW_LOCK();
-    if (!gcLock)
-        return false;
-    gcDone = JS_NEW_CONDVAR(gcLock);
-    if (!gcDone)
-        return false;
-    requestDone = JS_NEW_CONDVAR(gcLock);
-    if (!requestDone)
-        return false;
     /* this is asymmetric with JS_ShutDown: */
     if (!js_SetupLocks(8, 16))
         return false;
@@ -1846,7 +1836,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    return cx->updateMallocCounter(nbytes);
+    return cx->runtime->updateMallocCounter(nbytes);
 }
 
 JS_PUBLIC_API(char *)
@@ -2614,7 +2604,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     if (!str)
         return NULL;
     str->initFlat(chars, length);
-    cx->updateMallocCounter((length + 1) * sizeof(jschar));
+    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
     return str;
 }
 
@@ -4825,7 +4815,10 @@ JS_TriggerOperationCallback(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_TriggerAllOperationCallbacks(JSRuntime *rt)
 {
-    js_TriggerAllOperationCallbacks(rt, JS_FALSE);
+#ifdef JS_THREADSAFE
+    AutoLockGC lock(rt);
+#endif
+    TriggerAllOperationCallbacks(rt);
 }
 
 JS_PUBLIC_API(JSBool)
