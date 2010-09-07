@@ -417,95 +417,57 @@ FrameState::sync(Assembler &masm, Uses uses) const
 void
 FrameState::syncAndKill(Registers kill, Uses uses)
 {
-    /* Sync all kill-registers up-front. */
-    Registers search(kill.freeMask & ~freeRegs.freeMask);
-    while (!search.empty()) {
-        RegisterID reg = search.takeAnyReg();
-        FrameEntry *fe = regstate[reg].usedBy();
-        if (!fe)
-            continue;
-
-        JS_ASSERT(fe->isTracked());
-
-        if (regstate[reg].type() == RematInfo::DATA) {
-            JS_ASSERT(fe->data.reg() == reg);
-            if (!fe->data.synced()) {
-                syncData(fe, addressOf(fe), masm);
-                fe->data.sync();
-            }
-        } else {
-            JS_ASSERT(fe->type.reg() == reg);
-            if (!fe->type.synced()) {
-                syncType(fe, addressOf(fe), masm);
-                fe->type.sync();
-            }
-        }
-    }
-
-    uint32 maxvisits = tracker.nentries;
+    /* Backwards, so we can allocate registers to backing slots better. */
     FrameEntry *bottom = sp - uses.nuses;
+
     if (inTryBlock)
-        bottom = entries;
+        bottom = NULL;
 
-    for (FrameEntry *fe = sp - 1; fe >= bottom && maxvisits; fe--) {
-        if (!fe->isTracked())
+    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
+        FrameEntry *fe = tracker[i];
+        if (fe >= sp)
             continue;
-
-        maxvisits--;
 
         Address address = addressOf(fe);
         FrameEntry *backing = fe;
-        if (fe->isCopy())
+        if (fe->isCopy()) {
+            if (!inTryBlock && fe < bottom)
+                continue;
             backing = fe->copyOf();
+        }
 
-        if (!fe->data.synced()) {
+        JS_ASSERT_IF(i == 0, !fe->isCopy());
+
+        bool killData = fe->data.inRegister() && kill.hasReg(fe->data.reg());
+        if (!fe->data.synced() && (killData || fe >= bottom)) {
             if (backing != fe && backing->data.inMemory())
                 tempRegForData(backing);
             syncData(backing, address, masm);
             fe->data.sync();
-            if (fe->isConstant() && !fe->type.synced()) {
+            if (fe->isConstant() && !fe->type.synced())
                 fe->type.sync();
-            } else if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
-                forgetReg(fe->data.reg());
-                fe->data.setMemory();
-            }
         }
-        if (!fe->type.synced()) {
+        if (killData) {
+            JS_ASSERT(backing == fe);
+            JS_ASSERT(fe->data.synced());
+            if (regstate[fe->data.reg()].fe())
+                forgetReg(fe->data.reg());
+            fe->data.setMemory();
+        }
+        bool killType = fe->type.inRegister() && kill.hasReg(fe->type.reg());
+        if (!fe->type.synced() && (killType || fe >= bottom)) {
             if (backing != fe && backing->type.inMemory())
                 tempRegForType(backing);
             syncType(backing, address, masm);
             fe->type.sync();
-            if (fe->type.inRegister() && kill.hasReg(fe->type.reg())) {
-                forgetReg(fe->type.reg());
-                fe->type.setMemory();
-            }
         }
-    }
-
-    /*
-     * Anything still alive at this point is guaranteed to be synced. However,
-     * it is necessary to evict temporary registers.
-     */
-    search = Registers(kill.freeMask & ~freeRegs.freeMask);
-    while (!search.empty()) {
-        RegisterID reg = search.takeAnyReg();
-        FrameEntry *fe = regstate[reg].usedBy();
-        if (!fe)
-            continue;
-
-        JS_ASSERT(fe->isTracked());
-
-        if (regstate[reg].type() == RematInfo::DATA) {
-            JS_ASSERT(fe->data.reg() == reg);
-            JS_ASSERT(fe->data.synced());
-            fe->data.setMemory();
-        } else {
-            JS_ASSERT(fe->type.reg() == reg);
+        if (killType) {
+            JS_ASSERT(backing == fe);
             JS_ASSERT(fe->type.synced());
+            if (regstate[fe->type.reg()].fe())
+                forgetReg(fe->type.reg());
             fe->type.setMemory();
         }
-
-        forgetReg(reg);
     }
 }
 
