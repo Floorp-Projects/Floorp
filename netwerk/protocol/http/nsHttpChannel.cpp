@@ -2798,6 +2798,13 @@ nsHttpChannel::InitCacheEntry()
     rv = AddCacheEntryHeaders(mCacheEntry);
     if (NS_FAILED(rv)) return rv;
 
+    // set predicted size of entry so we do not store anything that will exceed
+    // the max entry size limit
+    PRInt64 predictedDataSize;
+    GetContentLength(&predictedDataSize);
+    rv = mCacheEntry->SetPredictedDataSize(predictedDataSize);
+    if (NS_FAILED(rv)) return rv;
+
     mInitedCacheEntry = PR_TRUE;
     return NS_OK;
 }
