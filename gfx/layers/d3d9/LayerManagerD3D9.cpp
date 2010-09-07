@@ -65,8 +65,8 @@ LayerManagerD3D9::~LayerManagerD3D9()
    */
   mSwapChain = nsnull;
 
-  if (mDeviceManager) {
-    mDeviceManager->Release();
+  if (mDeviceManager && mDeviceManager->Release() == 0) {
+    mDeviceManager = nsnull;
   }
 }
 
@@ -79,14 +79,16 @@ LayerManagerD3D9::Initialize()
 
   if (!mDeviceManager) {
     mDeviceManager = new DeviceManagerD3D9;
+    mDeviceManager->AddRef();
 
     if (!mDeviceManager->Init()) {
+      mDeviceManager->Release();
       mDeviceManager = nsnull;
       return PR_FALSE;
     }
+  } else {
+    mDeviceManager->AddRef();
   }
-
-  mDeviceManager->AddRef();
 
   mSwapChain = mDeviceManager->
     CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));

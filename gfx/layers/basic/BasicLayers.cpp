@@ -378,10 +378,30 @@ ShouldRetainTransparentSurface(PRUint32 aContentFlags,
   case gfxASurface::TEXT_QUALITY_OK:
     return PR_TRUE;
   case gfxASurface::TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS:
+    // Retain the buffer if all text is over opaque pixels. Otherwise,
+    // don't retain the buffer, in the hope that the backbuffer has
+    // opaque pixels where our layer does not.
     return (aContentFlags & Layer::CONTENT_NO_TEXT_OVER_TRANSPARENT) != 0;
+  case gfxASurface::TEXT_QUALITY_BAD:
+    // If the backbuffer is opaque, then draw directly into it to get
+    // subpixel AA. If the backbuffer is not an opaque format, then we won't get
+    // subpixel AA by drawing into it, so we might as well retain.
+    return aTargetSurface->GetContentType() != gfxASurface::CONTENT_COLOR;
   default:
-    return PR_FALSE;
+    NS_ERROR("Unknown quality type");
+    return PR_TRUE;
   }
+}
+
+static nsIntRegion
+IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
+{
+  gfxRect clip = aContext->GetClipExtents();
+  clip.RoundOut();
+  nsIntRect r(clip.X(), clip.Y(), clip.Width(), clip.Height());
+  nsIntRegion result;
+  result.And(aRegion, r);
+  return result;
 }
 
 void
@@ -409,17 +429,20 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     mValidRegion.SetEmpty();
     mBuffer.Clear();
 
-    target->Save();
-    gfxUtils::ClipToRegionSnapped(target, mVisibleRegion);
-    if (aOpacity != 1.0) {
-      target->PushGroup(contentType);
+    nsIntRegion toDraw = IntersectWithClip(mVisibleRegion, target);
+    if (!toDraw.IsEmpty()) {
+      target->Save();
+      gfxUtils::ClipToRegionSnapped(target, toDraw);
+      if (aOpacity != 1.0) {
+        target->PushGroup(contentType);
+      }
+      aCallback(this, target, toDraw, nsIntRegion(), aCallbackData);
+      if (aOpacity != 1.0) {
+        target->PopGroupToSource();
+        target->Paint(aOpacity);
+      }
+      target->Restore();
     }
-    aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
-    if (aOpacity != 1.0) {
-      target->PopGroupToSource();
-      target->Paint(aOpacity);
-    }
-    target->Restore();
     return;
   }
 

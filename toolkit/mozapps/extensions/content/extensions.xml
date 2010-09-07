@@ -817,11 +817,10 @@
             <xul:button anonid="disable-btn" class="addon-control disable"
                         label="&cmd.disableAddon.label;"
                         oncommand="document.getBindingParent(this).userDisabled = true;"/>
+            <xul:button anonid="remove-btn" class="addon-control remove"
+                        label="&cmd.uninstallAddon.label;"
+                        oncommand="document.getBindingParent(this).uninstall();"/>
           </xul:hbox>
-        </xul:vbox>
-        <xul:vbox pack="start" class="remove-container">
-          <xul:button anonid="remove-btn" class="remove-button"
-                      oncommand="document.getBindingParent(this).uninstall();"/>
         </xul:vbox>
       </xul:hbox>
     </content>

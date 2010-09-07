@@ -13,6 +13,7 @@ browser.jar:
 * skin/classic/browser/browser.css                    (browser.css)
 * skin/classic/browser/engineManager.css              (engineManager.css)
   skin/classic/browser/fullscreen-video.css
+  skin/classic/browser/inspector.css
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
@@ -73,6 +74,7 @@ browser.jar:
   skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/progress.png         (tabbrowser/progress.png)
   skin/classic/browser/tabbrowser/progress-pulsing.png (tabbrowser/progress-pulsing.png)
+  skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
   skin/classic/browser/tabview/edit.png               (tabview/edit.png)

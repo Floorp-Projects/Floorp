@@ -126,6 +126,20 @@ var gTestSteps = [
     ensure_opentabs_match_db();
     nextStep();
   },
+  function() {
+    info("Running step 8 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
+    let tabToKeep = gBrowser.addTab();
+    let tab = gBrowser.addTab();
+    tab.linkedBrowser.addEventListener("load", function () {
+      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
+      ensure_opentabs_match_db();
+      gBrowser.removeTab(tabToKeep);
+      ensure_opentabs_match_db();
+      nextStep();
+    }, true);
+    tab.linkedBrowser.loadURI('about:robots');
+  },
 ];
 
 

@@ -808,7 +808,7 @@ nsARIAGridAccessible::SetARIASelected(nsAccessible *aAccessible,
   if (aIsSelected)
     return NS_OK;
 
-  PRUint32 role = nsAccUtils::Role(aAccessible);
+  PRUint32 role = aAccessible->Role();
 
   // If the given accessible is row that was unselected then remove
   // aria-selected from cell accessible.
@@ -831,7 +831,7 @@ nsARIAGridAccessible::SetARIASelected(nsAccessible *aAccessible,
       role == nsIAccessibleRole::ROLE_COLUMNHEADER) {
     nsAccessible *row = aAccessible->GetParent();
 
-    if (nsAccUtils::Role(row) == nsIAccessibleRole::ROLE_ROW &&
+    if (row && row->Role() == nsIAccessibleRole::ROLE_ROW &&
         nsAccUtils::IsARIASelected(row)) {
       rv = SetARIASelected(row, PR_FALSE, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -948,15 +948,17 @@ nsARIAGridCellAccessible::GetTable(nsIAccessibleTable **aTable)
   NS_ENSURE_ARG_POINTER(aTable);
   *aTable = nsnull;
 
-  nsCOMPtr<nsIAccessible> thisRow;
-  GetParent(getter_AddRefs(thisRow));
-  if (nsAccUtils::Role(thisRow) != nsIAccessibleRole::ROLE_ROW)
+  nsAccessible* thisRow = GetParent();
+  if (!thisRow || thisRow->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
-  nsCOMPtr<nsIAccessible> table;
-  thisRow->GetParent(getter_AddRefs(table));
-  if (nsAccUtils::Role(table) != nsIAccessibleRole::ROLE_TABLE &&
-      nsAccUtils::Role(table) != nsIAccessibleRole::ROLE_TREE_TABLE)
+  nsAccessible* table = thisRow->GetParent();
+  if (!table)
+    return NS_OK;
+
+  PRUint32 tableRole = table->Role();
+  if (tableRole != nsIAccessibleRole::ROLE_TABLE &&
+      tableRole != nsIAccessibleRole::ROLE_TREE_TABLE)
     return NS_OK;
 
   CallQueryInterface(table, aTable);
@@ -972,20 +974,20 @@ nsARIAGridCellAccessible::GetColumnIndex(PRInt32 *aColumnIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  nsAccessible* row = GetParent();
+  if (!row)
+    return NS_OK;
+
   *aColumnIndex = 0;
 
-  nsCOMPtr<nsIAccessible> prevCell, tmpAcc;
-  GetPreviousSibling(getter_AddRefs(prevCell));
-
-  while (prevCell) {
-    PRUint32 role = nsAccUtils::Role(prevCell);
+  PRInt32 indexInRow = GetIndexInParent();
+  for (PRInt32 idx = 0; idx < indexInRow; idx++) {
+    nsAccessible* cell = row->GetChildAt(idx);
+    PRUint32 role = cell->Role();
     if (role == nsIAccessibleRole::ROLE_GRID_CELL ||
         role == nsIAccessibleRole::ROLE_ROWHEADER ||
         role == nsIAccessibleRole::ROLE_COLUMNHEADER)
       (*aColumnIndex)++;
-
-    prevCell->GetPreviousSibling(getter_AddRefs(tmpAcc));
-    tmpAcc.swap(prevCell);
   }
 
   return NS_OK;
@@ -1000,15 +1002,21 @@ nsARIAGridCellAccessible::GetRowIndex(PRInt32 *aRowIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAccessible> row, prevRow;
-  GetParent(getter_AddRefs(row));
+  nsAccessible* row = GetParent();
+  if (!row)
+    return NS_OK;
 
-  while (row) {
-    if (nsAccUtils::Role(row) == nsIAccessibleRole::ROLE_ROW)
+  nsAccessible* table = row->GetParent();
+  if (!table)
+    return NS_OK;
+
+  *aRowIndex = 0;
+
+  PRInt32 indexInTable = row->GetIndexInParent();
+  for (PRInt32 idx = 0; idx < indexInTable; idx++) {
+    row = table->GetChildAt(idx);
+    if (row->Role() == nsIAccessibleRole::ROLE_ROW)
       (*aRowIndex)++;
-
-    row->GetPreviousSibling(getter_AddRefs(prevRow));
-    row.swap(prevRow);
   }
 
   return NS_OK;
@@ -1088,7 +1096,7 @@ nsARIAGridCellAccessible::IsSelected(PRBool *aIsSelected)
     return NS_ERROR_FAILURE;
 
   nsAccessible *row = GetParent();
-  if (nsAccUtils::Role(row) != nsIAccessibleRole::ROLE_ROW)
+  if (!row || row->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
   if (!nsAccUtils::IsARIASelected(row) && !nsAccUtils::IsARIASelected(this))
@@ -1112,8 +1120,8 @@ nsARIAGridCellAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
     return NS_OK;
 
   // Check aria-selected="true" on the row.
-  nsAccessible *row = GetParent();
-  if (nsAccUtils::Role(row) != nsIAccessibleRole::ROLE_ROW)
+  nsAccessible* row = GetParent();
+  if (!row || row->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
   nsIContent *rowContent = row->GetContent();
@@ -1141,8 +1149,8 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
 
   // Expose "table-cell-index" attribute.
 
-  nsAccessible *thisRow = GetParent();
-  if (nsAccUtils::Role(thisRow) != nsIAccessibleRole::ROLE_ROW)
+  nsAccessible* thisRow = GetParent();
+  if (!thisRow || thisRow->Role() != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
   PRInt32 colIdx = 0, colCount = 0;
@@ -1152,16 +1160,20 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
     if (child == this)
       colIdx = colCount;
 
-    PRUint32 role = nsAccUtils::Role(child);
+    PRUint32 role = child->Role();
     if (role == nsIAccessibleRole::ROLE_GRID_CELL ||
         role == nsIAccessibleRole::ROLE_ROWHEADER ||
         role == nsIAccessibleRole::ROLE_COLUMNHEADER)
       colCount++;
   }
 
-  nsAccessible *table = thisRow->GetParent();
-  if (nsAccUtils::Role(table) != nsIAccessibleRole::ROLE_TABLE &&
-      nsAccUtils::Role(table) != nsIAccessibleRole::ROLE_TREE_TABLE)
+  nsAccessible* table = thisRow->GetParent();
+  if (!table)
+    return NS_OK;
+
+  PRUint32 tableRole = table->Role();
+  if (tableRole != nsIAccessibleRole::ROLE_TABLE &&
+      tableRole != nsIAccessibleRole::ROLE_TREE_TABLE)
     return NS_OK;
 
   PRInt32 rowIdx = 0;
@@ -1171,7 +1183,7 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
     if (child == thisRow)
       break;
 
-    if (nsAccUtils::Role(child) == nsIAccessibleRole::ROLE_ROW)
+    if (child->Role() == nsIAccessibleRole::ROLE_ROW)
       rowIdx++;
   }
 

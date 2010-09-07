@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="303267Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="nextTestAsync();"
+        title="bug 582176 test">
+
+  <script type="application/javascript"
+  src="docshell_helpers.js">
+  </script>
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTestAsync() {
+      SimpleTest.executeSoon(tests.next.bind(tests));
+    }
+
+    ////
+    // Generator function for test steps for bug 582176:
+    // Description goes here.
+    //
+    function testIterator()
+    {
+      var browser = document.getElementById('content');
+      browser.addEventListener("pageshow", nextTestAsync, true);
+
+      enableBFCache(true);
+
+      var notificationCount = 0;
+      var observer = {
+        observe: function(aSubject, aTopic, aData) {
+          is(aSubject, browser.contentWindow,
+             "correct subject");
+          is(aTopic, "content-document-global-created",
+             "correct topic");
+          is(aData, "http://mochi.test:8888",
+             "correct data");
+          notificationCount++;
+        }
+      };
+
+      os = Components.classes["@mozilla.org/observer-service;1"].
+        getService(Components.interfaces.nsIObserverService);
+      os.addObserver(observer, "content-document-global-created", false);
+
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");
+      yield;
+      is(browser.contentWindow.testVar, undefined,
+         "variable unexpectedly there already");
+      browser.contentWindow.wrappedJSObject.testVar = 1;
+      is(notificationCount, 1, "Should notify on first navigation");
+
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html?2");
+      yield;
+      is(browser.contentWindow.wrappedJSObject.testVar, undefined,
+         "variable should no longer be there");
+      is(notificationCount, 2, "Should notify on second navigation");
+
+      browser.goBack();
+      yield;
+      is(browser.contentWindow.wrappedJSObject.testVar, 1,
+         "variable should still be there");
+      is(notificationCount, 2, "Should not notify on back navigation");
+
+      os.removeObserver(observer, "content-document-global-created")
+
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>
