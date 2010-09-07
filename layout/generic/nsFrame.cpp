@@ -736,6 +736,40 @@ nsIFrame::GetContentRect() const
   return r;
 }
 
+PRBool
+nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
+                             const nscoord aFrameWidth,
+                             const nscoord aFrameHeight,
+                             nscoord aRadii[8])
+{
+  PRBool result = PR_FALSE;
+
+  // Percentages are relative to whichever side they're on.
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    const nsStyleCoord c = aBorderRadius.Get(i);
+    nscoord axis = NS_HALF_CORNER_IS_X(i) ? aFrameWidth : aFrameHeight;
+
+    switch (c.GetUnit()) {
+      case eStyleUnit_Percent:
+        aRadii[i] = (nscoord)(c.GetPercentValue() * axis);
+        break;
+
+      case eStyleUnit_Coord:
+        aRadii[i] = c.GetCoordValue();
+        break;
+
+      default:
+        NS_NOTREACHED("ComputeBorderRadii: bad unit");
+        aRadii[i] = 0;
+        break;
+    }
+
+    if (aRadii[i])
+      result = PR_TRUE;
+  }
+  return result;
+}
+
 nsStyleContext*
 nsFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
