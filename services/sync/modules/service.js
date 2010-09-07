@@ -262,6 +262,7 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:backoff:interval", this);
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("weave:resource:status:401", this);
+    Svc.Prefs.observe("engine.", this);
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -419,6 +420,12 @@ WeaveSvc.prototype = {
         this._idleTime = 0;
         Utils.delay(function() this.sync(false), 0, this);
         break;
+      case "nsPref:changed":
+        if (this._ignorePrefObserver)
+          return;
+        let engine = data.slice((PREFS_BRANCH + "engine.").length);
+        this._handleEngineStatusChanged(engine);
+        break;
     }
   },
 
@@ -437,6 +444,17 @@ WeaveSvc.prototype = {
 
     this._log.trace("Global score updated: " + this.globalScore);
     this._checkSyncStatus();
+  },
+
+  _handleEngineStatusChanged: function handleEngineDisabled(engine) {
+    this._log.trace("Status for " + engine + " engine changed.");
+    if (Svc.Prefs.get("engineStatusChanged." + engine, false)) {
+      // The enabled status being changed back to what it was before.
+      Svc.Prefs.reset("engineStatusChanged." + engine);
+    } else {
+      // Remember that the engine status changed locally until the next sync.
+      Svc.Prefs.set("engineStatusChanged." + engine, true);
+    }
   },
 
   _handleResource401: function _handleResource401(request) {
@@ -676,7 +694,9 @@ WeaveSvc.prototype = {
     // Reset all engines
     this.resetClient();
     // Reset Weave prefs
+    this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
+    this._ignorePrefObserver = false;
     // set lastversion pref
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
@@ -1392,8 +1412,9 @@ WeaveSvc.prototype = {
       }
     }
 
-    // Update the client mode now because it might change what we sync
+    // Update the client mode and engines because it might change what we sync.
     this._updateClientMode();
+    this._updateEnabledEngines();
 
     try {
       for each (let engine in Engines.getEnabled()) {
@@ -1443,6 +1464,56 @@ WeaveSvc.prototype = {
       this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
       this.syncThreshold = hasMobile ? MULTI_MOBILE_THRESHOLD : MULTI_DESKTOP_THRESHOLD;
     }
+  },
+
+  _updateEnabledEngines: function _updateEnabledEngines() {
+    let meta = Records.get(this.metaURL);
+    if (!meta.payload.engines)
+      return;
+
+    this._ignorePrefObserver = true;
+
+    let enabled = [eng.name for each (eng in Engines.getEnabled())];
+    for (let engineName in meta.payload.engines) {
+      let index = enabled.indexOf(engineName);
+      if (index != -1) {
+        // The engine is enabled locally. Nothing to do.
+        enabled.splice(index, 1);
+        continue;
+      }
+      let engine = Engines.get(engineName);
+      if (!engine) {
+        // The engine doesn't exist locally. Nothing to do.
+        continue;
+      }
+
+      if (Svc.Prefs.get("engineStatusChanged." + engineName, false)) {
+        // The engine was disabled locally. Wipe server data and
+        // disable it everywhere.
+        this._log.trace("Wiping data for " + engineName + " engine.");
+        engine.wipeServer();
+        delete meta.payload.engines[engineName];
+        meta.changed = true;
+        Svc.Prefs.reset("engineStatusChanged." + engineName);
+      } else {
+        // The engine was enabled remotely. Enable it locally.
+        this._log.trace(engineName + " engine was enabled remotely.");
+        engine.enabled = true;
+      }
+    }
+
+    // Any remaining engines were either enabled locally or disabled remotely.
+    for each (engineName in enabled) {
+      if (Svc.Prefs.get("engineStatusChanged." + engineName, false)) {
+        this._log.trace("The " + engineName + " engine was enabled locally.");
+        Svc.Prefs.reset("engineStatusChanged." + engineName);
+      } else {
+        this._log.trace("The " + engineName + " engine was disabled remotely.");
+        Engines.get(engineName).enabled = false;
+      }
+    }
+
+    this._ignorePrefObserver = false;
   },
 
   // returns true if sync should proceed
