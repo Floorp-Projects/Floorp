@@ -655,6 +655,9 @@ var BrowserUI = {
     Elements.panelUI.hidden = false;
     Elements.contentShowing.setAttribute("disabled", "true");
 
+    if (this.activePanel)
+      this.activePanel = null;
+
     if (aPage != undefined)
       this.switchPane(aPage);
   },
@@ -694,8 +697,8 @@ var BrowserUI = {
     }
 
     // Check active panel
-    if (BrowserUI.activePanel) {
-      BrowserUI.activePanel = null;
+    if (this.activePanel) {
+      this.activePanel = null;
       return;
     }
 
