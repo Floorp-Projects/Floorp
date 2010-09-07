@@ -62,6 +62,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
       mLastModified(0),
       mExpirationTime(nsICache::NO_EXPIRATION_TIME),
       mFlags(0),
+      mPredictedDataSize(-1),
       mDataSize(0),
       mCacheDevice(nsnull),
       mData(nsnull)
