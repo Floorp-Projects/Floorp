@@ -104,6 +104,7 @@ function xmlElt(contents) Pattern({ type: "XMLElement", contents: contents })
 function xmlAttr(value) Pattern({ type: "XMLAttribute", value: value })
 function xmlText(text) Pattern({ type: "XMLText", text: text })
 function xmlPI(target, contents) Pattern({ type: "XMLProcessingInstruction", target: target, contents: contents })
+function xmlDefNS(ns) Pattern({ type: "XMLDefaultDeclaration", namespace: ns })
 
 function assertBlockStmt(src, patt) {
     blockPatt(patt).assert(Reflect.parse(blockSrc(src)));
@@ -757,6 +758,8 @@ assertExpr("<{foo}>text</{foo}>", xmlElt([xmlStartTag([xmlEscape(ident("foo"))])
                                           xmlEndTag([xmlEscape(ident("foo"))])]));
 assertExpr("<?xml?>", xmlPI("xml", ""));
 assertExpr("<?xml version='1.0'?>", xmlPI("xml", "version='1.0'"));
+assertDecl("default xml namespace = 'js';", xmlDefNS(lit("js")));
+assertDecl("default xml namespace = foo;", xmlDefNS(ident("foo")));
 
 // NOTE: We appear to be unable to test XMLNAME, XMLCDATA, and XMLCOMMENT.
 

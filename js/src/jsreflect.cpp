@@ -1884,11 +1884,11 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
 #if JS_HAS_XML_SUPPORT
       case TOK_DEFAULT:
       {
-        LOCAL_ASSERT(pn->pn_arity == PN_UNARY && PN_TYPE(pn->pn_kid) == TOK_STRING);
+        LOCAL_ASSERT(pn->pn_arity == PN_UNARY);
 
         Value ns;
 
-        return literal(pn->pn_kid, &ns) &&
+        return expression(pn->pn_kid, &ns) &&
                builder.xmlDefaultNamespace(ns, &pn->pn_pos, dst);
       }
 #endif
