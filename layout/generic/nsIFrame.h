@@ -922,9 +922,11 @@ public:
    * Get the size, in app units, of the border radii. It returns FALSE iff all
    * returned radii == 0 (so no border radii), TRUE otherwise.
    * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
+   * If a side is skipped via aSkipSides, its corners are forced to 0.
    */
   static PRBool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                                    const nsSize& aFrameSize,
+                                   PRIntn aSkipSides,
                                    nscoord aRadii[8]);
 
   /**
