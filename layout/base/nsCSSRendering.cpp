@@ -571,9 +571,14 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     return;
   }
 
-  nsIFrame::ComputeBorderRadii(aStyleBorder.mBorderRadius,
-                               aForFrame->GetSize(), aBorderArea.Size(),
-                               aSkipSides, twipsRadii);
+  nsSize frameSize = aForFrame->GetSize();
+  if (&aStyleBorder == aForFrame->GetStyleBorder() &&
+      frameSize == aBorderArea.Size()) {
+    aForFrame->GetBorderRadii(twipsRadii);
+  } else {
+    nsIFrame::ComputeBorderRadii(aStyleBorder.mBorderRadius, frameSize,
+                                 aBorderArea.Size(), aSkipSides, twipsRadii);
+  }
 
   // Turn off rendering for all of the zero sized sides
   if (aSkipSides & SIDE_BIT_TOP) border.top = 0;
@@ -1108,9 +1113,8 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   } else {
     nativeTheme = PR_FALSE;
     nscoord twipsRadii[8];
-    hasBorderRadius = nsIFrame::ComputeBorderRadii(styleBorder->mBorderRadius,
-                        aFrameArea.Size(), aFrameArea,
-                        aForFrame->GetSkipSides(), twipsRadii);
+    NS_ASSERTION(aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
+    hasBorderRadius = aForFrame->GetBorderRadii(twipsRadii);
     if (hasBorderRadius) {
       ComputePixelRadii(twipsRadii, twipsPerPixel, &borderRadii);
     }
@@ -1287,10 +1291,8 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
   // Get any border radius, since box-shadow must also have rounded corners if the frame does
   nscoord twipsRadii[8];
-  PRBool hasBorderRadius = nsIFrame::ComputeBorderRadii(
-                             styleBorder->mBorderRadius, aFrameArea.Size(),
-                             aFrameArea.Size(), aForFrame->GetSkipSides(),
-                             twipsRadii);
+  NS_ASSERTION(aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
+  PRBool hasBorderRadius = aForFrame->GetBorderRadii(twipsRadii);
   nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 
   nsRect paddingRect = aFrameArea;
@@ -2179,9 +2181,15 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   PRBool haveRoundedCorners;
   {
     nscoord radii[8];
-    haveRoundedCorners = nsIFrame::ComputeBorderRadii(aBorder.mBorderRadius,
-                           aForFrame->GetSize(), aBorderArea.Size(),
-                           aForFrame->GetSkipSides(), radii);
+    nsSize frameSize = aForFrame->GetSize();
+    if (&aBorder == aForFrame->GetStyleBorder() &&
+        frameSize == aBorderArea.Size()) {
+      haveRoundedCorners = aForFrame->GetBorderRadii(radii);
+    } else {
+      haveRoundedCorners = nsIFrame::ComputeBorderRadii(aBorder.mBorderRadius,
+                                   frameSize, aBorderArea.Size(),
+                                   aForFrame->GetSkipSides(), radii);
+    }
     if (haveRoundedCorners)
       ComputePixelRadii(radii, appUnitsPerPixel, &bgRadii);
   }
