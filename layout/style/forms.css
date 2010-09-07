@@ -62,6 +62,7 @@ fieldset > legend {
   min-height: 0;
   max-height: none;
   white-space: nowrap;
+  display: block !important;
 }
 
 legend {
