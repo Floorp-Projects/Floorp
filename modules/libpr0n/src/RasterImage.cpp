@@ -1655,13 +1655,20 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     needToBlankComposite = PR_TRUE;
   } else if (aNextFrameIndex != mAnim->lastCompositedFrameIndex+1) {
 
-    // When we are looping the compositing frame needs to be cleared.
+    // If we are not drawing on top of last composited frame, 
+    // then we are building a new composite frame, so let's clear it first.
     needToBlankComposite = PR_TRUE;
   }
 
   // More optimizations possible when next frame is not transparent
+  // But if the next frame has kDisposeRestorePrevious,
+  // this "no disposal" optimization is not possible, 
+  // because the frame in "after disposal operation" state 
+  // needs to be stored in compositingFrame, so it can be 
+  // copied into compositingPrevFrame later.
   PRBool doDisposal = PR_TRUE;
-  if (!aNextFrame->GetHasAlpha()) {
+  if (!aNextFrame->GetHasAlpha() &&
+      nextFrameDisposalMethod != kDisposeRestorePrevious) {
     if (isFullNextFrame) {
       // Optimization: No need to dispose prev.frame when 
       // next frame is full frame and not transparent.
@@ -1751,7 +1758,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     if (!mAnim->compositingPrevFrame) {
       mAnim->compositingPrevFrame = new imgFrame();
       if (!mAnim->compositingPrevFrame) {
-        NS_WARNING("Failed to init compositingFrame!\n");
+        NS_WARNING("Failed to init compositingPrevFrame!\n");
         return NS_ERROR_OUT_OF_MEMORY;
       }
       nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
@@ -1779,8 +1786,13 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     return rv;
   }
 
-  // We don't want to keep composite images for 8bit frames...
+  // We don't want to keep composite images for 8bit frames.
+  // Also this optimization won't work if the next frame has 
+  // kDisposeRestorePrevious, because it would need to be restored 
+  // into "after prev disposal but before next blend" state, 
+  // not into empty frame.
   if (isFullNextFrame && mAnimationMode == kNormalAnimMode && mLoopCount != 0 &&
+      nextFrameDisposalMethod != kDisposeRestorePrevious &&
       !aNextFrame->GetIsPaletted()) {
     // We have a composited full frame
     // Store the composited frame into the mFrames[..] so we don't have to
