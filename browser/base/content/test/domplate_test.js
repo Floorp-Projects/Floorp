@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Domplate Test.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,12 +37,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+let doc;
+let div;
+let plate;
 
-interface nsIFile;
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource:///modules/domplate.jsm");
 
-[scriptable, uuid(047CA6C4-52B3-46F1-8976-E198B724F72F)]
-interface nsIDOMFileInternal : nsISupports
+function createDocument()
 {
-  attribute nsIFile internalFile;
-};
+  doc.body.innerHTML = '<div id="first">no</div>';
+  doc.title = "Domplate Test";
+  setupDomplateTests();
+}
+
+function setupDomplateTests()
+{
+  ok(domplate, "domplate is defined");
+  plate = domplate({tag: domplate.DIV("Hello!")});
+  ok(plate, "template is defined");
+  div = doc.getElementById("first");
+  ok(div, "we have our div");
+  plate.tag.replace({}, div, template);
+  is(div.innerText, "Hello!", "Is the div's innerText replaced?");
+  finishUp();
+}
+
+function finishUp()
+{
+  gBrowser.removeCurrentTab();
+  finish();
+}
+
+function test()
+{
+  waitForExplicitFinish();
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", function() {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+    doc = content.document;
+    waitForFocus(createDocument, content);
+  }, true);
+
+  content.location = "data:text/html,basic domplate tests";
+}
+

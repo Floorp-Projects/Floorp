@@ -201,6 +201,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsHTMLCSSStyleSheet.h"
 
 #include "mozilla/dom/Link.h"
+#include "nsIHTMLDocument.h"
+
 using namespace mozilla::dom;
 
 
@@ -1433,6 +1435,87 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI, mPrincipal,
                                         scriptHandlingObject, aReturn);
+}
+
+NS_IMETHODIMP
+nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
+                                        nsIDOMDocument** aReturn)
+{
+  *aReturn = NULL;
+
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = NS_NewHTMLDocument(getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLDocument> HTMLdoc = do_QueryInterface(doc);
+  HTMLdoc->SetCompatibilityMode(eCompatibility_FullStandards);
+
+  nsCOMPtr<nsIDOMDocumentType> doctype;
+  // Indicate that there is no internal subset (not just an empty one)
+  nsAutoString voidString;
+  voidString.SetIsVoid(true);
+  rv = NS_NewDOMDocumentType(getter_AddRefs(doctype),
+                             NULL, // aNodeInfoManager
+                             mPrincipal, // aPrincipal
+                             nsGkAtoms::html, // aName
+                             NULL, // aEntities
+                             NULL, // aNotations
+                             EmptyString(), // aPublicId
+                             EmptyString(), // aSystemId
+                             voidString); // aInternalSubset
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> doctypeAsContent = do_QueryInterface(doctype);
+  rv = doc->AppendChildTo(doctypeAsContent, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> root;
+  rv = doc->CreateElem(NS_LITERAL_STRING("html"), NULL, kNameSpaceID_XHTML,
+                       false, getter_AddRefs(root));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = doc->AppendChildTo(root, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> head;
+  rv = doc->CreateElem(NS_LITERAL_STRING("head"), NULL, kNameSpaceID_XHTML,
+                       false, getter_AddRefs(head));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = root->AppendChildTo(head, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> title;
+  rv = doc->CreateElem(NS_LITERAL_STRING("title"), NULL, kNameSpaceID_XHTML,
+                       false, getter_AddRefs(title));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = head->AppendChildTo(title, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> titleText;
+  rv = NS_NewTextNode(getter_AddRefs(titleText), doc->NodeInfoManager());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = titleText->SetText(aTitle, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = title->AppendChildTo(titleText, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> body;
+  rv = doc->CreateElem(NS_LITERAL_STRING("body"), NULL, kNameSpaceID_XHTML,
+                       false, getter_AddRefs(body));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = root->AppendChildTo(body, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+  doc->SetScriptHandlingObject(scriptHandlingObject);
+
+  // created documents are immediately "complete" (ready to use)
+  doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
+
+  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(doc);
+  document.forget(aReturn);
+
+  return NS_OK;
 }
 
 // ==================================================================

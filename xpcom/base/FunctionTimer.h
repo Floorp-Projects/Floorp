@@ -112,6 +112,11 @@
 #define NS_TIME_FUNCTION_ELAPSED_SINCE_MARK                             \
     ft__autogen.ElapsedSinceMark
 
+// A TimeDuration value representing the elapsed time between the
+// last logged event of any sort and the app startup.
+#define NS_TIME_FUNCTION_LATEST \
+    mozilla::FunctionTimer::LatestSinceStartup()
+
 #else
 
 #define NS_TIME_FUNCTION do { } while (0)
@@ -122,6 +127,7 @@
 #define NS_TIME_FUNCTION_MARK(...) do { } while (0)
 #define NS_TIME_FUNCTION_ELAPSED (0)
 #define NS_TIME_FUNCTION_ELAPSED_SINCE_MARK (0)
+#define NS_TIME_FUNCTION_LATEST (mozilla::TimeDuration(0))
 
 #endif
 
@@ -135,8 +141,11 @@ public:
 
     void LogString(const char *str);
 
+    TimeDuration LatestSinceStartup() const;
+
 private:
     void *mFile;
+    TimeStamp mLatest;
 };
 
 class NS_COM FunctionTimer
@@ -197,6 +206,10 @@ public:
         if (mEnabled)
             return (TimeStamp::Now() - mLastMark).ToSeconds() * 1000.0;
         return 0.0;
+    }
+
+    static inline TimeDuration LatestSinceStartup() {
+        return sLog ? sLog->LatestSinceStartup() : TimeDuration(0);
     }
 
     FunctionTimer(double minms, const char *s, ...)

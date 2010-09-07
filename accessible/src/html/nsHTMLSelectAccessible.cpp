@@ -101,15 +101,13 @@ nsHTMLSelectListAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsresult
-nsHTMLSelectListAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsHTMLSelectListAccessible::NativeRole()
 {
-  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX)
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-  else
-    *aRole = nsIAccessibleRole::ROLE_LISTBOX;
+  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX)
+    return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
 
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_LISTBOX;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,15 +196,13 @@ nsHTMLSelectOptionAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectOptionAccessible: nsAccessible public
 
-nsresult
-nsHTMLSelectOptionAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsHTMLSelectOptionAccessible::NativeRole()
 {
-  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
-  else
-    *aRole = nsIAccessibleRole::ROLE_OPTION;
+  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
 
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_OPTION;
 }
 
 nsresult
@@ -352,10 +348,8 @@ nsHTMLSelectOptionAccessible::GetLevelInternal()
   PRInt32 level =
     parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::optgroup) ? 2 : 1;
 
-  if (level == 1 &&
-      nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_HEADING) {
+  if (level == 1 && Role() != nsIAccessibleRole::ROLE_HEADING)
     level = 0; // In a single level list, the level is irrelevant
-  }
 
   return level;
 }
@@ -621,11 +615,10 @@ nsHTMLSelectOptGroupAccessible::
 {
 }
 
-nsresult
-nsHTMLSelectOptGroupAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsHTMLSelectOptGroupAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_HEADING;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_HEADING;
 }
 
 nsresult
@@ -681,11 +674,10 @@ nsHTMLComboboxAccessible::
 {
 }
 
-nsresult
-nsHTMLComboboxAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsHTMLComboboxAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_COMBOBOX;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_COMBOBOX;
 }
 
 void

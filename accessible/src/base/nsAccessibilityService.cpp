@@ -943,7 +943,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
           if (tableAccessible) {
             if (!roleMapEntry) {
-              PRUint32 role = nsAccUtils::Role(tableAccessible);
+              PRUint32 role = tableAccessible->Role();
               if (role != nsIAccessibleRole::ROLE_TABLE &&
                   role != nsIAccessibleRole::ROLE_TREE_TABLE) {
                 // No ARIA role and not in table: override role. For example,

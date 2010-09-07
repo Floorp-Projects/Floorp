@@ -699,6 +699,11 @@ void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
                                               PRUint32 aFrameBufferLength,
                                               PRUint64 aTime)
 {
+  // Auto manage the memory for the frame buffer, so that if we add an early
+  // return-on-error here in future, we won't forget to release the memory.
+  // Otherwise we hand ownership of the memory over to the event created by 
+  // DispatchAudioAvailableEvent().
+  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
   // Do same-origin check on element and media before allowing MozAudioAvailable events.
   if (!mMediaSecurityVerified) {
     nsCOMPtr<nsIPrincipal> principal = GetCurrentPrincipal();
@@ -708,7 +713,7 @@ void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
     }
   }
 
-  DispatchAudioAvailableEvent(aFrameBuffer, aFrameBufferLength, aTime);
+  DispatchAudioAvailableEvent(frameBuffer.forget(), aFrameBufferLength, aTime);
 }
 
 PRBool nsHTMLMediaElement::MayHaveAudioAvailableEventListener()
@@ -2213,6 +2218,12 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
                                                          PRUint32 aFrameBufferLength,
                                                          PRUint64 aTime)
 {
+  // Auto manage the memory for the frame buffer. If we fail and return
+  // an error, this ensures we free the memory in the frame buffer. Otherwise
+  // we hand off ownership of the frame buffer to the audioavailable event,
+  // which frees the memory when it's destroyed.
+  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
+
   nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(GetOwnerDoc()));
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(static_cast<nsIContent*>(this)));
   NS_ENSURE_TRUE(docEvent && target, NS_ERROR_INVALID_ARG);
@@ -2224,7 +2235,7 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = audioavailableEvent->InitAudioAvailableEvent(NS_LITERAL_STRING("MozAudioAvailable"),
-                                                    PR_TRUE, PR_TRUE, aFrameBuffer, aFrameBufferLength,
+                                                    PR_TRUE, PR_TRUE, frameBuffer.forget(), aFrameBufferLength,
                                                     (float)aTime / MS_PER_SECOND, mAllowAudioData);
   NS_ENSURE_SUCCESS(rv, rv);
 

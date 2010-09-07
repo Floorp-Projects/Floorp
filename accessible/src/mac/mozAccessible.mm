@@ -135,7 +135,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   if ((self = [super init])) {
     mGeckoAccessible = geckoAccessible;
     mIsExpired = NO;
-    geckoAccessible->GetRole(&mRole);
+    mRole = geckoAccessible->Role();
     
     // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
     // in nsRoleMap.h.

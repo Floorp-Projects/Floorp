@@ -200,13 +200,19 @@ ThebesLayerD3D9::RenderLayer()
     mValidRegion.SetEmpty();
   }
 
-  if (!mValidRegion.IsEqual(mVisibleRegion)) {
+  if (!mValidRegion.IsEqual(mVisibleRegion.GetBounds())) {
+    /* We use the bounds of the visible region because we draw the bounds of
+     * this region when we draw this entire texture. We have to make sure that
+     * the areas that aren't filled with content get their background drawn.
+     * This is an issue for opaque surfaces, which otherwise won't get their
+     * background painted.
+     */
     nsIntRegion region;
-    region.Sub(mVisibleRegion, mValidRegion);
+    region.Sub(mVisibleRegion.GetBounds(), mValidRegion);
 
     DrawRegion(region);
 
-    mValidRegion = mVisibleRegion;
+    mValidRegion = mVisibleRegion.GetBounds();
   }
 
   float quadTransform[4][4];

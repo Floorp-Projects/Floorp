@@ -10,7 +10,13 @@
 <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
 
 <menupopup id="popup" hidden="true" onpopupshown="ok(true, 'popupshown'); this.hidePopup()"
-                                    onpopuphidden="runTests($('popupinbutton'));">
+                                    onpopuphidden="$('popup-hideonshow').openPopup(null, 'after_start')">
+  <menuitem id="i1" label="One"/>
+  <menuitem id="i2" label="Two"/>
+</menupopup>
+
+<menupopup id="popup-hideonshow" onpopupshowing="hidePopupWhileShowing(this)"
+                                 onpopupshown="ok(false, 'popupshown when hidden')">
   <menuitem id="i1" label="One"/>
   <menuitem id="i2" label="Two"/>
 </menupopup>
@@ -32,6 +38,13 @@ function runTests(popup)
 {
   popup.hidden = false;
   popup.openPopup(null, "after_start");
+}
+
+function hidePopupWhileShowing(popup)
+{
+  popup.hidden = true;
+  is(popup.state, 'closed', 'popupshowing hidden');
+  SimpleTest.executeSoon(function () runTests($('popupinbutton')));
 }
 
 function checkEndTest(event)

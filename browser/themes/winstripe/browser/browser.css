@@ -114,31 +114,42 @@ statusbarpanel#statusbar-display {
 
 #appmenu-button {
   -moz-appearance: none;
-  background-color: rgb(228,120,14);
-  background-image: -moz-linear-gradient(rgba(255,255,255,.7),
-                                         rgba(255,255,255,.4) 10%,
-                                         rgba(255,255,255,0) 50%);
+  background-image: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
   background-clip: padding-box;
-  border: 1px solid rgba(0,0,0,.5);
-  border-top-style: none;
-  -moz-border-radius-bottomleft: 4px;
-  -moz-border-radius-bottomright: 4px;
-  -moz-box-shadow: 0 0 5px rgba(255,255,255,.5) inset;
+  -moz-border-radius: 0 0 4px 4px;
+  border: 1px solid rgba(83,42,6,.9);
+  border-top: none;
+  -moz-box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
+                   0 0 0 1px rgba(255,255,255,.25) inset;
   color: white;
-  text-shadow: 0 0 2px #333;
+  text-shadow: 0 0 1px rgba(0,0,0,.7),
+               0 1px 2px rgba(0,0,0,.5);
   font-weight: bold;
-  padding: .1em 1.5em;
+  padding: .1em 1.5em .15em;
   margin: 0;
 }
 
+#appmenu-button:-moz-window-inactive {
+  background: transparent;
+  border-color: rgba(0,0,0,.4);
+}
+
 #appmenu-button:hover:not(:active):not([open]) {
-  background-color: rgb(248,140,34);
+  background-image: -moz-radial-gradient(center bottom, farthest-side, rgba(252,240,89,.5) 10%, rgba(252,240,89,0) 70%),
+                    -moz-radial-gradient(center bottom, farthest-side, rgb(236,133,0), rgba(255,229,172,0)),
+                    -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
+  border-color: rgba(83,42,6,.9);
+  -moz-box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
+                   0 0 2px 1px rgba(250,234,169,.7) inset,
+                   0 -1px 0 rgba(250,234,169,.5) inset;
 }
 
 #appmenu-button:hover:active,
 #appmenu-button[open] {
-  background-image: -moz-linear-gradient(rgba(0,0,0,.3), rgba(0,0,0,.2) 10%, transparent 60%);
-  -moz-box-shadow: 0 0 4px rgba(0,0,0,.3) inset;
+  background-image: -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
+  -moz-border-radius: 0;
+  -moz-box-shadow: 0 2px 4px rgba(0,0,0,.4) inset,
+                   0 1px 1px rgba(0,0,0,.2) inset;
 }
 
 #appmenu-button > .button-box {
@@ -303,14 +314,9 @@ statusbarpanel#statusbar-display {
   margin-right: 15px;
 }
 
-/* aesthetic - push the fx button off the top window border */
-@media not all and (-moz-windows-classic) {
+@media all and (-moz-windows-classic) {
   #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
-%ifndef WINSTRIPE_AERO
-    margin-top: 1px;
-%else
-    margin-top: 2px;
-%endif
+    margin-top: 4px;
   }
 }
 

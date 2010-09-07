@@ -50,7 +50,7 @@ DIRS		+= mochitest \
 XPCSHELL_TESTS = unit
 
 ifneq (mobile,$(MOZ_BUILD_APP))
-	dirs += browser
+	DIRS += browser
 endif
 
 include $(topsrcdir)/config/rules.mk
