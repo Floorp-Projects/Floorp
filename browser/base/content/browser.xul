@@ -560,6 +560,10 @@
                         command="View:PageSource"
                         key="key_viewSource"/>
               <menuseparator/>
+#define ID_PREFIX appmenu_
+#include browser-charsetmenu.inc
+#undef ID_PREFIX
+              <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
                         type="checkbox"
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
