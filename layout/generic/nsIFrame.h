@@ -923,9 +923,20 @@ public:
    * returned radii == 0 (so no border radii), TRUE otherwise.
    * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
    * If a side is skipped via aSkipSides, its corners are forced to 0.
+   *
+   * All corner radii are then adjusted so they do not require more
+   * space than aBorderArea, according to the algorithm in css3-background.
+   *
+   * aFrameSize is used as the basis for percentage widths and heights.
+   * aBorderArea is used for the adjustment of radii that might be too
+   * large.
+   * FIXME: In the long run, we can probably get away with only one of
+   * these, especially if we change the way we handle outline-radius (by
+   * removing it and inflating the border radius)
    */
   static PRBool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                                    const nsSize& aFrameSize,
+                                   const nsSize& aBorderArea,
                                    PRIntn aSkipSides,
                                    nscoord aRadii[8]);
 
