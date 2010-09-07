@@ -158,6 +158,15 @@ function assertDecl(src, patt) {
     assertBlockDecl(src, patt);
 }
 
+function assertError(src, errorType) {
+    try {
+        Reflect.parse(src);
+    } catch (expected if expected instanceof errorType) {
+        return;
+    }
+    throw new Error("expected " + errorType.name + " for " + uneval(src));
+}
+
 // general tests
 
 // NB: These are useful but for now trace-test doesn't do I/O reliably.
@@ -541,6 +550,32 @@ assertStmt("for each ({a:x,b:y,c:z} in foo);", forEachInStmt(axbycz, ident("foo"
 assertStmt("for each (var [x,y,z] in foo);", forEachInStmt(varDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each (let [x,y,z] in foo);", forEachInStmt(letDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each ([x,y,z] in foo);", forEachInStmt(xyz, ident("foo"), emptyStmt));
+assertError("for (const x in foo);", SyntaxError);
+assertError("for (const {a:x,b:y,c:z} in foo);", SyntaxError);
+assertError("for (const [x,y,z] in foo);", SyntaxError);
+assertError("for each (const x in foo);", SyntaxError);
+assertError("for each (const {a:x,b:y,c:z} in foo);", SyntaxError);
+assertError("for each (const [x,y,z] in foo);", SyntaxError);
+
+// destructuring in for-in and for-each-in loop heads with initializers
+
+assertStmt("for (var {a:x,b:y,c:z} = 22 in foo);", forInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (let {a:x,b:y,c:z} = 22 in foo);", forInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (var [x,y,z] = 22 in foo);", forInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (let [x,y,z] = 22 in foo);", forInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (var {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (let {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (var [x,y,z] = 22 in foo);", forEachInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (let [x,y,z] = 22 in foo);", forEachInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertError("for (x = 22 in foo);", SyntaxError);
+assertError("for ({a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for ([x,y,z] = 22 in foo);", SyntaxError);
+assertError("for (const x = 22 in foo);", SyntaxError);
+assertError("for (const {a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for (const [x,y,z] = 22 in foo);", SyntaxError);
+assertError("for each (const x = 22 in foo);", SyntaxError);
+assertError("for each (const {a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for each (const [x,y,z] = 22 in foo);", SyntaxError);
 
 // expression closures
 
@@ -666,6 +701,10 @@ assertExpr("(let (x,y,z) z)", letExpr([{ id: ident("x"), init: null },
                                        { id: ident("y"), init: null },
                                        { id: ident("z"), init: null }],
                                       ident("z")));
+assertExpr("(let (x = 1, y = x) y)", letExpr([{ id: ident("x"), init: lit(1) },
+                                              { id: ident("y"), init: ident("x") }],
+                                             ident("y")));
+assertError("(let (x = 1, x = 2) x)", TypeError);
 
 // let statements
 
@@ -685,6 +724,10 @@ assertStmt("let (x,y,z) { }", letStmt([{ id: ident("x"), init: null },
                                        { id: ident("y"), init: null },
                                        { id: ident("z"), init: null }],
                                       blockStmt([])));
+assertStmt("let (x = 1, y = x) { }", letStmt([{ id: ident("x"), init: lit(1) },
+                                              { id: ident("y"), init: ident("x") }],
+                                             blockStmt([])));
+assertError("let (x = 1, x = 2) { }", TypeError);
 
 
 // E4X
