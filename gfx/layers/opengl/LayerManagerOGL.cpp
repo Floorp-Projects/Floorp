@@ -502,6 +502,12 @@ LayerManagerOGL::Render()
 
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
+
+  // We can't draw anything to something with no area
+  // so just return
+  if (rect.width == 0 || rect.height == 0)
+    return;
+
   GLint width = rect.width;
   GLint height = rect.height;
 
@@ -709,6 +715,9 @@ LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
                                     mFBOTextureTarget,
                                     mBackBufferTexture,
                                     0);
+
+  NS_ASSERTION(mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
+               LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
 
   mBackBufferSize.width = aWidth;
   mBackBufferSize.height = aHeight;
