@@ -159,8 +159,6 @@
             case "MozScrolledAreaChanged":
               this._widthInCSSPx = aMessage.json.width;
               this._heightInCSSPx = aMessage.json.height;
-              this._viewportWidthInCSSPx = aMessage.json.viewportWidth;
-              this._viewportHeightInCSSPx = aMessage.json.viewportHeight;
               this._updateCacheViewport();
               break;
          }
@@ -488,6 +486,8 @@
         <parameter name="height"/>
         <body>
           <![CDATA[
+            this._viewportWidthInCSSPx = width;
+            this._viewportHeightInCSSPx = height;
             this.messageManager.sendAsyncMessage("Content:SetCssViewportSize", {
               width: width,
               height: height
