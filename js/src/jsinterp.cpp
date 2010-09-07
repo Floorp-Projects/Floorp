@@ -2116,6 +2116,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 
 #ifdef JS_METHODJIT
     bool leaveOnTracePoint = (fp->flags & JSFRAME_BAILING) && !fp->hasIMacroPC();
+# define CLEAR_LEAVE_ON_TRACE_POINT() ((void) (leaveOnTracePoint = false))
+#else
+# define CLEAR_LEAVE_ON_TRACE_POINT() ((void) 0)
 #endif
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
@@ -2179,7 +2182,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
-                leaveOnTracePoint = false;                                    \
+                CLEAR_LEAVE_ON_TRACE_POINT();                                 \
             }                                                                 \
             RESTORE_INTERP_VARS();                                            \
             JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
@@ -2412,7 +2415,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
               case ARECORD_IMACRO_ABORTED:
                 atoms = COMMON_ATOMS_START(&rt->atomState);
                 op = JSOp(*regs.pc);
-                leaveOnTracePoint = false;
+                CLEAR_LEAVE_ON_TRACE_POINT();
                 if (status == ARECORD_IMACRO)
                     DO_OP();    /* keep interrupting for op. */
                 break;
