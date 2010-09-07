@@ -457,6 +457,8 @@ class NodeBuilder
 
     bool xmlQualifiedIdentifier(Value left, Value right, bool computed, TokenPos *pos, Value *dst);
 
+    bool xmlFunctionQualifiedIdentifier(Value right, bool computed, TokenPos *pos, Value *dst);
+
     bool xmlElement(NodeVector &elts, TokenPos *pos, Value *dst);
 
     bool xmlText(Value text, TokenPos *pos, Value *dst);
@@ -1085,6 +1087,15 @@ bool
 NodeBuilder::xmlAttributeSelector(Value expr, TokenPos *pos, Value *dst)
 {
     return newNode(AST_XMLATTR_SEL, pos, "attribute", expr, dst);
+}
+
+bool
+NodeBuilder::xmlFunctionQualifiedIdentifier(Value right, bool computed, TokenPos *pos, Value *dst)
+{
+    return newNode(AST_XMLFUNCQUAL, pos,
+                   "right", right,
+                   "computed", BooleanValue(computed),
+                   dst);
 }
 
 bool
@@ -2280,19 +2291,32 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
 
       case TOK_DBLCOLON:
       {
-        Value left, right;
+        Value right;
 
         LOCAL_ASSERT(pn->pn_arity == PN_NAME || pn->pn_arity == PN_BINARY);
 
-        bool computed = pn->pn_arity == PN_BINARY;
+        JSParseNode *pnleft;
+        bool computed;
 
-        return (computed
-                ? (expression(pn->pn_left, &left) &&
-                   expression(pn->pn_right, &right))
-                : (expression(pn->pn_expr, &left) &&
-                   identifier(pn->pn_atom, NULL, &right))) &&
-               builder.xmlQualifiedIdentifier(left, right, computed,
-                                              &pn->pn_pos, dst);
+        if (pn->pn_arity == PN_BINARY) {
+            computed = true;
+            pnleft = pn->pn_left;
+            if (!expression(pn->pn_right, &right))
+                return false;
+        } else {
+            JS_ASSERT(pn->pn_arity == PN_NAME);
+            computed = false;
+            pnleft = pn->pn_expr;
+            if (!identifier(pn->pn_atom, NULL, &right))
+                return false;
+        }
+
+        if (PN_TYPE(pnleft) == TOK_FUNCTION)
+            return builder.xmlFunctionQualifiedIdentifier(right, computed, &pn->pn_pos, dst);
+
+        Value left;
+        return expression(pnleft, &left) &&
+               builder.xmlQualifiedIdentifier(left, right, computed, &pn->pn_pos, dst);
       }
 
       case TOK_AT:
