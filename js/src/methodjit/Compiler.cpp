@@ -1185,22 +1185,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
-          {
-            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !analysis[next].nincoming;
-            frame.storeLocal(GET_SLOTNO(PC), pop);
-            if (pop) {
-                frame.pop();
-                PC += JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
-                break;
-            }
-          }
-          END_CASE(JSOP_SETLOCAL)
-
           BEGIN_CASE(JSOP_SETLOCALPOP)
-            frame.storeLocal(GET_SLOTNO(PC), true);
-            frame.pop();
-          END_CASE(JSOP_SETLOCALPOP)
+            frame.storeLocal(GET_SLOTNO(PC));
+            if (op == JSOP_SETLOCALPOP)
+                frame.pop();
+          END_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_UINT16)
             frame.push(Value(Int32Value((int32_t) GET_UINT16(PC))));

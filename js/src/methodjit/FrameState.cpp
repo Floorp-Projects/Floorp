@@ -782,8 +782,32 @@ FrameState::pushCopyOf(uint32 index)
 }
 
 FrameEntry *
-FrameState::walkTrackerForUncopy(FrameEntry *original)
+FrameState::uncopy(FrameEntry *original)
 {
+    JS_ASSERT(original->isCopied());
+
+    /*
+     * Copies have three critical invariants:
+     *  1) The backing store precedes all copies in the tracker.
+     *  2) The backing store precedes all copies in the FrameState.
+     *  3) The backing store of a copy cannot be popped from the stack
+     *     while the copy is still live.
+     *
+     * Maintaining this invariant iteratively is kind of hard, so we choose
+     * the "lowest" copy in the frame up-front.
+     *
+     * For example, if the stack is:
+     *    [A, B, C, D]
+     * And the tracker has:
+     *    [A, D, C, B]
+     *
+     * If B, C, and D are copies of A - we will walk the tracker to the end
+     * and select B, not D (see bug 583684).
+     *
+     * Note: |tracker.nentries <= (nslots + nargs)|. However, this walk is
+     * sub-optimal if |original->trackerIndex() > sp - original|. With large
+     * scripts this may be a problem worth investigating.
+     */
     uint32 firstCopy = InvalidIndex;
     FrameEntry *bestFe = NULL;
     uint32 ncopies = 0;
@@ -805,6 +829,7 @@ FrameState::walkTrackerForUncopy(FrameEntry *original)
     if (!ncopies) {
         JS_ASSERT(firstCopy == InvalidIndex);
         JS_ASSERT(!bestFe);
+        original->copied = false;
         return NULL;
     }
 
@@ -843,77 +868,7 @@ FrameState::walkTrackerForUncopy(FrameEntry *original)
         bestFe->setNotCopied();
     }
 
-    return bestFe;
-}
-
-FrameEntry *
-FrameState::walkFrameForUncopy(FrameEntry *original)
-{
-    FrameEntry *bestFe = NULL;
-    uint32 ncopies = 0;
-
-    /* It's only necessary to visit as many FEs are being tracked. */
-    uint32 maxvisits = tracker.nentries;
-
-    for (FrameEntry *fe = original + 1; fe < sp && maxvisits; fe++) {
-        if (!fe->isTracked())
-            continue;
-
-        maxvisits--;
-
-        if (fe->isCopy() && fe->copyOf() == original) {
-            if (!bestFe) {
-                bestFe = fe;
-                bestFe->setCopyOf(NULL);
-            } else {
-                fe->setCopyOf(bestFe);
-                if (fe->trackerIndex() < bestFe->trackerIndex())
-                    swapInTracker(bestFe, fe);
-            }
-            ncopies++;
-        }
-    }
-
-    return bestFe;
-}
-
-FrameEntry *
-FrameState::uncopy(FrameEntry *original)
-{
-    JS_ASSERT(original->isCopied());
-
-    /*
-     * Copies have three critical invariants:
-     *  1) The backing store precedes all copies in the tracker.
-     *  2) The backing store precedes all copies in the FrameState.
-     *  3) The backing store of a copy cannot be popped from the stack
-     *     while the copy is still live.
-     *
-     * Maintaining this invariant iteratively is kind of hard, so we choose
-     * the "lowest" copy in the frame up-front.
-     *
-     * For example, if the stack is:
-     *    [A, B, C, D]
-     * And the tracker has:
-     *    [A, D, C, B]
-     *
-     * If B, C, and D are copies of A - we will walk the tracker to the end
-     * and select B, not D (see bug 583684).
-     *
-     * Note: |tracker.nentries <= (nslots + nargs)|. However, this walk is
-     * sub-optimal if |tracker.nentries - original->trackerIndex() > sp - original|.
-     * With large scripts this may be a problem worth investigating. Note that
-     * the tracker is walked twice, so we multiply by 2 for pessimism.
-     */
-    FrameEntry *fe;
-    if ((tracker.nentries - original->trackerIndex()) * 2 > uint32(sp - original))
-        fe = walkFrameForUncopy(original);
-    else
-        fe = walkTrackerForUncopy(original);
-    if (!fe) {
-        original->setNotCopied();
-        return NULL;
-    }
+    FrameEntry *fe = bestFe;
 
     /*
      * Switch the new backing store to the old backing store. During
@@ -947,76 +902,45 @@ FrameState::uncopy(FrameEntry *original)
 void
 FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 {
-    FrameEntry *local = getLocal(n);
+    FrameEntry *localFe = getLocal(n);
+    bool cacheable = !eval && !escaping[n];
 
-    storeTop(local, popGuaranteed, typeChange);
-
-    if (eval || escaping[n]) {
-        /* Ensure that the local variable remains synced. */
-        if (local->isCopy()) {
-            FrameEntry *backing = local->copyOf();
-            if (!local->data.synced()) {
-                if (backing->data.inMemory())
-                    tempRegForData(backing);
-                syncData(backing, addressOf(local), masm);
-            }
-            if (!local->type.synced()) {
-                if (backing->type.inMemory())
-                    tempRegForType(backing);
-                syncType(backing, addressOf(local), masm);
-            }
-        } else if (local->isConstant()) {
-            if (!local->data.synced())
-                syncData(local, addressOf(local), masm);
-        } else {
-            if (!local->data.synced()) {
-                syncData(local, addressOf(local), masm);
-                local->data.sync();
-            }
-            if (!local->type.synced()) {
-                syncType(local, addressOf(local), masm);
-                local->type.sync();
-            }
-            forgetEntry(local);
-        }
-
-        local->resetSynced();
+    if (!popGuaranteed && !cacheable) {
+        JS_ASSERT_IF(locals[n].isTracked() && (!eval || n < script->nfixed),
+                     locals[n].type.inMemory() &&
+                     locals[n].data.inMemory());
+        Address local(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value));
+        storeTo(peek(-1), local, false);
+        forgetAllRegs(getLocal(n));
+        localFe->resetSynced();
+        return;
     }
-}
 
-void
-FrameState::forgetEntry(FrameEntry *fe)
-{
-    if (fe->isCopied()) {
-        uncopy(fe);
-        if (!fe->isCopied())
-            forgetAllRegs(fe);
-    } else {
-        forgetAllRegs(fe);
-    }
-}
-
-void
-FrameState::storeTop(FrameEntry *target, bool popGuaranteed, bool typeChange)
-{
-    bool wasSynced = target->type.synced();
+    bool wasSynced = localFe->type.synced();
 
     /* Detect something like (x = x) which is a no-op. */
     FrameEntry *top = peek(-1);
-    if (top->isCopy() && top->copyOf() == target) {
-        JS_ASSERT(target->isCopied());
+    if (top->isCopy() && top->copyOf() == localFe) {
+        JS_ASSERT(localFe->isCopied());
         return;
     }
 
     /* Completely invalidate the local variable. */
-    forgetEntry(target);
-    target->resetUnsynced();
+    if (localFe->isCopied()) {
+        uncopy(localFe);
+        if (!localFe->isCopied())
+            forgetAllRegs(localFe);
+    } else {
+        forgetAllRegs(localFe);
+    }
+
+    localFe->resetUnsynced();
 
     /* Constants are easy to propagate. */
     if (top->isConstant()) {
-        target->setCopyOf(NULL);
-        target->setNotCopied();
-        target->setConstant(Jsvalify(top->getValue()));
+        localFe->setCopyOf(NULL);
+        localFe->setNotCopied();
+        localFe->setConstant(Jsvalify(top->getValue()));
         return;
     }
 
@@ -1038,18 +962,18 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, bool typeChange)
         backing = top->copyOf();
         JS_ASSERT(backing->trackerIndex() < top->trackerIndex());
 
-        if (backing < target) {
+        if (backing < localFe) {
             /* local.idx < backing.idx means local cannot be a copy yet */
-            if (target->trackerIndex() < backing->trackerIndex())
-                swapInTracker(backing, target);
-            target->setNotCopied();
-            target->setCopyOf(backing);
+            if (localFe->trackerIndex() < backing->trackerIndex())
+                swapInTracker(backing, localFe);
+            localFe->setNotCopied();
+            localFe->setCopyOf(backing);
             if (backing->isTypeKnown())
-                target->setType(backing->getKnownType());
+                localFe->setType(backing->getKnownType());
             else
-                target->type.invalidate();
-            target->data.invalidate();
-            target->isNumber = backing->isNumber;
+                localFe->type.invalidate();
+            localFe->data.invalidate();
+            localFe->isNumber = backing->isNumber;
             return;
         }
 
@@ -1076,7 +1000,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, bool typeChange)
             if (fe >= sp)
                 continue;
             if (fe->isCopy() && fe->copyOf() == backing)
-                fe->setCopyOf(target);
+                fe->setCopyOf(localFe);
         }
     }
     backing->setNotCopied();
@@ -1086,48 +1010,50 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, bool typeChange)
      * consistent ordering - all copies of |backing| are tracked after 
      * |backing|. Transitively, only one swap is needed.
      */
-    if (backing->trackerIndex() < target->trackerIndex())
-        swapInTracker(backing, target);
+    if (backing->trackerIndex() < localFe->trackerIndex())
+        swapInTracker(backing, localFe);
 
     /*
      * Move the backing store down - we spill registers here, but we could be
      * smarter and re-use the type reg.
      */
     RegisterID reg = tempRegForData(backing);
-    target->data.setRegister(reg);
-    regstate[reg].reassociate(target);
+    localFe->data.setRegister(reg);
+    regstate[reg].reassociate(localFe);
 
     if (typeChange) {
         if (backing->isTypeKnown()) {
-            target->setType(backing->getKnownType());
+            localFe->setType(backing->getKnownType());
         } else {
             RegisterID reg = tempRegForType(backing);
-            target->type.setRegister(reg);
-            regstate[reg].reassociate(target);
+            localFe->type.setRegister(reg);
+            regstate[reg].reassociate(localFe);
         }
     } else {
         if (!wasSynced)
-            masm.storeTypeTag(ImmType(backing->getKnownType()), addressOf(target));
-        target->type.setMemory();
+            masm.storeTypeTag(ImmType(backing->getKnownType()), addressOf(localFe));
+        localFe->type.setMemory();
     }
 
     if (!backing->isTypeKnown())
         backing->type.invalidate();
     backing->data.invalidate();
-    backing->setCopyOf(target);
-    backing->isNumber = target->isNumber;
+    backing->setCopyOf(localFe);
+    backing->isNumber = localFe->isNumber;
+    localFe->setCopied();
 
-    JS_ASSERT(top->copyOf() == target);
+    if (!cacheable) {
+        /* TODO: x64 optimization */
+        if (!localFe->type.synced())
+            syncType(localFe, addressOf(localFe), masm);
+        if (!localFe->data.synced())
+            syncData(localFe, addressOf(localFe), masm);
+        forgetAllRegs(localFe);
+        localFe->type.setMemory();
+        localFe->data.setMemory();
+    }
 
-    /*
-     * If this condition fails, top->copyOf()->isCopied() is temporarily
-     * left broken. This is okay since frame.pop() is guaranteed to follow.
-     *
-     * NB: If |top->isCopy()|, then there are two copies: the backing and the
-     * top. This is why popGuaranteed is not enough.
-     */
-    if (!popGuaranteed || top->isCopy())
-        target->setCopied();
+    JS_ASSERT(top->copyOf() == localFe);
 }
 
 void
@@ -1135,7 +1061,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(sp - n >= spBase);
     int32 depth = 0 - int32(n);
-    storeTop(&sp[depth - 1], true);
+    storeLocal(uint32(&sp[depth - 1] - locals), true);
     popn(n);
 }
 
@@ -1144,7 +1070,7 @@ FrameState::shift(int32 n)
 {
     JS_ASSERT(n < 0);
     JS_ASSERT(sp + n - 1 >= spBase);
-    storeTop(&sp[n - 1], true);
+    storeLocal(uint32(&sp[n - 1] - locals), true);
     pop();
 }
 
