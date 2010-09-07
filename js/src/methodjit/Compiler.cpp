@@ -1894,7 +1894,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     FrameEntry *fe = frame.peek(-int(argc + 2));
 
     /* Currently, we don't support constant functions. */
-    if (fe->isNotType(JSVAL_TYPE_OBJECT) || script->debugMode || fe->isConstant()) {
+    if (fe->isConstant() || fe->isNotType(JSVAL_TYPE_OBJECT) || script->debugMode) {
         emitUncachedCall(argc, callingNew);
         return;
     }
