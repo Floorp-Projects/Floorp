@@ -93,6 +93,7 @@ function blockPatt(patt) program([exprStmt(funExpr(null, [], blockStmt([blockStm
 var xmlAnyName = Pattern({ type: "XMLAnyName" });
 
 function xmlQualId(left, right, computed) Pattern({ type: "XMLQualifiedIdentifier", left: left, right: right, computed: computed })
+function xmlFuncQualId(right, computed) Pattern({ type: "XMLFunctionQualifiedIdentifier", right: right, computed: computed })
 function xmlAttrSel(id) Pattern({ type: "XMLAttributeSelector", attribute: id })
 function xmlFilter(left, right) Pattern({ type: "XMLFilterExpression", left: left, right: right })
 function xmlPointTag(contents) Pattern({ type: "XMLPointTag", contents: contents })
@@ -741,6 +742,8 @@ assertExpr("x::[foo()]", xmlQualId(ident("x"), callExpr(ident("foo"), []), true)
 assertExpr("*::*", xmlQualId(xmlAnyName, ident("*"), false));
 assertExpr("*::[foo]", xmlQualId(xmlAnyName, ident("foo"), true));
 assertExpr("*::[foo()]", xmlQualId(xmlAnyName, callExpr(ident("foo"), []), true));
+assertExpr("function::x", xmlFuncQualId(ident("x"), false));
+assertExpr("function::[foo]", xmlFuncQualId(ident("foo"), true));
 assertExpr("@foo", xmlAttrSel(ident("foo")));
 assertExpr("x.(p)", xmlFilter(ident("x"), ident("p")));
 assertExpr("<{foo}/>", xmlPointTag([xmlEscape(ident("foo"))]));
