@@ -433,17 +433,28 @@ protected:
     virtual already_AddRefed<gfxASurface>
     CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
     {
+        mUpdateSize = aSize;
+        mUpdateFormat = aFmt;
+
         return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
     }
 
     virtual already_AddRefed<gfxImageSurface>
     GetImageForUpload(gfxASurface* aUpdateSurface)
     {
-        NS_ASSERTION(gfxASurface::SurfaceTypeWin32 == aUpdateSurface->GetType(),
-                     "unexpected surface type");
-        nsRefPtr<gfxImageSurface> uploadImage(
-            static_cast<gfxWindowsSurface*>(aUpdateSurface)->
-            GetImageSurface());
+        nsRefPtr<gfxImageSurface> uploadImage;
+
+        if (aUpdateSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
+            gfxWindowsSurface* ws = static_cast<gfxWindowsSurface*>(aUpdateSurface);
+            uploadImage = ws->GetImageSurface();
+        } else {
+            uploadImage = new gfxImageSurface(mUpdateSize, mUpdateFormat);
+            nsRefPtr<gfxContext> cx(new gfxContext(uploadImage));
+            cx->SetSource(aUpdateSurface);
+            cx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            cx->Paint();
+        }
+
         return uploadImage.forget();
     }
 
@@ -454,6 +465,9 @@ private:
                     GLContext* aContext)
         : BasicTextureImage(aTexture, aSize, aContentType, aContext)
     {}
+
+    gfxIntSize mUpdateSize;
+    ImageFormat mUpdateFormat;
 };
 
 already_AddRefed<TextureImage>
