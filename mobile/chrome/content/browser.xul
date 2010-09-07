@@ -231,13 +231,12 @@
 #ifdef MOZ_PLATFORM_MAEMO
                   <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
 #endif
-                  <hbox id="urlbar-container" flex="1">
+                  <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
                     <box id="identity-box"
                          onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                          onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                      <box id="urlbar-image-box" mousethrough="always" observes="bcast_urlbarState">
+                      <box id="urlbar-image-box" mousethrough="always">
                         <image id="urlbar-throbber"/>
-                        <image id="urlbar-magnifier" hidden="true"/>
                         <image id="urlbar-favicon" hidden="true"/>
                       </box>
                     </box>
@@ -260,7 +259,7 @@
                       <toolbarbutton id="tool-reload" class="urlbar-cap-button"
                                      oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
                       <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
-                      <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+                      <toolbarbutton id="tool-search" class="urlbar-cap-button" command="cmd_opensearch"/>
                     </hbox>
                   </hbox>
 #ifdef MOZ_PLATFORM_MAEMO
