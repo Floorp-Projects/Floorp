@@ -1279,7 +1279,8 @@ void nsWindow::ClearThemeRegion()
 {
 #ifndef WINCE
   if (nsUXThemeData::sIsVistaOrLater && !HasGlass() &&
-      mWindowType == eWindowType_popup && (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel)) {
+      (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
+       (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, NULL, false);
   }
 #endif
@@ -1294,7 +1295,8 @@ void nsWindow::SetThemeRegion()
   // state values from nsNativeThemeWin's GetThemePartAndState, but currently windows that
   // change shape based on state haven't come up.
   if (nsUXThemeData::sIsVistaOrLater && !HasGlass() &&
-      mWindowType == eWindowType_popup && (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel)) {
+      (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
+       (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nsnull;
     RECT rect = {0,0,mBounds.width,mBounds.height};
     
