@@ -661,6 +661,12 @@ FrameState::forgetAllRegs(FrameEntry *fe)
         forgetReg(fe->data.reg());
 }
 
+inline FrameEntry *
+FrameState::tosFe() const
+{
+    return sp;
+}
+
 inline void
 FrameState::swapInTracker(FrameEntry *lhs, FrameEntry *rhs)
 {
