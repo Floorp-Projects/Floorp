@@ -64,7 +64,7 @@ FrameState::init(uint32 nargs)
 
     uint32 nslots = script->nslots + nargs;
     if (!nslots) {
-        sp = spBase = locals = args = NULL;
+        sp = spBase = locals = args = base = NULL;
         return true;
     }
 
@@ -72,11 +72,11 @@ FrameState::init(uint32 nargs)
     if ((eval = script->usesEval || cx->compartment->debugMode))
         nlocals = 0;
 
-    size_t totalBytes = sizeof(FrameEntry) * nslots +       // entries[]
-                        sizeof(FrameEntry *) * nslots +     // tracker.entries[]
-                        sizeof(uint32) * nlocals;           // escaping[]
-
-    uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
+    uint8 *cursor = (uint8 *)cx->malloc(sizeof(FrameEntry) * nslots +       // entries[]
+                                        sizeof(FrameEntry *) * nslots +     // base[]
+                                        sizeof(FrameEntry *) * nslots +     // tracker.entries[]
+                                        sizeof(uint32) * nlocals            // escaping[]
+                                        );
     if (!cursor)
         return false;
 
@@ -86,10 +86,13 @@ FrameState::init(uint32 nargs)
     entries = (FrameEntry *)cursor;
     cursor += sizeof(FrameEntry) * nslots;
 
-    args = entries;
-    locals = args + nargs;
+    base = (FrameEntry **)cursor;
+    args = base;
+    locals = base + nargs;
     spBase = locals + script->nfixed;
     sp = spBase;
+    memset(base, 0, sizeof(FrameEntry *) * nslots);
+    cursor += sizeof(FrameEntry *) * nslots;
 
     tracker.entries = (FrameEntry **)cursor;
     cursor += sizeof(FrameEntry *) * nslots;
@@ -97,10 +100,7 @@ FrameState::init(uint32 nargs)
     if (nlocals) {
         escaping = (uint32 *)cursor;
         memset(escaping, 0, sizeof(uint32) * nlocals);
-        cursor += sizeof(uint32) * nlocals;
     }
-
-    JS_ASSERT(reinterpret_cast<uint8 *>(entries) + totalBytes == cursor);
 
     return true;
 }
@@ -193,7 +193,7 @@ void
 FrameState::throwaway()
 {
     for (uint32 i = 0; i < tracker.nentries; i++)
-        tracker[i]->untrack();
+        base[indexOfFe(tracker[i])] = NULL;
 
     tracker.reset();
     freeRegs.reset();
@@ -861,9 +861,9 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
     bool cacheable = !eval && !escaping[n];
 
     if (!popGuaranteed && !cacheable) {
-        JS_ASSERT_IF(locals[n].isTracked() && (!eval || n < script->nfixed),
-                     locals[n].type.inMemory() &&
-                     locals[n].data.inMemory());
+        JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),
+                     entries[localIndex(n)].type.inMemory() &&
+                     entries[localIndex(n)].data.inMemory());
         Address local(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value));
         storeTo(peek(-1), local, false);
         forgetAllRegs(getLocal(n));
@@ -917,7 +917,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         JS_ASSERT(backing->trackerIndex() < top->trackerIndex());
 
         uint32 backingIndex = indexOfFe(backing);
-        uint32 tol = uint32(spBase - entries);
+        uint32 tol = uint32(spBase - base);
         if (backingIndex < tol || backingIndex < localIndex(n)) {
             /* local.idx < backing.idx means local cannot be a copy yet */
             if (localFe->trackerIndex() < backing->trackerIndex())
