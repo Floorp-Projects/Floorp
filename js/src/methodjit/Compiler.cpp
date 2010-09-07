@@ -1314,9 +1314,20 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LINENO)
 
           BEGIN_CASE(JSOP_DEFFUN)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSFunction *inner = script->getFunction(index);
+
+            if (fun) {
+                JSLocalKind localKind = fun->lookupLocal(cx, inner->atom, NULL);
+                if (localKind != JSLOCAL_NONE)
+                    frame.forgetEverything();
+            }
+
             prepareStubCall(Uses(0));
-            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
+            masm.move(ImmPtr(inner), Registers::ArgReg1);
             stubCall(stubs::DefFun);
+          }
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
