@@ -43,13 +43,16 @@
 namespace js {
 namespace mjit {
 
-inline void
-FrameState::addToTracker(FrameEntry *fe)
+inline FrameEntry *
+FrameState::addToTracker(uint32 index)
 {
-    JS_ASSERT(!fe->isTracked());
+    JS_ASSERT(!base[index]);
+    FrameEntry *fe = &entries[index];
+    base[index] = fe;
     fe->track(tracker.nentries);
     tracker.add(fe);
     JS_ASSERT(tracker.nentries <= script->nslots);
+    return fe;
 }
 
 inline FrameEntry *
@@ -57,9 +60,9 @@ FrameState::peek(int32 depth)
 {
     JS_ASSERT(depth < 0);
     JS_ASSERT(sp + depth >= spBase);
-    FrameEntry *fe = &sp[depth];
-    if (!fe->isTracked()) {
-        addToTracker(fe);
+    FrameEntry *fe = sp[depth];
+    if (!fe) {
+        fe = addToTracker(indexOf(depth));
         fe->resetSynced();
     }
     return fe;
@@ -159,8 +162,8 @@ FrameState::pop()
 {
     JS_ASSERT(sp > spBase);
 
-    FrameEntry *fe = --sp;
-    if (!fe->isTracked())
+    FrameEntry *fe = *--sp;
+    if (!fe)
         return;
 
     forgetAllRegs(fe);
@@ -194,12 +197,14 @@ FrameState::forgetEverything(uint32 newStackDepth)
 inline FrameEntry *
 FrameState::rawPush()
 {
-    JS_ASSERT(unsigned(sp - entries) < nargs + script->nslots);
+    JS_ASSERT(unsigned(sp - base) < nargs + script->nslots);
 
-    if (!sp->isTracked())
-        addToTracker(sp);
+    sp++;
 
-    return sp++;
+    if (FrameEntry *fe = sp[-1])
+        return fe;
+
+    return addToTracker(&sp[-1] - base);
 }
 
 inline void
@@ -212,9 +217,10 @@ FrameState::push(const Value &v)
 inline void
 FrameState::pushSynced()
 {
-    if (sp->isTracked())
-        sp->resetSynced();
     sp++;
+
+    if (FrameEntry *fe = sp[-1])
+        fe->resetSynced();
 }
 
 inline void
@@ -612,11 +618,10 @@ inline FrameEntry *
 FrameState::getLocal(uint32 slot)
 {
     uint32 index = nargs + slot;
-    FrameEntry *fe = &entries[index];
-    if (!fe->isTracked()) {
-        addToTracker(fe);
-        fe->resetSynced();
-    }
+    if (FrameEntry *fe = base[index])
+        return fe;
+    FrameEntry *fe = addToTracker(index);
+    fe->resetSynced();
     return fe;
 }
 
@@ -647,7 +652,7 @@ FrameState::forgetAllRegs(FrameEntry *fe)
 inline FrameEntry *
 FrameState::tosFe() const
 {
-    return sp;
+    return &entries[uint32(sp - base)];
 }
 
 inline void
@@ -704,8 +709,8 @@ FrameState::pushLocal(uint32 n)
          * SETLOCAL equivocation of stack slots, and let expressions, just
          * weakly assert on the fixed local vars.
          */
-        FrameEntry *fe = &locals[n];
-        if (fe->isTracked() && n < script->nfixed) {
+        FrameEntry *fe = base[localIndex(n)];
+        if (fe && n < script->nfixed) {
             JS_ASSERT(fe->type.inMemory());
             JS_ASSERT(fe->data.inMemory());
         }
