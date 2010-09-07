@@ -402,6 +402,8 @@ public:
   nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
   NSView<mozView>* GetEditorView();
 
+  PRBool IsPluginView() { return (mWindowType == eWindowType_plugin); }
+
 protected:
 
   PRBool            ReportDestroyEvent();
