@@ -37,7 +37,7 @@
 #filter substitution
 
 // for browser.xml binding
-pref("toolkit.browser.cachePixelX", 500);
+pref("toolkit.browser.cachePixelX", 800);
 pref("toolkit.browser.cachePixelY", 2000);
 pref("toolkit.browser.recacheRatio", 50);
 

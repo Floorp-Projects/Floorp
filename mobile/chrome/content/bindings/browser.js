@@ -367,8 +367,8 @@ let ContentScroll =  {
           break;
 
         let cwu = Util.getWindowUtils(content);
-        cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
         cwu.setResolution(json.zoomLevel, json.zoomLevel);
+        cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
         break;
       }
 
