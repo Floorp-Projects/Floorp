@@ -49,6 +49,7 @@ function caseClause(test, stmts) Pattern({ type: "SwitchCase", test: test, conse
 function defaultClause(stmts) Pattern({ type: "SwitchCase", test: null, consequent: stmts })
 function catchClause(id, guard, body) Pattern({ type: "CatchClause", param: id, guard: guard, body: body })
 function tryStmt(body, catches, fin) Pattern({ type: "TryStatement", block: body, handler: catches, finalizer: fin })
+function letStmt(head, body) Pattern({ type: "LetStatement", head: head, body: body })
 function funExpr(id, args, body, gen) Pattern({ type: "FunctionExpression",
                                                 id: id,
                                                 params: args,
@@ -75,6 +76,7 @@ function objExpr(elts) Pattern({ type: "ObjectExpression", properties: elts })
 function compExpr(body, blocks, filter) Pattern({ type: "ComprehensionExpression", body: body, blocks: blocks, filter: filter })
 function genExpr(body, blocks, filter) Pattern({ type: "GeneratorExpression", body: body, blocks: blocks, filter: filter })
 function graphExpr(idx, body) Pattern({ type: "GraphExpression", index: idx, expression: body })
+function letExpr(head, body) Pattern({ type: "LetExpression", head: head, body: body })
 function idxExpr(idx) Pattern({ type: "GraphIndexExpression", index: idx })
 
 function compBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false })
@@ -644,7 +646,45 @@ assertExpr("( [x,y,z] for each (x in foo) for each (y in bar) for each (z in baz
 
 // sharp variables
 
-assertExpr("#1={me:#1#}", graphExpr(1, objExpr([{ key: ident("me"), value: idxExpr(1) }])))
+assertExpr("#1={me:#1#}", graphExpr(1, objExpr([{ key: ident("me"), value: idxExpr(1) }])));
+
+// let expressions
+
+assertExpr("(let (x=1) x)", letExpr([{ id: ident("x"), init: lit(1) }], ident("x")));
+assertExpr("(let (x=1,y=2) y)", letExpr([{ id: ident("x"), init: lit(1) },
+                                         { id: ident("y"), init: lit(2) }],
+                                        ident("y")));
+assertExpr("(let (x=1,y=2,z=3) z)", letExpr([{ id: ident("x"), init: lit(1) },
+                                             { id: ident("y"), init: lit(2) },
+                                             { id: ident("z"), init: lit(3) }],
+                                            ident("z")));
+assertExpr("(let (x) x)", letExpr([{ id: ident("x"), init: null }], ident("x")));
+assertExpr("(let (x,y) y)", letExpr([{ id: ident("x"), init: null },
+                                     { id: ident("y"), init: null }],
+                                    ident("y")));
+assertExpr("(let (x,y,z) z)", letExpr([{ id: ident("x"), init: null },
+                                       { id: ident("y"), init: null },
+                                       { id: ident("z"), init: null }],
+                                      ident("z")));
+
+// let statements
+
+assertStmt("let (x=1) { }", letStmt([{ id: ident("x"), init: lit(1) }], blockStmt([])));
+assertStmt("let (x=1,y=2) { }", letStmt([{ id: ident("x"), init: lit(1) },
+                                         { id: ident("y"), init: lit(2) }],
+                                        blockStmt([])));
+assertStmt("let (x=1,y=2,z=3) { }", letStmt([{ id: ident("x"), init: lit(1) },
+                                             { id: ident("y"), init: lit(2) },
+                                             { id: ident("z"), init: lit(3) }],
+                                            blockStmt([])));
+assertStmt("let (x) { }", letStmt([{ id: ident("x"), init: null }], blockStmt([])));
+assertStmt("let (x,y) { }", letStmt([{ id: ident("x"), init: null },
+                                     { id: ident("y"), init: null }],
+                                    blockStmt([])));
+assertStmt("let (x,y,z) { }", letStmt([{ id: ident("x"), init: null },
+                                       { id: ident("y"), init: null },
+                                       { id: ident("z"), init: null }],
+                                      blockStmt([])));
 
 
 // E4X
