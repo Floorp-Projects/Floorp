@@ -2149,7 +2149,9 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
       case TOK_DELETE:
       case TOK_UNARYOP:
 #if JS_HAS_XML_SUPPORT
-        if (PN_OP(pn) == JSOP_XMLNAME)
+        if (PN_OP(pn) == JSOP_XMLNAME ||
+            PN_OP(pn) == JSOP_SETXMLNAME ||
+            PN_OP(pn) == JSOP_BINDXMLNAME)
             return expression(pn->pn_kid, dst);
 #endif
 
