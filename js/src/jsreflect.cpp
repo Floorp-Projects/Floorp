@@ -497,8 +497,9 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
-        !setProperty(node, "type", tv))
+        !setProperty(node, "type", tv)) {
         return false;
+    }
 
     *dst = node;
     return true;
@@ -1835,8 +1836,9 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
                 !expression(prelude->pn_kid, &init) ||
                 !builder.variableDeclarator(patt, init, &pnlet->pn_pos, &dtor) ||
                 !dtors.append(dtor) ||
-                !builder.variableDeclaration(dtors, kind, &pnlet->pn_pos, &var))
+                !builder.variableDeclaration(dtors, kind, &pnlet->pn_pos, &var)) {
                 return false;
+            }
         }
 
         JSParseNode *head = loop->pn_left;
@@ -2004,8 +2006,7 @@ ASTSerializer::comprehension(JSParseNode *pn, Value *dst)
     JSParseNode *next = pn;
     while (PN_TYPE(next) == TOK_FOR) {
         Value block;
-        if (!comprehensionBlock(next, &block) ||
-            !blocks.append(block))
+        if (!comprehensionBlock(next, &block) || !blocks.append(block))
             return false;
         next = next->pn_right;
     }
@@ -2040,8 +2041,7 @@ ASTSerializer::generatorExpression(JSParseNode *pn, Value *dst)
     JSParseNode *next = pn;
     while (PN_TYPE(next) == TOK_FOR) {
         Value block;
-        if (!comprehensionBlock(next, &block) ||
-            !blocks.append(block))
+        if (!comprehensionBlock(next, &block) || !blocks.append(block))
             return false;
         next = next->pn_right;
     }
@@ -2561,8 +2561,9 @@ ASTSerializer::objectPattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
         Value key, patt, prop;
         if (!propertyName(next->pn_left, &key) ||
             !pattern(next->pn_right, pkind, &patt) ||
-            !builder.propertyPattern(key, patt, &next->pn_pos, &prop))
+            !builder.propertyPattern(key, patt, &next->pn_pos, &prop)) {
             return false;
+        }
 
         JS_ALWAYS_TRUE(elts.append(prop)); /* space check above */
     }
@@ -2715,16 +2716,25 @@ ASTSerializer::functionArgs(JSParseNode *pn, JSParseNode *pnargs, JSParseNode *p
      * both.
      */
     while ((arg && arg != pnbody) || destruct) {
-        if (arg && arg != pnbody && arg->frameSlot() == i) {
-            if (!identifier(arg, &node) ||
-                !args.append(node))
-                return false;
-            arg = arg->pn_next;
-        } else if (destruct && destruct->pn_right->frameSlot() == i) {
-            if (!pattern(destruct->pn_left, NULL, &node) ||
-                !args.append(node))
+        if (destruct && destruct->pn_right->frameSlot() == i) {
+            if (!pattern(destruct->pn_left, NULL, &node) || !args.append(node))
                 return false;
             destruct = destruct->pn_next;
+        } else if (arg && arg != pnbody) {
+            /*
+             * We don't check that arg->frameSlot() == i since we
+             * can't call that method if the arg def has been turned
+             * into a use, e.g.:
+             *
+             *     function(a) { function a() { } }
+             *
+             * There's no other way to ask a non-destructuring arg its
+             * index in the formals list, so we rely on the ability to
+             * ask destructuring args their index above.
+             */
+            if (!identifier(arg, &node) || !args.append(node))
+                return false;
+            arg = arg->pn_next;
         } else {
             LOCAL_NOT_REACHED("missing function argument");
         }
@@ -2742,8 +2752,7 @@ ASTSerializer::functionBody(JSParseNode *pn, TokenPos *pos, Value *dst)
     /* We aren't sure how many elements there are up front, so we'll check each append. */
     for (JSParseNode *next = pn; next; next = next->pn_next) {
         Value child;
-        if (!sourceElement(next, &child) ||
-            !elts.append(child))
+        if (!sourceElement(next, &child) || !elts.append(child))
             return false;
     }
 
@@ -2835,8 +2844,9 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
-                           JS_PropertyStub, JS_PropertyStub, 0))
+                           JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
+    }
 
     if (!JS_DefineFunctions(cx, Reflect, static_methods))
         return NULL;
