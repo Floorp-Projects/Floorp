@@ -819,6 +819,66 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
   return haveRadius;
 }
 
+/* static */ void
+nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
+{
+  NS_FOR_CSS_SIDES(side) {
+    nscoord offset = aOffsets.side(side);
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_FALSE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_FALSE);
+    aRadii[hc1] = NS_MAX(0, aRadii[hc1] - offset);
+    aRadii[hc2] = NS_MAX(0, aRadii[hc2] - offset);
+  }
+}
+
+/* static */ void
+nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
+{
+  NS_FOR_CSS_SIDES(side) {
+    nscoord offset = aOffsets.side(side);
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_FALSE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_FALSE);
+    if (aRadii[hc1] > 0)
+      aRadii[hc1] += offset;
+    if (aRadii[hc2] > 0)
+      aRadii[hc2] += offset;
+  }
+}
+
+/* virtual */ PRBool
+nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
+{
+  nsSize size = GetSize();
+  return ComputeBorderRadii(GetStyleBorder()->mBorderRadius, size, size,
+                            GetSkipSides(), aRadii);
+}
+
+PRBool
+nsIFrame::GetPaddingBoxBorderRadii(nscoord aRadii[8]) const
+{
+  if (!GetBorderRadii(aRadii))
+    return PR_FALSE;
+  InsetBorderRadii(aRadii, GetUsedBorder());
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (aRadii[corner])
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsIFrame::GetContentBoxBorderRadii(nscoord aRadii[8]) const
+{
+  if (!GetBorderRadii(aRadii))
+    return PR_FALSE;
+  InsetBorderRadii(aRadii, GetUsedBorderAndPadding());
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (aRadii[corner])
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsStyleContext*
 nsFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {

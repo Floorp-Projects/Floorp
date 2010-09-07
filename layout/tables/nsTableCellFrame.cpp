@@ -1081,6 +1081,15 @@ nsBCTableCellFrame::GetUsedBorder() const
   return result;
 }
 
+/* virtual */ PRBool
+nsBCTableCellFrame::GetBorderRadii(nscoord aRadii[8]) const
+{
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    aRadii[corner] = 0;
+  }
+  return PR_FALSE;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
