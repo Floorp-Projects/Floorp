@@ -308,13 +308,15 @@ FrameState::assertValidRegisterState() const
 #endif
 
 void
-FrameState::syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
+FrameState::syncFancy(Assembler &masm, Registers avail, uint32 resumeAt,
                       FrameEntry *bottom) const
 {
-    reifier.reset(&masm, avail, resumeAt, bottom);
+    /* :TODO: can be resumeAt? */
+    reifier.reset(&masm, avail, tracker.nentries, bottom);
 
-    for (FrameEntry *fe = resumeAt; fe >= bottom; fe--) {
-        if (!fe->isTracked())
+    for (uint32 i = resumeAt; i < tracker.nentries; i--) {
+        FrameEntry *fe = tracker[i];
+        if (fe >= sp)
             continue;
 
         reifier.sync(fe);
@@ -324,29 +326,6 @@ FrameState::syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
 void
 FrameState::sync(Assembler &masm, Uses uses) const
 {
-    if (!entries)
-        return;
-
-    /* Sync all registers up-front. */
-    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
-        RegisterID reg = RegisterID(i);
-        FrameEntry *fe = regstate[reg].usedBy();
-        if (!fe)
-            continue;
-
-        JS_ASSERT(fe->isTracked());
-
-        if (regstate[reg].type() == RematInfo::DATA) {
-            JS_ASSERT(fe->data.reg() == reg);
-            if (!fe->data.synced())
-                syncData(fe, addressOf(fe), masm);
-        } else {
-            JS_ASSERT(fe->type.reg() == reg);
-            if (!fe->type.synced())
-                syncType(fe, addressOf(fe), masm);
-        }
-    }
-
     /*
      * Keep track of free registers using a bitmask. If we have to drop into
      * syncFancy(), then this mask will help avoid eviction.
@@ -357,33 +336,31 @@ FrameState::sync(Assembler &masm, Uses uses) const
     FrameEntry *bottom = sp - uses.nuses;
 
     if (inTryBlock)
-        bottom = entries;
+        bottom = NULL;
 
-    for (FrameEntry *fe = sp - 1; fe >= bottom; fe--) {
-        if (!fe->isTracked())
+    for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
+        FrameEntry *fe = tracker[i];
+        if (fe >= sp)
             continue;
 
         Address address = addressOf(fe);
 
         if (!fe->isCopy()) {
-            /*
-             * If this |fe| has registers, track them as available. They've
-             * already been synced. Otherwise, see if a constant needs to be
-             * synced.
-             */
-            if (fe->data.inRegister()) {
+            /* Keep track of registers that can be clobbered. */
+            if (fe->data.inRegister())
                 avail.putReg(fe->data.reg());
-            } else if (!fe->data.synced()) {
+            if (fe->type.inRegister())
+                avail.putReg(fe->type.reg());
+
+            /* Sync. */
+            if (!fe->data.synced() && (fe->data.inRegister() || fe >= bottom)) {
                 syncData(fe, address, masm);
                 if (fe->isConstant())
                     continue;
             }
-
-            if (fe->type.inRegister())
-                avail.putReg(fe->type.reg());
-            else if (!fe->type.synced())
-                syncType(fe, address, masm);
-        } else {
+            if (!fe->type.synced() && (fe->type.inRegister() || fe >= bottom))
+                syncType(fe, addressOf(fe), masm);
+        } else if (fe >= bottom) {
             FrameEntry *backing = fe->copyOf();
             JS_ASSERT(backing != fe);
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
@@ -394,7 +371,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
              */
             if ((!fe->type.synced() && !backing->type.inRegister()) ||
                 (!fe->data.synced() && !backing->data.inRegister())) {
-                syncFancy(masm, avail, fe, bottom);
+                syncFancy(masm, avail, i, bottom);
                 return;
             }
 
