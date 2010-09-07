@@ -10,7 +10,7 @@ chrome.jar:
   skin/firstRun.css                         (firstRun.css)
   skin/header.css                           (header.css)
   skin/platform.css                         (platform.css)
-  skin/browser.css                          (browser.css)
+* skin/browser.css                          (browser.css)
   skin/notification.css                     (notification.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 
