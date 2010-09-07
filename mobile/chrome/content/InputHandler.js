@@ -339,8 +339,8 @@ function MouseModule(owner, browserViewContainer) {
   this._targetScrollInterface = null;
 
   var self = this;
-  this._kinetic = new KineticController(Util.bind(this._dragBy, this),
-                                        Util.bind(this._kineticStop, this));
+  this._kinetic = new KineticController(this._dragBy.bind(this),
+                                        this._kineticStop.bind(this));
 
   messageManager.addMessageListener("Browser:ContextMenu", this);
 }

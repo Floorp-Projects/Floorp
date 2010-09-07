@@ -46,17 +46,10 @@
 Cu.import("resource://gre/modules/Geometry.jsm");
 
 let Util = {
-  bind: function bind(f, thisObj) {
-    return function() {
-      return f.apply(thisObj, arguments);
-    };
-  },
-
   bindAll: function bindAll(instance) {
-    let bind = Util.bind;
     for (let key in instance)
       if (instance[key] instanceof Function)
-        instance[key] = bind(instance[key], instance);
+        instance[key] = instance[key].bind(instance);
   },
 
   /** printf-like dump function */

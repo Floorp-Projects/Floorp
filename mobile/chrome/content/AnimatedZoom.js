@@ -146,7 +146,7 @@ AnimatedZoom.prototype.startTimer = function() {
     this.inc = 1.0 / Services.prefs.getIntPref("browser.ui.zoom.animationDuration");
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this.interval = 1000 / Services.prefs.getIntPref("browser.ui.zoom.animationFps");
-    this.timer.initWithCallback(Util.bind(this._callback, this), this.interval, this.timer.TYPE_REPEATING_PRECISE);
+    this.timer.initWithCallback(this._callback.bind(this), this.interval, this.timer.TYPE_REPEATING_PRECISE);
 
     // force first update to be according to FPS even though first callback would take longer
     this.lastTime = 0;
