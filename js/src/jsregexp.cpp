@@ -963,7 +963,7 @@ static JSBool
 regexp_construct(JSContext *cx, uintN argc, Value *vp)
 {
     Value *argv = JS_ARGV(cx, vp);
-    if (IsConstructing(vp)) {
+    if (!IsConstructing(vp)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
          * (regexp_compile_sub detects the regexp + flags case and throws a
