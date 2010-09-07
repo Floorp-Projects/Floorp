@@ -175,100 +175,22 @@ class FrameState
         uint32 nentries;
     };
 
-    /*
-     * Some RegisterState invariants.
-     *
-     *  - Both |fe| and |save| cannot be non-NULL.
-     *  - If either |fe| or |save| is non-NULL, the register is not in freeRegs.
-     *  - If both |fe| and |save| are NULL, the register is either in freeRegs,
-     *    or allocated by the Compiler (and thus not tracked as part of a Value).
-     */
     struct RegisterState {
-        RegisterState() : fe_(NULL), save_(NULL)
+        RegisterState()
         { }
 
         RegisterState(FrameEntry *fe, RematInfo::RematType type)
-          : fe_(fe), save_(NULL), type_(type)
-        {
-            JS_ASSERT(!save_);
-        }
+          : fe(fe), type(type)
+        { }
 
-        bool isPinned() const {
-            assertConsistency();
-            return !!save_;
-        }
-
-        void assertConsistency() const {
-            JS_ASSERT_IF(fe_, !save_);
-            JS_ASSERT_IF(save_, !fe_);
-        }
-
-        FrameEntry *fe() const {
-            assertConsistency();
-            return fe_;
-        }
-
-        RematInfo::RematType type() const {
-            assertConsistency();
-            return type_;
-        }
-
-        FrameEntry *usedBy() const {
-            if (fe_)
-                return fe_;
-            return save_;
-        }
-
-        void associate(FrameEntry *fe, RematInfo::RematType type) {
-            JS_ASSERT(!fe_);
-            JS_ASSERT(!save_);
-
-            fe_ = fe;
-            type_ = type;
-            JS_ASSERT(!save_);
-        }
-
-        /* Change ownership. */
-        void reassociate(FrameEntry *fe) {
-            assertConsistency();
-            JS_ASSERT(fe);
-
-            fe_ = fe;
-        }
-
-        /* Unassociate this register from the FE. */
-        void forget() {
-            JS_ASSERT(fe_);
-            fe_ = NULL;
-            JS_ASSERT(!save_);
-        }
-
-        void pin() {
-            assertConsistency();
-            save_ = fe_;
-            fe_ = NULL;
-        }
-
-        void unpin() {
-            assertConsistency();
-            fe_ = save_;
-            save_ = NULL;
-        }
-
-        void unpinUnsafe() {
-            assertConsistency();
-            save_ = NULL;
-        }
-
-      private:
         /* FrameEntry owning this register, or NULL if not owned by a frame. */
-        FrameEntry *fe_;
+        FrameEntry *fe;
 
         /* Hack - simplifies register allocation for pairs. */
-        FrameEntry *save_;
+        FrameEntry *save;
         
         /* Part of the FrameEntry that owns the FE. */
-        RematInfo::RematType type_;
+        RematInfo::RematType type;
     };
 
   public:
@@ -588,34 +510,28 @@ class FrameState
      */
     void syncAndKill(Registers kill, Uses uses); 
 
-    /* Syncs and kills everything. */
-    void syncAndKillEverything() {
-        syncAndKill(Registers(Registers::AvailRegs), Uses(frameDepth()));
-    }
+    /*
+     * Reset the register state.
+     */
+    void resetRegState();
 
     /*
      * Clear all tracker entries, syncing all outstanding stores in the process.
      * The stack depth is in case some merge points' edges did not immediately
      * precede the current instruction.
      */
-    inline void syncAndForgetEverything(uint32 newStackDepth);
+    inline void forgetEverything(uint32 newStackDepth);
 
     /*
      * Same as above, except the stack depth is not changed. This is used for
      * branching opcodes.
      */
-    void syncAndForgetEverything();
-
-    /*
-     * Throw away the entire frame state, without syncing anything.
-     * This can only be called after a syncAndKill() against all registers.
-     */
     void forgetEverything();
 
     /*
-     * Discard the entire framestate forcefully.
+     * Throw away the entire frame state, without syncing anything.
      */
-    void discardFrame();
+    void throwaway();
 
     /*
      * Mark an existing slot with a type.
@@ -671,9 +587,8 @@ class FrameState
 
     /*
      * Marks a register such that it cannot be spilled by the register
-     * allocator. Any pinned registers must be unpinned at the end of the op,
-     * no matter what. In addition, pinReg() can only be used on registers
-     * which are associated with FrameEntries.
+     * allocator. Any pinned registers must be unpinned at the end of the op.
+     * Note: This function should only be used on registers tied to FEs.
      */
     inline void pinReg(RegisterID reg);
 
@@ -681,11 +596,6 @@ class FrameState
      * Unpins a previously pinned register.
      */
     inline void unpinReg(RegisterID reg);
-
-    /*
-     * Same as unpinReg(), but does not restore the FrameEntry.
-     */
-    inline void unpinKilledReg(RegisterID reg);
 
     /*
      * Dups the top item on the stack.
@@ -772,7 +682,6 @@ class FrameState
     void syncFancy(Assembler &masm, Registers avail, uint32 resumeAt,
                    FrameEntry *bottom) const;
     inline bool tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
-    void resetInternalState();
 
     /*
      * "Uncopies" the backing store of a FrameEntry that has been copied. The
@@ -787,6 +696,10 @@ class FrameState
     FrameEntry *entryFor(uint32 index) const {
         JS_ASSERT(entries[index].isTracked());
         return &entries[index];
+    }
+
+    void moveOwnership(RegisterID reg, FrameEntry *newFe) {
+        regstate[reg].fe = newFe;
     }
 
     RegisterID evictSomeReg() {
