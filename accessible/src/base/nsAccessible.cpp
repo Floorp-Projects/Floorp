@@ -1832,7 +1832,7 @@ nsAccessible::Role()
   } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_LISTBOX) {
     // A listbox inside of a combobox needs a special role because of ATK
     // mapping to menu.
-    if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+    if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX) {
       return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
 
       nsCOMPtr<nsIAccessible> possibleCombo =
@@ -1843,7 +1843,7 @@ nsAccessible::Role()
     }
 
   } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OPTION) {
-    if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
       return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
   }
 
@@ -3352,7 +3352,7 @@ nsAccessible::GetLevelInternal()
 {
   PRInt32 level = nsAccUtils::GetDefaultLevel(this);
 
-  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 role = Role();
   nsAccessible* parent = GetParent();
 
   if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
@@ -3362,7 +3362,7 @@ nsAccessible::GetLevelInternal()
     level = 1;
 
     while (parent) {
-      PRUint32 parentRole = nsAccUtils::Role(parent);
+      PRUint32 parentRole = parent->Role();
 
       if (parentRole == nsIAccessibleRole::ROLE_OUTLINE)
         break;
@@ -3382,7 +3382,7 @@ nsAccessible::GetLevelInternal()
     level = 0;
 
     while (parent) {
-      PRUint32 parentRole = nsAccUtils::Role(parent);
+      PRUint32 parentRole = parent->Role();
 
       if (parentRole == nsIAccessibleRole::ROLE_LISTITEM)
         ++ level;

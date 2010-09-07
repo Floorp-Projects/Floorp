@@ -279,8 +279,7 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
   PRInt32 startOffset = aStartOffset;
   PRInt32 endOffset = aEndOffset;
   // XXX this prevents text interface usage on <input type="password">
-  PRBool isPassword =
-    (nsAccUtils::Role(this) == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
+  PRBool isPassword = (Role() == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
 
   // Clear out parameters and set up loop
   if (aText) {
@@ -804,7 +803,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
     nsAccessible *firstChild = mChildren.SafeElementAt(0, nsnull);
     // For line selection with needsStart, set start of line exactly to line break
     if (pos.mContentOffset == 0 && firstChild &&
-        nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
+        firstChild->Role() == nsIAccessibleRole::ROLE_STATICTEXT &&
         static_cast<PRInt32>(nsAccUtils::TextLength(firstChild)) == hyperTextOffset) {
       // XXX Bullet hack -- we should remove this once list bullets use anonymous content
       hyperTextOffset = 0;
@@ -816,7 +815,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
   else if (aAmount == eSelectEndLine && finalAccessible) { 
     // If not at very end of hypertext, we may need change the end of line offset by 1, 
     // to make sure we are in the right place relative to the line ending
-    if (nsAccUtils::Role(finalAccessible) == nsIAccessibleRole::ROLE_WHITESPACE) {  // Landed on <br> hard line break
+    if (finalAccessible->Role() == nsIAccessibleRole::ROLE_WHITESPACE) {  // Landed on <br> hard line break
       // if aNeedsStart, set end of line exactly 1 character past line break
       // XXX It would be cleaner if we did not have to have the hard line break check,
       // and just got the correct results from PeekOffset() for the <br> case -- the returned offset should
@@ -983,7 +982,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     nsRefPtr<nsAccessible> endAcc;
     nsIFrame *endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                        nsnull, getter_AddRefs(endAcc));
-    if (nsAccUtils::Role(endAcc) == nsIAccessibleRole::ROLE_STATICTEXT) {
+    if (endAcc && endAcc->Role() == nsIAccessibleRole::ROLE_STATICTEXT) {
       // Static text like list bullets will ruin our forward calculation,
       // since the caret cannot be in the static text. Start just after the static text.
       startOffset = endOffset = finalStartOffset +
