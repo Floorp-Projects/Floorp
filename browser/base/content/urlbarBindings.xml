@@ -721,4 +721,26 @@
       ]]></constructor>
     </implementation>
   </binding>
+
+  <binding id="menuitem-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem">
+    <implementation>
+      <constructor><![CDATA[
+        this.setAttribute("tooltiptext", this.getAttribute("acceltext"));
+        // TODO: Simplify this to this.setAttribute("acceltext", "") once bug
+        // 592424 is fixed
+        document.getAnonymousElementByAttribute(this, "anonid", "accel").firstChild.setAttribute("value", "");
+      ]]></constructor>
+    </implementation>
+  </binding>
+
+  <binding id="menuitem-iconic-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem-iconic">
+    <implementation>
+      <constructor><![CDATA[
+        this.setAttribute("tooltiptext", this.getAttribute("acceltext"));
+        // TODO: Simplify this to this.setAttribute("acceltext", "") once bug
+        // 592424 is fixed
+        document.getAnonymousElementByAttribute(this, "anonid", "accel").firstChild.setAttribute("value", "");
+      ]]></constructor>
+    </implementation>
+  </binding>
 </bindings>
