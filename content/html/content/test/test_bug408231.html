@@ -182,7 +182,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
 
     function runTests() {
       document.designMode='on';
-      window.getSelection().collapse(document.body, 0);
       testQueryCommand(commandEnabledResults, callQueryCommandEnabled, "queryCommandEnabled");
       testQueryCommand(commandStateResults, callQueryCommandState, "queryCommandState");
       testQueryCommand(commandValueResults, callQueryCommandValue, "queryCommandValue");

@@ -573,6 +573,9 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       item.removeTrenches();
 
+      if (!dropPos)
+        dropPos = {top:window.innerWidth, left:window.innerHeight};
+
       if (typeof options == 'undefined')
         options = {};
 
@@ -626,7 +629,7 @@ window.GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       // Insert the tab into the right position.
-      var index = dropPos ? findInsertionPoint(dropPos) : this._children.length;
+      var index = findInsertionPoint(dropPos);
       this._children.splice(index, 0, item);
 
       item.setZ(this.getZ() + 1);
@@ -1402,6 +1405,21 @@ window.GroupItems = {
     }
 
     return sane;
+  },
+
+  // ----------
+  // Function: getGroupItemWithTitle
+  // Returns the <GroupItem> that has the given title, or null if none found.
+  // TODO: what if there are multiple groupItems with the same title??
+  //       Right now, looks like it'll return the last one. Bug 586557
+  getGroupItemWithTitle: function(title) {
+    var result = null;
+    this.groupItems.forEach(function(groupItem) {
+      if (groupItem.getTitle() == title)
+        result = groupItem;
+    });
+
+    return result;
   },
 
   // ----------
