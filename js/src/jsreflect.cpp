@@ -376,6 +376,8 @@ class NodeBuilder
 
     bool debuggerStatement(TokenPos *pos, Value *dst);
 
+    bool letStatement(NodeVector &head, Value stmt, TokenPos *pos, Value *dst);
+
     /*
      * expressions
      */
@@ -420,6 +422,8 @@ class NodeBuilder
     bool graphExpression(jsint idx, Value expr, TokenPos *pos, Value *dst);
 
     bool graphIndexExpression(jsint idx, TokenPos *pos, Value *dst);
+
+    bool letExpression(NodeVector &head, Value expr, TokenPos *pos, Value *dst);
 
     /*
      * declarations
@@ -941,6 +945,30 @@ NodeBuilder::graphIndexExpression(jsint idx, TokenPos *pos, Value *dst)
 }
 
 bool
+NodeBuilder::letExpression(NodeVector &head, Value expr, TokenPos *pos, Value *dst)
+{
+    Value array;
+
+    return newArray(head, &array) &&
+           newNode(AST_LET_EXPR, pos,
+                   "head", array,
+                   "body", expr,
+                   dst);
+}
+
+bool
+NodeBuilder::letStatement(NodeVector &head, Value stmt, TokenPos *pos, Value *dst)
+{
+    Value array;
+
+    return newArray(head, &array) &&
+           newNode(AST_LET_STMT, pos,
+                   "head", array,
+                   "body", stmt,
+                   dst);
+}
+
+bool
 NodeBuilder::variableDeclaration(NodeVector &elts, VarDeclKind kind, TokenPos *pos, Value *dst)
 {
     JS_ASSERT(kind > VARDECL_ERR && kind < VARDECL_LIMIT);
@@ -1185,6 +1213,7 @@ class ASTSerializer
     bool declaration(JSParseNode *pn, Value *dst);
     bool variableDeclaration(JSParseNode *pn, bool let, Value *dst);
     bool variableDeclarator(JSParseNode *pn, VarDeclKind *pkind, Value *dst);
+    bool letHead(JSParseNode *pn, NodeVector &dtors);
 
     bool optStatement(JSParseNode *pn, Value *dst) {
         if (!pn) {
@@ -1536,6 +1565,28 @@ ASTSerializer::variableDeclarator(JSParseNode *pn, VarDeclKind *pkind, Value *ds
 }
 
 bool
+ASTSerializer::letHead(JSParseNode *pn, NodeVector &dtors)
+{
+    if (!dtors.reserve(pn->pn_count))
+        return false;
+
+    VarDeclKind kind = VARDECL_LET_HEAD;
+
+    for (JSParseNode *next = pn->pn_head; next; next = next->pn_next) {
+        Value child;
+        /*
+         * Unlike in |variableDeclaration|, this does not update |kind|; since let-heads do
+         * not contain const declarations, declarators should never have PND_CONST set.
+         */
+        if (!variableDeclarator(next, &kind, &child))
+            return false;
+        (void)dtors.append(child); /* space check above */
+    }
+
+    return true;
+}
+
+bool
 ASTSerializer::switchCase(JSParseNode *pn, Value *dst)
 {
     NodeVector stmts(cx);
@@ -1650,6 +1701,15 @@ ASTSerializer::statement(JSParseNode *pn, Value *dst)
 
       case TOK_LEXICALSCOPE:
         pn = pn->pn_expr;
+        if (PN_TYPE(pn) == TOK_LET) {
+            NodeVector dtors(cx);
+            Value stmt;
+
+            return letHead(pn->pn_left, dtors) &&
+                   statement(pn->pn_right, &stmt) &&
+                   builder.letStatement(dtors, stmt, &pn->pn_pos, dst);
+        }
+
         if (PN_TYPE(pn) != TOK_LC)
             return statement(pn, dst);
         /* FALL THROUGH */
@@ -2149,6 +2209,18 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
         LOCAL_ASSERT(PN_TYPE(pn->pn_head) == TOK_LEXICALSCOPE);
 
         return comprehension(pn->pn_head->pn_expr, dst);
+
+      case TOK_LEXICALSCOPE:
+      {
+        pn = pn->pn_expr;
+
+        NodeVector dtors(cx);
+        Value expr;
+
+        return letHead(pn->pn_left, dtors) &&
+               expression(pn->pn_right, &expr) &&
+               builder.letExpression(dtors, expr, &pn->pn_pos, dst);
+      }
 
 #ifdef JS_HAS_XML_SUPPORT
       case TOK_ANYNAME:
