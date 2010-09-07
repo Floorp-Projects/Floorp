@@ -933,12 +933,41 @@ public:
    * FIXME: In the long run, we can probably get away with only one of
    * these, especially if we change the way we handle outline-radius (by
    * removing it and inflating the border radius)
+   *
+   * Return whether any radii are nonzero.
    */
   static PRBool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                                    const nsSize& aFrameSize,
                                    const nsSize& aBorderArea,
                                    PRIntn aSkipSides,
                                    nscoord aRadii[8]);
+
+  /*
+   * Given a set of border radii for one box (e.g., border box), convert
+   * it to the equivalent set of radii for another box (e.g., in to
+   * padding box, out to outline box) by reducing radii or increasing
+   * nonzero radii as appropriate.
+   *
+   * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   *
+   * Note that InsetBorderRadii is lossy, since it can turn nonzero
+   * radii into zero, and OutsetBorderRadii does not inflate zero radii.
+   * Therefore, callers should always inset or outset directly from the
+   * original value coming from style.
+   */
+  static void InsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets);
+  static void OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets);
+
+  /**
+   * Fill in border radii for this frame.  Return whether any are
+   * nonzero.
+   *
+   * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   */
+  virtual PRBool GetBorderRadii(nscoord aRadii[8]) const;
+
+  PRBool GetPaddingBoxBorderRadii(nscoord aRadii[8]) const;
+  PRBool GetContentBoxBorderRadii(nscoord aRadii[8]) const;
 
   /**
    * Get the position of the frame's baseline, relative to the top of
