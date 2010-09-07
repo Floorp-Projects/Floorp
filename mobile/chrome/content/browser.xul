@@ -263,7 +263,9 @@
                       <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
                     </hbox>
                   </hbox>
+#ifdef MOZ_PLATFORM_MAEMO
                   <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
+#endif
                 </toolbar>
               </box>
             </box>
