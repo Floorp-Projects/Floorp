@@ -385,7 +385,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible *aAccessible,
   }
 
   gLastFocusedAccessiblesState = nsAccUtils::State(finalFocusAccessible);
-  PRUint32 role = nsAccUtils::Role(finalFocusAccessible);
+  PRUint32 role = finalFocusAccessible->Role();
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mCurrentARIAMenubar) {  // Entering menus
       // The natural role is the role that this type of element normally has
@@ -673,7 +673,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     HandlePopupShownEvent(accessible);
   }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
-    if (nsAccUtils::Role(accessible) == nsIAccessibleRole::ROLE_MENUPOPUP) {
+    if (accessible->Role() == nsIAccessibleRole::ROLE_MENUPOPUP) {
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
                               accessible);
     }
@@ -707,7 +707,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         if (nsAccUtils::State(containerAccessible) & nsIAccessibleStates::STATE_COLLAPSED) {
           nsAccessible *containerParent = containerAccessible->GetParent();
           NS_ENSURE_TRUE(containerParent, NS_ERROR_FAILURE);
-          if (nsAccUtils::Role(containerParent) != nsIAccessibleRole::ROLE_COMBOBOX) {
+          if (containerParent->Role() != nsIAccessibleRole::ROLE_COMBOBOX) {
             return NS_OK;
           }
         }
@@ -856,7 +856,7 @@ nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
 nsresult
 nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
 {
-  PRUint32 role = nsAccUtils::Role(aAccessible);
+  PRUint32 role = aAccessible->Role();
 
   if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
     // Don't fire menupopup events for combobox and autocomplete lists.
@@ -876,12 +876,14 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
 
   if (role == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     // Fire expanded state change event for comboboxes and autocompeletes.
-    nsAccessible *comboboxAcc = aAccessible->GetParent();
-    PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
+    nsAccessible* combobox = aAccessible->GetParent();
+    NS_ENSURE_STATE(combobox);
+
+    PRUint32 comboboxRole = combobox->Role();
     if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
         comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       nsRefPtr<AccEvent> event =
-        new AccStateChangeEvent(comboboxAcc,
+        new AccStateChangeEvent(combobox,
                                 nsIAccessibleStates::STATE_EXPANDED,
                                 PR_FALSE, PR_TRUE);
       NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
@@ -914,16 +916,17 @@ nsRootAccessible::HandlePopupHidingEvent(nsINode *aNode,
   if (!aAccessible)
     return NS_OK;
 
-  PRUint32 role = nsAccUtils::Role(aAccessible);
-  if (role != nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+  if (aAccessible->Role() != nsIAccessibleRole::ROLE_COMBOBOX_LIST)
     return NS_OK;
 
-  nsAccessible *comboboxAcc = aAccessible->GetParent();
-  PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
+  nsAccessible* combobox = aAccessible->GetParent();
+  NS_ENSURE_STATE(combobox);
+
+  PRUint32 comboboxRole = combobox->Role();
   if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
       comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(comboboxAcc,
+      new AccStateChangeEvent(combobox,
                               nsIAccessibleStates::STATE_EXPANDED,
                               PR_FALSE, PR_FALSE);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);

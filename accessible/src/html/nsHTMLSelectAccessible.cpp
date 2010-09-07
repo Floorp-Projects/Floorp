@@ -104,7 +104,7 @@ nsHTMLSelectListAccessible::GetStateInternal(PRUint32 *aState,
 PRUint32
 nsHTMLSelectListAccessible::NativeRole()
 {
-  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX)
+  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX)
     return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
 
   return nsIAccessibleRole::ROLE_LISTBOX;
@@ -199,7 +199,7 @@ nsHTMLSelectOptionAccessible::
 PRUint32
 nsHTMLSelectOptionAccessible::NativeRole()
 {
-  if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
     return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
 
   return nsIAccessibleRole::ROLE_OPTION;
@@ -348,10 +348,8 @@ nsHTMLSelectOptionAccessible::GetLevelInternal()
   PRInt32 level =
     parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::optgroup) ? 2 : 1;
 
-  if (level == 1 &&
-      nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_HEADING) {
+  if (level == 1 && Role() != nsIAccessibleRole::ROLE_HEADING)
     level = 0; // In a single level list, the level is irrelevant
-  }
 
   return level;
 }

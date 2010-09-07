@@ -460,7 +460,8 @@ nsHTMLTextFieldAccessible::GetStateInternal(PRUint32 *aState,
     *aState |= nsIAccessibleStates::STATE_PROTECTED;
   }
   else {
-    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_AUTOCOMPLETE)
+    nsAccessible* parent = GetParent();
+    if (parent && parent->Role() == nsIAccessibleRole::ROLE_AUTOCOMPLETE)
       *aState |= nsIAccessibleStates::STATE_HASPOPUP;
   }
 
@@ -662,7 +663,7 @@ nsHTMLLegendAccessible::GetRelationByType(PRUint32 aRelationType,
     // Look for groupbox parent
     nsAccessible* groupbox = GetParent();
 
-    if (nsAccUtils::Role(groupbox) == nsIAccessibleRole::ROLE_GROUPING) {
+    if (groupbox && groupbox->Role() == nsIAccessibleRole::ROLE_GROUPING) {
       // XXX: if group box exposes more than one relation of the given type
       // then we fail.
       nsCOMPtr<nsIAccessible> testLabelAccessible =

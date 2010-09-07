@@ -1285,7 +1285,7 @@ nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
 void
 nsDocAccessible::FireValueChangeForTextFields(nsAccessible *aAccessible)
 {
-  if (nsAccUtils::Role(aAccessible) != nsIAccessibleRole::ROLE_ENTRY)
+  if (aAccessible->Role() != nsIAccessibleRole::ROLE_ENTRY)
     return;
 
   // Dependent value change event for text changes in textfields
@@ -1372,7 +1372,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
   PRInt32 offset = 0;
   if (aChangeChild) {
     // Don't fire event for the first html:br in an editor.
-    if (nsAccUtils::Role(aChangeChild) == nsIAccessibleRole::ROLE_WHITESPACE) {
+    if (aChangeChild->Role() == nsIAccessibleRole::ROLE_WHITESPACE) {
       nsCOMPtr<nsIEditor> editor;
       textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
       if (editor) {
@@ -1624,8 +1624,7 @@ nsDocAccessible::RefreshNodes(nsINode *aStartNode)
   nsAccessible *accessible = GetCachedAccessible(aStartNode);
   if (accessible) {
     // Fire menupopup end if a menu goes away
-    PRUint32 role = nsAccUtils::Role(accessible);
-    if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+    if (accessible->Role() == nsIAccessibleRole::ROLE_MENUPOPUP) {
       nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(aStartNode));
       if (!popup) {
         // Popup elements already fire these via DOMMenuInactive
