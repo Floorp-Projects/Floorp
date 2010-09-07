@@ -775,6 +775,64 @@ assertExpr("<?xml version='1.0'?>", xmlPI("xml", "version='1.0'"));
 assertDecl("default xml namespace = 'js';", xmlDefNS(lit("js")));
 assertDecl("default xml namespace = foo;", xmlDefNS(ident("foo")));
 
+// The parser turns these into TOK_UNARY nodes with pn_op == JSOP_SETXMLNAME.
+
+assertExpr("x::y = foo", aExpr("=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
+assertExpr("function::x = foo", aExpr("=", xmlFuncQualId(ident("x"), false), ident("foo")));
+assertExpr("@x = foo", aExpr("=", xmlAttrSel(ident("x")), ident("foo")));
+assertExpr("x::* = foo", aExpr("=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
+assertExpr("*::* = foo", aExpr("=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
+assertExpr("x.* = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+assertExpr("x[*] = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+
+assertExpr("x::y += foo", aExpr("+=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
+assertExpr("function::x += foo", aExpr("+=", xmlFuncQualId(ident("x"), false), ident("foo")));
+assertExpr("@x += foo", aExpr("+=", xmlAttrSel(ident("x")), ident("foo")));
+assertExpr("x::* += foo", aExpr("+=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
+assertExpr("*::* += foo", aExpr("+=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
+assertExpr("x.* += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+assertExpr("x[*] += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+
+assertExpr("x::y++", updExpr("++", xmlQualId(ident("x"), ident("y"), false), false));
+assertExpr("function::x++", updExpr("++", xmlFuncQualId(ident("x"), false), false));
+assertExpr("@x++", updExpr("++", xmlAttrSel(ident("x")), false));
+assertExpr("x::*++", updExpr("++", xmlQualId(ident("x"), ident("*"), false), false));
+assertExpr("*::*++", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), false));
+assertExpr("x.*++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
+assertExpr("x[*]++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
+
+assertExpr("++x::y", updExpr("++", xmlQualId(ident("x"), ident("y"), false), true));
+assertExpr("++function::x", updExpr("++", xmlFuncQualId(ident("x"), false), true));
+assertExpr("++@x", updExpr("++", xmlAttrSel(ident("x")), true));
+assertExpr("++x::*", updExpr("++", xmlQualId(ident("x"), ident("*"), false), true));
+assertExpr("++*::*", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), true));
+assertExpr("++x.*", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
+assertExpr("++x[*]", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
+
+
+// The parser turns these into TOK_UNARY nodes with pn_op == JSOP_BINDXMLNAME.
+
+function singletonObjPatt(name, val) objPatt([{ key: ident(name), value: val }])
+
+assertExpr("({a:x::y}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("y"), false)), ident("foo")));
+assertExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", xmlFuncQualId(ident("x"), false)), ident("foo")));
+assertExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", xmlAttrSel(ident("x"))), ident("foo")));
+assertExpr("({a:x::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("*"), false)), ident("foo")));
+assertExpr("({a:*::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(xmlAnyName, ident("*"), false)), ident("foo")));
+assertExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
+assertExpr("({a:x[*]}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
+
+function emptyForInPatt(val, rhs) forInStmt(val, rhs, emptyStmt)
+
+assertStmt("for (x::y in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("y"), false), ident("foo")));
+assertStmt("for (function::x in foo);", emptyForInPatt(xmlFuncQualId(ident("x"), false), ident("foo")));
+assertStmt("for (@x in foo);", emptyForInPatt(xmlAttrSel(ident("x")), ident("foo")));
+assertStmt("for (x::* in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("*"), false), ident("foo")));
+assertStmt("for (*::* in foo);", emptyForInPatt(xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
+assertStmt("for (x.* in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
+assertStmt("for (x[*] in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
+
+
 // NOTE: We appear to be unable to test XMLNAME, XMLCDATA, and XMLCOMMENT.
 
 
