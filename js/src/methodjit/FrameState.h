@@ -568,10 +568,9 @@ class FrameState
     void storeTo(FrameEntry *fe, Address address, bool popHint);
 
     /*
-     * Stores the top stack slot back to a slot.
+     * Stores the top stack slot back to a local variable.
      */
     void storeLocal(uint32 n, bool popGuaranteed = false, bool typeChange = true);
-    void storeTop(FrameEntry *target, bool popGuaranteed = false, bool typeChange = true);
 
     /*
      * Restores state from a slow path.
@@ -783,14 +782,6 @@ class FrameState
      * Later addition: uncopy() returns the first copy found.
      */
     FrameEntry *uncopy(FrameEntry *original);
-    FrameEntry *walkTrackerForUncopy(FrameEntry *original);
-    FrameEntry *walkFrameForUncopy(FrameEntry *original);
-
-    /*
-     * All registers in the FE are forgotten. If it is copied, it is uncopied
-     * beforehand.
-     */
-    void forgetEntry(FrameEntry *fe);
 
     FrameEntry *entryFor(uint32 index) const {
         JS_ASSERT(entries[index].isTracked());
