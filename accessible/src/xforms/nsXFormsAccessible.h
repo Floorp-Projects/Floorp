@@ -128,7 +128,7 @@ public:
   nsXFormsContainerAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual nsresult GetRoleInternal(PRUint32 *aRole);
+  virtual PRUint32 NativeRole();
 
   // Allows accessible nodes in anonymous content of xforms element by
   // always returning PR_TRUE value.

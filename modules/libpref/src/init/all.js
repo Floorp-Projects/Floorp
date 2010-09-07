@@ -3182,7 +3182,11 @@ pref("gfx.color_management.mode", 0);
 pref("mozilla.widget.render-mode", -1);
 
 // Default value of acceleration for all widgets.
+#ifdef XP_WIN
+pref("layers.accelerate-all", true);
+#else
 pref("layers.accelerate-all", false);
+#endif
 
 // Whether to allow acceleration on layers at all.
 pref("layers.accelerate-none", false);

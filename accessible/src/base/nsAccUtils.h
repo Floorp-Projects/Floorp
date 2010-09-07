@@ -298,11 +298,6 @@ public:
   }
 
   /**
-   * Return the role from native markup of the given accessible.
-   */
-  static PRUint32 RoleInternal(nsIAccessible *aAcc);
-
-  /**
    * Return the state for the given accessible.
    */
   static PRUint32 State(nsIAccessible *aAcc)

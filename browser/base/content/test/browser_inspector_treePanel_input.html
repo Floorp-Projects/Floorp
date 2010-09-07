@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xml:lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Inspector tree panel test</title>
+    <style type="text/css"><!--
+      #duplicate { color: green }
+    --></style>
+    <script type="text/javascript"><!--
+      function fooBarBaz(arg1) {
+        return true; // do nothing
+      }
+    // --></script>
+  </head>
+  <body arbitrary:attribute="value">
+    <p>Inspector tree panel test.</p>
+
+    <div id="foo" class="foo bar baz" style="border:1px solid red; 
+      unknownProperty: unknownValue; color: withUnkownValue">
+      <unknownTag unknownAttribute="fooBar">
+        <p unknownAttribute="fooBar" data-test1="value">hello world!</p>
+      </unknownTag>
+    </div>
+
+    <div id="duplicate" id="duplicate" id="different" class="test" class="foo" 
+      fooBar="baz" fooBar="bazbaz">test</div>
+
+    <iframe src="data:text/html,&lt;div&gt;hello from an iframe!&lt;/div&gt;">no 
+      frames!</iframe>
+
+    <!-- hello world from a comment! -->
+  </body>
+</html>

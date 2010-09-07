@@ -55,13 +55,13 @@ filters::GetSelectable(nsAccessible* aAccessible)
 bool
 filters::GetRow(nsAccessible* aAccessible)
 {
-  return nsAccUtils::Role(aAccessible) == nsIAccessibleRole::ROLE_ROW;
+  return aAccessible->Role() == nsIAccessibleRole::ROLE_ROW;
 }
 
 bool
 filters::GetCell(nsAccessible* aAccessible)
 {
-  PRUint32 role = nsAccUtils::Role(aAccessible);
+  PRUint32 role = aAccessible->Role();
   return role == nsIAccessibleRole::ROLE_GRID_CELL ||
       role == nsIAccessibleRole::ROLE_ROWHEADER ||
       role == nsIAccessibleRole::ROLE_COLUMNHEADER;

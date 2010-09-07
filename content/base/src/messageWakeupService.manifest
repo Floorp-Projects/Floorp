@@ -1,0 +1,4 @@
+component {f9798742-4f7b-4188-86ba-48b116412b29} messageWakeupService.js
+contract @mozilla.org/content/messagewakeupservice;1 {f9798742-4f7b-4188-86ba-48b116412b29}
+category profile-after-change messageWakeupService @mozilla.org/content/messagewakeupservice;1
+

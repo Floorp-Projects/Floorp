@@ -65,17 +65,13 @@ function createDocument()
 
 function toggleInspector()
 {
-  document.addEventListener("popupshown", inspectNode, false);
+  Services.obs.addObserver(inspectNode, "inspector-opened", false);
   InspectorUI.toggleInspectorUI();
 }
 
-function inspectNode(aEvent)
+function inspectNode()
 {
-  if (aEvent.target.id != "inspector-panel") {
-    return true;
-  }
-
-  document.removeEventListener("popupshown", inspectNode, false);
+  Services.obs.removeObserver(inspectNode, "inspector-opened", false);
   document.addEventListener("popupshown", performScrollingTest, false);
 
   InspectorUI.inspectNode(div)

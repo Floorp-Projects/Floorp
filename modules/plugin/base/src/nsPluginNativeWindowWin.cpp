@@ -132,6 +132,7 @@ typedef enum {
   nsPluginType_Unknown = 0,
   nsPluginType_Flash,
   nsPluginType_Real,
+  nsPluginType_PDF,
   nsPluginType_Other
 } nsPluginType;
 
@@ -163,6 +164,8 @@ private:
   PluginWindowWeakRef mWeakRef;
   nsRefPtr<PluginWindowEvent> mCachedPluginWindowEvent;
 
+  HWND mParentWnd;
+  LONG_PTR mParentProc;
 public:
   nsPluginType mPluginType;
 };
@@ -229,23 +232,6 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   // to prevent that, bug 374229.
   nsCOMPtr<nsIPluginInstance> inst;
   win->GetPluginInstance(inst);
-
-  // check plugin mime type and cache whether it is Flash or not
-  // Flash will need special treatment later
-  if (win->mPluginType == nsPluginType_Unknown) {
-    if (inst) {
-      const char* mimetype = nsnull;
-      inst->GetMIMEType(&mimetype);
-      if (mimetype) { 
-        if (!strcmp(mimetype, "application/x-shockwave-flash"))
-          win->mPluginType = nsPluginType_Flash;
-        else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
-          win->mPluginType = nsPluginType_Real;
-        else
-          win->mPluginType = nsPluginType_Other;
-      }
-    }
-  }
 
   // Real may go into a state where it recursivly dispatches the same event
   // when subclassed. If this is Real, lets examine the event and drop it
@@ -408,7 +394,10 @@ nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
   mPrevWinProc = NULL;
   mPluginWinProc = NULL;
   mPluginType = nsPluginType_Unknown;
-  
+
+  mParentWnd = NULL;
+  mParentProc = NULL;
+
   if (sWM_FLASHBOUNCEMSG == 0)
     sWM_FLASHBOUNCEMSG = ::RegisterWindowMessage(NS_PLUGIN_CUSTOM_MSG_ID);
 
@@ -503,6 +492,24 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
   // check the incoming instance, null indicates that window is going away and we are
   // not interested in subclassing business any more, undo and don't subclass
 
+  // check plugin mime type and cache it if it will need special treatment later
+  if (mPluginType == nsPluginType_Unknown) {
+    if (aPluginInstance) {
+      const char* mimetype = nsnull;
+      aPluginInstance->GetMIMEType(&mimetype);
+      if (mimetype) { 
+        if (!strcmp(mimetype, "application/x-shockwave-flash"))
+          mPluginType = nsPluginType_Flash;
+        else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
+          mPluginType = nsPluginType_Real;
+        else if (!strcmp(mimetype, "application/pdf"))
+          mPluginType = nsPluginType_PDF;
+        else
+          mPluginType = nsPluginType_Other;
+      }
+    }
+  }
+
   // WINCE does not subclass windows.  See bug 300011 for the details.
 #ifndef WINCE
   if (!aPluginInstance) {
@@ -515,6 +522,17 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
     WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
     if (currentWndProc != PluginWndProc)
       mPrevWinProc = currentWndProc;
+
+    // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
+    // V8.2.2 and V9.1 don't have such problem.
+    if (mPluginType == nsPluginType_PDF) {
+      HWND parent = ::GetParent((HWND)window);
+      if (mParentWnd != parent) {
+        NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
+        mParentWnd = parent;
+        mParentProc = ::GetWindowLongPtr(mParentWnd, GWLP_WNDPROC);
+      }
+    }
   }
 #endif
 
@@ -591,6 +609,12 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
     LONG_PTR style = GetWindowLongPtr(hWnd, GWL_STYLE);
     style &= ~WS_CLIPCHILDREN;
     SetWindowLongPtr(hWnd, GWL_STYLE, style);
+  }
+
+  if (mPluginType == nsPluginType_PDF && mParentWnd) {
+    ::SetWindowLongPtr(mParentWnd, GWLP_WNDPROC, mParentProc);
+    mParentWnd = NULL;
+    mParentProc = NULL;
   }
 
   return NS_OK;

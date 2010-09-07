@@ -389,7 +389,7 @@ function run_test_1() {
     urlTests:           urlTests,
     getURL:             function() AddonRepository.getRecommendedURL()
   }, {
-    initiallyUndefined: true,
+    initiallyUndefined: false,
     preference:         PREF_GETADDONS_BROWSESEARCHRESULTS,
     urlTests:           urlTests.concat(searchURLTests),
     getURL:             function getSearchURL(aTest) {

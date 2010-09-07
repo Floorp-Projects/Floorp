@@ -3833,10 +3833,11 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
                                           getter_AddRefs(bodyContent));
 
         if (! bodyContent) {
-            nsresult rv = document->CreateElem(nsAtomString(nsGkAtoms::treechildren),
-                                               nsnull, kNameSpaceID_XUL,
-                                               PR_FALSE,
-                                               getter_AddRefs(bodyContent));
+            nsresult rv =
+                document->CreateElem(nsDependentAtomString(nsGkAtoms::treechildren),
+                                     nsnull, kNameSpaceID_XUL,
+                                     PR_FALSE,
+                                     getter_AddRefs(bodyContent));
             NS_ENSURE_SUCCESS(rv, rv);
 
             aElement->AppendChildTo(bodyContent, PR_FALSE);

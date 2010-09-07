@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <script>
+    
+      function testDone() {
+        document.body.removeChild(document.body.firstChild);
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        var isOK = false;
+        try {
+          isOK = history.previous != location;
+        } catch(ex) {
+          // history.previous should throw if this is the first page in shistory.
+          isOK = true;
+        }
+        document.body.textContent = isOK ? "PASSED" : "FAILED";
+        opener.ok(isOK, "Duplicate session history transactions should have been removed!");
+        opener.nextTest();
+        window.close();
+      }
+      function ifrload() {
+        setTimeout(testDone, 0);
+      }
+      function test() {
+        var ifr = document.getElementsByTagName("iframe")[0];
+        ifr.onload = ifrload;
+        ifr.src = "data:text/html,doc2";
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(test, 0)"><iframe src="data:text/html,doc1"></iframe>
+  </body>
+</html>
