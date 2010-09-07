@@ -6471,25 +6471,6 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 }
 #endif
 
-mozilla::layers::LayerManager*
-nsWindow::GetLayerManager()
-{
-    GtkWidget *topWidget;
-    GetToplevelWidget(&topWidget);
-
-    nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
-    if (!topWindow) {
-        return nsBaseWidget::GetLayerManager();
-    }
-
-    if (mUseAcceleratedRendering != topWindow->GetAcceleratedRendering()) {
-        mLayerManager = NULL;
-        mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
-    }
-
-    return nsBaseWidget::GetLayerManager();
-}
-
 // return the gfxASurface for rendering to this widget
 gfxASurface*
 nsWindow::GetThebesSurface()
