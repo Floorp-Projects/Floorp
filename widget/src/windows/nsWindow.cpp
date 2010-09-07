@@ -386,6 +386,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mTouchWindow          = PR_FALSE;
   mCustomNonClient      = PR_FALSE;
   mHideChrome           = PR_FALSE;
+  mFullscreenMode       = PR_FALSE;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
@@ -2724,6 +2725,7 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
 #else
 
+  mFullscreenMode = aFullScreen;
   if (aFullScreen) {
     if (mSizeMode == nsSizeMode_Fullscreen)
       return NS_OK;
@@ -5904,6 +5906,8 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
       event.mSizeMode = nsSizeMode_Maximized;
     else if (pl.showCmd == SW_SHOWMINIMIZED)
       event.mSizeMode = nsSizeMode_Minimized;
+    else if (mFullscreenMode)
+      event.mSizeMode = nsSizeMode_Fullscreen;
     else
       event.mSizeMode = nsSizeMode_Normal;
 
@@ -6071,6 +6075,8 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
       sizeMode = nsSizeMode_Maximized;
     else if (pl.showCmd == SW_SHOWMINIMIZED)
       sizeMode = nsSizeMode_Minimized;
+    else if (mFullscreenMode)
+      sizeMode = nsSizeMode_Fullscreen;
     else
       sizeMode = nsSizeMode_Normal;
 
