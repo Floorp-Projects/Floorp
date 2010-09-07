@@ -505,12 +505,10 @@ Content.prototype = {
     this._contextTimeout.clear();
     this._overlayTimeout.clear();
     this._loading = true;
-    this._coalescer.start();
   },
 
   stopLoading: function stopLoading() {
     this._loading = false;
-    this._coalescer.stop();
   },
 
   isSelected: function isSelected() {
