@@ -755,10 +755,20 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
-    if (mResponseHead)
+    if (mResponseHead) {
         SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
                            mResponseHead->ContentLength());
-
+        // If we have a cache entry, set its predicted size to ContentLength to
+        // avoid caching an entry that will exceed the max size limit.
+        if (mCacheEntry) {
+            nsresult rv;
+            PRInt64 predictedDataSize = -1; // -1 in case GetAsInt64 fails.
+            GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, 
+                               &predictedDataSize);
+            rv = mCacheEntry->SetPredictedDataSize(predictedDataSize);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
         gIOService->GetContentSniffers().Count() != 0) {
@@ -3062,10 +3072,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (!httpChannel)
         return NS_OK; // no other options to set
 
-    // transfer the remote flag
-    nsHttpChannel *httpChannelImpl = static_cast<nsHttpChannel*>(httpChannel.get());
-    httpChannelImpl->SetRemoteChannel(mRemoteChannel);
-
     // convey the mApplyConversion flag (bug 91862)
     nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
     if (encodedChannel)
@@ -3080,6 +3086,12 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
+
+    // transfer the remote flag
+    nsCOMPtr<nsIHttpChannelParentInternal> httpInternal = 
+        do_QueryInterface(newChannel);
+    if (httpInternal)
+        httpInternal->SetServicingRemoteChannel(mRemoteChannel);
 
     return NS_OK;
 }
@@ -3529,6 +3541,23 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     mFallbackChannel = PR_TRUE;
     mFallbackKey = aFallbackKey;
 
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIHttpChannelParentInternal
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::GetServicingRemoteChannel(PRBool *value)
+{
+    *value = mRemoteChannel;
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsHttpChannel::SetServicingRemoteChannel(PRBool value)
+{
+    mRemoteChannel = value;
     return NS_OK;
 }
 //-----------------------------------------------------------------------------
