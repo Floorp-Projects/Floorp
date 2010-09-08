@@ -47,6 +47,7 @@ _BROWSER_FILES = \
                  browser_tabview_launch.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_group.js \
+                 browser_tabview_search.js \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)
