@@ -61,7 +61,10 @@ public:
     void GetDPI(double *xDPI, double *yDPI);
 
     // this is in points!
-    const gfxSize& GetSize() const { return mSize; }
+    virtual const gfxIntSize GetSize() const
+    {
+        return gfxIntSize(mSize.width, mSize.height);
+    }
 
     virtual PRInt32 GetDefaultContextFlags() const
     {

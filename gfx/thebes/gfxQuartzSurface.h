@@ -65,7 +65,7 @@ public:
       return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
     }
 
-    const gfxSize& GetSize() const { return mSize; }
+    virtual const gfxIntSize GetSize() const { return gfxIntSize(mSize.width, mSize.height); }
 
     CGContextRef GetCGContext() { return mCGContext; }
 
