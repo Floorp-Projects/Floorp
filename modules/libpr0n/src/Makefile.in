@@ -74,6 +74,9 @@ LOCAL_INCLUDES += \
 			-I$(topsrcdir)/content/base/src \
 			$(NULL)
 
+# Because VectorImage.cpp includes nsSVGUtils.h and nsSVGEffects.h
+LOCAL_INCLUDES += -I$(topsrcdir)/layout/svg/base/src
+
 include $(topsrcdir)/config/rules.mk
 
 # Because imgFrame.cpp includes "cairo.h"
