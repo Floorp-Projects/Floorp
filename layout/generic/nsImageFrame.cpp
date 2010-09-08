@@ -565,10 +565,6 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     return NS_OK;
   }
   
-  // XXX We really need to round this out, now that we're doing better
-  // image scaling!
-  nsRect r = SourceRectToDest(*aRect);
-
   if (IsPendingLoad(aRequest)) {
     // We don't care
     return NS_OK;
@@ -578,6 +574,12 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   // from
   if (!aCurrentFrame)
     return NS_OK;
+
+  // XXX We really need to round this out, now that we're doing better
+  // image scaling!
+  nsRect r = (*aRect == mozilla::imagelib::kFullImageSpaceRect) ?
+    GetInnerArea() :
+    SourceRectToDest(*aRect);
 
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d) -> invalidate dest rect (%d,%d,%d,%d)\n",
