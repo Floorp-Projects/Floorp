@@ -74,6 +74,7 @@ NS_IMPL_ISUPPORTS3(SVGDocumentWrapper,
                    nsIObserver)
 
 SVGDocumentWrapper::SVGDocumentWrapper()
+ : mIgnoreInvalidation(PR_FALSE)
 {
   // Lazy-initialize our "svg" atom.  (It'd be nicer to just use nsGkAtoms::svg
   // directly, but we can't access it from here in non-libxul builds.)
@@ -152,8 +153,11 @@ SVGDocumentWrapper::GetRootLayoutFrame()
 void
 SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 {
+  NS_ABORT_IF_FALSE(!mIgnoreInvalidation, "shouldn't be reentrant");
+  mIgnoreInvalidation = PR_TRUE;
   mViewer->SetBounds(nsIntRect(nsIntPoint(0, 0), aViewportSize));
   FlushLayout();
+  mIgnoreInvalidation = PR_FALSE;
 }
 
 PRBool
@@ -396,6 +400,13 @@ SVGDocumentWrapper::FlushLayout()
 nsSVGSVGElement*
 SVGDocumentWrapper::GetRootSVGElem()
 {
+  if (!mViewer)
+    return nsnull; // Can happen during destruction
+
+  nsIDocument* doc = mViewer->GetDocument();
+  if (!doc)
+    return nsnull; // Can happen during destruction
+
   Element* rootElem = mViewer->GetDocument()->GetRootElement();
   if (!rootElem ||
       rootElem->GetNameSpaceID() != kNameSpaceID_SVG ||

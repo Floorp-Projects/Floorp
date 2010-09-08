@@ -145,6 +145,14 @@ public:
   PRBool    IsAnimated();
 
   /**
+   * Indicates whether we should currently ignore rendering invalidations sent
+   * from the wrapped SVG doc.
+   *
+   * @return PR_TRUE if we should ignore invalidations sent from this SVG doc.
+   */
+  PRBool ShouldIgnoreInvalidation() { return mIgnoreInvalidation; }
+
+  /**
    * Methods to control animation.
    */
   void StartAnimation();
@@ -163,6 +171,7 @@ private:
   nsCOMPtr<nsIDocumentViewer> mViewer;
   nsCOMPtr<nsILoadGroup>      mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
+  PRPackedBool                mIgnoreInvalidation;
 
   // Lazily-initialized pointer to nsGkAtoms::svg, to make life easier in
   // non-libxul builds, which don't let us reference nsGkAtoms from imagelib.
