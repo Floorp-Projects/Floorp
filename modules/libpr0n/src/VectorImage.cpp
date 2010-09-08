@@ -314,8 +314,8 @@ VectorImage::GetHeight(PRInt32* aHeight)
     return NS_ERROR_FAILURE;
   }
 
-  if (mSVGDocumentWrapper->GetWidthOrHeight(SVGDocumentWrapper::eHeight,
-                                            *aHeight)) {
+  if (!mSVGDocumentWrapper->GetWidthOrHeight(SVGDocumentWrapper::eHeight,
+                                             *aHeight)) {
     return NS_ERROR_FAILURE;
   }
 
