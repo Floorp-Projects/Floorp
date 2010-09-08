@@ -381,7 +381,9 @@ Narcissus.parser = (function() {
 
         RETURN: {
             build: function(t) {
-                return new Node(t, RETURN);
+                var n = new Node(t, RETURN);
+                n.value = undefined;
+                return n;
             },
 
             setValue: function(n, e) {
