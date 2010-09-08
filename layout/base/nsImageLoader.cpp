@@ -203,8 +203,10 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
     // We're in the middle of a paint anyway
     return NS_OK;
   }
-  
-  nsRect r = aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
+
+  nsRect r = (*aDirtyRect == mozilla::imagelib::kFullImageSpaceRect) ?
+    nsRect(nsPoint(0, 0), mFrame->GetSize()) :
+    aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 
   DoRedraw(&r);
 

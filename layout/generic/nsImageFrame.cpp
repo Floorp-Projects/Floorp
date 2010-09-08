@@ -659,8 +659,10 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
     // We don't care about it
     return NS_OK;
   }
-  
-  nsRect r = SourceRectToDest(*aDirtyRect);
+
+  nsRect r = (*aDirtyRect == mozilla::imagelib::kFullImageSpaceRect) ?
+    GetInnerArea() :
+    SourceRectToDest(*aDirtyRect);
 
   // Update border+content to account for image change
   Invalidate(r);
