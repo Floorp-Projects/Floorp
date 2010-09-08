@@ -114,6 +114,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 findLastInTableScopeOrRootTbodyTheadTfoot();
     PRInt32 findLast(nsIAtom* name);
     PRInt32 findLastInTableScope(nsIAtom* name);
+    PRInt32 findLastInButtonScope(nsIAtom* name);
     PRInt32 findLastInScope(nsIAtom* name);
     PRInt32 findLastInListScope(nsIAtom* name);
     PRInt32 findLastInScopeHn();
