@@ -958,19 +958,9 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
 #else
 
-    EGLDisplay display;
     EGLConfig  config;
     EGLSurface surface;
     EGLContext context;
-
-    display = sEGLLibrary.fGetDisplay(aWidget->GetNativeData(NS_NATIVE_DISPLAY));
-    if (!display) {
-        return nsnull;
-    }
-
-    if (!sEGLLibrary.fInitialize(display, NULL, NULL)) {
-        return nsnull;
-    }
 
     EGLint attribs[] = {
         LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_WINDOW_BIT,
@@ -988,7 +978,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     EGLConfig configs[64];
     EGLint ncfg = 64;
-    if (!sEGLLibrary.fChooseConfig(display, attribs, configs, ncfg, &ncfg) ||
+    if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(), attribs, configs, ncfg, &ncfg) ||
         ncfg < 1)
     {
         return nsnull;
@@ -1022,11 +1012,13 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     //
     // We also only have one true "window", so we just use it directly and ignore
     // what was passed in.
+    printf_stderr("... requesting window surface from bridge\n");
     surface = mozilla::AndroidBridge::Bridge()->
-        CallEglCreateWindowSurface(display, config,
+        CallEglCreateWindowSurface(EGL_DISPLAY(), config,
                                    mozilla::AndroidBridge::Bridge()->SurfaceView());
+    printf_stderr("got surface %p\n", surface);
 #else
-    surface = sEGLLibrary.fCreateWindowSurface(display, config, GET_NATIVE_WINDOW(aWidget), 0);
+    surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);
 #endif
 
     if (!surface) {
@@ -1034,7 +1026,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     }
 
     if (!sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API)) {
-        sEGLLibrary.fDestroySurface(display, surface);
+        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
         return nsnull;
     }
 
@@ -1046,7 +1038,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     GLContextEGL *shareContext = GetGlobalContextEGL();
 
 TRY_AGAIN_NO_SHARING:
-    context = sEGLLibrary.fCreateContext(display,
+    context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
                                          config,
                                          shareContext ? shareContext->mContext : EGL_NO_CONTEXT,
                                          cxattribs);
@@ -1058,7 +1050,7 @@ TRY_AGAIN_NO_SHARING:
         }
 
         NS_WARNING("CreateForWindow -- no context, giving up");
-        sEGLLibrary.fDestroySurface(display, surface);
+        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
         return nsnull;
     }
 
