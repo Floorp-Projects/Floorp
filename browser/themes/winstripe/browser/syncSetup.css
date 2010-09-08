@@ -22,8 +22,7 @@ wizard {
 }
 
 
-.accountChoiceButton,
-.mergeChoiceButton {
+.accountChoiceButton {
   -moz-appearance: none;
   border: #999999 1px solid !important;
   padding: 2px 3px;
@@ -35,14 +34,9 @@ wizard {
     rgba(0, 0, 0, 0.1) 0px 1px 0px;
 }
 
-.accountChoiceButton:hover,
-.mergeChoiceButton[selected="true"] {
+.accountChoiceButton:hover {
   background-color: -moz-MenuHover;
   color: -moz-MenuHoverText;
-}
-
-.mergeChoiceButtonBox {
-  padding: 0.2em;
 }
 
 .success,
