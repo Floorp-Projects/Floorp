@@ -91,8 +91,14 @@ let gSyncUI = {
     try {
       firstSync = Services.prefs.getCharPref("services.sync.firstSync");
     } catch (e) { }
-    return Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
+    return Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED ||
            firstSync == "notReady";
+  },
+
+  _isLoggedIn: function() {
+    if (this._needsSetup())
+      return false;
+    return Weave.Service.isLoggedIn;
   },
 
   updateUI: function SUI_updateUI() {
@@ -101,13 +107,13 @@ let gSyncUI = {
     document.getElementById("sync-menu").hidden = needsSetup;
 
     if (gBrowser) {
-      let showLabel = !Weave.Service.isLoggedIn && !needsSetup;
+      let showLabel = !this._isLoggedIn() && !needsSetup;
       let button = document.getElementById("sync-status-button");
       button.setAttribute("class", showLabel ? "statusbarpanel-iconic-text"
                                              : "statusbarpanel-iconic");
       button.image = "chrome://browser/skin/sync-16.png";
 
-      if (!Weave.Service.isLoggedIn) {
+      if (!this._isLoggedIn()) {
         //XXXzpao When we move the string bundle, we can add more and make this
         //        say "needs setup" or something similar. (bug 583381)
         button.removeAttribute("tooltiptext");
