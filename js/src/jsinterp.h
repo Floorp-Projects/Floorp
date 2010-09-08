@@ -67,13 +67,17 @@ enum JSFrameFlags {
     JSFRAME_FLOATING_GENERATOR =   0x20, /* frame copy stored in a generator obj */
     JSFRAME_YIELDING           =   0x40, /* js_Interpret dispatched JSOP_YIELD */
     JSFRAME_GENERATOR          =   0x80, /* frame belongs to generator-iterator */
-    JSFRAME_BAILING            =  0x100, /* walking out of a method JIT'd frame */
-    JSFRAME_RECORDING          =  0x200, /* recording a trace */
-    JSFRAME_BAILED_AT_RETURN   =  0x400, /* bailed at JSOP_RETURN */
-    JSFRAME_DUMMY              =  0x800, /* frame is a dummy frame */
-    JSFRAME_IN_IMACRO          = 0x1000, /* frame has imacpc value available */
+    JSFRAME_BAILED_AT_RETURN   =  0x100, /* bailed at JSOP_RETURN */
+    JSFRAME_DUMMY              =  0x200, /* frame is a dummy frame */
+    JSFRAME_IN_IMACRO          =  0x400, /* frame has imacpc value available */
 	
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
+};
+
+/* Flags to toggle Interpret() execution. */
+enum JSInterpFlags {
+    JSINTERP_RECORD         =   0x01, /* interpreter has been started to record/run traces */
+    JSINTERP_SAFEPOINT      =   0x02  /* interpreter should leave on a method JIT safe point */
 };
 
 namespace js { namespace mjit {
@@ -757,7 +761,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
  * pointed to by cx->fp until completion or error.
  */
 extern JS_REQUIRES_STACK bool
-Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0);
+Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0, uintN interpFlags = 0);
 
 extern JS_REQUIRES_STACK bool
 RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);

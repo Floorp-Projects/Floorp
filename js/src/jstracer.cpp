@@ -295,7 +295,7 @@ ValueToTypeChar(const Value &v)
  * Number of iterations of a loop where we start tracing.  That is, we don't
  * start tracing until the beginning of the HOTLOOP-th iteration.
  */
-#define HOTLOOP 4
+#define HOTLOOP 8
 
 /* Attempt recording this many times before blacklisting permanently. */
 #define BL_ATTEMPTS 2
@@ -304,7 +304,7 @@ ValueToTypeChar(const Value &v)
 #define BL_BACKOFF 32
 
 /* Minimum number of times a loop must execute, or else it is blacklisted. */
-#define MIN_LOOP_ITERS 2
+#define MIN_LOOP_ITERS 8
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 1
@@ -16222,11 +16222,8 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
     JS_ASSERT(TRACE_RECORDER(cx));
 
     /* Locked and loaded with a recorder. Ask the interperter to go run some code. */
-    fp->flags |= JSFRAME_RECORDING;
-    if (!Interpret(cx, fp, inlineCallCount))
+    if (!Interpret(cx, fp, inlineCallCount, JSINTERP_RECORD))
         return TPA_Error;
-
-    fp->flags &= ~JSFRAME_RECORDING;
 
     return TPA_RanStuff;
 }
