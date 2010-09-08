@@ -36,7 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Weave'];
+// 'Weave' continues to be exported for backwards compatibility.
+const EXPORTED_SYMBOLS = ["Service", "Weave"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -58,34 +59,15 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/ext/Sync.js");
+Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/main.js");
 
-// for export
-let Weave = {};
-Cu.import("resource://services-sync/auth.js", Weave);
-Cu.import("resource://services-sync/constants.js", Weave);
-Cu.import("resource://services-sync/base_records/keys.js", Weave);
-Cu.import("resource://services-sync/engines.js", Weave);
-Cu.import("resource://services-sync/engines/bookmarks.js", Weave);
-Cu.import("resource://services-sync/engines/clients.js", Weave);
-Cu.import("resource://services-sync/engines/forms.js", Weave);
-Cu.import("resource://services-sync/engines/history.js", Weave);
-Cu.import("resource://services-sync/engines/prefs.js", Weave);
-Cu.import("resource://services-sync/engines/passwords.js", Weave);
-Cu.import("resource://services-sync/engines/tabs.js", Weave);
-Cu.import("resource://services-sync/ext/Preferences.js");
-Cu.import("resource://services-sync/identity.js", Weave);
-Cu.import("resource://services-sync/notifications.js", Weave);
-Cu.import("resource://services-sync/resource.js", Weave);
-Cu.import("resource://services-sync/status.js", Weave);
-Cu.import("resource://services-sync/stores.js", Weave);
-Cu.import("resource://services-sync/util.js", Weave);
-
-Utils.lazy(Weave, 'Service', WeaveSvc);
+Utils.lazy(this, 'Service', WeaveSvc);
 
 /*
  * Service singleton
@@ -285,11 +267,14 @@ WeaveSvc.prototype = {
       this._log.info("Weave Sync disabled");
 
     // Create Weave identities (for logging in, and for encryption)
-    ID.set('WeaveID', new Identity(PWDMGR_PASSWORD_REALM, this.username));
-    Auth.defaultAuthenticator = new BasicAuthenticator(ID.get('WeaveID'));
+    let id = ID.get("WeaveID");
+    if (!id)
+      id = ID.set("WeaveID", new Identity(PWDMGR_PASSWORD_REALM, this.username));
+    Auth.defaultAuthenticator = new BasicAuthenticator(id);
 
-    ID.set('WeaveCryptoID',
-           new Identity(PWDMGR_PASSPHRASE_REALM, this.username));
+    if (!ID.get("WeaveCryptoID"))
+      ID.set("WeaveCryptoID",
+             new Identity(PWDMGR_PASSPHRASE_REALM, this.username));
 
     this._updateCachedURLs();
 
@@ -311,25 +296,9 @@ WeaveSvc.prototype = {
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {
-    if (!this.enabled) {
-      Status.service = STATUS_DISABLED;
-    }
-    else if (!this.username) {
-      this._log.debug("checkSetup: no username set");
-      Status.login = LOGIN_FAILED_NO_USERNAME;
-    }
-    else if (!Utils.mpLocked() && !this.password) {
-      this._log.debug("checkSetup: no password set");
-      Status.login = LOGIN_FAILED_NO_PASSWORD;
-    }
-    else if (!Utils.mpLocked() && !this.passphrase) {
-      this._log.debug("checkSetup: no passphrase set");
-      Status.login = LOGIN_FAILED_NO_PASSPHRASE;
-    }
-    else
-      Status.service = STATUS_OK;
-
-    return Status.service;
+    if (!this.enabled)
+      return Status.service = STATUS_DISABLED;
+    return Status.checkSetup();
   },
 
   _migratePrefs: function _migratePrefs() {
@@ -875,7 +844,7 @@ WeaveSvc.prototype = {
 
     let url = this.userAPI + username;
     let res = new Resource(url);
-    res.authenticator = new Weave.NoOpAuthenticator();
+    res.authenticator = new NoOpAuthenticator();
 
     // Hint to server to allow scripted user creation or otherwise
     // ignore captcha.
@@ -907,7 +876,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.trace("Fetching global metadata record");
-    let meta = Records.import(this.metaURL);
+    let meta = Records.get(this.metaURL);
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
@@ -1378,6 +1347,13 @@ WeaveSvc.prototype = {
       this.keysModified = info.obj.keys;
     }
 
+    // If the modified time of the meta record ever changes, clear the cache.
+    if (info.obj.meta != this.metaModified) {
+      this._log.debug("Clearing cached meta record.");
+      Records.del(this.metaURL);
+      this.metaModified = info.obj.meta;
+    }
+
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
 
@@ -1757,4 +1733,4 @@ WeaveSvc.prototype = {
 };
 
 // Load Weave on the first time this file is loaded
-Weave.Service.onStartup();
+Service.onStartup();

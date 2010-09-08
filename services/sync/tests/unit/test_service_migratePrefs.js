@@ -38,7 +38,7 @@ function run_test() {
   globalPref.set("extensions.weave.tooLate", "already migrated!");
   do_check_eq(globalPref.get("extensions.weave.tooLate"), "already migrated!");
   do_check_eq(globalPref.get("services.sync.tooLate"), null);
-  Weave.Service._migratePrefs();
+  Service._migratePrefs();
   do_check_eq(globalPref.get("extensions.weave.tooLate"), "already migrated!");
   do_check_eq(globalPref.get("services.sync.tooLate"), null);
 
