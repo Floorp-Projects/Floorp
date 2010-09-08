@@ -877,31 +877,50 @@ toolbar[iconsize="small"] #fullscreen-button {
   direction: ltr;
 }
 
+/* Favicon */
+#page-proxy-favicon,
+#urlbar-throbber {
+  width: 16px;
+  height: 16px;
+}
+
+#page-proxy-stack {
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
+  background: url(urlbar-favicon-glow.png) center center no-repeat;
+}
+
+#page-proxy-favicon:not([src]) {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#page-proxy-favicon[pageproxystate="invalid"] {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+
+#urlbar-throbber {
+  list-style-image: url("chrome://browser/skin/places/searching_16.png");
+}
+
 /* Identity indicator */
-
-#identity-container {
-  min-height: 20px;
-}
-
-#identity-container:-moz-locale-dir(rtl) {
-  -moz-border-start: 1px solid ThreeDShadow;
-}
-
-#notification-popup-box,
 #identity-box {
-  background-color: rgb(95%,95%,95%);
-  background-image: -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
+  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
+  color: -moz-dialogtext;
   -moz-border-end: 1px solid ThreeDShadow;
-  color: #444;
-  text-shadow: 0 1px 0 rgba(255,255,255,.25);
 }
 
-#identity-box {
-  padding: 0 1px;
+#identity-box:-moz-locale-dir(rtl) {
+  -moz-border-start: 1px solid ThreeDShadow;
 }
 
 #identity-box:-moz-focusring {
   outline: 1px dotted -moz-DialogText;
+}
+
+#identity-box:hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
 }
 
 #identity-box:hover:active,
@@ -910,27 +929,17 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 #identity-icon-labels {
-  -moz-padding-start: 4px;
-  -moz-transform: translate(0, -1px);
+  padding: 0 2px;
 }
 
 #identity-box.verifiedDomain {
-  background-color: hsl(219,75%,80%);
-  color: #333;
+  background-color: rgba(30, 80, 170, 0.7);
+  color: white;
 }
 
 #identity-box.verifiedIdentity {
-  background-color: hsl(92,75%,72%);
-}
-
-#identity-dropmarker {
-  -moz-appearance: toolbarbutton-dropdown;
-  width: 12px;
-  height: 12px;
-}
-
-#urlbar[pageproxystate="invalid"] > #identity-container > #identity-box {
-  opacity: .5;
+  background-color: rgba(50, 150, 50, 0.8);
+  color: white;
 }
 
 /* Identity popup icons */
@@ -1026,9 +1035,8 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 /* Notification icon box */
-
 #notification-popup-box {
-  padding: 0 3px;
+  margin: 0 3px;
 }
 
 .notification-anchor-icon {
