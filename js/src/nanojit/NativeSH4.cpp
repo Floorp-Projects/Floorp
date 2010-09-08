@@ -2661,7 +2661,7 @@ namespace nanojit
         findSpecificRegFor(value, reg);
     }
 
-    void Assembler::asm_spill(Register reg, int offset, bool /* pop */, bool quad) {
+    void Assembler::asm_spill(Register reg, int offset, bool quad) {
         (void)quad;
 
         if (offset == 0)
@@ -3161,7 +3161,6 @@ namespace nanojit
     void Assembler::nRegisterResetAll(RegAlloc& regs) {
         regs.clear();
         regs.free = GpRegs | FpRegs;
-        debug_only( regs.managed = regs.free; )
     }
 
     // Keep in sync' with Assembler::asm_param().
