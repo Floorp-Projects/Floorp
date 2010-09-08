@@ -303,6 +303,7 @@ abstract public class GeckoApp
         byte[] buf = new byte[8192];
         unpackFile(zip, buf, null, "application.ini");
         unpackFile(zip, buf, null, getContentProcessName());
+        unpackFile(zip, buf, null, "update.locale");
 
         try {
             ZipEntry componentsList = zip.getEntry("components/components.manifest");
