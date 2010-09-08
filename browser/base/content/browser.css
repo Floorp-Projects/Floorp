@@ -181,6 +181,11 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }
 
+#urlbar-throbber:not([busy="true"]),
+#urlbar-throbber[busy="true"] + #page-proxy-favicon {
+  display: none;
+}
+
 #feed-button > .button-box > .box-inherit > .button-text,
 #feed-button > .button-box > .button-menu-dropmarker {
   display: none;
@@ -207,7 +212,7 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   direction: ltr;
 }
 
-#identity-box.verifiedIdentity > #identity-icon-labels > #identity-icon-label {
+#identity-box.verifiedIdentity > #identity-box-inner > #identity-icon-labels > #identity-icon-label {
   -moz-margin-end: 0.25em !important;
 }
 
