@@ -2309,15 +2309,12 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool isExternalResource = !!mDocument->GetDisplayDocument();
-
   // Create a widget if we were given a parent widget or don't have a
   // container view that we can hook up to without a widget.
-  // Don't create widgets for...
-  //  - external resource documents, since they're not displayed.
-  //  - documents being used as images, since they'll be painted into
-  //    someone else's widget when they're displayed.
-  if (!mDocument->IsBeingUsedAsImage() && !isExternalResource &&
+  // Don't create widgets for ResourceDocs (external resources & svg images),
+  // because when they're displayed, they're painted into *another* document's
+  // widget.
+  if (!mDocument->IsResourceDoc() &&
       (mParentWidget || !aContainerView)) {
     // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
     // otherwise the view will find its own parent widget and "do the right thing" to
