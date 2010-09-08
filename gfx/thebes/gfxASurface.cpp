@@ -460,10 +460,19 @@ static const char *sSurfaceNamesForSurfaceType[] = {
     "gfx/surface/quartzimage",
     "gfx/surface/script",
     "gfx/surface/qpainter",
-    "gfx/surface/ddraw"
+    "gfx/surface/recording",
+    "gfx/surface/vg",
+    "gfx/surface/gl",
+    "gfx/surface/drm",
+    "gfx/surface/tee",
+    "gfx/surface/xml",
+    "gfx/surface/skia",
+    "gfx/surface/ddraw",
+    "gfx/surface/d2d"
 };
 
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceNamesForSurfaceType) == gfxASurface::SurfaceTypeMax);
+PR_STATIC_ASSERT(CAIRO_SURFACE_TYPE_D2D == gfxASurface::SurfaceTypeD2D);
 
 static const char *
 SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
