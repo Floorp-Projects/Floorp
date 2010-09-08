@@ -886,14 +886,14 @@
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
                onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
-               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
+               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
+               ondragstart="gIdentityHandler.onDragStart(event);">
             <hbox id="identity-box-inner" align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        pageproxystate="invalid"
-                       ondragstart="proxyIconDNDObserver.onDragStart(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
               <hbox id="identity-icon-labels">
