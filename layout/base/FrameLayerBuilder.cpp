@@ -879,7 +879,9 @@ IsText(nsDisplayItem* aItem) {
   case nsDisplayItem::TYPE_TEXT:
   case nsDisplayItem::TYPE_BULLET:
   case nsDisplayItem::TYPE_HEADER_FOOTER:
+#ifdef MOZ_MATHML
   case nsDisplayItem::TYPE_MATHML_CHAR_FOREGROUND:
+#endif
 #ifdef MOZ_XUL
   case nsDisplayItem::TYPE_XUL_TEXT_BOX:
 #endif
