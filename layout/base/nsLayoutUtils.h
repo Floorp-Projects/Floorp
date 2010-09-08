@@ -1017,6 +1017,25 @@ public:
                                   const nsRect*        aSourceArea = nsnull);
 
   /**
+   * Given an imgIContainer, this method attempts to obtain an intrinsic
+   * px-valued height & width for it.  If the imgIContainer has a non-pixel
+   * value for either height or width, this method tries to generate a pixel
+   * value for that dimension using the intrinsic ratio (if available).
+   *
+   * This method will always set aGotWidth and aGotHeight to indicate whether
+   * we were able to successfully obtain (or compute) a value for each
+   * dimension.
+   *
+   * NOTE: This method is similar to ComputeSizeWithIntrinsicDimensions.  The
+   * difference is that this one is simpler and is suited to places where we
+   * have less information about the frame tree.
+   */
+  static void ComputeSizeForDrawing(imgIContainer* aImage,
+                                    nsIntSize&     aImageSize,
+                                    PRBool&        aGotWidth,
+                                    PRBool&        aGotHeight);
+
+  /**
    * Given a source area of an image (in appunits) and a destination area
    * that we want to map that source area too, computes the area that
    * would be covered by the whole image. This is useful for passing to

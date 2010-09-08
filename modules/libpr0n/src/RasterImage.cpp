@@ -2425,6 +2425,7 @@ RasterImage::SyncDecode()
  *                      [const] in gfxMatrix aUserSpaceToImageSpace,
  *                      [const] in gfxRect aFill,
  *                      [const] in nsIntRect aSubimage,
+ *                      [const] in nsIntSize aViewportSize,
  *                      in PRUint32 aFlags); */
 NS_IMETHODIMP
 RasterImage::Draw(gfxContext *aContext,
@@ -2432,6 +2433,7 @@ RasterImage::Draw(gfxContext *aContext,
                   const gfxMatrix &aUserSpaceToImageSpace,
                   const gfxRect &aFill,
                   const nsIntRect &aSubimage,
+                  const nsIntSize& /*aViewportSize - ignored*/,
                   PRUint32 aFlags)
 {
   if (mError)
