@@ -197,7 +197,7 @@ function (aDescriptionURL)
   if (browser.shouldLoadFavIcon(browser.selectedBrowser
                                        .contentDocument
                                        .documentURIObject))
-    iconURL = win.gProxyFavIcon.getAttribute("src");
+    iconURL = win.gBrowser.getIcon();
   
   if (!this.validateSearchEngine(aDescriptionURL, iconURL))
     return;
