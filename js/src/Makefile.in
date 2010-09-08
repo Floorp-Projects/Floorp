@@ -159,7 +159,6 @@ CPPSRCS		= \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
-		jstask.cpp \
 		jstypedarray.cpp \
 		jsutil.cpp \
 		jswrapper.cpp \
@@ -223,7 +222,6 @@ INSTALLED_HEADERS = \
 		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
-		jstask.h \
 		jstracer.h \
 		jstypedarray.h \
 		jstypes.h \

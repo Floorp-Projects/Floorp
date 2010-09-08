@@ -28,7 +28,6 @@ function genFunDecl(id, params, body) Pattern({ type: "FunctionDeclaration",
 function varDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "var" })
 function letDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "let" })
 function constDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "const" })
-function blockStmt(body) Pattern({ type: "BlockStatement", body: body })
 function ident(name) Pattern({ type: "Identifier", name: name })
 function dotExpr(obj, id) Pattern({ type: "MemberExpression", computed: false, object: obj, property: id })
 function memExpr(obj, id) Pattern({ type: "MemberExpression", computed: true, object: obj, property: id })
@@ -37,7 +36,7 @@ function forInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: lhs, 
 function forEachInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body, each: true })
 function breakStmt(lab) Pattern({ type: "BreakStatement", label: lab })
 function continueStmt(lab) Pattern({ type: "ContinueStatement", label: lab })
-function blockStmt(stmts) Pattern({ type: "BlockStatement", body: stmts })
+function blockStmt(body) Pattern({ type: "BlockStatement", body: body })
 var emptyStmt = Pattern({ type: "EmptyStatement" })
 function ifStmt(test, cons, alt) Pattern({ type: "IfStatement", test: test, alternate: alt, consequent: cons })
 function labStmt(lab, stmt) Pattern({ type: "LabeledStatement", label: lab, body: stmt })
@@ -49,6 +48,7 @@ function caseClause(test, stmts) Pattern({ type: "SwitchCase", test: test, conse
 function defaultClause(stmts) Pattern({ type: "SwitchCase", test: null, consequent: stmts })
 function catchClause(id, guard, body) Pattern({ type: "CatchClause", param: id, guard: guard, body: body })
 function tryStmt(body, catches, fin) Pattern({ type: "TryStatement", block: body, handler: catches, finalizer: fin })
+function letStmt(head, body) Pattern({ type: "LetStatement", head: head, body: body })
 function funExpr(id, args, body, gen) Pattern({ type: "FunctionExpression",
                                                 id: id,
                                                 params: args,
@@ -75,6 +75,7 @@ function objExpr(elts) Pattern({ type: "ObjectExpression", properties: elts })
 function compExpr(body, blocks, filter) Pattern({ type: "ComprehensionExpression", body: body, blocks: blocks, filter: filter })
 function genExpr(body, blocks, filter) Pattern({ type: "GeneratorExpression", body: body, blocks: blocks, filter: filter })
 function graphExpr(idx, body) Pattern({ type: "GraphExpression", index: idx, expression: body })
+function letExpr(head, body) Pattern({ type: "LetExpression", head: head, body: body })
 function idxExpr(idx) Pattern({ type: "GraphIndexExpression", index: idx })
 
 function compBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false })
@@ -91,6 +92,7 @@ function blockPatt(patt) program([exprStmt(funExpr(null, [], blockStmt([blockStm
 var xmlAnyName = Pattern({ type: "XMLAnyName" });
 
 function xmlQualId(left, right, computed) Pattern({ type: "XMLQualifiedIdentifier", left: left, right: right, computed: computed })
+function xmlFuncQualId(right, computed) Pattern({ type: "XMLFunctionQualifiedIdentifier", right: right, computed: computed })
 function xmlAttrSel(id) Pattern({ type: "XMLAttributeSelector", attribute: id })
 function xmlFilter(left, right) Pattern({ type: "XMLFilterExpression", left: left, right: right })
 function xmlPointTag(contents) Pattern({ type: "XMLPointTag", contents: contents })
@@ -101,6 +103,7 @@ function xmlElt(contents) Pattern({ type: "XMLElement", contents: contents })
 function xmlAttr(value) Pattern({ type: "XMLAttribute", value: value })
 function xmlText(text) Pattern({ type: "XMLText", text: text })
 function xmlPI(target, contents) Pattern({ type: "XMLProcessingInstruction", target: target, contents: contents })
+function xmlDefNS(ns) Pattern({ type: "XMLDefaultDeclaration", namespace: ns })
 
 function assertBlockStmt(src, patt) {
     blockPatt(patt).assert(Reflect.parse(blockSrc(src)));
@@ -156,6 +159,15 @@ function assertDecl(src, patt) {
     assertBlockDecl(src, patt);
 }
 
+function assertError(src, errorType) {
+    try {
+        Reflect.parse(src);
+    } catch (expected if expected instanceof errorType) {
+        return;
+    }
+    throw new Error("expected " + errorType.name + " for " + uneval(src));
+}
+
 // general tests
 
 // NB: These are useful but for now trace-test doesn't do I/O reliably.
@@ -181,6 +193,23 @@ assertDecl("function foo() { }",
            funDecl(ident("foo"), [], blockStmt([])));
 assertDecl("function foo() { return 42 }",
            funDecl(ident("foo"), [], blockStmt([returnStmt(lit(42))])));
+
+
+// Bug 591437: rebound args have their defs turned into uses
+assertDecl("function f(a) { function a() { } }",
+           funDecl(ident("f"), [ident("a")], blockStmt([funDecl(ident("a"), [], blockStmt([]))])));
+assertDecl("function f(a,b,c) { function b() { } }",
+           funDecl(ident("f"), [ident("a"),ident("b"),ident("c")], blockStmt([funDecl(ident("b"), [], blockStmt([]))])));
+assertDecl("function f(a,[x,y]) { function a() { } }",
+           funDecl(ident("f"),
+                   [ident("a"), arrPatt([ident("x"), ident("y")])],
+                   blockStmt([funDecl(ident("a"), [], blockStmt([]))])));
+
+// Bug 591450: this test currently crashes because of a bug in jsparse
+// assertDecl("function f(a,[x,y],b,[w,z],c) { function b() { } }",
+//            funDecl(ident("f"),
+//                    [ident("a"), arrPatt([ident("x"), ident("y")]), ident("b"), arrPatt([ident("w"), ident("z")]), ident("c")],
+//                    blockStmt([funDecl(ident("b"), [], blockStmt([]))])));
 
 
 // expressions
@@ -355,6 +384,21 @@ assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } fina
                      catchClause(ident("e"), ident("bar"), blockStmt([])),
                      catchClause(ident("e"), null, blockStmt([])) ],
                    blockStmt([])));
+
+// redeclarations (TOK_NAME nodes with lexdef)
+
+assertStmt("function f() { function g() { } function g() { } }",
+           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+                                              funDecl(ident("g"), [], blockStmt([]))])));
+
+assertStmt("function f() { function g() { } function g() { return 42 } }",
+           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+                                              funDecl(ident("g"), [], blockStmt([returnStmt(lit(42))]))])));
+
+assertStmt("function f() { var x = 42; var x = 43; }",
+           funDecl(ident("f"), [], blockStmt([varDecl([{ id: ident("x"), init: lit(42) }]),
+                                              varDecl([{ id: ident("x"), init: lit(43) }])])));
+
 
 assertDecl("var {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
                                           init: ident("foo") }]));
@@ -539,6 +583,32 @@ assertStmt("for each ({a:x,b:y,c:z} in foo);", forEachInStmt(axbycz, ident("foo"
 assertStmt("for each (var [x,y,z] in foo);", forEachInStmt(varDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each (let [x,y,z] in foo);", forEachInStmt(letDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each ([x,y,z] in foo);", forEachInStmt(xyz, ident("foo"), emptyStmt));
+assertError("for (const x in foo);", SyntaxError);
+assertError("for (const {a:x,b:y,c:z} in foo);", SyntaxError);
+assertError("for (const [x,y,z] in foo);", SyntaxError);
+assertError("for each (const x in foo);", SyntaxError);
+assertError("for each (const {a:x,b:y,c:z} in foo);", SyntaxError);
+assertError("for each (const [x,y,z] in foo);", SyntaxError);
+
+// destructuring in for-in and for-each-in loop heads with initializers
+
+assertStmt("for (var {a:x,b:y,c:z} = 22 in foo);", forInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (let {a:x,b:y,c:z} = 22 in foo);", forInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (var [x,y,z] = 22 in foo);", forInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (let [x,y,z] = 22 in foo);", forInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (var {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (let {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (var [x,y,z] = 22 in foo);", forEachInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for each (let [x,y,z] = 22 in foo);", forEachInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertError("for (x = 22 in foo);", SyntaxError);
+assertError("for ({a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for ([x,y,z] = 22 in foo);", SyntaxError);
+assertError("for (const x = 22 in foo);", SyntaxError);
+assertError("for (const {a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for (const [x,y,z] = 22 in foo);", SyntaxError);
+assertError("for each (const x = 22 in foo);", SyntaxError);
+assertError("for each (const {a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for each (const [x,y,z] = 22 in foo);", SyntaxError);
 
 // expression closures
 
@@ -644,7 +714,53 @@ assertExpr("( [x,y,z] for each (x in foo) for each (y in bar) for each (z in baz
 
 // sharp variables
 
-assertExpr("#1={me:#1#}", graphExpr(1, objExpr([{ key: ident("me"), value: idxExpr(1) }])))
+assertExpr("#1={me:#1#}", graphExpr(1, objExpr([{ key: ident("me"), value: idxExpr(1) }])));
+
+// let expressions
+
+assertExpr("(let (x=1) x)", letExpr([{ id: ident("x"), init: lit(1) }], ident("x")));
+assertExpr("(let (x=1,y=2) y)", letExpr([{ id: ident("x"), init: lit(1) },
+                                         { id: ident("y"), init: lit(2) }],
+                                        ident("y")));
+assertExpr("(let (x=1,y=2,z=3) z)", letExpr([{ id: ident("x"), init: lit(1) },
+                                             { id: ident("y"), init: lit(2) },
+                                             { id: ident("z"), init: lit(3) }],
+                                            ident("z")));
+assertExpr("(let (x) x)", letExpr([{ id: ident("x"), init: null }], ident("x")));
+assertExpr("(let (x,y) y)", letExpr([{ id: ident("x"), init: null },
+                                     { id: ident("y"), init: null }],
+                                    ident("y")));
+assertExpr("(let (x,y,z) z)", letExpr([{ id: ident("x"), init: null },
+                                       { id: ident("y"), init: null },
+                                       { id: ident("z"), init: null }],
+                                      ident("z")));
+assertExpr("(let (x = 1, y = x) y)", letExpr([{ id: ident("x"), init: lit(1) },
+                                              { id: ident("y"), init: ident("x") }],
+                                             ident("y")));
+assertError("(let (x = 1, x = 2) x)", TypeError);
+
+// let statements
+
+assertStmt("let (x=1) { }", letStmt([{ id: ident("x"), init: lit(1) }], blockStmt([])));
+assertStmt("let (x=1,y=2) { }", letStmt([{ id: ident("x"), init: lit(1) },
+                                         { id: ident("y"), init: lit(2) }],
+                                        blockStmt([])));
+assertStmt("let (x=1,y=2,z=3) { }", letStmt([{ id: ident("x"), init: lit(1) },
+                                             { id: ident("y"), init: lit(2) },
+                                             { id: ident("z"), init: lit(3) }],
+                                            blockStmt([])));
+assertStmt("let (x) { }", letStmt([{ id: ident("x"), init: null }], blockStmt([])));
+assertStmt("let (x,y) { }", letStmt([{ id: ident("x"), init: null },
+                                     { id: ident("y"), init: null }],
+                                    blockStmt([])));
+assertStmt("let (x,y,z) { }", letStmt([{ id: ident("x"), init: null },
+                                       { id: ident("y"), init: null },
+                                       { id: ident("z"), init: null }],
+                                      blockStmt([])));
+assertStmt("let (x = 1, y = x) { }", letStmt([{ id: ident("x"), init: lit(1) },
+                                              { id: ident("y"), init: ident("x") }],
+                                             blockStmt([])));
+assertError("let (x = 1, x = 2) { }", TypeError);
 
 
 // E4X
@@ -658,6 +774,8 @@ assertExpr("x::[foo()]", xmlQualId(ident("x"), callExpr(ident("foo"), []), true)
 assertExpr("*::*", xmlQualId(xmlAnyName, ident("*"), false));
 assertExpr("*::[foo]", xmlQualId(xmlAnyName, ident("foo"), true));
 assertExpr("*::[foo()]", xmlQualId(xmlAnyName, callExpr(ident("foo"), []), true));
+assertExpr("function::x", xmlFuncQualId(ident("x"), false));
+assertExpr("function::[foo]", xmlFuncQualId(ident("foo"), true));
 assertExpr("@foo", xmlAttrSel(ident("foo")));
 assertExpr("x.(p)", xmlFilter(ident("x"), ident("p")));
 assertExpr("<{foo}/>", xmlPointTag([xmlEscape(ident("foo"))]));
@@ -671,6 +789,66 @@ assertExpr("<{foo}>text</{foo}>", xmlElt([xmlStartTag([xmlEscape(ident("foo"))])
                                           xmlEndTag([xmlEscape(ident("foo"))])]));
 assertExpr("<?xml?>", xmlPI("xml", ""));
 assertExpr("<?xml version='1.0'?>", xmlPI("xml", "version='1.0'"));
+assertDecl("default xml namespace = 'js';", xmlDefNS(lit("js")));
+assertDecl("default xml namespace = foo;", xmlDefNS(ident("foo")));
+
+// The parser turns these into TOK_UNARY nodes with pn_op == JSOP_SETXMLNAME.
+
+assertExpr("x::y = foo", aExpr("=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
+assertExpr("function::x = foo", aExpr("=", xmlFuncQualId(ident("x"), false), ident("foo")));
+assertExpr("@x = foo", aExpr("=", xmlAttrSel(ident("x")), ident("foo")));
+assertExpr("x::* = foo", aExpr("=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
+assertExpr("*::* = foo", aExpr("=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
+assertExpr("x.* = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+assertExpr("x[*] = foo", aExpr("=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+
+assertExpr("x::y += foo", aExpr("+=", xmlQualId(ident("x"), ident("y"), false), ident("foo")));
+assertExpr("function::x += foo", aExpr("+=", xmlFuncQualId(ident("x"), false), ident("foo")));
+assertExpr("@x += foo", aExpr("+=", xmlAttrSel(ident("x")), ident("foo")));
+assertExpr("x::* += foo", aExpr("+=", xmlQualId(ident("x"), ident("*"), false), ident("foo")));
+assertExpr("*::* += foo", aExpr("+=", xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
+assertExpr("x.* += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+assertExpr("x[*] += foo", aExpr("+=", memExpr(ident("x"), xmlAnyName), ident("foo")));
+
+assertExpr("x::y++", updExpr("++", xmlQualId(ident("x"), ident("y"), false), false));
+assertExpr("function::x++", updExpr("++", xmlFuncQualId(ident("x"), false), false));
+assertExpr("@x++", updExpr("++", xmlAttrSel(ident("x")), false));
+assertExpr("x::*++", updExpr("++", xmlQualId(ident("x"), ident("*"), false), false));
+assertExpr("*::*++", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), false));
+assertExpr("x.*++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
+assertExpr("x[*]++", updExpr("++", memExpr(ident("x"), xmlAnyName), false));
+
+assertExpr("++x::y", updExpr("++", xmlQualId(ident("x"), ident("y"), false), true));
+assertExpr("++function::x", updExpr("++", xmlFuncQualId(ident("x"), false), true));
+assertExpr("++@x", updExpr("++", xmlAttrSel(ident("x")), true));
+assertExpr("++x::*", updExpr("++", xmlQualId(ident("x"), ident("*"), false), true));
+assertExpr("++*::*", updExpr("++", xmlQualId(xmlAnyName, ident("*"), false), true));
+assertExpr("++x.*", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
+assertExpr("++x[*]", updExpr("++", memExpr(ident("x"), xmlAnyName), true));
+
+
+// The parser turns these into TOK_UNARY nodes with pn_op == JSOP_BINDXMLNAME.
+
+function singletonObjPatt(name, val) objPatt([{ key: ident(name), value: val }])
+
+assertExpr("({a:x::y}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("y"), false)), ident("foo")));
+assertExpr("({a:function::x}) = foo", aExpr("=", singletonObjPatt("a", xmlFuncQualId(ident("x"), false)), ident("foo")));
+assertExpr("({a:@x}) = foo", aExpr("=", singletonObjPatt("a", xmlAttrSel(ident("x"))), ident("foo")));
+assertExpr("({a:x::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(ident("x"), ident("*"), false)), ident("foo")));
+assertExpr("({a:*::*}) = foo", aExpr("=", singletonObjPatt("a", xmlQualId(xmlAnyName, ident("*"), false)), ident("foo")));
+assertExpr("({a:x.*}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
+assertExpr("({a:x[*]}) = foo", aExpr("=", singletonObjPatt("a", memExpr(ident("x"), xmlAnyName)), ident("foo")));
+
+function emptyForInPatt(val, rhs) forInStmt(val, rhs, emptyStmt)
+
+assertStmt("for (x::y in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("y"), false), ident("foo")));
+assertStmt("for (function::x in foo);", emptyForInPatt(xmlFuncQualId(ident("x"), false), ident("foo")));
+assertStmt("for (@x in foo);", emptyForInPatt(xmlAttrSel(ident("x")), ident("foo")));
+assertStmt("for (x::* in foo);", emptyForInPatt(xmlQualId(ident("x"), ident("*"), false), ident("foo")));
+assertStmt("for (*::* in foo);", emptyForInPatt(xmlQualId(xmlAnyName, ident("*"), false), ident("foo")));
+assertStmt("for (x.* in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
+assertStmt("for (x[*] in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
+
 
 // NOTE: We appear to be unable to test XMLNAME, XMLCDATA, and XMLCOMMENT.
 
