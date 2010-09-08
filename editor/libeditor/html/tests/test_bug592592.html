@@ -15,6 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592592
 <p id="display"></p>
 <div id="content">
   <div id="editor" contenteditable="true" style="white-space:pre-wrap">a b</div>
+  <div id="editor2" contenteditable="true" style="white-space:pre-wrap">a   b</div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -50,6 +51,18 @@ SimpleTest.waitForFocus(function() {
 
   // Make sure that we have added an nbsp
   is(ed.innerHTML, "a&nbsp; b", "We should add an &nbsp; for non-preformatted text");
+
+  ed = document.getElementById("editor2");
+
+  // Put the selection after the second space in the second editable field
+  ed.focus();
+  window.getSelection().collapse(ed.firstChild, 3);
+
+  // Press the back-space key
+  synthesizeKey("VK_BACK_SPACE", {});
+
+  // Make sure that we've only deleted a single space
+  is(ed.innerHTML, "a  b", "We should only be deleting a single space");
 
   SimpleTest.finish();
 });
