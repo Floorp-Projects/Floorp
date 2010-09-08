@@ -2141,27 +2141,63 @@ namespace nanojit
         RegisterMask allow = inst->isD() ? FpRegs : GpRegs;
 
         Register dest_reg = prepareResultReg(inst, allow);
-        Register src_reg = findRegFor(if_false, allow & ~rmask(dest_reg));
 
-        // 3. If the test is "true", we branched over the copy.
-        underrunProtect(2 * sizeof(NIns));
-        NIns *after_mov = _nIns;
+        // Try to re-use the result register for one of the arguments.
+        Register src_true_reg  = if_true->isInReg()  ? if_true->getReg()  : dest_reg;
+        Register src_false_reg = if_false->isInReg() ? if_false->getReg() : dest_reg;
 
-        // 2. If the test is "false", copy the register.
+        // Note that iftrue and iffalse may actually be the same, though
+        // it shouldn't happen with the LIR optimizers turned on.
+        if (src_true_reg == src_false_reg && if_true != if_false) {
+            // We can't re-use the result register for both arguments,
+            // so force one into its own register.
+            src_false_reg = findRegFor(if_false, allow & ~rmask(dest_reg));
+            NanoAssert(if_false->isInReg());
+        }
+
+        underrunProtect(6 * sizeof(NIns));
+        // 3. If the test is "true", copy the "true" source register.
+        NIns *after_mov_true = _nIns;
         if (inst->isop(LIR_cmovd)) {
-            SH4_fmov(src_reg, dest_reg);
-            SH4_fmov(Register(src_reg + 1), Register(dest_reg + 1));
+            SH4_fmov(src_true_reg, dest_reg);
+            SH4_fmov(Register(src_true_reg + 1), Register(dest_reg + 1));
         }
         else {
-            SH4_mov(src_reg, dest_reg);
+            SH4_mov(src_true_reg, dest_reg);
+        }        
+
+        // 2. If the test is "false", copy the "false" source register
+        // then jump over the "mov if true".
+        NIns *after_mov_false = _nIns;
+
+        SH4_nop();
+        SH4_bra(SH4_LABEL(after_mov_true));
+
+        if (inst->isop(LIR_cmovd)) {
+            SH4_fmov(src_false_reg, dest_reg);
+            SH4_fmov(Register(src_false_reg + 1), Register(dest_reg + 1));
+        }
+        else {
+            SH4_mov(src_false_reg, dest_reg);
         }
 
-        findSpecificRegFor(if_true, dest_reg);
+        freeResourcesOf(inst);
+
+        // If we re-used the result register, mark it as active for either if_true
+        // or if_false (or both in the corner-case where they're the same).
+        if (src_true_reg == dest_reg) {
+            NanoAssert(!if_true->isInReg());
+            findSpecificRegForUnallocated(if_true, dest_reg);
+        } else if (src_false_reg == dest_reg) {
+            NanoAssert(!if_false->isInReg());
+            findSpecificRegForUnallocated(if_false, dest_reg);
+        } else {
+            NanoAssert(if_false->isInReg());
+            NanoAssert(if_true->isInReg());
+        }
 
         // 1. Branch [or not] according to the condition.
-        asm_branch(false, condition, after_mov);
-
-        freeResourcesOf(inst);
+        asm_branch(false, condition, after_mov_false);
     }
 
     void Assembler::asm_cond(LIns *inst) {
