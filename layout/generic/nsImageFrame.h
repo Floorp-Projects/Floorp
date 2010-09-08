@@ -181,7 +181,7 @@ public:
 protected:
   virtual ~nsImageFrame();
 
-  void EnsureIntrinsicSize(nsPresContext* aPresContext);
+  void EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext);
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
@@ -244,9 +244,17 @@ private:
    * Recalculate mIntrinsicSize from the image.
    *
    * @return whether aImage's size did _not_
-   *         match our previous intrinsic size
+   *         match our previous intrinsic size.
    */
   PRBool UpdateIntrinsicSize(imgIContainer* aImage);
+
+  /**
+   * Recalculate mIntrinsicRatio from the image.
+   *
+   * @return whether aImage's ratio did _not_
+   *         match our previous intrinsic ratio.
+   */
+  PRBool UpdateIntrinsicRatio(imgIContainer* aImage);
 
   /**
    * This function will recalculate mTransform.
@@ -272,7 +280,9 @@ private:
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsSize mComputedSize;
-  nsSize mIntrinsicSize;
+  nsIFrame::IntrinsicSize mIntrinsicSize;
+  nsSize mIntrinsicRatio;
+
   nsTransform2D mTransform;
   PRBool mDisplayingIcon;
 

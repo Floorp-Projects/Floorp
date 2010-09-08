@@ -1505,6 +1505,12 @@ public:
     IntrinsicSize& operator=(const IntrinsicSize& rhs) {
       width = rhs.width; height = rhs.height; return *this;
     }
+    PRBool operator==(const IntrinsicSize& rhs) {
+      return width == rhs.width && height == rhs.height;
+    }
+    PRBool operator!=(const IntrinsicSize& rhs) {
+      return !(*this == rhs);
+    }
   };
   virtual IntrinsicSize GetIntrinsicSize() = 0;
 
