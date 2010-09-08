@@ -817,10 +817,12 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     // If @value is changed and BF_VALUE_CHANGED is false, @value is the value
-    // of the element so we call |Reset| which is getting the default value and
-    // sets it to the current value.
+    // of the element so, if the value of the element is different than @value,
+    // we have to re-set it. This is only the case when GetValueMode() returns
+    // VALUE_MODE_VALUE.
     if (aName == nsGkAtoms::value &&
-        !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+        !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
+        GetValueMode() == VALUE_MODE_VALUE) {
       SetDefaultValueAsValue();
     }
 
@@ -2873,65 +2875,39 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 nsresult
 nsHTMLInputElement::SetDefaultValueAsValue()
 {
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-    {
-      PRBool resetVal;
-      GetDefaultChecked(&resetVal);
-      return DoSetChecked(resetVal, PR_TRUE, PR_FALSE);
-    }
-    case NS_FORM_INPUT_SEARCH:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_EMAIL:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_TEL:
-    case NS_FORM_INPUT_URL:
-    {
-      nsAutoString resetVal;
-      GetDefaultValue(resetVal);
-      // SetValueInternal is going to sanitize the value.
-      return SetValueInternal(resetVal, PR_FALSE, PR_FALSE);
-    }
-    case NS_FORM_INPUT_FILE:
-    {
-      // Resetting it to blank should not perform security check
-      ClearFiles();
-      break;
-    }
-    // Value is the same as defaultValue for hidden inputs
-    case NS_FORM_INPUT_HIDDEN:
-    default:
-      break;
-  }
+  NS_ASSERTION(GetValueMode() == VALUE_MODE_VALUE,
+               "GetValueMode() should return VALUE_MODE_VALUE!");
 
-  return NS_OK;
+  // The element has a content attribute value different from it's value when
+  // it's in the value mode value.
+  nsAutoString resetVal;
+  GetDefaultValue(resetVal);
+
+  // SetValueInternal is going to sanitize the value.
+  return SetValueInternal(resetVal, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::Reset()
 {
-  nsresult rv = SetDefaultValueAsValue();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // We should be able to reset all dirty flags regardless of the type.
+  SetCheckedChanged(PR_FALSE);
+  SetValueChanged(PR_FALSE);
 
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-      SetCheckedChanged(PR_FALSE);
-      break;
-    case NS_FORM_INPUT_SEARCH:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_EMAIL:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_TEL:
-    case NS_FORM_INPUT_URL:
-      SetValueChanged(PR_FALSE);
-      break;
+  switch (GetValueMode()) {
+    case VALUE_MODE_VALUE:
+      return SetDefaultValueAsValue();
+    case VALUE_MODE_DEFAULT_ON:
+      PRBool resetVal;
+      GetDefaultChecked(&resetVal);
+      return DoSetChecked(resetVal, PR_TRUE, PR_FALSE);
+    case VALUE_MODE_FILENAME:
+      ClearFiles();
+      return NS_OK;
+    case VALUE_MODE_DEFAULT:
     default:
-      break;
+      return NS_OK;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

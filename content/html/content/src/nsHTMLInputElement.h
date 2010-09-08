@@ -512,6 +512,8 @@ protected:
 
   /**
    * Set the current default value to the value of the input element.
+   * @note You should not call this method if GetValueMode() doesn't return
+   * VALUE_MODE_VALUE.
    */
   nsresult SetDefaultValueAsValue();
 
