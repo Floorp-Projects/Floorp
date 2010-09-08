@@ -758,7 +758,11 @@
             if (!this._previewMode && oldTab != this.selectedTab)
               oldTab.owner = null;
 
-            this._lastRelatedTab = null;
+            if (this._lastRelatedTab) {
+              if (this._lastRelatedTab != this.selectedTab)
+                this._lastRelatedTab.owner = null;
+              this._lastRelatedTab = null;
+            }
 
             var oldBrowser = this.mCurrentBrowser;
             if (oldBrowser) {
@@ -808,6 +812,8 @@
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
               this.updateTitlebar();
+
+              this.mCurrentTab.removeAttribute("titlechanged");
             }
 
             // If the new tab is busy, and our current state is not busy, then
@@ -884,7 +890,7 @@
         <body>
           <![CDATA[
             aTab.label = this.mStringBundle.getString("tabs.loading");
-            aTab.setAttribute("crop", "end");
+            aTab.crop = "end";
             this._tabAttrModified(aTab);
           ]]>
         </body>
@@ -924,9 +930,14 @@
                 title = this.mStringBundle.getString("tabs.emptyTabTitle");
             }
 
+            if (aTab.label == title &&
+                aTab.crop == crop)
+              return false;
+
             aTab.label = title;
-            aTab.setAttribute("crop", crop);
+            aTab.crop = crop;
             this._tabAttrModified(aTab);
+            return true;
           ]]>
         </body>
       </method>
@@ -1245,6 +1256,10 @@
                 Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
               let newTabPos = (this._lastRelatedTab ||
                                this.selectedTab)._tPos + 1;
+              if (this._lastRelatedTab)
+                this._lastRelatedTab.owner = null;
+              else
+                t.owner = this.selectedTab;
               this.moveTabTo(t, newTabPos);
               this._lastRelatedTab = t;
             }
@@ -1441,7 +1456,7 @@
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
 
-            if (browser.registeredOpenURI) {
+            if (browser.registeredOpenURI && !aTabWillBeMoved) {
               this.mBrowserHistory.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
@@ -1643,10 +1658,18 @@
             filter.removeProgressListener(tabListener);
             var tabListenerBlank = tabListener.mBlank;
 
+            var otherBrowser = aOtherTab.linkedBrowser;
+
+            // Restore current registered open URI.
+            if (ourBrowser.registeredOpenURI)
+              this.mBrowserHistory.unregisterOpenPage(ourBrowser.registeredOpenURI);
+            if (otherBrowser.registeredOpenURI)
+              ourBrowser.registeredOpenURI = otherBrowser.registeredOpenURI;
+
             // Workarounds for bug 458697
             // Icon might have been set on DOMLinkAdded, don't override that.
-            if (!ourBrowser.mIconURL && aOtherTab.linkedBrowser.mIconURL)
-              this.setIcon(aOurTab, aOtherTab.linkedBrowser.mIconURL);
+            if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
+              this.setIcon(aOurTab, otherBrowser.mIconURL);
             var isBusy = aOtherTab.hasAttribute("busy");
             if (isBusy) {
               aOurTab.setAttribute("busy", "true");
@@ -1656,7 +1679,7 @@
             }
 
             // Swap the docshells
-            ourBrowser.swapDocShells(aOtherTab.linkedBrowser);
+            ourBrowser.swapDocShells(otherBrowser);
 
             // Finish tearing down the tab that's going away.
             remoteBrowser._endRemoveTab(aOtherTab);
@@ -2446,9 +2469,14 @@
             return;
 
           var tab = this._getTabForContentWindow(contentWin);
-          this.setTabTitle(tab);
+          var titleChanged = this.setTabTitle(tab);
+          if (!titleChanged)
+            return;
+
           if (tab == this.mCurrentTab)
             this.updateTitlebar();
+          else if (!tab.hasAttribute("busy"))
+            tab.setAttribute("titlechanged", "true");
         ]]>
       </handler>
     </handlers>
@@ -2773,7 +2801,16 @@
       <method name="_getDragTargetTab">
         <parameter name="event"/>
         <body><![CDATA[
-          return event.target.localName == "tab" ? event.target : null;
+          let tab = event.target.localName == "tab" ? event.target : null;
+          if (tab &&
+              (event.type == "drop" || event.type == "dragover") &&
+              event.dataTransfer.dropEffect == "link") {
+            let boxObject = tab.boxObject;
+            if (event.screenX < boxObject.screenX + boxObject.width * .25 ||
+                event.screenX > boxObject.screenX + boxObject.width * .75)
+              return null;
+          }
+          return tab;
         ]]></body>
       </method>
 
@@ -3022,6 +3059,7 @@
               this._dragTime = Date.now();
             if (Date.now() >= this._dragTime + this._dragOverDelay)
               this.selectedItem = tab;
+            ind.collapsed = true;
             return;
           }
         }

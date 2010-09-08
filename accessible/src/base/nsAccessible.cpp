@@ -1263,52 +1263,8 @@ nsAccessible::GetRole(PRUint32 *aRole)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (mRoleMapEntry) {
-    *aRole = mRoleMapEntry->role;
-
-    // These unfortunate exceptions don't fit into the ARIA table
-    // This is where the nsIAccessible role depends on both the role and ARIA state
-    if (*aRole == nsIAccessibleRole::ROLE_PUSHBUTTON) {
-
-      if (nsAccUtils::HasDefinedARIAToken(mContent,
-                                          nsAccessibilityAtoms::aria_pressed)) {
-        // For simplicity, any existing pressed attribute except "", or "undefined"
-        // indicates a toggle.
-        *aRole = nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
-
-      } else if (mContent->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::aria_haspopup,
-                                       nsAccessibilityAtoms::_true,
-                                       eCaseMatters)) {
-        // For button with aria-haspopup="true".
-        *aRole = nsIAccessibleRole::ROLE_BUTTONMENU;
-      }
-    }
-    else if (*aRole == nsIAccessibleRole::ROLE_LISTBOX) {
-      // A listbox inside of a combo box needs a special role because of ATK mapping to menu
-      nsCOMPtr<nsIAccessible> possibleCombo;
-      GetParent(getter_AddRefs(possibleCombo));
-      if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX) {
-        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      }
-      else {   // Check to see if combo owns the listbox instead
-        possibleCombo = nsRelUtils::
-          GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
-        if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX)
-          *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      }
-    }
-    else if (*aRole == nsIAccessibleRole::ROLE_OPTION) {
-      if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
-    }
-
-    // We are done if the mapped role trumps native semantics
-    if (mRoleMapEntry->roleRule == kUseMapRole)
-      return NS_OK;
-  }
-
-  return GetRoleInternal(aRole);
+  *aRole = Role();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1627,10 +1583,6 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  PRUint32 role;
-  rv = GetRole(&role);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // For some reasons DOM node may have not a frame. We tract such accessibles
   // as invisible.
   nsIFrame *frame = GetFrame();
@@ -1852,19 +1804,57 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
   return NS_OK;
 }
 
-/* unsigned long getRole (); */
-nsresult
-nsAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsAccessible::Role()
 {
-  *aRole = nsIAccessibleRole::ROLE_NOTHING;
+  // No ARIA role or it doesn't suppress role from native markup.
+  if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
+    return NativeRole();
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
+  // where the accessible role depends on both the role and ARIA state.
+  if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+    if (nsAccUtils::HasDefinedARIAToken(mContent,
+                                        nsAccessibilityAtoms::aria_pressed)) {
+      // For simplicity, any existing pressed attribute except "" or "undefined"
+      // indicates a toggle.
+      return nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
+    }
 
-  if (nsCoreUtils::IsXLink(mContent))
-    *aRole = nsIAccessibleRole::ROLE_LINK;
+    if (mContent->AttrValueIs(kNameSpaceID_None,
+                              nsAccessibilityAtoms::aria_haspopup,
+                              nsAccessibilityAtoms::_true,
+                              eCaseMatters)) {
+      // For button with aria-haspopup="true".
+      return nsIAccessibleRole::ROLE_BUTTONMENU;
+    }
 
-  return NS_OK;
+  } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_LISTBOX) {
+    // A listbox inside of a combobox needs a special role because of ATK
+    // mapping to menu.
+    if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX) {
+      return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+
+      nsCOMPtr<nsIAccessible> possibleCombo =
+        nsRelUtils::GetRelatedAccessible(this,
+                                         nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
+      if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX)
+        return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+    }
+
+  } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OPTION) {
+    if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+      return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
+  }
+
+  return mRoleMapEntry->role;
+}
+
+PRUint32
+nsAccessible::NativeRole()
+{
+  return nsCoreUtils::IsXLink(mContent) ?
+    nsIAccessibleRole::ROLE_LINK : nsIAccessibleRole::ROLE_NOTHING;
 }
 
 // readonly attribute PRUint8 numActions
@@ -2785,9 +2775,7 @@ nsAccessible::GetParent()
 
   // XXX: mParent can be null randomly because supposedly we get layout
   // notification and invalidate parent-child relations, this accessible stays
-  // unattached. This should gone after bug 572951. Other reason is bug 574588
-  // since CacheChildren() implementation calls nsAccessible::GetRole() what
-  // can need to get a parent and we are here as result.
+  // unattached. This should gone after bug 572951.
   NS_WARNING("Bad accessible tree!");
 
 #ifdef DEBUG
@@ -3364,7 +3352,7 @@ nsAccessible::GetLevelInternal()
 {
   PRInt32 level = nsAccUtils::GetDefaultLevel(this);
 
-  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 role = Role();
   nsAccessible* parent = GetParent();
 
   if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
@@ -3374,7 +3362,7 @@ nsAccessible::GetLevelInternal()
     level = 1;
 
     while (parent) {
-      PRUint32 parentRole = nsAccUtils::Role(parent);
+      PRUint32 parentRole = parent->Role();
 
       if (parentRole == nsIAccessibleRole::ROLE_OUTLINE)
         break;
@@ -3394,7 +3382,7 @@ nsAccessible::GetLevelInternal()
     level = 0;
 
     while (parent) {
-      PRUint32 parentRole = nsAccUtils::Role(parent);
+      PRUint32 parentRole = parent->Role();
 
       if (parentRole == nsIAccessibleRole::ROLE_LISTITEM)
         ++ level;

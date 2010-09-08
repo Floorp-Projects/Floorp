@@ -50,11 +50,10 @@ nsXFormsLabelAccessible::
 {
 }
 
-nsresult
-nsXFormsLabelAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsLabelAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_LABEL;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_LABEL;
 }
 
 nsresult
@@ -86,11 +85,10 @@ nsXFormsOutputAccessible::
 {
 }
 
-nsresult
-nsXFormsOutputAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsOutputAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_STATICTEXT;
 }
 
 
@@ -104,11 +102,10 @@ nsXFormsTriggerAccessible::
 {
 }
 
-nsresult
-nsXFormsTriggerAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsTriggerAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_PUSHBUTTON;
 }
 
 NS_IMETHODIMP
@@ -160,11 +157,10 @@ nsXFormsInputAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
 
-nsresult
-nsXFormsInputAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsInputAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_ENTRY;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_ENTRY;
 }
 
 NS_IMETHODIMP
@@ -207,11 +203,10 @@ nsXFormsInputBooleanAccessible::
 {
 }
 
-nsresult
-nsXFormsInputBooleanAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsInputBooleanAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_CHECKBUTTON;
 }
 
 nsresult
@@ -281,11 +276,10 @@ nsXFormsInputDateAccessible::
 {
 }
 
-nsresult
-nsXFormsInputDateAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsInputDateAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_DROPLIST;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_DROPLIST;
 }
 
 
@@ -299,11 +293,10 @@ nsXFormsSecretAccessible::
 {
 }
 
-nsresult
-nsXFormsSecretAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsSecretAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_PASSWORD_TEXT;
 }
 
 nsresult
@@ -334,11 +327,10 @@ nsXFormsRangeAccessible::
 {
 }
 
-nsresult
-nsXFormsRangeAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsRangeAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_SLIDER;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_SLIDER;
 }
 
 nsresult
@@ -460,11 +452,10 @@ nsXFormsChoicesAccessible::
 {
 }
 
-nsresult
-nsXFormsChoicesAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsChoicesAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_GROUPING;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_GROUPING;
 }
 
 NS_IMETHODIMP
@@ -491,11 +482,10 @@ nsXFormsSelectFullAccessible::
 {
 }
 
-nsresult
-nsXFormsSelectFullAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsSelectFullAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_GROUPING;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_GROUPING;
 }
 
 void
@@ -515,11 +505,10 @@ nsXFormsItemCheckgroupAccessible::
 {
 }
 
-nsresult
-nsXFormsItemCheckgroupAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsItemCheckgroupAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_CHECKBUTTON;
 }
 
 nsresult
@@ -561,11 +550,10 @@ nsXFormsItemRadiogroupAccessible::
 {
 }
 
-nsresult
-nsXFormsItemRadiogroupAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsItemRadiogroupAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_RADIOBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_RADIOBUTTON;
 }
 
 nsresult
@@ -603,11 +591,10 @@ nsXFormsSelectComboboxAccessible::
 {
 }
 
-nsresult
-nsXFormsSelectComboboxAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsSelectComboboxAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_COMBOBOX;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_COMBOBOX;
 }
 
 nsresult
@@ -650,11 +637,10 @@ nsXFormsItemComboboxAccessible::
 {
 }
 
-nsresult
-nsXFormsItemComboboxAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsItemComboboxAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_LISTITEM;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_LISTITEM;
 }
 
 nsresult

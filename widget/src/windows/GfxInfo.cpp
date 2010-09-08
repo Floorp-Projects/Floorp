@@ -395,9 +395,9 @@ struct GfxDriverInfo {
 
 /* NVIDIA vendor and device IDs */
 
-#define V(a,b,c,d)   ((PRUint64(a)<<48) | (PRUint64(b)<<32) | (PRUint64(c)<<16) | PRUint64(d))
-
 /* AMD vendor and device IDs */
+
+#define V(a,b,c,d)   ((PRUint64(a)<<48) | (PRUint64(b)<<32) | (PRUint64(c)<<16) | PRUint64(d))
 
 static GfxDriverInfo driverInfo[] = {
   /*
@@ -469,7 +469,7 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
     bool match = false;
 
     if (info->vendor != adapterVendor ||
-        info->device != adapterDeviceID)
+        (info->device != ANY_DEVICE && info->device != adapterDeviceID))
     {
       info++;
       continue;

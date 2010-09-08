@@ -473,6 +473,7 @@ class TypedArrayTemplate
   : public TypedArray
 {
   public:
+    typedef NativeType ThisType;
     typedef TypedArrayTemplate<NativeType> ThisTypeArray;
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
@@ -1527,6 +1528,19 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
+    JSObject *ctor = JS_GetConstructor(cx, proto);                             \
+    if (!ctor ||                                                               \
+        !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
+                           INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
+                           JS_PropertyStub, JS_PropertyStub,                   \
+                           JSPROP_PERMANENT | JSPROP_READONLY) ||              \
+        !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",                     \
+                           INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
+                           JS_PropertyStub, JS_PropertyStub,                   \
+                           JSPROP_PERMANENT | JSPROP_READONLY))                \
+    {                                                                          \
+        return NULL;                                                           \
+    }                                                                          \
     proto->setPrivate(0);                                                      \
 } while (0)
 

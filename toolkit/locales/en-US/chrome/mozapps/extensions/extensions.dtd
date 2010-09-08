@@ -13,6 +13,15 @@
 <!ENTITY cmd.back.tooltip                     "Go back one page">
 <!ENTITY cmd.forward.tooltip                  "Go forward one page">
 
+<!-- global warnings -->
+<!ENTITY warning.safemode.label                    "All add-ons have been disabled by safe mode.">
+<!ENTITY warning.checkcompatibility.label          "Add-on compatibility checking is disabled. You may have incompatible add-ons.">
+<!ENTITY warning.checkcompatibility.enable.label   "Enable">
+<!ENTITY warning.checkcompatibility.enable.tooltip "Enable add-on compatibility checking">
+<!ENTITY warning.updatesecurity.label              "Add-on update security checking is disabled. You may be compromised by updates.">
+<!ENTITY warning.updatesecurity.enable.label       "Enable">
+<!ENTITY warning.updatesecurity.enable.tooltip     "Enable add-on update security checking">
+
 <!-- categories / views -->
 <!ENTITY view.search.label                    "Search">
 <!ENTITY view.discover.label                  "Get Add-ons">
@@ -56,6 +65,10 @@
 <!ENTITY cmd.enableAddon.accesskey            "E">
 <!ENTITY cmd.disableAddon.label               "Disable">
 <!ENTITY cmd.disableAddon.accesskey           "D">
+<!ENTITY cmd.enableTheme.label                "Wear Theme">
+<!ENTITY cmd.enableTheme.accesskey            "W">
+<!ENTITY cmd.disableTheme.label               "Stop Wearing Theme">
+<!ENTITY cmd.disableTheme.accesskey           "W">
 <!ENTITY cmd.installAddon.label               "Install">
 <!ENTITY cmd.installAddon.accesskey           "I">
 <!ENTITY cmd.uninstallAddon.label             "Remove">

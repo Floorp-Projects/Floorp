@@ -307,6 +307,10 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
                                       PRUint32 aFrameBufferLength,
                                       PRUint64 aTime)
 {
+  // Auto manage the frame buffer's memory. If we return due to an error
+  // here, this ensures we free the memory. Otherwise, we pass off ownership
+  // to HTMLMediaElement::NotifyAudioAvailable().
+  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown) {
     return;
@@ -316,7 +320,7 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
     return;
   }
 
-  mElement->NotifyAudioAvailable(aFrameBuffer, aFrameBufferLength, aTime);
+  mElement->NotifyAudioAvailable(frameBuffer.forget(), aFrameBufferLength, aTime);
 }
 
 void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
@@ -411,7 +415,6 @@ void nsBuiltinDecoder::ResourceLoaded()
 
   // Ensure the final progress event gets fired
   if (mElement) {
-    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
     mElement->ResourceLoaded();
   }
 }
@@ -566,8 +569,11 @@ void nsBuiltinDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  if (aStatus == NS_BINDING_ABORTED)
+  if (aStatus == NS_BINDING_ABORTED) {
+    // Download has been cancelled by user.
+    mElement->LoadAborted();
     return;
+  }
 
   {
     MonitorAutoEnter mon(mMonitor);

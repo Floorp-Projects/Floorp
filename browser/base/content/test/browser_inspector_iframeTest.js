@@ -79,30 +79,27 @@ function createDocument()
 
 function setupIframeTests()
 {
-  document.addEventListener("popupshown", runIframeTests, false);
-  InspectorUI.toggleInspectorUI();
+  Services.obs.addObserver(runIframeTests, "inspector-opened", false);
+  InspectorUI.openInspectorUI();
 }
 
-function runIframeTests(evt)
+function runIframeTests()
 {
-  if (evt.target.id != "inspector-panel")
-    return true;
-
-  document.removeEventListener("popupshown", runIframeTests, false);
+  Services.obs.removeObserver(runIframeTests, "inspector-opened", false);
   document.addEventListener("popupshown", performTestComparisons1, false);
-
   EventUtils.synthesizeMouse(div1, 2, 2, {type: "mousemove"},
     iframe1.contentWindow);
 }
 
 function performTestComparisons1(evt)
 {
-  if (evt.target.id != "highlighter-panel")
+  if (evt.target.id != "highlighter-panel") {
     return true;
+  }
 
-  document.removeEventListener("popupshown", performTestComparisons1, false);
+  document.removeEventListener(evt.type, arguments.callee, false);
 
-  is(InspectorUI.treeView.selectedNode, div1, "selection matches div1 node");
+  is(InspectorUI.selection, div1, "selection matches div1 node");
   is(InspectorUI.highlighter.highlitNode, div1, "highlighter matches selection");
 
   document.addEventListener("popupshown", performTestComparisons2, false);
@@ -113,12 +110,13 @@ function performTestComparisons1(evt)
 
 function performTestComparisons2(evt)
 {
-  if (evt.target.id != "highlighter-panel")
+  if (evt.target.id != "highlighter-panel") {
     return true;
+  }
 
-  document.removeEventListener("popupshown", performTestComparisons2, false);
+  document.removeEventListener(evt.type, arguments.callee, false);
 
-  is(InspectorUI.treeView.selectedNode, div2, "selection matches div2 node");
+  is(InspectorUI.selection, div2, "selection matches div2 node");
   is(InspectorUI.highlighter.highlitNode, div2, "highlighter matches selection");
 
   executeSoon(finishUp);
@@ -139,7 +137,7 @@ function test()
     doc = content.document;
     waitForFocus(createDocument, content);
   }, true);
-  
+
   content.location = "data:text/html,iframe tests for inspector";
 }
 

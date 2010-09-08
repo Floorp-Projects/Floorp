@@ -83,22 +83,14 @@
     ]]></script>
 
     <style type="text/css"><![CDATA[
-      #errorPageContainer {
-        background: url('chrome://browser/content/aboutRobots-icon.png') left 0 no-repeat -moz-Field;
-        background-origin: content-box;
+      #errorPageContainer:before {
+        content: url('chrome://browser/content/aboutRobots-icon.png');
+        position: absolute;
       }
 
-      #errorTrailerDescText {
-        float: right;
-      }
-
-      body[dir=rtl] #errorPageContainer {
-        background-image: url('chrome://browser/content/aboutRobots-icon-rtl.png');
-        background-position: right 0;
-      }
-
-      body[dir=rtl] #errorTrailerDescText {
-        float: left;
+      body[dir=rtl] #icon,
+      body[dir=rtl] #errorPageContainer:before {
+        -moz-transform: scaleX(-1);
       }
     ]]></style>
   </head>
@@ -145,8 +137,8 @@
 
       <img src="chrome://browser/content/aboutRobots-widget-left.png"
            style="position: absolute; bottom: -12px; left: -10px;"/>
-      <img src="chrome://browser/content/aboutRobots-widget-right.png"
-           style="position: absolute; bottom: -12px; right: -10px;"/>
+      <img src="chrome://browser/content/aboutRobots-widget-left.png"
+           style="position: absolute; bottom: -12px; right: -10px; -moz-transform: scaleX(-1);"/>
     </div>
 
   </body>

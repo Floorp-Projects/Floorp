@@ -436,8 +436,8 @@ function runTest(testNum) {
 
 var testNum = 1;
 var subwindow, chromeWin, contextMenu;
-var text, link, mailto, input, img, canvas, video, iframe,
-    textarea, contenteditable, inputspell;
+var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
+    iframe, textarea, contenteditable, inputspell;
 
 function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -451,6 +451,11 @@ function startTest() {
                     .QueryInterface(Ci.nsIDOMChromeWindow);
     contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     ok(contextMenu, "Got context menu XUL");
+
+    if (chromeWin.document.getElementById("Browser:Stop").getAttribute("disabled") != "true") {
+      SimpleTest.executeSoon(startTest);
+      return;
+    }
 
     text   = subwindow.document.getElementById("test-text");
     link   = subwindow.document.getElementById("test-link");
