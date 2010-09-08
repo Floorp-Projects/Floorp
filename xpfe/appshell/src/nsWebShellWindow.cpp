@@ -210,7 +210,9 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                   nsnull,                             // nsIToolkit
                   &widgetInitData);                   // Widget initialization data
   mWindow->GetClientBounds(r);
-  mWindow->SetBackgroundColor(NS_RGB(192,192,192));
+  // Match the default background color of content. Important on windows
+  // since we no longer use content child widgets.
+  mWindow->SetBackgroundColor(NS_RGB(255,255,255));
 
   // Create web shell
   mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
