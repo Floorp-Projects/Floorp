@@ -24,6 +24,7 @@
 #   Edward Lee <edilee@mozilla.com>
 #   Mike Connor <mconnor@mozilla.com>
 #   Paul O’Shannessy <paul@oshannessy.com>
+#   Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,6 +68,8 @@
           src="chrome://browser/content/syncUtils.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/printUtils.js"/>
 
   <wizardpage id="pickSetupType"
               label="&setup.choicePage.title.label;"
@@ -207,47 +210,54 @@
     </grid>
   </wizardpage>
 
-  <wizardpage label="&setup.newPPPage.title.label;"
+  <wizardpage label="&setup.newSyncKeyPage.title.label;"
               onpageshow="gSyncSetup.onPageShow();">
     <description>
-      &passphraseDesc.label;
+      &setup.newSyncKeyPage.description.label;
     </description>
     <spacer/>
-    <grid>
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row align="center">
-          <label value="&passphraseEntry.label;"
-                 accesskey="&passphraseEntry.accesskey;"
-                 control="weavePassphrase"/>
-          <textbox type="password" id="weavePassphrase"
-                   onkeyup="gSyncSetup.checkFields()"
-                   onchange="gSyncSetup.checkFields()"/>
-        </row>
-        <row align="center">
-          <label value="&passphraseConfirm.label;"
-                 accesskey="&passphraseConfirm.accesskey;"
-                 control="weavePassphraseConfirm"/>
-          <textbox type="password" id="weavePassphraseConfirm"
-                   onkeyup="gSyncSetup.checkFields()"
-                   onchange="gSyncSetup.checkFields()"/>
-        </row>
-      </rows>
-    </grid>
-    <hbox id="passphraseFeedbackRow" align="center" hidden="true">
-      <spacer/>
+
+    <vbox>
       <hbox>
-        <image class="statusIcon"/>
-        <label class="status" value=" "/>
+        <label value="&syncKeyEntry.label;"
+               accesskey="&syncKeyEntry.accesskey;"
+               control="weavePassphrase"/>
+        <label id="generatePassphraseButton"
+               value="&syncKeyGenerate.label;"
+               class="text-link inline-link"
+               onclick="event.stopPropagation();
+                        gSyncSetup.onPassphraseGenerate();"/>
       </hbox>
-    </hbox>
-    <separator/>
-    <description class="small">
-      &passphraseDesc2.label;
-    </description>
+      <textbox id="weavePassphrase"
+               onkeyup="gSyncSetup.onPassphraseChange()"
+               onchange="gSyncSetup.onPassphraseChange()"
+               onfocus="this.select()"/>
+      <hbox id="passphraseFeedbackRow" align="center" hidden="true">
+        <spacer/>
+        <hbox>
+          <image class="statusIcon"/>
+          <label class="status" value=" "/>
+        </hbox>
+      </hbox>
+    </vbox>
+
+    <vbox align="center">
+      <description>&syncKeyBackup.description;</description>
+      <hbox>
+        <button label="&button.syncKeyBackup.email.label;"
+                accesskey="&button.syncKeyBackup.email.accesskey;"
+                oncommand="gSyncUtils.passphraseEmail('weavePassphrase');
+                           gSyncSetup.afterBackup();"/>
+        <button label="&button.syncKeyBackup.print.label;"
+                accesskey="&button.syncKeyBackup.print.accesskey;"
+                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');
+                           gSyncSetup.afterBackup();"/>
+        <button label="&button.syncKeyBackup.save.label;"
+                accesskey="&button.syncKeyBackup.save.accesskey;"
+                oncommand="gSyncUtils.passphraseSave('weavePassphrase');
+                           gSyncSetup.afterBackup();"/>
+      </hbox>
+    </vbox>
   </wizardpage>
 
   <wizardpage label="&setup.newAccountPrefs2.title.label;">
@@ -386,9 +396,10 @@
         </rows>
       </grid>
   </wizardpage>
-  <wizardpage id="existingPassphraseEntry" label="&passphraseGroupbox.label;">
-    <description>&passphraseDesc3.label;</description>
-    <textbox type="password" id="existingPassphrase"
+  <wizardpage id="existingPassphraseEntry"
+              label="&setup.existingSyncKeyPage.title;">
+    <description>&setup.existingSyncKeyPage.description;</description>
+    <textbox id="existingPassphrase"
              onkeyup="gSyncSetup.checkFields(event)"
              onchange="gSyncSetup.checkFields(event)"/>
     <hbox id="passphrase-throbber" hidden="true">
@@ -403,8 +414,8 @@
       </hbox>
     </hbox>
     <vbox class="small" id="passphraseHelpBox" hidden="true">
-      <description class="small">&passphraseHelp.label;</description>
-      <label class="text-link small" value="&changePassphrase.label;"
+      <description class="small">&existingSyncKeyHelp.description;</description>
+      <label class="text-link small" value="&lostSyncKey.label;"
              onclick="gSyncUtils.resetPassphrase(); return false;"/>
     </vbox>
   </wizardpage>
