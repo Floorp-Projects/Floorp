@@ -1084,7 +1084,6 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     if (aNotify) {
       nsIDocument* doc = GetCurrentDoc();
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
 
       if (aName == nsGkAtoms::readonly) {
         UpdateEditableState();
@@ -1092,6 +1091,7 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
 
       if (doc && states) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, states);
       }
     }
@@ -1131,6 +1131,7 @@ nsHTMLTextAreaElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID);
   }
