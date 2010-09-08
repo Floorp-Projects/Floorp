@@ -36,7 +36,7 @@ var iconDiscoveryTests = [
 function runIconDiscoveryTest() {
   var test = iconDiscoveryTests[0];
   var head = doc().getElementById("linkparent");
-  var hasSrc = gProxyFavIcon.hasAttribute("src");
+  var hasSrc = gBrowser.getIcon() != null;
   if (test.pass)
     ok(hasSrc, test.text);
   else
@@ -50,7 +50,7 @@ function runIconDiscoveryTest() {
 function iconDiscovery() {
   setHandlerFunc(runIconDiscoveryTest);
   if (iconDiscoveryTests.length) {
-    gProxyFavIcon.removeAttribute("src");
+    gBrowser.setIcon(gBrowser.selectedTab, null);
 
     var test = iconDiscoveryTests[0];
     var head = doc().getElementById("linkparent");

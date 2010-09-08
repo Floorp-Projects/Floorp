@@ -375,9 +375,12 @@ nsChangeHint nsStylePadding::MaxDifference()
 #endif
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
-  : mHaveBorderImageWidth(PR_FALSE),
-    mComputedBorder(0, 0, 0, 0),
-    mBorderImage(nsnull)
+  : mHaveBorderImageWidth(PR_FALSE)
+  , mComputedBorder(0, 0, 0, 0)
+  , mBorderImage(nsnull)
+#ifdef DEBUG
+  , mImageTracked(false)
+#endif
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
   nscoord medium =
@@ -451,6 +454,8 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 
 nsStyleBorder::~nsStyleBorder()
 {
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "nsStyleBorder being destroyed while still tracking image!");
   MOZ_COUNT_DTOR(nsStyleBorder);
   if (mBorderColors) {
     for (PRInt32 i = 0; i < 4; i++)
@@ -469,6 +474,8 @@ nsStyleBorder::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   
 void 
 nsStyleBorder::Destroy(nsPresContext* aContext) {
+  if (mBorderImage)
+    UntrackImage(aContext);
   this->~nsStyleBorder();
   aContext->FreeToShell(sizeof(nsStyleBorder), this);
 }
@@ -552,6 +559,42 @@ nsStyleBorder::GetActualBorder() const
       return mBorder;
   else
     return mComputedBorder;
+}
+
+void
+nsStyleBorder::TrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
+  NS_ABORT_IF_FALSE(mBorderImage, "Can't track null image!");
+
+  // Register the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->AddImage(mBorderImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = true;
+#endif
+}
+
+void
+nsStyleBorder::UntrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
+  NS_ABORT_IF_FALSE(mBorderImage, "Can't track null image!");
+
+  // Unregister the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->RemoveImage(mBorderImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = false;
+#endif
 }
 
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)

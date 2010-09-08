@@ -2279,7 +2279,9 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
     nsWindowType winType;
     containerItem->GetItemType(&docType);
     mParentWidget->GetWindowType(winType);
-    if (winType == eWindowType_toplevel &&
+    if ((winType == eWindowType_toplevel ||
+         winType == eWindowType_dialog ||
+         winType == eWindowType_invisible) &&
         docType == nsIDocShellTreeItem::typeChrome) {
       // If the old view is already attached to our parent, detach
       DetachFromTopLevelWidget();

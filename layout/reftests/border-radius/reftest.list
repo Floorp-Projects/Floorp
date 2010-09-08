@@ -48,3 +48,7 @@ fails == clipping-1.html clipping-1-ref.html # background color should completel
 
 == invalidate-1a.html invalidate-1-ref.html
 == invalidate-1b.html invalidate-1-ref.html
+
+# test that border-radius is reduced for scrollbars
+== scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+== scrollbar-clamping-2.html scrollbar-clamping-2-ref.html

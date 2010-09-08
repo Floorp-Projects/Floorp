@@ -40,6 +40,7 @@
 
 #include "ImageLayers.h"
 #include "Layers.h"
+#include "gfxPlatform.h"
 
 using namespace mozilla::layers;
  
@@ -169,6 +170,15 @@ AppendToString(nsACString& s, const FrameMetrics& m,
 
 namespace mozilla {
 namespace layers {
+
+//--------------------------------------------------
+// LayerManager
+already_AddRefed<gfxASurface>
+LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
+                                   gfxASurface::gfxImageFormat aFormat)
+{
+  return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFormat);
+}
 
 //--------------------------------------------------
 // Layer

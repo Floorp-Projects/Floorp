@@ -67,14 +67,16 @@ html {
   color: white;
 }
 
-#brandLogo {
+#brandStart:before {
+  content: url("chrome://branding/content/icon128.png");
   position: absolute;
   top: 0;
 }
-body[dir="ltr"] #brandLogo {
+
+body[dir="ltr"] #brandStart:before {
   right: 0;
 }
-body[dir="rtl"] #brandLogo {
+body[dir="rtl"] #brandStart:before {
   left: -15px;
 }
 

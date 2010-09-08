@@ -261,8 +261,6 @@ nsImageFrame::Init(nsIContent*      aContent,
     currentRequest->GetImage(getter_AddRefs(image));
     if (image) {
       image->SetAnimationMode(aPresContext->ImageAnimationMode());
-      // Ensure the animation (if any) is started.
-      image->StartAnimation();
     }
   }
 
@@ -480,8 +478,6 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
    */
   nsPresContext *presContext = PresContext();
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
-  // Ensure the animation (if any) is started.
-  aImage->StartAnimation();
 
   if (IsPendingLoad(aRequest)) {
     // We don't care

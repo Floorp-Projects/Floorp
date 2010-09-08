@@ -423,6 +423,10 @@ class XPCShellTests(object):
     self.debuggerInfo = getDebuggerInfo(self.oldcwd, debugger, debuggerArgs, debuggerInteractive)
     self.profileName = profileName or "xpcshell"
 
+    # If we have an interactive debugger, disable ctrl-c.
+    if self.debuggerInfo and self.debuggerInfo["interactive"]:
+        signal.signal(signal.SIGINT, lambda signum, frame: None)
+
     if not testdirs and not manifest:
       # nothing to test!
       print >>sys.stderr, "Error: No test dirs or test manifest specified!"

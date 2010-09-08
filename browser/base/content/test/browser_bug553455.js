@@ -433,7 +433,19 @@ function test_theme() {
 
       gBrowser.removeTab(gBrowser.selectedTab);
       Services.perms.remove("example.com", "install");
-      runNextTest();
+
+      AddonManager.getAddonByID("{972ce4c6-7e08-4474-a285-3208198ce6fd}", function(aAddon) {
+        ok(aAddon.userDisabled, "Should be switching away from the default theme.");
+        // Undo the pending theme switch
+        aAddon.userDisabled = false;
+
+        AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
+          isnot(aAddon, null, "Test theme will have been installed");
+          aAddon.uninstall();
+
+          runNextTest();
+        });
+      });
     });
   });
 },

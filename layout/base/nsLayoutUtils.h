@@ -946,6 +946,12 @@ public:
                             PRUint32             aImageFlags);
 
   /**
+   * Convert an nsRect to a gfxRect.
+   */
+  static gfxRect RectToGfxRect(const nsRect& aRect,
+                               PRInt32 aAppUnitsPerDevPixel);
+
+  /**
    * Draw a drawable using the pixel snapping algorithm.
    * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
    *   @param aRenderingContext Where to draw the image, set up with an

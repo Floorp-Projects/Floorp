@@ -596,6 +596,13 @@ nsWindow::Create(nsIWidget *aParent,
     return NS_ERROR_FAILURE;
   }
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  if (mIsRTL && nsUXThemeData::dwmSetWindowAttributePtr) {
+    DWORD dwAttribute = TRUE;    
+    nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+  }
+#endif
+
   if (nsWindow::sTrackPointHack &&
       mWindowType != eWindowType_plugin &&
       mWindowType != eWindowType_invisible) {
